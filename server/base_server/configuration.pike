@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.710 2010/12/02 16:11:02 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.711 2011/01/20 17:39:41 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4672,34 +4672,20 @@ the site carefully afterwards. A reload of the whole server
 configuration is required to propagate the change properly to all
 modules.</p>
 
-<p>Available compatibility levels:
-<table>
-<tr valign='top'><td>2.1&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.1.</td></tr>
-<tr valign='top'><td>2.2&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.2.</td></tr>
-<tr valign='top'><td>2.4&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.4. This version is also
-  commonly known as 3.2 - the version number that applies to the
-  release of Roxen CMS which contains Roxen WebServer 2.4.</td></tr>
-<tr valign='top'><td>2.5&nbsp;&nbsp;</td>
-  <td>Corresponds to no released version. This compatibility level is
-  only used to turn on some optimizations that have compatibility
+<p>Compatibility level notes:</p>
+
+<ul>
+  <li>2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.</li>
+
+  <li>2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
-  the &lt;cache&gt; tag.</td></tr>
-<tr valign='top'><td>3.3&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 3.3.</td></tr>
-<tr valign='top'><td>3.4&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 3.4.</td></tr>
-<tr valign='top'><td>4.0&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 4.0.</td></tr>
-<tr valign='top'><td>4.5&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 4.5.</td></tr>
-<tr valign='top'><td>5.0&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 5.0.</td></tr>
-<tr valign='top'><td>5.1&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 5.1.</td></tr>
-</table></p>")));
+  the &lt;cache&gt; tag.</li>
+
+  <li>There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.</li>
+</ul>")));
 
   set ("compat_level", roxen.roxen_ver);
   // Note to developers: This setting can be accessed through
