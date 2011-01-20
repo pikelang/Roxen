@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.303 2010/12/02 16:08:09 mast Exp $
+// $Id: Roxen.pmod,v 1.304 2011/01/20 14:01:01 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5494,6 +5494,40 @@ void pop_color (string tagname, RequestID id)
 		ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
   }
+}
+
+string generate_self_signed_certificate(string common_name)
+{
+  int key_size = 4096;	// Ought to be safe for a few years.
+
+  Crypto.RSA rsa = Crypto.RSA();
+  rsa->generate_key(key_size, Crypto.Random.random_string);
+
+  string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
+					   Standards.PKCS.RSA.private_key(rsa));
+
+  // These are the fields used by testca.pem.
+  array(mapping(string:object)) name = ({
+    ([ "organizationName":
+       Standards.ASN1.Types.asn1_printable_string("Roxen IS")
+    ]),
+    ([ "organizationUnitName":
+       Standards.ASN1.Types.asn1_printable_string("Automatic certificate")
+    ]),
+    ([ "commonName":
+       (Standards.ASN1.Types.asn1_printable_valid(common_name)?
+	Standards.ASN1.Types.asn1_printable_string:
+	Standards.ASN1.Types.asn1_broken_teletex_string)(common_name)
+    ]),
+  });
+
+  int ttl = 3652;	// 10 years.
+
+  /* Create a plain X.509 v1 certificate, without any extensions */
+  string cert = Tools.X509.make_selfsigned_rsa_certificate
+    (rsa, 24 * 3600 * ttl, name);
+
+  return Tools.PEM.simple_build_pem("CERTIFICATE", cert) + key;
 }
 
 class LogPipe
