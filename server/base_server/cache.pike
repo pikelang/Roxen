@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.138 2011/01/13 16:05:31 mast Exp $
+// $Id: cache.pike,v 1.139 2011/01/20 17:05:59 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -851,8 +851,18 @@ class CM_GDS_Time
 #if 0
 	  // This assertion is disabled for now, since it doesn't work
 	  // correctly when entry creations are interleaved instead of
-	  // properly nested. FIXME: Need a better method to cope with
-	  // that.
+	  // properly nested.
+	  //
+	  // However, handling that would mean more overhead. Just to
+	  // detect interleaving we need to store the real timestamp
+	  // in save_start_hrtime, in addition to the one with
+	  // all_ctx[0] subtracted. And to evenly distribute the
+	  // overlapping time between the interleaved entries, we'd
+	  // have to track them and update their creation costs
+	  // afterwards. If all that work is concentrated to this
+	  // function (to keep save_start_hrtime as lean as possible
+	  // since it's called much more often), it'd be an O(n^2)
+	  // process.
 	  //
 	  // Also note that this assertion might trig if gettime_func
 	  // isn't monotonic (c.f. FIXME in CM_GDS_RealTime.gettime_func).
@@ -860,13 +870,28 @@ class CM_GDS_Time
 			   duration, start, all_ctx);
 #endif
 	  if (duration < 0)
-	    // Limit the breakage somewhat when the assertion isn't active.
+	    // Can get negative duration when entry creation is
+	    // interleaved. Consider this case (t_acc is all_ctx[0]):
+	    //
+	    //                  0                            t5
+	    // Create entry A:  |----------------------------|
+	    //                      t1               t3
+	    // Create entry B:      |----------------|
+	    //           t_acc == 0 ^         t2         t4
+	    // Create entry C:                |----------|
+	    //                     t_acc == 0 ^          ^ t_acc == t3
+	    //
+	    // When we get here for entry C, the accumulated time is
+	    // t3, which could be larger than t4 - t2, thereby causing
+	    // negative duration. Setting the duration to 0 here not
+	    // only affects this entry; it also gives too much time
+	    // (t4 - t3) to the entry A which encompasses both
+	    // interleaved entries. The error stops there, though.
 	    duration = 0;
 	  all_ctx[0] += duration;
 	  return duration;
 	}
       }
-#ifndef RUN_SELF_TEST
 #ifdef DEBUG
     // Note that this also happens if the caller calls cache_set()
     // several times to add the same entry. That should be avoided
@@ -874,7 +899,6 @@ class CM_GDS_Time
     werror ("Warning: No preceding lookup for this key - "
 	    "cannot determine entry creation time.\n%s\n",
 	    describe_backtrace (backtrace()));
-#endif
 #endif
     return 0;
   }
