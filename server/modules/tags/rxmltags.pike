@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.641 2011/01/21 00:33:22 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.642 2011/01/21 10:41:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4324,8 +4324,8 @@ class TagUse {
       }
       RXML.Context ctx = RXML_CONTEXT;
 
-      if(args->info || id->pragma["no-cache"] ||
-	 !(res=cache_lookup("macrofiles",name)) ||
+      if(!(res=cache_lookup("macrofiles",name)) ||
+	 args->info || id->pragma["no-cache"] ||
 	 (is_package ? !res[0] : res[0] != global::this)) {
 
 	string file;
