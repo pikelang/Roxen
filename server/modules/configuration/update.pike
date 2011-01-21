@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.41 2009/05/07 14:15:54 mast Exp $
+ * $Id: update.pike,v 1.42 2011/01/21 11:14:35 mast Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2009, Roxen IS.
@@ -120,6 +120,9 @@ void post_start()
 
 void start(int num, Configuration conf)
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
+    // Don't do anything - config_filesystem will reload us.
+    return;
   if(conf && !inited)
   {
     inited++;
