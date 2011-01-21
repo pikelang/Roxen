@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.278 2011/01/21 12:20:07 marty Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.279 2011/01/21 15:21:06 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -928,7 +928,7 @@ class CacheKey
   {
     foreach (destruction_cbs, [CacheDestructionCB cb, int remove_at_activation,
 			       array args]) {
-      cb (this, @args);
+      if (cb) cb (this, @args);
     }
 
 #if 0
