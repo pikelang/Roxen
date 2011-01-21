@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.640 2011/01/20 17:23:46 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.641 2011/01/21 00:33:22 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -901,28 +901,10 @@ class TagImgs {
       if(args->src) {
 	if (!sizeof(args->src))
 	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
-	string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
-	if(!file) {
-	  file=id->conf->try_get_file(args->src,id);
-	  if(file)
-	    file=class {
-	      int p=0;
-	      string d;
-	      void create(string data) { d=data; }
-	      int tell() { return p; }
-	      int seek(int pos) {
-		if(abs(pos)>sizeof(d)) return -1;
-		if(pos<0) pos=sizeof(d)+pos;
-		p=pos;
-		return p;
-	      }
-	      string read(int bytes) {
-		p+=bytes;
-		return d[p-bytes..p-1];
-	      }
-	    }(file);
-	}
-
+	string|object file =
+	  id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
+	  id->conf->try_get_file(args->src, id);
+	
 	if(file) {
 	  array(int) xysize;
 	  if(xysize=Dims.dims()->get(file)) {
@@ -942,12 +924,41 @@ class TagImgs {
 	}
 
 	int xml=!m_delete(args, "noxml");
-
+	m_delete(args, "quiet");
+	
 	result = Roxen.make_tag("img", args, xml);
 	return 0;
       }
       RXML.parse_error("No src given.\n");
     }
+  }
+}
+
+class TagEmitImgs {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "imgs";
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
+  
+  array get_dataset(mapping args, RequestID id)
+  {
+    if (!sizeof(args->src))
+      RXML.parse_error("Attribute 'src' cannot be empty.");
+    if (string|object file =
+	id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
+	id->conf->try_get_file(args->src, id)) {
+      if (array(int) xysize = Dims.dims()->get(file)) {
+	return ({ ([ "xsize" : xysize[0],
+		     "ysize" : xysize[1],
+		     "type"  : xysize[2] ]) });
+      }
+      if (!args->quiet)
+	RXML.run_error("Could not get dimensions for file " + args->src + ".\n");
+      return ({ });
+    }
+    if (!args->quiet)
+      RXML.run_error("Image file not found.\n");
+    return ({ });
   }
 }
 
@@ -9139,10 +9150,14 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "imgs":#"<desc type='tag'><p><short>
- Generates a image tag with the correct dimensions in the width and height
+ Generates an image tag with the correct dimensions in the width and height
  attributes. These dimensions are read from the image itself, so the image
- must exist when the tag is generated. The image must also be in GIF, JPEG/JFIF
- or PNG format.</short>
+ must exist when the tag is generated. The image must also be in GIF,
+ JPEG/JFIF, PNG, PSD or TIFF format. Note that the image content is not
+ converted.</p>
+
+ <p>See also the <tag>emit source=\"imgs\"</tag> for retrieving
+ the same image information without generating the output tag.</short>
 </p></desc>
 
 <attr name='src' value='string' required='required'>
@@ -9155,7 +9170,35 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  be used.</p>
  </attr>
 
+<attr name='quiet' value='string'>
+ <p>If provided, silently ignore run-time errors such as image not found.</p>
+</attr>
+
  <p>All other attributes will be inherited by the generated img tag.</p>",
+
+//----------------------------------------------------------------------
+
+"emit#imgs": ({ #"<desc type='plugin'><p><short>
+ Similar to <tag>imgs</tag> but works as a emit plugin. This emit source
+ returns dimensions and type for a given image file.</short>
+</p></desc>
+
+<attr name='src' value='string' required='required'>
+ <p>The path to the file that should be inspected.</p>
+</attr>
+
+<attr name='quiet' value='string'>
+ <p>If provided, silently ignore run-time errors such as image not found.</p>
+</attr>",
+
+  ([ "&_.xsize;":#"<desc type='entity'><p>
+         The width of the image.</p></desc>",
+     "&_.ysize;":#"<desc type='entity'><p>
+         The height of the image.</p></desc>",
+     "&_.type;":#"<desc type='entity'><p>
+         The type of the image. Supported types are \"gif\", \"jpeg\", \"png\",
+         \"psd\"and \"tiff\".</p></desc>" ])
+  }),
 
 //----------------------------------------------------------------------
 
