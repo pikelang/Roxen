@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.239 2011/01/20 17:23:46 mast Exp $
+# $Id: start,v 1.240 2011/01/21 00:23:25 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -131,7 +131,7 @@ setup_environment
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DRAM_CACHE -DHTTP_COMPRESSION"
+DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
 
 
 # Thread enabling.
