@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.51 2011/01/21 00:58:32 jonasw Exp $";
+constant cvs_version = "$Id: email.pike,v 1.52 2011/01/21 08:46:30 jonasw Exp $";
 
 constant thread_safe=1;
 
@@ -109,7 +109,7 @@ from the mail's MIME headers will be taken.");
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.51 $"/" ")[1];
+string revision = ("$Revision: 1.52 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -272,10 +272,13 @@ class TagEmail {
 	
 	//  Use "nocid" for first attachment (backwards compatibility)
 	//  but counter-based strings for subsequent attachments.
-	int nocid_counter = id->misc["_email_nocid_"]++;
-	content_id   = args->cid || (nocid_counter ?
-				     sprintf("cid_%05d", nocid_counter) :
-				     "nocid");
+	if (args->cid)
+	  content_id = args->cid;
+	else {
+	  int nocid_counter = id->misc["_email_nocid_"]++;
+	  content_id =
+	    nocid_counter ? sprintf("cid_%05d", nocid_counter) : "nocid";
+	}
 	
 	error = catch {
 	  m = MIME.Message(body,
