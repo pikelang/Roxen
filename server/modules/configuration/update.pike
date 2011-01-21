@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.42 2011/01/21 11:14:35 mast Exp $
+ * $Id: update.pike,v 1.43 2011/01/21 19:02:20 mast Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2009, Roxen IS.
@@ -123,6 +123,17 @@ void start(int num, Configuration conf)
   if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
     // Don't do anything - config_filesystem will reload us.
     return;
+
+#ifndef ENABLE_UPDATE_CLIENT
+  // This update system isn't in use, so drop this module.
+  roxen.background_run (0, lambda (Configuration conf) {
+			     conf->disable_module (module_local_id());
+			     conf->save();
+			     conf->save_me();
+			   }, conf);
+  return;
+#endif
+
   if(conf && !inited)
   {
     inited++;
