@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.712 2011/01/20 17:39:41 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.713 2011/01/21 12:20:40 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -251,6 +251,9 @@ class DataCache
       current_size -= CALC_ENTRY_SIZE (key, e[0]);
       if (e[1]->co_handle) {
 	remove_call_out(e[1]->co_handle);
+      }
+      if (CacheKey cachekey = e[1]->key) {
+	destruct (cachekey);
       }
     }
   }
