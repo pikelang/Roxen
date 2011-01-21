@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.123 2010/01/26 17:51:36 jonasw Exp $";
+  "$Id: config_filesystem.pike,v 1.124 2011/01/21 11:12:22 mast Exp $";
 
 constant path = "config_interface/";
 
@@ -117,6 +117,25 @@ mapping logged_in = ([]);
 int last_cache_clear_time;
 mixed find_file( string f, RequestID id )
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver) {
+    // The config interface always runs with the current compatibility
+    // level. Have to reload all modules after changing it, and that
+    // cannot be done directly from here since we'll get recursive
+    // locks then.
+    roxen.background_run (
+      0, lambda (RequestID id) {
+	   Configuration conf = my_configuration();
+	   report_notice ("Adjusting compat level from %s to %s "
+			  "for the config interface\n",
+			  conf->query ("compat_level"), roxen.roxen_ver);
+	   conf->set ("compat_level", roxen.roxen_ver);
+	   conf->save (1);
+	   conf->reload_all_modules();
+	   id->send_result (conf->get_file (id));
+	 }, id);
+    return Roxen.http_pipe_in_progress();
+  }
+
   int is_docs;
   User user;
   string locale = "standard";
@@ -500,25 +519,6 @@ void zap_old_modules()
     my_configuration()->disable_module( "awizard#0" );
   if( my_configuration()->find_module("config_userdb#0") )
     my_configuration()->disable_module( "config_userdb#0" );
-}
-
-void ready_to_receive_requests()
-{
-  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
-    // The config interface always runs with the current compatibility
-    // level. Have to reload all modules after changing it, and that
-    // cannot be done directly from here since we'll get recursive
-    // locks then.
-    roxen.background_run (
-      0, lambda () {
-	   Configuration conf = my_configuration();
-	   report_notice ("Adjusted compat level from %s to %s "
-			  "for the config interface\n",
-			  conf->query ("compat_level"), roxen.roxen_ver);
-	   conf->set ("compat_level", roxen.roxen_ver);
-	   conf->save (1);
-	   conf->reload_all_modules();
-	 });
 }
 
 void create()
