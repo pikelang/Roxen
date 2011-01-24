@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.240 2011/01/21 00:23:25 mast Exp $
+# $Id: start,v 1.241 2011/01/24 16:36:41 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -187,7 +187,7 @@ setup_for_tests() {
     rm -rf "$VARDIR/test_config"*
     DIR="$VARDIR/test_config"
     if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then
-      $PIKE "$SELF_TEST_DIR/scripts/setup.pike" "$SELF_TEST_DIR" "$VARDIR"
+      $PIKE $DEFINES "$SELF_TEST_DIR/scripts/setup.pike" "$SELF_TEST_DIR" "$VARDIR"
     fi
     once=${once:-1}
     debug=1
@@ -373,17 +373,17 @@ parse_args() {
     SELF_TEST_DIR=`echo $1 | sed -e's/^--self-test-dir=//'`
   ;;
   '--self-test')
-    setup_for_tests
+    do_setup_for_tests=1
   ;;
   '--self-test-quiet')
     SILENT_START=y
     do_pipe="| grep '  |'"
-    setup_for_tests
+    do_setup_for_tests=1
     debug=-1
   ;;
   '--self-test-verbose')
     pass="$pass --tests-verbose=1"
-    setup_for_tests
+    do_setup_for_tests=1
   ;;
   '--help'|'-?')
    if [ "x$passhelp" = "x1" ] ; then
@@ -588,6 +588,10 @@ EOF
   esac
   shift
  done
+
+ if [ "x$do_setup_for_tests" = x1 ]; then
+   setup_for_tests
+ fi
 }
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
