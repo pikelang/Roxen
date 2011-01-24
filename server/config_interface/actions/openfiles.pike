@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.14 2011/01/24 13:01:10 mast Exp $
+ * $Id: openfiles.pike,v 1.15 2011/01/24 17:16:56 mast Exp $
  */
 inherit "wizard";
 
@@ -27,6 +27,8 @@ string fix_port(string p)
   if (a[0] == "0.0.0.0") {
     a[0] = "*";
   }
+  if (has_value (a[0], ":"))
+    a[0] = "[" + a[0] + "]";
   if (a[1] == "0") {
     a[1] = "ANY";
   }
