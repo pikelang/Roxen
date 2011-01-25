@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.418 2010/11/02 15:20:09 jonasw Exp $
+// $Id: module.pmod,v 1.419 2011/01/25 20:09:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9694,9 +9694,13 @@ class PCodeDecoder
 	  }
 	  else if (!(config = roxen->get_configuration (what[1])))
 	    error ("Cannot find configuration %O.\n", what[1]);
-	  if (config->compat_level() != what[2])
-	    p_code_stale_error ("P-code is stale - the compatibility level "
-				"has changed since it was encoded.\n");
+	  int int_enc_compat_level = (int) round (what[2] * 1000);
+	  if ((int) (config->compat_level() * 1000) != int_enc_compat_level)
+	    p_code_stale_error ("P-code is stale - it was encoded with "
+				"compatibility level %O, "
+				"but now running with %O.\n",
+				int_enc_compat_level / 1000.0,
+				config->compat_level());
 	  ENCODE_DEBUG_RETURN (config);
 	}
 
