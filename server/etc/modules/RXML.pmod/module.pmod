@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.419 2011/01/25 20:10:39 mast Exp $
+// $Id: module.pmod,v 1.420 2011/01/25 20:21:17 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9446,7 +9446,7 @@ class PCodeEncoder
     this_program::default_config = default_config;
   }
 
-  protected string server_dir = getcwd() + "/";
+  protected string server_dir = combine_path (getcwd()) + "/";
 
   string|array nameof(mixed what)
   {
@@ -9626,7 +9626,7 @@ class PCodeDecoder
     this_program::check_tag_set_hash = check_tag_set_hash;
   }
 
-  protected string server_dir = getcwd() + "/";
+  protected string server_dir = combine_path (getcwd()) + "/";
 
   mixed thingof(string|array what)
   {
