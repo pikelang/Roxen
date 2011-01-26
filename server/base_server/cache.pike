@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.141 2011/01/26 17:34:51 mast Exp $
+// $Id: cache.pike,v 1.142 2011/01/26 18:45:22 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -901,10 +901,13 @@ class CM_GDS_Time
     return 0;
   }
 
-  protected float mean_cost;
-  protected int mean_count = 0;
-  // This is not a real mean value since we (normally) don't keep
-  // track of the cost of each entry. Instead it's a decaying average.
+  protected mapping(string:array(float|int)) mean_costs = ([]);
+  // Stores the mean cost for all entries in each cache. The values
+  // are on the form ({mean, count}), where count is the number of
+  // samples that have contributed to the mean. These are not real
+  // mean values since we (normally) don't keep track of the cost of
+  // each entry. Instead it's a decaying average, where count is
+  // capped at 1000.
 
   float calc_value (string cache_name, CacheEntry entry,
 		    int old_entry, mapping cache_context)
@@ -913,14 +916,13 @@ class CM_GDS_Time
 	entry_create_hrtime (cache_name, entry->key, cache_context)) {
       float cost = entry->cost = (float) hrtime;
 
-      if (!mean_count) {
-	mean_cost = cost;
-	mean_count = 1;
+      if (array(float|int) mean_entry = mean_costs[cache_name]) {
+	[float mean_cost, int mean_count] = mean_entry;
+	mean_entry[0] = (mean_count * mean_cost + cost) / (mean_count + 1);
+	if (mean_count < 1000) mean_entry[1] = mean_count + 1;
       }
-      else {
-	mean_cost = (mean_count * mean_cost + cost) / (mean_count + 1);
-	if (mean_count < 1000) mean_count++;
-      }
+      else
+	mean_costs[cache_name] = ({cost, 1});
 
       return cost / entry->size;
     }
@@ -928,17 +930,16 @@ class CM_GDS_Time
     // Awkward situation: We don't have any cost for this entry. Just
     // use the mean cost of all entries in the cache, so it at least
     // isn't way off in either direction.
-    //
-    // FIXME: This is the mean cost for all caches in this cache
-    // manager. It can be wildly off compared to the other entries in
-    // the same cache.
-    return mean_cost / entry->size;
+    if (array(float|int) mean_entry = mean_costs[cache_name])
+      return mean_entry[0] / entry->size;
+    else
+      return 0.0;		// Here goes nothing.. :P
   }
 
   void evict (int max_size)
   {
     ::evict (max_size);
-    if (!max_size) mean_count = 0;
+    if (!max_size) mean_costs = ([]);
   }
 
   string format_cost (float cost)
