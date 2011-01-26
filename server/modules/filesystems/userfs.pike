@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.72 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.73 2011/01/26 10:00:22 wellhard Exp $";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -261,7 +261,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
     if(!stat || (stat[5] != (int)(us[2])))
     {
-      USERFS_WERR(sprintf("File not owned by user.", u));
+      USERFS_WERR(sprintf("File not owned by user %O.", u));
       return 0;
     }
   }
@@ -269,7 +269,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   if(query("useuserid"))
     id->misc->is_user = f;
 
-  USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
+  USERFS_WERR(sprintf("Forwarding request to inherited filesystem."));
   return filesystem::find_file( f, id );
 }
 
