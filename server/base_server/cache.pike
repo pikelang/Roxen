@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.140 2011/01/20 17:23:46 mast Exp $
+// $Id: cache.pike,v 1.141 2011/01/26 17:34:51 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -928,6 +928,10 @@ class CM_GDS_Time
     // Awkward situation: We don't have any cost for this entry. Just
     // use the mean cost of all entries in the cache, so it at least
     // isn't way off in either direction.
+    //
+    // FIXME: This is the mean cost for all caches in this cache
+    // manager. It can be wildly off compared to the other entries in
+    // the same cache.
     return mean_cost / entry->size;
   }
 
