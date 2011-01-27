@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.277 2011/01/11 08:47:16 marty Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.278 2011/01/27 11:57:22 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -926,8 +926,9 @@ class CacheKey
 
   protected void destroy()
   {
-    foreach (destruction_cbs, [CacheDestructionCB cb, array args]) {
-      cb (this, @args);
+    foreach (destruction_cbs, [CacheDestructionCB cb, int remove_at_activation,
+			       array args]) {
+      if (cb) cb (this, @args);
     }
 
 #if 0
@@ -937,11 +938,17 @@ class CacheKey
 #endif
   }
 
-  void add_destruction_cb (CacheDestructionCB cb, mixed... args)
+  void add_destruction_cb (CacheDestructionCB cb, int remove_at_activation,
+			   mixed... args)
   //! Register a callback that will be called when this cache key is
-  //! destructed. See also @[add_activation_cb].
+  //! destructed. If @[remove_at_activation] is set, the callback will
+  //! be removed when this key is activated. Also, attempts to add
+  //! callbacks with the @[remove_at_activation] flag set when the key
+  //! is already active will be silently ignored. See also
+  //! @[add_activation_cb].
   {
-    destruction_cbs += ({({cb, args })});
+    if (activation_cbs || !remove_at_activation)
+      destruction_cbs += ({({ cb, remove_at_activation, args })});
   }
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
@@ -1036,6 +1043,16 @@ class CacheKey
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
       // Relying on the interpreter lock here too.
       activation_cbs = 0;
+
+      array _destruction_cbs = destruction_cbs;
+      // Remove destruction callbacks set to be removed at activation.
+      _destruction_cbs = filter (_destruction_cbs,
+				lambda (array(CacheDestructionCB|int|array) arg)
+				{
+				  return !arg[1];
+				});
+      if (this) destruction_cbs = _destruction_cbs;
+
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
 	werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
