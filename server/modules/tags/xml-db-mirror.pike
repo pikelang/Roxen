@@ -368,7 +368,7 @@ int(0..1) import_xml(string path, string xml)
   mixed err = catch {
       xml = Parser.XML.autoconvert(xml);
 	  // BOM handling...
-      if (has_prefix(xml, "ï»¿")) {
+      if (has_prefix(xml, "\xef\xbb\xbf")) {
         xml = utf8_to_string(xml)[1..];
       } else if (has_prefix(xml, "\xfeff")) {
         xml = xml[1..];
