@@ -34,18 +34,19 @@ class Fetcher
   void create()
   {
     call_out( Fetcher, 3600 );
-    string url = "/crunch/changed.xml?date="+crunch_date( time()-24*60*60*7 );
+    string url = "/bugzilla/buglist.cgi?ctype=atom&chfieldfrom=" +
+      crunch_date( time()-24*60*60*7 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
-    query->async_request( "community.roxen.com", 80,
+    query->async_request( "bugzilla.roxen.com", 80,
 			  "GET "+url+" HTTP/1.0",
-			  ([ "Host":"community.roxen.com:80" ]) );
+			  ([ "Host":"bugzilla.roxen.com:80" ]) );
   }
 }
 
 
 class Data( string data )
 {
-  class Bug( int id, string short, string created,
+  class Bug( int id, string href, string short, string created,
 	     string product, string component,
 	     string version, string opsys, string arch,
 	     string severity, string priority, string status,
@@ -57,7 +58,8 @@ class Data( string data )
 	  (version > roxen.roxen_ver) )
 	return "";
 
-      if( (product == "Pike") && (abs((float)version - __VERSION__) > 0.09) )
+      if( (product == "Pike") && sizeof(version) &&
+	  (abs((float)version - __VERSION__) > 0.09) )
 	return "";
 
       switch( status )
@@ -82,11 +84,10 @@ class Data( string data )
 	case "Image Module":
 	  component = "Image";
       }
-      return "<tr valign=top><td align=right><font size=-1>"
-	"<a href='http://community.roxen.com/"+	id+"'>"+id+"</a></font></td>"
+      return "<tr valign=top>"
 	"<td><font size=-1>"+(product - "Roxen WebServer")+
 	" <nobr>"+(component-"Other ")+"</nobr></font></td>"
-	"<td><font size=-1>"+short+"</font></td>"
+	"<td><font size=-1><a href='"+ href +"'>"+short+"</a></font></td>"
 	"<td><font size=-1>"+lower_case(status)+"</font></td></tr>";
     }
 
@@ -105,18 +106,88 @@ class Data( string data )
 
   array(Bug) parsed;
 
-  void parse_bug( Parser.HTML b, mapping m )
+  Parser.HTML entry_parser;
+
+  Parser.HTML summary_parser;
+
+  static mapping md;
+
+  string parse_summary_tr(Parser.HTML x, mapping m, string content)
   {
-    parsed += ({ Bug( (int)m->id, m->short, m->created,
-		      m->product, m->component, m->version,
-		      m->opsys, m->arch, m->severity,
-		      m->priority, m->status, m->resolution ) });
+    md->summary_class = m->class;
+    return content;
+  }
+
+  void parse_summary_td(Parser.HTML x, mapping m, string value)
+  {
+    if (!md["summary_" + md->summary_class + "_label"]) {
+      md["summary_" + md->summary_class + "_label"] = value;
+    } else {
+      md["summary_" + md->summary_class + "_value"] = value;
+    }
+  }
+
+  void parse_title(Parser.HTML x, mapping m, string title)
+  {
+    md->title = title;
+  }
+
+  void parse_link(Parser.HTML x, mapping m)
+  {
+    md->href = m->href;
+  }
+
+  void parse_id(Parser.HTML x, mapping m, string id)
+  {
+    md->id = ((("&" + (id/"?")[1])/"&id=")[1]/"&")[0];
+  }
+
+  void parse_name(Parser.HTML x, mapping m, string name)
+  {
+    md->author = name;
+  }
+
+  void parse_updated(Parser.HTML x, mapping m, string updated)
+  {
+    md->updated = updated;
+  }
+
+  void parse_summary(Parser.HTML x, mapping m, string summary)
+  {
+    summary_parser->finish(Parser.parse_html_entities(summary))->read();
+  }
+
+  void parse_entry(Parser.HTML b, mapping m, string content)
+  {
+    md = ([]);
+    entry_parser->finish(content)->read();
+    parsed += ({ Bug( (int)md->id, md->href, md->title, md->updated,
+		      md->summary_bz_feed_product_value||"",
+		      md->summary_bz_feed_component_value||"",
+		      md->summary_bz_feed_version_value||"",
+		      md->summary_bz_feed_opsys_value||"",
+		      md->summary_bz_feed_arch_value||"",
+		      md->summary_nz_feed_severity_value||"",
+		      md->summary_bz_feed_priority_value||"",
+		      md->summary_bz_feed_bug_status_value||"",
+		      md->summary_bz_feed_resolution_value||"" ) });
   }
   
   void parse( )
   {
     parsed = ({});
-    Parser.HTML()->add_tag( "bug", parse_bug )->finish( data )->read();
+    entry_parser = Parser.HTML()->
+      add_container("title", parse_title)->
+      add_tag("link", parse_link)->
+      add_container("id", parse_id)->
+      add_container("author", parse_name)->
+      add_container("updated", parse_updated)->
+      add_container("summary", parse_summary);
+    summary_parser = Parser.HTML()->
+      add_container("tr", parse_summary_tr)->
+      add_container("td", parse_summary_td);
+    Parser.HTML()->add_container( "entry", parse_entry )->
+      finish( data )->read();
   }
   
   string get_page()
