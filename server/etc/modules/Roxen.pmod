@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.304 2011/01/20 14:01:01 grubba Exp $
+// $Id: Roxen.pmod,v 1.305 2011/02/02 16:38:21 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2783,6 +2783,11 @@ protected string low_roxen_encode(string val, string encoding)
    case "oracle":
      return replace (val, "'", "''");
 
+  case "bytea":
+    return replace (val,
+		    ({ "'", "\\", "\0", "&" }),
+		    { "\\'", "\\\\\\\\", "\\\\000", "\\\\046" }) );
+
    case "csv":
      if (sizeof(val) &&
 	 ((<' ', '\t'>)[val[0]] || (<' ', '\t'>)[val[-1]] ||
@@ -2914,6 +2919,9 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //!     NOTE: Do NOT use this quoting method when creating
 //!           sql-queries intended for MySQL!
+//!
+//!   @value "bytea"
+//!     PostgreSQL quoting for BYTEA (binary) values.
 //!
 //!   @value "mysql-pike"
 //!     Compat. MySQL quoting followed by Pike string quoting.
