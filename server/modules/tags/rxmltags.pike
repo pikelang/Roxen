@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.640 2011/01/21 10:41:41 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.641 2011/02/07 12:46:52 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -180,6 +180,19 @@ private string try_decode_image(string data, void|string var) {
     return my_configuration()->type_from_filename("nonenonenone");
 }
 
+// ----------------- Vary callbacks ----------------------
+
+static string client_ip_cb(string ignored, RequestId id)
+{
+  return id->remoteaddr;
+}
+
+static string client_host_cb(string ignored, RequestId id)
+{
+  if (id->host) return id->host;
+  return id->host=roxen.quick_ip_to_host(id->remoteaddr);
+}
+
 // ----------------- Entities ----------------------
 
 class EntityClientTM {
@@ -213,8 +226,8 @@ class EntityClientName {
 class EntityClientIP {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->register_vary_callback(0);
-    return c->id->remoteaddr;
+    c->id->register_vary_callback(0, client_ip_cb);
+    return client_ip_cb(UNDEFINED, c->id);
   }
 }
 
@@ -267,9 +280,8 @@ class EntityClientLanguages {
 class EntityClientHost {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->register_vary_callback(0);
-    if(c->id->host) return c->id->host;
-    return c->id->host=roxen.quick_ip_to_host(c->id->remoteaddr);
+    c->id->register_vary_callback(0, client_host_cb);
+    return client_host_cb(UNDEFINED, c->id);
   }
 }
 
@@ -6884,8 +6896,8 @@ class TagIfDomain {
   constant plugin_name = "domain";
   constant cache = -1;
   string source(RequestID id) {
-    id->register_vary_callback(0);
-    return id->host;
+    id->register_vary_callback(0, client_host_cb);
+    return client_host_cb(UNDEFINED, id);
   }
 }
 
@@ -6894,8 +6906,8 @@ class TagIfIP {
   constant plugin_name = "ip";
   constant cache = -1;
   string source(RequestID id) {
-    id->register_vary_callback(0);
-    return id->remoteaddr;
+    id->register_vary_callback(0, client_ip_cb);
+    return client_ip_cb(UNDEFINED, id);
   }
 }
 
