@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.279 2011/01/21 15:21:06 marty Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.280 2011/02/07 12:50:35 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2121,6 +2121,9 @@ class RequestID
   void register_vary_callback(string|void vary,
 			      function(string, RequestID: string|int)|void cb)
   {
+    if (!(vary || cb)) {
+      error("Vary: At least one of the arguments MUST be specified.\n");
+    }
     // Don't generate a vary header for the Host header.
     if (vary != "host") {
       if (!misc->vary) {
