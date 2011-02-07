@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.643 2011/02/07 12:46:24 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.644 2011/02/07 13:03:34 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -182,12 +182,12 @@ private string try_decode_image(string data, void|string var) {
 
 // ----------------- Vary callbacks ----------------------
 
-static string client_ip_cb(string ignored, RequestId id)
+static string client_ip_cb(string ignored, RequestID id)
 {
   return id->remoteaddr;
 }
 
-static string client_host_cb(string ignored, RequestId id)
+static string client_host_cb(string ignored, RequestID id)
 {
   if (id->host) return id->host;
   return id->host=roxen.quick_ip_to_host(id->remoteaddr);
