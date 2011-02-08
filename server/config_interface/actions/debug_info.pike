@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.45 2009/12/15 15:56:24 grubba Exp $
+ * $Id: debug_info.pike,v 1.46 2011/02/08 08:46:26 marty Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -75,6 +75,22 @@ mixed page_0( object id )
     walked_objects++;
     obj = next_obj;
   }
+
+  // We need to convert the objects to strings here already, in order
+  // to release object references before threads_disabled is released
+  // below. The extra references might otherwise cause problems with
+  // e.g. Thread.MutexKey objects that are normally expected to only
+  // have references from the stack of the owning thread.
+  foreach (allobj; string|program prog; array objs)
+    for (int i = 0; i < sizeof (objs); i++) {
+      if (catch {
+	  // The object might have become destructed since the walk above.
+	  // Just ignore it in that case.
+	  objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+	})
+	objs[i] = 0;
+    }
+
   mapping(string:int) mem_usage_afterwards = _memory_usage();
   int num_things_afterwards =
     mem_usage_afterwards->num_arrays +
@@ -183,16 +199,6 @@ mixed page_0( object id )
   mapping save_numobjs = roxen->query_var( "__num_clones" );
   int no_save_numobjs = !save_numobjs;
   if (no_save_numobjs) save_numobjs = ([]);
-
-  foreach (allobj; string|program prog; array objs)
-    for (int i = 0; i < sizeof (objs); i++) {
-      if (catch {
-	  // The object might have become destructed since the walk above.
-	  // Just ignore it in that case.
-	  objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
-	})
-	objs[i] = 0;
-    }
 
   if (destructed_objs) {
     allobj["    "] = ({"<destructed object>"});
