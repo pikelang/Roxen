@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.713 2011/01/21 12:20:40 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.714 2011/02/09 08:21:57 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -606,6 +606,8 @@ int http_compr_maxlen;
 int(0..1) http_compr_dynamic_reqs;
 Thread.Local gz_file_pool = Thread.Local();
 #endif
+
+int handler_queue_timeout;
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
@@ -5556,7 +5558,96 @@ low."))->add_changed_callback(lambda(object v)
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(420, "What to return when an authentication attempt failed."));
 
+  if (!retrieve ("EnabledModules", this)["config_filesystem#0"]) {
+    // Do not use a handler queue timeout of the administration
+    // interface. You most probably don't want to get a 503 in your
+    // face when you're trying to reconfigure an overloaded server...
+    defvar("503-message", #"<html>
+<head>
+  <title>503 - Server Too Busy</title>
+  <style>
+    .header { font-family:  arial;
+            font-size:      20px;
+            line-height:    160% }
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='50' rightmargin='0' topmargin='50' bottommargin='0'
+      style='margin: 0; padding: 0'>
 
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr><td height='50'></td></tr>
+  <tr>
+    <td width='100'></td>
+    <td>
+      <div class='header'>503 &mdash; Server Too Busy</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>
+        The server is currently too busy to serve your request. Please try again in a few moments.
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr valign='bottom' height='100%'>
+    <td></td>
+    <td>
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+   </td>
+   <td></td>
+ </tr>
+</table>
+
+</body>
+</html>",
+	   DLOCALE(0, "Server too busy message"),
+	   TYPE_TEXT_FIELD|VAR_PUBLIC,
+	   DLOCALE(0, "What to return if the server is too busy. See also "
+		   "\"Handler queue timeout\"."));
+
+    defvar("handler_queue_timeout", 30,
+	   DLOCALE(0, "Handler queue timeout"),
+	   TYPE_INT,
+	   DLOCALE(0, #"Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+\"Server too busy message\" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load."))
+      ->add_changed_callback(lambda(object v)
+			     { handler_queue_timeout = v->query(); });
+    handler_queue_timeout = query("handler_queue_timeout");
+  }
 
 #ifdef SNMP_AGENT
   // SNMP stuffs

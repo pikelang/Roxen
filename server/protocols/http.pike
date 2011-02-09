@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.636 2010/12/08 14:56:03 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.637 2011/02/09 08:21:57 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2978,6 +2978,21 @@ void handle_request( )
   
   int now = gethrtime();
   queue_time = now - queue_time;
+
+  // Let's see if the queue time was so long that we should return a
+  // "503 - server too busy" response..
+  int queue_timeout = conf->handler_queue_timeout;
+  if (queue_timeout && queue_time/1E6 > queue_timeout) {
+    file = Roxen.http_rxml_answer (conf->query ("503-message"),
+				   this, 0, "text/html");
+    file->error = Protocols.HTTP.HTTP_UNAVAIL;
+    NO_PROTO_CACHE();
+    handle_time = 0;
+    handle_vtime = 0;
+    TIMER_END(handle_request);
+    send_result();
+    return;
+  }
 
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
