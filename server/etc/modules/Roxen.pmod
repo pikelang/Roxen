@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.305 2011/02/02 16:38:21 grubba Exp $
+// $Id: Roxen.pmod,v 1.306 2011/02/11 16:22:41 marty Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2786,7 +2786,7 @@ protected string low_roxen_encode(string val, string encoding)
   case "bytea":
     return replace (val,
 		    ({ "'", "\\", "\0", "&" }),
-		    { "\\'", "\\\\\\\\", "\\\\000", "\\\\046" }) );
+		    ({ "\\'", "\\\\\\\\", "\\\\000", "\\\\046" }) );
 
    case "csv":
      if (sizeof(val) &&
