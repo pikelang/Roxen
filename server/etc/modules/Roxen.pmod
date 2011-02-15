@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.306 2011/02/11 16:22:41 marty Exp $
+// $Id: Roxen.pmod,v 1.307 2011/02/15 13:36:57 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -17,6 +17,77 @@
 
 // Tell Pike.count_memory this is global.
 constant pike_cycle_depth = 0;
+
+// Error handling tools
+
+enum OnError {
+  THROW_INTERNAL = 0,	//! Throw a generic error.
+  THROW_RXML,		//! Throw an RXML run error.
+  LOG_ERROR,		//! Log the error and return @expr{0@} (zero).
+  RETURN_ZERO,		//! Return @expr{0@} (zero).
+};
+//! Flags to control the error handling in various functions taking an
+//! argument of this type.
+//!
+//! Typical use is as an argument to a function that in turn
+//! calls @[raise_err()] in order to handle an error.
+//!
+//! @note
+//!   This covers only specific types of errors that the function might
+//!   generate. Other errors might throw internal exceptions or return
+//!   zero. See the function docs.
+//!
+//! @seealso
+//!   @[raise_err()]
+
+int(0..0) raise_err (OnError on_error, sprintf_format msg,
+		     sprintf_args... args)
+//! Trig an error according to @[on_error].
+//!
+//! Typical use is as an expression in a @expr{return@} statement.
+//!
+//! @param on_error
+//!   Method to signal the error:
+//!   @int
+//!     @value THROW_INTERNAL
+//!       Throw a generic exception (@expr{"internal server error"@}).
+//!       Use this for error conditions that never should
+//!       happen if the code is correct. This is the default.
+//!   
+//!     @value THROW_RXML
+//!       Throw the error as a RXML run error.
+//!       Convenient in rxml tag implementations.
+//!   
+//!     @value LOG_ERROR
+//!       Print a message using @[report_error] and
+//!       return @expr{0@} (zero).
+//!   
+//!     @value RETURN_ZERO
+//!       Just return @expr{0@} (zero).
+//!   @endint
+//!
+//! @param msg
+//!   Error message.
+//!
+//! @param args
+//!   @[sprintf()] parameters for @[msg] (if any).
+//!
+//! @returns
+//!   If the function returns, it will always be the
+//!   value @expr{0@} (zero).
+//!
+//! @seealso
+//!   @[OnError]
+{
+  switch(on_error) {
+    case LOG_ERROR: report_error(msg, @args); break;
+    case RETURN_ZERO: break;
+    case THROW_RXML: RXML.run_error(msg, @args);
+    default: error(msg, @args);
+  }
+  return 0;
+}
+
 
 // Thunks to be able to access the cache from here, since this module
 // is compiled and instantiated before cache.pike.
