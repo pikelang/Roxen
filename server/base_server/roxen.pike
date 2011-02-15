@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1079 2011/01/20 17:40:45 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1080 2011/02/15 13:51:39 marty Exp $";
 
 //! @appears roxen
 //!
@@ -1908,7 +1908,16 @@ class Protocol
 	  if(!(c=mu->conf)->inited ) {
 	    handle (lambda () {
 		      c->enable_all_modules();
-		      call_out (requesthandler, 0, q, this, c);
+		      call_out (lambda ()
+				{
+				  // The connection might have been
+				  // closed already, e.g. by
+				  // http_fallback.ssl_alert_callback()
+				  // (prot_https.pike). Avoid a
+				  // backtrace in that case.
+				  if (q->is_open())
+				    requesthandler (q, this, c);
+				}, 0);
 		    });
 	    return;
 	  }
