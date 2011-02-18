@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.712 2011/01/27 11:57:50 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.713 2011/02/18 09:58:12 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3508,6 +3508,33 @@ int start(int num)
 					    "Number of queue runs longer than 15 seconds."),
 			     }),
 			   })
+			 }),
+			 ({
+			   UNDEFINED,
+			   SNMP.Counter(lambda()
+					{ return datacache->hits + datacache->misses; },
+			     "protCacheLookups",
+			     "Number of protocol cache lookups."),
+			   SNMP.Counter(lambda()
+					{ return datacache->hits; },
+			     "protCacheHits",
+			     "Number of protocol cache hits."),
+			   SNMP.Counter(lambda()
+					{ return datacache->misses; },
+			     "protCacheMisses",
+			     "Number of protocol cache misses."),
+			   SNMP.Gauge(lambda()
+				      { return sizeof(datacache->cache); },
+			     "protCacheEntries",
+			     "Number of protocol cache entries."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->max_size/1024; },
+			     "protCacheMaxSize",
+			     "Maximum size of protocol cache in KiB."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->current_size/1024; },
+			     "protCacheCurrSize",
+			     "Current size of protocol cache in KiB."),
 			 })
 		       }));
       SNMP.set_owner(mib, this_object());
