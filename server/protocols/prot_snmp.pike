@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.19 2011/02/18 13:19:51 wellhard Exp $
+ * $Id: prot_snmp.pike,v 2.20 2011/02/18 15:35:24 wellhard Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.19 $"/" ")[1],
+			   ("$Revision: 2.20 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -550,6 +550,48 @@ class RoxenGlobalMIB
 		     "pikeMemString",
 		     "Size of pike strings in KiB."),
 		 })
+	       }),
+	       ({
+		 UNDEFINED,
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->alloc_threshold; },
+		   "gcAllocThreshold",
+		   "Threshold for gcNumAllocs when another automatic gc run is "
+		   "scheduled."),
+		 UNDEFINED,  /* Reserved for gc_time */
+		 UNDEFINED,  /* Reserved for last_garbage_ratio */
+		 UNDEFINED,  /* Reserved for last_garbage_strategy */
+		 SNMP.Tick(lambda()
+			   { return (time(1) - Debug.gc_status()->last_gc)*100; },
+		   "gcLastRun",
+		   "Time from last garbage-collector run in centiseconds."),
+		 UNDEFINED,  /* Reserved for non_gc_time */
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->num_allocs; },
+		   "gcNumAllocs",
+		   "Number of memory allocations since the last gc run."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->num_objects; },
+		   "gcNumObjects",
+		   "Number of arrays, mappings, multisets, objects and programs."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->objects_alloced; },
+		   "gcObjectsAlloced",
+		   "Decaying average over the number of allocated objects between "
+		   "gc runs."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->objects_freed; },
+		   "gcObjectsFreed",
+		   "Decaying average over the number of freed objects in each gc run."),
+		 UNDEFINED,  /* Reserved for projected_garbage */
+		 SNMP.Counter(lambda()
+			    { return Debug.gc_status()->total_gc_cpu_time/10000000; },
+		   "gcTotalCpuTime",
+		   "Total CPU time spent inside the garbage collector in centiseconds."),
+		 SNMP.Counter(lambda()
+			    { return Debug.gc_status()->total_gc_real_time/10000000; },
+		   "gcTotalRealTime",
+		   "Total real time spent inside the garbage collector in centiseconds."),
 	       }),
 	     }));
   }
