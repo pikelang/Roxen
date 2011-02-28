@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.43 2009/03/18 21:29:33 mast Exp $
+ * $Id: create_configif.pike,v 1.44 2011/02/28 13:29:43 anders Exp $
  *
  * Create an initial administration interface server.
  */
@@ -318,7 +318,7 @@ ent text/html
     <str>Automatically created by create_configuration</str>
   </var>
   <var name='compat_level'>
-    <str>5.0</str>
+    <str>5.2</str>
   </var>
 
   <var name='name'>
