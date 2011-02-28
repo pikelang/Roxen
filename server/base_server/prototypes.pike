@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.279 2011/02/07 12:50:39 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.280 2011/02/28 17:45:26 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2486,7 +2486,7 @@ class RequestID
     if (misc->defines && misc->defines[" _extra_heads"]) {
       misc->defines[" _extra_heads"][name] = value;
       if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
-	ctx->signal_var_change (name, "header");
+	ctx->signal_var_change (name, "header", value);
     }
     else {
       if (!misc->moreheads) misc->moreheads = ([]);

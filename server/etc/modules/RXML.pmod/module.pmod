@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.420 2011/01/25 20:21:17 mast Exp $
+// $Id: module.pmod,v 1.421 2011/02/28 17:45:24 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2229,17 +2229,19 @@ class Context
     return (string) ++last_internal_var_id;
   }
 
-  void signal_var_change (string var, void|string scope_name)
+  void signal_var_change (string var, void|string scope_name, void|mixed val)
   //! Call this when the variable @[var] in the specified scope has
   //! changed in some other way than by calling a function in this
   //! class. If necessary, this will register the variable and its
   //! current value in generated p-code (see @[set_misc] for further
   //! details). The current scope is used if @[scope_name] is left
-  //! out.
+  //! out. The caller can provide a overriding value which is needed when
+  //! modifying e.g. the outgoing headers via extra_heads.
   {
     if (array rec_chgs = misc->recorded_changes) {
       if (!scope_name) scope_name = "_";
-      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = scopes[scope_name][var];
+      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] =
+	(val == UNDEFINED) ? scopes[scope_name][var] : val;
     }
   }
 
