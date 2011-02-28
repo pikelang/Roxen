@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.307 2011/02/15 13:36:57 grubba Exp $
+// $Id: Roxen.pmod,v 1.308 2011/02/28 13:58:33 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5007,7 +5007,14 @@ string get_world(array(string) urls) {
 			       "/etc" }), "ifconfig");
     local_addrs = dns[1];
     if (ifconfig) {
-      foreach(Process.run(({ ifconfig, "-a" }))->stdout/"\n", string line) {
+      foreach(Process.run(({ ifconfig, "-a" }),
+			  ([ "env":getenv() +
+			     ([
+			       // Make sure the output is not affected
+			       // by the locale. cf [bug 5898].
+			       "LC_ALL":"C",
+			       "LANG":"C",
+			     ])]))->stdout/"\n", string line) {
 	int i;
 
 	// We need to parse lines with the following formats:
