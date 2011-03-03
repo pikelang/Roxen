@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.421 2011/02/28 17:45:26 jonasw Exp $
+// $Id: module.pmod,v 1.422 2011/03/03 08:50:04 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2241,7 +2241,7 @@ class Context
     if (array rec_chgs = misc->recorded_changes) {
       if (!scope_name) scope_name = "_";
       rec_chgs[-1][encode_value_canonic (({scope_name, var}))] =
-	(val == UNDEFINED) ? scopes[scope_name][var] : val;
+	zero_type (val) ? scopes[scope_name][var] : val;
     }
   }
 
