@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.637 2011/02/09 08:21:57 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.638 2011/03/06 14:48:54 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1122,15 +1122,13 @@ private int parse_got( string new_data )
     leftovers = data;
     data = "";
   }
-  if (sizeof(data)) {
-    switch(method) {
-    case "POST":
-      // FIXME: Get this POST variable munching out of the backend thread!
+  if (sizeof(data) && method == "POST") {
+    // FIXME: Get this POST variable munching out of the backend thread!
 
-      // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
-      // and rfc 2388 for specs of the format of form submissions.
-      switch (misc->content_type_type)
-      {
+    // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
+    // and rfc 2388 for specs of the format of form submissions.
+    switch (misc->content_type_type)
+    {
       case "application/x-www-form-urlencoded": {
 	// Form data.
 
@@ -1291,8 +1289,6 @@ private int parse_got( string new_data )
 	}
 	break;
       }
-      }
-      break;
     }
   }
   TIMER_END(parse_got_2_more_data);
