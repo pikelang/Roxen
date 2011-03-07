@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.205 2009/11/17 09:56:05 anders Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.206 2011/03/07 13:01:49 grubba Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1323,13 +1323,25 @@ class TagUploadLicense
       string s = RXML.user_get_var(args["from"]);
       if(!s || sizeof(s) < 10)
 	RXML.run_error("Specified licens file is not valid %O.\n", filename);
-      int bytes = Stdio.write_file(tmpname, s);
-      if(bytes != sizeof(s))
-	RXML.run_error("Could not write file %O.\n", tmpname);
+      Privs privs =
+	Privs(sprintf("Creating temporary licence file %O.", tmpname));
+      if (mixed err = catch {
+	  int bytes = Stdio.write_file(tmpname, s);
+	  privs = UNDEFINED;
+	  if(bytes != sizeof(s))
+	    RXML.run_error("Could not write file %O.\n", tmpname);
+	}) {
+	privs = UNDEFINED;
+	throw(err);
+      }
+      privs = UNDEFINED;
 
       License.Key(license_dir, args["filename"]+"~");
       
+      privs = Privs(sprintf("Renaming to permanent licence file %O.",
+			    filename));
       mv(tmpname, filename);
+      privs = UNDEFINED;
     }
   }
 }
