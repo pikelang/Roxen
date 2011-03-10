@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.142 2011/01/26 18:45:22 mast Exp $
+// $Id: cache.pike,v 1.143 2011/03/10 23:05:58 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -103,7 +103,7 @@ class CacheEntry (mixed key, mixed data)
       else
 	return sprintf ("%q", key);
     }
-    else if (objectp (key))
+    else if (intp (key) || floatp (key) || objectp (key))
       return sprintf ("%O", key);
     else
       return sprintf ("%t", key);
@@ -524,8 +524,9 @@ class CM_GreedyDual
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O)",
-				     format_key(), size, value);
+      return flag == 'O' &&
+	sprintf ("CM_GreedyDual.CacheEntry(%O: %s, %db, %O)",
+		 pval, format_key(), size, value);
     }
   }
 
@@ -545,6 +546,26 @@ class CM_GreedyDual
   // significant bits remains when v(p) is added to it. In that case
   // max_used_pval only works as a flag, and we set it to
   // Int.NATIVE_MAX when that state is reached.
+
+#ifdef CACHE_DEBUG
+  protected void debug_check_priority_list()
+  // Assumes no concurrent access - run inside _disable_threads.
+  {
+    werror ("Checking priority_list with %d entries.\n",
+	    sizeof (priority_list));
+    CacheEntry prev;
+    foreach (priority_list; CacheEntry entry;) {
+      if (!prev)
+	prev = entry;
+      else if (prev >= entry)
+	error ("Found cache entries in wrong order: %O vs %O in %O\n",
+	       prev, entry, priority_list);
+      if (intp (entry->pval) && entry->pval > max_used_pval)
+	error ("Found %O with pval higher than max %O.\n",
+	       entry, max_used_pval);
+    }
+  }
+#endif
 
   int|float calc_value (string cache_name, CacheEntry entry,
 			int old_entry, mapping cache_context);
@@ -642,8 +663,11 @@ class CM_GreedyDual
 	else {
 	  // Got the lock so it can't be a race, i.e. the priority_list order
 	  // is funky. Have to rebuild it without interventions.
+#ifdef CACHE_DEBUG
+	  debug_check_priority_list();
+#endif
 	  report_warning ("Warning: Recovering from race inconsistency "
-			  "in %O->priority_list.\n", this);
+			  "in %O->priority_list (on %O).\n", this, entry);
 	  priority_list = (<>);
 	  foreach (lookup; string cache_name; mapping(mixed:CacheEntry) lm)
 	    foreach (lm;; CacheEntry entry)
@@ -716,6 +740,10 @@ class CM_GreedyDual
 	      }
 	    }
 
+#ifdef CACHE_DEBUG
+      debug_check_priority_list();
+#endif
+
       if (intp (max_pval))
 	max_used_pval = max_pval;
 
@@ -769,8 +797,9 @@ class CM_GDS_Time
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O, %O)",
-				     format_key(), size, value, cost);
+      return flag == 'O' &&
+	sprintf ("CM_GDS_Time.CacheEntry(%O: %s, %db, %O, %O)",
+		 pval, format_key(), size, value, cost);
     }
   }
 
@@ -908,6 +937,9 @@ class CM_GDS_Time
   // mean values since we (normally) don't keep track of the cost of
   // each entry. Instead it's a decaying average, where count is
   // capped at 1000.
+  //
+  // FIXME: Nowadays we actually do keep track of the cost for each
+  // entry.
 
   float calc_value (string cache_name, CacheEntry entry,
 		    int old_entry, mapping cache_context)
