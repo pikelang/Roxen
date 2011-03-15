@@ -798,7 +798,6 @@ mapping|string parse( RequestID id )
 	  {
 	    switch( field->type  )
 	    {
-	      case "bit":
 	      case "char":	// Actually a TINYINT.
 	      case "short":
 	      case "int":
@@ -820,6 +819,7 @@ mapping|string parse( RequestID id )
 		qres += "<th class='num'>";
 		col_types += ({"string"});
 		break;
+	      case "bit":
 	      default:
 		qres += "<th>";
 		col_types += ({"string"});
@@ -856,7 +856,7 @@ mapping|string parse( RequestID id )
 		if( is_encode_value( tmp ) )
 		  qres += format_decode_value(tmp);
 		else
-		  qres += Roxen.html_encode_string(tmp);
+		  qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	      }
 	      qres += "</td>";
 	    }
