@@ -12,6 +12,7 @@ LocaleString box_doc  = _(262,"Recently changed Crunch reports");
 
 class Fetcher
 {
+  mapping|int cache_context;
   Protocols.HTTP.Query query;
   string crunch_date( int t )
   {
@@ -22,7 +23,7 @@ class Fetcher
   void done( Protocols.HTTP.Query q )
   {
     crunch_data = Data( query->data() );
-    cache_set( "box_data", "crunch", query->data(), 9000 );
+    cache_set( "crunch_data", "data", query->data(), 9000, cache_context );
     destruct();
   }
   
@@ -31,9 +32,10 @@ class Fetcher
     crunch_data = Data("");
   }
 
-  void create()
+  void create(mapping|int cache_context)
   {
-    call_out( Fetcher, 3600 );
+    this_program::cache_context = cache_context;
+    call_out( Fetcher, 3600, 1 );
     string url = "/bugzilla/buglist.cgi?ctype=atom&chfieldfrom=" +
       crunch_date( time()-24*60*60*7 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
@@ -209,14 +211,15 @@ string parse( RequestID id )
   if( !crunch_data )
   {
     string data;
-    if( !(data = cache_lookup( "crunch_data", "data" )) )
+    mapping cache_context = ([]);
+    if( !(data = cache_lookup( "crunch_data", "data", cache_context )) )
     {
       if( !fetcher )
-	fetcher = Fetcher();
+	fetcher = Fetcher(cache_context);
       contents = "Fetching data from Crunch...";
     } else {
       crunch_data = Data( data );
-      call_out( Fetcher, 3600 );
+      call_out( Fetcher, 3600, 1 );
       contents = crunch_data->get_page();
     }
   } else
