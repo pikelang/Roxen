@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.715 2011/02/18 09:58:19 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.716 2011/03/15 15:49:48 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3634,7 +3634,7 @@ void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
   if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
       module_post_callbacks[func]) {
     if (!mod_name)
-      sscanf (mod->module_local_id(), "%[^#]", mod_name);
+      sscanf (otomod[mod] || mod->module_local_id(), "%[^#]", mod_name);
     array(function(RoxenModule,mixed...:void)) cbs;
     if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
       func_cbs[mod_name] = (a -= ({0}));
@@ -4049,6 +4049,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
+
+  if (me->not_a_module) nostart = 1;
 
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
