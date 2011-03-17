@@ -34,14 +34,14 @@ mapping|string parse( RequestID id )
   
   string error="",form =
 #"
-<gtext scale=0.6>"+_(450,"Create a new database group")+#"</gtext><br />
-"+_(451,"The groups are used mainly to group the databases in the\n"
-"Administration interface, but also to indicate the default MySQL server\n"
-"external databases will be created in.\n"
-"\n"
-"<p> If a group has a URL set, it will be used to select the database\n"
-"server in which the database will be created. Please note that this\n"
-    "server must be a MySQL server, nothing else will work.\n")+#"<br /><p>
+<h3>"+_(450,"Create a new database group")+#"</h3>
+"+_(451,#"<p>The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL
+server external databases will be created in.</p>
+
+<p>If a group has a URL set, it will be used to select the database
+server in which the database will be created. Please note that it
+server must be a MySQL server.</p>")+#"<p>
 <font size=+1><b>ERROR</b></font>
 <table>
   <tr>
@@ -50,29 +50,28 @@ mapping|string parse( RequestID id )
   </tr>
   <tr>
   <td valign=top colspan='2'>
-    <i>"+_(453,"The identifier of the group. This is used internally in Roxen,"
+    "+_(453,"The identifier of the group. This is used internally in Roxen,"
 	   " and must be unique. "
-	   "If you leave it as automatic, a ID will be selected "
+	   "If you leave it as automatic, an identifier is selected "
 	   "automatically.")+#"
-     </i>
    </td>
    <td valign=top colspan='2' width='100%'>
-
-        <i>"+_(454,"The name of the database group. This is what is"
-	       " shown in the configuration interface")+#"</i>
+     "+_(454,"The name of the database group. This is what is"
+	 " shown in the configuration interface.")+#"
    </td>
  </tr>
   <tr>
      <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
       <td colspan=3>mysql://<input name='url' size=30 value='&form.url;'/></td>
       </tr>
-      <tr><td valign=top colspan='4'><i>
-      "+_(455,"This URL is only used when </i>Internal<i> databases is "
-	  "created in this group, and it specified which MySQL server "
-	  "the datbase should be created in. As an example, if you want all "
-	  "databases created in the group to end up in the MySQL running "
-	  "on the host </i>wyrm<i>, using the account with the username </i>foo<i> and "
-	  "password </i>bar<i>, set this URL to </i>foo:bar@wyrm<i>")+
+      <tr><td valign=top colspan='4'>
+      "+_(455, #"\
+This URL is used for <i>internal</i> databases created in this group,
+and it specifies which MySQL server they should be created in. As an
+example, if you want all databases created in the group to end up in
+the MySQL running on the host <i>wyrm</i>, using the account with
+the username <i>foo</i> and password <i>bar</i>, set this URL to
+<i>foo:bar@wyrm</i>.")+
     "</td></tr>"
 #"<tr><td valign=top><nbsp><b>"+_(448,"Comment")+#":</b></nbsp></td>
       <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
