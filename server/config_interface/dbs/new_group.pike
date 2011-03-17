@@ -114,7 +114,7 @@ the username <i>foo</i> and password <i>bar</i>, set this URL to
 			     sprintf("<redirect to='import_dbs.pike?group=%s'/>",
 				     Roxen.http_encode_url(c_name(id->variables->name,id))));
 	else
-	  RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	  RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );
 	return "";
       }
   }

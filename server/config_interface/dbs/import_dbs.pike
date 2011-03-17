@@ -24,7 +24,7 @@ mapping|string parse( RequestID id )
 	DBManager.set_permission( db[3..], c, DBManager.READ );
       DBManager.set_permission( db[3..], id->conf, DBManager.WRITE );
     }
-    return Roxen.http_redirect( "", id );
+    return Roxen.http_redirect( "/dbs/", id );
   }
 
   
