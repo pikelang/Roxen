@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.28 2010/10/25 16:06:38 jonasw Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.29 2011/03/21 18:21:53 anders Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -359,15 +359,17 @@ class Patcher
 	  foreach(new_files, string file)
 	    rm(file);
 
-	write_log(1, "Restoring backed up files ... ");
-	if (extract_tar_archive(backup_file, server_path))
-	{
-	  write_log(0, "<green>ok</green>.\n");
-	  rm(backup_file);
+	if (is_file(backup_file)) {
+	  write_log(1, "Restoring backed up files ... ");
+	  if (extract_tar_archive(backup_file, server_path))
+	  {
+	    write_log(0, "<green>ok</green>.\n");
+	    rm(backup_file);
+	  }
+	  else
+	    write_log(1, "FAILED! Backup needs to be restored manually "
+			 "from <u>%s</u>\n", backup_file);
 	}
-	else
-	  write_log(1, "FAILED! Backup needs to be restored manually "
-		       "from <u>%s</u>\n", backup_file);
 	write_file(log_path, log);
 	write_err("Writing log to <u>%s</u>\n", log_path);
       }
