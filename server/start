@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.241 2011/01/24 16:36:41 mast Exp $
+# $Id: start,v 1.242 2011/03/21 00:17:43 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -158,6 +158,7 @@ if uname | grep 'Linux' >/dev/null 2>&1; then
 fi
 
 gdb=no
+valgrind=
 truss=
 
 remove_dumped_passed=no
@@ -324,6 +325,11 @@ parse_args() {
     once=2
     debug=0
   ;;
+  --valgrind|--valgrind=*)
+    valgrind="$1"
+    once=2
+    debug=0
+  ;;
   '--program')
     program="$2"
     once=2
@@ -476,6 +482,8 @@ the default arguments.
 				  is frequently terminated.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
+
+      .B--valgrind[=valgrind args]B.: Run the server in valgrind. Implies .B--onceB..
 
       .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
@@ -823,7 +831,7 @@ start_roxen() {
   if [ x"$cd_to" != x ] ; then
     cd "$cd_to"
   fi
-  if [ "x$gdb" = "xno" ]; then
+  if [ "x$gdb" = "xno" -a "x$valgrind" = "x" ]; then
     if [ "x$once" = "x" ]; then
       if [ $verbose -gt 0 ]; then
 	dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
@@ -850,7 +858,7 @@ start_roxen() {
         exit $exitcode
       fi
     fi
-  else
+  elif [ "x$gdb" != "xno" ]; then
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
@@ -875,6 +883,15 @@ start_roxen() {
       gdb "$pike"
     fi
     rm .gdbinit
+  else
+    firstline=`head -1 "$pike" 2>/dev/null`
+    if expr "x$firstline" : 'x#! */.*' >/dev/null; then
+      dp "Executing $pike $valgrind $args"
+      eval "\"$pike\" \"$valgrind\" $args"
+    else
+      dp "Executing valgrind $pike $args"
+      valgrind `expr "$valgrind" : '--valgrind=\(.*\)'` "$pike"
+    fi
   fi
 }
 
