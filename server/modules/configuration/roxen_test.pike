@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.86 2011/03/29 12:09:02 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.87 2011/03/29 12:11:28 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -597,7 +597,7 @@ void run_xml_tests(string data) {
     bkgr_fails = 0;
   }
 
-  continue_find_tests();
+  continue_run_tests();
 }
 
 
@@ -619,7 +619,7 @@ void run_pike_tests(object test, string path)
       bkgr_fails = 0;
     }
 
-    continue_find_tests();
+    continue_run_tests();
   };
 
   if(!test)
@@ -634,61 +634,39 @@ void run_pike_tests(object test, string path)
 
 // --- Mission control ------------------------
 
-array(string) tests_to_run;
-ADT.Stack file_stack = ADT.Stack();
+array(string) test_files;
 
-void continue_find_tests( )
+void continue_run_tests( )
 {
-  while( string file = file_stack->pop() )
-  {
-    if( Stdio.Stat st = file_stat( file ) )
+  if (sizeof (test_files)) {
+    string file = test_files[0];
+    test_files = test_files[1..];
+
+    report_debug("\nRunning test %s\n",file);
+
+    if (has_suffix (file, ".xml"))
     {
-      if( file!="CVS" && st->isdir )
-      {
-	string dir = file+"/";
-	foreach( get_dir( dir ), string f )
-	  file_stack->push( dir+f );
+      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
+      return;
+    }
+    else			// Pike test.
+    {
+      object test;
+      mixed error;
+      tests++;
+      if( error=catch( test=compile_file(file)( verbose ) ) ) {
+	report_error("Failed to compile %s:\n%s", file,
+		     describe_backtrace(error));
+	fails++;
       }
-      else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
+      else
       {
-	report_debug("\nFound test file %s\n",file);
-	int done;
-	foreach( tests_to_run, string p ) {
-	  if( !has_prefix(p, "RoxenTest_") )
-	    p = "RoxenTest_" + p;
-	  if( glob( "*"+p+"*", file ) )
-	  {
-	    if(glob("*.xml",file))
-	    {
-	      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
-	      return;
-	    }
-	    else if(glob("*.pike",file))
-	    {
-	      object test;
-	      mixed error;
-	      tests++;
-	      if( error=catch( test=compile_file(file)( verbose ) ) ) {
-		report_error("Failed to compile %s:\n%s", file,
-			     describe_backtrace(error));
-		fails++;
-	      }
-	      else
-	      {
-		schedule_tests (0, run_pike_tests,test,file);
-		return;
-	      }
-	    }
-	    done++;
-	    break;
-	  }
-	}
-	if( !done )
-	  report_debug( "Skipped (not matched by --tests argument)\n" );
+	schedule_tests (0, run_pike_tests,test,file);
+	return;
       }
     }
   }
-  
+
   running = 0;
   finished = 1;
   if(is_last_test_configuration())
@@ -710,17 +688,61 @@ void do_tests()
     schedule_tests (0.2, do_tests);
     return;
   }
-  report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
+  report_debug("\nStarting roxen self test in %s\n",
+	       query("selftestdir"));
 
-  tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  array(string) tests_to_run =
+    Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  foreach( tests_to_run; int i; string p )
+    if( !has_prefix(p, "RoxenTest_") )
+      tests_to_run[i] = "RoxenTest_" + p;
+
   verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
 
   conf->rxml_tag_set->handle_run_error = rxml_error;
   conf->rxml_tag_set->handle_parse_error = rxml_error;
 
+  test_files = ({});
+  mapping(string:int) matched_pos = ([]);
+  ADT.Stack file_stack = ADT.Stack();
   file_stack->push( 0 );
   file_stack->push( combine_path(query("selftestdir"), "tests" ));
-  schedule_tests (0, continue_find_tests);
+
+file_loop:
+  while( string file = file_stack->pop() )
+  {
+    if( Stdio.Stat st = file_stat( file ) )
+    {
+      if( file!="CVS" && st->isdir )
+      {
+	string dir = file+"/";
+	foreach( get_dir( dir ), string f )
+	  file_stack->push( dir+f );
+      }
+      else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
+      {
+	foreach( tests_to_run; int i; string p ) {
+	  if( glob( "*/"+p+"*", file ) )
+	  {
+	    if (has_suffix (file, ".xml") || has_suffix (file, ".pike")) {
+	      test_files += ({file});
+	      matched_pos[file] = i;
+	    }
+	    continue file_loop;
+	  }
+	}
+	report_debug( "Skipped test %s\n", file);
+      }
+    }
+  }
+
+  // The order should not be significant ...
+  test_files = Array.shuffle (test_files);
+
+  // ... but let the caller control the order in case it turns out to be.
+  sort (map (test_files, matched_pos), test_files);
+
+  schedule_tests (0, continue_run_tests);
 }
 
 // --- Some tags used in the RXML tests ---------------
