@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.85 2010/11/19 15:20:15 marty Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.86 2011/03/29 12:09:02 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -62,6 +62,22 @@ void background_failure()
     bkgr_fails++;
 }
 
+void schedule_tests (int|float delay, function func, mixed... args)
+{
+  // Run the tests in a normal handler thread so that real background
+  // jobs can run as usual.
+  call_out (roxen.handle, delay,
+	    lambda (function func, array args) {
+	      // Meddle with the busy_threads counter, so that this
+	      // handler thread running the tests doesn't delay the
+	      // background jobs.
+	      roxen->busy_threads--;
+	      mixed err = catch (func (@args));
+	      roxen->busy_threads++;
+	      if (err) throw (err);
+	    }, func, args);
+}
+
 int do_continue(int _tests, int _fails)
 {
   if(finished)
@@ -70,7 +86,7 @@ int do_continue(int _tests, int _fails)
   running = 1;
   tests += _tests;
   fails += _fails;
-  roxen.background_run (0.5, do_tests);
+  schedule_tests (0.5, do_tests);
   return 1;
 }
 
@@ -96,7 +112,7 @@ void start(int n, Configuration c)
   if(is_ready_to_start())
   {
     running = 1;
-    roxen.background_run (0.5, do_tests);
+    schedule_tests (0.5, do_tests);
   }
 }
 
@@ -608,6 +624,7 @@ void run_pike_tests(object test, string path)
 
   if(!test)
     return;
+
   if( mixed error = catch(test->low_run_tests(conf, update_num_tests)) ) {
     if (error != 1) throw (error);
     update_num_tests( 1, 1 );
@@ -643,7 +660,7 @@ void continue_find_tests( )
 	  {
 	    if(glob("*.xml",file))
 	    {
-	      roxen.background_run (0, run_xml_tests, Stdio.read_file(file));
+	      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
 	      return;
 	    }
 	    else if(glob("*.pike",file))
@@ -658,7 +675,7 @@ void continue_find_tests( )
 	      }
 	      else
 	      {
-		roxen.background_run (0, run_pike_tests,test,file);
+		schedule_tests (0, run_pike_tests,test,file);
 		return;
 	      }
 	    }
@@ -690,7 +707,7 @@ void continue_find_tests( )
 void do_tests()
 {
   if(time() - roxen->start_time < 2 ) {
-    roxen.background_run (0.2, do_tests);
+    schedule_tests (0.2, do_tests);
     return;
   }
   report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
@@ -703,7 +720,7 @@ void do_tests()
 
   file_stack->push( 0 );
   file_stack->push( combine_path(query("selftestdir"), "tests" ));
-  roxen.background_run (0, continue_find_tests);
+  schedule_tests (0, continue_find_tests);
 }
 
 // --- Some tags used in the RXML tests ---------------
