@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.87 2011/03/29 12:11:28 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.88 2011/03/29 12:45:53 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -517,7 +517,9 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 class TagTestData {
   inherit RXML.Tag;
   constant name = "test-data";
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
   array(RXML.Type) result_types = ({RXML.t_html (RXML.PXml)});
+
   class Frame {
     inherit RXML.Frame;
 
