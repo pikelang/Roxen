@@ -321,10 +321,20 @@ mapping(string:mixed)|int(-1..0)|Stdio.File find_action(string path,
   NOCACHE(); // Never cache action requests.
 
   mapping|array(mapping) res;
-  float action_vtime = gauge {
+#if 0
+  float action_vtime = gauge
+#endif
+    {
       res = call_fs_action(path, id);
       if (!mappingp(res)) {
-	res = Roxen.http_low_answer(200, Standards.JSON.encode(res));
+	string json_res =
+	  Standards.JSON.encode(res,
+#ifdef AFS_HUMAN_READABLE
+				Standards.JSON.HUMAN_READABLE|
+				Standards.JSON.PIKE_CANONICAL
+#endif
+			       );
+	res = Roxen.http_low_answer(200, json_res);
 	id->set_output_charset("utf-8");
 	res->type = "application/json";
       }
