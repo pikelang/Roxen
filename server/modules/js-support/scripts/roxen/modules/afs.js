@@ -424,6 +424,8 @@ ROXEN.AFS = function () {
 	actions_prefix = options["actions_prefix"];
       if (options["session_var"])
 	session_var = options["session_var"];
+      if (options["poll_timeout"])
+        poll_timeout = options["poll_timeout"];
     }
     
     if (debug_log)
