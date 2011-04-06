@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.169 2009/11/27 13:39:27 stewa Exp $
+// $Id: wizard.pike,v 1.170 2011/04/06 21:13:57 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -786,6 +786,23 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 }
 
 
+mapping|string wizard_cancel_exit (mapping state, string default_return_url,
+				   RequestID id)
+{
+  return http_redirect ((state->cancel_url && state->cancel_url[0]) ||
+			default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
+mapping|string wizard_done_exit (mapping state, string default_return_url,
+				 RequestID id)
+{
+  return http_redirect (default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
 mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
@@ -803,9 +820,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 #endif
 
   if(id->real_variables->cancel || id->real_variables["cancel.x"])
-     return http_redirect((s->cancel_url&&s->cancel_url[0])
-			  || cancel || id->not_query,
-			  @(id->conf?({id}):({})));
+    return wizard_cancel_exit (s, cancel, id);
 
   mapping å = id->real_variables;
   foreach(indices(s), string q)
@@ -912,9 +927,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  res = c(id,@args);
 	}
 	if(res != -1)
-	  return (res
-		  || http_redirect(cancel || id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
 	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
   }
@@ -949,10 +962,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			 "Probably infinite redirect loop in automaton.";
 
       if (v->_page == "cancel") {
-	string to =
-	  (s->cancel_url && s->cancel_url[0]) || cancel || id->not_query;
-	DEBUGMSG ("Wizard: Canceling with redirect to " + to + "\n");
-	return http_redirect(to, @(id->conf?({id}):({})));
+	DEBUGMSG ("Wizard: Canceling\n");
+	return wizard_cancel_exit (s, cancel, id);
       }
 
       if (!v->_page) v->_page = "done", oldpage = 0;
@@ -983,8 +994,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  return "Internal error in wizard code: No wizard_done function.";
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	data = donefn (id, @args);
-	if (!data) return http_redirect(cancel||id->not_query,
-					@(id->conf?({id}):({})));
+	if (!data) return wizard_done_exit (s, cancel, id);
 	wiz_name = "done";
 	break;
       }
@@ -1032,9 +1042,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	mixed res = c(id,@args);
 	if(res != -1)
-	  return (res
-		  || http_redirect(cancel||id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
       }
       if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
       DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
