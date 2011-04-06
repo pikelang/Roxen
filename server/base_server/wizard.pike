@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.170 2011/04/06 21:13:57 mast Exp $
+// $Id: wizard.pike,v 1.171 2011/04/06 21:21:29 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -798,7 +798,8 @@ mapping|string wizard_cancel_exit (mapping state, string default_return_url,
 mapping|string wizard_done_exit (mapping state, string default_return_url,
 				 RequestID id)
 {
-  return http_redirect (default_return_url || id->not_query,
+  return http_redirect ((state->done_url && state->done_url[0]) ||
+			default_return_url || id->not_query,
 			// id->conf check is probably just old crud.
 			id->conf && id);
 }
@@ -811,13 +812,35 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   int offset = 1;
   string wiz_name = "page_";
 
+  mapping s;
+  {
+    string state_str;
 #ifdef USE_WIZARD_COOKIE
-  mapping s = decompress_state(id->real_variables->_page
-			       && id->cookies->WizardState);
+    state_str = id->real_variables->_page && id->cookies->WizardState;
 #else
-  mapping s = decompress_state(id->real_variables->_state
-			       && id->real_variables->_state[0]);
+    state_str = id->real_variables->_state && id->real_variables->_state[0];
 #endif
+    if (state_str)
+      s = decompress_state(state_str);
+    else {
+      s = ([]);
+      if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
+	  id->referer && sizeof (id->referer)) {
+	// Define return_to_referrer to use the Referer to go back to
+	// the previous place after the wizard is done. This currently
+	// doesn't use a stack, so if we're coming here from another
+	// wizard return then we ignore the referrer so that the
+	// ordinary "cancel" url is used instead.
+	string referrer = id->referer[0];
+	if (!has_value (referrer, "&_wiz_ret=") &&
+	    !has_value (referrer, "?_wiz_ret=")) {
+	  if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
+	  else referrer += "?_wiz_ret=";
+	}
+	s->cancel_url = s->done_url = ({referrer});
+      }
+    }
+  }
 
   if(id->real_variables->cancel || id->real_variables["cancel.x"])
     return wizard_cancel_exit (s, cancel, id);
