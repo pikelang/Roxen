@@ -778,102 +778,109 @@ mapping|string parse( RequestID id )
       if( strlen(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
       query +=  q + "\n";
     }
-    foreach( (query/";\n")-({""}), string q )
+    foreach( (query/";\n")-({""}); int i; string q )
     {
-      float qtime = 0.0;
+      q = String.trim_all_whites (q);
+      Sql.sql_result big_q;
+
+      int h = gethrtime();
+      if (mixed err = catch (big_q = db->big_query( q ))) {
+	qres += "<p><font color='&usr.warncolor;'>"+
+	  sprintf((string)_(0,"Error running query %d: %s"), i + 1,
+		  replace (Roxen.html_encode_string (
+			     String.trim_all_whites (describe_error(err))),
+			   "\n", "<br/>\n"))+
+	  "</p>\n";
+	continue;
+      }
+      float qtime = (gethrtime()-h)/1000000.0;
+
+      if (!big_q)
+	// Query had no result or was empty/commented out.
+	continue;
+
       int qrows;
       qres += "<p>\n"
 	"<table id='res'><tr>";
-      mixed e = catch {
-	multiset right_columns = (<>);
-	int h = gethrtime();
-	object big_q = db->big_query( q );
-	qtime = (gethrtime()-h)/1000000.0;
-	int column;
-	if( big_q )
+      multiset right_columns = (<>);
+      int column;
+
+      array(string) col_types = ({});
+
+      foreach( big_q->fetch_fields(), mapping field )
+      {
+	switch( field->type  )
 	{
-	  array(string) col_types = ({});
-
-	  foreach( big_q->fetch_fields(), mapping field )
-	  {
-	    switch( field->type  )
-	    {
-	      case "char":	// Actually a TINYINT.
-	      case "short":
-	      case "int":
-	      case "long":
-	      case "int24":
-	      case "longlong":
-		right_columns[column]=1;
-		qres += "<th class='num'>";
-		col_types += ({"int"});
-		break;
-	      case "float":
-	      case "double":
-		right_columns[column]=1;
-		qres += "<th class='num'>";
-		col_types += ({"float"});
-		break;
-	      case "decimal":
-	      case "numeric":
-		qres += "<th class='num'>";
-		col_types += ({"string"});
-		break;
-	      case "bit":
-	      default:
-		qres += "<th>";
-		col_types += ({"string"});
-	    }
-	    qres += Roxen.html_encode_string (field->name) + "</th>\n";
-	    column++;
-	  }
-	  qres += "</tr>";
-
-	  while( array q = big_q->fetch_row() )
-	  {
-	    qrows++;
-	    qres += "<tr>";
-	    for( int i = 0; i<sizeof(q); i++ ) {
-	      qres += right_columns[i] ? "<td class='num'>" : "<td>";
-	      if( !q[i] )
-		qres += "<i>NULL</i>";
-	      else if( intp( q[i] ) || col_types[i] == "int" )
-		qres += (string) (int) q[i];
-	      else if( floatp( q[i] ) || col_types[i] == "float" )
-		qres += (string) (float) q[i];
-	      else if( is_image( q[i] ) )
-		qres +=
-		  "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
-	      else {
-		mixed tmp = q[i];
-		if (is_deflated (q[i])) {
-		  // is_deflated _may_ give false positives, hence the catch.
-		  catch {
-		    tmp = Gz.inflate()->inflate (q[i]);
-		  };
-		}
-
-		if( is_encode_value( tmp ) )
-		  qres += format_decode_value(tmp);
-		else
-		  qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
-	      }
-	      qres += "</td>";
-	    }
-	    qres += "</tr>\n";
-	  }
+	  case "char":	// Actually a TINYINT.
+	  case "short":
+	  case "int":
+	  case "long":
+	  case "int24":
+	  case "longlong":
+	    right_columns[column]=1;
+	  qres += "<th class='num'>";
+	  col_types += ({"int"});
+	  break;
+	  case "float":
+	  case "double":
+	    right_columns[column]=1;
+	  qres += "<th class='num'>";
+	  col_types += ({"float"});
+	  break;
+	  case "decimal":
+	  case "numeric":
+	    qres += "<th class='num'>";
+	  col_types += ({"string"});
+	  break;
+	  case "bit":
+	  default:
+	    qres += "<th>";
+	  col_types += ({"string"});
 	}
-      };
-      if( e ) {
-	qres += "<tr><td> <font color='&usr.warncolor;'>"+
-	  sprintf((string)_(380,"While running %s: %s"), q,
-		  describe_error(e) )+
-	  "</td></tr>\n";
-#ifdef DEBUG
-	report_debug("Administration DB browser error: \n" +
-		     describe_backtrace(e));
-#endif
+	qres += Roxen.html_encode_string (field->name) + "</th>\n";
+	column++;
       }
+      qres += "</tr>";
+
+      while( array q = big_q->fetch_row() )
+      {
+	qrows++;
+	qres += "<tr>";
+	for( int i = 0; i<sizeof(q); i++ ) {
+	  qres += right_columns[i] ? "<td class='num'>" : "<td>";
+	  if( !q[i] )
+	    qres += "<i>NULL</i>";
+	  else if( intp( q[i] ) || col_types[i] == "int" )
+	    qres += (string) (int) q[i];
+	  else if( floatp( q[i] ) || col_types[i] == "float" )
+	    qres += (string) (float) q[i];
+	  else if( is_image( q[i] ) )
+	    qres +=
+	      "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
+	  else {
+	    mixed tmp = q[i];
+	    if (is_deflated (q[i])) {
+	      // is_deflated _may_ give false positives, hence the catch.
+	      catch {
+		tmp = Gz.inflate()->inflate (q[i]);
+	      };
+	    }
+
+	    if( is_encode_value( tmp ) )
+	      qres += format_decode_value(tmp);
+#if 0
+	    else if (String.width (tmp) > 8)
+	      qres += Roxen.html_encode_string(
+		utf8_to_string (sprintf("%q", string_to_utf8 (tmp))[1..<1]));
+#endif
+	    else
+	      qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
+	  }
+	  qres += "</td>";
+	}
+	qres += "</tr>\n";
+      }
+
       qres += "</table>"+
 	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
 		 "\n</p>\n", qtime, qrows);
