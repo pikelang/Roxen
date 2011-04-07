@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.445 2011/03/15 14:29:38 mast Exp $
+// $Id: roxenloader.pike,v 1.446 2011/04/07 06:55:04 marty Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.445 2011/03/15 14:29:38 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.446 2011/04/07 06:55:04 marty Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1984,7 +1984,17 @@ Sql.Sql sq_cache_get( string db_name,
       if (master_sql->set_charset) {
 	if (!charset)
 	  charset = default_db_charsets[object_program (master_sql)];
-	if (charset != db->get_charset()) {
+
+	// Compensate for asymmetries between SQL.mysql.get_charset()
+	// and SQL.mysql.set_charset() when the "broken-unicode"
+	// kludge is used. This avoids unnecessary resets of the
+	// charset on already open connections.
+	//
+	// Note: Setting the charset on slow remote connections while
+	// holding sq_cache_lock() may cause lock contention even for
+	// local DB connections.
+	if ((charset == "broken-unicode" ? "unicode" : charset) !=
+	    db->get_charset()) {
 	  if (master_sql->set_unicode_decode_mode)
 	    // Ugly special case for mysql: The set_charset call below
 	    // does not reset this state.
