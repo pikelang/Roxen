@@ -775,6 +775,7 @@ mapping|string parse( RequestID id )
     {
       //q = (q/" "-({""}))*" ";
       q = String.trim_all_whites (q);
+      if (q == "--") break;
       if (q != "")
 	query = (query == "" ? q : query + "\n" + q);
     }
@@ -1151,10 +1152,13 @@ mapping|string parse( RequestID id )
       "<textarea rows='12' cols='90' wrap='soft' name='query' "
       " style='font-size: 90%'>" +
       Roxen.html_encode_string (id->variables->query) + "</textarea><br />"
+      "<table><tr><td>"
       "<submit-gbutton2 name=reset_q> "+_(378,"Reset query")+" </submit-gbutton2>"
-      " "
+      "</td><td>"
       "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
-      "</p>";
+      "</td><td style='font-size: smaller; padding-left: 10px'>" +
+      _(0, "Tip: Put '--' on a line to ignore everything below it.") +
+      "</td></tr></table></p>";
 
     // Query result.
 
