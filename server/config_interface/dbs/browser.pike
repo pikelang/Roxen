@@ -770,17 +770,17 @@ mapping|string parse( RequestID id )
     user->settings->save();
 
     string query = "";
-    // 1: Normalize.
-    foreach( replace((id->variables->query-"\r"),"\t"," ")/"\n", string q )
+    // Normalize.
+    foreach( (id->variables->query-"\r")/"\n", string q )
     {
-      q = (q/" "-({""}))*" ";
-      if( strlen(q) && (q[0] == ' ') )  q = q[1..];
-      if( strlen(q) && (q[-1] == ' ') ) q = q[..strlen(q)-2];
-      query +=  q + "\n";
+      //q = (q/" "-({""}))*" ";
+      q = String.trim_all_whites (q);
+      if (q != "")
+	query = (query == "" ? q : query + "\n" + q);
     }
+
     foreach( (query/";\n")-({""}); int i; string q )
     {
-      q = String.trim_all_whites (q);
       Sql.sql_result big_q;
 
       int h = gethrtime();
