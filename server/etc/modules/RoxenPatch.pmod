@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.30 2011/04/14 14:06:07 mast Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.31 2011/04/14 14:21:37 mast Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -795,6 +795,7 @@ class Patcher
       while (!mv_status && errno() == 13 && i > 0)
       {
 	sleep(0.25);
+	Stdio.recursive_rm (dest_path); // To clean up a half-finished copy.
 	mv_status = Stdio.recursive_mv(source_path, dest_path);
 	i--;
       }
