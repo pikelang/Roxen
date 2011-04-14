@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.29 2011/03/21 18:21:53 anders Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.30 2011/04/14 14:06:07 mast Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -791,11 +791,11 @@ class Patcher
       // soon as one would wish. That's why a time out before reporting
       // permission denied is needed. 
       int i = 8; // Two seconds
-      int mv_status = mv(source_path, dest_path);
+      int mv_status = Stdio.recursive_mv(source_path, dest_path);
       while (!mv_status && errno() == 13 && i > 0)
       {
 	sleep(0.25);
-	mv_status = mv(source_path, dest_path);
+	mv_status = Stdio.recursive_mv(source_path, dest_path);
 	i--;
       }
       if (mv_status)
@@ -943,7 +943,7 @@ class Patcher
     // Move patch dir to Imported Patches
     write_mess("Moving patch files ...");
     string dest_path = combine_path(import_path, id);
-    if (mv(append_path(installed_path, id), dest_path))
+    if (Stdio.recursive_mv(append_path(installed_path, id), dest_path))
       write_mess("<green>Done!</green>\n");
     else
     {
