@@ -7,13 +7,44 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.26 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.27 2011/04/15 15:17:48 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
 constant module_doc  = #"\
 This module provides the session tag which provides a variable scope
 where user session data can be stored.";
+
+protected string shared_db;
+
+protected void create (Configuration conf)
+{
+  defvar ("enable-shared-db", 0, "Enabled shared storage",
+	  TYPE_FLAG, #"\
+<p>Whether to store sessions in a database that can be shared between
+servers.</p>
+
+<p>Normally sessions are cached in RAM and are shifted out to disk
+only when they have been inactive for some time. Enabling shared
+storage disables all RAM caching, to make the sessions work across
+servers in e.g. a round-robin load balancer. The drawback is more
+expensive session handling.</p>");
+
+  defvar ("shared-db", Variable.DatabaseChoice (
+	    "shared", 0, "Shared database", #"\
+The database to store sessions in. A table called \"session_cache\"
+will be created in it."))
+    ->set_invisibility_check_callback (lambda () {
+					 return !query ("enable-shared-db");
+				       });
+}
+
+void start() {
+  query_tag_set()->prepare_context=set_entities;
+  shared_db = query ("enable-shared-db") && query ("shared-db");
+  if (shared_db)
+    cache.setup_session_table (shared_db);
+}
 
 
 // --- &client.session; ----------------------------------------
@@ -54,10 +85,6 @@ void set_entities(RXML.Context c) {
   c->extend_scope("client", session_entity + ([]));
 }
 
-void start() {
-  query_tag_set()->prepare_context=set_entities;
-}
-
 
 // --- RXML Tags -----------------------------------------------
 
@@ -73,15 +100,18 @@ class TagSession {
 
     array do_enter(RequestID id) {
       NOCACHE();
-      vars = cache.get_session_data(args->id) || ([]);
+      vars = cache.get_session_data(args->id, shared_db) || ([]);
       scope_name = args->scope || "session";
     }
 
     array do_return(RequestID id) {
       result = content;
       if(!sizeof(vars)) return 0;
-      cache.set_session_data(vars, args->id, args->life?(int)args->life+time(1):0,
-			     !!args["force-db"] );
+      int timeout;
+      if (args->life) timeout = (int) args->life + time (1);
+      else if (shared_db) timeout = 900;
+      cache.set_session_data(vars, args->id, timeout,
+			     shared_db || !!args["force-db"] );
     }
   }
 }
@@ -97,7 +127,7 @@ class TagClearSession {
 
     array do_enter(RequestID id) {
       NOCACHE();
-      cache.clear_session(args->id);
+      cache.clear_session(args->id, shared_db);
     }
   }
 }
@@ -183,18 +213,29 @@ the session. Could e.g. be a name, an IP adress, a cookie or the value
 of the special variable client.session provided by this module (see
 above).</p></attr>
 
-<attr name='life' value='number' default='900'><p>Determines how many seconds the session is guaranteed to
-persist on the server side. Values over 900 means that the session variables will be stored in a
-disk based database when they have not been used within 900 seconds.</p></attr>
+<attr name='life' value='number' default='900'><p>Determines how many
+seconds the session is guaranteed to persist on the server side.</p>
 
-<attr name='force-db'><p>If used, the session variables will be immediatly written to the database.
-Normally, e.g. when not defined, session variables are only moved to the database when they have
-not been used for a while (given that they still have \"time to live\", as determined by the life
-attribute). This will increase the integrity of the session, since the variables will survive a
-server reboot, but it will also decrease performance somewhat.</p></attr>
+<p>If the module isn't configured to use a shared database, then
+values over 900 means that the session variables will be moved to a
+disk based database when they have not been used within 900
+seconds.</p></attr>
 
-<attr name='scope' value='name' default='session'><p>The name of the scope that is created inside
-the session tag.</p></attr>
+<attr name='force-db'><p>If used, the session variables will be
+immediatly written to the database. Otherwise session variables are
+only moved to the database when they have not been used for a while
+(given that they still have \"time to live\", as determined by the
+life attribute).</p>
+
+<p>Setting this flag will increase the integrity of the session, since
+the variables will survive a server reboot, but it will also decrease
+performance somewhat.</p>
+
+<p>If the module is configured to use a shared database then sessions
+are always written immediately, regardless of this flag.</p></attr>
+
+<attr name='scope' value='name' default='session'><p>The name of the
+scope that is created inside the session tag.</p></attr>
 ",
 
   // ------------------------------------------------------------
@@ -207,13 +248,14 @@ the session tag.</p></attr>
 
   // ------------------------------------------------------------
 
-  "&client.session;":#"<desc type='entity'>
-<p><short>Contains a session key for the user or nothing.</short>
-The session key is primary taken from the RoxenUserID cookie. If there is no such cookie it
-will return the value in the prestate that begins with \"RoxenUserID=\". However, if both
-the cookie and such a prestate exists the client.session variable will be empty. This allows
-the client.session variable to be used together with <tag>force-session-id</tag>. Note that
-the Session tag module must be loaded for this entity to exist.</p></desc>",
+  "&client.session;":#"<desc type='entity'> <p><short>Contains a session key for the user or
+nothing.</short> The session key is primary taken from the RoxenUserID
+cookie. If there is no such cookie it will return the value in the
+prestate that begins with \"RoxenUserID=\". However, if both the
+cookie and such a prestate exists the client.session variable will be
+empty. This allows the client.session variable to be used together
+with <tag>force-session-id</tag>. Note that the Session tag module
+must be loaded for this entity to exist.</p></desc>",
 
   // ------------------------------------------------------------
 
