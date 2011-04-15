@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.27 2011/04/15 15:17:47 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.28 2011/04/15 15:23:28 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -109,7 +109,7 @@ class TagSession {
       if(!sizeof(vars)) return 0;
       int timeout;
       if (args->life) timeout = (int) args->life + time (1);
-      else if (shared_db) timeout = 900;
+      else if (shared_db) timeout = 900 + time (1);
       cache.set_session_data(vars, args->id, timeout,
 			     shared_db || !!args["force-db"] );
     }
