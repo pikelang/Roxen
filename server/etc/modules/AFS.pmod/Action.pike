@@ -1,4 +1,4 @@
-// $Id: Action.pike,v 1.1 2011/02/16 12:45:48 grubba Exp $
+// $Id: Action.pike,v 1.2 2011/04/15 11:25:08 mast Exp $
 
 //
 // AFS.Action interface
@@ -64,14 +64,13 @@ mapping(string:mixed) eval_args (mapping(string:mixed) vars,
 //! default argument type, unless listed in
 //! @[ignore_args]. @[on_error] determines how errors are handled.
 //!
-//! @note
-//!  This code is stolen from the RXML parser and modified to be allow
-//!  reuse here.
-//!
 //! @returns
 //!   A mapping of parsed arguments.
 {
   mapping(string:mixed) args = ([]);
+
+  // Note: This code is stolen from the RXML parser and modified to be
+  // allow reuse here.
 
   mapping(string:RXML.Type) atypes = vars & req_arg_types;
   if (sizeof (atypes) < sizeof (req_arg_types)) {
@@ -92,27 +91,26 @@ mapping(string:mixed) eval_args (mapping(string:mixed) vars,
     foreach (indices (vars) - ignore_args, string arg) {
       if (sizeof(vars[arg]) != 1)
 	return Roxen.raise_err(on_error, "Multiple %O arguments found!", arg);
-
-      mixed err = catch {
-	  args[arg] = (atypes[arg] ||
-		       def_arg_type)->encode (vars[arg][0]);
-	};
-      if (objectp(err) && err->is_RXML_Backtrace) {
-	return Roxen.raise_err(on_error,
-			     "Failed to parse argument %O", arg);
+      RXML.Type type = atypes[arg] || def_arg_type;
+      if (mixed err = catch (args[arg] = type->encode (vars[arg][0]))) {
+	if (objectp(err) && err->is_RXML_Backtrace) {
+	  return Roxen.raise_err(on_error,
+				 "Failed to parse argument %O", arg);
+	}
+	throw (err);
       }
     }
   else
     foreach (vars; string arg; mixed val) {
       if (sizeof(val) != 1)
 	return Roxen.raise_err(on_error, "Multiple %O arguments found!", arg);
-      mixed err = catch {
-	  args[arg] = (atypes[arg] ||
-		       def_arg_type)->encode (val[0]);
-	};
-      if (objectp(err) && err->is_RXML_Backtrace) {
-	return Roxen.raise_err(on_error,
-			     "Failed to parse argument %O", arg);
+      RXML.Type type = atypes[arg] || def_arg_type;
+      if (mixed err = catch (args[arg] = type->encode (val[0]))) {
+	if (objectp(err) && err->is_RXML_Backtrace) {
+	  return Roxen.raise_err(on_error,
+				 "Failed to parse argument %O", arg);
+	}
+	throw (err);
       }
     }
   return args;
@@ -229,7 +227,7 @@ int(0..0)|mapping exec(RequestID id,
 //!
 //! @param push_args
 //!   Message type specific arguments. Typically equal to the
-//!   arguments sent to @[AFS.Filesystem()->broadcast_client_message()@].
+//!   arguments sent to @[AFS.Filesystem()->broadcast_client_message()].
 //!
 //! @note
 //!   The client session is destructed asynchronously when it times out.
