@@ -415,7 +415,10 @@
           a.push(i.toString());
           a.push("=");
           if (ROXEN.isArray(args[i])) {
-            a.push(args[i].join(","));
+            var b = [];
+            for (var j = 0; j < args[i].length; j++)
+              b.push(ROXEN.escape(args[i][j]));
+            a.push(b.join(","));
           }
           else {
             a.push(ROXEN.escape(args[i]));
