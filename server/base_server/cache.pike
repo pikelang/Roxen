@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.144 2011/04/15 11:50:31 mast Exp $
+// $Id: cache.pike,v 1.145 2011/04/15 15:17:47 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1891,10 +1891,10 @@ private function(string:Sql.Sql) db;
 private int max_persistence;
 
 // The low level call for storing a session in the database
-private void store_session(string id, mixed data, int t) {
+private void store_session(string db_name, string id, mixed data, int t) {
   data = encode_value(data);
-  db("local")->query("REPLACE INTO session_cache VALUES (%s," + t + ",%s)",
-		     id, data);
+  db(db_name)->query("REPLACE INTO session_cache VALUES (%s,%d,%s)",
+		     id, t, data);
 }
 
 // GC that, depending on the sessions session_persistence either
@@ -1919,7 +1919,7 @@ private void session_cache_handler() {
 	m_delete(session_persistence, id);
 	continue;
       }
-      store_session(id, data, session_persistence[id]);
+      store_session("local", id, data, session_persistence[id]);
       m_delete(session_buckets[-1], id);
       m_delete(session_persistence, id);
     }
@@ -1938,52 +1938,65 @@ private void session_cache_destruct() {
     foreach(session_buckets, mapping(string:mixed) session_bucket)
       foreach(session_bucket; string id; mixed data)
 	if(session_persistence[id]>t) {
-	  store_session(id, data, session_persistence[id]);
+	  store_session("local", id, data, session_persistence[id]);
 	  m_delete(session_persistence, id);
 	}
   }
   report_notice("Session cache synchronized\n");
 }
 
-//! Removes the session data assiciate with @[id] from the
-//! session cache and session database.
+//! Removes the session data associated with @[id] from the session
+//! cache and session database.
+//!
+//! @[db_name] may be given to use another database than the default
+//! "local". That implictly disables the RAM based bucket cache.
 //!
 //! @seealso
 //!   set_session_data
-void clear_session(string id) {
-  m_delete(session_persistence, id);
-  foreach(session_buckets, mapping bucket)
-    m_delete(bucket, id);
-  db("local")->query("DELETE FROM session_cache WHERE id=%s", id);
+void clear_session(string id, void|string db_name) {
+  if (!db_name) {
+    m_delete(session_persistence, id);
+    foreach(session_buckets, mapping bucket)
+      m_delete(bucket, id);
+  }
+  db(db_name || "local")->query("DELETE FROM session_cache WHERE id=%s", id);
 }
 
 //! Returns the data associated with the session @[id].
 //! Returns a zero type upon failure.
 //!
+//! @[db_name] may be given to use another database than the default
+//! "local". That implictly disables the RAM based bucket cache.
+//!
 //! @seealso
 //!   set_session_data
-mixed get_session_data(string id) {
+mixed get_session_data(string id, void|string db_name) {
   mixed data;
-  foreach(session_buckets, mapping bucket)
-    if(data=bucket[id]) {
-      session_buckets[0][id] = data;
-      return data;
-    }
-  data = db("local")->query("SELECT data FROM session_cache WHERE id=%s", id);
+  if (!db_name)
+    foreach(session_buckets, mapping bucket)
+      if(data=bucket[id]) {
+	session_buckets[0][id] = data;
+	return data;
+      }
+  data = db(db_name || "local")->
+    query("SELECT data FROM session_cache WHERE id=%s", id);
   if(sizeof([array]data) &&
      !catch(data=decode_value( ([array(mapping(string:string))]data)[0]->data )))
     return data;
   return ([])[0];
 }
 
-//! Assiciates the session @[id] to the @[data]. If no @[id] is provided
+//! Associates the session @[id] to the @[data]. If no @[id] is provided
 //! a unique id will be generated. The session id is returned from the
 //! function. The minimum guaranteed storage time may be set with the
 //! @[persistence] argument. Note that this is a time stamp, not a time out.
-//! If @[store] is set, the @[data] will be stored in a database directly,
-//! and not when the garbage collect tries to delete the data. This
-//! will ensure that the data is kept safe in case the server restarts
-//! before the next GC.
+//!
+//! If @[store] is set, the @[data] will be stored in a database
+//! directly, and not when the garbage collect tries to delete the
+//! data. This will ensure that the data is kept safe in case the
+//! server restarts before the next GC. @[store] may also be the name
+//! of another database where the "session_cache" table resides. In
+//! that case the @[data] is always stored directly.
 //!
 //! @note
 //!   The @[data] must not contain any object, programs or functions, or the
@@ -1992,21 +2005,31 @@ mixed get_session_data(string id) {
 //! @seealso
 //!   get_session_data, clear_session
 string set_session_data(mixed data, void|string id, void|int persistence,
-			void|int(0..1) store) {
+			void|int(0..1)|string store) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
-  session_persistence[id] = persistence;
-  session_buckets[0][id] = data;
-  max_persistence = max(max_persistence, persistence);
-  if(store && persistence) store_session(id, data, persistence);
+  if (intp (store)) {
+    session_persistence[id] = persistence;
+    session_buckets[0][id] = data;
+    max_persistence = max(max_persistence, persistence);
+  }
+  if(store && persistence)
+    store_session(stringp (store) ? store : "local", id, data, persistence);
   return id;
+}
+
+void setup_session_table (string db_name)
+//! Creates a table "session_cache" with the proper definition in the
+//! given database.
+{
+  db(db_name)->query("CREATE TABLE IF NOT EXISTS session_cache ("
+		     "id CHAR(32) NOT NULL PRIMARY KEY, "
+		     "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+		     "data BLOB NOT NULL)");
 }
 
 // Sets up the session database tables.
 private void setup_tables() {
-  db("local")->query("CREATE TABLE IF NOT EXISTS session_cache ("
-		     "id CHAR(32) NOT NULL PRIMARY KEY, "
-		     "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
-		     "data BLOB NOT NULL)");
+  setup_session_table ("local");
   master()->resolv("DBManager.is_module_table")
     ( 0, "local", "session_cache", "Used by the session manager" );
 }
