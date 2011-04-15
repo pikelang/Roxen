@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.139 2011/01/20 17:09:32 mast Exp $
+// $Id: cache.pike,v 1.140 2011/04/15 15:03:33 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -2222,7 +2222,7 @@ private void session_cache_handler() {
   if(max_persistence>t) {
 
   clean:
-    foreach(indices(session_buckets[-1]), string id) {
+    foreach(session_buckets[-1]; string id; mixed data) {
       if(session_persistence[id]<t) {
 	m_delete(session_buckets[-1], id);
 	m_delete(session_persistence, id);
@@ -2232,12 +2232,12 @@ private void session_cache_handler() {
 	if(session_buckets[i][id]) {
 	  continue clean;
 	}
-      if(objectp(session_buckets[-1][id])) {
+      if(objectp(data)) {
 	m_delete(session_buckets[-1], id);
 	m_delete(session_persistence, id);
 	continue;
       }
-      store_session(id, session_buckets[-1][id], session_persistence[id]);
+      store_session(id, data, session_persistence[id]);
       m_delete(session_buckets[-1], id);
       m_delete(session_persistence, id);
     }
@@ -2254,9 +2254,9 @@ private void session_cache_destruct() {
   if(max_persistence>t) {
     report_notice("Synchronizing session cache");
     foreach(session_buckets, mapping(string:mixed) session_bucket)
-      foreach(indices(session_bucket), string id)
+      foreach(session_bucket; string id; mixed data)
 	if(session_persistence[id]>t) {
-	  store_session(id, session_bucket[id], session_persistence[id]);
+	  store_session(id, data, session_persistence[id]);
 	  m_delete(session_persistence, id);
 	}
   }
