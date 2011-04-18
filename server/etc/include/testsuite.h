@@ -19,7 +19,7 @@
 		 #EXPR, ({ARGS}))
 
 #define TEST_EQUAL(A, B)						\
-  do {									\
+  lambda () {								\
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);		\
     array args__ = ({len__, #A, 0, len__, #B, 0});			\
     cpp_test_true (__FILE__, __LINE__,					\
@@ -30,10 +30,10 @@
 		   "%-*s  (is %O)?",					\
 		   args__);						\
     args__ = 0;								\
-  } while (0)
+  }()
 
 #define TEST_NOT_EQUAL(A, B)						\
-  do {									\
+  lambda () {								\
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);		\
     array args__ = ({len__, #A, 0, len__, #B, 0});			\
     cpp_test_true (__FILE__, __LINE__,					\
@@ -44,10 +44,10 @@
 		   "%-*s  (is %O)?",					\
 		   args__);						\
     args__ = 0;								\
-  } while (0)
+  }()
 
 #define TEST_CMP(A, OP, B)						\
-  do {									\
+  lambda () {								\
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);		\
     array args__ = ({len__, #A, 0, len__, #B, 0});			\
     cpp_test_true (__FILE__, __LINE__,					\
@@ -58,7 +58,7 @@
 		   "%-*s  (is %O)?",					\
 		   args__);						\
     args__ = 0;								\
-  } while (0)
+  }()
 
 #define TEST_ERROR(CODE, ARGS...)					\
   cpp_test_true (__FILE__, __LINE__,					\
