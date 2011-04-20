@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.141 2011/04/15 15:17:47 mast Exp $
+// $Id: cache.pike,v 1.142 2011/04/20 23:50:47 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1391,7 +1391,7 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
 	MORE_CACHE_WERR ("cache_lookup (%O, %s): %s\n",
 			 cache_name, RXML.utils.format_short (key),
 			 entry->data ? "Timed out" : "Destructed");
-	return 0;
+	return UNDEFINED;
       }
 
       mgr->got_hit (cache_name, entry, cache_context);
@@ -1403,7 +1403,7 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
   mgr->got_miss (cache_name, key, cache_context);
   MORE_CACHE_WERR ("cache_lookup (%O, %s): Miss\n",
 		   cache_name, RXML.utils.format_short (key));
-  return 0;
+  return UNDEFINED;
 }
 
 mixed cache_peek (string cache_name, mixed key)
@@ -1419,7 +1419,7 @@ mixed cache_peek (string cache_name, mixed key)
 	  mgr->remove_entry (cache_name, entry);
 	  MORE_CACHE_WERR ("cache_peek (%O, %s): Timed out\n",
 			   cache_name, RXML.utils.format_short (key));
-	  return 0;
+	  return UNDEFINED;
 	}
 
 	MORE_CACHE_WERR ("cache_peek (%O, %s): Entry found\n",
@@ -1429,7 +1429,7 @@ mixed cache_peek (string cache_name, mixed key)
 
   MORE_CACHE_WERR ("cache_peek (%O, %s): Entry not found\n",
 		   cache_name, RXML.utils.format_short (key));
-  return 0;
+  return UNDEFINED;
 }
 
 mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
