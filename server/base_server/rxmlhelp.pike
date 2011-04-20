@@ -249,29 +249,29 @@ protected string list_cont( TagdocParser parser, mapping m, string c )
     "</"+type+">";
 }
 
-protected string xtable_cont( mixed a, mixed b, string c )
+protected string xtable_cont( mixed a, mapping m, string c )
 {
-  return "<table>"+c+"</table>";
+  return Roxen.make_container ("table", m, c);
 }
 
-protected string module_cont( mixed a, mixed b, string c )
+protected string module_cont( mixed a, mapping m, string c )
 {
-  return "<i>"+c+"</i>";
+  return Roxen.make_container ("i", m, c);
 }
 
-protected string xtable_row_cont( mixed a, mixed b, string c )
+protected string xtable_row_cont( mixed a, mapping m, string c )
 {
-  return "<tr>"+c+"</tr>";
+  return Roxen.make_container ("tr", m, c);
 }
 
-protected string xtable_c_cont( mixed a, mixed b, string c )
+protected string xtable_c_cont( mixed a, mapping m, string c )
 {
-  return "<td>"+c+"</td>";
+  return Roxen.make_container ("td", m, c);
 }
 
-protected string xtable_h_cont( mixed a, mixed b, string c )
+protected string xtable_h_cont( mixed a, mapping m, string c )
 {
-  return "<th>"+c+"</th>";
+  return Roxen.make_container ("th", m, c);
 }
 
 protected string help_tag( TagdocParser p, mapping m, string c )
