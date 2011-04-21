@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.643 2011/03/01 13:15:55 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.644 2011/04/21 13:16:39 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -45,6 +45,68 @@ multiset query_provides() {
   return (< "modified", "rxmltags" >);
 }
 
+private Regexp.PCRE.Plain rxml_var_splitter =
+#if constant(Regexp.PCRE.UTF8_SUPPORTED)
+#define LETTER "\\pL"
+  Regexp.PCRE.StudiedWidestring
+#else
+#define LETTER "A-Za-z"
+  Regexp.PCRE.Studied
+#endif
+  ("^(.*?)"
+   // Must start with a letter or "_" and contain at least one dot.
+   // Also be as picky as possible when accepting a negation sign.
+   "(["LETTER"_]["LETTER"_0-9]*(?:\\.(?:["LETTER"_0-9]+|-[0-9]+)?)+)"
+   "(.*)$");
+
+private string fix_rxml_vars (string code, RXML.Context ctx)
+{
+  string res = "";
+  while (array split = rxml_var_splitter->split (code)) {
+    res += sprintf ("%s(index(%{%O,%}))",
+		    split[0], ctx->parse_user_var (split[1]));
+    code = split[2];
+  }
+  return res + code;
+}
+
+private object sexpr_funcs = class SExprFunctions
+  {
+    // A class for the special functions in sexpr_constants. This is
+    // to give these function proper names, since those names can
+    // occur in the compiler errors that are shown to users.
+
+    mixed search (mixed a, mixed b)
+    {
+      return search (a, b) + 1;	// RXML uses base 1.
+    }
+
+    int INT (void|mixed x)
+    {
+      return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
+    }
+
+    float FLOAT (void|mixed x)
+    {
+      return intp (x) || floatp (x) || stringp (x) ? (float) x : 0.0;
+    }
+
+    string STRING (void|mixed x)
+    {
+      return intp (x) || floatp (x) || stringp (x) ? (string) x : "";
+    }
+
+    mixed var (string var)
+    {
+      return RXML_CONTEXT->user_get_var (var);
+    }
+
+    mixed index (string scope, string|int... rxml_var_ref)
+    {
+      return RXML_CONTEXT->get_var (rxml_var_ref, scope);
+    }
+  }();
+
 private mapping(string:mixed) sexpr_constants = ([
   "this_program":0,
 
@@ -74,21 +136,18 @@ private mapping(string:mixed) sexpr_constants = ([
   "sizeof": sizeof,
   "pow":pow,
   "abs": abs,
-  "search": lambda (mixed a, mixed b) {
-	      return search (a, b) + 1;	// RXML uses base 1.
-	    },
+  "max": max,
+  "min": min,
+  "search": sexpr_funcs->search,
   "reverse": reverse,
   "uniq": Array.uniq,
 
-  "INT":lambda(void|mixed x) {
-	  return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
-	},
-  "FLOAT":lambda(void|mixed x) {
-	    return intp (x) || floatp (x) || stringp (x) ? (float) x : 0.0;
-	  },
-  "STRING":lambda(void|mixed x) {
-	     return intp (x) || floatp (x) || stringp (x) ? (string) x : "";
-	   },
+  "INT": sexpr_funcs->INT,
+  "FLOAT": sexpr_funcs->FLOAT,
+  "STRING": sexpr_funcs->STRING,
+
+  "var": sexpr_funcs->var,
+  "index": sexpr_funcs->index,
 ]);
 
 private class SExprCompileHandler
@@ -100,9 +159,8 @@ private class SExprCompileHandler
   }
 
   mixed resolv(string id, void|string fn, void|string ch) {
-    if (mapping|object scope = RXML_CONTEXT->get_scope (id))
-      return scope;
-    error ("Unknown identifier %O.\n", id);
+    // Only the identifiers in sexpr_constants are allowed.
+    error ("Unknown identifier.\n");
   }
 
   void compile_error (string a, int b, string c)
@@ -116,43 +174,64 @@ private class SExprCompileHandler
   }
 }
 
-string|int|float sexpr_eval(string what)
+mixed sexpr_eval(string what)
 {
-  if (!has_value (what, "\"")) {
-    if (has_value (what, "lambda") ||
-	has_value (what, "program") ||
-	has_value (what, "object") ||
-	// Disallow chars:
-	// o  ';' would provide an obvious code injection possibility.
-	// o  '{' might also allow code injection.
-	// o  '[' to avoid pike indexing and ranges. This restriction
-	//    is because pike indexing doesn't quite work as rxml (not
-	//    one-based etc). It might be solved in a better way
-	//    later.
-	sscanf (what, "%*[^;{[]%*c") > 1)
-      RXML.parse_error ("Syntax error in expr attribute.\n");
-  }
+  program prog = cache.cache_lookup ("expr", what);
+  if (!prog) {
+    RXML.Context ctx = RXML_CONTEXT;
+    array(string) split = what / "\"";
 
-  else {
-    array(string) split = replace (what, "\\\"", "") / "\"";
-    for (int i = 0; i < sizeof (split); i += 2) {
+    for (int i = 0; i < sizeof (split);) {
       string s = split[i];
+
+      if (i > 0) {
+	// Skip this segment if the preceding " is escaped (i.e.
+	// there's an odd number of backslashes before it).
+	string p = split[i - 1];
+	int b;
+	for (b = sizeof (p) - 1; b >= 0; b--)
+	  if (p[b] != '\\')
+	    break;
+	if (!((sizeof (p) - b) & 1)) {
+	  i++;
+	  continue;
+	}
+      }
+
+      split[i] = fix_rxml_vars (s, ctx);
+
       if (has_value (s, "lambda") ||
 	  has_value (s, "program") ||
 	  has_value (s, "object") ||
+	  // Disallow chars:
+	  // o  ';' would provide an obvious code injection possibility.
+	  // o  '{' might also allow code injection.
+	  // o  '[' to avoid pike indexing and ranges. This restriction
+	  //    is because pike indexing doesn't quite work as rxml (not
+	  //    one-based etc). It might be solved in a better way
+	  //    later.
 	  sscanf (s, "%*[^;{[]%*c") > 1)
 	RXML.parse_error ("Syntax error in expr attribute.\n");
+
+      i += 2;
     }
+
+    string mangled = split * "\"";
+
+    SExprCompileHandler handler = SExprCompileHandler();
+    if (mixed err = catch {
+	prog = compile_string ("mixed __v_=(" + mangled + ");", 0, handler);
+      }) {
+      RXML.parse_error ("Error in expr attribute: %s\n",
+			handler->errmsg || describe_error (err));
+    }
+
+    cache_set ("expr", what, prog);
   }
 
-  SExprCompileHandler handler = SExprCompileHandler();
-  string|int|float res;
-  if (mixed err = catch {
-      res = compile_string( "mixed foo=(" + what + ");",
-			    0, handler )()->foo;
-    })
-    RXML.parse_error ("Error in expr attribute: %s\n",
-		      handler->errmsg || describe_error (err));
+  mixed res;
+  if (mixed err = catch (res = prog()->__v_))
+    RXML.run_error ("Error in expr attribute: %s\n", describe_error (err));
   if (compat_level < 2.2) return (string) res;
   else return res;
 }
@@ -10123,10 +10202,24 @@ After: &var.language;<br /></ex>
 
  <xtable>
    <row valign='top'>
-     <c><p><tt><i>scope</i>.<i>var</i></tt></p></c>
-     <c><p>The value of the given RXML variable. Note that it is not
-     written as an entity reference; i.e. it is written without the
-     surrounding \"&amp;\" and \";\".</p></c></row>
+     <c><p><tt><i>scope</i>.<i>var[</i>.<i>var...]</i></tt></p></c>
+     <c><p>The value of the given RXML variable. This follows the
+     usual RXML variable reference syntax, e.g. \".\" in a variable
+     name is quoted as \"..\". The scope and variable names may only
+     contain pike identifier chars, i.e. letters, numbers (except at
+     the start of a scope name), and \"_\". An exception is that a
+     <i>var</i> may be a positive or negative integer.</p>
+
+     <p>To reference an RXML variable that doesn't obey these
+     restrictions, e.g. when a variable name contains \"-\", use the
+     <tt>var()</tt> or <tt>index()</tt> functions.</p>
+
+     <p>Note that the variable is not written as an entity reference.
+     I.e. it is written without the surrounding \"&amp;\" and \";\".
+     Using e.g. \"&amp;form.x;\" instead of \"form.x\" works most of
+     the time, but it is more susceptible to parse errors if form.x
+     contains funny things, and it is slower since Roxen cannot cache
+     the compiled expression very well.</p></c></row>
 
    <row valign='top'>
      <c><p><tt>49</tt></p></c>
@@ -10190,12 +10283,12 @@ After: &var.language;<br /></ex>
      except that they do not generate any error if <i>expr</i> cannot
      be cast successfully. Instead a zero number or an empty string is
      returned as appropriate. This is useful if <i>expr</i> is a value
-     from the client that might be bogus.</p></c></row>
+     from the client that may be bogus.</p></c></row>
  </xtable>
 
- <p>Note that values in RXML variables often are strings even though
- they might appear as (formatted) numbers. It is therefore a good idea
- to use the <tt>INT()</tt> or <tt>FLOAT()</tt> functions on them
+ <p>Note that values in the RXML form scope often are strings even
+ though they may appear as (formatted) numbers. It is therefore a good
+ idea to use the <tt>INT()</tt> or <tt>FLOAT()</tt> functions on them
  before you do math.</p>
 
  <p>Expressions for numeric operands:</p>
@@ -10257,6 +10350,14 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>abs(<i>expr</i>)</tt></p></c>
      <c><p>Returns the absolute value of <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>max(<i>expr</i>, ...)</tt></p></c>
+     <c><p>Returns the maximum value of the arguments.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>min(<i>expr</i>, ...)</tt></p></c>
+     <c><p>Returns the minimum value of the arguments.</p></c></row>
  </xtable>
 
  <p>Expressions for string operands:</p>
@@ -10279,6 +10380,13 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt><i>expr1</i> - <i>expr2</i></tt></p></c>
      <c><p>Returns <i>expr1</i> without any occurrences of <i>expr2</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>var(<i>expr</i>)</tt></p></c>
+     <c><p>Parses the string <i>expr</i> as an RXML variable reference
+     and returns its value. Useful e.g. if the immediate
+     <tt><i>scope</i>.<i>var</i></tt> form cannot be used due to
+     strange characters in the scope or variable names.</p></c></row>
 
    <row valign='top'>
      <c><p><tt>sizeof(<i>expr</i>)</tt></p></c>
@@ -10363,7 +10471,7 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt><i>expr1</i> == <i>expr2</i></tt></p></c>
      <c><p>1 (true) if <i>expr1</i> and <i>expr2</i> are the same, 0
-     (false) otherwise. Note that arrays might be different even
+     (false) otherwise. Note that arrays may be different even
      though they contain the same sequence of elements.</p></c></row>
 
    <row valign='top'>
@@ -10390,6 +10498,14 @@ After: &var.language;<br /></ex>
      <c><p>Nonzero (true) if either expression is nonzero (true), 0
      (false) otherwise. A true return value is actually the value of
      the last true expression.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>index(<i>scope</i>, <i>expr</i>, ...)</tt></p></c>
+     <c><p>Indexes the RXML scope specified by the string <i>scope</i>
+     with <i>expr</i>, and then continue to index the result
+     successively with the remaining arguments. The indexing is done
+     according to RXML rules, so e.g. the first index in an array is
+     1.</p></c></row>
  </xtable>
 </attr>
 
