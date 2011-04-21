@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.127 2009/06/30 10:56:19 jonasw Exp $ -->
+<!-- $Id: template,v 1.128 2011/04/21 13:43:05 jonasw Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -171,7 +171,7 @@
 <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />
 </if>
 </head>
-<gauge variable='var.time-spent' resultonly='yes'>
+<gauge variable='var.time_spent' resultonly='yes'>
 <nooutput>
   <eval><insert file="/themes/&usr.theme;/theme"/></eval>
   <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
@@ -180,7 +180,7 @@
   <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
-<gauge variable='var.time-parse-spent' resultonly='yes'>
+<gauge variable='var.time_parse_spent' resultonly='yes'>
   <contents/>
 </gauge>
 </nooutput>
@@ -231,9 +231,9 @@
 	<font color="#ffbe00">|</font>
 	&roxen.dist-os;<br />
         <if debug="yes">
-          <set variable="var.time-ms" expr="(int)(&var.time-spent; * 1000)"/>
+          <set variable="var.time-ms" expr="(int)(var.time_spent * 1000)"/>
           Total render time: &var.time-ms; ms<br />
-          <set variable="var.time-ms" expr="(int)(&var.time-parse-spent; * 1000)"/>
+          <set variable="var.time-ms" expr="(int)(var.time_parse_spent * 1000)"/>
           Content file: &var.time-ms; ms<br />
         </if>
       </font>
