@@ -132,18 +132,21 @@
     },
 
     /**
-     * Escapes a string for URL encoding.
+     * Escapes a string for use as an URI component. Like
+     * encodeURIComponent, but also encodes ! ' ( ) * which are part
+     * of the reserved set in RFC 3987.
+     *
      * @method escape
      * @param  {String} s String to encode.
      * @return {String}   The result.
      */
-    escape: function (s) {
-      // We would love to use the "encodeURIComponent" function, but it
-      // encodes utf8 without using the %uXXXX standard encoding, which
-      // makes it unsuitable for reception on the server side. This
-      // implementation of escape uses %uXXXX, but we need to post process
-      // the '+' character since it's not handled at all by escape.
-      return escape(s).replace(/\+/g, "%2B");
+    escapeURIComponent: function (s) {
+      return encodeURIComponent (s).
+	replace(/!/g, "%21").
+	replace(/\x27/g, "%27"). // ' escaped to avoid unbalanced quotes.
+	replace(/\(/g, "%28").
+	replace(/\)/g, '%29').
+	replace(/\*/g, '%2A');
     },
 
     /**
@@ -417,11 +420,11 @@
           if (ROXEN.isArray(args[i])) {
             var b = [];
             for (var j = 0; j < args[i].length; j++)
-              b.push(ROXEN.escape(args[i][j]));
+	      b.push(ROXEN.escapeURIComponent(args[i][j]));
             a.push(b.join(","));
           }
           else {
-            a.push(ROXEN.escape(args[i]));
+	    a.push(ROXEN.escapeURIComponent(args[i]));
           }
         }
       }
@@ -581,5 +584,11 @@
       return YAHOO.util.Date.format(tm, { format: fmt }, locale);
     }
   };
+
+  // Alias for REP compat only. This function used to call the global
+  // JS escape() function and additionally encode +. That means it
+  // used %uXXXX for wide chars, which isn't valid in URI:s.
+  lib.escape = lib.escapeURIComponent;
+
   YAHOO.lang.augmentObject(ROXEN, lib);
 })();
