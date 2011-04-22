@@ -157,7 +157,7 @@
      */
     escapeHTML: function(s) {
       return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").
-             replace(/'/g,"&apos;").replace(/"/g,"&quot;");
+	     replace(/\x27/g,"&apos;").replace(/\x22/g,"&quot;");
     },
     
     /**
