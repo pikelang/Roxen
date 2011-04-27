@@ -1,4 +1,4 @@
-// $Id: Action.pike,v 1.2 2011/04/15 11:25:08 mast Exp $
+// $Id: Action.pike,v 1.3 2011/04/27 14:35:29 mast Exp $
 
 //
 // AFS.Action interface
@@ -54,18 +54,17 @@ mapping(string:RXML.Type) opt_arg_types = ([]);
 
 constant def_arg_type = RXML.t_string;
 
-mapping(string:mixed) eval_args (mapping(string:mixed) vars,
-				 void|Roxen.OnError on_error,
-				 void|array(string) ignore_args)
-//! Parses and evaluates the tag arguments according to
+mapping(string:mixed) decode_args (mapping(string:mixed) vars,
+				   void|Roxen.OnError on_error)
+//! Decodes and type checks the tag arguments according to
 //! @[req_arg_types] and @[opt_arg_types]. The @[vars] mapping
-//! contains the unparsed arguments on entry. Arguments not mentioned
-//! in @[req_arg_types] or @[opt_arg_types] are evaluated with the
-//! default argument type, unless listed in
-//! @[ignore_args]. @[on_error] determines how errors are handled.
+//! contains the unparsed arguments on entry, and it may be modified
+//! destructively. Arguments not mentioned in @[req_arg_types] or
+//! @[opt_arg_types] are checked against the default argument type
+//! @[def_arg_type]. @[on_error] determines how errors are handled.
 //!
 //! @returns
-//!   A mapping of parsed arguments.
+//!   The decoded arguments.
 {
   mapping(string:mixed) args = ([]);
 
@@ -87,32 +86,18 @@ mapping(string:mixed) eval_args (mapping(string:mixed) vars,
   }
 
   atypes += vars & opt_arg_types;
-  if (ignore_args)
-    foreach (indices (vars) - ignore_args, string arg) {
-      if (sizeof(vars[arg]) != 1)
-	return Roxen.raise_err(on_error, "Multiple %O arguments found!", arg);
-      RXML.Type type = atypes[arg] || def_arg_type;
-      if (mixed err = catch (args[arg] = type->encode (vars[arg][0]))) {
-	if (objectp(err) && err->is_RXML_Backtrace) {
-	  return Roxen.raise_err(on_error,
-				 "Failed to parse argument %O", arg);
-	}
-	throw (err);
+  foreach (vars; string arg; mixed val) {
+    if (sizeof(val) != 1)
+      return Roxen.raise_err(on_error, "Multiple %O arguments found.\n", arg);
+    RXML.Type type = atypes[arg] || def_arg_type;
+    if (mixed err = catch (args[arg] = type->encode (val[0]))) {
+      if (objectp(err) && err->is_RXML_Backtrace) {
+	return Roxen.raise_err(on_error, "Failed to parse argument %O\n", arg);
       }
+      throw (err);
     }
-  else
-    foreach (vars; string arg; mixed val) {
-      if (sizeof(val) != 1)
-	return Roxen.raise_err(on_error, "Multiple %O arguments found!", arg);
-      RXML.Type type = atypes[arg] || def_arg_type;
-      if (mixed err = catch (args[arg] = type->encode (val[0]))) {
-	if (objectp(err) && err->is_RXML_Backtrace) {
-	  return Roxen.raise_err(on_error,
-				 "Failed to parse argument %O", arg);
-	}
-	throw (err);
-      }
-    }
+  }
+
   return args;
 }
 
@@ -141,7 +126,8 @@ int(0..1) register() {
 //! @param cs
 //!   The @[AFS.ClientSession] object associated with the request.
 //! @param args
-//!   Request arguments as returned by @[eval_args()].
+//!   Request arguments, checked against @[req_arg_types] and
+//!   @[opt_arg_types].
 //! @param tag
 //!   Optional tag requested by the client. If this parameter is !0,
 //!   it must be included in the "_.tag" parameter in the response,
@@ -181,7 +167,8 @@ int(0..1) access_perm(RequestID id,
 //! @param cs
 //!   The @[AFS.ClientSession] object associated with the request.
 //! @param args
-//!   Request arguments as returned by @[eval_args()].
+//!   Request arguments, checked against @[req_arg_types] and
+//!   @[opt_arg_types].
 //! @param tag
 //!   Optional tag requested by the client. If this parameter is @expr{!0@},
 //!   it must be included in the @expr{"_.tag"@} parameter in the response,

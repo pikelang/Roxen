@@ -260,7 +260,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     }
   }
 
-  mapping(string:mixed) args = fsa->eval_args(variables, Roxen.RETURN_ZERO);
+  mapping(string:mixed) args = fsa->decode_args(variables, Roxen.RETURN_ZERO);
   if (!args) {
     return Roxen.http_low_answer(400,
 				 sprintf("Invalid parameters for action %q!",
