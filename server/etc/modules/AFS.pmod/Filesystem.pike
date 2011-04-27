@@ -2,6 +2,12 @@
 
 #include <module.h>
 
+#ifdef AFS_DEBUG
+#define AFS_DEBUG_MSG(msg...) report_debug (msg)
+#else
+#define AFS_DEBUG_MSG(msg...) 0
+#endif
+
 // inherit "module";
 
 //////////////////////////////////////////////////////////////////////////////
@@ -237,6 +243,8 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
   }
 
   if (!cs || mappingp(cs)) {
+    AFS_DEBUG_MSG ("AFS call %O: No session id\n",
+		   fs_actions[path] && fs_actions[path]->name);
     return cs || Roxen.http_low_answer(400, "Please provide a session id!");
   }
 
@@ -245,6 +253,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
   AFS.Action fsa = fs_actions[path];
 
   if (!fsa) {
+    AFS_DEBUG_MSG ("AFS: Call to unknown action %O\n", path);
     return Roxen.http_low_answer(404, "Unknown action.");
   }
 
@@ -255,6 +264,7 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     if (sizeof (v) == 1) {
       subscription_id = v[0];
     } else {
+      AFS_DEBUG_MSG ("AFS call %O: Multiple subscribe arguments\n", fsa->name);
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
 				    "Multiple subscribe arguments found.\n");
     }
@@ -268,17 +278,24 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
   mapping(string:mixed) args;
   if (mixed err = catch (
 	args = fsa->decode_args(variables, Roxen.THROW_RXML))) {
-    if (objectp (err) && err->is_RXML_Backtrace)
+    if (objectp (err) && err->is_RXML_Backtrace) {
+      AFS_DEBUG_MSG ("AFS call %O: %sRaw args: %O\n", fsa->name, err->msg,
+		     mkmapping (indices (variables),
+				column (values (variables), 0)));
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD, err->msg);
+    }
     throw (err);
   }
 
   if (!fsa->access_perm(id, cs, args, tag)) {
+    AFS_DEBUG_MSG ("AFS call %O: Permission denied. Args: %O\n",
+		   fsa->name, args - (["session_id": 1]));
     return Roxen.http_low_answer(403, "Permission denied.");
   }
 
   if (subscription_id && cs && cs->get_subscription(subscription_id)) {
     // Client is trying to change a subscription, which isn't supported!
+    AFS_DEBUG_MSG ("AFS call %O: Subscription change attempt\n", fsa->name);
     return Roxen.http_low_answer(403,
 				 sprintf("Client has already subscribed to "
 					 "objects using the key %q and "
@@ -293,13 +310,33 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
 	cs->add_subscription (subscription_id, cmt, fsa->push, args);
       }
     } else {
+      AFS_DEBUG_MSG ("AFS call %O: Unsubscribable action\n", fsa->name);
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
 				    sprintf ("Subscriptions not implemented "
 					     "for action %s.", fsa->name));
     }
   }
 
-  return fsa->exec(id, cs, args, tag) || cs->get_responses();
+  AFS_DEBUG_MSG ("AFS call %O: Executing with args: %O\n",
+		 fsa->name, args - (["session_id": 1]));
+  mapping|array(mapping) res = (fsa->exec(id, cs, args, tag) ||
+				cs->get_responses());
+#ifdef AFS_DEBUG
+  if (mappingp (res))
+    AFS_DEBUG_MSG ("AFS call %O: Returned http response: %O\n", fsa->name, res);
+  else if (sizeof (res)) {
+    AFS_DEBUG_MSG ("AFS call %O: Returned response messages:\n", fsa->name);
+    foreach (res; int i; mapping msg) {
+      if (msg->msg_type == "error")
+	AFS_DEBUG_MSG ("  %d: Error: %O\n", i, msg->message || msg);
+      else
+	AFS_DEBUG_MSG ("  %d: %O\n", i, msg->msg_type);
+    }
+  }
+  else
+    AFS_DEBUG_MSG ("AFS call %O: Returned no response messages.\n", fsa->name);
+#endif
+  return res;
 }
 
 //! Call an @[ActionFS] action via JSON.
