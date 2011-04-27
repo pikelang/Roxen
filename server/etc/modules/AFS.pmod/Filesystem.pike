@@ -260,17 +260,17 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     }
   }
 
+  string tag;
+  if (array t = m_delete (variables, "tag")) {
+    tag = t * "\0";
+  }
+
   mapping(string:mixed) args;
   if (mixed err = catch (
 	args = fsa->decode_args(variables, Roxen.THROW_RXML))) {
     if (objectp (err) && err->is_RXML_Backtrace)
       return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD, err->msg);
     throw (err);
-  }
-
-  string tag;
-  if (variables["tag"]) {
-    tag = variables["tag"]*"\0";
   }
 
   if (!fsa->access_perm(id, cs, args, tag)) {
