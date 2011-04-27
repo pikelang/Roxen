@@ -1,4 +1,4 @@
-// $Id: Action.pike,v 1.4 2011/04/27 17:27:55 mast Exp $
+// $Id: Action.pike,v 1.5 2011/04/27 17:43:42 mast Exp $
 
 //
 // AFS.Action interface
@@ -52,16 +52,12 @@ constant subscribable_types = 0;
 mapping(string:RXML.Type) req_arg_types = ([]);
 mapping(string:RXML.Type) opt_arg_types = ([]);
 
-constant def_arg_type = RXML.t_string;
-
 mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
 				   void|Roxen.OnError on_error)
 //! Decodes and type checks the arguments according to
 //! @[req_arg_types] and @[opt_arg_types]. The @[real_vars] mapping
 //! contains the unparsed @[RequestID.real_variables] style arguments
-//! on entry. Arguments not mentioned in @[req_arg_types] or
-//! @[opt_arg_types] are checked against the default argument type
-//! @[def_arg_type]. @[on_error] determines how errors are handled.
+//! on entry. @[on_error] determines how errors are handled.
 //!
 //! @returns
 //!   The decoded arguments.
@@ -100,16 +96,15 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
     return Roxen.raise_err (on_error, err_msg);
   }
 
-  foreach (args; string arg; mixed val) {
-    RXML.Type type = req_types[arg] || opt_arg_types[arg] || def_arg_type;
-    if (mixed err = catch (type->type_check (val))) {
-      if (objectp(err) && err->is_RXML_Backtrace) {
-	return Roxen.raise_err(on_error, "Invalid type for %O: %s",
-			       arg, err->msg);
+  foreach (args; string arg; mixed val)
+    if (RXML.Type type = req_types[arg] || opt_arg_types[arg])
+      if (mixed err = catch (type->type_check (val))) {
+	if (objectp(err) && err->is_RXML_Backtrace) {
+	  return Roxen.raise_err(on_error, "Invalid type for %O: %s",
+				 arg, err->msg);
+	}
+	throw (err);
       }
-      throw (err);
-    }
-  }
 
   return args;
 }
