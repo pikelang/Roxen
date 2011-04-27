@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.422 2011/03/03 08:50:04 mast Exp $
+// $Id: module.pmod,v 1.423 2011/04/27 17:30:22 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6417,8 +6417,10 @@ class Type
   //! "]", "?" and "=".
   //!
   //! If it doesn't contain a "/", it's treated as a type outside the
-  //! MIME system, e.g. "int" for an integer. Any type that can be
-  //! mapped to a MIME type should be so.
+  //! MIME system, e.g. "int" for an integer. In this case the name
+  //! should follow the Pike type syntax.
+  //!
+  //! Any type that can be mapped to a MIME type should be so.
 
   //! @decl constant string type_name;
   //!
@@ -7604,6 +7606,154 @@ class THtml
   }
 
   constant decode = 0;		// Cover it; not needed here.
+}
+
+// Composite types:
+//
+// A few ad-hoc combinations since we lack a generic system for
+// building composite types.
+
+TStrOrInt t_str_or_int = TStrOrInt();
+//! Either a string or an integer. Not sequential.
+//!
+//! Supertype: @[RXML.t_scalar]
+
+class TStrOrInt
+{
+  inherit TScalar;
+  constant name = "string|int";
+  constant type_name = "RXML.t_str_or_int";
+  Type supertype = t_scalar;
+  Type conversion_type = t_scalar;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!intp (val) && !stringp (val) && val != empty)
+      type_check_error (msg, args,
+			"Expected string or integer value, got %t.\n", val);
+  }
+
+  string|int encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string|int] val;
+	default: return [string|int] indirect_convert (val, from);
+      }
+    if (!stringp (val) && !intp (val))
+      // Cannot unambigiously use a cast for this type.
+      parse_error ("Cannot convert %s to string or integer.\n",
+		   format_short (val));
+    return [string|int] val;
+  }
+}
+
+class TTypedArray
+{
+  inherit TArray;
+  Type supertype = t_array;
+
+  /* constant element_type_name; */
+  protected int element_type_p (mixed val);
+  protected mixed element_encode (mixed val);
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (val == empty) return;
+    if (!arrayp (val))
+      type_check_error (msg, args, "Expected array, got %t.\n", val);
+    foreach (val; int i; mixed ent)
+      if (!element_type_p (ent))
+	type_check_error (msg, args,
+			  "Expected %s at position %d, got %t.\n",
+			  this->element_type_name, i + 1, ent);
+  }
+
+  array encode (mixed val, void|Type from)
+  {
+    array res = ::encode (val, from);
+    foreach (res; int i; mixed ent)
+      res[i] = element_encode (ent);
+    return res;
+  }
+}
+
+TNumArray t_num_array = TNumArray();
+//! An array of numbers (i.e. floats or integers).
+//!
+//! Supertype: @[RXML.t_array]
+
+class TNumArray
+{
+  inherit TTypedArray;
+  constant name = "array(number)";
+  constant type_name = "RXML.t_num_array";
+  constant element_type_name = "number";
+
+  protected int element_type_p (mixed val)
+    {return intp (val) || floatp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_num->encode (val);}
+}
+
+TIntArray t_int_array = TIntArray();
+//! An array of integers.
+//!
+//! Supertype: @[RXML.t_num_array]
+
+class TIntArray
+{
+  inherit TTypedArray;
+  constant name = "array(int)";
+  constant type_name = "RXML.t_int_array";
+  Type supertype = t_num_array;
+  constant element_type_name = "int";
+
+  protected int element_type_p (mixed val)
+    {return intp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_int->encode (val);}
+}
+
+TStrArray t_str_array = TStrArray();
+//! An array of strings.
+//!
+//! Supertype: @[RXML.t_array]
+
+class TStrArray
+{
+  inherit TTypedArray;
+  constant name = "array(string)";
+  constant type_name = "RXML.t_str_array";
+  constant element_type_name = "string";
+
+  protected int element_type_p (mixed val)
+    {return stringp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_string->encode (val);}
+}
+
+TMapArray t_map_array = TMapArray();
+//! An array of mappings.
+//!
+//! Supertype: @[RXML.t_array]
+
+class TMapArray
+{
+  inherit TTypedArray;
+  constant name = "array(mapping)";
+  constant type_name = "RXML.t_map_array";
+  constant element_type_name = "mapping";
+
+  protected int element_type_p (mixed val)
+    {return mappingp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_mapping->encode (val);}
 }
 
 
