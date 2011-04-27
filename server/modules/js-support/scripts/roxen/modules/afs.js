@@ -86,6 +86,35 @@ ROXEN.AFS = function () {
   // low-level AFS errors (connection errors or JSON format errors).
   var error_callbacks = [];
 
+  function encode_afs_args (args)
+  {
+    var query = [];
+    var json_args = {}, got_json_args = false;
+
+    // Send strings as ordinary variables. Everything else is sent as
+    // json in the special __afs variable. That way it's possible to
+    // send variables that are parsed by the server outside the main
+    // afs query handler.
+
+    for (var name in args)
+      if (args.hasOwnProperty (name)) {
+	var val = args[name];
+	if (YAHOO.lang.isString (val))
+	  // Assume the name only contains ordinary characters. May
+	  // escape it later should it be a problem.
+	  query.push (name + "=" + ROXEN.escapeURIComponent (val));
+	else {
+	  json_args[name] = val;
+	  got_json_args = true;
+	}
+      }
+
+    if (got_json_args)
+      query.push ("__afs=" + YAHOO.lang.JSON.stringify (json_args));
+
+    return query.join ("&");
+  }
+
   function request_failure (resp)
   {
     ROXEN.log("ROXEN.AFS: connection error: " +
@@ -261,7 +290,7 @@ ROXEN.AFS = function () {
     args[session_var] = session;
 
     open_connections++;
-    var url = actions_prefix + action + ROXEN.queryify(args);
+    var url = actions_prefix + action + "?" + encode_afs_args (args);
     var con = YAHOO.util.Connect.asyncRequest ( method, url,
                                                 { cache: false,
                                                   success: request_success,

@@ -1,4 +1,4 @@
-// $Id: Action.pike,v 1.3 2011/04/27 14:35:29 mast Exp $
+// $Id: Action.pike,v 1.4 2011/04/27 17:27:55 mast Exp $
 
 //
 // AFS.Action interface
@@ -54,12 +54,12 @@ mapping(string:RXML.Type) opt_arg_types = ([]);
 
 constant def_arg_type = RXML.t_string;
 
-mapping(string:mixed) decode_args (mapping(string:mixed) vars,
+mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
 				   void|Roxen.OnError on_error)
-//! Decodes and type checks the tag arguments according to
-//! @[req_arg_types] and @[opt_arg_types]. The @[vars] mapping
-//! contains the unparsed arguments on entry, and it may be modified
-//! destructively. Arguments not mentioned in @[req_arg_types] or
+//! Decodes and type checks the arguments according to
+//! @[req_arg_types] and @[opt_arg_types]. The @[real_vars] mapping
+//! contains the unparsed @[RequestID.real_variables] style arguments
+//! on entry. Arguments not mentioned in @[req_arg_types] or
 //! @[opt_arg_types] are checked against the default argument type
 //! @[def_arg_type]. @[on_error] determines how errors are handled.
 //!
@@ -67,13 +67,28 @@ mapping(string:mixed) decode_args (mapping(string:mixed) vars,
 //!   The decoded arguments.
 {
   mapping(string:mixed) args = ([]);
+  foreach (real_vars; string var; array(string) val) {
+    if (sizeof (val) > 1)
+      return Roxen.raise_err(on_error, "Multiple %O variables found.\n", var);
+    args[var] = val[0];
+  }
 
-  // Note: This code is stolen from the RXML parser and modified to be
-  // allow reuse here.
+  if (string json_arg = m_delete (args, "__afs")) {
+    mapping(string:mixed) decoded;
+    if (mixed err = catch (decoded = Standards.JSON.decode (json_arg)))
+      return Roxen.raise_err (on_error, "Format error in __afs value: %s",
+			      describe_error (err));
+    if (!mappingp (decoded))
+      return Roxen.raise_err (on_error, "Format error in __afs value: "
+			      "Contains a %t, expected mapping.\n", args);
+    // Let unencoded variables override, although there shouldn't be
+    // any overlap.
+    args = decoded + args;
+  }
 
-  mapping(string:RXML.Type) atypes = vars & req_arg_types;
-  if (sizeof (atypes) < sizeof (req_arg_types)) {
-    array(string) missing = sort (indices (req_arg_types - atypes));
+  mapping(string:RXML.Type) req_types = args & req_arg_types;
+  if (sizeof (req_types) < sizeof (req_arg_types)) {
+    array(string) missing = sort (indices (req_arg_types - req_types));
     string err_msg = sprintf("Required " +
 			     (sizeof (missing) > 1 ?
 			      "arguments " + String.implode_nicely (missing) + " are" :
@@ -85,14 +100,12 @@ mapping(string:mixed) decode_args (mapping(string:mixed) vars,
     return Roxen.raise_err (on_error, err_msg);
   }
 
-  atypes += vars & opt_arg_types;
-  foreach (vars; string arg; mixed val) {
-    if (sizeof(val) != 1)
-      return Roxen.raise_err(on_error, "Multiple %O arguments found.\n", arg);
-    RXML.Type type = atypes[arg] || def_arg_type;
-    if (mixed err = catch (args[arg] = type->encode (val[0]))) {
+  foreach (args; string arg; mixed val) {
+    RXML.Type type = req_types[arg] || opt_arg_types[arg] || def_arg_type;
+    if (mixed err = catch (type->type_check (val))) {
       if (objectp(err) && err->is_RXML_Backtrace) {
-	return Roxen.raise_err(on_error, "Failed to parse argument %O\n", arg);
+	return Roxen.raise_err(on_error, "Invalid type for %O: %s",
+			       arg, err->msg);
       }
       throw (err);
     }
