@@ -260,11 +260,12 @@ mapping|array(mapping) call_fs_action(string path, RequestID id,
     }
   }
 
-  mapping(string:mixed) args = fsa->decode_args(variables, Roxen.RETURN_ZERO);
-  if (!args) {
-    return Roxen.http_low_answer(400,
-				 sprintf("Invalid parameters for action %q!",
-					 fsa->name));
+  mapping(string:mixed) args;
+  if (mixed err = catch (
+	args = fsa->decode_args(variables, Roxen.THROW_RXML))) {
+    if (objectp (err) && err->is_RXML_Backtrace)
+      return Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD, err->msg);
+    throw (err);
   }
 
   string tag;
