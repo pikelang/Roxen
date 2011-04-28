@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.123 2009/12/05 01:04:00 jonasw Exp $
+// $Id: global_variables.pike,v 1.124 2011/04/28 09:14:27 liin Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -982,6 +982,25 @@ the Roxen instance of the MySQL server).</p>"));
   defvar("global_position",
 	 Variable.Variable(0, VAR_INVISIBLE));
 
+#ifdef ENABLE_OUTGOING_PROXY
+  defvar("use_proxy", 0,
+	 LOCALE(0, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+	 LOCALE(0, "Use proxy for outgoing requests. E.g. when browsing "
+		"external web sites through the Linkbrowser or when Insert "
+		"cached-href fetches data from an external location."));
+  
+  defvar("proxy_url", "",
+	 LOCALE(0, "Proxy: Proxy URL"), TYPE_STRING,
+	 LOCALE(0, "The URL of the proxy to use for outgoing requests."));
+  
+  defvar("proxy_username", "",
+         LOCALE(0, "Proxy: Proxy username"), TYPE_STRING,
+         LOCALE(0, "Username for proxy authorization."));
+  
+  defvar("proxy_password", "",
+         LOCALE(0, "Proxy: Proxy password"), TYPE_STRING,
+         LOCALE(0, "Password for proxy authorization."));
+#endif
 }
 
 
