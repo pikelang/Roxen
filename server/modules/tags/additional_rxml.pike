@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.54 2010/12/01 22:07:27 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.55 2011/04/28 09:16:08 liin Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -174,10 +174,28 @@ class AsyncHTTPClient {
 		      request_headers, req_data);
     
     */
+
     con->set_callbacks(req_ok, req_fail);
+
+#ifdef ENABLE_OUTGOING_PROXY
+    if (roxen.query("use_proxy")) {
+      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					     roxen.query("proxy_username"), 
+					     roxen.query("proxy_password"),
+					     method, url, 0,
+					     request_headers, con,
+					     req_data);
+    } else {
+      con->async_request(url->host,url->port,
+			 method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+			 request_headers, req_data);
+    }
+#else
     con->async_request(url->host,url->port,
 		       method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
 		       request_headers, req_data);
+#endif
+
     status = con->status;
     queue->read();
   }
@@ -258,7 +276,6 @@ class TagInsertHref {
     q = AsyncHTTPClient(method, args, headers);
     q->run();
 #else
-
     mixed err;
     if(method == "POST") {
       mapping vars = ([ ]);
