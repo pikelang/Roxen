@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.31 2011/01/17 10:29:25 marty Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.32 2011/04/28 09:17:00 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -874,9 +874,25 @@ class HTTPClient {
     con->set_callbacks(req_ok, req_fail);
     con->timeout = timeout;
     start_time = time();
-    con->async_request(url->host,url->port,
-		       "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
-		       request_headers);
+
+#ifdef ENABLE_OUTGOING_PROXY
+    if (roxen.query("use_proxy")) {
+      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					     roxen.query("proxy_username"), 
+					     roxen.query("proxy_password"),
+					     "GET", url, 0,
+					     request_headers, con);
+    } else {
+      con->async_request(url->host,url->port,
+			 "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
+			 request_headers);
+    }
+#else
+      con->async_request(url->host,url->port,
+			 "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
+			 request_headers);
+#endif
+
     status = con->status;
 
     if (sync) {
