@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.28 2011/04/15 15:23:28 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.29 2011/05/03 21:18:16 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -16,6 +16,7 @@ This module provides the session tag which provides a variable scope
 where user session data can be stored.";
 
 protected string shared_db;
+protected int db_ok;
 
 protected void create (Configuration conf)
 {
@@ -43,7 +44,17 @@ void start() {
   query_tag_set()->prepare_context=set_entities;
   shared_db = query ("enable-shared-db") && query ("shared-db");
   if (shared_db)
-    cache.setup_session_table (shared_db);
+    db_ok = cache.setup_session_table (shared_db);
+  else
+    db_ok = 1;
+}
+
+string status()
+{
+  if (!db_ok)
+    return "<font color='red'>"
+      "Not working - cannot connect to shared database."
+      "</font>\n";
 }
 
 
@@ -99,6 +110,7 @@ class TagSession {
     string scope_name;
 
     array do_enter(RequestID id) {
+      if (!db_ok) run_error ("Shared db not set up.\n");
       NOCACHE();
       vars = cache.get_session_data(args->id, shared_db) || ([]);
       scope_name = args->scope || "session";
@@ -126,6 +138,7 @@ class TagClearSession {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
+      if (!db_ok) run_error ("Shared db not set up.\n");
       NOCACHE();
       cache.clear_session(args->id, shared_db);
     }
