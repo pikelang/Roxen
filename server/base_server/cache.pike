@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.146 2011/04/20 23:50:47 mast Exp $
+// $Id: cache.pike,v 1.147 2011/05/03 21:20:51 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -2017,14 +2017,17 @@ string set_session_data(mixed data, void|string id, void|int persistence,
   return id;
 }
 
-void setup_session_table (string db_name)
+int setup_session_table (string db_name)
 //! Creates a table "session_cache" with the proper definition in the
 //! given database.
 {
-  db(db_name)->query("CREATE TABLE IF NOT EXISTS session_cache ("
-		     "id CHAR(32) NOT NULL PRIMARY KEY, "
-		     "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
-		     "data BLOB NOT NULL)");
+  Sql.Sql conn = db (db_name);
+  if (!conn) return 0;
+  conn->query("CREATE TABLE IF NOT EXISTS session_cache ("
+	      "id CHAR(32) NOT NULL PRIMARY KEY, "
+	      "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+	      "data BLOB NOT NULL)");
+  return 1;
 }
 
 // Sets up the session database tables.
