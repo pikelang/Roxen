@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.40 2010/10/11 15:46:33 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.41 2011/05/03 15:43:06 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -477,7 +477,9 @@ class TagEmitLanguages {
 		   ->get_language() || "eng");
     function(string:string) localized =
       locale_obj && [function(string:string)] locale_obj->language;
-    
+
+    string current_code = locale_obj->id();
+
     string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
     array(string) conf_langs=Array.map(get_config_langs(id),
 			       lambda(string lang) { return "-"+(iso639?"":"$")+lang; } );
@@ -490,6 +492,7 @@ class TagEmitLanguages {
 	({ lang, "Unknown", "Unknown" });
       
       res+=({ (["code":lid[0],
+		"current":current_code,
 		"en": (lid[1] == "standard") ? "english" : lid[1],
 		"local":lid[2],
 		"preurl":Roxen.add_pre_state(url, id->prestate - 
@@ -519,6 +522,8 @@ will be used.</p></desc>
 languages associated with these codes will be emitted in that order.</p></attr>",
 ([
   "&_.code;"      : "<desc type='entity'><p>The language code.</p></desc>",
+  "&_.current;"   : "<desc type='entity'><p>The code of the currently selected"
+                    " language.</p></desc>",
   "&_.en;"        : "<desc type='entity'><p>The language name in english.</p>"
                     "</desc>",
   "&_.local;"     : "<desc type='entity'><p>The language name as written in "
