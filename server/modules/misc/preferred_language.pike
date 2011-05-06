@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.41 2011/05/03 15:43:06 marty Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.42 2011/05/06 07:42:24 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -478,7 +478,7 @@ class TagEmitLanguages {
     function(string:string) localized =
       locale_obj && [function(string:string)] locale_obj->language;
 
-    string current_code = locale_obj->id();
+    string current_code = (locale_obj && locale_obj->id()) || "";
 
     string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
     array(string) conf_langs=Array.map(get_config_langs(id),
