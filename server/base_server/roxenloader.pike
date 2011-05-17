@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.394 2010/05/25 09:37:10 grubba Exp $
+// $Id: roxenloader.pike,v 1.395 2011/05/17 12:20:46 marty Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.394 2010/05/25 09:37:10 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.395 2011/05/17 12:20:46 marty Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1661,7 +1661,7 @@ Sql.Sql sq_cache_get( string db_name,
 	db->master_sql->unicode_decode_mode_is_broken)
       cur_charset = "broken-unicode";
 #endif
-    if (charset != db->get_charset())
+    if (charset != cur_charset)
       db->set_charset (charset);
     return [object(Sql.Sql)] (object) SQLKey (db, db_name, reuse_in_thread);
   }
