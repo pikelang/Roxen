@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.447 2011/05/18 14:38:53 mast Exp $
+// $Id: roxenloader.pike,v 1.448 2011/05/23 11:00:34 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.447 2011/05/18 14:38:53 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.448 2011/05/23 11:00:34 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1766,6 +1766,53 @@ protected class SQLResKey
     return !real;
   }
 
+  // Iterator copied from Sql.sql_result. It's less hassle to
+  // implement our own than to wrap the real one.
+  class _get_iterator
+  {
+    protected int|array(string|int) row = fetch_row();
+    protected int pos = 0;
+
+    int index()
+    {
+      return pos;
+    }
+
+    int|array(string|int) value()
+    {
+      return row;
+    }
+
+    int(0..1) next()
+    {
+      pos++;
+      return !!(row = fetch_row());
+    }
+
+    this_program `+=(int steps)
+    {
+      if(!steps) return this;
+      if(steps<0) error("Iterator must advance a positive number of steps.\n");
+      if(steps>1)
+      {
+	pos += steps-1;
+	seek(steps-1);
+      }
+      next();
+      return this;
+    }
+
+    int(0..1) `!()
+    {
+      return eof();
+    }
+
+    int _sizeof()
+    {
+      return num_fields();
+    }
+  }
+
   protected mixed `[]( string what )
   {
     return `->( what );
@@ -1781,6 +1828,7 @@ protected class SQLResKey
     case "fetch_fields":      return fetch_fields;
     case "seek":              return seek;
     case "fetch_row":         return fetch_row;
+    case "_get_iterator":     return _get_iterator;
     case "fetch_json_result": return fetch_json_result;
     }
     return real[what];
