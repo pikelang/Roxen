@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.445 2011/05/23 11:29:41 mast Exp $
+// $Id: roxenloader.pike,v 1.446 2011/05/23 12:30:49 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.445 2011/05/23 11:29:41 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.446 2011/05/23 12:30:49 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1697,10 +1697,14 @@ mapping(string:int) get_sql_free_list_status()
   return map(sql_free_list, sizeof);
 }
 
+#ifndef DB_CONNECTION_TIMEOUT
+// 1 minute timeout by default.
+#define DB_CONNECTION_TIMEOUT 60
+#endif
+
 protected class SQLTimeout(protected Sql.Sql real)
 {
-  // 5 minutes timeout.
-  protected int timeout = time(1) + 5*60;
+  protected int timeout = time(1) + DB_CONNECTION_TIMEOUT;
 
   protected int(0..1) `!()
   {
