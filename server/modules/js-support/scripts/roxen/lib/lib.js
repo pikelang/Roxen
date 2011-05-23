@@ -544,7 +544,7 @@
 
     /**
       * Return a short readable date and time string similar to
-      * Sitebuilder.mtime_to_sr().
+      * Sitebuilder.mtime_to_str().
       * @method shortDateTime
       * @param unixtime {Int} 
       */
@@ -568,18 +568,13 @@
         //  Feb 23, 14:30
         fmt = date_fmt.replace(", %Y", "");
         fmt = fmt.replace(" %Y", "");
-        if (time_fmt != "")
-          fmt = fmt + ", " + time_fmt;
+	fmt = fmt + ", " + time_fmt;
       } else if (tm_yday == today_yday - 1) {
         //  Yesterday, 14:30
-        fmt = "yesterday";
-        if (time_fmt != "")
-          fmt += ", " + time_fmt;
+	fmt = "yesterday, " + time_fmt;
       } else {
         //  Today, 14:30
-        fmt = "today";
-        if (time_fmt != "")
-          fmt += ", " + time_fmt;
+	fmt = "today, " + time_fmt;
       }
       return YAHOO.util.Date.format(tm, { format: fmt }, locale);
     }
