@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.448 2011/05/23 11:00:34 mast Exp $
+// $Id: roxenloader.pike,v 1.449 2011/05/23 11:29:41 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.448 2011/05/23 11:00:34 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.449 2011/05/23 11:29:41 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1999,8 +1999,7 @@ Thread.MutexKey sq_cache_lock()
 
 protected mapping(program:string) default_db_charsets = ([]);
 
-Sql.Sql sq_cache_get( string db_name,
-		      void|int reuse_in_thread, void|string charset)
+Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 {
   Sql.Sql db;
 
@@ -2027,38 +2026,42 @@ Sql.Sql sq_cache_get( string db_name,
     }
   }
 
-  if (db) {
-    if (object master_sql = db->master_sql)
-      if (master_sql->set_charset) {
-	if (!charset)
-	  charset = default_db_charsets[object_program (master_sql)];
-
-	if ((charset == "unicode" || charset == "broken-unicode") &&
-	    master_sql->get_unicode_encode_mode) {
-	  // Unicode mode requested and the sql backend seems to
-	  // support it (a better recognition flag would be nice).
-	  // Detect if it's already enabled through
-	  // get_unicode_encode_mode and get_unicode_decode_mode. It's
-	  // enabled iff both return true.
-	  if (!(master_sql->get_unicode_encode_mode() &&
-		master_sql->get_unicode_decode_mode()))
-	    master_sql->set_charset (charset);
-	}
-
-	else {
-	  if (master_sql->set_unicode_decode_mode &&
-	      master_sql->get_unicode_decode_mode())
-	    // Ugly special case for mysql: The set_charset call does
-	    // not reset this state.
-	    master_sql->set_unicode_decode_mode (0);
-	  if (charset != master_sql->get_charset())
-	    master_sql->set_charset (charset);
-	}
-      }
+  if (db)
     return [object(Sql.Sql)] (object) SQLKey (db, db_name, reuse_in_thread);
-  }
-
   return 0;
+}
+
+Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
+{
+  if (object master_sql = db->master_sql)
+    if (master_sql->set_charset) {
+      if (!charset)
+	charset = default_db_charsets[object_program (master_sql)];
+
+      if ((charset == "unicode" || charset == "broken-unicode") &&
+	  master_sql->get_unicode_encode_mode) {
+	// Unicode mode requested and the sql backend seems to
+	// support it (a better recognition flag would be nice).
+	// Detect if it's already enabled through
+	// get_unicode_encode_mode and get_unicode_decode_mode. It's
+	// enabled iff both return true.
+	if (!(master_sql->get_unicode_encode_mode() &&
+	      master_sql->get_unicode_decode_mode()))
+	  master_sql->set_charset (charset);
+      }
+
+      else {
+	if (master_sql->set_unicode_decode_mode &&
+	    master_sql->get_unicode_decode_mode())
+	  // Ugly special case for mysql: The set_charset call does
+	  // not reset this state.
+	  master_sql->set_unicode_decode_mode (0);
+	if (charset != master_sql->get_charset())
+	  master_sql->set_charset (charset);
+      }
+    }
+
+  return db;
 }
 
 #define FIX_CHARSET_FOR_NEW_SQL_CONN(SQLOBJ, CHARSET) do {		\
@@ -2106,8 +2109,11 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
     return res;
   }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  Sql.Sql res = sq_cache_get(i, reuse_in_thread, charset);
-  if (res) return res;
+  Sql.Sql res = sq_cache_get(i, reuse_in_thread);
+  if (res) {
+    destruct (key);
+    return fix_connection_charset (res, charset);
+  }
   destruct(key);
   if (res = low_connect_to_my_mysql( ro, db )) {
     key = sq_cache_lock();

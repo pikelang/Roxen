@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.99 2010/11/25 10:34:18 grubba Exp $
+// $Id: DBManager.pmod,v 1.100 2011/05/23 11:29:41 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -669,8 +669,11 @@ Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
 {
   Thread.MutexKey key = roxenloader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
-  Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread, charset);
-  if (res) return res;
+  Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread);
+  if (res) {
+    destruct(key);
+    return roxenloader.fix_connection_charset (res, charset);
+  }
   // Release the lock during the call to get_sql_handler(),
   // since it may take quite a bit of time...
   destruct(key);
