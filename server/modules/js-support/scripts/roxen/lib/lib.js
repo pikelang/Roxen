@@ -548,7 +548,7 @@
       * @method shortDateTime
       * @param unixtime {Int} 
       */
-    shortDateTime: function (unixtime) {
+    shortDateTime: function (unixtime, force_include_time) {
       var tm = new Date(unixtime*1000);
       var today = new Date();
       var fmt = "";
@@ -562,7 +562,9 @@
       var today_yday = (today.getMonth() + 1) * today.getDate();
       if (tm.getYear() != today.getYear()) {
         //  Feb 23, 2010
-        fmt = date_fmt;
+	fmt = date_fmt;
+	if (force_include_time)
+	  fmt += ", " + time_fmt;
       } else if (tm_yday < today_yday - 1 ||
                  tm_yday > today_yday) {
         //  Feb 23, 14:30
