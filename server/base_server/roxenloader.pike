@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.450 2011/05/23 12:30:49 mast Exp $
+// $Id: roxenloader.pike,v 1.451 2011/05/24 14:17:48 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.450 2011/05/23 12:30:49 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.451 2011/05/24 14:17:48 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1866,22 +1866,42 @@ protected class SQLKey
 
   protected int `!( )  { return !real; }
 
-  array(mapping) query( string f, mixed ... args )
+  protected void handle_db_error (mixed err)
   {
-    return real->query( f, @args );
-  }
-
-  Sql.sql_result big_query( string f, mixed ... args )
-  {
-    if (Sql.sql_result o = real->big_query( f, @args )) {
+    // FIXME: Ugly way of recognizing connect errors. If these errors
+    // happen the connection is not welcome back to the pool.
+    string errmsg = describe_error (err);
+    if (has_prefix (errmsg, "Mysql.mysql(): Couldn't connect ") ||
+	has_prefix (errmsg, "Mysql.mysql(): Couldn't reconnect ")) {
       if (reuse_in_thread) {
 	mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
 	if (dbs_for_thread[db_name] == real)
 	  m_delete (dbs_for_thread, db_name);
       }
-      return [object(Sql.sql_result)] (object) SQLResKey (o, this);
+      real = 0;
     }
-    return 0;
+    throw (err);
+  }
+
+  array(mapping) query( string f, mixed ... args )
+  {
+    mixed err = catch {
+	return real->query( f, @args );
+      };
+    handle_db_error (err);
+  }
+
+  Sql.sql_result big_query( string f, mixed ... args )
+  {
+    Sql.sql_result o;
+    if (mixed err = catch (o = real->big_query( f, @args )))
+      handle_db_error (err);
+    if (reuse_in_thread) {
+      mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+      if (dbs_for_thread[db_name] == real)
+	m_delete (dbs_for_thread, db_name);
+    }
+    return [object(Sql.sql_result)] (object) SQLResKey (o, this);
   }
   
 #ifdef DB_DEBUG
@@ -1938,6 +1958,8 @@ protected class SQLKey
 	if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
       }
     }
+
+    if (!real) return;
 
 #ifndef NO_DB_REUSE
     mixed key;
