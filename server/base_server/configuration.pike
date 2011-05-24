@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.717 2011/05/20 12:21:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.718 2011/05/24 13:54:34 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3119,21 +3119,7 @@ int|string try_get_file(string s, RequestID id,
   fake_id->misc->internal_get = !not_internal;
   fake_id->method = "GET";
 
-  // Stash the rxml context if we have any, to keep code in the nested
-  // request from modifying it. E.g. RequestID.set_max_cache,
-  // RequestID.add_response_header and RequestID.set_output_charset
-  // may otherwise record changes in our context if there's no nested
-  // rxml session when they are called.
-  RXML.Context old_ctx = RXML.get_context();
-  RXML.set_context (0);
-
-  array a;
-  mixed err = catch {
-      a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
-    };
-
-  RXML.set_context (old_ctx);
-  if (err) throw (err);
+  array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
 
   m = a[1];
 
