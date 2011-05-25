@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.646 2011/04/21 13:16:40 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.647 2011/05/25 09:38:54 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7301,6 +7301,23 @@ class TagEmitValues {
   constant name="emit";
   constant plugin_name="values";
 
+  static mixed post_process_value(mixed val, mapping(string:mixed) m)
+  {
+    if (arrayp(val)) {
+      if (m->trimwhites || m->case) {
+	return map(val, post_process_value, m);
+      }
+      return val;
+    }
+    if(m->trimwhites)
+      val=String.trim_all_whites(RXML.t_string->encode (val));
+    if(m->case=="upper")
+      val=upper_case(RXML.t_string->encode (val));
+    else if(m->case=="lower")
+      val=lower_case(RXML.t_string->encode (val));
+    return val;
+  }
+
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
     if(m["from-scope"]) {
       m->values=([]);
@@ -7430,43 +7447,27 @@ class TagEmitValues {
 
     if(mappingp(m->values))
       return map( indices(m->values),
-		  lambda(mixed ind) {
-		    mixed val = m->values[ind];
-		    if(m->trimwhites)
-		      val=String.trim_all_whites(RXML.t_string->encode (val));
-		    if(m->case=="upper")
-		      val=upper_case(RXML.t_string->encode (val));
-		    else if(m->case=="lower")
-		      val=lower_case(RXML.t_string->encode (val));
+		  lambda(mixed ind, mapping(string:mixed) m) {
+		    mixed val = post_process_value(m->values[ind], m);
 		    return (["index":ind,"value":val]);
-		  });
+		  }, m);
 
     if(arrayp(m->values)) {
       if(m->distinct)
 	m->values = Array.uniq(m->values);
       return map( m->values,
-		  lambda(mixed val) {
-		    if(m->trimwhites)
-		      val=String.trim_all_whites(RXML.t_string->encode (val));
-		    if(m->case=="upper")
-		      val=upper_case(RXML.t_string->encode (val));
-		    else if(m->case=="lower")
-		      val=lower_case(RXML.t_string->encode (val));
+		  lambda(mixed val, mapping(string:mixed) m) {
+		    val = post_process_value(val, m);
 		    return (["value":val]);
-		  } );
+		  }, m);
     }
 
     if(multisetp(m->values))
       return map( m->values,
-		  lambda(mixed val) {
-		    if(m->trimwhites)
-		      val=String.trim_all_whites(RXML.t_string->encode (val));
-		    if(m->case=="upper")
-		      val=upper_case(RXML.t_string->encode (val));
-		    else if(m->case=="lower")
-		      val=lower_case(RXML.t_string->encode (val));
+		  lambda(mixed val, mapping(string:mixed) m) {
+		    val = post_process_value(val, m);
 		    return (["index":val]);
-		  } );
+		  }, m);
 
     RXML.run_error("Values variable has wrong type %t.\n", m->values);
   }
