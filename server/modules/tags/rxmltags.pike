@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.647 2011/05/25 09:38:54 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.648 2011/05/26 09:40:13 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -12311,9 +12311,26 @@ Specify scope to test for existence.</p>
 </attr>
 
 <attr name='advanced' value='lines|words|csv|chars'><p>
- If the value is a string it can be split into separate lines,
- words, CSV (comma separated values) fields or characters by using
- this attribute.</p>
+ If the value is a string it can be split into multiple fields
+ by using this attribute:</p>
+ <dl>
+  <dh><tt>lines</tt></dh>
+  <dd>The input is split on individual line-feed and carriage-return
+      characters and in combination. Note that the separator characters
+      are not kept in the output values.</dd>
+  <dh><tt>words</tt></dh>
+  <dd>The input is split on the common white-space characters (line-feed,
+      carriage-return, space and tab). White-space is not retained in
+      the fields. Note that if a field ends with one of the punctuation
+      marks <tt>'.'</tt>, <tt>','</tt>, <tt>':'</tt>, <tt>';'</tt>,
+      <tt>'!'</tt> or <tt>'?'</tt>, the punctuation mark will be removed.</dd>
+  <dh><tt>chars</tt> (Characters)</dh>
+  <dd>The input is split into individual characters.</dd>
+  <dh><tt>csv</tt> (Comma-separated values)</dh>
+  <dd>This input is first split into lines, and the lines then split
+      into fields on <tt>','</tt> and <tt>';'</tt> according to CSV
+      quoting rules. Note that this results in a two-dimensional result.</dd>
+ </dl>
 </attr>
 
 <attr name='case' value='upper|lower'><p>
