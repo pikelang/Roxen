@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.171 2011/04/06 21:21:29 mast Exp $
+// $Id: wizard.pike,v 1.172 2011/05/28 13:26:09 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -806,48 +806,59 @@ mapping|string wizard_done_exit (mapping state, string default_return_url,
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
 
+mapping(string:array) wizard_get_state (RequestID id)
+//! Decodes the wizard state and incorporates it into
+//! id->real_variables, letting existing variables override those from
+//! the wizard state. Returns the wizard state without overrides.
+{
+  mapping(string:array) s = id->misc->wizard_state;
+  if (s) return s;
+
+  string state_str;
+#ifdef USE_WIZARD_COOKIE
+  state_str = id->real_variables->_page && id->cookies->WizardState;
+#else
+  state_str = id->real_variables->_state && id->real_variables->_state[0];
+#endif
+  if (state_str)
+    s = decompress_state(state_str);
+  else {
+    s = ([]);
+    if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
+	id->referer && sizeof (id->referer)) {
+      // Define return_to_referrer to use the Referer to go back to
+      // the previous place after the wizard is done. This currently
+      // doesn't use a stack, so if we're coming here from another
+      // wizard return then we ignore the referrer so that the
+      // ordinary "cancel" url is used instead.
+      string referrer = id->referer[0];
+      if (!has_value (referrer, "&_wiz_ret=") &&
+	  !has_value (referrer, "?_wiz_ret=")) {
+	if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
+	else referrer += "?_wiz_ret=";
+      }
+      s->cancel_url = s->done_url = ({referrer});
+    }
+  }
+
+  mapping(string:array) vars = id->real_variables;
+  foreach(vars; string q; array var)
+    if (!vars[q])
+      vars[q] = var;
+
+  return id->misc->wizard_state = s;
+}
+
 mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
   string data;
   int offset = 1;
   string wiz_name = "page_";
 
-  mapping s;
-  {
-    string state_str;
-#ifdef USE_WIZARD_COOKIE
-    state_str = id->real_variables->_page && id->cookies->WizardState;
-#else
-    state_str = id->real_variables->_state && id->real_variables->_state[0];
-#endif
-    if (state_str)
-      s = decompress_state(state_str);
-    else {
-      s = ([]);
-      if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
-	  id->referer && sizeof (id->referer)) {
-	// Define return_to_referrer to use the Referer to go back to
-	// the previous place after the wizard is done. This currently
-	// doesn't use a stack, so if we're coming here from another
-	// wizard return then we ignore the referrer so that the
-	// ordinary "cancel" url is used instead.
-	string referrer = id->referer[0];
-	if (!has_value (referrer, "&_wiz_ret=") &&
-	    !has_value (referrer, "?_wiz_ret=")) {
-	  if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
-	  else referrer += "?_wiz_ret=";
-	}
-	s->cancel_url = s->done_url = ({referrer});
-      }
-    }
-  }
+  mapping(string:array) s = wizard_get_state (id);
 
   if(id->real_variables->cancel || id->real_variables["cancel.x"])
     return wizard_cancel_exit (s, cancel, id);
-
-  mapping å = id->real_variables;
-  foreach(indices(s), string q)
-     å[q] = å[q]||s[q];
 
   //  Handle double posting of variables in select override widgets
   foreach(Array.uniq(id->real_variables->__select_override_vars || ({ }) ),
@@ -1169,7 +1180,7 @@ string focused_wizard_menu;
 mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  
+
   //  Cannot clear wizard cache since it will trigger massive recompiles of
   //  wizards from inside SiteBuilder. It also breaks wizards which use
   //  persistent storage.
