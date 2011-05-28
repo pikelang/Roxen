@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.172 2011/05/28 13:26:09 mast Exp $
+// $Id: wizard.pike,v 1.173 2011/05/28 13:54:35 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -842,7 +842,7 @@ mapping(string:array) wizard_get_state (RequestID id)
   }
 
   mapping(string:array) vars = id->real_variables;
-  foreach(vars; string q; array var)
+  foreach(s; string q; array var)
     if (!vars[q])
       vars[q] = var;
 
