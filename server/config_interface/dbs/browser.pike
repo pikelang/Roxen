@@ -869,11 +869,20 @@ mapping|string parse( RequestID id )
 
 	    if( is_encode_value( tmp ) )
 	      qres += format_decode_value(tmp);
-#if 0
-	    else if (String.width (tmp) > 8)
-	      qres += Roxen.html_encode_string(
-		utf8_to_string (sprintf("%q", string_to_utf8 (tmp))[1..<1]));
-#endif
+	    else if (String.width (tmp) > 8) {
+	      // Let wide chars skip past the %q quoting, because
+	      // it'll quote them to \u escapes otherwise.
+	      string q = "";
+	      int s;
+	      foreach (tmp; int i; int c)
+		if (c >= 256) {
+		  if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
+		  q += sprintf ("%c", c);
+		  s = i + 1;
+		}
+	      q += sprintf ("%q", tmp[s..])[1..<1];
+	      qres += Roxen.html_encode_string (q);
+	    }
 	    else
 	      qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	  }
