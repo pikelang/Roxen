@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.638 2011/03/06 14:48:54 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.639 2011/06/09 20:36:03 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2965,13 +2965,12 @@ void send_result(mapping|void result)
 }
 
 // Execute the request. This is called from a handler thread.
-void handle_request( )
+protected void handle_request_from_queue( )
 {
   if (mixed err = catch {
 
-  REQUEST_WERR("HTTP: handle_request()");
-  TIMER_START(handle_request);
-  
+  REQUEST_WERR("HTTP: handle_request_from_queue()");
+
   int now = gethrtime();
   queue_time = now - queue_time;
 
@@ -2979,6 +2978,8 @@ void handle_request( )
   // "503 - server too busy" response..
   int queue_timeout = conf->handler_queue_timeout;
   if (queue_timeout && queue_time/1E6 > queue_timeout) {
+    REQUEST_WERR (sprintf ("HTTP: Too long in queue (%d ms) - returning 503\n",
+			   queue_time));
     file = Roxen.http_rxml_answer (conf->query ("503-message"),
 				   this, 0, "text/html");
     file->error = Protocols.HTTP.HTTP_UNAVAIL;
@@ -2990,6 +2991,21 @@ void handle_request( )
     return;
   }
 
+  handle_request();
+
+  }) {
+    call_out (disconnect, 0);
+    report_error("Internal server error: " + describe_backtrace(err));
+  }
+}
+
+void handle_request()
+{
+  if (mixed err = catch {
+
+  REQUEST_WERR("HTTP: handle_request()");
+  TIMER_START(handle_request);
+  
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -3026,7 +3042,7 @@ void handle_request( )
 
   MARK_FD("HTTP handling request");
 
-  handle_time = now;
+  handle_time = gethrtime();
 #if constant(System.CPU_TIME_IS_THREAD_LOCAL)
   handle_vtime = gethrvtime();
 #endif
@@ -3615,7 +3631,7 @@ void got_data(mixed fooid, string s, void|int chained)
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
     queue_length = roxen.handle_queue_length();
-    roxen.handle(handle_request);
+    roxen.handle(handle_request_from_queue);
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
