@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.447 2011/05/24 14:17:48 mast Exp $
+// $Id: roxenloader.pike,v 1.448 2011/06/15 09:57:38 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.447 2011/05/24 14:17:48 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.448 2011/06/15 09:57:38 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2018,6 +2018,12 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
       if (!charset)
 	charset = default_db_charsets[object_program (master_sql)];
 
+#if 1
+      // Set the charset unconditionally. This is a temporary kludge
+      // until the problem with lost charset on reconnect has been
+      // sorted out properly ([bug 5964]).
+      db->set_charset (charset);
+#else
       // Compensate for asymmetries between SQL.mysql.get_charset()
       // and SQL.mysql.set_charset() when the "broken-unicode"
       // kludge is used. This avoids unnecessary resets of the
@@ -2034,6 +2040,7 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
 	  master_sql->set_unicode_decode_mode (0);
 	db->set_charset (charset);
       }
+#endif
     }
 
   return db;
