@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1080 2011/02/15 13:51:39 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1081 2011/06/15 15:11:08 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1808,7 +1808,10 @@ class Protocol
   //! Maps the configuration objects to the data mappings in @[urls].
 
   void ref(string name, mapping(string:mixed) data)
-  //! Add a ref for the URL 'name' with the data 'data'
+  //! Add a ref for the URL @[name] with the data @[data].
+  //!
+  //! See @[urls] for documentation about the supported
+  //! fields in @[data].
   {
     if(urls[name])
     {
@@ -2600,12 +2603,58 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
 
 mapping(string:program/*(Protocol)*/) protocols;
 
-// prot:ip:port ==> Protocol.
+//! Lookup from protocol, IP number and port to
+//! the corresponding open @[Protocol] port.
+//!
+//! @mapping
+//!   @member mapping(string:mapping(int:Protocol)) protocol_name
+//!     @mapping
+//!       @member mapping(int:Protocol) ip_number
+//!         @mapping
+//!           @member Protocol port_number
+//!             @[Protocol] object that holds this ip_number and port open.
+//!         @endmapping
+//!     @endmapping
+//! @endmapping
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
-// url:"port" ==> Protocol.
+//! Lookup from URL string to the corresponding open @[Protocol] ports.
+//!
+//! Note that there are two classes of URL strings used as indices in
+//! this mapping:
+//! @dl
+//!   @item "prot://host_glob:port/path/"
+//!     A normalized URL string as returned by @[normalize_url()].
+//!
+//!     @[Protocol()->ref()] in the contained ports as been called
+//!     with the url.
+//!
+//!   @item "port://host_glob:port/path/#opt1=val1;opt2=val2"
+//!     An URL string containing options as stored in the @tt{"URLs"@}
+//!     configuration variable, and expected as argument by
+//!     @[register_url()] and @[unregister_url()]. Also known
+//!     as an ourl.
+//! @enddl
+//!
+//! In both cases the same set of data is stored:
+//! @mapping
+//!   @member mapping(string:Configuration|Protocol|string|array(Protocol)) url
+//!     @mapping
+//!       @member Protocol "port"
+//!         Representative open port for this URL.
+//!       @member array(Protocol) "ports"
+//!         Array of all open ports for this URL.
+//!       @member Configuration "conf"
+//!         Configuration that has registered the URL.
+//!       @member string "path"
+//!         Path segment of the URL.
+//!       @member string "host"
+//!         Hostname segment of the URL.
+//!     @endmapping
+//! @endmapping
 mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)))
   urls = ([]);
+
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
@@ -2705,27 +2754,41 @@ string normalize_url(string url, void|int port_match_form)
   }
 }
 
+//! Unregister an URL from a configuration.
+//!
+//! @seealso
+//!   @[register_url()]
 void unregister_url(string url, Configuration conf)
 {
   string ourl = url;
+  mapping(string:mixed) data = m_delete(urls, ourl);
+  if (!data) return;	// URL not registered.
   if (!sizeof(url = normalize_url(url, 1))) return;
 
   report_debug ("Unregister %s%s.\n", normalize_url (ourl),
 		conf ? sprintf (" for %O", conf->query_name()) : "");
 
-  if (urls[url] && (!conf || !urls[url]->conf || (urls[url]->conf == conf)) &&
-      urls[url]->port)
-  {
-    urls[ url ]->port->unref(url);
-    m_delete( urls, url );
-    m_delete( urls, ourl );
-    sort_urls();
+  mapping(string:mixed) shared_data = urls[url];
+  if (!shared_data) return;	// Strange case, but URL not registered.
+
+  foreach(data->ports, Protocol port) {
+    shared_data->ports -= ({ port });
+    int was_main_port = (shared_data->port == port);
+    port->unref(url);
+    m_delete(shared_data, "port");
   }
+  if (!sizeof(shared_data->ports)) {
+    m_delete(urls, url);
+  } else if (!shared_data->port) {
+    shared_data->port = shared_data->ports[0];
+  }
+  sort_urls();
 }
 
 array all_ports( )
 {
-  return Array.uniq( values( urls )->port )-({0});
+  // FIXME: Consider using open_ports instead.
+  return Array.uniq( values( urls )->ports * ({}) )-({0});
 }
 
 Protocol find_port( string name )
@@ -2741,6 +2804,10 @@ void sort_urls()
   sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
 }
 
+//! Register an URL for a configuration.
+//!
+//! @seealso
+//!   @[unregister_url()]
 int register_url( string url, Configuration conf )
 {
   string ourl = url;
@@ -2795,8 +2862,8 @@ int register_url( string url, Configuration conf )
 		     display_url, urls[ url ]->conf->name);
 	return 0;
       }
+      // FIXME: Is this correct?
       urls[ url ]->port->ref(url, urls[url]);
-      return 1;
     }
     else
       urls[ url ]->port->unref( url );
@@ -2812,9 +2879,12 @@ int register_url( string url, Configuration conf )
     return 0;
   }
 
-  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
-  urls[ ourl ] = urls[url] + ([]);
-  sorted_urls += ({ url });
+  if (!urls[ourl])
+    urls[ ourl ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  if (!urls[url]) {
+    urls[ url ] = urls[ourl] + ([]);
+    sorted_urls += ({ url });	// FIXME: Not exactly sorted...
+  }
 
   array(string)|int(-1..0) required_hosts;
 
@@ -2842,7 +2912,7 @@ int register_url( string url, Configuration conf )
   if (prot->supports_ipless ) {
     // Check if the ANY port is already open for this port, since this
     // protocol supports IP-less virtual hosting, there is no need to
-    // open yet another port if it is, since that would mosts probably
+    // open yet another port if it is, since that would most probably
     // only conflict with the ANY port anyway. (this is true on most
     // OSes, it works on Solaris, but fails on linux)
     array(string) ipv6 = filter(required_hosts - ({ 0 }), has_value, ":");
@@ -2881,6 +2951,11 @@ int register_url( string url, Configuration conf )
       m[required_host][port]->ref(url, urls[url]);
 
       urls[url]->port = m[required_host][port];
+      if (urls[url]->ports) {
+	urls[url]->ports += ({ m[required_host][port] });
+      } else {
+	urls[url]->ports = ({ m[required_host][port] });
+      }
       urls[ourl]->port = m[required_host][port];
       if (urls[ourl]->ports) {
 	urls[ourl]->ports += ({ m[required_host][port] });
@@ -2900,7 +2975,7 @@ int register_url( string url, Configuration conf )
 	  prot( port, required_host,
 		// Don't complain if binding IPv4 ANY fails with
 		// EADDRINUSE after we've bound IPv6 ANY. 
-		// Most systems seems to bind booth IPv4 ANY and
+		// Most systems seems to bind both IPv4 ANY and
 		// IPv6 ANY for "::"
 		!required_host && opened_ipv6_any_port);
       }) {
@@ -2936,6 +3011,11 @@ int register_url( string url, Configuration conf )
     }
 
     urls[ url ]->port = prot_obj;
+    if (urls[url]->ports) {
+      urls[url]->ports += ({ prot_obj });
+    } else {
+      urls[url]->ports = ({ prot_obj });
+    }
     urls[ ourl ]->port = prot_obj;
     if (urls[ourl]->ports) {
       urls[ourl]->ports += ({ prot_obj });
