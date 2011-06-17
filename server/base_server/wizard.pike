@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.173 2011/05/28 13:54:35 mast Exp $
+// $Id: wizard.pike,v 1.174 2011/06/17 09:59:27 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -713,6 +713,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   string method = this_object()->wizard_method || "method=\"get\"";
 
 #ifdef USE_WIZARD_COOKIE
+  // FIXME: If this is enabled there may be trouble with the state
+  // getting mixed up between wizards when one wizard initiates
+  // another. The state should be extended with a wizard identifier
+  // then.
   string state_form = "";
   id->add_response_header("Set-Cookie",
 			  sprintf("WizardState=%s; path=/",
