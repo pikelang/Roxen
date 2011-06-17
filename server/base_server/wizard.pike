@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.174 2011/06/17 09:59:27 mast Exp $
+// $Id: wizard.pike,v 1.175 2011/06/17 11:28:23 mast Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -835,6 +835,10 @@ mapping(string:array) wizard_get_state (RequestID id)
       // doesn't use a stack, so if we're coming here from another
       // wizard return then we ignore the referrer so that the
       // ordinary "cancel" url is used instead.
+      //
+      // Note that this only works with the assumption that the
+      // referring wizard (or other page) doesn't retain the _wiz_ret
+      // variable in later links.
       string referrer = id->referer[0];
       if (!has_value (referrer, "&_wiz_ret=") &&
 	  !has_value (referrer, "?_wiz_ret=")) {
