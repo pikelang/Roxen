@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.718 2011/05/24 13:54:34 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.719 2011/06/19 14:49:07 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3677,9 +3677,11 @@ void save(int|void all)
   {
     foreach(indices(modules[modname]->copies), int i)
     {
-      store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
-      if (mixed err = catch(modules[modname]->copies[i]->
-			    start(2, this_object(), 0)))
+      RoxenModule mod = modules[modname]->copies[i];
+      store(modname+"#"+i, mod->query(), 0, this);
+      if (mixed err = mod->start && catch {
+	  call_module_func_with_cbs (mod, "start", 2, this, 0);
+	})
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }
