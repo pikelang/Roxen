@@ -548,7 +548,7 @@
       * @method shortDateTime
       * @param unixtime {Int} 
       */
-    shortDateTime: function (unixtime, force_include_time) {
+    shortDateTime: function (unixtime, force_include_time, am_pm) {
       var tm = new Date(unixtime*1000);
       var today = new Date();
       var fmt = "";
@@ -557,9 +557,15 @@
       // FIXME - Use user setting
       var locale = "en-US";
       var date_fmt = "%b %e, %Y";
-      var time_fmt = "%l:%M %P";
-      var tm_yday = (tm.getMonth() + 1) * tm.getDate();
-      var today_yday = (today.getMonth() + 1) * today.getDate();
+      var time_fmt = am_pm ? "%l:%M %P" : "%H:%M";
+
+      // The following simplistic calculation is bogus, but the only
+      // effect is that we'll return a date instead of "yesterday" if
+      // today is the first day of a month where the preceding month
+      // was shorter than 31 days.
+      var tm_yday = (tm.getMonth() + 1) * 31 + tm.getDate();
+      var today_yday = (today.getMonth() + 1) * 31 + today.getDate();
+
       if (tm.getYear() != today.getYear()) {
         //  Feb 23, 2010
 	fmt = date_fmt;
