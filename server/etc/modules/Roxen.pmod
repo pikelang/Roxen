@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.308 2011/02/28 13:58:33 grubba Exp $
+// $Id: Roxen.pmod,v 1.309 2011/07/05 21:41:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2839,9 +2839,12 @@ protected string low_roxen_encode(string val, string encoding)
    case "js":
    case "javascript":
      return replace (val,
-		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
+		    ({ "\b", "\014", "\n", "\r", "\t", "\\",
+		       "'", "\"",
+		       "</", "<!--"}),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
-		       "\\'", "\\\"" }));
+		       "\\'", "\\\"",
+		       "<\\/", "<\\!--" }));
 
    case "mysql":
      // Note: Quotes the single-quote (') in traditional sql-style,
@@ -2978,6 +2981,21 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "javascript"
 //!     Javascript string quoting, i.e. using backslash escapes for
 //!     @expr{"@}, @expr{\@}, and more.
+//!
+//!     For safe use inside @tt{<script>@} elements, it quotes some
+//!     additional character sequences:
+//!
+//!     @ul
+//!     @item
+//!       @tt{</@} is quoted as @tt{<\/@} according to appendix B.3.2
+//!       in the HTML 4.01 spec.
+//!     @item
+//!       @tt{<!--@} is quoted as @tt{<\!--@} according to 4.3.1.2 in
+//!       the HTML 5 spec.
+//!     @endul
+//!
+//!     Both are harmless in Javascript string literals in other
+//!     contexts.
 //!
 //!   @value "mysql"
 //!     MySQL quoting. This also means backslash escapes, except the
