@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.309 2011/07/05 21:41:18 mast Exp $
+// $Id: Roxen.pmod,v 1.310 2011/07/06 18:23:46 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2788,7 +2788,14 @@ protected string low_roxen_encode(string val, string encoding)
    case "base-64":
    case "b64":
      return MIME.encode_base64(val);
-
+   
+  case "md5":
+  case "sha1":
+  case "sha256":
+    if (String.width(val) > 8)
+      RXML.run_error("Cannot hash wide characters.");
+    return Crypto[upper_case(encoding)]->hash(val);
+    
    case "quotedprintable":
    case "quoted-printable":
    case "qp":
@@ -2930,6 +2937,15 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "b64"
 //!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
 //!     C.f. @[MIME.encode_base64].
+//!
+//!   @value "md5"
+//!   @value "sha1"
+//!   @value "sha256"
+//!     Message digest using supplied hash algorithm. Requires octet
+//!     (i.e. non-wide) strings. Note that the result is a binary string
+//!     so apply e.g. hex encoding afterward to get a printable value.
+//!     C.f. @[Crypto.MD5.hash], @[Crypto.SHA1.hash] and
+//!     @[Crypto.SHA256.hash].
 //!
 //!   @value "quotedprintable"
 //!   @value "quoted-printable"
