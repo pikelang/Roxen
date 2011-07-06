@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.306 2011/07/06 18:23:27 jonasw Exp $
+// $Id: Roxen.pmod,v 1.307 2011/07/06 18:32:20 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2722,7 +2722,7 @@ protected string low_roxen_encode(string val, string encoding)
   case "sha1":
   case "sha256":
     if (String.width(val) > 8)
-      RXML.run_error("Cannot hash wide characters.");
+      RXML.run_error("Cannot hash wide characters.\n");
     return Crypto[upper_case(encoding)]->hash(val);
     
    case "quotedprintable":
