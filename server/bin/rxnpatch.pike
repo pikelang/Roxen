@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.17 2009/06/25 16:03:26 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.18 2011/07/08 09:10:01 jonasw Exp $";
 
 import RoxenPatch;
 
@@ -1076,7 +1076,7 @@ constant help_flags = ([
 			"<b>--version=</b><u>VERSION</u>..." }),
 	  "hlptxt" : ({ "Specifies which versions the patch should work on.",
 			"If omitted it is presumed that the patch is intended",
-			"for all platforms. May not be used in combination with",
+			"for all versions. May not be used in combination with",
 			"<b>-m</b>" }),
 	  "scope"  : ({ "create" }) ]),
   "p": ([ "syntax" : ({ "<b>-p</b>[<u>FILE</u>]...",
