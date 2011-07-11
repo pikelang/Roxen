@@ -86,6 +86,11 @@ class Fetcher
       cb( qu->data() );
   }
   
+  void connected( Protocols.HTTP.Query qu )
+  {
+    qu->timed_async_fetch(done, fail);
+  }
+
   void fail( Protocols.HTTP.Query qu )
   {
     cache[h+p+q] = ({"Failed to connect to server"});
@@ -98,7 +103,7 @@ class Fetcher
   {
     remove_call_out( start );
     call_out( start, 3600 );
-    query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
+    query = Protocols.HTTP.Query( )->set_callbacks( connected, fail );
     query->async_request( h, p, q,
 			  ([ "Host":h+":"+p,
 			     "User-Agent": (roxen.query("default_ident") ?
