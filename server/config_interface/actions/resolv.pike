@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.39 2011/07/12 11:44:34 jonasw Exp $
+ * $Id: resolv.pike,v 1.40 2011/07/12 20:19:44 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -90,7 +90,7 @@ void trace_enter_ol(string type, function|object module, void|int timestamp)
     (/*((prev_level >= level ? "<br />\n" : "")*/ "" +
      anchor("") +
      "<li class='timing open'>" +
-     "<span class='toggle' onclick='return toggle_vis(this.parentNode);'></span>" +
+     "<span class='toggle' onmousedown='return toggle_vis(event, this.parentNode);'></span>" +
      Roxen.html_encode_string(type) + " " + module_name(module) +
      "<div class='inner'>"
      "<ol class='timing'>");
@@ -224,12 +224,30 @@ string parse( RequestID id )
 
   res +=
     #"<script language='javascript'>
-        function toggle_vis(li_elem) {
-          var cls = li_elem.className;
-          if (cls.match('open'))
-            li_elem.className = cls.replace('open', 'closed');
-          else
-            li_elem.className = cls.replace('closed', 'open');
+        function toggle_vis(evt, li_elem) {
+          var items = [ li_elem ];
+          if (evt.shiftKey) {
+            //  Include all sibling <li> elements
+            items = [ ];
+            var candidates = li_elem.parentNode.children;
+            for (var i = 0; i < candidates.length; i++)
+              if (candidates[i].nodeType == 1 &&
+                  candidates[i].tagName.toLowerCase() == 'li')
+                items.push(candidates[i]);
+          }
+          var is_open = li_elem.className.match('open');
+          var from_cls = is_open ? 'open' : 'closed';
+          var to_cls = is_open ? 'closed' : 'open';
+          for (var j = 0; j < items.length; j++) {
+            items[j].className = items[j].className.replace(from_cls, to_cls);
+          }
+          if (evt.preventDefault) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          } else {
+            evt.cancelBubble = true;
+            evt.returnValue = false;
+          }
           return false;
         }
       </script>";
