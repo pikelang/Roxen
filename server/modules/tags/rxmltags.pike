@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.646 2011/05/25 09:43:32 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.647 2011/07/12 15:55:52 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -456,7 +456,7 @@ class TagAppend {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags = RXML.FLAG_DONT_RECOVER;
+  int flags = RXML.FLAG_DONT_RECOVER | RXML.FLAG_CUSTOM_TRACE;
 
   class Frame {
     inherit RXML.Frame;
@@ -466,6 +466,8 @@ class TagAppend {
 
     array do_enter (RequestID id)
     {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
+      
       if (args->value || args->from || args->expr)
 	flags |= RXML.FLAG_EMPTY_ELEMENT;
 
@@ -514,9 +516,11 @@ class TagAppend {
 	else if (string expr = args->expr)
 	  content = sexpr_eval (expr);
 	else {
-	  if (objectp (content) && content->is_rxml_empty_value)
+	  if (objectp (content) && content->is_rxml_empty_value) {
 	    // No value to concatenate with.
+	    TAG_TRACE_LEAVE("");
 	    return 0;
+	  }
 	  break get_content_from_args; // The content already got content_type.
 	}
 
@@ -535,6 +539,7 @@ class TagAppend {
 	}
 	else {
 	  RXML.user_set_var(args->variable, content, args->scope);
+	  TAG_TRACE_LEAVE("");
 	  return 0;
 	}
       }
@@ -547,6 +552,7 @@ class TagAppend {
 			     content_type->sequential ?
 			     content : ({content}),
 			     args->scope);
+	  TAG_TRACE_LEAVE("");
 	  return 0;
 	}
 
@@ -561,6 +567,7 @@ class TagAppend {
 		   err->msg || describe_error (err));
 
       RXML.user_set_var(args->variable, val, args->scope);
+      TAG_TRACE_LEAVE("");
     }
   }
 }
@@ -774,19 +781,22 @@ class TagGuessContentType
 class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_CUSTOM_TRACE;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if(!args->variable && !args->scope)
 	parse_error("Neither variable nor scope specified.\n");
       if(!args->variable && args->scope!="roxen") {
 	RXML_CONTEXT->add_scope(args->scope, ([]) );
+	TAG_TRACE_LEAVE("");
 	return 0;
       }
       RXML_CONTEXT->user_delete_var(args->variable, args->scope);
+      TAG_TRACE_LEAVE("");
       return 0;
     }
   }
@@ -799,13 +809,14 @@ class TagSet {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags = RXML.FLAG_DONT_RECOVER;
+  int flags = RXML.FLAG_DONT_RECOVER | RXML.FLAG_CUSTOM_TRACE;
 
   class Frame {
     inherit RXML.Frame;
 
     array do_enter (RequestID id)
     {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if (args->value || args->from || args->expr)
 	flags |= RXML.FLAG_EMPTY_ELEMENT;
       if (RXML.Type t = args->type)
@@ -823,6 +834,7 @@ class TagSet {
 	    parse_error ("From variable %q does not exist.\n", var);
 	  if (compat_level < 5.0) {
 	    RXML.user_set_var(args->variable, content, args->scope);
+	    TAG_TRACE_LEAVE("");
 	    return 0;
 	  }
 	}
@@ -831,6 +843,7 @@ class TagSet {
 	  content = sexpr_eval (expr);
 	  if (compat_level < 5.0) {
 	    RXML.user_set_var(args->variable, content, args->scope);
+	    TAG_TRACE_LEAVE("");
 	    return 0;
 	  }
 	}
@@ -874,6 +887,7 @@ class TagSet {
       else
 	RXML.user_set_var(args->variable, content, args->scope);
 
+      TAG_TRACE_LEAVE("");
       return 0;
     }
   }
