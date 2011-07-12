@@ -74,7 +74,6 @@ class RDF
 
 class Fetcher
 {
-  Protocols.HTTP.Query query;
   function cb;
   string h, q;
   int p;
@@ -84,6 +83,7 @@ class Fetcher
     cache[h+p+q] = ({qu->data()});
     if( cb )
       cb( qu->data() );
+    destruct(qu);
   }
   
   void connected( Protocols.HTTP.Query qu )
@@ -97,13 +97,15 @@ class Fetcher
     if( cb )
       cb(  "Failed to connect to server" );
     call_out( start, 30 );
+    destruct(qu);
   }
 
   void start( )
   {
     remove_call_out( start );
     call_out( start, 3600 );
-    query = Protocols.HTTP.Query( )->set_callbacks( connected, fail );
+    Protocols.HTTP.Query query = Protocols.HTTP.Query( )->
+      set_callbacks( connected, fail );
     query->async_request( h, p, q,
 			  ([ "Host":h+":"+p,
 			     "User-Agent": (roxen.query("default_ident") ?
