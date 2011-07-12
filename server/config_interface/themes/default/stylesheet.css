@@ -180,3 +180,52 @@ table.module-sub-list-2
              text-align: left; }
 .td_top    { padding-right: 10px; border-top: solid 1px #d5d5db; }
 .td_bottom { padding-right: 10px; border-bottom: solid 1px #d5d5db; }
+
+
+
+/* Resolve path styling */
+ol.timing {
+  list-style-type:	none;
+  padding:		0;
+  cursor:		arrow;
+}
+
+li.timing {
+  list-style-image:	none;
+  margin:		2px 0;
+  padding:		0 0 0 16px;
+  font-size:		11px;
+}
+
+li.timing span.toggle {
+  display:	block;
+  width:	16px;
+  height:	13px;
+  float:	left;
+  margin-left:	-16px;
+  background:	white url("fold.gif") -5px 50% no-repeat;
+}
+
+li.timing a,
+li.timing span.toggle {
+  cursor:	pointer;
+}
+
+li.timing div.inner {
+}
+
+li.timing.closed > span.toggle {
+  background-image:	url("unfold.gif");
+}
+
+li.timing.closed > div.inner {
+  display:	none;
+}
+
+li.timing.open:hover {
+  background:	url("/internal-roxen-pixel-ddddff") 5px 0 repeat-y;
+}
+
+i.timing {
+  color:	#888;
+}
