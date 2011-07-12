@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.38 2009/03/17 16:37:52 jonasw Exp $
+ * $Id: resolv.pike,v 1.39 2011/07/12 11:44:34 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -86,13 +86,14 @@ mapping vtimes = ([]);
 void trace_enter_ol(string type, function|object module, void|int timestamp)
 {
   level++;
-
-  string font="";
-  if(level>2) font="<font size=-1>";
-  resolv += ((prev_level >= level ? "<br />\n" : "") +
-	     anchor("")+"<li>"+
-	     Roxen.html_encode_string(type) + " " + module_name(module) +
-	     "<br />\n" + font + "<ol style='padding-left: 3ex'>");
+  resolv +=
+    (/*((prev_level >= level ? "<br />\n" : "")*/ "" +
+     anchor("") +
+     "<li class='timing open'>" +
+     "<span class='toggle' onclick='return toggle_vis(this.parentNode);'></span>" +
+     Roxen.html_encode_string(type) + " " + module_name(module) +
+     "<div class='inner'>"
+     "<ol class='timing'>");
 
 #if efun(gethrvtime)
   // timestamp is cputime.
@@ -132,20 +133,17 @@ string format_time (int hrrstart, int hrvstart, int timestamp)
 
 void trace_leave_ol(string desc, void|int timestamp)
 {
-  string efont="";
-  if(level>2) efont="</font>";
-
   string html_desc = Roxen.html_encode_string(desc || "");
   if (has_value(html_desc, "\n"))
     html_desc = "<pre>" + html_desc + "</pre>\n";
   else if (html_desc != "")
     html_desc += "<br />\n";
   resolv +=
-    "</ol>" + efont + "\n" + html_desc +
+    "</ol>\n" + html_desc +
 #ifdef HAVE_TRACE_TIME
-    "<i>" + format_time (rtimes[level], vtimes[level], timestamp) + "</i>"
+    "<i class='timing'>" + format_time (rtimes[level], vtimes[level], timestamp) + "</i>"
 #endif
-    ;
+    "</div></li>";
   level--;
 }
 
@@ -224,6 +222,18 @@ string parse( RequestID id )
     "</tr></table>\n"
     "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
 
+  res +=
+    #"<script language='javascript'>
+        function toggle_vis(li_elem) {
+          var cls = li_elem.className;
+          if (cls.match('open'))
+            li_elem.className = cls.replace('open', 'closed');
+          else
+            li_elem.className = cls.replace('closed', 'open');
+          return false;
+        }
+      </script>";
+
   nid = roxen.InternalRequestID();
   nid->client = id->client;
   nid->client_var = id->client_var + ([]);
@@ -294,7 +304,7 @@ string parse( RequestID id )
       link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
       " "+LOCALE(33, "in")+" " +
       link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
-      "<ol style='padding-left: 3ex'>";
+      "<ol class='timing'>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
