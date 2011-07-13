@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.639 2011/06/09 20:36:03 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.640 2011/07/13 11:02:32 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -242,7 +242,8 @@ void send(string|object what, int|void len,
   if(!pipe) setup_pipe();
   if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
-    if (connection_debug_verbose
+    if (sizeof (what) < 2000 ||
+	connection_debug_verbose
 #if TOSTR(CONNECTION_DEBUG) != "1"
 	// CONNECTION_DEBUG may be defined to something like "text/"
 	// to see the response content for all content types with that
@@ -3100,8 +3101,12 @@ void got_data(mixed fooid, string s, void|int chained)
   if (mixed err = catch {
 
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP[%s]: Request ----------------------------------------------\n"
-	  "%O\n", DEBUG_GET_FD, s);
+  if (wanted_data < 2000)
+    werror ("HTTP[%s]: Request ----------------------------------------------\n"
+	    "%O\n", DEBUG_GET_FD, s);
+  else
+    werror ("HTTP[%s]: Request ----------------------------------------------\n"
+	    "Length %d\n", DEBUG_GET_FD, sizeof (s));
 #else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
 #endif
