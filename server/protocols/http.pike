@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.640 2011/07/13 11:02:32 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.641 2011/07/13 11:04:40 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1056,8 +1056,14 @@ private int parse_got( string new_data )
 	 misc->content_type_type = lower_case (ct_type + "/" + ct_subtype);
 	 break;
        case "destination":
+	 // FIXME: This silently strips away the server if the
+	 // destination is an absolute URI, and it can be a different
+	 // one according to RFC 4918, section 10.3. If we cannot use
+	 // it as destination (which is probably the case), then the
+	 // request MUST NOT succeed.
 	 if (mixed err = catch {
-	     contents = http_decode_string (Standards.URI(contents)->path);
+	     contents = http_decode_string (Standards.URI(contents,
+							  "dummy:")->path);
 	   }) {
 #ifdef DEBUG
 	   report_debug(sprintf("Destination header contained a bad URI: %O\n"
