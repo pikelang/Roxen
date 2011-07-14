@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1081 2011/06/15 15:11:08 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1082 2011/07/14 12:13:32 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2638,7 +2638,7 @@ mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 //!
 //! In both cases the same set of data is stored:
 //! @mapping
-//!   @member mapping(string:Configuration|Protocol|string|array(Protocol)) url
+//!   @member mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)) url
 //!     @mapping
 //!       @member Protocol "port"
 //!         Representative open port for this URL.
@@ -2650,9 +2650,12 @@ mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 //!         Path segment of the URL.
 //!       @member string "host"
 //!         Hostname segment of the URL.
+//!       @member array(string) "skipped"
+//!         List of IP numbers not bound due to a corresponding
+//!         ANY port already being open.
 //!     @endmapping
 //! @endmapping
-mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)))
+mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)))
   urls = ([]);
 
 array sorted_urls = ({});
@@ -2771,9 +2774,17 @@ void unregister_url(string url, Configuration conf)
   mapping(string:mixed) shared_data = urls[url];
   if (!shared_data) return;	// Strange case, but URL not registered.
 
+  int was_any_ip;
+  if (!data->skipped && data->port) {
+    if (!data->port->ip || (data->port->ip == "::")) {
+      was_any_ip = data->port->port;
+      report_debug("Unregistering ANY port: %O:%d\n",
+		   data->port->ip, data->port->port);
+    }
+  }
+
   foreach(data->ports, Protocol port) {
     shared_data->ports -= ({ port });
-    int was_main_port = (shared_data->port == port);
     port->unref(url);
     m_delete(shared_data, "port");
   }
@@ -2783,6 +2794,17 @@ void unregister_url(string url, Configuration conf)
     shared_data->port = shared_data->ports[0];
   }
   sort_urls();
+
+  if (was_any_ip) {
+    foreach(urls; string url; mapping(string:mixed) url_info) {
+      if (!url_info->skipped || !url_info->conf ||
+	  (url_info->port && (url_info->port->port != was_any_ip))) {
+	continue;
+      }
+      // Re-register the ports that may have bound to the removed ANY port.
+      register_url(url, url_info->conf);
+    }
+  }
 }
 
 array all_ports( )
@@ -2879,8 +2901,8 @@ int register_url( string url, Configuration conf )
     return 0;
   }
 
-  if (!urls[ourl])
-    urls[ ourl ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  // FIXME: Do we need to unref the old ports first in case of a reregister?
+  urls[ ourl ] = ([ "conf":conf, "path":path, "hostname": host ]);
   if (!urls[url]) {
     urls[ url ] = urls[ourl] + ([]);
     sorted_urls += ({ url });	// FIXME: Not exactly sorted...
@@ -2919,11 +2941,15 @@ int register_url( string url, Configuration conf )
     array(string) ipv4 = required_hosts - ipv6;
     if (m[0][port] && sizeof(ipv4 - ({ 0 }))) {
       // We have a non-ANY IPv4 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped = ipv4;
       ipv4 = ({ 0 });
     }
 #if constant(__ROXEN_SUPPORTS_IPV6__)
     if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
       // We have a non-ANY IPv6 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped += ipv6;
       ipv6 = ({ "::" });
     }
     required_hosts = ipv6 + ipv4;
