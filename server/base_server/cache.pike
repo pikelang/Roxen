@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.147 2011/05/03 21:20:51 mast Exp $
+// $Id: cache.pike,v 1.148 2011/07/20 17:21:08 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1409,10 +1409,19 @@ void cache_expire (void|string cache_name)
   // doesn't have to be quick.
   foreach (cache_name ? ({cache_name}) : indices (caches), string cn) {
     CACHE_WERR ("Emptying cache %O.\n", cn);
-    if (CacheManager mgr = caches[cn]) {
-      mgr->evict (0);
-      mgr->update_size_limit();
-    }
+    if (CacheManager mgr = caches[cn])
+      if (mapping(mixed:CacheEntry) lm = mgr->lookup[cn]) {
+	if (sizeof (mgr->lookup) == 1 || !cache_name) {
+	  // Only one cache in this manager, or zapping all caches.
+	  mgr->evict (0);
+	  mgr->update_size_limit();
+	}
+	else
+	  foreach (lm;; CacheEntry entry) {
+	    MORE_CACHE_WERR ("cache_expire: Removing %O\n", entry);
+	    mgr->remove_entry (cn, entry);
+	  }
+      }
   }
 }
 
