@@ -546,10 +546,13 @@
       * Return a short readable date and time string similar to
       * Sitebuilder.mtime_to_str().
       * @method shortDateTime
-      * @param unixtime {Int} 
+      * @param timestamp {Int or Date}
       */
-    shortDateTime: function (unixtime, force_include_time, am_pm) {
-      var tm = new Date(unixtime*1000);
+    shortDateTime: function (timestamp, force_include_time, am_pm) {
+      var tm;
+      if (typeof (timestamp) === "number") tm = new Date(timestamp*1000);
+      else tm = timestamp;
+
       var today = new Date();
       var fmt = "";
       // YUI date formats:
