@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.40 2011/07/12 20:20:01 jonasw Exp $
+ * $Id: resolv.pike,v 1.41 2011/08/01 09:50:09 grubba Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -31,7 +31,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
   if(!m) return "";
 
   string name;
-  catch (name = Roxen.get_modfullname (m));
+  catch (name = Roxen.html_encode_string(Roxen.get_modfullname (m)));
   if (!name) return "<font color='red'>Unavailable</font>";
 
   Configuration c;
