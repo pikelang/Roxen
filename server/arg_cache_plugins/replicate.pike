@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.31 2010/01/13 14:21:07 jonasw Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.32 2011/08/11 14:57:10 grubba Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -48,69 +48,119 @@ Sql.Sql get_db()
   return DBManager.cached_get( "local" );
 }
 
-protected void init_replicate_db()
+protected void resilver_replicate_db()
 {
-  catch {
-    // Avoid the 'IF NOT EXISTS' feature here to be more compatible.
-    sQUERY( "CREATE TABLE "+cache->name+"2 ("
-	    " id        CHAR(32) PRIMARY KEY, "
-	    " ctime     DATETIME NOT NULL, "
-	    " atime     DATETIME NOT NULL, "
-	    " contents  MEDIUMBLOB NOT NULL)");
-  };
+  werror("Arg-cache replication thread started.\n");
+  // Outer loop is for initialization and error recovery.
+  while(this_object()) {
+    sleep(60);
+    catch {
+      Sql.Sql sdb = get_sdb();
 
-  catch {
+      if (!sdb) continue;
+
+      if (catch(sdb->query("SELECT id FROM "+cache->name+"2 LIMIT 0"))) {
+	// Avoid the 'IF NOT EXISTS' feature here to be more compatible.
+	sdb->query( "CREATE TABLE "+cache->name+"2 ("
+		    " id        CHAR(32) PRIMARY KEY, "
+		    " ctime     DATETIME NOT NULL, "
+		    " atime     DATETIME NOT NULL, "
+		    " contents  MEDIUMBLOB NOT NULL)");
+      }
+
+      DBManager.is_module_table( 0, "replicate", ""+cache->name+"2", 
+				 "A shared arg-cache database used for "
+				 "replication purposes.");
+
       array(mapping(string:mixed)) res = 
-	sQUERY("DESCRIBE "+cache->name+"2 contents");
+	sdb->query("DESCRIBE "+cache->name+"2 contents");
 
       if(res[0]->Type == "blob") {
-	sQUERY("ALTER TABLE "+cache->name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
-	werror("ArgCache replication: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", cache->name);
+	sdb->query("ALTER TABLE "+cache->name+"2 "
+		   "MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache replication: Extending \"contents\" field in "
+	       "table \"%s2\" from BLOB to MEDIUMBLOB.\n", cache->name);
       }
-  };
-  
-  // Populate with entries created when the shared table was down.
 
-  Thread.MutexKey key;
-  catch( key = cache->mutex->lock() );
+      // The inner loop is for actual replication of data.
+      while(this_object()) {
+	sdb = UNDEFINED;
   
-  werror("Synchronizing remote arg-cache with local cache:\n");
-  constant FETCH_ROWS = 10000;
-  constant CHECK_ROWS = 100;
-  int cursor;
-  array(mapping) rows =
-    QUERY( "SELECT COUNT(id) as ids from "+cache->name+"2");
-  werror("  found %d entries ", (int)rows[0]->ids);
-  do {
-    rows = 
-      QUERY( "SELECT id from "+cache->name+"2 "
-	     " LIMIT %d, %d", cursor, FETCH_ROWS );
-    cursor += FETCH_ROWS;
+	sleep(60);
 
-    for(int i = 0; i < sizeof(rows); i += CHECK_ROWS) {
-      array(string) ids = rows[i .. i + CHECK_ROWS - 1]->id;
-      array(mapping) shared_rows =
-	sQUERY( "SELECT id from "+cache->name+"2 "
-		" WHERE id in ('"+(map(ids, get_db()->quote) * "','")+"')" );
-      if(sizeof(ids) != sizeof(shared_rows)) {
-	array(string) missing_ids = ids - shared_rows->id;
-	// werror("Found %O missing ids ", sizeof(missing_ids));
-	array(mapping) missing_rows =
-	  QUERY( "SELECT id, contents from "+cache->name+"2 "
-		 " WHERE id in ('"+(map(missing_ids, get_db()->quote) * "','")+"')" );
-	
-	foreach(missing_rows, mapping missing_row)
-	  create_key(missing_row->id, missing_row->contents);
+	sdb = get_sdb();
+
+	constant FETCH_ROWS = 1000;
+	constant CHECK_ROWS = 50;
+
+	int t = time();
+
+	// Populate with entries created when the shared table was down.
+
+	int resilver;
+
+	array(mapping) rows =
+	  QUERY( "SELECT id FROM "+cache->name+"2 "
+		 " WHERE sync_time IS NULL "
+		 " LIMIT " + FETCH_ROWS);
+	if (!sizeof(rows)) {
+	  // Resilver the oldest rows that haven't been resilvered
+	  // for at least one hour.
+	  rows =
+	    QUERY( "SELECT id FROM "+cache->name+"2 "
+		   " WHERE sync_time < " + (t - 3600) + " "
+		   " ORDER BY sync_time ASC "
+		   " LIMIT " + CHECK_ROWS);
+
+	  resilver = 1;
+	  if (!sizeof(rows)) continue;	// All is well.
+	} else {
+	  werror("Synchronizing remote arg-cache with local cache:\n");
+	  werror("  Found %d entries to sync ", sizeof(rows));
+	}
+
+	for(int i = 0; i < sizeof(rows); i += CHECK_ROWS) {
+	  array(string) ids = rows[i .. i + CHECK_ROWS - 1]->id;
+	  array(mapping) shared_rows =
+	    sdb->query( "SELECT id from "+cache->name+"2 "
+			" WHERE id in ('"+
+			(map(ids, sdb->quote) * "','")+"')" );
+	  if(sizeof(ids) != sizeof(shared_rows)) {
+	    array(string) missing_ids = ids - shared_rows->id;
+	    // werror("Found %O missing ids ", sizeof(missing_ids));
+	    array(mapping) missing_rows =
+	      QUERY( "SELECT id, contents from "+cache->name+"2 "
+		     " WHERE id in ('"+
+		     (map(missing_ids, get_db()->quote) * "','")+"')" );
+
+	    if (resilver) {
+	      werror("Synchronizing remote arg-cache with local cache:\n");
+	      werror("  Found %d lost entries\n", sizeof(missing_rows));
+	    }
+
+	    foreach(missing_rows, mapping missing_row)
+	      create_key(missing_row->id, missing_row->contents);
+
+	    ids -= missing_ids;
+	  }
+
+	  if (sizeof(ids)) {
+	    // Bump the timestamps for the already synced entries.
+	    QUERY( "UPDATE "+cache->name+"2 "
+		   "   SET sync_time = " + t + " "
+		   " WHERE id in ('" +
+		   (map(ids, get_db()->quote) * "','")+"')" );
+	  }
+	  if (!resilver) werror(".");
+	}
+	if (!resilver) werror(" done.\n");
       }
+    };
+    if (this_object()) {
+      werror("\nArg-cache synchronization error. Retrying...\n");
     }
-    werror(".");
-  } while(sizeof(rows) == FETCH_ROWS);
-  werror(" Done\n");
-  key = 0;
-
-  DBManager.is_module_table( 0, "replicate", ""+cache->name+"2", 
-			     "A shared arg-cache database used for "
-			     "replication purposes.");
+  }
+  werror("Arg-cache replication thread terminated.\n");
 }
 
 protected void create( object c )
@@ -125,6 +175,8 @@ protected void create( object c )
       return;
     }
   };
+
+  Thread.Thread(resilver_replicate_db);
   
   if( err )
   {
@@ -133,8 +185,6 @@ protected void create( object c )
 		   DBManager.db_url("replicate", 1) );
     return;
   }
-
-  init_replicate_db();
 }
 
 Sql.Sql debug_get_sdb() {
@@ -153,7 +203,6 @@ Sql.Sql debug_get_sdb() {
       if( !catch( get_sdb() ) )						\
       {									\
 	off = 0;							\
-	init_replicate_db();						\
       }									\
     if( off )								\
       return X;								\
@@ -194,6 +243,9 @@ void create_key( string id, string encoded_args )
 	    "  (id, contents, ctime, atime) VALUES "
 	    "  (%s, %s, NOW(), NOW())", id, encoded_args );
   );
+  QUERY("UPDATE "+cache->name+"2 "
+	"   SET sync_time = %d "
+	"   WHERE id = %s", time(1), id);
   dwerror("ArgCache.replicate: Create new key %O\n", id );
 }
 
