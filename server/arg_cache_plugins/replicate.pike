@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.32 2011/08/11 14:57:10 grubba Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.33 2011/08/15 14:00:38 grubba Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -90,8 +90,8 @@ protected void resilver_replicate_db()
 
 	sdb = get_sdb();
 
-	constant FETCH_ROWS = 1000;
-	constant CHECK_ROWS = 50;
+	constant FETCH_ROWS = 10000;
+	constant CHECK_ROWS = 100;
 
 	int t = time();
 
