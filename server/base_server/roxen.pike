@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1083 2011/08/11 14:57:10 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1084 2011/08/15 14:13:48 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2067,9 +2067,11 @@ class Protocol
   string get_key()
   //! Return the key used for this port (protocol:ip:portno)
   {
+#if 0
     if (ip == "::")
       return name + ":0:" + port;
     else
+#endif
       return name+":"+ip+":"+port;
   }
 
