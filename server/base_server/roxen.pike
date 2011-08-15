@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1078 2011/02/15 13:51:39 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1079 2011/08/15 14:11:52 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4363,9 +4363,12 @@ class ArgCache
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
 	    "rep_time  DATETIME NOT NULL, "
+	    "sync_time INT NULL, "
 	    "timeout   INT NULL, "
 	    "contents  MEDIUMBLOB NOT NULL, "
-	    "          INDEX(timeout))");
+	    "          INDEX(timeout),"
+	    "          INDEX(sync_time)"
+	    ")");
     }
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
@@ -4384,6 +4387,16 @@ class ArgCache
 	     "AFTER rep_time");
       QUERY ("ALTER TABLE " + name + "2 "
 	     "  ADD INDEX(timeout)");
+    }
+
+    if (catch (QUERY ("SELECT sync_time FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without sync_time.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD sync_time INT NULL"
+	     " AFTER rep_time");
+      QUERY ("ALTER TABLE " + name + "2 "
+	     "  ADD INDEX(sync_time)");
     }
 
     catch {
