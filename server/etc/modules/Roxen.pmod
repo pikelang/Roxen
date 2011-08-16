@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.312 2011/08/16 15:25:40 grubba Exp $
+// $Id: Roxen.pmod,v 1.313 2011/08/16 15:26:36 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -896,9 +896,6 @@ string parse_http_response (string response,
 //! @returns
 //! Returns the body of the response message, with charset decoded if
 //! applicable.
-//!
-//! @note
-//! Does not currently support the Content-Encoding header.
 {
   array parsed = Roxen.HeaderParser()->feed (response);
   if (!parsed) {
