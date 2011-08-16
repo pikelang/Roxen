@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.307 2011/07/06 18:32:20 jonasw Exp $
+// $Id: Roxen.pmod,v 1.308 2011/08/16 15:28:06 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -825,9 +825,6 @@ string parse_http_response (string response,
 //! @returns
 //! Returns the body of the response message, with charset decoded if
 //! applicable.
-//!
-//! @note
-//! Does not currently support the Content-Encoding header.
 {
   array parsed = Roxen.HeaderParser()->feed (response);
   if (!parsed) {
@@ -887,8 +884,21 @@ proc: {
     }
 
     if (string ce = headers["content-encoding"]) {
-      err_msg = "Content-Encoding header not supported.\n";
-      break proc;
+      switch(lower_case(ce)) {
+      case "gzip":
+	{
+	  Stdio.FakeFile f = Stdio.FakeFile(body, "rb");
+	  Gz.File gz = Gz.File(f, "rb");
+	  body = gz->read();
+	}
+	break;
+      case "deflate":
+	body = Gz.inflate(-15)->inflate(body);
+	break;
+      default:
+	err_msg = sprintf("Content-Encoding %O not supported.\n", ce);
+	break proc;
+      }
     }
 
     if (!charset) {
