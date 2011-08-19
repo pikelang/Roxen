@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.308 2011/08/16 15:28:06 grubba Exp $
+// $Id: Roxen.pmod,v 1.309 2011/08/19 07:43:07 marty Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -850,12 +850,17 @@ string parse_http_response (string response,
 string low_parse_http_response (mapping(string:string) headers,
 				string body,
 				void|mapping(string:mixed) response_map,
-				void|int|string on_error)
+				void|int|string on_error,
+				void|int(0..1) ignore_unknown_ce)
 //! Similar to @[parse_http_response], but takes a http response
 //! message that has been split into headers in @[headers] and the
 //! message body in @[body].
 //!
 //! The indices in @[headers] are assumed to be in lower case.
+//!
+//! @param ignore_unknown_ce
+//!   If set, unknown Content-Encoding headers will be ignored and
+//!   parsing will continue on the verbatim body data.
 {
   string err_msg;
 
@@ -896,8 +901,10 @@ proc: {
 	body = Gz.inflate(-15)->inflate(body);
 	break;
       default:
-	err_msg = sprintf("Content-Encoding %O not supported.\n", ce);
-	break proc;
+	if (!ignore_unknown_ce) {
+	  err_msg = sprintf("Content-Encoding %O not supported.\n", ce);
+	  break proc;
+	}
       }
     }
 

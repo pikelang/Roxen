@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.55 2011/04/28 09:16:08 liin Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.56 2011/08/19 07:43:07 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -305,7 +305,8 @@ class TagInsertHref {
       RXML.user_set_var(args["status-variable"],q->status);
     
     if(q && q->status>0 && q->status<400) {
-      return Roxen.low_parse_http_response (q->con->headers, q->data(), 0, 1);
+      return Roxen.low_parse_http_response (q->con->headers, q->data(), 0, 1,
+					    (int)args["ignore-unknown-ce"]);
     }
 
     _ok = 0;
@@ -1204,6 +1205,14 @@ constant tagdoc=([
 
 <attr name='request-headers' value='\"header=value[,header2=value2,...]\"'><p>
  Comma separated list of extra headers to send in the request.</p>
+</attr>
+
+<attr name='ignore-unknown-ce' value='int'><p>
+  If set, unknown Content-Encoding headers in the response will be ignored. Some
+servers specify the character set (e.g. 'UTF-8') in the Content-Encoding header
+in addition to the Content-Type header. (The real purpose of the 
+Content-Encoding header is described here: 
+http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)</p>
 </attr>
 ",
 
