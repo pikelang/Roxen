@@ -3,12 +3,12 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "";
+constant cvs_version = "$Id: memory_logger.pike,v 1.2 2011/08/22 11:28:23 wellhard Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOGGER;
 constant module_name = "Memory logger";
-constant module_doc  = "This module printes memory usage information "
+constant module_doc  = "This module prints memory usage information "
                        "in a log file";
 
 void create(Configuration c) 
@@ -45,8 +45,6 @@ void create(Configuration c)
   
 }
 
-
-
 void schedule()
 {
   remove_call_out(log_memory);
@@ -74,29 +72,6 @@ void start()
   schedule();
 }
 
-//    "array_bytes": 1134096,
-//    "call_out_bytes": 2824,
-//    "callable_bytes": 16304,
-//    "callback_bytes": 6192,
-//    "frame_bytes": 32720,
-//    "mapping_bytes": 4975233,
-//    "multiset_bytes": 295640,
-//    "object_bytes": 2219868,
-//    "program_bytes": 6468908,
-//    "string_bytes": 16672652,
-
-//    "num_arrays": 16388,
-//    "num_call_outs": 45,
-//    "num_callables": 255,
-//    "num_callbacks": 4,
-//    "num_frames": 55,
-//    "num_mappings": 14880,
-//    "num_multisets": 3495,
-//    "num_objects": 18602,
-//    "num_programs": 3002,
-//    "num_strings": 87410,
-
-
 void log_memory()
 {
   mapping lt = localtime(time());
@@ -115,18 +90,32 @@ void log_memory()
     pmem->program_bytes +
     pmem->string_bytes;
 
-  string res = sprintf("%s "
-	 "ARR: %:3d, CLO: %:2d, CLA: %:2d, "
-	 "CLB: %:2d, FRM: %:2d, MAP: %:3d, "
-	 "MUL: %:3d, OBJ: %:3d, PRO: %:3d, "
-	 "STR: %:3d, TOT: %:4d, "
-	 "RES: %:4d, VIR: %:4d\n", 
-	 t, 
-	 pmem->array_bytes/1048576, pmem->call_out_bytes/1048576, pmem->callable_bytes/1048576, 
-	 pmem->callback_bytes/1048576, pmem->frame_bytes/1048576, pmem->mapping_bytes/1048576, 
-	 pmem->multiset_bytes/1048576, pmem->object_bytes/1048576, pmem->program_bytes/1048576, 
-	 pmem->string_bytes/1048576, pmem_tot/1048576, 
-	 rmem->resident/1024, rmem->virtual/1024);
+  string res = 
+    sprintf("%s "
+	    "ARR: %:3d, CLO: %:2d, CLA: %:2d, "
+	    "CLB: %:2d, FRM: %:2d, MAP: %:3d, "
+	    "MUL: %:3d, OBJ: %:3d, PRO: %:3d, "
+	    "STR: %:3d, TOT: %:4d, "
+	    "RES: %:4d, VIR: %:4d\n", 
+	    t, 
+	    pmem->array_bytes/1048576, 
+	    pmem->call_out_bytes/1048576, 
+	    pmem->callable_bytes/1048576, 
+
+	    pmem->callback_bytes/1048576, 
+	    pmem->frame_bytes/1048576, 
+	    pmem->mapping_bytes/1048576, 
+
+	    pmem->multiset_bytes/1048576, 
+	    pmem->object_bytes/1048576, 
+	    pmem->program_bytes/1048576, 
+
+	    pmem->string_bytes/1048576,
+	    pmem_tot/1048576, 
+
+	    rmem->resident/1024, 
+	    rmem->virtual/1024);
+  
   log_function(res);
 
   schedule();
