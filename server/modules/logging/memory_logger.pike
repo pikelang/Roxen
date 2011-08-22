@@ -3,19 +3,35 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: memory_logger.pike,v 1.2 2011/08/22 11:28:23 wellhard Exp $";
+constant cvs_version = "$Id: memory_logger.pike,v 1.3 2011/08/22 11:42:29 wellhard Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOGGER;
 constant module_name = "Memory logger";
-constant module_doc  = "This module prints memory usage information "
-                       "in a log file";
+constant module_doc  = 
+  "<p>This module prints memory usage information in a log file. "
+  "The log format contains the following columns:</p>"
+  "<table>"
+  "<tr><td>ARR:</td> <td>Array megabytes </td></tr>"
+  "<tr><td>CLO:</td> <td>Call out megabytes </td></tr>"
+  "<tr><td>CLA:</td> <td>Callable megabytes </td></tr>"
+  "<tr><td>CLB:</td> <td>Callback megabytes </td></tr>"
+  "<tr><td>FRM:</td> <td>Frame megabytes </td></tr>"
+  "<tr><td>MAP:</td> <td>Mapping megabytes </td></tr>"
+  "<tr><td>MUL:</td> <td>Multiset megabytes </td></tr>"
+  "<tr><td>OBJ:</td> <td>Object megabytes </td></tr>"
+  "<tr><td>PRO:</td> <td>Program megabytes </td></tr>"
+  "<tr><td>STR:</td> <td>String megabytes </td></tr>"
+  "<tr><td>TOT:</td> <td>Total pike megabytes </td></tr>"
+  "<tr><td>RES:</td> <td>Resident megabytes </td></tr>"
+  "<tr><td>VIR:</td> <td>Virtual megabytes </td></tr>"
+  "</table>";
 
 void create(Configuration c) 
 {
   defvar("LogInterval", 60, "Log interval",
 	 TYPE_INT,
-	 "Log interval in second.");
+	 "Log interval in seconds.");
 
   defvar("LogFile", "$LOGDIR/memory/MemoryLog.%y-%m-%d",
 	 "Log file", TYPE_FILE,
