@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1084 2011/08/15 14:13:48 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1085 2011/08/22 20:45:39 mast Exp $";
 
 //! @appears roxen
 //!
@@ -684,6 +684,8 @@ protected void slow_be_before_cb()
 
 protected void slow_be_after_cb()
 {
+  // FIXME: This should try to compensate for delays due to the pike
+  // gc, because it just causes noise here.
 #ifdef DEBUG
   if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
 #endif
@@ -1216,7 +1218,7 @@ function async_sig_start( function f, int really )
 
 #ifdef THREADS
 protected Thread.Queue bg_queue = Thread.Queue();
-protected int bg_process_running;
+protected Thread.Thread bg_process_thread;
 
 // Use a time buffer to strike a balance if the server is busy and
 // always have at least one busy thread: The maximum waiting time in
@@ -1245,9 +1247,9 @@ int bg_queue_length()
 
 protected void bg_process_queue()
 {
-  if (bg_process_running) return;
+  if (bg_process_thread) return;
   // Relying on the interpreter lock here.
-  bg_process_running = 1;
+  bg_process_thread = this_thread();
 
   int maxbeats =
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.01);
@@ -1355,11 +1357,11 @@ protected void bg_process_queue()
 #ifndef NO_SLOW_REQ_BT
     if (call_out) monitor->remove_call_out (call_out);
 #endif
-    bg_process_running = 0;
+    bg_process_thread = 0;
     handle (bg_process_queue);
     throw (err);
   }
-  bg_process_running = 0;
+  bg_process_thread = 0;
   if (bg_queue->size()) {
     handle (bg_process_queue);
     // Sleep a short while to encourage a thread switch. This is a
@@ -1369,6 +1371,20 @@ protected void bg_process_queue()
   }
 }
 #endif
+
+Thread.Thread background_run_thread()
+//! Returns the thread currently executing the background_run queue,
+//! or 0 if it isn't being processed.
+{
+#ifdef THREADS
+  return bg_process_thread;
+#else
+  // FIXME: This is not correct. Should return something nonzero when
+  // called from the call out. But noone is running without threads
+  // nowadays anyway.
+  return 0;
+#endif
+}
 
 mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
@@ -1426,7 +1442,7 @@ mixed background_run (int|float delay, function func, mixed... args)
     mixed `()()
     {
       bg_queue->write (({func, args}));
-      if (!bg_process_running)
+      if (!bg_process_thread)
 	handle (bg_process_queue);
     }
   };
