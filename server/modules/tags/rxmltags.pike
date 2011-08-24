@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.649 2011/07/12 15:55:54 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.650 2011/08/24 23:09:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -6472,11 +6472,6 @@ class IfIs
     mixed var;
     if (sizeof (arr) < 2) {
       var = source (id, arr[0], 1);
-      // Compatibility kludge: Empty arrays are considered false. This
-      // is probably the result of that multiple values are
-      // represented by arrays. We don't want to escalate that to
-      // other types, though (empty strings are already considered
-      // true).
       if (!arrayp (var) && !mappingp (var) && !multisetp (var))
 	return !!var;
     }
