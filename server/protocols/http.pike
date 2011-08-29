@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.543 2010/05/26 14:10:39 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.544 2011/08/29 22:32:58 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -191,8 +191,10 @@ void decode_map( mapping what, function decoder )
   foreach(what; mixed q; mixed val)
   {
     string ni;
-    if( stringp( q ) )
+    if( stringp( q ) ) {
+      ni = q;
       catch { ni = decoder( q ); };
+    }
     // Don't touch stuff that has a mimetype.
     if (!stringp(q) || (!what[q + ".mimetype"] && !what[ni + ".mimetype"])) {
       if( stringp( val ) )
