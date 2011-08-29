@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.453 2011/06/15 10:06:41 mast Exp $
+// $Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.453 2011/06/15 10:06:41 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1717,6 +1717,15 @@ protected class SQLTimeout(protected Sql.Sql real)
     if (timeout < time(1)) {
       real = 0;
     }
+    if (timeout - time(1) < (DB_CONNECTION_TIMEOUT - 10)) {
+      // Idle more than 10 seconds.
+      // - Check that the connection still is alive.
+      if (real->ping()) real = 0;
+    } else {
+      // Idle less than 10 seconds.
+      // - Just check that the connection hasn't been closed.
+      if (!real->is_open()) real = 0;
+    }
     Sql.Sql res = real;
     real = 0;
     return res;
@@ -2045,7 +2054,7 @@ Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 	sql_free_list[ db_name ] = sql_free_list[db_name][1..];
       else
 	m_delete( sql_free_list, db_name );
-      if ((db = res && res->get())) {
+      if ((db = res && res->get()) && db->is_open()) {
 	sql_active_list[db_name]++;
 	break;
       }
@@ -2177,7 +2186,8 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
       ro = ro?"ro":"rw";
     int t = gethrtime();
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
-			    ({ ro, db })) );
+			    ({ ro, db })),
+		   ([ "reconnect":0 ]));
 #ifdef ENABLE_MYSQL_UNICODE_MODE
     if (res && res->master_sql && res->master_sql->set_unicode_decode_mode) {
       // NOTE: The following code only works on Mysql servers 4.1 and later.

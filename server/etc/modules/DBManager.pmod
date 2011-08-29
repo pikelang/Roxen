@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.100 2011/05/23 11:29:41 mast Exp $
+// $Id: DBManager.pmod,v 1.101 2011/08/29 14:33:10 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -661,7 +661,7 @@ Sql.Sql get_sql_handler(string db_url)
   if(has_prefix(db_url, "oracle:"))
     return ExtSQL.sql(db_url);
 #endif
-  return Sql.Sql(db_url);
+  return Sql.Sql(db_url, ([ "reconnect":0 ]));
 }
 
 Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
