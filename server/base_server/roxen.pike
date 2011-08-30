@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1085 2011/08/22 20:45:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1086 2011/08/30 12:28:23 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2722,6 +2722,9 @@ string normalize_url(string url, void|int port_match_form)
 //! If @[port_match_form] is set, it normalizes to the form that is
 //! used for port matching, i.e. what
 //! @[roxen.Protocol.find_configuration_for_url] expects.
+//!
+//! @note
+//!   Returns @expr{""@} for @[url]s that are incomplete.
 {
   if (!sizeof (url - " " - "\t")) return "";
 
@@ -2872,6 +2875,7 @@ int register_url( string url, Configuration conf )
 
   string display_url = normalize_url (url, 0);
   url = normalize_url (url, 1);
+  if (url == "") return 1;
   ui = Standards.URI (url);
 
   string protocol = ui->scheme;
