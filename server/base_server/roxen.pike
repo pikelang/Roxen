@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1086 2011/08/30 12:28:23 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1087 2011/08/31 11:23:35 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4449,9 +4449,10 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
+#define GET_DB()				\
+  Sql.Sql db = dbm_cached_get("local")
 #undef QUERY
 #define QUERY(X,Y...) db->query(X,Y)
-  Sql.Sql db;
   string name;
 
 #define CACHE_SIZE  900
@@ -4478,6 +4479,8 @@ class ArgCache
 
   protected void setup_table()
   {
+    GET_DB();
+
     // New style argument2 table.
     if(catch(QUERY("SELECT id FROM "+name+"2 LIMIT 0")))
     {
@@ -4540,6 +4543,7 @@ class ArgCache
 
   protected void do_cleanup()
   {
+    GET_DB();
     QUERY("DELETE LOW_PRIORITY FROM " + name + "2 "
 	  " WHERE timeout IS NOT NULL "
 	  "   AND timeout < %d", time());
@@ -4564,7 +4568,6 @@ class ArgCache
     // compiled.
     cache = ([]);
     no_expiry = ([]);
-    db = dbm_cached_get("local");
     setup_table( );
 
     // Cleanup exprired entries on start.
@@ -4584,6 +4587,7 @@ class ArgCache
   protected string read_encoded_args( string id, int dont_update_atime )
   {
     LOCK();
+    GET_DB();
     array res = QUERY("SELECT contents FROM "+name+"2 "
 		      " WHERE id = %s", id);
     if(!sizeof(res))
@@ -4600,6 +4604,7 @@ class ArgCache
   {
     if (!zero_type(timeout) && (timeout < time(1))) return; // Expired.
     LOCK();
+    GET_DB();
     array(mapping) rows =
       QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
     foreach( rows, mapping row )
@@ -4684,6 +4689,7 @@ class ArgCache
     if( cache[ id ] ) {
       if (!no_expiry[id]) {
 	// The cache id may have a timeout.
+	GET_DB();
 	if (zero_type(timeout)) {
 	  // No timeout now, but there may have been one earlier.
 	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
@@ -4742,6 +4748,7 @@ class ArgCache
   //! Remove the data element stored under the key @[id].
   {
     LOCK();
+    GET_DB();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
@@ -4780,6 +4787,7 @@ class ArgCache
     // setup with a shared database.
     if( !has_value((plugins->is_functional-({0}))(), 1) )
     {
+      GET_DB();
       int cursor;
       array(string) ids;
       do {
@@ -4896,6 +4904,7 @@ class ArgCache
   //! Indicate that the entry @[id] needs to be included in the next
   //! @[write_dump]. @[id] must be an existing entry.
   {
+    GET_DB();
     QUERY("UPDATE "+name+"2 SET rep_time=NOW() WHERE id = %s", id);
   }
 }
