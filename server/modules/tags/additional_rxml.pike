@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.56 2011/08/19 08:54:33 marty Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.57 2011/08/31 14:37:44 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -851,34 +851,21 @@ class TagFormatNumber
 	dec_sep = args["decimal-separator"];
       }
 
+      // Get rid of white-space.
+      content = replace(content,
+			({ " ", "\t", "\r", "\n" }),
+			({ "", "", "", "" }));
+
       // Parse the number.
-      array(string) value = ({"", ""});
-      int int_part = 0, frac_part = 0;
-      if (sscanf(content, "%*s%d.%d", int_part, frac_part) == 3)
-      {
-	value[INT_PART]  = (string) int_part;
-	value[FRAC_PART] = (string) frac_part;
-      }
-      else if (sscanf(content, "%*s-.%d", frac_part) == 2)
-      {
-	value[INT_PART]  = "-0";
-	value[FRAC_PART] = (string) frac_part; 
-      }
-      else if (sscanf(content, "%*s.%d", frac_part) == 2)
-      {
-	value[INT_PART]  = "0";
-	value[FRAC_PART] = (string) frac_part;
-      }
-      else if (sscanf(content, "%*s%d", int_part) == 2)
-      {
-	value[INT_PART]  = (string) int_part;
-	value[FRAC_PART] = "";
-      }
-      else
-      {
+      string sgn = "", int_part = "", frac_part = "", rest = "";
+      if (sscanf(content, "%[-+]%[0-9]%s", sgn, int_part, rest) <= 1) {
 	RXML.parse_error("No number to be formatted was given.");
       }
+      sscanf(rest, ".%[0-9]%s", frac_part, rest);
 
+      if (!(sizeof(sgn/"-") & 1)) int_part = "-" + int_part;
+
+      // FIXME: Consider checking whether rest contains junk.
 
       /* We need to break down the pattern, first by ";" and make sure that ";"
          is not an escaped character. */
@@ -895,19 +882,18 @@ class TagFormatNumber
 	}
 	else if (is_pos)
 	{
-	    is_pos = FALSE;
+	  is_pos = FALSE;
 	}
       }
 
       /* Now that we have extracted the patterns for positive and negative 
          numbers, we can reuse the is_pos flag to reflect which pattern we
 	 should use. */
-      if ((((int)value[INT_PART]) < 0 || value[INT_PART][0..0] == "-") && 
-	  sizeof(pattern[0]) > 0)
+      if (has_prefix(int_part, "-") && sizeof(pattern[0]) > 0)
       {
 	is_pos = FALSE;
 	// Trim away the minus sign.
-	sscanf(value[0], "%*[ ]-%s", value[0]) ;
+	int_part = int_part[1..];
       }
       else if (sizeof(pattern[1]) > 0)
       {
@@ -971,22 +957,23 @@ class TagFormatNumber
 
       for (int i = log_ten; i > 0; i--)
       {
-	if (strlen(value[FRAC_PART]) > 0)
+	if (frac_part != "")
 	{
-	  value[INT_PART] += value[FRAC_PART][0..0];
-	  value[FRAC_PART] = value[FRAC_PART][1..];
+	  int_part += frac_part[0..0];
+	  frac_part = frac_part[1..];
 	}
         else 
 	{
-	  value[INT_PART] += "0";
+	  int_part += "0";
 	}
       }
 
       // Trim away leading zeros
-      value[INT_PART] = (string)(int)value[INT_PART][0..];
+      sscanf(int_part, "%*[0]%s", int_part);
+      if (int_part == "") int_part = "0";
 
       // Start with the fractional part.
-      int val_length     = strlen(value[FRAC_PART]);
+      int val_length     = strlen(frac_part);
       int ptn_length     = strlen(pattern[FRAC_PART]);
       int vi             = 0;
       string frac_result = "";
@@ -1000,14 +987,14 @@ class TagFormatNumber
 	  case "#":
 	    if (vi < val_length)
 	    {
-	      frac_result += value[FRAC_PART][vi..vi];
+	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    }
 	    break;
 	  case "0":
 	    if (vi < val_length)
 	    {
-	      frac_result += value[FRAC_PART][vi..vi];
+	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    } 
 	    else
@@ -1021,26 +1008,32 @@ class TagFormatNumber
       }
 
       // Round the last digit.    
-      if (vi < val_length &&
-	  ((int)value[FRAC_PART][vi..vi] > 5 ||
-	  ((int)value[FRAC_PART][vi..vi] == 5 && is_pos)))
+      if (vi < val_length && (frac_part[vi] > '5' ||
+			      (frac_part[vi] == '5' && is_pos)))
       {
-	if (strlen(frac_result) == 0)
-	{
-	  value[INT_PART] = (string)(((int)value[INT_PART]) + 1);  
+	vi = sizeof(frac_result);
+	while(vi > 0) {
+	  if (frac_result[vi-1] == '9') {
+	    // Carry.
+	    vi--;
+	    frac_result[vi] = '0';
+	    continue;
+	  }
+	  frac_result[vi-1] += 1;
+	  break;
 	}
-	else
+	if (!vi)
 	{
-	  frac_result[-1] = frac_result[-1] + 1;  
+	  int_part = (string)(((int)int_part) + 1);
 	}
       }
       
       // Now for the integral part. We traverse it in reverse.
-      val_length        = strlen(value[INT_PART]);
+      val_length        = strlen(int_part);
       ptn_length        = strlen(pattern[INT_PART]);
       vi                = 0;
       int num_wid       = 0; 
-      string rev_val    = reverse(value[INT_PART]);
+      string rev_val    = reverse(int_part);
       string int_result = "";
       string minus_sign = "";
       foreach(reverse(pattern[INT_PART])/1, string s)
