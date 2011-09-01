@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.650 2011/08/24 23:09:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.651 2011/09/01 11:53:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -10008,7 +10008,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  </list>
 
  <p>Positive positions count from the start of the input array,
- beginning with 1. Negative positions counts from the end.</p>
+ beginning with 1. Negative positions count from the end.</p>
 
  <p>It is not an error if a position count goes past the array limit
  (in either direction). The position gets capped by the start or end
