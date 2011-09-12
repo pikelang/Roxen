@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.101 2011/08/29 14:33:10 grubba Exp $
+// $Id: DBManager.pmod,v 1.102 2011/09/12 10:54:42 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1432,17 +1432,17 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     Stdio.File cooked = raw;
     if (has_suffix(fname, ".bz2")) {
       cooked = Stdio.File();
-      Process.create_process(({ "bzip2", "-cd" }),
-			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
-				"stdin":raw,
-			     ]));
+      Process.Process(({ "bzip2", "-cd" }),
+		      ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+			 "stdin":raw,
+		      ]));
       raw->close();
     } else if (has_suffix(fname, ".gz")) {
       cooked = Stdio.File();
-      Process.create_process(({ "gzip", "-cd" }),
-			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
-				"stdin":raw,
-			     ]));
+      Process.Process(({ "gzip", "-cd" }),
+		      ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+			 "stdin":raw,
+		      ]));
       raw->close();
     }
     report_notice("Restoring backup file %s to database %s...\n",
@@ -1643,7 +1643,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   werror("Backing up database %s to %s/dump.sql...\n", dbname, directory);
   // werror("Starting mysqldump command: %O...\n", cmd);
 
-  if (Process.create_process(cmd)->wait()) {
+  if (Process.Process(cmd)->wait()) {
     error("Mysql dump command failed for DB %s.\n", dbname);
   }
 
@@ -1657,9 +1657,9 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 	   dbname, table, directory, time(), tag );
   }
 
-  if (Process.create_process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
+  if (Process.Process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
       wait() &&
-      Process.create_process(({ "gzip", "-f9", directory + "/dump.sql" }))->
+      Process.Process(({ "gzip", "-f9", directory + "/dump.sql" }))->
       wait()) {
     werror("Failed to compress the database dump.\n");
   }

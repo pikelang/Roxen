@@ -84,14 +84,14 @@ void run_tests(Configuration c)
 "rxnpatch"
 #endif
 );
-  Process.create_process p = test(Process.create_process,
-				  ({ clt_path, 
-				     "-O", "self_test@roxen.com",
-				     "--no-colour",
-				     "install", 
-				     combine_path(temp_path, 
-						  "2009-02-25T1628.rxp") }),
-				  ([ "env" : env ]) );
+  Process.Process p = test(Process.Process,
+			   ({ clt_path, 
+			      "-O", "self_test@roxen.com",
+			      "--no-colour",
+			      "install", 
+			      combine_path(temp_path, 
+					   "2009-02-25T1628.rxp") }),
+			   ([ "env" : env ]) );
   test_false(p && p->wait);
 
   // Create a patch using the command line tool and then install it.
@@ -105,8 +105,8 @@ void run_tests(Configuration c)
 		      "--patch=" + combine_path(test_path, "testfile.patch"),
 		      "-t", temp_path });
   Stdio.File desc = Stdio.File();
-  p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe(),
-	   					"env"	: env ]) );
+  p = test(Process.Process, clt_args, ([ "stdin" : desc.pipe(),
+					 "env"	: env ]) );
   
   test(desc.write, "Created by self_test.");
   test(desc.close);

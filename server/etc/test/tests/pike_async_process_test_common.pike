@@ -52,7 +52,7 @@ void run_pikescript( string p, string ... args  )
     return;
   }
 
-  test = Process.create_process( ({
+  test = Process.Process( ({
     getenv("PIKE"),
     combine_path( __FILE__, "../"+p ),
     http_url

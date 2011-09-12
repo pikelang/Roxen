@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.314 2011/08/19 08:54:33 marty Exp $
+// $Id: Roxen.pmod,v 1.315 2011/09/12 10:54:42 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5729,14 +5729,14 @@ class LogPipe
 
 LogPipe get_log_pipe()
 //! Returns a pipe suitable to bind to @expr{"stdout"@} and
-//! @expr{"stderr"@} in a @[Process.create_process] call to get the
+//! @expr{"stderr"@} in a @[Process.Process] call to get the
 //! output from the created process into the debug log. The log data
 //! is line buffered to avoid mixing output from different processes
 //! on the same line.
 //!
 //! @note
 //! Don't forget to close the returned pipe after the call to
-//! @[Process.create_process]. Otherwise the pipe will remain intact
+//! @[Process.Process]. Otherwise the pipe will remain intact
 //! after the process has exited and you'll get an fd leak.
 //!
 //! @note

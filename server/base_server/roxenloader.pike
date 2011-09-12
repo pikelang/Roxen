@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.455 2011/09/12 09:51:26 grubba Exp $
+// $Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.455 2011/09/12 09:51:26 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -639,13 +639,13 @@ void report_error_sparsely (LocaleString|sprintf_format message,
 //! @appears popen
 //! Starts the specified process and returns a string
 //! with the result. Mostly a compatibility functions, uses
-//! Process.create_process
+//! Process.Process
 //!
 //! If @[cmd] is a string then it's interpreted as a command line with
 //! glob expansion, argument splitting, etc according to the command
 //! shell rules on the system. If it's an array of strings then it's
 //! taken as processed argument list and is sent to
-//! @[Process.create_process] as-is.
+//! @[Process.Process] as-is.
 string popen(string|array(string) cmd, void|mapping env,
 	     int|void uid, int|void gid)
 {
@@ -703,7 +703,7 @@ Process.Process spawne(string s, array(string) args, mapping|array env,
 #if efun(geteuid)
   else { u=geteuid(); g=getegid(); }
 #endif
-  return Process.create_process(({s}) + (args || ({})), ([
+  return Process.Process(({s}) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
     "stdout":stdout,
@@ -733,11 +733,11 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 
   cmd += ({"--quiet","--program"}) + args;
 
-  return Process.create_process (cmd,
-				 (["toggle_uid":1,
-				   "stdin":stdin,
-				   "stdout":stdout,
-				   "stderr":stderr]));
+  return Process.Process (cmd,
+			  (["toggle_uid":1,
+			    "stdin":stdin,
+			    "stdout":stdout,
+			    "stderr":stderr]));
 }
 
 // Add a few cache control related efuns
@@ -2305,13 +2305,13 @@ protected void low_check_mysql(string myisamchk, string datadir,
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
-      Process.create_process(({ myisamchk }) +
-			     args + sort(files),
-			     ([
-			       "stdin":devnull,
-			       "stdout":errlog,
-			       "stderr":errlog
-			     ]))->wait();
+      Process.Process(({ myisamchk }) +
+		      args + sort(files),
+		      ([
+			"stdin":devnull,
+			"stdout":errlog,
+			"stderr":errlog
+		      ]))->wait();
     };
   if(err)
     werror(describe_backtrace(err));
@@ -2511,13 +2511,13 @@ void low_start_mysql( string datadir,
   report_debug ("MySQL server executable: %s\n", args[0]);
 #endif
 
-  Process.create_process p = Process.create_process( args,
-			  ([
-			    "environment":env,
-			    "stdin":devnull,
-			    "stdout":errlog,
-			    "stderr":errlog
-			  ]) );
+  Process.Process p = Process.Process( args,
+				       ([
+					 "environment":env,
+					 "stdin":devnull,
+					 "stdout":errlog,
+					 "stderr":errlog
+				       ]) );
 #ifdef __NT__
   if (p)
     Stdio.write_file(pid_file, (string)p->pid());

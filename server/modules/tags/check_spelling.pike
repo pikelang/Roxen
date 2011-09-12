@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.37 2010/10/27 15:32:22 jonasw Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.38 2011/09/12 10:54:42 grubba Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -241,11 +241,11 @@ string run_spellcheck(string|array(string) words, void|string dict)
     return 0;
   }
   Process.Process p =
-    Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
-			   (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
-                           (stringp(words) ? ({ "-H" })         : ({ }) ) +
-                           (dict           ? ({ "-d", dict })   : ({ }) ),
-                           ([ "stdin":file2,"stdout":file4 ]));
+    Process.Process(({ query("spellchecker"), "-a", "-C" }) +
+		    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
+		    (stringp(words) ? ({ "-H" })         : ({ }) ) +
+		    (dict           ? ({ "-d", dict })   : ({ }) ),
+		    ([ "stdin":file2,"stdout":file4 ]));
 
   string text = stringp(words) ?
                " "+words /* Extra space to ignore aspell commands

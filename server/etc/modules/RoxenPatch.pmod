@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.31 2011/04/14 14:21:37 mast Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.32 2011/09/12 10:54:42 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -740,12 +740,12 @@ class Patcher
 	if (dry_run) 
 	  args += ({ "--dry-run" });
 
-	Process.create_process p = 
-	  Process.create_process(args, 
-				 ([ 
-				   "cwd"   : server_path, 
-				   "stdin" : udiff_data 
-				 ]));
+	Process.Process p = 
+	  Process.Process(args, 
+			  ([ 
+			    "cwd"   : server_path, 
+			    "stdin" : udiff_data 
+			  ]));
 
 	if (!p || p->wait())
 	{
@@ -2174,8 +2174,7 @@ class Patcher
     write_mess("Creating tar file %s ... ", dest);
     array args = ({ tar_bin, "czf", dest, id });
   
-    Process.create_process p = Process.create_process(args, 
-						      ([ "cwd" : temp_path ]));
+    Process.Process p = Process.Process(args, ([ "cwd" : temp_path ]));
     if (!p || p->wait())
     {
       write_err("FAILED: Could not create tar file!\n");
@@ -2198,8 +2197,7 @@ class Patcher
 		    unixify_path(tar_archive), 
 		    simplify_path(unixify_path(file_name)) });
   
-    Process.create_process p = Process.create_process(args,
-						      ([ "cwd" : base_path ]));
+    Process.Process p = Process.Process(args, ([ "cwd" : base_path ]));
     if (!p || p->wait())
       return 0;
   

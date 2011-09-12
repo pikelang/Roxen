@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.18 2011/07/08 09:10:01 jonasw Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.19 2011/09/12 10:54:42 grubba Exp $";
 
 import RoxenPatch;
 
@@ -916,7 +916,7 @@ private string launch_external_editor(Patcher aux)
 
   // Start the process.
   array args = ({ editor, tempfile });
-  Process.create_process p = Process.create_process(args);
+  Process.Process p = Process.Process(args);
 
   if (p->wait())
      return 0;

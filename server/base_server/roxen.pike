@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1087 2011/08/31 11:23:35 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1088 2011/09/12 10:54:41 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -7241,8 +7241,8 @@ class LogFile(string fname, string|void compressor_program)
        if(!stat || time(1) < stat->mtime + 1200)
          continue; // Wait at least 20 minutes before compressing log file...
        werror("Compressing log file %O\n", compress_file);
-       compressor_process = Process.create_process(({ compressor_program,
-                                                      compress_file }));
+       compressor_process = Process.Process(({ compressor_program,
+					       compress_file }));
        return;
       }
     }
