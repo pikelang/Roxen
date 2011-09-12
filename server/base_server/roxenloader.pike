@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $
+// $Id: roxenloader.pike,v 1.455 2011/09/12 09:51:26 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.455 2011/09/12 09:51:26 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1464,6 +1464,11 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
     roxen_product_name="Roxen CMS";
   else
     roxen_product_name="Roxen WebServer";
+
+#if defined(ROXEN_USE_FORKD) && constant(Process.set_forkd_default)
+  report_debug("Enabling use of forkd daemon.\n");
+  Process.set_forkd_default(1);
+#endif
 
   // The default (internally managed) mysql path
   string defpath =
