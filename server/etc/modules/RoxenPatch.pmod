@@ -21,7 +21,7 @@ constant known_platforms = (< "macosx_ppc32",
 
 typedef mapping(string:string |
 		  multiset(string) |
-		  array(string | mapping(string:string))) PatchObject;          
+		  array(string | mapping(string:string))) PatchObject;
 //! Contains the patchdata
 //! 
 //! @mapping
@@ -65,6 +65,11 @@ typedef mapping(string:string |
 //!     An array of all "delete" fields in the metadata block.
 //! @endmapping
 
+#if !constant(Privs)
+protected class Privs(string reason, int|string|void uid, int|string|void gid)
+{}
+#endif
+
 string wash_output(string s)
 {
   return replace(s, ([ "<green>":"",
@@ -97,7 +102,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.31 2011/04/14 14:21:37 mast Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.32 2011/09/13 14:05:39 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -740,12 +745,14 @@ class Patcher
 	if (dry_run) 
 	  args += ({ "--dry-run" });
 
+	Privs privs = Privs(sprintf("RoxenPatch: Spawning %O.", patch_bin));
 	Process.create_process p = 
 	  Process.create_process(args, 
 				 ([ 
 				   "cwd"   : server_path, 
 				   "stdin" : udiff_data 
 				 ]));
+	privs = 0;
 
 	if (!p || p->wait())
 	{
@@ -944,10 +951,12 @@ class Patcher
     // Move patch dir to Imported Patches
     write_mess("Moving patch files ...");
     string dest_path = combine_path(import_path, id);
-    if (Stdio.recursive_mv(append_path(installed_path, id), dest_path))
+    Privs privs = Privs("RoxenPatch: Moving patch files.");
+    if (Stdio.recursive_mv(append_path(installed_path, id), dest_path)) {
+      privs = 0;
       write_mess("<green>Done!</green>\n");
-    else
-    {
+    } else {
+      privs = 0;
       write_err("FAILED to move patch files (%d: %s)\n"
 		"%O ==> %O\n",
 		errno(), strerror(errno()),
@@ -965,7 +974,9 @@ class Patcher
     log += sprintf("\nUninstalled:\t%s\nUser:\t\t%s\n", 
 		   Calendar.ISO->now()->format_mtime(),
 		   user);
+    privs = Privs("RoxenPatch: Creating installation.log file.");
     write_file(append_path(dest_path, "installation.log"), log);
+    privs = 0;
     return 1;
   }
 
@@ -2102,14 +2113,18 @@ class Patcher
     write_mess("Writing patch data to %s ... ", path);
 
     File out_file = File();
+
+    Privs privs = Privs(sprintf("Patcher: Opening %O for writing.", path));
     
     if(!out_file->open(path, "cxw"))
     {
+      privs = 0;
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
     }
+    privs = 0;
     
-    if(out_file->write(data) < 1)
+    if(out_file->write(data) != sizeof(data))
     {
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
@@ -2173,9 +2188,12 @@ class Patcher
     dest = unixify_path(dest);
     write_mess("Creating tar file %s ... ", dest);
     array args = ({ tar_bin, "czf", dest, id });
-  
+
+    Privs privs =
+      Privs(sprintf("RoxenPatch: Creating tar file %O.", dest));
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : temp_path ]));
+    privs = 0;
     if (!p || p->wait())
     {
       write_err("FAILED: Could not create tar file!\n");
@@ -2197,9 +2215,12 @@ class Patcher
     array args = ({ tar_bin, "rf", 
 		    unixify_path(tar_archive), 
 		    simplify_path(unixify_path(file_name)) });
-  
+
+    Privs privs =
+      Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
     Process.create_process p = Process.create_process(args,
 						      ([ "cwd" : base_path ]));
+    privs = 0;
     if (!p || p->wait())
       return 0;
   
@@ -2222,9 +2243,12 @@ class Patcher
     Filesystem.Tar tarfs = Filesystem.Tar(file_name, UNDEFINED, file);
 
     if (mixed err = catch {
+	Privs privs =
+	  Privs(sprintf("RoxenPatch: Extracting tar archive %O.", file_name));
 	tarfs->tar->extract("", path, UNDEFINED,
 			    Filesystem.Tar.EXTRACT_SKIP_MODE|
 			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
+	privs = 0;
       }) {
       werror("%s\n", describe_backtrace(err));
       file->close();
