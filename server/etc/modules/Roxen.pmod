@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.315 2011/09/12 10:54:42 grubba Exp $
+// $Id: Roxen.pmod,v 1.316 2011/09/13 14:46:28 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2859,6 +2859,20 @@ protected string low_roxen_encode(string val, string encoding)
      return replace (val,
 		    ({ "\"", "\\", "\n" }),
 		    ({ "\\\"", "\\\\", "\\n" }));
+
+   case "json":
+     // RFC 4627, section 2.5
+     //
+     // Perform the set of single-character escapes specified there.
+     //
+     // Note that further escapes may optionally be performed using
+     // the syntax \uXXXX, where characters outside the BMP first
+     // are split into UTF-16 surrogate pairs.
+     return replace(val,
+		   ({ "\"",   "\\",   "/",   "\b",
+		      "\f",   "\n",   "\r",  "\t" }),
+		   ({ "\\\"", "\\\\", "\\/", "\\b",
+		      "\\f",  "\\n",  "\\r", "\\t" }));
 
    case "js":
    case "javascript":
