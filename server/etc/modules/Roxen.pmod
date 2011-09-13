@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.310 2011/09/13 14:46:36 grubba Exp $
+// $Id: Roxen.pmod,v 1.311 2011/09/13 14:51:29 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2944,6 +2944,10 @@ protected string low_roxen_encode(string val, string encoding)
 //!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@}
 //!     tag. This means backslash escapes for chars that cannot occur
 //!     verbatim in Pike string literals.
+//!
+//!   @value "json"
+//!     JSON string quoting. Similar to the @expr{"js"@} quoting,
+//!     but keeps strictly to RFC 4627.
 //!
 //!   @value "js"
 //!   @value "javascript"
