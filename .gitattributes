@@ -281,6 +281,7 @@ worldmap binary
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
 /server/modules/logging/roxen_network.pike foreign_ident
+/server/modules/misc/argcache-garb.pike foreign_ident
 /server/modules/misc/contenttypes.pike foreign_ident
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/implicit_use.pike foreign_ident
