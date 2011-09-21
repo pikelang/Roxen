@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.318 2011/09/13 16:02:52 grubba Exp $
+// $Id: Roxen.pmod,v 1.319 2011/09/21 21:31:23 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2861,18 +2861,10 @@ protected string low_roxen_encode(string val, string encoding)
 		    ({ "\\\"", "\\\\", "\\n" }));
 
    case "json":
-     // RFC 4627, section 2.5
-     //
-     // Perform the set of single-character escapes specified there.
-     //
-     // We also escape \u2028 and \u2029 that may not be part
-     // of literal JS-strings and thus cause problems for some
-     // naive JSON parsers. cf
-     //   http://timelessrepo.com/json-isnt-a-javascript-subset
-     //
-     // Note that further escapes may optionally be performed using
-     // the syntax \uXXXX, where characters outside the BMP first
-     // are split into UTF-16 surrogate pairs.
+#if constant (Standards.JSON.escape_string)
+     return Standards.JSON.escape_string (val);
+#else
+     // Simpler variant for compat with older pikes.
      return replace(val,
 		   ({ "\"",   "\\",   "/",   "\b",
 		      "\f",   "\n",   "\r",  "\t",
@@ -2880,6 +2872,7 @@ protected string low_roxen_encode(string val, string encoding)
 		   ({ "\\\"", "\\\\", "\\/", "\\b",
 		      "\\f",  "\\n",  "\\r", "\\t",
 		      "\\u2028",      "\\u2029", }));
+#endif
 
    case "js":
    case "javascript":
