@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.319 2011/09/21 21:31:23 mast Exp $
+// $Id: Roxen.pmod,v 1.320 2011/09/21 21:32:39 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2879,9 +2879,11 @@ protected string low_roxen_encode(string val, string encoding)
      return replace (val,
 		    ({ "\b", "\014", "\n", "\r", "\t", "\\",
 		       "'", "\"",
+		       "\u2028", "\u2029",
 		       "</", "<!--"}),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
 		       "\\'", "\\\"",
+		       "\\u2028", "\\u2029",
 		       "<\\/", "<\\!--" }));
 
    case "mysql":
