@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.320 2011/09/21 21:32:39 mast Exp $
+// $Id: Roxen.pmod,v 1.321 2011/09/21 21:33:47 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5066,9 +5066,10 @@ string get_world(array(string) urls) {
   // The host part of the URL is a glob.
   // Lets find some suitable hostnames and IPs to match it against.
 
-  array hosts=({ gethostname() }), dns;
+  array hosts=({ gethostname() });
 
 #ifndef NO_DNS
+  array dns;
   catch(dns=roxen->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2]+dns[1];
