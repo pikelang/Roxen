@@ -6,9 +6,8 @@
 
 #include <module.h>
 inherit "module";
-import Sitebuilder;
 
-constant cvs_version = "$Id: argcache-garb.pike,v 1.1 2011/09/16 14:56:56 wellhard Exp $";
+constant cvs_version = "$Id: argcache-garb.pike,v 1.2 2011/09/23 06:49:14 wellhard Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_ZERO;
@@ -20,8 +19,6 @@ constant module_doc  =
   "<p><b>Note:</b> Potentionally dangerous to use if the site keeps persistent "
   "cache objects longer then the remote purge time. This can lead to "
   "broken images.</p>";
-
-inherit SBConnect;
 
 void create(Configuration conf) 
 {
