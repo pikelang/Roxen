@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.647 2011/07/12 15:55:52 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.648 2011/09/30 09:57:53 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1012,7 +1012,8 @@ class TagImgs {
 	
 	if(file) {
 	  array(int) xysize;
-	  if(xysize=Dims.dims()->get(file)) {
+	  mixed err = catch { xysize = Dims.dims()->get(file); };
+	  if (!err && xysize) {
 	    args->width=(string)xysize[0];
 	    args->height=(string)xysize[1];
 	  }
@@ -1052,7 +1053,9 @@ class TagEmitImgs {
     if (string|object file =
 	id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
 	id->conf->try_get_file(args->src, id)) {
-      if (array(int) xysize = Dims.dims()->get(file)) {
+      array(int) xysize;
+      mixed err = catch { xysize = Dims.dims()->get(file); };
+      if (!err && xysize) {
 	return ({ ([ "xsize" : xysize[0],
 		     "ysize" : xysize[1],
 		     "type"  : xysize[2] ]) });
