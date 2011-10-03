@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.322 2011/10/03 13:10:40 mast Exp $
+// $Id: Roxen.pmod,v 1.323 2011/10/03 19:23:24 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5846,7 +5846,8 @@ mapping(string:int) get_memusage()
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
 }
 
-string lookup_real_path_case_insens (string path, void|int no_warn)
+string lookup_real_path_case_insens (string path, void|int no_warn,
+				     void|string charset)
 //! Looks up the given path case insensitively to a path in the real
 //! file system. I.e. all segments in @[path] that exist in the file
 //! system when matched case insensitively are converted to the same
@@ -5858,9 +5859,25 @@ string lookup_real_path_case_insens (string path, void|int no_warn)
 //! is also logged in this case, unless @[no_warn] is nonzero.
 //!
 //! The given path is assumed to be absolute, and it is normalized
-//! with @[combine_path] before being checked. If there's a trailing
-//! slash then it's kept intact.
+//! with @[combine_path] before being checked. The returned paths
+//! always have "/" as directory separators. If there is a trailing
+//! slash then it is kept intact.
 //!
+//! If @[charset] is set then charset conversion is done: @[path] is
+//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! taken as the charset used in the file system. The returned path is
+//! a unicode string as well. If @[charset] isn't specified then no
+//! charset conversion is done anywhere, which means that @[path] must
+//! have the same charset as the file system, and the case insensitive
+//! comparisons only work in as far as @[lower_case] does the right
+//! thing with that charset.
+//!
+//! If @[charset] is given then it's assumed to be a charset accepted
+//! by @[Locale.Charset]. If there are charset conversion errors in
+//! @[path] or in the file system then those paths are treated as
+//! nonexisting.
+//!
+//! @note
 //! Existing paths are cached without any time limit, but the cached
 //! paths are always verified to still exist before being reused. Thus
 //! the only overcaching effect that can occur is if the underlying
@@ -5869,50 +5886,128 @@ string lookup_real_path_case_insens (string path, void|int no_warn)
 {
   ASSERT_IF_DEBUG (is_absolute_path (path));
 
-  string recur (string path)
+  string cache_name = "case_insens_paths";
+
+  function(string:string) encode, decode;
+  switch (charset) {
+    case 0:
+      break;
+    case "utf8":
+    case "utf-8":
+      encode = string_to_utf8;
+      decode = utf8_to_string;
+      cache_name += ":utf8";
+      break;
+    default:
+      Locale.Charset.Encoder enc = Locale.Charset.encoder (charset);
+      Locale.Charset.Decoder dec = Locale.Charset.decoder (charset);
+      encode = lambda (string in) {return enc->feed (in)->drain();};
+      decode = lambda (string in) {return dec->feed (in)->drain();};
+      cache_name += ":" + enc->charset;
+      break;
+  }
+
+  string dec_path, enc_path;
+  int nonexist;
+
+  void recur (string path)
   {
     string lc_path = lower_case (path);
-    if (string cached = cache_lookup ("case_insens_paths", lc_path)) {
-      if (Stdio.exist (cached)) {
-	// werror ("path %q -> %q (cached)\n", path, cached);
-	return cached;
-      }
-      cache_remove ("case_insens_paths", lc_path);
-    }
 
-    string dir = dirname (path);
-    if (dir != "" && dir != path) dir = recur (dir);
-
-  search_dir:
-    if (array(string) dir_list = get_dir (dir)) {
-      string lc_name = basename (lc_path);
-      string real_name;
-      foreach (dir_list, string ent)
-	if (lower_case (ent) == lc_name) {
-	  if (real_name) {
-	    if (!no_warn)
-	      report_warning ("Ambiguous path %q matches both %q and %q "
-			      "in %q.\n", path, real_name, ent, dir);
-	    break search_dir;
-	  }
-	  real_name = ent;
+    dec_path = cache_lookup (cache_name, lc_path);
+    if (dec_path) {
+    check_cached: {
+	if (!encode)
+	  enc_path = dec_path;
+	else if (mixed err = catch (enc_path = encode (dec_path))) {
+	  if (!objectp (err) || !err->is_charset_encode_error)
+	    throw (err);
+	  break check_cached;
 	}
-      if (real_name) {
-	string real_path = combine_path (dir, real_name);
-	// werror ("path %q -> %q\n", path, real_path);
-	cache_set ("case_insens_paths", lc_path, real_path);
-	return real_path;
+	if (Stdio.exist (enc_path)) {
+	  //werror ("path %O -> %O (cached)\n", path, dec_path);
+	  return;
+	}
       }
+      cache_remove (cache_name, lc_path);
     }
 
-    // Nonexisting file or dir - keep the case in that part.
-    // werror ("path %q -> %q (nonexisting)\n", path, combine_path (dir, basename (path)));
-    return combine_path (dir, basename (path));
+    dec_path = dirname (path);
+    if (dec_path == "" || dec_path == path) { // At root.
+      if (!encode)
+	enc_path = dec_path;
+      else if (mixed err = catch (enc_path = encode (dec_path))) {
+	if (!objectp (err) || !err->is_charset_encode_error)
+	  throw (err);
+      }
+      return;
+    }
+    recur (dec_path);
+
+    if (!nonexist) {
+      // FIXME: Note that get_dir on windows accepts and returns
+      // unicode paths, so the following isn't correct there. The
+      // charset handling in the file system interface on windows is
+      // inconsistent however, since most other functions do not
+      // accept neither wide strings nor strings encoded with any
+      // charset. This applies at least up to pike 7.8.589.
+    search_dir:
+      if (array(string) dir_list = get_dir (enc_path)) {
+	string lc_name = basename (lc_path);
+	string dec_name, enc_name;
+
+	foreach (dir_list, string enc_ent) {
+	  string dec_ent;
+	  if (!decode)
+	    dec_ent = enc_ent;
+	  else if (mixed err = catch (dec_ent = decode (dec_ent))) {
+	    if (!objectp (err) || !err->is_charset_decode_error)
+	      throw (err);
+	    // Ignore file system paths that we cannot decode.
+	    continue;
+	  }
+
+	  if (lower_case (dec_ent) == lc_name) {
+	    if (dec_name) {
+	      if (!no_warn)
+		report_warning ("Ambiguous path %q matches both %q and %q "
+				"in %q.\n", path, dec_name, dec_ent, dec_path);
+	      break search_dir;
+	    }
+	    dec_name = dec_ent;
+	    enc_name = enc_ent;
+	  }
+	}
+
+	if (dec_name) {
+	  dec_path = combine_path_unix (dec_path, dec_name);
+	  enc_path = combine_path (enc_path, enc_name);
+	  //werror ("path %O -> %O/%O\n", path, dec_path, enc_path);
+	  cache_set (cache_name, lc_path, dec_path);
+	  return;
+	}
+      }
+
+      nonexist = 1;
+    }
+
+    // Nonexisting file or dir - keep the case in that part. enc_path
+    // won't be used anymore when nonexist gets set, so no need to
+    // update it.
+    dec_path = combine_path_unix (dec_path, basename (path));
+    //werror ("path %O -> %O (nonexisting)\n", path, dec_path);
+    return;
   };
 
   path = combine_path (path);
-  if (has_suffix (path, "/"))
-    return recur (path[..<1]) + "/";
+  if (has_suffix (path, "/") || has_suffix (path, "\\")) {
+    recur (path[..<1]);
+    dec_path += "/";
+  }
   else
-    return recur (path);
+    recur (path);
+
+  encode = decode = 0;		// Avoid garbage.
+
+  return dec_path;
 }
