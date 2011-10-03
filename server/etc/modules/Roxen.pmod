@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.312 2011/09/13 16:02:57 grubba Exp $
+// $Id: Roxen.pmod,v 1.313 2011/10/03 13:14:09 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3338,7 +3338,6 @@ protected class CharsetDecoderWrapper
     // name back from Locale.Charset so we could use that instead in
     // the client_charset_decoders cache mapping.
     decoder = Locale.Charset.decoder (charset = cs);
-    werror ("created %O from %O\n", decoder, cs);
   }
 
   string decode (string what)
