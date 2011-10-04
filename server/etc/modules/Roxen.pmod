@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.323 2011/10/03 19:23:24 mast Exp $
+// $Id: Roxen.pmod,v 1.324 2011/10/04 09:31:11 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5960,7 +5960,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	  string dec_ent;
 	  if (!decode)
 	    dec_ent = enc_ent;
-	  else if (mixed err = catch (dec_ent = decode (dec_ent))) {
+	  else if (mixed err = catch (dec_ent = decode (enc_ent))) {
 	    if (!objectp (err) || !err->is_charset_decode_error)
 	      throw (err);
 	    // Ignore file system paths that we cannot decode.
