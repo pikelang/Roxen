@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1088 2011/09/12 10:54:41 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1089 2011/10/05 15:01:29 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5583,6 +5583,9 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
   }
 
   array(array) queue = handle_queue->peek_array();
+
+  // Ignore the handle thread shutdown marker, if any.
+  queue -= ({0});
 
   if (!sizeof (queue))
     report_debug ("###### No entries in the handler queue\n");
