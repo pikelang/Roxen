@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $
+// $Id: roxenloader.pike,v 1.457 2011/10/07 08:59:33 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.457 2011/10/07 08:59:33 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1886,7 +1886,8 @@ protected class SQLKey
     // happen the connection is not welcome back to the pool.
     string errmsg = describe_error (err);
     if (has_prefix (errmsg, "Mysql.mysql(): Couldn't connect ") ||
-	has_prefix (errmsg, "Mysql.mysql(): Couldn't reconnect ")) {
+	has_prefix (errmsg, "Mysql.mysql(): Couldn't reconnect ") ||
+	has_suffix (errmsg, "(MySQL server has gone away)\n")) {
       if (reuse_in_thread) {
 	mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
 	if (dbs_for_thread[db_name] == real)
