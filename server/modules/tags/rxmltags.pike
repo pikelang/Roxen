@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.652 2011/09/30 09:57:52 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.653 2011/10/11 10:01:53 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1946,11 +1946,13 @@ class TagCharset
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
-      if( args->in && catch {
-	content=Locale.Charset.decoder( args->in )->feed( content || "" )->drain();
-      })
-	RXML.run_error("Invalid charset, or unable to decode data: %s\n",
-		       args->in );
+      if (string charset = args->in) {
+	Locale.Charset.Decoder dec;
+	if (catch (dec = Locale.Charset.decoder (charset)))
+	  RXML.parse_error ("Invalid charset %q\n", charset);
+	if (mixed err = catch (content = dec->feed (content || "")->drain()))
+	  RXML.run_error (describe_error (err));
+      }
       if( args->out && id->set_output_charset)
 	id->set_output_charset( args->out );
       result_type = result_type (RXML.PXml);
@@ -1979,17 +1981,17 @@ class TagRecode
       switch(args->from)
       {
 	case "safe-utf8":
-	  catch {
-	    content = Locale.Charset.decoder("utf8")->feed(content)->drain();
-	  };
+	  catch (content = utf8_to_string (content));
 	  break;
 
 	default:
-	  if(args->from && catch {
-	      content = Locale.Charset.decoder(args->from)->
-			feed(content)->drain(); })
-	    RXML.run_error("Invalid charset, or unable to decode data: %s\n",
-			   args->from);
+	  if (string charset = args->from) {
+	    Locale.Charset.Decoder dec;
+	    if (catch (dec = Locale.Charset.decoder (charset)))
+	      RXML.parse_error ("Invalid charset %q\n", charset);
+	    if (mixed err = catch (content = dec->feed (content)->drain()))
+	      RXML.run_error (describe_error (err));
+	  }
       }
       
       if (args->to) {
@@ -1998,14 +2000,15 @@ class TagRecode
 	int use_entity_fallback =
 	  lower_case(args["entity-fallback"] || "no") != "no";
 	string str_fallback = args["string-fallback"];
-	if (catch {
-	    content = Locale.Charset.encoder(args->to, str_fallback,
-					     use_entity_fallback &&
-					     lambda(string ch) {
-					       return "&#" + ch[0] + ";";
-					     })->feed(content)->drain(); })
-	  RXML.run_error("Invalid charset, or unable to encode data: %s\n",
-			 args->to);
+	Locale.Charset.Encoder enc;
+	if (catch (enc = Locale.Charset.encoder (args->to, str_fallback,
+						 use_entity_fallback &&
+						 lambda(string ch) {
+						   return "&#" + ch[0] + ";";
+						 })))
+	  RXML.parse_error ("Invalid charset %q\n", args->to);
+	if (mixed err = catch (content = enc->feed (content)->drain()))
+	  RXML.run_error (describe_error (err));
       }
       
       return ({ content });
