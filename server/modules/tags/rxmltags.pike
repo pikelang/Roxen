@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.653 2011/10/11 10:01:53 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.654 2011/10/11 10:06:00 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1950,8 +1950,12 @@ class TagCharset
 	Locale.Charset.Decoder dec;
 	if (catch (dec = Locale.Charset.decoder (charset)))
 	  RXML.parse_error ("Invalid charset %q\n", charset);
-	if (mixed err = catch (content = dec->feed (content || "")->drain()))
-	  RXML.run_error (describe_error (err));
+	if (mixed err = catch (content = dec->feed (content || "")->drain())) {
+	  if (objectp (err) && err->is_charset_decode_error)
+	    RXML.run_error (describe_error (err));
+	  else
+	    throw (err);
+	}
       }
       if( args->out && id->set_output_charset)
 	id->set_output_charset( args->out );
@@ -1989,8 +1993,12 @@ class TagRecode
 	    Locale.Charset.Decoder dec;
 	    if (catch (dec = Locale.Charset.decoder (charset)))
 	      RXML.parse_error ("Invalid charset %q\n", charset);
-	    if (mixed err = catch (content = dec->feed (content)->drain()))
-	      RXML.run_error (describe_error (err));
+	    if (mixed err = catch (content = dec->feed (content)->drain())) {
+	      if (objectp (err) && err->is_charset_decode_error)
+		RXML.run_error (describe_error (err));
+	      else
+		throw (err);
+	    }
 	  }
       }
       
@@ -2007,8 +2015,12 @@ class TagRecode
 						   return "&#" + ch[0] + ";";
 						 })))
 	  RXML.parse_error ("Invalid charset %q\n", args->to);
-	if (mixed err = catch (content = enc->feed (content)->drain()))
-	  RXML.run_error (describe_error (err));
+	if (mixed err = catch (content = enc->feed (content)->drain())) {
+	  if (objectp (err) && err->is_charset_encode_error)
+	    RXML.run_error (describe_error (err));
+	  else
+	    throw (err);
+	}
       }
       
       return ({ content });
