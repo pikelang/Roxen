@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.55 2011/10/17 14:13:46 erikd Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.56 2011/10/17 14:23:19 erikd Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -620,7 +620,7 @@ constant tagdoc = ([
     </p></attr>
 
     <attr name='filename' value='string'><p>
-      Works like <tag>cimg</tag> filename attribute</p>
+      Works like the <i>filename</i> attribute to <tag>cimg/</tag>.</p>
     </attr>
 
 <h1>Timeout</h1>
