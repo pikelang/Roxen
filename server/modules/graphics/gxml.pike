@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.54 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.55 2011/10/17 14:15:00 erikd Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -558,7 +558,8 @@ class TagGXML
       if(do_ext)
 	ext = "." + (my_args->format || "png");
       
-      res_args->src = query_internal_location() + key + ext;
+      res_args->src = query_internal_location() + key +
+	((args->filename && sizeof(args->filename))? "/" + Roxen.http_encode_url(args->filename) : "") + ext;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( key, id, no_draw, timeout ) )
       {
@@ -617,6 +618,10 @@ constant tagdoc = ([
     <attr name='noxml'><p>
       Don't self close the generated <tag>img</tag>.
     </p></attr>
+
+    <attr name='filename' value='string'><p>
+      Works like <tag>cimg</tag> filename attribute</p>
+    </attr>
 
 <h1>Timeout</h1>
 
