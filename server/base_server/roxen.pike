@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1089 2011/10/05 15:01:29 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1090 2011/10/17 09:14:14 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1087,11 +1087,14 @@ void stop_handler_threads()
 //! Stop all the handler threads and the backend, but give up if it
 //! takes too long.
 {
-  int timeout=10;
+  int timeout=15;		// Timeout if the bg queue doesn't get shorter.
+  int background_run_timeout = 100; // Hard timeout that cuts off the bg queue.
 #if constant(_reset_dmalloc)
   // DMALLOC slows stuff down a bit...
   timeout *= 10;
+  background_run_timeout *= 3;
 #endif /* constant(_reset_dmalloc) */
+
   report_debug("Stopping all request handler threads.\n");
 
   // Wake up any handler threads on hold, and ensure none gets on hold
@@ -1120,11 +1123,23 @@ void stop_handler_threads()
 	      }, 0);
   }
 
-  while(thread_reap_cnt) {
+  int prev_bg_len = bg_queue_length();
+
+  while (thread_reap_cnt) {
     sleep(0.1);
-    if(--timeout<=0) {
+
+    if (--timeout <= 0) {
+      int cur_bg_len = bg_queue_length();
+      if (prev_bg_len < cur_bg_len)
+	// Allow more time if the background queue is being worked off.
+	timeout = 10;
+      prev_bg_len = cur_bg_len;
+    }
+
+    if(--background_run_timeout <= 0 || timeout <= 0) {
       report_debug("Giving up waiting on threads; "
-		   "%d threads blocked.\n", thread_reap_cnt);
+		   "%d threads blocked, %d jobs in the background queue.\n",
+		   thread_reap_cnt, bg_queue_length());
 #ifdef DEBUG
       describe_all_threads();
 #endif
@@ -1266,8 +1281,12 @@ protected void bg_process_queue()
     // If jobs are enqueued while running another background job,
     // bg_process_queue is put on the handler queue again at the very
     // end of this function.
+    //
+    // However, during shutdown we continue until the queue is really
+    // empty. background_run won't queue new jobs then, and if this
+    // takes too long, stop_handler_threads will exit anyway.
     int jobs_to_process = bg_queue->size();
-    while (jobs_to_process-- && !shutdown_started) {
+    while (hold_wakeup_cond ? jobs_to_process-- : bg_queue->size()) {
       // Not a race here since only one thread is reading the queue.
       array task = bg_queue->read();
 
@@ -1430,9 +1449,13 @@ mixed background_run (int|float delay, function func, mixed... args)
 #endif
 
 #ifdef THREADS
-  if (!hold_wakeup_cond)
+  if (!hold_wakeup_cond) {
     // stop_handler_threads is running; ignore more work.
+#ifdef DEBUG
+    report_debug ("Ignoring background job queued during shutdown: %O\n", func);
+#endif
     return 0;
+  }
 
   class enqueue(function func, mixed ... args)
   {
