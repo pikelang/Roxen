@@ -1157,7 +1157,7 @@ mapping|string parse( RequestID id )
     // Query widget.
 
     res +=
-      "<a name='dbquery'/><p>"
+      "<a name='dbquery'></a><p>"
       "<textarea rows='12' cols='90' wrap='soft' name='query' "
       " style='font-size: 90%'>" +
       Roxen.html_encode_string (id->variables->query) + "</textarea><br />"
