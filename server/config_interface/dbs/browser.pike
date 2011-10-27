@@ -604,7 +604,13 @@ mapping|string parse( RequestID id )
     return Roxen.http_redirect( "/dbs/", id );
 
   string res =
-    "<style type='text/css'>"
+    "<set variable='var.form-anchor' value='#dbquery'/>"
+    "<use file='/template'/><tmpl>"
+    "<topmenu base='../' selected='dbs'/>"
+    "<content><cv-split><subtablist width='100%'><st-tabs>"
+    "<insert file='subtabs.pike'/></st-tabs><st-page>"
+    "<input type='hidden' name='sort' value='&form.sort:http;' />\n"
+    "<style type='text/css'>\n"
     ".num {"
     " text-align: right;"
     " white-space: nowrap;"
@@ -662,14 +668,8 @@ mapping|string parse( RequestID id )
     " font-weight: bold;"
     " background-color: &usr.matrix12;;"
     "}\n"
-    "</style>"
-    "<set variable='var.form-anchor' value='#dbquery'/>"
-    "<use file='/template'/><tmpl>"
-    "<topmenu base='../' selected='dbs'/>"
-    "<content><cv-split><subtablist width='100%'><st-tabs>"
-    "<insert file='subtabs.pike'/></st-tabs><st-page>"
-    "<input type='hidden' name='sort' value='&form.sort:http;' />\n";
-
+    "</style>\n";
+  
   if( id->variables->action && actions[ id->variables->action ])
   {
     res += "<input type='hidden' name='db' value='&form.db:http;' />\n";

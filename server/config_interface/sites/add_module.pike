@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.90 2009/03/17 16:37:52 jonasw Exp $
+// $Id: add_module.pike,v 1.91 2011/10/27 16:38:32 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -108,9 +108,9 @@ string page_base( RequestID id, string content, int|void noform,
     "</tr>"
     "</table>";
 
-  return sprintf( "<use file='/template' />\n"
+  return sprintf( "<use file='/template' />"
                   "<tmpl title=' %s'%s>"
-                  "<topmenu base='/' selected='sites'/>\n"
+                  "<topmenu base='/' selected='sites'/>"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
