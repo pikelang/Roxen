@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.654 2011/10/11 10:06:00 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.655 2011/10/31 08:49:54 marty Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2595,6 +2595,32 @@ class TagCrypt {
       }
       result=crypt(content);
       return 0;
+    }
+  }
+}
+
+class TagHashHMAC
+{
+  inherit RXML.Tag;
+  constant name = "hash-hmac";
+
+  mapping(string:RXML.Type) req_arg_types = ([
+    "hash"     : RXML.t_string(RXML.PEnt),
+    "password" : RXML.t_string(RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    void do_return(RequestID id) {
+      string password = args->password;
+      args->password = "";
+      object hash;
+      hash = Crypto[upper_case(args->hash)] || Crypto[lower_case(args->hash)];
+      if (!hash)
+	RXML.parse_error ("Unknown hash algorithm %O.", args->hash);
+
+      result = String.string2hex(Crypto.HMAC(hash)(password)(content));
     }
   }
 }
@@ -8708,6 +8734,25 @@ using the pre tag.
 <then>Yepp!</then>
 <else>Nope!</else>
 </ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"hash-hmac":#"<desc type='cont'><p><short>
+ Keyed-Hashing for Message Authentication (HMAC) tag.</short></p>
+
+<ex-box><hmac-hash hash='md5' password='key'>The quick brown fox jumps over the lazy dog</hmac-hash>
+  Result: 80070713463e7749b90c2dc24911e275
+</ex-box>
+</desc>
+
+<attr name='hash' value='string'>
+ <p>The hash algorithm to use (e.g. MD5, SHA1, SHA256 etc.) All hash algorithms
+supported by Pike can be used.</p>
+</attr>
+
+<attr name='password' value='string'>
+ <p>The password to use.</p>
 </attr>",
 
 //----------------------------------------------------------------------
