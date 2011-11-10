@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.459 2011/11/10 17:20:06 mast Exp $
+// $Id: roxenloader.pike,v 1.460 2011/11/10 17:21:07 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.459 2011/11/10 17:20:06 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.460 2011/11/10 17:21:07 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2327,7 +2327,7 @@ void low_start_mysql( string datadir,
 				"*"
 #endif
   });
-  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
+  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "5.5.*" "6.*" });
   
   void rotate_log(string path)
   {
