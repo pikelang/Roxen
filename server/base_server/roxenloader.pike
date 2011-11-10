@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.458 2011/11/10 16:51:57 mast Exp $
+// $Id: roxenloader.pike,v 1.459 2011/11/10 17:20:06 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.458 2011/11/10 16:51:57 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.459 2011/11/10 17:20:06 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2360,7 +2360,8 @@ void low_start_mysql( string datadir,
       version = version[sizeof (mysql_location->mysqld)..];
     if (sscanf(lower_case(version), "%*s  ver %[0-9.]", version) != 2) {
       version_fatal_error =
-	sprintf("Failed to parse MySQL version string %q.\n", version);
+	  sprintf("Failed to parse MySQL version string - got %q from:\n"
+		  "%O\n\n", version, orig_version);
     } else {
       //  Determine if version is acceptable
       if (has_value(glob(MYSQL_GOOD_VERSION[*], version), 1)) {
