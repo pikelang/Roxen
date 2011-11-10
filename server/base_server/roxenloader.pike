@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.457 2011/10/07 08:59:33 mast Exp $
+// $Id: roxenloader.pike,v 1.458 2011/11/10 16:51:57 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.457 2011/10/07 08:59:33 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.458 2011/11/10 16:51:57 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2386,6 +2386,14 @@ void low_start_mysql( string datadir,
 	  sprintf("MySQL version %s detected:\n\n"
 		  "  %s\n\n", version, orig_version);
       }
+#ifdef RUN_SELF_TEST
+      if (version_fatal_error) {
+	report_debug ("\n%s"
+		      "Continuing anyway in self test mode.\n\n",
+		      version_fatal_error);
+	version_fatal_error = 0;
+      }
+#endif
     }
   }
   if (version_fatal_error) {
