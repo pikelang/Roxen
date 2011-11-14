@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.655 2011/10/31 08:49:54 marty Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.656 2011/11/14 00:32:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4195,6 +4195,83 @@ class TagValue
 	result = result_type->encode (content, content_type);
       else
 	result = content;
+    }
+  }
+}
+
+class TagJsonFormat
+{
+  inherit RXML.Tag;
+  constant name = "json-format";
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "variable": RXML.t_text (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return (RequestID id)
+    {
+      int encode_flags;
+
+      if (args["ascii-only"])
+	encode_flags |= Standards.JSON.ASCII_ONLY;
+      if (args["human-readable"])
+	encode_flags |= Standards.JSON.HUMAN_READABLE;
+      if (string canon = args["canonical"]) {
+	if (canon != "pike")
+	  RXML.parse_error ("Unknown canonical form %q requested.\n", canon);
+	encode_flags |= Standards.JSON.PIKE_CANONICAL;
+      }
+
+      if (args->value)
+	content = args->value;
+      else if (string var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (var)))
+	  parse_error ("Variable %q does not exist.\n", var);
+      }
+
+      if (mixed err =
+	  catch (result = Standards.JSON.encode (content, encode_flags)))
+	RXML.run_error (describe_error (err));
+
+      if (!args["no-xml-quote"])
+	result = replace (result, ([
+			    "&": "\\u0026",
+			    "<": "\\u003c",
+			    ">": "\\u003e",
+			  ]));
+    }
+  }
+}
+
+class TagJsonParse
+{
+  inherit RXML.Tag;
+  constant name = "json-parse";
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return (RequestID id)
+    {
+      if (args->value)
+	content = args->value;
+      else if (string var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (var)))
+	  parse_error ("Variable %q does not exist.\n", var);
+      }
+
+      if (mixed err = catch (result = Standards.JSON.decode (content)))
+	RXML.run_error (describe_error (err));
     }
   }
 }
@@ -10198,6 +10275,32 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  content must be empty if this is used.</p>
 </attr>",
 
+"json-parse": #"<desc type='cont'>
+ <p><short>Parses a json formatted string.</short> This returns a
+ value of the same type as the top level json object, typically an
+ array or a mapping.</p>
+",
+
+"json-format": #"<desc type='cont'>
+ <p><short>Formats a json string.</short> The input value may be a
+ number, string, array, mapping, or one of the special values
+ <ent>roxen.true</ent>, <ent>roxen.false</ent>, or
+ <ent>roxen.null</ent>.</p>
+
+ <p>Note: In some cases it may be easier to write the json answer as a
+ plain string and substitute some values into it. In that case, the
+ \"json\" encoding is more useful:</p>
+
+ <ex-box>
+{\"user\": \"<ent>var.username:json</ent>\",
+ \"name\": \"<ent>var.fullname:json</ent>\"
+</ex-box>
+
+<attr name='variable' value='string'>
+ <p>Get the value to format from this variable. If this isn't
+ specified, the content of the container is used.</p>
+</attr>",
+
 //----------------------------------------------------------------------
 
 "return":#"<desc type='tag'><p><short>
@@ -12444,7 +12547,6 @@ Specify scope to test for existence.</p>
 //----------------------------------------------------------------------
 
 "emit":({ #"<desc type='cont'><p><short hide='hide'>
-
  Provides data, fetched from different sources, as entities. </short>
 
  <tag>emit</tag> is a generic tag used to fetch data from a

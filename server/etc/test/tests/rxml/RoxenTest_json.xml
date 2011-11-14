@@ -1,0 +1,115 @@
+<test>
+  <rxml>
+    <json-parse>
+      "ss
+yy"
+    </json-parse>
+  </rxml>
+  <glob>[Error (run): Error decoding JSON at position *]*</glob>
+</test>
+
+<test>
+  <rxml>
+    <json-format>
+      <value type="array">
+	<value>1</value>
+	<value type="int">2</value>
+	<value type="float">-3.17e-13</value>
+	<value type="mapping">
+	  <value index="str xx">abc"'def&lt;&amp;&gt;</value>
+	</value>
+	<value>&roxen.true;</value>
+	<value>&roxen.false;</value>
+	<value>&roxen.null;</value>
+      </value>
+    </json-format>
+  </rxml>
+  <glob>["1",2,-3.17e-*13,{"str xx":"abc\"'def\u003c\u0026\u003e"},true,false,null]</glob>
+</test>
+
+<test>
+  <rxml type="any">
+    <json-parse>
+      {"int": -1,
+       "float": 2.0,
+       "strings": ["a", "&lt;&amp;&gt;", "ss\"'"]
+      }
+    </json-parse>
+  </rxml>
+  <equal>
+    (["int": -1,
+      "float": 2.0,
+      "strings": ({"a", "<&>", "ss\"'"})
+    ])
+  </equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <json-parse>{"true": true, "false": false, "null": null}</json-parse>
+  </rxml>
+  <equal>
+    (["true": Val.true,
+      "false": Val.false,
+      "null": Val.null,
+    ])
+  </equal>
+</test>
+
+<test>
+  <rxml type="text/*">
+    &roxen.true;
+    &roxen.false;
+    &roxen.null;
+  </rxml>
+  <result>
+    [Error (parse): Cannot convert Roxen.true to type text/*.]
+    [Error (parse): Cannot convert Roxen.false to type text/*.]
+  </result>
+</test>
+
+<test>
+  <rxml type="string">
+    &roxen.null;
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="int">&roxen.true;</rxml>
+  <equal>1</equal>
+</test>
+
+<test>
+  <rxml type="int">&roxen.false;</rxml>
+  <equal>0</equal>
+</test>
+
+<test>
+  <rxml type="int">&roxen.null;</rxml>
+  <equal>0</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x">&roxen.true;</set>
+    <if variable="var.x">t</if><else>f</else>
+  </rxml>
+  <result>t</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x">&roxen.false;</set>
+    <if variable="var.x">t</if><else>f</else>
+  </rxml>
+  <result>f</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x">&roxen.false;</set>
+    <if variable-exists="var.x">t</if><else>f</else>
+  </rxml>
+  <result>t</result>
+</test>
