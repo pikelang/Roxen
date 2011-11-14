@@ -2716,7 +2716,9 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3" sort="data"><set variable="x">1</set>&_.data;:</emit></rxml>
-<result>:::0:a:</result>
+<!-- Note: Many of the values in this set have no well defined sort
+     order at all. This test should perhaps be removed. -->
+<result>:::0::a:</result>
 </test>
 
 <test>
@@ -2932,22 +2934,22 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test>

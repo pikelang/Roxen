@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.324 2011/10/04 09:31:11 mast Exp $
+// $Id: Roxen.pmod,v 1.325 2011/11/14 00:13:57 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4499,6 +4499,13 @@ class ScopeRoxen {
       return ENCODE_RXML_TEXT("magic_roxen_automatic_charset_variable", type);
     case "auto-charset-value":
       return ENCODE_RXML_TEXT(magic_charset_variable_value, type);
+
+    case "null":
+      return Val->null;
+    case "true":
+      return Val->true;
+    case "false":
+      return Val->false;
     }
     
     return RXML.nil;
@@ -5371,43 +5378,100 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
     });
 }
 
-// FIXME: Having a Roxen.sql_null that is different from but `== equal
-// to pikes Sql.NULL isn't good. We should remove this class, but then
-// a lot of type conversion functions in RXML.pmod need special cases
-// for Sql.NULL.
-
-class SqlNull
-//! The class for @[Roxen.sql_null]. Avoid creating more instances of
-//! this.
+class True
+//! Type for @[Roxen.true]. Do not create more instances of this.
 {
-  inherit RXML.Nil;
-  constant is_RXML_encodable = 1;
+  // Val.true is replaced by this by create() in roxen.pike.
+  inherit Val.True;
 
-#if constant(Sql.Null)
-  inherit Sql.Null;
-#else
-  constant is_sql_null = 1;
-  //! Nonzero recognition constant.
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (1);
+    // Don't try type->encode(this) since we've inherited a cast
+    // function that we don't wish the rxml parser to use - it should
+    // be an error if this object is used in non-numeric contexts.
+    if (type != RXML.t_any)
+      RXML.parse_error ("Cannot convert %O to type %s.\n", this, type->name);
+    return this;
+  }
 
-  // Treat these objects as indistinguishable from each other. We
-  // ought to ensure that there's only one in the pike process
-  // instead, but that's tricky to solve in the PCode codec.
-  int `== (mixed other)
-    {return objectp (other) && other->is_sql_null;}
-  int __hash() {return 17;}
-
-  string _sprintf (int flag) {return flag == 'O' && "sql_null";}
-#endif
-
-  int _encode() {return 0;}
-  void _decode (int dummy) {}
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.true";}
 }
 
-SqlNull sql_null = SqlNull();
-//! Used primarily by emit#sql to represent the SQL NULL value in
-//! RXML. Similar to @[RXML.nil], except that it is a valid value for
-//! an RXML variable. Like @[RXML.nil], it is false in a boolean
-//! context (i.e. @[`!] returns true).
+True true = True();
+//! Roxen replacement for @[Val.true] that adds rxml type conversions:
+//! It's true in boolean tests and yields 1 or 1.0, as appropriate, in
+//! a numeric context.
+
+class False
+//! Type for @[Roxen.false]. Do not create more instances of this.
+{
+  // Val.false is replaced by this by create() in roxen.pike.
+  inherit Val.False;
+
+  constant is_rxml_null_value = 1;
+
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (0);
+    // Don't try type->encode(this) since we've inherited a cast
+    // function that we don't wish the rxml parser to use - it should
+    // be an error if this object is used in non-numeric contexts.
+    if (type != RXML.t_any)
+      RXML.parse_error ("Cannot convert %O to type %s.\n", this, type->name);
+    return this;
+  }
+
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.false";}
+}
+
+False false = False();
+//! Roxen replacement for @[Val.false] that adds rxml type
+//! conversions: It's false in boolean tests, and yields 0 or 0.0, as
+//! appropriate, in a numeric context.
+
+class Null
+{
+  // Val.null is replaced by this by create() in roxen.pike.
+  inherit Val.Null;
+
+  constant is_rxml_null_value = 1;
+
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->string_type)
+      // A bit inconsistent with the true/false values, but compatible
+      // with the old sql_null value and how sql NULLs behaved prior
+      // to it when they produced UNDEFINED.
+      return "";
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (0);
+    return type->encode (this);
+  }
+
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.null";}
+}
+
+Null null = Null();
+//! Roxen replacement for @[Val.null] that adds rxml type conversions:
+//! It's false in boolean tests, yields "" in a string context and 0
+//! or 0.0, as appropriate, in a numeric context.
+
+constant SqlNull = Null;
+Val.Null sql_null;
+// Compat aliases. sql_null is initialized in create() in roxen.pike.
+
 
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,

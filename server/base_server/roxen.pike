@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1090 2011/10/17 09:14:14 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1091 2011/11/14 00:13:57 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5011,6 +5011,12 @@ void create()
   dump( "etc/modules/RXML.pmod/module.pmod" );
   master()->add_dump_constant ("RXML.empty_tag_set",
 			       master()->resolv ("RXML.empty_tag_set"));
+
+  // Replace Val objects with versions extended for the rxml type system.
+  Val->true = Roxen.true;
+  Val->false = Roxen.false;
+  Val->null = Roxen->sql_null = Roxen.null;
+
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Roxen.pmod" );

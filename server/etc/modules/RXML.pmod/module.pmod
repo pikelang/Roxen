@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.423 2011/04/27 17:30:22 mast Exp $
+// $Id: module.pmod,v 1.424 2011/11/14 00:13:57 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -10063,19 +10063,14 @@ class Nil
   inherit Empty;
 
   constant is_rxml_null_value = 1;
-  //! Used in some places to test for a null value.
+  //! Used to test for a false value in a boolean rxml context.
   //!
-  //! Note that @[RXML.nil] represents an undefined value (i.e. the
-  //! RXML counterpart to Pike @[UNDEFINED]) rather than a null/nil
-  //! value (despite its misleading name). However in tests it's
-  //! convenient to lump @[RXML.nil] together with null values since
-  //! one typically want to test both that the value exists and that
-  //! it isn't null (like e.g. @expr{<if variable="_.foo">@} does).
+  //! This constant lumps together various special objects like
+  //! @[RXML.nil], @[Roxen.false], and @[Roxen.null] that should be
+  //! considered false in boolean contexts.
   //!
-  //! Therefore this flag is set in @[RXML.nil] too, and that also
-  //! makes it easier to inherit @[RXML.Nil] to create null value
-  //! classes. (Only the globally unique @[RXML.nil] instance is
-  //! treated as undefined by the @[RXML] module anyway.)
+  //! @note
+  //! The name is confusing, for historical reasons.
 
   int `!() {return 1;}
   string _sprintf (int flag) {return flag == 'O' && "RXML.nil";}
