@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.122 2010/05/06 12:31:53 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.123 2011/11/15 11:33:04 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -156,10 +156,10 @@ constant tagdoc=([
  information.</short> The result will be available in variables named
  as the SQL columns.</p>
 
- <p>NULL values in the SQL result are mapped to a special null value.
- That value expands to the empty string if inserted, and tests as
- false with <tag>if variable</tag> and true with <tag>if
- variable-exists</tag>.</p>
+ <p>NULL values in the SQL result are mapped to the special null
+ value, <ent>roxen.null</ent>. That value expands to the empty string
+ if inserted, and tests as false with <tag>if variable</tag> and true
+ with <tag>if variable-exists</tag>.</p>
 
  <p><i>Compatibility note:</i> If the compatibility level is 4.5 or
  lower, an SQL NULL value instead maps to an undefined value in RXML,
@@ -620,7 +620,7 @@ class SqlEmitResponse {
 	    return x->type;
 #endif
 
-	  if (!v) val[i] = Roxen.sql_null;
+	  if (!v) val[i] = Val.null;
 	}
       }
 
