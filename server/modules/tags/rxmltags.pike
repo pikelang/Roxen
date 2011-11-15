@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.657 2011/11/14 00:38:00 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.658 2011/11/15 11:07:59 erikd Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7811,6 +7811,21 @@ constant tagdoc=([
  Contains the maximum number of bits encryption strength that the SSL is capable of.
  Note that this is the server side capability, not the client capability.
  Possible values are 0, 40, 128 or 168.
+</p></desc>",
+
+"&roxen.true;":#"<desc type='entity'><p>
+ The value is true in boolean tests and yields 1 or 1.0, as appropriate, in
+ a numeric context.
+</p></desc>",
+
+"&roxen.false;":#"<desc type='entity'><p>
+ The value is false in boolean tests, and yields 0 or 0.0, as
+ appropriate, in a numeric context.
+</p></desc>",
+
+"&roxen.null;":#"<desc type='entity'><p>
+ NULL value. It's false in boolean tests, yields "" in a string context and 0
+ or 0.0, as appropriate, in a numeric context.
 </p></desc>",
 
 "&roxen.time;":#"<desc type='entity'><p>
