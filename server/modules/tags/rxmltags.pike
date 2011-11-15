@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.658 2011/11/15 11:07:59 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.659 2011/11/15 11:26:02 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7815,17 +7815,27 @@ constant tagdoc=([
 
 "&roxen.true;":#"<desc type='entity'><p>
  The value is true in boolean tests and yields 1 or 1.0, as appropriate, in
- a numeric context.
+ a numeric context.</p>
+
+ <p>This is used for the special 'true' value in JSON (see
+ <tag>json-parse</tag> and <tag>json-format</tag>).
 </p></desc>",
 
 "&roxen.false;":#"<desc type='entity'><p>
  The value is false in boolean tests, and yields 0 or 0.0, as
- appropriate, in a numeric context.
+ appropriate, in a numeric context.</p>
+
+ <p>This is used for the special 'false' value in JSON (see
+ <tag>json-parse</tag> and <tag>json-format</tag>).
 </p></desc>",
 
 "&roxen.null;":#"<desc type='entity'><p>
- NULL value. It's false in boolean tests, yields "" in a string context and 0
- or 0.0, as appropriate, in a numeric context.
+ NULL value. It's false in boolean tests, yields \"\" in a string
+ context and 0 or 0.0, as appropriate, in a numeric context.</p>
+
+ <p>This is used for SQL NULL in the SQL tags, and also for the
+ special 'null' value in JSON (see <tag>json-parse</tag> and
+ <tag>json-format</tag>).
 </p></desc>",
 
 "&roxen.time;":#"<desc type='entity'><p>
