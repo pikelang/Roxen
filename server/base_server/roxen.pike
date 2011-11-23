@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1091 2011/11/14 00:13:57 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1092 2011/11/23 10:12:46 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3320,9 +3320,16 @@ protected void engage_abs(int n)
   // Paranoia exit in case describe_all_threads below hangs.
   signal(signum("SIGALRM"), low_engage_abs);
   int t = alarm(20);
-#ifdef THREADS
-  report_debug("Handler queue:\n");
+  report_debug("\nTrying to dump backlog: \n");
   if (mixed err = catch {
+      // Catch for paranoia reasons.
+      describe_all_threads();
+    })
+    werror (describe_backtrace (err));
+#ifdef THREADS
+  report_debug("\nHandler queue:\n");
+  if (mixed err = catch {
+    t = alarm(20);	// Restart the timeout timer.
     array(mixed) queue = handle_queue->buffer[handle_queue->r_ptr..];
     foreach(queue, mixed v) {
       if (!v) continue;
@@ -3335,12 +3342,6 @@ protected void engage_abs(int n)
     })
     werror (describe_backtrace (err));
 #endif
-  report_debug("Trying to dump backlog: \n");
-  if (mixed err = catch {
-      // Catch for paranoia reasons.
-      describe_all_threads();
-    })
-    werror (describe_backtrace (err));
   low_engage_abs();
 }
 
