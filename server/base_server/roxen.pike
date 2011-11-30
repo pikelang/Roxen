@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1081 2011/08/31 11:23:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1082 2011/11/30 11:09:22 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3884,7 +3884,7 @@ class ImageCache
   //! that time are flushed.
   {
     int num;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
     int t = gethrtime();
     report_debug("Cleaning "+name+" image cache ... ");
 #endif
@@ -3893,7 +3893,7 @@ class ImageCache
     rst_cache  = ([]);
     if( !age )
     {
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
       report_debug("cleared\n");
 #endif
       QUERY( "DELETE FROM "+name );
@@ -3910,7 +3910,7 @@ class ImageCache
     while(q<sizeof(ids)) {
       string list = map(ids[q..q+99], get_db()->quote) * "','";
       q+=100;
-      QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
+      QUERY( "DELETE LOW_PRIORITY FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
 #if 0
@@ -3925,14 +3925,14 @@ class ImageCache
 	// Old versions of Mysql lacks OPTIMIZE. Not that we support
 	// them, really, but it might be nice not to throw an error, at
 	// least.
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
 	report_debug("Optimizing database ... ", name);
 #endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
     report_debug("%s removed (%dms)\n",
 		 (num==-1?"all":num?(string)num:"none"),
 		 (gethrtime()-t)/1000);
@@ -4251,8 +4251,25 @@ class ImageCache
 	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
 	    "data MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "INDEX atime (atime)"
+	    "INDEX atime_id (atime, id)"
 	    ")" );
+    }
+
+    // Create index in old databases. Index is used when flushing old
+    // entries. Column 'id' is included in index in order to avoid
+    // reading data file.
+    array(mapping(string:mixed)) res = QUERY("SHOW INDEX FROM " + name);
+    if(search(res->Key_name, "atime_id") < 0) {
+      report_debug("Updating " + name + " image cache: "
+		   "Adding index atime_id on %s... ", name);
+      int start_time = gethrtime();
+      QUERY("CREATE INDEX atime_id ON " + name + " (atime, id)");
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
+      report_debug("Updating " + name + " image cache: "
+		   "Dropping index atime on %s... ", name);
+      start_time = gethrtime();
+      QUERY("DROP INDEX atime ON " + name);
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
   }
 
