@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.557 2010/10/28 12:25:52 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.558 2011/11/30 21:41:16 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3201,8 +3201,21 @@ class TagUse {
        mapping(string:mixed)|RXML.Scope formvars,
        mapping(string:mixed)|RXML.Scope varvars] = res;
       foreach (indices (newdefs), string defname) {
-	mixed def = ctx->misc[defname] = newdefs[defname];
-	if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+	mixed def = newdefs[defname];
+        if (defname == "scope_roxen" || defname == "scope_page") {
+          // The user override mappings for the "roxen" and "page"
+          // scopes. Merge with existing mappings.
+          mapping(string:mixed) tgt_map = ctx->misc[defname];
+          if (!tgt_map)         // Shouldn't happen.
+            ctx->misc[defname] = def + ([]);
+          else
+            foreach (def; string var; mixed val)
+              tgt_map[var] = val;
+        }
+        else {
+          ctx->misc[defname] = def;
+          if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+        }
       }
       ctx->extend_scope ("form", formvars);
       ctx->extend_scope ("var", varvars);
