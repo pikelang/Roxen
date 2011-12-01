@@ -1,13 +1,6 @@
 /*
 File: Math.uuid.js
-Version: 1.3
-Change History:
-  v1.0 - first release
-  v1.1 - less code and 2x performance boost (by minimizing calls to Math.random())
-  v1.2 - Add support for generating non-standard uuids of arbitrary length
-  v1.3 - Fixed IE7 bug (can't use []'s to access string chars.  Thanks, Brian R.)
-  v1.4 - Changed method to be "Math.uuid". Added support for radix argument.  Use module pattern for better encapsulation.
-
+Version: 1.4-roxen
 Latest version:   http://www.broofa.com/Tools/Math.uuid.js
 Information:      http://www.broofa.com/blog/?p=151
 Contact:          robert@broofa.com
@@ -53,12 +46,12 @@ Math.uuid = (function() {
   var CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split(''); 
 
   return function (len, radix) {
-    var chars = CHARS, uuid = [], rnd = Math.random;
+    var chars = CHARS, uuid = [], i;
     radix = radix || chars.length;
 
     if (len) {
       // Compact form
-      for (var i = 0; i < len; i++) uuid[i] = chars[0 | rnd()*radix];
+      for (i = 0; i < len; i++) uuid[i] = chars[0 | Math.random()*radix];
     } else {
       // rfc4122, version 4 form
       var r;
@@ -69,9 +62,9 @@ Math.uuid = (function() {
 
       // Fill in random data.  At i==19 set the high bits of clock sequence as
       // per rfc4122, sec. 4.1.5
-      for (var i = 0; i < 36; i++) {
+      for (i = 0; i < 36; i++) {
         if (!uuid[i]) {
-          r = 0 | rnd()*16;
+          r = 0 | Math.random()*16;
           uuid[i] = chars[(i == 19) ? (r & 0x3) | 0x8 : r & 0xf];
         }
       }
@@ -80,6 +73,3 @@ Math.uuid = (function() {
     return uuid.join('');
   };
 })();
-
-// Deprecated - only here for backward compatability
-var randomUUID = Math.uuid;
