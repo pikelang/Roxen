@@ -110,7 +110,7 @@ ROXEN.AFS = function () {
       }
 
     if (got_json_args)
-      query.push ("__afs=" + YAHOO.lang.JSON.stringify (json_args));
+      query.push ("__afs=" + ROXEN.escapeURIComponent(YAHOO.lang.JSON.stringify (json_args)));
 
     return query.join ("&");
   }
