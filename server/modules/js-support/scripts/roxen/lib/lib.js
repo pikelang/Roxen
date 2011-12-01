@@ -54,13 +54,15 @@
       //  http://james.padolsey.com/javascript/deep-copying-of-objects-and-arrays/
       //
       //  FIXME: Replace with clone() in YUI3?
+      var out, i, len;
       if (Object.prototype.toString.call(obj) === "[object Array]") {
-	var out = [ ], i = 0, len = obj.length;
-	for ( ; i < len; i++)
+	out = [ ];
+	len = obj.length;
+	for (i = 0 ; i < len; i++)
 	  out[i] = arguments.callee(obj[i]);
 	return out;
       } else if (typeof obj === "object") {
-	var out = { }, i;
+	out = { };
 	for (i in obj)
 	  out[i] = arguments.callee(obj[i]);
 	return out;
