@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.118 2011/07/13 16:07:11 grubba Exp $
+// $Id: module.pmod,v 1.119 2011/12/05 13:52:27 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -2124,7 +2124,7 @@ string input(string name, string value, int size,
 
   args->name=name;
   if(value)
-    args->value=value;
+    args->value = Roxen.html_encode_string(value);
   if(!args->size && size)
     args->size=(string)size; 
 
@@ -2136,6 +2136,8 @@ string input(string name, string value, int size,
     else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
     else render+="'"+replace(args[attr], "'", "&#39;")+"'";
   }
+
+  render = "<tt>" + Roxen.html_encode_string(name) + "</tt><br />\n" + render;
 
   if(noxml) return render+">";
   return render+" />";
