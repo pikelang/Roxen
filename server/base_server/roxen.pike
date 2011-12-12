@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1095 2011/12/12 13:13:16 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1096 2011/12/12 22:23:08 mast Exp $";
 
 //! @appears roxen
 //!
@@ -6512,10 +6512,10 @@ protected LogFormat compile_log_format( string fmt )
       if (mixed err = catch {
 	  lf = decode_value( tmp[0]->enc, master()->Decoder() )();
 	}) {
-// #ifdef DEBUG
-	report_error("Decoding of dumped log format failed:\n%s",
-		     describe_backtrace(err));
-// #endif
+	if (describe_error (err) !=
+	    "Cannot decode programs encoded with other pike version.")
+	  report_error("Decoding of dumped log format failed: %s",
+		       describe_backtrace(err));
       }
 
       if (lf && lf->log_access) {
