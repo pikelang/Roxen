@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.33 2011/08/15 14:00:38 grubba Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.34 2011/12/20 12:59:36 grubba Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -54,7 +54,7 @@ protected void resilver_replicate_db()
   // Outer loop is for initialization and error recovery.
   while(this_object()) {
     sleep(60);
-    catch {
+    mixed err = catch {
       Sql.Sql sdb = get_sdb();
 
       if (!sdb) continue;
@@ -156,8 +156,11 @@ protected void resilver_replicate_db()
 	if (!resilver) werror(" done.\n");
       }
     };
-    if (this_object()) {
-      werror("\nArg-cache synchronization error. Retrying...\n");
+    if (this_object() && err) {
+      werror("\nArg-cache synchronization error:\n"
+	     "%s\n"
+	     "Retrying arg-cache sync in 60 seconds...\n",
+	     describe_backtrace(err));
     }
   }
   werror("Arg-cache replication thread terminated.\n");
