@@ -101,7 +101,7 @@ string|mapping parse( RequestID id )
   }
 </script>
 <p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
-	  LOCALE(0, "Uncheck/check all") +
+	  LOCALE(1065, "Uncheck/check all") +
 	  "</gbutton></a></p>\n";
       }
       res += "<ul id='checkbox_list'>";

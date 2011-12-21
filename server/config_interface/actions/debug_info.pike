@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.46 2011/02/08 08:46:26 marty Exp $
+ * $Id: debug_info.pike,v 1.47 2011/12/21 00:46:47 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -285,7 +285,7 @@ mixed page_0( object id )
   res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"References")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
     "</tr>\n";

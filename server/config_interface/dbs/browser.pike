@@ -235,7 +235,7 @@ mixed backup_db( string db, RequestID id )
   }
   return
     "<b>"+_(405,"Directory")+":</b> <input name='dir' size='60' value='auto' /><br />"
-    "<i>" + sprintf (_(0, #"\
+    "<i>" + sprintf (_(1061, #"\
 The directory the backup will be saved in. If you chose auto, Roxen
 will generate a directory name that includes the database name and
 today's date in <tt>$VARDIR/backup</tt> (%s)."),
@@ -787,7 +787,7 @@ mapping|string parse( RequestID id )
       int h = gethrtime();
       if (mixed err = catch (big_q = db->big_query( q ))) {
 	qres += "<p><font color='&usr.warncolor;'>"+
-	  sprintf((string)_(0,"Error running query %d: %s"), i + 1,
+	  sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
 		  replace (Roxen.html_encode_string (
 			     String.trim_all_whites (describe_error(err))),
 			   "\n", "<br/>\n"))+
@@ -912,7 +912,7 @@ mapping|string parse( RequestID id )
 
   if (db_connect_error)
     res += "<p><font color='red'>" +
-      _(0, "Error connecting to database: ") +
+      _(1063, "Error connecting to database: ") +
       Roxen.html_encode_string (describe_error (db_connect_error)) +
       "</font></p>\n";
 
@@ -1166,7 +1166,7 @@ mapping|string parse( RequestID id )
       "</td><td>"
       "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
       "</td><td style='font-size: smaller; padding-left: 10px'>" +
-      _(0, "Tip: Put '--' on a line to ignore everything below it.") +
+      _(1064, "Tip: Put '--' on a line to ignore everything below it.") +
       "</td></tr></table></p>";
 
     // Query result.

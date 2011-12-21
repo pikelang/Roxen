@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.719 2011/06/19 14:49:07 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.720 2011/12/21 00:46:45 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3759,7 +3759,7 @@ RoxenModule reload_module( string modname )
       nm = mi->instance( this_object(), 0, mod_copy);
       // If this is a faked module, let's call it a failure.
       if (nm->module_is_disabled)
-	report_notice (LOC_C(0, "Module is disabled") + "\n");
+	report_notice (LOC_C(1047, "Module is disabled") + "\n");
       else if( nm->not_a_module )
       {
 	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
@@ -4001,12 +4001,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " <i>trust levels</i> grants access to modules with higher"
 		   " <i>security levels</i>."
 		   "\n<p><h2>Definitions</h2><ul>"
-		   " <li>A requests initial Trust level is infinitely high.</li>"
+		   " <li>A requests initial trust level is infinitely high.</li>"
 		   " <li> A request will only be handled by a module if its"
 		   "     <i>trust level</i> is higher or equal to the"
 		   "     <i>security level</i> of the module.</li>"
 		   " <li> Each time the request is handled by a module the"
-		   "     <i>trust level</i> of the module will be set to the"
+		   "     <i>trust level</i> of the request will be set to the"
 		   "      lower of its <i>trust level</i> and the modules"
 	           "     <i>security level</i>, <i>unless</i> the security "
 	           "        level of the module is 0, which is a special "
@@ -4025,7 +4025,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " higher <i>security level</i> than the requests trust"
 		   " level.</p>"
 		   "\n<p>On the other hand, a request handled by the the"
-		   " \"Filsystem module\" could later be handled by the"
+		   " \"Filesystem module\" could later be handled by the"
 		   " \"CGI module\".</p>"));
 
       } else {
@@ -5075,7 +5075,6 @@ below.</p>
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
 	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
 	 DLOCALE(31, "The log file. "
-	 ""
 	 "A file name. Some substitutions will be done:"
 	 "<pre>"
 	 "%y    Year  (e.g. '1997')\n"
@@ -5663,15 +5662,15 @@ low."))->add_changed_callback(lambda(object v)
 
 </body>
 </html>",
-	   DLOCALE(0, "Server too busy message"),
+	   DLOCALE(1048, "Server too busy message"),
 	   TYPE_TEXT_FIELD|VAR_PUBLIC,
-	   DLOCALE(0, "What to return if the server is too busy. See also "
+	   DLOCALE(1049, "What to return if the server is too busy. See also "
 		   "\"Handler queue timeout\"."));
 
     defvar("handler_queue_timeout", 30,
-	   DLOCALE(0, "Handler queue timeout"),
+	   DLOCALE(1050, "Handler queue timeout"),
 	   TYPE_INT,
-	   DLOCALE(0, #"Requests that have been waiting this many seconds on
+	   DLOCALE(1051, #"Requests that have been waiting this many seconds on
 the handler queue will not be processed. Instead, a 503 error code and the
 \"Server too busy message\" will be returned to the client. This may help the
 server to cut down the queue length after spikes of heavy load."))

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.125 2011/04/28 09:14:37 liin Exp $
+// $Id: global_variables.pike,v 1.126 2011/12/21 00:46:45 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -968,22 +968,22 @@ the Roxen instance of the MySQL server).</p>"));
 
 #ifdef ENABLE_OUTGOING_PROXY
   defvar("use_proxy", 0,
-	 LOCALE(0, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
-	 LOCALE(0, "Use proxy for outgoing requests. E.g. when browsing "
+	 LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+	 LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
 		"external web sites through the Linkbrowser or when Insert "
 		"cached-href fetches data from an external location."));
   
   defvar("proxy_url", "",
-	 LOCALE(0, "Proxy: Proxy URL"), TYPE_STRING,
-	 LOCALE(0, "The URL of the proxy to use for outgoing requests."));
+	 LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
+	 LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
   
   defvar("proxy_username", "",
-         LOCALE(0, "Proxy: Proxy username"), TYPE_STRING,
-         LOCALE(0, "Username for proxy authorization."));
+         LOCALE(1056, "Proxy: Proxy username"), TYPE_STRING,
+         LOCALE(1057, "Username for proxy authorization."));
   
   defvar("proxy_password", "",
-         LOCALE(0, "Proxy: Proxy password"), TYPE_STRING,
-         LOCALE(0, "Password for proxy authorization."));
+         LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
+         LOCALE(1059, "Password for proxy authorization."));
 #endif
 }
 

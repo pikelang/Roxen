@@ -55,7 +55,7 @@ string parse( RequestID id )
   contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->received));
 
 #if constant(System.getloadavg)
-  contents += add_row( _(0, "System load"),
+  contents += add_row( _(1060, "System load"),
 		       sprintf ("%{%.2f %}", System.getloadavg()));
 #endif
 
