@@ -14,6 +14,7 @@
 <file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
@@ -1276,8 +1277,6 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 <o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but may also sometimes be because of memory leaks.</o>
 <t></t>
 </str>
-
-
 
 <str id="172">
 <new/>
@@ -4263,5 +4262,17 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1065">
 <new/>
 <o>Uncheck/check all</o>
+<t></t>
+</str>
+
+<str id="1066">
+<new/>
+<o>SNMP status</o>
+<t></t>
+</str>
+
+<str id="1067">
+<new/>
+<o>Global SNMP server statistics</o>
 <t></t>
 </str>

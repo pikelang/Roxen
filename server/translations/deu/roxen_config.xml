@@ -14,6 +14,7 @@
 <file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
@@ -1257,8 +1258,6 @@ Anfrage eine Weile benötigt.</t>
 Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
 Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
-
-
 
 <str id="172">
 <o>Commented config files</o>
@@ -4112,5 +4111,17 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1065">
 <new/>
 <o>Uncheck/check all</o>
+<t></t>
+</str>
+
+<str id="1066">
+<new/>
+<o>SNMP status</o>
+<t></t>
+</str>
+
+<str id="1067">
+<new/>
+<o>Global SNMP server statistics</o>
 <t></t>
 </str>

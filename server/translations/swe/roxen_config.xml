@@ -14,6 +14,7 @@
 <file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
@@ -1219,8 +1220,6 @@ värdet av omgivningsvariablerna LC_MESSAGES och LANG.</t>
 monolitisk icke-forkande server (en enda långlivad process) så tenderar
 processen att växa med tiden. Det beror främst på minnesfragmentation men kan ibland även orsakas av minnesläckor.</t>
 </str>
-
-
 
 <str id="172">
 <o>Commented config files</o>
@@ -3975,4 +3974,14 @@ datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
 <str id="1065">
 <o>Uncheck/check all</o>
 <t>Välj ingen/alla</t>
+</str>
+
+<str id="1066">
+<o>SNMP status</o>
+<t>SNMP-status</t>
+</str>
+
+<str id="1067">
+<o>Global SNMP server statistics</o>
+<t>Global SNMP-serverstatistik</t>
 </str>
