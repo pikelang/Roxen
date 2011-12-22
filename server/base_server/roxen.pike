@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1097 2011/12/14 10:57:12 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1098 2011/12/22 09:54:46 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3386,6 +3386,10 @@ void restart_if_stuck (int force)
 
 function(string:Sql.Sql) dbm_cached_get;
 
+// Threshold in seconds for updating atime records Currently set to
+// one day.
+#define ATIME_THRESHOLD 60*60*24
+
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
 //! regeneration features of graphics generated on the fly. Besides
@@ -4001,7 +4005,8 @@ class ImageCache
     werror("restore meta %O\n", id );
 #endif
     array(mapping(string:string)) q =
-      QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
+      QUERY("SELECT meta, UNIX_TIMESTAMP() - atime as atime_diff "
+	    "FROM "+name+" WHERE id=%s", id );
 
     string s;
     if(!sizeof(q) || !strlen(s = q[0]->meta))
@@ -4015,7 +4020,12 @@ class ImageCache
       return 0;
     }
 
-    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
+    // Update atime only if older than threshold.
+    if((int)q[0]->atime_diff > ATIME_THRESHOLD) {
+      QUERY("UPDATE LOW_PRIORITY "+name+" "
+	    "   SET atime = UNIX_TIMESTAMP() "
+	    " WHERE id = %s ", id);
+    }
     return meta_cache_insert( id, m );
   }
 
@@ -4500,10 +4510,6 @@ class ArgCache
 
 #define CACHE_SIZE  900
 
-  Thread.Mutex mutex = Thread.Mutex();
-  // Allow recursive locks, since it's normal here.
-# define LOCK() mixed __ = mutex->lock (2)
-
 #ifdef ARGCACHE_DEBUG
 #define dwerror(ARGS...) werror(ARGS)
 #else
@@ -4629,7 +4635,6 @@ class ArgCache
 
   protected string read_encoded_args( string id, int dont_update_atime )
   {
-    LOCK();
     GET_DB();
     array res = QUERY("SELECT contents FROM "+name+"2 "
 		      " WHERE id = %s", id);
@@ -4646,10 +4651,13 @@ class ArgCache
   void create_key( string id, string encoded_args, int|void timeout )
   {
     if (!zero_type(timeout) && (timeout < time(1))) return; // Expired.
-    LOCK();
     GET_DB();
     array(mapping) rows =
-      QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
+      QUERY("SELECT id, contents, timeout, "
+	    "UNIX_TIMESTAMP() - UNIX_TIMESTAMP(atime) as atime_diff "
+	    "FROM "+name+"2 "
+	    "WHERE id = %s", id );
+
     foreach( rows, mapping row )
       if( row->contents != encoded_args ) {
       	report_error("ArgCache.create_key(): "
@@ -4660,34 +4668,35 @@ class ArgCache
       }
 
     if(sizeof(rows)) {
-      if (zero_type(timeout)) {
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET atime = NOW(), timeout = NULL "
-              " WHERE id = %s", id);
-      } else {
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET atime = NOW() "
-              " WHERE id = %s", id);
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET timeout = %d "
-              " WHERE id = %s "
-              "   AND timeout IS NOT NULL "
-              "   AND timeout < %d",
-              timeout, id, timeout);
+      // Update atime only if older than threshold.
+      if((int)rows[0]->atime_diff > ATIME_THRESHOLD) {
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET atime = NOW() "
+	      " WHERE id = %s", id);
+      }
+
+      // Increase timeout when needed.
+      if (rows[0]->timeout) {
+	if (zero_type(timeout)) {
+	  // No timeout, i.e. infinite timeout.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = NULL "
+		" WHERE id = %s", id);
+	} else if (timeout > (int)rows[0]->timeout) {
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = %d "
+		" WHERE id = %s", timeout, id);
+	}
       }
       return;
     }
 
-    QUERY( "INSERT INTO "+name+"2 "
-	   "(id, contents, ctime, atime) VALUES "
-	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW())", id, encoded_args );
-
-    if (!zero_type(timeout)) {
-      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	    "   SET timeout = %d "
-	    " WHERE id = %s",
-	    timeout, id);
-    }
+    string timeout_sql = zero_type(timeout) ? "NULL" : (string)timeout;
+    // Use REPLACE INTO to cope with entries created by other threads.
+    QUERY( "REPLACE INTO "+name+"2 "
+	   "(id, contents, ctime, atime, timeout) VALUES "
+	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW(), "+timeout_sql+")",
+	   id, encoded_args );
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -4790,7 +4799,6 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key @[id].
   {
-    LOCK();
     GET_DB();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
