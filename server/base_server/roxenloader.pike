@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.463 2011/12/27 18:26:51 mast Exp $
+// $Id: roxenloader.pike,v 1.464 2011/12/27 18:58:49 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.463 2011/12/27 18:26:51 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.464 2011/12/27 18:58:49 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -122,6 +122,11 @@ int use_syslog, loggingfield;
 //! The path to the server directory, without trailing slash. If
 //! available, this is the logical path without following symlinks (as
 //! opposed to what @[getcwd] returns).
+//!
+//! @note
+//! @[getcwd] should be used when the server directory is combined
+//! with a path that may contain "..". The main reason is to keep
+//! compatibility, and in extension for the sake of consistency.
 string server_dir =
   lambda () {
     string cwd = getcwd();
