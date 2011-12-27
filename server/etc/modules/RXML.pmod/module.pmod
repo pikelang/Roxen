@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.425 2011/12/27 18:47:14 mast Exp $
+// $Id: module.pmod,v 1.426 2011/12/27 19:01:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9782,8 +9782,6 @@ class PCodeDecoder
     this_program::check_tag_set_hash = check_tag_set_hash;
   }
 
-  protected string server_dir = combine_path (getcwd()) + "/";
-
   mixed thingof(string|array what)
   {
     if (arrayp (what)) {
@@ -9872,7 +9870,7 @@ class PCodeDecoder
 
 	default:
 	  if (sscanf (what[0], "Rf:%1s%s", string cls, string path) == 2)
-	    what[0] = cls + server_dir + path;
+	    what[0] = cls + roxenloader.server_dir + path;
 	  ENCODE_DEBUG_RETURN (::thingof (what));
       }
     }
@@ -9898,7 +9896,7 @@ class PCodeDecoder
 
 	default:
 	  if (sscanf (what, "Rf:%1s%s", string cls, string path) == 2)
-	    what = cls + server_dir + path;
+	    what = cls + roxenloader.server_dir + path;
 	  ENCODE_DEBUG_RETURN (::thingof (what));
       }
     }
