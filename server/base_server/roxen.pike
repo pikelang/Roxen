@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1098 2011/12/22 09:54:46 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1099 2011/12/27 15:37:29 mast Exp $";
 
 //! @appears roxen
 //!
@@ -6506,6 +6506,8 @@ protected LogFormat compile_log_format( string fmt )
 {
   add_constant( "___LogFormat", LogFormat );
 
+  // Note similar code in compile_security_pattern.
+
   string kmd5 = md5( fmt );
 
   object con = dbm_cached_get("local");
@@ -6522,8 +6524,8 @@ protected LogFormat compile_log_format( string fmt )
 	}) {
 	if (describe_error (err) !=
 	    "Cannot decode programs encoded with other pike version.\n")
-	  report_error("Decoding of dumped log format failed: %s",
-		       describe_backtrace(err));
+	  report_warning ("Decoding of dumped log format failed "
+			  "(will recompile): %s", describe_backtrace(err));
       }
 
       if (lf && lf->log_access) {
@@ -6930,6 +6932,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // mostly coded it as a proof-of-concept, and because it was more
   // fun that trying to find the bug in the image-cache at the moment.
 
+  // Note similar code in compile_log_format.
+
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
@@ -6943,8 +6947,10 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       return decode_value( tmp[0]->enc, master()->Decoder() )()->f;
     };
 // #ifdef DEBUG
-    report_error("Decoding of dumped log format failed:\n%s",
-		 describe_backtrace(err));
+    if (describe_error (err) !=
+	"Cannot decode programs encoded with other pike version.\n")
+      report_warning ("Decoding of dumped security pattern failed "
+		      "(will recompile):\n%s", describe_backtrace(err));
 // #endif
   }
 #endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
