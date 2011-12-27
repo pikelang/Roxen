@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.641 2011/07/13 11:04:40 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.642 2011/12/27 18:47:14 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1696,8 +1696,10 @@ int store_error(mixed _err)
       int line;
       if (arrayp (ent)) {
 	if (sizeof (ent) && stringp (ent[0]))
-	  if (ent[0][..sizeof (cwd) - 1] == cwd)
+	  if (has_prefix (ent[0], cwd))
 	    file = ent[0] = ent[0][sizeof (cwd)..];
+	  else if (has_prefix (ent[0], roxenloader.server_dir))
+	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir)..];
 	  else
 	    file = ent[0];
 	if (sizeof (ent) >= 2) line = ent[1];

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.47 2011/12/21 00:46:47 jonasw Exp $
+ * $Id: debug_info.pike,v 1.48 2011/12/27 18:47:14 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -235,6 +235,8 @@ mixed page_0( object id )
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
 	  progstr = prog[sizeof (cwd)..];
+	else if (has_prefix (prog, roxenloader.server_dir))
+	  progstr = prog[sizeof (roxenloader.server_dir)..];
 	else
 	  progstr = prog;
       }

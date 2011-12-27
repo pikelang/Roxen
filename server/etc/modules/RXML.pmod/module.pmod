@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.424 2011/11/14 00:13:57 mast Exp $
+// $Id: module.pmod,v 1.425 2011/12/27 18:47:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9598,7 +9598,7 @@ class PCodeEncoder
     this_program::default_config = default_config;
   }
 
-  protected string server_dir = combine_path (getcwd()) + "/";
+  protected string cwd = combine_path (getcwd()) + "/";
 
   string|array nameof(mixed what)
   {
@@ -9726,8 +9726,10 @@ class PCodeEncoder
     if (stringp (pike_name)) {
       sscanf (pike_name, "%1s%s", string cls, string path);
       if ((<"p", "o", "f">)[cls]) {
-	if (has_prefix (path, server_dir))
-	  pike_name = "Rf:" + cls + path[sizeof (server_dir)..];
+	if (has_prefix (path, cwd))
+	  pike_name = "Rf:" + cls + path[sizeof (cwd)..];
+	else if (has_prefix (path, roxenloader.server_dir))
+	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -9737,8 +9739,10 @@ class PCodeEncoder
     else {
       sscanf (pike_name[0], "%1s%s", string cls, string path);
       if ((<"p", "o", "f">)[cls]) {
-	if (has_prefix (path, server_dir))
-	  pike_name[0] = "Rf:" + cls + path[sizeof (server_dir)..];
+	if (has_prefix (path, cwd))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (cwd)..];
+	else if (has_prefix (path, roxenloader.server_dir))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "

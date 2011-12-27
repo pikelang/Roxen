@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.13 2009/11/19 18:51:59 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.14 2011/12/27 18:47:14 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -48,7 +48,10 @@ class ObjectMarker
 
     if (file) {
       string cwd = getcwd() + "/";
-      if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
+      if (has_prefix (file, cwd))
+	file = file[sizeof (cwd)..];
+      else if (has_prefix (file, roxenloader.server_dir))
+	file = file[sizeof (roxenloader.server_dir)..];
       werror ("%s:%d: %s", file, bt[i][1], msg);
     }
     else werror (msg);
