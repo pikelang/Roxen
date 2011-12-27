@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.461 2011/11/10 17:30:07 mast Exp $
+// $Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.461 2011/11/10 17:30:07 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -118,6 +118,47 @@ int getppid() {   return -1; }
 #define  LOG_DEBUG   (1<<7)
 int use_syslog, loggingfield;
 #endif
+
+//! The path to the server directory, without trailing slash. If
+//! available, this is the logical path without following symlinks (as
+//! opposed to what @[getcwd] returns).
+string server_dir =
+  lambda () {
+    string cwd = getcwd();
+#ifdef __NT__
+    cwd = replace ("\\", "/");
+#endif
+    if (has_suffix (cwd, "/"))
+      report_warning ("Warning: Server directory is a root dir "
+		      "(or getcwd() misbehaves): %O\n", cwd);
+
+    string check_dir (string d) {
+      while (has_suffix (d, "/"))
+	d = d[..<2];
+
+#if constant (resolvepath)
+      if (resolvepath (d) == cwd)
+	return d;
+#else
+      if (cd (d)) {
+	if (getcwd() == cwd)
+	  return d;
+	else
+	  cd (cwd);
+      }
+#endif
+      return 0;
+    };
+
+    if (string env_pwd = getenv ("PWD"))
+      if (string res = check_dir (env_pwd))
+	return res;
+
+    if (string res = check_dir (combine_path (__FILE__, "../..")))
+      return res;
+
+    return cwd;
+  }();
 
 
 /*
@@ -803,9 +844,8 @@ class LowErrorContainer
   }
   void got_error(string file, int line, string err, int|void is_warning)
   {
-    if (file[..sizeof(d)-1] == d) {
-      file = file[sizeof(d)..];
-    }
+    if (has_prefix (file, d)) file = file[sizeof(d)..];
+    if (has_prefix (file, server_dir)) file = file[sizeof(server_dir)..];
     if( is_warning)
       warnings+= sprintf("%s:%s\t%s\n", file, line ? (string) line : "-", err);
     else
@@ -1147,7 +1187,8 @@ string roxen_version()
 
 //! @appears roxen_path
 //!
-//! Buhu
+//! Expands the following paths in the given string and returns the
+//! result. If on Windows, also strips off trailing slashes.
 //!
 //! @string
 //!   @value "$LOCALDIR"
@@ -1177,7 +1218,7 @@ string roxen_path( string filename )
                       ({"$VARDIR/"+roxen_version(),
                         getenv ("LOCALDIR") || "../local",
 			getenv ("LOGFILE") || "$LOGDIR/debug/default.1",
-			getcwd() }) );
+			server_dir }) );
   if( roxen )
     filename = replace( filename, 
                         "$LOGDIR", 
@@ -1325,7 +1366,7 @@ string make_path(string ... from)
   return map(from, lambda(string a, string b) {
     return (a[0]=='/')?combine_path("/",a):combine_path(b,a);
     //return combine_path(b,a);
-  }, getcwd())*":";
+  }, server_dir)*":";
 }
 
 //! @appears isodate
@@ -2726,7 +2767,7 @@ int low_dump( string file, program|void p )
 {
 #ifdef ENABLE_DUMPING
   if( file[0] != '/' )
-    file = getcwd() +"/"+ file;
+    file = server_dir +"/"+ file;
 #ifdef __NT__
   file = normalize_path( file );
 #endif
