@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $
+// $Id: roxenloader.pike,v 1.463 2011/12/27 18:26:51 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.463 2011/12/27 18:26:51 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -135,7 +135,6 @@ string server_dir =
     string check_dir (string d) {
       while (has_suffix (d, "/"))
 	d = d[..<2];
-
 #if constant (resolvepath)
       if (resolvepath (d) == cwd)
 	return d;
@@ -1609,7 +1608,6 @@ mapping(string:string) mysql_location()
   //
   //  All non-absolute paths will be interpreted relative to server-x.y.z.
   
-  string server_dir = combine_path(__FILE__, "../../");
   mapping res = ([ "basedir" : combine_path(server_dir, "mysql/") ]);
 
   string mysql_loc_file = combine_path(server_dir, "mysql-location.txt");
