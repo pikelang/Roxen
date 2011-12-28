@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.147 2011/12/27 18:48:01 mast Exp $
+// $Id: module_support.pike,v 1.148 2011/12/28 18:29:37 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -609,6 +609,7 @@ class ModuleInfo( string sname, string filename )
   int find_module( string sn )
   {
     foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+      dir = roxen_path (dir);
       multiset(string) files = (<>);
       rec_find_module_files (sn, dir, files);
       if (sizeof (files)) {
@@ -775,6 +776,7 @@ array(ModuleInfo) all_modules()
   array(string) possible = ({});
 
   foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+    dir = roxen_path (dir);
     mapping(string:string) module_files = ([]);
     rec_find_all_modules( dir, module_files );
 
@@ -821,7 +823,7 @@ array(string) find_all_pike_module_directories()
 
   all_pike_module_cache = ({});
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
-    all_pike_module_cache += recurse( dir );
+    all_pike_module_cache += recurse( roxen_path (dir) );
   return all_pike_module_cache;
 }
 

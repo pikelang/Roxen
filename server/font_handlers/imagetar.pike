@@ -93,5 +93,5 @@ void update_font_list()
     }
   };
   foreach(roxen->query("font_dirs"), string dir)
-    rec_find_in_dir( dir );
+    rec_find_in_dir( roxen_path (dir) );
 }

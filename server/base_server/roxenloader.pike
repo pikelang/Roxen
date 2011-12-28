@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.465 2011/12/28 17:08:36 mast Exp $
+// $Id: roxenloader.pike,v 1.466 2011/12/28 18:29:36 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.465 2011/12/28 17:08:36 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.466 2011/12/28 18:29:36 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1307,6 +1307,8 @@ string r_read_bytes (string filename, mixed... args)
 }
 
 //! @appears open
+//! Like @[Stdio.File.open] on a new file object, but processes the
+//! path with @[roxen_path]. Returns zero on open error.
 object|void open(string filename, string mode, int|void perm)
 {
 #ifdef FD_DEBUG
@@ -1351,26 +1353,29 @@ array(string) package_directories = ({ });
 
 void add_package(string package_dir)
 {
-  string ver = Stdio.read_bytes(combine_path(package_dir, "VERSION"));
+  string ver = r_read_bytes(combine_path(package_dir, "VERSION"));
   if (ver && (ver != "")) {
     report_debug("Adding package %s (Version %s).\n", package_dir, ver - "\n");
   } else {
     report_debug("Adding package %s.\n", package_dir);
   }
   package_directories = ({ package_dir }) + package_directories;
-  string sub_dir = combine_path(package_dir, "pike-modules");
+
+  string real_pkg_dir = roxen_path (package_dir);
+  string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
     master()->add_module_path(sub_dir);
   }
-  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "include/"))) {
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "include/"))) {
     master()->add_include_path(sub_dir);
   }
+
   default_roxen_module_path = ({ combine_path(package_dir, "modules/") }) +
     default_roxen_module_path;
-  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
+  if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
     default_roxen_module_path = ({ sub_dir }) + default_roxen_module_path;
   }
-  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
+  if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
   }
 }
@@ -1539,7 +1544,7 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
     (replace(Stdio.read_bytes("OS") || "src dist", "\r", "\n") / "\n")[0];
   
   // Get package directories.
-  add_package(getenv("LOCALDIR") || "../local");
+  add_package("$LOCALDIR");
   foreach(package_directories + ({ "." }), string dir) {
     dir = combine_path(dir, "packages");
     foreach(sort(get_dir(dir) || ({})), string fname) {

@@ -39,6 +39,7 @@ protected void build_font_names_cache( )
   mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
+    dir = roxen_path (dir);
     foreach(r_get_dir( dir )||({}), string fname)
     {
       string path=combine_path(dir+"/",fname);
