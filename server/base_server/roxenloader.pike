@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.464 2011/12/27 18:58:49 mast Exp $
+// $Id: roxenloader.pike,v 1.465 2011/12/28 17:08:36 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.464 2011/12/27 18:58:49 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.465 2011/12/28 17:08:36 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1244,6 +1244,8 @@ int rm( string filename )
 }
 
 array(string) r_get_dir( string path )
+//! @appears r_get_dir
+//! Like @[predef::get_dir], but processes the path with @[roxen_path].
 {
   return predef::get_dir( roxen_path( path ) );
 }
@@ -1253,9 +1255,55 @@ int mv( string f1, string f2 )
   return predef::mv( roxen_path(f1), roxen_path( f2 ) );
 }
 
+int r_cp( string f1, string f2 )
+//! @appears r_cp
+//! Like @[Stdio.cp], but processes the paths with @[roxen_path].
+{
+  return Stdio.cp( roxen_path(f1), roxen_path( f2 ) );
+}
+
 Stdio.Stat file_stat( string filename, int|void slinks )
 {
   return predef::file_stat( roxen_path(filename), slinks );
+}
+
+// Like the other wrappers above, the following get the "r_" prefix
+// when they're added as constants, so it makes no sense to have
+// different names for the real functions in this file.
+
+int r_is_file (string path)
+//! @appears r_is_file
+//! Like @[Stdio.is_file], but processes the path with @[roxen_path].
+{
+  return Stdio.is_file (roxen_path (path));
+}
+
+int r_is_dir (string path)
+//! @appears r_is_dir
+//! Like @[Stdio.is_dir], but processes the path with @[roxen_path].
+{
+  return Stdio.is_dir (roxen_path (path));
+}
+
+int r_is_link (string path)
+//! @appears r_is_link
+//! Like @[Stdio.is_link], but processes the path with @[roxen_path].
+{
+  return Stdio.is_link (roxen_path (path));
+}
+
+int r_exist (string path)
+//! @appears r_exist
+//! Like @[Stdio.exist], but processes the path with @[roxen_path].
+{
+  return Stdio.exist (roxen_path (path));
+}
+
+string r_read_bytes (string filename, mixed... args)
+//! @appears r_read_bytes
+//! Like @[Stdio.read_bytes], but processes the path with @[roxen_path].
+{
+  return Stdio.read_bytes (roxen_path (filename), @args);
 }
 
 //! @appears open
@@ -3027,8 +3075,14 @@ the correct system time.
 
   add_constant("r_rm", rm);
   add_constant("r_mv", mv);
+  add_constant("r_cp", r_cp);
   add_constant("r_get_dir", r_get_dir);
   add_constant("r_file_stat", file_stat);
+  add_constant("r_is_file", r_is_file);
+  add_constant("r_is_dir", r_is_dir);
+  add_constant("r_is_link", r_is_link);
+  add_constant("r_exist", r_exist);
+  add_constant("r_read_bytes", r_read_bytes);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
 
@@ -3258,19 +3312,15 @@ library should be enough.
 
 //! @decl int(0..1) r_rm(string f)
 //! @appears r_rm
-//! Alias for rm.
+//! Like @[predef::rm], but processes the path with @[roxen_path].
 
 //! @decl int(0..1) r_mv(string from, string to)
 //! @appears r_mv
-//! Alias for mv.
-
-//! @decl array(string) r_get_dir(string dirname)
-//! @appears r_get_dir
-//! Alias for get_dir.
+//! Like @[predef::mv], but processes the paths with @[roxen_path].
 
 //! @decl Stdio.Stat r_file_stat(string path, void|int(0..1) symlink)
 //! @appears r_file_stat
-//! Alias for file_stat.
+//! Like @[predef::file_stat], but processes the path with @[roxen_path].
 
 //! @decl string capitalize(string text)
 //! @appears capitalize
