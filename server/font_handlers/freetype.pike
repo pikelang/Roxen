@@ -206,10 +206,16 @@ class FTFont
     if(stringp(what))
       what = ({ what });
     int oversampling = _oversampling || (roxen->query("font_oversampling") ? 2 : 1);
-    if( oversampling != 1 )
-      face->set_size( 0, size * oversampling );
-    else
-      face->set_size( 0, size );
+    if (mixed err = catch {
+	if( oversampling != 1 )
+	  face->set_size( 0, size * oversampling );
+	else
+	  face->set_size( 0, size );
+      }) {
+      // set_size can fail like this for bitmap fonts.
+      if (describe_error (err) != "Failed to set size: invalid pixel size\n")
+	throw (err);
+    }
     if( !sizeof( what ) )
       return ([ "img" : Image.Image( 1,height() ) ]);
 
@@ -273,7 +279,11 @@ class FTFont
   }
 
   string _sprintf() {
-    return "Freetype";
+    if (face)
+      if (mapping(string:mixed) info = face->info())
+	return sprintf ("FTFont(%s, %s)",
+			info->family || "?", info->style_name || "?");
+    return "FTFont()";
   }
 
   protected void create(object r, int s, string fn, int fb, int fi)
