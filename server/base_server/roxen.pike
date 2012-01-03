@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1100 2011/12/27 18:47:13 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1101 2012/01/03 08:23:23 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5943,18 +5943,21 @@ int main(int argc, array tmp)
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
     if (sizeof(roxenloader.package_directories) &&
 	(lfile_path(file_name) == file_name)) {
-      file_name = roxenloader.package_directories[-1] + "/" + file_name;
-      report_notice("Generating a new certificate: %O...\n", file_name);
+      file_name = roxen_path (roxenloader.package_directories[-1] + "/" +
+			      file_name);
+      report_notice("Generating a new certificate %s...\n", file_name);
       string cert = Roxen.generate_self_signed_certificate("*");
 
       // Note: set_u_and_gid() hasn't been called yet,
       //       so there's no need for Privs.
       Stdio.File file = Stdio.File();
       if (!file->open(file_name, "wxc", 0600)) {
-	report_error("Couldn't create certificate file %O.\n", file_name);
+	report_error("Couldn't create certificate file %s: %s\n", file_name,
+		     strerror (file->errno()));
       } else if (file->write(cert) != sizeof(cert)) {
 	rm(cert);
-	report_error("Couldn't write certificate file %O.\n", file_name);
+	report_error("Couldn't write certificate file %s: %s\n", file_name,
+		     strerror (file->errno()));
       }
     }
   }

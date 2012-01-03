@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.466 2011/12/28 18:29:36 mast Exp $
+// $Id: roxenloader.pike,v 1.467 2012/01/03 08:23:23 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.466 2011/12/28 18:29:36 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.467 2012/01/03 08:23:23 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1355,9 +1355,11 @@ void add_package(string package_dir)
 {
   string ver = r_read_bytes(combine_path(package_dir, "VERSION"));
   if (ver && (ver != "")) {
-    report_debug("Adding package %s (Version %s).\n", package_dir, ver - "\n");
+    report_debug("Adding package %s (Version %s).\n",
+		 roxen_path (package_dir), ver - "\n");
   } else {
-    report_debug("Adding package %s.\n", package_dir);
+    report_debug("Adding package %s.\n",
+		 roxen_path (package_dir));
   }
   package_directories = ({ package_dir }) + package_directories;
 
