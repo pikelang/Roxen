@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.660 2011/11/30 21:41:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.661 2012/01/03 12:18:03 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9429,13 +9429,13 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 "imgs":#"<desc type='tag'><p><short>
  Generates an image tag with the correct dimensions in the width and height
- attributes. These dimensions are read from the image itself, so the image
- must exist when the tag is generated. The image must also be in GIF,
+ attributes.</short> These dimensions are read from the image itself, so the
+ image must exist when the tag is generated. The image must also be in GIF,
  JPEG/JFIF, PNG, PSD or TIFF format. Note that the image content is not
  converted.</p>
 
  <p>See also the <tag>emit source=\"imgs\"</tag> for retrieving
- the same image information without generating the output tag.</short>
+ the same image information without generating the output tag.
 </p></desc>
 
 <attr name='src' value='string' required='required'>
@@ -10316,7 +10316,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  <p><short>Parses a json formatted string.</short> This returns a
  value of the same type as the top level json object, typically an
  array or a mapping.</p>
-",
+ </desc>",
 
 "json-format": #"<desc type='cont'>
  <p><short>Formats a json string.</short> The input value may be a
@@ -10332,6 +10332,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 {\"user\": \"<ent>var.username:json</ent>\",
  \"name\": \"<ent>var.fullname:json</ent>\"}
 </ex-box>
+</desc>
 
 <attr name='variable' value='string'>
  <p>Get the value to format from this variable. If this isn't
