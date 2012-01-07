@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.467 2012/01/03 08:23:23 mast Exp $
+// $Id: roxenloader.pike,v 1.468 2012/01/07 01:07:02 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.467 2012/01/03 08:23:23 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.468 2012/01/07 01:07:02 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2178,16 +2178,6 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
       if (!charset)
 	charset = default_db_charsets[object_program (master_sql)];
 
-#if 1
-      // Set the charset unconditionally. This is a temporary kludge
-      // until the problem with lost charset on reconnect has been
-      // sorted out properly ([bug 5964]).
-      if (master_sql->set_unicode_decode_mode)
-	// Ugly special case for mysql: The set_charset call does
-	// not reset this state.
-	master_sql->set_unicode_decode_mode (0);
-      master_sql->set_charset (charset);
-#else
       if ((charset == "unicode" || charset == "broken-unicode") &&
 	  master_sql->get_unicode_encode_mode) {
 	// Unicode mode requested and the sql backend seems to
@@ -2209,7 +2199,6 @@ Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
 	if (charset != master_sql->get_charset())
 	  master_sql->set_charset (charset);
       }
-#endif
     }
 
   return db;
