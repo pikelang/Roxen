@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.468 2012/01/07 01:07:02 mast Exp $
+// $Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -14,7 +14,7 @@ mixed x = Calendar.Timezone; // #"!¤&"¤%/"&#¤!%#¤&#
 // Sets up the roxen environment. Including custom functions like spawne().
 
 #include <stat.h>
-#include <config.h>
+#include <roxen.h>
 //
 // NOTE:
 //	This file uses replace_master(). This implies that the
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.468 2012/01/07 01:07:02 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1782,8 +1782,9 @@ protected Thread.Local sql_reuse_in_thread = Thread.Local();
 mapping(string:int) sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
-protected int sql_keynum;
+#ifdef OBJ_COUNT_DEBUG
 mapping(int:string) my_mysql_last_user = ([]);
+#endif
 multiset(Sql.Sql) all_wrapped_sql_objects = set_weak_flag( (<>), 1 );
 #endif /* DB_DEBUG */
 
@@ -1840,6 +1841,8 @@ protected class SQLResKey
 {
   protected Sql.sql_result real;
   protected SQLKey key;
+
+  DECLARE_OBJ_COUNT;
 
   protected void create (Sql.sql_result real, SQLKey key)
   {
@@ -1953,7 +1956,7 @@ protected class SQLResKey
 
   protected string _sprintf(int type)
   {
-    return sprintf( "SQLRes( X, %O )", key );
+    return sprintf( "SQLResKey(%O)" + OBJ_COUNT, real );
   }
 
   protected void destroy()
@@ -2017,9 +2020,9 @@ protected class SQLKey
     }
     return [object(Sql.sql_result)] (object) SQLResKey (o, this);
   }
-  
+
+  DECLARE_OBJ_COUNT;
 #ifdef DB_DEBUG
-  protected int num = sql_keynum++;
   protected string bt;
 #endif
   protected void create( Sql.Sql real, string db_name, int reuse_in_thread)
@@ -2051,7 +2054,9 @@ protected class SQLKey
     all_wrapped_sql_objects[real] = 1;
 #if 0
     // Disabled, since it seems to have bad side-effects :-(
-    bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
+#ifdef OBJ_COUNT_DEBUG
+    bt=(my_mysql_last_user[__object_count] = describe_backtrace(backtrace()));
+#endif
 #endif
 #endif /* DB_DEBUG */
   }
@@ -2082,8 +2087,10 @@ protected class SQLKey
     };
     
 #ifdef DB_DEBUG
-    werror("%O:%d added to free list\n", db_name, num );
-    m_delete(my_mysql_last_user, num);
+    werror("%O added to free list\n", this );
+#ifdef OBJ_COUNT_DEBUG
+    m_delete(my_mysql_last_user, __object_count);
+#endif
 #endif
     if( !--sql_active_list[db_name] )
       m_delete( sql_active_list, db_name );
@@ -2122,12 +2129,7 @@ protected class SQLKey
 
   protected string _sprintf(int type)
   {
-#ifdef DB_DEBUG
-    if (type == 'd') return (string)num;
-    return sprintf( "SQL( %O:%d )", db_name, num );
-#else
-    return sprintf( "SQL( %O )", db_name );
-#endif /* DB_DEBUG */
+    return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, db_name, real );
   }
 }
 
