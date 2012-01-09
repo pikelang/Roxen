@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $
+// $Id: roxenloader.pike,v 1.470 2012/01/09 00:16:40 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.470 2012/01/09 00:16:40 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2175,33 +2175,45 @@ Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 
 Sql.Sql fix_connection_charset (Sql.Sql db, string charset)
 {
-  if (object master_sql = db->master_sql)
-    if (master_sql->set_charset) {
-      if (!charset)
-	charset = default_db_charsets[object_program (master_sql)];
+  if (object master_sql = db->master_sql) {
+    if (mixed err = catch {
 
-      if ((charset == "unicode" || charset == "broken-unicode") &&
-	  master_sql->get_unicode_encode_mode) {
-	// Unicode mode requested and the sql backend seems to
-	// support it (a better recognition flag would be nice).
-	// Detect if it's already enabled through
-	// get_unicode_encode_mode and get_unicode_decode_mode. It's
-	// enabled iff both return true.
-	if (!(master_sql->get_unicode_encode_mode() &&
-	      master_sql->get_unicode_decode_mode()))
-	  master_sql->set_charset (charset);
-      }
+	if (master_sql->set_charset) {
+	  if (!charset)
+	    charset = default_db_charsets[object_program (master_sql)];
 
-      else {
-	if (master_sql->set_unicode_decode_mode &&
-	    master_sql->get_unicode_decode_mode())
-	  // Ugly special case for mysql: The set_charset call does
-	  // not reset this state.
-	  master_sql->set_unicode_decode_mode (0);
-	if (charset != master_sql->get_charset())
-	  master_sql->set_charset (charset);
-      }
+	  if ((charset == "unicode" || charset == "broken-unicode") &&
+	      master_sql->get_unicode_encode_mode) {
+	    // Unicode mode requested and the sql backend seems to
+	    // support it (a better recognition flag would be nice).
+	    // Detect if it's already enabled through
+	    // get_unicode_encode_mode and get_unicode_decode_mode. It's
+	    // enabled iff both return true.
+	    if (!(master_sql->get_unicode_encode_mode() &&
+		  master_sql->get_unicode_decode_mode()))
+	      master_sql->set_charset (charset);
+	  }
+
+	  else {
+	    if (master_sql->set_unicode_decode_mode &&
+		master_sql->get_unicode_decode_mode())
+	      // Ugly special case for mysql: The set_charset call does
+	      // not reset this state.
+	      master_sql->set_unicode_decode_mode (0);
+	    if (charset != master_sql->get_charset())
+	      master_sql->set_charset (charset);
+	  }
+	}
+
+      })
+    {
+      // Since SQLKey (currently) doesn't wrap master_sql, be careful
+      // to destroy the wrapper object on errors above so we don't
+      // risk getting an object with a strange charset state in the cache.
+      if (db) destruct (db);
+      throw (err);
     }
+  }
 
   return db;
 }
