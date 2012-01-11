@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1085 2011/12/22 09:54:04 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1086 2012/01/11 14:27:04 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -4509,11 +4509,17 @@ class ArgCache
 
     foreach( rows, mapping row )
       if( row->contents != encoded_args ) {
-      	report_error("ArgCache.create_key(): "
-		     "Duplicate key found! Please report this to support@roxen.com: "
-		     "id: %O, old data: %O, new data: %O\n",
+      	report_error("ArgCache.create_key(): Duplicate key found! "
+		     "Please report this to support@roxen.com:\n"
+		     "  id: %O\n"
+		     "  old data: %O\n"
+		     "  new data: %O\n"
+		     "  Updating local database with new value.\n",
 		     id, row->contents, encoded_args);
-	error("ArgCache.create_key() Duplicate key found!\n");
+
+	// Remove the old entry (probably corrupt). No need to update
+	// the database since the query below uses REPLACE INTO.
+	rows = ({});
       }
 
     if(sizeof(rows)) {
@@ -4541,7 +4547,8 @@ class ArgCache
     }
 
     string timeout_sql = zero_type(timeout) ? "NULL" : (string)timeout;
-    // Use REPLACE INTO to cope with entries created by other threads.
+    // Use REPLACE INTO to cope with entries created by other threads
+    // as well as corrupted entries that should be overwritten.
     QUERY( "REPLACE INTO "+name+"2 "
 	   "(id, contents, ctime, atime, timeout) VALUES "
 	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW(), "+timeout_sql+")",

@@ -1,21 +1,12 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.32 2011/08/15 14:11:52 grubba Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.33 2012/01/11 14:27:04 wellhard Exp $";
 
 #if constant(WS_REPLICATE)
 
 #define QUERY(X,Y...)    get_db()->query(X,Y)
 #define sQUERY( X,Y...) get_sdb()->query(X,Y)
-
-#define CATCH_DUPLICATE(X)                                            \
-  do {                                                                \
-    mixed err = catch { X };                                          \
-    if(err)                                                           \
-      if(!arrayp(err) || !sizeof(err) || !sizeof(err[0]) ||           \
-         !glob("*duplicate entry*", lower_case(err[0])))              \
-         throw(err);                                                  \
-  } while(0)
 
 #ifdef ARGCACHE_DEBUG
 #define dwerror(ARGS...) werror(ARGS)
@@ -228,21 +219,28 @@ void create_key( string id, string encoded_args )
     
   foreach( rows, mapping row )
     if( row->contents != encoded_args ) {
-      report_error("ArgCache.replicate.create_key(): "
-		   "Duplicate key found! Please report this to support@roxen.com: "
-		   "id: %O, old data: %O, new data: %O\n",
+      report_error("ArgCache.replicate.create_key(): Duplicate key found! "
+		   "Please report this to support@roxen.com:\n"
+		   "  id: %O\n"
+		   "  old data: %O\n"
+		   "  new data: %O\n"
+		   "  Updating shared database with new value.\n",
 		   id, row->contents, encoded_args);
-      error("ArgCache.replicate.create_key() Duplicate shared key found!\n");
+      
+      // Remove the old entry (probably corrupt). No need to update
+      // the database since the query below uses REPLACE INTO.
+      rows = ({});
     }
   
   if(sizeof(rows))
     return;
 
-  CATCH_DUPLICATE(
-    sQUERY( "INSERT INTO "+cache->name+"2 "
-	    "  (id, contents, ctime, atime) VALUES "
-	    "  (%s, %s, NOW(), NOW())", id, encoded_args );
-  );
+  // Use REPLACE INTO to cope with entries created by other threads as
+  // well as corrupted entries that should be overwritten.
+  sQUERY( "REPLACE INTO "+cache->name+"2 "
+	  "  (id, contents, ctime, atime) VALUES "
+	  "  (%s, %s, NOW(), NOW())", id, encoded_args );
+  
   QUERY("UPDATE "+cache->name+"2 "
 	"   SET sync_time = %d "
 	"   WHERE id = %s", time(1), id);
