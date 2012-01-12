@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.422 2011/03/03 08:50:04 mast Exp $
+// $Id: module.pmod,v 1.423 2012/01/12 16:12:11 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8120,7 +8120,9 @@ protected class PikeCompile
       "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
+    string txt = sprintf (
+      "# 1\n" // Workaround for pike bug with large line numbers, [bug 6146].
+      "%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
     Thread.MutexKey lock = mutex::lock();
     code::add (txt);
