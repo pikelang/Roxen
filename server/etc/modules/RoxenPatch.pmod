@@ -102,7 +102,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.33 2011/09/13 14:05:26 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.34 2012/01/16 15:06:11 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -2298,14 +2298,18 @@ class Patcher
     
     if (patch_data)
     {
-      // Check for Windows line breaks.
+      // Normalize line breaks.
       patch_data = replace(patch_data, "\r\n", "\n");
-      // Split on "@@" and then on newline to find file name.
-      foreach(patch_data / "@@\n", string chunk)
+      // Split on "\n@@" to find the chunk headers.
+      // Note that GIT-diff appends context information
+      // after the second "@@" on the "@@"-line.
+      foreach(patch_data / "\n@@", string chunk)
       {
-	array(string) line = chunk / "\n";
-	if (sizeof(line) > 1 &&
-	    sscanf(line[-2], "+++ %s\t", string fname))
+	array(string) lines = chunk / "\n";
+	// Look at the last line before the "@@"-line to find the filename.
+	// Note that CVS-diff appends a tab and a timestamp after the filename.
+	if (sizeof(lines) > 1 &&
+	    sscanf(lines[-1], "+++ %[^\t]", string fname))
 	{
 	  res += ({ fname });
 	}
