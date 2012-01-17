@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.242 2011/03/21 00:17:43 mast Exp $
+# $Id: start,v 1.243 2012/01/17 10:52:44 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -748,12 +748,21 @@ cleanup_pid_file() {
   [ -z "$pidfile" ] || rm $pidfile
 }
 
+# Check if the PID in $1 is an active process.
+processp() {
+  if kill -0 "$1"; then return 0; fi;
+
+  # Check that the cause for the failure is that the process doesn't exist.
+  "$PIKE" $DEFINES -e 'return !kill('"$1"', 0) && (errno() == System.ESRCH);';
+  return;
+}
+
 # NOTE: The following function needs to be reentrant.
 signal_exit() {
   test "x$once" != x2 && dp "Start script terminating."
   trap "" 2 15
   if [ "x$ROXEN_PID" != "x" ] && \
-     kill -0 $ROXEN_PID 2>/dev/null; then
+     processp $ROXEN_PID 2>/dev/null; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
     # FIXME: Consider exiting here.
@@ -772,7 +781,7 @@ signal_exit() {
       timer=""
       while [ -f "$mysql_pidfile" -a \
 	      "$timer" != "mmmmm" ] && \
-	    kill -0 "$mysql_pid" 2>/dev/null; do
+	    processp "$mysql_pid" 2>/dev/null; do
 	sleep 2
 	timer=`echo "x$timer" | sed -e 's/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/m/'`
 	if [ "x$SILENT_START" != "xy" ]; then
@@ -784,7 +793,7 @@ signal_exit() {
       if [ "x$SILENT_START" != "xy" ]; then
 	echo >&2
       fi
-      if kill -0 "$mysql_pid" 2>/dev/null; then
+      if processp "$mysql_pid" 2>/dev/null; then
         dp "Shutting down MySQL the hard way."
         kill -9 "$mysql_pid" 2>/dev/null
       fi
@@ -912,9 +921,11 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   then
       pids=`cat "$pidfile"`
       echo "$pids" | xargs kill
-      while kill -0 $pids 2>/dev/null
-      do
-	sleep 1
+      cat "$pidfile" | while read pid; do
+	  while processp $pid 2>/dev/null; do
+	      echo "Waiting for $pid to die." >&2
+	      sleep 1
+	  done
       done
       exit
   fi
@@ -922,13 +933,13 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   mypid=$$
   test -f "$pidfile" && {
     if read roxenpid && read scriptpid; then
-      if kill -0 $scriptpid 2>/dev/null; then
+      if processp $scriptpid 2>/dev/null; then
 	dp "According to the pid file $pidfile,"
 	dp "there is already a start script running with pid $scriptpid. Specify "
 	dp "another pid file with --pid-file if this is a different server."
 	dp "Server not started."
 	:
-      elif kill -0 $roxenpid 2>/dev/null; then
+      elif processp $roxenpid 2>/dev/null; then
 	dp "According to the pid file $pidfile,"
 	dp "there is already a server running with pid $roxenpid, but its start "
 	dp "script seems to have died. You should shut it down and restart "
