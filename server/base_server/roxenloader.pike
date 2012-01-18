@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.471 2012/01/18 14:25:42 grubba Exp $
+// $Id: roxenloader.pike,v 1.472 2012/01/18 14:34:09 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.471 2012/01/18 14:25:42 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.472 2012/01/18 14:34:09 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2770,6 +2770,11 @@ void start_mysql (void|int log_queries_to_stdout)
       if (pid) {
 	if (!kill(pid, 0) && errno() == System.ESRCH) {
 	  // The process has gone away.
+	  if (prev_pid == pid) {
+	    // The pid_file is stale.
+	    rm(pid_file);
+	  }
+
 	  prev_pid = pid;
 	  pid = 0;	// Reread the pid file.
 	  cnt = 0;
