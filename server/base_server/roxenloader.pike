@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.470 2012/01/09 00:16:40 mast Exp $
+// $Id: roxenloader.pike,v 1.471 2012/01/18 14:25:42 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.470 2012/01/09 00:16:40 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.471 2012/01/18 14:25:42 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2623,6 +2623,7 @@ void low_start_mysql( string datadir,
   report_debug ("MySQL server executable: %s\n", args[0]);
 #endif
 
+  rm(pid_file);
   Process.Process p = Process.Process( args,
 				       ([
 					 "environment":env,
@@ -2632,7 +2633,7 @@ void low_start_mysql( string datadir,
 				       ]) );
 #ifdef __NT__
   if (p)
-    Stdio.write_file(pid_file, (string)p->pid());
+    Stdio.write_file(pid_file, p->pid() + "\n");
 #endif
 }
 
@@ -2756,7 +2757,60 @@ void start_mysql (void|int log_queries_to_stdout)
     exit(1);
   }
 
-  rm( pid_file );
+#ifndef __NT__
+  if (!Stdio.exist(pid_file)) sleep(0.1);
+  if (Stdio.exist(pid_file)) {
+    int pid;
+    int prev_pid = -1;
+    int cnt;
+    for (cnt = 0; cnt < 600; cnt++) {
+      // Check if the mysqld process is running (it could eg be starting up).
+      pid = pid ||
+	(int)String.trim_all_whites(Stdio.read_bytes(pid_file)||"");
+      if (pid) {
+	if (!kill(pid, 0) && errno() == System.ESRCH) {
+	  // The process has gone away.
+	  prev_pid = pid;
+	  pid = 0;	// Reread the pid file.
+	  cnt = 0;
+	  sleep(0.1);
+	  continue;
+	}
+      } else if (prev_pid) {
+	// A new process might be taking over, give it some more time...
+	prev_pid = 0;
+	sleep(0.1);
+	continue;
+      } else {
+	// No active process is claiming the pid file.
+	break;
+      }
+      report_debug("Retrying to connect to local MySQL (pid: %d).\n", pid);
+      if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
+#ifdef MYSQL_CONNECT_DEBUG
+	werror ("Error connecting to local MySQL: %s", describe_error (err));
+#endif
+      }
+      else {
+	if (!once_mode) start_tailf();
+	connected_ok(1);
+	return;
+      }
+      sleep(0.1);
+    }
+    if (pid && (cnt >= 600)) {
+      report_error("Process %d is claiming to be MySQLd (pid file: %O),\n"
+		   "but doesn't answer to connection attempts.\n",
+		   pid, pid_file);
+      exit(1);
+    }
+  }
+  
+#endif
+
+  // Steal the mysqld pid_file, and claim that we are mysqld
+  // until we actually start mysqld.
+  Stdio.write_file(pid_file, getpid()+"\n");
   rm( err_log );
 
   if (!once_mode) start_tailf();
