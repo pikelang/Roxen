@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.720 2011/12/21 00:46:45 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.721 2012/01/18 12:55:26 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4825,7 +4825,7 @@ hyphens ('-') occur in the specifier names.</p>
 
 <h3>Format specifiers for both access and event logging</h3>
 
-<table><tbody valign='top'>
+<table class='hilite-1stcol'><tbody valign='top'>
 <tr><td>\\n \\t \\r</td>
     <td>Insert a newline, tab or linefeed character, respectively.</td></tr>
 <tr><td>$char(int)</td>
@@ -4873,7 +4873,7 @@ hyphens ('-') occur in the specifier names.</p>
 
 <h3>Format specifiers for access logging</h3>
 
-<table><tbody valign='top'>
+<table class='hilite-1stcol'><tbody valign='top'>
 <tr><td>$host</td>
     <td>The remote host name, or ip number.</td></tr>
 <tr><td>$vhost</td>
@@ -4956,7 +4956,7 @@ hyphens ('-') occur in the specifier names.</p>
     <td>A comma separated list of words (containing no whitespace)
     that describes how the request got handled by various caches:
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>protcache</td>
 	<td>The page is served from the HTTP protocol cache.</td></tr>
     <tr><td>protstore</td>
@@ -4973,6 +4973,11 @@ hyphens ('-') occur in the specifier names.</p>
 	<td>A hit in the RXML p-code RAM cache.</td></tr>
     <tr><td>pcodedisk</td>
 	<td>A hit in the RXML p-code persistent cache.</td></tr>
+    <tr><td>pcodestore</td>
+	<td>P-code is added to or updated in the persistent cache.</td></tr>
+    <tr><td>pcodestorefailed</td>
+	<td>An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).</td></tr>
     <tr><td>cachetag</td>
 	<td>RXML was evaluated without any cache miss in any RXML
 	&lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
@@ -4988,7 +4993,7 @@ hyphens ('-') occur in the specifier names.</p>
     <td>A comma separated list of words (containing no whitespace)
     that describes how the page has been evaluated:
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>xslt</td>
 	<td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
@@ -5014,7 +5019,7 @@ below.</p>
 
     <p>The known events are:</p>
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>ram-cache-gc</td>
 	<td>Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
@@ -5042,7 +5047,7 @@ below.</p>
 
     <p>These extra format specifiers are defined where applicable:</p>
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>$ac-userid</td>
 	<td>The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.</td></tr>

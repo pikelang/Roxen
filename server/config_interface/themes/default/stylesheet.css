@@ -118,6 +118,13 @@ table.module-sub-list-2
 	font-size: 100%;
 }
 
+table.hilite-1stcol > tr > td:first-child,
+table.hilite-1stcol > tbody > tr > td:first-child {
+	font-weight: bold;
+	white-space: nowrap;
+	padding-right:	12px;
+}
+
 .module-list-item-hover,
 .module-list-item-hover a,
 .module-list-item-hover a:hover
