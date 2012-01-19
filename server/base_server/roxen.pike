@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1102 2012/01/11 14:25:53 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1103 2012/01/19 14:12:01 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2706,7 +2706,7 @@ array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
 {
-  if( what == "*" || lower_case(what) == "any" )
+  if( what == "*" || lower_case(what) == "any" || has_value(what, "*") )
     return ({
 #if constant(__ROXEN_SUPPORTS_IPV6__)
 	      "::",
@@ -2830,12 +2830,12 @@ void unregister_url(string url, Configuration conf)
     }
   }
 
-  foreach(data->ports, Protocol port) {
+  foreach(data->ports || ({}), Protocol port) {
     shared_data->ports -= ({ port });
     port->unref(url);
     m_delete(shared_data, "port");
   }
-  if (!sizeof(shared_data->ports)) {
+  if (!sizeof(shared_data->ports || ({}))) {
     m_delete(urls, url);
   } else if (!shared_data->port) {
     shared_data->port = shared_data->ports[0];
@@ -2857,7 +2857,7 @@ void unregister_url(string url, Configuration conf)
 array all_ports( )
 {
   // FIXME: Consider using open_ports instead.
-  return Array.uniq( values( urls )->ports * ({}) )-({0});
+  return Array.uniq( (values( urls )->ports - ({0})) * ({}) )-({0});
 }
 
 Protocol find_port( string name )
