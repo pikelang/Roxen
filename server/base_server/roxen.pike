@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1103 2012/01/19 14:12:01 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1104 2012/01/19 14:13:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2310,7 +2310,9 @@ class SSLProtocol
     // Filter weak and really weak cipher suites.
     ctx->preferred_suites -= ({
       SSL.Constants.SSL_rsa_with_des_cbc_sha,
+      SSL.Constants.SSL_dhe_dss_with_des_cbc_sha,
       SSL.Constants.SSL_rsa_export_with_rc4_40_md5,
+      SSL.Constants.TLS_rsa_with_null_sha256,
       SSL.Constants.SSL_rsa_with_null_sha,
       SSL.Constants.SSL_rsa_with_null_md5,
       SSL.Constants.SSL_dhe_dss_export_with_des40_cbc_sha,
