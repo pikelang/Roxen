@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.472 2012/01/18 14:34:09 grubba Exp $
+// $Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.472 2012/01/18 14:34:09 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2757,6 +2757,8 @@ void start_mysql (void|int log_queries_to_stdout)
     exit(1);
   }
 
+  mkdirhier( mysqldir+"/mysql/" );
+
 #ifndef __NT__
   if (!Stdio.exist(pid_file)) sleep(0.1);
   if (Stdio.exist(pid_file)) {
@@ -2809,8 +2811,7 @@ void start_mysql (void|int log_queries_to_stdout)
 		   pid, pid_file);
       exit(1);
     }
-  }
-  
+  }  
 #endif
 
   // Steal the mysqld pid_file, and claim that we are mysqld
@@ -2835,7 +2836,6 @@ void start_mysql (void|int log_queries_to_stdout)
       mkdir(mysqldir, 0750);
     }
 
-    mkdirhier( mysqldir+"/mysql/" );
     Filesystem.System tar = Filesystem.Tar( "etc/mysql-template.tar" );
     foreach( tar->get_dir( "mysql" ), string f )
     {
