@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.282 2012/01/23 11:47:58 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.283 2012/01/23 12:50:52 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3598,7 +3598,7 @@ class MultiStatus
       SimpleElementNode response_node =
 	SimpleElementNode("DAV:response", ([]))->
 	add_child(SimpleElementNode("DAV:href", ([]))->
-		  add_child(SimpleTextNode(Roxen->http_encode_url(href))));
+		  add_child(SimpleTextNode(href)));
       response_xml[i++] = response_node;
       status_set[href]->build_response (response_node);
     }
@@ -3618,24 +3618,46 @@ class MultiStatus
     ]);
   }
 
+  //! MultiStatus with a fix prefix.
+  //!
+  //! This object acts as a proxy for its parent.
   class Prefixed (protected string href_prefix)
   {
+    //! Get the parent @[MultiStatus] object.
     MultiStatus get_multi_status() {return MultiStatus::this;}
+
+    //! Add a property for a path.
+    //!
+    //! @note
+    //!   Note that the segments of the path will be
+    //!   encoded with @[Roxen.http_encode_url()].
     void add_property(string path, string prop_name,
 		      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
 		      MultiStatusStatus|mapping(string:mixed) prop_value)
     {
+      path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
     }
+
+    //! Add a status for a path.
+    //!
+    //! @note
+    //!   Note that the segments of the path will be
+    //!   encoded with @[Roxen.http_encode_url()].
     void add_status (string path, int status_code,
 		     void|string message, mixed... args)
     {
+      path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_status (href_prefix + path, status_code, message, @args);
     }
+
+    //!
     void add_namespace (string namespace)
     {
       MultiStatus::add_namespace (namespace);
     }
+
+    //!
     MultiStatus.Prefixed prefix(string href_prefix) {
       return this_program (this_program::href_prefix + href_prefix);
     }

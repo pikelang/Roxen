@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.244 2010/06/28 06:57:57 marty Exp $
+// $Id: module.pike,v 1.245 2012/01/23 12:50:52 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -569,8 +569,9 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
 					      int depth, RequestID id,
 					      multiset(string)|void filt)
 {
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
 
   mapping(string:mixed) recurse (string path, int depth) {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
@@ -656,8 +657,10 @@ mapping(string:mixed) patch_properties(string path,
     properties->unroll();
     throw (err);
   } else {
+    string prefix = map((query_location()[1..] + path)/"/",
+			Roxen.http_encode_url)*"/";
     MultiStatus.Prefixed result =
-      id->get_multi_status()->prefix (id->url_base() + query_location()[1..] + path);
+      id->get_multi_status()->prefix (id->url_base() + prefix);
     int any_failed;
     foreach(results, mapping(string:mixed) answer) {
       if (any_failed = (answer && (answer->error >= 300))) {
@@ -1726,9 +1729,9 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
     return Roxen.http_status(403, "Source and destination overlap.");
   }
 
-  string loc = query_location();
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + loc[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
 
   mapping(string:mixed) recurse(string source, string destination) {
     // Note: Already got an extra TRACE_ENTER level on entry here.
@@ -1874,8 +1877,9 @@ protected mapping(string:mixed) move_collection(
   mapping(string:mixed) res = find_file(source, tmp_id);
   if (!res || res->error != 501) return res;
   // Not implemented. Fall back to COPY + DELETE.
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
   res = copy_collection(source, destination, behavior, overwrite, result, id);
   if (res && (res->error >= 300 || !sizeof(res))) {
     // Copy failed.
