@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.281 2011/02/28 17:45:26 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.282 2012/01/23 11:47:58 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3592,11 +3592,13 @@ class MultiStatus
 
     // Sort this because some client (which one?) requires collections
     // to come before the entries they contain.
+    // Encode the hrefs because some clients (eg MacOS X) assume that
+    // they are proper URLs (eg including fragment).
     foreach(sort(indices(status_set)), string href) {
       SimpleElementNode response_node =
 	SimpleElementNode("DAV:response", ([]))->
 	add_child(SimpleElementNode("DAV:href", ([]))->
-		  add_child(SimpleTextNode(href)));
+		  add_child(SimpleTextNode(Roxen->http_encode_url(href))));
       response_xml[i++] = response_node;
       status_set[href]->build_response (response_node);
     }
