@@ -833,7 +833,7 @@ class LoadImage
 	float compat_level = (float) id->conf->query("compat_level");
 	if (compat_level >= 5.2) {
 	  if (RXML_CONTEXT)
-	    RXML.parse_error("Empty src attribute not allowed.");
+	    RXML.parse_error("Empty src attribute not allowed.\n");
 	  else
 	    error("Empty src attribute not allowed.");
 	}
@@ -869,9 +869,14 @@ class LoadImage
 
     Arguments check_args( Arguments args)
     {
+      RequestID id = RXML.get_context()->id;
       if( !args->src )
 	RXML.parse_error("Missing src attribute to load\n");
-      RequestID id = RXML.get_context()->id;
+      if (args->src == "") {
+	float compat_level = (float) id->conf->query("compat_level");
+	if (compat_level >= 5.2)
+	  RXML.parse_error("Empty src attribute not allowed.\n");
+      }
       args->src = Roxen.fix_relative( args->src, id );
       Stat s = id->conf->try_stat_file( args->src, id );
       
