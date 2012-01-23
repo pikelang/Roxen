@@ -292,6 +292,7 @@ worldmap binary
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language2.pike foreign_ident
 /server/modules/misc/pathinfo.pike foreign_ident
+/server/modules/misc/periodic-fetcher.pike foreign_ident
 /server/modules/misc/preferred_language.pike foreign_ident
 /server/modules/misc/randomtext.pike foreign_ident
 /server/modules/misc/robots.txt.pike foreign_ident
