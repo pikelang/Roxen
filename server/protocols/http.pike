@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.642 2011/12/27 18:47:14 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.643 2012/01/24 16:15:47 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -754,7 +754,6 @@ private int got_chunk_fragment(string fragment)
 	// avoid having to realloc.
 	data_buffer = String.Buffer(sizeof(data) + misc->chunk_len + 16384);
 	data_buffer->add(data);
-	data_buffer->add(str);
 	data = "";
       }
       if (data_buffer) {
