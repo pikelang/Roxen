@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.662 2012/01/04 17:22:05 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.663 2012/01/25 17:32:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -10329,8 +10329,8 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  \"json\" encoding is more useful:</p>
 
  <ex-box>
-{\"user\": \"<ent>var.username:json</ent>\",
- \"name\": \"<ent>var.fullname:json</ent>\"}
+{\"user\": \"&var.username:json;\",
+ \"name\": \"&var.fullname:json;\"}
 </ex-box>
 </desc>
 
