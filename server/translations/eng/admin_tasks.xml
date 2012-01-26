@@ -1483,3 +1483,13 @@ the Pike interpreter.</o>
 <o>References</o>
 <t></t>
 </str>
+
+<str id="404">
+<o>Import</o>
+<t></t>
+</str>
+
+<str id="405">
+<o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
+<t></t>
+</str>

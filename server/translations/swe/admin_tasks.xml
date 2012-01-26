@@ -1365,7 +1365,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 
 <str id="377">
 <o>Click on a patch for more information.</o>
-<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
+<t>Klicka på patchnamnet eller patch-ID:t för mer information.</t>
 </str>
 
 <str id="378">
@@ -1375,7 +1375,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 
 <str id="379">
 <o>Click on a Patch for more information.</o>
-<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
+<t>Klicka på patchnamnet eller patch-ID:t för mer information.</t>
 </str>
 
 <str id="380">
@@ -1515,4 +1515,15 @@ Pike-interpretatorn.</t>
 <str id="403">
 <o>References</o>
 <t>Referenser</t>
+</str>
+
+<str id="404">
+<o>Import</o>
+<t>Importera</t>
+</str>
+
+<str id="405">
+<o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
+<t>Du kan också använda kommandoradsverktyget bin/rxnpatch för att hantera
+patchar, exempelvis för att importera flera stycken på en gång.</t>
 </str>

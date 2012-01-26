@@ -503,6 +503,13 @@ mixed parse(RequestID id)
         background: &usr.obox-bodybg;;
         border:     2px solid &usr.obox-border;;        
       }
+
+      input#patchupload {
+        background: #f8f8f8;;
+        border:	    1px solid #ddd;
+        padding:    5px;
+        margin:     0 4px 0 0;
+      }
     </style>
     <script type='text/javascript'>
       // <![CDATA[
@@ -735,13 +742,15 @@ mixed parse(RequestID id)
 
   res += #" 
     <font size='+1'><b>" + LOCALE(373, "Import a New Patch") + #"</b></font>
-    <p>\n" + LOCALE(374,"Select local file to upload:") + #"<br />
-        <input type='file' name='file' size='40'/>
+    <p>\n" + LOCALE(374,"Select local file to upload:") + #"</p>
+        <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton name='ok' width='75' align='center'
-      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
-      <br /><br />
-    </p>
+      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton>
+    <p>" + LOCALE(405, "You can also use the bin/rxnpatch command-line tool to "
+		  "manage patches, e.g. to import many patches at once.") +
+   #"</p>
+    <br />
     <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
