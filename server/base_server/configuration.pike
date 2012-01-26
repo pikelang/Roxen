@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.721 2012/01/18 12:55:26 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.722 2012/01/26 09:56:42 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4969,6 +4969,13 @@ hyphens ('-') occur in the specifier names.</p>
     <tr><td>refresh</td>
 	<td>This is the finishing of the background refresh request
 	for the entry in the HTTP protocol cache.</td></tr>
+    <tr><td>icachedraw</td>
+	<td>A server-generated image had to be rendered from scratch.</td></tr>
+    <tr><td>icacheram</td>
+	<td>A server-generated image was found in the RAM cache.</td></tr>
+    <tr><td>icachedisk</td>
+	<td>A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).</td></tr>
     <tr><td>pcoderam</td>
 	<td>A hit in the RXML p-code RAM cache.</td></tr>
     <tr><td>pcodedisk</td>
