@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.663 2012/01/25 17:32:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.664 2012/01/26 16:01:54 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1957,8 +1957,14 @@ class TagCharset
 	    throw (err);
 	}
       }
-      if( args->out && id->set_output_charset)
+      if (args->out && id->set_output_charset) {
+	//  Verify that encoder exists since we'll get internal errors
+	//  later if it's invalid. (The same test also happens in
+	//  id->set_output_charset() but only in debug mode.)
+	if (catch { Locale.Charset.encoder(args->out); })
+	  RXML.parse_error("Invalid charset %q\n", args->out);
 	id->set_output_charset( args->out );
+      }
       result_type = result_type (RXML.PXml);
       result="";
       return ({content});
