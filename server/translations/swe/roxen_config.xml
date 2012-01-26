@@ -225,7 +225,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
     &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
@@ -273,7 +273,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
     &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
@@ -356,7 +356,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the request got handled by various caches:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
 	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
@@ -369,10 +369,22 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
 	&lt;td&gt;This is the finishing of the background refresh request
 	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedraw&lt;/td&gt;
+	&lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icacheram&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedisk&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestore&lt;/td&gt;
+	&lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestorefailed&lt;/td&gt;
+	&lt;td&gt;An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
 	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
 	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
@@ -388,7 +400,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the page has been evaluated:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
 	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
@@ -414,7 +426,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;The known events are:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
 	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
@@ -442,7 +454,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
 	&lt;td&gt;The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
@@ -3972,7 +3984,7 @@ datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
 </str>
 
 <str id="1065">
-<o>Uncheck/check all</o>
+<o>Uncheck/Check All</o>
 <t>Välj ingen/alla</t>
 </str>
 
