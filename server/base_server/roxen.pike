@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1104 2012/01/19 14:13:03 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1105 2012/01/26 11:12:10 mast Exp $";
 
 //! @appears roxen
 //!
@@ -837,6 +837,8 @@ protected string debug_format_queue_task (array(function|array) task)
 	  ")");
 }
 
+protected mapping(Thread.Thread:int) thread_task_start_times = ([]);
+
 local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
@@ -876,6 +878,7 @@ local protected void handler_thread(int id)
 	  handler_num_runs++;
 
 	  int start_hrtime = gethrtime();
+	  thread_task_start_times[this_thread()] = start_hrtime;
 	  float handler_vtime = gauge {
 #ifndef NO_SLOW_REQ_BT
 	      if (h[0] != bg_process_queue &&
@@ -894,6 +897,7 @@ local protected void handler_thread(int id)
 		}
 	    };
 	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
+	  thread_task_start_times[this_thread()] = 0;
 
 	  h=0;
 	  busy_threads--;
@@ -1315,6 +1319,7 @@ protected void bg_process_queue()
 	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
 				      this_thread(), slow_req_timeout);
 	int start_hrtime = gethrtime (1);
+	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0]) // Ignore things that have become destructed.
 	      // Note: BackgroundProcess.repeat assumes that there are
@@ -1322,17 +1327,20 @@ protected void bg_process_queue()
 	      task[0] (@task[1]);
 	  };
 	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	thread_task_start_times[this_thread()] = 0;
 	monitor->remove_call_out (call_out);
       }
       else
 #endif
       {
 	int start_hrtime = gethrtime (1);
+	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0])
 	      task[0] (@task[1]);
 	  };
 	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	thread_task_start_times[this_thread()] = 0;
       }
 
       if (task_rtime >  0.01) bg_num_runs_001s++;
@@ -5638,14 +5646,19 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
 	return a->id_number() > b->id_number();
     });
 
-  int i;
-  for(i=0; i < sizeof(threads); i++) {
+  int hrnow = gethrtime();
+  foreach (threads, Thread.Thread thread) {
+    string thread_descr = "";
+    if (int start_hrtime = thread_task_start_times[thread])
+      thread_descr += sprintf (", busy for %.3fs",
+			       (hrnow - start_hrtime) / 1e6);
+    if (thread == backend_thread)
+      thread_descr += " (backend thread)";
     report_debug(">> ### Thread 0x%x%s:\n",
-		 threads[i]->id_number(),
-		 threads[i] == backend_thread ? " (backend thread)" : ""
-		);
+		 thread->id_number(),
+		 thread_descr);
     report_debug(">> " +
-		 replace (describe_backtrace (threads[i]->backtrace()),
+		 replace (describe_backtrace (thread->backtrace()),
 			  "\n", "\n>> ") +
 		 "\n");
   }
