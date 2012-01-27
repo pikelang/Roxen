@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.664 2012/01/26 16:01:54 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.665 2012/01/27 18:32:53 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -10319,18 +10319,28 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 </attr>",
 
 "json-parse": #"<desc type='cont'>
- <p><short>Parses a json formatted string.</short> This returns a
- value of the same type as the top level json object, typically an
+ <p><short>Parses a JSON-formatted string.</short> This returns a
+ value of the same type as the top level JSON object, typically an
  array or a mapping.</p>
- </desc>",
+ </desc>
+
+<attr name='value' value='string'>
+ <p>The JSON-formatted value to parse.</p>
+</attr>
+
+<attr name='variable' value='string'>
+ <p>Get the JSON-formatted value to parse from this variable, unless
+ <tt>value</tt> is provided. If neither is specified the content of
+ the container is used.</p>
+</attr>",
 
 "json-format": #"<desc type='cont'>
- <p><short>Formats a json string.</short> The input value may be a
+ <p><short>Formats a JSON string.</short> The input value may be a
  number, string, array, mapping, or one of the special values
  <ent>roxen.true</ent>, <ent>roxen.false</ent>, or
  <ent>roxen.null</ent>.</p>
 
- <p>Note: In some cases it may be easier to write the json answer as a
+ <p>Note: In some cases it may be easier to write the JSON answer as a
  plain string and substitute some values into it. In that case, the
  \"json\" encoding is more useful:</p>
 
@@ -10340,9 +10350,34 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 </ex-box>
 </desc>
 
+<attr name='value' value='string'>
+ <p>The value to format.</p>
+</attr>
+
 <attr name='variable' value='string'>
- <p>Get the value to format from this variable. If this isn't
- specified, the content of the container is used.</p>
+ <p>Get the value to format from this variable, unless <tt>value</tt> has been
+ provided. If neither is specified the content of the container is used.</p>
+</attr>
+
+<attr name='ascii-only'>
+ <p>Set to generate JSON output where all non-ASCII characters are escaped.
+    If not set only required characters are escaped.</p>
+</attr>
+
+<attr name='human-readable'>
+ <p>Set to generate JSON output with extra whitespace for easier reading.</p>
+</attr>
+
+<attr name='canonical' value='pike'>
+ <p>Use <tt>canonical=\"pike\"</tt> to generate JSON output where the same
+    input always gives consistent output with regards to e.g. mapping
+    sorting. If not provided the order is undefined.</p>
+</attr>
+
+<attr name='no-xml-quote'>
+ <p>Set to skip escaping of XML markup characters (<tt>&amp;</tt>,
+    <tt>&lt;</tt> and <tt>&gt;</tt>). The standard behavior is to escape
+    these characters using \\uXXXX encoding.</p>
 </attr>",
 
 //----------------------------------------------------------------------
