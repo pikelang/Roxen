@@ -745,8 +745,8 @@ mixed parse(RequestID id)
     <p>\n" + LOCALE(374,"Select local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
-        <submit-gbutton name='ok' width='75' align='center'
-      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton>
+        <submit-gbutton2 name='OK' width='75' align='center'
+      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton2>
     <p>" + LOCALE(405, "You can also use the bin/rxnpatch command-line tool to "
 		  "manage patches, e.g. to import many patches at once.") +
    #"</p>
