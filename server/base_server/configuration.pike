@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.722 2012/01/26 09:56:42 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.723 2012/02/03 15:55:21 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -911,8 +911,9 @@ protected mixed strip_fork_information(RequestID id)
     if (has_value(id->not_query, "..namedfork/") ||
 	has_suffix(id->not_query, "/rsrc") ||
 	has_value(lower_case(id->not_query), ".ds_store"))
-      //  Show 404 page
-      return error_file(id);
+      //  Skip elaborate error page since we get these e.g. for WebDAV
+      //  mounts in OS X Finder.
+      return Roxen.http_string_answer("No such file", "text/plain");
   }
   
   array a = id->not_query/"::";
