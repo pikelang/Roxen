@@ -271,7 +271,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	md += ({
 	  ({ is_right_platform ? 
 	     LOCALE(338, "Platforms:") :
-	     "<b style='color:red'>" + LOCALE(341, "Platform") + "</b>", 
+	     "<b style='color:red'>" + LOCALE(338, "Platforms:") + "</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->platform) })
 	});
