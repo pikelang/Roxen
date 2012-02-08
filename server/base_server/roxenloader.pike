@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $
+// $Id: roxenloader.pike,v 1.474 2012/02/08 00:52:14 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.474 2012/02/08 00:52:14 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -131,7 +131,7 @@ string server_dir =
   lambda () {
     string cwd = getcwd();
 #ifdef __NT__
-    cwd = replace ("\\", "/");
+    cwd = replace (cwd, "\\", "/");
 #endif
     if (has_suffix (cwd, "/"))
       report_warning ("Warning: Server directory is a root dir "
