@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.148 2011/12/28 18:29:37 mast Exp $
+// $Id: module_support.pike,v 1.149 2012/02/08 00:56:21 jonasw Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -578,10 +578,11 @@ class ModuleInfo( string sname, string filename )
 
     foreach( dirlist, string file ) {
 	Stdio.Stat s;
+	string fpath = combine_path(dir, file);
         if( file[0] != '.' &&
-	    (s=file_stat( dir+file )) && s->isdir
+	    (s=file_stat( fpath )) && s->isdir
 	    && !nomods[file] ) {
-	  rec_find_module_files (what, dir+file+"/", files);
+	  rec_find_module_files (what, fpath, files);
 	  continue;
 	}
 
@@ -596,11 +597,11 @@ class ModuleInfo( string sname, string filename )
 	  if( (< "pike", "so", "jar", "class" >)[ extension( file ) ] )
           {
             Stdio.File f = Stdio.File();
-	    if( !f->open( dir+file, "r" ) )
+	    if( !f->open( fpath, "r" ) )
 	      report_error ("Failed to open %s: %s\n",
-			    dir + file, strerror (f->errno()));
+			    fpath, strerror (f->errno()));
 	    else if( (f->read( 4 ) != "#!NO" ) )
-	      files[dir + file] = 1;
+	      files[fpath] = 1;
 	  }
         }
     }
@@ -723,21 +724,22 @@ protected void rec_find_all_modules( string dir,
     foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
+	string fpath = combine_path(dir, file);
 	if( (< "so", "pike">)[ extension( file ) ] ||
 	    (<"class", "jar">)[extension (file)] && got_java())
         {
 	  Stdio.File f = Stdio.File();
-	  if (!f->open( dir+file, "r" ))
+	  if (!f->open( fpath, "r" ))
 	    report_warning ("Failed to open %s: %s\n",
-			    dir + file, strerror (f->errno()));
+			    fpath, strerror (f->errno()));
 	  else if( (f->read( 4 ) != "#!NO" ) )
-	    modules[dir + file] = strip_extention (file);
+	    modules[fpath] = strip_extention (file);
 	}
-	else if( (s = file_stat( dir+file )) &&
+	else if( (s = file_stat( fpath )) &&
 		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
-	  rec_find_all_modules( dir+file+"/", modules );
+	  rec_find_all_modules( fpath, modules );
     }
 }
 

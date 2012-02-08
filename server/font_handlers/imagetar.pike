@@ -78,15 +78,16 @@ void update_font_list()
   {
     foreach( get_dir( dir )||({}), string pd )
     {
-      if( Stdio.is_dir( dir+pd ) )
-        rec_find_in_dir( dir+pd+"/" );
+      string fpath = combine_path(dir, pd);
+      if( Stdio.is_dir( fpath ) )
+        rec_find_in_dir( fpath );
       else if( glob( "*.tar", pd ) )
       {
-        Filesystem.Tar t = open_tar( dir+pd );
+        Filesystem.Tar t = open_tar( fpath );
         if( Stdio.File f = t->open( "fontinfo", "r" ) )
-          font_list[font_name( f->read() )] = dir+pd;
+          font_list[font_name( f->read() )] = fpath;
         else if( Stdio.File f = t->open( "fontname", "r" ) )
-          font_list[font_name( f->read() )] = dir+pd;
+          font_list[font_name( f->read() )] = fpath;
         else
           destruct( t );
       }
