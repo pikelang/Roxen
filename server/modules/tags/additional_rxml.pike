@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.57 2011/08/31 14:37:58 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.58 2012/02/09 15:58:13 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -199,6 +199,12 @@ class AsyncHTTPClient {
     status = con->status;
     queue->read();
   }
+  
+  void destroy()
+  {
+    if(con)
+      destruct(con);
+  }
 
   void create(string method, mapping args, mapping|void headers) {
     if(method == "POST") {
@@ -305,7 +311,12 @@ class TagInsertHref {
       RXML.user_set_var(args["status-variable"],q->status);
     
     if(q && q->status>0 && q->status<400) {
-      return Roxen.low_parse_http_response (q->con->headers, q->data(), 0, 1,
+      mapping headers = q->con->headers;
+      string data = q->data();
+      // Explicitly destruct the connection object to avoid garbage
+      // and CLOSE_WAIT sockets. Reported in [RT 18335].
+      destruct(q);
+      return Roxen.low_parse_http_response (headers, data, 0, 1,
 					    (int)args["ignore-unknown-ce"]);
     }
 
@@ -313,6 +324,9 @@ class TagInsertHref {
 
     if(!args->silent)
       RXML.run_error((q && q->status_desc) || "No server response");
+    // Explicitly destruct the connection object to avoid garbage
+    // and CLOSE_WAIT sockets. Reported in [RT 18335].
+    destruct(q);
     return "";
   }
 }
