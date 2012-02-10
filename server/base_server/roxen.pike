@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1105 2012/01/26 11:12:10 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1106 2012/02/10 16:07:22 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -838,6 +838,12 @@ protected string debug_format_queue_task (array(function|array) task)
 }
 
 protected mapping(Thread.Thread:int) thread_task_start_times = ([]);
+
+mapping(Thread.Thread:int) get_thread_task_start_times()
+{
+  //  Also needed in Admin interface's thread wizard
+  return thread_task_start_times + ([ ]);
+}
 
 local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
