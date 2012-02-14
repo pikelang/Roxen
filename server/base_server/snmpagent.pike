@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.27 2012/02/14 22:20:52 jonasw Exp $
+ * $Id: snmpagent.pike,v 1.28 2012/02/14 22:55:00 jonasw Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -376,7 +376,6 @@ class SNMPagent {
 #else
       //SNMPAGENT_MSG("Threads detected. One thread will be created for agent processing.");
       th = thread_create( real_start );
-      roxen.name_thread(th, "SNMP agent");
 #endif
     }
   }
@@ -777,7 +776,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.27 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.28 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

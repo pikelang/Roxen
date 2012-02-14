@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.326 2012/02/14 22:20:53 jonasw Exp $
+// $Id: Roxen.pmod,v 1.327 2012/02/14 22:55:00 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5787,6 +5787,7 @@ class LogPipe
       read_cb (read_end, data);
     }
     close_cb (read_end);
+    roxen->name_thread(this_thread(), 0);
   }
 
   protected void create (Stdio.File read_end, Stdio.File write_end,

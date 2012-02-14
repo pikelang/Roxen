@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1109 2012/02/14 22:20:52 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1110 2012/02/14 22:55:00 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -149,7 +149,11 @@ string thread_name( object thread, int|void skip_auto_name )
 
 void name_thread( object thread, string name )
 {
-  thread_names[ sprintf( "%O", thread ) ] = name;
+  string th_key = sprintf("%O", thread);
+  if (name)
+    thread_names[th_key] = name;
+  else
+    m_delete(thread_names, th_key);
 }
 
 // This mutex is used by Privs
@@ -5749,6 +5753,7 @@ void cdt_poll_file()
     }
     sleep (cdt_poll_interval);
   }
+  name_thread(this_thread(), 0);
   cdt_thread = 0;
 }
 
