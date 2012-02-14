@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1110 2012/02/14 22:55:00 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1111 2012/02/14 23:10:13 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -5662,11 +5662,11 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
   int hrnow = gethrtime();
   foreach (threads, Thread.Thread thread) {
     string thread_descr = "";
+    if (string th_name = thread_name(thread, 1))
+      thread_descr += " - " + th_name;
     if (int start_hrtime = thread_task_start_times[thread])
-      thread_descr += sprintf (", busy for %.3fs",
+      thread_descr += sprintf (" - busy for %.3fs",
 			       (hrnow - start_hrtime) / 1e6);
-    if (thread == backend_thread)
-      thread_descr += " (backend thread)";
     report_debug(">> ### Thread 0x%x%s:\n",
 		 thread->id_number(),
 		 thread_descr);
