@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.92 2012/02/14 17:22:54 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.93 2012/02/14 19:52:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -677,7 +677,19 @@ void continue_run_tests( )
 
     if (has_suffix (file, ".xml"))
     {
-      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
+      string data = Stdio.read_file(file);
+      int single_thread;
+      // If the file contains a pi <?single-thread?> then it's run with the
+      // handler threads disabled (see the single_thread constant in
+      // pike_test_common.pike).
+      Roxen.get_xml_parser()->add_quote_tag ("?single-thread",
+					     lambda() {single_thread = 1;},
+					     "?")
+			    ->finish (data);
+      if (single_thread)
+	schedule_tests_single_thread (0, run_xml_tests, data);
+      else
+	schedule_tests (0, run_xml_tests, data);
       return;
     }
     else			// Pike test.
