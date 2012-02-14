@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.90 2012/02/14 11:20:47 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.91 2012/02/14 16:48:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -79,6 +79,20 @@ void schedule_tests (int|float delay, function func, mixed... args)
 	      roxen->busy_threads++;
 	      if (err) throw (err);
 	    }, func, args);
+}
+
+void schedule_tests_single_thread (int|float delay,
+				   function func, mixed... args)
+{
+  // The opposite of schedule_tests, i.e. tries to ensure no other
+  // jobs gets executed in parallel by either background_run or a
+  // roxen.handle.
+  call_out (lambda (function func, array args) {
+	      roxen->hold_handler_threads();
+	      mixed err = catch (func (@args));
+	      roxen->release_handler_threads (0);
+	      if (err) throw (err);
+	    }, delay, func, args);
 }
 
 int do_continue(int _tests, int _fails)
@@ -667,7 +681,10 @@ void continue_run_tests( )
       }
       else
       {
-	schedule_tests (0, run_pike_tests,test,file);
+	if (test->single_thread)
+	  schedule_tests_single_thread (0, run_pike_tests, test, file);
+	else
+	  schedule_tests (0, run_pike_tests,test,file);
 	return;
       }
     }

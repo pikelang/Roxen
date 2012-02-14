@@ -1,6 +1,13 @@
 int current_test, tests_failed;
 int verbose;
 
+constant single_thread = 0;
+// If this constant is set then the test will run in the backend
+// thread while all handler threads are on hold (which implies the
+// background_run queue is on hold as well). Otherwise tests are run
+// in one handler thread while another one is free to execute
+// background jobs right away.
+
 void create( int vb ) { verbose = vb; }
 
 
