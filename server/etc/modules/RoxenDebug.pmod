@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.16 2012/02/14 14:54:01 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.17 2012/02/14 14:58:33 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -89,7 +89,9 @@ class ObjectMarker
 
       id = new_id;
       object_markers[id]++;
-      object_create_places[id] = describe_backtrace (backtrace());
+      // Use master()->describe_backtrace to sidestep the background
+      // failure wrapper that's active in RUN_SELF_TEST.
+      object_create_places[id] = master()->describe_backtrace (backtrace());
     }
   }
 
@@ -113,7 +115,7 @@ class ObjectMarker
       }
       if (flags & LOG_DESTRUCT_BT) {
 	werror("destructing...\n"
-	       "%s\n", describe_backtrace(backtrace()));
+	       "%s\n", master()->describe_backtrace(backtrace()));
       }
     }
   }
