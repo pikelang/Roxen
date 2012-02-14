@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1108 2012/02/14 18:06:51 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1109 2012/02/14 22:20:52 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -139,10 +139,10 @@ array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
-string thread_name( object thread )
+string thread_name( object thread, int|void skip_auto_name )
 {
   string tn;
-  if( thread_names[ tn=sprintf("%O",thread) ] )
+  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
     return thread_names[tn];
   return tn;
 }
@@ -5725,6 +5725,7 @@ int cdt_next_seq_dump;
 
 void cdt_poll_file()
 {
+  name_thread(this_thread(), "Dump thread file monitor");
   while (this && query ("dump_threads_by_file")) {
     if (array(string) dir = r_get_dir (cdt_directory)) {
       if (has_value (dir, cdt_filename)) {

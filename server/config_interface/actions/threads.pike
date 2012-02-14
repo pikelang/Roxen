@@ -121,21 +121,19 @@ mixed parse( RequestID id )
     string open_state = (threads[i] == this_thread()) ? "closed" : "open";
     string busy_time = "";
     if (int start_hrtime = thread_task_start_times[threads[i]])
-      busy_time = sprintf(", busy for %.3fs", (hrnow - start_hrtime) / 1e6);
+      busy_time = sprintf(" &ndash; busy for %.3fs",
+			  (hrnow - start_hrtime) / 1e6);
+    string th_name =
+      roxen.thread_name(threads[i], 1) || 
+      sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
     res +=
       sprintf ("<h3 class='%s' "
 	       " onclick='toggle_vis(\"%s\", this); return false;'>"
-	       "%s 0x%x%s%s</h3>\n"
+	       "%s%s</h3>\n"
 	       "<ol class='%s' id='%s'> %s</ol>\n",
 	       open_state,
 	       "bt_" + div_num,
-	       LOCALE(39,"Thread"), threads[i]->id_number(),
-#ifdef THREADS
-	       (threads[i] == roxen->backend_thread ?
-		" (" + LOCALE(38,"backend thread")+ ")" : ""),
-#else
-	       "",
-#endif
+	       th_name,
 	       busy_time,
 	       open_state,
 	       "bt_" + div_num,

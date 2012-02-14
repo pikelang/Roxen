@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.325 2011/11/14 00:13:57 mast Exp $
+// $Id: Roxen.pmod,v 1.326 2012/02/14 22:20:53 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5780,6 +5780,7 @@ class LogPipe
 
   protected void log_pipe_read_thread (Stdio.File read_end)
   {
+    roxen->name_thread(this_thread(), "Log pipe");
     while (1) {
       string data = read_end->read (1024, 1);
       if (!data || data == "") break;
