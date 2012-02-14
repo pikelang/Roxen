@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.723 2012/02/03 15:55:21 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.724 2012/02/14 16:52:38 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -716,7 +716,16 @@ void stop (void|int asynch)
 
     unregister_urls();
 
-    roxen.handle (do_stop_all_modules, lock);
+    if (roxen.handler_threads_on_hold())
+      // Run do_stop_all_modules synchronously if there are no handler
+      // threads running (typically during the RoxenTest_help self test).
+      do_stop_all_modules (lock);
+    else
+      // Seems meaningless to queue this in a handler thread and then
+      // just wait for it below if asynch isn't set - could just as
+      // well do the work in this thread then. But now isn't a good
+      // moment to mess around with it. /mast
+      roxen.handle (do_stop_all_modules, lock);
   }
 
   if (!asynch) stop_all_modules_mutex->lock (1);
