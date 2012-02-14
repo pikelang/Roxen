@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.91 2012/02/14 16:48:55 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.92 2012/02/14 17:22:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -318,7 +318,11 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 				    !objectp (err) || !err->is_RXML_Backtrace ||
 				    err->type != m["ignore-errors"]))
 			 {
-			   test_error("Failed (backtrace): %s",describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error("Failed (backtrace): %s",
+				      master()->describe_backtrace(err));
 			   throw(1);
 			 }
 
@@ -451,8 +455,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			   int i;
 			   c = map(c/"\n", lambda(string in) {
 					     return sprintf("%3d: %s", ++i, in); }) * "\n";
-			   werror("Error while compiling test\n%s\n\nBacktrace\n%s\n",
-				  c, describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error ("Error while compiling test\n%s\n\n"
+				       "Backtrace:\n%s\n",
+				       c, master()->describe_backtrace(err));
 			   throw(1);
 			 }
 			 string r = test->test(res);
@@ -523,7 +531,10 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 
   if( mixed error = catch(parser->finish(c)) ) {
     if (error != 1)
-      test_error ("Failed to parse test: " + describe_backtrace (error));
+      // Use master()->describe_backtrace() to bypass background_failure() and
+      // avoid counting this error twice.
+      test_error ("Failed to parse test: " +
+		  master()->describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -675,8 +686,10 @@ void continue_run_tests( )
       mixed error;
       tests++;
       if( error=catch( test=compile_file(file)( verbose ) ) ) {
+	// Use master()->describe_backtrace() to bypass background_failure()
+	// and avoid counting this error twice.
 	report_error("################ Failed to compile %s:\n%s", file,
-		     describe_backtrace(error));
+		     master()->describe_backtrace(error));
 	fails++;
       }
       else
