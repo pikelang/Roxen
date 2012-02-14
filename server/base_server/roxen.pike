@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1107 2012/02/14 16:52:38 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1108 2012/02/14 18:06:51 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -1327,7 +1327,7 @@ protected void bg_process_queue()
       if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
 	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
 				      this_thread(), slow_req_timeout);
-	int start_hrtime = gethrtime (1);
+	int start_hrtime = gethrtime();
 	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0]) // Ignore things that have become destructed.
@@ -1335,20 +1335,20 @@ protected void bg_process_queue()
 	      // exactly two refs to task[0] during the call below.
 	      task[0] (@task[1]);
 	  };
-	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	task_rtime = (gethrtime() - start_hrtime) / 1e6;
 	thread_task_start_times[this_thread()] = 0;
 	monitor->remove_call_out (call_out);
       }
       else
 #endif
       {
-	int start_hrtime = gethrtime (1);
+	int start_hrtime = gethrtime();
 	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0])
 	      task[0] (@task[1]);
 	  };
-	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	task_rtime = (gethrtime() - start_hrtime) / 1e6;
 	thread_task_start_times[this_thread()] = 0;
       }
 
