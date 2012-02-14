@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.89 2011/11/14 00:13:58 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.90 2012/02/14 11:20:47 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -58,8 +58,11 @@ void background_failure()
   // describe_backtrace() (roxenloader.pike), in self test mode. We
   // need to check whether it's for us or not by checking if we're
   // running currently.
-  if (is_running())
+  if (is_running()) {
+    // Log something to make these easier to locate in the noisy test logs.
+    report_error ("################ Background failure\n");
     bkgr_fails++;
+  }
 }
 
 void schedule_tests (int|float delay, function func, mixed... args)
@@ -218,12 +221,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
-    report_debug (indent (2, sprintf ("Error at line %d:",
+    report_error (indent (2, sprintf ("################ Error at line %d:",
 				      file_parser->at_line())));
     if( strlen( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
-    report_debug( indent(2, message ) );
+    report_error( indent(2, message ) );
   };
 
   string test_ok(  )
@@ -452,6 +455,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			       default:
 				 test_error("Could not <add> %O; "
 					    "unknown variable.\n", m->what);
+				 throw (1);
 				 break;
 			       case "prestate":
 				 id->prestate[m->name] = 1;
@@ -657,7 +661,7 @@ void continue_run_tests( )
       mixed error;
       tests++;
       if( error=catch( test=compile_file(file)( verbose ) ) ) {
-	report_error("Failed to compile %s:\n%s", file,
+	report_error("################ Failed to compile %s:\n%s", file,
 		     describe_backtrace(error));
 	fails++;
       }

@@ -69,7 +69,8 @@ void current_test_done()
       {
 	tests_failed++;
 	if( verbose ) report_debug(" FAILED\n");
-	report_debug(do_describe_error(IND("_desc")+" FAILED\n" ));
+	report_debug("################ " +
+		     do_describe_error(IND("_desc")+" FAILED\n" ));
 	report_debug(do_describe_error( fail ));
       }
       else if( verbose )

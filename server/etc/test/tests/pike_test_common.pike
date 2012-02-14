@@ -84,16 +84,17 @@ void report_test_failure( mixed err,
 			  function|string|array cb, array args, int st )
 {
   if( verbose ) 
-    report_debug(" FAILED\n");
+    report_debug(" ################ FAILED\n");
   else {
     if (arrayp (cb)) {
       // Got line number info.
-      report_debug (indent (2, sprintf ("%s:%d:   FAILED",
+      report_debug (indent (2, sprintf ("################ %s:%d:   FAILED",
 					cb[0], cb[1])) + "\n" +
 		    do_describe_error(describe_test (cb[2], args)));
     }
     else
-      report_debug(do_describe_error(describe_test (cb, args) + "   FAILED"));
+      report_debug(indent (2, "################ " +
+			   describe_test (cb, args) + "   FAILED\n"));
   }
 
   if( err )
@@ -329,7 +330,7 @@ void low_run_tests( Configuration c,
     run_tests( c );
   };
   if( err ) {
-    write( describe_backtrace( err ) );
+    write( "################ " + describe_backtrace( err ) );
     go_on (++current_test, ++tests_failed);
   }
   else
