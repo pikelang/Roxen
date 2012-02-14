@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.125 2011/01/20 23:49:17 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.126 2012/02/14 15:02:21 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1016,8 +1016,7 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href"    : args->href,
-			     "onfocus" : "this.blur();" ]);
+	mapping a_attrs = ([ "href"    : args->href ]);
 
 	foreach(indices(args), string arg)
 	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
