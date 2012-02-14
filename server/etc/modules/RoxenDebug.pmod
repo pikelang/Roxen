@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.15 2012/02/14 14:48:56 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.16 2012/02/14 14:54:01 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -12,14 +12,19 @@
 mapping(string:int) object_markers = ([]);
 mapping(string:string) object_create_places = ([]);
 
-int log_create_destruct = 1;
+int log_create_destruct = 0;
+
+enum ObjectMarkerFlags {
+  LOG_CREATE_DESTRUCT = 1,
+  LOG_DESTRUCT_BT = 2,
+}
 
 //!
 class ObjectMarker
 {
   int count = ++all_constants()->__object_marker_count;
   string id;
-  int flags;
+  ObjectMarkerFlags flags;
 
   protected void debug_msg (array bt, int ignore_frames,
 			    string msg, mixed... args)
@@ -58,7 +63,7 @@ class ObjectMarker
   }
 
   //!
-  void create (void|string|object obj, void|int _flags)
+  void create (void|string|object obj, void|ObjectMarkerFlags _flags)
   {
     flags = _flags;
     if (obj) {
@@ -68,7 +73,7 @@ class ObjectMarker
 
       if (id) {
 	if (new_id == id) return;
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  if (object_markers[id] > 0)
 	    debug_msg (backtrace(), 1, "rename %s -> %s\n", id, new_id);
 	  else
@@ -79,7 +84,7 @@ class ObjectMarker
 	}
       }
       else
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  debug_msg (backtrace(), 1, "create %s\n", new_id);
 
       id = new_id;
@@ -98,7 +103,7 @@ class ObjectMarker
   {
     if (global::this) {
       if (id) {
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
 	  else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
 	if (--object_markers[id] <= 0) {
@@ -106,7 +111,7 @@ class ObjectMarker
 	  m_delete (object_create_places, id);
 	}
       }
-      if (flags && log_create_destruct) {
+      if (flags & LOG_DESTRUCT_BT) {
 	werror("destructing...\n"
 	       "%s\n", describe_backtrace(backtrace()));
       }
