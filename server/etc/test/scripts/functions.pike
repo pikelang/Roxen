@@ -35,7 +35,13 @@ void recursive_cp(string src, string dest)
 
 void extract_tarfile(Filesystem.Tar tarfile, string dest_dir)
 {
-  tarfile->tar->extract ("/", dest_dir);
+  mixed err = catch {
+      tarfile->tar->extract ("/", dest_dir);
+    };
+  if (err) {
+    werror("Failed to extract tar file: %s\n", describe_backtrace(err));
+    throw(err);
+  }
 }
 
 array(string) long_get_dir(string dir)
