@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.428 2012/01/26 01:16:41 mast Exp $
+// $Id: module.pmod,v 1.429 2012/02/16 13:10:23 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5501,8 +5501,6 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
   return frame;
 }
 
-//! @decl class parse_frame (Type type, string to_parse);
-//!
 //! Returns a frame that, when evaluated, parses the given string
 //! according to the type (which typically has a parser set).
 //!
@@ -5514,6 +5512,7 @@ final class parse_frame
   inherit Frame;
   int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
+  //!
   protected void create (Type type, string to_parse)
   {
     if (type) {			// Might be created from decode or _clone_empty.
