@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1111 2012/02/14 23:10:13 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1112 2012/02/18 01:14:34 mast Exp $";
 
 //! @appears roxen
 //!
@@ -221,7 +221,7 @@ protected class Privs
 #ifdef THREADS
     if (euid_egid_lock) {
       if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
     threads_disabled = _disable_threads();
 #endif /* THREADS */
@@ -282,11 +282,11 @@ protected class Privs
     if (u[2]) {
 #if efun(cleargroups)
       if (mixed err = catch { cleargroups(); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif /* cleargroups */
 #if efun(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif
     }
     gid = gid || getgid();
@@ -379,7 +379,7 @@ protected class Privs
 			      "from backend")+"\n", saved_uid, saved_gid);
 	}
 	})
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
 
 #ifdef PRIVS_DEBUG
@@ -401,11 +401,11 @@ protected class Privs
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
     if (mixed err = catch { cleargroups(); })
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
 #endif /* cleargroups */
     if(u && (sizeof(u) > 3)) {
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
     setegid(saved_gid);
     seteuid(saved_uid);
@@ -483,7 +483,7 @@ private void really_low_shutdown(int exit_code)
 	  Sql.Sql db = connect_to_my_mysql(0, "mysql");
 	  db->shutdown();
 	})
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
   }
   // Zap some of the remaining caches.
   destruct (argcache);
@@ -498,7 +498,7 @@ private void really_low_shutdown(int exit_code)
       else
 	report_notice("Shutting down Roxen.\n");
     })
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 #endif
   roxenloader.real_exit( exit_code ); // Now we die...
 }
@@ -515,13 +515,13 @@ private void low_shutdown(int exit_code)
     if (mixed err =
 	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
 	catch (stop_all_configurations()))
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
 #ifdef THREADS
     if (mixed err = catch (stop_handler_threads()))
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
 #endif /* THREADS */
     roxenloader.real_exit(exit_code);
   }
@@ -533,7 +533,7 @@ private void low_shutdown(int exit_code)
 #endif
 
   if (mixed err = catch(stop_all_configurations()))
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 
 #ifdef SNMP_AGENT
   if(objectp(snmpagent)) {
@@ -958,9 +958,7 @@ local protected void handler_thread(int id)
       if (call_out) monitor->remove_call_out (call_out);
 #endif
       if (h = catch {
-	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
-		       "Client will not get any response from Roxen.\n"),*/
-		     describe_backtrace(q));
+	master()->handle_error (q);
 	if (q = catch {h = 0;}) {
 	  report_error(LOC_M(5, "Uncaught error in handler thread: %sClient "
 			     "will not get any response from Roxen.")+"\n",
@@ -1537,12 +1535,8 @@ class BackgroundProcess
     mixed err = catch {
 	func (@args);
       };
-    if (err) {
-      catch {
-	report_error(LOC_M(66, "Uncaught error in background process:") +
-		     "%s\n", describe_backtrace(err));
-      };
-    }
+    if (err)
+      master()->handle_error (err);
     background_run (period, repeat, func, args);
   }
 
@@ -3351,7 +3345,7 @@ protected void engage_abs(int n)
       // Catch for paranoia reasons.
       describe_all_threads();
     })
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 #ifdef THREADS
   report_debug("\nHandler queue:\n");
   if (mixed err = catch {
@@ -3366,7 +3360,7 @@ protected void engage_abs(int n)
       }
     }
     })
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 #endif
   low_engage_abs();
 }
@@ -4514,7 +4508,7 @@ class ImageCache
       report_warning("Failed to sync cached atimes for "+name+"\n");
 #if 0
 #ifdef DEBUG
-      report_debug (describe_backtrace (err));
+      master()->handle_error (err);
 #endif
 #endif
     }
@@ -5216,7 +5210,7 @@ int set_u_and_gid (void|int from_handler_thread)
 	// If this is necessary from every handler thread, these
 	// things are thread local and thus are no locks necessary.
 	if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
 	threads_disabled = _disable_threads();
       }
 #endif
@@ -5230,7 +5224,7 @@ int set_u_and_gid (void|int from_handler_thread)
 	  initgroups(pw[0], gid);
 	  // Doesn't always work - David.
 	})
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif
 
       if (query("permanent_uid")) {
@@ -5513,7 +5507,7 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
 	if (mixed err = catch {
 	    data = Protocols.HTTP.get_url_data( f, 0, hd );
 	  })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
       }
 #endif
       if( !data )
@@ -5545,7 +5539,7 @@ array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 	if (mixed err = catch {
 	    data = Protocols.HTTP.get_url_data( f, 0, hd );
 	  })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
       }
 #endif
       if( !data )
