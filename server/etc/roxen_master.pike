@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.155 2010/01/13 14:35:14 jonasw Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.156 2012/02/18 01:12:14 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -872,19 +872,11 @@ program handle_inherit (string pname, string current_file, object|void handler)
   return ::handle_inherit (pname, current_file, handler);
 }
 
-#if 0
 void handle_error(array(mixed)|object trace)
 {
-  catch {
-    if (arrayp (trace) && sizeof (trace) == 2 &&
-	arrayp (trace[1]) && !sizeof (trace[1]))
-      // Don't report the special compilation errors thrown above. Pike
-      // calls this if resolv() or similar throws.
-      return;
-  };
+  werror ("Internal server error: ");
   ::handle_error (trace);
 }
-#endif
 
 void compile_warning(string file,int line,string err)
 {
