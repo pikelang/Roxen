@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.429 2012/02/16 13:10:23 grubba Exp $
+// $Id: module.pmod,v 1.430 2012/02/20 14:22:20 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6876,6 +6876,9 @@ TArray t_array = TArray();
 //!
 //! Supertype: @[RXML.t_any]
 
+//!
+//! @seealso
+//!   @[t_array]
 class TArray
 {
   inherit TAny;
@@ -6949,6 +6952,9 @@ TMapping t_mapping = TMapping();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_mapping]
 class TMapping
 {
   inherit TAny;
@@ -6991,6 +6997,8 @@ TType t_type = TType();
 //! Supertype: @[RXML.t_any_seq]
 
 //!
+//! @seealso
+//!   @[t_type]
 protected class TType
 {
   inherit Type;
@@ -7033,6 +7041,9 @@ TParser t_parser = TParser();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_parser]
 protected class TParser
 {
   inherit Type;
@@ -7079,6 +7090,9 @@ TScalar t_scalar = TScalar();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_scalar]
 class TScalar
 {
   inherit Type;
@@ -7115,6 +7129,9 @@ TNum t_num = TNum();
 //!
 //! Supertype: @[RXML.t_scalar]
 
+//!
+//! @seealso
+//!   @[t_num]
 class TNum
 {
   inherit Type;
@@ -7158,6 +7175,9 @@ TInt t_int = TInt();
 //!
 //! Supertype: @[RXML.t_num]
 
+//!
+//! @seealso
+//!   @[t_int]
 class TInt
 {
   inherit Type;
@@ -7198,6 +7218,9 @@ TFloat t_float = TFloat();
 //!
 //! Supertype: @[RXML.t_num]
 
+//!
+//! @seealso
+//!   @[t_float]
 class TFloat
 {
   inherit Type;
@@ -7252,6 +7275,8 @@ TString t_string = TString();
 //! normalization rules.
 
 //!
+//! @seealso
+//!   @[t_string]
 class TString
 {
   inherit Type;
@@ -7361,6 +7386,9 @@ TAnyText t_any_text = TAnyText();
 //! literal). If @[RXML.t_text] was used instead, it might throw
 //! errors at that point if the xml value contains tags.
 
+//!
+//! @seealso
+//!   @[t_any_text]
 class TAnyText
 {
   inherit TString;
@@ -7379,6 +7407,9 @@ TText t_text = TText();
 //! type of text; @[RXML.t_any_text] represents that. Is sequential
 //! and allows free text.
 
+//!
+//! @seealso
+//!   @[t_text]
 class TText
 {
   inherit TAnyText;
@@ -7405,6 +7436,8 @@ TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
 //!
+//! @seealso
+//!   @[t_xml]
 class TXml
 {
   inherit TText;
@@ -7589,6 +7622,9 @@ class TXml
 THtml t_html = THtml();
 //! (Currently) identical to t_xml, but tags it as "text/html".
 
+//!
+//! @seealso
+//!   @[t_html]
 class THtml
 {
   inherit TXml;
@@ -7617,6 +7653,9 @@ TStrOrInt t_str_or_int = TStrOrInt();
 //!
 //! Supertype: @[RXML.t_scalar]
 
+//!
+//! @seealso
+//!   @[t_str_or_int]
 class TStrOrInt
 {
   inherit TScalar;
@@ -7648,6 +7687,9 @@ class TStrOrInt
   }
 }
 
+//!
+//! @seealso
+//!   @[TArray]
 class TTypedArray
 {
   inherit TArray;
@@ -7683,6 +7725,9 @@ TNumArray t_num_array = TNumArray();
 //!
 //! Supertype: @[RXML.t_array]
 
+//!
+//! @seealso
+//!   @[t_num_array]
 class TNumArray
 {
   inherit TTypedArray;
@@ -7702,6 +7747,9 @@ TIntArray t_int_array = TIntArray();
 //!
 //! Supertype: @[RXML.t_num_array]
 
+//!
+//! @seealso
+//!   @[t_int_array]
 class TIntArray
 {
   inherit TTypedArray;
@@ -7722,6 +7770,9 @@ TStrArray t_str_array = TStrArray();
 //!
 //! Supertype: @[RXML.t_array]
 
+//!
+//! @seealso
+//!   @[t_str_array]
 class TStrArray
 {
   inherit TTypedArray;
@@ -7741,6 +7792,9 @@ TMapArray t_map_array = TMapArray();
 //!
 //! Supertype: @[RXML.t_array]
 
+//!
+//! @seealso
+//!   @[t_map_array]
 class TMapArray
 {
   inherit TTypedArray;
