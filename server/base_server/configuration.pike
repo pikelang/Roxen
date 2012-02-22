@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.724 2012/02/14 16:52:38 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.725 2012/02/22 09:27:23 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -215,6 +215,7 @@ mapping(RequestID:mapping) connection_get( )
 // It's nice to have the name when the rest of __INIT executes.
 string name = roxen->bootstrap_info->get();
 
+//! The hierarchal cache used for the HTTP protocol cache.
 class DataCache
 {
   protected typedef array(string|mapping(string:mixed))|string|
