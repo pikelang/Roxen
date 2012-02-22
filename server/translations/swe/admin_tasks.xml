@@ -456,7 +456,7 @@ processen försvinner efter senast 15 minuter.</t>
 
 <str id="65">
 <o>Shows detailed process status on Solaris 2.5 and later.</o>
-<t>Visar detaljerad processinformaiton på Solaris 2.5 och senare.</t>
+<t>Visar detaljerad processinformation på Solaris 2.5 och senare.</t>
 </str>
 
 <str id="66">
@@ -541,7 +541,7 @@ demonstrationscertifikat som följer med Roxen.</t>
 
 <str id="93">
 <o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
-<t>Den önskade nyckelstorleken. Detta är en säkerhetsparameter; störree nycklar ger bättre säkerhet, men gör också att det tar längre tid att kontakta webserver.</t>
+<t>Den önskade nyckelstorleken. Detta är en säkerhetsparameter; större nycklar ger bättre säkerhet, men gör också att det tar längre tid att kontakta webserver.</t>
 </str>
 
 <str id="94">
@@ -561,12 +561,12 @@ demonstrationscertifikat som följer med Roxen.</t>
 
 <str id="97">
 <o>Where to store the file, may be relative to %s.</o>
-<t>Var filen ska sparas, kan vara relatvit till %s i filsystemet.</t>
+<t>Var filen ska sparas, kan vara relativt till %s i filsystemet.</t>
 </str>
 
 <str id="98">
 <o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
-<t>En fil i det riktiga filsystemet där den hemliga nyckeln kommer att sparas. Det här är det filnamn som du skiverin i nyckelfilsfältet när du konfigurerar en SSL-port.</t>
+<t>En fil i det riktiga filsystemet där den hemliga nyckeln kommer att sparas. Det här är det filnamn som du skiver in i nyckelfilsfältet när du konfigurerar en SSL-port.</t>
 </str>
 
 <str id="99">
@@ -618,7 +618,7 @@ Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält 
 
 <str id="108">
 <o>The organization name under which you are registered with some national or regional authority.</o>
-<t>Det officiellt registrerade organistationsnamnet.</t>
+<t>Det officiellt registrerade organisationsnamnet.</t>
 </str>
 
 <str id="109">
@@ -681,12 +681,12 @@ idag, vill du att certifikatet ska vara giltigt?</t>
 
 <str id="120">
 <o>Wrote %d-bit key in %s</o>
-<t>Skrev en %d-bittars nyckel i %s</t>
+<t>Skrev en %d-bitars nyckel i %s</t>
 </str>
 
 <str id="121">
 <o>Generate a Certificate Signing Request and an RSA key...</o>
-<t>Generera en certifikatsignerings förfrågan och en RSA nyckel...</t>
+<t>Generera en certifikatsigneringsförfrågan och en RSA-nyckel...</t>
 </str>
 
 <str id="122">
@@ -699,17 +699,17 @@ idag, vill du att certifikatet ska vara giltigt?</t>
 <t>Ett X.509-certifikat associerar ett s.k. 'Common Name' med en
 publik nyckel. En del certifikattillhandahållare tillåter utökade
 certifikat, som specifieras i PKCS#10. Ett utökat certifikat kan
-innehållan annan användbar information, förutom namnet på nyckeln.</t>
+innehålla annan användbar information, förutom namnet på nyckeln.</t>
 </str>
 
 <str id="124">
 <o>Email address</o>
-<t>Email adress</t>
+<t>Email-adress</t>
 </str>
 
 <str id="125">
 <o>An email address to be embedded in the certificate.</o>
-<t>En email adress att associera med certifikatet</t>
+<t>En email-adress att associera med certifikatet</t>
 </str>
 
 <str id="126">
@@ -767,7 +767,7 @@ för att identifiera dig.</t>
 <str id="40">
 <o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
 <t>För att använda SSL på din sajt så måste du först ha skapat ett
-nyckelpar. Den ena halvan ska hållas hemlig</t>
+nyckelpar. Den ena halvan ska hållas hemlig.</t>
 </str>
 
 <str id="42">
@@ -795,7 +795,7 @@ kan du använda den här för att byta vilken som körs.</t>
 
 <str id="46">
 <o>Change Roxen version</o>
-<t>Ändra roxenversion</t>
+<t>Ändra Roxenversion</t>
 </str>
 
 <str id="47">
@@ -827,7 +827,7 @@ kan du använda den här för att byta vilken som körs.</t>
 <o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t>Om du ändrar till en av de här Roxenversionerna så kommer du inte
 kunna byta tillbaka igen från administrationsgränssnittet, du måste
-istället editera filen %O manuellt och sedan ta ner server, och köra
+istället redigera filen %O manuellt och sedan ta ner server, och köra
 %O manuellt.</t>
 </str>
 
