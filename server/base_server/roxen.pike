@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1112 2012/02/18 01:14:34 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1113 2012/02/27 23:32:11 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5664,8 +5664,10 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
     report_debug(">> ### Thread 0x%x%s:\n",
 		 thread->id_number(),
 		 thread_descr);
+    // Use master()->describe_backtrace to sidestep the background
+    // failure wrapper that's active in RUN_SELF_TEST.
     report_debug(">> " +
-		 replace (describe_backtrace (thread->backtrace()),
+		 replace (master()->describe_backtrace (thread->backtrace()),
 			  "\n", "\n>> ") +
 		 "\n");
   }
