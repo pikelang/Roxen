@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.474 2012/02/08 00:52:14 jonasw Exp $
+// $Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.474 2012/02/08 00:52:14 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1837,12 +1837,15 @@ protected class SQLTimeout(protected Sql.Sql real)
   }
 }
 
+//!
 protected class SQLResKey
 {
   protected Sql.sql_result real;
   protected SQLKey key;
 
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 
   protected void create (Sql.sql_result real, SQLKey key)
   {
@@ -1974,6 +1977,7 @@ protected class SQLResKey
   }
 }
 
+//!
 protected class SQLKey
 {
   protected Sql.Sql real;
@@ -2021,7 +2025,9 @@ protected class SQLKey
     return [object(Sql.sql_result)] (object) SQLResKey (o, this);
   }
 
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 #ifdef DB_DEBUG
   protected string bt;
 #endif
