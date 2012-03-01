@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.148 2011/07/20 17:21:08 mast Exp $
+// $Id: cache.pike,v 1.149 2012/03/01 18:55:02 grubba Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -68,8 +68,8 @@ void set_total_size_limit (int size)
   update_cache_size_balance();
 }
 
-class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
+class CacheEntry (mixed key, mixed data)
 {
   // FIXME: Consider unifying this with CacheKey. But in that case we
   // need to ensure "interpreter lock" atomicity below.
