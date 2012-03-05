@@ -83,7 +83,8 @@ mapping(AFS.Types.ClientMessage:multiset(AFS.ClientSession.Subscription))
 client_subscriptions = ([]);
 
 //! Register all @expr{"filesystem-actions"@} provider modules.
-//! Typically called from @[start()].
+//!
+//! Typically called from @[start()] or @[ready_to_receive_requests()].
 protected void init_action_modules(Configuration conf)
 {
   fs_actions = ([]);

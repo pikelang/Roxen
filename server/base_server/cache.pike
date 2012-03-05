@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.149 2012/03/01 18:55:02 grubba Exp $
+// $Id: cache.pike,v 1.150 2012/03/05 13:55:10 grubba Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -502,6 +502,7 @@ class CM_GreedyDual
   inherit CacheManager;
 
   class CacheEntry
+  //!
   {
     inherit global::CacheEntry;
 
