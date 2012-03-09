@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.668 2012/03/09 10:23:33 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.669 2012/03/09 10:48:29 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -11962,7 +11962,7 @@ the respective attributes below for further information.</p></desc>
    <if defined=\"if&#0;person\">
      <div>
        <if person=\"Matt\">Yes, it's Matt!</if>
-       <else>No Matt</else></if>
+       <else>No Matt</else>
     </div>
    </if>
 
