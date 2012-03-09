@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.666 2012/02/21 13:10:07 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.667 2012/03/09 08:13:18 erikd Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -11938,6 +11938,35 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='defined' value='define' required='required'><p>
  Choose what define to test.</p>
+ <p>The define is <em>type</em>&amp;#0;<em>name-of-define</em> currently
+    there are two:</p>
+ <ul>
+   <li>tag&amp;#0;<em>name-of-define</em></li>
+   <li>if&amp;#0;<em>name-of-define</em></li>
+ </ul>
+ <ex>
+   <define tag=\"hello-world\">Hello world</define>
+   <define container=\"say-hello\">Hello, <contents/></define>
+   <define if=\"person\">Matt</define>
+
+   <if defined=\"tag&#0;hello-world\">
+     <div><hello-world/>!!</div>
+   </if>
+
+   <if defined=\"tag&#0;say-hello\">
+     <div><say-hello>Matt</say-hello></div>
+   </if>
+
+   <if defined=\"if&#0;person\">
+     <div>
+       <if person=\"Matt\">Yes, it's Matt!</if>
+       <else>No Matt</else></if>
+    </div>
+   </if>
+
+   <if defined=\"tag&#0;non-defined-thing\"><non-defined-thing/></if>
+   <else><div>&lt;non-defined-thing/&gt; is not defined</div></else>
+ </ex>
 </attr>",
 
 //----------------------------------------------------------------------
