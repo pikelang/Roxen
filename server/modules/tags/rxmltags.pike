@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.667 2012/03/09 08:13:18 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.668 2012/03/09 10:23:33 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -11938,8 +11938,10 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='defined' value='define' required='required'><p>
  Choose what define to test.</p>
- <p>The define is <em>type</em>&amp;#0;<em>name-of-define</em> currently
-    there are two:</p>
+ <p>The define should be provided as
+    <em>type</em>&amp;#0;<em>name-of-define</em>, i.e. the type
+    and the name separated by a NUL (ASCII 0) character. Currently there
+    are two alternatives:</p>
  <ul>
    <li>tag&amp;#0;<em>name-of-define</em></li>
    <li>if&amp;#0;<em>name-of-define</em></li>
