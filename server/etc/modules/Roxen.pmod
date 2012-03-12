@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.313 2011/10/03 13:14:09 mast Exp $
+// $Id: Roxen.pmod,v 1.314 2012/03/12 13:26:38 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4860,7 +4860,9 @@ void set_cookie( RequestID id,
                  string value, 
                  int|void expire_time_delta, 
                  string|void domain, 
-                 int(1..1)|string|void path )
+                 int(1..1)|string|void path,
+                 string|void secure,
+                 string|void httponly)
 //! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
 //! header in the response that will be made from @[id].
 //!
@@ -4888,6 +4890,8 @@ void set_cookie( RequestID id,
 
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
   if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
+  if( secure ) cookie += "; secure";
+  if( httponly ) cookie += "; HttpOnly";
   id->add_response_header ("Set-Cookie", cookie);
 }
 

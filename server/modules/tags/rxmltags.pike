@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.649 2011/11/30 21:41:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.650 2012/03/12 13:26:04 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1762,7 +1762,8 @@ class TagSetCookie {
       int t;
       if(args->persistent) t=-1; else t=Roxen.time_dequantifier(args);
       Roxen.set_cookie( id,  args->name, (args->value||""), t, 
-                        args->domain, args->path );
+                        args->domain, args->path,
+                        args->secure, args->httponly );
       return 0;
     }
   }
@@ -10683,6 +10684,17 @@ After: &var.language;<br /></ex>
 
 <attr name='path' value='string' default=\"\"><p>
  The path in which the cookie should be available.</p>
+</attr>
+
+<attr name='secure'>
+  <p>If this attribute is present the cookie will be set with the Secure
+  attribute. The Secure flag instructs the user agent to use only
+  (unspecified) secure means to contact the origin server whenever it
+  sends back the cookie. If the browser supports the secure flag, it will not send the cookie when the request is going to an HTTP page.</p>
+</attr>
+
+<attr name='httponly'>
+  <p>If this attribute is present the cookie will be set with the HttpOnly attribute. If the browser supports the HttpOnly flag, the cookie will be secured from being accessed by a client side script.</p>
 </attr>
 ",
 
