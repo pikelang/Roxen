@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: memory_logger.pike,v 1.3 2011/08/22 11:42:29 wellhard Exp $";
+constant cvs_version = "$Id: memory_logger.pike,v 1.4 2012/03/12 15:36:47 grubba Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOGGER;
@@ -22,10 +22,18 @@ constant module_doc  =
   "<tr><td>OBJ:</td> <td>Object megabytes </td></tr>"
   "<tr><td>PRO:</td> <td>Program megabytes </td></tr>"
   "<tr><td>STR:</td> <td>String megabytes </td></tr>"
+  "<tr><td>TYP:</td> <td>Type megabytes </td></tr>"
   "<tr><td>TOT:</td> <td>Total pike megabytes </td></tr>"
+  "<tr><td>COM:</td> <td>Consolidated compiler megabytes </td></tr>"
+  "<tr><td>RUN:</td> <td>Consolidated run-time overhead megabytes </td></tr>"
+  "<tr><td>GC:</td> <td>Consolidated gc overhead megabytes </td></tr>"
+  "<tr><td>MAL:</td> <td>Total allocated megabytes (if available) </td></tr>"
+  "<tr><td>USE:</td> <td>Total in use megabytes (if available) </td></tr>"
   "<tr><td>RES:</td> <td>Resident megabytes </td></tr>"
   "<tr><td>VIR:</td> <td>Virtual megabytes </td></tr>"
-  "</table>";
+  "</table>"
+  "<p><b>Note:</b> Other versions of this module may "
+  "add or remove columns.</p>";
 
 void create(Configuration c) 
 {
@@ -99,19 +107,22 @@ void log_memory()
     pmem->call_out_bytes +
     pmem->callable_bytes +
     pmem->callback_bytes +
-    pmem->frame_bytes +
+    pmem->pike_frame_bytes +
     pmem->mapping_bytes + 
     pmem->multiset_bytes + 
     pmem->object_bytes +
     pmem->program_bytes +
-    pmem->string_bytes;
+    pmem->string_bytes +
+    pmem->pike_type_bytes;
 
   string res = 
     sprintf("%s "
 	    "ARR: %:3d, CLO: %:2d, CLA: %:2d, "
 	    "CLB: %:2d, FRM: %:2d, MAP: %:3d, "
 	    "MUL: %:3d, OBJ: %:3d, PRO: %:3d, "
-	    "STR: %:3d, TOT: %:4d, "
+	    "STR: %:3d, TYP: %:3d, TOT: %:4d, "
+	    "COM: %:3d, RUN: %:3d, GC: %:3d, "
+	    "MAL: %:4d, USE: %:4d, "
 	    "RES: %:4d, VIR: %:4d\n", 
 	    t, 
 	    pmem->array_bytes/1048576, 
@@ -119,7 +130,7 @@ void log_memory()
 	    pmem->callable_bytes/1048576, 
 
 	    pmem->callback_bytes/1048576, 
-	    pmem->frame_bytes/1048576, 
+	    pmem->pike_frame_bytes/1048576, 
 	    pmem->mapping_bytes/1048576, 
 
 	    pmem->multiset_bytes/1048576, 
@@ -127,7 +138,21 @@ void log_memory()
 	    pmem->program_bytes/1048576, 
 
 	    pmem->string_bytes/1048576,
+	    pmem->pike_type_bytes/1048576,
 	    pmem_tot/1048576, 
+
+	    (pmem->node_s_bytes +
+	     pmem->supporter_marker_bytes)/1048576,
+	    (pmem->catch_context_bytes +
+	     pmem->pike_frame_bytes)/1048576,
+	    (pmem->ba_mixed_frame_bytes +
+	     pmem->destroy_called_mark_bytes +
+	     pmem->gc_rec_frame_bytes +
+	     pmem->marker_bytes +
+	     pmem->mc_marker_bytes)/1048576,
+
+	    pmem->malloc_block_bytes/1048576,
+	    pmem->malloc_bytes/1048576,
 
 	    rmem->resident/1024, 
 	    rmem->virtual/1024);
