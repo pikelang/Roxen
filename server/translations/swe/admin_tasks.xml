@@ -289,10 +289,7 @@ processen försvinner efter senast 15 minuter.</t>
 <t>version</t>
 </str>
 
-<str id="38">
-<o>backend thread</o>
-<t>backend-tråden</t>
-</str>
+
 
 <str id="39">
 <o>Thread</o>
@@ -1181,10 +1178,7 @@ istället redigera filen %O manuellt och sedan ta ner server, och köra
 <t>Plattform:</t>
 </str>
 
-<str id="341">
-<o>Platform</o>
-<t>Plattform</t>
-</str>
+
 
 <str id="342">
 <o>Target version:</o>
@@ -1526,4 +1520,9 @@ Pike-interpretatorn.</t>
 <o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
 <t>Du kan också använda kommandoradsverktyget bin/rxnpatch för att hantera
 patchar, exempelvis för att importera flera stycken på en gång.</t>
+</str>
+
+<str id="406">
+<o>Repeated action request ignored &amp;ndash; server process ID is different.</o>
+<t>Upprepad förfrågan ignorerad &amp;ndash; serverns process-ID är annorlunda.</t>
 </str>

@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.16 2012/02/07 21:10:30 jonasw Exp $
+ * $Id: restart.pike,v 1.17 2012/03/14 16:22:20 jonasw Exp $
  */
 
 #include <config_interface.h>
@@ -30,7 +30,7 @@ mixed parse( RequestID id )
       ignore_msg =
 	"<br />"
 	"<p><font color='&usr.warncolor;'>" +
-	LOCALE(0, "Repeated action request ignored &ndash; "
+	LOCALE(406, "Repeated action request ignored &ndash; "
 	       "server process ID is different.") +
 	"</font></p>";
       what = 0;

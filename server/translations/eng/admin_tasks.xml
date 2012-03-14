@@ -286,10 +286,7 @@
 <t></t>
 </str>
 
-<str id="38">
-<o>backend thread</o>
-<t></t>
-</str>
+
 
 <str id="39">
 <o>Thread</o>
@@ -1159,10 +1156,7 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="341">
-<o>Platform</o>
-<t></t>
-</str>
+
 
 <str id="342">
 <o>Target version:</o>
@@ -1491,5 +1485,10 @@ the Pike interpreter.</o>
 
 <str id="405">
 <o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
+<t></t>
+</str>
+
+<str id="406">
+<o>Repeated action request ignored &amp;ndash; server process ID is different.</o>
 <t></t>
 </str>
