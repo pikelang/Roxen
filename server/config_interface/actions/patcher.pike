@@ -633,12 +633,13 @@ mixed parse(RequestID id)
     // Do we need to restart?
     if (flags->restart)
     {
+      string pid = (string)getpid();
       res += "<blockquote><br />\n"
 	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-             width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
+    <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" +
+	pid + #"' width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") +
 #" </gbutton>
   </cf-perm>
 
