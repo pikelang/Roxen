@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.103 2012/03/16 09:26:35 marty Exp $
+// $Id: DBManager.pmod,v 1.104 2012/03/16 10:06:08 marty Exp $
 
 //! Manages database aliases and permissions
 
@@ -630,11 +630,12 @@ private class SqlSqlStaleChecker (protected Sql.Sql sql)
   protected void _check_ping()
   {
     if (time(1)-_our_last_ping > _our_timeout)
-      werror ("Query attempted where last ping occurred more than %d seconds "
-	      "ago. Something is probably holding on to Sql.Sql connections "
-	      "longer than it should. Backtrace: \n%s\n",
+      werror ("Query attempted on connection with latest activity more than %d"
+	      " seconds ago. Something is probably holding on to Sql.Sql "
+	      "connections longer than it should. Backtrace: \n%s\n",
 	      _our_timeout,
 	      describe_backtrace(backtrace()));
+    _our_last_ping = time (1); // Reset timestamp when running queries.
   }
 
   protected mixed `[]( string i )
