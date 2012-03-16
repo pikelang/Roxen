@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.102 2011/09/12 10:54:42 grubba Exp $
+// $Id: DBManager.pmod,v 1.103 2012/03/16 09:26:35 marty Exp $
 
 //! Manages database aliases and permissions
 
@@ -616,6 +616,49 @@ mapping(string:mixed) get_db_url_info(string db)
   return d;
 }
 
+#ifdef MODULE_DEBUG
+private class SqlSqlStaleChecker (protected Sql.Sql sql)
+{
+  // Wrapper to check that connections aren't held on to by modules
+  // for too long, in MODULE_DEBUG mode. Modules should fetch
+  // connections via the DBManager to make sure timeouts are handled
+  // correctly.
+
+  int _our_last_ping = time (1);
+  constant _our_timeout = 10;
+
+  protected void _check_ping()
+  {
+    if (time(1)-_our_last_ping > _our_timeout)
+      werror ("Query attempted where last ping occurred more than %d seconds "
+	      "ago. Something is probably holding on to Sql.Sql connections "
+	      "longer than it should. Backtrace: \n%s\n",
+	      _our_timeout,
+	      describe_backtrace(backtrace()));
+  }
+
+  protected mixed `[]( string i )
+  {
+    switch (i) {
+    case "ping":
+      _our_last_ping = time (1);
+      break;
+    case "query":
+    case "typed_query":
+    case "big_query":
+    case "big_typed_query":
+    case "streaming_query":
+      _check_ping();
+      break;
+    }
+    return sql[i];
+  }
+  protected mixed `->( string i )
+  {
+    return `[](i);
+  }
+}
+#endif
 
 Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
 		 void|string charset)
@@ -639,20 +682,30 @@ Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
   mapping(string:mixed) d = get_db_url_info(db);
   if( !d ) return 0;
 
-  if( (int)d->local )
-    return connect_to_my_mysql( user, db, reuse_in_thread,
-				charset || d->default_charset );
+  Sql.Sql res;
 
-  // Otherwise it's a tad more complex...  
-  if( has_suffix (user, "_ro") )
+  if( (int)d->local ) {
+    res = connect_to_my_mysql( user, db, reuse_in_thread,
+			       charset || d->default_charset );
+  }
+  // Otherwise it's a tad more complex...
+  else if( has_suffix (user, "_ro") ) {
     // The ROWrapper object really has all member functions Sql.Sql
     // has, but they are hidden behind an overloaded index operator.
     // Thus, we have to fool the typechecker.
-    return [object(Sql.Sql)](object)
+    res = [object(Sql.Sql)](object)
       ROWrapper( sql_cache_get( d->path, reuse_in_thread,
 				charset || d->default_charset) );
-  return sql_cache_get( d->path, reuse_in_thread,
-			charset || d->default_charset);
+  } else {
+    res = sql_cache_get( d->path, reuse_in_thread,
+			 charset || d->default_charset);
+  }
+
+#ifdef MODULE_DEBUG
+  return [object(Sql.Sql)](object)SqlSqlStaleChecker (res);
+#else
+  return res;
+#endif
 }
 
 Sql.Sql get_sql_handler(string db_url)
