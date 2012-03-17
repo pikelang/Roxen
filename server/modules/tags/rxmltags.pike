@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.671 2012/03/12 12:44:27 rineke Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.672 2012/03/17 20:17:47 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -643,15 +643,22 @@ class TagExpireTime {
 class TagHeader {
   inherit RXML.Tag;
   constant name = "header";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
+  constant flags = RXML.FLAG_NONE;
+  mapping(string:RXML.Type) opt_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
 					       "value": RXML.t_text(RXML.PEnt) ]);
-  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+  array(RXML.Type) result_types = ({RXML.t_any}); // Variable result.
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      if (!args->name || !args->value) {
+	// HTML 5.0 header tag.
+	// FIXME: return ({ propagate_tag(args, content) });
+	return ({
+	  result_type->format_tag("header", args, content, UNDEFINED)
+	});
+      }
       string name = Roxen.canonicalize_http_header (args->name) || args->name;
 
       if(name == "WWW-Authenticate") {
