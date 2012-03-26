@@ -791,7 +791,7 @@ mapping|string parse( RequestID id )
 		  replace (Roxen.html_encode_string (
 			     String.trim_all_whites (describe_error(err))),
 			   "\n", "<br/>\n"))+
-	  "</p>\n";
+	  "</font></p>\n";
 	continue;
       }
       float qtime = (gethrtime()-h)/1000000.0;
