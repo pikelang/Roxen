@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.67 2010/04/22 09:55:48 grubba Exp $
+# $Id: extensions,v 1.68 2012/03/28 12:14:18 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to
@@ -49,14 +49,17 @@ gsm	audio/gsm
 la      audio/x-nspaudio
 lma     audio/x-nspaudio
 m3u	audio/x-mpegurl
+m4a	audio/mp4
 mid	audio/midi
 midi	audio/midi
 mod	audio/x-mod
 mp2	audio/mpeg
 mp3	audio/mpeg
 mp3url	audio/x-mpegurl
+mp4	audio/mp4
 ##mpa	audio/mpeg
 mpega	audio/mpeg
+ogg	audio/ogg
 pls	audio/x-mpegurl
 psid	audio/x-psid
 ra	audio/x-pn-realaudio
