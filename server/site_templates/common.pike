@@ -7,16 +7,22 @@
 //!
 //! Modules to include in the configuration. Any @tt{VAR_INITIAL@}
 //! variables in them get shown in the wizard to be set by the user.
+//!
+//! Use "!" as separator for multiple module copies in this array,
+//! e.g. "filesystem!1".
 
 //! @decl optional array(string) silent_modules = ({});
 //!
 //! Silent modules do not get their @tt{VAR_INITIAL@} variables shown.
+//!
+//! In this array the normal "#" separator is used in module copy
+//! specs, e.g. "filesystem#1".
 
 int unlocked(License.Key license)
 {
   foreach(this->modules || ({}), string module)
-    if(!license->is_module_unlocked(module))
-      return 0;
+    if(!license->is_module_unlocked((module / "!")[0]))
+       return 0;
   return 1;
 }
 
@@ -33,6 +39,7 @@ object load_modules(Configuration conf)
 
   foreach( this->modules || ({}), string mod )
   {
+    mod = replace (mod, "!", "#");
     RoxenModule module;
 
     // Enable the module but do not call start or save in the
@@ -123,6 +130,7 @@ int form_is_ok( RequestID id )
   Configuration conf = id->misc->new_configuration;
   foreach( this->modules || ({}), string mod )
   {
+    mod = replace (mod, "!", "#");
     ModuleInfo mi = roxen.find_module( mod );
     if( mi )
     {
@@ -180,6 +188,7 @@ mixed parse( RequestID id, mapping|void opt )
 
     foreach( this->modules || ({}), string mod )
     {
+      mod = replace (mod, "!", "#");
       RoxenModule module = conf->find_module( mod );
       if(module)
 	conf->call_start_callbacks( module,
