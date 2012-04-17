@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.30 2012/04/17 12:55:08 erikd Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.31 2012/04/17 13:52:32 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -38,7 +38,7 @@ will be created in it."))
     ->set_invisibility_check_callback (lambda () {
 					 return !query ("enable-shared-db");
 				       });
-  defvar ("use-prestate", 0,
+  defvar ("use-prestate-51", 1,
 	  "Use prestate as fallback",
 	  TYPE_FLAG,
 	  #"If set to Yes, prestates will be used as fallback for users without
@@ -75,7 +75,7 @@ class EntityClientSession {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable = 0;
-    if( query("use-prestate") ) {
+    if( query("use-prestate-51") ) {
       multiset prestates = filter(c->id->prestate,
 				  lambda(string in) {
 				  return has_prefix(in, "RoxenUserID="); } );
@@ -169,7 +169,7 @@ class TagForceSessionID {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      if( query("use-prestate") ) {
+      if( query("use-prestate-51") ) {
 	int prestate = sizeof(filter(id->prestate,
 				     lambda(string in) {
 				       return has_prefix(in, "RoxenUserID");
