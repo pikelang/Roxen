@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.30 2012/04/17 09:13:04 erikd Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.31 2012/04/17 12:11:32 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -39,15 +39,15 @@ will be created in it."))
 					 return !query ("enable-shared-db");
 				       });
   defvar ("use-prestate", 0,
-	  "Use prestate to verify cookie",
+	  "Use prestate as fallback",
 	  TYPE_FLAG,
-	  "If set to Yes, a redirect will be issued so that the request "
-	  "will contain a prestate, that will be checked against the "
-	  "cookie value. And it will mean that there will be two requests "
-	  "in order for force-session-id to complete for clients that supports "
-	  "cookies. For client that don't support cookies there will be one "
-	  "request, and it affects SEO due to the redirect that will serve the "
-	  "same page but with another url."
+	  #"If set to Yes, prestates will be used as fallback for users without
+cookie support. One or more redirects will then be issued by
+&lt;force-session-id&gt; to retain the session either in a cookie or
+in the prestate. See the documentation for &lt;force-session-id&gt;
+for details. Note that the prestates affect SEO due to the redirects
+that will serve the same pages through different url's. This setting
+is therefore deprecated, but exists for backward compatibility."
 	  );
 }
 
@@ -287,32 +287,53 @@ scope that is created inside the session tag.</p></attr>
   // ------------------------------------------------------------
 
   "&client.session;":#"<desc type='entity'> <p><short>Contains a session key for the user or
-nothing.</short> The session key is primary taken from the RoxenUserID
-cookie. If there is no such cookie it will return the value in the
-prestate that begins with \"RoxenUserID=\" if the module is configured to use prestate.
-Also, if the module is configured to use prestate and both the cookie and such a prestate
-exists the client.session variable will be empty.
-However the module is configured to set the cookie, this approach allows the 
-client.session variable to be used together with <tag>force-session-id</tag>.
-Note that the Session tag module must be loaded for this entity to exist.</p></desc>",
+nothing.</short> The session key is taken from the RoxenUserID cookie.</p>
+<p>RoxenUserID cookie is set through the \"Set unique browser id cookies\" option in the http protocol
+module (located under the server ports tab) or by using the <tag>force-session-id</tag> tag.</p>
+<p>If configured to use prestate (which is deprecated) its value can be retrieved from:</p>
+<list type='ul'>
+  <item><p>Prestate that begins with \"RoxenUserID=\" if there is no RoxenUserID
+           cookie.</p></item>
+  <item><p>If both the cookie and such a prestate exists the
+     client.session variable will be empty. This happens when
+     <tag>force-session-id</tag> would generate a redirect, and
+     can be used to skip the rest of the page (see the example
+     for that tag).</p></item>
+</list>
+<p>Note that the Session tag module must be loaded for this entity to exist.</p></desc>",
 
   // ------------------------------------------------------------
 
-  "force-session-id":#"<desc tag='tag'><p>Forces a session id to be set in the variable
-client.session. The heuristics is as follows: If the RoxenUserID
-cookie is set, use its value. Then, depending on the settings of this module, there are two
-ways the session cookie is set:</p>
-  <list type='ul'>
-    <item><p>If no RoxenUserID cookie exists, headers to set the cookie is generated. The client.session variable is set and usable immediately during the request from then on. If the client do not support cookies or has cookies turned off, each request the force-session-id tag is used, the session key will have a different value. This is the default behavior. If this approach is
-undesirable, there is an alternative way next.</p></item>
-    <item><p>If no RoxenUserID cookie exist, a redirect to the same page but with a prestate containing a newly generated session key together with a Set-Cookie header with the same key as value. If both the RoxenUserID cookie and the session prestate is set, redirect back to the same page without any session prestate set. I.e. 2 requests for client that supports cookies, and only one request for clients that don't. The module must be configured to do these redirects.</p></item>
+  "force-session-id":#"<desc tag='tag'><p><short>Forces a session id to be set in the variable <ent>client.session</ent>.</short></p>
+<p>Depending on the settings of this module, there are two ways the session cookie is set:</p>
+<list type='ul'>
+  <item>
+    <p><b>Default</b><p>If no RoxenUserID cookie exists, headers to set the cookie
+       is generated. The client.session variable is set and usable immediately during
+       the request from then on. If the client do not support cookies or has cookies turned
+       off, each request the force-session-id tag is used, the session key will have a
+       different value.</p></item>
+    <item><p><b>Deprecated</b></p>
+          <p>If no RoxenUserID cookie exist, a redirect is made to the same page with
+a prestate containing a newly generated session key together with a Set-Cookie
+header with the same key as value. The prestate is used if the cookie cannot be set. If both the RoxenUserID cookie and the session prestate is set, it redirects back to the same page without any prestate. I.e. two redirects for client that supports cookies, and one redirect for clients that don't. Also note that the tag itself does not stop the RXML parser during these requests the redirects are made. This is why it is deprecated; the fallback only works as long as the prestate exists, secondly the search engines will have two urls containing the same content due to the redirects.</p></item>
   </list>
 
 <p>The RoxenUserID cookie can  be set automatically by the HTTP protocol module. Look
 at the option to enable unique browser id cookies under the server ports tab.</p>
 
 <ex-box><force-session-id/>
+  <!-- RXML code that uses &client.session;, e.g. as follows: -->
+<session id='&client.session;'>
+  ...
+</session>
+</ex-box>
+
+<p>Deprecated (when module is configured to use prestate):</p>
+<ex-box><force-session-id/>
 <if variable='client.session'>
+  <!-- client.session has a value when the RoxenUserID cookie exists or if cookie don't
+       exist but the prestate that starts with \"RoxenUserID=\" does. -->
   <!-- RXML code that uses &client.session;, e.g. as follows: -->
   <session id='&client.session;'>
     ...
@@ -320,8 +341,9 @@ at the option to enable unique browser id cookies under the server ports tab.</p
 </if>
 </ex-box>
 
-<ex-box><!-- To verify that client supports cookies on the server side: -->
-<nocache>
+<p>Example of how to do a separate test to verify if a client supports cookies,
+   server side:</p>
+<ex-box><nocache>
   <if variable=\"form.test-cookie = 1\">
     <if variable=\"cookie.testing_cookie = 1\">
       Cookies work
