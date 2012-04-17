@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.29 2011/05/03 21:18:16 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.30 2012/04/17 09:13:04 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -38,6 +38,17 @@ will be created in it."))
     ->set_invisibility_check_callback (lambda () {
 					 return !query ("enable-shared-db");
 				       });
+  defvar ("use-prestate", 0,
+	  "Use prestate to verify cookie",
+	  TYPE_FLAG,
+	  "If set to Yes, a redirect will be issued so that the request "
+	  "will contain a prestate, that will be checked against the "
+	  "cookie value. And it will mean that there will be two requests "
+	  "in order for force-session-id to complete for clients that supports "
+	  "cookies. For client that don't support cookies there will be one "
+	  "request, and it affects SEO due to the redirect that will serve the "
+	  "same page but with another url."
+	  );
 }
 
 void start() {
@@ -64,27 +75,31 @@ class EntityClientSession {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable = 0;
-    multiset prestates = filter(c->id->prestate,
-				lambda(string in) {
+    if( query("use-prestate") ) {
+      multiset prestates = filter(c->id->prestate,
+				  lambda(string in) {
 				  return has_prefix(in, "RoxenUserID="); } );
 
-    // If there is both a cookie and a prestate, then we're in the process of
-    // deciding session variable vehicle, and should thus return nothing.
-    if(c->id->cookies->RoxenUserID && sizeof(prestates))
-      return RXML.nil;
+      // If there is both a cookie and a prestate, then we're in the process of
+      // deciding session variable vehicle, and should thus return nothing.
+      if(c->id->cookies->RoxenUserID && sizeof(prestates))
+	return RXML.nil;
+      // If there is a UserID cookie, use that as our session identifier.
+      if(c->id->cookies->RoxenUserID)
+	return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
 
-    // If there is a UserID cookie, use that as our session identifier.
-    if(c->id->cookies->RoxenUserID)
-      return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
-
-    // If there is a RoxenUserID-prefixed prestate, use the first such
-    // prestate as session identifier.
-    if(sizeof(prestates)) {
-      string session = indices(prestates)[0][12..];
-      if(sizeof(session))
-	return ENCODE_RXML_TEXT(session, type);
+      // If there is a RoxenUserID-prefixed prestate, use the first such
+      // prestate as session identifier.
+      if(sizeof(prestates)) {
+	string session = indices(prestates)[0][12..];
+	if(sizeof(session))
+	  return ENCODE_RXML_TEXT(session, type);
+      }
+    } else {
+      if ( c->id->cookies->RoxenUserID ) {
+	return ENCODE_RXML_TEXT(c->id->cookies->RoxenUserID, type);
+      }
     }
-
     // Otherwise return nothing.
     return RXML.nil;
   }
@@ -154,52 +169,62 @@ class TagForceSessionID {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
-      int prestate = sizeof(filter(id->prestate,
-				   lambda(string in) {
-				     return has_prefix(in, "RoxenUserID");
-				   } ));
+      if( query("use-prestate") ) {
+	int prestate = sizeof(filter(id->prestate,
+				     lambda(string in) {
+				       return has_prefix(in, "RoxenUserID");
+				     } ));
 
-      string path_info = id->misc->path_info || "";
+	string path_info = id->misc->path_info || "";
 
-      // If there is no ID cooke nor prestate, redirect to the same page
-      // but with a session id prestate set.
-      if(!id->cookies->RoxenUserID && !prestate) {
-	multiset orig_prestate = id->prestate;
-	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
+	// If there is no ID cooke nor prestate, redirect to the same page
+	// but with a session id prestate set.
+	if(!id->cookies->RoxenUserID && !prestate) {
+	  multiset orig_prestate = id->prestate;
+	  string session_id = roxen.create_unique_id();
+	  id->prestate += (< "RoxenUserID=" + session_id >);
 
-	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
-					id->real_variables);
-	if (r->error)
-	  RXML_CONTEXT->set_misc (" _error", r->error);
-	if (r->extra_heads)
-	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
+	  mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+					  id->real_variables);
+	  if (r->error)
+	    RXML_CONTEXT->set_misc (" _error", r->error);
+	  if (r->extra_heads)
+	    RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 
-	// Don't trust that the user cookie setting is turned on. The effect
-	// might be that the RoxenUserID cookie is set twice, but that is
-	// not a problem for us.
-	id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie() );
-	id->prestate = orig_prestate;
-	return 0;
-      }
+	  // Don't trust that the user cookie setting is turned on. The effect
+	  // might be that the RoxenUserID cookie is set twice, but that is
+	  // not a problem for us.
+	  id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie(session_id) );
+	  id->prestate = orig_prestate;
+	  return 0;
+	}
 
-      // If there is both an ID cookie and a session prestate, then the
-      // user do accept cookies, and there is no need for the session
-      // prestate. Redirect back to the page, but without the session
-      // prestate. 
-      if(id->cookies->RoxenUserID && prestate) {
-	multiset orig_prestate = id->prestate;
-	id->prestate = filter(id->prestate,
-			      lambda(string in) {
-				return !has_prefix(in, "RoxenUserID");
-			      } );
-	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
-					id->real_variables);
-	id->prestate = orig_prestate;
-	if (r->error)
-	  RXML_CONTEXT->set_misc (" _error", r->error);
-	if (r->extra_heads)
-	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
-	return 0;
+	// If there is both an ID cookie and a session prestate, then the
+	// user do accept cookies, and there is no need for the session
+	// prestate. Redirect back to the page, but without the session
+	// prestate. 
+	if(id->cookies->RoxenUserID && prestate) {
+	  multiset orig_prestate = id->prestate;
+	  id->prestate = filter(id->prestate,
+				lambda(string in) {
+				  return !has_prefix(in, "RoxenUserID");
+				} );
+	  mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+					  id->real_variables);
+	  id->prestate = orig_prestate;
+	  if (r->error)
+	    RXML_CONTEXT->set_misc (" _error", r->error);
+	  if (r->extra_heads)
+	    RXML_CONTEXT->extend_scope ("header", r->extra_heads);
+	  return 0;
+	}
+      } else {
+	if ( !id->cookies->RoxenUserID ) {
+	  string session_id = roxen->create_unique_id();
+	  id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie( session_id ) );
+	  id->cookies->RoxenUserID = session_id;
+	  return 0;
+	}
       }
     }
   }
@@ -264,23 +289,27 @@ scope that is created inside the session tag.</p></attr>
   "&client.session;":#"<desc type='entity'> <p><short>Contains a session key for the user or
 nothing.</short> The session key is primary taken from the RoxenUserID
 cookie. If there is no such cookie it will return the value in the
-prestate that begins with \"RoxenUserID=\". However, if both the
-cookie and such a prestate exists the client.session variable will be
-empty. This allows the client.session variable to be used together
-with <tag>force-session-id</tag>. Note that the Session tag module
-must be loaded for this entity to exist.</p></desc>",
+prestate that begins with \"RoxenUserID=\" if the module is configured to use prestate.
+Also, if the module is configured to use prestate and both the cookie and such a prestate
+exists the client.session variable will be empty.
+However the module is configured to set the cookie, this approach allows the 
+client.session variable to be used together with <tag>force-session-id</tag>.
+Note that the Session tag module must be loaded for this entity to exist.</p></desc>",
 
   // ------------------------------------------------------------
 
   "force-session-id":#"<desc tag='tag'><p>Forces a session id to be set in the variable
 client.session. The heuristics is as follows: If the RoxenUserID
-cookie is set, use its value. Otherwise redirect to the same page but
-with a prestate containing a newly generated session key. If now both
-the RoxenUserID cookie and the session prestate is set, redirect back
-to the same page without any session prestate set. The RoxenUserID
-cookie should be set automatically by the HTTP protocol module. Look
-at the option to enable unique browser id cookies under the server
-ports tab.</p>
+cookie is set, use its value. Then, depending on the settings of this module, there are two
+ways the session cookie is set:</p>
+  <list type='ul'>
+    <item><p>If no RoxenUserID cookie exists, headers to set the cookie is generated. The client.session variable is set and usable immediately during the request from then on. If the client do not support cookies or has cookies turned off, each request the force-session-id tag is used, the session key will have a different value. This is the default behavior. If this approach is
+undesirable, there is an alternative way next.</p></item>
+    <item><p>If no RoxenUserID cookie exist, a redirect to the same page but with a prestate containing a newly generated session key together with a Set-Cookie header with the same key as value. If both the RoxenUserID cookie and the session prestate is set, redirect back to the same page without any session prestate set. I.e. 2 requests for client that supports cookies, and only one request for clients that don't. The module must be configured to do these redirects.</p></item>
+  </list>
+
+<p>The RoxenUserID cookie can  be set automatically by the HTTP protocol module. Look
+at the option to enable unique browser id cookies under the server ports tab.</p>
 
 <ex-box><force-session-id/>
 <if variable='client.session'>
@@ -289,7 +318,25 @@ ports tab.</p>
     ...
   </session>
 </if>
-</ex-box></desc>",
+</ex-box>
+
+<ex-box><!-- To verify that client supports cookies on the server side: -->
+<nocache>
+  <if variable=\"form.test-cookie = 1\">
+    <if variable=\"cookie.testing_cookie = 1\">
+      Cookies work
+    </if>
+    <else>
+     Your browser do not support cookies.
+    </else>
+  </if>
+  <else>
+    <set-cookie name=\"testing_cookie\" value=\"1\"/>
+    <redirect to=\"&page.path;?test-cookie=1\"/>
+  </else>
+</nocache>
+</ex-box>
+</desc>",
 
 ]);
 #endif
