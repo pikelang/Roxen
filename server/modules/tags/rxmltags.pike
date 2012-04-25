@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.672 2012/03/17 20:17:47 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.673 2012/04/25 16:06:27 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9419,7 +9419,13 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  Adds an HTTP header to the page sent back to the client.</short> For
  more information about HTTP headers please steer your browser to
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
-</p></desc>
+</p>
+
+<note><p>If not both name and value attributes are present, the tag is
+passed on to the output HTML assuming the intention is to make the HTML5
+header tag.</p></note>
+
+</desc>
 
 <attr name='name' value='string' required='required'>
  <p>The name of the header.</p>
