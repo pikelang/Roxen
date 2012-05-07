@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.283 2012/01/23 12:50:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.284 2012/05/07 18:11:03 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -978,10 +978,11 @@ class CacheKey
   //! @[cb] should not be a lambda that contains references to this
   //! object.
   {
-    // Relying on the interpreter lock here.
-    if (activation_cbs)
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (this && activation_cbs) {
       activation_cbs += ({({cb, args})});
+      // ^^^ Relying on the interpreter lock to here.
+    }
     else {
 #if 0
       werror ("Key %O already active - calling %O(%{%O, %})\n", this, cb, args);
@@ -993,10 +994,11 @@ class CacheKey
   void add_activation_list (array(array(CacheActivationCB|array)) cbs)
   // For internal use by merge_activation_list.
   {
-    // Relying on the interpreter lock here.
-    if (activation_cbs)
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (this && activation_cbs) {
       activation_cbs += cbs;
+      // ^^^ Relying on the interpreter lock to here.
+    }
     else
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
@@ -1015,9 +1017,8 @@ class CacheKey
   //! right away. If this key already is active then zero is returned
   //! and nothing is done.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // vvv Relying on the interpreter lock from here.
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (objectp (merge_target) && merge_target->add_activation_list) {
 	merge_target->add_activation_list (cbs);
 	// ^^^ Relying on the interpreter lock up to this call.
@@ -1039,10 +1040,10 @@ class CacheKey
   //! Activate the cache key. This must be called when the key is
   //! stored in a cache. Return nonzero if any callbacks got called.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       activation_cbs = 0;
+      // ^^^ Relying on the interpreter lock to here.
 
       array _destruction_cbs = destruction_cbs;
       // Remove destruction callbacks set to be removed at activation.
@@ -1067,8 +1068,7 @@ class CacheKey
   int activated()
   //! Returns nonzero iff the key is activated.
   {
-    // Relying on the interpreter lock here.
-    return !activation_cbs;
+    return this && !activation_cbs; // Relying on the interpreter on this line.
   }
 
   int activate_if_necessary()
@@ -1079,12 +1079,11 @@ class CacheKey
   // request but might still be in the recursive case. Ignore if you
   // can.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (sizeof (cbs)) {
-	if (this)
-	  // Relying on the interpreter lock here.
-	  activation_cbs = 0;
+	activation_cbs = 0;
+	// ^^^ Relying on the interpreter lock to here.
 	foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
 	  werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
