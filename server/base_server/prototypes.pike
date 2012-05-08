@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.284 2012/05/07 18:11:03 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.285 2012/05/08 12:53:36 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1068,7 +1068,9 @@ class CacheKey
   int activated()
   //! Returns nonzero iff the key is activated.
   {
-    return this && !activation_cbs; // Relying on the interpreter on this line.
+    return this &&
+      // Relying on the interpreter lock here.
+      !activation_cbs;
   }
 
   int activate_if_necessary()
