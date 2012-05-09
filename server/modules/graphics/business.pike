@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.158 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version = "$Id: business.pike,v 1.159 2012/05/09 09:14:03 jenny Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -853,7 +853,8 @@ constant tagdoc=([
 "diagram":({ #"<desc type='cont'><p><short>
  The <tag>diagram</tag> tag is used to draw pie, bar, or line charts
  as well as graphs.</short> It is quite complex with six internal
- tags.</p>
+ tags. Any added attribute not listed below will be passed on unchanged 
+ to the resulting img tag. </p>
 </desc>
 
 <attr name='do3d' value='number'><p>
