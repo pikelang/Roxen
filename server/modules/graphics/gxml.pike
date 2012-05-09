@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.57 2011/10/17 23:04:17 erikd Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.58 2012/05/09 13:52:12 jenny Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -611,7 +611,8 @@ constant tagdoc = ([
   "gxml": ({ #"<desc type='cont'><p><short>Manipulates images in different ways
     using layers.</short></p><p>It is possible to make much more advanced
     manipulation using <tag>gtext</tag><tag>/gtext</tag> than with for instance
-    <tag>cimg/</tag>.</p></desc>
+    <tag>cimg/</tag>. It is possible to pass attributes, such as the alt 
+    attribute, to the resulting tag by including them in the gxml tag.</p></desc>
     <attr name='url'><p>
       Instead of generating a <tag>img</tag> return the url to the generated
       image.

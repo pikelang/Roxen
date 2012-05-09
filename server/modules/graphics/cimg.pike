@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.90 2010/11/26 17:22:01 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.91 2012/05/09 13:52:12 jenny Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -30,7 +30,8 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
  Manipulates and converts images between different image
  formats.</short> Provides the tag <tag>cimg</tag> that makes it is
  possible to convert, resize, crop and in other ways transform
- images.</p>
+ images. It is possible to pass attributes, such as the alt attribute, 
+ to the resulting tag by including them in the cimg tag. </p>
 </desc>
 
 <attr name='src' value='url' required='required'><p>

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.673 2012/04/25 16:06:27 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.674 2012/05/09 13:52:12 jenny Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8798,7 +8798,9 @@ using the pre tag.
 
 "configimage":#"<desc type='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
- src attribute is required.
+ src attribute is required. It is possible to pass attributes, such as 
+ the title attribute, to the resulting tag by including them in the 
+ configimage tag.
 </p></desc>
 
 <attr name='src' value='string'>
@@ -9451,8 +9453,9 @@ header tag.</p></note>
  Generates an image tag with the correct dimensions in the width and height
  attributes.</short> These dimensions are read from the image itself, so the
  image must exist when the tag is generated. The image must also be in GIF,
- JPEG/JFIF, PNG, PSD or TIFF format. Note that the image content is not
- converted.</p>
+ JPEG/JFIF, PNG, PSD or TIFF format. It is possible to pass attributes, such 
+ as the alt attribute, to the resulting tag by including them in the imgs tag. 
+ Note that the image content is not converted.</p>
 
  <p>See also the <tag>emit source=\"imgs\"</tag> for retrieving
  the same image information without generating the output tag.
