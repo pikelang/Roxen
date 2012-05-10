@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: periodic-fetcher.pike,v 1.1 2012/01/23 15:54:53 wellhard Exp $";
+constant cvs_version = "$Id: periodic-fetcher.pike,v 1.2 2012/05/10 05:53:49 liin Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 
@@ -175,6 +175,10 @@ void ready_to_receive_requests()
     return;
   }
 
+  roxen.background_run(1, init_crawler);
+}
+
+void init_crawler() {  
   array(Event) events = fetch_events(query("crawl_src"));
   if(!events)
   {
