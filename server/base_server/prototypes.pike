@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.287 2012/05/10 16:15:00 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.288 2012/05/10 16:25:57 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2457,8 +2457,9 @@ class RequestID
     }
     else
       cur_val = value;
+    object /*(RXML.Context)*/ ctx;
     if (misc->defines && misc->defines[" _extra_heads"] &&
-	object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+	(ctx = RXML_CONTEXT))
       ctx->set_var (name, cur_val, "header");
     else
       hdrs[name] = cur_val;
@@ -2490,8 +2491,9 @@ class RequestID
   {
     if (!misc->moreheads) misc->moreheads = ([]);
     misc->moreheads[name] = value;
+    object/*(RXML.Context)*/ ctx;
     if (misc->defines && misc->defines[" _extra_heads"] &&
-	object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+	(ctx = RXML_CONTEXT))
       ctx->signal_var_change (name, "header", value);
   }
 
