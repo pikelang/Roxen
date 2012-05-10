@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.286 2012/05/10 16:12:07 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.287 2012/05/10 16:15:00 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1443,6 +1443,8 @@ class RequestID
     //! Contains the set of cookies that have been zapped in some way.
     protected mapping(string:string) eaten = ([]);
 
+
+    // cf RFC 2109.
     protected void create(string|array(string)|mapping(string:string)|void
 			  contents)
     {
@@ -1460,22 +1462,27 @@ class RequestID
       array tmp = arrayp(contents) ? contents : ({ contents});
   
       foreach(tmp, string cookieheader) {
-    
-	foreach(((cookieheader/";") - ({""})), string c)
+	array(int|string) tokens = MIME.tokenize(cookieheader);
+	foreach(tokens/({';'}), array(int|string) c)
 	{
-	  string name, value;
-	  while(sizeof(c) && c[0]==' ') c=c[1..];
-	  if(sscanf(c, "%s=%s", name, value) == 2)
-	  {
+	  array(array(int|string)) pair = c/({'='});
+	  if (sizeof(pair) < 2) continue;
+	  string name = MIME.quote(pair[0]);
+	  string value = MIME.quote(pair[1..]*({'='}));
+	  // FIXME: What about cookie-attributes?
+	  catch {
 	    value=_Roxen.http_decode_string(value);
+	  };
+	  catch {
 	    name=_Roxen.http_decode_string(name);
-	    real_cookies[ name ]=value;
+	  };
+	  real_cookies[ name ]=value;
+	  
 #ifdef OLD_RXML_CONFIG
-	    // FIXME: Really ought to register this one...
-	    if( (name == "RoxenConfig") && strlen(value) )
-	      config =  mkmultiset( value/"," );
+	  // FIXME: Really ought to register this one...
+	  if( (name == "RoxenConfig") && strlen(value) )
+	    config =  mkmultiset( value/"," );
 #endif
-	  }
 	}
       }
     }
