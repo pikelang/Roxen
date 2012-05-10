@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.725 2012/02/22 09:27:23 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.726 2012/05/10 17:48:29 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2755,9 +2755,10 @@ mapping error_file( RequestID id )
       //  The most popular 404 request ever? Skip the fancy error page.
       id->not_query == "/favicon.ico") {
     res = Roxen.http_string_answer("No such file", "text/plain");
+    res->error = 404;
   } else {
     id->root_id->misc->generate_file_not_found = 1;
-    string data = query("ZNoSuchFile");
+    string data = "<return code='404' />" + query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
     data = replace(data,({"$File", "$Me"}),
 		   ({"&page.virtfile;", "&roxen.server;"}));
@@ -2765,7 +2766,6 @@ mapping error_file( RequestID id )
     res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
     id->root_id->misc->generate_file_not_found = 0;
   }
-  res->error = 404;
   NOCACHE();
   return res;
 }
@@ -2779,11 +2779,10 @@ mapping auth_failed_file( RequestID id, string message )
 				 "<h2 align=center>Access Denied</h2>");
   id->root_id->misc->generate_auth_failed = 1;
   
-  string data = query("ZAuthFailed");
+  string data = "<return code='401' />" + query("ZAuthFailed");
   NOCACHE();
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
   id->root_id->misc->generate_auth_failed = 0;
-  res->error = 401;
   return res;
 }
 
