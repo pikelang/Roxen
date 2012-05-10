@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.126 2011/12/21 00:46:45 jonasw Exp $
+// $Id: global_variables.pike,v 1.127 2012/05/10 15:53:42 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -232,28 +232,22 @@ void set_up_ssl_variables( Protocol o )
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
-  string t, s;
+  string s = "nowhere";
+  string t;
 
   // FIXME: NT support.
 
   t = Stdio.read_bytes("/etc/resolv.conf");
-  if(t)
-  {
-    if(!sscanf(t, "domain %s\n", s))
-      if(!sscanf(t, "search %s%*[ \t\n]", s))
-        s="nowhere";
-  } else {
-    s="nowhere";
+  if (!t) return s;
+
+  if (!sscanf(t, "domain %s\n", s) && !sscanf(t, "search %s%*[ \t\n]", s)) {
+    return s;
   }
-  s = "host."+s;
-  sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown";
-  }
+
+  if (has_prefix(s, ".")) s = s[1..];
+  if (has_suffix(s, ".")) s = s[..sizeof(s)-2];
+  if (!sizeof(s)) return "unknown";
+
   return s;
 }
 
