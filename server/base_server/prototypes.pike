@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.285 2012/05/08 12:53:36 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.286 2012/05/10 16:12:07 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2421,7 +2421,7 @@ class RequestID
   //! ensure that the new header is registered properly in the RXML
   //! p-code cache. That's the primary reason to used it instead of
   //! adding the header directly to
-  //! @tt{misc->defines[" _extra_heads"]@} or @tt{misc->moreheads@}.
+  //! @tt{misc->defines[" _extra_heads"]@} and/or @tt{misc->moreheads@}.
   //!
   //! @note
   //! Although case is insignificant in http header names, it is
@@ -2433,8 +2433,7 @@ class RequestID
   //! @[set_response_header], @[add_or_set_response_header],
   //! @[get_response_headers], @[remove_response_headers]
   {
-    mapping(string:string|array(string)) hdrs =
-      misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
     if (!hdrs) hdrs = misc->moreheads = ([]);
 
     // Essentially Roxen.add_http_header inlined. Can't refer to it
@@ -2451,10 +2450,8 @@ class RequestID
     }
     else
       cur_val = value;
-
-    if (hdrs == misc->moreheads)
-      hdrs[name] = cur_val;
-    else if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+    if (misc->defines && misc->defines[" _extra_heads"] &&
+	object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
       ctx->set_var (name, cur_val, "header");
     else
       hdrs[name] = cur_val;
@@ -2484,15 +2481,11 @@ class RequestID
   //! @[add_or_set_response_header], @[get_response_headers],
   //! @[remove_response_headers]
   {
-    if (misc->defines && misc->defines[" _extra_heads"]) {
-      misc->defines[" _extra_heads"][name] = value;
-      if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
-	ctx->signal_var_change (name, "header", value);
-    }
-    else {
-      if (!misc->moreheads) misc->moreheads = ([]);
-      misc->moreheads[name] = value;
-    }
+    if (!misc->moreheads) misc->moreheads = ([]);
+    misc->moreheads[name] = value;
+    if (misc->defines && misc->defines[" _extra_heads"] &&
+	object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+      ctx->signal_var_change (name, "header", value);
   }
 
   void add_or_set_response_header (string name, string value)
@@ -2511,6 +2504,7 @@ class RequestID
 	  "Content-Language": 1,
 	  "Pragma": 1,
 	  "Proxy-Authenticate": 1,
+	  "Set-Cookie": 1,
 	  "Trailer": 1,
 	  "Transfer-Encoding": 1,
 	  "Upgrade": 1,
@@ -2552,29 +2546,27 @@ class RequestID
   //! i.e. headers that have been set using @[add_response_header] or
   //! @[set_response_header].
   {
-    array(string) res = ({});
-
-    foreach (({misc->defines && misc->defines[" _extra_heads"],
-	       misc->moreheads}),
-	     mapping(string:string|array(string)) hdrs)
-      if (hdrs) {
-	if (array(string)|string cur_val = hdrs[name]) {
-	  if (!value_prefix)
-	    res += arrayp (cur_val) ? cur_val : ({cur_val});
-	  else {
-	    if (arrayp (cur_val)) {
-	      foreach (cur_val, string val)
-		if (MATCH_TOKEN_PREFIX (val, value_prefix))
-		  res += ({val});
-	    }
-	    else
-	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
-		res += ({cur_val});
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
+    if (hdrs) {
+      if (array(string)|string cur_val = hdrs[name]) {
+	if (!value_prefix)
+	  return arrayp (cur_val) ? cur_val : ({cur_val});
+	else {
+	  if (arrayp (cur_val)) {
+	    array(string) res = ({});
+	    foreach (cur_val, string val)
+	      if (MATCH_TOKEN_PREFIX (val, value_prefix))
+		res += ({val});
+	    return res;
 	  }
+	  else
+	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
+	      return ({cur_val});
 	}
       }
+    }
 
-    return res;
+    return ({});
   }
 
   int remove_response_headers (string name, void|string value_prefix)
@@ -2590,7 +2582,7 @@ class RequestID
   //!
   //! @note
   //! This function only removes headers in
-  //! @tt{misc->defines[" _extra_heads"]@} and @tt{misc->moreheads@},
+  //! @tt{misc->defines[" _extra_heads"]@} and/or @tt{misc->moreheads@},
   //! i.e. headers that have been set using @[add_response_header] or
   //! @[set_response_header]. It's possible that a matching header
   //! gets sent anyway if it gets added later or through other means
@@ -2598,34 +2590,32 @@ class RequestID
   {
     int removed;
 
-    foreach (({misc->defines && misc->defines[" _extra_heads"],
-	       misc->moreheads}),
-	     mapping(string:string|array(string)) hdrs)
-      if (hdrs) {
-	if (array(string)|string cur_val = hdrs[name]) {
-	  if (!value_prefix) {
-	    m_delete (hdrs, name);
-	    removed = 1;
-	  }
-	  else {
-	    if (arrayp (cur_val)) {
-	      foreach (cur_val; int i; string val)
-		if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
-		  cur_val[i] = 0;
-		  removed = 1;
-		}
-	      cur_val -= ({0});
-	      if (sizeof (cur_val)) hdrs[name] = cur_val;
-	      else m_delete (hdrs, name);
-	    }
-	    else
-	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
-		m_delete (hdrs, name);
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
+    if (hdrs) {
+      if (array(string)|string cur_val = hdrs[name]) {
+	if (!value_prefix) {
+	  m_delete (hdrs, name);
+	  removed = 1;
+	}
+	else {
+	  if (arrayp (cur_val)) {
+	    foreach (cur_val; int i; string val)
+	      if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
+		cur_val[i] = 0;
 		removed = 1;
 	      }
+	    cur_val -= ({0});
+	    if (sizeof (cur_val)) hdrs[name] = cur_val;
+	    else m_delete (hdrs, name);
 	  }
+	  else
+	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
+	      m_delete (hdrs, name);
+	      removed = 1;
+	    }
 	}
       }
+    }
 
     return removed;
   }
