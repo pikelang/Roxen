@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.674 2012/05/09 13:52:12 jenny Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.675 2012/05/10 19:43:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -105,6 +105,14 @@ private object sexpr_funcs = class SExprFunctions
     {
       return RXML_CONTEXT->get_var (rxml_var_ref, scope);
     }
+
+    array regexp_split (string regexp, string data)
+    {
+      Regexp.PCRE.Plain re;
+      if (mixed err = catch (re = Regexp.PCRE.Widestring (regexp)))
+	RXML.parse_error (describe_error (err));
+      return re->split2 (data) || Val.false;
+    }
   }();
 
 private mapping(string:mixed) sexpr_constants = ([
@@ -141,6 +149,7 @@ private mapping(string:mixed) sexpr_constants = ([
   "search": sexpr_funcs->search,
   "reverse": reverse,
   "uniq": Array.uniq,
+  "regexp_split": sexpr_funcs->regexp_split,
 
   "INT": sexpr_funcs->INT,
   "FLOAT": sexpr_funcs->FLOAT,
@@ -10707,6 +10716,15 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>reverse(<i>expr</i>)</tt></p></c>
      <c><p>Returns the reverse of <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>regexp_split(<i>regexp</i>, <i>expr</i>)</tt></p></c>
+     <c><p>Matches <i>regexp</i> against the string <i>expr</i>. If it
+     matches then an array is returned that has the full match in the
+     first element, followed by what the corresponding submatches (if
+     any) match. Returns <ent>roxen.false</ent> if the regexp doesn't
+     match. The regexp follows
+     <a href='http://www.pcre.org/'>PCRE</a> syntax.</p></c></row>
  </xtable>
 
  <p>Expressions for array operands:</p>
