@@ -3840,3 +3840,29 @@ e</random></rxml>
   </rxml>
   <result>2</result>
 </test>
+
+
+<!-- ............................................................ -->
+<comment>sscanf</comment>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <sscanf variables="var.d,var.m,var.y"
+	    format="%s-%s-%s">&var.contents;</sscanf>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <nooutput>
+      <sscanf variables="var.d,var.m,var.y"
+	      format="%s-%s-%s">&var.contents;</sscanf>
+    </nooutput>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
+</test>

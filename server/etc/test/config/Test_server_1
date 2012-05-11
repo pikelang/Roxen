@@ -8,6 +8,7 @@
   <var name='roxen_test#0'>      <int>1</int> </var>
   <var name='rxmlparse#0'>       <int>1</int> </var>
   <var name='rxmltags#0'>        <int>1</int> </var>
+  <var name='additional_rxml#0'> <int>1</int> </var>
   <var name='sqltag#0'>          <int>1</int> </var>
 </region>
 
