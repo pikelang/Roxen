@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.430 2012/02/20 14:22:20 grubba Exp $
+// $Id: module.pmod,v 1.431 2012/05/11 00:23:04 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2866,7 +2866,7 @@ protected void set_nil_arg (mapping(string:mixed) args, string arg,
 // Helper to do the work to assign nil to an attribute value.
 {
   if (type->sequential)
-    args[arg] = type->empty_value;
+    args[arg] = type->copy_empty_value();
   else if (req_args[arg]) {
     nil_for_nonseq_error (id, type, " in attribute %s", format_short (arg));
     args[arg] = nil;		// < 5.0 compat.
@@ -4709,7 +4709,7 @@ class Frame
 			THIS_TAG_DEBUG ("Setting content to empty value: %s\n",
 					format_short (
 					  content_type->empty_value));
-			content = content_type->empty_value;
+			content = content_type->copy_empty_value();
 		      }
 		      else if (flags & FLAG_CONTENT_VAL_REQ)
 			parse_error ("Missing value for nonsequential "
@@ -4898,7 +4898,7 @@ class Frame
 			    THIS_TAG_DEBUG (
 			      "Setting content to empty value: %s\n",
 			      format_short (content_type->empty_value));
-			    content = content_type->empty_value;
+			    content = content_type->copy_empty_value();
 			  }
 			  else if (flags & FLAG_CONTENT_VAL_REQ)
 			    parse_error ("Missing value for nonsequential "
@@ -6355,7 +6355,7 @@ class Type
     // FOO
     if (res == nil) {
       if (sequential)
-	res = this->empty_value;
+	res = this->copy_empty_value();
       else
 	nil_for_nonseq_error (ctx->id, this);
     }
@@ -6442,6 +6442,11 @@ class Type
   //!
   //! The empty value, i.e. what eval ("") would produce. Must be
   //! defined for every sequential type.
+
+  mixed copy_empty_value();
+  //! Returns an instance of @[empty_value] such that provided it's
+  //! possible to modify it destructively, such modifications don't
+  //! affect @[empty_value].
 
   Type supertype;
   //! The supertype for this type.
@@ -6798,6 +6803,7 @@ protected class TIgnore
   constant type_name = "RXML.t_ignore";
   constant sequential = 1;
   mixed empty_value = nil;
+  mixed copy_empty_value() {return nil;}
   Type supertype = t_any;
   Type conversion_type = 0;
   constant free_text = 1;
@@ -6886,6 +6892,7 @@ class TArray
   constant type_name = "RXML.t_array";
   constant sequential = 1;
   constant empty_value = ({});
+  mixed copy_empty_value() {return ({});}
   Type supertype = t_any;
 
   constant container_type = 1;
@@ -6962,6 +6969,7 @@ class TMapping
   constant type_name = "RXML.t_mapping";
   constant sequential = 1;
   constant empty_value = ([]);
+  mixed copy_empty_value() {return ([]);}
   Type supertype = t_any_seq;
 
   constant container_type = 1;
@@ -7139,6 +7147,7 @@ class TNum
   constant type_name = "RXML.t_num";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7185,6 +7194,7 @@ class TInt
   constant type_name = "RXML.t_int";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_num;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7228,6 +7238,7 @@ class TFloat
   constant type_name = "RXML.t_float";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_num;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7284,6 +7295,7 @@ class TString
   constant type_name = "RXML.t_string";
   constant sequential = 1;
   constant empty_value = "";
+  mixed copy_empty_value() {return "";}
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7395,7 +7407,6 @@ class TAnyText
   constant name = "text/*";
   constant type_name = "RXML.t_any_text";
   constant sequential = 1;
-  constant empty_value = "";
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant free_text = 1;
@@ -9305,7 +9316,7 @@ class PCode
 	}
 
 	if (!ppos)
-	  return type->sequential ? type->empty_value : nil;
+	  return type->sequential ? type->copy_empty_value() : nil;
 	else
 	  if (type->sequential)
 	    return `+ (type->empty_value, @parts[..ppos - 1]);
@@ -9372,10 +9383,11 @@ class PCode
   //! exception unwinding and rewinding, checks for staleness, chained
   //! p-code or state updates. Mostly for internal use.
   {
-    if (!length)
-      return type->sequential ? comp->bind (type->empty_value) : "RXML.nil";
-
     string typevar = comp->bind (type);
+
+    if (!length)
+      return type->sequential ? typevar + "->copy_empty_value()" : "RXML.nil";
+
     array(string) parts = allocate (length);
 
     for (int pos = 0; pos < length; pos++) {

@@ -1390,6 +1390,19 @@ a&auml; &amp; b  &gt;
   <equal>17</equal>
 </test>
 
+<test>
+  <rxml type="array">
+    <set variable="var.foo" type="mapping"/>
+    <set variable="var.foo.a" value="1"/>
+    <set variable="var.bar" type="mapping"/>
+    <set variable="var.bar.c" value="3"/>
+    &var.foo;
+    &var.bar;
+    <value type="mapping"/>
+  </rxml>
+  <equal>({(["a": "1"]), (["c": "3"]), ([])})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>String number test</comment>
