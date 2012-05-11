@@ -6,11 +6,14 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.58 2012/02/09 15:58:13 wellhard Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.59 2012/05/11 13:02:36 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
+
+//  Cached copy of conf->query("compat_level").
+float compat_level = (float) my_configuration()->query("compat_level");
 
 void create() {
   defvar("insert_href",
@@ -681,6 +684,11 @@ class TagSprintf {
 class TagSscanf {
   inherit RXML.Tag;
   constant name = "sscanf";
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types =
+    compat_level < 5.2 ? ::result_types : ({RXML.t_nil}); // No result.
+
   mapping(string:RXML.Type) req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
 					       "format"    : RXML.t_text(RXML.PEnt)
   ]);
