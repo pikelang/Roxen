@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.288 2012/05/10 16:25:57 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.289 2012/05/14 13:47:21 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1444,7 +1444,7 @@ class RequestID
     protected mapping(string:string) eaten = ([]);
 
 
-    // cf RFC 2109.
+    // cf RFC 6265.
     protected void create(string|array(string)|mapping(string:string)|void
 			  contents)
     {
@@ -1462,14 +1462,14 @@ class RequestID
       array tmp = arrayp(contents) ? contents : ({ contents});
   
       foreach(tmp, string cookieheader) {
-	array(int|string) tokens = MIME.tokenize(cookieheader);
-	foreach(tokens/({';'}), array(int|string) c)
+	foreach(cookieheader/";", array(string) c)
 	{
-	  array(array(int|string)) pair = c/({'='});
+	  array(array(int|string)) pair = c/"=";
 	  if (sizeof(pair) < 2) continue;
-	  string name = MIME.quote(pair[0]);
-	  string value = MIME.quote(pair[1..]*({'='}));
-	  // FIXME: What about cookie-attributes?
+	  string name = String.trim_whites(pair[0]);
+	  string value = String.trim_whites(pair[1..]*"=");
+	  if (has_prefix(value, "\"") && has_suffix(value, "\""))
+	    value = value[1..sizeof(value)-2];
 	  catch {
 	    value=_Roxen.http_decode_string(value);
 	  };
