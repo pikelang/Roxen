@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.289 2012/05/14 13:47:21 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.290 2012/05/15 16:00:39 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1462,9 +1462,9 @@ class RequestID
       array tmp = arrayp(contents) ? contents : ({ contents});
   
       foreach(tmp, string cookieheader) {
-	foreach(cookieheader/";", array(string) c)
+	foreach(cookieheader/";", string c)
 	{
-	  array(array(int|string)) pair = c/"=";
+	  array(string) pair = c/"=";
 	  if (sizeof(pair) < 2) continue;
 	  string name = String.trim_whites(pair[0]);
 	  string value = String.trim_whites(pair[1..]*"=");
