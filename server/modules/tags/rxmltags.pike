@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.676 2012/06/05 09:54:05 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.677 2012/06/05 09:55:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1124,6 +1124,8 @@ class TagDebug {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      RXML.Context ctx = RXML_CONTEXT;
+
       if (string var = args->showvar) {
 	TAG_TRACE_ENTER("");
 	mixed val = RXML.user_get_var (var, args->scope);
@@ -1131,6 +1133,28 @@ class TagDebug {
 	  (zero_type (val) ? "UNDEFINED" :
 	   Roxen.html_encode_string (sprintf ("%O", val))) +
 	  "</pre>";
+	TAG_TRACE_LEAVE("");
+	return 0;
+      }
+
+      if (string scope_name = args->showscope) {
+	TAG_TRACE_ENTER("");
+	mixed scope = ctx->get_scope (scope_name);
+	if (!scope)
+	  RXML.run_error ("No scope %O.\n", scope_name);
+	result = "<pre>";
+	if (objectp (scope)) {
+	  result += sprintf ("[object scope %O]\n", scope);
+	  if (array(string) vars = ctx->list_vars (scope_name, 1)) {
+	    mapping scope_map = ([]);
+	    foreach (vars, string var)
+	      scope_map[var] = ctx->get_var (var, scope_name);
+	    scope = scope_map;
+	  }
+	}
+	if (mappingp (scope))
+	  result += Roxen.html_encode_string (sprintf ("%O", scope));
+	result += "</pre>";
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
@@ -9187,6 +9211,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='showvar' value='variable'>
  <p>Shows the value of the given variable in a generic debug format
  that works regardless of the type.</p>
+</attr>
+
+<attr name='showscope' value='scope'>
+ <p>Shows all the variables in the given scope in a generic debug
+ format.</p>
 </attr>
 
 <attr name='showlog'>
