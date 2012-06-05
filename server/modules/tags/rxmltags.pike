@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.677 2012/06/05 09:55:05 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.678 2012/06/05 10:15:54 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2036,6 +2036,11 @@ class TagRecode
 	  break;
 
 	default:
+	  if (String.width (content) > 8)
+	    // If it's wide it's already decoded by necessity. Some of
+	    // the decoders also throw an error on this that isn't
+	    // typed as a DecodeError.
+	    RXML.run_error ("Cannot charset decode a wide string.\n");
 	  if (string charset = args->from) {
 	    Locale.Charset.Decoder dec;
 	    if (catch (dec = Locale.Charset.decoder (charset)))
