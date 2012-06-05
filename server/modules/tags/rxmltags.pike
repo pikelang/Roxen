@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.675 2012/05/10 19:43:46 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.676 2012/06/05 09:54:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5088,8 +5088,10 @@ class UserTag {
 
     constant is_user_tag = 1;
     constant is_contents_nest_tag = 1;
+
     string content_text;
     RXML.PCode compiled_content;
+
     mixed content_result;
     int got_content_result;
     mapping(string:mixed) saved_scopes;
@@ -8904,13 +8906,11 @@ supported by Pike can be used.</p>
 </desc>
 
 <attr name='unix-time' value='number of seconds'>
- <p>Display this time instead of the current. This attribute uses the
- specified Unix 'time_t' time as the starting time (which is
- <i>01:00, January the 1st, 1970</i>), instead of the current time.
- This is mostly useful when the <tag>date</tag> tag is used from a
- Pike-script or Roxen module.</p>
+ <p>Display this time instead of the current. The time is taken as a
+ unix timestamp (i.e. the number of seconds since 00:00:00 Jan 1 1970
+ UTC).</p>
 
-<ex><date unix-time='120'/></ex>
+<ex><date unix-time='946684800'/></ex>
 </attr>
 
 <attr name='http-time' value='http time stamp'>
