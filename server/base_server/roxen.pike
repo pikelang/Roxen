@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1113 2012/02/27 23:32:11 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1114 2012/06/07 12:12:09 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -637,7 +637,7 @@ class Queue
     return tmp;
   }
 
-  mixed tryread()
+  mixed try_read()
   {
     if (!(w_ptr - r_ptr)) return ([])[0];
     mixed tmp = buffer[r_ptr];
@@ -1062,7 +1062,7 @@ void release_handler_threads (int numthreads)
   if (Thread.Condition cond = hold_wakeup_cond) {
     // Flush out any remaining hold messages from the queue.
     for (int i = handle_queue->size(); i && num_hold_messages; i--) {
-      mixed task = handle_queue->tryread();
+      mixed task = handle_queue->try_read();
       if (task == 1) num_hold_messages--;
       else handle_queue->write (task);
     }
