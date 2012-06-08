@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1115 2012/06/08 14:08:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1116 2012/06/08 14:39:26 mast Exp $";
 
 //! @appears roxen
 //!
@@ -7411,13 +7411,13 @@ class LogFile(string fname, string|void compressor_program)
   }
 
   private array(string) write_buf = ({});
-  private void do_the_write_co() { handle(do_the_write); }
   private void do_the_write()
   {
     object mutex_key = lock->lock();
 
     if (!opened) do_open(mutex_key);
     if (!opened) return;
+    if (!sizeof (write_buf)) return;
     mixed err = catch (fd->write(write_buf));
     if (err)
       catch {
@@ -7434,13 +7434,9 @@ class LogFile(string fname, string|void compressor_program)
 
   int write( string what )
   {
-    if (!this_object()) return 0; // We've been destructed, return
-    object mutex_key = lock->lock();
-    if (!this_object()) return 0; // We've been destructed, return
-
-    if (!sizeof(write_buf))
-      call_out(do_the_write_co, 1);
     write_buf += ({ what });
+    if (sizeof (write_buf) == 1)
+      background_run (1, do_the_write);
     return strlen(what); 
   }
 }
