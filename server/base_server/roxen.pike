@@ -7160,9 +7160,7 @@ class LogFile(string fname, string|void compressor_program)
   private void do_open_co() { handle(do_open); }
   private void do_open(void|object mutex_key)
   {
-    if (!this_object()) return; // We've been destructed, return
     if (!mutex_key) mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     mixed parent;
     if (catch { parent = function_object(object_program(this_object())); } ||
@@ -7207,12 +7205,11 @@ class LogFile(string fname, string|void compressor_program)
     call_out(do_close_co, 10.0);
   }
 
-  private void do_close_co() { handle(do_close); }
-  private void do_close()
+  private void do_close_co() { handle(close); }
+
+  void close()
   {
-    if (!this_object()) return; // We've been destructed, return
     object mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     destruct( fd );
     opened = 0;
@@ -7222,9 +7219,7 @@ class LogFile(string fname, string|void compressor_program)
   private void do_the_write_co() { handle(do_the_write); }
   private void do_the_write()
   {
-    if (!this_object()) return; // We've been destructed, return
     object mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     if (!opened) do_open(mutex_key);
     if (!opened) return;

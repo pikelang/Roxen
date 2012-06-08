@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.714 2012/10/14 15:43:05 wellhard Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -696,12 +696,7 @@ private void do_stop_all_modules (Thread.MutexKey stop_lock)
       STOP_MODULES (indices (p->provider_modules), "provider module");
     }
 
-  if (mixed err = catch {
-    if (object m = log_function && function_object (log_function)) {
-      destruct (m);
-      allmods[m] = 0;
-    }
-  }) report_error ("While stopping the logger: " + describe_backtrace (err));
+  end_logger();
 
   STOP_MODULES(indices (allmods), "unclassified module");
 #undef STOP_MODULES
@@ -1057,15 +1052,21 @@ array(function) filter_modules()
   return filter_module_cache;
 }
 
+void end_logger()
+{
+  if (mixed err = catch {
+      if (roxen.LogFile logger =
+	  log_function && function_object (log_function)) {
+	logger->close();
+	destruct (logger);
+      }
+    }) report_error ("While stopping the logger: " + describe_backtrace (err));
+  log_function = 0;
+}
 
 void init_log_file()
 {
-  if(log_function)
-  {
-    // Free the old one.
-    destruct(function_object(log_function));
-    log_function = 0;
-  }
+  end_logger();
   // Only try to open the log file if logging is enabled!!
   if(query("Log"))
   {
