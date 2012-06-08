@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.727 2012/06/08 14:08:52 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.728 2012/06/08 14:21:48 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1061,7 +1061,6 @@ void end_logger()
       if (roxen.LogFile logger =
 	  log_function && function_object (log_function)) {
 	logger->close();
-	destruct (logger);
       }
     }) report_error ("While stopping the logger: " + describe_backtrace (err));
   log_function = 0;

@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: memory_logger.pike,v 1.5 2012/06/08 14:08:52 mast Exp $";
+constant cvs_version = "$Id: memory_logger.pike,v 1.6 2012/06/08 14:21:48 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOGGER;
@@ -83,7 +83,6 @@ void end_logger()
       if (roxen.LogFile logger =
 	  log_function && function_object (log_function)) {
 	logger->close();
-	destruct (logger);
       }
     }) report_error ("While stopping the logger: " + describe_backtrace (err));
   log_function = 0;
