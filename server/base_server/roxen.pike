@@ -7223,16 +7223,22 @@ class LogFile(string fname, string|void compressor_program)
     if (!opened) do_open(mutex_key);
     if (!opened) return;
     if (!sizeof (write_buf)) return;
-    mixed err = catch (fd->write(write_buf));
+
+    array(string) buf = write_buf;
+    // Relying on the interpreter lock here.
+    write_buf = ({});
+
+    mixed err = catch (fd->write(buf));
     if (err)
       catch {
 	foreach (write_buf, string str)
 	  if (String.width (str) > 8)
 	    werror ("Got wide string in log output: %O\n", str);
       };
-    write_buf = ({});
+
     remove_call_out(do_close_co);
     call_out(do_close_co, 10.0);
+
     if (err)
       throw (err);
   }
