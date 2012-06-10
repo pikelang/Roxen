@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.329 2012/04/17 09:06:40 erikd Exp $
+// $Id: Roxen.pmod,v 1.330 2012/06/10 00:27:24 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1041,6 +1041,9 @@ proc: {
 	}
       }
     }
+
+    // FIXME: Parse away BOM in xml documents also when the charset
+    // already is known.
 
     if (charset) {
       Locale.Charset.Decoder decoder;
@@ -4501,6 +4504,9 @@ class ScopeRoxen {
       return ENCODE_RXML_TEXT(magic_charset_variable_value, type);
 
     case "null":
+      // Note that we don't need to check compat_level < 5.2 and
+      // return compat_5_1_null here, since this constant didn't exist
+      // prior to 5.2.
       return Val->null;
     case "true":
       return Val->true;
@@ -5475,6 +5481,21 @@ Null null = Null();
 constant SqlNull = Null;
 Val.Null sql_null;
 // Compat aliases. sql_null is initialized in create() in roxen.pike.
+
+class Compat51Null
+// Null object for compat_level < 5.2. Also inherits RXML.Nil, which
+// among other things allows casting to empty values of various types.
+{
+  inherit Null;
+  inherit RXML.Nil;
+
+  protected string _sprintf (int flag)
+  {
+    return flag == 'O' && "Roxen.compat_5_1_null";
+  }
+}
+
+Compat51Null compat_5_1_null = Compat51Null();
 
 
 #ifdef REQUEST_TRACE
