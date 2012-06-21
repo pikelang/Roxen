@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.315 2012/05/09 13:52:12 jenny Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.316 2012/06/21 18:15:40 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -750,8 +750,8 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
   }
 
   if (!font)
-    error("gtext: No font (tried "+
-          (args->afont||args->font||args->nfont)+ ")!\n");
+    RXML.parse_error("gtext: No font (tried "+
+		     (args->afont||args->font||args->nfont)+ ")!\n");
 
   // Fonts and such are now initialized.
   array|mapping make_res = GText.make_text_image(args, font, text, id);

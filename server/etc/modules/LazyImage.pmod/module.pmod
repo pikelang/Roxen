@@ -832,10 +832,7 @@ class LoadImage
       if ((args->src || "") == "") {
 	float compat_level = (float) id->conf->query("compat_level");
 	if (compat_level >= 5.2) {
-	  if (RXML_CONTEXT)
-	    RXML.parse_error("Empty src attribute not allowed.\n");
-	  else
-	    error("Empty src attribute not allowed.");
+	  RXML.parse_error("Empty src attribute not allowed.\n");
 	}
       }
       
@@ -854,12 +851,7 @@ class LoadImage
       if( !res || mappingp(res) ) {
 	if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
 	  return res;
-	if (RXML_CONTEXT)
-	  // This can be called from within the gxml tag if
-	  // id->misc->generate_images is set.
-	  RXML.parse_error("Failed to load specified image [%O]\n", args->src );
-	else
-	  error("Failed to load specified image [%O]\n", args->src );
+	RXML.parse_error("Failed to load specified image [%O]\n", args->src );
       }
       if( args->tiled )
 	foreach( res, Image.Layer l )

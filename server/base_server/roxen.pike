@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1117 2012/06/09 14:15:07 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1118 2012/06/21 18:15:40 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4256,31 +4256,21 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
-	// File not found.
-	
-	if(arrayp(err) && sizeof(err) && stringp(err[0]))
-	{
-	  if (sscanf(err[0], "Requesting unknown key %s\n",
-		     string message) == 1)
-	  {
-	    report_debug("Requesting unknown key %s %O from %O\n",
-			 message,
-			 id->not_query,
-			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
-	    return 0;
-	  }
-	  if (sscanf(err[0], "Failed to load specified image [\"%s\"]\n",
-		     string message) == 1)
-	  {
-	    report_debug("Failed to load specified image %O from %O - referrer %O\n",
-			 message,
-			 id->not_query,
-			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
-	    return 0;
-	  }
+	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
+	  // If we get an rxml error and there's no rxml context then
+	  // we're called from a direct request to the image cache.
+	  // The error ought to have been reported in the page that
+	  // generated the link to the image cache, but since it's too
+	  // late for that now, we just log it as a (brief) server
+	  // error with the referring page.
+	  string errmsg = "Error in " + name + " image generation: " +
+	    err->msg;
+	  if (sizeof (id->referer))
+	    errmsg += "  Referrer: " + id->referer[0];
+	  report_error (errmsg + "\n");
+	  return 0;
 	}
-	report_debug("Error in draw: %s\n", describe_backtrace(err));
-	return 0;
+	throw (err);
       }
       if( !(res = restore( na,id )) ) {
 	error("Draw callback %O did not generate any data.\n"
@@ -4491,6 +4481,16 @@ class ImageCache
   //! may take any arguments you want, depending on the first argument
   //! you give the <ref>store()</ref> method, but its final argument
   //! will be the RequestID object.
+  //!
+  //! @note
+  //! Use @[RXML.run_error] or @[RXML.parse_error] within the draw
+  //! function to throw user level drawing errors, e.g. invalid or
+  //! missing images or argument errors. If it's called within a
+  //! graphics tag then the error is thrown directly and reported
+  //! properly by the rxml evaluator. If it's called later, i.e. in a
+  //! direct request to the image cache, then it is catched by the
+  //! @[ImageCache] functions and reported in as good way as possible,
+  //! i.e. currently briefly in the debug log.
   {
     name = id;
     draw_function = draw_func;

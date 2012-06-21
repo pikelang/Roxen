@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.126 2012/02/14 15:02:21 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.127 2012/06/21 18:15:40 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -357,8 +357,8 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     
     if (mappingp(tmp)) {
       if (tmp->error != 401)
-	report_debug("GButton: Failed to load frame image: %O (error: %O)\n",
-		     args->border_image, tmp->error);
+	RXML.parse_error("Failed to load frame image: %O (error: %O)\n",
+			 args->border_image, tmp->error);
       return tmp;
     }
     set_image( tmp );

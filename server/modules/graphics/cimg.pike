@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.91 2012/05/09 13:52:12 jenny Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.92 2012/06/21 18:15:40 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -284,16 +284,6 @@ string status() {
 		 s[0], Roxen.sizetostring(s[1]));
 }
 
-void image_error (string fmt, mixed... args)
-{
-  if (RXML_CONTEXT)
-    // generate_image can be called from within the cimg tag if
-    // id->misc->generate_images is set.
-    RXML.run_error (fmt, @args);
-  else
-    error (fmt, @args);
-}
-
 array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 {
   array layers;
@@ -340,13 +330,14 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   if(!layers)
   {
     if( args->data )
-      image_error("Failed to decode specified data\n");
+      RXML.run_error("Failed to decode specified data\n");
     else
-      image_error("Failed to load specified image [%O]\n", args->src);
+      RXML.run_error("Failed to load specified image [%O]\n", args->src);
   }
 
   if (!sizeof(filter(layers->image(), objectp)))
-    image_error("Failed to decode layers in specified image [%O]\n", args->src);
+    RXML.run_error("Failed to decode layers in specified image [%O]\n",
+		   args->src);
   if(!args["exclude-invisible-layers"])
      layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
@@ -410,9 +401,6 @@ mapping get_my_args( mapping args, RequestID id )
   ]);
 
   if( args->src ) {
-    // FIXME: Unacceptable error handling!
-    mixed err = catch 
-    {
       a->src = Roxen.fix_relative( args->src, id );
       array(int)|Stat st = (id->conf->try_stat_file(a->src, id));
       if (st)
@@ -430,12 +418,6 @@ mapping get_my_args( mapping args, RequestID id )
 	  a = Sitebuilder.sb_prepare_imagecache(a, a->src, id);
 #endif
       }
-    };
-#ifdef DEBUG
-    if (err)
-      report_error("<cimg> or <emit#cimg>: error in get_my_args(): %s\n",
-		   describe_backtrace(err));
-#endif
   }
 
   a["background-color"] = id->misc->defines->bgcolor || "#eeeeee";
@@ -474,8 +456,6 @@ class TagCimgplugin
 
     int timeout = Roxen.timeout_dequantifier(args);
 
-    mixed err = catch // This code will fail if the image does not exist.
-    {
       // Store misc->cacheable since the image cache can raise it and
       // disable protocol cache.
       int cacheable = id->misc->cacheable;
@@ -501,13 +481,6 @@ class TagCimgplugin
       id->misc->cacheable = cacheable;
       id->misc->no_proto_cache = no_proto_cache;
       return ({ res });
-    };
-#ifdef DEBUG
-    report_error("<emit#cimg> error in get_dataset(): %s\n",
-		 describe_backtrace(err));
-#endif
-    RXML.parse_error( "Illegal arguments or image: %s",
-		      describe_error (err));
   }
 }
 
