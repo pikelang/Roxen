@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.651 2012/06/27 11:17:54 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.652 2012/06/27 11:58:51 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -108,42 +108,22 @@ private object sexpr_funcs = class SExprFunctions
     
     float log(void|mixed x)
     {
-      if (intp(x))
-	return predef::log((float) x);
-      else if (floatp(x))
-	return predef::log(x);
-      else
-	return 0.0;
+      return predef::log(intp(x) ? (float) x : x);
     }
     
     int floor(void|mixed x)
     {
-      if (intp(x))
-	return (int) predef::floor((float) x);
-      else if (floatp(x))
-	return (int) predef::floor(x);
-      else
-	return 0;
+      return (int) predef::floor(intp(x) ? (float) x : x);
     }
 
     int ceil(void|mixed x)
     {
-      if (intp(x))
-	return (int) predef::ceil((float) x);
-      else if (floatp(x))
-	return (int) predef::ceil(x);
-      else
-	return 0;
+      return (int) predef::ceil(intp(x) ? (float) x : x);
     }
 
     int round(void|mixed x)
     {
-      if (intp(x))
-	return (int) predef::round((float) x);
-      else if (floatp(x))
-	return (int) predef::round(x);
-      else
-	return 0;
+      return (int) predef::round(intp(x) ? (float) x : x);
     }
     
   }();
