@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.650 2012/03/12 13:26:04 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.651 2012/06/27 11:17:54 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -78,7 +78,7 @@ private object sexpr_funcs = class SExprFunctions
 
     mixed search (mixed a, mixed b)
     {
-      return search (a, b) + 1;	// RXML uses base 1.
+      return predef::search (a, b) + 1;	// RXML uses base 1.
     }
 
     int INT (void|mixed x)
@@ -105,6 +105,47 @@ private object sexpr_funcs = class SExprFunctions
     {
       return RXML_CONTEXT->get_var (rxml_var_ref, scope);
     }
+    
+    float log(void|mixed x)
+    {
+      if (intp(x))
+	return predef::log((float) x);
+      else if (floatp(x))
+	return predef::log(x);
+      else
+	return 0.0;
+    }
+    
+    int floor(void|mixed x)
+    {
+      if (intp(x))
+	return (int) predef::floor((float) x);
+      else if (floatp(x))
+	return (int) predef::floor(x);
+      else
+	return 0;
+    }
+
+    int ceil(void|mixed x)
+    {
+      if (intp(x))
+	return (int) predef::ceil((float) x);
+      else if (floatp(x))
+	return (int) predef::ceil(x);
+      else
+	return 0;
+    }
+
+    int round(void|mixed x)
+    {
+      if (intp(x))
+	return (int) predef::round((float) x);
+      else if (floatp(x))
+	return (int) predef::round(x);
+      else
+	return 0;
+    }
+    
   }();
 
 private mapping(string:mixed) sexpr_constants = ([
@@ -135,9 +176,13 @@ private mapping(string:mixed) sexpr_constants = ([
   "equal": equal,
   "sizeof": sizeof,
   "pow":pow,
+  "log": sexpr_funcs->log,
   "abs": abs,
   "max": max,
   "min": min,
+  "round": sexpr_funcs->round,
+  "floor": sexpr_funcs->floor,
+  "ceil": sexpr_funcs->ceil,
   "search": sexpr_funcs->search,
   "reverse": reverse,
   "uniq": Array.uniq,
@@ -10422,8 +10467,29 @@ After: &var.language;<br /></ex>
      <i>expr2</i>.</p></c></row>
 
    <row valign='top'>
+     <c><p><tt>log(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the natural logarithm of the value <i>expr</i>. To get
+        the logarithm in another base, divide the result with
+        <tt>log(<i>base</i>)</tt>.</p></c></row>
+
+   <row valign='top'>
      <c><p><tt>abs(<i>expr</i>)</tt></p></c>
      <c><p>Returns the absolute value of <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>floor(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value less than or equal to the
+        value <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>ceil(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value greater than or equal to the
+        value <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>round(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value to the value <i>expr</i>.
+        </p></c></row>
 
    <row valign='top'>
      <c><p><tt>max(<i>expr</i>, ...)</tt></p></c>
