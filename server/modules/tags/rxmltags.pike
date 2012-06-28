@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.652 2012/06/27 11:58:51 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.653 2012/06/28 17:52:48 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2161,7 +2161,7 @@ class TagCache {
     mapping(string|int:mixed) keymap, overridden_keymap;
     string key;
     RXML.PCode evaled_content;
-    int timeout, persistent_cache = 0;
+    int timeout, persistent_cache;
 
     // The following are retained for frame reuse.
 
@@ -2406,6 +2406,7 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
+      persistent_cache = 0;
       TAG_TRACE_ENTER ("cache miss%s for key %s, %s",
 		       args->shared ?
 		       (timeout ?
@@ -2757,7 +2758,12 @@ class TagMaketag {
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal;
-    mapping(string:mixed) makeargs = ([]);
+    mapping(string:mixed) makeargs;
+
+    array do_enter (RequestID id)
+    {
+      makeargs = ([]);
+    }
 
     array do_return(RequestID id) {
       if (!content) content = "";
