@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.245 2012/01/23 12:50:52 grubba Exp $
+// $Id: module.pike,v 1.246 2012/07/02 10:05:18 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -66,6 +66,10 @@ void report_notice(sprintf_format fmt, sprintf_args ... args)
   { predef::report_notice(fmt, @args); }
 void report_debug(sprintf_format fmt, sprintf_args ... args)
   { predef::report_debug(fmt, @args); }
+void report_warning_sparsely (sprintf_format fmt, sprintf_args ... args)
+  {predef::report_warning_sparsely (fmt, @args);}
+void report_error_sparsely (sprintf_format fmt, sprintf_args ... args)
+  {predef::report_error_sparsely (fmt, @args);}
 
 void log_event (string facility, string action, string resource,
 		void|mapping(string:mixed) info)
