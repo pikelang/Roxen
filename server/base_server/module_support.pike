@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.149 2012/02/08 00:56:21 jonasw Exp $
+// $Id: module_support.pike,v 1.150 2012/07/02 16:36:47 jonasw Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -596,6 +596,10 @@ class ModuleInfo( string sname, string filename )
 	  
 	  if( (< "pike", "so", "jar", "class" >)[ extension( file ) ] )
           {
+	    //  Skip inner classes in Java
+	    if (has_value(file, "$") && has_suffix(file, ".class"))
+	      continue;
+	    
             Stdio.File f = Stdio.File();
 	    if( !f->open( fpath, "r" ) )
 	      report_error ("Failed to open %s: %s\n",
@@ -728,6 +732,10 @@ protected void rec_find_all_modules( string dir,
 	if( (< "so", "pike">)[ extension( file ) ] ||
 	    (<"class", "jar">)[extension (file)] && got_java())
         {
+	  //  Skip inner classes in Java
+	  if (has_value(file, "$") && has_suffix(file, ".class"))
+	    continue;
+	  
 	  Stdio.File f = Stdio.File();
 	  if (!f->open( fpath, "r" ))
 	    report_warning ("Failed to open %s: %s\n",
