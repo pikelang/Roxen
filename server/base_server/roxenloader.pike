@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $
+// $Id: roxenloader.pike,v 1.476 2012/07/02 08:59:44 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.476 2012/07/02 08:59:44 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -641,10 +641,10 @@ protected void garb_sparsely_dont_log()
 {
   if (sparsely_dont_log && sizeof (sparsely_dont_log)) {
     int now = time (1);
-    foreach (indices (sparsely_dont_log), string msg)
-      if (sparsely_dont_log[msg] < now) m_delete (sparsely_dont_log, msg);
+    foreach (sparsely_dont_log; string msg; int ts)
+      if (ts < now) m_delete (sparsely_dont_log, msg);
   }
-  call_out (garb_sparsely_dont_log, 10*60);
+  call_out (garb_sparsely_dont_log, 20*60);
 }
 
 void report_warning_sparsely (LocaleString|sprintf_format message,
@@ -673,8 +673,8 @@ void report_error_sparsely (LocaleString|sprintf_format message,
 {
   if( sizeof( args ) ) message = sprintf((string)message, @args );
   int now = time (1);
-  if (sparsely_dont_log[message] >= now - 10*60*60) return;
-  sparsely_dont_log[message] = now;
+  if (sparsely_dont_log[message] >= now) return;
+  sparsely_dont_log[message] = now + 10*60;
   nwrite([string]message,0,3,MC);
 #if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
