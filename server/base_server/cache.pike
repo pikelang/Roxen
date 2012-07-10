@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.150 2012/03/05 13:55:10 grubba Exp $
+// $Id: cache.pike,v 1.151 2012/07/10 14:22:56 jonasw Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1424,6 +1424,11 @@ void cache_expire (void|string cache_name)
 	  }
       }
   }
+}
+
+void cache_expire_by_prefix(string cache_name_prefix)
+{
+  map(filter(indices(caches), has_prefix, cache_name_prefix), cache_expire);
 }
 
 void flush_memory_cache (void|string cache_name) {cache_expire (cache_name);}
