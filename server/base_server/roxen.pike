@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1120 2012/07/12 14:13:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1121 2012/07/13 10:00:58 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -671,8 +671,10 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
   // my_monitor is just a safeguard to ensure we don't get multiple
   // monitor threads.
+  name_thread(this_thread(), "Slow request monitor");
   while (slow_req_monitor == my_monitor)
-    slow_req_monitor (3600);
+    slow_req_monitor (3600.0);
+  name_thread(this_thread(), 0);
 }
 
 protected mixed slow_be_call_out;
