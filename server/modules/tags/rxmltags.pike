@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.682 2012/06/28 17:52:47 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.683 2012/07/17 13:40:23 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8433,7 +8433,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='drop' value='string'>
- <p>The prestate or prestates that should be dropped, in a comma separated
+ <p>The prestate or prestates that should be dropped, in a comma-separated
  list.</p>
 </attr>
 
@@ -9864,12 +9864,12 @@ header tag.</p></note>
 </attr>
 
 <attr name='add' value='string'>
- <p>The prestate or prestates that should be added, in a comma separated
+ <p>The prestate or prestates that should be added, in a comma-separated
  list.</p>
 </attr>
 
 <attr name='drop' value='string'>
- <p>The prestate or prestates that should be dropped, in a comma separated
+ <p>The prestate or prestates that should be dropped, in a comma-separated
  list.</p>
 </attr>
 
