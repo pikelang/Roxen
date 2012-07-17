@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.59 2012/05/11 13:02:36 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.60 2012/07/17 13:40:11 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -689,17 +689,23 @@ class TagSscanf {
   array(RXML.Type) result_types =
     compat_level < 5.2 ? ::result_types : ({RXML.t_nil}); // No result.
 
-  mapping(string:RXML.Type) req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
-					       "format"    : RXML.t_text(RXML.PEnt)
-  ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "return"    : RXML.t_text(RXML.PEnt),
-					       "scope"     : RXML.t_text(RXML.PEnt)
-  ]);
+  mapping(string:RXML.Type)
+    req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
+		       "format"    : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type)
+    opt_arg_types = ([ "variable"  : RXML.t_text(RXML.PEnt),
+		       "return"    : RXML.t_text(RXML.PEnt),
+		       "scope"     : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
 
     string do_return(RequestID id) {
+      if (string content_var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (content_var)))
+	  parse_error ("Variable %q does not exist.\n", content_var);
+      }
+      
       array(string) vars=args->variables/",";
       vars=map(vars, String.trim_all_whites);
       array(string) vals;
@@ -1203,7 +1209,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='post-variables' value='\"variable=rxml variable[,variable2=rxml variable2,...]\"'><p>
- Comma separated list of variables to send in a POST request.</p>
+ Comma-separated list of variables to send in a POST request.</p>
 <ex-box>
 <insert href='http://www.somesite.com/news/' 
          method='POST' post-variables='action=var.action,data=form.data' />
@@ -1219,7 +1225,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='request-headers' value='\"header=value[,header2=value2,...]\"'><p>
- Comma separated list of extra headers to send in the request.</p>
+ Comma-separated list of extra headers to send in the request.</p>
 </attr>
 
 <attr name='ignore-unknown-ce' value='int'><p>
@@ -1311,13 +1317,19 @@ http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)</p>
  description.</p>
 </desc>
 
+<attr name='variable'><p>
+Name of the variable holding the input data. If not provided the tag oeprates
+on the contents of the <tag>sscanf</tag> element.
+</p>
+</attr>
+
 <attr name='format' value='pattern' required='required'><p>
 The sscanf pattern.
 </p>
 </attr>
 
 <attr name='variables' value='list' required='required'><p>
- A comma separated list with the name of the variables that should be set.</p>
+ A comma-separated list with the name of the variables that should be set.</p>
 <ex>
 <sscanf variables='form.year,var.month,var.day'
 format='%4d%2d%2d'>19771003</sscanf>
