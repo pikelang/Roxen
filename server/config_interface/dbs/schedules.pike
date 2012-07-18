@@ -21,23 +21,18 @@ mapping|string parse( RequestID id )
 	      period = (int)segments[0];
 	      offset = (int)segments[1] +
 		(int)id->variables["time-" + schedule];
-	      int generations = (int)id->variables["generations-" + schedule];
-	      string method = id->variables["method-" + schedule];
-	      string dir = id->variables["directories-" + schedule];
-	      db->query("UPDATE db_schedules "
-			"   SET period = %d, "
-			"       offset = %d, "
-			"       generations = %d, "
-			"       method = %s, "
-			"       dir = %s "
-			" WHERE id = %s",
-			period, offset, generations, method, dir, schedule);
-	    } else {
-	      db->query("UPDATE db_schedules "
-			"   SET period = 0 "
-			" WHERE id = %s",
-			schedule);
 	    }
+	    int generations = (int)id->variables["generations-" + schedule];
+	    string method = id->variables["method-" + schedule];
+	    string dir = id->variables["directory-" + schedule];
+	    db->query("UPDATE db_schedules "
+		      "   SET period = %d, "
+		      "       offset = %d, "
+		      "       generations = %d, "
+		      "       method = %s, "
+		      "       dir = %s "
+		      " WHERE id = %s",
+		      period, offset, generations, method, dir, schedule);
 	    DBManager.start_backup_timer((int)schedule, period, offset);
 	  }
 	}
