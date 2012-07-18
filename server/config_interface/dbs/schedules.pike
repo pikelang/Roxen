@@ -120,9 +120,9 @@ mapping|string parse( RequestID id )
     }
   }
 
-  res += "<tr><td>"
-    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
-    "<td align='right' colspan='4'><cf-cancel href=''/></td></tr>\n";
+  res += "<tr><td align='right' colspan='5'>"
+    "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
+    "</tr>\n"
     "</table>\n";
 
   return Roxen.http_string_answer(res);
