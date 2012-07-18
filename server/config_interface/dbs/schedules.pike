@@ -21,23 +21,18 @@ mapping|string parse( RequestID id )
 	      period = (int)segments[0];
 	      offset = (int)segments[1] +
 		(int)id->variables["time-" + schedule];
-	      int generations = (int)id->variables["generations-" + schedule];
-	      string method = id->variables["method-" + schedule];
-	      string dir = id->variables["directories-" + schedule];
-	      db->query("UPDATE db_schedules "
-			"   SET period = %d, "
-			"       offset = %d, "
-			"       generations = %d, "
-			"       method = %s, "
-			"       dir = %s "
-			" WHERE id = %s",
-			period, offset, generations, method, dir, schedule);
-	    } else {
-	      db->query("UPDATE db_schedules "
-			"   SET period = 0 "
-			" WHERE id = %s",
-			schedule);
 	    }
+	    int generations = (int)id->variables["generations-" + schedule];
+	    string method = id->variables["method-" + schedule];
+	    string dir = id->variables["directory-" + schedule];
+	    db->query("UPDATE db_schedules "
+		      "   SET period = %d, "
+		      "       offset = %d, "
+		      "       generations = %d, "
+		      "       method = %s, "
+		      "       dir = %s "
+		      " WHERE id = %s",
+		      period, offset, generations, method, dir, schedule);
 	    DBManager.start_backup_timer((int)schedule, period, offset);
 	  }
 	}
@@ -125,9 +120,9 @@ mapping|string parse( RequestID id )
     }
   }
 
-  res += "<tr><td>"
-    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
-    "<td align='right' colspan='4'><cf-cancel href=''/></td></tr>\n";
+  res += "<tr><td align='right' colspan='5'>"
+    "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
+    "</tr>\n"
     "</table>\n";
 
   return Roxen.http_string_answer(res);
