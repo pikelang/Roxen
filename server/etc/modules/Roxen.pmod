@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.332 2012/06/28 12:05:13 mast Exp $
+// $Id: Roxen.pmod,v 1.333 2012/08/15 11:49:09 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4229,13 +4229,16 @@ class EScope(string scope)
 
   protected mixed `[]( string what )
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     return ctx->get_var( what, scope );
   }
 
   protected mixed `->( string what )
   {
-    return `[]( what );
+    // NB: This function may be called by eg master()->describe_object()
+    //     with symbols such as "is_resolv_dirnode", in contexts where
+    //     the scope doesn't exist. cf [bug 6451].
+    return ctx->scopes[scope || "_"] && `[]( what );
   }
 
   protected mixed `[]=( string what, mixed nval )
