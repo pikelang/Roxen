@@ -102,7 +102,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.34 2012/01/16 15:06:11 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.35 2012/08/16 13:18:21 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -980,6 +980,25 @@ class Patcher
     return 1;
   }
 
+  int(0..1) remove_patch(string patch_id, string user) 
+  //! Removes an imported patch from disk.
+  //! @returns
+  //!   Returns 1 if the patch was successfully removed, otherwise 0
+  {
+    string path = id_to_filepath(patch_id);
+    if (!path) {
+      return 0;
+    }
+    
+    if (!Stdio.recursive_rm(path)) {
+      write_err(sprintf("Failed to remove patch %s from disk. "
+			"Not enough privileges?\n", patch_id));
+      return 0;
+    }
+
+    return 1;
+  }
+
   mapping patch_status(string id)
   //! Returns the status of a patch.
   //! @returns
@@ -1746,6 +1765,9 @@ class Patcher
     }
 
     // Apparently we didn't find anything
+    if (!silent)
+      write_err("Not found on disk.\n");
+
     return 0;
   }
 

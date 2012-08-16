@@ -83,16 +83,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
   string res = "";
 
   array(mapping) list;
-  int colspan;
+  int colspan = 5;
   if (which_list == "installed")
   {
     list = po->file_list_installed();
-    colspan = 5;
   }
   else if (which_list == "imported")
   {
     list = po->file_list_imported();
-    colspan = 4;
   }
   else
     // This should never happen.
@@ -171,7 +169,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     "        <td onclick='expand(\"%[1]s\");'"
 		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
 		     "%s"
-		     "        <td style='width:20px;text-align:right'>\n"
+		     + (which_list == "imported" ? 
+			"<td style='text-align:right'>"
+			"  <a style='font-size: 11px' "
+			"     href='?action=patcher.pike&class=maintenance&remove-patch-id=%[2]s'>remove</a>"
+			"</td>"
+			: "") + 
+		     "        </td>"
+		     "        <td style='width:20px;text-align:right'>\n"		     
 		     "          <input type='checkbox' id='%[2]s'"
 		     " name='%s' value='%[2]s' dependencies='%s'" +
 		     " onclick='toggle_%[5]s(%s)' />"
@@ -182,7 +187,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     item->metadata->id,
 		     Roxen.html_encode_string(item->metadata->name),
 		     installed_date,
-		     (which_list == "imported") ? "install" : "uninstall",
+		     (which_list == "imported") ? "install" : "uninstall",		     
 		     deps,
 		     (which_list == "installed") ? 
 		                         "\"" + item->metadata->id + "\"" : "");
@@ -422,7 +427,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     replace(item->metadata->id, "-", ""),
 		     table_bgcolor,
 		     colspan - 2,
- 		     md);
+ 		     md);      
     }
   }
   else
@@ -445,9 +450,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		 "      </tr>\n",
 		 colspan,
 		 (which_list == "installed") ? "uninstall" : "install",
-		 (which_list == "installed") ? 
-		 LOCALE(358, "Uninstall selected patches") : 
-		 LOCALE(359, "Install selected patches"));
+		 (which_list == "installed") ? LOCALE(358, "Uninstall selected patches") : 
+		                               LOCALE(359, "Install selected patches"));
 
   return res; //+ sprintf("<td>&nbsp;</td>"
 // 		       "<td>&nbsp;</td>"
@@ -741,6 +745,37 @@ mixed parse(RequestID id)
     wb->clear_all();
     return Roxen.http_string_answer(res);
   }
+  
+ removepatch:
+  if (id->real_variables["remove-patch-id"] &&
+      sizeof(id->real_variables["remove-patch-id"])) { 
+
+    wb->clear_all();
+    string patch_id = id->real_variables["remove-patch-id"][0];
+
+    if (plib->remove_patch(patch_id, current_user)) {
+      report_notice_for(0, "Patch manager: Removed %s from disk.\n", patch_id);
+      break removepatch;
+    } 
+
+    report_error_for(0, "Patch manager: Failed to remove %s from disk.\n", patch_id);
+
+    res += "<p>" +
+      LOCALE(0, "Failed to remove the patch. See the log below for "
+	     "details") + 
+      "</p>\n";
+
+    res += sprintf("<p>"
+		   "  <span id='log_img' class='unfolded'"
+		   "        onmouseover='this.style.cursor=\"pointer\"'"
+		   "        onclick='expand(\"log\")'>log</span>"
+		   "  <div id='idlog'>%s</div>"
+		   "</p>\n"
+		   "<cf-ok-button href='?action=patcher.pike&class=maintenance' />",
+		   wb->get_all_messages());
+
+    return Roxen.http_string_answer(res);
+  }
 
   res += #" 
     <font size='+1'><b>" + LOCALE(373, "Import a New Patch") + #"</b></font>
@@ -756,8 +791,8 @@ mixed parse(RequestID id)
     <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
-		"they are imported but not applied. It should be safe to "
-		"remove them from disk. They can be found in local/patches/.") +
+		"they are imported but not applied. They can be found in "
+	   "local/patches/.") +
    "</p>\n    <p>" +
     LOCALE(377, "Click on a patch for more information.") +
   #"</p>
@@ -769,6 +804,7 @@ mixed parse(RequestID id)
           <th style='width:20px'>&nbsp;</th>
 	  <th style='width:12em; text-align:left;'>Id</th>
 	  <th style='width: auto; text-align:left'>Patch Name</th>
+          <th style='width: 70px;text-align:right'></th>
 	  <th style='width:20px;text-align:right'>
             <input type='checkbox' 
                    name='install'
