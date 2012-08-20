@@ -102,7 +102,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.36 2012/08/20 09:30:22 liin Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.37 2012/08/20 12:24:54 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -334,9 +334,9 @@ class Patcher
 	continue;
       }
       
-      // Check if it's installed or already imported.
-      if (is_imported(patch_id) || is_installed(patch_id)) {
-	write_err("Patch %s is already installed or imported!\n", patch_id);
+      // Check if it's installed already.
+      if (is_installed(patch_id)) {
+	write_err("Patch %s is already installed!\n", patch_id);
 	patch_ids += ({ 0 });
 	continue;
       }
