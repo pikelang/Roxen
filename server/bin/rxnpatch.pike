@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.19 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.20 2012/08/20 09:30:22 liin Exp $";
 
 import RoxenPatch;
 
@@ -443,11 +443,11 @@ int main(int argc, array(string) argv)
     list = Array.sort_array(list);
     foreach(list, string file)
     {
-      string id = plib->import_file(file, dryrun);
-      if(id)
-	plib->write_mess("%s is successfully imported!\n", id);
-      else
-	plib->write_err("Couldn't import %s.\n", file);
+      array(int|string) patch_ids = plib->import_file(file);
+      foreach(patch_ids, int|string patch_id) {	
+	if (patch_id) 
+	  plib->write_mess("%s is successfully imported!\n", patch_id);
+      }
     }
     return 0;
   }
@@ -500,11 +500,11 @@ int main(int argc, array(string) argv)
     imp_list = Array.sort_array(imp_list);
     foreach(imp_list, string file)
     {
-      string id = plib->import_file(file);
-      if(id)
-	ins_list += ({ id });
-      else
-	plib->write_err("Couldn't install %s.\n", file);
+      array(int|string) patch_ids = plib->import_file(file);
+      foreach(patch_ids, int|string patch_id) {	
+	if (patch_id) 
+	  ins_list += ({ patch_id });
+      }
     }
   
     // Install everything.

@@ -172,6 +172,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     + (which_list == "imported" ? 
 			"<td style='text-align:right'>"
 			"  <a style='font-size: 11px' "
+			"     title='Removes the uploaded patch from disk'"
 			"     href='?action=patcher.pike&class=maintenance&remove-patch-id=%[2]s'>remove</a>"
 			"</td>"
 			: "") + 
@@ -540,7 +541,7 @@ mixed parse(RequestID id)
       id->real_variables["fixedfilename"] &&
       sizeof(id->real_variables["fixedfilename"][0]) &&
       id->real_variables["file"] &&
-      sizeof(id->real_variables["file"][0]))
+      sizeof(id->real_variables["file"][0])) 
   {
     //  With Windows browsers the submitted filename may contain a full path
     //  with drive letter etc. When the Patcher processes it later it will
@@ -557,24 +558,45 @@ mixed parse(RequestID id)
     string temp_file = Stdio.append_path(temp_dir, patch_name);
 
     plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
-    string patch_id = plib->import_file(temp_file);
+    array(int|string) patch_ids = plib->import_file(temp_file);
     plib->clean_up(temp_dir);
 
-    if (patch_id)
-      res += sprintf("<font size='+1' ><b>"
-		     + LOCALE(360, "Importing") +" %s</b></font><br /><br />\n"
-		     "<p><b style='color: green'>"
-		     + LOCALE(361, "Patch successfully imported.") + "</b></p>",
-		     patch_id);
-    else
-      res += "<font size='+1' ><b>"
-	     + LOCALE(360, "Importing") + " &form.fixedfilename;</b></font>"
-	     "<br /><br />\n"
-	     "<p><b style='color: red'>"
-	     + LOCALE(362, "Could not import patch.") + "</b></p>";
-    
-    
-    
+    int failed_patches, num_patches = sizeof(patch_ids);
+    foreach(patch_ids, int|string patch_id) {
+      if (patch_id == 0) 
+	failed_patches++;
+    }
+      
+    res += sprintf("<font size='+1' >"
+		   "  <b>" 
+		   + LOCALE(360, "Importing") +
+		   "  </b>"
+		   "</font>"
+		   "<br/><br/>\n");
+
+    if (failed_patches) {
+      if (failed_patches == sizeof(patch_ids)) {
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "The patch import failed:") + 
+		       "  </b>"
+		       "</p>");	
+      } else {
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "All patches were not imported:") +
+		       "  </b>"
+		       "</p>");
+      }
+
+    } else {
+      res += sprintf("<p>"
+		     "  <b style='color: green'>"
+		     + LOCALE(0, "Patch import done.") +
+		     "  </b>"
+		     "</p>");
+    }
+
     res += sprintf("<p><span id='log_img' class='%s'"
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
@@ -582,8 +604,8 @@ mixed parse(RequestID id)
 		   "<br clear='all' /><br />\n"
 		   "<cf-ok-button href='?action=patcher.pike&"
 		   "class=maintenance' />",
-		   patch_id ? "folded" : "unfolded",
-		   patch_id ? "display: none" : "",
+		   failed_patches ? "unfolded" : "folded",
+		   failed_patches ? "" : "display: none",
 		   wb->get_all_messages());
     wb->clear_all();
     return res;

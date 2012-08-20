@@ -102,7 +102,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.35 2012/08/16 13:18:21 liin Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.36 2012/08/20 09:30:22 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -279,12 +279,14 @@ class Patcher
     return md->depends || ({ });
   }
 
-  string import_file(string path, void|int(0..1) dry_run)
+  array(int|string) import_file(string path, void|int(0..1) dry_run)
   //! Copies the file at @tt{path@} to the directory of imported patches.
   //! It will check if the file exists and that its name contains a valid
   //! patch id. 
+  //! If the file at @tt{path@} is a tar file, the enclosed rxp files will
+  //! be extracted first and each of them will be imported.
   //! @returns
-  //!    Returns the patch id of the imported patch. 
+  //!    Returns array of imported patch ids, or 0 if patch import failed.
   //!    TO DO: Check the id inside the file so it matches the id in the
   //!    file name.
   {
@@ -292,26 +294,64 @@ class Patcher
     if (!is_file(path))
     {
       write_err("<b>%s</b> could not be found!\n", path);
-      return 0;
+      return ({ 0 });
     }
-
-    string patch_id = extract_id_from_filename(basename(path));
-    if (!patch_id)
-    {
-      write_err("<b>%s</b> is not a valid rxp package!\n", path);
-      return 0;
-    }
-
-    // Check if it's installed or already imported.
-    if (is_imported(patch_id) || is_installed(patch_id))
-    {
-      write_err("Patch already installed or imported!\n");
-      return 0;
-    }
-   
-    PatchObject res = extract_patch(path, import_path, dry_run);
     
-    return (res) ? res->id : 0;
+    int is_tar, is_tar_gz;
+    if (glob("*.tar", lower_case(path)))
+      is_tar = 1;
+    else if (glob("*.tar.gz", lower_case(path)))
+      is_tar_gz = 1;
+
+    array(string) rxp_paths = ({});
+    string target_tmp_dir;
+
+    if (is_tar || is_tar_gz) {
+      // Assuming the tar/tar.gz file is not an rxp file but a
+      // container of multiple rxp files
+
+      target_tmp_dir = combine_path(get_temp_dir(), "rxps");
+      mkdir(target_tmp_dir);
+      extract_tar_archive(path, target_tmp_dir, is_tar ? 0 : 1);
+
+      foreach(get_dir(target_tmp_dir), string rxp_filename) {
+	rxp_paths += ({ combine_path(target_tmp_dir, rxp_filename) });
+      }
+
+      if (sizeof(rxp_paths) > 1)
+	write_mess("Extracted multiple patch files from tar file.\n");
+
+    } else {
+      rxp_paths = ({ path });
+    }
+
+    array(int|string) patch_ids = ({});
+    foreach(rxp_paths, string rxp_path) {
+      string patch_id = extract_id_from_filename(basename(rxp_path));
+      if (!patch_id) {
+	write_err("<b>%s</b> is not a valid rxp package!\n", rxp_path);
+	patch_ids += ({ 0 });
+	continue;
+      }
+      
+      // Check if it's installed or already imported.
+      if (is_imported(patch_id) || is_installed(patch_id)) {
+	write_err("Patch %s is already installed or imported!\n", patch_id);
+	patch_ids += ({ 0 });
+	continue;
+      }
+   
+      PatchObject po = extract_patch(rxp_path, import_path, dry_run);
+      if (po)
+	patch_ids += ({ po->id });
+      else
+	patch_ids += ({ 0 });
+    }
+
+    if (target_tmp_dir)
+      clean_up(target_tmp_dir, 1);
+
+    return patch_ids;
   }
 
 
