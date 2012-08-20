@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.431 2012/05/11 00:23:04 mast Exp $
+// $Id: module.pmod,v 1.432 2012/08/20 17:57:03 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8342,6 +8342,9 @@ protected class PikeCompile
     code::add (txt);
     cur_ids[id] = 1;
 
+    // Be nice to the Pike compiler, and compile the code in segments.
+    if (code::_sizeof() >= 65536) compile();
+
     return id;
   }
 
@@ -8401,15 +8404,16 @@ protected class PikeCompile
     }
   }
 
-  object compile()
+  void compile()
   {
     Thread.MutexKey lock = mutex::lock();
-    object compiled = 0;
 
     string txt = code::get();
 
     if (txt != "") {
       COMP_MSG ("%O compile\n", this_object());
+
+      object compiled = 0;
 
       txt +=
 	"mixed _encode() { } void _decode(mixed v) { }\n"
@@ -8473,7 +8477,7 @@ protected class PikeCompile
       }
     }
 
-    return compiled;
+    return;
   }
 
   protected void destroy()
