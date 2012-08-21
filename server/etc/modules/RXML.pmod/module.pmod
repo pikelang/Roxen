@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.432 2012/08/20 17:57:03 grubba Exp $
+// $Id: module.pmod,v 1.433 2012/08/21 12:13:28 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8297,31 +8297,6 @@ protected class PikeCompile
       "b" + p_comp_idnr++;
     COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
-    return id;
-  }
-
-  string add_var (string type, void|string init)
-  {
-    string id =
-#ifdef DEBUG
-      pcid +
-#endif
-      "v" + p_comp_idnr++;
-    string txt;
-
-    if (init) {
-      COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      txt = sprintf ("%s %s = %s;\n", type, id, init);
-    }
-    else {
-      COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      txt = sprintf ("%s %s;\n", type, id);
-    }
-
-    Thread.MutexKey lock = mutex::lock();
-    code::add (txt);
-    cur_ids[id] = 1;
-
     return id;
   }
 
