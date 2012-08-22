@@ -1,8 +1,18 @@
 #!/bin/sh
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
-# $Id: init.d_roxen,v 1.32 2012/01/12 16:42:03 grubba Exp $
+# $Id: init.d_roxen,v 1.33 2012/08/22 11:09:09 grubba Exp $
 #############
+### BEGIN INIT INFO
+# Provides:		roxen
+# Required-Start:	$local_fs $syslog $named $network $time
+# Required-Stop:	$local_fs $syslog $named $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Description:		Roxen Webserver
+### END INIT INFO
 
 # Configurations collection directory. If available, it overrides
 # roxenhome below.
