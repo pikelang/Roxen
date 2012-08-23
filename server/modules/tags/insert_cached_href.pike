@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.32 2011/04/28 09:17:00 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.33 2012/08/23 08:30:37 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -751,8 +751,9 @@ class HTTPClient {
       request_headers = ([]);
 
     string host_header;
-    if (url->scheme == "http" && url->port == 80)
-      host_header = sprintf("%s", url->host);
+    if ((url->scheme == "http" && url->port == 80) ||
+	(url->scheme == "https" && url->port == 443))
+      host_header = sprintf("%s", url->host); // Omit ports when standard
     else
       host_header = sprintf("%s:%d", url->host, url->port);
 
