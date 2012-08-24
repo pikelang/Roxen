@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.68 2012/03/28 12:14:18 grubba Exp $
+# $Id: extensions,v 1.69 2012/08/24 12:10:43 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to
@@ -10,7 +10,7 @@
 #
 # Last synchronized with IANA media types list: 2000-09-20
 
-# Some mime-types from RFC 3023 have been added.
+# Some mime-types from RFC 3023 and RFC 3236 have been added.
 
 # -------------------- Audio ---------------------
 
@@ -316,6 +316,7 @@ hqx	application/mac-binhex40
 # application/news-transmission
 wpd	application/wordperfect5.1
 wp6	application/wordperfect5.1
+xhtml	application/xhtml+xml
 pdf	application/pdf
 zip	application/zip
 # application/macwriteii
