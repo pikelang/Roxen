@@ -53,9 +53,10 @@ void run_tests(Configuration c)
   env->TEMP = temp_path;
 
   // Try importing and installing a patch directly through the lib. 
-  string patch_id = test_true(po->import_file, 
-			      combine_path(test_path, "2009-02-25T1124.rxp"), 
-			      0);
+  array(int|string) patch_ids = test_true(po->import_file, 
+					  combine_path(test_path, "2009-02-25T1124.rxp"), 
+					  0);
+  string patch_id = patch_ids[0];
   test_true(po->install_patch, patch_id, "self_test@localhost");
 
   // Create a patch using the lib.
@@ -112,9 +113,10 @@ void run_tests(Configuration c)
   test(desc.close);
   test_false(p && p->wait);
   
-  patch_id = test_true(po->import_file,
-		       combine_path(temp_path, "2009-02-25T1728.rxp"),
-		       0);
+  patch_ids = test_true(po->import_file,
+			combine_path(temp_path, "2009-02-25T1728.rxp"),
+			0);
+  patch_id = patch_ids[0];
 
   test_true(po->install_patch, patch_id, "self_test@localhost");
 
