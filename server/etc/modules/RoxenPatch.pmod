@@ -103,7 +103,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.38 2012/08/27 10:47:36 liin Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.39 2012/08/27 10:54:47 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -301,7 +301,8 @@ class Patcher
     int is_tar, is_tar_gz;
     if (glob("*.tar", lower_case(path)))
       is_tar = 1;
-    else if (glob("*.tar.gz", lower_case(path)))
+    else if (glob("*.tar.gz", lower_case(path)) || 
+	     glob("*.tgz", lower_case(path)))
       is_tar_gz = 1;
 
     array(string) rxp_paths = ({});
