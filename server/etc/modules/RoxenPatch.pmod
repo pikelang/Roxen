@@ -16,6 +16,7 @@ constant known_platforms = (< "macosx_ppc32",
 			      "rhel4_x86_64",
 			      "rhel5_x86",
 			      "rhel5_x86_64",
+			      "rhel6_x86_64",
 			      "sol10_x86_64",
 			      "win32_x86" >);
 
@@ -102,7 +103,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.37 2012/08/20 12:24:54 liin Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.38 2012/08/27 10:47:36 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
