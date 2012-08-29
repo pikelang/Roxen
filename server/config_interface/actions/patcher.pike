@@ -171,9 +171,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     "%s"
 		     + (which_list == "imported" ? 
 			"<td style='text-align:right'>"
-			"  <a style='font-size: 11px' "
-			"     title='Removes the uploaded patch from disk'"
-			"     href='?action=patcher.pike&class=maintenance&remove-patch-id=%[2]s'>remove</a>"
+			"<link-gbutton href='?action=patcher.pike&class=maintenance&remove-patch-id=%[2]s'>remove"
+			"</link-gbutton>"
 			"</td>"
 			: "") + 
 		     "        </td>"
@@ -800,14 +799,17 @@ mixed parse(RequestID id)
   }
 
   res += #" 
-    <font size='+1'><b>" + LOCALE(373, "Import a New Patch") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
     <p>\n" + LOCALE(374,"Select local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton2 name='OK' width='75' align='center'
       onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton2>
-    <p>" + LOCALE(405, "You can also use the bin/rxnpatch command-line tool to "
-		  "manage patches, e.g. to import many patches at once.") +
+    <p>" 
+    + LOCALE(0, "You can upload either a single rxp file or tar/tar.gz/tgz "
+	     " files containing multiple rxp files.")
+    + LOCALE(0, "There is also an bin/rxnpatch command-line tool to "
+	     "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
     <br />
     <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>

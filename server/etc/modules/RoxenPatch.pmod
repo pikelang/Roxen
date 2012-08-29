@@ -103,7 +103,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.39 2012/08/27 10:54:47 liin Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.40 2012/08/29 12:53:59 liin Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -316,9 +316,18 @@ class Patcher
       mkdir(target_tmp_dir);
       extract_tar_archive(path, target_tmp_dir, is_tar ? 0 : 1);
 
-      foreach(get_dir(target_tmp_dir), string rxp_filename) {
-	rxp_paths += ({ combine_path(target_tmp_dir, rxp_filename) });
-      }
+      // Find rxp files recursively
+      rxp_paths = lambda(string dirpath) {
+		    array(string) rxps = ({});
+		    foreach(get_dir(dirpath), string dp) {
+		      string fullpath = combine_path(dirpath, dp);
+		      if (Stdio.is_file(fullpath))
+			rxps += ({ fullpath });
+		      else
+			rxps += this_function(fullpath);
+		    }
+		    return rxps;
+		  } (target_tmp_dir);
 
       if (sizeof(rxp_paths) > 1)
 	write_mess("Extracted multiple patch files from tar file.\n");
