@@ -856,7 +856,7 @@ mixed parse(RequestID id)
              width='100%' style='table-layout: fixed'>\n
 	<tr bgcolor='&usr.obox-titlebg;' >
           <th style='width:20px'>&nbsp;</th>
-	  <th style='width:10em; text-align:left;'>Id</th>
+	  <th style='width:12em; text-align:left;'>Id</th>
 	  <th style='width:auto; text-align:left'>Patch Name</th>
 	  <th style='width:16em; text-align:left'>Time of Installation</th>
 	  <th style='width:20px; text-align:right'>
