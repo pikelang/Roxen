@@ -1,10 +1,10 @@
 // Version information
-// $Id: version.h,v 1.1771 2012/08/31 12:25:53 dist Exp $
+// $Id: version.h,v 1.1772 2012/08/31 15:11:40 dist Exp $
 // 
 // Note that version information (major and minor) is also
 // present in module.h.
 constant roxen_ver = "5.2";
-constant roxen_build = "240";
+constant roxen_build = "241";
 
 #if !constant(roxen_release)
 constant roxen_release = "-cvs";
