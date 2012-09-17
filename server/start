@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.243 2012/01/17 10:52:44 grubba Exp $
+# $Id: start,v 1.244 2012/09/17 16:38:46 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -745,6 +745,8 @@ fi
 #
 
 cleanup_pid_file() {
+  rm -f "/tmp/roxen.$$" 2>/dev/null
+  rm -f "/var/run/roxen.$$" 2>/dev/null
   [ -z "$pidfile" ] || rm $pidfile
 }
 
@@ -755,6 +757,21 @@ processp() {
   # Check that the cause for the failure is that the process doesn't exist.
   "$PIKE" $DEFINES -e 'return !kill('"$1"', 0) && (errno() == System.ESRCH);';
   return;
+}
+
+# Check if the PID in $1 is an active process and is the Roxen start-script.
+roxenp() {
+  # Check that there's a lock-file.
+  #
+  # Primary check is in /var/run/ which often is restricted to root.
+  # Secondary check is in /tmp/ to allow for normal users running
+  # the script unmodified.
+  if [ -f "/var/run/roxen.$1" -o -f "/tmp/roxen.$1" ]; then
+    # Check that the process exists as well.
+    processp "$1";
+    return;
+  fi
+  return 1;
 }
 
 # NOTE: The following function needs to be reentrant.
@@ -803,6 +820,7 @@ signal_exit() {
       fi
     fi
   fi
+  cleanup_pid_file
   test "x$once" != x2 && dp "Start script terminated."
   exit 0
 }
@@ -919,36 +937,39 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   # Check for stop.
   if [ "$stop"x != x ] && [ -f "$pidfile" ]
   then
-      pids=`cat "$pidfile"`
-      echo "$pids" | xargs kill
-      cat "$pidfile" | while read pid; do
-	  while processp $pid 2>/dev/null; do
-	      echo "Waiting for $pid to die." >&2
-	      sleep 1
+      if read roxenpid && read scriptpid && roxenp "$scriptpid"; then
+	  pids=`cat "$pidfile"`
+	  echo "$pids" | xargs kill
+	  cat "$pidfile" | while read pid; do
+	      while processp $pid 2>/dev/null; do
+		  echo "Waiting for $pid to die." >&2
+		  sleep 1
+	      done
 	  done
-      done
+      else
+	  dp "There is a pid file $pidfile,"
+	  dp "but the corresponding processes do not exist."
+	  dp "Stale pid file? Deleting the pid file."
+	  rm "$pidfile"
+	  :
+      fi < "$pidfile"
       exit
   fi
   # Avoid duplicate start scripts if we got a pid file.
   mypid=$$
   test -f "$pidfile" && {
     if read roxenpid && read scriptpid; then
-      if processp $scriptpid 2>/dev/null; then
+      if roxenp $scriptpid 2>/dev/null ; then
 	dp "According to the pid file $pidfile,"
 	dp "there is already a start script running with pid $scriptpid. Specify "
 	dp "another pid file with --pid-file if this is a different server."
 	dp "Server not started."
 	:
-      elif processp $roxenpid 2>/dev/null; then
-	dp "According to the pid file $pidfile,"
-	dp "there is already a server running with pid $roxenpid, but its start "
-	dp "script seems to have died. You should shut it down and restart "
-	dp "it, since it won't restart automatically. Server not started."
-	:
       else false; fi
     else false; fi
   } < "$pidfile" && exit 1
   # Minor race here.
+  { touch "/var/run/roxen.$mypid" || touch "/tmp/roxen.$mypid"; } 2>/dev/null
   { echo "x" && echo $mypid; } > "$pidfile"
   trap cleanup_pid_file 0
 fi
@@ -985,6 +1006,7 @@ if [ -z "$once" ] ; then
   if [ ! -d "$DEBUGDIR" ] ; then
     if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
       dp "Failed to create log directory $DEBUGDIR."
+      cleanup_pid_file
       exit 1
     fi
   fi
@@ -1012,6 +1034,7 @@ if [ -z "$once" ] ; then
 	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
 	  if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
 	    dp "Failed to create log directory $DEBUGDIR."
+	    cleanup_pif_file
 	    exit 1
 	  fi
 	fi
@@ -1039,6 +1062,7 @@ if [ -z "$once" ] ; then
 	   cleanup_pid_file
            cd .. && exec ./start "$@"
            dp 'Failed to spawn start script. -- Permission problem?'
+	   cleanup_pid_file
            exit 1
            ;;
 	 50)
@@ -1073,6 +1097,7 @@ if [ -z "$once" ] ; then
     :
   else
     dp 'Failed to spawn subshell. -- Permission problem?'
+    cleanup_pid_file
     exit 1
   fi
 
