@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.245 2012/09/20 11:27:10 grubba Exp $
+# $Id: start,v 1.246 2012/09/21 08:17:54 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -805,7 +805,7 @@ check_pid_file_lock() {
   # the script unmodified.
   if [ -f "/var/run/roxen-$2.$1.pid" -o -f "/tmp/roxen-$2.$1.pid" ]; then
     # Check that the pid file belongs to our configuration.
-    if [ `cat /var/run/roxen-$2.$1.pid 2>/dev/null || cat /var/run/roxen-$2.$1.pid 2>/dev/null` = "$3" ]; then
+    if [ "`cat /var/run/roxen-$2.$1.pid 2>/dev/null || cat /var/run/roxen-$2.$1.pid 2>/dev/null`" = "$3" ]; then
       return 0
     fi
   fi
