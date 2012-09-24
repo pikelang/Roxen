@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.151 2012/07/10 14:22:56 jonasw Exp $
+// $Id: cache.pike,v 1.152 2012/09/24 08:07:01 wellhard Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1562,10 +1562,11 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
 		   "collect_stats": 1,
 		   "collect_direct_externals": 1,
+		   "block_strings": -1
 		 ]);
   float t = gauge {
 #else
-#define opts 0
+      mapping opts = (["block_strings": -1]);
 #endif
 
       if (function(int|mapping:int) cm_cb =
