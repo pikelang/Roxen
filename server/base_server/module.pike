@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.246 2012/07/02 10:05:18 mast Exp $
+// $Id: module.pike,v 1.247 2012/09/24 16:06:41 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -488,8 +488,12 @@ class DefaultPropertySet
       RequestID sub_id = id->clone_me();
       sub_id->misc->common = id->misc->common;
 
-      sub_id->not_query = query_location() + path;
-      sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+      sub_id->raw_url = sub_id->not_query = query_location() + path;
+      if ((sub_id->raw_url != id->raw_url) && (id->raw_url != id->not_query)) {
+	// sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+	sub_id->raw_url = sub_id->not_query +
+	  (({ "" }) + (id->raw_url/"?")[1..]) * "?";
+      }
       sub_id->method = "HEAD";
 
       mapping(string:mixed)|int(-1..0)|object res = find_file (path, sub_id);
