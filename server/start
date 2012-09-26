@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.246 2012/09/21 08:17:54 grubba Exp $
+# $Id: start,v 1.247 2012/09/26 15:44:15 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -781,19 +781,11 @@ if [ $verbose -gt 1 -a "$passhelp" = "" ]; then
   dp "Canonical Roxen configuration identifier: $canonicalconf."
 fi
 
+start_pid="$$"
 
 #
 # Some useful functions
 #
-
-cleanup_pid_file_lock() {
-  if [ -z "$pidfile" ]; then return 0; fi
-  if [ $verbose -gt 1 ]; then
-    dp "Releasing pid-file lock roxen-$2.$1.pid."
-  fi
-  rm -f "/tmp/roxen-$2.$1.pid" 2>/dev/null
-  rm -f "/var/run/roxen-$2.$1.pid" 2>/dev/null
-}
 
 # Check whether there's a valid pid lock on pid $1
 # of process type $2 for configuration $3.
@@ -803,18 +795,34 @@ check_pid_file_lock() {
   # Primary check is in /var/run/ which often is restricted to root.
   # Secondary check is in /tmp/ to allow for normal users running
   # the script unmodified.
+  if [ "$verbose" -g 1 ]; then
+    dp "Checking pid-file lock roxen-$2.$1.pid for configuration $3."
+  fi
   if [ -f "/var/run/roxen-$2.$1.pid" -o -f "/tmp/roxen-$2.$1.pid" ]; then
     # Check that the pid file belongs to our configuration.
-    if [ "`cat /var/run/roxen-$2.$1.pid 2>/dev/null || cat /var/run/roxen-$2.$1.pid 2>/dev/null`" = "$3" ]; then
+    if [ "x$3" = "x" -o "x`cat /var/run/roxen-$2.$1.pid 2>/dev/null || cat /tmp/roxen-$2.$1.pid 2>/dev/null`" = "x$3" ]; then
       return 0
     fi
   fi
   return 1
 }
 
+# Remove the lock on pid $1 of process type $2 for configuration $3
+# (if any).
+cleanup_pid_file_lock() {
+  if [ -z "$pidfile" ]; then return 0; fi
+  if check_pid_file_lock "$1" "$2" "$3"; then
+    if [ $verbose -gt 1 ]; then
+      dp "Releasing pid-file lock roxen-$2.$1.pid."
+    fi
+    rm -f "/tmp/roxen-$2.$1.pid" 2>/dev/null
+    rm -f "/var/run/roxen-$2.$1.pid" 2>/dev/null
+  fi
+}
+
 # Cleanup after the start-script.
 cleanup_start_pid_file() {
-  cleanup_pid_file_lock "$$" "start" "$canonicalconf"
+  cleanup_pid_file_lock "$start_pid" "start" "$canonicalconf"
   [ -z "$pidfile" ] || rm -f $pidfile
 }
 
@@ -826,13 +834,13 @@ cleanup_roxen_pid_file() {
     if check_pid_file_lock "$roxenpid" "server" "$canonicalconf"; then
       # There's a valid pid file lock for the server for this configuration.
       # Delete it.
-      cleanup_pid_file_lock "$roxenpid" "server"
+      cleanup_pid_file_lock "$roxenpid" "server" "$canonicalconf"
     fi
     # Remove the stale pid from the pid-file.
     if [ $verbose -gt 1 ]; then
       dp "Removing stale pids from $pidfile."
     fi
-    { echo "x"; echo "$$"; } >"$pidfile"
+    { echo "x"; echo "$start_pid"; } >"$pidfile"
   fi
 }
 
@@ -849,18 +857,18 @@ processp() {
 # a $2 {start,server} lock-file associated with the
 # configuration $3.
 roxenp() {
-  if check_pid_file "$1" "$2" "$3"; then
+  if check_pid_file_lock "$1" "$2" "$3"; then
     # Check that the process exists as well.
     if processp "$1"; then return 0; fi
     # Cleanup the lock, since it is stale.
-    cleanup_pid_file_lock "$1" "$2"
+    cleanup_pid_file_lock "$1" "$2" ""
   fi
   return 1;
 }
 
 # Create a roxen lock-file for PID $1 of type $2
 # associated with configuration $3.
-lock_pid() {
+lock_pid_file() {
   if [ -z "$pidfile" ]; then return 0; fi
   # Create a lock-file.
   if [ $verbose -gt 1 ]; then
@@ -883,7 +891,7 @@ signal_exit() {
     # Zap the pid lock file if it is still around.
     # NB: We don't need to clean the pid-file, since
     #     we will zap it later.
-    cleanup_pid_file_lock "$ROXEN_PID" "server"
+    cleanup_pid_file_lock "$ROXEN_PID" "server" ""
     ROXEN_PID=""
     dp "Roxen WebServer shutdown."
     # FIXME: Consider exiting here.
@@ -1078,7 +1086,6 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
     exit
   fi
   # Avoid duplicate start scripts if we got a pid file.
-  mypid=$$
   test -f "$pidfile" && {
     if read roxenpid && read scriptpid; then
       if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
@@ -1097,8 +1104,8 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
     else false; fi
   } < "$pidfile" && exit 1
   # Minor race here.
-  lock_pid $mypid "start" "$canonicalconf"
-  { echo "x" && echo $mypid; } > "$pidfile"
+  lock_pid_file $start_pid "start" "$canonicalconf"
+  { echo "x" && echo $start_pid; } > "$pidfile"
   trap cleanup_start_pid_file 0
 fi
 
@@ -1151,6 +1158,20 @@ if [ -z "$once" ] ; then
   if (
     (
       # Minor race here wrt pid file cleanup.
+
+      # Note: We can't use $$ here since it is the pid of the master shell.
+      #       We can't use $(exec sh -c 'echo $PPID') (the POSIX way), for
+      #       multiple reasons, most of them pertaining to /bin/sh on
+      #       Solaris which supports neither $PPID nor $().
+      old_start_pid="$start_pid"
+      start_pid="`\"$pike\" $PIKEARGS -e 'return (string)getppid();'`"
+      lock_pid_file "$start_pid" "start" "$canonicalconf"
+      [ -z "$pidfile" ] || { echo "x" && echo $start_pid; } > "$pidfile"
+      if [ "x$old_start_pid" = "x$start_pid" ]; then :; else
+        # Get rid of the tentative pid file lock.
+	cleanup_pid_file_lock "$old_start_pid" "start" "$canonicalconf"
+      fi
+
       exec 3>&-
       trap signal_exit 2 15
       trap "" 1
@@ -1214,12 +1235,10 @@ if [ -z "$once" ] ; then
       done
     ) &
     # Minor race here wrt pid file contents.
-    pid=$!
+    start_pid=$!
     trap "" 0
-    lock_pid_file "$pid" "start" "$canonicalconf"
-    [ -z "$pidfile" ] || { echo "x" && echo $pid; } > "$pidfile"
-    dp "Forked start script, pid $pid." 2>&3
-    dp "Start script pid $pid."
+    dp "Forked start script, pid $start_pid." 2>&3
+    dp "Start script pid $start_pid."
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
