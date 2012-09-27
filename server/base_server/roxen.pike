@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1122 2012/09/20 12:05:33 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1123 2012/09/27 15:25:29 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5595,24 +5595,30 @@ void create_pid_file(string where)
   object privs = Privs("Deleting old pid file.");
   r_rm(where);
 
-  // NB: The following won't work if there's a wrapper process
-  //     for Roxen (eg started via gdb, truss or valgrind),
-  //     but that shouldn't matter much, since the pid lock file
-  //     won't be used in that case anyway.
-  privs = Privs("Creating pid lock.");
   mixed err;
-  if (catch {
-      // Try /var/run/ first.
-      hardlink(sprintf("/var/run/roxen-start.%d.pid", getppid()),
-	       sprintf("/var/run/roxen-server.%d.pid", getpid()));
-    } && (err = catch {
-	// And then /tmp/.
-	hardlink(sprintf("/tmp/roxen-start.%d.pid", getppid()),
-		 sprintf("/tmp/roxen-server.%d.pid", getpid()));
-      })) {
-    report_debug("Cannot create the pid lock file %O: %s",
-		 sprintf("/tmp/roxen-server.%d.pid", getpid()),
-		 describe_error(err));
+
+  // Note: The server lock file is often created by the start script, but
+  //       there is a race, so this code is here for paranoia reasons.
+  if (!Stdio.exist(sprintf("/var/run/roxen-server.%d.pid", getpid())) &&
+      !Stdio.exist(sprintf("/tmp/roxen-server.%d.pid", getpid()))) {
+    // NB: The following won't work if there's a wrapper process
+    //     for Roxen (eg started via gdb, truss or valgrind),
+    //     but that shouldn't matter much, since the pid lock file
+    //     won't be used in that case anyway.
+    privs = Privs("Creating pid lock.");
+    if (catch {
+	// Try /var/run/ first.
+	hardlink(sprintf("/var/run/roxen-start.%d.pid", getppid()),
+		 sprintf("/var/run/roxen-server.%d.pid", getpid()));
+      } && (err = catch {
+	  // And then /tmp/.
+	  hardlink(sprintf("/tmp/roxen-start.%d.pid", getppid()),
+		   sprintf("/tmp/roxen-server.%d.pid", getpid()));
+	})) {
+      report_debug("Cannot create the pid lock file %O: %s",
+		   sprintf("/tmp/roxen-server.%d.pid", getpid()),
+		   describe_error(err));
+    }
   }
   privs = 0;
   if(err = catch {
