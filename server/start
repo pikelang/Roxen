@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.247 2012/09/26 15:44:15 grubba Exp $
+# $Id: start,v 1.248 2012/09/27 10:04:49 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -795,7 +795,7 @@ check_pid_file_lock() {
   # Primary check is in /var/run/ which often is restricted to root.
   # Secondary check is in /tmp/ to allow for normal users running
   # the script unmodified.
-  if [ "$verbose" -g 1 ]; then
+  if [ "$verbose" -gt 1 ]; then
     dp "Checking pid-file lock roxen-$2.$1.pid for configuration $3."
   fi
   if [ -f "/var/run/roxen-$2.$1.pid" -o -f "/tmp/roxen-$2.$1.pid" ]; then
@@ -1064,25 +1064,50 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
   # Check for stop.
-  if [ "$stop"x != x ] && [ -f "$pidfile" ]
+  if [ "$stop"x != x ]
   then
-    if read roxenpid && read scriptpid && \
-	roxenp "$scriptpid" "start" "$canonicalconf"; then
-      pids=`cat "$pidfile"`
-      echo "$pids" | xargs kill
-      cat "$pidfile" | while read pid; do
-	while processp $pid 2>/dev/null; do
-	  echo "Waiting for $pid to die." >&2
-	  sleep 1
-	done
-      done
+    if [ -f "$pidfile" ]; then
+      if read roxenpid && read scriptpid; then
+	problems=""
+	if roxenp "$scriptpid" "start" "$canonicalconf"; then
+	  dp "Shutting down the start script..."
+	  kill "$scriptpid"
+	  while processp $pid 2>/dev/null; do
+	    echo "Waiting for start script $pid to die." >&2
+	    sleep 1
+	  done
+	else
+	  problems="nostart"
+	fi
+	# NB: At this point the original start script has
+	#     often already shut down the server, but...
+	if roxenp "$roxenpid" "server" "$canonicalconf"; then
+	  dp "Shutting down the server..."
+	  kill "$roxenpid"
+	  while processp $roxenpid 2>/dev/null; do
+	    echo "Waiting for roxen $roxenpid to die." >&2
+	    sleep 1
+	  done
+	else
+	  problems="$problems:noserver"
+	fi
+	if [ "$problems" = "nostart:noserver" ]; then
+	  dp "There is a pid file $pidfile,"
+	  dp "but the corresponding processes do not exist,"
+	  dp "or are not associated with this configuration."
+	  dp "Stale pid file? Deleting the pid file."
+	  rm "$pidfile"
+	  :
+	fi
+      else
+	dp "There is a pid file $pidfile,"
+	dp "but it seems to be truncated."
+	exit 1
+      fi < "$pidfile"
     else
-      dp "There is a pid file $pidfile,"
-      dp "but the corresponding processes do not exist."
-      dp "Stale pid file? Deleting the pid file."
-      rm "$pidfile"
-      :
-    fi < "$pidfile"
+      dp "The pid file $pidfile does not exist."
+      dp "The server is probably not running."
+    fi
     exit
   fi
   # Avoid duplicate start scripts if we got a pid file.
