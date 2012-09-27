@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.248 2012/09/27 10:04:49 grubba Exp $
+# $Id: start,v 1.249 2012/09/27 12:44:12 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -222,7 +222,7 @@ setup_for_tests() {
     rm -rf "$VARDIR/test_config"*
     DIR="$VARDIR/test_config"
     if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then
-      $PIKE $DEFINES "$SELF_TEST_DIR/scripts/setup.pike" "$SELF_TEST_DIR" "$VARDIR"
+      eval "\"$pike\" $PIKEARGS $DEFINES \"$SELF_TEST_DIR/scripts/setup.pike\" \"$SELF_TEST_DIR\" \"$VARDIR\""
     fi
     once=${once:-1}
     debug=1
@@ -849,7 +849,7 @@ processp() {
   if kill -0 "$1"; then return 0; fi;
 
   # Check that the cause for the failure is that the process doesn't exist.
-  "$PIKE" $DEFINES -e 'return !kill('"$1"', 0) && (errno() == System.ESRCH);';
+  eval "\"$pike\" $PIKEARGS $DEFINES -e 'return !kill('\"$1\"', 0) && (errno() == System.ESRCH);'";
   return;
 }
 
