@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.728 2012/06/08 14:21:48 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.729 2012/10/01 14:10:02 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -239,10 +239,11 @@ class DataCache
 
   // Heuristic to calculate the entry size. Besides the data itself,
   // we add the size of the key. Even though it's a shared string we
-  // can pretty much assume it has no other permanent refs. 128 is a
+  // can pretty much assume it has no other permanent refs. 1024 is a
   // constant penalty that accounts for the keypair in the mapping and
-  // that leaf entries are stored in arrays.
-#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 128)
+  // that leaf entries are stored in arrays and the metadata mapping.
+#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 1024)
+#define CALC_VARY_CB_SIZE(key) (sizeof (key) + 128)
 
   // Expire a single entry.
   protected void really_low_expire_entry(string key)
@@ -256,6 +257,8 @@ class DataCache
       if (CacheKey cachekey = e[1]->key) {
 	destruct (cachekey);
       }
+    } else if (!zero_type(e)) {
+      current_size -= CALC_VARY_CB_SIZE(key);
     }
   }
 
@@ -294,6 +297,8 @@ class DataCache
 	current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
 	m_delete(cache, key_prefix);
 	return;
+      } else if (!zero_type(val)) {
+	current_size -= CALC_VARY_CB_SIZE(key_prefix);
       }
       if (!val) {
 	return;
@@ -314,7 +319,7 @@ class DataCache
   }
 
   //! Clear ~1/10th of the cache.
-  protected void clear_some_cache()
+  void clear_some_cache()
   {
     // FIXME: Use an iterator to avoid indices() here.
     array(string) q = indices(cache);
@@ -326,7 +331,7 @@ class DataCache
 
     // The following code should be ~O(n * log(n)).
     sort(q);
-    for(int i = 0; i < sizeof(q)/10; i++) {
+    for(int i = 0; i < sizeof(q)/10 + 1; i++) {
       int r = random(sizeof(q));
       string key_prefix = q[r = random(sizeof(q))];
       if (!key_prefix) continue;
@@ -369,9 +374,13 @@ class DataCache
 			    (arrayp (old) ? "of size " + sizeof (old[0]) :
 			     sprintf ("%O", old)));
 	low_expire_entry(key);
+	old = UNDEFINED; // Ensure that current size is updated below.
 	SIMPLE_TRACE_LEAVE ("");
       }
       cache[key] = vary_cb;
+      if(!old) {
+	current_size += CALC_VARY_CB_SIZE(key);
+      }
 
       SIMPLE_TRACE_ENTER (this, "Registering vary cb %O", vary_cb);
 
@@ -397,6 +406,7 @@ class DataCache
 	key_frag = replace (key_frag, "\0", "\0\1");
       else key_frag = "";
       key += "\0\0" + key_frag;
+      entry_size += 2 + sizeof(key_frag);
     }
 
     array(string|mapping(string:mixed))|string|
