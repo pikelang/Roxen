@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.683 2012/07/17 13:40:23 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.684 2012/10/02 08:39:07 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8942,7 +8942,7 @@ using the pre tag.
 "hash-hmac":#"<desc type='cont'><p><short>
  Keyed-Hashing for Message Authentication (HMAC) tag.</short></p>
 
-<ex-box><hmac-hash hash='md5' password='key'>The quick brown fox jumps over the lazy dog</hmac-hash>
+<ex-box><hash-hmac hash='md5' password='key'>The quick brown fox jumps over the lazy dog</hash-hmac>
   Result: 80070713463e7749b90c2dc24911e275
 </ex-box>
 </desc>
