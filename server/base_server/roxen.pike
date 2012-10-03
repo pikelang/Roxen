@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1123 2012/09/27 15:25:29 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1124 2012/10/03 13:16:02 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5594,6 +5594,7 @@ void create_pid_file(string where)
 
   object privs = Privs("Deleting old pid file.");
   r_rm(where);
+  privs = 0;
 
   mixed err;
 
@@ -5619,8 +5620,8 @@ void create_pid_file(string where)
 		   sprintf("/tmp/roxen-server.%d.pid", getpid()),
 		   describe_error(err));
     }
+    privs = 0;
   }
-  privs = 0;
   if(err = catch {
       Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()));
     })
