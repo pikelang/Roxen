@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.60 2012/07/17 13:40:11 jonasw Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.61 2012/11/06 15:43:53 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -209,23 +209,15 @@ class AsyncHTTPClient {
       destruct(con);
   }
 
-  void create(string method, mapping args, mapping|void headers) {
+  void create(string method, mapping args,
+	      mapping|void headers, string|mapping|void data)
+  {
     if(method == "POST") {
-      mapping vars = ([ ]);
-      string data;
-#if constant(roxen)
-      data = args["post-data"];
-      foreach( (args["post-variables"] || "") / ",", string var) {
-	array a = var / "=";
-	if(sizeof(a) == 2)
-	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
+      if (mappingp(data)) {
+	do_method(method, args->href, data, headers, 0, UNDEFINED);
+      } else {
+	do_method(method, args->href, UNDEFINED, headers, 0, data);
       }
-      if(data && sizeof(data) && sizeof(vars))
-	RXML.run_error("The 'post-variables' and the 'post-data' arguments "
-		       "are mutually exclusive.");
-#endif
-      do_method("POST", args->href, sizeof(vars) && vars, headers,
-		0, data);
     }
     else
       do_method("GET", args->href, 0, headers);
@@ -251,8 +243,22 @@ class TagInsertHref {
   inherit RXML.Tag;
   constant name = "insert";
   constant plugin_name = "href";
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
 
-  string get_data(string var, mapping args, RequestID id) {
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "method": RXML.t_text(RXML.PEnt),
+    "soap-action": RXML.t_text(RXML.PEnt),
+  ]);
+
+  array do_enter(mapping args, RequestID id, RXML.Frame frame)
+  {
+    if (args["soap-action"]) {
+      frame->flags &= ~RXML.FLAG_EMPTY_ELEMENT;
+    }
+  }
+
+  string get_data(string var, mapping args, RequestID id, RXML.Frame frame)
+  {
     if(!query("insert_href")) RXML.run_error("Insert href is not allowed.\n");
 
     int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
@@ -271,6 +277,7 @@ class TagInsertHref {
     string method = "GET";
     if(args->method && lower_case(args->method) == "post")
       method = "POST";
+    if (args["soap-action"]) method = "POST";
 
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
@@ -281,26 +288,43 @@ class TagInsertHref {
 	if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
 	  headers[name] = val;
 
+    string|mapping data;
+    if (method == "POST")
+    {
+      int set;
+      data = args["post-data"];
+      if (data) set++;
+      if(args["soap-action"]) {
+	headers["SOAPACTION"] = args["soap-action"];
+	headers["content-type"] = "text/xml; charset=utf-8";
+	// NB: frame->content has been RXML parsed.
+	data = string_to_utf8(frame->content);
+	set++;
+      }
+      if (args["post-variables"]) {
+	data = ([]);
+	foreach(args["post-variables"] / ",", string var) {
+	  array a = var / "=";
+	  if(sizeof(a) == 2)
+	    data[String.trim_whites(a[0])] =
+	      RXML.user_get_var(String.trim_whites(a[1]));
+	}
+	set++;
+      }
+      if (set > 1) {
+	RXML.run_error("The 'post-variables', 'post-data' and 'soap-action' "
+		       "attributes are mutually exclusive.");
+      }
+    }
+
 #ifdef THREADS
-    q = AsyncHTTPClient(method, args, headers);
+    q = AsyncHTTPClient(method, args, headers, data);
     q->run();
 #else
-    mixed err;
-    if(method == "POST") {
-      mapping vars = ([ ]);
-      foreach( (args["post-variables"] || "") / ",", string var) {
-	array a = var / "=";
-	if(sizeof(a) == 2)
-	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
-      }
-      err = catch {
-	  q = Protocols.HTTP.post_url(args->href, vars, headers);
-	};
-    }
-    else
-      err = catch {
-	  q = Protocols.HTTP.get_url(args->href, 0, headers);
-	};
+    mixed err = catch {
+	q = Protocols.HTTP.post_url(args->href, data, headers);
+      };
+
     if (err) {
       string msg = describe_error (err);
       if (has_prefix (msg, "Standards.URI:"))
@@ -312,21 +336,27 @@ class TagInsertHref {
     
     if(args["status-variable"] && q && q->status)
       RXML.user_set_var(args["status-variable"],q->status);
-    
+
+    string errmsg;
     if(q && q->status>0 && q->status<400) {
       mapping headers = q->con->headers;
       string data = q->data();
       // Explicitly destruct the connection object to avoid garbage
       // and CLOSE_WAIT sockets. Reported in [RT 18335].
       destruct(q);
-      return Roxen.low_parse_http_response (headers, data, 0, 1,
-					    (int)args["ignore-unknown-ce"]);
+
+      if (data) {
+	return Roxen.low_parse_http_response (headers, data, 0, 1,
+					      (int)args["ignore-unknown-ce"]);
+      }
+    } else {
+      errmsg = q && q->status_desc;
     }
 
     _ok = 0;
 
     if(!args->silent)
-      RXML.run_error((q && q->status_desc) || "No server response");
+      RXML.run_error(errmsg || "No server response");
     // Explicitly destruct the connection object to avoid garbage
     // and CLOSE_WAIT sockets. Reported in [RT 18335].
     destruct(q);
