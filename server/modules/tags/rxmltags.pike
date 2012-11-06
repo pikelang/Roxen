@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.684 2012/10/02 08:39:07 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.685 2012/11/06 15:33:47 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1517,7 +1517,7 @@ class TagDate {
 class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
+  constant flags = RXML.FLAG_SOCKET_TAG;
 
   array(RXML.Type) result_types = ({RXML.t_any});
 
@@ -1525,6 +1525,18 @@ class TagInsert {
 
   class Frame {
     inherit RXML.Frame;
+
+    array do_enter(RequestID id)
+    {
+      // Default to being an empty element tag, but
+      // allow the plugins to have content if needed.
+      flags |= RXML.FLAG_EMPTY_ELEMENT;
+
+      RXML.Tag plugin = get_plugins()[args->source];
+      if (plugin && plugin->do_enter) {
+	return plugin->do_enter(args, id, this);
+      }
+    }
 
     void do_insert(RXML.Tag plugin, string name, RequestID id) {
       result=plugin->get_data(args[name], args, id, this);
