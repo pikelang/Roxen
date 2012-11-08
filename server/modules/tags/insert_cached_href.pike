@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.33 2012/08/23 08:29:56 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.34 2012/11/08 13:52:52 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -764,7 +764,7 @@ class HTTPClient {
     if(url->user)
       default_headers->authorization = "Basic "
 	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""));
+			     (url->password || ""), 1);
 
     request_headers = default_headers | request_headers;
     query=url->query;

@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.42 2011/10/27 17:09:34 jonasw Exp $
+ * $Id: resolv.pike,v 1.43 2012/11/08 13:52:49 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -331,7 +331,7 @@ string parse( RequestID id )
     {
       nid->rawauth
         = "Basic "+MIME.encode_base64(id->variables->user+":"+
-                                      id->variables->password);
+                                      id->variables->password, 1);
       nid->realauth=id->variables->user+":"+id->variables->password;
     }
 

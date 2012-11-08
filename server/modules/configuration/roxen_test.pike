@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.93 2012/02/14 19:52:54 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.94 2012/11/08 13:52:52 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -524,7 +524,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 		   "login" : lambda(Parser.HTML p, mapping m) {
 			       id->realauth = m->user + ":" + m->password;
 			       id->request_headers->authorization =
-				 "Basic " + MIME.encode_base64 (id->realauth);
+				 "Basic " + MIME.encode_base64 (id->realauth, 1);
 			       conf->authenticate(id);
 			     },
     ]) );

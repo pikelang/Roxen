@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.61 2012/11/06 15:43:53 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.62 2012/11/08 13:52:52 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -122,7 +122,7 @@ class AsyncHTTPClient {
     if(url->user)
       default_headers->authorization = "Basic "
 	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""));
+			     (url->password || ""), 1);
     request_headers = default_headers | request_headers;
     
     query=url->query;
