@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.729 2012/10/01 14:10:02 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.730 2012/11/12 09:23:26 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4913,6 +4913,9 @@ hyphens ('-') occur in the specifier names.</p>
     <td>Full requested resource, including any query fields.</td></tr>
 <tr><td>$protocol</td>
     <td>The protocol used (normally HTTP/1.1).</td></tr>
+<tr><td>$scheme</td>
+    <td>The URL scheme (e.g. http or https) derived from the port handler
+        module.</td></tr>
 <tr><td>$response</td>
     <td>The response code sent.</td></tr>
 <tr><td>$bin-response</td>
