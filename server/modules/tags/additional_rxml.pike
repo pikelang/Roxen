@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.62 2012/11/08 13:52:52 jonasw Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.63 2012/11/12 10:43:03 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -298,7 +298,7 @@ class TagInsertHref {
 	headers["SOAPACTION"] = args["soap-action"];
 	headers["content-type"] = "text/xml; charset=utf-8";
 	// NB: frame->content has been RXML parsed.
-	data = string_to_utf8(frame->content);
+	data = String.trim_all_whites(string_to_utf8(frame->content));
 	set++;
       }
       if (args["post-variables"]) {
