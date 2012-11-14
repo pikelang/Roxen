@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.335 2012/08/15 12:44:53 grubba Exp $
+// $Id: Roxen.pmod,v 1.336 2012/11/14 15:03:23 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2792,6 +2792,13 @@ protected string low_roxen_encode(string val, string encoding)
    case "utf-8":
      return string_to_utf8(val);
 
+   case "-utf8":
+   case "-utf-8":
+    if( catch {
+	return utf8_to_string(val);
+      })
+      RXML.run_error("Cannot decode utf-8 string. Bad data.\n");
+
    case "utf16":
    case "utf16be":
      return Locale.Charset.encoder("utf16be")->feed(val)->drain();
@@ -2804,10 +2811,25 @@ protected string low_roxen_encode(string val, string encoding)
       RXML.run_error(  "Cannot hex encode wide characters.\n" );
     return String.string2hex(val);
 
+  case "-hex":
+    if( catch {
+	return String.hex2string(val);
+      })
+      RXML.run_error("Cannot decode hex string. Bad data.\n");
+
    case "base64":
    case "base-64":
    case "b64":
      return MIME.encode_base64(val);
+
+   case "-base64":
+   case "-base-64":
+   case "-b64":
+     if( catch {
+	 return MIME.decode_base64(val);
+       })
+       RXML.run_error("Cannot decode base64 string. Bad data.\n");
+
    
   case "md5":
   case "sha1":
@@ -2954,6 +2976,10 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "utf-8"
 //!     UTF-8 encoding. C.f. @[string_to_utf8].
 //!
+//!   @value "-utf8"
+//!   @value "-utf-8"
+//!     UTF-8 decoding. C.f. @[utf8_to_string].
+//!
 //!   @value "utf16"
 //!   @value "utf16be"
 //!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
@@ -2968,11 +2994,22 @@ protected string low_roxen_encode(string val, string encoding)
 //!     @expr{"666f6f"@}. Requires octet (i.e. non-wide) strings.
 //!     C.f. @[String.string2hex].
 //!
+//!   @value "-hex"
+//!     Hexadecimal decoding, e.g. @expr{"666f6f"@} is decoded to
+//!     @expr{"foo"@}.
+//!     C.f. @[String.hex2string].
+//!
 //!   @value "base64"
 //!   @value "base-64"
 //!   @value "b64"
 //!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
 //!     C.f. @[MIME.encode_base64].
+//!
+//!   @value "-base64"
+//!   @value "-base-64"
+//!   @value "-b64"
+//!     Base-64 MIME decoding.
+//!     C.f. @[MIME.decode_base64].
 //!
 //!   @value "md5"
 //!   @value "sha1"
