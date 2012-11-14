@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.150 2012/07/02 16:36:47 jonasw Exp $
+// $Id: module_support.pike,v 1.151 2012/11/14 14:43:12 jonasw Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -594,7 +594,8 @@ class ModuleInfo( string sname, string filename )
         if( strip_extention(file) == what )
         {
 	  
-	  if( (< "pike", "so", "jar", "class" >)[ extension( file ) ] )
+	  if( (< "pike", "so" >)[ extension( file ) ] ||
+	      ( (< "class", "jar" >)[extension(file)] && got_java()))
           {
 	    //  Skip inner classes in Java
 	    if (has_value(file, "$") && has_suffix(file, ".class"))
