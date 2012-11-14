@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.477 2012/07/10 14:22:56 jonasw Exp $
+// $Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.477 2012/07/10 14:22:56 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -3049,6 +3049,20 @@ and rebuild Pike from source.
 ");
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
+
+#if !constant (Regexp.PCRE)
+  report_debug (#"
+
+
+******************************************
+Roxen requires Regexp.PCRE support in Pike
+******************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Regexp.PCRE)
+
 
   Stdio.Stat stat = file_stat("etc/include/version.h");
   if (stat && (stat->mtime > time())) {
