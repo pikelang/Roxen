@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.643 2012/01/24 16:15:47 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.644 2012/11/15 16:54:00 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2621,10 +2621,11 @@ void send_result(mapping|void result)
 	// If we got no body then put the message there to make it
 	// more visible.
 	file->data = "<html><body>" +
-	  replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
+	  replace (Roxen.html_encode_string (string_to_utf8(head_status)),
+		   "\n", "<br />\n") +
 	  "</body></html>";
 	file->len = sizeof (file->data);
-	file->type = "text/html";
+	file->type = "text/html; charset=utf-8";
       }
       if (has_value (head_status, "\n"))
 	// Fold lines nicely.
