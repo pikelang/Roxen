@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.336 2012/11/14 15:03:23 stewa Exp $
+// $Id: Roxen.pmod,v 1.337 2012/11/16 10:25:31 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2863,6 +2863,10 @@ protected string low_roxen_encode(string val, string encoding)
 
    case "html":
      return html_encode_string (val);
+   case "-html":
+     //  Can't use html_decode_string() which doesn't understand numerical
+     //  entities.
+     return RXML.TXml()->decode_charrefs(val);
 
    case "invalids":
    case "xmlinvalids":
