@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.337 2012/11/16 10:25:31 jonasw Exp $
+// $Id: Roxen.pmod,v 1.338 2012/11/17 09:34:44 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3056,6 +3056,10 @@ protected string low_roxen_encode(string val, string encoding)
 //!     HTML encoding, for generic text in html documents. This means
 //!     encoding chars like @expr{<@}, @expr{&@}, and quotes using
 //!     character reference entities.
+//!
+//!   @value "-html"
+//!     HTML decoding of entities (literals and decimal/hexadecimal
+//!     representations).
 //!
 //!   @value "wml"
 //!     HTML encoding, and doubling of any @tt{$@}'s.
