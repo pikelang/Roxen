@@ -1,3 +1,4 @@
+/*  -*- coding: koi8-r -*- */
 #charset koi8-r
 constant required_charset = "koi8-r";
 /* Bugs by: Per, jhs */
@@ -8,7 +9,7 @@ constant required_charset = "koi8-r";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.13 2012/12/03 17:07:29 anders Exp $";
+constant cvs_version = "$Id: russian.pike,v 1.14 2012/12/03 17:38:40 anders Exp $";
 constant _id = ({ "ru", "russian", "русский" });
 constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
