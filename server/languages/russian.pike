@@ -1,5 +1,5 @@
-#charset iso-8859-5
-constant required_charset = "iso-8859-5";
+#charset koi8-r
+constant required_charset = "koi8-r";
 /* Bugs by: Per, jhs */
 /*
  * name = "Russian language plugin ";
@@ -8,8 +8,8 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.12 2009/03/23 19:16:56 grubba Exp $";
-constant _id = ({ "ru", "russian", "ÀãááÚØÙ" });
+constant cvs_version = "$Id: russian.pike,v 1.13 2012/12/03 17:07:29 anders Exp $";
+constant _id = ({ "ru", "russian", "ÒÕÓÓËÉÊ" });
 constant _aliases = ({ "ru", "rus", "russian", "ÒÕÓÓËÉÊ" });
 
 #define error(x) throw( ({ x, backtrace() }) )
