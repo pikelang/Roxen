@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.685 2012/11/06 15:33:47 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.686 2012/12/07 12:06:31 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1229,9 +1229,6 @@ class TagDebug {
 	RXML_CONTEXT->set_id_misc ("debug", !id->misc->debug);
       else if (args->on)
 	RXML_CONTEXT->set_id_misc ("debug", 1);
-
-      if (result_type->subtype_of (RXML.t_any_text))
-	result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
 
       TAG_TRACE_LEAVE ("");
       return 0;
