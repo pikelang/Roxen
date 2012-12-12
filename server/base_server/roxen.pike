@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1125 2012/11/12 09:23:26 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1126 2012/12/12 15:03:39 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4271,6 +4271,17 @@ class ImageCache
 	    errmsg += "  Referrer: " + id->referer[0];
 	  report_error (errmsg + "\n");
 	  return 0;
+	} else if (arrayp(err) && sizeof(err) && stringp(err[0])) {
+	  if (sscanf(err[0], "Requesting unknown key %s\n",
+		     string message) == 1)
+	  {
+	    // File not found.
+	    report_debug("Requesting unknown key %s %O from %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
 	}
 	throw (err);
       }
