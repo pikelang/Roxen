@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: periodic-fetcher.pike,v 1.2 2012/05/10 05:53:49 liin Exp $";
+constant cvs_version = "$Id: periodic-fetcher.pike,v 1.3 2012/12/17 14:48:38 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 
@@ -45,6 +45,7 @@ string status()
     res += "  <tr>\n";
     res += "    <th align='left'>URL</th>\n";
     res += "    <th align='left'>Period</th>\n";
+    res += "    <th align='left'>Host</th>\n";
     res += "    <th align='left'>Low</th>\n";
     res += "    <th align='left'>High</th>\n";
     res += "    <th align='left'>Last</th>\n";
@@ -55,12 +56,13 @@ string status()
       res += sprintf("<tr>\n"
 		     "  <td>%s</td>\n"
 		     "  <td>%d</td>\n"
+		     "  <td>%s</td>\n"
 		     "  <td>%f</td>\n"
 		     "  <td>%f</td>\n"
 		     "  <td>%f</td>\n"
 		     "  <td>%d</td>\n"
 		     "</tr>\n", 
-		     event->url, event->period, 
+		     event->url, event->period, event->host||"",
 		     event->low/1000000.0,
 		     event->high/1000000.0,
 		     event->last/1000000.0,
@@ -81,6 +83,7 @@ class Event
 {
   string url;
   int period;
+  string host;
   int time;
   int count;
 
@@ -88,16 +91,16 @@ class Event
   int high = UNDEFINED;
   int low = UNDEFINED;
 
-  void create(string _url, int _period, int|void _time)
+  void create(string _url, int _period, string _host)
   {
     url = _url;
     period = _period;
-    time = _time;
+    host = _host;
   }
 
   string _sprintf()
   {
-    return sprintf("Event(%O, %d, %d)", url, period, time);
+    return sprintf("Event(%O, %d, %O, %d)", url, period, host, time);
   }
 
   void update_statistics(int t)
@@ -125,9 +128,11 @@ void create()
 	 "Crawl list URL", TYPE_STRING,
 	 "<p>The URL to the file that contains the list of URLs to fetch. "
 	 "It should be a text file with one URL, and its periodicity in "
-	 "seconds separated by space, per line, e.g:</p>"
+	 "seconds separated by space, per line. It is also possible to specify "
+	 "an optional host header at the end of the line, e.g:</p>"
 	 "<pre>"
 	 "  http://localhost:8080/ 5<br/>"
+	 "  http://localhost:8080/ 5 mobile.roxen.com<br/>"
 	 "  http://localhost:8080/news 10<br/>"
 	 "  http://localhost:8080/sports 10<br/>"
 	 "  http://localhost:8080/rss.xml?category=3455&id=47 20"
@@ -233,7 +238,7 @@ array(Event) fetch_events(string crawl_src)
       return 0;
     }
 
-    events += ({ Event(fields[0], (int)fields[1]) });
+    events += ({ Event(fields[0], (int)fields[1], (sizeof(fields) >= 3)? fields[2]:0) });
   }
   return events;
 }
@@ -275,13 +280,13 @@ void do_fetch()
 {
   Event event = event_queue->pop();
   // werror("do_fetch: %O\n", event);
-  int fetch_time = fetch_url(event->url);
+  int fetch_time = fetch_url(event->url, event->host);
   if(fetch_time >= 0) 
   {
     event->update_statistics(fetch_time);
     
-    DEBUG_MSG("%O Pe:%d Lo:%f Hi:%f La:%f Co:%d\n", 
-	      event->url, event->period, 
+    DEBUG_MSG("%O Pe:%d Ho:%O Lo:%f Hi:%f La:%f Co:%d\n", 
+	      event->url, event->period, event->host||"",
 	      event->low/1000000.0,
 	      event->high/1000000.0,
 	      event->last/1000000.0,
@@ -300,9 +305,9 @@ void schedule_next()
   do_fetch_co = roxen.background_run(event->time - time(), do_fetch);
 }
 
-int fetch_url(string url) 
+int fetch_url(string url, string|void host)
 {
-  DEBUG_MSG("Fetching %O\n", url);
+  DEBUG_MSG("Fetching %O, host: %O\n", url, host||"");
   Stdio.File stderr = Stdio.File();
   array command_args = ({ query("curl_path"), 
                           "-o", "/dev/null",
@@ -310,8 +315,12 @@ int fetch_url(string url)
 			  "--max-time", (string)query("curl_timeout"),
                           //"--stderr", "/dev/null",
 			  "--silent",
-			  "--show-error",
-                          url });
+			  "--show-error" });
+
+  if(host)
+    command_args += ({ "--header", "Host: "+host });
+  
+  command_args += ({ url });
 
   mixed err = catch 
   {
