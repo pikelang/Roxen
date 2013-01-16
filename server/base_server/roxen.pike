@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1126 2012/12/12 15:03:39 grubba Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -4387,11 +4387,18 @@ class ImageCache
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY("INSERT INTO "+name+" "
-		      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-		      ci, user||"")) )
-	QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
-	       user||"", ci );
+      // Make sure to only update the entry if it does not already
+      // exists or has wrong uid. Allways updating the table will
+      // casue mysql to lock the table and cause a potential gobal
+      // ImageCache stall.
+      string uid = user || "";
+      array q = QUERY("SELECT uid from "+name+" where id=%s", ci);
+      if(!sizeof(q) || (sizeof(q) && q[0]->uid != uid)) {
+	QUERY("INSERT INTO "+name+" "
+	      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP()) "
+	      "ON DUPLICATE KEY UPDATE uid=%s",
+	      ci, uid, uid);
+      }
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
