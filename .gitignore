@@ -6,6 +6,8 @@
 *.[oas]
 *.sb
 *.iw
+configurations
+license
 local
 logs
 server/bin/roxen
