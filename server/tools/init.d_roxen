@@ -1,7 +1,7 @@
 #!/bin/sh
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
-# $Id: init.d_roxen,v 1.33 2012/08/22 11:09:09 grubba Exp $
+# $Id$
 #############
 ### BEGIN INIT INFO
 # Provides:		roxen
@@ -106,6 +106,11 @@ run_server()
 {
     test x"$pidfile" = x && pidfile="$configdir"/_roxen_pid
     flags="$flags --pid-file=$pidfile"
+
+    if [ -x "$roxenhome/start" ]; then :; else
+      echo "Cannot find a Roxen installation in $roxenhome."
+      exit $errexit
+    fi
     
  case $1 in
   'start_msg')
@@ -120,34 +125,19 @@ run_server()
   'start')
     echo "Starting Roxen in $roxenhome..."
     cd $roxenhome && {
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-	  echo "Roxen is already running (start script pid $pid)."
-	  :
-	else false; fi
-      } < $pidfile && exit $okexit
-      if [ -x $roxenhome/start ]; then
-	./start $flags 2>/dev/null
+      ./start $flags 2>/dev/null && {
 	echo "Roxen started."
 	exit $okexit
-      fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+      }
+      echo "Failed to start Roxen. Already running?"
     }
   ;;
 
   'reload')
     echo "Reloading configurations in Roxen in $roxenhome..."
     cd $roxenhome && {
-      if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGHUP to Roxen process $pid."
-	kill -1 $pid && exit $okexit
-      fi
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-	  echo "The start script is currently forking a new server - nothing to do."
-	  :
-	else false; fi
-      } < $pidfile && exit $okexit
+      echo "Sending SIGHUP to Roxen process."
+      ./start --signal 1 $flags 2>/dev/null && exit $okexit
       echo "Roxen doesn't seem to be running."
     }
   ;;
@@ -155,78 +145,41 @@ run_server()
   'restart')
     echo "Restarting Roxen in $roxenhome..."
     cd $roxenhome && {
-      if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGTERM to Roxen process $pid."
-	kill $pid && exit $okexit
-      fi
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 $pid 2>/dev/null; then
-	  echo "The start script is currently forking a new server - nothing to do."
-	  :
-	else false; fi
-      } < $pidfile && exit $okexit
-      echo "Roxen doesn't seem to be running."
-      echo "Starting Roxen in $roxenhome."
-      if [ -x $roxenhome/start ]; then
-	./start $flags 2>/dev/null
+      ./start --restart $flags 2>/dev/null && {
 	echo "Roxen started."
 	exit $okexit
-      fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+      }
+      echo "Failed to restart Roxen."
     }
   ;;
 
   'stop')
     echo "Stopping Roxen in $roxenhome..."
-    cd $roxenhome && {
-      test -f "$pidfile" && {
-	if read pid && read pid; then
-	  echo "Sending SIGTERM to start script process $pid."
-	  if kill "$pid"; then
-	    while kill -0 $pid 2>/dev/null; do
-	      sleep 1
-	    done
-	    echo "Roxen stopped."
-	    # Get all the CGI scripts... :-)
-	    if [ x$killallwww = xyes ] ; then
-	      echo "Killing all programs running as the $wwwuser user."
-	      su $wwwuser -c "kill -9 -1"
-	    fi
-	    :
-	  else false; fi
-	else false; fi
-      } < $pidfile && exit $okexit
-      echo "Roxen doesn't seem to be running."
+    cd "$roxenhome" && {
+      ./start --stop $flags 2>/dev/null && {
+	echo "Roxen stopped."
+	exit $okexit
+      }
+      echo "Failed to stop Roxen."
     }
   ;;
 
   'status')
     cd "$roxenhome" && {
-	test -f "$pidfile" && {
-	    if read pid && read pid && ps -p "$pid" >/dev/null
-	    then
-		echo "Roxen is running (start script pid $pid)."
-		:
-	    else 
-		false
-	    fi
-	} < "$pidfile" && status=0 && return 
-	echo "Roxen is not running."
-	exit $errexit
+      if ./start --signal 0 $flags 2>/dev/null; then
+	echo "Roxen is running."
+	status=0
+	return 0
+      fi
+      echo "Roxen is not running."
     }
   ;;
 
   'debug')
-    echo "Sending Roxen SIGQUIT..."
-    cd $roxenhome && {
-      test -f "$pidfile" && {
-        if read pid && kill -QUIT "$pid" 2>/dev/null; then
-          echo "Roxen process found. Consult debug log for output."
-          :
-        else echo "pid $pid"; fi
-      } < $pidfile && exit $okexit
+    cd "$roxenhome" && {
+      echo "Sending SIGQUIT to Roxen process $pid."
+      ./start --signal QUIT $flags 2>/dev/null && exit $okexit
       echo "Roxen doesn't seem to be running."
-      exit $errexit
     }
   ;;
 
