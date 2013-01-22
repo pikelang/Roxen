@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.249 2012/09/27 12:44:12 grubba Exp $
+# $Id$
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -121,6 +121,12 @@ roxendir="`pwd`"
 
 # No debug by default.
 debug=-1
+
+# Don't attempt to stop a running server by default.
+stop=""
+
+# Attempt to start the server by default.
+start=1
 
 # Locate Pike binary.
 find_pike
@@ -338,7 +344,17 @@ parse_args() {
      remove_dumped=1;
   ;;
   '--stop')
-     stop=1;
+     stop="TERM";
+     start="";
+  ;;
+  '--restart')
+     stop="TERM";
+     start=1;
+  ;;
+  '--signal')
+     stop="$2"
+     shift
+     start="";
   ;;
 
   '--once')
@@ -509,6 +525,11 @@ the default arguments.
 				  --module-debug.
 
       .B--stopB.:                     Stop the server.
+
+      .B--restartB.:                  Stop the server, and then restart it.
+
+      .B--signalB.:                   Send the specified signal to the running
+                                  Roxen process.
 
       .B--keep-mysqlB.:               Do not shut down MySQL process when exiting
 				  the start script. Useful during development
@@ -1051,6 +1072,24 @@ start_roxen() {
   cleanup_roxen_pid_file
 }
 
+# <pid> <signal> <type> <canonicalconf> <description>
+stop_roxen()
+{
+  if roxenp "$1" "$3" "$4"; then
+    if [ "$2" = "TERM" ]; then
+      dp "Shutting down the $5..."
+      kill "$1" || exit 1
+      while processp "$1" 2>/dev/null; do
+	echo "Waiting for $5 $1 to die." >&2
+	sleep 1
+      done
+    else
+      kill "-$2" "$1" || exit 1
+    fi
+    return 0
+  fi
+  return 1
+}
 
 #
 # Now do the stuff
@@ -1069,25 +1108,19 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
     if [ -f "$pidfile" ]; then
       if read roxenpid && read scriptpid; then
 	problems=""
-	if roxenp "$scriptpid" "start" "$canonicalconf"; then
-	  dp "Shutting down the start script..."
-	  kill "$scriptpid"
-	  while processp $pid 2>/dev/null; do
-	    echo "Waiting for start script $pid to die." >&2
-	    sleep 1
-	  done
-	else
-	  problems="nostart"
+	# NB: No need to shut down the start-script
+        #     if we're going to do a restart.
+	if [ "$start"x = x -a "$stop" = "TERM" ]; then
+	  if stop_roxen "$scriptpid" "TERM" "start" "$canonicalconf" "start script"; then
+	    :
+	  else
+	    problems="nostart"
+	  fi
 	fi
 	# NB: At this point the original start script has
 	#     often already shut down the server, but...
-	if roxenp "$roxenpid" "server" "$canonicalconf"; then
-	  dp "Shutting down the server..."
-	  kill "$roxenpid"
-	  while processp $roxenpid 2>/dev/null; do
-	    echo "Waiting for roxen $roxenpid to die." >&2
-	    sleep 1
-	  done
+	if stop_roxen "$roxenpid" "$stop" "server" "$canonicalconf" "Roxen server"; then
+	  :
 	else
 	  problems="$problems:noserver"
 	fi
@@ -1099,6 +1132,10 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
 	  rm "$pidfile"
 	  :
 	fi
+	if [ "$problems:$start" = "nostart:1" ]; then
+	  dp "The listed start script was dead. Starting a new one."
+	  :
+	fi
       else
 	dp "There is a pid file $pidfile,"
 	dp "but it seems to be truncated."
@@ -1107,27 +1144,43 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
     else
       dp "The pid file $pidfile does not exist."
       dp "The server is probably not running."
+      if [ "$stop" != "TERM" ]; then
+	exit 1
+      fi
     fi
-    exit
+    if [ "$start"x = x ]; then
+      exit 0
+    fi
   fi
   # Avoid duplicate start scripts if we got a pid file.
-  test -f "$pidfile" && {
-    if read roxenpid && read scriptpid; then
-      if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
-	dp "According to the pid file $pidfile,"
-	dp "there is already a start script running with pid $scriptpid. Specify "
-	dp "another pid file with --pid-file if this is a different server."
-	dp "Server not started."
-	:
-      elif roxenp "$roxenpid" "server" "$canonicalconf" 2>/dev/null ; then
-	dp "According to the pid file $pidfile,"
-	dp "there is already a server running with pid $roxenpid, but its start "
-	dp "script seems to have died. You should shut it down and restart "
-	dp "it, since it won't restart automatically. Server not started."
-	:
-      else false; fi
-    else false; fi
-  } < "$pidfile" && exit 1
+  if [ -f "$pidfile" ]; then
+    {
+      if read roxenpid && read scriptpid; then
+        if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
+	  if [ "$stop"x = x ]; then
+	    dp "According to the pid file $pidfile,"
+	    dp "there is already a start script running with pid $scriptpid. Specify "
+	    dp "another pid file with --pid-file if this is a different server."
+	    dp "Server not started."
+	    exit 1
+	  fi
+	  dp "The old start script (pid $scriptpid) should now restart the server."
+	  exit 2
+	elif roxenp "$roxenpid" "server" "$canonicalconf" 2>/dev/null ; then
+	  dp "According to the pid file $pidfile,"
+	  dp "there is already a server running with pid $roxenpid, but its start "
+	  dp "script seems to have died. You should shut it down and restart "
+	  dp "it, since it won't restart automatically. Server not started."
+	  exit 1
+	fi
+      fi
+    } < "$pidfile" || {
+      # NB: The exits above just exit the subshell used for the
+      #     redirect. Adjust the exit codes and exit for real.
+      [ "$?" = "2" ];
+      exit;
+    }
+  fi
   # Minor race here.
   lock_pid_file $start_pid "start" "$canonicalconf"
   { echo "x" && echo $start_pid; } > "$pidfile"
