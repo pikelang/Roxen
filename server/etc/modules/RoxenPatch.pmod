@@ -103,7 +103,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.40 2012/08/29 12:53:59 liin Exp $";
+  private constant lib_version = "$Id$";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -374,6 +374,7 @@ class Patcher
   //! @returns
   //!   Returns 1 if the patch was successfully installed, otherwise 0
   {
+    Privs privs;
     string log = "";
     int error_count = 0;
     object current_time = Calendar.ISO->now();
@@ -407,6 +408,7 @@ class Patcher
     
     void undo_changes_and_dump_log_to_file()
     {
+      Privs privs = Privs("RoxenPatch: Rollback");
       if(dry_run)
 	rm(backup_file);
       else
@@ -414,19 +416,26 @@ class Patcher
 	if (sizeof(new_files))
 	  foreach(new_files, string file)
 	    rm(file);
+	privs = 0;
 
 	if (is_file(backup_file)) {
 	  write_log(1, "Restoring backed up files ... ");
 	  if (extract_tar_archive(backup_file, server_path))
 	  {
 	    write_log(0, "<green>ok</green>.\n");
+	    Privs privs = Privs("RoxenPatch: Rollback");
 	    rm(backup_file);
+	    privs = 0;
 	  }
 	  else
 	    write_log(1, "FAILED! Backup needs to be restored manually "
 			 "from <u>%s</u>\n", backup_file);
 	}
+
+	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
 	write_file(log_path, log);
+	privs = 0;
+
 	write_err("Writing log to <u>%s</u>\n", log_path);
       }
     };
@@ -528,7 +537,9 @@ class Patcher
       }
       if (error && !force)
       {
+	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
 	write_file(log_path, log);
+	privs = 0;
 	write_err("Writing log to <u>%s</u>\n", log_path);
 	return 0;
       }
@@ -551,9 +562,11 @@ class Patcher
 	  // Check if the path exists or if we need to create it.
 	  // Ignore if we are doing a dry run.
 	  string path = dirname(dest);
-	  if (!dry_run && !is_dir(path))
+	  if (!dry_run && !is_dir(path)) {
+	    privs = Privs("RoxenPatch: Create target directory: " + path);
 	    if(!mkdirhier(path))
 	    {
+	      privs = 0;
 	      write_log(1, "FAILED: Could not create target directory.\n");
 	      error_count++;
 	      if (!force)
@@ -562,6 +575,8 @@ class Patcher
 		return 0;
 	      }
 	    }
+	    privs = 0;
+	  }
 	}
 	else
 	{
@@ -572,6 +587,7 @@ class Patcher
 	  {
 	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest, 
 		                                     basename(backup_file));
+
 	    if (add_file_to_tar_archive(file->destination,
 					server_path,
 					backup_file))
@@ -590,6 +606,7 @@ class Patcher
 	}
 
 	// Copy the file from the archive to it's destination in the system.
+	privs = Privs(sprintf("RoxenPatch: Copy file %O -> %O", source, dest));
 	if (!dry_run && cp(source, dest))
 	{
 	  // Set correct mtime - if possible.
@@ -597,11 +614,13 @@ class Patcher
 	  
 	  if(fstat)
 	    System.utime(dest, fstat->atime, fstat->mtime);
+	  privs = 0;
 	  write_log(0, "<green>ok.</green>\n");
 	  new_files += ({ dest });
 	}
 	else if (!dry_run)
 	{
+	  privs = 0;
 	  write_log(1, "FAILED: Could not write file.\n");
 	  error_count++;
 	  if (!force)
@@ -610,6 +629,7 @@ class Patcher
 	    return 0;
 	  }
 	}
+	privs = 0;
       }
     }
 
@@ -628,6 +648,7 @@ class Patcher
 	  write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", 
 		    dest, 
 		    basename(backup_file));
+
 	  if (add_file_to_tar_archive(file->destination,
 				      server_path,
 				      backup_file))
@@ -645,6 +666,7 @@ class Patcher
   
 	  // copy the file from the archive to it's destination in the system.
 	  write_log(0, "Replacing file <u>%s</u> ... ", dest);
+	  privs = Privs("RoxenPatch: Replace file \"" + source + "\" -> \"" + dest + "\"");
 	  if (!dry_run && cp(source, dest))
 	  {
 	    // Set correct mtime - if possible.
@@ -652,10 +674,12 @@ class Patcher
 
 	    if(fstat)
 	      System.utime(dest, fstat->atime, fstat->mtime);
+	    privs = 0;
 	    write_log(0, "<green>ok.</green>\n");
 	  }
 	  else if (!dry_run)
 	  {
+	    privs = 0;
 	    write_log(1, "FAILED: Could not write file.\n");
 	    error_count++;
 	    if (!force)
@@ -664,8 +688,10 @@ class Patcher
 	      return 0;
 	    }
 	  }
-	  else
+	  else {
+	    privs = 0;
 	    write_log(0, "<green>ok.</green>\n");
+	  }
 	}
 	else
 	{
@@ -695,6 +721,7 @@ class Patcher
 	  write_log(0, "Backing up <u>%s</u> to </u>%s</u> ... ", 
 		    dest, 
 		    basename(backup_file));
+
 	  if (add_file_to_tar_archive(file,
 				      server_path,
 				      backup_file))
@@ -711,6 +738,7 @@ class Patcher
 	  }
 	  
 	  // Remove the file
+	  privs = Privs("RoxenPatch: Remove file: " + dest);
 	  if (!dry_run && rm(dest))
 	  {
 	    write_log(0, "<green>ok.</green>\n");
@@ -721,10 +749,12 @@ class Patcher
 	    error_count++;
 	    if (!force)
 	    {
+	      privs = 0;
 	      undo_changes_and_dump_log_to_file();
 	      return 0;
 	    }
 	  }
+	  privs = 0;
 	}
 	else
 	{
@@ -781,6 +811,7 @@ class Patcher
 	    }
 	  }
 	}
+	privs = 0;
 	
 	// Patch file.
 	write_log(0, "Applying patch ... ");
@@ -845,6 +876,7 @@ class Patcher
       write_log(0, "Moving patch files ...");
       string dest_path = combine_path(installed_path,
 				      basename(source_path));
+      privs = Privs("RoxenPatch: Move patch files");
       // This is because the file locks in Windows are evil and don't let go as
       // soon as one would wish. That's why a time out before reporting
       // permission denied is needed. 
@@ -857,6 +889,8 @@ class Patcher
 	mv_status = Stdio.recursive_mv(source_path, dest_path);
 	i--;
       }
+      privs = 0;
+
       if (mv_status)
       {
 	write_log(0, "<green>ok.</green>\n");
@@ -882,6 +916,7 @@ class Patcher
 
     // If we're doing a dry run then delete the backup file so we don't create
     // any footprints. If this is not a dry run then write log file to disk.
+    privs = Privs("RoxenPatch: Cleanup");
     if (dry_run)
       rm(backup_file);
     else
@@ -889,6 +924,7 @@ class Patcher
       write_mess("Writing log file to <u>%s</u>\n", log_path);
       write_file(log_path, log);
     }
+    privs = 0;
 
     return 1;
   }
@@ -903,6 +939,7 @@ class Patcher
   //!   fails including if patch is not installed or got dependers.
   {
     int errors;
+    Privs privs;
 
     write_mess("Checking if the patch is installed ... ");
     if (!is_installed(id))
@@ -976,6 +1013,7 @@ class Patcher
       foreach(metadata->new->destination, string filename)
       {
 	write_mess("Removing %s ... ", append_path(server_path, filename));
+	privs = Privs("RoxenPatch: Removing created files.");
 	if(rm(append_path(server_path, filename)))
 	  write_mess("<green>Done!</green>\n");
 	else
@@ -983,6 +1021,7 @@ class Patcher
 	  write_err("FAILED!\n");
 	  errors++;
 	}
+	privs = 0;
       }
     }
 
@@ -1002,7 +1041,7 @@ class Patcher
     // Move patch dir to Imported Patches
     write_mess("Moving patch files ...");
     string dest_path = combine_path(import_path, id);
-    Privs privs = Privs("RoxenPatch: Moving patch files.");
+    privs = Privs("RoxenPatch: Moving patch files.");
     if (Stdio.recursive_mv(append_path(installed_path, id), dest_path)) {
       privs = 0;
       write_mess("<green>Done!</green>\n");
@@ -2288,8 +2327,7 @@ class Patcher
 		    unixify_path(tar_archive), 
 		    simplify_path(unixify_path(file_name)) });
   
-    Privs privs =
-      Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
+    Privs privs = Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
     Process.Process p = Process.Process(args, ([ "cwd" : base_path ]));
     privs = 0;
     if (!p || p->wait())
