@@ -1278,6 +1278,9 @@ class Patcher
   //!     @member mapping(string:mixed) "metadata"
   //!       metadata block as returned from parse_metadata()
   //!   @endmapping
+  //!
+  //!  Entries are sorted by patch ID in reverse alphabetical order, i.e.
+  //!  newest patch first since IDs are by convention ISO timestamps.
   {
     array patch_list = filter(get_dir(installed_path) || ({ }), 
 			      lambda(string s)
@@ -1334,6 +1337,7 @@ class Patcher
       }
     }
 
+    //  Return in reverse chronological order, i.e. newest first
     return Array.sort_array(res, lambda (mapping a, mapping b)
 				 {
 				   return a->metadata->id < b->metadata->id;
@@ -1366,6 +1370,9 @@ class Patcher
   //!     @member mapping(string:mixed) "metadata"
   //!       metadata block as returned from parse_metadata()
   //!   @endmapping
+  //!
+  //!  Entries are sorted by patch ID in alphabetical order, i.e. oldest
+  //!  patch first since IDs are by convention ISO timestamps.
   {
     array patch_list = filter(get_dir(import_path) || ({ }), 
 			      lambda(string s)
@@ -1437,6 +1444,7 @@ class Patcher
       }
     }
 
+    //  Return in chronological order, i.e. oldest first
     return Array.sort_array(res, lambda (mapping a, mapping b)
 				 {
 				   return a->metadata->id > b->metadata->id;
