@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2539,7 +2539,8 @@ void low_start_mysql( string datadir,
 		  "--socket="+datadir+"/socket",
 		  "--pid-file="+pid_file,
 #endif
-		  "--skip-locking",
+		  has_prefix(version, "5.1.")?
+		  "--skip-locking":"--skip-external-locking",
 		  "--skip-name-resolve",
 		  "--basedir=" + mysql_location->basedir,
 		  "--datadir="+datadir,
@@ -2573,8 +2574,8 @@ void low_start_mysql( string datadir,
 
   // Create the configuration file.
   string cfg_file = ("[mysqld]\n"
-		     "set-variable = max_allowed_packet=16M\n"
-		     "set-variable = net_buffer_length=8K\n"
+		     "max_allowed_packet = 16M\n"
+		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
 #ifndef UNSAFE_MYSQL
