@@ -2573,7 +2573,9 @@ void low_start_mysql( string datadir,
     args += ({"--log=/dev/stdout"});
 
   // Create the configuration file.
-  string cfg_file = ("[mysqld]\n"
+  int force = !file_stat( datadir+"/my.cfg" );
+  string cfg_file = (Stdio.read_bytes(datadir + "/my.cfg") ||
+		     "[mysqld]\n"
 		     "max_allowed_packet = 16M\n"
 		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
@@ -2586,10 +2588,24 @@ void low_start_mysql( string datadir,
 		     (uid ? "user = " + uid : "") + "\n");
 
 #ifdef __NT__
-  cfg_file = replace(cfg_file, "\n", "\r\n");
+  cfg_file = replace(cfg_file, ({ "\r\n", "\n" }), ({ "\r\n", "\r\n" }));
 #endif /* __NT__ */
 
-  if(!file_stat( datadir+"/my.cfg" ))
+  // Check if we need to update the contents of the config file.
+  //
+  // NB: set-variable became optional after MySQL 4.0.2,
+  //     and was deprecated in MySQL 5.5.
+  if (has_value(cfg_file, "set-variable=") ||
+      has_value(cfg_file, "set-variable =")) {
+    report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
+    cfg_file = replace(cfg_file,
+		       ({ "set-variable=",
+			  "set-variable = ", "set-variable =" }),
+		       ({ "", "", "" }));
+    force = 1;
+  }
+
+  if(force)
     catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
 
   // Keep mysql's logging to stdout and stderr when running in --once
