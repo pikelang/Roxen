@@ -1626,10 +1626,11 @@ protected mapping(string:string) cached_mysql_location;
 //!
 //!  @code
 //!    ([
-//!       "basedir"   : <absolute path to MySQL server directory>
-//!       "mysqld"    : <absolute path to mysqld[-nt.exe]>
-//!       "myisamchk" : <absolute path to myisamchk[.exe]>
-//!       "mysqldump" : <absolute path to mysqldump[.exe]>
+//!       "basedir"       : <absolute path to MySQL server directory>
+//!       "mysqld"        : <absolute path to mysqld[-nt.exe]>
+//!       "myisamchk"     : <absolute path to myisamchk[.exe]>
+//!       "mysqldump"     : <absolute path to mysqldump[.exe]>
+//!       "mysql_upgrade" : <absolute path to mysql_upgrade[.exe]>
 //!    ])
 //!  @endcode
 //!
@@ -1657,7 +1658,9 @@ mapping(string:string) mysql_location()
   multiset(string) valid_keys =
     //  NOTE: "mysqladmin" not used but listed here since NT starter
     //  looks for it.
-    (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump" >);
+    (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump",
+       "mysql_upgrade",
+    >);
   
   //  If the path file is missing we fall back on the traditional
   //  /mysql/ subdirectory. The file should contain lines on this
@@ -1741,6 +1744,19 @@ mapping(string:string) mysql_location()
       string binary = "mysqldump";
 #endif
       res->mysqldump =
+	check_paths( ({ combine_path(res->basedir, "libexec", binary),
+			combine_path(res->basedir, "bin", binary),
+			combine_path(res->basedir, "sbin", binary) }) );
+    }
+
+    //  Locate mysql_upgrade
+    if (!res->mysql_upgrade) {
+#ifdef __NT__
+      string binary = "mysql_upgrade.exe";
+#else
+      string binary = "mysql_upgrade";
+#endif
+      res->mysql_upgrade =
 	check_paths( ({ combine_path(res->basedir, "libexec", binary),
 			combine_path(res->basedir, "bin", binary),
 			combine_path(res->basedir, "sbin", binary) }) );
