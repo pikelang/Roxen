@@ -1575,13 +1575,9 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
   string defpath =
 #ifdef __NT__
     // Use pipes with a name created from the config dir
-    "mysql://%user%@.:"+
-    replace(combine_path(query_mysql_data_dir(), "pipe"), ":", "_") +
-    "/%db%";
+    "mysql://%user%@.:" + query_mysql_socket() + "/%db%";
 #else
-    "mysql://%user%@localhost:"+
-      combine_path(query_mysql_data_dir(), "socket")+
-    "/%db%";
+    "mysql://%user%@localhost:" + query_mysql_socket() + "/%db%";
 #endif
 
   my_mysql_path =
@@ -1785,6 +1781,15 @@ string query_mysql_data_dir()
   if(new_dir)
     return new_dir;
   return old_dir;
+}
+
+string query_mysql_socket()
+{
+#ifdef __NT__
+  return replace(combine_path(query_mysql_data_dir(), "pipe"), ":", "_");
+#else
+  return combine_path(query_mysql_data_dir(), "socket");
+#endif
 }
 
 string  my_mysql_path;
