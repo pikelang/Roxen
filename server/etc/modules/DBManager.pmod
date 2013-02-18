@@ -332,7 +332,25 @@ private
 
     mapping(string:string) mysql_location = roxenloader->parse_mysql_location();
     string update_mysql;
-    if (mysql_location->mysql_upgrade) {
+
+    string mysql_version = db->server_info();
+    // Typically a string like "mysql/5.5.30-log".
+    if (has_value(mysql_version, "/")) mysql_version = (mysql_version/"/")[1];
+    mysql_version = (mysql_version/"-")[0];
+
+    string db_version;
+    // Catch in case mysql_upgrade_info is a directory (unlikely, but...).
+    catch {
+      db_version =
+	Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
+				      "mysql_upgrade_info"));
+      // Typically a string like "5.5.30".
+    };
+    db_version = db_version && (db_version - "\n");
+
+    if (db_version == mysql_version) {
+      // Already up-to-date.
+    } else if (mysql_location->mysql_upgrade) {
       // Upgrade method in MySQL 5.0.19 and later (UNIX),
       // MySQL 5.0.25 and later (NT).
       Process.Process(({ mysql_location->mysql_upgrade,
