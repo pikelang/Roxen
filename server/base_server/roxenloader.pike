@@ -2600,12 +2600,10 @@ void low_start_mysql( string datadir,
 		     "local-infile = 0\n"
 #endif
 		     "skip-name-resolve\n"
+		     "character-set-server=latin1\n"
+		     "collation-server=latin1_swedish_ci\n"
 		     "bind-address = "+env->MYSQL_HOST+"\n" +
 		     (uid ? "user = " + uid : "") + "\n");
-
-#ifdef __NT__
-  cfg_file = replace(cfg_file, ({ "\r\n", "\n" }), ({ "\r\n", "\r\n" }));
-#endif /* __NT__ */
 
   // Check if we need to update the contents of the config file.
   //
@@ -2620,6 +2618,33 @@ void low_start_mysql( string datadir,
 		       ({ "", "", "" }));
     force = 1;
   }
+
+  if (!has_prefix(version, "5.1.") &&
+      !has_value(cfg_file, "character-set-server")) {
+    // The default character set was changed sometime
+    // during the MySQL 5.x series. We need to set
+    // the default to latin1 to avoid breaking old
+    // internal tables (like eg roxen/dbs) where fields
+    // otherwise shrink to a third.
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding default character set entries to %s/my.cfg.\n",
+		   datadir);
+      a[1] = "\n"
+	"character-set-server=latin1\n"
+	"collation-server=latin1_swedish_ci" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "character set entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
+#ifdef __NT__
+  cfg_file = replace(cfg_file, ({ "\r\n", "\n" }), ({ "\r\n", "\r\n" }));
+#endif /* __NT__ */
 
   if(force)
     catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
