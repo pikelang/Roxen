@@ -664,9 +664,12 @@ int main(int argc, array(string) argv)
   if (cmd_n_files[1] == "version")
   {
     sscanf(cvs_string, "$""Id: %s""$", string cvs_version);
-    write("CVS Version ... %s\nRXP Version ... %s\n",
+    write("CVS Version ... %s\n"
+	  "RXP Version ... %s\n"
+	  "RXP File Format Version ... %s\n",
 	  cvs_version || "n/a",
-	  plib->current_version());
+	  plib->current_version(),
+	  rxp_version);
 	  
     return 0;
   }
