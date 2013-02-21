@@ -1839,11 +1839,19 @@ class Patcher
       array(string) path = id/"/";
       if ((sizeof(path) == 2) && allow_versioned) {
 	// Package/VERSION
-	string installed =
-	  Stdio.read_bytes(combine_path(server_path, "packages",
-					path[0], "VERSION")) ||
-	  Stdio.read_bytes(combine_path(server_path, "modules",
-					path[0], "VERSION"));
+	string installed;
+	if (path[0] == "roxen") {
+	  installed = Stdio.read_bytes(combine_path(server_path, "VERSION"));
+	} else if (path[0] == "pike") {
+	  installed =
+	    Stdio.read_bytes(combine_path(server_path, "pike", "VERSION"));
+	} else {
+	  installed =
+	    Stdio.read_bytes(combine_path(server_path, "packages",
+					  path[0], "VERSION")) ||
+	    Stdio.read_bytes(combine_path(server_path, "modules",
+					  path[0], "VERSION"));
+	}
 	if (!installed) return 0;
 	installed -= "\n";
 	installed -= "\r";
