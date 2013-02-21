@@ -1942,7 +1942,7 @@ class Patcher
   {
     if (!silent)
       write_mess("Verifying metadata ... ");
-    if (ptc_obj->rxp_version != rxp_version)
+    if (ptc_obj->rxp_version > rxp_version)
     {
       if (!silent)
 	write_err("FAILED: This rxp version is not supported!\n");
