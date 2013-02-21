@@ -3,7 +3,7 @@ import Parser.XML.Tree;
 import String;
 import Stdio;
 
-constant rxp_version = "1.0";
+constant rxp_version = "1.1";
 //! The latest supported version of the rxp fileformat.
 
 constant known_flags = ([ "restart" : "Need to restart server" ]);
@@ -521,18 +521,41 @@ class Patcher
     if (ptchdata->depends)
     {
       int error = 0;
-      foreach(ptchdata->depends, string patch_id)
+      foreach(ptchdata->depends, string patch_id_list)
       {
-	if (!is_installed(patch_id) && !error)
-	{
-	  write_log(1, "FAILED:\n<b>%s</b> is not installed!\n", patch_id);
+	array(string) patch_ids;
+	if (ptchdata->rxp_version > "1.0") {
+	  patch_ids = patch_id_list/"|";
+	} else {
+	  patch_ids = ({ patch_id_list });
+	}
+	int missing = 1;
+	foreach(patch_ids, string patch_id) {
+	  if (is_installed(patch_id, ptchdata->rxp_version > "1.0")) {
+	    missing = 0;
+	    break;
+	  }
+	}
+	if (missing) {
+	  if (sizeof(patch_ids) > 1) {
+	    if (!error) {
+	      write_log(1, "FAILED:\nNone of <b>%s</b> are installed!\n",
+			patch_id_list);
+	    } else {
+	      write_log(1, "Neither are any of <b>%s</b> installed.\n",
+			patch_id_list);
+	    }
+	  } else {
+	    if (!error) {
+	      write_log(1, "FAILED:\n<b>%s</b> is not installed!\n",
+			patch_id_list);
+	    } else {
+	      write_log(1, "<b>%s</b> is not installed either!\n",
+			patch_id_list);
+	    }
+	  }
 	  error_count++;
 	  error = 1;
-	}
-	else if (!is_installed(patch_id))
-	{
-	  write_log(1, "<b>%s</b> is not installed either!\n", patch_id);
-	  error_count++;
 	}
       }
       if (error && !force)
@@ -1625,11 +1648,24 @@ class Patcher
 	return 0;
       
       array filtered_list = filter(po->depends, 
-				   lambda (string id)
+				   lambda (string id, string rxp_version)
 				   {
-				     return !(is_installed(id) ||
-					      pretend_installed[id]);
-				   }
+				     array(string) ids;
+				     if (rxp_version > "1.0") {
+				       ids = id/"|";
+				     } else {
+				       ids = ({ id });
+				     }
+				     foreach(ids, id) {
+				       if (is_installed(id,
+							rxp_version > "1.0") ||
+					   pretend_installed[id]) {
+					 return 0;
+				       }
+				     }
+				     return 1;
+				   },
+				   po->rxp_version
 				   );
       return !!sizeof(filtered_list);
     }
@@ -1793,13 +1829,26 @@ class Patcher
     return 0;
   }
 
-  int(0..1) is_installed(string id)
+  int(0..1) is_installed(string id, int|void allow_versioned)
   //! Check if a patch is installed.
   //! @returns
   //!   Returns 1 if a patch is installed, 0 otherwise
   {
     if(!patchid_regexp->match(id))
     {
+      array(string) path = id/"/";
+      if ((sizeof(path) == 2) && allow_versioned) {
+	// Package/VERSION
+	string installed =
+	  Stdio.read_bytes(combine_path(server_path, "packages",
+					path[0], "VERSION")) ||
+	  Stdio.read_bytes(combine_path(server_path, "modules",
+					path[0], "VERSION"));
+	if (!installed) return 0;
+	installed -= "\n";
+	installed -= "\r";
+	return installed == path[1];
+      }
       write_err("Not a proper id\n");
       return 0;
     }
@@ -1931,10 +1980,12 @@ class Patcher
     return res;
   }
 
-  int(0..1) verify_patch_id(string patch_id)
+  int(0..1) verify_patch_id(string patch_id, int|void allow_versioned)
   //! Takes a string and verifies that it is a correctly formated patch id.
   {
-    return patchid_regexp->match(patch_id);
+    if (patchid_regexp->match(patch_id)) return 1;
+    if (!allow_versioned) return 0;
+    return sizeof(patch_id/"/") == 2;
   }
 
   int(0..1) verify_patch_object(PatchObject ptc_obj, void|int(0..1) silent)
@@ -1985,15 +2036,27 @@ class Patcher
     }
     
     if (ptc_obj->depends)
-      foreach(ptc_obj->depends, string patch_id)
-	if (!verify_patch_id(patch_id))
-	{
-	  if (!silent)
-	    write_err("FAILED: Dependency %s is not a valid patch id\n",
-		      patch_id);
-	  return 0;
+      foreach(ptc_obj->depends, string patch_id_list) {
+	if (ptc_obj->rxp_version > "1.0") {
+	  foreach(patch_id_list/"|", string patch_id)
+	    if (!verify_patch_id(patch_id, 1))
+	    {
+	      if (!silent)
+		write_err("FAILED: Dependency %s is not a valid patch id\n",
+			patch_id);
+	      return 0;
+	    }
+	} else {
+	  if (!verify_patch_id(patch_id_list))
+	  {
+	    if (!silent)
+	      write_err("FAILED: Dependency %s is not a valid patch id\n",
+			patch_id_list);
+	    return 0;
+	  }
 	}
-    
+      }
+
     if (ptc_obj->replace)
     {
       if (!sizeof(ptc_obj->replace))
