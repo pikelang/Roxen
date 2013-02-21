@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.20 2012/08/20 09:30:22 liin Exp $";
+constant cvs_string = "$Id$";
 
 import RoxenPatch;
 
@@ -53,6 +53,7 @@ int main(int argc, array(string) argv)
   int(0..1) recursive	= 0;
   int(0..1) silent      = 0;
 
+  int rxp_minor = 0;
 
   // If we have the command 'help' normal rules don't apply.
   int h = search(argv, "help");
@@ -379,13 +380,21 @@ int main(int argc, array(string) argv)
 	  ptc_obj->delete += ({ argument[1] });
 	  break;
 	case "depends_on":
-	  if (plib->verify_patch_id(argument[1]))
-	    ptc_obj->depends += ({ argument[1] });
-	  else
-	  {
-	    write_err(err_patch_id);
-	    return 0;
+	  array(string) alternatives = argument[1]/"|";
+	  if (sizeof(alternatives) > 1) {
+	    rxp_minor = 1;
 	  }
+	  foreach(alternatives, string dep_id) {
+	    if (!plib->verify_patch_id(dep_id, rxp_minor)) {
+	      if (!rxp_minor && plib->verify_patch_id(dep_id, 1)) {
+		rxp_minor = 1;
+	      } else {
+		write_err(err_patch_id);
+		return 0;
+	      }
+	    }
+	  }
+	  ptc_obj->depends += ({ argument[1] });
 	  break;
 	case "flags":
 	  ptc_obj->flags += (< argument[1] >);
@@ -401,7 +410,7 @@ int main(int argc, array(string) argv)
       }
     }
 
-    ptc_obj->rxp_version = rxp_version;
+    ptc_obj->rxp_version = rxp_minor?"1.1":"1.0";
     ptc_obj->originator = current_user;
 
     // If we don't have an id then create one.
@@ -1130,7 +1139,18 @@ constant help_flags = ([
   "d": ([ "syntax" : ({ "<b>-d</b> <u>ID</u>...",
 			"<b>--depends=</b><u>ID</u>..." }),
 	  "hlptxt" : ({ "<u>ID</u> is the id of a patch which is required to be",
-			"installed in order for this patch to be installed." }),
+			"installed in order for this patch to be installed.",
+			"",
+			"It may also be a submodule with version, ",
+			"eg \"sitebuilder/5.2.200\", in which case that ",
+			"specific version of the submodule will be required.",
+			"",
+			"Multiple alternative <u>ID</u>'s may be listed ",
+			"separated with \"|\" (vertical bar).",
+			"",
+			"Specifying either of the latter syntaxen ",
+			"will force the version of the resulting ",
+			"RXP-file to be at least 1.1." }),
 	  "scope"  : ({ "create" }) ]),
   "F": ([ "syntax" : ({ "<b>-F</b> <u>FLAG</u>",
 			"<b>--flag=</b><u>FLAG</u>" }),
