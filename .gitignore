@@ -6,6 +6,7 @@
 *.[oas]
 *.sb
 *.iw
+/backup
 configurations
 license
 local
