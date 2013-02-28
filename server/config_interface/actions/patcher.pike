@@ -77,6 +77,16 @@ Write_back wb = class Write_back
 		  }
                 } ();
 
+mapping get_patch_stats(Patcher po) {
+	array a_imported = po->file_list_imported();
+	array a_installed = po->file_list_installed();
+
+	return ([
+		"imported_count": sizeof(a_imported),
+		"installed_count": sizeof(a_installed),
+	]);
+}
+
 string list_patches(RequestID id, Patcher po, string which_list)
 {
   string self_url = "?class=maintenance&action=patcher.pike";
@@ -798,6 +808,8 @@ mixed parse(RequestID id)
     return Roxen.http_string_answer(res);
   }
 
+  mapping patch_stats = get_patch_stats(plib);
+
   res += #" 
     <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
     <p>\n" + LOCALE(374,"Select local file to upload:") + #"</p>
@@ -812,7 +824,7 @@ mixed parse(RequestID id)
 	     "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
     <br />
-    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + " (" + patch_stats->imported_count + ")" + #"</b></font>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
 		"they are imported but not applied. They can be found in "
@@ -845,7 +857,7 @@ mixed parse(RequestID id)
     <br clear='all' />
     <br />
 
-    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + " (" + patch_stats->installed_count + ")" + #"</b></font>
     <p>" +
     LOCALE(379, "Click on a Patch for more information.") +
   #"</p>
