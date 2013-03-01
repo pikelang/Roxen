@@ -5,8 +5,6 @@
 /server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
-/local/fonts/.distignore -text -crlf
-/local/pike_modules/.distignore -text -crlf
 *.dsp eol=crlf
 *.gif binary
 /server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
@@ -24,11 +22,9 @@
 *.jpg binary
 /server/config_interface/dbs/ajax_optimizeall.js eol=crlf
 /server/config_interface/dbs/ajax_repairall.js eol=crlf
-/server/config_interface/sites/find_module.js -text -crlf
 *.mc eol=crlf
 *.pdf binary
-/server/demo_certificate.pem -text -crlf
-/server/modules/proxies/gopher.pike -text -crlf
+/server/demo_certificate.pem eol=crlf
 *.png binary
 *.raw binary
 *.rc eol=crlf
@@ -45,7 +41,6 @@
 *.vcproj eol=crlf
 *.wxs eol=crlf
 *.xcf binary
-/server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
 rbf binary
 worldmap binary
@@ -295,7 +290,6 @@ worldmap binary
 /server/modules/misc/webdav.pike foreign_ident
 /server/modules/proxies/connect.pike foreign_ident
 /server/modules/proxies/ftpgateway.pike foreign_ident
-/server/modules/proxies/gopher.pike foreign_ident
 /server/modules/proxies/port_forwarder.pike foreign_ident
 /server/modules/proxies/proxy.pike foreign_ident
 /server/modules/proxies/relay2.pike foreign_ident
