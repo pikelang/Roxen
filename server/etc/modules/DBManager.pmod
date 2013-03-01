@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.104 2012/03/16 10:06:08 marty Exp $
+// $Id$
 
 //! Manages database aliases and permissions
 
@@ -332,14 +332,40 @@ private
 
     mapping(string:string) mysql_location = roxenloader->parse_mysql_location();
     string update_mysql;
-    if ((mysql_location->basedir) && 
-	(update_mysql =
-	 (Stdio.read_bytes(combine_path(mysql_location->basedir,
-					"share/mysql",
-					"mysql_fix_privilege_tables.sql")) ||
-	  Stdio.read_bytes(combine_path(mysql_location->basedir,
-					"share",
-					"mysql_fix_privilege_tables.sql"))))) {
+
+    string mysql_version = db->server_info();
+    // Typically a string like "mysql/5.5.30-log".
+    if (has_value(mysql_version, "/")) mysql_version = (mysql_version/"/")[1];
+    mysql_version = (mysql_version/"-")[0];
+
+    string db_version;
+    // Catch in case mysql_upgrade_info is a directory (unlikely, but...).
+    catch {
+      db_version =
+	Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
+				      "mysql_upgrade_info"));
+      // Typically a string like "5.5.30".
+    };
+    db_version = db_version && (db_version - "\n");
+
+    if (db_version == mysql_version) {
+      // Already up-to-date.
+    } else if (mysql_location->mysql_upgrade) {
+      // Upgrade method in MySQL 5.0.19 and later (UNIX),
+      // MySQL 5.0.25 and later (NT).
+      Process.Process(({ mysql_location->mysql_upgrade,
+			 "-S", roxenloader.query_mysql_socket(),
+			 "--user=rw",
+			 // "--verbose",
+		      }))->wait();
+    } else if ((mysql_location->basedir) &&
+	       (update_mysql =
+		(Stdio.read_bytes(combine_path(mysql_location->basedir,
+					       "share/mysql",
+					       "mysql_fix_privilege_tables.sql")) ||
+		 Stdio.read_bytes(combine_path(mysql_location->basedir,
+					       "share",
+					       "mysql_fix_privilege_tables.sql"))))) {
       // Don't complain about failures, they're expected...
       execute_sql_script(db, update_mysql, 1);
     } else {

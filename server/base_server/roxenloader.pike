@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1575,13 +1575,9 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
   string defpath =
 #ifdef __NT__
     // Use pipes with a name created from the config dir
-    "mysql://%user%@.:"+
-    replace(combine_path(query_mysql_data_dir(), "pipe"), ":", "_") +
-    "/%db%";
+    "mysql://%user%@.:" + query_mysql_socket() + "/%db%";
 #else
-    "mysql://%user%@localhost:"+
-      combine_path(query_mysql_data_dir(), "socket")+
-    "/%db%";
+    "mysql://%user%@localhost:" + query_mysql_socket() + "/%db%";
 #endif
 
   my_mysql_path =
@@ -1626,10 +1622,11 @@ protected mapping(string:string) cached_mysql_location;
 //!
 //!  @code
 //!    ([
-//!       "basedir"   : <absolute path to MySQL server directory>
-//!       "mysqld"    : <absolute path to mysqld[-nt.exe]>
-//!       "myisamchk" : <absolute path to myisamchk[.exe]>
-//!       "mysqldump" : <absolute path to mysqldump[.exe]>
+//!       "basedir"       : <absolute path to MySQL server directory>
+//!       "mysqld"        : <absolute path to mysqld[-nt.exe]>
+//!       "myisamchk"     : <absolute path to myisamchk[.exe]>
+//!       "mysqldump"     : <absolute path to mysqldump[.exe]>
+//!       "mysql_upgrade" : <absolute path to mysql_upgrade[.exe]>
 //!    ])
 //!  @endcode
 //!
@@ -1657,7 +1654,9 @@ mapping(string:string) mysql_location()
   multiset(string) valid_keys =
     //  NOTE: "mysqladmin" not used but listed here since NT starter
     //  looks for it.
-    (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump" >);
+    (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump",
+       "mysql_upgrade",
+    >);
   
   //  If the path file is missing we fall back on the traditional
   //  /mysql/ subdirectory. The file should contain lines on this
@@ -1745,6 +1744,19 @@ mapping(string:string) mysql_location()
 			combine_path(res->basedir, "bin", binary),
 			combine_path(res->basedir, "sbin", binary) }) );
     }
+
+    //  Locate mysql_upgrade
+    if (!res->mysql_upgrade) {
+#ifdef __NT__
+      string binary = "mysql_upgrade.exe";
+#else
+      string binary = "mysql_upgrade";
+#endif
+      res->mysql_upgrade =
+	check_paths( ({ combine_path(res->basedir, "libexec", binary),
+			combine_path(res->basedir, "bin", binary),
+			combine_path(res->basedir, "sbin", binary) }) );
+    }
   }
   
   return cached_mysql_location = res;
@@ -1769,6 +1781,15 @@ string query_mysql_data_dir()
   if(new_dir)
     return new_dir;
   return old_dir;
+}
+
+string query_mysql_socket()
+{
+#ifdef __NT__
+  return replace(combine_path(query_mysql_data_dir(), "pipe"), ":", "_");
+#else
+  return combine_path(query_mysql_data_dir(), "socket");
+#endif
 }
 
 string  my_mysql_path;
@@ -2539,7 +2560,8 @@ void low_start_mysql( string datadir,
 		  "--socket="+datadir+"/socket",
 		  "--pid-file="+pid_file,
 #endif
-		  "--skip-locking",
+		  has_prefix(version, "5.1.")?
+		  "--skip-locking":"--skip-external-locking",
 		  "--skip-name-resolve",
 		  "--basedir=" + mysql_location->basedir,
 		  "--datadir="+datadir,
@@ -2572,23 +2594,64 @@ void low_start_mysql( string datadir,
     args += ({"--log=/dev/stdout"});
 
   // Create the configuration file.
-  string cfg_file = ("[mysqld]\n"
-		     "set-variable = max_allowed_packet=16M\n"
-		     "set-variable = net_buffer_length=8K\n"
+  int force = !file_stat( datadir+"/my.cfg" );
+  string cfg_file = (Stdio.read_bytes(datadir + "/my.cfg") ||
+		     "[mysqld]\n"
+		     "max_allowed_packet = 16M\n"
+		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
 #endif
 		     "skip-name-resolve\n"
+		     "character-set-server=latin1\n"
+		     "collation-server=latin1_swedish_ci\n"
 		     "bind-address = "+env->MYSQL_HOST+"\n" +
 		     (uid ? "user = " + uid : "") + "\n");
 
+  // Check if we need to update the contents of the config file.
+  //
+  // NB: set-variable became optional after MySQL 4.0.2,
+  //     and was deprecated in MySQL 5.5.
+  if (has_value(cfg_file, "set-variable=") ||
+      has_value(cfg_file, "set-variable =")) {
+    report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
+    cfg_file = replace(cfg_file,
+		       ({ "set-variable=",
+			  "set-variable = ", "set-variable =" }),
+		       ({ "", "", "" }));
+    force = 1;
+  }
+
+  if (!has_prefix(version, "5.1.") &&
+      !has_value(cfg_file, "character-set-server")) {
+    // The default character set was changed sometime
+    // during the MySQL 5.x series. We need to set
+    // the default to latin1 to avoid breaking old
+    // internal tables (like eg roxen/dbs) where fields
+    // otherwise shrink to a third.
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding default character set entries to %s/my.cfg.\n",
+		   datadir);
+      a[1] = "\n"
+	"character-set-server=latin1\n"
+	"collation-server=latin1_swedish_ci" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "character set entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
 #ifdef __NT__
-  cfg_file = replace(cfg_file, "\n", "\r\n");
+  cfg_file = replace(cfg_file, ({ "\r\n", "\n" }), ({ "\r\n", "\r\n" }));
 #endif /* __NT__ */
 
-  if(!file_stat( datadir+"/my.cfg" ))
+  if(force)
     catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
 
   // Keep mysql's logging to stdout and stderr when running in --once
