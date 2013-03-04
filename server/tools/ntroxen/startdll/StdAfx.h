@@ -2,7 +2,7 @@
 //      or project specific include files that are used frequently,
 //      but are changed infrequently
 //
-// $Id: StdAfx.h,v 1.2 2002/02/06 17:24:36 tomas Exp $
+// $Id$
 //
 
 #if !defined(AFX_STDAFX_H__E0590E86_A99B_4C9D_85F9_0FB1752360D0__INCLUDED_)

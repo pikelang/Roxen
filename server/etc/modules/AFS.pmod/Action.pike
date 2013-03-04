@@ -1,4 +1,4 @@
-// $Id: Action.pike,v 1.5 2011/04/27 17:43:42 mast Exp $
+// $Id$
 
 //
 // AFS.Action interface

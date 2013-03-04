@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.5 2003/11/17 16:01:28 anders Exp $
+ * $Id$
  */
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>

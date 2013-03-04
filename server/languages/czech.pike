@@ -17,7 +17,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.20 2009/03/23 19:05:35 grubba Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "cs", "czech", "èesky" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 

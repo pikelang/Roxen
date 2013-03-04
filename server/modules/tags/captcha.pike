@@ -3,7 +3,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: captcha.pike,v 1.2 2010/04/08 12:44:41 grubba Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = "Tags: Captcha";

@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.22 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_version = "$Id$";
 
 #include <roxen.h>
 #include <module.h>

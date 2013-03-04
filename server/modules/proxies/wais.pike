@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.30 2009/05/07 14:15:55 mast Exp $";
+string cvs_version = "$Id$";
 
 #include <config.h>
 #include <module.h>

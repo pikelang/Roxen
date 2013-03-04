@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.334 2012/05/10 16:12:07 grubba Exp $
+// $Id$
 
 
 inherit "rxmlhelp";

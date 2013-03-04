@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.6 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.6 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";

@@ -7,7 +7,7 @@ inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.16 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";

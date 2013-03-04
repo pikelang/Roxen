@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenConfiguration.java,v 1.5 2000/11/13 19:34:22 marcus Exp $
+ * $Id$
  *
  */
 

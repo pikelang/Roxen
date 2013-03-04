@@ -60,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.11 2009/05/07 14:15:55 mast Exp $";
+string version = "$Id$";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";

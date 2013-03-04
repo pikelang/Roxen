@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.11 2008/08/15 12:33:54 mast Exp $";
+string cvs_version = "$Id$";
    Subject: New 'german.lpc' ...
  
    Hi,

@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.91 2011/10/27 16:38:32 jonasw Exp $
+// $Id$
 
 #include <config_interface.h>
 #include <module.h>

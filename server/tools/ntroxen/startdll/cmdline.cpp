@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.24 2011/01/20 17:23:46 mast Exp $
+// $Id$
 //
 //////////////////////////////////////////////////////////////////////
 

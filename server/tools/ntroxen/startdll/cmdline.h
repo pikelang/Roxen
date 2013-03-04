@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.12 2002/10/15 09:46:36 tomas Exp $
+// $Id$
 //
 //////////////////////////////////////////////////////////////////////
 

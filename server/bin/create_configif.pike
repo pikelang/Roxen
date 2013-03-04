@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.44 2011/02/28 13:29:43 anders Exp $
+ * $Id$
  *
  * Create an initial administration interface server.
  */

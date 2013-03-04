@@ -10,7 +10,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.22 2009/05/26 14:20:25 mast Exp $";
+ "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>

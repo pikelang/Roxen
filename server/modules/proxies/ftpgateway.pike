@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.43 2009/05/07 14:15:55 mast Exp $";
+string cvs_version = "$Id$";
 #include <module.h>
 #include <config.h>
 

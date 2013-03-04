@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.41 2011/05/25 14:49:05 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 inherit "module";

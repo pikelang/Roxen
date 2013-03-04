@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.686 2012/12/07 12:06:31 stewa Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 

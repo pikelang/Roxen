@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.20 2009/04/21 15:54:52 mast Exp $
+// $Id$
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H

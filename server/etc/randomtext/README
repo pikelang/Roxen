@@ -9,7 +9,7 @@
 /// has a configuration field selecting what directory to search for
 /// rule files.
 ///
-/// $Id: README,v 1.1 2000/02/01 18:21:50 leif Exp $
+/// $Id$
 ///
 /// Below follows a minimal rule file, in case somebody tries to use
 /// this README file as rules:

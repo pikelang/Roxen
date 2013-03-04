@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.9 2010/05/26 10:52:18 grubba Exp $
+// $Id$
 //
 // Tests of the ftp protocol module.
 //

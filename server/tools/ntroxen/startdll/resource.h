@@ -2,7 +2,7 @@
 // Microsoft Developer Studio generated include file.
 // Used by startdll.rc
 //
-// $Id: resource.h,v 1.1 2001/05/29 14:35:40 tomas Exp $
+// $Id$
 //
 #define IDS_SERVICENAME                 100
 #define IDR_Startdll                    100

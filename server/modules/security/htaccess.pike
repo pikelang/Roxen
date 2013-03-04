@@ -7,7 +7,7 @@
 // The canonical documentation for the .htaccess format seems to be
 //   http://httpd.apache.org/docs/1.3/mod/mod_access.html
 
-constant cvs_version="$Id: htaccess.pike,v 1.109 2010/11/22 14:04:53 grubba Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>

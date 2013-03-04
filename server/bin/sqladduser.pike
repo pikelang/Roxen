@@ -1,7 +1,7 @@
 #!/usr/local/bin/pike
 #!NO_MODULE
 
-/* $Id: sqladduser.pike,v 1.6 2009/05/26 14:20:25 mast Exp $
+/* $Id$
  *
  * name = "SQL Add user";
  * doc = "Add a user to an SQL user-database.";

@@ -8,7 +8,7 @@
 # everywhere. Another user may be specified with -u, but it must be
 # the first argument then.
 #
-# $Id: mysql_client,v 1.5 2010/06/07 14:37:09 grubba Exp $
+# $Id$
 
 dn="`dirname $0`"
 case "$dn" in 

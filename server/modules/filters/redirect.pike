@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.54 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 inherit "module";

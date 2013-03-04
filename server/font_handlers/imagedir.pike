@@ -3,7 +3,7 @@
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.18 2012/02/08 00:56:23 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.57 2009/12/08 20:38:45 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;

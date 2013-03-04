@@ -9,7 +9,7 @@
  * fastest-developed module.
  */
 
-constant cvs_version="$Id: throttling_byuser.pike,v 1.5 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "throttlelib";

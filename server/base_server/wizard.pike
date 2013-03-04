@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.175 2011/06/17 11:28:23 mast Exp $
+// $Id$
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 

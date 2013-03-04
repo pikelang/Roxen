@@ -1,7 +1,7 @@
 // Config tablist look-a-like module. Copyright © 1999 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: configtablist.pike,v 1.14 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version="$Id$";
 
 inherit "module";
 inherit "roxenlib";

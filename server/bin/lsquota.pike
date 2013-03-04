@@ -1,5 +1,5 @@
 /*
- * $Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $
+ * $Id$
  *
  * List the keys of a quotadb.
  *
@@ -27,7 +27,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: lsquota.pike,v 1.2 2001/01/19 12:41:36 per Exp $\n");
+      werror("$Id$\n");
       exit(0);
       break;
     }

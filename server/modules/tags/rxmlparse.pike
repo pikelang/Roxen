@@ -9,7 +9,7 @@
 
 #define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.85 2011/03/01 13:14:03 stewa Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 

@@ -1,7 +1,7 @@
 /// Random Text Generator module rule file for generating a nonsense
 /// "About us" text for a company in the computer business.
 ///
-/// $Id: company,v 1.2 2001/08/30 12:57:37 nilsson Exp $
+/// $Id$
 
 ***syll1***trim-spaces
 $SELECT:|b|c|d|f|g|h|j|k|l|m|n|p|qu|r|s|t|v|w|x|z|y|t|n|m|d|ph|th|ch|sh$

@@ -9,7 +9,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: maori.pike,v 1.9 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "mi", "maori", "" });
 constant _aliases = ({ "mi", "maori", "maaori" });
 

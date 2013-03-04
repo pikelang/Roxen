@@ -4,7 +4,7 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.18 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.49 2012/08/13 12:54:37 grubba Exp $
+ * $Id$
  */
 #include <stat.h>
 #include <roxen.h>

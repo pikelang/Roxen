@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-constant cvs_version = "$Id: cvsfs.pike,v 1.24 2001/09/03 21:16:06 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <roxen.h>

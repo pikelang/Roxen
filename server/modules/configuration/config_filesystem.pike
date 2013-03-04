@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.125 2012/03/13 10:40:29 grubba Exp $";
+  "$Id$";
 
 constant path = "config_interface/";
 

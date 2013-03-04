@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.338 2012/11/17 09:34:44 jonasw Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>

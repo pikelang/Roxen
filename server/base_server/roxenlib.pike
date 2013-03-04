@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: roxenlib.pike,v 1.227 2011/12/27 18:48:01 mast Exp $
+// $Id$
 
 //#pragma strict_types
 

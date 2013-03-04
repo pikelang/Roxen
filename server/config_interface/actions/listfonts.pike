@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.23 2011/12/28 18:24:08 mast Exp $
+ * $Id$
  */
 
 #include <roxen.h>

@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.34 2012/11/08 13:52:52 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;

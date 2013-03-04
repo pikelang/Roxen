@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.9 2003/11/17 16:01:27 anders Exp $
+ * $Id$
  */
 
 #include <config.h>

@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.8 2006/03/14 16:03:47 noring Exp $
+//  $Id$
 
 
 //  Known HTML color names

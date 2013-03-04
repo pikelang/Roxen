@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.23 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 
 // 
 

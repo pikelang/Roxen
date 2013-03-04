@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.63 2008/09/15 08:58:11 jonasw Exp $
+// $Id$
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H

@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.130 2012/05/31 19:00:30 jonasw Exp $ -->
+<!-- $Id$ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />

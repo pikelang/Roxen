@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.66 2008/10/29 21:36:40 mast Exp $
+//! $Id$
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 

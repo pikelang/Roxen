@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: read_config.pike,v 1.72 2009/11/16 14:18:20 grubba Exp $
+// $Id$
 
 #include <module.h>
 

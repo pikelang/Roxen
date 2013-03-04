@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.40 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>

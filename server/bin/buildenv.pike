@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.11 2010/07/08 15:13:16 grubba Exp $";
+string cvs_version = "$Id$";
 
 class Environment
 {

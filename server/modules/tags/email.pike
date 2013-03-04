@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.52 2011/01/21 08:46:30 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe=1;
 

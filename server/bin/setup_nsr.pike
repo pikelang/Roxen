@@ -1,4 +1,4 @@
-// $Id: setup_nsr.pike,v 1.5 2009/01/08 23:14:46 mast Exp $
+// $Id$
 //
 // Setup .nsr (Networker) files for logfile directories if appropriate.
 // NOTE: We must be paranoid; we must not alter files that the user
@@ -104,7 +104,7 @@ int main(int argc, array(string) argv)
       verbose++;
       break;
     case "version":
-      write("$Id: setup_nsr.pike,v 1.5 2009/01/08 23:14:46 mast Exp $\n");
+      write("$Id$\n");
       break;
     }
   }

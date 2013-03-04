@@ -1,4 +1,4 @@
-// $Id: nptl.pike,v 1.4 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 //
 // Detection and workaround for Redhat 9's New Posix Thread Library.
 //

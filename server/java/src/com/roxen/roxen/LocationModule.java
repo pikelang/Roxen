@@ -1,5 +1,5 @@
 /*
- * $Id: LocationModule.java,v 1.5 2000/02/21 18:30:45 marcus Exp $
+ * $Id$
  *
  */
 

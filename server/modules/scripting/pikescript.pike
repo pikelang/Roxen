@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.77 2009/11/11 14:29:23 mast Exp $";
+constant cvs_version="$Id$";
 
 constant thread_safe=1;
 mapping scripts=([]);

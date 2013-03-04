@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.21 2012/12/12 17:43:49 jonasw Exp $
+ * $Id$
  *
  * SNMP protocol support.
  *

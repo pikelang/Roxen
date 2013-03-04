@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: periodic-fetcher.pike,v 1.3 2012/12/17 14:48:38 wellhard Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 

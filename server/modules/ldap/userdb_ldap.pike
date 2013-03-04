@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.15 2009/05/07 14:15:55 mast Exp $";
+  "$Id$";
 inherit UserDB;
 inherit "module";
 

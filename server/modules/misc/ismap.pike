@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.23 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 #include <module.h>
 inherit "module";

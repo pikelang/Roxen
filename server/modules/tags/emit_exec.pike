@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.8 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 
 #include <module.h>
 inherit "module";

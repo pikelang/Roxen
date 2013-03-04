@@ -1,6 +1,6 @@
 #!/usr/local/bin/pike
 //#pike 7.2
-// $Id: tetris.pike,v 1.6 2006/10/24 15:36:49 jonasw Exp $
+// $Id$
 import Process;import Protocols.TELNET;mixed a,h,Q,e=([]),q=Q=([]),c,s,I,_,j,K,
 w,x=252,m,f=map((array)"H45BBI65@CJ@BMED45@GM@LBFP@NBHS@BCDA5@LBB5BNCK5BMEL5@B"
 "EC5@MEN5MNFO6@BFE45MFQ65MHR4B@HF5MLHG5MYD",`-,65),n=25,io,tm;int u(){foreach(

@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.22 2009/05/06 12:16:12 grubba Exp $
+ * $Id$
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -41,7 +41,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.22 2009/05/06 12:16:12 grubba Exp $\n");
+	werror("$Id$\n");
 	exit(0);
       }
       break;

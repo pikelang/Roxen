@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.161 2010/06/29 13:30:31 grubba Exp $";
+constant cvs_version= "$Id$";
 constant thread_safe=1;
 
 #include <module.h>

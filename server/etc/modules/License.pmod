@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.27 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 #if constant(roxen)
 #define INSIDE_ROXEN

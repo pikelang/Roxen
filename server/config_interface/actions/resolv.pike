@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.43 2012/11/08 13:52:49 jonasw Exp $
+ * $Id$
  */
 inherit "wizard";
 inherit "../logutil";

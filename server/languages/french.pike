@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.13 2008/08/15 12:33:54 mast Exp $";
+string cvs_version = "$Id$";
 Created by:
 
 ---------------------+--------------------------------------------------

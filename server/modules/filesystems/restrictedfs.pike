@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.25 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 
 #include <module.h>
 #include <roxen.h>

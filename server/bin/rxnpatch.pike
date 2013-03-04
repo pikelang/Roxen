@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.20 2012/08/20 09:30:22 liin Exp $";
+constant cvs_string = "$Id$";
 
 import RoxenPatch;
 
