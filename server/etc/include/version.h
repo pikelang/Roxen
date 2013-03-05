@@ -4,7 +4,7 @@
 // Note that version information (major and minor) is also
 // present in module.h.
 constant roxen_ver = "5.2";
-constant roxen_build = "339";
+constant roxen_build = "340";
 
 #if !constant(roxen_release)
 constant roxen_release = "-git";
