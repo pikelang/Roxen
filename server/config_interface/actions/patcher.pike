@@ -87,6 +87,20 @@ mapping get_patch_stats(Patcher po) {
 	]);
 }
 
+array(string) get_missing_binaries() {
+#ifdef __NT__
+  array(string) bins = ({ "tar.exe", "patch.exe" });
+#else
+  array(string) bins = ({ "tar", "patch" });
+#endif
+
+  array(string) r = ({ });
+  foreach (bins, string a) {
+    if (!search_path(a)) r += ({ a });
+  }
+  return r;
+}
+
 string list_patches(RequestID id, Patcher po, string which_list)
 {
   string self_url = "?class=maintenance&action=patcher.pike";
@@ -546,6 +560,18 @@ mixed parse(RequestID id)
       // ]]> 
     </script>";
 
+  array(string) mbins = get_missing_binaries();
+  if (sizeof(mbins)) {
+    res += "<font size='+1' style='color: #d22;' ><b>" + LOCALE(0, "Warning: Missing tools") + "</b></font><br/><br/>";
+    res += "Roxen can't find one or more tools required for the patch management to work properly.<br/>";
+    res += "Before importing or installing any patches, please make sure you have the following executable(s) available on your system:<br/>";
+
+    res += "<ul>";
+    foreach (mbins, string a) res += "<li>" + a + "</li>";
+    res += "</ul>";
+    res += "<br/>";
+  }
+
   if (id->real_variables["OK.x"] &&
       id->real_variables["fixedfilename"] &&
       sizeof(id->real_variables["fixedfilename"][0]) &&
@@ -980,4 +1006,46 @@ mixed parse(RequestID id)
       // ]]> 
     </script>";
   return res;
+}
+
+// Non-caching version of Process.search_path()
+string search_path(string command) {
+  array(string) search_path_entries=0;
+  if (command=="" || command[0]=='/') return command;
+
+  if (!search_path_entries) {
+#ifdef __NT__
+    array(string) e=replace(getenv("PATH")||"", "\\", "/")/";"-({""});
+#elif defined(__amigaos__)
+    array(string) e=(getenv("PATH")||"")/";"-({""});
+#else
+    array(string) e=(getenv("PATH")||"")/":"-({""});
+#endif
+
+    multiset(string) filter=(<>);
+    search_path_entries=({});
+    foreach (e,string s) {
+      string t;
+      if (s[0]=='~') {  // some shells allow ~-expansion in PATH
+	if (s[0..1]=="~/" && (t=[string]getenv("HOME")))
+	  s=t+s[1..];
+	else {
+	  // expand user?
+	}
+      }
+
+      if (!filter[s] /* && directory exist */ ) {
+	search_path_entries+=({s});
+	filter[s]=1;
+      }
+    }
+  }
+
+  foreach (search_path_entries, string path) {
+    string p=combine_path(path,command);
+    Stdio.Stat s=file_stat(p);
+    if (s && s->mode&0111) return p;
+  }
+
+  return 0;
 }
