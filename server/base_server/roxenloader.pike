@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -734,6 +734,166 @@ class restricted_cd
 int getuid(){ return 17; }
 int getgid(){ return 42; }
 #endif
+
+//! @appears verify_password
+//!
+//! Verify a password against a hash.
+//!
+//! This function attempts to support most
+//! password hashing schemes.
+//!
+//! @returns
+//!   Returns @expr{1@} on success, and @expr{0@} (zero) otherwise.
+//!
+//! @seealso
+//!   @[hash_password()], @[predef::crypt()]
+int verify_password(string password, string hash)
+{
+  if (hash == "") return 1;
+
+  // Detect the password hashing scheme.
+  // First check for an LDAP-style marker.
+  string scheme = "crypt";
+  sscanf(hash, "{%s}%s", scheme, hash);
+  // NB: RFC2307 proscribes lower case schemes, while
+  //     in practise they are usually in upper case.
+  switch(lower_case(scheme)) {
+  case "md5":	// RFC 2307
+  case "smd5":
+    hash = MIME.decode_base64(hash);
+    password += hash[16..];
+    hash = hash[..15];
+    return Crypto.MD5.hash(password) == hash;
+
+  case "sha":	// RFC 2307
+  case "ssha":
+    // SHA1 and Salted SHA1.
+    hash = MIME.decode_base64(hash);
+    password += hash[20..];
+    hash = hash[..19];
+    return Crypto.SHA1.hash(password) == hash;
+
+  case "crypt":	// RFC 2307
+    // First try the operating system's crypt(3C).
+    if ((hash == "") || crypt(password, hash)) return 1;
+    if (hash[0] != '$') {
+      if (hash[0] == '_') {
+	// FIXME: BSDI-style crypt(3C).
+      }
+      return 0;
+    }
+
+    // Then try our implementations.
+    sscanf(hash, "$%s$%s$%s", scheme, string salt, string hash);
+    int rounds = UNDEFINED;
+    if (has_prefix(salt, "rounds=")) {
+      sscanf(salt, "rounds=%d", rounds);
+      sscanf(hash, "%s$%s", salt, hash);
+    }
+    switch(scheme) {
+    case "1":	// crypt_md5
+      return Nettle.crypt_md5(password, salt) == hash;
+
+    case "2":	// Blowfish (obsolete)
+    case "2a":	// Blowfish (possibly weak)
+    case "2x":	// Blowfish (weak)
+    case "2y":	// Blowfish (stronger)
+      break;
+
+    case "3":	// MD4 NT LANMANAGER (FreeBSD)
+      break;
+
+#if constant(Crypto.SHA256.crypt_hash)
+      // cf http://www.akkadia.org/drepper/SHA-crypt.txt
+    case "5":	// SHA-256
+      return Crypto.SHA256.crypt_hash(password, salt, rounds) == hash;
+#endif
+#if constant(Crypto.SHA512.crypt_hash)
+    case "6":	// SHA-512
+      return Crypto.SHA512.crypt_hash(password, salt, rounds) == hash;
+#endif
+    }
+    break;
+  }
+  return 0;
+}
+
+//! @appears crypt_password
+//!
+//! Generate a hash of @[password] suitable for @[verify_password()].
+//!
+//! @param password
+//!   Password to hash.
+//!
+//! @param scheme
+//!   Password hashing scheme. If not specified the strongest available
+//!   will be used.
+//!
+//!   If an unsupported scheme is specified an error will be thrown.
+//!
+//! @param rounds
+//!   The number of rounds to use in parameterized schemes. If not
+//!   specified the scheme specific default will be used.
+//!
+//! @returns
+//!   Returns a string suitable for @[verify_password()].
+//!
+//! @seealso
+//!   @[verify_password], @[predef::crypt()], @[Nettle.crypt_md5()],
+//!   @[Nettle.HashInfo()->crypt_hash()]
+string crypt_password(string password, string|void scheme, int|void rounds)
+{
+  function(string, string, int:string) crypt_hash;
+  int salt_size = 16;
+  int default_rounds = 5000;
+  switch(scheme) {
+  case UNDEFINED:
+    // FALL_THROUGH
+#if constant(Crypto.SHA512.crypt_hash)
+  case "6":
+  case "$6$":
+    crypt_hash = Crypto.SHA512.crypt_hash;
+    scheme = "6";
+    break;
+#endif
+#if constant(Crypto.SHA256.crypt_hash)
+  case "5":
+  case "$5$":
+    crypt_hash = Crypto.SHA256.crypt_hash;
+    scheme = "5";
+    break;
+#endif
+#if constant(Crypto.MD5.crypt_hash)
+  case "1":
+  case "$1$":
+    crypt_hash = Crypto.MD5.crypt_hash;
+    salt_size = 8;
+    rounds = 1000;		// Currently only 1000 rounds is supported.
+    default_rounds = 1000;
+    scheme = "1";
+    break;
+#endif
+  case "":
+    return crypt(password);
+    // FIXME: Add support for SSHA?
+  default:
+    error("Unsupported hashing scheme: %O\n", scheme);
+  }
+
+  if (!rounds) rounds = default_rounds;
+
+  // NB: The salt must be printable.
+  string salt =
+    MIME.encode_base64(Crypto.Random.random_string(salt_size))[..salt_size-1];
+
+  string hash = crypt_hash(password, salt, rounds);
+
+  if (rounds != default_rounds) {
+    salt = "rounds=" + rounds + "$" + salt;
+  }
+
+  return sprintf("$%s$%s$%s", scheme, salt, hash);
+}
 
 // Load Roxen for real
 Roxen really_load_roxen()
@@ -2667,6 +2827,9 @@ library should be enough.
   add_constant( "parse_color", nm_resolv("Colors.parse_color") );
   add_constant( "color_name",  nm_resolv("Colors.color_name")  );
   add_constant( "colors",      nm_resolv("Colors")             );
+
+  add_constant("verify_password", verify_password);
+  add_constant("crypt_password", crypt_password);
 
   // Load prototypes (after the master is replaces, thus making it
   // possible to dump them to a .o file (in the mysql))
