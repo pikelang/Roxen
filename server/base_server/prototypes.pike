@@ -4007,7 +4007,7 @@ class User( UserDB database )
   //! implementation uses the crypted_password() method.
   {
     string c = crypted_password();
-    return !sizeof(c) || crypt(password, c);
+    return !sizeof(c) || verify_password(password, c);
   }
 
   int uid();

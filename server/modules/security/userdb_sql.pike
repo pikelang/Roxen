@@ -46,7 +46,7 @@ class SqlUser
 	return (int)sql_query("SELECT OLD_PASSWORD(%s) = %s as pswmatch",
 			      password, crypted_password())[0]->pswmatch;
       case "crypt":
-	return (crypt(password, crypted_password()));
+	return (verify_password(password, crypted_password()));
       case "clear text":
 	return (password == crypted_password());
       case "md5 crypt":

@@ -340,7 +340,7 @@ string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Administrator</str>
-  <str>password</str>    : <str>" + crypt(password) + #"</str>
+  <str>password</str>    : <str>$1$" + Nettle.crypt_md5(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
   write("\n   Administrator user \"" + user + "\" created.\n");

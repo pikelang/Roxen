@@ -355,7 +355,7 @@ export ROXEN_CONFIGDIR ROXEN_DATADIR ROXEN_LOGDIR ROXEN_PID_FILE
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Administrator</str>
-  <str>password</str>    : <str>" + crypt(config->password) + #"</str>
+  <str>password</str>    : <str>$1$" + Nettle.crypt_md5(config->password) + #"</str>
   <str>name</str>        : <str>" + config->admin_user + "</str>\n</map>");
   
   if(Stdio.File(ufile, "wct", 0770)->write(user_config_file) !=
