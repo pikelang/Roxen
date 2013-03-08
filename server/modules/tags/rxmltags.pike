@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.553 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2145,10 +2145,10 @@ class TagCrypt {
 
     array do_return(RequestID id) {
       if(args->compare) {
-	_ok=crypt(content,args->compare);
+	_ok = verify_password(content,args->compare);
 	return 0;
       }
-      result=crypt(content);
+      result = crypt_password(content);
       return 0;
     }
   }
@@ -5385,7 +5385,7 @@ class TagIfUser {
 
   private int match_passwd(string try, string org) {
     if(!strlen(org)) return 1;
-    if(crypt(try, org)) return 1;
+    if(verify_password(try, org)) return 1;
   }
 
   private string simple_parse_users_file(string file, string u) {
@@ -7048,6 +7048,9 @@ using the pre tag.
  clear-text password from being stored anywhere. When a login attempt
  is made, the password supplied is also encrypted and then compared to
  the stored encrypted password.</p>
+
+ <p>Depending on the version of Roxen and Pike this tag supports
+    several different encryption schemes.</p>
 </desc>
 
 <attr name='compare' value='string'>
