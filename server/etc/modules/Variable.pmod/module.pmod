@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.120 2011/12/06 10:51:46 grubba Exp $
+// $Id$
 
 #include <module.h>
 #include <roxen.h>
@@ -1006,7 +1006,7 @@ class Text
 // Password
 // =====================================================================
 class Password
-//! Password variable (uses crypt)
+//! Password variable (uses crypt_password)
 {
   inherit String;
   int width = 20;
@@ -1017,7 +1017,7 @@ class Password
     mapping val;
     if( sizeof( val = get_form_vars(id)) && 
         val[""] && strlen(val[""]) ) {
-      set( crypt( val[""] ) );
+      set( crypt_password( val[""] ) );
       return 1;
     }
     return 0;
