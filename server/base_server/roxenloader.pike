@@ -914,6 +914,13 @@ int getuid(){ return 17; }
 int getgid(){ return 42; }
 #endif
 
+#if constant(Crypto.Password)
+// Pike 7.9 and later.
+constant verify_password = Crypto.Password.verify;
+constant crypt_password = Crypto.Password.hash;
+
+#else /* !Crypto.Password */
+
 //! @appears verify_password
 //!
 //! Verify a password against a hash.
@@ -1073,6 +1080,7 @@ string crypt_password(string password, string|void scheme, int|void rounds)
 
   return sprintf("$%s$%s$%s", scheme, salt, hash);
 }
+#endif /* !Crypto.Password */
 
 // Load Roxen for real
 Roxen really_load_roxen()
