@@ -307,7 +307,6 @@ worldmap binary
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/additional_rxml.pike foreign_ident
-/server/modules/tags/awizard.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/email.pike foreign_ident
