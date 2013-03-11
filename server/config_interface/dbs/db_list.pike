@@ -151,7 +151,7 @@ string|mapping parse( RequestID id )
 
     mapping(string:int) db_stats;
     if ( mixed e = catch {
-	db_stats = DBManager.db_stats( db );
+	db_stats = DBManager.db_stats( db ) || ([]);
       } ) {
       string em = describe_error(e);
       sscanf( em, "%*sreconnect to SQL-server%s", em);
