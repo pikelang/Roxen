@@ -695,7 +695,7 @@ class Patcher
 	}
 	else
 	{
-	  write_log(1, "FAILED: File to be overwritten doesn't exists.\n");
+	  write_log(1, "FAILED: File to be overwritten doesn't exist.\n");
 	  error_count++;
 	  if (!force)
 	  {
@@ -758,7 +758,7 @@ class Patcher
 	}
 	else
 	{
-	  write_log(1, "FAILED: File to be removed doesn't exists.\n");
+	  write_log(1, "FAILED: File to be removed doesn't exist.\n");
 	  error_count++;
 	  // This is not a fatal error so we'll just continue.
 	}

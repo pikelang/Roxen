@@ -25,7 +25,7 @@ constant tagdoc = ([
 <attr name='age' value='number' required='required'><p>
   This is the documentation of the 'age' attribute to the <tag>example-tag</tag>.
   In this case the attribute accepts a number, e.g. &lt;example-tag age='42'&gt;&lt;/example-tag&gt;.
-  This attribute is required. If it doesn't exists in the tag you will get an RXML parse error.
+  This attribute is required. If it doesn't exist in the tag you will get an RXML parse error.
 </p></attr>
 
 <attr name='sort' value='up|down' default='up'><p>
