@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.30 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -86,7 +86,7 @@ class Page
     return res;
   }
 
-  string tag_button(string t, mapping m, RequestID id)
+  string tag_wizard_button(string t, mapping m, RequestID id)
   {
     mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
 			 "image": 1, "gbutton_title": 1, "title": 1]);
@@ -307,6 +307,10 @@ class AWizard
   string internal_tag_page(string t, mapping args, string c, int l,
                            RequestID id)
   {
+    //  Replace conflicting tag name "button" in the content to make it local
+    //  to this element.
+    c = replace(c, ({ "<button", "<rxml:button" }),
+		   ({ "<wizard-button", "<rxml:wizard-button" }) );
     args->num = last_page;
     if(!args->name) args->name = (string)last_page;
     pages += ({ Page( args, c, button_id, button_code ) });
@@ -507,7 +511,7 @@ mapping(string:AWizard) wizards = ([]);
 
 PROXY_TAG (goto);
 PROXY_TAG (wizard_buttons);
-PROXY_TAG (button);
+PROXY_TAG (wizard_button);
 PROXY_CONTAINER (dbutton);
 PROXY_CONTAINER (warn);
 PROXY_CONTAINER (notice);
@@ -533,7 +537,7 @@ mixed container_awizard(string tagname, mapping arguments,
                         string contents, RequestID id)
 {
   mixed res;
-
+  
   if(!wizards[id->not_query])
     wizards[ id->not_query ]=AWizard(arguments, contents, id, this_object() );
   else
@@ -593,7 +597,7 @@ constant tagdoc=([
 </attr>",
 
 "ebutton":#"<desc type='cont'>
- A more advanved button. When pressed the content of this container
+ A more advanced button. When pressed the content of this container
  will be parsed before the user are allowed to leave the page.
 </desc>
 
