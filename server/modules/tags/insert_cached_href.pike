@@ -425,7 +425,8 @@ class HrefDatabase {
     
     string url = args["cached-href"];
     sql_query("UPDATE " + request_table +
-	      "   SET latest_request = " + now +
+	      "   SET latest_request = " + now + ", "
+	      "       out_of_date = NULL "
 	      " WHERE url = %s "
 	      "   AND fetch_interval = %d "
 	      "   AND fresh_time = %d "
