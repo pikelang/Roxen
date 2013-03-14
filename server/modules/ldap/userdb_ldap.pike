@@ -99,7 +99,6 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
       }
     }
 
-    string sv, salt;
     if (has_prefix(pass, "{")) {
       // RFC 2307
       // Digests {CRYPT}, {SH1}, {SSHA}, {MD5} and {SMD5}.
