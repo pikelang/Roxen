@@ -1080,11 +1080,14 @@ class Patcher
       return 0;
     }
     
+    Privs privs = Privs("RoxenPatch: Remove patch " + patch_id + ", " + sprintf("%O", path));
     if (!Stdio.recursive_rm(path)) {
+      privs = 0;
       write_err(sprintf("Failed to remove patch %s from disk. "
 			"Not enough privileges?\n", patch_id));
       return 0;
     }
+    privs = 0;
 
     return 1;
   }
