@@ -13,8 +13,6 @@ constant cvs_version = "$Id$";
 constant _id = ({ "ru", "russian", "русский" });
 constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
-#define error(x) throw( ({ x, backtrace() }) )
-
 constant months = ({
   "январь", "фебраль", "март", "апрель", "май",
   "июнь", "июль", "август", "сентябрь", "октябрь",
