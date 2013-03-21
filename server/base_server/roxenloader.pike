@@ -1727,12 +1727,18 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
     }
   }
 
-  roxen_is_cms = !!lfile_stat("modules/sitebuilder");
+  roxen_is_cms = !!lfile_stat("modules/sitebuilder") ||
+    !!lfile_stat("packages/sitebuilder");
 
-  if(roxen_is_cms)
-    roxen_product_name="Roxen CMS";
-  else
+  if(roxen_is_cms) {
+    if (lfile_stat("modules/print") || lfile_stat("packages/print")) {
+      roxen_product_name="Roxen EP";
+    } else {
+      roxen_product_name="Roxen CMS";
+    }
+  } else {
     roxen_product_name="Roxen WebServer";
+  }
 
 #if defined(ROXEN_USE_FORKD) && constant(Process.set_forkd_default)
   report_debug("Enabling use of forkd daemon.\n");
