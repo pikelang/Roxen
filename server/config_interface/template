@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.130 2012/05/31 19:00:30 jonasw Exp $ -->
+<!-- $Id$ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -169,7 +169,7 @@
 <title>
   <set variable="var.cf-headline"><cf-headline/></set>
   <if variable="var.cf-headline = ?*">&var.cf-headline; - </if>
-  &roxen.version; <translate id="204">Administration Interface</translate> - <eval>&_.title:none;</eval>
+  &roxen.product-name;/&roxen.dist-version; <translate id="204">Administration Interface</translate> - <eval>&_.title:none;</eval>
 </title>
 <link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico" />
 <if exists="/themes/&usr.theme;/stylesheet.css">
