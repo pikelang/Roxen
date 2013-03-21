@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1558,12 +1558,18 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
     }
   }
 
-  roxen_is_cms = !!lfile_stat("modules/sitebuilder");
+  roxen_is_cms = !!lfile_stat("modules/sitebuilder") ||
+    !!lfile_stat("packages/sitebuilder");
 
-  if(roxen_is_cms)
-    roxen_product_name="Roxen CMS";
-  else
+  if(roxen_is_cms) {
+    if (lfile_stat("modules/print") || lfile_stat("packages/print")) {
+      roxen_product_name="Roxen EP";
+    } else {
+      roxen_product_name="Roxen CMS";
+    }
+  } else {
     roxen_product_name="Roxen WebServer";
+  }
 
 #if defined(ROXEN_USE_FORKD) && constant(Process.set_forkd_default)
   report_debug("Enabling use of forkd daemon.\n");
