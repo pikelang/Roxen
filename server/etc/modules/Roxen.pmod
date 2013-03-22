@@ -2679,11 +2679,22 @@ string strftime(string fmt, int t,
       case 'X':
 	res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
 	break;
-      case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-	res += my_sprintf(prefix, "%d", lt->wday + 1);
+      case 'u':	// Weekday as a decimal number [1,7], Monday == 1
+	res += my_sprintf(prefix, "%d", 1 + ((lt->wday + 6) % 7));
+	break;
+      case 'U':	// Week number of current year [00,53]; 0-prefix
+		// Sunday is first day of week.
+	res += my_sprintf(prefix, "%02d", 1 + (lt->yday - lt->wday)/ 7);
+	break;
+      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
+	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
 	break;
       case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
 	res += my_sprintf(prefix, "%d", lt->wday);
+	break;
+      case 'W':	// Week number of year as a decimal number [00,53],
+		// with Monday as the first day of week 1; 0-prefix
+	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
 	break;
       case 'x':	// Date
 	res += strftime("%a %b %d %Y", t);
@@ -2693,18 +2704,6 @@ string strftime(string fmt, int t,
 	break;
       case 'Y':	// Year [0000.9999]; 0-prefix
 	res += my_sprintf(prefix, "%04d", 1900 + lt->year);
-	break;
-
-      case 'U':	// Week number of year as a decimal number [00,53],
-		// with Sunday as the first day of week 1; 0-prefix
-	res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
-	break;
-      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
-	break;
-      case 'W':	// Week number of year as a decimal number [00,53],
-		// with Monday as the first day of week 1; 0-prefix
-	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
 	break;
       case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
