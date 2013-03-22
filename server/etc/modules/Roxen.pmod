@@ -2664,7 +2664,7 @@ string strftime(string fmt, int t,
 	res += lt->hour<12 ? "am" : "pm";
 	break;
       case 'r':	// Time in 12-hour clock format with %p
-	res += strftime("%l:%M %p", t);
+	res += strftime("%I:%M:%S %p", t);
 	break;
       case 'R':	// Time as %H:%M
 	res += sprintf("%02d:%02d", lt->hour, lt->min);
