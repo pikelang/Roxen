@@ -2633,6 +2633,38 @@ string strftime(string fmt, int t,
       case 'e':	// Day of month [1,31]; space-prefix
 	res += my_sprintf(prefix, "%2d", lt->mday);
 	break;
+      case 'F':	// ISO 8601 date %Y-%m-%d
+	res += sprintf("%04d-%02d-%02d",
+		       1900 + lt->year, lt->mon + 1, lt->mday);
+	break;
+      case 'G':	// Year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%04d", 1899 + lt->year);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%04d", 1901 + lt->year);
+	  } else {
+	    res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	  }
+	}
+	break;
+      case 'g':	// Short year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%02d", (99 + lt->year) % 100);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%02d", (1 + lt->year) % 100);
+	  } else {
+	    res += my_sprintf(prefix, "%02d", (lt->year) % 100);
+	  }
+	}
+	break;
       case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
 	res += my_sprintf(prefix, "%02d", lt->hour);
 	break;
@@ -2669,6 +2701,9 @@ string strftime(string fmt, int t,
       case 'R':	// Time as %H:%M
 	res += sprintf("%02d:%02d", lt->hour, lt->min);
 	break;
+      case 's':	// Seconds since epoch.
+	res += my_sprintf(prefix, "%d", t);
+	break;
       case 'S':	// Seconds [00,61]; 0-prefix
 	res += my_sprintf(prefix, "%02d", lt->sec);
 	break;
@@ -2704,6 +2739,15 @@ string strftime(string fmt, int t,
 	break;
       case 'Y':	// Year [0000.9999]; 0-prefix
 	res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	break;
+      case 'z':	// Time zone as hour offset from UTC.
+		// Needed for RFC822 dates.
+	{
+	  int minutes = lt->timezone/60;
+	  int hours = minutes/60;
+	  minutes -= hours * 60;
+	  res += my_sprintf(prefix, "%+05d%", hours*100 + minutes);
+	}
 	break;
       case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
