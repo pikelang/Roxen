@@ -2607,9 +2607,13 @@ string strftime(string fmt, int t,
 		    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
 	break;
       case 'B':	// Month name
-	if (language)
-	  res += number2string(lt->mon+1,m,language(lang,"month",id));
-	else
+	if (language) {
+	  if (alternative_form) {
+	    res += number2string(lt->mon+1,m,language(lang,"numbered_month",id));
+	  } else {
+	    res += number2string(lt->mon+1,m,language(lang,"month",id));
+	  }
+	} else
 	  res += ({ "January", "February", "March", "April", "May", "June",
 		    "July", "August", "September", "October", "November", "December" })[lt->mon];
 	break;
