@@ -2618,6 +2618,7 @@ string strftime(string fmt, int t,
 		    "July", "August", "September", "October", "November", "December" })[lt->mon];
 	break;
       case 'c':	// Date and time
+	// FIXME: Should be preferred date and time for the locale.
 	res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
 				lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
 	break;
@@ -2711,7 +2712,7 @@ string strftime(string fmt, int t,
 	res += "\t";
 	break;
       case 'T':	// Time as %H:%M:%S
-      case 'X':
+      case 'X':	// FIXME: Time in locale preferred format.
 	res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
 	break;
       case 'u':	// Weekday as a decimal number [1,7], Monday == 1
@@ -2732,6 +2733,7 @@ string strftime(string fmt, int t,
 	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
 	break;
       case 'x':	// Date
+		// FIXME: Locale preferred date format.
 	res += strftime("%a %b %d %Y", t);
 	break;
       case 'y':	// Year [00,99]; 0-prefix
@@ -2751,6 +2753,7 @@ string strftime(string fmt, int t,
 	break;
       case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
+	break;
       }
       res+=key[1..];
       break;
