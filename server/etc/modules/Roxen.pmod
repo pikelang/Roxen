@@ -2492,6 +2492,8 @@ string strftime(string fmt, int t,
   
   foreach(a[1..], string key) {
     int(0..1) prefix = 1;
+    int(0..1) alternative_numbers = 0;
+    int(0..1) alternative_form = 0;
     while (sizeof(key)) {
       switch(key[0]) {
 	// Flags.
@@ -2499,9 +2501,13 @@ string strftime(string fmt, int t,
 	prefix = 0;
 	key = key[1..];
 	continue;
-      case 'E':
-      case 'O':
-	key = key[1..]; // No support for E or O extension.
+      case 'E':	// Locale-dependent alternative form.
+	alternative_form = 1;
+	key = key[1..];
+	continue;
+      case 'O':	// Locale-dependent alternative numeric representation.
+	alternative_numbers = 1;
+	key = key[1..];
 	continue;
 
 	// Formats.
