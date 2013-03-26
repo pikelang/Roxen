@@ -58,8 +58,11 @@ typedef mapping(string:string |
 //!       @member string "source"
 //!       @member string "destination"
 //!     @endmapping
-//!   @member array(string) "patch"
+//!   @member array(mapping(string:string)) "patch"
 //!     An array of all "patch" fields in the metadata block.
+//!     @mapping
+//!       @member string "source"
+//!     @endmapping
 //!   @member string "udiff"
 //!     A string of udiff data.
 //!   @member array(string) "delete"
@@ -794,8 +797,9 @@ class Patcher
     {
       int error = 0;
       
-      foreach (ptchdata->patch, string file)
+      foreach (ptchdata->patch, mapping(string:string) patch_info)
       {
+	string file = patch_info->source;
 	File udiff_data = File(append_path(source_path, file));
 
 	// Backup files
@@ -1242,7 +1246,7 @@ class Patcher
 	break;
       case "patch":
 	if (attrs->source) {
-	  p->patch += ({ attrs->source });
+	  p->patch += ({ attrs });
 	}
 	break;
       case "name":
@@ -1583,6 +1587,11 @@ class Patcher
 	    xml += sprintf("  <flag name=\"%s\">%s</flag>\n",
 			   s, (metadata->flags[s]) ? "true" : "false");
 	}
+	else if (tag_name == "patch")
+	{
+	  foreach(metadata->patch, mapping(string:string) patch_info)
+	    xml += sprintf("  <patch source=\"%s\" />\n", patch_info->source);
+	}
 	else if (mappingp(metadata[tag_name][0]))
 	{
 	  foreach(metadata[tag_name], mapping m)
@@ -1591,11 +1600,6 @@ class Patcher
 			   m->source,
 			   m->destination,
 			   tag_name);
-	}
-	else if (tag_name == "patch")
-	{
-	  foreach(metadata->patch, string s)
-	    xml += sprintf("  <patch source=\"%s\" />\n", s);
 	}
 	else
 	{
@@ -1692,10 +1696,9 @@ class Patcher
 
     // Copy the files to the temp dir:
     if (metadata->patch)
-      foreach(metadata->patch; int i; string s)
+      foreach(metadata->patch, mapping m)
       {
 	// Package the string nicely:
-	mapping m = ([ "source" : s ]);
 	if (!copy_file_to_temp_dir(m, temp_data_path))
 	{
 	  clean_up(temp_data_path);
@@ -1703,7 +1706,7 @@ class Patcher
 	}
 
 	// Update with the new file name
-	metadata->patch[i] = basename(s);
+	m->source = basename(m->source);
       }
 
     if (metadata->replace)
@@ -1737,7 +1740,7 @@ class Patcher
 
       // Update the patch object with a pointer to the file and discard the
       // udiff block; it's not needed anymore.
-      metadata->patch += ({ out_filename });
+      metadata->patch += ({ ([ "source": out_filename ]) });
       metadata->udiff = 0;
     }
 

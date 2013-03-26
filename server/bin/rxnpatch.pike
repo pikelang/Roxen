@@ -359,7 +359,7 @@ int main(int argc, array(string) argv)
 	  else
 	  // Assume file name.
 	  {
-	    ptc_obj->patch += ({ argument[1] });
+	    ptc_obj->patch += ({ ([ "source": argument[1] ]) });
 	  }
 	  break;
 	case "new_file":

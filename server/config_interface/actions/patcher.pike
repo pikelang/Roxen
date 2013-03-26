@@ -387,10 +387,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	else
 	  patch_path = combine_path(po->get_installed_dir(),
 				    item->metadata->id);
-	foreach(item->metadata->patch, string patch_file)
+	foreach(item->metadata->patch, mapping(string:string) patch)
 	{
 	  patch_data += Stdio.read_file(combine_path(patch_path,
-						     patch_file));
+						     patch->source));
 	}
 	
 	array(string) patched_files_list = po->lsdiff(patch_data);
