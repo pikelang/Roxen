@@ -377,7 +377,7 @@ int main(int argc, array(string) argv)
 	    return 0;
 	  break;
 	case "delete_file":
-	  ptc_obj->delete += ({ argument[1] });
+	  ptc_obj->delete += ({ ([ "destination": argument[1] ]) });
 	  break;
 	case "depends_on":
 	  array(string) alternatives = argument[1]/"|";
@@ -843,12 +843,12 @@ private void write_list(Patcher plib,
 	if (obj->delete && sizeof(obj->metadata->delete) == 1)
 	  md += ({ 
 	    ({ "Deleted file:", 
-	       sprintf("%s", obj->metadata->delete[0]) })
+	       sprintf("%s", obj->metadata->delete[0]->destination) })
 	  });
 	else if (obj->metadata->delete)
 	  md += ({
 	    ({ "Deleted files:", 
-	       sprintf("%{%s\n%}", obj->metadata->delete) })
+	       sprintf("%{%s\n%}", obj->metadata->delete->destination) })
 	  });
 	
 	if (obj->metadata->patch)

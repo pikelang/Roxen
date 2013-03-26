@@ -65,8 +65,11 @@ typedef mapping(string:string |
 //!     @endmapping
 //!   @member string "udiff"
 //!     A string of udiff data.
-//!   @member array(string) "delete"
+//!   @member array(mapping(string:string)) "delete"
 //!     An array of all "delete" fields in the metadata block.
+//!     @mapping
+//!       @member string "destination"
+//!     @endmapping
 //! @endmapping
 
 #if !constant(Privs)
@@ -736,9 +739,9 @@ class Patcher
     // Handle files to be deleted
     if (ptchdata->delete)
     {
-      foreach (ptchdata->delete, string file)
+      foreach (ptchdata->delete, mapping(string:string) del_info)
       {
-	string dest = append_path(server_path, file);
+	string dest = append_path(server_path, del_info->destination);
 	write_log(0, "Removing file <u>%s</u> ... ", dest);
 	
 	// Make sure that the destination already exists
@@ -749,7 +752,7 @@ class Patcher
 		    dest, 
 		    basename(backup_file));
 
-	  if (add_file_to_tar_archive(file,
+	  if (add_file_to_tar_archive(del_info->destination,
 				      server_path,
 				      backup_file))
 	    write_log(0, "<green>ok.</green>\n");       
@@ -1258,8 +1261,10 @@ class Patcher
       case "originator":
 	p->originator = tag_content;
 	break;
-      case "new":
       case "delete":
+	p->delete += ({ ([ "destination": tag_content ]) });
+	break;
+      case "new":
       case "replace":
       default:
 	if (sizeof(attrs)) {
@@ -1594,12 +1599,20 @@ class Patcher
 	}
 	else if (mappingp(metadata[tag_name][0]))
 	{
-	  foreach(metadata[tag_name], mapping m)
-	    xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
-			   tag_name,
-			   m->source,
-			   m->destination,
-			   tag_name);
+	  foreach(metadata[tag_name], mapping m) {
+	    if (m->source) {
+	      xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
+			     tag_name,
+			     m->source,
+			     m->destination,
+			     tag_name);
+	    } else {
+	      xml += sprintf("  <%s>%s</%s>\n",
+			     tag_name,
+			     m->destination,
+			     tag_name);
+	    }
+	  }
 	}
 	else
 	{

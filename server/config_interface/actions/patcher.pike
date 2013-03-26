@@ -366,14 +366,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
       {
 	md += ({ 
 	  ({ LOCALE(353, "Deleted file:"), 
-	     sprintf("%s", item->metadata->delete[0]) })
+	     sprintf("%s", item->metadata->delete[0]->destination) })
 	});
       }
       else if (item->metadata->delete)
       {
 	md += ({
 	  ({ LOCALE(354, "Deleted files:"), 
-	     sprintf("%{%s<br />\n%}", item->metadata->delete) })
+	     sprintf("%{%s<br />\n%}", item->metadata->delete->destination) })
 	});
       }
 
