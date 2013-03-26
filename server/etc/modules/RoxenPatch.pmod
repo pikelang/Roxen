@@ -63,8 +63,12 @@ typedef mapping(string:string |
 //!     @mapping
 //!       @member string "source"
 //!     @endmapping
-//!   @member string "udiff"
-//!     A string of udiff data.
+//!   @member array(mapping(string:string)) "udiff"
+//!     An array with literal udiff data.
+//!     @mapping
+//!       @member string "patch"
+//!         A string of udiff data.
+//!     @endmapping
 //!   @member array(mapping(string:string)) "delete"
 //!     An array of all "delete" fields in the metadata block.
 //!     @mapping
@@ -1742,18 +1746,20 @@ class Patcher
     // down to a file as well.
     if (metadata->udiff)
     {
-      constant out_filename = "patchdata.patch";
-      string out_file_path = combine_path(temp_data_path, out_filename);
+      foreach(metadata->udiff; int i; mapping(string:string) udiff) {
+	string out_filename = sprintf("patchdata-%04d.patch", i);
+	string out_file_path = combine_path(temp_data_path, out_filename);
       
-      if(!write_file_to_disk(out_file_path, metadata->udiff))
-      {
-	clean_up(temp_data_path);
-	return 0;
-      }
+	if(!write_file_to_disk(out_file_path, udiff->patch))
+	{
+	  clean_up(temp_data_path);
+	  return 0;
+	}
 
-      // Update the patch object with a pointer to the file and discard the
-      // udiff block; it's not needed anymore.
-      metadata->patch += ({ ([ "source": out_filename ]) });
+	// Update the patch object with a pointer to the file and discard the
+	// udiff block; it's not needed anymore.
+	metadata->patch += ({ ([ "source": out_filename ]) });
+      }
       metadata->udiff = 0;
     }
 

@@ -347,7 +347,7 @@ int main(int argc, array(string) argv)
 	    write_mess("Reading patch data from stdin...");
 	    stdin = 1;
 	    string s = Stdio.stdin->read();
-	    ptc_obj->udiff = s;
+	    ptc_obj->udiff += ({ ([ "patch": s ]) });
 	    write_mess("Done!\n");
 	  }
 	  else if (argument[1] == 1)
