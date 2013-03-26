@@ -1230,53 +1230,46 @@ class Patcher
     {
       string name = node->get_full_name();
       string tag_content = (node[0]) ? node[0]->get_text() : "";
-      if (sizeof(node->get_attributes()))
+      mapping(string:string) attrs = node->get_attributes();
+
+      switch(name)
       {
-	foreach(node->get_attributes(); string i; string v)
-	{
-	  // Check if we have a flag and if that flag is on or off.
-	  if(name == "flag")
-	  { 
-	    if((i == "name") && 
-	       !(tag_content == "false" ||
-		 tag_content == "0"))
-	    {
-	      p->flags += (< v >);
+      case "flag":
+	// Check if we have a flag and if that flag is on or off.
+	if (attrs->name && (tag_content != "false") && (tag_content != "0")) {
+	  p->flags += (< attrs->name >);
+	}
+	break;
+      case "patch":
+	if (attrs->source) {
+	  p->patch += ({ attrs->source });
+	}
+	break;
+      case "name":
+	p->name = tag_content;
+	break;
+      case "description":
+	p->description = trim_ALL_redundant_whites(tag_content);
+	break;
+      case "originator":
+	p->originator = tag_content;
+	break;
+      case "new":
+      case "delete":
+      case "replace":
+      default:
+	if (sizeof(attrs)) {
+	  if (!p[name]) p[name] = ({});
+	  foreach(attrs; string i; string v) {
+	    p[name] += ({ ([i:v]) });
+	    if (i == "source") {
+	      // NB: This is for <new> and <replace>.
+	      p[name][-1]->destination = tag_content;
 	    }
 	  }
-	  else if(name == "patch")
-	  {
-	    p->patch += ({ v });
-	  }
-	  else
-	  {
-	    if(!p[name])
-	      p += ([ name:({ }) ]);
-	    p[name] += ({ ([i:v]) });
-	  }
 	}
-	if(arrayp(p[name]) && 
-	   mappingp(p[name][-1]) &&
-	   p[name][-1]->source)
-	  p[name][-1]->destination = tag_content;
-      }
-      else
-      {
-	switch(name)
-	{
-	  case "name":
-	    p->name = tag_content;
-	    break;
-	  case "description":
-	    p->description = trim_ALL_redundant_whites(tag_content);
-	    break;
-	  case "originator":
-	    p->originator = tag_content;
-	    break;
-	  default:
-	    p[name] += ({ tag_content });
-	    break;
-	}
+	p[name] += ({ tag_content });
+	break;
       }
     }
     
