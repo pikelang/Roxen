@@ -208,7 +208,7 @@ int main(int argc, array(string) argv)
   // Handle the different commands.
   if (cmd_n_files[1] == "create")
   {
-    PatchObject ptc_obj = ([ ]);
+    PatchObject ptc_obj = PatchObject();
     string target_dir;
     int(0..1) metadata, cfcl;
     foreach(switches, array argument)
@@ -481,7 +481,7 @@ int main(int argc, array(string) argv)
       // files that has that glob.
       if (cmd_n_files[i] == "*")
       {
-	foreach(plib->file_list_imported(), PatchObject po)
+	foreach(plib->file_list_imported(), mapping(string:PatchObject) po)
 	{
 	  ins_list += ({ po->metadata->id });
 	}

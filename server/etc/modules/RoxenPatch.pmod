@@ -20,61 +20,87 @@ constant known_platforms = (< "macosx_ppc32",
 			      "sol10_x86_64",
 			      "win32_x86" >);
 
-typedef mapping(string:string |
-		  multiset(string) |
-		  array(string | mapping(string:string))) PatchObject;
 //! Contains the patchdata
 //! 
-//! @mapping
-//!   @member string "id"
-//!     Taken from filename.
-//!   @member string "name"
-//!     "name" field in the metadata block
-//!   @member string "description"
-//!     "description" field in the metadata block
-//!   @member string "originator"
-//!     "originator" field in the metadata block
-//!   @member string "rxp_version"
-//!     File format version.
-//!   @member array(string) "platform"
-//!     An array of all "platform" fields in the metadata block.
-//!   @member array(string) "version"
-//!     An array of all "version" fields in the metadata block.
-//!   @member array(string) "depends"
-//!     An array of all "depends" fields in the metadata block.
-//!   @member multiset(string) "flags"
-//!     A multiset of active flags
-//!   @member array(string) "reload"
-//!     An array of all "reload" fields in the metadata block.
-//!   @member array(mapping(string:string)) "new"
-//!     An array of all "new" fields in the metadata block.
-//!     @mapping
-//!       @member string "source"
-//!       @member string "destination"
-//!     @endmapping
-//!   @member array(mapping(string:string)) "replace"
-//!     An array of all "replace" fields in the metadata block.
-//!     @mapping
-//!       @member string "source"
-//!       @member string "destination"
-//!     @endmapping
-//!   @member array(mapping(string:string)) "patch"
-//!     An array of all "patch" fields in the metadata block.
-//!     @mapping
-//!       @member string "source"
-//!     @endmapping
-//!   @member array(mapping(string:string)) "udiff"
-//!     An array with literal udiff data.
-//!     @mapping
-//!       @member string "patch"
-//!         A string of udiff data.
-//!     @endmapping
-//!   @member array(mapping(string:string)) "delete"
-//!     An array of all "delete" fields in the metadata block.
-//!     @mapping
-//!       @member string "destination"
-//!     @endmapping
-//! @endmapping
+class PatchObject(string|void id
+		  //! Taken from filename.
+		  )
+{
+  string name;
+  //! "name" field in the metadata block
+
+  string description;
+  //! "description" field in the metadata block
+
+  string originator;
+  //! "originator" field in the metadata block
+
+  string rxp_version;
+  //! File format version.
+
+  array(string) platform = ({});
+  //! An array of all "platform" fields in the metadata block.
+
+  array(string) version = ({});
+  //! An array of all "version" fields in the metadata block.
+
+  array(string) depends = ({});
+  //! An array of all "depends" fields in the metadata block.
+
+  multiset(string) flags = (<>);
+  //! A multiset of active flags
+
+  array(string) reload = ({});
+  //! An array of all "reload" fields in the metadata block.
+
+  array(mapping(string:string)) new = ({});
+  //! An array of all "new" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!       @member string "destination"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) replace = ({});
+  //! An array of all "replace" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!       @member string "destination"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) patch = ({});
+  //! An array of all "patch" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) udiff = ({});
+  //! An array with literal udiff data.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "patch"
+  //!         A string of udiff data.
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) delete = ({});
+  //! An array of all "delete" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "destination"
+  //!     @endmapping
+  //! @endarray
+}
 
 #if !constant(Privs)
 protected class Privs(string reason, int|string|void uid, int|string|void gid)
@@ -483,7 +509,7 @@ class Patcher
 
     // Check platform
     write_log(0, "Checking platform ... ");
-    if (ptchdata->platform)
+    if (sizeof(ptchdata->platform || ({})))
     {
       if (!sizeof(filter(ptchdata->platform, check_platform)))
       {
@@ -506,7 +532,7 @@ class Patcher
 
     // Check version
     write_log(0, "Checking server version ... ");
-    if (ptchdata->version)
+    if (sizeof(ptchdata->version || ({})))
     {
       if (!sizeof(filter(ptchdata->version, check_server_version)))
       {
@@ -1228,7 +1254,7 @@ class Patcher
   //! @returns
   //!   Returns a mapping if successful, 0 otherwise.
   {
-    PatchObject p = ([ "id" : patchid ]);
+    PatchObject p = PatchObject(patchid);
     SimpleNode md = simple_parse_input(metadata_block, 0,
 				       PARSE_CHECK_ALL_ERRORS);
     //				       PARSE_FORCE_LOWERCASE |
@@ -1374,7 +1400,7 @@ class Patcher
 			    );
   }
   
-  array(mapping(string:string|mapping(string:mixed))) file_list_imported()
+  array(mapping(string:string|mapping(string:int)|PatchObject)) file_list_imported()
   //! This function returns a list of all imported patches.
   //!
   //! @returns
@@ -1396,7 +1422,7 @@ class Patcher
   //!       has been uninstalled.
   //!     @member string "uninstall_user"
   //!       User who uninstalled the patch. This field is usually 0.
-  //!     @member mapping(string:mixed) "metadata"
+  //!     @member PatchObject "metadata"
   //!       metadata block as returned from parse_metadata()
   //!   @endmapping
   {
@@ -1588,7 +1614,7 @@ class Patcher
 
     foreach(valid_tags, string tag_name)
     {
-      if(metadata[tag_name])
+      if(metadata[tag_name] && sizeof(metadata[tag_name]))
       {
 	if (tag_name == "flags")
 	{
@@ -2098,13 +2124,6 @@ class Patcher
 
     if (ptc_obj->replace)
     {
-      if (!sizeof(ptc_obj->replace))
-      {
-	if (!silent)
-	  write_err("FAILED: List of files to be replaced exists but is "
-		    "empty.\n");
-	return 0;
-      }
 //       foreach(ptc_obj->replace, mapping(string:string) m)
 //       {
 // 	werror("REPLACE: %s\n", m->source);
@@ -2119,12 +2138,6 @@ class Patcher
 
     if (ptc_obj->new)
     {
-      if (!sizeof(ptc_obj->new))
-      {
-	write_err("FAILED: List of new files to be created exists but is "
-		  "empty.\n");
-	return 0;
-      }
 //       foreach(ptc_obj->new, mapping(string:string) m)
 //       {
 // 	Stat stat = file_stat(m->source);
@@ -2136,12 +2149,8 @@ class Patcher
 //       }
     }
 
-    if (ptc_obj->delete && !sizeof(ptc_obj->delete))
+    if (ptc_obj->delete)
     {
-      if (!silent)
-	write_err("FAILED: List of files to be deleted exists but is "
-		  "empty.\n");
-      return 0;
     }
     
     // We have passed all the above tests.
