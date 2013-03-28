@@ -806,9 +806,9 @@ mixed parse(RequestID id)
         <submit-gbutton2 name='OK' width='75' align='center'
       onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton2>
     <p>" 
-    + LOCALE(0, "You can upload either a single rxp file or tar/tar.gz/tgz "
-	     " files containing multiple rxp files.")
-    + LOCALE(0, "There is also an bin/rxnpatch command-line tool to "
+    + LOCALE(0, "You can upload either a single rxp file or a tar/tar.gz/tgz "
+	     "file containing multiple rxp files.")
+    + LOCALE(0, "There is also a <tt>bin/rxnpatch</tt> command-line tool to "
 	     "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
     <br />
