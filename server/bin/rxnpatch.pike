@@ -688,6 +688,70 @@ private string combine_and_check_path(string path)
   return combined;
 }
 
+array(array(string)) describe_metadata(Patcher po,
+				       array(mapping(string:string)) md,
+				       string singular, string plural,
+				       void|int(0..1) color,
+				       string|void patch_path)
+{
+  if (!md || !sizeof(md)) return ({});
+
+  mapping(string:multiset(string)) files = ([]);
+  foreach(md, mapping(string:string) item) {
+    array(string) file_list = ({});
+    if (item->destination) {
+      file_list = ({ item->destination });
+    } else if (item->source) {
+      file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
+							  item->source)));
+    }
+    foreach(file_list, string file) {
+      if (!files[file]) files[file] = (<>);
+      files[file][item->platform] = 1;
+    }
+  }
+
+  string res = "";
+  foreach(sort(indices(files)), string file) {
+    multiset(string) platforms = files[file];
+    array(string) post = ({});
+    if (!platforms[0] && !platforms[po->server_platform]) {
+      res += "(" + file + ")";
+    } else {
+      res += file;
+    }
+    if ((sizeof(platforms) > 1) || !platforms[0]) {
+      res += " [";
+      if (platforms[0]) {
+	if (color) {
+	  res += "\e[1mALL\e[0m";
+	} else {
+	  res += "ALL";
+	}
+      }
+      foreach(sort(indices(platforms)); int i; string platform) {
+	if (!platform) continue;
+	if (i || !platforms[0]) {
+	  res += ", ";
+	}
+	if (platform == po->server_platform) {
+	  if (color) {
+	    res += "\e[1m" + platform + "\e[0m";
+	  } else {
+	    res += platform;
+	  }
+	} else {
+	  res += platform;
+	}
+      }
+      res += "]";
+    }
+    res += "\n";
+  }
+  if (sizeof(files) == 1) return ({ ({ singular, res }) });
+  return ({ ({ plural, res }) });
+}
+
 private void write_list(Patcher plib,
 			string  list_name,
 			void|int(0..1) extended_info,
@@ -816,63 +880,16 @@ private void write_list(Patcher plib,
 	  }),
 	});
 
-	if (obj->metadata->new && sizeof(obj->metadata->new) == 1)
-	  md += ({ 
-	    ({ "New file:", sprintf("%s", 
-				    obj->metadata->new[0]->destination) }) 
-	  });
-	else if (obj->metadata->new)
-	  md += ({ 
-	    ({ "New files:", sprintf("%{%s\n%}", 
-				     obj->metadata->new->destination) })
-	  });
-	
-	if (obj->metadata->replace && sizeof(obj->metadata->replace) == 1)
-	{
-	  md += ({ 
-	    ({ "Replaced file:",  
-	       sprintf("%s", obj->metadata->replace[0]->destination) })
-	  });
-	}
-	else if (obj->metadata->replace)
-	  md += ({ 
-	    ({ "Replaced files:", 
-	       sprintf("%{%s\n%}", obj->metadata->replace->destination) })
-	  });
-	
-	if (obj->delete && sizeof(obj->metadata->delete) == 1)
-	  md += ({ 
-	    ({ "Deleted file:", 
-	       sprintf("%s", obj->metadata->delete[0]->destination) })
-	  });
-	else if (obj->metadata->delete)
-	  md += ({
-	    ({ "Deleted files:", 
-	       sprintf("%{%s\n%}", obj->metadata->delete->destination) })
-	  });
-	
-	if (obj->metadata->patch)
-	{
-	  string patch_data = "";
-	  string patch_path = plib->id_to_filepath(obj->metadata->id);
-	  foreach(obj->metadata->patch, string patch_file)
-	  {
-	    patch_data += Stdio.read_file(combine_path(patch_path,
-						       patch_file));
-	  }
-	  
-	  array(string) patched_files_list = plib->lsdiff(patch_data);
-	  if (sizeof(patched_files_list) == 1)
-	    md += ({
-	      ({ "Patched file:",
-		 sprintf("%s\n", patched_files_list[0]) })
-	    });
-	  else
-	    md += ({
-	      ({ "Patched files:",
-		 sprintf("%{%s\n%}", patched_files_list) })
-	    });
-	}
+	md += describe_metadata(plib, obj->metadata->new,
+				"New file:", "New files:", color);
+	md += describe_metadata(plib, obj->metadata->replace,
+				"Replaced file:", "Replaced files:", color);
+	md += describe_metadata(plib, obj->metadata->delete,
+				"Deleted file:", "Deleted files:", color);
+
+	md += describe_metadata(plib, obj->metadata->patch,
+				"Patched file:", "Patched files:", color,
+				plib->id_to_filepath(obj->metadata->id));
 	
 	string active_flags = "";
 	string yes = (color) ? "\e[1mYes\e[0m" : "YES";

@@ -60,6 +60,7 @@ class PatchObject(string|void id
   //!     @mapping
   //!       @member string "source"
   //!       @member string "destination"
+  //!       @member string "platform"
   //!     @endmapping
   //! @endarray
 
@@ -70,6 +71,7 @@ class PatchObject(string|void id
   //!     @mapping
   //!       @member string "source"
   //!       @member string "destination"
+  //!       @member string "platform"
   //!     @endmapping
   //! @endarray
 
@@ -79,6 +81,7 @@ class PatchObject(string|void id
   //!   @elem mapping(string:string) 0..
   //!     @mapping
   //!       @member string "source"
+  //!       @member string "platform"
   //!     @endmapping
   //! @endarray
 
@@ -89,6 +92,7 @@ class PatchObject(string|void id
   //!     @mapping
   //!       @member string "patch"
   //!         A string of udiff data.
+  //!       @member string "platform"
   //!     @endmapping
   //! @endarray
 
@@ -98,6 +102,7 @@ class PatchObject(string|void id
   //!   @elem mapping(string:string) 0..
   //!     @mapping
   //!       @member string "destination"
+  //!       @member string "platform"
   //!     @endmapping
   //! @endarray
 }
@@ -612,6 +617,9 @@ class Patcher
     {
       foreach (ptchdata->new, mapping file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
 	write_log(0, "Writing new file <u>%s</u> ... ", dest);
@@ -698,6 +706,9 @@ class Patcher
     {
       foreach (ptchdata->replace, mapping file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
 	
@@ -771,6 +782,9 @@ class Patcher
     {
       foreach (ptchdata->delete, mapping(string:string) del_info)
       {
+	if ((del_info->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string dest = append_path(server_path, del_info->destination);
 	write_log(0, "Removing file <u>%s</u> ... ", dest);
 	
@@ -832,6 +846,9 @@ class Patcher
       
       foreach (ptchdata->patch, mapping(string:string) patch_info)
       {
+	if ((patch_info->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string file = patch_info->source;
 	File udiff_data = File(append_path(source_path, file));
 
@@ -1071,8 +1088,12 @@ class Patcher
     // Delete new files that were created and thus are not part of the backups.
     if (metadata->new)
     {
-      foreach(metadata->new->destination, string filename)
+      foreach(metadata->new, mapping(string:string) file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
+	string filename = file->destination;
 	write_mess("Removing %s ... ", append_path(server_path, filename));
 	privs = Privs("RoxenPatch: Removing created files.");
 	if(rm(append_path(server_path, filename)))
@@ -1741,6 +1762,9 @@ class Patcher
     if (metadata->patch)
       foreach(metadata->patch, mapping m)
       {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	// Package the string nicely:
 	if (!copy_file_to_temp_dir(m, temp_data_path))
 	{
@@ -1753,20 +1777,28 @@ class Patcher
       }
 
     if (metadata->replace)
-      foreach(metadata->replace, mapping m)
+      foreach(metadata->replace, mapping m) {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	if (!copy_file_to_temp_dir(m, temp_data_path))
 	{
 	  clean_up(temp_data_path);
 	  return 0;
 	}
+      }
 
     if (metadata->new)
-      foreach(metadata->new, mapping m)
+      foreach(metadata->new, mapping m) {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	if (!copy_file_to_temp_dir(m, temp_data_path)) 
 	{
 	  clean_up(temp_data_path);
 	  return 0;
 	}
+      }
 
     // If we for some reason have any unified diffs then we need to write them
     // down to a file as well.
@@ -1785,6 +1817,9 @@ class Patcher
 	// Update the patch object with a pointer to the file and discard the
 	// udiff block; it's not needed anymore.
 	metadata->patch += ({ ([ "source": out_filename ]) });
+	if (udiff->platform) {
+	  metadata->patch[-1]->platform = udiff->platform;
+	}
       }
       metadata->udiff = 0;
     }

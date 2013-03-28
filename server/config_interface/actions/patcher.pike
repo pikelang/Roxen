@@ -77,6 +77,62 @@ Write_back wb = class Write_back
 		  }
                 } ();
 
+array(array(string)) describe_metadata(Patcher po,
+				       array(mapping(string:string)) md,
+				       LocaleString singular,
+				       LocaleString plural,
+				       string|void patch_path)
+{
+  if (!md || !sizeof(md)) return ({});
+
+  mapping(string:multiset(string)) files = ([]);
+  foreach(md, mapping(string:string) item) {
+    array(string) file_list = ({});
+    if (item->destination) {
+      file_list = ({ item->destination });
+    } else if (item->source) {
+      file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
+							  item->source)));
+    }
+    foreach(file_list, string file) {
+      if (!files[file]) files[file] = (<>);
+      files[file][item->platform] = 1;
+    }
+  }
+
+  string res = "";
+  foreach(sort(indices(files)), string file) {
+    multiset(string) platforms = files[file];
+    array(string) post = ({});
+    if (!platforms[0] && !platforms[po->server_platform]) {
+      res += "<span style='fgcolor:grey'>" + file + "</span>";
+    } else {
+      res += file;
+    }
+    if ((sizeof(platforms) > 1) || !platforms[0]) {
+      res += "&nbsp;[";
+      if (platforms[0]) {
+	res += "<b>ALL</b>";
+      }
+      foreach(sort(indices(platforms)); int i; string platform) {
+	if (!platform) continue;
+	if (i || !platforms[0]) {
+	  res += ", ";
+	}
+	if (platform == po->server_platform) {
+	  res += "<b>" + platform + "</b>";
+	} else {
+	  res += platform;
+	}
+      }
+      res += "]";
+    }
+    res += "<br />\n";
+  }
+  if (sizeof(files) == 1) return ({ ({ singular, res }) });
+  return ({ ({ plural, res }) });
+}
+
 string list_patches(RequestID id, Patcher po, string which_list)
 {
   string self_url = "?class=maintenance&action=patcher.pike";
@@ -331,84 +387,30 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	  ({ LOCALE(347, "Dependencies:"), LOCALE(348, "None") }),
 	});
       }
-      
-      if (item->metadata->new && sizeof(item->metadata->new) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(349, "New file:"), sprintf("%s", 
-				  item->metadata->new[0]->destination) }) 
-	});
-      }
-      else if (item->metadata->new)
-      {
-	md += ({ 
-	  ({ LOCALE(350, "New files:"), sprintf("%{%s<br />\n%}", 
-				   item->metadata->new->destination) })
-	});
-      }
-      
-      if (item->metadata->replace && sizeof(item->metadata->replace) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(351, "Replaced file:"),  
-	     sprintf("%s", item->metadata->replace[0]->destination) })
-	});
-      }
-      else if (item->metadata->replace)
-      {
-	md += ({ 
-	  ({ LOCALE(352, "Replaced files:"), 
-	     sprintf("%{%s<br />\n%}", item->metadata->replace->destination) })
-	});
-      }
-      
-      if (item->metadata->delete && sizeof(item->metadata->delete) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(353, "Deleted file:"), 
-	     sprintf("%s", item->metadata->delete[0]->destination) })
-	});
-      }
-      else if (item->metadata->delete)
-      {
-	md += ({
-	  ({ LOCALE(354, "Deleted files:"), 
-	     sprintf("%{%s<br />\n%}", item->metadata->delete->destination) })
-	});
-      }
 
-      if (item->metadata->patch)
-      {
-	string patch_data = "";
-	string patch_path = "";
-	if (which_list == "imported")
-	  patch_path = combine_path(po->get_import_dir(),
-				    item->metadata->id);
-	else
-	  patch_path = combine_path(po->get_installed_dir(),
-				    item->metadata->id);
-	foreach(item->metadata->patch, mapping(string:string) patch)
-	{
-	  patch_data += Stdio.read_file(combine_path(patch_path,
-						     patch->source));
-	}
-	
-	array(string) patched_files_list = po->lsdiff(patch_data);
-	if (sizeof(patched_files_list) == 1)
-	{
-	  md += ({
-	    ({ LOCALE(355, "Patched file:"),
-	       sprintf("%s\n", patched_files_list[0]) })
-	  });
-	}
-	else
-	{
-	  md += ({
-	    ({ LOCALE(356, "Patched files:"),
-	       sprintf("%{%s<br />\n%}", patched_files_list) })
-	  });
-	  }
-      }      
+      md += describe_metadata(po, item->metadata->new,
+			      LOCALE(349, "New file:"),
+			      LOCALE(350, "New files:"));
+      md += describe_metadata(po, item->metadata->replace,
+			      LOCALE(351, "Replaced file:"),
+			      LOCALE(352, "Replaced files:"));
+      md += describe_metadata(po, item->metadata->delete,
+			      LOCALE(353, "Deleted file:"),
+			      LOCALE(354, "Deleted files:"));
+
+      if (which_list == "imported") {
+	md += describe_metadata(po, item->metadata->path,
+				LOCALE(355, "Patched file:"),
+				LOCALE(356, "Patched files:"),
+				combine_path(po->get_import_dir(),
+					     item->metadata->id));
+      } else {
+	md += describe_metadata(po, item->metadata->path,
+				LOCALE(355, "Patched file:"),
+				LOCALE(356, "Patched files:"),
+				combine_path(po->get_installed_dir(),
+					     item->metadata->id));
+      }
 
       res += sprintf("      <tr id='id%s' bgcolor='%s' "
 		     " style='display: none'>\n"
