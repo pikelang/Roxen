@@ -210,7 +210,8 @@ int main(int argc, array(string) argv)
   {
     PatchObject ptc_obj = PatchObject();
     string target_dir;
-    int(0..1) metadata, cfcl;
+    int(0..1) metadata, cfcl, any_platform;
+    string current_platform = UNDEFINED;
     foreach(switches, array argument)
     {
       switch (argument[0])
@@ -319,10 +320,14 @@ int main(int argc, array(string) argv)
 	  break;
 	case "platform":
 	  array platform = plib->parse_platform(argument[1]);
-	  if (platform && sizeof(platform))
+	  if (platform && sizeof(platform)) {
+	    current_platform = platform[0];
 	    ptc_obj->platform += platform;
-	  else
-	  {
+	  } else if ((argument[1] == "") ||
+		     (lower_case(argument[1]) == "all")) {
+	    current_platform = UNDEFINED;
+	    any_platform = 1;
+	  } else {
 	    plib->write_err("Unkown platform: %s. Quitting.\n", argument[1]);
 	    return 0;
 	  }
@@ -348,6 +353,11 @@ int main(int argc, array(string) argv)
 	    stdin = 1;
 	    string s = Stdio.stdin->read();
 	    ptc_obj->udiff += ({ ([ "patch": s ]) });
+	    if (current_platform) {
+	      ptc_obj->udiff[-1]->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    write_mess("Done!\n");
 	  }
 	  else if (argument[1] == 1)
@@ -359,25 +369,47 @@ int main(int argc, array(string) argv)
 	  else
 	  // Assume file name.
 	  {
-	    ptc_obj->patch += ({ ([ "source": argument[1] ]) });
+	    if (current_platform) {
+	      ptc_obj->patch += ({ ([ "platform":current_platform,
+				      "source": argument[1] ]) });
+	    } else {
+	      ptc_obj->patch += ({ ([ "source": argument[1] ]) });
+	      any_platform = 1;
+	    }
 	  }
 	  break;
 	case "new_file":
 	  array new_file = plib->parse_src_dest_path(argument[1]);
-	  if (new_file && sizeof(new_file))
+	  if (new_file && sizeof(new_file)) {
+	    if (current_platform) {
+	      new_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->new += new_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "replace_file":
 	  array replace_file = plib->parse_src_dest_path(argument[1]); 
-	  if (replace_file && sizeof(replace_file))
+	  if (replace_file && sizeof(replace_file)) {
+	    if (current_platform) {
+	      replace_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->replace += replace_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "delete_file":
-	  ptc_obj->delete += ({ ([ "destination": argument[1] ]) });
+	  if (current_platform) {
+	    ptc_obj->delete += ({ ([ "platform": current_platform,
+				     "destination": argument[1] ]) });
+	  } else {
+	    ptc_obj->delete += ({ ([ "destination": argument[1] ]) });
+	    any_platform = 1;
+	  }
 	  break;
 	case "depends_on":
 	  array(string) alternatives = argument[1]/"|";
@@ -412,6 +444,9 @@ int main(int argc, array(string) argv)
 
     ptc_obj->rxp_version = rxp_minor?"1.1":"1.0";
     ptc_obj->originator = current_user;
+    if (any_platform) {
+      ptc_obj->platform = UNDEFINED;
+    }
 
     // If we don't have an id then create one.
     if(!ptc_obj->id)
