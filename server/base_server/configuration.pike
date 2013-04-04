@@ -1198,7 +1198,7 @@ void log_event (string facility, string action, string resource,
       // appears to be a module identifier.
       modname != "" && (log_format[modname + "/" + action] ||
 			log_format[modname + "/*"]) ||
-      log_format["*/*"])
+      log_format["*/" + action] || log_format["*/*"])
     roxen.run_log_event_format (format, log_function,
 				facility, action, resource || "-", info);
 }
