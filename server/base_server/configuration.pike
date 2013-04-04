@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.730 2012/11/12 09:23:26 jonasw Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4822,13 +4822,13 @@ code line.</p>
 
 <p><i>&lt;facility&gt;</i> matches an identifier for the Roxen module
 or subsystem that the event comes from. Facility identifiers always
-starts with a character in <code>[a-zA-Z0-9]</code> and contains only
+start with a character in <code>[a-zA-Z0-9]</code> and contain only
 characters in <code>[-_.#a-zA-Z0-9]</code>. If '<code>*</code>' is
 used instead of <i>&lt;facility&gt;</i> then that line matches all
 facilities that aren't matched by any other line.</p>
 
 <p><i>&lt;action&gt;</i> matches an identifier for a specific kind of
-event logged by a facility. An action identifier contains only
+event logged by a facility. An action identifier may only contain
 characters in <code>[-_.#a-zA-Z0-9]</code>. '<code>*</code>' may be
 used instead of an <i>&lt;action&gt;</i> to match all events logged by
 a facility that aren't matched by any other line.</p>
@@ -4841,7 +4841,7 @@ cases it expands to a dummy value that is syntactically compatible
 with what it usually expands to.</p>
 
 <p>For compatibility, underscores ('_') may be used wherever
-hyphens ('-') occur in the specifier names.</p>
+hyphens ('-') occur in the format specifier names.</p>
 
 <h3>Format specifiers for both access and event logging</h3>
 
@@ -4854,11 +4854,11 @@ hyphens ('-') occur in the specifier names.</p>
     character.</td></tr>
 <tr><td>$wchar(int)</td>
     <td>Insert the specified integer using 2 bytes in network byte
-    order. Specify a negative integer to get the opposite (i.e. big
+    order. Specify a negative integer to get the opposite (i.e. little
     endian) order.</td></tr>
 <tr><td>$int(int)</td>
     <td>Insert the specified integer using 4 bytes in network byte
-    order. Specify a negative integer to get the opposite (i.e. big
+    order. Specify a negative integer to get the opposite (i.e. little
     endian) order.</td></tr>
 <tr><td>$^</td>
     <td>Suppress newline at the end of the logentry.</td></tr>
@@ -4871,7 +4871,6 @@ hyphens ('-') occur in the specifier names.</p>
     like '<code>17/Jan/2001:13:00:00 +0200</code>'.</td></tr>
 <tr><td>$utc-date</td>
     <td>UTC date formatted like '<code>2001-01-17</code>'.</td></tr>
-
 <tr><td>$utc-time</td>
     <td>UTC time formatted like '<code>13:00:00</code>'.</td></tr>
 <tr><td>$bin-date</td>
@@ -4892,6 +4891,8 @@ hyphens ('-') occur in the specifier names.</p>
 </tbody></table>
 
 <h3>Format specifiers for access logging</h3>
+<p>Note that some of these may also be available
+   for some event log actions</p>
 
 <table class='hilite-1stcol'><tbody valign='top'>
 <tr><td>$host</td>
