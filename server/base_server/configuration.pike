@@ -1216,7 +1216,7 @@ void log_event (string facility, string action, string resource,
       // appears to be a module identifier.
       modname != "" && (log_format[modname + "/" + action] ||
 			log_format[modname + "/*"]) ||
-      log_format["*/*"])
+      log_format["*/" + action] || log_format["*/*"])
     roxen.run_log_event_format (format, log_function,
 				facility, action, resource || "-", info);
 }
@@ -4773,11 +4773,11 @@ modules.</p>
 # still break external log analysis tools.
 
 # To log commits and similar filesystem changes in a sitebuilder file system.
-#sbfs/commit: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
-#sbfs/*: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
+#sbfs/commit: $ip-number - $user [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
+#sbfs/*: $ip-number - $user [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
 
 # Catch-all for internal log messages.
-#*/*: 0.0.0.0 - - [$cern-date] \"$action $resource $facility\" - -",
+#*/*: $ip-number - $user [$cern-date] \"$action $resource $facility\" $response $length",
 	 DLOCALE(26, "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
