@@ -92,7 +92,7 @@ string html_encode(string s)
 }
 
 string unixify_path(string s)
-//! This is for utils of MSYS that needs /c/ instead of c:\
+//! This is for utils of MSYS that need /c/ instead of c:\.
 {
   if (s[0] == '/' || s[0] == '\\' || s[1] == ':')
     return append_path_nt("/", s);
