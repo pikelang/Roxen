@@ -193,7 +193,6 @@ worldmap binary
 /server/modules/filesystems/userfs.pike foreign_ident
 /server/modules/filters/auto_gzip.pike foreign_ident
 /server/modules/filters/hostredirect.pike foreign_ident
-/server/modules/filters/htaccess.pike foreign_ident
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/supports_filter.pike foreign_ident
 /server/modules/filters/tableborder.pike foreign_ident
@@ -218,7 +217,6 @@ worldmap binary
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
 /server/modules/logging/roxen_network.pike foreign_ident
-/server/modules/misc/contenttypes.pike foreign_ident
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/implicit_use.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
