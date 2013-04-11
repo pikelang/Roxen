@@ -27,10 +27,10 @@ inherit "module";
 
 constant module_type = MODULE_SECURITY|MODULE_LAST|MODULE_URL|MODULE_USERDB;
 constant module_name = "Authentication: .htaccess support";
-constant module_doc  = "Almost complete support for NCSA/Apache "
+constant module_doc  = "Authentication support for NCSA/Apache "
   ".htaccess files. See "
-  "<a href=\"http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html\">"
-  "http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html</a> for more information.<br />\n"
+  "<a href=\"http://httpd.apache.org/docs/2.4/howto/htaccess.html\">"
+  "http://httpd.apache.org/docs/2.4/howto/htaccess.html</a> for more information.<br />\n"
   "\n"
   "Some non-standard options are supported:"
 

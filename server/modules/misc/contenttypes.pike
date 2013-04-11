@@ -29,8 +29,8 @@ follows: <table><tr><th>extension</th><th>type</th><th>encoding</th></tr>
 <tr><td>gif</td><td>image/gif</td></tr>
 <tr><td>gz</td> <td>STRIP</td><td>application/gnuzip</td></tr></table>
 For a list of types, see <a
-href='ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types'
->ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types</a>"));
+href='http://www.iana.org/assignments/media-types'
+>http://www.iana.org/assignments/media-types</a>"));
 
   defvar("default", 
          Variable.String("application/octet-stream", VAR_NOT_CFIF,
