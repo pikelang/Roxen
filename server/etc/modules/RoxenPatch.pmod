@@ -3,7 +3,7 @@ import Parser.XML.Tree;
 import String;
 import Stdio;
 
-constant rxp_version = "1.0";
+constant rxp_version = "1.1";
 //! The latest supported version of the rxp fileformat.
 
 constant known_flags = ([ "restart" : "Need to restart server" ]);
@@ -20,51 +20,92 @@ constant known_platforms = (< "macosx_ppc32",
 			      "sol10_x86_64",
 			      "win32_x86" >);
 
-typedef mapping(string:string |
-		  multiset(string) |
-		  array(string | mapping(string:string))) PatchObject;
 //! Contains the patchdata
 //! 
-//! @mapping
-//!   @member string "id"
-//!     Taken from filename.
-//!   @member string "name"
-//!     "name" field in the metadata block
-//!   @member string "description"
-//!     "description" field in the metadata block
-//!   @member string "originator"
-//!     "originitor" field in the metadata block
-//!   @member string "rxp_version"
-//!     File format version.
-//!   @member array(string) "platform"
-//!     An array of all "platform" fields in the metadata block.
-//!   @member array(string) "version"
-//!     An array of all "version" fields in the metadata block.
-//!   @member array(string) "depends"
-//!     An array of all "depends" fields in the metadata block.
-//!   @member multiset(string) "flags"
-//!     A multiset of active flags
-//!   @member array(string) "reload"
-//!     An array of all "reload" fields in the metadata block.
-//!   @member array(mapping(string:string)) "new"
-//!     An array of all "new" fields in the metadata block.
-//!     @mapping
-//!       @member string "source"
-//!       @member string "destination"
-//!     @endmapping
-//!   @member array(mapping(string:string)) "replace"
-//!     An array of all "replace" fields in the metadata block.
-//!     @mapping
-//!       @member string "source"
-//!       @member string "destination"
-//!     @endmapping
-//!   @member array(string) "patch"
-//!     An array of all "patch" fields in the metadata block.
-//!   @member string "udiff"
-//!     A string of udiff data.
-//!   @member array(string) "delete"
-//!     An array of all "delete" fields in the metadata block.
-//! @endmapping
+class PatchObject(string|void id
+		  //! Taken from filename.
+		  )
+{
+  string name;
+  //! "name" field in the metadata block
+
+  string description;
+  //! "description" field in the metadata block
+
+  string originator;
+  //! "originator" field in the metadata block
+
+  string rxp_version;
+  //! File format version.
+
+  array(string) platform = ({});
+  //! An array of all "platform" fields in the metadata block.
+
+  array(string) version = ({});
+  //! An array of all "version" fields in the metadata block.
+
+  array(string) depends = ({});
+  //! An array of all "depends" fields in the metadata block.
+
+  multiset(string) flags = (<>);
+  //! A multiset of active flags
+
+  array(string) reload = ({});
+  //! An array of all "reload" fields in the metadata block.
+
+  array(mapping(string:string)) new = ({});
+  //! An array of all "new" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!       @member string "destination"
+  //!       @member string "platform"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) replace = ({});
+  //! An array of all "replace" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!       @member string "destination"
+  //!       @member string "platform"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) patch = ({});
+  //! An array of all "patch" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "source"
+  //!       @member string "platform"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) udiff = ({});
+  //! An array with literal udiff data.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "patch"
+  //!         A string of udiff data.
+  //!       @member string "platform"
+  //!     @endmapping
+  //! @endarray
+
+  array(mapping(string:string)) delete = ({});
+  //! An array of all "delete" fields in the metadata block.
+  //! @array
+  //!   @elem mapping(string:string) 0..
+  //!     @mapping
+  //!       @member string "destination"
+  //!       @member string "platform"
+  //!     @endmapping
+  //! @endarray
+}
 
 #if !constant(Privs)
 protected class Privs(string reason, int|string|void uid, int|string|void gid)
@@ -472,7 +513,7 @@ class Patcher
 
     // Check platform
     write_log(0, "Checking platform ... ");
-    if (ptchdata->platform)
+    if (sizeof(ptchdata->platform || ({})))
     {
       if (!sizeof(filter(ptchdata->platform, check_platform)))
       {
@@ -495,7 +536,7 @@ class Patcher
 
     // Check version
     write_log(0, "Checking server version ... ");
-    if (ptchdata->version)
+    if (sizeof(ptchdata->version || ({})))
     {
       if (!sizeof(filter(ptchdata->version, check_server_version)))
       {
@@ -521,18 +562,41 @@ class Patcher
     if (ptchdata->depends)
     {
       int error = 0;
-      foreach(ptchdata->depends, string patch_id)
+      foreach(ptchdata->depends, string patch_id_list)
       {
-	if (!is_installed(patch_id) && !error)
-	{
-	  write_log(1, "FAILED:\n<b>%s</b> is not installed!\n", patch_id);
+	array(string) patch_ids;
+	if (ptchdata->rxp_version > "1.0") {
+	  patch_ids = patch_id_list/"|";
+	} else {
+	  patch_ids = ({ patch_id_list });
+	}
+	int missing = 1;
+	foreach(patch_ids, string patch_id) {
+	  if (is_installed(patch_id, ptchdata->rxp_version > "1.0")) {
+	    missing = 0;
+	    break;
+	  }
+	}
+	if (missing) {
+	  if (sizeof(patch_ids) > 1) {
+	    if (!error) {
+	      write_log(1, "FAILED:\nNone of <b>%s</b> are installed!\n",
+			patch_id_list);
+	    } else {
+	      write_log(1, "Neither are any of <b>%s</b> installed.\n",
+			patch_id_list);
+	    }
+	  } else {
+	    if (!error) {
+	      write_log(1, "FAILED:\n<b>%s</b> is not installed!\n",
+			patch_id_list);
+	    } else {
+	      write_log(1, "<b>%s</b> is not installed either!\n",
+			patch_id_list);
+	    }
+	  }
 	  error_count++;
 	  error = 1;
-	}
-	else if (!is_installed(patch_id))
-	{
-	  write_log(1, "<b>%s</b> is not installed either!\n", patch_id);
-	  error_count++;
 	}
       }
       if (error && !force)
@@ -552,6 +616,9 @@ class Patcher
     {
       foreach (ptchdata->new, mapping file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
 	write_log(0, "Writing new file <u>%s</u> ... ", dest);
@@ -638,6 +705,9 @@ class Patcher
     {
       foreach (ptchdata->replace, mapping file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
 	
@@ -709,9 +779,12 @@ class Patcher
     // Handle files to be deleted
     if (ptchdata->delete)
     {
-      foreach (ptchdata->delete, string file)
+      foreach (ptchdata->delete, mapping(string:string) del_info)
       {
-	string dest = append_path(server_path, file);
+	if ((del_info->platform || server_platform) != server_platform) {
+	  continue;
+	}
+	string dest = append_path(server_path, del_info->destination);
 	write_log(0, "Removing file <u>%s</u> ... ", dest);
 	
 	// Make sure that the destination already exists
@@ -722,7 +795,7 @@ class Patcher
 		    dest, 
 		    basename(backup_file));
 
-	  if (add_file_to_tar_archive(file,
+	  if (add_file_to_tar_archive(del_info->destination,
 				      server_path,
 				      backup_file))
 	    write_log(0, "<green>ok.</green>\n");       
@@ -770,8 +843,12 @@ class Patcher
     {
       int error = 0;
       
-      foreach (ptchdata->patch, string file)
+      foreach (ptchdata->patch, mapping(string:string) patch_info)
       {
+	if ((patch_info->platform || server_platform) != server_platform) {
+	  continue;
+	}
+	string file = patch_info->source;
 	File udiff_data = File(append_path(source_path, file));
 
 	// Backup files
@@ -1010,8 +1087,12 @@ class Patcher
     // Delete new files that were created and thus are not part of the backups.
     if (metadata->new)
     {
-      foreach(metadata->new->destination, string filename)
+      foreach(metadata->new, mapping(string:string) file)
       {
+	if ((file->platform || server_platform) != server_platform) {
+	  continue;
+	}
+	string filename = file->destination;
 	write_mess("Removing %s ... ", append_path(server_path, filename));
 	privs = Privs("RoxenPatch: Removing created files.");
 	if(rm(append_path(server_path, filename)))
@@ -1193,7 +1274,7 @@ class Patcher
   //! @returns
   //!   Returns a mapping if successful, 0 otherwise.
   {
-    PatchObject p = ([ "id" : patchid ]);
+    PatchObject p = PatchObject(patchid);
     SimpleNode md = simple_parse_input(metadata_block, 0,
 				       PARSE_CHECK_ALL_ERRORS);
     //				       PARSE_FORCE_LOWERCASE |
@@ -1206,53 +1287,48 @@ class Patcher
     {
       string name = node->get_full_name();
       string tag_content = (node[0]) ? node[0]->get_text() : "";
-      if (sizeof(node->get_attributes()))
+      mapping(string:string) attrs = node->get_attributes();
+
+      switch(name)
       {
-	foreach(node->get_attributes(); string i; string v)
-	{
-	  // Check if we have a flag and if that flag is on or off.
-	  if(name == "flag")
-	  { 
-	    if((i == "name") && 
-	       !(tag_content == "false" ||
-		 tag_content == "0"))
-	    {
-	      p->flags += (< v >);
+      case "flag":
+	// Check if we have a flag and if that flag is on or off.
+	if (attrs->name && (tag_content != "false") && (tag_content != "0")) {
+	  p->flags += (< attrs->name >);
+	}
+	break;
+      case "patch":
+	if (attrs->source) {
+	  p->patch += ({ attrs });
+	}
+	break;
+      case "name":
+	p->name = tag_content;
+	break;
+      case "description":
+	p->description = trim_ALL_redundant_whites(tag_content);
+	break;
+      case "originator":
+	p->originator = tag_content;
+	break;
+      case "delete":
+	p->delete += ({ ([ "destination": tag_content ]) });
+	break;
+      case "new":
+      case "replace":
+      default:
+	if (sizeof(attrs)) {
+	  if (!p[name]) p[name] = ({});
+	  foreach(attrs; string i; string v) {
+	    p[name] += ({ ([i:v]) });
+	    if (i == "source") {
+	      // NB: This is for <new> and <replace>.
+	      p[name][-1]->destination = tag_content;
 	    }
 	  }
-	  else if(name == "patch")
-	  {
-	    p->patch += ({ v });
-	  }
-	  else
-	  {
-	    if(!p[name])
-	      p += ([ name:({ }) ]);
-	    p[name] += ({ ([i:v]) });
-	  }
 	}
-	if(arrayp(p[name]) && 
-	   mappingp(p[name][-1]) &&
-	   p[name][-1]->source)
-	  p[name][-1]->destination = tag_content;
-      }
-      else
-      {
-	switch(name)
-	{
-	  case "name":
-	    p->name = tag_content;
-	    break;
-	  case "description":
-	    p->description = trim_ALL_redundant_whites(tag_content);
-	    break;
-	  case "originator":
-	    p->originator = tag_content;
-	    break;
-	  default:
-	    p[name] += ({ tag_content });
-	    break;
-	}
+	p[name] += ({ tag_content });
+	break;
       }
     }
     
@@ -1348,7 +1424,7 @@ class Patcher
 			    );
   }
   
-  array(mapping(string:string|mapping(string:mixed))) file_list_imported()
+  array(mapping(string:string|mapping(string:int)|PatchObject)) file_list_imported()
   //! This function returns a list of all imported patches.
   //!
   //! @returns
@@ -1370,7 +1446,7 @@ class Patcher
   //!       has been uninstalled.
   //!     @member string "uninstall_user"
   //!       User who uninstalled the patch. This field is usually 0.
-  //!     @member mapping(string:mixed) "metadata"
+  //!     @member PatchObject "metadata"
   //!       metadata block as returned from parse_metadata()
   //!   @endmapping
   //!
@@ -1566,7 +1642,7 @@ class Patcher
 
     foreach(valid_tags, string tag_name)
     {
-      if(metadata[tag_name])
+      if(metadata[tag_name] && sizeof(metadata[tag_name]))
       {
 	if (tag_name == "flags")
 	{
@@ -1574,19 +1650,27 @@ class Patcher
 	    xml += sprintf("  <flag name=\"%s\">%s</flag>\n",
 			   s, (metadata->flags[s]) ? "true" : "false");
 	}
-	else if (mappingp(metadata[tag_name][0]))
-	{
-	  foreach(metadata[tag_name], mapping m)
-	    xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
-			   tag_name,
-			   m->source,
-			   m->destination,
-			   tag_name);
-	}
 	else if (tag_name == "patch")
 	{
-	  foreach(metadata->patch, string s)
-	    xml += sprintf("  <patch source=\"%s\" />\n", s);
+	  foreach(metadata->patch, mapping(string:string) patch_info)
+	    xml += sprintf("  <patch source=\"%s\" />\n", patch_info->source);
+	}
+	else if (mappingp(metadata[tag_name][0]))
+	{
+	  foreach(metadata[tag_name], mapping m) {
+	    if (m->source) {
+	      xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
+			     tag_name,
+			     m->source,
+			     m->destination,
+			     tag_name);
+	    } else {
+	      xml += sprintf("  <%s>%s</%s>\n",
+			     tag_name,
+			     m->destination,
+			     tag_name);
+	    }
+	  }
 	}
 	else
 	{
@@ -1636,11 +1720,24 @@ class Patcher
 	return 0;
       
       array filtered_list = filter(po->depends, 
-				   lambda (string id)
+				   lambda (string id, string rxp_version)
 				   {
-				     return !(is_installed(id) ||
-					      pretend_installed[id]);
-				   }
+				     array(string) ids;
+				     if (rxp_version > "1.0") {
+				       ids = id/"|";
+				     } else {
+				       ids = ({ id });
+				     }
+				     foreach(ids, id) {
+				       if (is_installed(id,
+							rxp_version > "1.0") ||
+					   pretend_installed[id]) {
+					 return 0;
+				       }
+				     }
+				     return 1;
+				   },
+				   po->rxp_version
 				   );
       return !!sizeof(filtered_list);
     }
@@ -1670,10 +1767,12 @@ class Patcher
 
     // Copy the files to the temp dir:
     if (metadata->patch)
-      foreach(metadata->patch; int i; string s)
+      foreach(metadata->patch, mapping m)
       {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	// Package the string nicely:
-	mapping m = ([ "source" : s ]);
 	if (!copy_file_to_temp_dir(m, temp_data_path))
 	{
 	  clean_up(temp_data_path);
@@ -1681,41 +1780,54 @@ class Patcher
 	}
 
 	// Update with the new file name
-	metadata->patch[i] = basename(s);
+	m->source = basename(m->source);
       }
 
     if (metadata->replace)
-      foreach(metadata->replace, mapping m)
+      foreach(metadata->replace, mapping m) {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	if (!copy_file_to_temp_dir(m, temp_data_path))
 	{
 	  clean_up(temp_data_path);
 	  return 0;
 	}
+      }
 
     if (metadata->new)
-      foreach(metadata->new, mapping m)
+      foreach(metadata->new, mapping m) {
+	if ((m->platform || server_platform) != server_platform) {
+	  continue;
+	}
 	if (!copy_file_to_temp_dir(m, temp_data_path)) 
 	{
 	  clean_up(temp_data_path);
 	  return 0;
 	}
+      }
 
     // If we for some reason have any unified diffs then we need to write them
     // down to a file as well.
     if (metadata->udiff)
     {
-      constant out_filename = "patchdata.patch";
-      string out_file_path = combine_path(temp_data_path, out_filename);
+      foreach(metadata->udiff; int i; mapping(string:string) udiff) {
+	string out_filename = sprintf("patchdata-%04d.patch", i);
+	string out_file_path = combine_path(temp_data_path, out_filename);
       
-      if(!write_file_to_disk(out_file_path, metadata->udiff))
-      {
-	clean_up(temp_data_path);
-	return 0;
-      }
+	if(!write_file_to_disk(out_file_path, udiff->patch))
+	{
+	  clean_up(temp_data_path);
+	  return 0;
+	}
 
-      // Update the patch object with a pointer to the file and discard the
-      // udiff block; it's not needed anymore.
-      metadata->patch += ({ out_filename });
+	// Update the patch object with a pointer to the file and discard the
+	// udiff block; it's not needed anymore.
+	metadata->patch += ({ ([ "source": out_filename ]) });
+	if (udiff->platform) {
+	  metadata->patch[-1]->platform = udiff->platform;
+	}
+      }
       metadata->udiff = 0;
     }
 
@@ -1804,13 +1916,46 @@ class Patcher
     return 0;
   }
 
-  int(0..1) is_installed(string id)
+  int(0..1) is_installed(string id, int|void allow_versioned)
   //! Check if a patch is installed.
   //! @returns
   //!   Returns 1 if a patch is installed, 0 otherwise
   {
     if(!patchid_regexp->match(id))
     {
+      array(string) path = id/"/";
+      if ((sizeof(path) == 2) && allow_versioned) {
+	// Package/VERSION
+	string installed;
+	if (path[0] == "roxen") {
+	  installed = Stdio.read_bytes(combine_path(server_path, "VERSION"));
+	} else if (path[0] == "pike") {
+	  string headerfile =
+	    Stdio.read_bytes(combine_path(server_path,
+					  "pike/include/version.h"));
+	  if (headerfile) {
+	    /* Filter everything but cpp-directives. */
+	    headerfile = filter(headerfile/"\n", has_prefix, "#")*"\n" + "\n";
+	    catch {
+	      installed =
+		compile_string(headerfile +
+			       "constant ver = PIKE_MAJOR_VERSION + \".\" +\n"
+			       "               PIKE_MINOR_VERSION + \".\" +\n"
+			       "               PIKE_BUILD_VERSION;\n")->ver;
+	    };
+	  }
+	} else {
+	  installed =
+	    Stdio.read_bytes(combine_path(server_path, "packages",
+					  path[0], "VERSION")) ||
+	    Stdio.read_bytes(combine_path(server_path, "modules",
+					  path[0], "VERSION"));
+	}
+	if (!installed) return 0;
+	installed -= "\n";
+	installed -= "\r";
+	return installed == path[1];
+      }
       write_err("Not a proper id\n");
       return 0;
     }
@@ -1942,10 +2087,12 @@ class Patcher
     return res;
   }
 
-  int(0..1) verify_patch_id(string patch_id)
+  int(0..1) verify_patch_id(string patch_id, int|void allow_versioned)
   //! Takes a string and verifies that it is a correctly formated patch id.
   {
-    return patchid_regexp->match(patch_id);
+    if (patchid_regexp->match(patch_id)) return 1;
+    if (!allow_versioned) return 0;
+    return sizeof(patch_id/"/") == 2;
   }
 
   int(0..1) verify_patch_object(PatchObject ptc_obj, void|int(0..1) silent)
@@ -1953,7 +2100,7 @@ class Patcher
   {
     if (!silent)
       write_mess("Verifying metadata ... ");
-    if (ptc_obj->rxp_version != rxp_version)
+    if (ptc_obj->rxp_version > rxp_version)
     {
       if (!silent)
 	write_err("FAILED: This rxp version is not supported!\n");
@@ -1996,24 +2143,29 @@ class Patcher
     }
     
     if (ptc_obj->depends)
-      foreach(ptc_obj->depends, string patch_id)
-	if (!verify_patch_id(patch_id))
-	{
-	  if (!silent)
-	    write_err("FAILED: Dependency %s is not a valid patch id\n",
-		      patch_id);
-	  return 0;
+      foreach(ptc_obj->depends, string patch_id_list) {
+	if (ptc_obj->rxp_version > "1.0") {
+	  foreach(patch_id_list/"|", string patch_id)
+	    if (!verify_patch_id(patch_id, 1))
+	    {
+	      if (!silent)
+		write_err("FAILED: Dependency %s is not a valid patch id\n",
+			patch_id);
+	      return 0;
+	    }
+	} else {
+	  if (!verify_patch_id(patch_id_list))
+	  {
+	    if (!silent)
+	      write_err("FAILED: Dependency %s is not a valid patch id\n",
+			patch_id_list);
+	    return 0;
+	  }
 	}
-    
+      }
+
     if (ptc_obj->replace)
     {
-      if (!sizeof(ptc_obj->replace))
-      {
-	if (!silent)
-	  write_err("FAILED: List of files to be replaced exists but is "
-		    "empty.\n");
-	return 0;
-      }
 //       foreach(ptc_obj->replace, mapping(string:string) m)
 //       {
 // 	werror("REPLACE: %s\n", m->source);
@@ -2028,12 +2180,6 @@ class Patcher
 
     if (ptc_obj->new)
     {
-      if (!sizeof(ptc_obj->new))
-      {
-	write_err("FAILED: List of new files to be created exists but is "
-		  "empty.\n");
-	return 0;
-      }
 //       foreach(ptc_obj->new, mapping(string:string) m)
 //       {
 // 	Stat stat = file_stat(m->source);
@@ -2045,12 +2191,8 @@ class Patcher
 //       }
     }
 
-    if (ptc_obj->delete && !sizeof(ptc_obj->delete))
+    if (ptc_obj->delete)
     {
-      if (!silent)
-	write_err("FAILED: List of files to be deleted exists but is "
-		  "empty.\n");
-      return 0;
     }
     
     // We have passed all the above tests.
