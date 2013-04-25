@@ -289,6 +289,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       }
 
       md += ({
+	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
         ({ LOCALE(333, "Description:")	, 
 	   Roxen.html_encode_string(item->metadata->description) }),
 	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
@@ -358,24 +359,30 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (item->metadata->depends)
       {
 	string dep_list = "";
-	foreach (item->metadata->depends, string dep_id)
+	foreach (item->metadata->depends, string dep)
 	{
-	  string dep_stat;
-	  switch(po->patch_status(dep_id)->status)
-	  {
-	    case "installed":
+	  foreach(dep/"|"; int i; string dep_id) {
+	    string dep_stat =
+	      "<b style='color:red'>" + LOCALE(346, "unavailable") + "</b>";
+	    if (!has_value(dep_id, "/")) {
+	      switch(po->patch_status(dep_id)->status)
+	      {
+	      case "installed":
+		dep_stat = LOCALE(344, "installed");
+		break;
+	      case "uninstalled":
+	      case "imported":
+		dep_stat = LOCALE(345, "imported");
+		break;
+	      }
+	    } else if (po->is_installed(dep_id,
+					item->metadata->rxp_version > "1.0")) {
 	      dep_stat = LOCALE(344, "installed");
-	      break;
-	    case "uninstalled":
-	    case "imported":
-	      dep_stat = LOCALE(345, "imported");
-	      break;
-	    default:
-	      dep_stat = "<b style='color:red'>" + LOCALE(346, "unavailable") + 
-		         "</b>";
-	      break;
+	    }
+	    if (i) dep_list += " or ";
+	    dep_list += sprintf("%s (%s)", dep_id, dep_stat);
 	  }
-	  dep_list += sprintf("%s (%s)<br />", dep_id, dep_stat);
+	  dep_list += "<br />\n";
 	}
 	md += ({
 	  ({ LOCALE(347, "Dependencies:"), dep_list })

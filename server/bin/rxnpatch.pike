@@ -900,7 +900,8 @@ private void write_list(Patcher plib,
 	  });
 	}
 
-	md += ({	  
+	md += ({
+	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
 	  ({ "Description:"    , obj->metadata->description }),
 	  ({ "Originator:"     , obj->metadata->originator  }),
 	  ({ "Platform(s):"    , (obj->metadata->platform) ? 
