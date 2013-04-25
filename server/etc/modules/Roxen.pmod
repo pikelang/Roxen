@@ -5163,7 +5163,9 @@ string get_server_url(Configuration c)
   return c->get_url();
 }
 
+#ifndef NO_DNS
 static private array(string) local_addrs;
+#endif
 
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
