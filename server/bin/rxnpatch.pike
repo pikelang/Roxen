@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.20 2012/08/20 09:30:22 liin Exp $";
+constant cvs_string = "$Id$";
 
 import RoxenPatch;
 
@@ -53,6 +53,7 @@ int main(int argc, array(string) argv)
   int(0..1) recursive	= 0;
   int(0..1) silent      = 0;
 
+  int rxp_minor = 0;
 
   // If we have the command 'help' normal rules don't apply.
   int h = search(argv, "help");
@@ -207,9 +208,10 @@ int main(int argc, array(string) argv)
   // Handle the different commands.
   if (cmd_n_files[1] == "create")
   {
-    PatchObject ptc_obj = ([ ]);
+    PatchObject ptc_obj = PatchObject();
     string target_dir;
-    int(0..1) metadata, cfcl;
+    int(0..1) metadata, cfcl, any_platform;
+    string current_platform = UNDEFINED;
     foreach(switches, array argument)
     {
       switch (argument[0])
@@ -318,10 +320,14 @@ int main(int argc, array(string) argv)
 	  break;
 	case "platform":
 	  array platform = plib->parse_platform(argument[1]);
-	  if (platform && sizeof(platform))
+	  if (platform && sizeof(platform)) {
+	    current_platform = platform[0];
 	    ptc_obj->platform += platform;
-	  else
-	  {
+	  } else if ((argument[1] == "") ||
+		     (lower_case(argument[1]) == "all")) {
+	    current_platform = UNDEFINED;
+	    any_platform = 1;
+	  } else {
 	    plib->write_err("Unkown platform: %s. Quitting.\n", argument[1]);
 	    return 0;
 	  }
@@ -346,7 +352,12 @@ int main(int argc, array(string) argv)
 	    write_mess("Reading patch data from stdin...");
 	    stdin = 1;
 	    string s = Stdio.stdin->read();
-	    ptc_obj->udiff = s;
+	    ptc_obj->udiff += ({ ([ "patch": s ]) });
+	    if (current_platform) {
+	      ptc_obj->udiff[-1]->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    write_mess("Done!\n");
 	  }
 	  else if (argument[1] == 1)
@@ -358,34 +369,64 @@ int main(int argc, array(string) argv)
 	  else
 	  // Assume file name.
 	  {
-	    ptc_obj->patch += ({ argument[1] });
+	    if (current_platform) {
+	      ptc_obj->patch += ({ ([ "platform":current_platform,
+				      "source": argument[1] ]) });
+	    } else {
+	      ptc_obj->patch += ({ ([ "source": argument[1] ]) });
+	      any_platform = 1;
+	    }
 	  }
 	  break;
 	case "new_file":
 	  array new_file = plib->parse_src_dest_path(argument[1]);
-	  if (new_file && sizeof(new_file))
+	  if (new_file && sizeof(new_file)) {
+	    if (current_platform) {
+	      new_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->new += new_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "replace_file":
 	  array replace_file = plib->parse_src_dest_path(argument[1]); 
-	  if (replace_file && sizeof(replace_file))
+	  if (replace_file && sizeof(replace_file)) {
+	    if (current_platform) {
+	      replace_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->replace += replace_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "delete_file":
-	  ptc_obj->delete += ({ argument[1] });
+	  if (current_platform) {
+	    ptc_obj->delete += ({ ([ "platform": current_platform,
+				     "destination": argument[1] ]) });
+	  } else {
+	    ptc_obj->delete += ({ ([ "destination": argument[1] ]) });
+	    any_platform = 1;
+	  }
 	  break;
 	case "depends_on":
-	  if (plib->verify_patch_id(argument[1]))
-	    ptc_obj->depends += ({ argument[1] });
-	  else
-	  {
-	    write_err(err_patch_id);
-	    return 0;
+	  array(string) alternatives = argument[1]/"|";
+	  if (sizeof(alternatives) > 1) {
+	    rxp_minor = 1;
 	  }
+	  foreach(alternatives, string dep_id) {
+	    if (!plib->verify_patch_id(dep_id, rxp_minor)) {
+	      if (!rxp_minor && plib->verify_patch_id(dep_id, 1)) {
+		rxp_minor = 1;
+	      } else {
+		write_err(err_patch_id);
+		return 0;
+	      }
+	    }
+	  }
+	  ptc_obj->depends += ({ argument[1] });
 	  break;
 	case "flags":
 	  ptc_obj->flags += (< argument[1] >);
@@ -401,8 +442,11 @@ int main(int argc, array(string) argv)
       }
     }
 
-    ptc_obj->rxp_version = rxp_version;
+    ptc_obj->rxp_version = rxp_minor?"1.1":"1.0";
     ptc_obj->originator = current_user;
+    if (any_platform) {
+      ptc_obj->platform = UNDEFINED;
+    }
 
     // If we don't have an id then create one.
     if(!ptc_obj->id)
@@ -472,7 +516,7 @@ int main(int argc, array(string) argv)
       // files that has that glob.
       if (cmd_n_files[i] == "*")
       {
-	foreach(plib->file_list_imported(), PatchObject po)
+	foreach(plib->file_list_imported(), mapping(string:PatchObject) po)
 	{
 	  ins_list += ({ po->metadata->id });
 	}
@@ -655,9 +699,12 @@ int main(int argc, array(string) argv)
   if (cmd_n_files[1] == "version")
   {
     sscanf(cvs_string, "$""Id: %s""$", string cvs_version);
-    write("CVS Version ... %s\nRXP Version ... %s\n",
+    write("CVS Version ... %s\n"
+	  "RXP Version ... %s\n"
+	  "RXP File Format Version ... %s\n",
 	  cvs_version || "n/a",
-	  plib->current_version());
+	  plib->current_version(),
+	  rxp_version);
 	  
     return 0;
   }
@@ -674,6 +721,70 @@ private string combine_and_check_path(string path)
   if(!stat->isdir)
     throw(({combined + " is not a directory!"}));
   return combined;
+}
+
+array(array(string)) describe_metadata(Patcher po,
+				       array(mapping(string:string)) md,
+				       string singular, string plural,
+				       void|int(0..1) color,
+				       string|void patch_path)
+{
+  if (!md || !sizeof(md)) return ({});
+
+  mapping(string:multiset(string)) files = ([]);
+  foreach(md, mapping(string:string) item) {
+    array(string) file_list = ({});
+    if (item->destination) {
+      file_list = ({ item->destination });
+    } else if (item->source) {
+      file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
+							  item->source)));
+    }
+    foreach(file_list, string file) {
+      if (!files[file]) files[file] = (<>);
+      files[file][item->platform] = 1;
+    }
+  }
+
+  string res = "";
+  foreach(sort(indices(files)), string file) {
+    multiset(string) platforms = files[file];
+    array(string) post = ({});
+    if (!platforms[0] && !platforms[po->server_platform]) {
+      res += "(" + file + ")";
+    } else {
+      res += file;
+    }
+    if ((sizeof(platforms) > 1) || !platforms[0]) {
+      res += " [";
+      if (platforms[0]) {
+	if (color) {
+	  res += "\e[1mALL\e[0m";
+	} else {
+	  res += "ALL";
+	}
+      }
+      foreach(sort(indices(platforms)); int i; string platform) {
+	if (!platform) continue;
+	if (i || !platforms[0]) {
+	  res += ", ";
+	}
+	if (platform == po->server_platform) {
+	  if (color) {
+	    res += "\e[1m" + platform + "\e[0m";
+	  } else {
+	    res += platform;
+	  }
+	} else {
+	  res += platform;
+	}
+      }
+      res += "]";
+    }
+    res += "\n";
+  }
+  if (sizeof(files) == 1) return ({ ({ singular, res }) });
+  return ({ ({ plural, res }) });
 }
 
 private void write_list(Patcher plib,
@@ -789,7 +900,8 @@ private void write_list(Patcher plib,
 	  });
 	}
 
-	md += ({	  
+	md += ({
+	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
 	  ({ "Description:"    , obj->metadata->description }),
 	  ({ "Originator:"     , obj->metadata->originator  }),
 	  ({ "Platform(s):"    , (obj->metadata->platform) ? 
@@ -804,63 +916,16 @@ private void write_list(Patcher plib,
 	  }),
 	});
 
-	if (obj->metadata->new && sizeof(obj->metadata->new) == 1)
-	  md += ({ 
-	    ({ "New file:", sprintf("%s", 
-				    obj->metadata->new[0]->destination) }) 
-	  });
-	else if (obj->metadata->new)
-	  md += ({ 
-	    ({ "New files:", sprintf("%{%s\n%}", 
-				     obj->metadata->new->destination) })
-	  });
-	
-	if (obj->metadata->replace && sizeof(obj->metadata->replace) == 1)
-	{
-	  md += ({ 
-	    ({ "Replaced file:",  
-	       sprintf("%s", obj->metadata->replace[0]->destination) })
-	  });
-	}
-	else if (obj->metadata->replace)
-	  md += ({ 
-	    ({ "Replaced files:", 
-	       sprintf("%{%s\n%}", obj->metadata->replace->destination) })
-	  });
-	
-	if (obj->delete && sizeof(obj->metadata->delete) == 1)
-	  md += ({ 
-	    ({ "Deleted file:", 
-	       sprintf("%s", obj->metadata->delete[0]) })
-	  });
-	else if (obj->metadata->delete)
-	  md += ({
-	    ({ "Deleted files:", 
-	       sprintf("%{%s\n%}", obj->metadata->delete) })
-	  });
-	
-	if (obj->metadata->patch)
-	{
-	  string patch_data = "";
-	  string patch_path = plib->id_to_filepath(obj->metadata->id);
-	  foreach(obj->metadata->patch, string patch_file)
-	  {
-	    patch_data += Stdio.read_file(combine_path(patch_path,
-						       patch_file));
-	  }
-	  
-	  array(string) patched_files_list = plib->lsdiff(patch_data);
-	  if (sizeof(patched_files_list) == 1)
-	    md += ({
-	      ({ "Patched file:",
-		 sprintf("%s\n", patched_files_list[0]) })
-	    });
-	  else
-	    md += ({
-	      ({ "Patched files:",
-		 sprintf("%{%s\n%}", patched_files_list) })
-	    });
-	}
+	md += describe_metadata(plib, obj->metadata->new,
+				"New file:", "New files:", color);
+	md += describe_metadata(plib, obj->metadata->replace,
+				"Replaced file:", "Replaced files:", color);
+	md += describe_metadata(plib, obj->metadata->delete,
+				"Deleted file:", "Deleted files:", color);
+
+	md += describe_metadata(plib, obj->metadata->patch,
+				"Patched file:", "Patched files:", color,
+				plib->id_to_filepath(obj->metadata->id));
 	
 	string active_flags = "";
 	string yes = (color) ? "\e[1mYes\e[0m" : "YES";
@@ -1130,7 +1195,18 @@ constant help_flags = ([
   "d": ([ "syntax" : ({ "<b>-d</b> <u>ID</u>...",
 			"<b>--depends=</b><u>ID</u>..." }),
 	  "hlptxt" : ({ "<u>ID</u> is the id of a patch which is required to be",
-			"installed in order for this patch to be installed." }),
+			"installed in order for this patch to be installed.",
+			"",
+			"It may also be a submodule with version, ",
+			"eg \"sitebuilder/5.2.200\", in which case that ",
+			"specific version of the submodule will be required.",
+			"",
+			"Multiple alternative <u>ID</u>'s may be listed ",
+			"separated with \"|\" (vertical bar).",
+			"",
+			"Specifying either of the latter syntaxen ",
+			"will force the version of the resulting ",
+			"RXP-file to be at least 1.1." }),
 	  "scope"  : ({ "create" }) ]),
   "F": ([ "syntax" : ({ "<b>-F</b> <u>FLAG</u>",
 			"<b>--flag=</b><u>FLAG</u>" }),
