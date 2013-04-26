@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.39 2012/04/13 17:08:30 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -183,11 +183,27 @@ int process_extra_dict(string ed_path, string pd_path)
     (use_utf8 ? ({ "--encoding", "utf-8" }) : ({ }) ) +
     ({ "create", "master", pd_path });
   report_notice("Spell Checker: Converting dictionary %s... ", ed_path);
+
+  //  Aspell doesn't like MS-DOS line endings so write a clean temp file
+  string in_data = Stdio.read_bytes(ed_path);
+  if (!in_data) {
+    report_notice("Error reading dictionary: %s\n", ed_path);
+    return -1;
+  }
+  in_data = replace(in_data, ({ "\r\n", "\r" }), ({ "\n", "\n" }) );
+  string ed_cleaned_path = ed_path + ".tmp";
+  if (mixed err = catch {
+      Stdio.write_file(ed_cleaned_path, in_data);
+    }) {
+    report_notice("Error writing temp file: %s\n", ed_cleaned_path);
+    return -1;
+  }
   
-  Stdio.File in_file = Stdio.File(ed_path);
+  Stdio.File in_file = Stdio.File(ed_cleaned_path);
   Process.Process p = Process.Process(args, ([ "stdin": in_file ]) );
   in_file->close();
   int err = p->wait();
+  rm(ed_cleaned_path);
   report_notice((err ? "Error" : "OK") + "\n");
   return err;
 }
