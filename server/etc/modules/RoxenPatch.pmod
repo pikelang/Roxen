@@ -1326,6 +1326,7 @@ class Patcher
 	      p[name][-1]->destination = tag_content;
 	    }
 	  }
+	  break;
 	}
 	p[name] += ({ tag_content });
 	break;
