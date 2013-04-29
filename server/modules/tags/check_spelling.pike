@@ -431,7 +431,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
   array(string) ed_args = ({ });
   foreach (extra_dicts; string ed_path; string pd_path) {
     if (pd_path)
-      ed_args += ({ "--extra-dicts", pd_path });
+      ed_args += ({ "--add-extra-dicts", pd_path });
   }
   
   object file1=Stdio.File();
