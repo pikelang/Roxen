@@ -41,6 +41,7 @@
 *.vcproj eol=crlf
 *.wxs eol=crlf
 *.xcf binary
+/server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
 nn binary
 rbf binary
 worldmap binary
