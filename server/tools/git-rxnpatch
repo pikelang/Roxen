@@ -697,6 +697,29 @@ void make_patch(mapping(string:string|int|array(string)) options,
     "--target-dir=" + tmpdir,
   });
 
+  // .distignore
+  // NB: We only care about the recent .distignores.
+  array(string) distignore_prefixes = ({});
+  foreach(git("ls-tree", "-r", "-z", head_sha1)/"\0", string line) {
+    if (!has_suffix(line, ".distignore")) continue;
+    array(string) a = line/"\t";
+    string path = a[1..]*"\t";
+    if (!has_suffix(path, "/.distignore") && (path != ".distignore")) continue;
+    string dir = dirname(path);
+    string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
+    if (distignore == "") {
+      distignore_prefixes += ({ dir });
+    } else {
+      foreach(distignore/"\n" - ({""}), string path) {
+	path = (path/"#")[0];
+	if (path == "") continue;
+	if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+	distignore_prefixes += ({ combine_path(dir, path) });
+      }
+    }
+  }
+  distignore_prefixes = Array.uniq(distignore_prefixes);
+
   // Diff.
   string raw_diff = git("diff", "--src-prefix=" + path_prefix,
 			"--dst-prefix=" + path_prefix, "--no-ext-diff",
@@ -726,6 +749,15 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	} else if (has_prefix(header->b[0], "\"")) {
 	  sscanf(a[3..]*" ", "%O", header->b[0]);
 	}
+	// Perform .distignore filtering.
+	string path = header->b[0];
+	foreach(distignore_prefixes, string prefix) {
+	  if (has_prefix(path, prefix)) {
+	    path = UNDEFINED;
+	    break;
+	  }
+	}
+	if (!path) break;
 	continue;
 
       case "+++":
