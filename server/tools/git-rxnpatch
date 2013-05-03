@@ -15,10 +15,14 @@ constant specific_options = ([
   "help": ({}),
   "init": ({
     ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
   }),
   "list": ({}),
-  "make": ({}),
+  "make": ({
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+  }),
   "new": ({
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
     ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
   }),
   "status": ({}),
@@ -384,6 +388,15 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
     }
   }
 
+  if (options->path_prefix) {
+    write("Setting default path prefix for branch %s to %s.\n",
+	  branch, options->path_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/path_prefix.txt",
+		  options->path_prefix + "\n",
+		  "New path prefix: " + options->path_prefix + ".\n");
+  }
+
   git("symbolic-ref", patch_branch, current_patch);
   write("Created patch branch %s.\n", patch_branch);
 }
@@ -419,6 +432,11 @@ void display_status(mapping(string:string|int|array(string)) options,
 		 "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
   if (release_tag_prefix) release_tag_prefix -= "\n";
 
+  string path_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/path_prefix.txt", 1);
+  if (path_prefix) path_prefix -= "\n";
+
   string patch;
 
   if (has_prefix(current_patch, "refs/tags/rxnpatch/")) {
@@ -449,6 +467,9 @@ void display_status(mapping(string:string|int|array(string)) options,
 	branch, patch);
   if (release_tag_prefix) {
     write("Release tag prefix: %s\n", release_tag_prefix);
+  }
+  if (path_prefix) {
+    write("Path prefix: %s\n", path_prefix);
   }
   if (pending) {
     write("Pending commits: %d\n", pending);
@@ -493,6 +514,21 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     werror("Invalid symbolic reference: %s ==> %s\n",
 	   patch_branch, current_patch);
     exit(1);
+  }
+
+  string path_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/path_prefix.txt", 1) || "";
+  path_prefix -= "\n";
+
+  if (options->path_prefix && (options->path_prefix != path_prefix)) {
+    path_prefix = options->path_prefix;
+    write("Updating default path prefix for branch %s to %s.\n",
+	  branch, path_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/path_prefix.txt",
+		  path_prefix + "\n",
+		  "New path prefix: " + path_prefix + ".\n");
   }
 
   string head = branch;
@@ -594,6 +630,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
   path_prefix -= "\n";
 
   if (options->path_prefix && (options->path_prefix != path_prefix)) {
+    path_prefix = options->path_prefix;
     write("Updating default path prefix for branch %s to %s.\n",
 	  branch, path_prefix);
     git_save_file("refs/heads/rxnpatch/rxnpatch",
@@ -705,7 +742,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
     array(string) a = line/"\t";
     string path = a[1..]*"\t";
     if (!has_suffix(path, "/.distignore") && (path != ".distignore")) continue;
-    string dir = dirname(path);
+    string dir = path_prefix + dirname(path);
     string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
     if (distignore == "") {
       distignore_prefixes += ({ dir });
