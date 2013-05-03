@@ -676,25 +676,19 @@ void make_patch(mapping(string:string|int|array(string)) options,
     exit(1);
   }
 
+  write("Preparing patch...\n");
+
   // Description.
   string description = a[1..]*"\n\n";
   Stdio.write_file(tmpdir + "/description.txt", description);
 
-  string diff = git("diff", "--src-prefix=" + path_prefix,
-		    "--dst-prefix=" + path_prefix,
-		    tail_sha1 + ".." + head_sha1);
-
-  Stdio.write_file(tmpdir + "/diff.patch", diff);
-
-  write("Generated diff %O.\n", tmpdir + "/diff.patch");
-
+  // Command.
   array(string) cmd = ({
     "rxnpatch", "create",
     "--id=" + patchid,
     "--originator=" + originator,
     "--name=" + (a[1]/"\n")[0],
     "--description=" + tmpdir + "/description.txt",
-    "--patch=" + tmpdir + "/diff.patch",
     @map(header->depends || ({}),
 	 lambda(string dep) {
 	   return "--depends=" + patchid;
@@ -702,6 +696,92 @@ void make_patch(mapping(string:string|int|array(string)) options,
     @(header->restart?({ "--flag=restart" }):({})),
     "--target-dir=" + tmpdir,
   });
+
+  // Diff.
+  string raw_diff = git("diff", "--src-prefix=" + path_prefix,
+			"--dst-prefix=" + path_prefix, "--no-ext-diff",
+			"--no-color", "--no-textconv", "--no-renames",
+			tail_sha1 + ".." + head_sha1);
+  string diff = "";
+  foreach(("\n" + raw_diff + "diff --git ")/"\ndiff --git ", string block) {
+    block = "diff --git " + block + "\n";
+    if (block == "diff --git \n") continue;
+    mapping(string:array(string)) header = ([]);
+    foreach(block/"\n", string line) {
+      if (has_prefix(line, "--- ")) {
+	diff += block;
+	break;
+      }
+      array a = line/" ";
+      switch(a[0]) {
+      case "diff":
+	// Extract the path names and perform unquoting.
+	header->a = ({ a[2] });
+	header->b = ({ a[3] });
+	if (has_prefix(header->a[0], "\"")) {
+	  sscanf(a[2..]*" ", "%O %s", header->a[0], header->b[0]);
+	  if (has_prefix(header->b[0], "\"")) {
+	    sscanf(a[2..]*" ", "%O %O", header->a[0], header->b[0]);
+	  }
+	} else if (has_prefix(header->b[0], "\"")) {
+	  sscanf(a[3..]*" ", "%O", header->b[0]);
+	}
+	continue;
+
+      case "+++":
+	if ((header["---"][0] != "/dev/null") && (a[1] != "/dev/null")) {
+	  // Not a new or deleted file, and not binary.
+	  diff += block;
+	  break;
+	}
+	// FALL_THROUGH
+      case "Binary":
+	string new_blob_sha1 = (header->index[0]/"..")[1];
+	if (new_blob_sha1 == "0000000000000000000000000000000000000000") {
+	  // Deleted file.
+	  cmd += ({
+	    "--delete-file=" + header->b[0],
+	  });
+	  break;
+	}
+	string old_blob_sha1 = (header->index[0]/"..")[0];
+	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob",
+			 git("cat-file", "blob", new_blob_sha1));
+	if (old_blob_sha1 == "0000000000000000000000000000000000000000") {
+	  // New file.
+	  cmd += ({
+	    "--new-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
+	    ":" + header->b[0],
+	  });
+	} else {
+	  // Altered file.
+	  cmd += ({
+	    "--replace-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
+	    ":" + header->b[0],
+	  });
+	}
+	break;
+
+      default:
+	if (header[a[0]]) {
+	  werror("Multiple %s headers not supported.\n"
+		 "%O\n", a[0], block);
+	  exit(1);
+	}
+	header[a[0]] = a[1..];
+	continue;
+      }
+      break;
+    }
+  }
+
+  if (sizeof(diff)) {
+    Stdio.write_file(tmpdir + "/diff.patch", diff);
+
+    cmd += ({
+      "--patch=" + tmpdir + "/diff.patch",
+    });
+  }
 
   Process.Process rxnpatch = Process.Process(cmd);
   int code;
@@ -718,6 +798,6 @@ void make_patch(mapping(string:string|int|array(string)) options,
 		"refs/heads/" + branch + "/patches/" +
 		patchid + "/" + patchid + ".rxp",
 		patchdata,
-		"Created " + patchid + ".rxp on branch " + branch".\n\n" +
+		"Created " + patchid + ".rxp on branch " + branch + ".\n\n" +
 		metadata);
 }
