@@ -2059,9 +2059,20 @@ class Patcher
   //! Uses the raw path as destination and then tries to find the source file
   //! by checking each directory from the given path up to root.
   //!
+  //! If the source path is known, it may be specified explicitly
+  //! by prefixing the destination path with the source path and
+  //! a colon: @expr{"path/to/source:destination/path"@}.
+  //!
   //! If the raw path contains a glob then it will try to find all source files
   //! matching that glob.
   {
+    array(string) a = raw_path/":";
+    if ((sizeof(a) > 1) && Stdio.exist(a[0])) {
+      return ({ ([ "source" : a[0],
+		   "destination" : a[1..] * ":",
+		]) });
+    }
+
     array(mapping(string:string)) res;
 
     // Check if there are globs in the raw_path. In that case we can assume that
