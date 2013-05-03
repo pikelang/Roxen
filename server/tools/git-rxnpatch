@@ -1,0 +1,723 @@
+#!/bin/env pike
+// -*- Pike -*-
+//
+// Tool to create Roxen patches from git repositories.
+//
+// 2013-04-25 Henrik Grubbström
+
+constant common_options = ({
+  ({ "help", Getopt.NO_ARG, ({ "-h", "--help" }) }),
+  ({ "version", Getopt.NO_ARG, ({ "-v", "--version" }) }),
+});
+
+constant specific_options = ([
+  "delete": ({}),
+  "help": ({}),
+  "init": ({
+    ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
+  }),
+  "list": ({}),
+  "make": ({}),
+  "new": ({
+    ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
+  }),
+  "status": ({}),
+]);
+
+constant cmd_args = ([
+  0:" [ <args> ]",
+  "delete": "",
+  "help": " [ <command> ]",
+  "init": " <start-point>",
+  "list": "",
+  "make": " [ <patchid> ]",
+  "new": "",
+  "status": " [ <commit> ]",
+]);
+
+constant cmd_doc = ([
+  0: "Create and manage RXN patches in git.\n",
+  "delete": "Delete the specified patch(es).\n",
+  "help": "Display help about a command.\n",
+  "init": "Initialize rxnpatch for the current branch.\n",
+  "list": "List existing RXN patches.\n",
+  "make": "Make the RXP file for an RXN patch.\n",
+  "new": "Create a new RXN patch.\n",
+  "status": "Display patch status for the current git branch.\n",
+]);
+
+string git_binary = getenv("_") || "git";
+
+string committer;
+
+string git(string command, string ... args)
+{
+  array(string) cmd = ({ git_binary, command, @args });
+  mapping(string:string|int) res = Process.run(cmd);
+  if (res->exitcode) {
+    werror("Git command '%s' failed with code %d:\n"
+	   "%s", cmd*"' '", res->exitcode, res->stderr||"");
+    exit(1);
+  }
+  return res->stdout||"";
+}
+
+string git_try(string command, string ... args)
+{
+  array(string) cmd = ({ git_binary, command, @args });
+  mapping(string:string|int) res = Process.run(cmd);
+  if (res->exitcode) return UNDEFINED;
+  return res->stdout||"";
+}
+
+string git_cat_file(string treeish, string path, int|void try)
+{
+  string blob_sha1 = git_try("ls-tree", "-z", treeish, path);
+  if (blob_sha1) {
+    blob_sha1 = (((blob_sha1/"\0")[0]/"\t")[0]/" ")[-1];
+  }
+  string res = blob_sha1 && git_try("cat-file", "blob", blob_sha1);
+  if (res || try) return res;
+  werror("File %O not found in tree %O.\n", path, treeish);
+  exit(1);
+}
+
+void git_save_file(string branch, string path, string data, string message)
+{
+  if (!committer) {
+    string user_name = git("config", "--get", "user.name") - "\n";
+    string user_email = git("config", "--get", "user.email") - "\n";
+
+    committer = sprintf("%s <%s> now", user_name, user_email);
+  }
+
+  if (!has_prefix(branch, "refs/heads/")) branch = "refs/heads/" + branch;
+
+  string parent = branch + "^0";
+
+  if (!git_try("rev-list", "--max-count=1", branch)) {
+    // First commit on branch.
+    parent = UNDEFINED;
+  }
+
+  Stdio.File export_fd = Stdio.File();
+  Process.Process fast_importer =
+    Process.Process(({ git_binary, "fast-import", "--date-format=now" }),
+		    ([
+		      "stdin":export_fd->pipe(),
+		      "stderr":Stdio.File("/dev/null"),
+		    ]));
+  Git.Export exporter = Git.Export(export_fd);
+
+  exporter->commit(branch, UNDEFINED, UNDEFINED, committer, message,
+		   @(parent?({ parent }):({})));
+  exporter->filemodify(Git.MODE_FILE, path);
+  exporter->data(data);
+  exporter->done();
+
+  int code;
+  if ((code = fast_importer->wait())) {
+    werror("Failed to save file %O on branch %O (exit code %d).\n",
+	   path, branch, code);
+    exit(1);
+  }
+}
+
+int main(int argc, array(string) argv)
+{
+  int help = 0;
+
+  foreach(Getopt.find_all_options(argv, common_options, 1),
+	  array(string) opt) {
+    switch(opt[0]) {
+    case "help":
+      help = 1;
+      break;
+    case "version":
+      display_version();
+      exit(0);
+    }
+  }
+
+  argv = Getopt.get_args(argv, 1);
+  if (sizeof(argv) < 2) {
+    display_usage();
+    exit(0);
+  }
+  argv = argv[1..];
+  if (!specific_options[argv[0]]) {
+    werror("Unknown command: %O.\n\n", argv[0]);
+    display_usage();
+    exit(1);
+  } else if (help) {
+    display_usage(argv[0]);
+    exit(0);
+  }
+
+  mapping(string:int|string|array(string)) options = ([]);
+  foreach(Getopt.find_all_options(argv, specific_options[argv[0]], 1),
+	  array(string) opt) {
+    switch(opt[0]) {
+    case "force":
+    case "message":
+    default:
+      if (options[opt[0]]) {
+	werror("Option %s specified multiple times.\n", opt[0]);
+	exit(1);
+      }
+      options[opt[0]] = opt[1];
+      break;
+    }
+  }
+
+  argv = Getopt.get_args(argv, 1);
+  switch(argv[0]) {
+  case "help":
+    if (sizeof(argv) < 2) {
+      display_usage();
+      exit(0);
+    }
+    if (!specific_options[argv[1]]) {
+      werror("Unknown command: %O.\n\n", argv[1]);
+      display_usage();
+      exit(1);
+    }
+    display_usage(argv[1]);
+    exit(0);
+  case "init":
+    init_patch_branch(options, argv);
+    break;
+  case "status":
+    display_status(options, argv);
+    break;
+  case "new":
+    create_new_patch(options, argv);
+    break;
+  case "make":
+    make_patch(options, argv);
+    break;
+  }
+}
+
+void display_usage(string|void cmd)
+{
+  string prefix = "  git rxnpatch";
+  array(array(string|int|array(string))) options = common_options;
+  if (cmd) {
+    prefix += " [ <opts> ] " + cmd;
+    options = specific_options[cmd];
+  }
+
+  Stdio.stdout.write("Usage:\n");
+  string doc = prefix;
+  foreach(options, array(string|int|array(string)) opt) {
+    doc += " [ " + (opt[2]*" | ") + " ]";
+  }
+  if (!cmd) {
+    doc += " [ " + (sort(indices(specific_options)) * " | ") + " ]";
+  }
+  doc += cmd_args[cmd];
+  doc = (sprintf("%-=70s\n", doc)/"\n" - ({""})) *
+    ("\n " + " " * sizeof(prefix));
+  Stdio.stdout.write(doc + "\n");
+
+  doc = cmd_doc[cmd];
+  if (sizeof(doc)) {
+    Stdio.stdout.write("\n" + doc);
+  }
+  return;
+}
+
+void display_version()
+{
+  Stdio.stdout.write("git-rxnpatch 1.0\n");
+}
+
+//! @returns
+//!   Mapping from tag reference to commit sha1.
+mapping(string:string) tags(string|void commit)
+{
+  return (mapping)map(git("show-ref", "--tags")/"\n" - ({""}),
+		      lambda(string line) {
+			array(string) a = line/" ";
+			return ({ a[1..]*" ", a[0] });
+		      });
+}
+
+//! Assert that @[commit] is on the first-parent path from @[head].
+//!
+//! @returns
+//!   Returns the number of commits on the path.
+int assert_first_parent(string head, string commit)
+{
+  string sha1 = git("rev-list", "--max-count=1", commit) - "\n";
+  array(string) commits =
+    map(git("rev-list", "--first-parent", "--parents",
+	    sha1 + ".." + head)/"\n" - ({""}),
+	lambda(string line) {
+	  array(string) a = line/" ";
+	  if (sizeof(a)) return a[1];
+	});
+  if (!sizeof(commits)) {
+    string head_sha1 = git("rev-list", "--max-count=1", commit) - "\n";
+    if (sha1 == head_sha1) {
+      // They are the same commit.
+      return 0;
+    }
+  }
+  if (!sizeof(commits) || (commits[-1] != sha1)) {
+    werror("Commit %s is not on the first-parent path from %s.\n",
+	   commit, head);
+    exit(1);
+  }
+  return sizeof(commits);
+}
+
+//! Allocate a new patchid.
+string new_patchid()
+{
+  do {
+    int t = time();
+    mapping(string:int) lt = localtime(t);
+    string patchid =
+      sprintf("%04d-%02d-%02dT%02d%02d%2d",
+	      lt->year + 1900, lt->mon + 1, lt->mday,
+	      lt->hour, lt->min, lt->sec);
+    if (git_try("git-show-ref", "refs/tags/rxnpatch/" + patchid)) {
+      werror("Patchid %s already exists!\n"
+	     "Waiting a second for the next...\n",
+	     patchid);
+      sleep(1);
+      continue;
+    }
+    return patchid;
+  } while (1);
+}
+
+void init_patch_branch(mapping(string:string|int|array(string)) options,
+		    array(string) argv)
+{
+  string branch = git("symbolic-ref", "HEAD") - "\n";
+
+  if (!sizeof(branch)) {
+    werror("Detached HEAD!\n");
+    exit(1);
+  }
+
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+
+  string patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  if (git_try("rev-list", "--max-count=1", patch_branch)) {
+    werror("Patch branch %s already exists!\n", patch_branch);
+    if (!options->force) exit(1);
+  }
+
+  if (sizeof(argv) < 2) {
+    werror("Missing argument: start-point.\n");
+    exit(1);
+  }
+
+  string current_patch;
+
+  foreach (git("show-ref", "--tags", argv[1])/"\n" - ({""}), string line) {
+    array(string) a = line/" ";
+    string tag = a[1..]*" ";
+    current_patch = tag;
+    break;
+  }
+  if (!current_patch) {
+    werror("%s is not a valid tag.\n", argv[1]);
+    exit(1);
+  }
+
+  assert_first_parent(branch, current_patch);
+
+  string rxnpatch_branch = "refs/heads/rxnpatch/rxnpatch";
+  // Check whether the refs/heads/rxnpatch/rxnpatch branch exists.
+  if (!git_try("rev-list", "--max-count=1", "--heads", rxnpatch_branch)) {
+    // Not available locally, what about remotely?
+    string other = git_try("show-ref", "--max-count=1", "rxnpatch/rxnpatch");
+    string remote;
+    foreach((other || "")/"\n" - ({""}), string line) {
+      array(string) a = line/" ";
+      string tag = a[1..]*" ";
+      if (has_prefix(tag, "refs/remotes/")) {
+	remote = tag;
+	// FIXME: Look up the tracking remote fro the current branch?
+	if (tag == "refs/remotes/origin/rxnpatch/rxnpatch") {
+	  break;
+	}
+      }
+    }
+    if (remote) {
+      // Clone the existing remote branch.
+      git("branch", "--track", "rxnpatch/rxnpatch", remote);
+    }
+  }
+
+  if (!has_prefix(current_patch, "refs/tags/rxnpatch/")) {
+    // Not a rxnpatch tag.
+    // We've probably got a release tag.
+    array(string) a = replace(current_patch, "-", "_")/"_";
+    if (sizeof(a) > 1) {
+      string tag_prefix = a[0] + "\n";
+
+      string prev_prefix =
+	git_cat_file(rxnpatch_branch,
+		     "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
+      if (tag_prefix != prev_prefix) {
+	write("Updating release tag prefix for branch %s to %s...\n",
+	      branch, tag_prefix - "\n");
+	git_save_file(rxnpatch_branch,
+		      "refs/heads/" + branch + "/release_tag_prefix.txt",
+		      tag_prefix,
+		      sprintf("Updated release tag prefix for branch %s to %s.\n",
+			      branch, tag_prefix - "\n"));
+      }
+    } else {
+      werror("Reference %s does not look like a release tag.\n",
+	     current_patch);
+      exit(1);
+    }
+  }
+
+  git("symbolic-ref", patch_branch, current_patch);
+  write("Created patch branch %s.\n", patch_branch);
+}
+
+
+void display_status(mapping(string:string|int|array(string)) options,
+		    array(string) argv)
+{
+  string branch = git("symbolic-ref", "HEAD") - "\n";
+
+  if (!sizeof(branch)) {
+    werror("Detached HEAD!\n");
+    exit(1);
+  }
+
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+
+  string patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  string current_patch = git_try("symbolic-ref", patch_branch);
+
+  if (!current_patch) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(0);
+  }
+
+  current_patch -= "\n";
+
+  string release_tag_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
+  if (release_tag_prefix) release_tag_prefix -= "\n";
+
+  string patch;
+
+  if (has_prefix(current_patch, "refs/tags/rxnpatch/")) {
+    patch = current_patch[sizeof("refs/tags/rxnpatch/")..];
+  } else if (release_tag_prefix &&
+	     has_prefix(current_patch, release_tag_prefix)) {
+    patch = replace(current_patch[sizeof("refs/tags/")..],
+		    ({ "-", "_" }), ({ "/", "/" }));
+  } else {
+    werror("Invalid symbolic reference: %s ==> %s\n",
+	   patch_branch, current_patch);
+    exit(1);
+  }
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  // Assert that the commits are in order on the first-parent path.
+
+  assert_first_parent(branch, head);
+
+  int pending = assert_first_parent(head, current_patch);
+
+  write("Branch: %s\n"
+	"Patch-level: %s\n",
+	branch, patch);
+  if (release_tag_prefix) {
+    write("Release tag prefix: %s\n", release_tag_prefix);
+  }
+  if (pending) {
+    write("Pending commits: %d\n", pending);
+  } else {
+    write("Up to date.\n");
+  }
+}
+
+void create_new_patch(mapping(string:string|int|array(string)) options,
+		      array(string) argv)
+{
+  string branch = git("symbolic-ref", "HEAD") - "\n";
+
+  if (!sizeof(branch)) {
+    werror("Detached HEAD!\n");
+    exit(1);
+  }
+
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+
+  string patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  string current_patch = git("symbolic-ref", patch_branch) - "\n";
+
+  string release_tag_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
+  if (release_tag_prefix) release_tag_prefix -= "\n";
+  werror("Release tag prefix: %O\n", release_tag_prefix);
+
+  string patch;
+
+  if (has_prefix(current_patch, "refs/tags/rxnpatch/")) {
+    patch = current_patch[sizeof("refs/tags/rxnpatch/")..];
+  } else if (release_tag_prefix &&
+	     has_prefix(current_patch, release_tag_prefix)) {
+    patch = replace(current_patch[sizeof("refs/tags/")..],
+		    ({ "-", "_" }), ({ "/", "/" }));
+  } else {
+    werror("Invalid symbolic reference: %s ==> %s\n",
+	   patch_branch, current_patch);
+    exit(1);
+  }
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  string head_sha1 = git("rev-list", "--max-count=1", head) - "\n";
+
+  assert_first_parent(branch, head_sha1);
+
+  string tail_sha1 = git("rev-list", "--max-count=1", current_patch) - "\n";
+
+  int count = assert_first_parent(head, tail_sha1);
+
+  if (!count) {
+    werror("Fully patched.\n");
+    exit(1);
+  }
+
+  string log = git("log", "--no-merges", "--date-order", "--dense",
+		   "--pretty=raw", "-s", tail_sha1 + ".." + head_sha1);
+
+  string description = "";
+  if (options->message) {
+    description = options->message;
+  } else {
+    foreach((log + "\n")/"\n\n", string block) {
+      if (!has_prefix(block, "    ")) continue;
+      description += block + "\n\n";
+    }
+  }
+
+  array(string) depends = ({ patch });
+  if (release_tag_prefix) {
+    foreach(git("show-ref", "--tags", "--dereference", "--")/"\n",
+	    string line) {
+      array(string) a = line/" ";
+      if (a[0] != tail_sha1) continue;
+      if (has_prefix(a[1], "refs/tags/rxnpatch/")) {
+	string dep = a[1][sizeof("refs/tags/rxnpatch/")..];
+	if (dep == patch) continue;
+	depends += ({ dep });
+      } else if (release_tag_prefix && has_prefix(a[1], release_tag_prefix)) {
+	string dep = replace(a[1][sizeof("refs/tags/")..],
+			     ({ "-", "_" }), ({ "/", "/" }));
+	if (dep == patch) continue;
+	depends += ({ dep });
+      }
+    }
+  }
+
+  string user_email =
+    options->originator || git("config", "--get", "user.email") - "\n";
+
+  string patchid = options->patchid || new_patchid();
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt",
+		sprintf("from: %s\n"
+			"to: %s\n"
+			"originator: %s\n"
+			"depends: %s\n"
+			"\n"
+			"%s",
+			tail_sha1,
+			head_sha1,
+			user_email,
+			depends * "|",
+			description),
+		sprintf("Created new patch %s on branch %s.\n"
+			"\n"
+			"From commit %s\n"
+			"to commit %s.\n",
+			patchid, branch, tail_sha1, head_sha1));
+  git("tag", "-f", "rxnpatch/" + patchid, head_sha1);
+
+  write("Created patch %s (%d commits).\n", patchid, count);
+
+  git("symbolic-ref", patch_branch, "refs/tags/rxnpatch/" + patchid);
+}
+
+void make_patch(mapping(string:string|int|array(string)) options,
+		array(string) argv)
+{
+  string branch = git("symbolic-ref", "HEAD") - "\n";
+
+  if (!sizeof(branch)) {
+    werror("Detached HEAD!\n");
+    exit(1);
+  }
+
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+
+  string path_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/path_prefix.txt", 1) || "";
+  path_prefix -= "\n";
+
+  if (options->path_prefix && (options->path_prefix != path_prefix)) {
+    write("Updating default path prefix for branch %s to %s.\n",
+	  branch, path_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/path_prefix.txt",
+		  path_prefix + "\n",
+		  "New path prefix: " + path_prefix + ".\n");
+  }
+
+  string patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  string current_patch = git_try("symbolic-ref", patch_branch);
+
+  if (!current_patch) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(0);
+  }
+
+  current_patch -= "\n";
+  string patchid;
+  if (sizeof(argv) < 2) {
+    if (has_prefix(current_patch, "refs/tags/rxnpatch/")) {
+      patchid = current_patch[sizeof("refs/tags/rxnpatch/")..];
+    } else {
+      werror("Missing argument: patchid.\n");
+      exit(1);
+    }
+  } else {
+    patchid = argv[1];
+  }
+
+  write("Patch: %s\n", patchid);
+
+  string metadata =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt");
+
+  array(string) a = metadata/"\n\n";
+  if (sizeof(a) < 2) {
+    werror("Missing patch description for patch %s.\n", patchid);
+    exit(1);
+  }
+
+  mapping(string:array(string)) header = ([]);
+  foreach(a[0]/"\n", string line) {
+    line = (line/"#")[0];
+    if (line == "") continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) < 2) {
+      werror("Invalid metadata syntax:\n"
+	     "%s\n", line);
+      exit(1);
+    }
+    header[String.trim_all_whites(pair[0])] +=
+      ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  string tail_sha1;
+  string head_sha1;
+  string originator;
+  if (header->from && (sizeof(header->from) == 1)) {
+    tail_sha1 = header->from[0];
+  } else {
+    werror("Invalid header field %O.\n", "from");
+  }
+  if (header->to && (sizeof(header->to) == 1)) {
+    head_sha1 = header->to[0];
+  } else {
+    werror("Invalid header field %O.\n", "to");
+  }
+  if (header->originator && (sizeof(header->originator) == 1)) {
+    originator = header->originator[0];
+  } else {
+    werror("Invalid header field %O.\n", "originator");
+  }
+
+  string tmpdir = "/var/tmp/rxnpatch-" + patchid;
+  if (!mkdir(tmpdir) && (errno() != System.EEXIST)) {
+    werror("Failed to create temporary directory %O (%s).\n",
+	   tmpdir, strerror(errno()));
+    exit(1);
+  }
+
+  // Description.
+  string description = a[1..]*"\n\n";
+  Stdio.write_file(tmpdir + "/description.txt", description);
+
+  string diff = git("diff", "--src-prefix=" + path_prefix,
+		    "--dst-prefix=" + path_prefix,
+		    tail_sha1 + ".." + head_sha1);
+
+  Stdio.write_file(tmpdir + "/diff.patch", diff);
+
+  write("Generated diff %O.\n", tmpdir + "/diff.patch");
+
+  array(string) cmd = ({
+    "rxnpatch", "create",
+    "--id=" + patchid,
+    "--originator=" + originator,
+    "--name=" + (a[1]/"\n")[0],
+    "--description=" + tmpdir + "/description.txt",
+    "--patch=" + tmpdir + "/diff.patch",
+    @map(header->depends || ({}),
+	 lambda(string dep) {
+	   return "--depends=" + patchid;
+	 }),
+    @(header->restart?({ "--flag=restart" }):({})),
+    "--target-dir=" + tmpdir,
+  });
+
+  Process.Process rxnpatch = Process.Process(cmd);
+  int code;
+  if ((code = rxnpatch->wait())) {
+    exit(code);
+  }
+  string patchdata = Stdio.read_bytes(tmpdir + "/" + patchid + ".rxp");
+  if (!patchdata) {
+    werror("Resulting patch file (%O) not found.\n",
+	   tmpdir + "/" + patchid + ".rxp");
+    exit(1);
+  }
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" +
+		patchid + "/" + patchid + ".rxp",
+		patchdata,
+		"Created " + patchid + ".rxp on branch " + branch".\n\n" +
+		metadata);
+}
