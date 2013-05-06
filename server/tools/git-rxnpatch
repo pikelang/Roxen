@@ -1059,7 +1059,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	if (new_blob_sha1 == GIT_NULL_SHA1) {
 	  // Deleted file.
 	  cmd += ({
-	    "--delete-file=" + header->b[0],
+	    "--delete=" + header->b[0],
 	  });
 	  break;
 	}
@@ -1075,7 +1075,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	} else {
 	  // Altered file.
 	  cmd += ({
-	    "--replace-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
+	    "--replace=" + tmpdir + "/" + new_blob_sha1 + ".blob"
 	    ":" + header->b[0],
 	  });
 	}
