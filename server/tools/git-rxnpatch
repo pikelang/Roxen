@@ -537,7 +537,7 @@ string new_patchid()
     int t = time();
     mapping(string:int) lt = localtime(t);
     string patchid =
-      sprintf("%04d-%02d-%02dT%02d%02d%2d",
+      sprintf("%04d-%02d-%02dT%02d%02d%02d",
 	      lt->year + 1900, lt->mon + 1, lt->mday,
 	      lt->hour, lt->min, lt->sec);
     if (git_try("git-show-ref", "refs/tags/rxnpatch/" + patchid)) {
