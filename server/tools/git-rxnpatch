@@ -844,9 +844,35 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     description = options->message;
   } else {
     // FIXME: Improve formatting.
+    if (count > 1) {
+      description = "Multiple fixes:\n";
+    }
     foreach((log + "\n")/"\n\n", string block) {
       if (!has_prefix(block, "    ")) continue;
-      description += block + "\n\n";
+      block = map(block/"\n",
+		  lambda(string line) {
+		    if (has_prefix(line, "    ")) return line[4..];
+		    return line;
+		  }) * "\n";
+      if (count > 1) {
+	block =
+	  (map(block/"\n\n",
+	       lambda(string paragraph) {
+		 if (paragraph == "") return "";
+		 if (has_prefix(paragraph, "\t")) return paragraph;
+		 if (has_prefix(paragraph, " ") ||
+		     has_prefix(paragraph, "*")) {
+		   return sprintf("%4#s%-60#s", "   ", paragraph);
+		 }
+		 if (has_prefix(paragraph, "Rev: ")) {
+		   // Remove CVS revision markers.
+		   return "";
+		 }
+		 return sprintf("%4#s%-60=s",
+			       " * ", replace(paragraph, "\n", " "));
+	       }) - ({ "" })) * "\n\n";
+      }
+      description += "\n" + block + "\n";
     }
   }
 
