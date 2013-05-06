@@ -59,6 +59,218 @@ string git_binary = getenv("_") || "git";
 
 string committer;
 
+#if constant(Git.Export)
+// Pike 7.9 and later.
+constant GIT_MODE_FILE = Git.MODE_FILE;
+constant GIT_MODE_EXE = Git.MODE_EXE;
+constant GIT_MODE_SYMLINK = Git.MODE_SYMLINK;
+constant GIT_MODE_GITLINK = Git.MODE_GITLINK;
+constant GIT_MODE_DIR = Git.MODE_DIR;
+constant GIT_NULL_SHA1 = Git.NULL_SHA1;
+constant GitExport = Git.Export;
+#else
+
+constant GIT_MODE_FILE = 0100644;
+constant GIT_MODE_EXE = 0100755;
+constant GIT_MODE_SYMLINK = 0120000;
+constant GIT_MODE_GITLINK = 0160000;
+constant GIT_MODE_DIR = 040000;
+constant GIT_NULL_SHA1 = "0000000000000000000000000000000000000000";
+
+//! This is a stripped Git.Export containing just the stuff that we need.
+//!
+//! @note
+//!   The APIs that are used MUST be compatible with the corresponding
+//!   in Git.Export.
+class GitExport {
+  protected Stdio.File export_fd;
+
+  protected mapping(string:string|int) requested_features = ([]);
+
+  protected void create(Stdio.File fd)
+  {
+    export_fd = fd || Stdio.stdout;
+  }
+
+  void command(sprintf_format cmd, sprintf_args ... args)
+  {
+    export_fd->write(cmd, @args);
+  }
+
+  int done()
+  {
+    if (requested_features["done"]) {
+      command("done\n");
+    }
+    if (export_fd) {
+      export_fd->close();
+      export_fd = UNDEFINED;
+    }
+    return 0;
+  }
+
+  void reset(string ref, string|void committish)
+  {
+    command("reset %s\n", ref);
+    if (committish) {
+      command("from %s\n", committish);
+    }
+  }
+
+  void mark(string marker)
+  {
+    command("mark %s\n", marker);
+  }
+
+  void data(string data)
+  {
+    command("data %d\n"
+	    "%s\n", sizeof(data), data);
+  }
+
+  void blob(string blob, string|void marker)
+  {
+    command("blob\n");
+    if (marker) mark(marker);
+    data(blob);
+  }
+
+  void checkpoint()
+  {
+    command("checkpoint\n");
+  }
+
+  void progress(string message)
+  {
+    foreach(message/"\n", string line) {
+      command("progress %s\n", line);
+    }
+  }
+
+  void feature(string feature, string|void arg)
+  {
+    if (arg) {
+      command("feature %s=%s\n", feature, arg);
+    } else {
+      command("feature %s\n", feature);
+    }
+    requested_features[feature] = arg || 1;
+  }
+
+  void option(string option)
+  {
+    command("option %s\n", option);
+  }
+
+  void tag(string name, string committish, string tagger_info, string message)
+  {
+    command("tag %s\n"
+	    "from %s\n"
+	    "tagger %s\n",
+	    name, committish, tagger_info);
+    data(message);
+  }
+
+  void commit(string ref, string|void commit_marker,
+	      string|void author_info, string committer_info,
+	      string message, string|void ... parents)
+  {
+    command("commit %s\n", ref);
+    if (commit_marker) {
+      mark(commit_marker);
+    }
+    if (author_info) {
+      command("author %s\n", author_info);
+    }
+    command("committer %s\n", committer_info);
+    data(message);
+    if (sizeof(parents)) {
+      command("from %s\n"
+	      "%{merge %s\n%}",
+	      parents[0], parents[1..]);
+    }
+  }
+
+  void filedeleteall()
+  {
+    command("deleteall\n");
+  }
+
+  void filemodify(int mode, string path, string|void dataref)
+  {
+    path = combine_path_unix("/", path)[1..];
+    if (path == "") {
+      error("Invalid path.\n");
+    }
+    command("M %06o %s %q\n",
+	    mode, dataref || "inline", path);
+  }
+
+  void filedelete(string path)
+  {
+    path = combine_path_unix("/", path)[1..];
+    if (path == "") {
+      error("Invalid path.\n");
+    }
+    command("D %q\n", path);
+  }
+
+  void filecopy(string from, string to)
+  {
+    from = combine_path_unix("/", from)[1..];
+    to = combine_path_unix("/", to)[1..];
+    if ((from == "") || (to == "")) {
+      error("Invalid path.\n");
+    }
+    command("C %q %q\n", from, to);
+  }
+
+  void filerename(string from, string to)
+  {
+    from = combine_path_unix("/", from)[1..];
+    to = combine_path_unix("/", to)[1..];
+    if ((from == "") || (to == "")) {
+      error("Invalid path.\n");
+    }
+    command("C %q %q\n", from, to);
+  }
+
+  void notemodify(string commit, string|void dataref)
+  {
+    if (!requested_features["notes"]) {
+      error("The notes feature has not been requested.\n");
+    }
+    command("N %s %s\n", dataref || "inline", commit);
+  }
+
+  void export(string file_name, string|void git_name)
+  {
+    Stdio.Stat st = file_stat(file_name);
+    if (!st) return;
+    int mode = st->mode;
+    if (mode & GIT_MODE_DIR) {
+      mode = GIT_MODE_DIR;
+    } else if (mode & 0111) {
+      mode = GIT_MODE_EXE;
+    } else if (mode & 0666) {
+      mode = GIT_MODE_FILE;
+    } else {
+      error("Unsupported filesystem mode for %O: %03o\n", file_name, mode);
+    }
+    if (mode == GIT_MODE_DIR) {
+      foreach(get_dir(file_name), string fn) {
+	export(combine_path(file_name, fn),
+	       combine_path(git_name || file_name, fn));
+      }
+    } else {
+      filemodify(mode, git_name);
+      data(Stdio.read_bytes(file_name));
+    }
+  }
+}
+
+#endif
+
 string git(string command, string ... args)
 {
   array(string) cmd = ({ git_binary, command, @args });
@@ -116,16 +328,16 @@ void git_save_file(string branch, string path, string data, string message)
 		      "stdin":export_fd->pipe(),
 		      "stderr":Stdio.File("/dev/null"),
 		    ]));
-  Git.Export exporter = Git.Export(export_fd);
+  GitExport exporter = GitExport(export_fd);
 
+  exporter->feature("done");
   exporter->commit(branch, UNDEFINED, UNDEFINED, committer, message,
 		   @(parent?({ parent }):({})));
-  exporter->filemodify(Git.MODE_FILE, path);
+  exporter->filemodify(GIT_MODE_FILE, path);
   exporter->data(data);
-  exporter->done();
 
   int code;
-  if ((code = fast_importer->wait())) {
+  if ((code = (exporter->done() || fast_importer->wait()))) {
     werror("Failed to save file %O on branch %O (exit code %d).\n",
 	   path, branch, code);
     exit(1);
@@ -822,7 +1034,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	// FALL_THROUGH
       case "Binary":
 	string new_blob_sha1 = (header->index[0]/"..")[1];
-	if (new_blob_sha1 == "0000000000000000000000000000000000000000") {
+	if (new_blob_sha1 == GIT_NULL_SHA1) {
 	  // Deleted file.
 	  cmd += ({
 	    "--delete-file=" + header->b[0],
@@ -832,7 +1044,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	string old_blob_sha1 = (header->index[0]/"..")[0];
 	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob",
 			 git("cat-file", "blob", new_blob_sha1));
-	if (old_blob_sha1 == "0000000000000000000000000000000000000000") {
+	if (old_blob_sha1 == GIT_NULL_SHA1) {
 	  // New file.
 	  cmd += ({
 	    "--new-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
