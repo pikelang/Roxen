@@ -847,6 +847,7 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     if (count > 1) {
       description = "Multiple fixes:\n";
     }
+    catch { log = utf8_to_string(log); };
     foreach((log + "\n")/"\n\n", string block) {
       if (!has_prefix(block, "    ")) continue;
       block = map(block/"\n",
@@ -868,11 +869,27 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 		   // Remove CVS revision markers.
 		   return "";
 		 }
-		 return sprintf("%4#s%-60=s",
-			       " * ", replace(paragraph, "\n", " "));
+		 // Keep [bug ####] et al from getting linebreaks.
+		 paragraph =
+		   replace(paragraph,
+			   ({ "[bug ", "[Bug ",
+			      "[InfoKOM ", "[Infokom ",
+			      "[LysKOM ", "[Lyskom ", "[lyskom ",
+			      "[LysLysKOM ", "[Lyslyskom ",
+			      "[lyslyskom ",
+			   }),
+			   ({ "[bug\xa0", "[bug\xa0",
+			      "[InfoKOM\xa0", "[InfoKOM\xa0",
+			      "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+			      "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+			      "[LysLysKOM\xa0",
+			   }));
+		 paragraph = sprintf("%4#s%-60=s",
+				     " * ", replace(paragraph, "\n", " "));
+		 return replace(paragraph, "\xa0", " ");
 	       }) - ({ "" })) * "\n\n";
       }
-      description += "\n" + block + "\n";
+      description += "\n" + string_to_utf8(block) + "\n";
     }
   }
 
