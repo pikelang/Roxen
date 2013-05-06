@@ -288,6 +288,36 @@ int assert_first_parent(string head, string commit)
   return sizeof(commits);
 }
 
+//! Bring the specified up to date with respect to the remote "origin".
+void git_update(string branch)
+{
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+  if (!git_try("fetch", "origin", branch)) return;
+
+  array(string) a =
+    map(git("rev-list", "--first-parent", "--parents",
+	"refs/heads/" + branch + "..refs/remotes/origin/" + branch)/"\n" -
+	({""}),
+	lambda(string line) {
+	  array(string) a = line/" ";
+	  if (sizeof(a)) return a[1];
+	});;
+  if(!sizeof(a)) return; // Up to date.
+  string head =
+    git_try("rev-list", "--max-count=1", "refs/heads/" + branch);
+  if (head) {
+    head -= "\n";
+    if (a[-1] != head) {
+      werror("Branch %s has diverged from upstream.\n", branch);
+      exit(1);
+    }
+  }
+  // Fast-forward.
+  git("branch", "--track", "-f", branch, "refs/remotes/origin/" + branch);
+}
+
 //! Allocate a new patchid.
 string new_patchid()
 {
@@ -375,6 +405,10 @@ int init(mapping(string:string|int|array(string)) options)
   }
 
   patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  // Bring the rxnpatch branches up to date.
+  git_update("refs/heads/rxnpatch/rxnpatch");
+  git_update(patch_branch);
 
   if (!(patch_sha1 = git_try("rev-list", "--max-count=1", patch_branch))) {
     return 0;
