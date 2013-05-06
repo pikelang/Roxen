@@ -14,8 +14,9 @@ constant specific_options = ([
   "delete": ({}),
   "help": ({}),
   "init": ({
-    ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+
+    ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
   }),
   "list": ({}),
   "make": ({
@@ -23,6 +24,10 @@ constant specific_options = ([
   }),
   "new": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+
+    ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
+    ({ "flags", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
+    ({ "originator", Getopt.HAS_ARG, ({ "-O", "--originator" }) }),
     ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
   }),
   "status": ({}),
@@ -162,9 +167,15 @@ int main(int argc, array(string) argv)
   foreach(Getopt.find_all_options(argv, specific_options[argv[0]], 1),
 	  array(string) opt) {
     switch(opt[0]) {
+    case "flags":
+    case "depends":
+      // Multiple OK.
+      options[opt[0]] += ({ opt[1] });
+      break;
     case "force":
     case "message":
     default:
+      // Singleton option.
       if (options[opt[0]]) {
 	werror("Option %s specified multiple times.\n", opt[0]);
 	exit(1);
@@ -554,6 +565,26 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     exit(1);
   }
 
+  string user_email =
+    options->originator || git("config", "--get", "user.email") - "\n";
+
+  string header = sprintf("from: %s\n"
+			  "to: %s\n"
+			  "originator: %s\n"
+			  "depends: %s\n",
+			  patch_sha1,
+			  head_sha1,
+			  user_email,
+			  depends * "|");
+
+  if (options->depends) {
+    header += sprintf("%{depends: %s\n%}", options->depends);
+  }
+
+  if (options->flags) {
+    header += sprintf("%{flag: %s\n%}", options->flags);
+  }
+
   string log = git("log", "--no-merges", "--date-order", "--dense",
 		   "--pretty=raw", "-s", patch_sha1 + ".." + head_sha1);
 
@@ -561,28 +592,19 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
   if (options->message) {
     description = options->message;
   } else {
+    // FIXME: Improve formatting.
     foreach((log + "\n")/"\n\n", string block) {
       if (!has_prefix(block, "    ")) continue;
       description += block + "\n\n";
     }
   }
 
-  string user_email =
-    options->originator || git("config", "--get", "user.email") - "\n";
-
   string patchid = options->patchid || new_patchid();
   git_save_file("refs/heads/rxnpatch/rxnpatch",
 		"refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt",
-		sprintf("from: %s\n"
-			"to: %s\n"
-			"originator: %s\n"
-			"depends: %s\n"
-			"\n"
+		sprintf("%s\n"
 			"%s",
-			patch_sha1,
-			head_sha1,
-			user_email,
-			depends * "|",
+			header,
 			description),
 		sprintf("Created new patch %s on branch %s.\n"
 			"\n"
