@@ -349,6 +349,20 @@ int init(mapping(string:string|int|array(string)) options)
     branch = branch[sizeof("refs/heads/")..];
   }
 
+  if (has_prefix(branch, "rxnpatch/")) {
+    if (branch == "rxnpatch/rxnpatch") {
+      werror("The current branch is the master patch branch (%s).\n"
+	     "Please switch to a development branch.\n",
+	     branch);
+      exit(1);
+    }
+
+    werror("The current is a patch branch (%s).\n"
+	   "Please switch to a development branch (%s?).\n",
+	   branch, branch[sizeof("rxnpatch/")..]);
+    exit(1);
+  }
+
   patch_branch = "refs/heads/rxnpatch/" + branch;
 
   if (!(patch_sha1 = git_try("rev-list", "--max-count=1", patch_branch))) {
