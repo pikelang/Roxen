@@ -551,6 +551,9 @@ string new_patchid()
   } while (1);
 }
 
+//! Directory containing the repository information.
+string git_dir;
+
 //! Master branch to generate patches for.
 string branch;
 
@@ -591,6 +594,8 @@ array(string) load_deps(string sha1)
 //! Initialize common git information.
 int init(mapping(string:string|int|array(string)) options)
 {
+  git_dir = git("rev-parse", "--git-dir") - "\n";
+
   branch = git("symbolic-ref", "HEAD") - "\n";
 
   if (!sizeof(branch)) {
@@ -985,10 +990,27 @@ void make_patch(mapping(string:string|int|array(string)) options,
   }
   distignore_prefixes = Array.uniq(distignore_prefixes);
 
+  // Set up suitable diff options, so that we can expand Id-strings.
+  if (!git_try("config", "diff.expand-ident.textconv")) {
+    git("config", "diff.expand-ident.textconv",
+	"sed -e \"s/\\\\\\$"
+	"Id\\\\\\$/\\$"
+	"Id: `git hash-object \"$1\"` \\$/g\" < \"$1\"");
+    // git("config", "xfuncname", "");
+  }
+  string attrs = Stdio.read_bytes(git_dir + "/info/attributes");
+  if (!attrs || !has_value(attrs, "expand-ident")) {
+    attrs = "[attr]ident ident diff=expand-ident\n" + (attrs || "");
+    if (!Stdio.is_dir(git_dir + "/info/.")) {
+      mkdir(git_dir + "/info");
+    }
+    Stdio.write_file(git_dir + "/info/attributes", attrs);
+  }
+
   // Diff.
   string raw_diff = git("diff", "--src-prefix=" + path_prefix,
 			"--dst-prefix=" + path_prefix, "--no-ext-diff",
-			"--no-color", "--no-textconv", "--no-renames",
+			"--no-color", "--textconv", "--no-renames",
 			tail_sha1 + ".." + head_sha1);
   string diff = "";
   foreach(("\n" + raw_diff + "diff --git ")/"\ndiff --git ", string block) {
