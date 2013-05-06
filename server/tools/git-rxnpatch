@@ -330,7 +330,7 @@ void git_save_file(string branch, string path, string data, string message)
 		    ]));
   GitExport exporter = GitExport(export_fd);
 
-  exporter->feature("done");
+  // exporter->feature("done");
   exporter->commit(branch, UNDEFINED, UNDEFINED, committer, message,
 		   @(parent?({ parent }):({})));
   exporter->filemodify(GIT_MODE_FILE, path);
