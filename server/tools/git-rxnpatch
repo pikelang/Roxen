@@ -319,6 +319,9 @@ void git_save_file(string branch, string path, string data, string message)
   if (!git_try("rev-list", "--max-count=1", branch)) {
     // First commit on branch.
     parent = UNDEFINED;
+  } else if (git_cat_file(branch, path, 1) == data) {
+    // Already up to date.
+    return;
   }
 
   Stdio.File export_fd = Stdio.File();
