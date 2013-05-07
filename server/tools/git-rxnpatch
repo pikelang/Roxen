@@ -43,7 +43,7 @@ constant cmd_args = ([
   "init": " <start-point>",
   "list": "",
   "make": " [\xa0<patchid>\xa0]",
-  "new": "",
+  "new": " [\xa0<commit>\xa0]",
   "status": " [\xa0<commit>\xa0]",
 ]);
 
