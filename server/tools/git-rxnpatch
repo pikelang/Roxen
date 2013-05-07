@@ -844,72 +844,91 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
   string log = git("log", "--no-merges", "--date-order", "--dense",
 		   "--pretty=raw", "-s", patch_sha1 + ".." + head_sha1);
 
+  string subject = options->message;
+
   string description = "";
-  if (options->message) {
-    description = options->message;
-  } else {
-    // FIXME: Improve formatting.
+  if (count > 1) {
+    description = "Multiple fixes:\n";
+  }
+  catch { log = utf8_to_string(log); };
+  foreach((log + "\n")/"\n\n", string block) {
+    if (!has_prefix(block, "    ")) continue;
+    block = map(block/"\n",
+		lambda(string line) {
+		  if (has_prefix(line, "    ")) return line[4..];
+		  return line;
+		}) * "\n";
     if (count > 1) {
-      description = "Multiple fixes:\n";
+      block =
+	(map(block/"\n\n",
+	     lambda(string paragraph) {
+	       if (paragraph == "") return "";
+	       if (has_prefix(paragraph, "\t")) return paragraph;
+	       if (has_prefix(paragraph, " ") ||
+		   has_prefix(paragraph, "*")) {
+		 return sprintf("%4#s%-60#s", "   ", paragraph);
+	       }
+	       if (has_prefix(paragraph, "Rev: ")) {
+		 // Remove CVS revision markers.
+		 return "";
+	       }
+	       // Keep [bug ####] et al from getting linebreaks.
+	       paragraph =
+		 replace(paragraph,
+			 ({ "[bug ", "[Bug ",
+			    "[InfoKOM ", "[Infokom ",
+			    "[LysKOM ", "[Lyskom ", "[lyskom ",
+			    "[LysLysKOM ", "[Lyslyskom ",
+			    "[lyslyskom ",
+			 }),
+			 ({ "[bug\xa0", "[bug\xa0",
+			    "[InfoKOM\xa0", "[InfoKOM\xa0",
+			    "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+			    "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+			    "[LysLysKOM\xa0",
+			 }));
+	       paragraph = sprintf("%4#s%-60=s",
+				   " * ", replace(paragraph, "\n", " "));
+	       return replace(paragraph, "\xa0", " ");
+	     }) - ({ "" })) * "\n\n";
     }
-    catch { log = utf8_to_string(log); };
-    foreach((log + "\n")/"\n\n", string block) {
-      if (!has_prefix(block, "    ")) continue;
-      block = map(block/"\n",
-		  lambda(string line) {
-		    if (has_prefix(line, "    ")) return line[4..];
-		    return line;
-		  }) * "\n";
-      if (count > 1) {
-	block =
-	  (map(block/"\n\n",
-	       lambda(string paragraph) {
-		 if (paragraph == "") return "";
-		 if (has_prefix(paragraph, "\t")) return paragraph;
-		 if (has_prefix(paragraph, " ") ||
-		     has_prefix(paragraph, "*")) {
-		   return sprintf("%4#s%-60#s", "   ", paragraph);
-		 }
-		 if (has_prefix(paragraph, "Rev: ")) {
-		   // Remove CVS revision markers.
-		   return "";
-		 }
-		 // Keep [bug ####] et al from getting linebreaks.
-		 paragraph =
-		   replace(paragraph,
-			   ({ "[bug ", "[Bug ",
-			      "[InfoKOM ", "[Infokom ",
-			      "[LysKOM ", "[Lyskom ", "[lyskom ",
-			      "[LysLysKOM ", "[Lyslyskom ",
-			      "[lyslyskom ",
-			   }),
-			   ({ "[bug\xa0", "[bug\xa0",
-			      "[InfoKOM\xa0", "[InfoKOM\xa0",
-			      "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
-			      "[LysLysKOM\xa0", "[LysLysKOM\xa0",
-			      "[LysLysKOM\xa0",
-			   }));
-		 paragraph = sprintf("%4#s%-60=s",
-				     " * ", replace(paragraph, "\n", " "));
-		 return replace(paragraph, "\xa0", " ");
-	       }) - ({ "" })) * "\n\n";
-      }
-      description += "\n" + string_to_utf8(block) + "\n";
+    description += "\n" + string_to_utf8(block) + "\n";
+  }
+
+  if (!subject) {
+    subject = "";
+    if (release_tag_prefix) {
+      string display_name =
+	map(release_tag_prefix[sizeof("refs/tags/")..]/"/",
+	    String.capitalize) * " ";
+
+      // Convert to marketing names.
+      display_name = ([
+	"Print": "EP",
+	"Sitebuilder": "CMS",
+	"Feedimport": "FeedImport",
+      ])[display_name] || replace(display_name, "_", " ");
+
+      subject = display_name + " " + branch + ": ";
     }
+    subject += (description/"\n")[0];
   }
 
   string patchid = options->patchid || new_patchid();
   git_save_file("refs/heads/rxnpatch/rxnpatch",
 		"refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt",
-		sprintf("%s\n"
+		sprintf("subject: %s\n"
+			"%s\n"
 			"%s",
+			subject,
 			header,
 			description),
 		sprintf("Created new patch %s on branch %s.\n"
 			"\n"
+			"%s\n"
 			"From commit %s\n"
 			"to commit %s.\n",
-			patchid, branch, patch_sha1, head_sha1));
+			patchid, branch, subject, patch_sha1, head_sha1));
   git("tag", "-f", "rxnpatch/" + patchid, head_sha1);
 
   write("Created patchid %s (%d commits).\n", patchid, count);
@@ -970,6 +989,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
   string tail_sha1;
   string head_sha1;
   string originator;
+  string subject;
   if (header->from && (sizeof(header->from) == 1)) {
     tail_sha1 = header->from[0];
   } else {
@@ -984,6 +1004,11 @@ void make_patch(mapping(string:string|int|array(string)) options,
     originator = header->originator[0];
   } else {
     werror("Invalid header field %O.\n", "originator");
+  }
+  if (header->subject && (sizeof(header->subject) == 1)) {
+    subject = header->subject[0];
+  } else {
+    werror("Invalid header field %O.\n", "subject");
   }
 
   string tmpdir = "/var/tmp/rxnpatch-" + patchid;
@@ -1004,7 +1029,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
     "rxnpatch", "create",
     "--id=" + patchid,
     "--originator=" + originator,
-    "--name=" + (a[1]/"\n")[0],
+    "--name=" + (subject || (a[1]/"\n")[0]),
     "--description=" + tmpdir + "/description.txt",
     @map(header->depends || ({}),
 	 lambda(string dep) {
