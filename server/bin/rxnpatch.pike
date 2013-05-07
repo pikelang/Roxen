@@ -901,16 +901,16 @@ private void write_list(Patcher plib,
 	}
 
 	md += ({
-	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
 	  ({ "Description:"    , obj->metadata->description }),
 	  ({ "Originator:"     , obj->metadata->originator  }),
-	  ({ "Platform(s):"    , (obj->metadata->platform) ? 
+	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
+	  ({ "Platform(s):"    , sizeof(obj->metadata->platform || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->platform) :
 	                         "All platforms" }),
-	  ({ "Target version:" , (obj->metadata->version) ? 
+	  ({ "Target version:" , sizeof(obj->metadata->version || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->version) :
 	                         "All versions" }),
-	  ({ "Dependencies:"   , (obj->metadata->depends) ? 
+	  ({ "Dependencies:"   , sizeof(obj->metadata->depends || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->depends) :
 	                         "(none)"
 	  }),
