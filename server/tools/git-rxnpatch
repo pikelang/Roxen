@@ -526,25 +526,33 @@ void git_update(string branch)
   }
   if (!git_try("fetch", "origin", branch)) return;
 
-  array(string) a =
-    map(git("rev-list", "--first-parent", "--parents",
-	"refs/heads/" + branch + "..refs/remotes/origin/" + branch)/"\n" -
-	({""}),
-	lambda(string line) {
-	  array(string) a = line/" ";
-	  if (sizeof(a)) return a[1];
-	});;
-  if(!sizeof(a)) return; // Up to date.
   string head =
     git_try("rev-list", "--max-count=1", "refs/heads/" + branch);
   if (head) {
-    head -= "\n";
-    if (a[-1] != head) {
-      werror("Branch %s has diverged from upstream.\n", branch);
-      exit(1);
+    array(string) a =
+      map((git("rev-list", "--first-parent", "--parents",
+	       "refs/heads/" + branch +
+	       "..refs/remotes/origin/" + branch) || "")/"\n" -
+	  ({""}),
+	  lambda(string line) {
+	    array(string) a = line/" ";
+	    if (sizeof(a)) return a[1];
+	  });;
+    if(!sizeof(a)) return; // Up to date.
+    if (head) {
+      head -= "\n";
+      if (a[-1] != head) {
+	werror("Branch %s has diverged from upstream.\n", branch);
+	exit(1);
+      }
     }
+  } else if (!git_try("rev-list", "--max-count=1",
+		      "refs/remotes/origin/" + branch)) {
+    // Not existing at origin either.
+    return;
   }
   // Fast-forward.
+  werror("Fast-forwarding branch %s.\n", branch);
   git("branch", "--track", "-f", branch, "refs/remotes/origin/" + branch);
 }
 
