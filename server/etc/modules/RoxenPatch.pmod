@@ -186,8 +186,13 @@ class Patcher
 
   private Regexp patchid_regexp = Regexp(
     "((19|20)[0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T"
-    "([01][0-9]|2[0-3])[0-5][0-9])");
+    "([01][0-9]|2[0-3])([0-5][0-9])*)");
   //! The format regexp for patch IDs.
+  //! ie currently on the format @expr{YYYY-MM-DDThhmmss@}.
+  //!
+  //! @note
+  //!   Old patchids were on the format @expr{YYYY-MM-DDThhmm@}.
+  //!   Matching and extraction of these MUST still be supported.
 
 
   void create(function      message_callback,
@@ -2061,9 +2066,20 @@ class Patcher
   //! Uses the raw path as destination and then tries to find the source file
   //! by checking each directory from the given path up to root.
   //!
+  //! If the source path is known, it may be specified explicitly
+  //! by prefixing the destination path with the source path and
+  //! a colon: @expr{"path/to/source:destination/path"@}.
+  //!
   //! If the raw path contains a glob then it will try to find all source files
   //! matching that glob.
   {
+    array(string) a = raw_path/":";
+    if ((sizeof(a) > 1) && Stdio.exist(a[0])) {
+      return ({ ([ "source" : a[0],
+		   "destination" : a[1..] * ":",
+		]) });
+    }
+
     array(mapping(string:string)) res;
 
     // Check if there are globs in the raw_path. In that case we can assume that
@@ -2403,13 +2419,16 @@ class Patcher
   }
 
   string create_id(void|object time)
-  //! Create a string on the format YYYY-MM-DDThhmm based on the current time.
+  //! Create a string on the format @expr{YYYY-MM-DDThhmmss@}
+  //! based on the current time.
+  //!
+  //! @note
+  //!   Old patchids were on the format @expr{YYYY-MM-DDThhmm@}.
   {
     if (!time)
       time = Calendar.ISO->now();
 
-    sscanf(time->format_mtime(), "%s %s:%s", string id1, string id2, string id3);
-    return sprintf("%sT%s%s", id1, id2, id3);
+    return time->format_ymd() + "T" + time->format_tod_short();
   }
 
 

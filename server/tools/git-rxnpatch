@@ -1,0 +1,1274 @@
+#!/bin/env pike
+// -*- Pike -*-
+//
+// Tool to create Roxen patches from git repositories.
+//
+// 2013-04-25 Henrik Grubbström
+
+constant common_options = ({
+  ({ "help", Getopt.NO_ARG, ({ "-h", "--help" }) }),
+  ({ "version", Getopt.NO_ARG, ({ "-v", "--version" }) }),
+});
+
+constant specific_options = ([
+  "delete": ({}),
+  "help": ({}),
+  "init": ({
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+
+    ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
+  }),
+  "list": ({}),
+  "make": ({
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+  }),
+  "new": ({
+    ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+
+    ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
+    ({ "flags", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
+    ({ "originator", Getopt.HAS_ARG, ({ "-O", "--originator" }) }),
+    ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
+  }),
+  "status": ({}),
+]);
+
+constant cmd_args = ([
+  0:" [\xa0<args>\xa0]",
+  "delete": "",
+  "help": " [\xa0<command>\xa0]",
+  "init": " <start-point>",
+  "list": "",
+  "make": " [\xa0<patchid>\xa0]",
+  "new": " [\xa0<commit>\xa0]",
+  "status": " [\xa0<commit>\xa0]",
+]);
+
+constant cmd_doc = ([
+  0: "Create and manage RXN patches in git.\n",
+  "delete": "Delete the specified patch(es).\n",
+  "help": "Display help about a command.\n",
+  "init": "Initialize rxnpatch for the current branch.\n",
+  "list": "List existing RXN patches.\n",
+  "make": "Make the RXP file for an RXN patch.\n",
+  "new": "Create a new RXN patch.\n",
+  "status": "Display patch status for the current git branch.\n",
+]);
+
+string git_binary = getenv("_") || "git";
+
+string committer;
+
+#if constant(Git.Export)
+// Pike 7.9 and later.
+constant GIT_MODE_FILE = Git.MODE_FILE;
+constant GIT_MODE_EXE = Git.MODE_EXE;
+constant GIT_MODE_SYMLINK = Git.MODE_SYMLINK;
+constant GIT_MODE_GITLINK = Git.MODE_GITLINK;
+constant GIT_MODE_DIR = Git.MODE_DIR;
+constant GIT_NULL_SHA1 = Git.NULL_SHA1;
+constant GitExport = Git.Export;
+#else
+
+constant GIT_MODE_FILE = 0100644;
+constant GIT_MODE_EXE = 0100755;
+constant GIT_MODE_SYMLINK = 0120000;
+constant GIT_MODE_GITLINK = 0160000;
+constant GIT_MODE_DIR = 040000;
+constant GIT_NULL_SHA1 = "0000000000000000000000000000000000000000";
+
+//! This is a stripped Git.Export containing just the stuff that we need.
+//!
+//! @note
+//!   The APIs that are used MUST be compatible with the corresponding
+//!   in Git.Export.
+class GitExport {
+  protected Stdio.File export_fd;
+
+  protected mapping(string:string|int) requested_features = ([]);
+
+  protected void create(Stdio.File fd)
+  {
+    export_fd = fd || Stdio.stdout;
+  }
+
+  void command(sprintf_format cmd, sprintf_args ... args)
+  {
+    export_fd->write(cmd, @args);
+  }
+
+  int done()
+  {
+    if (requested_features["done"]) {
+      command("done\n");
+    }
+    if (export_fd) {
+      export_fd->close();
+      export_fd = UNDEFINED;
+    }
+    return 0;
+  }
+
+  void reset(string ref, string|void committish)
+  {
+    command("reset %s\n", ref);
+    if (committish) {
+      command("from %s\n", committish);
+    }
+  }
+
+  void mark(string marker)
+  {
+    command("mark %s\n", marker);
+  }
+
+  void data(string data)
+  {
+    command("data %d\n"
+	    "%s\n", sizeof(data), data);
+  }
+
+  void blob(string blob, string|void marker)
+  {
+    command("blob\n");
+    if (marker) mark(marker);
+    data(blob);
+  }
+
+  void checkpoint()
+  {
+    command("checkpoint\n");
+  }
+
+  void progress(string message)
+  {
+    foreach(message/"\n", string line) {
+      command("progress %s\n", line);
+    }
+  }
+
+  void feature(string feature, string|void arg)
+  {
+    if (arg) {
+      command("feature %s=%s\n", feature, arg);
+    } else {
+      command("feature %s\n", feature);
+    }
+    requested_features[feature] = arg || 1;
+  }
+
+  void option(string option)
+  {
+    command("option %s\n", option);
+  }
+
+  void tag(string name, string committish, string tagger_info, string message)
+  {
+    command("tag %s\n"
+	    "from %s\n"
+	    "tagger %s\n",
+	    name, committish, tagger_info);
+    data(message);
+  }
+
+  void commit(string ref, string|void commit_marker,
+	      string|void author_info, string committer_info,
+	      string message, string|void ... parents)
+  {
+    command("commit %s\n", ref);
+    if (commit_marker) {
+      mark(commit_marker);
+    }
+    if (author_info) {
+      command("author %s\n", author_info);
+    }
+    command("committer %s\n", committer_info);
+    data(message);
+    if (sizeof(parents)) {
+      command("from %s\n"
+	      "%{merge %s\n%}",
+	      parents[0], parents[1..]);
+    }
+  }
+
+  void filedeleteall()
+  {
+    command("deleteall\n");
+  }
+
+  void filemodify(int mode, string path, string|void dataref)
+  {
+    path = combine_path_unix("/", path)[1..];
+    if (path == "") {
+      error("Invalid path.\n");
+    }
+    command("M %06o %s %q\n",
+	    mode, dataref || "inline", path);
+  }
+
+  void filedelete(string path)
+  {
+    path = combine_path_unix("/", path)[1..];
+    if (path == "") {
+      error("Invalid path.\n");
+    }
+    command("D %q\n", path);
+  }
+
+  void filecopy(string from, string to)
+  {
+    from = combine_path_unix("/", from)[1..];
+    to = combine_path_unix("/", to)[1..];
+    if ((from == "") || (to == "")) {
+      error("Invalid path.\n");
+    }
+    command("C %q %q\n", from, to);
+  }
+
+  void filerename(string from, string to)
+  {
+    from = combine_path_unix("/", from)[1..];
+    to = combine_path_unix("/", to)[1..];
+    if ((from == "") || (to == "")) {
+      error("Invalid path.\n");
+    }
+    command("C %q %q\n", from, to);
+  }
+
+  void notemodify(string commit, string|void dataref)
+  {
+    if (!requested_features["notes"]) {
+      error("The notes feature has not been requested.\n");
+    }
+    command("N %s %s\n", dataref || "inline", commit);
+  }
+
+  void export(string file_name, string|void git_name)
+  {
+    Stdio.Stat st = file_stat(file_name);
+    if (!st) return;
+    int mode = st->mode;
+    if (mode & GIT_MODE_DIR) {
+      mode = GIT_MODE_DIR;
+    } else if (mode & 0111) {
+      mode = GIT_MODE_EXE;
+    } else if (mode & 0666) {
+      mode = GIT_MODE_FILE;
+    } else {
+      error("Unsupported filesystem mode for %O: %03o\n", file_name, mode);
+    }
+    if (mode == GIT_MODE_DIR) {
+      foreach(get_dir(file_name), string fn) {
+	export(combine_path(file_name, fn),
+	       combine_path(git_name || file_name, fn));
+      }
+    } else {
+      filemodify(mode, git_name);
+      data(Stdio.read_bytes(file_name));
+    }
+  }
+}
+
+#endif
+
+string git(string command, string ... args)
+{
+  array(string) cmd = ({ git_binary, command, @args });
+  mapping(string:string|int) res = Process.run(cmd);
+  if (res->exitcode) {
+    werror("Git command '%s' failed with code %d:\n"
+	   "%s", cmd*"' '", res->exitcode, res->stderr||"");
+    exit(1);
+  }
+  return res->stdout||"";
+}
+
+string git_try(string command, string ... args)
+{
+  array(string) cmd = ({ git_binary, command, @args });
+  mapping(string:string|int) res = Process.run(cmd);
+  if (res->exitcode) return UNDEFINED;
+  return res->stdout||"";
+}
+
+string git_cat_file(string treeish, string path, int|void try)
+{
+  string blob_sha1 = git_try("ls-tree", "-z", "--full-tree", treeish, path);
+  if (blob_sha1) {
+    blob_sha1 = (((blob_sha1/"\0")[0]/"\t")[0]/" ")[-1];
+  }
+  string res = blob_sha1 && git_try("cat-file", "blob", blob_sha1);
+  if (res || try) return res;
+  werror("File %O not found in tree %O.\n", path, treeish);
+  exit(1);
+}
+
+void git_save_file(string branch, string path, string data, string message)
+{
+  if (!committer) {
+    string user_name = git("config", "--get", "user.name") - "\n";
+    string user_email = git("config", "--get", "user.email") - "\n";
+
+    committer = sprintf("%s <%s> now", user_name, user_email);
+  }
+
+  if (!has_prefix(branch, "refs/heads/")) branch = "refs/heads/" + branch;
+
+  string parent = branch + "^0";
+
+  if (!git_try("rev-list", "--max-count=1", branch)) {
+    // First commit on branch.
+    parent = UNDEFINED;
+  } else if (git_cat_file(branch, path, 1) == data) {
+    // Already up to date.
+    return;
+  }
+
+  Stdio.File export_fd = Stdio.File();
+  Process.Process fast_importer =
+    Process.Process(({ git_binary, "fast-import", "--date-format=now" }),
+		    ([
+		      "stdin":export_fd->pipe(),
+		      "stderr":Stdio.File("/dev/null"),
+		    ]));
+  GitExport exporter = GitExport(export_fd);
+
+  // exporter->feature("done");
+  exporter->commit(branch, UNDEFINED, UNDEFINED, committer, message,
+		   @(parent?({ parent }):({})));
+  exporter->filemodify(GIT_MODE_FILE, path);
+  exporter->data(data);
+
+  int code;
+  if ((code = (exporter->done() || fast_importer->wait()))) {
+    werror("Failed to save file %O on branch %O (exit code %d).\n",
+	   path, branch, code);
+    exit(1);
+  }
+  git_try("push", "origin", branch);
+}
+
+int main(int argc, array(string) argv)
+{
+  int help = 0;
+
+  foreach(Getopt.find_all_options(argv, common_options, 1),
+	  array(string) opt) {
+    switch(opt[0]) {
+    case "help":
+      help = 1;
+      break;
+    case "version":
+      display_version();
+      exit(0);
+    }
+  }
+
+  argv = Getopt.get_args(argv, 1);
+  if (sizeof(argv) < 2) {
+    display_usage();
+    exit(0);
+  }
+  argv = argv[1..];
+  if (!specific_options[argv[0]]) {
+    werror("Unknown command: %O.\n\n", argv[0]);
+    display_usage();
+    exit(1);
+  } else if (help) {
+    display_usage(argv[0]);
+    exit(0);
+  }
+
+  mapping(string:int|string|array(string)) options = ([]);
+  foreach(Getopt.find_all_options(argv, specific_options[argv[0]], 1),
+	  array(string) opt) {
+    switch(opt[0]) {
+    case "depends":
+    case "flags":
+      // Multiple OK.
+      options[opt[0]] += ({ opt[1] });
+      break;
+    case "force":
+    case "message":
+    default:
+      // Singleton option.
+      if (options[opt[0]]) {
+	werror("Option %s specified multiple times.\n", opt[0]);
+	exit(1);
+      }
+      options[opt[0]] = opt[1];
+      break;
+    }
+  }
+
+  argv = Getopt.get_args(argv, 1);
+  switch(argv[0]) {
+  case "help":
+    if (sizeof(argv) < 2) {
+      display_usage();
+      exit(0);
+    }
+    if (!specific_options[argv[1]]) {
+      werror("Unknown command: %O.\n\n", argv[1]);
+      display_usage();
+      exit(1);
+    }
+    display_usage(argv[1]);
+    exit(0);
+  case "delete":
+    werror("Not implemented!\n");
+    exit(1);
+  case "init":
+    init_patch_branch(options, argv);
+    break;
+  case "list":
+    werror("Not implemented!\n");
+    exit(1);
+  case "make":
+    make_patch(options, argv);
+    break;
+  case "new":
+    create_new_patch(options, argv);
+    break;
+  case "status":
+    display_status(options, argv);
+    break;
+  }
+}
+
+void display_usage(string|void cmd)
+{
+  string prefix = "  git rxnpatch";
+  array(array(string|int|array(string))) options = common_options;
+  if (cmd) {
+    prefix += " [\xa0<opts>\xa0] " + cmd;
+    options = specific_options[cmd];
+  }
+
+  Stdio.stdout.write("Usage:\n");
+  string doc = "";
+  foreach(options, array(string|int|array(string)) opt) {
+    doc += " [\xa0" + (opt[2]*"\xa0|\xa0");
+    if (opt[1] == Getopt.HAS_ARG) {
+      doc += " <" + opt[0] + ">";
+    }
+    doc += "\xa0]";
+  }
+  if (!cmd) {
+    doc += " [\xa0" + (sort(indices(specific_options)) * "\xa0|\xa0") + "\xa0]";
+  }
+  doc += cmd_args[cmd];
+  doc = sprintf("%#*s%-=*s\n",
+		sizeof(prefix), prefix,
+		70 - sizeof(prefix), doc)[1..];
+  Stdio.stdout.write(replace(doc, "\xa0", " "));
+
+  doc = cmd_doc[cmd];
+  if (sizeof(doc)) {
+    Stdio.stdout.write("\n" + doc);
+  }
+  return;
+}
+
+void display_version()
+{
+  Stdio.stdout.write("git-rxnpatch 1.0\n");
+}
+
+//! @returns
+//!   Mapping from tag reference to commit sha1.
+mapping(string:string) tags(string|void commit)
+{
+  return (mapping)map(git("show-ref", "--tags")/"\n" - ({""}),
+		      lambda(string line) {
+			array(string) a = line/" ";
+			return ({ a[1..]*" ", a[0] });
+		      });
+}
+
+//! Assert that @[commit] is on the first-parent path from @[head].
+//!
+//! @returns
+//!   Returns the number of commits on the path.
+int assert_first_parent(string head, string commit)
+{
+  string sha1 = git("rev-list", "--max-count=1", commit) - "\n";
+  array(string) commits =
+    map(git("rev-list", "--first-parent", "--parents",
+	    sha1 + ".." + head)/"\n" - ({""}),
+	lambda(string line) {
+	  array(string) a = line/" ";
+	  if (sizeof(a)) return a[1];
+	});
+  if (!sizeof(commits)) {
+    string head_sha1 = git("rev-list", "--max-count=1", commit) - "\n";
+    if (sha1 == head_sha1) {
+      // They are the same commit.
+      return 0;
+    }
+  }
+  if (!sizeof(commits) || (commits[-1] != sha1)) {
+    werror("Commit %s is not on the first-parent path from %s.\n",
+	   commit, head);
+    exit(1);
+  }
+  return sizeof(commits);
+}
+
+//! Bring the specified up to date with respect to the remote "origin".
+void git_update(string branch)
+{
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+  if (!git_try("fetch", "origin", branch)) return;
+
+  array(string) a =
+    map(git("rev-list", "--first-parent", "--parents",
+	"refs/heads/" + branch + "..refs/remotes/origin/" + branch)/"\n" -
+	({""}),
+	lambda(string line) {
+	  array(string) a = line/" ";
+	  if (sizeof(a)) return a[1];
+	});;
+  if(!sizeof(a)) return; // Up to date.
+  string head =
+    git_try("rev-list", "--max-count=1", "refs/heads/" + branch);
+  if (head) {
+    head -= "\n";
+    if (a[-1] != head) {
+      werror("Branch %s has diverged from upstream.\n", branch);
+      exit(1);
+    }
+  }
+  // Fast-forward.
+  git("branch", "--track", "-f", branch, "refs/remotes/origin/" + branch);
+}
+
+//! Allocate a new patchid.
+string new_patchid()
+{
+  do {
+    int t = time();
+    mapping(string:int) lt = localtime(t);
+    string patchid =
+      sprintf("%04d-%02d-%02dT%02d%02d%02d",
+	      lt->year + 1900, lt->mon + 1, lt->mday,
+	      lt->hour, lt->min, lt->sec);
+    if (git_try("git-show-ref", "refs/tags/rxnpatch/" + patchid)) {
+      werror("Patchid %s already exists!\n"
+	     "Waiting a second for the next...\n",
+	     patchid);
+      sleep(1);
+      continue;
+    }
+    return patchid;
+  } while (1);
+}
+
+//! Directory containing the repository information.
+string git_dir;
+
+//! Master branch to generate patches for.
+string branch;
+
+//! Branch indicating the current patch level.
+string patch_branch;
+
+//! SHA1 for the commit corresponding to @[patch_branch].
+string patch_sha1;
+
+//! Dependencies corresponding to the current patch head.
+array(string) depends = ({});
+
+//! Prefix for release tags on @[branch].
+string release_tag_prefix;
+
+//! Prefix where the repository is extracted at the user.
+string path_prefix;
+
+//! Repository subtree to extract.
+string subtree_prefix;
+
+//! Load dependencies corresponsing to @[sha1].
+array(string) load_deps(string sha1)
+{
+  array(string) ret = ({});
+  foreach(git("show-ref", "--tags", "--dereference", "--")/"\n", string line) {
+    array(string) a = line/" ";
+    if (a[0] != sha1) continue;
+    string dep = a[1];
+    if (has_prefix(dep, "refs/tags/rxnpatch/")) {
+      dep = dep[sizeof("refs/tags/rxnpatch/")..];
+    } else if (release_tag_prefix && has_prefix(dep, release_tag_prefix)) {
+      dep = replace(dep[sizeof("refs/tags/")..],
+		    ({ "-", "_" }), ({ "/", "/" }));
+    } else continue;
+    ret += ({ dep });
+  }
+  return ret;
+}
+
+//! Initialize common git information.
+int init(mapping(string:string|int|array(string)) options)
+{
+  git_dir = git("rev-parse", "--git-dir") - "\n";
+
+  branch = git("symbolic-ref", "HEAD") - "\n";
+
+  if (!sizeof(branch)) {
+    werror("Detached HEAD!\n");
+    exit(1);
+  }
+
+  if (has_prefix(branch, "refs/heads/")) {
+    branch = branch[sizeof("refs/heads/")..];
+  }
+
+  if (has_prefix(branch, "rxnpatch/")) {
+    if (branch == "rxnpatch/rxnpatch") {
+      werror("The current branch is the master patch branch (%s).\n"
+	     "Please switch to a development branch.\n",
+	     branch);
+      exit(1);
+    }
+
+    werror("The current is a patch branch (%s).\n"
+	   "Please switch to a development branch (%s?).\n",
+	   branch, branch[sizeof("rxnpatch/")..]);
+    exit(1);
+  }
+
+  patch_branch = "refs/heads/rxnpatch/" + branch;
+
+  // Bring the rxnpatch branches up to date.
+  werror("Syncing...\n");
+  git_update("refs/heads/rxnpatch/rxnpatch");
+  git_update(patch_branch);
+
+  if (!(patch_sha1 = git_try("rev-list", "--max-count=1", patch_branch))) {
+    return 0;
+  }
+  patch_sha1 -= "\n";
+
+  release_tag_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
+  if (release_tag_prefix) release_tag_prefix -= "\n";
+
+  path_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/path_prefix.txt", 1) || "";
+  path_prefix -= "\n";
+
+  if (options->path_prefix && (options->path_prefix != path_prefix)) {
+    path_prefix = options->path_prefix;
+    write("Updating default path prefix for branch %s to %s.\n",
+	  branch, path_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/path_prefix.txt",
+		  path_prefix + "\n",
+		  "New path prefix: " + path_prefix + ".\n");
+  }
+
+  subtree_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/subtree_prefix.txt", 1) || "";
+  subtree_prefix -= "\n";
+
+  if (options->subtree_prefix && (options->subtree_prefix != subtree_prefix)) {
+    if (!has_suffix(options->subtree_prefix, "/") &&
+	(options->subtree_prefix != "")) {
+      // Normalize the prefix to contain the directory separator.
+      options->subtree_prefix += "/";
+    }
+    if (subtree_prefix != options->subtree_prefix) {
+      // They still differ.
+      subtree_prefix = options->subtree_prefix;
+      write("Updating default repository subtree prefix "
+	    "for branch %s to %s.\n",
+	    branch, subtree_prefix);
+      git_save_file("refs/heads/rxnpatch/rxnpatch",
+		    "refs/heads/" + branch + "/subtree_prefix.txt",
+		    subtree_prefix + "\n",
+		    "New repository subtree prefix: " +
+		    subtree_prefix + ".\n");
+    }
+  }
+
+  depends = load_deps(patch_sha1);
+
+  if (!sizeof(depends)) {
+    werror("No dependency tags at the current patch branch HEAD!\n");
+    exit(1);
+  }
+
+  return 1;
+}
+
+void init_patch_branch(mapping(string:string|int|array(string)) options,
+		    array(string) argv)
+{
+  if (init(options)) {
+    werror("Patch branch %s already exists!\n", patch_branch);
+    if (!options->force) exit(1);
+  }
+
+  if (sizeof(argv) < 2) {
+    werror("Missing argument: start-point.\n");
+    exit(1);
+  }
+
+  string current_patch = argv[1];
+
+  assert_first_parent(branch, current_patch);
+
+  string current_tag;
+
+  foreach (git("show-ref", "--tags", current_patch)/"\n" - ({""}),
+	   string line) {
+    array(string) a = line/" ";
+    string tag = a[1..]*" ";
+    current_tag = tag;
+    break;
+  }
+  if (!current_tag) {
+    werror("%s is not a valid tag.\n", argv[1]);
+    exit(1);
+  }
+
+  string rxnpatch_branch = "refs/heads/rxnpatch/rxnpatch";
+  // Check whether the refs/heads/rxnpatch/rxnpatch branch exists.
+  if (!git_try("rev-list", "--max-count=1", "--heads", rxnpatch_branch)) {
+    // Not available locally, what about remotely?
+    string other = git_try("show-ref", "--max-count=1", "rxnpatch/rxnpatch");
+    string remote;
+    foreach((other || "")/"\n" - ({""}), string line) {
+      array(string) a = line/" ";
+      string tag = a[1..]*" ";
+      if (has_prefix(tag, "refs/remotes/")) {
+	remote = tag;
+	// FIXME: Look up the tracking remote for the current branch?
+	if (tag == "refs/remotes/origin/rxnpatch/rxnpatch") {
+	  break;
+	}
+      }
+    }
+    if (remote) {
+      // Clone the existing remote branch.
+      git("branch", "--track", "rxnpatch/rxnpatch", remote);
+    }
+  }
+
+  if (current_tag && !has_prefix(current_tag, "refs/tags/rxnpatch/")) {
+    // Not a rxnpatch tag.
+    // We've probably got a release tag.
+    array(string) a = replace(current_tag, "-", "_")/"_";
+    if (sizeof(a) > 1) {
+      string tag_prefix = a[0] + "\n";
+
+      string prev_prefix =
+	git_cat_file(rxnpatch_branch,
+		     "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
+      if (tag_prefix != prev_prefix) {
+	write("Updating release tag prefix for branch %s to %s...\n",
+	      branch, tag_prefix - "\n");
+	git_save_file(rxnpatch_branch,
+		      "refs/heads/" + branch + "/release_tag_prefix.txt",
+		      tag_prefix,
+		      sprintf("Updated release tag prefix for branch %s to %s.\n",
+			      branch, tag_prefix - "\n"));
+      }
+    } else {
+      werror("Reference %s does not look like a release tag.\n",
+	     current_patch);
+      exit(1);
+    }
+  }
+
+  if (options->path_prefix) {
+    write("Setting default path prefix for branch %s to %s.\n",
+	  branch, options->path_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/path_prefix.txt",
+		  options->path_prefix + "\n",
+		  "New path prefix: " + options->path_prefix + ".\n");
+  }
+
+  git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
+  write("Created patch branch %s.\n", patch_branch);
+}
+
+void display_status(mapping(string:string|int|array(string)) options,
+		    array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(0);
+  }
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  // Assert that the commits are in order on the first-parent path.
+
+  assert_first_parent(branch, head);
+
+  int pending = assert_first_parent(head, patch_branch);
+
+  write("Branch: %s\n"
+	"Patch-level: %s\n",
+	branch, depends * " | ");
+  if (release_tag_prefix) {
+    write("Release tag prefix: %s\n", release_tag_prefix);
+  }
+  if (sizeof(subtree_prefix)) {
+    write("Subtree path prefix: %s\n", subtree_prefix);
+  }
+  if (sizeof(path_prefix)) {
+    write("Path prefix: %s\n", path_prefix);
+  }
+  if (pending) {
+    write("Pending commits: %d\n", pending);
+  } else {
+    write("Up to date.\n");
+  }
+}
+
+void create_new_patch(mapping(string:string|int|array(string)) options,
+		      array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  werror("Release tag prefix: %O\n", release_tag_prefix);
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  string head_sha1 = git("rev-list", "--max-count=1", head) - "\n";
+
+  assert_first_parent(branch, head_sha1);
+
+  int count = assert_first_parent(head, patch_sha1);
+
+  if (!count) {
+    werror("Fully patched.\n");
+    exit(1);
+  }
+
+  string user_email =
+    options->originator || git("config", "--get", "user.email") - "\n";
+
+  string header = sprintf("from: %s\n"
+			  "to: %s\n"
+			  "originator: %s\n"
+			  "depends: %s\n",
+			  patch_sha1,
+			  head_sha1,
+			  user_email,
+			  depends * "|");
+
+  if (options->depends) {
+    header += sprintf("%{depends: %s\n%}", options->depends);
+  }
+
+  if (options->flags) {
+    header += sprintf("%{flag: %s\n%}", options->flags);
+  }
+
+  string log = git("log", "--no-merges", "--date-order", "--dense",
+		   "--pretty=raw", "-s", patch_sha1 + ".." + head_sha1);
+
+  string subject = options->message;
+
+  string description = "";
+  if (count > 1) {
+    description = "Multiple fixes:\n";
+  }
+  catch { log = utf8_to_string(log); };
+  foreach((log + "\n")/"\n\n", string block) {
+    if (!has_prefix(block, "    ")) continue;
+    block = map(block/"\n",
+		lambda(string line) {
+		  if (has_prefix(line, "    ")) return line[4..];
+		  return line;
+		}) * "\n";
+    if (count > 1) {
+      block =
+	(map(block/"\n\n",
+	     lambda(string paragraph) {
+	       if (paragraph == "") return "";
+	       if (has_prefix(paragraph, "\t")) return paragraph;
+	       if (has_prefix(paragraph, " ") ||
+		   has_prefix(paragraph, "*")) {
+		 return sprintf("%4#s%-60#s", "   ", paragraph);
+	       }
+	       if (has_prefix(paragraph, "Rev: ")) {
+		 // Remove CVS revision markers.
+		 return "";
+	       }
+	       // Keep [bug ####] et al from getting linebreaks.
+	       paragraph =
+		 replace(paragraph,
+			 ({ "[bug ", "[Bug ",
+			    "[InfoKOM ", "[Infokom ",
+			    "[LysKOM ", "[Lyskom ", "[lyskom ",
+			    "[LysLysKOM ", "[Lyslyskom ",
+			    "[lyslyskom ",
+			 }),
+			 ({ "[bug\xa0", "[bug\xa0",
+			    "[InfoKOM\xa0", "[InfoKOM\xa0",
+			    "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+			    "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+			    "[LysLysKOM\xa0",
+			 }));
+	       paragraph = sprintf("%4#s%-60=s",
+				   " * ", replace(paragraph, "\n", " "));
+	       return replace(paragraph, "\xa0", " ");
+	     }) - ({ "" })) * "\n\n";
+    }
+    description += "\n" + string_to_utf8(block) + "\n";
+  }
+
+  if (!subject) {
+    subject = "";
+    if (release_tag_prefix) {
+      string display_name =
+	map(release_tag_prefix[sizeof("refs/tags/")..]/"/",
+	    String.capitalize) * " ";
+
+      // Convert to marketing names.
+      display_name = ([
+	"Print": "EP",
+	"Sitebuilder": "CMS",
+	"Feedimport": "FeedImport",
+      ])[display_name] || replace(display_name, "_", " ");
+
+      subject = display_name + " " + branch + ": ";
+    }
+    subject += (description/"\n")[0];
+  }
+
+  string patchid = options->patchid || new_patchid();
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt",
+		sprintf("subject: %s\n"
+			"%s\n"
+			"%s",
+			subject,
+			header,
+			description),
+		sprintf("Created new patch %s on branch %s.\n"
+			"\n"
+			"%s\n"
+			"From commit %s\n"
+			"to commit %s.\n",
+			patchid, branch, subject, patch_sha1, head_sha1));
+  git("tag", "-f", "rxnpatch/" + patchid, head_sha1);
+  git_try("push", "origin", "refs/tags/rxnpatch/" + patchid);
+
+  write("Created patchid %s (%d commits).\n", patchid, count);
+
+  git("branch", "-f", patch_branch[sizeof("refs/heads/")..], head_sha1);
+  git_try("push", "origin", patch_branch);
+}
+
+void make_patch(mapping(string:string|int|array(string)) options,
+		array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  string patchid;
+  if (sizeof(argv) < 2) {
+    foreach(depends, string dep) {
+      if (!has_value(dep, "/")) {
+	patchid = dep;
+	break;
+      }
+    }
+    if (!patchid) {
+      werror("Missing argument: patchid.\n");
+      exit(1);
+    }
+  } else {
+    patchid = argv[1];
+  }
+
+  write("Patch: %s\n", patchid);
+
+  string metadata =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt");
+
+  array(string) a = metadata/"\n\n";
+  if (sizeof(a) < 2) {
+    werror("Missing patch description for patch %s.\n", patchid);
+    exit(1);
+  }
+
+  mapping(string:array(string)) header = ([]);
+  foreach(a[0]/"\n", string line) {
+    line = (line/"#")[0];
+    if (line == "") continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) < 2) {
+      werror("Invalid metadata syntax:\n"
+	     "%s\n", line);
+      exit(1);
+    }
+    header[String.trim_all_whites(pair[0])] +=
+      ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  string tail_sha1;
+  string head_sha1;
+  string originator;
+  string subject;
+  if (header->from && (sizeof(header->from) == 1)) {
+    tail_sha1 = header->from[0];
+  } else {
+    werror("Invalid header field %O.\n", "from");
+  }
+  if (header->to && (sizeof(header->to) == 1)) {
+    head_sha1 = header->to[0];
+  } else {
+    werror("Invalid header field %O.\n", "to");
+  }
+  if (header->originator && (sizeof(header->originator) == 1)) {
+    originator = header->originator[0];
+  } else {
+    werror("Invalid header field %O.\n", "originator");
+  }
+  if (header->subject && (sizeof(header->subject) == 1)) {
+    subject = header->subject[0];
+  } else {
+    werror("Invalid header field %O.\n", "subject");
+  }
+
+  string tmpdir = "/var/tmp/rxnpatch-" + patchid;
+  if (!mkdir(tmpdir) && (errno() != System.EEXIST)) {
+    werror("Failed to create temporary directory %O (%s).\n",
+	   tmpdir, strerror(errno()));
+    exit(1);
+  }
+
+  write("Preparing patch...\n");
+
+  // Description.
+  string description = a[1..]*"\n\n";
+  Stdio.write_file(tmpdir + "/description.txt", description);
+
+  // Command.
+  array(string) cmd = ({
+    "rxnpatch", "create",
+    "--id=" + patchid,
+    "--originator=" + originator,
+    "--name=" + (subject || (a[1]/"\n")[0]),
+    "--description=" + tmpdir + "/description.txt",
+    @map(header->depends || ({}),
+	 lambda(string dep) {
+	   return "--depends=" + dep;
+	 }),
+    @(header->restart?({ "--flag=restart" }):({})),
+    "--target-dir=" + tmpdir,
+  });
+
+  // .distignore
+  // NB: We only care about the recent .distignores.
+  array(string) distignore_prefixes = ({});
+  foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1,
+	      "--", subtree_prefix)/"\0",
+	  string line) {
+    if (!has_suffix(line, ".distignore")) continue;
+    array(string) a = line/"\t";
+    string path = a[1..]*"\t";
+    if (!has_suffix(path, "/.distignore") && (path != ".distignore")) continue;
+    path = path[sizeof(subtree_prefix)..];
+    string dir = path_prefix + dirname(path);
+    string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
+    if (distignore == "") {
+      distignore_prefixes += ({ dir });
+    } else {
+      foreach(distignore/"\n" - ({""}), string path) {
+	path = (path/"#")[0];
+	if (path == "") continue;
+	if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+	distignore_prefixes += ({ combine_path(dir, path) });
+      }
+    }
+  }
+  distignore_prefixes = Array.uniq(distignore_prefixes);
+
+  // Set up suitable diff options, so that we can expand Id-strings.
+  if (!git_try("config", "diff.expand-ident.textconv")) {
+    git("config", "diff.expand-ident.textconv",
+	"sed -e \"s/\\\\\\$"
+	"Id\\\\\\$/\\$"
+	"Id: `git hash-object \"$1\"` \\$/g\" < \"$1\"");
+    // git("config", "xfuncname", "");
+  }
+  string attrs = Stdio.read_bytes(git_dir + "/info/attributes");
+  if (!attrs || !has_value(attrs, "expand-ident")) {
+    attrs = "[attr]ident ident diff=expand-ident\n" + (attrs || "");
+    if (!Stdio.is_dir(git_dir + "/info/.")) {
+      mkdir(git_dir + "/info");
+    }
+    Stdio.write_file(git_dir + "/info/attributes", attrs);
+  }
+
+  // Diff.
+  string raw_diff = git("diff", "--src-prefix=" + path_prefix,
+			"--dst-prefix=" + path_prefix, "--no-ext-diff",
+			"--no-color", "--textconv", "--no-renames",
+			"--relative=" + subtree_prefix,
+			tail_sha1 + ".." + head_sha1);
+  string diff = "";
+  array(string) added = ({});
+  array(string) modified = ({});
+  array(string) deleted = ({});
+  foreach(("\n" + raw_diff + "diff --git ")/"\ndiff --git ", string block) {
+    block = "diff --git " + block + "\n";
+    if (block == "diff --git \n") continue;
+    mapping(string:array(string)) header = ([]);
+    foreach(block/"\n", string line) {
+      if (has_prefix(line, "--- ")) {
+	diff += block;
+	break;
+      }
+      array a = line/" ";
+      switch(a[0]) {
+      case "diff":
+	// Extract the path names and perform unquoting.
+	header->a = ({ a[2] });
+	header->b = ({ a[3] });
+	if (has_prefix(header->a[0], "\"")) {
+	  sscanf(a[2..]*" ", "%O %s", header->a[0], header->b[0]);
+	  if (has_prefix(header->b[0], "\"")) {
+	    sscanf(a[2..]*" ", "%O %O", header->a[0], header->b[0]);
+	  }
+	} else if (has_prefix(header->b[0], "\"")) {
+	  sscanf(a[3..]*" ", "%O", header->b[0]);
+	}
+	// Perform .distignore filtering.
+	string path = header->b[0];
+	foreach(distignore_prefixes, string prefix) {
+	  if (has_prefix(path, prefix)) {
+	    path = UNDEFINED;
+	    break;
+	  }
+	}
+	if (!path) break;
+	continue;
+
+      case "+++":
+	if ((header["---"][0] != "/dev/null") && (a[1] != "/dev/null")) {
+	  // Not a new or deleted file, and not binary.
+	  diff += block;
+	  modified += ({ a[1] });
+	  break;
+	}
+	// FALL_THROUGH
+      case "Binary":
+	string new_blob_sha1 = (header->index[0]/"..")[1];
+	if (new_blob_sha1 == GIT_NULL_SHA1) {
+	  // Deleted file.
+	  cmd += ({
+	    "--delete=" + header->b[0],
+	  });
+	  deleted += ({ header->b[0] });
+	  break;
+	}
+	string old_blob_sha1 = (header->index[0]/"..")[0];
+	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob",
+			 git("cat-file", "blob", new_blob_sha1));
+	if (old_blob_sha1 == GIT_NULL_SHA1) {
+	  // New file.
+	  cmd += ({
+	    "--new-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
+	    ":" + header->b[0],
+	  });
+	  added += ({ header->b[0] });
+	} else {
+	  // Altered file.
+	  cmd += ({
+	    "--replace=" + tmpdir + "/" + new_blob_sha1 + ".blob"
+	    ":" + header->b[0],
+	  });
+	  modified += ({ header->b[0] });
+	}
+	break;
+
+      default:
+	if (header[a[0]]) {
+	  werror("Multiple %s headers not supported.\n"
+		 "%O\n", a[0], block);
+	  exit(1);
+	}
+	header[a[0]] = a[1..];
+	continue;
+      }
+      break;
+    }
+  }
+
+  if (sizeof(diff)) {
+    Stdio.write_file(tmpdir + "/diff.patch", diff);
+
+    cmd += ({
+      "--patch=" + tmpdir + "/diff.patch",
+    });
+  }
+
+  Process.Process rxnpatch = Process.Process(cmd);
+  int code;
+  if ((code = rxnpatch->wait())) {
+    exit(code);
+  }
+  string patchdata = Stdio.read_bytes(tmpdir + "/" + patchid + ".rxp");
+  if (!patchdata) {
+    werror("Resulting patch file (%O) not found.\n",
+	   tmpdir + "/" + patchid + ".rxp");
+    exit(1);
+  }
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" +
+		patchid + "/" + patchid + ".rxp",
+		patchdata,
+		"Created " + patchid + ".rxp on branch " + branch + ".\n\n" +
+		metadata);
+
+  string affected_files = "";
+  if (sizeof(added)) {
+    affected_files += sprintf("Added files:\n"
+			      "%{  %s\n%}",
+			      added);
+  }
+  if (sizeof(modified)) {
+    affected_files += sprintf("Modified files:\n"
+			      "%{  %s\n%}",
+			      modified);
+  }
+  if (sizeof(deleted)) {
+    affected_files += sprintf("Deleted files:\n"
+			      "%{  %s\n%}",
+			      deleted);
+  }
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" +
+		patchid + "/affected-files.txt",
+		affected_files,
+		"Updated affected-files.txt for patch " + patchid +".\n");
+}
