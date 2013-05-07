@@ -1096,9 +1096,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
     array(string) a = line/"\t";
     string path = a[1..]*"\t";
     if (!has_suffix(path, "/.distignore") && (path != ".distignore")) continue;
+    string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
     path = path[sizeof(subtree_prefix)..];
     string dir = path_prefix + dirname(path);
-    string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
     if (distignore == "") {
       distignore_prefixes += ({ dir });
     } else {
@@ -1144,10 +1144,6 @@ void make_patch(mapping(string:string|int|array(string)) options,
     if (block == "diff --git \n") continue;
     mapping(string:array(string)) header = ([]);
     foreach(block/"\n", string line) {
-      if (has_prefix(line, "--- ")) {
-	diff += block;
-	break;
-      }
       array a = line/" ";
       switch(a[0]) {
       case "diff":
