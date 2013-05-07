@@ -345,6 +345,7 @@ void git_save_file(string branch, string path, string data, string message)
 	   path, branch, code);
     exit(1);
   }
+  git_try("push", "origin", branch);
 }
 
 int main(int argc, array(string) argv)
@@ -632,6 +633,7 @@ int init(mapping(string:string|int|array(string)) options)
   patch_branch = "refs/heads/rxnpatch/" + branch;
 
   // Bring the rxnpatch branches up to date.
+  werror("Syncing...\n");
   git_update("refs/heads/rxnpatch/rxnpatch");
   git_update(patch_branch);
 
@@ -933,10 +935,12 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 			"to commit %s.\n",
 			patchid, branch, subject, patch_sha1, head_sha1));
   git("tag", "-f", "rxnpatch/" + patchid, head_sha1);
+  git_try("push", "origin", "refs/tags/rxnpatch/" + patchid);
 
   write("Created patchid %s (%d commits).\n", patchid, count);
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], head_sha1);
+  git_try("push", "origin", patch_branch);
 }
 
 void make_patch(mapping(string:string|int|array(string)) options,
