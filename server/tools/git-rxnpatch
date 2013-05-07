@@ -1089,6 +1089,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
 			"--no-color", "--textconv", "--no-renames",
 			tail_sha1 + ".." + head_sha1);
   string diff = "";
+  array(string) added = ({});
+  array(string) modified = ({});
+  array(string) deleted = ({});
   foreach(("\n" + raw_diff + "diff --git ")/"\ndiff --git ", string block) {
     block = "diff --git " + block + "\n";
     if (block == "diff --git \n") continue;
@@ -1127,6 +1130,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	if ((header["---"][0] != "/dev/null") && (a[1] != "/dev/null")) {
 	  // Not a new or deleted file, and not binary.
 	  diff += block;
+	  modified += ({ a[1] });
 	  break;
 	}
 	// FALL_THROUGH
@@ -1137,6 +1141,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  cmd += ({
 	    "--delete=" + header->b[0],
 	  });
+	  deleted += ({ header->b[0] });
 	  break;
 	}
 	string old_blob_sha1 = (header->index[0]/"..")[0];
@@ -1148,12 +1153,14 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	    "--new-file=" + tmpdir + "/" + new_blob_sha1 + ".blob"
 	    ":" + header->b[0],
 	  });
+	  added += ({ header->b[0] });
 	} else {
 	  // Altered file.
 	  cmd += ({
 	    "--replace=" + tmpdir + "/" + new_blob_sha1 + ".blob"
 	    ":" + header->b[0],
 	  });
+	  modified += ({ header->b[0] });
 	}
 	break;
 
@@ -1195,4 +1202,26 @@ void make_patch(mapping(string:string|int|array(string)) options,
 		patchdata,
 		"Created " + patchid + ".rxp on branch " + branch + ".\n\n" +
 		metadata);
+
+  string affected_files = "";
+  if (sizeof(added)) {
+    affected_files += sprintf("Added files:\n"
+			      "%{  %s\n%}",
+			      added);
+  }
+  if (sizeof(modified)) {
+    affected_files += sprintf("Modified files:\n"
+			      "%{  %s\n%}",
+			      modified);
+  }
+  if (sizeof(deleted)) {
+    affected_files += sprintf("Deleted files:\n"
+			      "%{  %s\n%}",
+			      deleted);
+  }
+  git_save_file("refs/heads/rxnpatch/rxnpatch",
+		"refs/heads/" + branch + "/patches/" +
+		patchid + "/affected-files.txt",
+		affected_files,
+		"Updated affected-files.txt for patch " + patchid +".\n");
 }
