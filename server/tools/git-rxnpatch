@@ -15,15 +15,18 @@ constant specific_options = ([
   "help": ({}),
   "init": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
 
     ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
   }),
   "list": ({}),
   "make": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
   }),
   "new": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
+    ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
 
     ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
     ({ "flags", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
@@ -581,6 +584,9 @@ string release_tag_prefix;
 //! Prefix where the repository is extracted at the user.
 string path_prefix;
 
+//! Repository subtree to extract.
+string subtree_prefix;
+
 //! Load dependencies corresponsing to @[sha1].
 array(string) load_deps(string sha1)
 {
@@ -660,6 +666,31 @@ int init(mapping(string:string|int|array(string)) options)
 		  "refs/heads/" + branch + "/path_prefix.txt",
 		  path_prefix + "\n",
 		  "New path prefix: " + path_prefix + ".\n");
+  }
+
+  subtree_prefix =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/subtree_prefix.txt", 1) || "";
+  subtree_prefix -= "\n";
+
+  if (options->subtree_prefix && (options->subtree_prefix != subtree_prefix)) {
+    if (!has_suffix(options->subtree_prefix, "/") &&
+	(options->subtree_prefix != "")) {
+      // Normalize the prefix to contain the directory separator.
+      options->subtree_prefix += "/";
+    }
+    if (subtree_prefix != options->subtree_prefix) {
+      // They still differ.
+      subtree_prefix = options->subtree_prefix;
+      write("Updating default repository subtree prefix "
+	    "for branch %s to %s.\n",
+	    branch, subtree_prefix);
+      git_save_file("refs/heads/rxnpatch/rxnpatch",
+		    "refs/heads/" + branch + "/subtree_prefix.txt",
+		    subtree_prefix + "\n",
+		    "New repository subtree prefix: " +
+		    subtree_prefix + ".\n");
+    }
   }
 
   depends = load_deps(patch_sha1);
@@ -790,7 +821,10 @@ void display_status(mapping(string:string|int|array(string)) options,
   if (release_tag_prefix) {
     write("Release tag prefix: %s\n", release_tag_prefix);
   }
-  if (path_prefix) {
+  if (sizeof(subtree_prefix)) {
+    write("Subtree path prefix: %s\n", subtree_prefix);
+  }
+  if (sizeof(path_prefix)) {
     write("Path prefix: %s\n", path_prefix);
   }
   if (pending) {
@@ -1049,12 +1083,14 @@ void make_patch(mapping(string:string|int|array(string)) options,
   // .distignore
   // NB: We only care about the recent .distignores.
   array(string) distignore_prefixes = ({});
-  foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1)/"\0",
+  foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1,
+	      "--", subtree_prefix)/"\0",
 	  string line) {
     if (!has_suffix(line, ".distignore")) continue;
     array(string) a = line/"\t";
     string path = a[1..]*"\t";
     if (!has_suffix(path, "/.distignore") && (path != ".distignore")) continue;
+    path = path[sizeof(subtree_prefix)..];
     string dir = path_prefix + dirname(path);
     string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
     if (distignore == "") {
@@ -1091,6 +1127,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
   string raw_diff = git("diff", "--src-prefix=" + path_prefix,
 			"--dst-prefix=" + path_prefix, "--no-ext-diff",
 			"--no-color", "--textconv", "--no-renames",
+			"--relative=" + subtree_prefix,
 			tail_sha1 + ".." + head_sha1);
   string diff = "";
   array(string) added = ({});
