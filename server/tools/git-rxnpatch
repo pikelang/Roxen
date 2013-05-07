@@ -386,8 +386,8 @@ int main(int argc, array(string) argv)
   foreach(Getopt.find_all_options(argv, specific_options[argv[0]], 1),
 	  array(string) opt) {
     switch(opt[0]) {
-    case "flags":
     case "depends":
+    case "flags":
       // Multiple OK.
       options[opt[0]] += ({ opt[1] });
       break;
@@ -418,17 +418,23 @@ int main(int argc, array(string) argv)
     }
     display_usage(argv[1]);
     exit(0);
+  case "delete":
+    werror("Not implemented!\n");
+    exit(1);
   case "init":
     init_patch_branch(options, argv);
     break;
-  case "status":
-    display_status(options, argv);
+  case "list":
+    werror("Not implemented!\n");
+    exit(1);
+  case "make":
+    make_patch(options, argv);
     break;
   case "new":
     create_new_patch(options, argv);
     break;
-  case "make":
-    make_patch(options, argv);
+  case "status":
+    display_status(options, argv);
     break;
   }
 }
