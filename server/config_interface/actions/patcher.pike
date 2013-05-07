@@ -201,12 +201,12 @@ string list_patches(RequestID id, Patcher po, string which_list)
       int is_right_version = 1;
       int is_right_platform = 1;
       if (which_list == "imported" &&
-	  item->metadata->version)
+	  sizeof(item->metadata->version || ({}))
 	is_right_version = !!sizeof(filter(item->metadata->version,
 					   po->check_server_version));
 
       if (which_list == "imported" &&
-	  item->metadata->platform)
+	  sizeof(item->metadata->platform || ({})))
 	is_right_platform = !!sizeof(filter(item->metadata->platform,
 					    po->check_platform));
 
@@ -289,10 +289,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
       }
 
       md += ({
-	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
         ({ LOCALE(333, "Description:")	, 
 	   Roxen.html_encode_string(item->metadata->description) }),
 	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
+	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
       });
       
 
@@ -312,7 +312,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       }
       md += ({ ({ LOCALE(337, "Flags:"), active_flags + "        </table>\n"}) });
  
-      if (!item->metadata->platform)
+      if (!sizeof(item->metadata->platform || ({})))
       {
 	md += ({
 	  ({ LOCALE(338, "Platforms:"), LOCALE(339, "All platforms") })
@@ -339,7 +339,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	});
       }
       
-      if (item->metadata->version)
+      if (sizeof(item->metadata->version || ({})))
       {
 	md += ({
 	  ({ is_right_version ? 
@@ -356,7 +356,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	});
       }
       
-      if (item->metadata->depends)
+      if (sizeof(item->metadata->depends || ({}))
       {
 	string dep_list = "";
 	foreach (item->metadata->depends, string dep)
