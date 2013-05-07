@@ -1144,10 +1144,6 @@ void make_patch(mapping(string:string|int|array(string)) options,
     if (block == "diff --git \n") continue;
     mapping(string:array(string)) header = ([]);
     foreach(block/"\n", string line) {
-      if (has_prefix(line, "--- ")) {
-	diff += block;
-	break;
-      }
       array a = line/" ";
       switch(a[0]) {
       case "diff":
