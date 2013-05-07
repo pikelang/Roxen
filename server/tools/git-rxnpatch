@@ -1003,7 +1003,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
     "--description=" + tmpdir + "/description.txt",
     @map(header->depends || ({}),
 	 lambda(string dep) {
-	   return "--depends=" + patchid;
+	   return "--depends=" + dep;
 	 }),
     @(header->restart?({ "--flag=restart" }):({})),
     "--target-dir=" + tmpdir,
