@@ -34,14 +34,14 @@ constant specific_options = ([
 ]);
 
 constant cmd_args = ([
-  0:" [ <args> ]",
+  0:" [\xa0<args>\xa0]",
   "delete": "",
-  "help": " [ <command> ]",
+  "help": " [\xa0<command>\xa0]",
   "init": " <start-point>",
   "list": "",
-  "make": " [ <patchid> ]",
+  "make": " [\xa0<patchid>\xa0]",
   "new": "",
-  "status": " [ <commit> ]",
+  "status": " [\xa0<commit>\xa0]",
 ]);
 
 constant cmd_doc = ([
@@ -431,22 +431,27 @@ void display_usage(string|void cmd)
   string prefix = "  git rxnpatch";
   array(array(string|int|array(string))) options = common_options;
   if (cmd) {
-    prefix += " [ <opts> ] " + cmd;
+    prefix += " [\xa0<opts>\xa0] " + cmd;
     options = specific_options[cmd];
   }
 
   Stdio.stdout.write("Usage:\n");
-  string doc = prefix;
+  string doc = "";
   foreach(options, array(string|int|array(string)) opt) {
-    doc += " [ " + (opt[2]*" | ") + " ]";
+    doc += " [\xa0" + (opt[2]*"\xa0|\xa0");
+    if (opt[1] == Getopt.HAS_ARG) {
+      doc += " <" + opt[0] + ">";
+    }
+    doc += "\xa0]";
   }
   if (!cmd) {
-    doc += " [ " + (sort(indices(specific_options)) * " | ") + " ]";
+    doc += " [\xa0" + (sort(indices(specific_options)) * "\xa0|\xa0") + "\xa0]";
   }
   doc += cmd_args[cmd];
-  doc = (sprintf("%-=70s\n", doc)/"\n" - ({""})) *
-    ("\n " + " " * sizeof(prefix));
-  Stdio.stdout.write(doc + "\n");
+  doc = sprintf("%#*s%-=*s\n",
+		sizeof(prefix), prefix,
+		70 - sizeof(prefix), doc)[1..];
+  Stdio.stdout.write(replace(doc, "\xa0", " "));
 
   doc = cmd_doc[cmd];
   if (sizeof(doc)) {
