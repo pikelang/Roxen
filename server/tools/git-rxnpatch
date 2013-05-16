@@ -673,13 +673,21 @@ int init(mapping(string:string|int|array(string)) options)
   path_prefix -= "\n";
 
   if (options->path_prefix && (options->path_prefix != path_prefix)) {
-    path_prefix = options->path_prefix;
-    write("Updating default path prefix for branch %s to %s.\n",
-	  branch, path_prefix);
-    git_save_file("refs/heads/rxnpatch/rxnpatch",
-		  "refs/heads/" + branch + "/path_prefix.txt",
-		  path_prefix + "\n",
-		  "New path prefix: " + path_prefix + ".\n");
+    if (!has_suffix(options->path_prefix, "/") &&
+	(options->path_prefix != "")) {
+      // Normalize the prefix to contain the directory separator.
+      options->path_prefix += "/";
+    }
+    if (options->path_prefix != path_prefix) {
+      // They still differ.
+      path_prefix = options->path_prefix;
+      write("Updating default path prefix for branch %s to %s.\n",
+	    branch, path_prefix);
+      git_save_file("refs/heads/rxnpatch/rxnpatch",
+		    "refs/heads/" + branch + "/path_prefix.txt",
+		    path_prefix + "\n",
+		    "New path prefix: " + path_prefix + ".\n");
+    }
   }
 
   subtree_prefix =
@@ -798,13 +806,21 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
   }
 
   if (options->path_prefix) {
+    if ((options->path_prefix != "") &&
+	!has_suffix(options->path_prefix, "/")) {
+      options->path_prefix += "/";
+    }
     write("Setting default path prefix for branch %s to %s.\n",
 	  branch, options->path_prefix);
     git_save_file("refs/heads/rxnpatch/rxnpatch",
 		  "refs/heads/" + branch + "/path_prefix.txt",
 		  options->path_prefix + "\n",
 		  "New path prefix: " + options->path_prefix + ".\n");
+  } else {
+    werror("Warning: The path prefix for this branch has not been set.\n");
   }
+
+  path_prefix = options->path_prefix || "";
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
   write("Created patch branch %s.\n", patch_branch);
