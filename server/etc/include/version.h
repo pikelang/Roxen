@@ -1,5 +1,4 @@
 // Version information
-// $Id$
 // 
 // Note that version information (major and minor) is also
 // present in module.h.
