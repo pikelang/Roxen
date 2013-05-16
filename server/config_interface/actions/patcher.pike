@@ -155,6 +155,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
   string table_bgcolor = "&usr.fade1;";
   if (list && sizeof(list))
   {
+    multiset(string) extra_deps = (<>);
     foreach(list; int i; mapping item)
     {
       if (table_bgcolor == "&usr.content-bg;")
@@ -190,6 +191,11 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	      int i; 
 	      string s)
       {
+	foreach(s/"|", string d) {
+	  if (has_value(d, "/") && po->is_installed(d, 1)) {
+	    extra_deps[d] = 1;
+	  }
+	}
 	if (i > 0)
 	  deps += ", ";
 
@@ -201,7 +207,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       int is_right_version = 1;
       int is_right_platform = 1;
       if (which_list == "imported" &&
-	  sizeof(item->metadata->version || ({}))
+	  sizeof(item->metadata->version || ({})))
 	is_right_version = !!sizeof(filter(item->metadata->version,
 					   po->check_server_version));
 
@@ -247,7 +253,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     deps,
 		     (which_list == "installed") ? 
 		                         "\"" + item->metadata->id + "\"" : "");
-	
+
       array md = ({ });
       if (which_list == "installed")
       {
@@ -291,7 +297,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       md += ({
         ({ LOCALE(333, "Description:")	, 
 	   Roxen.html_encode_string(item->metadata->description) }),
-	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
+	({ LOCALE(334, "Originator:")	, item->metadata->originator  }),
 	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
       });
       
@@ -356,7 +362,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	});
       }
       
-      if (sizeof(item->metadata->depends || ({}))
+      if (sizeof(item->metadata->depends || ({})))
       {
 	string dep_list = "";
 	foreach (item->metadata->depends, string dep)
@@ -406,13 +412,13 @@ string list_patches(RequestID id, Patcher po, string which_list)
 			      LOCALE(354, "Deleted files:"));
 
       if (which_list == "imported") {
-	md += describe_metadata(po, item->metadata->path,
+	md += describe_metadata(po, item->metadata->patch,
 				LOCALE(355, "Patched file:"),
 				LOCALE(356, "Patched files:"),
 				combine_path(po->get_import_dir(),
 					     item->metadata->id));
       } else {
-	md += describe_metadata(po, item->metadata->path,
+	md += describe_metadata(po, item->metadata->patch,
 				LOCALE(355, "Patched file:"),
 				LOCALE(356, "Patched files:"),
 				combine_path(po->get_installed_dir(),
@@ -437,6 +443,17 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     table_bgcolor,
 		     colspan - 2,
  		     md);      
+    }
+    foreach(sort(indices(extra_deps)), string dep) {
+      res +=
+	sprintf("      <tr style='display:none'>\n"
+		"        <td colspan='4'>&nbsp;</td>\n"
+		"        <td style='width:20px;text-align:right'>\n"
+		"          <input type='checkbox' id='%s' name='%[0]s'"
+		" value='%[0]s' dependencies='' checked='true'/>\n"
+		"        </td>\n"
+		"      </tr>\n",
+		dep);
     }
   }
   else
@@ -955,14 +972,20 @@ mixed parse(RequestID id)
 	  deps = deps.split(', ');
           for (var i = 0; i < deps.length; i++)
           {
-            var dep_element = document.getElementById(deps[i]);
-            if (!dep_element || (dep_element &&
-				 !(dep_element.name == 'uninstall' ||
-				   dep_element.checked == true)))
-            {
-              checkBox.checked  = false;
-              checkBox.disabled = true;
+            var alts = deps[i].split('|');
+            checkBox.disabled = true;
+            for (var j = 0; j < alts.length; j++) {
+              var alt = alts[j];
+              var dep_element = document.getElementById(alt);
+              if (dep_element && (dep_element.name == 'uninstall' ||
+				  dep_element.checked == true)) {
+                checkBox.disabled = false;
+		break;
+	      }
             }
+	    if (checkBox.disabled) {
+              checkBox.checked  = false;
+	    }
           }
         }
 	else
