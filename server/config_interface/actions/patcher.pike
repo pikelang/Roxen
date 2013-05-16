@@ -445,12 +445,17 @@ string list_patches(RequestID id, Patcher po, string which_list)
  		     md);      
     }
     foreach(sort(indices(extra_deps)), string dep) {
+      // Add uninstall checkbox markers for all valid version dependencies,
+      // so that the toggle_dep_install() javascript can know about them.
+      //
+      // Note that the value 'on' will cause the value to
+      // be ignored when it is submitted.
       res +=
 	sprintf("      <tr style='display:none'>\n"
 		"        <td colspan='4'>&nbsp;</td>\n"
 		"        <td style='width:20px;text-align:right'>\n"
-		"          <input type='checkbox' id='%s' name='%[0]s'"
-		" value='%[0]s' dependencies='' checked='true'/>\n"
+		"          <input type='checkbox' id='%s' name='uninstall'"
+		" value='on' dependencies=''/>\n"
 		"        </td>\n"
 		"      </tr>\n",
 		dep);
