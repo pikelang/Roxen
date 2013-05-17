@@ -961,7 +961,8 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 	       return replace(paragraph, "\xa0", " ");
 	     }) - ({ "" })) * "\n\n";
     }
-    description += "\n" + string_to_utf8(block) + "\n";
+    if (description != "") description += "\n";
+    description += string_to_utf8(block) + "\n";
   }
 
   if (!subject) {
