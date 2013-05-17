@@ -917,7 +917,8 @@ mixed parse(RequestID id)
       {
         var i;
         var reference = document.getElementById(name + '_all');
-        var elements = document.getElementsByName(name)
+        var elements = document.getElementsByName(name);
+        var found = false;
         for (i = 0; i < elements.length; i++)
         {
 	  elements[i].checked = reference.checked;
@@ -925,9 +926,17 @@ mixed parse(RequestID id)
 	  {
 	    toggle_install();
 	  }
-	  else if (name == 'uninstall' && i > 1)
+	  else if ((name == 'uninstall') && found)
 	  {
+	    // Disable unchecked uninstall checkboxes
+	    // after the first unchecked one.
 	    elements[i].disabled = !elements[i].checked;
+	  }
+	  else if ((name == 'uninstall') && (elements.value != 'no'))
+	  {
+	    # Found the first non-magic uninstall checkbox.
+	    found = true;
+	    elements[i].disabled = false;
 	  }
         }
       }
@@ -944,6 +953,7 @@ mixed parse(RequestID id)
 
       function toggle_uninstall(id)
       {
+        var toggleAllElement = document.getElementById('uninstall_all');
 	var currentElement = document.getElementById(id);
 	var allElements = document.getElementsByName('uninstall');
 	var currentNo = 0;
@@ -960,13 +970,17 @@ mixed parse(RequestID id)
 	    
 	    if ((i+1) < allElements.length)
 	    {
-	      allElements[0].checked = false;
+	      // There are some checkboxes left to check.
+	      toggleAllElement.checked = false;
+
+	      // Make the next one available.
 	      allElements[i+1].checked = false;
 	      allElements[i+1].disabled = !currentElement.checked;
 	    }
 	    else
 	    {
-	      allElements[0].checked = currentElement.checked;
+	      // Checked the last checkbox ==> All are checked.
+	      toggleAllElement.checked = currentElement.checked;
 	    }
 	  }
 	}
