@@ -961,22 +961,29 @@ mixed parse(RequestID id)
         var found = false;
         for (i = 0; i < elements.length; i++)
         {
+	  if (elements.value == 'no') continue;
+
+	  // Default to the value from the 'all'-checkbox.
 	  elements[i].checked = reference.checked;
 	  if (name == 'install')
 	  {
+	    // FIXME: Why call it so many times?
 	    toggle_install();
 	  }
-	  else if ((name == 'uninstall') && found)
+	  else if (name == 'uninstall')
 	  {
-	    // Disable unchecked uninstall checkboxes
-	    // after the first unchecked one.
-	    elements[i].disabled = !elements[i].checked;
-	  }
-	  else if ((name == 'uninstall') && (elements.value != 'no'))
-	  {
-	    # Found the first non-magic uninstall checkbox.
-	    found = true;
-	    elements[i].disabled = false;
+	    if (found)
+	    {
+	      // Disable unchecked uninstall checkboxes
+	      // after the first unchecked one.
+	      elements[i].disabled = !elements[i].checked;
+	    }
+	    else
+	    {
+	      // Found the first non-magic uninstall checkbox.
+	      found = true;
+	      elements[i].disabled = false;
+	    }
 	  }
         }
       }
@@ -1031,24 +1038,31 @@ mixed parse(RequestID id)
 	var deps = checkBox.getAttribute('dependencies');
         if (deps && deps.length > 0)
         { 
+	  var deps_ok = true;
 	  deps = deps.split(', ');
           for (var i = 0; i < deps.length; i++)
           {
+            deps_ok = false;
             var alts = deps[i].split('|');
-            checkBox.disabled = true;
             for (var j = 0; j < alts.length; j++) {
               var alt = alts[j];
               var dep_element = document.getElementById(alt);
               if (dep_element && (dep_element.name == 'uninstall' ||
 				  dep_element.checked == true)) {
-                checkBox.disabled = false;
+		// One of the dependencies in the set is satisfied.
+                deps_ok = true;
 		break;
 	      }
             }
-	    if (checkBox.disabled) {
-              checkBox.checked  = false;
+	    if (!deps_ok) {
+	      // One of the dependencies is not satisfied.
+	      break;
 	    }
           }
+	  checkBox.disabled = !deps_ok;
+	  if (checkBox.disabled) {
+            checkBox.checked = false;
+	  }
         }
 	else
 	  checkBox.disabled = false;
