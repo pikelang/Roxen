@@ -921,7 +921,7 @@ mixed parse(RequestID id)
         var found = false;
         for (i = 0; i < elements.length; i++)
         {
-	  if (elements[i].value == 'no') continue;
+	  if (elements[i].value == 'on') continue;
 
 	  // Default to the value from the 'all'-checkbox.
 	  elements[i].checked = reference.checked;
