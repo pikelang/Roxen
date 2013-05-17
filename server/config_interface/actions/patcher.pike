@@ -213,38 +213,41 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       // Calculate dependencies of other patches
       string deps = "";
-      foreach(po->get_dependencies(item->metadata->id) || ({ }); 
-	      int i; 
-	      string s)
-      {
-	foreach(s/"|", string d) {
-	  if (has_value(d, "/") && po->is_installed(d, 1)) {
-	    extra_deps[d] = 1;
+      if (which_list != "installed") {
+	// NB: There's no need to calculate forward dependencies
+	//     for uninstallation...
+	foreach(po->get_dependencies(item->metadata->id) || ({ });
+		int i;
+		string s)
+	{
+	  foreach(s/"|", string d) {
+	    if (has_value(d, "/") && po->is_installed(d, 1)) {
+	      extra_deps[d] = 1;
+	    }
 	  }
-	}
-	if (i > 0)
-	  deps += ", ";
+	  if (i > 0)
+	    deps += ", ";
 
-	deps += s; 
+	  deps += s;
+	}
       }
 
       // Make sure that only patches for the right platform and version are
       // installable
       int is_right_version = 1;
       int is_right_platform = 1;
-      if (which_list == "imported" &&
-	  sizeof(item->metadata->version || ({})))
-	is_right_version = !!sizeof(filter(item->metadata->version,
-					   po->check_server_version));
+      if (which_list == "imported") {
+	if (sizeof(item->metadata->version || ({})))
+	  is_right_version = !!sizeof(filter(item->metadata->version,
+					     po->check_server_version));
 
-      if (which_list == "imported" &&
-	  sizeof(item->metadata->platform || ({})))
-	is_right_platform = !!sizeof(filter(item->metadata->platform,
-					    po->check_platform));
+	if (sizeof(item->metadata->platform || ({})))
+	  is_right_platform = !!sizeof(filter(item->metadata->platform,
+					      po->check_platform));
 
-      if (!(is_right_version &&
-	    is_right_platform))
-	deps += "not_installable";
+	if (!(is_right_version && is_right_platform))
+	  deps += "not_installable";
+      }
       
 
       res += sprintf("      <tr style='background-color: %s' >\n"
