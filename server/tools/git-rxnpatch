@@ -874,9 +874,74 @@ void display_status(mapping(string:string|int|array(string)) options,
   if (sizeof(path_prefix)) {
     write("Path prefix: %s\n", path_prefix);
   }
+
+  mapping(string:string) patches = ([]);
+  string prefix = "refs/heads/" + branch + "/patches";
+  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+	      "--", prefix)/"\0", string entry) {
+    if (entry == "") continue;
+    string path = (entry/"\t")[1..] * "\t";
+    if (!has_prefix(path, prefix + "/")) continue;
+    string subpath = path[sizeof(prefix + "/")..];
+    string patchid = (subpath/"/")[0];
+    if (subpath == (patchid + "/" + patchid + ".rxp")) {
+      patches[patchid] = "ok";
+
+      // FIXME: Add detection of stale patches.
+    } else if (patches[patchid] != "ok") {
+      if (subpath == (patchid + "/metadata.txt")) {
+	patches[patchid] = "pending";
+      } else if (!patches[patchid]) {
+	// Note that this is a normal state at this point,
+	// since there may be other files than the main two
+	// in the directory (notably "affected-files.txt").
+	patches[patchid] = "suspect";
+      }
+    }
+  }
+
+  int num_pending;
+  int num_suspect;
+  foreach(patches; string patchid; string mode) {
+    switch(mode) {
+    case "ok": break;
+    case "pending":
+      num_pending++;
+      break;
+    default:
+    case "suspect":
+      patches[patchid] = "suspect";
+      num_suspect++;
+      break;
+    }
+  }
+  if (sizeof(patches)) {
+    write("Num patches: %d\n", sizeof(patches) - num_pending);
+    if (num_suspect) {
+      write("Suspect patches found:\n");
+      foreach(sort(indices(patches)), string patchid) {
+	if (patches[patchid] == "suspect") {
+	  write("  %s\n", patchid);
+	}
+      }
+    }
+    if (num_pending) {
+      if (num_pending == 1) {
+	write("Pending patch:\n");
+      } else {
+	write("Pending patches:\n");
+      }
+      foreach(sort(indices(patches)), string patchid) {
+	if (patches[patchid] == "pending") {
+	  write("  %s\n", patchid);
+	}
+      }
+    }
+  }
+
   if (pending) {
     write("Pending commits: %d\n", pending);
-  } else {
+  } else if (!num_pending) {
     write("Up to date.\n");
   }
 }
