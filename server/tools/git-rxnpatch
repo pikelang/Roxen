@@ -29,9 +29,11 @@ constant specific_options = ([
     ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
 
     ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
-    ({ "flags", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
+    ({ "flag", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
     ({ "originator", Getopt.HAS_ARG, ({ "-O", "--originator" }) }),
     ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
+    ({ "restart", Getopt.NO_ARG, ({ "--restart" }) }),
+    ({ "norestart", Getopt.NO_ARG, ({ "--no-restart" }) }),
   }),
   "status": ({}),
 ]);
@@ -382,14 +384,29 @@ int main(int argc, array(string) argv)
     exit(0);
   }
 
-  mapping(string:int|string|array(string)) options = ([]);
+  mapping(string:int|string|array(string)) options = ([
+    "flag": ({ "restart" }),
+  ]);
   foreach(Getopt.find_all_options(argv, specific_options[argv[0]], 1),
 	  array(string) opt) {
     switch(opt[0]) {
+    case "flag":
+      opt[1] = lower_case(opt[1]);
+      if (has_prefix(opt[1], "no-")) {
+	// Negated option.
+	options[opt[1]] -= ({ opt[1][sizeof("no-")..] });
+	break;
+      }
+      // FALL_THROUGH
     case "depends":
-    case "flags":
       // Multiple OK.
       options[opt[0]] += ({ opt[1] });
+      break;
+    case "restart":
+      options->flag += ({ "restart" });
+      break;
+    case "norestart":
+      options->flag -= ({ "restart" });
       break;
     case "force":
     case "message":
@@ -425,8 +442,8 @@ int main(int argc, array(string) argv)
     init_patch_branch(options, argv);
     break;
   case "list":
-    werror("Not implemented!\n");
-    exit(1);
+    list_pending_commits(options, argv);
+    break;
   case "make":
     make_patch(options, argv);
     break;
@@ -536,8 +553,8 @@ void git_update(string branch)
 	  ({""}),
 	  lambda(string line) {
 	    array(string) a = line/" ";
-	    if (sizeof(a)) return a[1];
-	  });;
+	    if (sizeof(a) > 1) return a[1];
+	  }) - ({ 0 });
     if(!sizeof(a)) return; // Up to date.
     if (head) {
       head -= "\n";
@@ -857,10 +874,176 @@ void display_status(mapping(string:string|int|array(string)) options,
   if (sizeof(path_prefix)) {
     write("Path prefix: %s\n", path_prefix);
   }
+
+  mapping(string:string) patches = ([]);
+  string prefix = "refs/heads/" + branch + "/patches";
+  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+	      "--", prefix)/"\0", string entry) {
+    if (entry == "") continue;
+    string path = (entry/"\t")[1..] * "\t";
+    if (!has_prefix(path, prefix + "/")) continue;
+    string subpath = path[sizeof(prefix + "/")..];
+    string patchid = (subpath/"/")[0];
+    if (subpath == (patchid + "/" + patchid + ".rxp")) {
+      patches[patchid] = "ok";
+
+      // FIXME: Add detection of stale patches.
+    } else if (patches[patchid] != "ok") {
+      if (subpath == (patchid + "/metadata.txt")) {
+	patches[patchid] = "pending";
+      } else if (!patches[patchid]) {
+	// Note that this is a normal state at this point,
+	// since there may be other files than the main two
+	// in the directory (notably "affected-files.txt").
+	patches[patchid] = "suspect";
+      }
+    }
+  }
+
+  int num_pending;
+  int num_suspect;
+  foreach(patches; string patchid; string mode) {
+    switch(mode) {
+    case "ok": break;
+    case "pending":
+      num_pending++;
+      break;
+    default:
+    case "suspect":
+      patches[patchid] = "suspect";
+      num_suspect++;
+      break;
+    }
+  }
+  if (sizeof(patches)) {
+    write("Num patches: %d\n", sizeof(patches) - num_pending);
+    if (num_suspect) {
+      write("Suspect patches found:\n");
+      foreach(sort(indices(patches)), string patchid) {
+	if (patches[patchid] == "suspect") {
+	  write("  %s\n", patchid);
+	}
+      }
+    }
+    if (num_pending) {
+      if (num_pending == 1) {
+	write("Pending patch:\n");
+      } else {
+	write("Pending patches:\n");
+      }
+      foreach(sort(indices(patches)), string patchid) {
+	if (patches[patchid] == "pending") {
+	  write("  %s\n", patchid);
+	}
+      }
+    }
+  }
+
   if (pending) {
     write("Pending commits: %d\n", pending);
-  } else {
+  } else if (!num_pending) {
     write("Up to date.\n");
+  }
+}
+
+string format_description(string old_sha1, string head_sha1)
+{
+  // Note: We build the description backwards (ie the oldest entry
+  //       will appear at the top).
+  string description = "";
+  string log = git("log", "--no-merges", "--date-order", "--dense",
+		   "--pretty=raw", "-s", old_sha1 + ".." + head_sha1);
+  catch { log = utf8_to_string(log); };
+  array(string) a = log/"\n\n";
+  foreach(a, string block) {
+    if (!has_prefix(block, "    ")) continue;
+    // Normalize bug references ([bug ####] et al),
+    // and keep them from getting linebreaks.
+    block =
+      replace(block,
+	      ({ "[bug ", "[Bug ",
+		 "[InfoKOM ", "[Infokom ",
+		 "[LysKOM ", "[Lyskom ", "[lyskom ",
+		 "[LysLysKOM ", "[Lyslyskom ",
+		 "[lyslyskom ",
+	      }),
+	      ({ "[bug\xa0", "[bug\xa0",
+		 "[InfoKOM\xa0", "[InfoKOM\xa0",
+		 "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+		 "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+		 "[LysLysKOM\xa0",
+	      }));
+    block = map(block/"\n",
+		lambda(string line) {
+		  if (has_prefix(line, "    ")) return line[4..];
+		  return line;
+		}) * "\n";
+    if (!has_suffix(block, "\n")) block += "\n";
+    if (sizeof(a) > 1) {
+      if (!has_prefix(block, "\t")) {
+	string new_block = "";
+	foreach((block/"\n")[..<1]; int i; string line) {
+	  if (has_prefix(block, " ") ||
+	      has_prefix(block, "*")) {
+	    line = "  " + line;
+	  } else if (i) {
+	    line = "    " + line;
+	  } else {
+	    line = "  * " + line;
+	  }
+	  new_block += line + "\n";
+	}
+	block = new_block;
+      }
+    }
+    block = replace(block, "\xa0", " ");
+
+    if (description == "") {
+      description = string_to_utf8(block);
+    } else {
+      description = string_to_utf8(block) + "\n" + description;
+    }
+  }
+  if (sizeof(a) > 1) {
+    description = "Multiple fixes:\n\n" + description;
+  }
+
+  return description;
+}
+
+void list_pending_commits(mapping(string:string|int|array(string)) options,
+			  array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  string head_sha1 = git("rev-list", "--max-count=1", head) - "\n";
+
+  assert_first_parent(branch, head_sha1);
+
+  int count = assert_first_parent(head, patch_sha1);
+
+  if (!count) {
+    write("Up to date.\n");
+    return;
+  }
+
+  array(string) revs = git("rev-list", "--first-parent",
+			   patch_sha1 + ".." + head_sha1)/"\n" - ({ "" });
+
+  string prev_sha1 = patch_sha1;
+  foreach(reverse(revs); int i; string sha1) {
+    write("Commit %s (aka %s%s):\n",
+	  sha1, head, (count == (i+1))?"":"~"+(count-i));
+    write(format_description(prev_sha1, sha1));
+    prev_sha1 = sha1;
   }
 }
 
@@ -906,64 +1089,17 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     header += sprintf("%{depends: %s\n%}", options->depends);
   }
 
-  if (options->flags) {
-    header += sprintf("%{flag: %s\n%}", options->flags);
+  if (options->flag) {
+    if (has_value(options->flag, "restart")) {
+      header += "restart: true\n";
+      options->flag -= ({ "restart" });
+    }
+    header += sprintf("%{flag: %s\n%}", Array.uniq(options->flag));
   }
-
-  string log = git("log", "--no-merges", "--date-order", "--dense",
-		   "--pretty=raw", "-s", patch_sha1 + ".." + head_sha1);
 
   string subject = options->message;
 
-  string description = "";
-  if (count > 1) {
-    description = "Multiple fixes:\n";
-  }
-  catch { log = utf8_to_string(log); };
-  foreach((log + "\n")/"\n\n", string block) {
-    if (!has_prefix(block, "    ")) continue;
-    block = map(block/"\n",
-		lambda(string line) {
-		  if (has_prefix(line, "    ")) return line[4..];
-		  return line;
-		}) * "\n";
-    if (count > 1) {
-      block =
-	(map(block/"\n\n",
-	     lambda(string paragraph) {
-	       if (paragraph == "") return "";
-	       if (has_prefix(paragraph, "\t")) return paragraph;
-	       if (has_prefix(paragraph, " ") ||
-		   has_prefix(paragraph, "*")) {
-		 return sprintf("%4#s%-60#s", "   ", paragraph);
-	       }
-	       if (has_prefix(paragraph, "Rev: ")) {
-		 // Remove CVS revision markers.
-		 return "";
-	       }
-	       // Keep [bug ####] et al from getting linebreaks.
-	       paragraph =
-		 replace(paragraph,
-			 ({ "[bug ", "[Bug ",
-			    "[InfoKOM ", "[Infokom ",
-			    "[LysKOM ", "[Lyskom ", "[lyskom ",
-			    "[LysLysKOM ", "[Lyslyskom ",
-			    "[lyslyskom ",
-			 }),
-			 ({ "[bug\xa0", "[bug\xa0",
-			    "[InfoKOM\xa0", "[InfoKOM\xa0",
-			    "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
-			    "[LysLysKOM\xa0", "[LysLysKOM\xa0",
-			    "[LysLysKOM\xa0",
-			 }));
-	       paragraph = sprintf("%4#s%-60=s",
-				   " * ", replace(paragraph, "\n", " "));
-	       return replace(paragraph, "\xa0", " ");
-	     }) - ({ "" })) * "\n\n";
-    }
-    if (description != "") description += "\n";
-    description += string_to_utf8(block) + "\n";
-  }
+  string description = format_description(patch_sha1, head_sha1);
 
   if (!subject) {
     subject = "";
@@ -1054,8 +1190,15 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	     "%s\n", line);
       exit(1);
     }
-    header[String.trim_all_whites(pair[0])] +=
+    header[lower_case(String.trim_all_whites(pair[0]))] +=
       ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  if (header->flags) {
+    // Common typo.
+    werror("Invalid header field %O.\n"
+	   "Did you perhaps mean %O?\n",
+	   "flags", "flag");
   }
 
   string tail_sha1;
@@ -1108,6 +1251,10 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	   return "--depends=" + dep;
 	 }),
     @(header->restart?({ "--flag=restart" }):({})),
+    @map(header->flag || ({}),
+	 lambda(string flag) {
+	   return "--flag=" + flag;
+	 }),
     "--target-dir=" + tmpdir,
   });
 
