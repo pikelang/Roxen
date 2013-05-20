@@ -442,8 +442,8 @@ int main(int argc, array(string) argv)
     init_patch_branch(options, argv);
     break;
   case "list":
-    werror("Not implemented!\n");
-    exit(1);
+    list_pending_commits(options, argv);
+    break;
   case "make":
     make_patch(options, argv);
     break;
@@ -946,6 +946,107 @@ void display_status(mapping(string:string|int|array(string)) options,
   }
 }
 
+string format_description(string old_sha1, string head_sha1)
+{
+  // Note: We build the description backwards (ie the oldest entry
+  //       will appear at the top).
+  string description = "";
+  string log = git("log", "--no-merges", "--date-order", "--dense",
+		   "--pretty=raw", "-s", old_sha1 + ".." + head_sha1);
+  catch { log = utf8_to_string(log); };
+  array(string) a = log/"\n\n";
+  foreach(a, string block) {
+    if (!has_prefix(block, "    ")) continue;
+    // Normalize bug references ([bug ####] et al),
+    // and keep them from getting linebreaks.
+    block =
+      replace(block,
+	      ({ "[bug ", "[Bug ",
+		 "[InfoKOM ", "[Infokom ",
+		 "[LysKOM ", "[Lyskom ", "[lyskom ",
+		 "[LysLysKOM ", "[Lyslyskom ",
+		 "[lyslyskom ",
+	      }),
+	      ({ "[bug\xa0", "[bug\xa0",
+		 "[InfoKOM\xa0", "[InfoKOM\xa0",
+		 "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+		 "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+		 "[LysLysKOM\xa0",
+	      }));
+    block = map(block/"\n",
+		lambda(string line) {
+		  if (has_prefix(line, "    ")) return line[4..];
+		  return line;
+		}) * "\n";
+    if (!has_suffix(block, "\n")) block += "\n";
+    if (sizeof(a) > 1) {
+      if (!has_prefix(block, "\t")) {
+	string new_block = "";
+	foreach((block/"\n")[..<1]; int i; string line) {
+	  if (has_prefix(block, " ") ||
+	      has_prefix(block, "*")) {
+	    line = "  " + line;
+	  } else if (i) {
+	    line = "    " + line;
+	  } else {
+	    line = "  * " + line;
+	  }
+	  new_block += line + "\n";
+	}
+	block = new_block;
+      }
+    }
+    block = replace(block, "\xa0", " ");
+
+    if (description == "") {
+      description = string_to_utf8(block);
+    } else {
+      description = string_to_utf8(block) + "\n" + description;
+    }
+  }
+  if (sizeof(a) > 1) {
+    description = "Multiple fixes:\n\n" + description;
+  }
+
+  return description;
+}
+
+void list_pending_commits(mapping(string:string|int|array(string)) options,
+			  array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  string head = branch;
+  if (sizeof(argv) > 1) {
+    head = argv[1];
+  }
+
+  string head_sha1 = git("rev-list", "--max-count=1", head) - "\n";
+
+  assert_first_parent(branch, head_sha1);
+
+  int count = assert_first_parent(head, patch_sha1);
+
+  if (!count) {
+    write("Up to date.\n");
+    return;
+  }
+
+  array(string) revs = git("rev-list", "--first-parent",
+			   patch_sha1 + ".." + head_sha1)/"\n" - ({ "" });
+
+  string prev_sha1 = patch_sha1;
+  foreach(reverse(revs); int i; string sha1) {
+    write("Commit %s (aka %s%s):\n",
+	  sha1, head, (count == (i+1))?"":"~"+(count-i));
+    write(format_description(prev_sha1, sha1));
+    prev_sha1 = sha1;
+  }
+}
+
 void create_new_patch(mapping(string:string|int|array(string)) options,
 		      array(string) argv)
 {
@@ -996,67 +1097,9 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     header += sprintf("%{flag: %s\n%}", Array.uniq(options->flag));
   }
 
-  string log = git("log", "--no-merges", "--date-order", "--dense",
-		   "--pretty=raw", "-s", patch_sha1 + ".." + head_sha1);
-
   string subject = options->message;
 
-  // Note: We build the log backwards (ie the oldest entry
-  //       will appear at the top).
-  string description = "";
-  catch { log = utf8_to_string(log); };
-  foreach(log/"\n\n", string block) {
-    if (!has_prefix(block, "    ")) continue;
-    // Normalize bug references ([bug ####] et al),
-    // and keep them from getting linebreaks.
-    block =
-      replace(block,
-	      ({ "[bug ", "[Bug ",
-		 "[InfoKOM ", "[Infokom ",
-		 "[LysKOM ", "[Lyskom ", "[lyskom ",
-		 "[LysLysKOM ", "[Lyslyskom ",
-		 "[lyslyskom ",
-	      }),
-	      ({ "[bug\xa0", "[bug\xa0",
-		 "[InfoKOM\xa0", "[InfoKOM\xa0",
-		 "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
-		 "[LysLysKOM\xa0", "[LysLysKOM\xa0",
-		 "[LysLysKOM\xa0",
-	      }));
-    block = map(block/"\n",
-		lambda(string line) {
-		  if (has_prefix(line, "    ")) return line[4..];
-		  return line;
-		}) * "\n";
-    if (!has_suffix(block, "\n")) block += "\n";
-    if (count > 1) {
-      if (!has_prefix(block, "\t")) {
-	string new_block = "";
-	foreach((block/"\n")[..<1]; int i; string line) {
-	  if (has_prefix(block, " ") ||
-	      has_prefix(block, "*")) {
-	    line = "  " + line;
-	  } else if (i) {
-	    line = "    " + line;
-	  } else {
-	    line = "  * " + line;
-	  }
-	  new_block += line + "\n";
-	}
-	block = new_block;
-      }
-    }
-    block = replace(block, "\xa0", " ");
-
-    if (description == "") {
-      description = string_to_utf8(block);
-    } else {
-      description = string_to_utf8(block) + "\n" + description;
-    }
-  }
-  if (count > 1) {
-    description = "Multiple fixes:\n\n" + description;
-  }
+  string description = format_description(patch_sha1, head_sha1);
 
   if (!subject) {
     subject = "";
