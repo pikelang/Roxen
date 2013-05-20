@@ -936,54 +936,61 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 
   string subject = options->message;
 
+  // Note: We build the log backwards (ie the oldest entry
+  //       will appear at the top).
   string description = "";
-  if (count > 1) {
-    description = "Multiple fixes:\n";
-  }
   catch { log = utf8_to_string(log); };
-  foreach((log + "\n")/"\n\n", string block) {
+  foreach(log/"\n\n", string block) {
     if (!has_prefix(block, "    ")) continue;
+    // Normalize bug references ([bug ####] et al),
+    // and keep them from getting linebreaks.
+    block =
+      replace(block,
+	      ({ "[bug ", "[Bug ",
+		 "[InfoKOM ", "[Infokom ",
+		 "[LysKOM ", "[Lyskom ", "[lyskom ",
+		 "[LysLysKOM ", "[Lyslyskom ",
+		 "[lyslyskom ",
+	      }),
+	      ({ "[bug\xa0", "[bug\xa0",
+		 "[InfoKOM\xa0", "[InfoKOM\xa0",
+		 "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
+		 "[LysLysKOM\xa0", "[LysLysKOM\xa0",
+		 "[LysLysKOM\xa0",
+	      }));
     block = map(block/"\n",
 		lambda(string line) {
 		  if (has_prefix(line, "    ")) return line[4..];
 		  return line;
 		}) * "\n";
+    if (!has_suffix(block, "\n")) block += "\n";
     if (count > 1) {
-      block =
-	(map(block/"\n\n",
-	     lambda(string paragraph) {
-	       if (paragraph == "") return "";
-	       if (has_prefix(paragraph, "\t")) return paragraph;
-	       if (has_prefix(paragraph, " ") ||
-		   has_prefix(paragraph, "*")) {
-		 return sprintf("%4#s%-60#s", "   ", paragraph);
-	       }
-	       if (has_prefix(paragraph, "Rev: ")) {
-		 // Remove CVS revision markers.
-		 return "";
-	       }
-	       // Keep [bug ####] et al from getting linebreaks.
-	       paragraph =
-		 replace(paragraph,
-			 ({ "[bug ", "[Bug ",
-			    "[InfoKOM ", "[Infokom ",
-			    "[LysKOM ", "[Lyskom ", "[lyskom ",
-			    "[LysLysKOM ", "[Lyslyskom ",
-			    "[lyslyskom ",
-			 }),
-			 ({ "[bug\xa0", "[bug\xa0",
-			    "[InfoKOM\xa0", "[InfoKOM\xa0",
-			    "[LysKOM\xa0", "[LysKOM\xa0", "[LysKOM\xa0",
-			    "[LysLysKOM\xa0", "[LysLysKOM\xa0",
-			    "[LysLysKOM\xa0",
-			 }));
-	       paragraph = sprintf("%4#s%-60=s",
-				   " * ", replace(paragraph, "\n", " "));
-	       return replace(paragraph, "\xa0", " ");
-	     }) - ({ "" })) * "\n\n";
+      if (!has_prefix(block, "\t")) {
+	string new_block = "";
+	foreach((block/"\n")[..<1]; int i; string line) {
+	  if (has_prefix(block, " ") ||
+	      has_prefix(block, "*")) {
+	    line = "  " + line;
+	  } else if (i) {
+	    line = "    " + line;
+	  } else {
+	    line = "  * " + line;
+	  }
+	  new_block += line + "\n";
+	}
+	block = new_block;
+      }
     }
-    if (description != "") description += "\n";
-    description += string_to_utf8(block) + "\n";
+    block = replace(block, "\xa0", " ");
+
+    if (description == "") {
+      description = string_to_utf8(block);
+    } else {
+      description = string_to_utf8(block) + "\n" + description;
+    }
+  }
+  if (count > 1) {
+    description = "Multiple fixes:\n\n" + description;
   }
 
   if (!subject) {
