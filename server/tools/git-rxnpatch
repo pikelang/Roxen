@@ -955,6 +955,10 @@ string format_description(string old_sha1, string head_sha1)
 		   "--pretty=raw", "-s", old_sha1 + ".." + head_sha1);
   catch { log = utf8_to_string(log); };
   array(string) a = log/"\n\n";
+  int num_blocks;
+  foreach(a, string block) {
+    if (has_prefix(block, "    ")) num_blocks++;
+  }
   foreach(a, string block) {
     if (!has_prefix(block, "    ")) continue;
     // Normalize bug references ([bug ####] et al),
@@ -979,7 +983,7 @@ string format_description(string old_sha1, string head_sha1)
 		  return line;
 		}) * "\n";
     if (!has_suffix(block, "\n")) block += "\n";
-    if (sizeof(a) > 1) {
+    if (num_blocks > 1) {
       if (!has_prefix(block, "\t")) {
 	string new_block = "";
 	foreach((block/"\n")[..<1]; int i; string line) {
@@ -1004,7 +1008,7 @@ string format_description(string old_sha1, string head_sha1)
       description = string_to_utf8(block) + "\n" + description;
     }
   }
-  if (sizeof(a) > 1) {
+  if (num_blocks > 2) {
     description = "Multiple fixes:\n\n" + description;
   }
 
