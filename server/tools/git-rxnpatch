@@ -1,4 +1,4 @@
-#!/bin/env pike
+#!/usr/bin/env pike
 // -*- Pike -*-
 //
 // Tool to create Roxen patches from git repositories.
