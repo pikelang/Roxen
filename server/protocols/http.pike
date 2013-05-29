@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.561 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1138,6 +1138,7 @@ protected void do_timeout()
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
   {
+    // FIXME: Hardcoded timeout of 30 seconds above.
 #ifdef CONNECTION_DEBUG
     werror ("HTTP[%s]: Connection timed out. Closing.\n", DEBUG_GET_FD);
 #endif
@@ -1149,6 +1150,12 @@ protected void do_timeout()
 			 my_fd->query_write_callback(),
 			 my_fd->query_close_callback()));
     MARK_FD("HTTP timeout");
+    if (my_fd && my_fd->linger) {
+      // We don't care if there's still data in the buffers
+      // (there probably is), just terminate the connection
+      // as soon as possible.
+      my_fd->linger(0);
+    }
     end();
   } else {
 #ifdef DEBUG
@@ -2899,8 +2906,11 @@ void clean()
 {
   if(!(my_fd && objectp(my_fd)))
     end();
-  else if((predef::time(1) - time) > 4800)
+  else if((predef::time(1) - time) > 4800) {
+    // FIXME: Hardcoded timeout of 80 minutes above.
+    if (my_fd->linger) my_fd->linger(0);
     end();
+  }
 }
 
 protected void create(object f, object c, object cc)
