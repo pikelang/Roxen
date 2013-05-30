@@ -4,6 +4,7 @@
 // Global variables
 var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,
 isMacIE50 = false, isSafari = false;
+var isIE9 = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
@@ -28,6 +29,9 @@ if (navigator.appVersion.charAt(0) == "4") {
   if (navigator.appName == "Netscape") {
     isNav5 = true;
     insideWindowWidth = window.innerWidth;
+  } else {
+    if (navigator.appVersion.match(/MSIE 9/))
+	  isIE9 = true;
   }
 }
 
@@ -276,7 +280,7 @@ function getTarget(e)
   if(isNav4||isNav5){
     return e.target;
   }
-  if(isIE4){
+  if(isIE4 || isIE9){
     return window.event.srcElement;
   }
 }
@@ -304,7 +308,7 @@ function getTargetX(e)
   if(isNav4){
     return e.target.x;
   }
-  if(isIE4){
+  if(isIE4 || isIE9){
     return getRecursiveLeft(window.event.srcElement);
   }
 
@@ -326,7 +330,7 @@ function getTargetY(e)
   if(isNav4){
     return e.target.y;
   }
-  if(isIE4){
+  if(isIE4 || isIE9){
     return getRecursiveTop(window.event.srcElement);
   }
 
