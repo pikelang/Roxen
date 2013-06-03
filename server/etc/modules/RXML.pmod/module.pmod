@@ -7446,6 +7446,32 @@ class TText
   }
 }
 
+TNarrowText t_narrowtext = TNarrowText();
+//! The type for plain text that needs to be narrow (eg HTTP headers
+//! and similar).
+
+//!
+//! @seealso
+//!    @[t_narrowtext]
+class TNarrowText
+{
+  inherit TText;
+  constant name = "text/x-8bit";
+  constant type_name = "RXML.t_narrowtext";
+  Type supertype = t_text;
+  Type conversion_type = t_text;
+
+  void type_check(mixed val, void|string msg, mixed ... args)
+  {
+    werror("%O: type_check(%O, %O%{, %O%})\n",
+	   this_object(), val, msg, args);
+    ::type_check(val);
+    if (stringp(val) && String.width(val)) {
+      type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
+    }
+  }
+}
+
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
