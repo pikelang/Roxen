@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.433 2012/08/21 12:13:28 grubba Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4237,6 +4237,9 @@ class Frame
 		    parser->finish (val); // Should not unwind.
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
+
+		    if (t->type_check) t->type_check(v);
+		    // FIXME: Add type-checking to the compiled code as well.
 
 		    if (t->sequential)
 		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
