@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.683 2012/07/17 13:40:23 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -679,7 +679,7 @@ class TagHeader {
   constant name = "header";
   constant flags = RXML.FLAG_NONE;
   mapping(string:RXML.Type) opt_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
-					       "value": RXML.t_text(RXML.PEnt) ]);
+					       "value": RXML.t_narrowtext(RXML.PEnt) ]);
   array(RXML.Type) result_types = ({RXML.t_any}); // Variable result.
 
   class Frame {
