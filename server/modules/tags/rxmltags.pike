@@ -679,7 +679,7 @@ class TagHeader {
   constant name = "header";
   constant flags = RXML.FLAG_NONE;
   mapping(string:RXML.Type) opt_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
-					       "value": RXML.t_text(RXML.PEnt) ]);
+					       "value": RXML.t_narrowtext(RXML.PEnt) ]);
   array(RXML.Type) result_types = ({RXML.t_any}); // Variable result.
 
   class Frame {

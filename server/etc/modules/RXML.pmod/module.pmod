@@ -4238,6 +4238,9 @@ class Frame
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
 
+		    if (t->type_check) t->type_check(v);
+		    // FIXME: Add type-checking to the compiled code as well.
+
 		    if (t->sequential)
 		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
 					    sub_p_code->compile_text (comp)));
@@ -7440,6 +7443,32 @@ class TText
     mixed err = catch {return (string) val;};
     parse_error ("Cannot convert %s to %s: %s",
 		 format_short (val), name, describe_error (err));
+  }
+}
+
+TNarrowText t_narrowtext = TNarrowText();
+//! The type for plain text that needs to be narrow (eg HTTP headers
+//! and similar).
+
+//!
+//! @seealso
+//!    @[t_narrowtext]
+class TNarrowText
+{
+  inherit TText;
+  constant name = "text/x-8bit";
+  constant type_name = "RXML.t_narrowtext";
+  Type supertype = t_text;
+  Type conversion_type = t_text;
+
+  void type_check(mixed val, void|string msg, mixed ... args)
+  {
+    werror("%O: type_check(%O, %O%{, %O%})\n",
+	   this_object(), val, msg, args);
+    ::type_check(val);
+    if (stringp(val) && String.width(val)) {
+      type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
+    }
   }
 }
 
