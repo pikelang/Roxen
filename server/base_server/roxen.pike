@@ -7021,7 +7021,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // fun that trying to find the bug in the image-cache at the moment.
 
   // Note similar code in compile_log_format.
-
+  if (pattern == "")
+    return 0;
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
