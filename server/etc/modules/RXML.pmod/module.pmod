@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.433 2012/08/21 12:13:28 grubba Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8463,7 +8463,8 @@ protected class PikeCompile
       string errmsg = "Still got unresolved delayed resolve places:\n";
       foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
-	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+	errmsg += replace (predef::sprintf ("  %O[%O]: %O",
+					    what, index, what[index]),
 			   "\n", "\n  ") + "\n";
       }
       error (errmsg);
