@@ -8492,7 +8492,8 @@ protected class PikeCompile
       string errmsg = "Still got unresolved delayed resolve places:\n";
       foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
-	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+	errmsg += replace (predef::sprintf ("  %O[%O]: %O",
+					    what, index, what[index]),
 			   "\n", "\n  ") + "\n";
       }
       error (errmsg);
