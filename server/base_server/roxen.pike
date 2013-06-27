@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.873 2004/05/07 14:41:21 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -4463,6 +4463,9 @@ class GCTimestamp
   }
 }
 
+protected int gc_start;
+
+protected mapping(string:int) gc_histogram = ([]);
 
 array argv;
 int main(int argc, array tmp)
@@ -4472,7 +4475,37 @@ int main(int argc, array tmp)
   tmp = 0;
 
 #ifdef LOG_GC_TIMESTAMPS
-  GCTimestamp();
+  Pike.gc_parameters(([ "pre_cb": lambda() {
+				    gc_start = gethrtime();
+				    werror("GC runs at %s", ctime(time()));
+				  },
+			"post_cb":lambda() {
+				    werror("GC done after %dus\n",
+					   gethrtime() - gc_start);
+				  },
+			"destruct_cb":lambda(object o) {
+					gc_histogram[sprintf("%O", object_program(o))]++;
+					werror("GC cyclic reference in %O.\n",
+					       o);
+				      },
+			"done_cb":lambda(int n) {
+				    if (!n) return;
+				    werror("GC zapped %d things.\n", n);
+				    mapping h = gc_histogram + ([]);
+				    if (!sizeof(h)) return;
+				    array i = indices(h);
+				    array v = values(h);
+				    sort(v, i);
+				    werror("GC histogram (accumulative):\n");
+				    foreach(reverse(i)[..9], string p) {
+				      werror("GC:  %s: %d\n", p, h[p]);
+				    }
+				  },
+		     ]));
+  if (!Pike.gc_parameters()->pre_cb) {
+    // GC callbacks not available.
+    GCTimestamp();
+  }
 #endif
 
   // For RBF
