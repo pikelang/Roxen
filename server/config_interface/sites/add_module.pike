@@ -18,7 +18,7 @@ int no_reload()
 array(string) class_description( string d, RequestID id )
 {
   string name, doc;
-  while(!(< "", "/" >)[d] && !file_stat( d+"/INFO" ))
+  while(!(< "", "/" >)[d] && !Stdio.is_file( d+"/INFO" ))
     d = dirname(d);
   if((< "", "/" >)[d])
     return ({"Local modules", "" });
