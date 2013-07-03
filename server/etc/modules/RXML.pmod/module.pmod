@@ -7463,8 +7463,6 @@ class TNarrowText
 
   void type_check(mixed val, void|string msg, mixed ... args)
   {
-    werror("%O: type_check(%O, %O%{, %O%})\n",
-	   this_object(), val, msg, args);
     ::type_check(val);
     if (stringp(val) && (String.width(val) > 8)) {
       type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
