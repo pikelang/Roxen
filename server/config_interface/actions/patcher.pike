@@ -251,13 +251,18 @@ string list_patches(RequestID id, Patcher po, string which_list)
       
 
       res += sprintf("      <tr style='background-color: %s' >\n"
+		     "        <td style='width:20px;text-align:right'>\n"
+		     "          <input type='checkbox' id='%s'"
+		     " name='%s' value='%[1]s' dependencies='%s'" +
+		     " onclick='toggle_%[2]s(%s)' />\n"
+		     "        </td>\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
 		     " onmouseover='this.style.cursor=\"pointer\"'"
-		     " onclick='expand(\"%[1]s\")' />&nbsp;</td>\n"
-		     "        <td onclick='expand(\"%[1]s\");'"
-		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
-		     "        <td onclick='expand(\"%[1]s\");'"
+		     " onclick='expand(\"%[5]s\")' />&nbsp;</td>\n"
+		     "        <td onclick='expand(\"%[5]s\");'"
+		     " onmouseover='this.style.cursor=\"pointer\"'>%[1]s</td>\n"
+		     "        <td onclick='expand(\"%[5]s\");'"
 		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
 		     "%s"
 		     + (which_list == "imported" ? 
@@ -267,21 +272,16 @@ string list_patches(RequestID id, Patcher po, string which_list)
 			"</td>"
 			: "") + 
 		     "        </td>"
-		     "        <td style='width:20px;text-align:right'>\n"		     
-		     "          <input type='checkbox' id='%[2]s'"
-		     " name='%s' value='%[2]s' dependencies='%s'" +
-		     " onclick='toggle_%[5]s(%s)' />"
-		     "</td>\n"
 		     "      </tr>\n",
 		     table_bgcolor,
-		     replace(item->metadata->id, "-", ""),
 		     item->metadata->id,
-		     Roxen.html_encode_string(item->metadata->name),
-		     installed_date,
-		     (which_list == "imported") ? "install" : "uninstall",		     
+		     (which_list == "imported") ? "install" : "uninstall",
 		     deps,
 		     (which_list == "installed") ? 
-		                         "\"" + item->metadata->id + "\"" : "");
+		     "\"" + item->metadata->id + "\"" : "",
+		     replace(item->metadata->id, "-", ""),
+		     Roxen.html_encode_string(item->metadata->name),
+		     installed_date);
 
       array md = ({ });
       if (which_list == "installed")
@@ -481,11 +481,11 @@ string list_patches(RequestID id, Patcher po, string which_list)
       // be ignored when it is submitted.
       res +=
 	sprintf("      <tr style='display:none'>\n"
-		"        <td colspan='4'>&nbsp;</td>\n"
 		"        <td style='width:20px;text-align:right'>\n"
 		"          <input type='checkbox' id='%s' name='uninstall'"
 		" value='on' dependencies=''/>\n"
 		"        </td>\n"
+		"        <td colspan='4'>&nbsp;</td>\n"
 		"      </tr>\n",
 		dep);
     }
@@ -503,7 +503,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
   
   res += sprintf("      <tr>\n"
 		 "        <td bgcolor='&usr.fade2;' colspan='%d'"
-		 " align='right'>\n"
+		 " align='left'>\n"
 		 "          <submit-gbutton2"
 		 " name='%s-button'>%s</submit-gbutton2>\n"
 		 "        </td>\n"
@@ -899,16 +899,16 @@ mixed parse(RequestID id)
       <table class='module-list' cellspacing='0' cellpadding='3' border='0' 
              width='100%' style='table-layout: fixed'>
 	<tr bgcolor='&usr.obox-titlebg;' >
-          <th style='width:20px'>&nbsp;</th>
-	  <th style='width:12em; text-align:left;'>Id</th>
-	  <th style='width: auto; text-align:left'>Patch Name</th>
-          <th style='width: 70px;text-align:right'></th>
-	  <th style='width:20px;text-align:right'>
+	  <th style='width:20px;text-align:left'>
             <input type='checkbox' 
                    name='install'
                    id='install_all'
                    onclick='check_all(\"install\")'/>
           </th>
+          <th style='width:20px'>&nbsp;</th>
+	  <th style='width:12em; text-align:left;'>Id</th>
+	  <th style='width: auto; text-align:left'>Patch Name</th>
+          <th style='width: 70px;text-align:right'></th>
 	</tr>
 ";
   res += list_patches(id, plib, "imported");
@@ -929,16 +929,16 @@ mixed parse(RequestID id)
       <table class='module-list' cellspacing='0' cellpadding='3' border='0' 
              width='100%' style='table-layout: fixed'>\n
 	<tr bgcolor='&usr.obox-titlebg;' >
-          <th style='width:20px'>&nbsp;</th>
-	  <th style='width:12em; text-align:left;'>Id</th>
-	  <th style='width:auto; text-align:left'>Patch Name</th>
-	  <th style='width:16em; text-align:left'>Time of Installation</th>
-	  <th style='width:20px; text-align:right'>
+	  <th style='width:20px; text-align:left'>
             <input type='checkbox'
                    name='uninstall'
                    id='uninstall_all'
                    onclick='check_all(\"uninstall\")'/>
           </th>
+          <th style='width:20px'>&nbsp;</th>
+	  <th style='width:12em; text-align:left;'>Id</th>
+	  <th style='width:auto; text-align:left'>Patch Name</th>
+	  <th style='width:16em; text-align:left'>Time of Installation</th>
 	</tr>
 ";
   res += list_patches(id, plib, "installed");
