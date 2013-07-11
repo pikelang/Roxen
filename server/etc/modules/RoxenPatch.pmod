@@ -187,7 +187,7 @@ class Patcher
 
   private Regexp patchid_regexp = Regexp(
     "((19|20)[0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T"
-    "([01][0-9]|2[0-3])([0-5][0-9])*)");
+    "([01][0-9]|2[0-3])([0-6][0-9])*)");
   //! The format regexp for patch IDs.
   //! ie currently on the format @expr{YYYY-MM-DDThhmmss@}.
   //!
@@ -2100,7 +2100,7 @@ class Patcher
   int(0..1) verify_patch_id(string patch_id, int|void allow_versioned)
   //! Takes a string and verifies that it is a correctly formated patch id.
   {
-    if (patchid_regexp->match(patch_id)) return 1;
+    if (extract_id_from_filename(patch_id) == patch_id) return 1;
     if (!allow_versioned) return 0;
     return sizeof(patch_id/"/") == 2;
   }
