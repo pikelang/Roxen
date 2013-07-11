@@ -1198,7 +1198,8 @@ class Patcher
   //!     @member string "uninstall_user"
   //!       Name of the user that installed the patch the last time. Only 
   //!       available if the @tt{status@} is "installed" or "uninstalled".
-  //!     @member mapping "metadata"
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     mapping res = ([ ]);
@@ -1361,8 +1362,8 @@ class Patcher
   //!       installation log. If there is no log,
   //!       i.e if it has been deleted by a user, then the value of this field
   //!       will be 0.
-  //!     @member mapping(string:mixed) "metadata"
-  //!       metadata block as returned from parse_metadata()
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     array patch_list = filter(get_dir(installed_path) || ({ }), 
@@ -1450,7 +1451,7 @@ class Patcher
   //!     @member string "uninstall_user"
   //!       User who uninstalled the patch. This field is usually 0.
   //!     @member PatchObject "metadata"
-  //!       metadata block as returned from parse_metadata()
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     array patch_list = filter(get_dir(import_path) || ({ }), 
