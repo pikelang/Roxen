@@ -1206,7 +1206,10 @@ class Patcher
     string file_path = id_to_filepath(id);
     
     if (!(file_path && sizeof(file_path)))
-      return ([ "status" : "unknown" ]);
+      return ([
+	"metadata" : PatchObject(id),
+	"status" : "unknown",
+      ]);
 
     // Get metadata
     if (is_file(append_path(file_path, "metadata")))
@@ -1215,7 +1218,10 @@ class Patcher
       res->metadata = parse_metadata(md, id);
     }
     else
-      return ([ "status" : "unknown" ]);
+      return ([
+	"metadata" : PatchObject(id),
+	"status" : "unknown"
+      ]);
 
     string inst_user, uninst_user;
     mapping(string:int) inst_date, uninst_date;
