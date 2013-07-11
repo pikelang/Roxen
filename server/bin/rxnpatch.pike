@@ -642,9 +642,11 @@ int main(int argc, array(string) argv)
       }
     }
     if (imp || !ins)
-      write_list(plib, "imported", 1, color);
+      write_list(plib, plib->file_list_imported(),
+		 "List of imported patches", 1, color);
     if (ins || !imp)
-      write_list(plib, "installed", 1, color);
+      write_list(plib, plib->file_list_installed(),
+		 "list of installed patches", 1, color);
     return 0;
   }
 
@@ -688,11 +690,33 @@ int main(int argc, array(string) argv)
       return 0;
     }
 
+    array(mapping) list = ({});
     foreach(cmd_n_files[2..], string id)
     {
-      if (plib->verify_patch_id(id))
-	write_list(plib, id);
+      if (plib->verify_patch_id(id)) {
+	mapping m = plib->patch_status(id);
+	list += ({ m });
+      } else {
+	string rxp_path = id;
+	if (!(id = plib->extract_id_from_filename(basename(rxp_path))) ||
+	    !Stdio.is_file(rxp_path)) {
+	  werror("\n%s is not a valid rxp filename.\n\n", rxp_path);
+	  continue;
+	}
+	string mdblock =
+	  Filesystem.Tar(rxp_path, UNDEFINED,
+			 Gz.File(Stdio.File(rxp_path, "rb"), "rb"))->
+	  open(id + "/metadata", "r")->read();
+	PatchObject po = plib->parse_metadata(mdblock, id);
+	list += ({
+	  ([
+	    "status": "Not imported",
+	    "metadata": po,
+	  ])
+	});
+      }
     }
+    write_list(plib, list, UNDEFINED, UNDEFINED, color);
     return 0;
   }
 
@@ -788,56 +812,35 @@ array(array(string)) describe_metadata(Patcher po,
 }
 
 private void write_list(Patcher plib,
-			string  list_name,
+			array(mapping) list,
+			string|void list_heading,
 			void|int(0..1) extended_info,
 			void|int(0..1) color)
 {
+  string color_h1 = "";
+  string color_th = "";
+  string color_tr = "";
+  string color_end = "";
+  string color_bold_hr = "="*79 + "\n";
+  string color_hr = "-"*79 + "\n";
 
-  array(mapping) list;
+  if (color) {
+    color_h1 = "\e[1;30;43m";
+    color_th = "\e[1;37;40m";
+    color_tr = "\e[1m";
+    color_end = "\e[0m";
+    color_bold_hr = "";
+    color_hr = "";
+  }
 
-  if (list_name == "installed")
-  {
-    list = plib->file_list_installed();
-    if (color)
-    {
-      write("\n\n\e[1;30;43m %|80s\e[0m\n", "List of installed patches");
-      write("\e[1;37;40m %|15s %|64s\e[0m\n", "ID", "NAME");
-    }
-    else if (list_name == "installed")
-    {
-      write("\n\nList of installed patches:\n\n");
-      write(" %|15s %|64s\n%s\n", "ID", "NAME", "=" * 80);
-    }
+  if (list_heading) {
+    write("\n\n%s %|78s%s\n",
+	  color_h1, list_heading, color_end);
   }
-  else if (list_name == "imported")
-  {
-    list = plib->file_list_imported();
-    if (color)
-    {
-      write("\n\n\e[1;30;43m %|80s\e[0m\n", "List of imported patches");
-      write("\e[1;37;40m %|15s %|64s\e[0m\n", "ID", "NAME");
-    }
-    else
-    {
-      write("\n\nList of imported patches:\n\n");
-      write(" %|15s %|64s\n%s\n", "ID", "NAME", "=" * 80);
-    }
-  }
-  else if (plib->verify_patch_id(list_name))
-  {
-    list = ({ plib->patch_status(list_name) });
-
-    // Check: is status "unknown"?
-    if (list[0]->status == "unknown")
-    {
-      write("%-15s\n%s\n%/15s %-=64s\n%s\n",
-	    list_name,
-	    "-" * 80,
-	    "Status:", "unknown",
-	    "=" * 80);
-      return;
-    }	     
-  }
+  write("%s %|16s %-61s%s\n"
+	"%s",
+	color_th, "ID", "NAME", color_end,
+	color_bold_hr);
 
   if (sizeof(list))
   {
@@ -848,19 +851,20 @@ private void write_list(Patcher plib,
 			    );
     foreach(list, mapping obj)
     {
-      if (color)
-	write("\e[1m%-15s %-64s\e[0m\n", 
-	      obj->metadata->id, 
-	      obj->metadata->name);
-      else
-	write("%-15s %-64s\n%s\n", 
-	      obj->metadata->id, 
-	      obj->metadata->name, "-" * 80);
+      write("%s%-17s %-60s%s\n"
+	    "%s",
+	    color_tr, obj->metadata->id, obj->metadata->name || "", color_end,
+	    color_hr);
       if(extended_info || obj->status)
       {
 	array md = ({ });
-	if (obj->status)
+	if (obj->status) {
 	  md += ({ ({ "Status:"	, obj->status }) });
+	  if (obj->status == "unknown") {
+	    write("%s\n", color_bold_hr);
+	    continue;
+	  }
+	}
 	if (obj->installed)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
@@ -873,13 +877,6 @@ private void write_list(Patcher plib,
 				obj->installed->min);
 	  md += ({
 	    ({ "Installed:"	, date }),
-	    ({ "Installed by:"	, obj->user || "Unknown" }),
-	  });
-	}
-	else if (list_name == "installed")
-	{
-	  md += ({
-	    ({ "Installed:"	, "Information not available." }),
 	    ({ "Installed by:"	, obj->user || "Unknown" }),
 	  });
 	}
@@ -916,19 +913,21 @@ private void write_list(Patcher plib,
 	  }),
 	});
 
-	md += describe_metadata(plib, obj->metadata->new,
-				"New file:", "New files:", color);
-	md += describe_metadata(plib, obj->metadata->replace,
-				"Replaced file:", "Replaced files:", color);
-	md += describe_metadata(plib, obj->metadata->delete,
-				"Deleted file:", "Deleted files:", color);
+	if (obj->status != "Not imported") {
+	  md += describe_metadata(plib, obj->metadata->new,
+				  "New file:", "New files:", color);
+	  md += describe_metadata(plib, obj->metadata->replace,
+				  "Replaced file:", "Replaced files:", color);
+	  md += describe_metadata(plib, obj->metadata->delete,
+				  "Deleted file:", "Deleted files:", color);
 
-	md += describe_metadata(plib, obj->metadata->patch,
-				"Patched file:", "Patched files:", color,
-				plib->id_to_filepath(obj->metadata->id));
+	  md += describe_metadata(plib, obj->metadata->patch,
+				  "Patched file:", "Patched files:", color,
+				  plib->id_to_filepath(obj->metadata->id));
+	}
 	
 	string active_flags = "";
-	string yes = (color) ? "\e[1mYes\e[0m" : "YES";
+	string yes = (color) ? (color_tr + "Yes" + color_end) : "YES";
 	foreach(known_flags; string index; string long_reading)
 	{
 	  active_flags += sprintf("%-40s %3s\n",
@@ -941,12 +940,9 @@ private void write_list(Patcher plib,
 
 	foreach(md, array mdfield)
 	{
-	  write("%/15s %-=64s\n", mdfield[0], mdfield[1]);
+	  write("%/17s %-=60s\n", mdfield[0], mdfield[1]);
 	}
-	if (color)
-	  write("\n");
-	else
-	  write("=" * 80 + "\n");
+	write("%s\n", color_bold_hr);
       }
     }
   }
