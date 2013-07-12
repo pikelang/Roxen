@@ -811,6 +811,42 @@ array(array(string)) describe_metadata(Patcher po,
   return ({ ({ plural, res }) });
 }
 
+protected string format_description(string desc)
+{
+  if (!has_value(desc, "\n")) return desc;
+
+  // plain-text formatted description.
+  //
+  // Split into paragraphs, and format them to a max line length of 60.
+
+  // Normalize empty lines.
+  desc = map(desc/"\n",
+	     lambda(string line) {
+	       if (String.trim_all_whites(line) == "") return "";
+	       return line;
+	     }) * "\n";
+
+  String.Buffer buf = String.Buffer();
+  foreach(desc/"\n\n", string paragraph) {
+    if (String.trim_all_whites(paragraph) == "") continue;
+    string indent = "";
+    string bullet = "";
+    sscanf(paragraph, "%[ ]%[-*o+ ]%s", indent, bullet, paragraph);
+    if (sizeof(bullet) && has_suffix(bullet, " ")) {
+      // Looks like we have a bullet.
+      indent += bullet;
+    } else {
+      // Not a bullet. Restore the prefix.
+      paragraph = bullet + paragraph;
+    }
+
+    paragraph = map(paragraph/"\n", String.trim_all_whites) * " ";
+    buf->add(sprintf("%/*s%-=*s\n\n",
+		     sizeof(indent), indent, 59 - sizeof(indent), paragraph));
+  }
+  return buf->get();
+}
+
 private void write_list(Patcher plib,
 			array(mapping) list,
 			string|void list_heading,
@@ -898,7 +934,9 @@ private void write_list(Patcher plib,
 	}
 
 	md += ({
-	  ({ "Description:"    , obj->metadata->description }),
+	  ({ "Description:"    ,
+	     format_description(obj->metadata->description)
+	  }),
 	  ({ "Originator:"     , obj->metadata->originator  }),
 	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
 	  ({ "Platform(s):"    , sizeof(obj->metadata->platform || ({})) ?

@@ -1319,7 +1319,18 @@ class Patcher
 	p->name = tag_content;
 	break;
       case "description":
-	p->description = trim_ALL_redundant_whites(tag_content);
+	switch (attrs->type) {
+	default:
+	case "text/plain":
+	  // Trim initial and trailing white space.
+	  p->description = String.trim_all_whites(tag_content);
+	  break;
+	  case 0:
+	  // Old-style.
+	  // All formatting (if any) was destroyed when the patch was created.
+	  p->description = trim_ALL_redundant_whites(tag_content);
+	  break;
+	}
 	break;
       case "originator":
 	p->originator = tag_content;
@@ -1622,24 +1633,9 @@ class Patcher
     xml += sprintf("  <name>%s</name>\n", 
 		   html_encode(metadata->name));
     
-    // Reformat the description
-    string desc = "   ";
-    int col_count = 3;
-    foreach(trim_ALL_redundant_whites(metadata->description) / " ", string s)
-    {
-      s = html_encode(s);
-      if((col_count + sizeof(s) + 1) < 80)
-      {
-	  desc += " " + s;
-	  col_count += sizeof(s) + 1;
-      }
-      else
-      {
-	desc += sprintf("\n    %s", s);
-	col_count = 4 + sizeof(s);
-      }
-    }
-    xml += sprintf("  <description>\n%s\n  </description>\n", desc);
+    string desc = String.trim_all_whites(metadata->description);
+    xml += sprintf("  <description type='text/plain'>\n%s\n  </description>\n",
+		   desc);
     
     xml += sprintf("  <originator>%s</originator>\n", metadata->originator);
 
