@@ -186,7 +186,7 @@ class Patcher
 
   private Regexp patchid_regexp = Regexp(
     "((19|20)[0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T"
-    "([01][0-9]|2[0-3])([0-5][0-9])*)");
+    "([01][0-9]|2[0-3])([0-6][0-9])*)");
   //! The format regexp for patch IDs.
   //! ie currently on the format @expr{YYYY-MM-DDThhmmss@}.
   //!
@@ -1197,14 +1197,18 @@ class Patcher
   //!     @member string "uninstall_user"
   //!       Name of the user that installed the patch the last time. Only 
   //!       available if the @tt{status@} is "installed" or "uninstalled".
-  //!     @member mapping "metadata"
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     mapping res = ([ ]);
     string file_path = id_to_filepath(id);
     
     if (!(file_path && sizeof(file_path)))
-      return ([ "status" : "unknown" ]);
+      return ([
+	"metadata" : PatchObject(id),
+	"status" : "unknown",
+      ]);
 
     // Get metadata
     if (is_file(append_path(file_path, "metadata")))
@@ -1213,7 +1217,10 @@ class Patcher
       res->metadata = parse_metadata(md, id);
     }
     else
-      return ([ "status" : "unknown" ]);
+      return ([
+	"metadata" : PatchObject(id),
+	"status" : "unknown"
+      ]);
 
     string inst_user, uninst_user;
     mapping(string:int) inst_date, uninst_date;
@@ -1311,7 +1318,18 @@ class Patcher
 	p->name = tag_content;
 	break;
       case "description":
-	p->description = trim_ALL_redundant_whites(tag_content);
+	switch (attrs->type) {
+	default:
+	case "text/plain":
+	  // Trim initial and trailing white space.
+	  p->description = String.trim_all_whites(tag_content);
+	  break;
+	  case 0:
+	  // Old-style.
+	  // All formatting (if any) was destroyed when the patch was created.
+	  p->description = trim_ALL_redundant_whites(tag_content);
+	  break;
+	}
 	break;
       case "originator":
 	p->originator = tag_content;
@@ -1360,8 +1378,8 @@ class Patcher
   //!       installation log. If there is no log,
   //!       i.e if it has been deleted by a user, then the value of this field
   //!       will be 0.
-  //!     @member mapping(string:mixed) "metadata"
-  //!       metadata block as returned from parse_metadata()
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     array patch_list = filter(get_dir(installed_path) || ({ }), 
@@ -1449,7 +1467,7 @@ class Patcher
   //!     @member string "uninstall_user"
   //!       User who uninstalled the patch. This field is usually 0.
   //!     @member PatchObject "metadata"
-  //!       metadata block as returned from parse_metadata()
+  //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
     array patch_list = filter(get_dir(import_path) || ({ }), 
@@ -1614,24 +1632,9 @@ class Patcher
     xml += sprintf("  <name>%s</name>\n", 
 		   html_encode(metadata->name));
     
-    // Reformat the description
-    string desc = "   ";
-    int col_count = 3;
-    foreach(trim_ALL_redundant_whites(metadata->description) / " ", string s)
-    {
-      s = html_encode(s);
-      if((col_count + sizeof(s) + 1) < 80)
-      {
-	  desc += " " + s;
-	  col_count += sizeof(s) + 1;
-      }
-      else
-      {
-	desc += sprintf("\n    %s", s);
-	col_count = 4 + sizeof(s);
-      }
-    }
-    xml += sprintf("  <description>\n%s\n  </description>\n", desc);
+    string desc = String.trim_all_whites(metadata->description);
+    xml += sprintf("  <description type='text/plain'>\n%s\n  </description>\n",
+		   desc);
     
     xml += sprintf("  <originator>%s</originator>\n", metadata->originator);
 
@@ -2099,7 +2102,7 @@ class Patcher
   int(0..1) verify_patch_id(string patch_id, int|void allow_versioned)
   //! Takes a string and verifies that it is a correctly formated patch id.
   {
-    if (patchid_regexp->match(patch_id)) return 1;
+    if (extract_id_from_filename(patch_id) == patch_id) return 1;
     if (!allow_versioned) return 0;
     return sizeof(patch_id/"/") == 2;
   }
