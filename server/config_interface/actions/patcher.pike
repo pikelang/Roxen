@@ -159,6 +159,94 @@ array(array(string)) describe_metadata(Patcher po,
   return ({ ({ plural, res }) });
 }
 
+protected string format_description(string desc)
+{
+  if (!has_value(desc, "\n")) {
+    // Old-style description.
+    return Roxen.html_encode_string(desc);
+  }
+
+  // plain-text formatted description.
+  //
+  // Split into paragraphs, identify indentation levels,
+  // and create list items.
+
+  // Normalize empty lines.
+  desc = map(desc/"\n",
+	     lambda(string line) {
+	       if (String.trim_all_whites(line) == "") return "";
+	       return line;
+	     }) * "\n";
+
+  array(array(int|string)) paragraphs = ({});
+  multiset(int) indents = (<>);
+  foreach(desc/"\n\n", string paragraph) {
+    if (String.trim_all_whites(paragraph) == "") continue;
+    string indent = "";
+    string bullet = "";
+    sscanf(paragraph, "%[ ]%[-*o+ ]%s", indent, bullet, paragraph);
+    if (sizeof(bullet) && has_suffix(bullet, " ")) {
+      // Looks like we have a bullet.
+      indent += bullet;
+    } else {
+      // Not a bullet. Restore the prefix.
+      paragraph = bullet + paragraph;
+      bullet = "";
+    }
+
+    paragraphs += ({ ({ sizeof(indent), !!sizeof(bullet), paragraph }) });
+    indents[sizeof(indent)] = 1;
+  }
+
+  array(int) tabstops = sort(indices(indents));
+  String.Buffer buf = String.Buffer();
+  int tab = 0;
+  int is_open = 1;
+  foreach(paragraphs, [int indent, int is_bullet, string paragraph]) {
+    while (indent > tabstops[tab]) {
+      if (!is_open) {
+	buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+      }
+      buf->add("<ul>\n");
+      is_open = 0;
+      tab++;
+    }
+    while (indent < tabstops[tab]) {
+      if (is_open) {
+	buf->add("</li>\n");
+      }
+      buf->add("</ul>\n");
+      is_open = 1;
+      tab--;
+    }
+    paragraph = Roxen.html_encode_string(paragraph);
+    if (!is_open) {
+      if (is_bullet) {
+	buf->add("<li>\n");
+      } else {
+	buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+      }
+      buf->add(paragraph);
+      is_open = 1;
+    } else if (is_bullet) {
+      buf->add("</li>\n"
+	       "<li>", paragraph);
+    } else {
+      buf->add("<p>\n", paragraph, "</p>\n");
+    }
+  }
+  while (tab) {
+    if (is_open) {
+      buf->add("</li>\n");
+    }
+    buf->add("</ul>\n");
+    is_open = 1;
+    tab--;
+  }
+
+  return buf->get();
+}
+
 string list_patches(RequestID id, Patcher po, string which_list)
 {
   string self_url = "?class=maintenance&action=patcher.pike";
@@ -325,7 +413,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       md += ({
         ({ LOCALE(333, "Description:")	, 
-	   Roxen.html_encode_string(item->metadata->description) }),
+	   format_description(item->metadata->description) }),
 	({ LOCALE(334, "Originator:")	, item->metadata->originator  }),
 	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
       });
