@@ -1,13 +1,13 @@
 #!/bin/sh
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
-# $Id: init.d_roxen,v 1.32 2012/01/12 16:42:03 grubba Exp $
+# $Id$
 #############
 
 # Configurations collection directory. If available, it overrides
 # roxenhome below.
 #
-roxenconfdirs=/etc/roxen
+roxenconfdir=/etc/roxen
 
 # The server directory where the 'start' script is located, if available.
 #
@@ -65,11 +65,11 @@ if [ -f /lib/svc/share/smf_include.sh -a "x$SMF_FMRI" != x ]; then
 	fi
     fi
 
-    # roxen/confdirs ==> roxenconfdirs
-    if svcprop -q -p roxen/confdirs ${SMF_FMRI}; then
-	val=`svcprop -p roxen/confdirs ${SMF_FMRI}`
+    # roxen/confdir ==> roxenconfdir
+    if svcprop -q -p roxen/confdir ${SMF_FMRI}; then
+	val=`svcprop -p roxen/confdir ${SMF_FMRI}`
 	if [ "$val" != "\"\"" ] ; then
-	    roxenconfdirs="$val"
+	    roxenconfdir="$val"
 	fi
     fi
 fi
@@ -261,7 +261,7 @@ get_variables()
     fi
 }
 
-if [ -d "$roxenconfdirs" ]
+if [ -d "$roxenconfdir" ]
 then
     if [ -z "$1" ]
     then
@@ -271,14 +271,14 @@ then
     if [ -z "$2" ]
     then
 	flagsorig="$flags"
-	for f in "$roxenconfdirs"/*
+	for f in "$roxenconfdir"/*
 	do
 	    flags="$flagsorig"
 	    get_variables "$f"
 	    run_server "$1"
 	done
     else
-	get_variables "$roxenconfdirs"/"$2"
+	get_variables "$roxenconfdir"/"$2"
 	run_server "$1"
     fi
 else
