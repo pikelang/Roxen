@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.18 2000/09/19 09:49:38 lange Exp $
+ * $Id$
  */
 inherit "wizard";
 inherit "../logutil";
@@ -150,6 +150,35 @@ void trace_leave_table(string desc)
 	     "<br />"+Roxen.html_encode_string(desc)+efont)+"</td></tr>";
 }
 
+string resolv_describe_backtrace(mixed err)
+{
+  catch {
+    return describe_backtrace(err);
+  };
+  catch {
+    return sprintf("Thrown value: %O\n", err);
+  };
+  return sprintf("Unformatable %t value.\n", err);
+}
+
+mapping|int resolv_get_file(object c, object nid)
+{
+  mixed err = catch {
+      return c->get_file(nid);
+    };
+
+  if (!level) {
+    trace_enter_ol("", this_object());
+  }
+  trace_leave_ol(sprintf("Uncaught exception thrown:\n\n%s\n",
+			 resolv_describe_backtrace(err)));
+
+  while(level) {
+    trace_leave_ol("");
+  }
+  return ([]);
+}
+
 void resolv_handle_request(object c, object nid)
 {
   int again;
@@ -177,7 +206,7 @@ void resolv_handle_request(object c, object nid)
     }
   } while(again);
 
-  if(!c->get_file(nid))
+  if(!resolv_get_file(c, nid))
   {
     foreach(c->last_modules(), funp)
     {
