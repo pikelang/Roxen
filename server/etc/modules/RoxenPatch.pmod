@@ -1757,13 +1757,24 @@ class Patcher
 
     // Copy all files to a temp dir.
     string id = metadata->id;
-    string temp_data_path = combine_path(temp_path, id);
-    write_mess("Creating temp dir for %s ... ", id);
-    if(mkdirhier(temp_data_path))
-      write_mess("<green>Done!</green>\n");
-    else
-    {
-      write_err("FAILED: Could not create %s\n", temp_data_path);
+
+    if (!destination_path) destination_path = getcwd();
+    string dest =
+      unixify_path(combine_path(destination_path || getcwd(), id + ".rxp"));
+    write_mess("Creating rxp file %s ... ", dest);
+    Stdio.File rxpfile = Stdio.File();
+    if (!rxpfile->open(dest, "wbct")) {
+      write_err("FAILED: Could not create %s: %s\n",
+		dest, strerror(rxpfile->errno()));
+      return 0;
+    }
+    write_mess("<green>Done!</green>\n");
+
+    int mtime = Calendar.dwim_time(id)->unix_time();
+    Gz.File gzfile = Gz.File(rxpfile, "wb");
+    mapping(string:string) tared_files = ([]);
+
+    if (!add_dir_to_rxp(gzfile, id, mtime)) {
       return 0;
     }
 
@@ -1775,14 +1786,10 @@ class Patcher
 	  continue;
 	}
 	// Package the string nicely:
-	if (!copy_file_to_temp_dir(m, temp_data_path))
+	if (!add_file_to_rxp(gzfile, m, id, tared_files))
 	{
-	  clean_up(temp_data_path);
 	  return 0;
 	}
-
-	// Update with the new file name
-	m->source = basename(m->source);
       }
 
     if (metadata->replace)
@@ -1790,9 +1797,8 @@ class Patcher
 	if ((m->platform || server_platform) != server_platform) {
 	  continue;
 	}
-	if (!copy_file_to_temp_dir(m, temp_data_path))
+	if (!add_file_to_rxp(gzfile, m, id, tared_files))
 	{
-	  clean_up(temp_data_path);
 	  return 0;
 	}
       }
@@ -1802,9 +1808,8 @@ class Patcher
 	if ((m->platform || server_platform) != server_platform) {
 	  continue;
 	}
-	if (!copy_file_to_temp_dir(m, temp_data_path)) 
+	if (!add_file_to_rxp(gzfile, m, id, tared_files))
 	{
-	  clean_up(temp_data_path);
 	  return 0;
 	}
       }
@@ -1815,11 +1820,9 @@ class Patcher
     {
       foreach(metadata->udiff; int i; mapping(string:string) udiff) {
 	string out_filename = sprintf("patchdata-%04d.patch", i);
-	string out_file_path = combine_path(temp_data_path, out_filename);
-      
-	if(!write_file_to_disk(out_file_path, udiff->patch))
-	{
-	  clean_up(temp_data_path);
+
+	if (!add_blob_to_rxp(gzfile, udiff->patch, id + "/" + out_filename,
+			     mtime)) {
 	  return 0;
 	}
 
@@ -1834,18 +1837,17 @@ class Patcher
     }
 
     string mdxml = build_metadata_block(metadata);
-    string out_file_path = combine_path(temp_data_path, "metadata");
-    
-    if(!write_file_to_disk(out_file_path, mdxml))
-      return 0;
 
-    if(!create_rxp_file(id, destination_path))
+    if (!add_blob_to_rxp(gzfile, mdxml, id + "/metadata", mtime)) {
       return 0;
+    }
+
+    if (!finish_rxp(gzfile)) {
+      return 0;
+    }
 
     write_mess("Patch created successfully!\n");
 
-    clean_up(temp_data_path);
-    
     return 1;
   }
 
@@ -2455,6 +2457,105 @@ class Patcher
       i++;    
     }
     return res;
+  }
+
+  protected int(0..1) add_header_to_rxp(Gz.File rxp, string path,
+					int mode, int uid, int gid, int sz,
+					int mtime, int|void header_type)
+  {
+    string path_pad = "\0" * (100 - sizeof(path));
+    string header = sprintf("%100s%06o \0%06o \0%06o \0%011o %011o ",
+			    path + path_pad, mode, uid, gid, sz, mtime);
+    int csum = `+(@((array(int))header), ' '*8);
+    string check = sprintf("%06o\0 %c", csum + header_type, header_type);
+    string pad = "\0" * (512 - (sizeof(header) + sizeof(check)));
+
+    int bytes;
+    bytes += rxp->write(header) - sizeof(header);
+    bytes += rxp->write(check) - sizeof(check);
+    bytes += rxp->write(pad) - sizeof(pad);
+    return !bytes;
+  }
+
+  protected int(0..1) add_dir_to_rxp(Gz.File rxp, string path, int mtime)
+  {
+    if (!has_suffix(path, "/")) path += "/";
+    write_mess("Archiving directory %s ... ", path);
+    if (!add_header_to_rxp(rxp, path, 0755, 0, 0, 0, mtime, '5')) {
+      write_err("FAILED: Failed to write tar header to rxp.\n");
+      return 0;
+    }
+    write_mess("<green>Done!</green>\n");
+    return 1;
+  }
+
+  protected int(0..1) add_blob_to_rxp(Gz.File rxp, string blob,
+				      string path, int mtime)
+  {
+    write_mess("Archiving %s ... ", path);
+    if (!add_header_to_rxp(rxp, path, 0644, 0, 0, sizeof(blob), mtime)) {
+      write_err("FAILED: Failed to write tar header to rxp.\n");
+      return 0;
+    }
+
+    int bytes = rxp->write(blob) - sizeof(blob);
+    if (sizeof(blob) & 511) {
+      bytes += rxp->write("\0" * (512 - (sizeof(blob) & 511))) -
+	(512 - (sizeof(blob) & 511));
+    }
+    if (bytes) {
+      write_err("FAILED: Failed to write %d bytes.\n", -bytes);
+      return 0;
+    }
+    write_mess("<green>Done!</green>\n");
+    return 1;
+  }
+
+  protected int(0..1) add_file_to_rxp(Gz.File rxp, mapping m, string id,
+				      mapping(string:string) tared_files)
+  {
+    string filename = basename(m->source);
+    string full_path = combine_path(getcwd(), m->source);
+    if (!sizeof(filename||"")) return 0;
+    string dest = id + "/" + filename;
+    if (tared_files[dest]) {
+      // We need to search for a suitable destination filename.
+      int n;
+      for (n = 0; tared_files[dest + n]; n++)
+	;
+      dest += n;
+      filename += n;
+    }
+    tared_files[dest] = full_path;
+    m->source = filename;
+
+    write_mess("Reading %s ... ", full_path);
+    string data = Stdio.read_bytes(full_path);
+    if (!data) {
+      write_err("FAILED: Could not read file %s: %s\n",
+		full_path, strerror(errno()));
+      return 0;
+    }
+    write_mess("<green>Done!</green>\n");
+    Stat st = file_stat(full_path);
+    int mtime = st && st->mtime;
+    return add_blob_to_rxp(rxp, data, dest, mtime);
+  }
+
+  protected int finish_rxp(Gz.File rxp)
+  {
+    write_mess("Finishing rxp ... ");
+    int bytes = rxp->write("\0" * (512 * 2)) - 512 * 2;
+    if (bytes) {
+      write_err("FAILED: %d bytes remaining.\n", -bytes);
+      return 0;
+    }
+    if (!rxp->close()) {
+      write_err("FAILED: Close failed.\n");
+      return 0;
+    }
+    write_mess("<green>Done!</green>\n");
+    return 1;
   }
 
   int create_rxp_file(string id, void|string dest_path)
