@@ -1769,7 +1769,7 @@ class Patcher
     }
     write_mess("<green>Done!</green>\n");
 
-    int mtime = Calendar.dwim_time(id)->unix_time();
+    int mtime = dwim_time(id);
     Gz.File gzfile = Gz.File(rxpfile, "wb");
     mapping(string:string) tared_files = ([]);
 
@@ -2428,6 +2428,11 @@ class Patcher
     return time->format_ymd() + "T" + time->format_tod_short();
   }
 
+  int dwim_time(string patchid)
+  //! Get the number of seconds since the epoch for a patchid.
+  {
+    return Calendar.ISO.parse("%Y-%M-%DT%t", patchid)->unix_time();
+  }
 
   string trim_ALL_redundant_whites(string s)
   //! Trim away all whites including newlines, double space a tabs.
