@@ -1409,7 +1409,11 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	    break;
 	  }
 	}
-	if (!path) break;
+	// Filter git and distmaker control files as well.
+	if (!path || has_prefix(path, ".git") || has_value(path, "/.git") ||
+	    has_suffix(path, ".distignore")) {
+	  break;
+	}
 	continue;
 
       case "+++":
