@@ -226,13 +226,13 @@ protected string format_description(string desc)
       } else {
 	buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
       }
-      buf->add(paragraph);
+      buf->add("<p>", paragraph, "</p>\n");
       is_open = 1;
     } else if (is_bullet) {
       buf->add("</li>\n"
-	       "<li>", paragraph);
+	       "<li><p>", paragraph, "</p>\n");
     } else {
-      buf->add("<p>\n", paragraph, "</p>\n");
+      buf->add("<p>", paragraph, "</p>\n");
     }
   }
   while (tab) {
@@ -359,7 +359,6 @@ string list_patches(RequestID id, Patcher po, string which_list)
 			"</link-gbutton>"
 			"</td>"
 			: "") + 
-		     "        </td>"
 		     "      </tr>\n",
 		     table_bgcolor,
 		     item->metadata->id,
@@ -544,7 +543,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       res += sprintf("      <tr id='id%s' bgcolor='%s' "
 		     " style='display: none'>\n"
-		     "        <td>&nbsp;</td>\n"
+		     "        <td colspan='2'>&nbsp;</td>\n"
 		     "        <td colspan='%d'>\n"
  		     "          <table class='module-sub-list'"
   		     " cellspacing='0' cellpadding='3' border='0'>\n"
@@ -553,7 +552,6 @@ string list_patches(RequestID id, Patcher po, string which_list)
   		     "              <td>\n%s</td>\n"
   		     "            </tr>\n%}"
   		     "          </table>\n"
-		     "          <td>\n"
 		     "        </td>\n"
 		     "      </tr>\n",
 		     replace(item->metadata->id, "-", ""),
@@ -661,6 +659,10 @@ mixed parse(RequestID id)
         border:	    1px solid #ddd;
         padding:    5px;
         margin:     0 4px 0 0;
+      }
+
+      table.module-sub-list p {
+	margin-top: 0px;
       }
     </style>
     <script type='text/javascript'>
@@ -994,7 +996,7 @@ mixed parse(RequestID id)
                    onclick='check_all(\"install\")'/>
           </th>
           <th style='width:20px'>&nbsp;</th>
-	  <th style='width:12em; text-align:left;'>Id</th>
+	  <th style='width:11em; text-align:left;'>Id</th>
 	  <th style='width: auto; text-align:left'>Patch Name</th>
           <th style='width: 70px;text-align:right'></th>
 	</tr>
@@ -1024,9 +1026,9 @@ mixed parse(RequestID id)
                    onclick='check_all(\"uninstall\")'/>
           </th>
           <th style='width:20px'>&nbsp;</th>
-	  <th style='width:12em; text-align:left;'>Id</th>
+	  <th style='width:11em; text-align:left;'>Id</th>
 	  <th style='width:auto; text-align:left'>Patch Name</th>
-	  <th style='width:16em; text-align:left'>Time of Installation</th>
+	  <th style='width:14em; text-align:left'>Time of Installation</th>
 	</tr>
 ";
   res += list_patches(id, plib, "installed");
