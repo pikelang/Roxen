@@ -1,0 +1,192 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 7e9ea4b61e79ee593faf69ac1023c989e287541d
+to: 2ce77331d92018fc325fdde63b453dac1ad2fdaf
+originator: wellhardh@roxen.com
+depends: roxen/5.2.365
+restart: true
+
+Multiple fixes:
+
+  * git-rxnpatch: Improved handling of flags.
+    
+    --restart is now default.
+    
+    The flags set by --flag are now actually propagated to rxnpatch.
+    
+    In addition the case-sensitivity of the metadata.txt parser
+    has been relaxed somewhat.
+
+  * git-rxnpatch: Reverse order of commits in description.
+    
+    Bullets are now only generated for individual commits.
+
+  * git-rxnpatch: Fixed detection of diverged branches.
+
+  * git-rxnpatch: Improved status information.
+    
+    The status command now lists patches that are pending.
+
+  * git-rxnpatch: Implemented list command.
+    
+    It is now possible to list the commits that not yet have a patch
+    with the list command.
+
+  * Some options for emit#captcha
+
+  * git-rxnpatch: Fix issue in description formatter.
+    
+    The special case with a single commit wasn't working
+    correctly in format_description().
+
+  * Version bumped to 5.2.366 by buildsystem.
+
+  * Version bumped to 5.2.367 by buildsystem.
+
+  * Changed hashbang path.
+
+  * HTTP: Don't linger on close on timeout.
+    
+    We don't care if there's data pending in the network buffers when
+    the connection times out (there probably is), since we won't send
+    the rest of the result anyway.
+
+  * Version bumped to 5.2.368 by buildsystem.
+
+  * Version bumped to 5.2.369 by buildsystem.
+
+  * Version bumped to 5.2.370 by buildsystem.
+
+  * Version bumped to 5.2.371 by buildsystem.
+
+  * Shortcut handling of empty security pattern to avoid database query.
+
+  * [debug] Improve LOG_GC_TIMESTAMPS by using gc callbacks.
+    
+    The LOG_GC_TIMESTAMPS mode now logs objects that contain
+    cyclic references and keeps a histogram of corresponding
+    programs.
+    
+    This should simplify identification of memory leaks.
+
+  * [compat][debug] Fix PikeCompile compat with Pike 7.9.
+    
+    String.Buffer in Pike 7.9 contains a sprintf() function. Make sure
+    not to call it (due to our inherit) since we want the normal one.
+    
+    Fixes "Bad argument 1 to add(). Expected string." where add()
+    was passed an int.
+
+  * Version bumped to 5.2.372 by buildsystem.
+
+  * Version bumped to 5.2.373 by buildsystem.
+
+  * git-rxnpatch: Added support for creating patch clusters.
+    
+    Fixes [bug 6828].
+
+  * git-rxnpatch: Improved tar compatibility for clusters.
+    
+    The tar header used by clusters now follows the compat
+    recomendations from FreeBSD's tar(5).
+    
+    Fixes [bug 6828] some more.
+
+  * RoxenPatch: Move checkboxes to first on the line.
+    
+    Convention has it that checkboxes usually should be first on the line.
+    This also has the benefit of disassociating the checkboxes from the
+    remove buttons.
+    
+    Fixes some of [bug 4748].
+
+  * RoxenPatch: Fix verify_patch_id() to work as intended.
+    
+    verify_patch_id() now only accepts patch-ids that aren't embedded
+    into paths.
+
+  * RoxenPatch: Updated some stale documentation.
+
+  * RoxenPatch: patch_status() now always returns metadata.
+    
+    The returned mapping now contains a metadata member (with
+    an almost empty PatchObject) even for status "unknown".
+    
+    This it to help streamlining code in other places.
+
+  * RoxenPatch: Support unimported patches in status.
+    
+    rxnpatch status now accepts paths to rxp files.
+    
+    Also some cleanup of the color handling for the status command.
+
+  * RoxenPatch: Allow some formatting of the patch description.
+    
+    One of the most requested features.
+    
+    Plain text formatting of the patch description now survives
+    patch generation and display.
+    
+    Some special handling of bullet lists has also been added.
+
+  * Init.d: Rename roxenconfigdirs ==> roxenconfigdir
+    
+    The variable now has the same name as in the macosx/
+    Library-StartupItems-Roxen-Roxen script (which was first
+    with the feature).
+    
+    [Warning]
+      Also renames the corresponding SVC property from
+      "roxen/confdirs" to "roxen/confdir".
+    
+    Fixes [bug 6722].
+
+  * Actions: Improved robustness in resolve path.
+    
+    500-errors shouldn't propagate through the resolve path action.
+    Catch errors from Configuration()->get_file(), and attempt to
+    format them.
+    
+    Fixes [bug 6802].
+
+  * RoxenPatch: Reduce use of external binaries.
+    
+    The RoxenPatch system required a GNU-style tar command
+    in the path to be able to generate RXP-files. Generate
+    the RXP files by hand instead. This also has the added
+    benefit of reducing the amount of temporary files used.
+    
+    Fixes building of RXPs on eg Solaris.
+
+  * git-rxnpatch: Ensure full blob sha1s. Fixes [bug 6853].
+    
+    git-diff(1) defaults to using short blob identifiers, which
+    breaks the new file detection in the git-rxnpatch make command.
+
+  * git-rxnpatch: Fixed cluster command whith existing clusters.
+    
+    A trailing newline in the cluster base sha1 caused the
+    git-diff-tree(1) command to fail.
+    
+    Fixes [bug 6854].
+
+  * RoxenPatch: Fixed generation of mtime on old Pike.
+    
+    Calendar.dwim_time() apparently doesn't support ISO timestamps
+    in Pike 7.8 and earlier.
+
+  * RoxenPatch: Fixed broken XML-quoting of description.
+
+  * git-rxnpatch: Filter git and distmaker control files.
+
+  * RoxenPatch: Multiple layout fixes in the config interface.
+    
+      * The description field can now use the full remainder of the
+        table width.
+    
+      * Got rid of the "empty" line preceding the description.
+    
+      * Reduced width of some of the columns.
+    
+      * Fixed some broken <td>-tags.
+
+  * RoxenPatch: Fixed broken remove buttons.
