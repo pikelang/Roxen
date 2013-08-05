@@ -1634,9 +1634,10 @@ class Patcher
     
     string desc = String.trim_all_whites(metadata->description);
     xml += sprintf("  <description type='text/plain'>\n%s\n  </description>\n",
-		   desc);
+		   html_encode(desc));
     
-    xml += sprintf("  <originator>%s</originator>\n", metadata->originator);
+    xml += sprintf("  <originator>%s</originator>\n",
+		   html_encode(metadata->originator));
 
     array valid_tags = ({ "version", "platform", "depends", "flags", "reload",
 			  "patch", "new", "replace", "delete" });
