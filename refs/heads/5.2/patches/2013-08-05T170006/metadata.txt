@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Patch system improvements, captcha, HTTP linger, init.d roxenconfigdir
 from: 7e9ea4b61e79ee593faf69ac1023c989e287541d
 to: 2ce77331d92018fc325fdde63b453dac1ad2fdaf
 originator: wellhardh@roxen.com
@@ -38,10 +38,6 @@ Multiple fixes:
     The special case with a single commit wasn't working
     correctly in format_description().
 
-  * Version bumped to 5.2.366 by buildsystem.
-
-  * Version bumped to 5.2.367 by buildsystem.
-
   * Changed hashbang path.
 
   * HTTP: Don't linger on close on timeout.
@@ -49,14 +45,6 @@ Multiple fixes:
     We don't care if there's data pending in the network buffers when
     the connection times out (there probably is), since we won't send
     the rest of the result anyway.
-
-  * Version bumped to 5.2.368 by buildsystem.
-
-  * Version bumped to 5.2.369 by buildsystem.
-
-  * Version bumped to 5.2.370 by buildsystem.
-
-  * Version bumped to 5.2.371 by buildsystem.
 
   * Shortcut handling of empty security pattern to avoid database query.
 
@@ -75,10 +63,6 @@ Multiple fixes:
     
     Fixes "Bad argument 1 to add(). Expected string." where add()
     was passed an int.
-
-  * Version bumped to 5.2.372 by buildsystem.
-
-  * Version bumped to 5.2.373 by buildsystem.
 
   * git-rxnpatch: Added support for creating patch clusters.
     
