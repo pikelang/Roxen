@@ -971,12 +971,13 @@ void display_status(mapping(string:string|int|array(string)) options,
     }
     if (cluster) {
       // There's apparently a cluster.
-      string base = (git_try("rev-list", "--max-count=1",
-			     "refs/tags/rxnpatch/clusters/" + branch +
-			     "/" + cluster)/"\n")[0];
+      string base = git_try("rev-list", "--max-count=1",
+			    "refs/tags/rxnpatch/clusters/" + branch +
+			    "/" + cluster);
       if (base) {
 	// Check if any patches have been added or changed for the
 	// branch since then.
+	base = (base/"\n")[0];
 	pending_cluster = 0;
 	foreach(git("diff-tree", "-r", "-z", "--name-only",
 		    base, "rxnpatch/rxnpatch")/"\0", string fname) {
@@ -1568,6 +1569,7 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     if (base) {
       // Check if any patches have been added or changed for the
       // branch since then.
+      base = (base/"\n")[0];
       pending_cluster = 0;
       foreach(git("diff-tree", "-r", "-z", "--name-only",
 		  base, "rxnpatch/rxnpatch")/"\0", string fname) {
