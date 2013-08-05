@@ -1611,7 +1611,7 @@ void create_cluster(mapping(string:string|int|array(string)) options,
 
     write("  %s (%d bytes)\n", patch_name, sizeof(blob));
 
-    int mtime = Calendar.dwim_time(patch_name)->unix_time();
+    int mtime = Calendar.ISO.parse("%Y-%M-%DT%t", patch_name)->unix_time();
 
     string name_pad =
       "\0" * (100 - (sizeof(cluster_dir) + sizeof(patch_name)));
