@@ -856,6 +856,24 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
 
   path_prefix = options->path_prefix || "";
 
+  if (options->subtree_prefix) {
+    if (!has_suffix(options->subtree_prefix, "/") &&
+	(options->subtree_prefix != "")) {
+      // Normalize the prefix to contain the directory separator.
+      options->subtree_prefix += "/";
+    }
+    write("Setting default repository subtree prefix "
+	  "for branch %s to %s.\n",
+	  branch, options->subtree_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/subtree_prefix.txt",
+		  options->subtree_prefix + "\n",
+		  "New repository subtree prefix: " +
+		  options->subtree_prefix + ".\n");
+  }
+
+  subtree_prefix = options->subtree_prefix || "";
+
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
   write("Created patch branch %s.\n", patch_branch);
 }
