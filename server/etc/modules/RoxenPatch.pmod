@@ -486,6 +486,98 @@ class Patcher
       }
     };
 
+    int post_process_path(string path, mapping(string:string) file) {
+      if (!has_prefix(path, server_path)) return 1;
+      string dest = path[sizeof(server_path)..];
+      if (has_prefix(dest, "/")) dest = dest[1..];
+      if (has_prefix(dest, "pike/lib/")) {
+	if (is_file(path + ".o")) {
+	  write_log(0, "Removing file <u>%s</u> ... ", path + ".o");
+	  write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
+		    path + ".o",
+		    basename(backup_file));
+
+	  if (add_file_to_tar_archive(dest + ".o",
+				      server_path,
+				      backup_file))
+	    write_log(0, "<green>ok.</green>\n");
+	  else
+	  {
+	    write_err("FAILED: Could not append tar file!\n");
+	    error_count++;
+	    if (!force) return 0;
+	  }
+	  Privs privs = Privs("RoxenPatch: Remove file: " + path + ".o");
+	  if (!dry_run) {
+	    if (rm(path + ".o"))
+	    {
+	      write_log(0, "<green>ok.</green>\n");
+	    } else {
+	      write_err("FAILED: Could not remove file.\n");
+	      error_count++;
+	      if (!force) return 0;
+	    }
+	  }
+	  privs = 0;
+	}
+
+	if (has_suffix(path, "/master.pike.in")) {
+	  string master = path[..sizeof(path)-4];
+	  write_log(0, "New Pike master file <u>%s</u> ... ", master);
+	  if (is_file(master)) {
+	    write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
+		      master, basename(backup_file));
+
+	    if (add_file_to_tar_archive(dest[..sizeof(dest)-4],
+					server_path,
+					backup_file))
+	      write_log(0, "<green>ok.</green>\n");
+	    else
+	    {
+	      write_err("FAILED: Could not append tar file!\n");
+	      error_count++;
+	      if (!force) return 0;
+	    }
+	  }
+	  if (!dry_run) {
+	    string data = Stdio.read_bytes(path);
+	    string libdir = dirname(master);
+	    string incdir = append_path(dirname(libdir), "include");
+	    string docdir = append_path(dirname(libdir), "doc");
+	    data = replace(data, ({
+			     "#lib_prefix#",
+			     "#share_prefix#",
+			     "#cflags#",
+			     "#ldflags#",
+			     "#include_prefix#",
+			     "#doc_prefix#",
+			   }), ({
+			     libdir,
+			     "#share_prefix#",
+			     predef::master()->cflags||"#cflags#",
+			     predef::master()->ldflags||"#ldflags#",
+			     incdir,
+			     docdir,
+			   }));
+	    Privs privs = Privs("RoxenPatch: Updating master " + master);
+	    if (catch {
+		Stdio.write_file(master, data);
+	      }) {
+	      privs = 0;
+	      write_err("FAILED: Could not write file.\n");
+	      error_count++;
+	      if (!force) return 0;
+	    }
+	    privs = 0;
+	    write_log(0, "<green>ok.</green>\n");
+
+	    // NB: Clean the .o-file for the master.
+	    return post_process_path(master, file);
+	  }
+	}
+      }
+    };
+
     // Check if the patch is already installed
     if (is_installed(patch_id))
     {
@@ -689,6 +781,11 @@ class Patcher
 	  privs = 0;
 	  write_log(0, "<green>ok.</green>\n");
 	  new_files += ({ dest });
+
+	  if (!post_process_path(dest, file)) {
+	    undo_changes_and_dump_log_to_file();
+	    return 0;
+	  }
 	}
 	else if (!dry_run)
 	{
@@ -720,7 +817,7 @@ class Patcher
 	if(is_file(dest))
 	{
 	  // Backup the original file to a tar_archive
-	  write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", 
+	  write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ",
 		    dest, 
 		    basename(backup_file));
 
@@ -751,6 +848,11 @@ class Patcher
 	      System.utime(dest, fstat->atime, fstat->mtime);
 	    privs = 0;
 	    write_log(0, "<green>ok.</green>\n");
+
+	    if (!post_process_path(dest, file)) {
+	      undo_changes_and_dump_log_to_file();
+	      return 0;
+	    }
 	  }
 	  else if (!dry_run)
 	  {
@@ -796,7 +898,7 @@ class Patcher
 	if(is_file(dest))
 	{
 	  // Backup the original file to a tar_archive
-	  write_log(0, "Backing up <u>%s</u> to </u>%s</u> ... ", 
+	  write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
 		    dest, 
 		    basename(backup_file));
 
@@ -820,6 +922,11 @@ class Patcher
 	  if (!dry_run && rm(dest))
 	  {
 	    write_log(0, "<green>ok.</green>\n");
+
+	    if (!post_process_path(dest, del_info)) {
+	      undo_changes_and_dump_log_to_file();
+	      return 0;
+	    }
 	  }
 	  else if (!dry_run)
 	  {
@@ -855,9 +962,10 @@ class Patcher
 	}
 	string file = patch_info->source;
 	File udiff_data = File(append_path(source_path, file));
+	string udiff = udiff_data->read();
 
 	// Backup files
-	foreach(lsdiff(udiff_data->read()), string affected_file)
+	foreach(lsdiff(udiff), string affected_file)
 	{
 	  // Check that the affected file exists
 	  write_log(0, "Checking %s ... ", affected_file);
@@ -946,10 +1054,21 @@ class Patcher
 	
 	// Close file object again
 	udiff_data->close();
+
+	if (!error) {
+	  write_log(0, "<green>ok.</green>\n");
+
+	  if (!dry_run) {
+	    foreach(lsdiff(udiff), string affected_file) {
+	      if (!post_process_path(append_path(server_path, affected_file),
+				     patch_info)) {
+		undo_changes_and_dump_log_to_file();
+		return 0;
+	      }
+	    }
+	  }
+	}
       }
-      if (!error)
-	write_log(0, "<green>ok.</green>\n");
-      
     }
     
     // Move dir
