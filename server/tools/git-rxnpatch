@@ -1448,8 +1448,10 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  }
 	}
 	// Filter git and distmaker control files as well.
+	// There are also some files in Pike that don't get installed.
 	if (!path || has_prefix(path, ".git") || has_value(path, "/.git") ||
-	    has_suffix(path, ".distignore")) {
+	    has_suffix(path, ".distignore") ||
+	    has_suffix(path, "/testsuite.in")) {
 	  break;
 	}
 	continue;
