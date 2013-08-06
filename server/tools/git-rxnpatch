@@ -642,6 +642,10 @@ array(string) load_deps(string sha1)
     } else if (release_tag_prefix && has_prefix(dep, release_tag_prefix)) {
       dep = replace(dep[sizeof("refs/tags/")..],
 		    ({ "-", "_" }), ({ "/", "/" }));
+      if (!has_value(dep, "/") && has_prefix(dep, "v")) {
+	// Pike.
+	dep = "pike/" + dep[1..];
+      }
     } else continue;
     ret += ({ dep });
   }
@@ -696,9 +700,16 @@ int init(mapping(string:string|int|array(string)) options)
   if (release_tag_prefix) {
     release_tag_prefix -= "\n";
 
+    string repo =
+      replace(release_tag_prefix[sizeof("refs/tags/")..], "/", "-");
+
+    if (repo == "v") {
+      // Pike.
+      repo = "pike";
+    }
+
     cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
-      replace(release_tag_prefix[sizeof("refs/tags/")..], "/", "-") + "-" +
-      replace(branch, "/", "-") + "-";
+      repo + "-" + replace(branch, "/", "-") + "-";
   }
 
   path_prefix =
@@ -817,9 +828,17 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
     // Not a rxnpatch tag.
     // We've probably got a release tag.
     array(string) a = replace(current_tag, "-", "_")/"_";
+    string tag_prefix;
     if (sizeof(a) > 1) {
-      string tag_prefix = a[0] + "\n";
-
+      tag_prefix = a[0] + "\n";
+    } else {
+      a = current_tag/"/";
+      if (has_prefix(a[-1], "v")) {
+	// Pike.
+	tag_prefix = a[..sizeof(a)-2]*"/" + "/v";
+      }
+    }
+    if (tag_prefix) {
       string prev_prefix =
 	git_cat_file(rxnpatch_branch,
 		     "refs/heads/" + branch + "/release_tag_prefix.txt", 1);
@@ -855,6 +874,24 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
   }
 
   path_prefix = options->path_prefix || "";
+
+  if (options->subtree_prefix) {
+    if (!has_suffix(options->subtree_prefix, "/") &&
+	(options->subtree_prefix != "")) {
+      // Normalize the prefix to contain the directory separator.
+      options->subtree_prefix += "/";
+    }
+    write("Setting default repository subtree prefix "
+	  "for branch %s to %s.\n",
+	  branch, options->subtree_prefix);
+    git_save_file("refs/heads/rxnpatch/rxnpatch",
+		  "refs/heads/" + branch + "/subtree_prefix.txt",
+		  options->subtree_prefix + "\n",
+		  "New repository subtree prefix: " +
+		  options->subtree_prefix + ".\n");
+  }
+
+  subtree_prefix = options->subtree_prefix || "";
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
   write("Created patch branch %s.\n", patch_branch);
@@ -1180,6 +1217,7 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 
       // Convert to marketing names.
       display_name = ([
+	"V": "Pike",
 	"Print": "EP",
 	"Sitebuilder": "CMS",
 	"Feedimport": "FeedImport",
