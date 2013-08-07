@@ -543,8 +543,18 @@ class Patcher
 	  if (!dry_run) {
 	    string data = Stdio.read_bytes(path);
 	    string libdir = dirname(master);
-	    string incdir = append_path(dirname(libdir), "include");
+	    string cflags = predef::master()->cflags||"#cflags#";
+	    string ldflags = predef::master()->ldflags||"#ldflags#";
+	    string incdir = append_path(dirname(libdir), "include/pike");
 	    string docdir = append_path(dirname(libdir), "doc");
+
+	    string cppflags = " -I" + dirname(incdir);
+	    if (has_suffix(cflags, cppflags)) {
+	      // The default master appends this to cflags,
+	      // so we need to remove it here.
+	      cflags = cflags[..sizeof(cflags) - (sizeof(cppflags)+1)];
+	    }
+
 	    data = replace(data, ({
 			     "#lib_prefix#",
 			     "#share_prefix#",
@@ -555,8 +565,8 @@ class Patcher
 			   }), ({
 			     libdir,
 			     "#share_prefix#",
-			     predef::master()->cflags||"#cflags#",
-			     predef::master()->ldflags||"#ldflags#",
+			     cflags,
+			     ldflags,
 			     incdir,
 			     docdir,
 			   }));
@@ -577,6 +587,8 @@ class Patcher
 	  }
 	}
       }
+      // Done.
+      return 1;
     };
 
     // Check if the patch is already installed
