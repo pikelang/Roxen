@@ -544,7 +544,7 @@ class Patcher
 	    string libdir = dirname(master);
 	    string cflags = predef::master()->cflags||"#cflags#";
 	    string ldflags = predef::master()->ldflags||"#ldflags#";
-	    string incdir = append_path(dirname(libdir), "include/pike");
+	    string incdir = append_path(dirname(libdir), "include");
 	    string docdir = append_path(dirname(libdir), "doc");
 
 	    string cppflags = " -I" + dirname(incdir);
