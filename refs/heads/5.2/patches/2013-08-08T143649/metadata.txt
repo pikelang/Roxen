@@ -1,0 +1,41 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 2ce77331d92018fc325fdde63b453dac1ad2fdaf
+to: 7aaa9ecc627aab741e4df107a18d70c38f90208b
+originator: wellhardh@roxen.com
+depends: 2013-08-05T170006
+restart: true
+
+Multiple fixes:
+
+  * git-rxnpatch: Fixed init --relative.
+    
+    The --relative option got lost on first initialization.
+
+  * git-rxnpatch: Support release tags for Pike.
+
+  * git-rxnpatch: Filter testsuite files.
+
+  * RoxenPatch: Improved support for patching Pike.
+    
+      * Support patching of master.pike.in.
+    
+      * Remove dumped module files corresponding to patched files.
+
+  * RoxenPatch: Some post processing fixes.
+    
+    * The post processor always indicated a failure when it had
+      actually done something non-trivial.
+    
+    * Avoid stacking of cflags in the master.pike generator.
+    
+    * Fix the include_prefix setting in the master.pike generator.
+
+  * RoxenPatch: Fix include directory for generated master.
+
+  * RoxenPatch: Support roxenpatch feature dependencies.
+    
+    * Adds support for the virtual dependency "roxenpatch/pike-support",
+      to ensure that RoxenPatch in use has the proper patch level before
+      a pike/lib/* patch is applied.
+    
+    * git-rxnpatch now automatically adds the above dependency when needed.
