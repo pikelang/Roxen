@@ -1455,11 +1455,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  break;
 	}
 	if (has_prefix(path, "pike/lib/") &&
-	    !has_value(header->depends||({}), "roxenpatch/pike-support")) {
+	    !has_value(cmd, "--depends=roxenpatch/pike-support")) {
 	  // Support for patching pike files required.
 	  cmd += ({ "--depends=roxenpatch/pike-support" });
-	  header->depends = (header->depends || ({})) +
-	    ({ "roxenpatch/pike-support" });
 	}
 	continue;
 
