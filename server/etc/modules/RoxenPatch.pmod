@@ -20,6 +20,12 @@ constant known_platforms = (< "macosx_ppc32",
 			      "sol10_x86_64",
 			      "win32_x86" >);
 
+//! All currently supported subfeatures.
+constant features = (<
+  "pike-support",		// Support patching master.pike.in and
+				// removal of .o-files, etc.
+>);
+
 //! Contains the patchdata
 //! 
 class PatchObject(string|void id
@@ -2087,6 +2093,15 @@ class Patcher
 			       "               PIKE_BUILD_VERSION;\n")->ver;
 	    };
 	  }
+	} else if (path[0] == "roxenpatch") {
+	  /* RoxenPatch feature dependency.
+	   *
+	   * These are used to force a too old RoxenPatch to fail,
+	   * but still allow the patch to be imported. This is to
+	   * ensure that implicit side effects (like eg patching
+	   * master.pike) will be performed when the patch is applied.
+	   */
+	  return features[path[1]];
 	} else {
 	  installed =
 	    Stdio.read_bytes(combine_path(server_path, "packages",
