@@ -39,3 +39,6 @@ Multiple fixes:
       a pike/lib/* patch is applied.
     
     * git-rxnpatch now automatically adds the above dependency when needed.
+
+NOTE: Roxen needs to be restarted after installing this patch to be
+able to install further patches.
