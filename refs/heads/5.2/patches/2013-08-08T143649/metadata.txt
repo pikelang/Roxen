@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Roxen patch pike support
 from: 2ce77331d92018fc325fdde63b453dac1ad2fdaf
 to: 7aaa9ecc627aab741e4df107a18d70c38f90208b
 originator: wellhardh@roxen.com
