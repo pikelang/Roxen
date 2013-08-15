@@ -41,7 +41,7 @@ constant specific_options = ([
 
 constant cmd_args = ([
   0:" [\xa0<args>\xa0]",
-  "delete": "",
+  "delete": " <patch-id>",
   "help": " [\xa0<command>\xa0]",
   "init": " <start-point>",
   "list": "",
@@ -53,7 +53,8 @@ constant cmd_args = ([
 
 constant cmd_doc = ([
   0: "Create and manage RXN patches in git.\n",
-  "delete": "Delete the specified patch(es).\n",
+  "delete": "Delete the latest patch.\n"
+  "Note that the patch id must be specified as a precaution.\n",
   "help": "Display help about a command.\n",
   "init": "Initialize rxnpatch for the current branch.\n",
   "list": "List existing RXN patches.\n",
@@ -356,6 +357,49 @@ void git_save_file(string branch, string path, string data, string message)
   git_try("push", "origin", branch);
 }
 
+void git_delete_files(string branch, array(string) files, string message)
+{
+  if (!committer) {
+    string user_name = git("config", "--get", "user.name") - "\n";
+    string user_email = git("config", "--get", "user.email") - "\n";
+
+    committer = sprintf("%s <%s> now", user_name, user_email);
+  }
+
+  if (!has_prefix(branch, "refs/heads/")) branch = "refs/heads/" + branch;
+
+  string parent = branch + "^0";
+
+  if (!git_try("rev-list", "--max-count=1", branch)) {
+    // First commit on branch.
+    return;
+  }
+
+  Stdio.File export_fd = Stdio.File();
+  Process.Process fast_importer =
+    Process.Process(({ git_binary, "fast-import", "--date-format=now" }),
+		    ([
+		      "stdin":export_fd->pipe(),
+		      "stderr":Stdio.File("/dev/null"),
+		    ]));
+  GitExport exporter = GitExport(export_fd);
+
+  // exporter->feature("done");
+  exporter->commit(branch, UNDEFINED, UNDEFINED, committer, message,
+		   @(parent?({ parent }):({})));
+  foreach(files, string path) {
+    exporter->filedelete(path);
+  }
+
+  int code;
+  if ((code = (exporter->done() || fast_importer->wait()))) {
+    werror("Failed to delete files on branch %O (exit code %d).\n",
+	   branch, code);
+    exit(1);
+  }
+  git_try("push", "origin", branch);
+}
+
 int main(int argc, array(string) argv)
 {
   int help = 0;
@@ -439,8 +483,8 @@ int main(int argc, array(string) argv)
     display_usage(argv[1]);
     exit(0);
   case "delete":
-    werror("Not implemented!\n");
-    exit(1);
+    delete_patch(options, argv);
+    break;
   case "init":
     init_patch_branch(options, argv);
     break;
@@ -1559,6 +1603,100 @@ void make_patch(mapping(string:string|int|array(string)) options,
 		patchid + "/affected-files.txt",
 		affected_files,
 		"Updated affected-files.txt for patch " + patchid +".\n");
+}
+
+void delete_patch(mapping(string:string|int|array(string)) options,
+		  array(string) argv)
+{
+  if (!init(options)) {
+    write("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  string patchid;
+  foreach(depends, string dep) {
+    if (!has_value(dep, "/")) {
+      patchid = dep;
+      break;
+    }
+  }
+
+  if (!patchid) {
+    werror("No patches to delete on this branch.\n");
+    exit(1);
+  }
+
+  if (sizeof(argv) != 2) {
+    werror("Missing argument: patchid (expected: %s).\n", patchid);
+    exit(1);
+  }
+  if (argv[1] != patchid) {
+    werror("Patch %s is not the latest patch on this branch.\n"
+	   "Latest patch id is %s\n",
+	   argv[1], patchid);
+    exit(1);
+  }
+
+  write("Deleting patch: %s...\n", patchid);
+
+  // Find previous patch.
+
+  string metadata =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt");
+
+  array(string) a = metadata/"\n\n";
+  if (sizeof(a) < 2) {
+    werror("Missing patch description for patch %s.\n", patchid);
+    exit(1);
+  }
+
+  mapping(string:array(string)) header = ([]);
+  foreach(a[0]/"\n", string line) {
+    line = (line/"#")[0];
+    if (line == "") continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) < 2) {
+      werror("Invalid metadata syntax:\n"
+	     "%s\n", line);
+      exit(1);
+    }
+    header[lower_case(String.trim_all_whites(pair[0]))] +=
+      ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  string tail_sha1;
+  if (header->from && (sizeof(header->from) == 1)) {
+    tail_sha1 = header->from[0];
+  } else {
+    werror("Invalid header field %O.\n", "from");
+  }
+
+  assert_first_parent(branch, tail_sha1);
+
+  // Reset the patch head for the branch.
+
+  git("branch", "-f", "rxnpatch/" + branch, tail_sha1);
+  git_try("push", "-f", "origin", "+rxnpatch/" + branch);
+
+  // Clear the patch tag.
+
+  git("tag", "-d", "rxnpatch/" + patchid);
+  git_try("push", "origin", ":refs/tags/rxnpatch/" + patchid);
+
+  // Clear the patch directory for the patch.
+  string patch_dir = "refs/heads/" + branch + "/patches/" + patchid;
+  array(string) files = ({});
+  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+	      "--", patch_dir)/"\0", string entry) {
+    if (entry == "") continue;
+    string path = (entry/"\t")[1..] * "\t";
+    if (!has_prefix(path, patch_dir)) continue;
+    files += ({ path });
+  }
+
+  git_delete_files("rxnpatch/rxnpatch", files,
+		   "Deleted patch " + patchid + ".\n");
 }
 
 class FileBuf(String.Buffer buf)
