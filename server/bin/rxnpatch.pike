@@ -489,7 +489,7 @@ int main(int argc, array(string) argv)
     {
       array(int|string) patch_ids = plib->import_file(file);
       foreach(patch_ids, int|string patch_id) {	
-	if (patch_id) 
+	if (patch_id && patch_id != -1) 
 	  plib->write_mess("%s is successfully imported!\n", patch_id);
       }
     }
@@ -546,7 +546,7 @@ int main(int argc, array(string) argv)
     {
       array(int|string) patch_ids = plib->import_file(file);
       foreach(patch_ids, int|string patch_id) {	
-	if (patch_id) 
+	if (patch_id && patch_id != -1) 
 	  ins_list += ({ patch_id });
       }
     }

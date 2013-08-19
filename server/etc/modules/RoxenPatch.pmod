@@ -339,7 +339,10 @@ class Patcher
   //! If the file at @tt{path@} is a tar file, the enclosed rxp files will
   //! be extracted first and each of them will be imported.
   //! @returns
-  //!    Returns array of imported patch ids, or 0 if patch import failed.
+  //!    Returns an array with one entry per patch containing:
+  //!      - The imported patch id if the import was successful, or:
+  //!      - 0 if the patch import failed, or:
+  //!      - 1 if the patch was already installed.
   //!    TO DO: Check the id inside the file so it matches the id in the
   //!    file name.
   {
@@ -399,8 +402,8 @@ class Patcher
       
       // Check if it's installed already.
       if (is_installed(patch_id)) {
-	write_err("Patch %s is already installed!\n", patch_id);
-	patch_ids += ({ 0 });
+	write_mess("Patch %s is already installed.\n", patch_id);
+	patch_ids += ({ -1 });
 	continue;
       }
    

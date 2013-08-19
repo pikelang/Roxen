@@ -8,6 +8,7 @@ import RoxenPatch;
 #define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "maintenance";
+constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
 
 // constant long_flags = ([ "restart" : LOCALE(0, "Need to restart server") ]);
 
@@ -698,18 +699,52 @@ mixed parse(RequestID id)
     res += "<br/>";
   }
 
-  if (id->real_variables["OK.x"] &&
-      id->real_variables["fixedfilename"] &&
-      sizeof(id->real_variables["fixedfilename"][0]) &&
-      id->real_variables["file"] &&
-      sizeof(id->real_variables["file"][0])) 
+  
+  if (id->real_variables["auto-import-button.x"] ||
+      (id->real_variables["OK.x"] &&
+       id->real_variables["fixedfilename"] &&
+       sizeof(id->real_variables["fixedfilename"][0]) &&
+       id->real_variables["file"] &&
+       sizeof(id->real_variables["file"][0]))) 
   {
-    //  With Windows browsers the submitted filename may contain a full path
-    //  with drive letter etc. When the Patcher processes it later it will
-    //  convert slashes etc, but for our file to be accessible in that layer
-    //  we must perform the same cleanup in the naming of our temp file.
-    string patch_name =
-      basename(RoxenPatch.unixify_path(id->real_variables["fixedfilename"][0]));
+    string patch_name, file_data;
+
+    if (id->real_variables["auto-import-button.x"]) {
+      mixed err = catch {
+	  mapping file = fetch_latest_rxp_cluster_file();
+	  patch_name = file->name;
+	  file_data = file->data;
+	};
+      if (err) {
+	report_error("Patch manager: failed to fetch latest patch cluster from Roxen\n");
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "The automatic patch cluster import failed.") + 
+		       "  </b>"
+		       "</p>");
+	
+	  res += sprintf("<p><span id='log_img' class='unfolded'"
+			 " onmouseover='this.style.cursor=\"pointer\"'"
+			 " onclick='expand(\"log\")'>log</span>"
+			 "<div  id='idlog'>%s</div></p>\n"
+			 "<br clear='all' /><br />\n"
+			 "<cf-ok-button href='?action=patcher.pike&"
+			 "class=maintenance' />",
+			 (string)err);
+
+	return res;
+      }
+
+    } else {
+      //  With Windows browsers the submitted filename may contain a full path
+      //  with drive letter etc. When the Patcher processes it later it will
+      //  convert slashes etc, but for our file to be accessible in that layer
+      //  we must perform the same cleanup in the naming of our temp file.
+      patch_name = 
+	basename(RoxenPatch.unixify_path(id->real_variables["fixedfilename"][0]));
+      file_data = id->real_variables["file"][0];
+    }
+
     string temp_dir =
       Stdio.append_path(plib->get_temp_dir(), patch_name);
 
@@ -718,7 +753,7 @@ mixed parse(RequestID id)
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, patch_name);
 
-    plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
+    plib->write_file_to_disk(temp_file, file_data);
     array(int|string) patch_ids = plib->import_file(temp_file);
     plib->clean_up(temp_dir);
 
@@ -964,11 +999,20 @@ mixed parse(RequestID id)
 
   res += #" 
     <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
-    <p>\n" + LOCALE(374,"Select local file to upload:") + #"</p>
+
+    <p style='margin-bottom: 5px'>" + 
+      LOCALE(0, "Automaticly fetch and import the latest patches from Roxen") + 
+    #":</p>
+
+    <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
+      LOCALE(0, "Import from Roxen") + 
+    #"</submit-gbutton2>
+
+    <p>\n" + LOCALE(0,"Or manually select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton2 name='OK' width='75' align='center'
-      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(404, "Import") + #"</submit-gbutton2>
+      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(0, "Import file") + #"</submit-gbutton2>
     <p>" 
     + LOCALE(0, "You can upload either a single rxp file or a tar/tar.gz/tgz "
 	     "file containing multiple rxp files.")
@@ -1208,4 +1252,66 @@ string search_path(string command) {
   }
 
   return 0;
+}
+
+mapping(string:string) fetch_latest_rxp_cluster_file() {
+  Standards.URI new_uri(string url) {
+    Standards.URI uri;
+    mixed err = catch { uri = Standards.URI(url); };
+    if (err) { throw(sprintf("Malformed URL: %s", url || "")); }
+    return uri;
+  };
+
+  string get_url(Standards.URI uri) {
+    Protocols.HTTP.Query query = get_url_async(uri);
+    if (query->status != 200) {
+      throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
+		    (string)uri || "", query->status, query->status_desc || ""));
+    }
+    return query->data();
+  };
+
+  // Get rxp action url
+  Standards.URI uri = new_uri(RXP_ACTION_URL);
+  uri->add_query_variables(([ "product"  : roxen_product_code,
+			      "version"  : roxen_dist_version,
+			      "platform" : roxen_dist_os,
+			      "action"   : "get-latest-rxp-cluster-url" ]));
+  string res = get_url(uri);
+
+  // Get rxp cluster url
+  Standards.URI uri2 = new_uri(res);
+  string res2 = get_url(uri2); 
+
+  return ([ "data" : res2,
+	    "name" : basename(uri2->path) ]);
+}
+
+Protocols.HTTP.Query get_url_async(Standards.URI uri) {
+  Thread.Queue queue = Thread.Queue();
+  object con = Protocols.HTTP.Query();
+  con->timeout = 20;
+
+  // Hack to force do_async_method to not reset the timeout value
+  con->headers = ([ "connection" : "keep-alive" ]);
+
+  function cb = lambda() { queue->write("@"); };
+  con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
+  
+#ifdef ENABLE_OUTGOING_PROXY
+  if (roxen.query("use_proxy")) {
+    Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					   roxen.query("proxy_username"), 
+					   roxen.query("proxy_password"),
+					   "GET", uri, 0, 0, con);
+  } else {
+    Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+  }
+#else
+  Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+#endif
+  
+  queue->read();    
+  
+  return con;
 }

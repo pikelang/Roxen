@@ -1350,6 +1350,7 @@ protected string dist_version;
 protected string dist_os;
 protected int roxen_is_cms;
 protected string roxen_product_name;
+protected string roxen_product_code;
 
 string roxen_version()
 //! @appears roxen_version
@@ -1733,11 +1734,14 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
   if(roxen_is_cms) {
     if (lfile_stat("modules/print") || lfile_stat("packages/print")) {
       roxen_product_name="Roxen EP";
+      roxen_product_code = "rep";
     } else {
       roxen_product_name="Roxen CMS";
+      roxen_product_code = "cms";
     }
   } else {
     roxen_product_name="Roxen WebServer";
+    roxen_product_code = "webserver";
   }
 
 #if defined(ROXEN_USE_FORKD) && constant(Process.set_forkd_default)
@@ -3367,6 +3371,7 @@ the correct system time.
   add_constant("roxen_release", release || roxen_release);
   add_constant("roxen_is_cms",  roxen_is_cms);
   add_constant("roxen_product_name", roxen_product_name);
+  add_constant("roxen_product_code", roxen_product_code);
   add_constant("lopen",         lopen);
   add_constant("lfile_stat",    lfile_stat);
   add_constant("lfile_path",    lfile_path);
