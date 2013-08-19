@@ -1001,7 +1001,7 @@ mixed parse(RequestID id)
     <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
 
     <p style='margin-bottom: 5px'>" + 
-      LOCALE(0, "Automaticly fetch and import the latest patches from Roxen") + 
+      LOCALE(0, "Fetch and import the latest patches from Roxen") + 
     #":</p>
 
     <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
