@@ -26,6 +26,9 @@ constant features = (<
 				// removal of .o-files, etc.
 >);
 
+constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
+//! URL for fetching rxp clusters.
+
 //! Contains the patchdata
 //! 
 class PatchObject(string|void id
@@ -174,9 +177,15 @@ class Patcher
   private string server_version = "";
   //! Server version extracted from server/etc/include/version.h
 
+  private string dist_version = "";
+  //! Dist version extracted from server/VERSION.DIST
+
   private string server_platform = "";
   //! The current platform. This should map to the platforms for which we build
   //! Roxen and is taken from [server_path]/OS.
+
+  private string product_code = "";
+  //! The roxen product: 'rep', 'cms' or 'webserver'.
 
   private string tar_bin = "tar";
   private string patch_bin = "patch";
@@ -294,6 +303,12 @@ class Patcher
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
 
+    // Set dist version
+    dist_version = 
+      (replace(Stdio.read_bytes("VERSION.DIST"), "\r", "\n") / "\n")[0];
+
+    write_mess("Dist version ... <green>%s</green>\n", dist_version);
+
     // Set current platform
     string os_file = combine_path(server_path, "OS");
     if (is_file(os_file))
@@ -301,6 +316,37 @@ class Patcher
     else
       server_platform = "unknown";
     write_mess("Platform ... <green>%s</green>\n", server_platform);
+
+#if constant(roxen_product_code)
+    // Added by roxenloader.pike when starting roxen
+    product_code = roxen_product_code;
+#else 
+    // When invoked via the command line, we need to find the
+    // product code ourselves.
+    //
+    // FIXME: is there a better way to do this? Currently this
+    //        mimics roxenloader.pike.
+    {
+      string modules_path = combine_path(server_path, "modules");
+      string packages_path = combine_path(server_path, "packages");
+
+      int roxen_is_cms = !!file_stat(combine_path(modules_path, "sitebuilder")) ||
+	!!file_stat(combine_path(packages_path, "sitebuilder"));
+      
+      if(roxen_is_cms) {
+	if (file_stat(combine_path(modules_path, "print")) || 
+	    file_stat(combine_path(packages_path, "print"))) {
+	  product_code = "rep";
+	} else {
+	  product_code = "cms";
+	}
+      } else {
+	product_code = "webserver";
+      }
+    }
+#endif
+
+    write_mess("Product code ... <green>%s</green>\n", product_code);
   }
   
   string extract_id_from_filename(string filename)
@@ -420,6 +466,33 @@ class Patcher
     return patch_ids;
   }
 
+  array(int|string) import_file_http(void|int(0..1) dry_run)
+  //! Fetch the latest rxp cluster from www.roxen.com and import the patches.
+  {
+    mapping file;
+
+    mixed err = catch {
+	file = fetch_latest_rxp_cluster_file();
+      };
+    if (err) {
+      write_err((string)err + "\n");
+      write_mess("No patches were imported.\n");
+      return 0;
+    }
+
+    write_mess("Fetched rxp cluster file %s over HTTP.\n", file->name);
+
+    string temp_dir = Stdio.append_path(get_temp_dir(), file->name);
+    // Extra directory level to get rid of the sticky bit normally
+    // present on /tmp/ that would require Privs for clean_up to work.
+    mkdir(temp_dir);
+    string temp_file = Stdio.append_path(temp_dir, file->name);   
+    write_file_to_disk(temp_file, file->data);
+    array(int|string) patch_ids = import_file(temp_file, dry_run);
+    clean_up(temp_dir);
+
+    return patch_ids;
+  }
 
   int(0..1) install_patch(string patch_id, 
 			  string user, 
@@ -2859,5 +2932,74 @@ class Patcher
       }
     }
     return res;
+  }
+
+  mapping(string:string) fetch_latest_rxp_cluster_file() {
+    Standards.URI new_uri(string url) {
+      Standards.URI uri;
+      mixed err = catch { uri = Standards.URI(url); };
+      if (err) { throw(sprintf("Malformed URL: %s", url || "")); }
+      return uri;
+    };
+
+    string get_url(Standards.URI uri) {
+#if constant(roxen) // We probably have threads
+      Protocols.HTTP.Query query = get_url_async(uri);
+#else // No threads
+      Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
+#endif
+      if (query->status != 200) {
+	throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
+		      (string)uri || "", query->status, query->status_desc || ""));
+      }
+      return query->data();
+    };
+
+    // Get rxp action url
+    Standards.URI uri = new_uri(RXP_ACTION_URL);
+    uri->add_query_variables(([ "product"  : product_code,
+				"version"  : dist_version,
+				"platform" : server_platform,
+				"action"   : "get-latest-rxp-cluster-url" ]));
+    string res = get_url(uri);
+
+    // Get rxp cluster url
+    if (!res || !sizeof(res))
+      throw("No rxp cluster URL was found.");
+
+    Standards.URI uri2 = new_uri(res);
+    string res2 = get_url(uri2); 
+
+    return ([ "data" : res2,
+	      "name" : basename(uri2->path) ]);
+  }
+
+  Protocols.HTTP.Query get_url_async(Standards.URI uri) {
+    Thread.Queue queue = Thread.Queue();
+    object con = Protocols.HTTP.Query();
+    con->timeout = 20;
+
+    // Hack to force do_async_method to not reset the timeout value
+    con->headers = ([ "connection" : "keep-alive" ]);
+
+    function cb = lambda() { queue->write("@"); };
+    con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
+  
+#ifdef ENABLE_OUTGOING_PROXY
+    if (roxen.query("use_proxy")) {
+      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					     roxen.query("proxy_username"), 
+					     roxen.query("proxy_password"),
+					     "GET", uri, 0, 0, con);
+    } else {
+      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+    }
+#else
+    Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+#endif
+  
+    queue->read();    
+  
+    return con;
   }
 }
