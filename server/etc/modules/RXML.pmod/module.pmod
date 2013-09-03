@@ -8318,7 +8318,10 @@ protected class PikeCompile
     cur_ids[id] = 1;
 
     // Be nice to the Pike compiler, and compile the code in segments.
-    if (code::_sizeof() >= 65536) compile();
+    if (code::_sizeof() >= 65536) {
+      lock = UNDEFINED;
+      compile();
+    }
 
     return id;
   }
