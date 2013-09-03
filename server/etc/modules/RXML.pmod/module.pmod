@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.432 2012/08/20 17:57:03 grubba Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8343,7 +8343,10 @@ protected class PikeCompile
     cur_ids[id] = 1;
 
     // Be nice to the Pike compiler, and compile the code in segments.
-    if (code::_sizeof() >= 65536) compile();
+    if (code::_sizeof() >= 65536) {
+      lock = UNDEFINED;
+      compile();
+    }
 
     return id;
   }
