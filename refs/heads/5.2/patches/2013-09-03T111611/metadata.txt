@@ -1,0 +1,48 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 7aaa9ecc627aab741e4df107a18d70c38f90208b
+to: 4847e704ecbab3a3da4de2210b4e81518844866e
+originator: wellhardh@roxen.com
+depends: 2013-08-08T143649
+restart: true
+
+Multiple fixes:
+
+  * git-rxnpatch: Fix multiple roxenpatch/pike-support dependencies.
+    
+    Fixes a bug causing one roxenpatch/pike-support dependency being added
+    for every file patched. The bug was due to the intended variable being
+    shadowed by another of the same name.
+
+  * Version bumped to 5.2.374 by buildsystem.
+
+  * git-rxnpatch: First go at supporting delete.
+    
+    Adds support for deleting the latest patch on the current branch.
+
+  * Vform: Support more characters in <vinput#email/>.
+    
+    All characters listed in RFC 5322 3.2.3 should now be accepted.
+    
+    Fixes [bug 6844].
+
+  * Version bumped to 5.2.375 by buildsystem.
+
+  * Version bumped to 5.2.376 by buildsystem.
+
+  * Version bumped to 5.2.377 by buildsystem.
+
+  * Version bumped to 5.2.378 by buildsystem.
+
+  * Version bumped to 5.2.379 by buildsystem.
+
+  * Version bumped to 5.2.380 by buildsystem.
+
+  * Version bumped to 5.2.381 by buildsystem.
+
+  * Version bumped to 5.2.382 by buildsystem.
+
+  * RXML: Fix recursive mutex bug.
+    
+    The tentative fix for [bug 6467] was broken.
+    
+    Fixes [bug 6866] and some of [bug 6467].
