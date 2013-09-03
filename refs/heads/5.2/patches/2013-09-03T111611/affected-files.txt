@@ -1,0 +1,5 @@
+Modified files:
+  etc/include/version.h
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/Variable.pmod/Email.pike
+  tools/git-rxnpatch
