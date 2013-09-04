@@ -63,6 +63,17 @@ protected void build_font_names_cache( )
             new_ttf_font_names_cache[f] = ([]);
           new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
                                    = combine_path(dir+"/",fname);
+	  if (n->ps_name && n->ps_name != f)
+	  {
+	    // Insert an alias name based on the ps_name
+	    // attribute for compatibility with Roxen 4.5
+	    // which used an older version of FreeType (2.1.9)
+	    // where the ps_name was used as family_name.
+	    if (!new_ttf_font_names_cache[n->ps_name])
+	      new_ttf_font_names_cache[n->ps_name] = ([]);
+	    new_ttf_font_names_cache[n->ps_name]["Regular"]
+	                           = combine_path(dir+"/",fname);
+	  }
         }
       }
     }
