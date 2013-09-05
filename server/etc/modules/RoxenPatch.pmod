@@ -178,7 +178,8 @@ class Patcher
   //! Server version extracted from server/etc/include/version.h
 
   private string dist_version = "";
-  //! Dist version extracted from server/VERSION.DIST
+  //! Dist version extracted from server/VERSION.DIST, or empty if not
+  //! running from a dist.
 
   private string server_platform = "";
   //! The current platform. This should map to the platforms for which we build
@@ -305,9 +306,12 @@ class Patcher
 
     // Set dist version
     dist_version = 
-      (replace(Stdio.read_bytes("VERSION.DIST"), "\r", "\n") / "\n")[0];
+      (replace(Stdio.read_bytes("VERSION.DIST") || "", "\r", "\n") / "\n")[0];
 
-    write_mess("Dist version ... <green>%s</green>\n", dist_version);
+    if (dist_version != "")
+      write_mess("Dist version ... <green>%s</green>\n", dist_version);
+    else
+      write_err("Dist version ... unknown\n");
 
     // Set current platform
     string os_file = combine_path(server_path, "OS");
@@ -2955,6 +2959,10 @@ class Patcher
       return query->data();
     };
 
+    // If not running in a dist we can't fetch patches
+    if (dist_version == "")
+      throw("Not running a proper distribution.");
+    
     // Get rxp action url
     Standards.URI uri = new_uri(RXP_ACTION_URL);
     uri->add_query_variables(([ "product"  : product_code,
