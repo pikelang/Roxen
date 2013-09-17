@@ -5,6 +5,8 @@
 //
 // 2013-04-25 Henrik Grubbström
 
+// #define DISABLE_PUSH
+
 constant common_options = ({
   ({ "help", Getopt.NO_ARG, ({ "-h", "--help" }) }),
   ({ "version", Getopt.NO_ARG, ({ "-v", "--version" }) }),
@@ -312,6 +314,22 @@ string git_cat_file(string treeish, string path, int|void try)
   exit(1);
 }
 
+void git_push(string remote, string ref, int|void force)
+{
+  int code;
+#ifndef DISABLE_PUSH
+  if (force) {
+    code = git_try("push", "-f", remote, ref);
+  } else {
+    code = git_try("push", remote, ref);
+  }
+#endif
+  if (code) {
+    werror("Warning: Failed to push reference %O to remote %s.\n",
+	   ref, remote);
+  }
+}
+
 void git_save_file(string branch, string path, string data, string message)
 {
   if (!committer) {
@@ -354,7 +372,7 @@ void git_save_file(string branch, string path, string data, string message)
 	   path, branch, code);
     exit(1);
   }
-  git_try("push", "origin", branch);
+  git_push("origin", branch);
 }
 
 void git_delete_files(string branch, array(string) files, string message)
@@ -397,7 +415,7 @@ void git_delete_files(string branch, array(string) files, string message)
 	   branch, code);
     exit(1);
   }
-  git_try("push", "origin", branch);
+  git_push("origin", branch);
 }
 
 int main(int argc, array(string) argv)
@@ -1288,12 +1306,12 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 			"to commit %s.\n",
 			patchid, branch, subject, patch_sha1, head_sha1));
   git("tag", "-f", "rxnpatch/" + patchid, head_sha1);
-  git_try("push", "origin", "refs/tags/rxnpatch/" + patchid);
+  git_push("origin", "refs/tags/rxnpatch/" + patchid);
 
   write("Created patchid %s (%d commits).\n", patchid, count);
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], head_sha1);
-  git_try("push", "origin", patch_branch);
+  git_push("origin", patch_branch);
 }
 
 void make_patch(mapping(string:string|int|array(string)) options,
@@ -1690,12 +1708,12 @@ void delete_patch(mapping(string:string|int|array(string)) options,
   // Reset the patch head for the branch.
 
   git("branch", "-f", "rxnpatch/" + branch, tail_sha1);
-  git_try("push", "-f", "origin", "+rxnpatch/" + branch);
+  git_push("origin", "+rxnpatch/" + branch, 1);
 
   // Clear the patch tag.
 
   git("tag", "-d", "rxnpatch/" + patchid);
-  git_try("push", "origin", ":refs/tags/rxnpatch/" + patchid);
+  git_push("origin", ":refs/tags/rxnpatch/" + patchid);
 
   // Clear the patch directory for the patch.
   string patch_dir = "refs/heads/" + branch + "/patches/" + patchid;
@@ -1865,6 +1883,6 @@ void create_cluster(mapping(string:string|int|array(string)) options,
 		" on branch " + branch + ".\n");
   string tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
   git("tag", "-f", tag, "refs/heads/rxnpatch/rxnpatch");
-  git_try("push", "origin", "refs/tags/" + tag);
+  git_push("origin", "refs/tags/" + tag);
 }
 
