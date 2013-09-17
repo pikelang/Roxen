@@ -1438,6 +1438,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 
   // Set up suitable diff options, so that we can expand Id-strings.
   if (!git_try("config", "diff.expand-ident.textconv")) {
+    // NB: Use string concat to avoid erroneous self-replacement here.
     git("config", "diff.expand-ident.textconv",
 	"sed -e \"s/\\\\\\$"
 	"Id\\\\\\$/\\$"
@@ -1524,8 +1525,20 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  break;
 	}
 	string old_blob_sha1 = (header->index[0]/"..")[0];
-	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob",
-			 git("cat-file", "blob", new_blob_sha1));
+	string blob = git("cat-file", "blob", new_blob_sha1);
+	// FIXME: We assume that the checked out .gitattributes is correct
+	//        with respect to this file.
+	array(string) ident_info =
+	  git("check-attr", "ident", "--", header->b[0])/": ident: ";
+	if (ident_info[-1] == "set\n") {
+	  // NB: Use string concat to avoid erroneous self-replacement here.
+	  blob = replace(blob, "$""Id""$",
+			 "$""Id: " + new_blob_sha1 + " $");
+	  // NB: We also assume that the same blob will not appear as new
+	  //     for several files in the same diff, but with different
+	  //     ident expansion state.
+	}
+	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob", blob);
 	if (old_blob_sha1 == GIT_NULL_SHA1) {
 	  // New file.
 	  cmd += ({
