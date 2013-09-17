@@ -422,8 +422,10 @@ mapping get_my_args( mapping args, RequestID id )
 
   a["background-color"] = id->misc->defines->bgcolor || "#eeeeee";
 
-  foreach( glob( "*-*", indices(args)), string n )
-    a[n] = args[n];
+  foreach( glob( "*-*", indices(args)), string n ) {
+    if (!has_prefix(n, "data-"))
+      a[n] = args[n];
+  }
 
   return a;
 }
