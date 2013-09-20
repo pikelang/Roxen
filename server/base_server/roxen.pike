@@ -33,6 +33,7 @@ inherit "smtprelay";
 #endif
 inherit "hosts";
 inherit "disk_cache";
+inherit "fsgc";
 // inherit "language";
 inherit "supports";
 inherit "module_support";
@@ -520,6 +521,9 @@ private void low_shutdown(int exit_code)
     destruct(argcache);
     destruct(cache);
 #ifdef THREADS
+#if constant(Filesystem.Monitor.basic)
+    stop_fsgarb();
+#endif
     if (mixed err = catch (stop_handler_threads()))
       master()->handle_error (err);
 #endif /* THREADS */
@@ -6099,6 +6103,9 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
+#if constant(Filesystem.Monitor.basic)
+  start_fsgarb();
+#endif
 #endif /* THREADS */
 
 #ifdef TEST_EUID_CHANGE
