@@ -64,6 +64,9 @@
      </if>
    </emit>
   </elseif>
+  <elseif variable='form.section is Filesystem GC'>
+    <insert file="fsgarb.pike"/>
+  </elseif>
   <else>
     <cfg-variables source='global-variables' section='&form.section;'/>
   </else>
