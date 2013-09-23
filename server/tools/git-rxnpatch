@@ -316,15 +316,15 @@ string git_cat_file(string treeish, string path, int|void try)
 
 void git_push(string remote, string ref, int|void force)
 {
-  int code;
+  string res;
 #ifndef DISABLE_PUSH
   if (force) {
-    code = git_try("push", "-f", remote, ref);
+    res = git_try("push", "-f", remote, ref);
   } else {
-    code = git_try("push", remote, ref);
+    res = git_try("push", remote, ref);
   }
 #endif
-  if (code) {
+  if (!res) {
     werror("Warning: Failed to push reference %O to remote %s.\n",
 	   ref, remote);
   }
