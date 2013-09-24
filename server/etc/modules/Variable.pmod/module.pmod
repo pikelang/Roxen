@@ -776,13 +776,16 @@ class Float
     if( _max != no_limit && _min != no_limit )
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
     string value;
-    if (_may_be_empty && (float)query() == (float)0)
-      value = "";
-    else
-      value = query()==""? "" : _format( (float)query() );
+    catch {
+      if (_may_be_empty && (float)query() == (float)0)
+	value = "";
+      else
+	value = query()==""? "" : _format( (float)query() );
+    };
     
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
 
     return input(path(), value, size, additional_args);
   }
@@ -883,7 +886,8 @@ class Int
     string value = (query() == 0 && _is_empty)? "" : (string)query();
 
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
 
     return input(path(), value, size, additional_args);
   }
@@ -928,7 +932,8 @@ class String
   string render_form( RequestID id, void|mapping additional_args )
   {
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
     return input(path(), (string)query(), width, additional_args);
   }
 }
