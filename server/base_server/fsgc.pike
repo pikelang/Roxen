@@ -321,6 +321,7 @@ class FSGarb
   void stable_data_change(string path, Stdio.Stat st)
   {
     GC_WERR("FSGC: Deleting stale file: %O\n", path);
+    if (path == root) return;
     rm(path);
   }
 
