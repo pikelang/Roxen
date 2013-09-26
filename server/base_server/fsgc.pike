@@ -44,6 +44,7 @@ class FSGarb
   int num_files;
   int total_size;
 
+  string modid;
   string root;
   int max_age;
   int max_files;
@@ -300,22 +301,24 @@ class FSGarb
     }
   }
 
-  protected void create(string path, int max_age,
+  protected void create(string modid, string path, int max_age,
 			int|void max_size, int|void max_files)
   {
     GC_WERR("FSGC: Max age: %d\n", max_age);
     GC_WERR("FSGC: Max size: %d\n", max_size);
     GC_WERR("FSGC: Max files: %d\n", max_files);
 
+    this_program::modid = modid;
+
     this_program::max_age = max_age;
     this_program::max_size = max_size;
     this_program::max_files = max_files;
 
+    root = canonic_path(path);
+
     ::create(max_age/file_interval_factor, 0, max_age);
 
-    root = path;
-
-    monitor(path, 3);
+    monitor(root, 3);
   }
 
   void stable_data_change(string path, Stdio.Stat st)
@@ -422,11 +425,11 @@ class FSGarbWrapper(string id)
   }
 }
 
-FSGarbWrapper register_fsgarb(string path, int max_age,
+FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
 			      int|void max_size, int|void max_files)
 {
-  string id = path + "\0" + gethrtime();
-  FSGarb g = FSGarb(path, max_age, max_size, max_files);
+  string id = modid + "\0" + path + "\0" + gethrtime();
+  FSGarb g = FSGarb(modid, path, max_age, max_size, max_files);
   fsgarbs[id] = g;
   GC_WERR("FSGC: Register garb on %O ==> id: %O\n", path, id);
   return FSGarbWrapper(id);
