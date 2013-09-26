@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.247 2012/09/24 16:06:41 grubba Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -2041,6 +2041,35 @@ mixed get_value_from_file(string path, string index, void|string pre)
   //  work correctly.
   return compile_string((pre || "") + file->read(), path)[index];
 }
+
+#if constant(roxen.FSGarbWrapper)
+//! Register a filesystem path for automatic garbage collection.
+//!
+//! @param path
+//!   Path in the real filesystem to garbage collect.
+//!
+//! @param max_age
+//!   Maximum allowed age in seconds for files.
+//!
+//! @param max_size
+//!   Maximum total size in bytes for all files under the path.
+//!   Zero to disable the limit.
+//!
+//! @param max_files
+//!   Maximum number of files under the path.
+//!   Zero to disable the limit.
+//!
+//! @returns
+//!   Returns a roxen.FSGarbWrapper object. The garbage collector
+//!   will be removed when this object is destructed (eg via
+//!   refcount-garb).
+roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
+				    int|void max_size, int|void max_files)
+{
+  return roxen.register_fsgarb(module_identifier(), path, max_age,
+			       max_size, max_files);
+}
+#endif
 
 private mapping __my_tables = ([]);
 
