@@ -48,10 +48,12 @@ string parse(RequestID id)
     if (sizeof(res)) res += "<tr><td>&nbsp;</td></tr>";
     res +=
       sprintf(LOCALE(0, "<tr><th>%s</th></tr>\n"
+		     "<tr><td>Registered by <b>%s</b></td></tr>"
 		     "<tr><td>%d files (max: %d)</td></tr>\n"
 		     "<tr><td>%d bytes (max: %d)</td></tr>\n"
 		     "<tr><td>Age limit: %d seconds</td></tr>\n"),
 	      Roxen.html_encode_string(g->root),
+	      Roxen.html_encode_string(g->modid),
 	      g->num_files, g->max_files,
 	      g->total_size, g->max_size,
 	      g->max_age);
