@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Font compat, accessed, slowpipe, new FSGC support, patch
 from: 4847e704ecbab3a3da4de2210b4e81518844866e
 to: a3284c0dcf148ec916ae9e689262c22af7176481
 originator: wellhardh@roxen.com
@@ -15,8 +15,6 @@ Multiple fixes:
 
   * Transform aliased PS font identifiers so that lookup works as expected. Should
     provide sufficient 4.5 compatibility to fix [bug 6872].
-
-  * Version bumped to 5.2.383 by buildsystem.
 
   * Fixed an old issue, making the <accessed/> tag a bit more tolerant
     against database connection failures. Bug #6377.
