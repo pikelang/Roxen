@@ -24,6 +24,8 @@ constant known_platforms = (< "macosx_ppc32",
 constant features = (<
   "pike-support",		// Support patching master.pike.in and
 				// removal of .o-files, etc.
+  "file-modes",			// Support patching and restoring of
+				// files with eg the exec bit set.
 >);
 
 //! Contains the patchdata
