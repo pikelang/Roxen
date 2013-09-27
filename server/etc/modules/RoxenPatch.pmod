@@ -24,6 +24,8 @@ constant known_platforms = (< "macosx_ppc32",
 constant features = (<
   "pike-support",		// Support patching master.pike.in and
 				// removal of .o-files, etc.
+  "file-modes",			// Support patching and restoring of
+				// files with eg the exec bit set.
 >);
 
 constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
@@ -2729,10 +2731,15 @@ class Patcher
   }
 
   protected int(0..1) add_blob_to_rxp(Gz.File rxp, string blob,
-				      string path, int mtime)
+				      string path, int mtime, int|void mode)
   {
     write_mess("Archiving %s ... ", path);
-    if (!add_header_to_rxp(rxp, path, 0644, 0, 0, sizeof(blob), mtime)) {
+    if (mode & 0111) {
+      mode = 0755;
+    } else {
+      mode = 0644;
+    }
+    if (!add_header_to_rxp(rxp, path, mode, 0, 0, sizeof(blob), mtime)) {
       write_err("FAILED: Failed to write tar header to rxp.\n");
       return 0;
     }
@@ -2778,7 +2785,8 @@ class Patcher
     write_mess("<green>Done!</green>\n");
     Stat st = file_stat(full_path);
     int mtime = st && st->mtime;
-    return add_blob_to_rxp(rxp, data, dest, mtime);
+    int mode = st ? st->mode : 0644;
+    return add_blob_to_rxp(rxp, data, dest, mtime, mode);
   }
 
   protected int finish_rxp(Gz.File rxp)
@@ -2864,7 +2872,7 @@ class Patcher
 	Privs privs =
 	  Privs(sprintf("RoxenPatch: Extracting tar archive %O.", file_name));
 	tarfs->tar->extract("", path, UNDEFINED,
-			    Filesystem.Tar.EXTRACT_SKIP_MODE|
+			    Filesystem.Tar.EXTRACT_SKIP_EXT_MODE|
 			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
 	privs = 0;
       }) {

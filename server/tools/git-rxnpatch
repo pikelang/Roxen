@@ -1554,9 +1554,20 @@ void make_patch(mapping(string:string|int|array(string)) options,
 			 "$""Id: " + new_blob_sha1 + " $");
 	  // NB: We also assume that the same blob will not appear as new
 	  //     for several files in the same diff, but with different
-	  //     ident expansion state.
+	  //     ident expansion state or mode.
 	}
 	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob", blob);
+
+	int blob_mode = 0644;
+	sscanf(git("ls-tree", head_sha1, "--", header->b[0]),
+	       "%o %*s", blob_mode);
+	if (blob_mode & 0111) {
+	  blob_mode = 0755;
+	} else {
+	  blob_mode = 0644;
+	}
+	chmod(tmpdir + "/" + new_blob_sha1 + ".blob", mode);
+
 	if (old_blob_sha1 == GIT_NULL_SHA1) {
 	  // New file.
 	  cmd += ({
