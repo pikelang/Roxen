@@ -1,0 +1,118 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 4847e704ecbab3a3da4de2210b4e81518844866e
+to: 9f79f07d68897210a56120281e3fe3aec9140228
+originator: wellhardh@roxen.com
+depends: 2013-09-03T111611
+restart: true
+
+Multiple fixes:
+
+  * Add a font alias name based on the font's ps_name. This is for
+    compatibility with Roxen 4.5 which used an older version of
+    FreeType where the ps_name was used as family_name for the font,
+    while modern FreeType versions use the SFNT family_name (and
+    SFNT subfamily_name for style_name).
+
+  * Transform aliased PS font identifiers so that lookup works as expected. Should
+    provide sufficient 4.5 compatibility to fix [bug 6872].
+
+  * Version bumped to 5.2.383 by buildsystem.
+
+  * Fixed an old issue, making the <accessed/> tag a bit more tolerant
+    against database connection failures. Bug #6377.
+    
+    Previously, whole sites could fail and generate backtraces when trying
+    to keep access logs if the database connection failed, even for pages
+    without <accessed/> tags. Now "catch" has been added at a few places
+    to avoid generating backtraces in those cases, and instead some
+    limited logging goes to the debug log. However, it's still possible to
+    get backtraces when attempting operations such as resetting the access
+    log for a page, because it's not clear if it makes sense to make such
+    operations fail silently.
+
+  * If slowpipe is used on virtual files that don't implement the
+    set_nonblocking() method, it would cause an Internal Server Error.
+    Fix: Only call set_nonblocking() if it's supported for the file type.
+
+  * git-rxnpatch: Fixed indent-expansion for new files.
+    
+    $Id$-strings were not expanded in new files, but were in succeeding
+    patches (and dists). This caused succeding patches to fail.
+    
+    Fixes [bug 6889].
+
+  * git-rxnpatch: Moved git-push to dedicated function.
+    
+    This makes it easier to test.
+
+  * FSGC: Added API for adding Filesystem Garbage Collectors.
+    
+    Fixes some of [bug 6572].
+
+  * ConfigInterface: Some code cleanup.
+    
+    Preparations for adding the FSGC tab.
+
+  * FSGC: First go at a status display.
+    
+    Adds a new tab "Filesystem GC" under "Global Variables",
+    and shows the state of the currently active Filesystem
+    Garbage Collectors.
+    
+    Fixes some more of [bug 6572].
+
+  * git-rxnpatch: Fixed API-miss in git_push().
+    
+    Fixes bug in previous commit.
+
+  * FSGC: Fixed issue where the fsgc root could be lost.
+    
+    The filesystem gc now seems to nolonger lose track of the filesystem state.
+    
+    Fixes some more of [bug 6572].
+
+  * FSGC: Moved API to base_server/module.pike.
+    
+    This adds registration of modules that register fsgcs.
+    
+    Note that this API change is incompatible with the previous API.
+    This shouldn't be a problem, since nothing that uses the old API
+    should be out in the wild yet.
+
+  * ConfigIF: Display the owner of FSGCs.
+
+  * FSGC: Protect against some common misconfigurations.
+    
+    We don't want to run an fsgc on the root or server directory,
+    and not one that zaps all files immediately either.
+    
+    Fixes some more of [bug 6572].
+
+  * git-rxnpatch: Retain exec bit in generated patch.
+    
+    The file protection mode bits were lost for new or binary files.
+    They are now preserved in the generated rxp archive.
+    
+    Fixes [bug 6898] part 1.
+
+  * RoxenPatch: Preserve exec bit when extracting tar files.
+    
+    Extracted files were always extracted with mode 0644.
+    This is NOT a good idea when patching eg the start script.
+    
+    Fixes some of [bug 6898] parts 2 and 3.
+
+  * RoxenPatch: Added virtual dependency roxenpatch/file-modes.
+    
+    This dependency is needed to force RoxenPatch to be patched and
+    used before applying patches that require the feature working.
+    
+    Fixes some of [bug 6898] part 2.
+
+  * git-rxnpatch: Retain file mode for all blobs.
+    
+    The file mode was lost for binary files being replaced.
+    
+    Fixes remaining issue of [bug 6898] part 1.
+
+  * git-rxnpatch: Fixed typo.
