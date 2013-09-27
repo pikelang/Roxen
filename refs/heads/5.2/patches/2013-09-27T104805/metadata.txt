@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Font compat, accessed tag, slowpipe, New generic GC
 from: 4847e704ecbab3a3da4de2210b4e81518844866e
 to: b0bf383cdda973a58c756dc613ac7fb9f5fc867d
 originator: wellhardh@roxen.com
@@ -15,8 +15,6 @@ Multiple fixes:
 
   * Transform aliased PS font identifiers so that lookup works as expected. Should
     provide sufficient 4.5 compatibility to fix [bug 6872].
-
-  * Version bumped to 5.2.383 by buildsystem.
 
   * Fixed an old issue, making the <accessed/> tag a bit more tolerant
     against database connection failures. Bug #6377.
