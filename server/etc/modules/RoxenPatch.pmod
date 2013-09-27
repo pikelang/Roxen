@@ -2783,7 +2783,7 @@ class Patcher
 	Privs privs =
 	  Privs(sprintf("RoxenPatch: Extracting tar archive %O.", file_name));
 	tarfs->tar->extract("", path, UNDEFINED,
-			    Filesystem.Tar.EXTRACT_SKIP_MODE|
+			    Filesystem.Tar.EXTRACT_SKIP_EXT_MODE|
 			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
 	privs = 0;
       }) {
