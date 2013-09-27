@@ -1,0 +1,14 @@
+Added files:
+  base_server/fsgc.pike
+  config_interface/global_settings/fsgarb.pike
+Modified files:
+  base_server/module.pike
+  base_server/roxen.pike
+  base_server/slowpipe.pike
+  config_interface/global_settings/index.html
+  etc/include/version.h
+  etc/modules/RoxenPatch.pmod
+  font_handlers/freetype.pike
+  modules/configuration/config_tags.pike
+  modules/tags/accessed.pike
+  tools/git-rxnpatch
