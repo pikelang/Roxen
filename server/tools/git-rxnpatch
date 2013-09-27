@@ -1557,18 +1557,17 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  //     ident expansion state or mode.
 	}
 	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob", blob);
-	if (header["new"] && (sizeof(header["new"]) > 2) &&
-	    (header["new"][-2] == "mode")) {
-	  // Typically either "new file mode 100644" or "new mode 100644".
-	  int mode;
-	  sscanf(header["new"][-1], "%o", mode);
-	  if (mode & 0111) {
-	    mode = 0755;
-	  } else {
-	    mode = 0644;
-	  }
-	  chmod(tmpdir + "/" + new_blob_sha1 + ".blob", mode);
+
+	int blob_mode = 0644;
+	sscanf(git("ls-tree", head_sha1, "--", header->b[0]),
+	       "%o %*s", blob_mode);
+	if (blob_mode & 0111) {
+	  blob_mode = 0755;
+	} else {
+	  blob_mode = 0644;
 	}
+	chmod(tmpdir + "/" + new_blob_sha1 + ".blob", mode);
+
 	if (old_blob_sha1 == GIT_NULL_SHA1) {
 	  // New file.
 	  cmd += ({
