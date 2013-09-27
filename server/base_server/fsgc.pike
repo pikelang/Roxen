@@ -318,7 +318,10 @@ class FSGarb
 
     ::create(max_age/file_interval_factor, 0, max_age);
 
-    monitor(root, 3);
+    // Workaround for too strict type-check in Pike 7.8.
+    int flags = 3;
+
+    monitor(root, flags);
   }
 
   void stable_data_change(string path, Stdio.Stat st)
