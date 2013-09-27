@@ -428,6 +428,7 @@ class FSGarbWrapper(string id)
 FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
 			      int|void max_size, int|void max_files)
 {
+  if ((path == "") || (path == "/") || (max_age <= 0)) return 0;
   string id = modid + "\0" + path + "\0" + gethrtime();
   FSGarb g = FSGarb(modid, path, max_age, max_size, max_files);
   fsgarbs[id] = g;
