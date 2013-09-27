@@ -1566,7 +1566,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	} else {
 	  blob_mode = 0644;
 	}
-	chmod(tmpdir + "/" + new_blob_sha1 + ".blob", mode);
+	chmod(tmpdir + "/" + new_blob_sha1 + ".blob", blob_mode);
 
 	if (old_blob_sha1 == GIT_NULL_SHA1) {
 	  // New file.
