@@ -1558,8 +1558,13 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	}
 	Stdio.write_file(tmpdir + "/" + new_blob_sha1 + ".blob", blob);
 
+	// Note: We need to reverse the prefixes so that
+	//       we get a repository relative path.
+	string repo_path =
+	  subtree_prefix + header->b[0][sizeof(path_prefix)..];
+
 	int blob_mode = 0644;
-	sscanf(git("ls-tree", head_sha1, "--", header->b[0]),
+	sscanf(git("ls-tree", head_sha1, "--", repo_path),
 	       "%o %*s", blob_mode);
 	if (blob_mode & 0111) {
 	  blob_mode = 0755;
