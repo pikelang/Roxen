@@ -709,6 +709,16 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
     # so no need to do it here.
     DEFINES="$DEFINES \"-m$PIKE_MASTER\""
   fi
+
+  # Kludge to add pike modules required by base_server to the
+  # module path. Remove when the package system comes in use.
+  for d in modules/feedimport; do
+    for pm in pike_modules pike-modules; do
+      if [ -d "$roxendir/$d/$pm/." ]; then
+	DEFINES="$DEFINES \"-M$roxendir/$d/$pm\""
+      fi
+    done
+  done
 fi
 
 # Extra module-path
