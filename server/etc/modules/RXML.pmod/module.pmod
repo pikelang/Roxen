@@ -8247,11 +8247,11 @@ protected class PikeCompile
 
     if (init) {
       COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      txt = sprintf ("%s %s = %s;\n", type, id, init);
+      txt = predef::sprintf ("%s %s = %s;\n", type, id, init);
     }
     else {
       COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      txt = sprintf ("%s %s;\n", type, id);
+      txt = predef::sprintf ("%s %s;\n", type, id);
     }
 
     Thread.MutexKey lock = mutex::lock();
@@ -8270,7 +8270,7 @@ protected class PikeCompile
       "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    string txt = sprintf (
+    string txt = predef::sprintf (
       "# 1\n" // Workaround for pike 7.8 bug with large line numbers, [bug 6146].
       "%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
