@@ -8336,7 +8336,7 @@ protected class PikeCompile
       "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    string txt = sprintf (
+    string txt = predef::sprintf (
       "# 1\n" // Workaround for pike 7.8 bug with large line numbers, [bug 6146].
       "%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
