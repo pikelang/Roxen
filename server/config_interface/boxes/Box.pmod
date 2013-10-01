@@ -145,10 +145,10 @@ class Fetcher
 string get_http_data( string host, int port, string query,
 		      function|void cb )
 {
-  mixed data;
 #ifdef OFFLINE
   return "The server is offline.";
 #else
+  mixed data;
   if( data = cache[host+port+query] )
   {
     return data[0];
