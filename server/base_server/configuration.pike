@@ -2815,6 +2815,13 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
   else {
     Configuration oc = id->conf;
     id->not_query = fname;
+
+    // Make sure RXML defines don't survive <insert file/>.
+    // Fixes [bug 6631] where the return code for the outer
+    // RXML scope caused the <insert file/> to fail.
+    m_delete(id->misc, "defines");
+    m_delete(id->misc, "error_code");
+
     TRY_FIRST_MODULES (file, open_file (fname, mode, id,
 					internal_get, recurse_count + 1));
     fname = id->not_query;
