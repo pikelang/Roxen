@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: FSGC fixes, RequestID clone fix
 from: 9f79f07d68897210a56120281e3fe3aec9140228
 to: d1d94288f91d6791385887b03f9899b0dbf64e47
 originator: wellhardh@roxen.com
