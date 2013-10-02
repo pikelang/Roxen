@@ -6,7 +6,7 @@
 
 #if constant(Filesystem.Monitor.basic)
 
-#define FSGC_DEBUG
+// #define FSGC_DEBUG
 // #define FSGC_PRETEND
 
 #ifdef FSGC_DEBUG
