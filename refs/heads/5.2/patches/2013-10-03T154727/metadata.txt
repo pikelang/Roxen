@@ -1,0 +1,47 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 9f79f07d68897210a56120281e3fe3aec9140228
+to: ed8f56bcb3d26247ab9530ca816ec005e811c95c
+originator: wellhardh@roxen.com
+depends: 2013-09-27T152550
+restart: true
+
+Multiple fixes:
+
+  * FSGC: Fixed compatibility with Pike 7.8.
+    
+    Fixes some of [bug 6572].
+
+  * git-rxnpatch: Adjusted path used to determine mode bits.
+    
+    Fixes [bug 6898].
+
+  * Start: Add some extra stuff to the module path if existing.
+    
+    The FSGC needs the Filesystem.Monitor module, which currently
+    (Pike 7.8) is provided by the feedimport module. As the
+    package system isn't yet in use in dists, it needs to be added
+    to the module path by the start-script. When the package system
+    is in use this is done when the package directories are added
+    by the roxenloader.
+    
+    Fixes some more of [bug 6572].
+
+  * Configuration: Clear some of the misc state in open_file().
+    
+    RequestID::clone_me() copies the entirety of id->misc, including
+    state like the return code for the parsed page, which could cause
+    the subrequest performed by open_file() to fail. It also polluted
+    the RXML state for the subrequest with tag definitions etc that
+    shouldn't be there.
+    
+    Fixes [bug 6631].
+
+  * [compat][debug] Fix PikeCompile compat with Pike 7.9.
+    
+    String.Buffer in Pike 7.9 contains a sprintf() function. Make sure
+    not to call it (due to our inherit) since we want the normal one.
+    
+    Fixes some more cases of "Bad argument 1 to add(). Expected string."
+    where add() was passed an int.
+
+  * FSGC: Disabled some debug.
