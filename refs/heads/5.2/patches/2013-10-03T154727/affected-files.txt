@@ -1,0 +1,6 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/fsgc.pike
+  etc/modules/RXML.pmod/module.pmod
+  start
+  tools/git-rxnpatch
