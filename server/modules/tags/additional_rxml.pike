@@ -923,6 +923,33 @@ class TagFormatNumber
 
       if (!(sizeof(sgn/"-") & 1)) int_part = "-" + int_part;
 
+      if (has_prefix(rest, "e") || has_prefix(rest, "E")) {
+	// Exponent notation.
+	int exponent = 0;
+	sscanf(rest[1..], "%d%s", exponent, rest);
+	if (exponent > 0) {
+	  if (exponent < sizeof(frac_part)) {
+	    int_part += frac_part[..exponent-1];
+	    frac_part = frac_part[exponent..];
+	  } else {
+	    exponent -= sizeof(frac_part);
+	    int_part += frac_part + "0" * exponent;
+	    frac_part = "";
+	  }
+	} else if (exponent < 0) {
+	  exponent = -exponent;
+	  if (exponent < sizeof(int_part)) {
+	    int off = sizeof(int_part) - exponent;
+	    frac_part = int_part[off..] + frac_part;
+	    int_part = int_part[..off-1];
+	  } else {
+	    exponent -= sizeof(int_part);
+	    frac_part = "0" * exponent + int_part + frac_part;
+	    int_part = "";
+	  }
+	}
+      }
+
       // FIXME: Consider checking whether rest contains junk.
 
       /* We need to break down the pattern, first by ";" and make sure that ";"
