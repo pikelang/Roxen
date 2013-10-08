@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.63 2012/11/12 10:43:03 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -922,6 +922,33 @@ class TagFormatNumber
       sscanf(rest, ".%[0-9]%s", frac_part, rest);
 
       if (!(sizeof(sgn/"-") & 1)) int_part = "-" + int_part;
+
+      if (has_prefix(rest, "e") || has_prefix(rest, "E")) {
+	// Exponent notation.
+	int exponent = 0;
+	sscanf(rest[1..], "%d%s", exponent, rest);
+	if (exponent > 0) {
+	  if (exponent < sizeof(frac_part)) {
+	    int_part += frac_part[..exponent-1];
+	    frac_part = frac_part[exponent..];
+	  } else {
+	    exponent -= sizeof(frac_part);
+	    int_part += frac_part + "0" * exponent;
+	    frac_part = "";
+	  }
+	} else if (exponent < 0) {
+	  exponent = -exponent;
+	  if (exponent < sizeof(int_part)) {
+	    int off = sizeof(int_part) - exponent;
+	    frac_part = int_part[off..] + frac_part;
+	    int_part = int_part[..off-1];
+	  } else {
+	    exponent -= sizeof(int_part);
+	    frac_part = "0" * exponent + int_part + frac_part;
+	    int_part = "";
+	  }
+	}
+      }
 
       // FIXME: Consider checking whether rest contains junk.
 
