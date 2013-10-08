@@ -10350,11 +10350,20 @@ protected void init_parsers()
   p->add_entity ("lt", 0);
   p->add_entity ("gt", 0);
   p->add_entity ("amp", 0);
+  // FIXME: The following quotes ought to be filtered only in
+  //        attribute contexts.
+  p->add_entity ("quot", 0);
+  p->add_entity ("apos", 0);
+  // The following three are also in the parser_charref_table.
+  p->add_entity ("#34", 0);	// quot
+  p->add_entity ("#39", 0);	// apos
+  p->add_entity ("#x22", 0);	// quot
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
       TRY_DECODE_CHREF (chref,
-			if ((<"<", ">", "&">)[chr]) return ({p->current()}););
+			if ((<"<", ">", "&", "\"", "\'">)[chr])
+			  return ({p->current()}););
       return ({p->current()});
     });
   tolerant_xml_safe_charref_decode_parser = p;
