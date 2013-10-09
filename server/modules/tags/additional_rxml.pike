@@ -921,8 +921,6 @@ class TagFormatNumber
       }
       sscanf(rest, ".%[0-9]%s", frac_part, rest);
 
-      if (!(sizeof(sgn/"-") & 1)) int_part = "-" + int_part;
-
       if (has_prefix(rest, "e") || has_prefix(rest, "E")) {
 	// Exponent notation.
 	int exponent = 0;
@@ -950,92 +948,58 @@ class TagFormatNumber
 	}
       }
 
+      if (!(sizeof(sgn/"-") & 1)) sgn = "-";
+      else sgn = "";
+
       // FIXME: Consider checking whether rest contains junk.
 
       /* We need to break down the pattern, first by ";" and make sure that ";"
-         is not an escaped character. */
-      array(string) temp_pattern = args->pattern / ";";
-      array(string) pattern = ({ "", "" });
-      int is_pos = TRUE;
-      for (int i = 0; i < sizeof(temp_pattern); i++)
-      {
-	pattern[is_pos] += temp_pattern[i];
-	if (sizeof(pattern[is_pos]) > 0 &&
-	    pattern[is_pos][sizeof(pattern[is_pos]) - 1] == "'"[0])
-	{
-	  pattern[is_pos][sizeof(pattern[is_pos]) - 1] = ";"[0];
+       * is not an escaped character.
+       */
+      string pattern = "";
+      int neg_pattern;
+      foreach(args->pattern/";"; int i; string seg) {
+	if (i) {
+	  if (!has_suffix(pattern, "'")) {
+	    if (sgn == "") break;
+	    // Start of negative pattern.
+	    pattern = "";
+	    neg_pattern = 1;
+	  } else {
+	    // Escaped.
+	    pattern = pattern[..sizeof(pattern)-2] + ";";
+	  }
 	}
-	else if (is_pos)
-	{
-	  is_pos = FALSE;
-	}
+	pattern += seg;
       }
 
-      /* Now that we have extracted the patterns for positive and negative 
-         numbers, we can reuse the is_pos flag to reflect which pattern we
-	 should use. */
-      if (has_prefix(int_part, "-") && sizeof(pattern[0]) > 0)
-      {
-	is_pos = FALSE;
-	// Trim away the minus sign.
-	int_part = int_part[1..];
-      }
-      else if (sizeof(pattern[1]) > 0)
-      {
-	is_pos = TRUE;
-      }
-      else
-      {
-	RXML.parse_error("The value was positive but no pattern " +
-			 "for positive values was defined.\n");
-      }
-      
       // Now do the same thing as above to find the fraction delimiter.
-      temp_pattern = pattern[is_pos] / ".";
-      pattern = ({"", ""});
-      int is_frac = FALSE;
-
-      pattern[INT_PART] = temp_pattern[0];
-      if (sizeof(pattern[INT_PART]) > 0 &&
-	  pattern[INT_PART][-1] == "'"[0])
-      {
-	pattern[INT_PART][sizeof(pattern[INT_PART]) - 1] = "."[0];
-      }
-      else
-      {
-	is_frac = TRUE;
-      }
-
-      if (sizeof(temp_pattern) > 1)
-      {
-	for (int i = 1; i < sizeof(temp_pattern); i++)
-	{
-	  pattern[is_frac] += temp_pattern[i];
-	  if (sizeof(pattern[is_frac]) > 0 &&
-	      pattern[is_frac][-1] == "'"[0])
-	  {
-	    pattern[is_frac][-1] = "."[0];
+      string int_pattern = "";
+      string frac_pattern;
+      foreach(pattern/"."; int i; string seg) {
+	if (i) {
+	  if (frac_pattern) {
+	    if (has_suffix(frac_pattern, "'")) {
+	      frac_pattern = frac_pattern[..sizeof(frac_pattern)-2];
+	    }
+	    frac_pattern += "." + seg;
+	  } else if (has_suffix(int_pattern, "'")) {
+	    int_pattern = int_pattern[..sizeof(int_pattern)-2] + "." + seg;
+	  } else {
+	    frac_pattern = seg;
 	  }
-	  else if (!is_frac)
-	  {
-	    is_frac = TRUE;
-	  }
-	  else if (i < (sizeof(temp_pattern) - 1))
-	  {
-	    pattern[is_frac] += ".";
-	  }
+	} else {
+	  int_pattern = seg;
 	}
       }
 
       // Handle percent and per-mille
       int log_ten = 0;
-      if (search(pattern[FRAC_PART], "%") >= 0 ||
-	  search(pattern[INT_PART], "%") >= 0)
+      if (has_value(pattern, "%"))
       {
 	log_ten = 2;
       }
-      else if (search(pattern[FRAC_PART], "\x2030") >= 0 ||
-	       search(pattern[INT_PART], "\x2030") >= 0)
+      else if (has_value(pattern, "\x2030"))
       {
 	log_ten = 3;
       }
@@ -1057,13 +1021,15 @@ class TagFormatNumber
       sscanf(int_part, "%*[0]%s", int_part);
       if (int_part == "") int_part = "0";
 
+      // Keep track of any digits in case we truncate/round to zero.
+      int digit_bits = 0;
+
       // Start with the fractional part.
       int val_length     = strlen(frac_part);
-      int ptn_length     = strlen(pattern[FRAC_PART]);
+      int ptn_length     = strlen(frac_pattern);
       int vi             = 0;
       string frac_result = "";
-      
-      foreach(pattern[FRAC_PART]/1, string s)
+      foreach(frac_pattern/1, string s)
       {
 	switch(s)
 	{
@@ -1072,6 +1038,7 @@ class TagFormatNumber
 	  case "#":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= frac_part[vi];
 	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    }
@@ -1079,6 +1046,7 @@ class TagFormatNumber
 	  case "0":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= frac_part[vi];
 	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    } 
@@ -1094,8 +1062,9 @@ class TagFormatNumber
 
       // Round the last digit.    
       if (vi < val_length && (frac_part[vi] > '5' ||
-			      (frac_part[vi] == '5' && is_pos)))
+			      (frac_part[vi] == '5' && (sgn == ""))))
       {
+	digit_bits = 0;
 	vi = sizeof(frac_result);
 	while(vi > 0) {
 	  if (frac_result[vi-1] == '9') {
@@ -1105,6 +1074,7 @@ class TagFormatNumber
 	    continue;
 	  }
 	  frac_result[vi-1] += 1;
+	  digit_bits |= frac_part[vi-1];
 	  break;
 	}
 	if (!vi)
@@ -1115,13 +1085,12 @@ class TagFormatNumber
       
       // Now for the integral part. We traverse it in reverse.
       val_length        = strlen(int_part);
-      ptn_length        = strlen(pattern[INT_PART]);
+      ptn_length        = strlen(int_pattern);
       vi                = 0;
       int num_wid       = 0; 
       string rev_val    = reverse(int_part);
       string int_result = "";
-      string minus_sign = "";
-      foreach(reverse(pattern[INT_PART])/1, string s)
+      foreach(reverse(int_pattern)/1, string s)
       {
 	switch(s)
 	{
@@ -1130,6 +1099,7 @@ class TagFormatNumber
 	  case "#":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= rev_val[vi];
 	      int_result += rev_val[vi..vi];
 	      vi++;
 	    }
@@ -1141,6 +1111,7 @@ class TagFormatNumber
 	  case "0":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= rev_val[vi];
 	      int_result += rev_val[vi..vi];
 	      vi++;
 	    } 
@@ -1163,16 +1134,6 @@ class TagFormatNumber
 	      int_result += grp_sep;
 	    }
 	    break;
-	  case "-":
-	    if (is_pos)
-	    {
-	      int_result += s;
-	    }
-	    else if (minus_sign = "")
-	    {
-	      minus_sign = "-";
-	    }
-	    break;
 	  case "%":
 	  case "\x2030":
 	    frac_result = s;
@@ -1182,7 +1143,7 @@ class TagFormatNumber
 	}
       }
       for (;vi < val_length;vi++)
-	{
+      {
 	  if (num_wid > 0 && vi%num_wid == 0)
 	  {
 	    int_result += grp_sep;
@@ -1190,18 +1151,44 @@ class TagFormatNumber
 	  int_result += rev_val[vi..vi];
       }
 
+      // Insert the sign.
+      if ((sgn == "-") && !(digit_bits & 0x0f)) {
+	// Negative zero.
+	sgn = "";
+      }
+      foreach(int_result/1; int i; string s) {
+	if (s == "-") {
+	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
+	} else if (s == "+") {
+	  if (sgn == "") {
+	    sgn = "+";
+	  }
+	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
+	} else
+	  continue;
+	sgn = "";
+	break;
+      }
+      if ((sgn != "") && !neg_pattern) {
+	// No sign in generic pattern.
+	if (has_suffix(int_result, "0")) {
+	  int_result = int_result[..sizeof(int_result)-2];
+	}
+	int_result += sgn;
+      }
+
       if (strlen(frac_result) == 0)
       {
-	result += minus_sign + reverse(int_result);
+	result += reverse(int_result);
       }
       else if (frac_result[0..0] == "%" ||
 	       frac_result[0..0] == "\x2030")
       {
-	result += minus_sign + reverse(int_result) + frac_result[0..0];
+	result += reverse(int_result) + frac_result[0..0];
       }
       else 
       {
-	result += minus_sign + reverse(int_result) + dec_sep + frac_result;
+	result += reverse(int_result) + dec_sep + frac_result;
       }
     }
   } 
