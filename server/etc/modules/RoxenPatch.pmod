@@ -86,13 +86,17 @@ class PatchObject(string|void id
   //!     @endmapping
   //! @endarray
 
-  array(mapping(string:string)) patch = ({});
+  array(mapping(string:string|array(string))) patch = ({});
   //! An array of all "patch" fields in the metadata block.
   //! @array
-  //!   @elem mapping(string:string) 0..
+  //!   @elem mapping(string:string|array(string)) 0..
   //!     @mapping
   //!       @member string "source"
+  //!         Filename containing the patch data.
   //!       @member string "platform"
+  //!         Platform.
+  //!       @member array(string) "file_list"
+  //!         Affected files. Not always present.
   //!     @endmapping
   //! @endarray
 
@@ -1581,6 +1585,165 @@ class Patcher
     return p;  
   }
 
+  mapping(string:string|mapping(string:mixed)) describe_installed_patch(string id)
+  //! Describe a single installed patch given its patch id.
+  //!
+  //! @returns
+  //!   Returns @expr{0@} (zero) for uninstalled or broken patches.
+  //!   Otherwise a mapping with the following content:
+  //!   @mapping
+  //!     @member mapping(string:int) "installed"
+  //!       Time of installation. Same kind of mapping as localtime() returns.
+  //!       Taken from the patch's installation log. If there is no log,
+  //!       i.e if it has been deleted by a user, then the value of this field
+  //!       will be 0.
+  //!     @member string "user"
+  //!       User who installed the patch. Taken from the patch's
+  //!       installation log. If there is no log,
+  //!       i.e if it has been deleted by a user, then the value of this field
+  //!       will be 0.
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
+  //!   @endmapping
+  //!
+  //!  Entries are sorted by patch ID in reverse alphabetical order, i.e.
+  //!  newest patch first since IDs are by convention ISO timestamps.
+  {
+    if (!is_dir(combine_path(installed_path, id))) return 0;
+
+    // Get installation log
+    string install_log = append_path(installed_path,
+				     id,
+				     "installation.log");
+    string user;
+    mapping(string:int) inst_date;
+    PatchObject po;
+
+    if (is_file(install_log))
+    {
+      string log_data = read_file(install_log);
+      sscanf(log_data,
+	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+	     int year,
+	     int month,
+	     int day,
+	     int hour,
+	     int minute,
+	     user);
+
+      inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
+		     "mon"  : month,
+		     "mday" : day,
+		     "hour" : hour,
+		     "min"  : minute ]);
+    }
+
+    // Get metadata
+    string mdfile = append_path(installed_path,
+				id,
+				"metadata");
+    if (is_file(mdfile))
+    {
+      string mdblock = read_file(mdfile);
+      po = parse_metadata(mdblock,
+			  extract_id_from_filename(mdfile));
+
+      return ([ "installed" : inst_date,
+		"user"      : user,
+		"metadata"  : po ]);
+    }
+
+    return 0;
+  }
+
+  mapping(string:string|mapping(string:mixed)) describe_imported_patch(string id)
+  //! Describe a single imported patch given its patch id.
+  //!
+  //! @returns
+  //!   Returns @expr{0@} (zero) for unimported or broken patches.
+  //!   Otherwise a mapping with the following content:
+  //!   @mapping
+  //!     @member mapping(string:int) "installed"
+  //!       Time of latest installation. Same kind of mapping as localtime()
+  //!       returns. Taken from the patch's installation log. If there is no
+  //!       log, e.g. if the patch has never been installed, then the value of
+  //!       this field will be 0.
+  //!     @member string "user"
+  //!       User who installed the patch. Taken from the patch's
+  //!       installation log. If there is no log, e.g. if the patch has never
+  //!       been installed, then the value of this field will be 0.
+  //!     @member mapping (string:int) "uninstalled"
+  //!       Time of latest unistallation. This field is 0 unless the patch has
+  //!       has been uninstalled.
+  //!     @member string "uninstall_user"
+  //!       User who uninstalled the patch. This field is usually 0.
+  //!     @member PatchObject "metadata"
+  //!       Metadata block as returned from parse_metadata()
+  //!   @endmapping
+  {
+    if (!is_dir(combine_path(import_path, id))) return 0;
+
+    // Get installation log
+    string install_log = append_path(import_path,
+				     id,
+				     "installation.log");
+    string inst_user, uninst_user;
+    mapping(string:int) inst_date, uninst_date;
+    PatchObject po;
+
+    if (is_file(install_log))
+    {
+      string log_data = read_file(install_log);
+      sscanf(log_data,
+	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+	     int year,
+	     int month,
+	     int day,
+	     int hour,
+	     int minute,
+	     inst_user);
+
+      inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
+		     "mon"  : month,
+		     "mday" : day,
+		     "hour" : hour,
+		     "min"  : minute ]);
+      sscanf(log_data,
+	     "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
+	     year,
+	     month,
+	     day,
+	     hour,
+	     minute,
+	     uninst_user);
+
+      uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
+		       "mon"  : month,
+		       "mday" : day,
+		       "hour" : hour,
+		       "min"  : minute ]);
+    }
+
+    // Get metadata
+    string mdfile = append_path(import_path,
+				id,
+				"metadata");
+    if (is_file(mdfile))
+    {
+      string mdblock = read_file(mdfile);
+      po = parse_metadata(mdblock,
+			  extract_id_from_filename(mdfile));
+
+      return ([ "installed"		: inst_date,
+		"user"		: inst_user,
+		"uninstalled"	: uninst_date,
+		"uninstall_user"	: uninst_user,
+		"metadata"		: po ]);
+    }
+
+    return 0;
+  }
+
   array(mapping(string:string|mapping(string:mixed))) file_list_installed()
   //! This function returns a list of installed patches.
   //!
@@ -1593,71 +1756,17 @@ class Patcher
   //!       i.e if it has been deleted by a user, then the value of this field
   //!       will be 0.
   //!     @member string "user"
-  //!       User who installed the patch. Taken from the patch's 
+  //!       User who installed the patch. Taken from the patch's
   //!       installation log. If there is no log,
   //!       i.e if it has been deleted by a user, then the value of this field
   //!       will be 0.
   //!     @member PatchObject "metadata"
   //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
-  //!
-  //!  Entries are sorted by patch ID in reverse alphabetical order, i.e.
-  //!  newest patch first since IDs are by convention ISO timestamps.
   {
-    array patch_list = filter(get_dir(installed_path) || ({ }), 
-			      lambda(string s)
-			      {
-				return is_dir(combine_path(installed_path, s));
-			      }
-			     );
-
-    array res = ({ });
-    
-    foreach(patch_list, string patch_path)
-    {
-      // Get installation log
-      string install_log = append_path(installed_path,
-				       patch_path,
-				       "installation.log");
-      string user;
-      mapping(string:int) inst_date;
-      PatchObject po;
-
-      if (is_file(install_log))
-      {
-	string log_data = read_file(install_log);
-	sscanf(log_data, 
-	       "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	       int year,
-	       int month,
-	       int day,
-	       int hour,
-	       int minute,
-	       user);
-
-	inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		       "mon"  : month,
-		       "mday" : day,
-		       "hour" : hour,
-		       "min"  : minute ]);
-      }
-
-      // Get metadata
-      string mdfile = append_path(installed_path, 
-				  patch_path, 
-				  "metadata");
-      if (is_file(mdfile))
-      {
-	string mdblock = read_file(mdfile);
-	po = parse_metadata(mdblock, 
-			    extract_id_from_filename(mdfile));
-
-      
-	res += ({ ([ "installed" : inst_date,
-		     "user"      : user,
-		     "metadata"  : po ]) });
-      }
-    }
+    array(mapping(string:string|mapping(string:mixed))) res =
+      filter(map(get_dir(installed_path) || ({ }), describe_installed_patch),
+	     mappingp);
 
     //  Return in reverse chronological order, i.e. newest first
     return Array.sort_array(res, lambda (mapping a, mapping b)
@@ -1666,7 +1775,7 @@ class Patcher
 				 }
 			    );
   }
-  
+
   array(mapping(string:string|mapping(string:int)|PatchObject)) file_list_imported()
   //! This function returns a list of all imported patches.
   //!
@@ -1679,11 +1788,9 @@ class Patcher
   //!       log, e.g. if the patch has never been installed, then the value of
   //!       this field will be 0.
   //!     @member string "user"
-  //!       User who installed the patch. Taken from the patch's 
+  //!       User who installed the patch. Taken from the patch's
   //!       installation log. If there is no log, e.g. if the patch has never
   //!       been installed, then the value of this field will be 0.
-  //!    then the value of this field
-  //!       will be 0.
   //!     @member mapping (string:int) "uninstalled"
   //!       Time of latest unistallation. This field is 0 unless the patch has
   //!       has been uninstalled.
@@ -1696,75 +1803,9 @@ class Patcher
   //!  Entries are sorted by patch ID in alphabetical order, i.e. oldest
   //!  patch first since IDs are by convention ISO timestamps.
   {
-    array patch_list = filter(get_dir(import_path) || ({ }), 
-			      lambda(string s)
-			      {
-				return is_dir(append_path(import_path, s));
-			      }
-			     );
-
-    array res = ({ });
-    
-    foreach(patch_list, string patch_path)
-    {
-      // Get installation log
-      string install_log = append_path(import_path,
-				       patch_path,
-				       "installation.log");
-      string inst_user, uninst_user;
-      mapping(string:int) inst_date, uninst_date;
-      PatchObject po;
-
-      if (is_file(install_log))
-      {
-	string log_data = read_file(install_log);
-	sscanf(log_data, 
-	       "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	       int year,
-	       int month,
-	       int day,
-	       int hour,
-	       int minute,
-	       inst_user);
-
-	inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-		       "mon"  : month,
-		       "mday" : day,
-		       "hour" : hour,
-		       "min"  : minute ]);
-	sscanf(log_data, 
-	       "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
-	       year,
-	       month,
-	       day,
-	       hour,
-	       minute,
-	       uninst_user);
-
-	uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
-			 "mon"  : month,
-			 "mday" : day,
-			 "hour" : hour,
-			 "min"  : minute ]);
-      }
-
-      // Get metadata
-      string mdfile = append_path(import_path, 
-				  patch_path, 
-				  "metadata");
-      if (is_file(mdfile))
-      {
-	string mdblock = read_file(mdfile);
-	po = parse_metadata(mdblock, 
-			    extract_id_from_filename(mdfile));
-
-	res += ({ ([ "installed"		: inst_date,
-		     "user"		: inst_user,
-		     "uninstalled"	: uninst_date,
-		     "uninstall_user"	: uninst_user,
-		     "metadata"		: po ]) });
-      }
-    }
+    array(mapping(string:string|mapping(string:mixed))) res =
+      filter(map(get_dir(import_path) || ({ }),  describe_imported_patch),
+	     mappingp);
 
     //  Return in chronological order, i.e. oldest first
     return Array.sort_array(res, lambda (mapping a, mapping b)
@@ -2111,6 +2152,15 @@ class Patcher
     }
 
     PatchObject res = parse_metadata(md, patchid);
+    if (res && dry_run) {
+      // We need to populate the list of affected files here,
+      // since we're about to delete the relevant information.
+      foreach(res->patch, mapping(string:string|array(string)) item) {
+	item->file_list = lsdiff(Stdio.read_file(combine_path(target_dir,
+							      patchid,
+							      item->source)));
+      }
+    }
     if (!res || dry_run)
       recursive_rm(combine_path(target_dir, patchid));
 

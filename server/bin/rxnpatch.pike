@@ -645,12 +645,36 @@ int main(int argc, array(string) argv)
 	  break;
       }
     }
-    if (imp || !ins)
+    if ((sizeof(cmd_n_files) == 2) && !imp && !ins) {
+      imp = ins = 1;
+    }
+    if (imp)
       write_list(plib, plib->file_list_imported(),
 		 "List of imported patches", 1, color);
-    if (ins || !imp)
+    if (ins)
       write_list(plib, plib->file_list_installed(),
 		 "list of installed patches", 1, color);
+    if (sizeof(cmd_n_files) > 2) {
+      array(mapping) patch_files =
+	map(cmd_n_files[2..],
+	    lambda(string path) {
+	      string id = plib->extract_id_from_filename(path);
+	      if (id) {
+		mapping res = plib->describe_installed_patch(id) ||
+		  plib->describe_imported_patch(id);
+		if (res) return res;
+	      }
+	      return ([
+		"status": "Not imported",
+		"installed": 0,
+		"user": 0,
+		"metadata":
+		plib->extract_patch(path, "/tmp/rxnpatch-" + getpid(), 1),
+	      ]);
+	    });
+      write_list(plib, patch_files,
+		 "list of patch files", 1, color);
+    }
     return 0;
   }
 
@@ -760,10 +784,12 @@ array(array(string)) describe_metadata(Patcher po,
   if (!md || !sizeof(md)) return ({});
 
   mapping(string:multiset(string)) files = ([]);
-  foreach(md, mapping(string:string) item) {
+  foreach(md, mapping(string:string|array(string)) item) {
     array(string) file_list = ({});
     if (item->destination) {
       file_list = ({ item->destination });
+    } else if (item->file_list) {
+      file_list = item->file_list;
     } else if (item->source) {
       file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
 							  item->source)));
@@ -908,8 +934,8 @@ private void write_list(Patcher plib,
 	if (obj->installed)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
+				(obj->installed->year < 1900) ?
+				obj->installed->year + 1900 :
 				obj->installed->year,
 				obj->installed->mon,
 				obj->installed->mday,
@@ -924,13 +950,13 @@ private void write_list(Patcher plib,
 	if (obj->uninstalled)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
-				obj->installed->year,
-				obj->installed->mon,
-				obj->installed->mday,
-				obj->installed->hour,
-				obj->installed->min);
+				(obj->uninstalled->year < 1900) ?
+				obj->uninstalled->year + 1900 :
+				obj->uninstalled->year,
+				obj->uninstalled->mon,
+				obj->uninstalled->mday,
+				obj->uninstalled->hour,
+				obj->uninstalled->min);
 	  md += ({
 	    ({ "Uninstalled:"	 , date }),
 	    ({ "Uninstalled by:" , obj->uninstall_user || "Unknown" }),
