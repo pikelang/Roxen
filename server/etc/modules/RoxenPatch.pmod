@@ -83,13 +83,17 @@ class PatchObject(string|void id
   //!     @endmapping
   //! @endarray
 
-  array(mapping(string:string)) patch = ({});
+  array(mapping(string:string|array(string))) patch = ({});
   //! An array of all "patch" fields in the metadata block.
   //! @array
-  //!   @elem mapping(string:string) 0..
+  //!   @elem mapping(string:string|array(string)) 0..
   //!     @mapping
   //!       @member string "source"
+  //!         Filename containing the patch data.
   //!       @member string "platform"
+  //!         Platform.
+  //!       @member array(string) "file_list"
+  //!         Affected files. Not always present.
   //!     @endmapping
   //! @endarray
 
@@ -2061,6 +2065,15 @@ class Patcher
     }
 
     PatchObject res = parse_metadata(md, patchid);
+    if (res && dry_run) {
+      // We need to populate the list of affected files here,
+      // since we're about to delete the relevant information.
+      foreach(res->patch, mapping(string:string|array(string)) item) {
+	item->file_list = lsdiff(Stdio.read_file(combine_path(target_dir,
+							      patchid,
+							      item->source)));
+      }
+    }
     if (!res || dry_run)
       recursive_rm(combine_path(target_dir, patchid));
 
