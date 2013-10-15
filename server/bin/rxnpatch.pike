@@ -930,8 +930,8 @@ private void write_list(Patcher plib,
 	if (obj->installed)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
+				(obj->installed->year < 1900) ?
+				obj->installed->year + 1900 :
 				obj->installed->year,
 				obj->installed->mon,
 				obj->installed->mday,
@@ -946,13 +946,13 @@ private void write_list(Patcher plib,
 	if (obj->uninstalled)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
-				obj->installed->year,
-				obj->installed->mon,
-				obj->installed->mday,
-				obj->installed->hour,
-				obj->installed->min);
+				(obj->uninstalled->year < 1900) ?
+				obj->uninstalled->year + 1900 :
+				obj->uninstalled->year,
+				obj->uninstalled->mon,
+				obj->uninstalled->mday,
+				obj->uninstalled->hour,
+				obj->uninstalled->min);
 	  md += ({
 	    ({ "Uninstalled:"	 , date }),
 	    ({ "Uninstalled by:" , obj->uninstall_user || "Unknown" }),
