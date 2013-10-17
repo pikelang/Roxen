@@ -893,10 +893,10 @@ class TagFormatNumber
     string do_return(RequestID req_id) {
       //constant PERCENT   = 0x01;
       //constant PER_MILLE = 0x02;
-      constant TRUE      = 0x01;
-      constant FALSE     = 0x00;
-      constant FRAC_PART = 1;
-      constant INT_PART  = 0;
+      // constant TRUE      = 0x01;
+      // constant FALSE     = 0x00;
+      // constant FRAC_PART = 1;
+      // constant INT_PART  = 0;
       
       string grp_sep     = ",";
       string dec_sep     = "."; 
