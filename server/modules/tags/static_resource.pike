@@ -73,6 +73,7 @@ class TagServeStaticResources
       parser->add_tag(tag_name + "/", process_tag);
     }
 
+    parser->ignore_unknown (1);
     string res = parser->finish(s)->read();
     parser = 0;
     process_tag = 0;
