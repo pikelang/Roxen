@@ -283,10 +283,12 @@ class TagInsertHref {
 
     mapping(string:string) headers = ([ "X-Roxen-Recursion-Depth":
 					(string)recursion_depth ]);
-    if (args["request-headers"])
-      foreach (args["request-headers"] / ",", string header)
+    if (args["request-headers"]) {
+      string delim = args["header-delimiter"] || ",";
+      foreach (args["request-headers"] / delim, string header)
 	if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
 	  headers[name] = val;
+    }
 
     string|mapping data;
     if (method == "POST")
@@ -1270,7 +1272,11 @@ constant tagdoc=([
 </attr>
 
 <attr name='request-headers' value='\"header=value[,header2=value2,...]\"'><p>
- Comma-separated list of extra headers to send in the request.</p>
+ List of extra headers to send in the request. Headers are separated by comma by default, but the delimiter can be changed using the 'header-delimiter' attribute.</p>
+</attr>
+
+<attr name='header-delimiter' value='string'><p>
+ Delimiter to use with 'request-headers', defaults to comma (\",\").</p>
 </attr>
 
 <attr name='ignore-unknown-ce' value='int'><p>
