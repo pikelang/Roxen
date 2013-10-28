@@ -992,6 +992,7 @@ class TagFormatNumber
 	  int_pattern = seg;
 	}
       }
+      if (!frac_pattern) frac_pattern = "";
 
       // Handle percent and per-mille
       int log_ten = 0;
