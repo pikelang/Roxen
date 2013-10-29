@@ -892,14 +892,8 @@ class TagFormatNumber
   class Frame {
     inherit RXML.Frame;
 
-    string do_return(RequestID req_id) {
-      //constant PERCENT   = 0x01;
-      //constant PER_MILLE = 0x02;
-      constant TRUE      = 0x01;
-      constant FALSE     = 0x00;
-      constant FRAC_PART = 1;
-      constant INT_PART  = 0;
-      
+    string do_return(RequestID req_id)
+    {
       string grp_sep     = ",";
       string dec_sep     = "."; 
       if (args["group-separator"])
