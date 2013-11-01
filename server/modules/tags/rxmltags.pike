@@ -2168,6 +2168,14 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
   return ({r});
 }
 
+//  Caches may request synchronization on a shared mutex to serialize
+//  expensive computations. It's flagged as weak so only locked mutexes
+//  are retained.
+mapping(string:Thread.Mutex) cache_mutexes =
+  set_weak_flag( ([ ]), Pike.WEAK_VALUES);
+mapping(string:int) cache_mutex_concurrency = ([ ]);
+
+
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
@@ -2228,6 +2236,15 @@ class TagCache {
     string key;
     RXML.PCode evaled_content;
     int timeout, persistent_cache;
+
+    //  Mutex state to restrict concurrent generation of same cache entry.
+    //  This is enabled only if RXML code specifies a "mutex" attribute.
+    //  We store the mutex in a module-global table (with weak values)
+    //  indexed on the user-provided name together with the keymap; locking
+    //  the mutex will maintain a reference. Extra book-keeping is needed
+    //  to clean up mutexes after concurrent access completes.
+    Thread.MutexKey mutex_key;
+    string mutex_id;
 
     // The following are retained for frame reuse.
 
@@ -2426,49 +2443,113 @@ class TagCache {
       make_key_from_keymap (id, timeout);
 
       // Now we have the cache key.
-
-      object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
-	cache_lookup (cache_tag_eval_loc, key) :
-	alternatives && alternatives[key];
-
-      int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
-
-      if (entry) {
-      check_entry_valid: {
-	  if (arrayp (entry)) {
-	    if (entry[0] < time (1)) {
-	      removed = 2;
-	      break check_entry_valid;
+      int removed;
+      object(RXML.PCode)|array(int|RXML.PCode) entry;
+      int retry_lookup;
+      
+      do {
+	retry_lookup = 0;
+	entry = args->shared ?
+	  cache_lookup (cache_tag_eval_loc, key) :
+	  alternatives && alternatives[key];
+	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
+	
+	if (entry) {
+	check_entry_valid: {
+	    if (arrayp (entry)) {
+	      if (entry[0] < time (1)) {
+		removed = 2;
+		break check_entry_valid;
+	      }
+	      else evaled_content = entry[1];
 	    }
-	    else evaled_content = entry[1];
+	    else evaled_content = entry;
+	    if (evaled_content->is_stale())
+	      removed = 1;
+	    else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
+	      removed = 3;
 	  }
-	  else evaled_content = entry;
-	  if (evaled_content->is_stale())
-	    removed = 1;
-	  else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
-	    removed = 3;
+	  
+	  if (removed) {
+	    if (args->shared)
+	      cache_remove (cache_tag_eval_loc, key);
+	    else
+	      if (alternatives) m_delete (alternatives, key);
+	  }
+	  
+	  else {
+	    do_iterate = -1;
+	    TAG_TRACE_ENTER ("cache hit%s for key %s",
+			     args->shared ?
+			     (timeout ?
+			      " (shared " + timeout + "s timeout cache)" :
+			      " (shared cache)") :
+			     (timeout ? " (" + timeout + "s timeout cache)" : ""),
+			     RXML.utils.format_short (keymap, 200));
+	    key = keymap = 0;
+	    if (mutex_key) {
+	      destruct(mutex_key);
+	      
+	      //  vvv Relying on interpreter lock
+	      if (!--cache_mutex_concurrency[mutex_id])
+		m_delete(cache_mutexes, mutex_id);
+	      //  ^^^ and here vvv
+	      if (!cache_mutex_concurrency[mutex_id])
+		m_delete(cache_mutex_concurrency, mutex_id);
+	      //  ^^^
+	    }
+	    return ({evaled_content});
+	  }
 	}
-
-	if (removed) {
-	  if (args->shared)
-	    cache_remove (cache_tag_eval_loc, key);
-	  else
-	    if (alternatives) m_delete (alternatives, key);
+	
+	//  Check for mutex synchronization during shared entry generation
+	if (!mutex_key && args->shared) {
+	  if (mutex_id = args->mutex) {
+	    //  We add the current key value to form the mutex ID so that
+	    //  generation of unrelated entries won't block each other.
+	    mutex_id += "\0" + key;
+	    
+	    //  Signal that we're about to enter mutex handling. This will
+	    //  prevent any other thread from deallocating the same mutex
+	    //  prematurely.
+	    //
+	    //  vvv Relying on interpreter lock
+	    cache_mutex_concurrency[mutex_id]++;
+	    //  ^^^
+	    
+	    //  Find existing mutex or allocate a new one
+	    Thread.Mutex mtx = cache_mutexes[mutex_id];
+	  lock_mutex:
+	    {
+	      if (!mtx) {
+		//  Prepare a new mutex and lock it before registering it so
+		//  the weak mapping will retain it. We'll swap in the mutex
+		//  atomically to avoid a race, and if we lose the race we
+		//  can discard it and continue with the old one.
+		Thread.Mutex new_mtx = Thread.Mutex();
+		Thread.MutexKey new_key = new_mtx->lock();
+		
+		//  vvv Relying on interpreter lock here
+		if (!(mtx = cache_mutexes[mutex_id])) {
+		  //  We're first so store our new mutex
+		  cache_mutexes[mutex_id] = new_mtx;
+		  //  ^^^
+		  mutex_key = new_key;
+		  break lock_mutex;
+		} else {
+		  //  Someone created it first so dispose of our prepared mutex
+		  //  and carry on with the existing one.
+		  destruct(new_key);
+		  new_mtx = 0;
+		}
+	      }
+	      mutex_key = mtx->lock();
+	    }
+	    
+	    retry_lookup = 1;
+	  }
 	}
-
-	else {
-	  do_iterate = -1;
-	  TAG_TRACE_ENTER ("cache hit%s for key %s",
-			   args->shared ?
-			   (timeout ?
-			    " (shared " + timeout + "s timeout cache)" :
-			    " (shared cache)") :
-			   (timeout ? " (" + timeout + "s timeout cache)" : ""),
-			   RXML.utils.format_short (keymap, 200));
-	  key = keymap = 0;
-	  return ({evaled_content});
-	}
-      }
+      } while (retry_lookup);
 
       keymap += ([]);
       do_iterate = 1;
@@ -2583,6 +2664,21 @@ class TagCache {
       }
 
       result += content;
+      if (mutex_key) {
+	destruct(mutex_key);
+	
+	//  Decrease parallel count for shared mutex. If we reach zero we
+	//  know no other thread depends on the same mutex so drop it from
+	//  global table.
+	//
+	//  vvv Relying on interpreter lock
+	if (!--cache_mutex_concurrency[mutex_id])
+	  m_delete(cache_mutexes, mutex_id);
+	//  ^^^ and here vvv
+	if (!cache_mutex_concurrency[mutex_id])
+	  m_delete(cache_mutex_concurrency, mutex_id);
+	//  ^^^
+      }
       return 0;
     }
 
@@ -8726,6 +8822,20 @@ using the pre tag.
  account by those caches. You can use <xref href='set-max-cache.tag'/>
  to set a timeout for the protocol cache and for the client-side
  caching.</p>
+</attr>
+
+<attr name='mutex' value='string'>
+ <p>For use in shared caches only. Following a cache miss for a shared
+ entry, prevent reundant generation of a new result in concurrent threads.
+ Only the first request will compute the value and all other threads will
+ wait for this to complete, thereby saving CPU resources.<p>
+
+ <p>The \"mutex\" attribute should be a name that uniquely identifies the
+ cache that wishes to use the synchronization behavior. Note that this name
+ will be extended internally with the lookup key to ensure parallel
+ execution for entries where keys are different. In other words, the mutex
+ name alone will not guard an underlying data source (e.g. database) from
+ parallel access.</p>
 </attr>
 
 <attr name='years' value='number'>
