@@ -70,6 +70,12 @@ void create() {
 	 "<tt>mywords.en.txt</tt> or <tt>mywords.en_US.txt</tt>. "
 	 "The plain-text files must also use UTF-8 encoding if you enable "
 	 "the UTF-8 support in the setting below.");
+
+  defvar("run_together_langs", "sv", "Languages with run-together words",
+	 TYPE_STRING,
+	 "A comma-separated list of language codes where run-together words "
+	 "are considered valid. This behavior is useful in languages such as "
+	 "Swedish but not appropriate for English.");
   
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
          "The default report type used, when not specified in the "
@@ -434,6 +440,11 @@ string run_spellcheck(string|array(string) words, void|string dict)
       ed_args += ({ "--add-extra-dicts", pd_path });
   }
   
+  //  Should run-together words be considered?
+  array(string) run_together_langs =
+    map(query("run_together_langs") / ",", String.trim_all_whites);
+  int use_run_together = dict && has_value(run_together_langs, dict);
+  
   object file1=Stdio.File();
   object file2=file1->pipe();
   object file3=Stdio.File();
@@ -449,7 +460,8 @@ string run_spellcheck(string|array(string) words, void|string dict)
     return 0;
   }
   Process.Process p =
-    Process.Process(({ query("spellchecker"), "-a", "-C" }) +
+    Process.Process(({ query("spellchecker"), "-a" }) +
+		    (use_run_together ? ({ "-C" })       : ({ }) ) +
 		    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
 		    (stringp(words) ? ({ "-H" })         : ({ }) ) +
 		    (dict           ? ({ "-d", dict })   : ({ }) ) +
