@@ -2233,7 +2233,8 @@ class TagCache {
 
     int do_iterate;
     mapping(string|int:mixed) keymap, overridden_keymap;
-    string key;
+    string key, key_level2;
+    array(string) level2_keys;
     RXML.PCode evaled_content;
     int timeout, persistent_cache;
 
@@ -2269,7 +2270,7 @@ class TagCache {
     // (ought to have a canonic_nameof callback in the codec). This
     // should cover most cases with object values, at least (e.g.
     // RXML.nil should never occur by definition).
-#define ADD_VARIABLE_TO_KEYMAP(ctx, var) do {				\
+#define ADD_VARIABLE_TO_KEYMAP(ctx, var, is_level2) do {		\
       array splitted = ctx->parse_user_var (var, 1);			\
       if (intp (splitted[0])) { /* Depend on the whole scope. */	\
 	mapping|RXML.Scope scope = ctx->get_scope (var);		\
@@ -2292,6 +2293,11 @@ class TagCache {
 	if (!zero_type (val))						\
 	  keymap[var] = (val == RXML.empty ? rxml_empty_replacement : val); \
       }									\
+      if (is_level2) {							\
+	if (!level2_keys)						\
+	  level2_keys = ({ });						\
+	level2_keys += ({ var });					\
+      }									\
     } while (0)
 
     protected void add_subvariables_to_keymap()
@@ -2299,7 +2305,7 @@ class TagCache {
       RXML.Context ctx = RXML_CONTEXT;
       foreach (subvariables, string var)
 	// Note: Shouldn't get an invalid variable spec here.
-	ADD_VARIABLE_TO_KEYMAP (ctx, var);
+	ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
     }
 
     protected void make_key_from_keymap (RequestID id, int timeout)
@@ -2333,15 +2339,32 @@ class TagCache {
       else if (timeout)
 	id->lower_max_cache (timeout);
 
-      key = encode_value_canonic (keymap);
-      if (!args["disable-key-hash"])
+      //  For two-level keys the level 1 variables are placed in "key" and
+      //  the level 2 variables in "key_level2". There is no overlap since
+      //  we'll compare both during lookup.
+      if (level2_keys) {
+	key = encode_value_canonic(keymap - level2_keys);
+	key_level2 = encode_value_canonic(keymap & level2_keys);
+      } else {
+	key = encode_value_canonic (keymap);
+	key_level2 = 0;
+      }
+      if (!args["disable-key-hash"]) {
 	// Initialize with a 32 char string to make sure MD5 goes
 	// through all the rounds even if the key is very short.
 	// Otherwise the risk for coincidental equal keys gets much
 	// bigger.
-	key = Crypto.MD5()->update ("................................")
-			  ->update (key)
-			  ->digest();
+	key =
+	  Crypto.MD5()->update ("................................")
+		       ->update (key)
+		       ->digest();
+	if (key_level2) {
+	  key_level2 =
+	    Crypto.MD5()->update ("................................")
+		        ->update (key_level2)
+		        ->digest();
+	}
+      }
     }
 
     array do_enter (RequestID id)
@@ -2349,6 +2372,7 @@ class TagCache {
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
+	key_level2 = 0;
 	TAG_TRACE_ENTER ("no cache due to %s",
 			 args->nocache ? "nocache argument" : "POST method");
 	id->cache_status->cachetag = 0;
@@ -2367,15 +2391,25 @@ class TagCache {
 	keymap = ctx->misc->cache_key = ([]);
       }
 
-      if (args->variable) {
-	if (args->variable != "")
-	  foreach (args->variable / ",", string var) {
-	    var = String.trim_all_whites (var);
-	    ADD_VARIABLE_TO_KEYMAP (ctx, var);
-	  }
+      if (string var_list = args->variable) {
+	if (var_list != "") {
+	  var_list = replace(String.normalize_space(var_list), " ", "");
+	  foreach (var_list / ",", string var)
+	    ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
+	}
 	default_key = 0;
       }
-
+      
+      if (string uniq_var_list = args["generation-variable"]) {
+	if (uniq_var_list != "") {
+	  uniq_var_list =
+	    replace(String.normalize_space(uniq_var_list), " ", "");
+	  foreach (uniq_var_list / ",", string uniq_var)
+	    ADD_VARIABLE_TO_KEYMAP (ctx, uniq_var, 1);
+	}
+	default_key = 0;
+      }
+      
       if (args->profile) {
 	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
 	  foreach (args->profile / ",", string profile) {
@@ -2398,7 +2432,7 @@ class TagCache {
 	do_iterate = 1;
 	TAG_TRACE_ENTER ("propagating key, is now %s",
 			 RXML.utils.format_short (keymap, 200));
-	key = keymap = 0;
+	key = key_level2 = keymap = 0;
 	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
 	return 0;
       }
@@ -2444,7 +2478,7 @@ class TagCache {
 
       // Now we have the cache key.
       int removed;
-      object(RXML.PCode)|array(int|RXML.PCode) entry;
+      object(RXML.PCode)|array(int|RXML.PCode|string) entry;
       int retry_lookup;
       
       do {
@@ -2454,16 +2488,42 @@ class TagCache {
 	  alternatives && alternatives[key];
 	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
 	
+      got_entry:
 	if (entry) {
 	check_entry_valid: {
 	    if (arrayp (entry)) {
-	      if (entry[0] < time (1)) {
+	      //  If this represents a two-level entry the second key must
+	      //  match as well for the entry to be considered a hit. A miss
+	      //  in that comparison is however not necessarily a sign that
+	      //  the entry is stale so we treat it as a regular miss.
+	      //
+	      //  Finding an entry with a two-level keymap when none was
+	      //  requested means whatever entry we got satisfies the
+	      //  lookup.
+	      if (key_level2 && (sizeof(entry) > 2) &&
+		  (entry[2] != key_level2)) {
+		entry = 0;
+		break got_entry;
+	      }
+	      
+	      if (entry[0] && (entry[0] < time (1))) {
 		removed = 2;
 		break check_entry_valid;
 	      }
-	      else evaled_content = entry[1];
+	      
+	      evaled_content = entry[1];
+	    } else {
+	      if (key_level2) {
+		//  Inconsistent use of cache variables since at least one
+		//  generation variable was expected but none found. We'll
+		//  consider it a miss and regenerate the entry so it gets
+		//  stored with a proper two-level keymap.
+		entry = 0;
+		break got_entry;
+	      }
+	      
+	      evaled_content = entry;
 	    }
-	    else evaled_content = entry;
 	    if (evaled_content->is_stale())
 	      removed = 1;
 	    else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
@@ -2486,7 +2546,7 @@ class TagCache {
 			      " (shared cache)") :
 			     (timeout ? " (" + timeout + "s timeout cache)" : ""),
 			     RXML.utils.format_short (keymap, 200));
-	    key = keymap = 0;
+	    key = key_level2 = keymap = 0;
 	    if (mutex_key) {
 	      destruct(mutex_key);
 	      
@@ -2590,7 +2650,12 @@ class TagCache {
 	    comp->compile();
 	    evaled_content->p_code_comp = 0;
 	  }
-	  cache_set (cache_tag_eval_loc, key, evaled_content, timeout);
+	  
+	  object(RXML.PCode)|array(int|RXML.PCode|string) new_entry =
+	    level2_keys ?
+	    ({ 0, evaled_content, key_level2 }) :
+	    evaled_content;
+	  cache_set (cache_tag_eval_loc, key, new_entry, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
 			   timeout ? " timeout" : "",
 			   RXML.utils.format_short (keymap, 200));
@@ -2602,11 +2667,12 @@ class TagCache {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
-	    if (!alternatives) {
+	    if (!alternatives || key_level2) {
 	      alternatives = ([]);
 	      if (!persistent_cache) add_timeout_cache (alternatives);
 	    }
-	    alternatives[key] = ({time() + timeout, evaled_content});
+	    alternatives[key] =
+	      ({ time() + timeout, evaled_content, key_level2 });
 	    if (cache_id) {
 	      // A persistent <cache> frame with a nonpersistent
 	      // cache. We need to ensure the cache exists in the
@@ -2619,7 +2685,7 @@ class TagCache {
 #endif
 	      // Avoid extra refs that mess up the size calculation in
 	      // cache_set.
-	      evaled_content = key = 0;
+	      evaled_content = key = key_level2 = 0;
 	      cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
 	    }
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
@@ -2629,7 +2695,7 @@ class TagCache {
 	  }
 
 	  else {
-	    if (!alternatives) {
+	    if (!alternatives || key_level2) {
 	      alternatives = ([]);
 	      if (cache_id) {
 		// A persistent <cache> frame with a nonpersistent
@@ -2644,7 +2710,10 @@ class TagCache {
 		cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
 	      }
 	    }
-	    alternatives[key] = evaled_content;
+	    alternatives[key] =
+	      key_level2 ?
+	      ({ 0, evaled_content, key_level2 }) :
+	      evaled_content;
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
@@ -8737,6 +8806,21 @@ using the pre tag.
  <p>Since it's important to keep down the size of the cache, this
  should typically be kept to only a few variables with a limited set
  of possible values, or else the cache should have a timeout.</p>
+</attr>
+
+<attr name='generation-variable' value='string'>
+ <p>Similar to the \"variable\" attribute with the difference that the
+ cache only keeps the most recently stored value for the combination of
+ all referenced generation variables. This is particularly suitable for
+ generation counters where old entries become garbage once a counter is
+ bumped (though there is no requirement that variable values are numeric).
+ </p>
+
+ <p>In the current implementation a cache entry associated with at least
+ one generation variable can be returned in lookups specifying zero
+ generation variables if all other variables match. The inverse is however
+ not true; a lookup including generation variables will never return entries
+ stored without the same \"generation-variable\" attribute.</p>
 </attr>
 
 <attr name='key' value='string'>
