@@ -2564,10 +2564,12 @@ class TagCache {
 	
 	//  Check for mutex synchronization during shared entry generation
 	if (!mutex_key && args->shared) {
-	  if (mutex_id = args->mutex) {
-	    //  We add the current key value to form the mutex ID so that
-	    //  generation of unrelated entries won't block each other.
-	    mutex_id += "\0" + key;
+	  if (args->mutex) {
+	    //  We use the serialized keymap as the mutex ID so that
+	    //  generation of unrelated entries in the same cache won't
+	    //  block each other. Note that cache_id is already incorporated
+	    //  into key.
+	    mutex_id = key;
 	    
 	    //  Signal that we're about to enter mutex handling. This will
 	    //  prevent any other thread from deallocating the same mutex
@@ -8908,18 +8910,18 @@ using the pre tag.
  caching.</p>
 </attr>
 
-<attr name='mutex' value='string'>
+<attr name='mutex'>
  <p>For use in shared caches only. Following a cache miss for a shared
  entry, prevent reundant generation of a new result in concurrent threads.
  Only the first request will compute the value and all other threads will
  wait for this to complete, thereby saving CPU resources.<p>
 
- <p>The \"mutex\" attribute should be a name that uniquely identifies the
- cache that wishes to use the synchronization behavior. Note that this name
- will be extended internally with the lookup key to ensure parallel
- execution for entries where keys are different. In other words, the mutex
- name alone will not guard an underlying data source (e.g. database) from
- parallel access.</p>
+ <p>The mutex protecting a particular <tag>cache</tag> tag depends on
+ the variables given as cache key. This ensures unrestricted execution
+ for entries where keys differ. Different <tag>cache</tag> instances will
+ be protected by independent mutexes unless they 1) are given identical
+ cache keys, and 2) have identical tag bodies (or uses the \"nohash\"
+ attribute).</p>
 </attr>
 
 <attr name='years' value='number'>
