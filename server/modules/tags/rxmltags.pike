@@ -2607,6 +2607,8 @@ class TagCache {
 	      }
 	      mutex_key = mtx->lock();
 	    }
+
+	    id->add_threadbound_session_object (mutex_key);
 	    
 	    retry_lookup = 1;
 	  }
