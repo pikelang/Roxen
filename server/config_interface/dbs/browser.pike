@@ -807,6 +807,7 @@ mapping|string parse( RequestID id )
       int column;
 
       array(string) col_types = ({});
+      array(string) col_names = ({});
 
       foreach( big_q->fetch_fields(), mapping field )
       {
@@ -839,9 +840,24 @@ mapping|string parse( RequestID id )
 	  col_types += ({"string"});
 	}
 	qres += Roxen.html_encode_string (field->name) + "</th>\n";
+	col_names += ({ field->name });
 	column++;
       }
       qres += "</tr>";
+
+      mapping(string:string) mod_info =
+	DBManager.module_table_info (id->variables->db, "");
+
+      Configuration c = !(<0, "">)[mod_info->conf] &&
+	roxen.find_configuration (mod_info->conf);
+      RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+	c->find_module (mod_info->module);
+
+      // Find any column formatter callback in the DB's owner
+      // module. See function prototype in base_server/module.pike.
+      function(string,string,string,array(string),array(string),array(string),
+	       RequestID:string) format_col_cb =
+	m && m->format_db_browser_value;
 
       while( array q = big_q->fetch_row() )
       {
@@ -860,31 +876,43 @@ mapping|string parse( RequestID id )
 	      "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
 	  else {
 	    mixed tmp = q[i];
-	    if (is_deflated (q[i])) {
-	      // is_deflated _may_ give false positives, hence the catch.
-	      catch {
-		tmp = Gz.inflate()->inflate (q[i]);
-	      };
+	    int got_result;
+	    if (format_col_cb) {
+	      if (mixed formatted =
+		  format_col_cb (id->variables->db, id->variables->table,
+				 col_names[i], col_names, col_types, q, id)) {
+		qres += formatted;
+		got_result = 1;
+	      }
 	    }
 
-	    if( is_encode_value( tmp ) )
-	      qres += format_decode_value(tmp);
-	    else if (String.width (tmp) > 8) {
-	      // Let wide chars skip past the %q quoting, because
-	      // it'll quote them to \u escapes otherwise.
-	      string q = "";
-	      int s;
-	      foreach (tmp; int i; int c)
-		if (c >= 256) {
-		  if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
-		  q += sprintf ("%c", c);
-		  s = i + 1;
-		}
-	      q += sprintf ("%q", tmp[s..])[1..<1];
-	      qres += Roxen.html_encode_string (q);
+	    if (!got_result) {
+	      if (is_deflated (tmp)) {
+		// is_deflated _may_ give false positives, hence the catch.
+		catch {
+		  tmp = Gz.inflate()->inflate (tmp);
+		};
+	      }
+
+	      if( is_encode_value( tmp ) )
+		qres += format_decode_value(tmp);
+	      else if (String.width (tmp) > 8) {
+		// Let wide chars skip past the %q quoting, because
+		// it'll quote them to \u escapes otherwise.
+		string q = "";
+		int s;
+		foreach (tmp; int i; int c)
+		  if (c >= 256) {
+		    if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
+		    q += sprintf ("%c", c);
+		    s = i + 1;
+		  }
+		q += sprintf ("%q", tmp[s..])[1..<1];
+		qres += Roxen.html_encode_string (q);
+	      }
+	      else
+		qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	    }
-	    else
-	      qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	  }
 	  qres += "</td>";
 	}

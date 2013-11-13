@@ -2285,3 +2285,10 @@ Sql.Sql get_my_sql( int|void read_only, void|string charset )
 {
   return DBManager.cached_get( my_db, _my_configuration, read_only, charset );
 }
+
+// Callback used by the DB browser, if defined, for custom formatting
+// of database fields.
+int|string format_db_browser_value (string db_name, string table_name,
+				    string column_name, array(string) col_names,
+				    array(string) col_types, array(string) row,
+				    RequestID id);
