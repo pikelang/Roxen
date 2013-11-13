@@ -2276,10 +2276,12 @@ mapping(string:string) module_table_info( string db, string table )
   if( sizeof(td=query("SELECT * FROM module_tables WHERE db=%s AND tbl=%s",
 		      db, table ) ) ) {
     res1 = td[0];
-    if (table != "" ||
-	(res1->conf && sizeof (res1->conf) &&
-	 res1->module && sizeof (res1->module)))
-      return res1;
+    foreach (td, mapping(string:mixed) row) {
+      if (table != "" ||
+	  (row->conf && sizeof (row->conf) &&
+	   row->module && sizeof (row->module)))
+	return row;
+    }
   }
   else
     res1 = ([]);
