@@ -140,7 +140,6 @@ worldmap binary
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/ExtScript.pmod foreign_ident
 /server/etc/modules/HTML.pmod foreign_ident
-/server/etc/modules/License.pmod foreign_ident
 /server/etc/modules/RXML.pmod/PEnt.pike foreign_ident
 /server/etc/modules/RXML.pmod/PExpr.pike foreign_ident
 /server/etc/modules/RXML.pmod/PXml.pike foreign_ident
