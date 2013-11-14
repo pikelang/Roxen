@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1077 2011/01/20 14:01:02 grubba Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -579,7 +579,7 @@ int is_shutting_down()
 #ifdef THREADS
 // function handle = threaded_handle;
 
-Thread do_thread_create(string id, function f, mixed ... args)
+Thread.Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
   name_thread( t, id );
@@ -2263,6 +2263,8 @@ class SSLProtocol
 #endif
   }
 
+  // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
@@ -2442,6 +2444,7 @@ class SSLProtocol
 	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
     }
   }
+#pragma deprecation_warnings
 
   class CertificateListVariable
   {

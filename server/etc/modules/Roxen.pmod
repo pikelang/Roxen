@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.304 2011/01/20 14:01:01 grubba Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -5496,6 +5496,10 @@ void pop_color (string tagname, RequestID id)
   }
 }
 
+// NB: Several of the Tools.PEM and Tools.X509 APIs below
+//     have been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
+
 string generate_self_signed_certificate(string common_name)
 {
   int key_size = 4096;	// Ought to be safe for a few years.
@@ -5529,6 +5533,8 @@ string generate_self_signed_certificate(string common_name)
 
   return Tools.PEM.simple_build_pem("CERTIFICATE", cert) + key;
 }
+
+#pragma deprecation_warnings
 
 class LogPipe
 //! The write end of a pipe that will log to the debug log. Use

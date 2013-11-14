@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.27 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -168,7 +168,10 @@ class Key
       error("Malformed %s.\n", key_name);
     return Gmp.mpz(d);
   }
-  
+
+  // NB: The sha_sign() and sha_verify() functions
+  //     have been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
   protected string encrypt(string msg)
   {
     Crypto.RSA rsa = Crypto.RSA()->
@@ -192,6 +195,7 @@ class Key
     Crypto.RSA rsa = Crypto.RSA()->set_public_key(@read_public_key());
     return rsa->sha_verify(msg, sign) && msg;
   }
+#pragma deprecation_warnings
 
   int write()
   {

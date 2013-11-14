@@ -76,10 +76,8 @@ worldmap binary
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
-/server/base_server/prototypes.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
-/server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
 /server/base_server/roxenloader.pike foreign_ident
 /server/base_server/rxml.pike foreign_ident
@@ -148,13 +146,11 @@ worldmap binary
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/ExtScript.pmod foreign_ident
 /server/etc/modules/HTML.pmod foreign_ident
-/server/etc/modules/License.pmod foreign_ident
 /server/etc/modules/RXML.pmod/PEnt.pike foreign_ident
 /server/etc/modules/RXML.pmod/PExpr.pike foreign_ident
 /server/etc/modules/RXML.pmod/PXml.pike foreign_ident
 /server/etc/modules/RXML.pmod/module.pmod foreign_ident
 /server/etc/modules/RXML.pmod/utils.pmod foreign_ident
-/server/etc/modules/Roxen.pmod foreign_ident
 /server/etc/modules/RoxenDebug.pmod foreign_ident
 /server/etc/modules/RoxenPatch.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident
