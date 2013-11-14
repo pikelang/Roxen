@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1112 2012/02/18 01:14:34 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -3362,6 +3362,15 @@ protected void engage_abs(int n)
     })
     master()->handle_error (err);
 #endif
+  report_debug("\nPending call_outs:\n");
+  if (mixed err = catch {
+      t = alarm(20);	// Restart the timeout timer.
+      foreach(call_out_info(), array info) {
+	report_debug("  %4d seconds: %O(%{%O, %})\n",
+		     info[0], info[2], info[3]);
+      }
+    })
+    master()->handle_error(err);
   low_engage_abs();
 }
 
@@ -6163,8 +6172,10 @@ string check_variable(string name, mixed value)
     if (value)
       // Make sure restart_if_stuck is called from the backend thread.
       call_out(restart_if_stuck, 0, 1);
-    else
+    else {
       remove_call_out(restart_if_stuck);
+      alarm(0);
+    }
     break;
   case "abs_timeout":
     if (value < 0) {
