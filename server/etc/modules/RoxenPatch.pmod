@@ -33,10 +33,14 @@ constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
 
 //! Contains the patchdata
 //! 
-class PatchObject(string|void id
-		  //! Taken from filename.
-		  )
+class PatchObject(string|void id)
 {
+  //! @decl string id
+  //! Taken from filename.
+
+  //! @decl void create(string|void id)
+  //! Taken from filename.
+
   string name;
   //! "name" field in the metadata block
 
