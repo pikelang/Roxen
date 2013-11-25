@@ -4238,7 +4238,7 @@ class Frame
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
 
-		    if (t->type_check) t->type_check(v);
+		    if ((v != nil) && t->type_check) t->type_check(v);
 		    // FIXME: Add type-checking to the compiled code as well.
 
 		    if (t->sequential)
