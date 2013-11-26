@@ -343,7 +343,7 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
   {
     array(Image.Layer)|mapping tmp;
 
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
     //  Let SiteBuilder get a chance to decode its argument data
     if (Sitebuilder.sb_start_use_imagecache) {
       Sitebuilder.sb_start_use_imagecache(args, id);
@@ -920,7 +920,7 @@ class ButtonFrame {
 
     if( fi ) {
       new_args->stat = get_file_stat( fi, id );
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_prepare_imagecache)
       //  The file we called get_file_stat() on above may be a SiteBuilder
       //  file. If so we need to extend the argument data with e.g.
       //  current language fork.
@@ -931,7 +931,7 @@ class ButtonFrame {
 
     if (string icn_path = new_args->icn) {
       new_args->stat_icn = get_file_stat(icn_path, id);
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_prepare_imagecache)
       if (Sitebuilder.sb_prepare_imagecache)
 	new_args = Sitebuilder.sb_prepare_imagecache(new_args, icn_path, id);
 #endif
