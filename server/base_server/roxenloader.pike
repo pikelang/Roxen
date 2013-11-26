@@ -1517,7 +1517,7 @@ array(string) default_roxen_font_path =
      @((getenv("RX_FONTPATH") || "")/"," - ({""}))
 #endif
   });
-array(string) default_roxen_module_path = ({ "modules/" });
+array(string) package_module_path = ({ });
 
 array(string) package_directories = ({ });
 
@@ -1542,10 +1542,10 @@ void add_package(string package_dir)
     master()->add_include_path(sub_dir);
   }
 
-  default_roxen_module_path = ({ combine_path(package_dir, "modules/") }) +
-    default_roxen_module_path;
+  package_module_path = ({ combine_path(package_dir, "modules/") }) +
+    package_module_path;
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
-    default_roxen_module_path = ({ sub_dir }) + default_roxen_module_path;
+    package_module_path = ({ sub_dir }) + package_module_path;
   }
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;

@@ -527,8 +527,8 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", roxenloader.default_roxen_module_path,
-	 LOCALE(132, "Module directories"), 
+  defvar("ModuleDirs", ({ "$LOCALDIR/modules/", "modules/" }),
+	 LOCALE(132, "Module directories"),
 	 TYPE_DIR_LIST,
 	 LOCALE(133, "This is a list of directories where Roxen should look "
 		"for modules. Can be relative paths, from the "
