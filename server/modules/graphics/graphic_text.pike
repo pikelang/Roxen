@@ -991,7 +991,7 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
        if (!has_prefix(tmp, "magic-")) {
 	 p[tmp] = Roxen.fix_relative(path, id);
 	 p[tmp + "_stat"] = get_file_stat(path, id);
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
 	 //  The file we called get_file_stat() on above may be a SiteBuilder
 	 //  file. If so we need to extend the argument data with e.g.
 	 //  current language fork.

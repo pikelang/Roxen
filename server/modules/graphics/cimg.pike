@@ -306,7 +306,7 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
   else
   {
     mixed tmp;
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
     //  Let SiteBuilder get a chance to decode its argument data
     if (Sitebuilder.sb_start_use_imagecache) {
       Sitebuilder.sb_start_use_imagecache(args, id);
@@ -410,7 +410,7 @@ mapping get_my_args( mapping args, RequestID id )
       	a->mtime = (string) (a->stat = st[ST_MTIME]);
 	a->filesize = (string) st[ST_SIZE];
 	
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
 	//  The file we called try_stat_file() on above may be a SiteBuilder
 	//  file. If so we need to extend the argument data with e.g.
 	//  current language fork.

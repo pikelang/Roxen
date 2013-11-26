@@ -837,7 +837,7 @@ class LoadImage
       }
       
       array|mapping res;
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
       //  Let SiteBuilder get a chance to decode its argument data
       if (Sitebuilder.sb_start_use_imagecache) {
 	Sitebuilder.sb_start_use_imagecache(args, id);
@@ -879,7 +879,7 @@ class LoadImage
 	string fn = id->conf->real_file( args->src, id );
 	if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
 	args->stat = s[ ST_MTIME ];
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_prepare_imagecache)
 	//  The file we called try_stat_file() on above may be a SiteBuilder
 	//  file. If so we need to extend the argument data with e.g.
 	//  current language fork.
