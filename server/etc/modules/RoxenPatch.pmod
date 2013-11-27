@@ -2031,8 +2031,7 @@ class Patcher
     string id = metadata->id;
 
     if (!destination_path) destination_path = getcwd();
-    string dest =
-      unixify_path(combine_path(destination_path || getcwd(), id + ".rxp"));
+    string dest = combine_path(destination_path || getcwd(), id + ".rxp");
     write_mess("Creating rxp file %s ... ", dest);
     Stdio.File rxpfile = Stdio.File();
     if (!rxpfile->open(dest, "wbct")) {
