@@ -346,13 +346,14 @@ module (located under the server ports tab) or by using the <tag>force-session-i
 <p>Depending on the settings of this module, there are two ways the session cookie is set:</p>
 <list type='ul'>
   <item>
-    <p><b>Default</b><p>If no RoxenUserID cookie exists, headers to set the cookie
+    <p><b>Default</b></p>
+    <p>If no RoxenUserID cookie exists, headers to set the cookie
        is generated. The client.session variable is set and usable immediately during
        the request from then on. If the client do not support cookies or has cookies turned
        off, each request the force-session-id tag is used, the session key will have a
        different value.</p></item>
-    <item><p><b>Deprecated</b></p>
-          <p>If no RoxenUserID cookie exist, a redirect is made to the same page with
+  <item><p><b>Deprecated</b></p>
+        <p>If no RoxenUserID cookie exist, a redirect is made to the same page with
 a prestate containing a newly generated session key together with a Set-Cookie
 header with the same key as value. The prestate is used if the cookie cannot be set. If both the RoxenUserID cookie and the session prestate is set, it redirects back to the same page without any prestate. I.e. two redirects for client that supports cookies, and one redirect for clients that don't. Also note that the tag itself does not stop the RXML parser during these requests the redirects are made. This is why it is deprecated; the fallback only works as long as the prestate exists, secondly the search engines will have two urls containing the same content due to the redirects.</p></item>
   </list>
