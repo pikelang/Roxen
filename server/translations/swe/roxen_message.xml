@@ -370,5 +370,3 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t>TLS-port %s öppnad.
 </t>
 </str>
-
-
