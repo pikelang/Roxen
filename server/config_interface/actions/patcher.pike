@@ -414,7 +414,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         ({ LOCALE(333, "Description:")	, 
 	   format_description(item->metadata->description) }),
 	({ LOCALE(334, "Originator:")	, item->metadata->originator  }),
-	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
+	({ LOCALE(408, "RXP Version:")    , item->metadata->rxp_version }),
       });
       
 
@@ -688,7 +688,7 @@ mixed parse(RequestID id)
 
   array(string) mbins = get_missing_binaries();
   if (sizeof(mbins)) {
-    res += "<font size='+1' style='color: #d22;' ><b>" + LOCALE(0, "Warning: Missing tools") + "</b></font><br/><br/>";
+    res += "<font size='+1' style='color: #d22;' ><b>" + LOCALE(409, "Warning: Missing tools") + "</b></font><br/><br/>";
     res += "Roxen can't find one or more tools required for the patch management to work properly.<br/>";
     res += "Before importing or installing any patches, please make sure you have the following executable(s) available on your system:<br/>";
 
@@ -717,7 +717,7 @@ mixed parse(RequestID id)
 	report_error("Patch manager: RXP cluster import over HTTP failed.\n");
 	res += sprintf("<p>"
 		       "  <b style='color: red'>"
-		       + LOCALE(0, "RXP cluster import over HTTP failed..") + 
+		       + LOCALE(410, "RXP cluster import over HTTP failed..") + 
 		       "  </b>"
 		       "</p>");       
 	  res += sprintf("<p><span id='log_img' class='unfolded'"
@@ -770,13 +770,13 @@ mixed parse(RequestID id)
       if (failed_patches == sizeof(patch_ids)) {
 	res += sprintf("<p>"
 		       "  <b style='color: red'>"
-		       + LOCALE(0, "The patch import failed:") + 
+		       + LOCALE(411, "The patch import failed:") + 
 		       "  </b>"
 		       "</p>");	
       } else {
 	res += sprintf("<p>"
 		       "  <b style='color: red'>"
-		       + LOCALE(0, "All patches were not imported:") +
+		       + LOCALE(412, "All patches were not imported:") +
 		       "  </b>"
 		       "</p>");
       }
@@ -784,7 +784,7 @@ mixed parse(RequestID id)
     } else {
       res += sprintf("<p>"
 		     "  <b style='color: green'>"
-		     + LOCALE(0, "Patch import done.") +
+		     + LOCALE(413, "Patch import done.") +
 		     "  </b>"
 		     "</p>");
     }
@@ -975,7 +975,7 @@ mixed parse(RequestID id)
     report_error_for(0, "Patch manager: Failed to remove %s from disk.\n", patch_id);
 
     res += "<p>" +
-      LOCALE(0, "Failed to remove the patch. See the log below for "
+      LOCALE(414, "Failed to remove the patch. See the log below for "
 	     "details") + 
       "</p>\n";
 
@@ -994,25 +994,25 @@ mixed parse(RequestID id)
   mapping patch_stats = get_patch_stats(plib);
 
   res += #" 
-    <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>
 
     <p style='margin-bottom: 5px'>" + 
-      LOCALE(0, "Fetch and import the latest patches from www.roxen.com") + 
+      LOCALE(416, "Fetch and import the latest patches from www.roxen.com") + 
     #":</p>
 
     <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
-      LOCALE(0, "Import from Roxen") + 
+      LOCALE(417, "Import from Roxen") + 
     #"</submit-gbutton2>
 
-    <p>\n" + LOCALE(0,"Or manually select a local file to upload:") + #"</p>
+    <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton2 name='OK' width='75' align='center'
-      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(0, "Import file") + #"</submit-gbutton2>
+      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(419, "Import file") + #"</submit-gbutton2>
     <p>" 
-    + LOCALE(0, "You can upload either a single rxp file or a tar/tar.gz/tgz "
+    + LOCALE(420, "You can upload either a single rxp file or a tar/tar.gz/tgz "
 	     "file containing multiple rxp files.")
-    + LOCALE(0, "There is also a <tt>bin/rxnpatch</tt> command-line tool to "
+    + LOCALE(421, "There is also a <tt>bin/rxnpatch</tt> command-line tool to "
 	     "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
     <br />

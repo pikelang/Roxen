@@ -49,6 +49,7 @@
   <file>../config_interface/diff.pike</file>
   <file>../config_interface/event_log/clear_log.pike</file>
   <file>../config_interface/event_log/log.pike</file>
+  <file>../config_interface/global_settings/fsgarb.pike</file>
   <file>../config_interface/global_settings/index.html</file>
   <file>../config_interface/logutil.pike</file>
   <file>../config_interface/sites/add_module.pike</file>
