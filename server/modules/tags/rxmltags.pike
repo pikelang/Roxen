@@ -8916,7 +8916,7 @@ using the pre tag.
  <p>For use in shared caches only. Following a cache miss for a shared
  entry, prevent reundant generation of a new result in concurrent threads.
  Only the first request will compute the value and all other threads will
- wait for this to complete, thereby saving CPU resources.<p>
+ wait for this to complete, thereby saving CPU resources.</p>
 
  <p>The mutex protecting a particular <tag>cache</tag> tag depends on
  the variables given as cache key. This ensures unrestricted execution
