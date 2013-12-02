@@ -44,6 +44,7 @@
 <file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
+<file>../config_interface/global_settings/fsgarb.pike</file>
 <file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
@@ -307,6 +308,9 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;Full requested resource, including any query fields.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$protocol&lt;/td&gt;
     &lt;td&gt;The protocol used (normally HTTP/1.1).&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$scheme&lt;/td&gt;
+    &lt;td&gt;The URL scheme (e.g. http or https) derived from the port handler
+        module.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$response&lt;/td&gt;
     &lt;td&gt;The response code sent.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$bin-response&lt;/td&gt;
@@ -3800,7 +3804,7 @@ low.</o>
 
 <str id="1003">
 <new/>
-<o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype") is not allowed and such globs will be silently ignored.</o>
+<o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype" or "maintype/sub*") is not allowed and such globs will be silently ignored.</o>
 <t></t>
 </str>
 
@@ -4255,5 +4259,70 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1067">
 <new/>
 <o>Global SNMP server statistics</o>
+<t></t>
+</str>
+
+<str id="1068">
+<new/>
+<o>&lt;rect x='%d' y='%d' width='10' height='%d' style='fill:#808080;'&gt;
+  &lt;title&gt;%s: %d - %d
+count: %d&lt;/title&gt;
+&lt;/rect&gt;
+&lt;rect x='%d' y='0' width='10' height='%d' style='fill:f2f1eb;'/&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1069">
+<new/>
+<o>No filesystem garbage collectors active.</o>
+<t></t>
+</str>
+
+<str id="1070">
+<new/>
+<o>Age</o>
+<t></t>
+</str>
+
+<str id="1071">
+<new/>
+<o>&lt;tr&gt;&lt;th align='left'&gt;Mount point: %s&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;th&gt;&lt;br/&gt;&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;
+    &lt;table&gt;
+      &lt;tr&gt;
+        &lt;th align='left'&gt;Registered by &lt;br/&gt;%s&lt;/th&gt;
+        &lt;th align='left'&gt;File size distribution&lt;/th&gt;
+        &lt;th align='left'&gt;File age distribution&lt;/th&gt;
+      &lt;/tr&gt;
+      &lt;tr id='tbl'&gt;
+        &lt;td&gt;
+            %d files (max: %d)&lt;br/&gt;
+            %d bytes (max: %d)&lt;br/&gt;
+            Age limit: %d seconds
+        &lt;/td&gt;
+        &lt;td&gt;
+%s&lt;/td&gt;
+        &lt;td&gt;
+%s&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/td&gt;
+&lt;/tr&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1072">
+<new/>
+<o>Not available in this installation of Roxen.</o>
+<t></t>
+</str>
+
+<str id="1073">
+<new/>
+<o>Filesystem GC:</o>
 <t></t>
 </str>

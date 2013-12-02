@@ -39,7 +39,7 @@ string lin_histogram(string|object title, int num_buckets,
     // y_pos = vertical pos of bar, origin at upper left corner
     //
     y_pos = max_height - percent;
-    res += sprintf(LOCALE(0, "<rect x='%d' y='%d'"
+    res += sprintf(LOCALE(1068, "<rect x='%d' y='%d'"
 			     " width='10' height='%d'"
 			     " style='fill:#808080;'>\n"
 			     "  <title>%s: %d - %d\ncount: %d</title>\n"
@@ -92,7 +92,7 @@ string exp_histogram(string|object title, int num_buckets,
     // x_pos = horizontal pos of bar, starting point: 0
     // y_pos = vertical pos of bar, origin at upper left corner
     y_pos = max_height - percent;
-    res += sprintf(LOCALE(0, "<rect x='%d' y='%d'"
+    res += sprintf(LOCALE(1068, "<rect x='%d' y='%d'"
 			     " width='10' height='%d'"
 			     " style='fill:#808080;'>\n"
 			     "  <title>%s: %d - %d\ncount: %d</title>\n"
@@ -123,7 +123,7 @@ string parse(RequestID id)
 #if constant(roxen.register_fsgarb)
   array(object/*(roxen.FSGarb)*/) garbs = values(roxen->fsgarbs);
   if (!sizeof(garbs)) {
-    return LOCALE(0, "No filesystem garbage collectors active.");
+    return LOCALE(1069, "No filesystem garbage collectors active.");
   }
 
   string res = "";
@@ -138,14 +138,14 @@ string parse(RequestID id)
       if (st->size > local_max_size) local_max_size = st->size;
       if (st->mtime < local_min_mtime) local_min_mtime = st->mtime;
     }
-    string sizes = exp_histogram(LOCALE(0, "Size"),
+    string sizes = exp_histogram(LOCALE(377, "Size"),
 				 10, stats->size, local_max_size);
-    string ages = lin_histogram(LOCALE(0, "Age"),
+    string ages = lin_histogram(LOCALE(1070, "Age"),
 				10, map(stats->mtime, `-, local_min_mtime),
 				time(1) - local_min_mtime);
     
     res +=
-      sprintf(LOCALE(0, "<tr><th align='left'>Mount point: %s</th></tr>\n"
+      sprintf(LOCALE(1071, "<tr><th align='left'>Mount point: %s</th></tr>\n"
 		        "<tr><th><br/></th></tr>\n"
 		        "<tr>\n"
 		        "  <td>\n"
@@ -179,6 +179,6 @@ string parse(RequestID id)
   return "<table width='100%'>\n" + res + "</table>\n";
   
 #else
-  return LOCALE(0, "Not available in this installation of Roxen.");
+  return LOCALE(1072, "Not available in this installation of Roxen.");
 #endif
 }
