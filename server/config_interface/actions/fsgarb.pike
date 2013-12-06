@@ -9,6 +9,12 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+constant action="status";
+
+string name = LOCALE(0, "Filesystem garbage collector status");
+string doc  =
+  LOCALE(0, "Show the status for the filesystem garbage collectors.");
+
 string fill_color = "#a6baf3";
 string bg_color = "#e9eefc";
 
