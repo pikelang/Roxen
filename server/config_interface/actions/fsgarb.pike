@@ -192,9 +192,6 @@ string parse(RequestID id)
 {
 #if constant(roxen.register_fsgarb)
   array(object/*(roxen.FSGarb)*/) garbs = values(roxen->fsgarbs);
-  if (!sizeof(garbs)) {
-    return LOCALE(1069, "No filesystem garbage collectors active.");
-  }
 
   int size_unit = 1024;
   string res = "";
@@ -279,7 +276,16 @@ string parse(RequestID id)
       "</tr>\n";
   }
 
-  return "<table width='100%'>\n" + res + "</table>\n";
+  if (!sizeof(res)) {
+    res = "<tr><th>" +
+      LOCALE(1069, "No filesystem garbage collectors active.") +
+      "</th></tr>\n";
+  }
+
+  return "<table width='100%'>\n" + res + "</table>\n"
+    "<input type='hidden' name='action' value='fsgarb.pike' />"
+    "<br />\n"
+    "<cf-ok-button href='./'/> <cf-refresh/>\n";
 
 #else
   return LOCALE(1072, "Not available in this installation of Roxen.");
