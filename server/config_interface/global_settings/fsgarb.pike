@@ -12,13 +12,50 @@
 string fill_color = "#a6baf3";
 string bg_color = "#e9eefc";
 
+string format_time(int t)
+{
+  string res;
+  foreach(({ ({ 604800, LOCALE(0, "1 week"), LOCALE(0, "%d weeks") }),
+	     ({ 86400, LOCALE(0, "1 day"), LOCALE(0, "%d days") }),
+	     ({ 3600, LOCALE(0, "1 hour"), LOCALE(0, "%d hours") }),
+	     ({ 60, LOCALE(0, "1 minute"), LOCALE(0, "%d minutes") }),
+	  }), [ int unit, string singular, string plural ]) {
+    if (t < unit) continue;
+    int c = t/unit;
+    string frag;
+    if (c == 1) frag = singular;
+    else frag = sprintf(plural, c);
+    if (res) res += " " + frag;
+    else res = frag;
+    t -= c * unit;
+  }
+  if (!res) return LOCALE(0, "none");
+  return res;
+}
+
 // Linear histogram
 string lin_histogram(string|object title, int num_buckets,
 		     array(int) value_set, int max)
 {
-  int num_files = sizeof(value_set);
-  if (!num_files) return "";
+  int num_files = sizeof(value_set) || 1;
   max++;
+
+  // Adjust to a reasonably even bucket size.
+  int bsize = max / num_buckets;
+  if (max > bsize * num_buckets) bsize++;
+  int threshold_found;
+  foreach(({ 604800, 86400, 3600, 60, 1 }), int quanta) {
+    if (bsize <= quanta) continue;
+    if (!threshold_found) {
+      threshold_found = 1;
+      continue;
+    }
+    int rest = bsize % quanta;
+    if (rest) bsize += quanta - rest;
+    break;
+  }
+  max = bsize * num_buckets;
+
   array(int) buckets = allocate(num_buckets);
   foreach(value_set, int v) {
     int b = (v * num_buckets)/max;
@@ -27,7 +64,7 @@ string lin_histogram(string|object title, int num_buckets,
     buckets[b]++;
   }
 
-  int max_height = 150;
+  int max_height = 60;
   int max_width = 0;
   int x_pos = 0;
   int y_pos = 0;
@@ -46,17 +83,19 @@ string lin_histogram(string|object title, int num_buckets,
     res += sprintf(LOCALE(1068, "<rect x='%d' y='%d'"
 			     " width='10' height='%d'"
 			     " style='fill:%s;'>\n"
-			     "  <title>%s: %d - %d s\n%f&#37; (%d)</title>\n"
+			     "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
 			     "</rect>\n"
 			     "<rect x='%d' y='0'"
 			     " width='10' height='%d'"
 			     " style='fill:%s;'>\n"
-			     "  <title>%s: %d - %d s\n%f&#37; (%d)</title>\n"
+			     "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
 			     "</rect>\n"),
 		   x_pos, y_pos, height, fill_color,
-		   Roxen.html_encode_string(title), min_val, max_val, percent, count,
+		   Roxen.html_encode_string(title),
+		   format_time(min_val), format_time(max_val+1), percent, count,
 		   x_pos, y_pos, bg_color,
-		   Roxen.html_encode_string(title), min_val, max_val, percent, count);
+		   Roxen.html_encode_string(title),
+		   format_time(min_val), format_time(max_val+1), percent, count);
 
     x_pos = x_pos + 12;
     max_width = max_width + 12;
@@ -79,15 +118,25 @@ string exp_histogram(string|object title, int num_buckets,
   int bucket_max = 1024;
   mapping(int:int) buckets = ([]);
 
-  foreach(value_set, int val) {
-    while (val > bucket_max) {
-      bucket_max *= 2;
-      buckets[bucket_max] = 0;
-    }
-    buckets[bucket_max]++;
+  buckets[bucket_max] = 0;
+  while (sizeof(buckets) < num_buckets) {
+    bucket_max *= 2;
+    buckets[bucket_max] = 0;
   }
 
-  int max_height = 150;
+  int bm = 1024;
+  foreach(value_set, int val) {
+    while (val > bm) {
+      bm *= 2;
+    }
+    if (bm > bucket_max) {
+      buckets[bucket_max]++;
+    } else {
+      buckets[bm]++;
+    }
+  }
+
+  int max_height = 60;
   int max_width = 0;
   int min = 0;
   int x_pos = 0;
@@ -96,9 +145,11 @@ string exp_histogram(string|object title, int num_buckets,
 
   foreach(sort(indices(buckets)), int sz) {
     int count = buckets[sz];
+    if (sz == bucket_max && bm > bucket_max) sz = bm;
     int max = sz / chunk_sz; // part in KB
-    int height = (count*max_height)/sizeof(value_set);
-    float percent = ((float)count/(float)sizeof(value_set))*100;
+    int height = (count*max_height)/(sizeof(value_set) || 1);
+    float percent = ((float)count/(float)(sizeof(value_set)||1))*100;
+
 
     // x_pos = horizontal pos of bar, starting point: 0
     // y_pos = vertical pos of bar, origin at upper left corner
@@ -139,7 +190,6 @@ string parse(RequestID id)
     return LOCALE(1069, "No filesystem garbage collectors active.");
   }
 
-  int time_unit = 60;
   int size_unit = 1024;
   string res = "";
   sort(garbs->root, garbs);
@@ -152,52 +202,49 @@ string parse(RequestID id)
     array(Stdio.Stat) stats = g->get_stats();
     int local_max_size = 0;
     int local_min_mtime = 0x7fffffff;
-    string age;
-    if ((g->max_age/time_unit) > 1)
-      age = g->max_age/time_unit + " minutes";
-    else
-      age = g->max_age + " seconds";
+    string age = format_time(g->max_age);
 
     foreach(stats, Stdio.Stat st) {
       if (st->size > local_max_size) local_max_size = st->size;
       if (st->mtime < local_min_mtime) local_min_mtime = st->mtime;
     }
     string sizes = exp_histogram(LOCALE(377, "Size"),
-				 10, stats->size, local_max_size);
+				 20, stats->size, local_max_size);
     // divide time in minutes.
     string ages = lin_histogram(LOCALE(1070, "Age"),
-				10, map(stats->mtime, `-, local_min_mtime),
-				time(1) - local_min_mtime);
+				20, map(stats->mtime, `-, local_min_mtime),
+				g->max_age || time(1) - local_min_mtime);
 
     res +=
-      sprintf(LOCALE(1071, "<tr><td><h3>Registered by %s</h3></td></tr>\n"
-		        "<tr>\n"
-		        "  <td>\n"
-		        "    <table width='100&#37;'>\n"
-		        "      <tr>\n"
-		        "        <th align='left' valign='top'>%s</th>\n"
-		        "        <th align='left' valign='top'>File size distribution</th>\n"
-		        "        <th align='left' valign='top'>File age distribution</th>\n"
-		        "      </tr>\n"
-	        "      <tr id='tbl'>\n"
-		        "        <td valign='top'>\n"
-		        "            %d files (max: %d)<br/>\n"
-		        "            %d KiB (max: %d)<br/>\n"
-		        "            Age limit: %s\n"
-                        "        </td>\n"
-		        "        <td valign='top'>\n%s</td>\n"
-		        "        <td valign='top'>\n%s</td>\n"
-		        "      </tr>\n"
-		        "    </table>\n"
-		        "  </td>\n"
-		        "</tr>\n"),
+      sprintf(LOCALE(1071,
+		     "<tr><td><h3>Registered by %s</h3></td></tr>\n"
+		     "<tr>\n"
+		     "  <td>\n"
+		     "    <table width='100&#37;'>\n"
+		     "      <tr>\n"
+		     "        <th align='left' valign='top'>%s</th>\n"
+		     "        <th align='left' valign='top'>File age distribution</th>\n"
+		     "        <th align='left' valign='top'>File size distribution</th>\n"
+		     "      </tr>\n"
+		     "      <tr id='tbl'>\n"
+		     "        <td valign='top'>\n"
+		     "            %d files (max: %d)<br/>\n"
+		     "            %d KiB (max: %d)<br/>\n"
+		     "            Age limit: %s\n"
+		     "        </td>\n"
+		     "        <td valign='top'>\n%s</td>\n"
+		     "        <td valign='top'>\n%s</td>\n"
+		     "      </tr>\n"
+		     "    </table>\n"
+		     "  </td>\n"
+		     "</tr>\n"),
 	      Roxen.html_encode_string(g->modid), // module
 	      Roxen.html_encode_string(g->root), // Mount point
 	      g->num_files, g->max_files, // files
 	      (g->total_size/size_unit), (g->max_size/size_unit), // size (KiB)
 	      age, // age (seconds or minutes)
-	      sizes, // size distribution histogram
-	      ages); // age distribution histogram
+	      ages, // age distribution histogram
+	      sizes); // size distribution histogram
   }
 
   return "<table width='100%'>\n" + res + "</table>\n";
