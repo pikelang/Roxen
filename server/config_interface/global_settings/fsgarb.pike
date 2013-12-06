@@ -193,11 +193,32 @@ string parse(RequestID id)
   int size_unit = 1024;
   string res = "";
   sort(garbs->root, garbs);
+  sort(garbs->modid, garbs);
+  string modid;
   foreach(garbs, object/*(roxen.FSGarb)*/ g) {
 
     // werror("FSGARG DEBUG object g: %O\n", g);
 
     if (sizeof(res)) res += "<tr><td>&nbsp;</td></tr>";
+
+    if (g->modid != modid) {
+      if (modid) {
+	res +=
+	  "    </table>\n"
+	  "  </td>\n"
+	  "</tr>\n";
+      }
+      modid = g->modid;
+      res +=
+	"<tr><td><h3>" +
+	sprintf(LOCALE(0, "Registered by %s"),
+		Roxen.html_encode_string(modid), // module
+		) +
+	"</h3></td></tr>\n"
+	"<tr>\n"
+	"  <td>\n"
+	"    <table width='100&#37;'>\n";
+    }
 
     array(Stdio.Stat) stats = g->get_stats();
     int local_max_size = 0;
@@ -216,35 +237,40 @@ string parse(RequestID id)
 				g->max_age || time(1) - local_min_mtime);
 
     res +=
-      sprintf(LOCALE(1071,
-		     "<tr><td><h3>Registered by %s</h3></td></tr>\n"
-		     "<tr>\n"
-		     "  <td>\n"
-		     "    <table width='100&#37;'>\n"
-		     "      <tr>\n"
-		     "        <th align='left' valign='top'>%s</th>\n"
-		     "        <th align='left' valign='top'>File age distribution</th>\n"
-		     "        <th align='left' valign='top'>File size distribution</th>\n"
-		     "      </tr>\n"
-		     "      <tr id='tbl'>\n"
-		     "        <td valign='top'>\n"
-		     "            %d files (max: %d)<br/>\n"
-		     "            %d KiB (max: %d)<br/>\n"
-		     "            Age limit: %s\n"
-		     "        </td>\n"
-		     "        <td valign='top'>\n%s</td>\n"
-		     "        <td valign='top'>\n%s</td>\n"
-		     "      </tr>\n"
-		     "    </table>\n"
-		     "  </td>\n"
-		     "</tr>\n"),
-	      Roxen.html_encode_string(g->modid), // module
+      sprintf("      <tr><th align='left' valign='top' colspan='4'>%s</th></tr>\n"
+	      "      <tr>\n"
+	      "        <td>&nbsp;</td>\n"
+	      "        <th align='left' valign='top'>%s</th>\n"
+	      "        <th align='left' valign='top'>%s</th>\n"
+	      "        <th align='left' valign='top'>%s</th>\n"
+	      "      </tr>\n"
+	      "      <tr id='tbl'>\n"
+	      "        <td>&nbsp;</td>\n"
+	      "        <td valign='top'>\n"
+	      "            " +
+	      LOCALE(1071, "%d files (max: %d)") + "<br/>\n"
+	      "            " +
+	      LOCALE(0, "%d KiB (max: %d)") + "<br/>\n"
+	      "            Age limit: %s\n"
+	      "        </td>\n"
+	      "        <td valign='top'>\n%s</td>\n"
+	      "        <td valign='top'>\n%s</td>\n"
+	      "      </tr>\n",
 	      Roxen.html_encode_string(g->root), // Mount point
+	      LOCALE(0, "Status"),
+	      LOCALE(0, "File age distribution"),
+	      LOCALE(0, "File size distribution"),
 	      g->num_files, g->max_files, // files
 	      (g->total_size/size_unit), (g->max_size/size_unit), // size (KiB)
 	      age, // age (seconds or minutes)
 	      ages, // age distribution histogram
 	      sizes); // size distribution histogram
+  }
+  if (modid) {
+    res +=
+      "    </table>\n"
+      "  </td>\n"
+      "</tr>\n";
   }
 
   return "<table width='100%'>\n" + res + "</table>\n";
