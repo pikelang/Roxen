@@ -212,11 +212,34 @@ string parse(RequestID id)
 	  "</tr>\n";
       }
       modid = g->modid;
+      RoxenModule mod = Roxen.get_module(modid);
+      string name = Roxen.html_encode_string(modid);
+      if (mod) {
+	Configuration conf = mod->my_configuration();
+	string curl = replace(conf->name, " ", "%20") + "/";
+	string mname = Roxen.get_modfullname(mod);
+
+	string mgroup = "zz_misc";
+	if (sscanf(mname, "%s:%*s", mgroup) != 2)
+	  mgroup = "zz_misc";
+	if (mgroup == "zz_misc") mgroup = LOCALE(525, "Other");
+
+	string murl = curl +
+	  Roxen.http_encode_invalids(mgroup) + "!0/" +
+	  replace(mod->sname(), "#", "!") + "/?section=Status";
+
+	name = sprintf("<a href='/sites/site.html/%s'>%s</a>/"
+		       "<a href='/sites/site.html/%s'>%s</a>",
+		       Roxen.html_encode_string(curl),
+		       replace(Roxen.html_encode_string(conf->query_name()),
+			       " ", "&nbsp;"),
+		       Roxen.html_encode_string(murl),
+		       replace(Roxen.get_modfullname(mod),
+			       " ", "&nbsp;"));
+      }
       res +=
 	"<tr><td><h3>" +
-	sprintf(LOCALE(0, "Registered by %s"),
-		Roxen.html_encode_string(modid), // module
-		) +
+	sprintf(LOCALE(0, "Registered by %s"), name) +
 	"</h3></td></tr>\n"
 	"<tr>\n"
 	"  <td>\n"
@@ -282,7 +305,8 @@ string parse(RequestID id)
       "</th></tr>\n";
   }
 
-  return "<table width='100%'>\n" + res + "</table>\n"
+  return
+    "<table width='100%'>\n" + res + "</table>\n"
     "<input type='hidden' name='action' value='fsgarb.pike' />"
     "<br />\n"
     "<cf-ok-button href='./'/> <cf-refresh/>\n";
