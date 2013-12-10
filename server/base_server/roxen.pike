@@ -4006,10 +4006,46 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("Replacing entry for %O\n", id );
 #endif
-    QUERY("REPLACE INTO "+name+
-	  " (id,size,atime,meta,data) VALUES"
-	  " (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
-	  id, strlen(data)+strlen(meta_data), meta_data, data );
+    if (sizeof(data) <= 8*1024*1024) {
+      // Should fit in the 16 MB query limit without problem.
+      // Albeit it might trigger a slow query entry for large
+      // entries.
+      QUERY("REPLACE INTO " + name +
+	    " (id,size,atime,meta,data) VALUES"
+	    " (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
+	    id, strlen(data)+strlen(meta_data), meta_data, data );
+    } else {
+      // We need to perform multiple queries.
+#ifdef ARG_CACHE_DEBUG
+      werror("Writing %d bytes of padding for %s.\n", sizeof(data), id);
+#endif
+      array(string) a = data/(8.0*1024*1024);
+      // NB: We clear the meta field to ensure that the entry
+      //     is invalid while we perform the insert.
+      QUERY("REPLACE INTO " + name +
+	    " (id,size,atime,meta,data) VALUES"
+	    " (%s,%d,UNIX_TIMESTAMP(),'',SPACE(%d))",
+	    id, strlen(data)+strlen(meta_data), sizeof(data));
+      int pos;
+      foreach(a, string frag) {
+#ifdef ARG_CACHE_DEBUG
+	werror("Writing fragment at position %d for %s.\n", pos, id);
+#endif
+	QUERY("UPDATE " + name +
+	      " SET data = INSERT(data, %d, %d, "MYSQL__BINARY "%s)"
+	      " WHERE id = %s",
+	      pos+1, sizeof(frag), frag, id);
+	pos += sizeof(frag);
+      }
+      /* Set the meta data field to a valid value to enable the entry. */
+#ifdef ARG_CACHE_DEBUG
+      werror("Writing metadata for %s.\n", id);
+#endif
+      QUERY("UPDATE " + name +
+	    " SET meta = " MYSQL__BINARY "%s"
+	    " WHERE id = %s",
+	    meta_data, id);
+    }
 #ifdef ARG_CACHE_DEBUG
     array(mapping(string:string)) q =
       QUERY("SELECT meta, data FROM " + name +
@@ -4023,8 +4059,15 @@ class ImageCache
 	       meta_data, q[0]->meta);
       }
       if (q[0]->data != data) {
-	werror("Data differs: %O != %O\n",
-	       data, q[0]->data);
+	string d = q[0]->data;
+	int i;
+	int cnt;
+	for (i = 0; i < sizeof(data); i++) {
+	  if (data[i] == d[i]) continue;
+	  werror("Data differs at offset %d: %d != %d\n",
+		 i, data[i], d[i]);
+	  if (cnt++ > 10) break;
+	}
       }
     }
 #endif
@@ -4458,7 +4501,7 @@ class ImageCache
 	    "uid    CHAR(32) NOT NULL DEFAULT '', "
 	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "data MEDIUMBLOB NOT NULL DEFAULT '',"
+	    "data  LARGEBLOB NOT NULL DEFAULT '',"
 	    "INDEX atime_id (atime, id)"
 	    ")" );
     }
@@ -4477,6 +4520,15 @@ class ImageCache
 		   "Dropping index atime on %s... ", name);
       start_time = gethrtime();
       QUERY("DROP INDEX atime ON " + name);
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
+    }
+    res = QUERY("SHOW COLUMNS FROM " + name + " WHERE Field = 'data'");
+    if (lowercase(res[0]->Type) != "longblob") {
+      report_debug("Updating " + name + " image cache: "
+		   "Increasing maximum blob size...");
+      start_time = gethrtime();
+      QUERY("ALTER TABLE " + name +
+	    "MODIFY COLUMN data LONGBLOB NOT NULL DEFAULT ''");
       report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
   }
