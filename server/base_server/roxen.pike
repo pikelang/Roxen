@@ -4528,7 +4528,7 @@ class ImageCache
 		   "Increasing maximum blob size...");
       start_time = gethrtime();
       QUERY("ALTER TABLE " + name +
-	    "MODIFY COLUMN data LONGBLOB NOT NULL DEFAULT ''");
+	    " MODIFY COLUMN data LONGBLOB NOT NULL DEFAULT ''");
       report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
   }
