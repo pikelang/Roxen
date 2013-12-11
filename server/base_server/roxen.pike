@@ -4523,7 +4523,7 @@ class ImageCache
       report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
     res = QUERY("SHOW COLUMNS FROM " + name + " WHERE Field = 'data'");
-    if (lowercase(res[0]->Type) != "longblob") {
+    if (lower_case(res[0]->Type) != "longblob") {
       report_debug("Updating " + name + " image cache: "
 		   "Increasing maximum blob size...");
       start_time = gethrtime();
