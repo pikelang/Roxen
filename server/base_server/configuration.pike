@@ -928,7 +928,7 @@ protected mixed strip_fork_information(RequestID id)
 	has_value(lower_case(id->not_query), ".ds_store"))
       //  Skip elaborate error page since we get these e.g. for WebDAV
       //  mounts in OS X Finder.
-      return Roxen.http_string_answer("No such file", "text/plain");
+      return Roxen.http_status(404, "No such file.");
   }
   
   array a = id->not_query/"::";
