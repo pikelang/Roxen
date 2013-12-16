@@ -4501,7 +4501,7 @@ class ImageCache
 	    "uid    CHAR(32) NOT NULL DEFAULT '', "
 	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "data  LARGEBLOB NOT NULL DEFAULT '',"
+	    "data  LONGEBLOB NOT NULL DEFAULT '',"
 	    "INDEX atime_id (atime, id)"
 	    ")" );
     }
