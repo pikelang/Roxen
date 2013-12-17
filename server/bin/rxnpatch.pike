@@ -34,7 +34,7 @@ int main(int argc, array(string) argv)
                                                 "--nocolor", "--nocolour" }) }),
     ({ "recursive",       Getopt.NO_ARG,       ({ "-r", "--recursive"     }) }),
     ({ "silent",	  Getopt.NO_ARG,       ({ "-s", "--silent"        }) }),
-    ({ "http",	          Getopt.NO_ARG,       ({ "-e", "--http"          }) }),
+    /* ({ "http",	          Getopt.NO_ARG,       ({ "-e", "--http"          }) }), */
     ({ "help",	    	  Getopt.NO_ARG,       ({ "-h", "--help"	  }) }),
   });
 
@@ -1324,13 +1324,14 @@ constant help_flags = ([
 			" messages will be", 
 			"displayed if this flag is set." }),
 	  "scope"  : ({ "global" }) ]),
+  /*
   "e": ([ "syntax" : ({ "<b>-e</b>",
 			"<b>--http</b>" }),
 	  "hlptxt" : ({ "Import over HTTP. The latest patch cluster will be ",
 			"fetched from www.roxen.com and imported. The correct ",
 			"cluster file will be returned based on dist version, ",
 			"platform and product type." }),
-	  "scope"  : ({ "import" }) ])
+                        "scope"  : ({ "import" }) ]) */
 ]);
 
 constant flag_map = ([
@@ -1361,7 +1362,7 @@ constant flag_map = ([
   "nocolour"		: "nc",
   "no-color"		: "nc",
   "no-colour"		: "nc",
-  "http"                : "e"
+  /* "http"                : "e" */
 ]);
 
 void help_write_flag(function write_out, mapping flag_desc)

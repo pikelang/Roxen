@@ -993,10 +993,10 @@ mixed parse(RequestID id)
 
   mapping patch_stats = get_patch_stats(plib);
 
-  res += #" 
-    <font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>
+  res += #"<font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>";
 
-    <p style='margin-bottom: 5px'>" + 
+#ifdef 0
+  res += "<p style='margin-bottom: 5px'>" + 
       LOCALE(416, "Fetch and import the latest patches from www.roxen.com") + 
     #":</p>
 
@@ -1004,7 +1004,10 @@ mixed parse(RequestID id)
       LOCALE(417, "Import from Roxen") + 
     #"</submit-gbutton2>
 
-    <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
+    <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>";
+#endif
+
+  res += "<p>\n" + LOCALE(418,"Select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton2 name='OK' width='75' align='center'
