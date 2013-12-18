@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: format-number, roxen patch, aspell, webdav
 from: ed8f56bcb3d26247ab9530ca816ec005e811c95c
 to: 5e0e376820472f1ed479adb612a6703853a150fe
 originator: wellhardh@roxen.com
