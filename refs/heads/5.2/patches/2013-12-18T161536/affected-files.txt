@@ -1,0 +1,12 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/prototypes.pike
+  base_server/roxen.pike
+  bin/rxnpatch.pike
+  etc/modules/License.pmod
+  etc/modules/Roxen.pmod
+  etc/modules/RoxenPatch.pmod
+  modules/tags/additional_rxml.pike
+  modules/tags/check_spelling.pike
+  modules/tags/static_resource.pike
+  tools/ntroxen/version.h
