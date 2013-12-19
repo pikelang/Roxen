@@ -9,7 +9,7 @@ constant cvs_version = "$Id$";
 #define REQUESTID this
 
 #ifdef MAGIC_ERROR
-inherit "highlight_pike";
+//inherit "highlight_pike";
 #endif
 
 // HTTP protocol module.
