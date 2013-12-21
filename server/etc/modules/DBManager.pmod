@@ -199,10 +199,10 @@ private
 
 	// Quote characters...
       case '\"': case '\'': case '\`': case '\´':
-	while (i < sizeof(script)) {
+	while (i < sizeof(script) - 1) {
 	  i++;
 	  if ((cc = script[i]) == c) {
-	    if (script[i+1] == c) {
+	    if ((i < sizeof(script) - 1) && (script[i+1] == c)) {
 	      i++;
 	      continue;
 	    }
@@ -215,7 +215,8 @@ private
 	// Comments...
       case '/':
 	i++;
-	if ((cc = script[i]) == '*') {
+	if ((i < sizeof(script)) &&
+	    ((cc = script[i]) == '*')) {
 	  // C-style comment.
 	  int p = search(script, "*/", i+1);
 	  if (p > i) i = p+1;
@@ -224,8 +225,9 @@ private
 	break;
       case '-':
 	i++;
-	if ((script[i] == '-') &&
-	    ((script[i+1] == ' ') || (script[i+1] == '\t'))) {
+	if ((i < sizeof(script) - 1) &&
+	    ((script[i] == '-') &&
+	     ((script[i+1] == ' ') || (script[i+1] == '\t')))) {
 	  // "-- "-style comment.
 	  int p = search(script, "\n", i+2);
 	  int p2 = search(script, "\r", i+2);
