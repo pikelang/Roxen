@@ -9,6 +9,8 @@ string get_id(string from)
     id = f->read(800);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
       return " (version "+id+")";
+    if(sscanf(id, "%*s$"+"Id: %[0-9a-f] $", id) == 2)
+      return " (sha: "+id[..7]+")";
   };
   return "";
 }
