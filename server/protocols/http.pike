@@ -1704,8 +1704,8 @@ int store_error(mixed _err)
 	if (sizeof (ent) && stringp (ent[0]))
 	  if (has_prefix (ent[0], cwd))
 	    file = ent[0] = ent[0][sizeof (cwd)..];
-	  else if (has_prefix (ent[0], roxenloader.server_dir))
-	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir)..];
+	  else if (has_prefix (ent[0], roxenloader.server_dir + "/"))
+	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir + "/")..];
 	  else
 	    file = ent[0];
 	if (sizeof (ent) >= 2) line = ent[1];
