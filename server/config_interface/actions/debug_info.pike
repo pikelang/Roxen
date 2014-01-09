@@ -268,8 +268,8 @@ mixed page_0( object id )
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
 	  progstr = prog[sizeof (cwd)..];
-	else if (has_prefix (prog, roxenloader.server_dir))
-	  progstr = prog[sizeof (roxenloader.server_dir)..];
+	else if (has_prefix (prog, roxenloader.server_dir + "/"))
+	  progstr = prog[sizeof (roxenloader.server_dir + "/")..];
 	else
 	  progstr = prog;
       }

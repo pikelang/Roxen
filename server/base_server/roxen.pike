@@ -115,8 +115,8 @@ array(string|int) filename_2 (program|object o)
   string cwd = getcwd() + "/";
   if (has_prefix (fname, cwd))
     fname = fname[sizeof (cwd)..];
-  else if (has_prefix (fname, roxenloader.server_dir))
-    fname = fname[sizeof (roxenloader.server_dir)..];
+  else if (has_prefix (fname, roxenloader.server_dir + "/"))
+    fname = fname[sizeof (roxenloader.server_dir + "/")..];
 
   return ({fname, line});
 }

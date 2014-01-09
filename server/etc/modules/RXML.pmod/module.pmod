@@ -9805,8 +9805,8 @@ class PCodeEncoder
       if ((<"p", "o", "f">)[cls]) {
 	if (has_prefix (path, cwd))
 	  pike_name = "Rf:" + cls + path[sizeof (cwd)..];
-	else if (has_prefix (path, roxenloader.server_dir))
-	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
+	else if (has_prefix (path, roxenloader.server_dir + "/"))
+	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir + "/")..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -9818,8 +9818,8 @@ class PCodeEncoder
       if ((<"p", "o", "f">)[cls]) {
 	if (has_prefix (path, cwd))
 	  pike_name[0] = "Rf:" + cls + path[sizeof (cwd)..];
-	else if (has_prefix (path, roxenloader.server_dir))
-	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
+	else if (has_prefix (path, roxenloader.server_dir + "/"))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir + "/")..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "

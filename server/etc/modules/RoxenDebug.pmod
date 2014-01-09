@@ -55,8 +55,8 @@ class ObjectMarker
       string cwd = getcwd() + "/";
       if (has_prefix (file, cwd))
 	file = file[sizeof (cwd)..];
-      else if (has_prefix (file, roxenloader.server_dir))
-	file = file[sizeof (roxenloader.server_dir)..];
+      else if (has_prefix (file, roxenloader.server_dir + "/"))
+	file = file[sizeof (roxenloader.server_dir + "/")..];
       werror ("%s:%d: %s", file, bt[i][1], msg);
     }
     else werror (msg);
