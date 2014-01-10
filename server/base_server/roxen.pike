@@ -133,10 +133,13 @@ protected int once_mode;
 // cache static optimization for tags such as <if> and <emit> inside
 // <cache> since that optimization can give tricky incompatibilities
 // with 2.4.
+// Note also that 5.3 only existed in the Print repository, and
+// thus is skipped here.
 array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 				"3.3", "3.4",
 				"4.0", "4.5",
-				"5.0", "5.1", "5.2" });
+				"5.0", "5.1", "5.2", "5.4",
+});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
