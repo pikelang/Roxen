@@ -5432,6 +5432,7 @@ low."))->add_changed_callback(lambda(object v)
 <html>
   <head>
     <title>404 - Page Not Found</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
       body {
         background:  #f2f1eb;
@@ -5455,9 +5456,9 @@ low."))->add_changed_callback(lambda(object v)
     </style>
   </head>
   <body>
-    <img src='/internal-roxen-404' class='number' width='142' height='57'/>
+    <img src='/internal-roxen-404' class='number' alt='404' width='142' height='57'/>
     <div class='main'>
-      <img src='/internal-roxen-page-not-found-2' class='header' width='356' height='23'/>
+      <img src='/internal-roxen-page-not-found-2' class='header' alt='Page Not Found' width='356' height='23'/>
       <p>Unable to retrieve <b class='url'>&page.virtfile;</b></p>
       <p>If you feel this is a configuration error, please contact
          the administrators of this server or the author of the
@@ -5525,6 +5526,7 @@ low."))->add_changed_callback(lambda(object v)
 <html>
   <head>
     <title>401 - Authentication Failed</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
       body {
         background:  #f2f1eb;
@@ -5548,9 +5550,9 @@ low."))->add_changed_callback(lambda(object v)
     </style>
   </head>
   <body>
-    <img src='/internal-roxen-401' class='number' width='142' height='57'/>
+    <img src='/internal-roxen-401' class='number' alt='401' width='142' height='57'/>
     <div class='main'>
-      <img src='/internal-roxen-authentication-failed' class='header' width='387' height='23'/>
+      <img src='/internal-roxen-authentication-failed' class='header' alt='Authentication Failed' width='387' height='23'/>
       <p>Unable to retrieve <b class='url'>&page.virtfile;</b></p>
       <p>If you feel this is a configuration error, please contact
          the administrators of this server or the author of the
@@ -5581,6 +5583,7 @@ low."))->add_changed_callback(lambda(object v)
 <html>
   <head>
     <title>503 - Server Too Busy</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
       body {
         background:  #f2f1eb;
