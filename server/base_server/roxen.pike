@@ -790,9 +790,13 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
   }
 
   else {
-    report_debug ("###### %s 0x%x has been busy for more than %g seconds.\n",
+    string th_name =
+      ((thread != backend_thread) && thread_name(thread, 1)) || "";
+    if (sizeof(th_name))
+      th_name = " - " + th_name + " -";
+    report_debug ("###### %s 0x%x%s has been busy for more than %g seconds.\n",
 		  thread == backend_thread ? "Backend thread" : "Thread",
-		  thread->id_number(), timeout);
+		  thread->id_number(), th_name, timeout);
     describe_all_threads (0, threads_disabled);
   }
 
