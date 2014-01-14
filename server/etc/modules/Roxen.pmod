@@ -5253,6 +5253,14 @@ string get_world(array(string) urls) {
       local_addrs = Array.uniq(local_addrs);
     }
     foreach(local_addrs, string addr) {
+      //  Shortcut some known aliases to avoid lengthy waits if DNS cannot
+      //  resolve them.
+      if (addr == "127.0.0.1" || addr == "::1" || addr == "fe80::1") {
+	if (addr != "fe80::1")
+	  hosts += ({ "localhost" });
+	break;
+      }
+      
       if ((dns = Protocols.DNS.gethostbyaddr(addr)) && sizeof(dns)) {
 	if (dns[0]) {
 	  hosts += ({ dns[0] });
