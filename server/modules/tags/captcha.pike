@@ -271,14 +271,14 @@ constant tagdoc = ([
        </desc>
        <attr name='background-color' value='color'><p>
          Captcha background color.
-         If the none of the \"background-color\" or \"background-image\" attributes
+         If none of the \"background-color\" or \"background-image\" attributes
          are specified, a default background image will be used.
         </p>
        </attr>
        <attr name='background-image' value='path'><p>
          Captcha background image. It's recommended that the image is larger than the captcha.
          The image offset will be randomized then.
-         If the none of the \"background-color\" or \"background-image\" attributes
+         If none of the \"background-color\" or \"background-image\" attributes
          are specified, a default background image will be used.
         </p>
        </attr>
