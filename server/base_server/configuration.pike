@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.668 2009/03/17 16:37:50 jonasw Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4651,6 +4651,8 @@ hyphens ('-') occur in the specifier names.</p>
     that describes how the page has been evaluated:
 
     <table><tbody valign='top'>
+    <tr><td>bad-charset</td>
+        <td>Detected invalid charset in declared content-type.</td></tr>
     <tr><td>xslt</td>
 	<td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
