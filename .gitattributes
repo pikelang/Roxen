@@ -288,7 +288,6 @@ worldmap binary
 /server/rxml_packages/counter foreign_ident
 /server/rxml_packages/gtext_list foreign_ident
 /server/rxml_packages/roxenlogo foreign_ident
-/server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
 /server/tools/nt_service/Makefile foreign_ident
 /server/tools/nt_service/roxen.c foreign_ident

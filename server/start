@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.158 2001/03/27 18:37:40 mast Exp $
+# $Id$
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -22,7 +22,7 @@ check_owner() {
      fi
      ugid=`grep $gargs "='User'>" $DIR/Global_Variables 2>/dev/null\
            | sed -e 's/.*<str>//' -e 's,</str>.*,,'`
-     if [ ! x$ugid = x ] ; then
+     if [ ! "x$ugid" = x ] ; then
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
 	if [ ! "x$2" = x ]; then
