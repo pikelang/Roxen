@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: SQL Backups, HTTP Wide strings, RXML replace, mutex cache support
 from: 5e0e376820472f1ed479adb612a6703853a150fe
 to: 873be297a8322f597722111e0854933f7caf07e8
 originator: wellhardh@roxen.com
@@ -7,27 +7,15 @@ restart: true
 
 Multiple fixes:
 
-  * Don't read past end of string when restoring SQL backups. Fixes [bug 6963].
-
-  * Version bumped to 4.1.35 by distmaker.
-
-  * Version bumped to 5.2.384 by buildsystem.
-
-  * Version bumped to 4.1.36 by distmaker.
-
-  * Version bumped to 4.1.37 by distmaker.
-
-  * Version bumped to 5.2.385 by buildsystem.
-
-  * Version bumped to 5.2.386 by buildsystem.
-
-  * Version bumped to 5.2.387 by buildsystem.
+  * Don't read past end of string when restoring SQL backups. Fixes
+    [bug 6963].
 
   * HTTP: Added some DWIM for wide strings.
     
-    If the user has set a content-type with charset, the output charset
-    setting is ignored, and a wide string could be sent to the low-level
-    protocol code. Detect wide strings and force them to UTF-8 in this case.
+    If the user has set a content-type with charset, the output
+    charset setting is ignored, and a wide string could be sent to the
+    low-level protocol code. Detect wide strings and force them to
+    UTF-8 in this case.
 
   * RXML: <replace/> needs to avoid decoding the XML/HTML quotes too.
     
@@ -35,25 +23,26 @@ Multiple fixes:
     
     Fixes [bug 6902] and [bug 4128].
 
-  * Implement <cache mutex="my-mutex">...</cache> for synchronizing cache miss
-    handling in shared caches. Part of [bug 6923].
+  * Implement <cache mutex="my-mutex">...</cache> for synchronizing
+    cache miss handling in shared caches. Part of [bug 6923].
 
-  * Implement <cache generation-variable="var.counter1,var.counter2,..."/>. This
-    is ideal for generation-based caches where old entries become garbage as soon
-    as a new generation (different, really, since generations aren't necessarily
-    numeric) is encountered.
+  * Implement <cache generation-variable="var.counter1,var.counter2,..."/>.
+    This is ideal for generation-based caches where old entries become
+    garbage as soon as a new generation (different, really, since
+    generations aren't necessarily numeric) is encountered.
     
-    Note: This is primarily intended for shared caches but I've tried to make the
-    attribute applicable to non-shared caches as well. This has however not been
-    extensively verified.
+    Note: This is primarily intended for shared caches but I've tried
+    to make the attribute applicable to non-shared caches as
+    well. This has however not been extensively verified.
     
     Part of [bug 6923].
 
-  * <cache mutex=""/> doesn't need a mutex name since the key itself already includes
-    the internal cache ID.
+  * <cache mutex=""/> doesn't need a mutex name since the key itself
+    already includes the internal cache ID.
 
-  * Add the cache tag's mutex_key to the RequestID's list of objects to destruct.
+  * Add the cache tag's mutex_key to the RequestID's list of objects
+    to destruct.
     
-    This should ensure that the mutex is always released when the request finishes,
-    even if the Frame object stays in RAM and an exception is thrown from within
-    the cache tag.
+    This should ensure that the mutex is always released when the
+    request finishes, even if the Frame object stays in RAM and an
+    exception is thrown from within the cache tag.
