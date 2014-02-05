@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Fixed DB backup of sb-database log table
 from: 873be297a8322f597722111e0854933f7caf07e8
 to: ade953004c28c3dbc840ed6a901d62c1c1b0b51d
 originator: wellhardh@roxen.com
@@ -6,8 +6,6 @@ depends: 2014-01-27T162413
 restart: true
 
 Multiple fixes:
-
-  * Version bumped to 4.1.38 by distmaker.
 
   * DBManager: Added set_perms_in_user_table()
     
