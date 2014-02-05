@@ -89,8 +89,8 @@ private
   {
     if( password )
     {
-      // According to the documentation MySQL is 4.1 or newer is required
-      // for OLD_PASWORD(). There does however seem to exist versions of
+      // According to the documentation MySQL 4.1 or newer is required
+      // for OLD_PASSWORD(). There does however seem to exist versions of
       // at least 4.0 that know of OLD_PASSWORD().
       if (db->server_info() >= "mysql/4.1") {
 	db->query( "REPLACE INTO user (Host,User,Password) "
