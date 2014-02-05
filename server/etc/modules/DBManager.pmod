@@ -89,8 +89,8 @@ private
   {
     if( password )
     {
-      // According to the documentation MySQL is 4.1 or newer is required
-      // for OLD_PASWORD(). There does however seem to exist versions of
+      // According to the documentation MySQL 4.1 or newer is required
+      // for OLD_PASSWORD(). There does however seem to exist versions of
       // at least 4.0 that know of OLD_PASSWORD().
       if (db->server_info() >= "mysql/4.1") {
 	db->query( "REPLACE INTO user (Host,User,Password) "
@@ -115,6 +115,70 @@ private
     }
   }
 
+  void set_perms_in_user_table(Sql.Sql db, string host, string user, int level)
+  {
+    multiset(string) privs = (<>);
+
+    switch (level) {
+      case NONE:
+	db->big_query ("DELETE FROM user "
+		       " WHERE Host = %s AND User = %s", host, user);
+	return;
+
+      case READ:
+	privs = (<
+	  "Select_priv", "Show_db_priv", "Create_tmp_table_priv",
+	  "Lock_tables_priv", "Execute_priv", "Show_view_priv",
+	>);
+	break;
+
+      case WRITE:
+	// Current as of MySQL 5.0.70.
+	privs = (<
+	  "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
+	  "Create_priv", "Drop_priv", "Reload_priv", "Shutdown_priv",
+	  "Process_priv", "File_priv", "Grant_priv", "References_priv",
+	  "Index_priv", "Alter_priv", "Show_db_priv", "Super_priv",
+	  "Create_tmp_table_priv", "Lock_tables_priv", "Execute_priv",
+	  "Repl_slave_priv", "Repl_client_priv", "Create_view_priv",
+	  "Show_view_priv",  "Create_routine_priv", "Alter_routine_priv",
+	  "Create_user_priv",
+	>);
+	break;
+
+      case -1:
+	// Special case to create a record for a user that got no access.
+	break;
+
+      default:
+	error ("Invalid level %d.\n", level);
+    }
+    if (!sizeof(db->query("SELECT User FROM user "
+			  " WHERE Host = %s AND User = %s",
+			  host, user))) {
+      // Ensure that the user exists.
+      db->big_query("REPLACE INTO user (Host, User) VALUES (%s, %s)",
+		    host, user);
+    }
+    werror("DBManager: Updating privs for %s@%s to %O.\n",
+	   user, host, privs);
+    // Current as of MySQL 5.0.70.
+    foreach(({ "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
+	       "Create_priv", "Drop_priv", "Reload_priv", "Shutdown_priv",
+	       "Process_priv", "File_priv", "Grant_priv", "References_priv",
+	       "Index_priv", "Alter_priv", "Show_db_priv", "Super_priv",
+	       "Create_tmp_table_priv", "Lock_tables_priv", "Execute_priv",
+	       "Repl_slave_priv", "Repl_client_priv", "Create_view_priv",
+	       "Show_view_priv",  "Create_routine_priv", "Alter_routine_priv",
+	       "Create_user_priv",
+	    }), string field) {
+      db->big_query("UPDATE user SET " + field + " = %s "
+		    " WHERE Host = %s AND User = %s AND " + field + " != %s",
+		    privs[field]?"Y":"N",
+		    host, user, privs[field]?"Y":"N");
+    }
+  }
+
   void set_perms_in_db_table (Sql.Sql db, string host, array(string) dbs,
 			      string user, int level)
   {
@@ -130,14 +194,15 @@ private
 
       case READ:
 	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv, "
-		       "Execute_priv) "
+		       "Create_tmp_table_priv, Lock_tables_priv, "
+		       "Show_view_priv, Execute_priv) "
 		       "VALUES " +
 		       map (dbs, lambda (string db_name) {
 				   return "("
 				     "'" + q (host) + "',"
 				     "'" + q (db_name) + "',"
 				     "'" + q (user) + "',"
-				     "'Y','Y')";
+				     "'Y','Y','Y','Y','Y')";
 				 }) * ",");
 	break;
 
@@ -407,6 +472,10 @@ private
   void synch_mysql_perms()
   {
     Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    // Force proper privs for the low-level users.
+    set_perms_in_user_table(db, "localhost", "rw", WRITE);
+    set_perms_in_user_table(db, "localhost", "ro", READ);
 
     mapping(string:int(1..1)) old_perms = ([]);
 
