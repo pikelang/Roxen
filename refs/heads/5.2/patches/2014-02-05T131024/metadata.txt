@@ -1,0 +1,28 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 873be297a8322f597722111e0854933f7caf07e8
+to: 31a035eae4050b16235f9e9e4a502bede78d7cb6
+originator: wellhardh@roxen.com
+depends: 2014-01-27T162413
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 4.1.38 by distmaker.
+
+  * DBManager: Added set_perms_in_user_table()
+    
+    synch_mysql_perms() now ensures that the "rw" and "ro" users have
+    proper permissions.
+    
+    This includes adding the "Show_view_priv" permission for the "ro" user.
+    
+    Fixes [bug 7002].
+
+  * DBManager: Add some more perms to read-only users.
+    
+    set_perms_in_db_table() now sets a few more permissions for
+    read-only users.
+    
+    Fixes some issues related to [bug 7002].
+
+  * DBManager: Fixed some documentation typos.
