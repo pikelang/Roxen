@@ -194,14 +194,15 @@ private
 
       case READ:
 	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv, "
-		       "Execute_priv) "
+		       "Create_tmp_table_priv, Lock_tables_priv, "
+		       "Show_view_priv, Execute_priv) "
 		       "VALUES " +
 		       map (dbs, lambda (string db_name) {
 				   return "("
 				     "'" + q (host) + "',"
 				     "'" + q (db_name) + "',"
 				     "'" + q (user) + "',"
-				     "'Y','Y')";
+				     "'Y','Y','Y','Y','Y')";
 				 }) * ",");
 	break;
 
