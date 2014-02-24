@@ -14,6 +14,9 @@ string|mapping parse( RequestID id )
   if( !config_perm( "Create Site" ) )
     return LOCALE(226, "Permission denied");
 
+  if (!id->variables->site)
+    return Roxen.http_redirect( "/sites/", id );
+
   Configuration cf = roxen->find_configuration( id->variables->site );
   if( !cf )
     return "No such configuration: "+id->variables->site;
