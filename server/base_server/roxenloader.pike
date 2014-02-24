@@ -2775,7 +2775,7 @@ void low_start_mysql( string datadir,
   int force = !file_stat( datadir+"/my.cfg" );
   string cfg_file = (Stdio.read_bytes(datadir + "/my.cfg") ||
 		     "[mysqld]\n"
-		     "max_allowed_packet = 16M\n"
+		     "max_allowed_packet = 128M\n"
 		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"

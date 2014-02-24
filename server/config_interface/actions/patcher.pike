@@ -993,7 +993,7 @@ mixed parse(RequestID id)
 
   mapping patch_stats = get_patch_stats(plib);
 
-  res += #" 
+  res += #"
     <font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>
 
     <p style='margin-bottom: 5px'>" + 

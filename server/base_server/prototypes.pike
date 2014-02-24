@@ -3126,10 +3126,18 @@ class RequestID
 	type += "; charset=" + charset;
     }
 
-    heads["Content-Type"] = type;
-
-    if (stringp (file->data))
+    if (stringp (file->data)) {
+      if (String.width(file->data) > 8) {
+	// Invalid charset header!
+	// DWIM!
+	eval_status["bad-charset"] = 1;
+	file->data = string_to_utf8(file->data);
+	type = (type/";")[0] + "; charset=utf-8";
+      }
       file->len = sizeof (file->data);
+    }
+
+    heads["Content-Type"] = type;
 
 #ifndef DISABLE_BYTE_RANGES
     heads["Accept-Ranges"] = "bytes";

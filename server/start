@@ -22,7 +22,7 @@ check_owner() {
      fi
      ugid=`grep $gargs "='User'>" $DIR/Global_Variables 2>/dev/null\
            | sed -e 's/.*<str>//' -e 's,</str>.*,,'`
-     if [ ! x$ugid = x ] ; then
+     if [ ! "x$ugid" = x ] ; then
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
 	if [ ! "x$2" = x ]; then

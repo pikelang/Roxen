@@ -5031,6 +5031,8 @@ hyphens ('-') occur in the specifier names.</p>
     that describes how the page has been evaluated:
 
     <table class='hilite-1stcol'><tbody valign='top'>
+    <tr><td>bad-charset</td>
+        <td>Detected invalid charset in declared content-type.</td></tr>
     <tr><td>xslt</td>
 	<td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
