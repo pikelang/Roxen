@@ -25,6 +25,8 @@ constant features = (<
   "pike-support",		// Support patching master.pike.in and
 				// removal of .o-files, etc.
   "file-modes",			// Support patching and restoring of
+				// files with eg the exec bit set (broken).
+  "file-modes-2",		// Support patching and restoring of
 				// files with eg the exec bit set.
 >);
 
@@ -801,8 +803,10 @@ class Patcher
 	  // Set correct mtime - if possible.
 	  Stat fstat = file_stat(source);
 	  
-	  if(fstat)
+	  if(fstat) {
+	    chmod(dest, fstat->mode);
 	    System.utime(dest, fstat->atime, fstat->mtime);
+	  }
 	  privs = 0;
 	  write_log(0, "<green>ok.</green>\n");
 	  new_files += ({ dest });
@@ -869,8 +873,10 @@ class Patcher
 	    // Set correct mtime - if possible.
 	    Stat fstat = file_stat(source);
 
-	    if(fstat)
+	    if(fstat) {
+	      chmod(dest, fstat->mode);
 	      System.utime(dest, fstat->atime, fstat->mtime);
+	    }
 	    privs = 0;
 	    write_log(0, "<green>ok.</green>\n");
 
@@ -2577,6 +2583,11 @@ class Patcher
     {
       write_err("FAILED: %s!\n", strerror(errno()));
       return 0;
+    }
+
+    Stat st = file_stat(full_path);
+    if (st) {
+      chmod(dest, st->mode);
     }
 
     // Since the filename may have been changed we'll extract it again from
