@@ -1,0 +1,12 @@
+subject: Roxen 5.2: RoxenPatch: Fixed some more mode bits.
+from: ade953004c28c3dbc840ed6a901d62c1c1b0b51d
+to: 02689d912d2e594afc9491109c999142056ad723
+originator: wellhardh@roxen.com
+depends: 2014-02-05T141547
+restart: true
+
+RoxenPatch: Fixed some more mode bits.
+
+cp() doesn't copy the mode bits, so we need to adjust them afterwards.
+
+Adds new virtual dependency "roxenpatch/file-modes-2".
