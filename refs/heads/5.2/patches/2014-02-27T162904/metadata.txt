@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: RoxenPatch file mode support
 from: ade953004c28c3dbc840ed6a901d62c1c1b0b51d
 to: 7da43a4a57ab4d49ed82dd3cf3f5da1dea884327
 originator: wellhardh@roxen.com
