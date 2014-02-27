@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: RoxenPatch mode bit support
 from: ade953004c28c3dbc840ed6a901d62c1c1b0b51d
 to: 8837394a6557b66f853dd99721347b39a8816034
 originator: wellhardh@roxen.com
