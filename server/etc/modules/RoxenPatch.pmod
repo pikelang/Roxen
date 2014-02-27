@@ -71,6 +71,7 @@ class PatchObject(string|void id
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -82,6 +83,7 @@ class PatchObject(string|void id
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -804,7 +806,11 @@ class Patcher
 	  Stat fstat = file_stat(source);
 	  
 	  if(fstat) {
-	    chmod(dest, fstat->mode & 0777);
+	    if (file["file-mode"]) {
+	      chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	    } else {
+	      chmod(dest, fstat->mode & 0777);
+	    }
 	    System.utime(dest, fstat->atime, fstat->mtime);
 	  }
 	  privs = 0;
@@ -874,7 +880,11 @@ class Patcher
 	    Stat fstat = file_stat(source);
 
 	    if(fstat) {
-	      chmod(dest, fstat->mode & 0777);
+	      if (file["file-mode"]) {
+		chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	      } else {
+		chmod(dest, fstat->mode & 0777);
+	      }
 	      System.utime(dest, fstat->atime, fstat->mtime);
 	    }
 	    privs = 0;
