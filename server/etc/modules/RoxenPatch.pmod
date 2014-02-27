@@ -1856,16 +1856,21 @@ class Patcher
 	}
 	else if (mappingp(metadata[tag_name][0]))
 	{
+	  // array(mapping) -- eg new, replace & delete.
 	  foreach(metadata[tag_name], mapping m) {
 	    if (m->source) {
-	      xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
+	      xml += sprintf("  <%s source=\"%s\"%s>%s</%s>\n",
 			     tag_name,
 			     m->source,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    } else {
-	      xml += sprintf("  <%s>%s</%s>\n",
+	      xml += sprintf("  <%s%s>%s</%s>\n",
 			     tag_name,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    }
@@ -2770,6 +2775,10 @@ class Patcher
     Stat st = file_stat(full_path);
     int mtime = st && st->mtime;
     int mode = st ? st->mode : 0644;
+    if (mode & 0111) {
+      // Propagate the file-mode to the meta data file.
+      m["file-mode"] = "0755";
+    }
     return add_blob_to_rxp(rxp, data, dest, mtime, mode);
   }
 
