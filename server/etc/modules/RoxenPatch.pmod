@@ -804,7 +804,7 @@ class Patcher
 	  Stat fstat = file_stat(source);
 	  
 	  if(fstat) {
-	    chmod(dest, fstat->mode);
+	    chmod(dest, fstat->mode & 0777);
 	    System.utime(dest, fstat->atime, fstat->mtime);
 	  }
 	  privs = 0;
@@ -874,7 +874,7 @@ class Patcher
 	    Stat fstat = file_stat(source);
 
 	    if(fstat) {
-	      chmod(dest, fstat->mode);
+	      chmod(dest, fstat->mode & 0777);
 	      System.utime(dest, fstat->atime, fstat->mtime);
 	    }
 	    privs = 0;
@@ -2587,7 +2587,7 @@ class Patcher
 
     Stat st = file_stat(full_path);
     if (st) {
-      chmod(dest, st->mode);
+      chmod(dest, st->mode & 0777);
     }
 
     // Since the filename may have been changed we'll extract it again from
