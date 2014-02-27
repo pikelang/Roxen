@@ -1495,19 +1495,20 @@ class Patcher
 	p->originator = tag_content;
 	break;
       case "delete":
-	p->delete += ({ ([ "destination": tag_content ]) });
-	break;
       case "new":
       case "replace":
+	if (sizeof(attrs)) {
+	  if (!p[name]) p[name] = ({});
+	  attrs->destination = attrs->destination || tag_content;
+	  p[name] += ({ attrs });
+	}
+	break;
       default:
 	if (sizeof(attrs)) {
 	  if (!p[name]) p[name] = ({});
 	  foreach(attrs; string i; string v) {
+	    // FIXME: Why?
 	    p[name] += ({ ([i:v]) });
-	    if (i == "source") {
-	      // NB: This is for <new> and <replace>.
-	      p[name][-1]->destination = tag_content;
-	    }
 	  }
 	  break;
 	}
