@@ -1836,6 +1836,17 @@ class Patcher
     xml += sprintf("  <originator>%s</originator>\n",
 		   html_encode(metadata->originator));
 
+    // Add feature dependency on file-modes-2 if used.
+    foreach((metadata->new || ({})) +
+	    (metadata->replace || ({})), mapping(string:string) f) {
+      if (f["file-mode"]) {
+	if (!has_value(metadata->depends, "roxenpatch/file-modes-2")) {
+	  metadata->depends += ({ "roxenpatch/file-modes-2" });
+	}
+	break;
+      }
+    }
+
     array valid_tags = ({ "version", "platform", "depends", "flags", "reload",
 			  "patch", "new", "replace", "delete" });
 
