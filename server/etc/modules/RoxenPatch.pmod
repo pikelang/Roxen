@@ -78,6 +78,7 @@ class PatchObject(string|void id)
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -89,6 +90,7 @@ class PatchObject(string|void id)
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -887,7 +889,11 @@ class Patcher
 	  Stat fstat = file_stat(source);
 	  
 	  if(fstat) {
-	    chmod(dest, fstat->mode);
+	    if (file["file-mode"]) {
+	      chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	    } else {
+	      chmod(dest, fstat->mode & 0777);
+	    }
 	    System.utime(dest, fstat->atime, fstat->mtime);
 	  }
 	  privs = 0;
@@ -957,7 +963,11 @@ class Patcher
 	    Stat fstat = file_stat(source);
 
 	    if(fstat) {
-	      chmod(dest, fstat->mode);
+	      if (file["file-mode"]) {
+		chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	      } else {
+		chmod(dest, fstat->mode & 0777);
+	      }
 	      System.utime(dest, fstat->atime, fstat->mtime);
 	    }
 	    privs = 0;
@@ -1917,6 +1927,17 @@ class Patcher
     xml += sprintf("  <originator>%s</originator>\n",
 		   html_encode(metadata->originator));
 
+    // Add feature dependency on file-modes-2 if used.
+    foreach((metadata->new || ({})) +
+	    (metadata->replace || ({})), mapping(string:string) f) {
+      if (f["file-mode"]) {
+	if (!has_value(metadata->depends, "roxenpatch/file-modes-2")) {
+	  metadata->depends += ({ "roxenpatch/file-modes-2" });
+	}
+	break;
+      }
+    }
+
     array valid_tags = ({ "version", "platform", "depends", "flags", "reload",
 			  "patch", "new", "replace", "delete" });
 
@@ -1937,16 +1958,21 @@ class Patcher
 	}
 	else if (mappingp(metadata[tag_name][0]))
 	{
+	  // array(mapping) -- eg new, replace & delete.
 	  foreach(metadata[tag_name], mapping m) {
 	    if (m->source) {
-	      xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
+	      xml += sprintf("  <%s source=\"%s\"%s>%s</%s>\n",
 			     tag_name,
 			     m->source,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    } else {
-	      xml += sprintf("  <%s>%s</%s>\n",
+	      xml += sprintf("  <%s%s>%s</%s>\n",
 			     tag_name,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    }
@@ -2677,7 +2703,7 @@ class Patcher
 
     Stat st = file_stat(full_path);
     if (st) {
-      chmod(dest, st->mode);
+      chmod(dest, st->mode & 0777);
     }
 
     // Since the filename may have been changed we'll extract it again from
@@ -2850,6 +2876,10 @@ class Patcher
     Stat st = file_stat(full_path);
     int mtime = st && st->mtime;
     int mode = st ? st->mode : 0644;
+    if (mode & 0111) {
+      // Propagate the file-mode to the meta data file.
+      m["file-mode"] = "0755";
+    }
     return add_blob_to_rxp(rxp, data, dest, mtime, mode);
   }
 
