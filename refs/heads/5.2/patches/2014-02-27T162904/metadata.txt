@@ -1,0 +1,44 @@
+subject: Roxen 5.2: Multiple fixes:
+from: ade953004c28c3dbc840ed6a901d62c1c1b0b51d
+to: 7da43a4a57ab4d49ed82dd3cf3f5da1dea884327
+originator: wellhardh@roxen.com
+depends: 2014-02-05T141547
+restart: true
+
+Multiple fixes:
+
+  * RoxenPatch: Fixed some more mode bits.
+    
+    cp() doesn't copy the mode bits, so we need to adjust them afterwards.
+    
+    Adds new virtual dependency "roxenpatch/file-modes-2".
+
+  * RoxenPatch: Be more paranoid when copying mode bits.
+
+  * RoxenPatch: Added support for explicit file-modes.
+    
+    The <new/> and <replace/> metadata tags now support the
+    attribute "file-mode", which is a Pike literal expression
+    (this means that eg octal notation is supported) containing
+    the low order file mode bits.
+    
+    This feature is needed to support *old* versions of the patch system,
+    that threw away file mode bits at import time.
+    
+    This new feature is available via the feature dependency
+    "roxenpatch/file-modes-2".
+
+  * RoxenPatch: Emit file-mode attribute where needed.
+    
+    Metadata <new/> and <replace/> tags now get the attribute "file-mode"
+    set to "0755" for executable files.
+
+  * RoxenPatch: Add automatic feature dependency on "file-modes-2".
+    
+    When generating metadata files using the attribute "file-mode", also
+    add a feature dependency on "file-modes-2".
+
+  * RoxenPatch: Improved parsing of metadata file.
+    
+    parse_metadata() now parses the <new/>, <replace/> and <delete/>
+    metadata tags in the manner you would usually expect...
