@@ -58,6 +58,9 @@
                                         Roxen HTTP server
                                 </loctext>
                         </common_name>
+			<documentation>
+				<doc_link name='roxen.com' uri='http://docs.roxen.com' />
+			</documentation>
                 </template>
 
         </instance>
