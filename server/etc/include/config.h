@@ -18,14 +18,14 @@
 //  #define UNSAFE_MYSQL
 
 
-#if efun(thread_create)
+#if constant(thread_create)
 // If it works, good for you. If it doesn't, too bad.
 #ifndef DISABLE_THREADS
 #ifdef ENABLE_THREADS
 # define THREADS
 #endif /* ENABLE_THREADS */
 #endif /* !DISABLE_THREADS */
-#endif /* efun(thread_create) */
+#endif /* constant(thread_create) */
 #define add_efun add_constant
 
 /* Reply 'PONG\r\n' to the query 'PING\r\n'.

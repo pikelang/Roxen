@@ -5772,7 +5772,7 @@ class Tracer
     return "Tracer()";
   }
 
-#if efun(gethrtime) || efun(gethrvtime)
+#if constant(gethrtime) || constant(gethrvtime)
 #define HAVE_CLOCKS
 
 #if constant (gethrtime)
@@ -5784,9 +5784,9 @@ class Tracer
 
   local void start_clock (int timestamp)
   {
-#if efun (gethrvtime)
+#if constant (gethrvtime)
     // timestamp is cputime.
-#if efun (gethrtime)
+#if constant (gethrtime)
     rtimes[level] = gethrtime();
 #endif
     vtimes[level] = (timestamp || gethrvtime()) - id->misc->trace_overhead;
@@ -5800,9 +5800,9 @@ class Tracer
   {
     int hrnow, hrvnow;
 
-#if efun (gethrvtime)
+#if constant (gethrvtime)
     // timestamp is cputime.
-#if efun (gethrtime)
+#if constant (gethrtime)
     hrnow = gethrtime();
 #endif
     hrvnow = (timestamp || gethrvtime()) - id->misc->trace_overhead;
@@ -5816,7 +5816,7 @@ class Tracer
       hrnow && ("real " + Roxen.format_hrtime (hrnow - rtimes[level]))
     }) * ", ";
   }
-#endif	// efun (gethrtime) || efun (gethrvtime)
+#endif	// constant (gethrtime) || constant (gethrvtime)
 
   void trace_enter_ol(string type, function|object thing, int timestamp)
   {

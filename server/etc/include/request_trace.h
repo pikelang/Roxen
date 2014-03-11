@@ -23,9 +23,9 @@
 //   has been removed. The Resolve Path wizard will now quote all
 //   strings instead.
 
-#if efun (gethrvtime)
+#if constant (gethrvtime)
 #define HRTIME() gethrvtime()
-#elif efun (gethrtime)
+#elif constant (gethrtime)
 #define HRTIME() gethrtime()
 #else
 #define HRTIME() 0
