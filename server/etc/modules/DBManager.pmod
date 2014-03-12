@@ -422,7 +422,22 @@ private
     } else if (mysql_location->mysql_upgrade) {
       // Upgrade method in MySQL 5.0.19 and later (UNIX),
       // MySQL 5.0.25 and later (NT).
+#if 0
+      werror("Upgrading MySQL tables...\n"
+	     " %{ %O%}\n",
+	     ({ mysql_location->mysql_upgrade,
+#ifdef __NT__
+		"--pipe",
+#endif
+		"-S", roxenloader.query_mysql_socket(),
+		"--user=rw",
+		// "--verbose",
+	     }));
+#endif /* 0 */
       Process.Process(({ mysql_location->mysql_upgrade,
+#ifdef __NT__
+			 "--pipe",
+#endif
 			 "-S", roxenloader.query_mysql_socket(),
 			 "--user=rw",
 			 // "--verbose",
