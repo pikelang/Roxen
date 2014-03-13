@@ -3539,10 +3539,9 @@ i dessa fall kommer processorbelastningen bli förhållandevis låg.</t>
 </str>
 
 <str id="1003">
-<changed from="The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype") is not allowed and such globs will be silently ignored."/>
 <o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype" or "maintype/sub*") is not allowed and such globs will be silently ignored.</o>
 <t>De MIME-typer för vilka komprimering slås på. Tillåtna varianter är "huvudtyp/*" och "huvudtyp/undertyp"
-medan allmänna glob-uttryck (exempelvis "huvudtyp/*undertyp") är otillåtna och ignoreras utan förvarning.</t>
+medan allmänna glob-uttryck (exempelvis "huvudtyp/*undertyp" eller "huvudtyp/sub*") är otillåtna och ignoreras utan förvarning.</t>
 </str>
 
 <str id="1004">
