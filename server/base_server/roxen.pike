@@ -1588,7 +1588,7 @@ class InternalRequestID
     }
 
     // Update the cached URL base to keep url_base() happy.
-    uri->path = misc->site_prefix_path || "";
+    uri->path = (misc->site_prefix_path || "") + "/";
     uri->query = UNDEFINED;
     uri->fragment = UNDEFINED;
     cached_url_base = sprintf("%s", uri);
