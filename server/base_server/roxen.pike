@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.999 2008/11/04 18:05:16 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -1586,6 +1586,12 @@ class InternalRequestID
       if (string config_path = url_data->path)
 	adjust_for_config_path (config_path);
     }
+
+    // Update the cached URL base to keep url_base() happy.
+    uri->path = misc->site_prefix_path || "";
+    uri->query = UNDEFINED;
+    uri->fragment = UNDEFINED;
+    cached_url_base = sprintf("%s", uri);
     return set_path( raw_url );
   }
 
@@ -1598,10 +1604,12 @@ class InternalRequestID
   {
     client = ({ "Roxen" });
     prot = "INTERNAL";
+    port_obj = InternalProtocol();
     method = "GET";
     real_variables = ([]);
     variables = FakedVariables( real_variables );
     root_id = this_object();
+    cached_url_base = "internal://0.0.0.0:0/";
 
     misc = ([ "pref_languages": PrefLanguages(),
 	      "cacheable": INITIAL_CACHEABLE,
@@ -2131,6 +2139,26 @@ class Protocol
   protected string _sprintf( )
   {
     return "Protocol(" + get_url() + ")";
+  }
+}
+
+class InternalProtocol
+//! Protocol for internal requests that are not linked to any real request.
+{
+  inherit Protocol;
+
+  constant name = "internal";
+
+  constant prot_name = "internal";
+
+  constant supports_ipless = 1;
+  constant default_port = 0;
+
+  protected void create()
+  {
+    path = "";
+    port = default_port;
+    ip = "0.0.0.0";
   }
 }
 
