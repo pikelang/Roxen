@@ -2159,7 +2159,9 @@ class Patcher
 	} else if (path[0] == "pike") {
 	  string headerfile =
 	    Stdio.read_bytes(combine_path(server_path,
-					  "pike/include/version.h"));
+					  "pike/include/version.h")) ||
+	    Stdio.read_bytes(combine_path(server_path,
+					  "pike/include/pike/version.h"));
 	  if (headerfile) {
 	    /* Filter everything but cpp-directives. */
 	    headerfile = filter(headerfile/"\n", has_prefix, "#")*"\n" + "\n";
