@@ -491,8 +491,7 @@ class Tag
     Type type = parser->type;
     parser->drain_output();
 
-    sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
-    if (ws == "" && rest != "") {
+    if (sizeof(content) && !(< ' ', '\t', '\n', '\r' >)[content[0]]) {
       // The parser didn't match a complete name, so this is a false
       // alarm for an unknown PI tag.
       if (!type->free_text)
