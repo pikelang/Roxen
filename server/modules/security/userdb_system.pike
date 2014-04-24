@@ -116,14 +116,18 @@ class SysGroup
 User find_user( string s )
 {
   mixed key = mt->lock();
+  object p = Privs("getpwnam");
   array a = getpwnam( s );
+  p = UNDEFINED;
   if( a )  return SysUser( this_object(), a );
 }
 
 User find_user_from_uid( int id )
 {
   mixed key = mt->lock();
+  object p = Privs("getpwuid");
   array a = getpwuid( id );
+  p = UNDEFINED;
   if( a ) return SysUser( this_object(), a );
 }
 
@@ -132,10 +136,12 @@ array(string) list_users( )
   array res = ({});
   array a;
   mixed key = mt->lock();
+  object p = Privs("getpwent");
   System.setpwent();
   while( a = System.getpwent() )
     res += ({ a[0] });
 //   endpwent();
+  p = UNDEFINED;
   return res;
 }
 
