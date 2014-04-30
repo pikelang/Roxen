@@ -5993,8 +5993,10 @@ int main(int argc, array tmp)
 				  },
 			"destruct_cb":lambda(object o) {
 					gc_histogram[sprintf("%O", object_program(o))]++;
+#ifdef LOG_GC_VERBOSE
 					werror("GC cyclic reference in %O.\n",
 					       o);
+#endif
 				      },
 			"done_cb":lambda(int n) {
 				    if (!n) return;
