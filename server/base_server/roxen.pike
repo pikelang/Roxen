@@ -4477,6 +4477,7 @@ int main(int argc, array tmp)
 #ifdef LOG_GC_TIMESTAMPS
   Pike.gc_parameters(([ "pre_cb": lambda() {
 				    gc_start = gethrtime();
+				    gc_histogram = ([]);
 				    werror("GC runs at %s", ctime(time()));
 				  },
 			"post_cb":lambda() {
@@ -4493,12 +4494,13 @@ int main(int argc, array tmp)
 			"done_cb":lambda(int n) {
 				    if (!n) return;
 				    werror("GC zapped %d things.\n", n);
-				    mapping h = gc_histogram + ([]);
+				    mapping h = gc_histogram;
+				    gc_histogram = ([]);
 				    if (!sizeof(h)) return;
 				    array i = indices(h);
 				    array v = values(h);
 				    sort(v, i);
-				    werror("GC histogram (accumulative):\n");
+				    werror("GC histogram:\n");
 				    foreach(reverse(i)[..9], string p) {
 				      werror("GC:  %s: %d\n", p, h[p]);
 				    }
