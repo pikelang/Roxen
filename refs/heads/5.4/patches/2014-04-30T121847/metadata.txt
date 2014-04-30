@@ -1,0 +1,28 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 6b0a87145e22e5005ed82d01a16754af42ce67e7
+to: 8487c61df9a63bd28e42f14681eddcc59d19526e
+originator: wellhardh@roxen.com
+depends: roxen/5.4.66
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 5.4.67 by buildsystem.
+
+  * Version bumped to 5.4.68 by buildsystem.
+
+  * RoxenPatch: Fix pike version deps on WIN32.
+    
+    For some reason the installation location of the version.h header file
+    for Pike differs on WIN32. We now check that location if there's no
+    file at the primary location.
+    
+    Fixes [bug 7101].
+
+  * LOG_GC_TIMESTAMPS: Reduce default verbosity.
+    
+    Hide "GC cyclic reference in %O." behind LOG_GC_VERBOSE.
+
+  * LOG_GC_TIMESTAMPS: The histogram is no longer accumulative.
+    
+    The local gc behaviour is usually more interesting than the global.
