@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.418 2010/11/02 15:20:09 jonasw Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -463,7 +463,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, args, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep(frame, "raw_tag_text"))
       frame->raw_tag_text = parser->raw_tag_text();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, parser->type, result);
@@ -478,7 +478,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, args, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep (frame, "raw_tag_text"))
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
@@ -503,7 +503,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, 0, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep (frame, "raw_tag_text"))
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
@@ -3656,7 +3656,7 @@ class Frame
   {
 #ifdef MODULE_DEBUG
 #define CHECK_RAW_TEXT							\
-    if (zero_type (this_object()->raw_tag_text))			\
+    if (!object_variablep (this, "raw_tag_text"))			\
       fatal_error ("The variable raw_tag_text must be defined.\n");	\
     if (!stringp (this_object()->raw_tag_text))				\
       fatal_error ("raw_tag_text must have a string value.\n");
