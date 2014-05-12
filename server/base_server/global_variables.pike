@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.123 2009/12/05 01:04:00 jonasw Exp $
+// $Id$
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -26,7 +26,7 @@ mixed save()
 
 private int(0..1) cache_disabled_p() { return !query("cache");         }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
-#if efun(syslog)
+#if constant(syslog)
 private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 #endif
 
@@ -557,7 +557,7 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	 LOCALE(137, "If Audit trail is set to Yes, all changes of uid will be "
 		"logged in the Event log."));
 
-#if efun(syslog)
+#if constant(syslog)
   defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"), 
 	 TYPE_STRING_LIST|VAR_MORE,
 	 LOCALE(139, "What method to use for the debug log, default is file, "
@@ -603,7 +603,7 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"of the Roxen daemon. The entered value will be appended to "
 		"all logs."),
 	 0, syslog_disabled);
-#endif // efun(syslog)
+#endif // constant(syslog)
 
   v = Variable.Flag (0, 0,
 		     LOCALE(534, "Logging: Dump threads by file polling"),

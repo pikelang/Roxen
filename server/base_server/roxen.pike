@@ -164,7 +164,7 @@ int privs_level;
 
 protected class Privs
 {
-#if efun(seteuid)
+#if constant(seteuid)
 
   int saved_uid;
   int saved_gid;
@@ -274,11 +274,11 @@ protected class Privs
 		    (string)dbt(backtrace()[-2]));
 
     if (u[2]) {
-#if efun(cleargroups)
+#if constant(cleargroups)
       if (mixed err = catch { cleargroups(); })
 	werror (describe_backtrace (err));
 #endif /* cleargroups */
-#if efun(initgroups)
+#if constant(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
 	werror (describe_backtrace (err));
 #endif
@@ -393,7 +393,7 @@ protected class Privs
 
     seteuid(0);
     array u = getpwuid(saved_uid);
-#if efun(cleargroups)
+#if constant(cleargroups)
     if (mixed err = catch { cleargroups(); })
       werror (describe_backtrace (err));
 #endif /* cleargroups */
@@ -406,9 +406,9 @@ protected class Privs
     enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
-#else /* efun(seteuid) */
+#else /* constant(seteuid) */
   void create(string reason, int|string|void uid, int|string|void gid){}
-#endif /* efun(seteuid) */
+#endif /* constant(seteuid) */
 }
 
 /* Used by read_config.pike, since there seems to be problems with
@@ -5335,7 +5335,7 @@ private void fix_root(string to)
   if(!chroot(to))
   {
     report_debug("Roxen: Cannot chroot to "+to+": ");
-#if efun(real_perror)
+#if constant(real_perror)
     real_perror();
 #endif
     return;
@@ -5366,7 +5366,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 		  Stdio.File|void to2,
 		  function(:void)|void callback)
 {
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   if(!to2)
   {
     object p = fastpipe( );
@@ -5383,7 +5383,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
     if(to2) p->output(to2);
     p->input(from);
     return p;
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   }
 #endif
 }
@@ -5679,7 +5679,7 @@ int main(int argc, array tmp)
   cache_clear_deltas();
   set_locale();
 
-#if efun(syslog)
+#if constant(syslog)
   init_logger();
 #endif
   init_garber();
