@@ -2250,7 +2250,67 @@ class SSLProtocol
     return;								\
   } while (0)
 
-  protected void filter_preferred_suites() {
+#if constant(SSL.ServerConnection)
+  protected void set_version()
+  {
+    ctx->min_version = query("ssl_min_version");
+  }
+#endif
+
+  protected void filter_preferred_suites()
+  {
+#if constant(SSL.ServerConnection)
+    int mode = query("ssl_suite_filter");
+    int bits = query("ssl_key_bits");
+
+    array(int) suites = ({});
+
+    if ((mode & 8) && !ctx->configure_suite_b) {
+      // FIXME: Warn: Suite B suites not available.
+      mode &= ~8;
+    }
+
+    if ((mode & 8) && ctx->configure_suite_b) {
+      // Suite B.
+      switch(mode) {
+      case 15:
+	// Strict mode.
+	ctx->configure_suite_b(bits, 2);
+	break;
+      case 14:
+	// Transitional mode.
+	ctx->configure_suite_b(bits, 1);
+	break;
+      default:
+	ctx->configure_suite_b(bits);
+	break;
+      }
+      suites = ctx->preferred_suites;
+
+      if (ctx->min_version < query("ssl_min_version")) {
+	set_version();
+      }
+    } else {
+      suites = ctx->get_suites(bits);
+
+      // Make sure the min version is restored in case we've
+      // switched from Suite B.
+      set_version();
+    }
+    if (mode & 4) {
+      // Ephemeral suites only.
+      suites = filter(suites,
+		      lambda(int suite) {
+			return (<
+			  SSL.Constants.KE_dhe_dss,
+			  SSL.Constants.KE_dhe_rsa,
+			  SSL.Constants.KE_ecdhe_ecdsa,
+			  SSL.Constants.KE_ecdhe_rsa,
+			>)[(SSL.Constants.CIPHER_SUITES[suite]||({ -1 }))[0]];
+		      });
+    }
+    ctx->preferred_suites = suites;
+#else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
     ctx->preferred_suites -= ({
@@ -2261,6 +2321,7 @@ class SSLProtocol
       SSL.Constants.SSL_null_with_null_null,
     });
 #endif
+#endif /* SSL.ServerConnection */
   }
 
   // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
@@ -2418,9 +2479,7 @@ class SSLProtocol
       //dsa->use_random(ctx->random);
       ctx->dsa = dsa;
       /* Use default DH parameters */
-#if constant(SSL.Cipher)
-      ctx->dh_params = SSL.Cipher.DHParameters();
-#else
+#if constant(SSL.cipher)
       ctx->dh_params = SSL.cipher()->dh_parameters();
 #endif
 
@@ -2489,9 +2548,9 @@ class SSLProtocol
   {
     ctx->random = Crypto.Random.random_string;
 
-    filter_preferred_suites();
-
     set_up_ssl_variables( this_object() );
+
+    filter_preferred_suites();
 
     ::setup(pn, i);
 
@@ -2505,6 +2564,12 @@ class SSLProtocol
     //        at the same time.
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
+
+#if constant(SSL.ServerConnection)
+    getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
+    getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
+    getvar("ssl_min_version")->set_changed_callback(set_version);
+#endif
   }
 
   string _sprintf( )
