@@ -230,11 +230,16 @@ void set_up_ssl_variables( Protocol o )
 #if constant(SSL.ServerConnection)
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
+  defvar( "ssl_password",
+	  Variable.String("", 0, LOCALE(0, "SSL decryption password"),
+			  LOCALE(0, "Optional password to decrypt the "
+				 "SSL key file(s).")));
+
   // 112 bits is the maximum strength to still retain the
   // DES-3 suites, which are required in the TLS standards.
   defvar("ssl_key_bits",
 	 Variable.Int(112, 0,
-		      LOCALE(0, "Cipher suite minimum strength"),
+		      LOCALE(0, "Cipher suite minimum key strength"),
 		      LOCALE(0,
 			     "<p>The minimum number of bits to secure "
 			     "connections.</p>\n"

@@ -2324,12 +2324,197 @@ class SSLProtocol
 #endif /* SSL.ServerConnection */
   }
 
+#if constant(Standards.X509)
+  void certificates_changed(Variable.Variable|void ignored,
+			    void|int ignore_eaddrinuse)
+  {
+    int old_cert_failure = cert_failure;
+    cert_failure = 0;
+
+    array(string) certificates = ({});
+    array(object) decoded_certs = ({});
+    array(object) decoded_keys = ({});
+
+    void handle_pem_file(string pem_file, Variable.Variable conf_var)
+    {
+      string raw_cert;
+      SSL3_WERR (sprintf ("Reading PEM file %O\n", pem_file));
+      if( catch{ raw_cert = lopen(pem_file, "r")->read(); } )
+      {
+	CERT_WARNING (conf_var,
+		      LOC_M(8, "Reading PEM file %O failed: %s\n"),
+		      pem_file, strerror (errno()));
+	return;
+      }
+
+      Standards.PEM.Messages msgs = Standards.PEM.Messages(raw_cert);
+
+      foreach(msgs->fragments, string|Standards.PEM.Message msg) {
+	if (stringp(msg)) {
+	  if (String.trim_all_whites(msg) != "") {
+	    CERT_WARNING(conf_var,
+			 LOC_M(0, "Invalid PEM in %O.\n"),
+			 pem_file);
+	  }
+	  continue;
+	}
+	string body = msg->body;
+	if (msg->headers["dek-info"]) {
+	  mixed err = catch {
+	      body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
+						body, query("ssl_password"));
+	    };
+	  if (err) {
+	    CERT_WARNING(conf_var,
+			 LOC_M(0, "Invalid decryption password for %O.\n"),
+			 pem_file);
+	  }
+	}
+	switch(msg->pre) {
+	case "CERTIFICATE":
+	case "X509 CERTIFICATE":
+	  Standards.X509.TBSCertificate tbs =
+	    Standards.X509.decode_certificate(body);
+	  if (!tbs) {
+	    CERT_WARNING (conf_var,
+			  LOC_M(13, "Certificate not valid (DER).\n"));
+	    return;
+	  }
+	  certificates += ({ body });
+	  decoded_certs += ({ Standards.X509.decode_certificate(body) });
+	  break;
+	case "PRIVATE KEY":
+	case "RSA PRIVATE KEY":
+	case "DSA PRIVATE KEY":
+	case "ECDSA PRIVATE KEY":
+	  Crypto.Sign key = Standards.X509.parse_private_key(body);
+	  if (!key) {
+	    CERT_ERROR (conf_var,
+			LOC_M(11,"Private key not valid")+" (DER).\n");
+	    return;
+	  }
+	  decoded_keys += ({ key });
+	  break;
+	}
+      }
+    };
+
+    Variable.Variable Certificates = getvar("ssl_cert_file");
+    Variable.Variable KeyFile = getvar("ssl_key_file");
+
+    object privs = Privs("Reading cert file");
+
+    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
+      if (cert_file == "") continue;
+      handle_pem_file(cert_file, Certificates);
+    }
+
+    string key_file = String.trim_whites(KeyFile->query());
+    if (key_file != "") {
+      handle_pem_file(key_file, KeyFile);
+    } else {
+      KeyFile = Certificates;
+    }
+
+    privs = 0;
+
+    if (!sizeof(decoded_certs)) {
+      CERT_ERROR(Certificates, LOC_M(63,"No certificates found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(63,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
+    if (!sizeof(decoded_keys)) {
+      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M (17,"No private key found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
+    if (sizeof(ctx->cert_pairs)) {
+      // We must reset the set of certificates.
+      ctx = SSL.context();
+      set_version();
+      filter_preferred_suites();
+    }
+
+    mapping(string:array(int)) cert_lookup = ([]);
+    foreach(decoded_certs; int no; Standards.X509.TBSCertificate tbs) {
+      cert_lookup[tbs->subject->get_der()] += ({ no });
+    }
+
+    foreach(decoded_keys, Crypto.Sign key) {
+      // FIXME: Multiple certificates with the same key?
+      array(int) cert_nos;
+      Standards.X509.TBSCertificate tbs;
+      foreach(decoded_certs; int no; tbs) {
+	if (tbs->public_key->pkc->public_key_equal(key)) {
+	  cert_nos = ({ no });
+	  break;
+	}
+      }
+      if (!cert_nos) {
+	CERT_ERROR (KeyFile,
+		    LOC_M(14, "Certificate and private key do not match.\n"));
+	continue;
+      }
+
+      // Build the certificate chain.
+      Standards.X509.TBSCertificate issuer;
+      do {
+	string issuer_der = tbs->issuer->get_der();
+	array(int) issuer_nos = cert_lookup[issuer_der];
+	if (!issuer_nos) break;
+
+	issuer = decoded_certs[issuer_nos[0]];
+
+	// FIXME: Verify that the issuer has signed the cert.
+
+	if (issuer != tbs) {
+	  cert_nos += ({ issuer_nos[0] });
+	} else {
+	  // Self-signed.
+	  issuer = UNDEFINED;
+	  break;
+	}
+      } while ((tbs = issuer));
+
+      report_notice("Adding %s certificate (%d certs) for %s\n",
+		    key->name(), sizeof(cert_nos), get_url());
+      ctx->add_cert(key, rows(certificates, cert_nos), ({ name }));
+    }
+
+    if (!sizeof(ctx->cert_pairs)) {
+      CERT_ERROR(Certificates,
+		 LOC_M(0,"No matching keys and certificates found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(0,"No matching keys and certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
+    if (!bound) {
+      Protocol::bind (ignore_eaddrinuse);
+      if (old_cert_failure && bound)
+	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
+      if (!bound)
+	report_notice("Failed to bind port %s.\n", get_url());
+    }
+  }
+#else
   // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
 #pragma no_deprecation_warnings
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
+    cert_failure = 0;
 
     string raw_keydata;
     array(string) certificates = ({});
@@ -2504,6 +2689,7 @@ class SSLProtocol
     }
   }
 #pragma deprecation_warnings
+#endif /* Tools.X509 */
 
   class CertificateListVariable
   {
