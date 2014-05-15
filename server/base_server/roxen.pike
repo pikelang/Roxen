@@ -2500,7 +2500,7 @@ class SSLProtocol
     }
 
     if (!bound) {
-      Protocol::bind (ignore_eaddrinuse);
+      bind (ignore_eaddrinuse);
       if (old_cert_failure && bound)
 	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
       if (!bound)
@@ -2723,12 +2723,21 @@ class SSLProtocol
     return 0;
   }
 
+#if constant(SSL.Connection)
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    if (!sizeof(ctx->cert_pairs)) return;
+    ::bind (ignore_eaddrinuse);
+  }
+#else
   protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
     if (!ctx->certificates) return;
     ::bind (ignore_eaddrinuse);
   }
+#endif
 
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
