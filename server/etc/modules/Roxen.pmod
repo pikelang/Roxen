@@ -5861,16 +5861,65 @@ void pop_color (string tagname, RequestID id)
   }
 }
 
+#if constant(Standards.X509)
+
+string generate_self_signed_certificate(string common_name,
+					Crypto.Sign|void key)
+{
+  int key_size = 4096;	// Ought to be safe for a few years.
+
+  if (!key) {
+    key = Crypto.RSA();
+    key->generate_key(key_size, Crypto.Random.random_string);
+  }
+
+  string key_type = key->name();
+  if (has_prefix(key_type, "ECDSA") ||
+      has_suffix(key_type, "ECDSA")) {
+    key_type = "ECDSA";
+  }
+
+  string key_pem =
+    Standards.PEM.build(key_type + " PRIVATE KEY",
+			Standards.PKCS[key_type].private_key(key));
+
+  // These are the fields used by testca.pem.
+  array(mapping(string:object)) name = ({
+    ([ "organizationName":
+       Standards.ASN1.Types.asn1_printable_string("Roxen IS")
+    ]),
+    ([ "organizationUnitName":
+       Standards.ASN1.Types.asn1_printable_string("Automatic certificate")
+    ]),
+    ([ "commonName":
+       (Standards.ASN1.Types.asn1_printable_valid(common_name)?
+	Standards.ASN1.Types.asn1_printable_string:
+	Standards.ASN1.Types.asn1_broken_teletex_string)(common_name)
+    ]),
+  });
+
+  int ttl = 3652;	// 10 years.
+
+  /* Create a plain X.509 v3 certificate, with just default extensions. */
+  string cert =
+    Standards.X509.make_selfsigned_certificate(key, 24 * 3600 * ttl, name);
+
+  return Standards.PEM.build("CERTIFICATE", cert) + key_pem;
+}
+
+#else
 // NB: Several of the Tools.PEM and Tools.X509 APIs below
 //     have been deprecated in Pike 8.0.
 #pragma no_deprecation_warnings
 
-string generate_self_signed_certificate(string common_name)
+string generate_self_signed_certificate(string common_name, Crypto.RSA|void rsa)
 {
   int key_size = 4096;	// Ought to be safe for a few years.
 
-  Crypto.RSA rsa = Crypto.RSA();
-  rsa->generate_key(key_size, Crypto.Random.random_string);
+  if (!rsa) {
+    rsa = Crypto.RSA();
+    rsa->generate_key(key_size, Crypto.Random.random_string);
+  }
 
   string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
 					   Standards.PKCS.RSA.private_key(rsa));
@@ -5900,6 +5949,7 @@ string generate_self_signed_certificate(string common_name)
 }
 
 #pragma deprecation_warnings
+#endif /* Standards.X509 */
 
 class LogPipe
 //! The write end of a pipe that will log to the debug log. Use
