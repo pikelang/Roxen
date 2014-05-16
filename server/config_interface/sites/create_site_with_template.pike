@@ -45,7 +45,7 @@ string|mapping parse( RequestID id )
 
   if (!id->variables->site_template ||
       search(id->variables->site_template, "site_templates")!=-1 ) {
-    foreach( glob( SITE_TEMPLATES "*.x",
+    foreach( glob("*" SITE_TEMPLATES "*.x",
 		   indices(id->variables) ), string t )
     {
       t = t[..sizeof(t)-3];
