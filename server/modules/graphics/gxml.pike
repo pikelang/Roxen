@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.54 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -549,6 +549,7 @@ class TagGXML
       foreach( glob( "*-*", indices(args)), string n )
 	my_args[n] = args[n];
 
+      string src_filename = m_delete(args, "filename");
       mapping res_args = args - my_args;
       mapping node_tree = i->encode();
       // werror("Node tree: %O\n", node_tree);
@@ -558,7 +559,8 @@ class TagGXML
       if(do_ext)
 	ext = "." + (my_args->format || "png");
       
-      res_args->src = query_internal_location() + key + ext;
+      res_args->src = query_internal_location() + key +
+	((src_filename && sizeof(src_filename))? "/" + Roxen.http_encode_url(src_filename) : "") + ext;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( key, id, no_draw, timeout ) )
       {
@@ -609,7 +611,8 @@ constant tagdoc = ([
   "gxml": ({ #"<desc type='cont'><p><short>Manipulates images in different ways
     using layers.</short></p><p>It is possible to make much more advanced
     manipulation using <tag>gtext</tag><tag>/gtext</tag> than with for instance
-    <tag>cimg/</tag>.</p></desc>
+    <tag>cimg/</tag>. It is possible to pass attributes, such as the alt 
+    attribute, to the resulting tag by including them in the gxml tag.</p></desc>
     <attr name='url'><p>
       Instead of generating a <tag>img</tag> return the url to the generated
       image.
@@ -617,6 +620,10 @@ constant tagdoc = ([
     <attr name='noxml'><p>
       Don't self close the generated <tag>img</tag>.
     </p></attr>
+
+    <attr name='filename' value='string'><p>
+      Works like the <i>filename</i> attribute to <tag>cimg/</tag>.</p>
+    </attr>
 
 <h1>Timeout</h1>
 

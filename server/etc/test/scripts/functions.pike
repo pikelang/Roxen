@@ -35,28 +35,7 @@ void recursive_cp(string src, string dest)
 
 void extract_tarfile(Filesystem.Tar tarfile, string dest_dir)
 {
-  void extract_path(string base)
-  {
-    foreach(tarfile->get_dir(base), string entry)
-    {
-      string abs_entry = combine_path(dest_dir, (entry[0..0]=="/"? entry[1..]: entry));
-      if(tarfile->stat(entry)->isdir())
-      {
-	mkdir(abs_entry);
-	extract_path(entry);
-      }
-      else
-      {
-	Stdio.File file = Stdio.File(abs_entry, "cwt");
-	
-	file->write(tarfile->stat(entry)->size?tarfile->open(entry, "r")->read():"");
-	file->close();
-      }
-    }
-  };
-  
-  mkdir(dest_dir);
-  extract_path("/");
+  tarfile->tar->extract ("/", dest_dir);
 }
 
 array(string) long_get_dir(string dir)

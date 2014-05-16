@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.122 2010/05/06 12:31:53 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -156,10 +156,10 @@ constant tagdoc=([
  information.</short> The result will be available in variables named
  as the SQL columns.</p>
 
- <p>NULL values in the SQL result are mapped to a special null value.
- That value expands to the empty string if inserted, and tests as
- false with <tag>if variable</tag> and true with <tag>if
- variable-exists</tag>.</p>
+ <p>NULL values in the SQL result are mapped to the special null
+ value, <ent>roxen.null</ent>. That value expands to the empty string
+ if inserted, and tests as false with <tag>if variable</tag> and true
+ with <tag>if variable-exists</tag>.</p>
 
  <p><i>Compatibility note:</i> If the compatibility level is 4.5 or
  lower, an SQL NULL value instead maps to an undefined value in RXML,
@@ -287,6 +287,7 @@ constant tagdoc=([
 // --------------------------- Database query code --------------------------------
 
 float compat_level;
+Val.Null null_obj = Val.null;
 
 #if ROXEN_COMPAT <= 1.3
 string compat_default_host;
@@ -620,14 +621,14 @@ class SqlEmitResponse {
 	    return x->type;
 #endif
 
-	  if (!v) val[i] = Roxen.sql_null;
+	  if (!v) val[i] = null_obj;
 	}
       }
 
       else {
 	// Same null handling as above, but also decode charsets.
 	foreach (val; int i; string v) {
-	  if (!v) val[i] = Roxen.sql_null;
+	  if (!v) val[i] = null_obj;
 	  else if (charset_decode_col[i]) {
 	    if (mixed err = catch (val[i] = decoder->feed (v)->drain()))
 	      if (objectp (err) && err->is_charset_decode_error)
@@ -845,7 +846,7 @@ class TagSQLTable {
 	    ret += "<tr>";
 	    foreach(row, string|Roxen.SqlNull value)
 	      // FIXME: Missing quoting here.
-	      ret += "<td>" + (value == Roxen.sql_null ?
+	      ret += "<td>" + (objectp (value) && value->is_val_null ?
 			       nullvalue : value) + "</td>";
 	    ret += "</tr>\n";
 	  }
@@ -969,7 +970,8 @@ multiset(string) query_provides() {return (<"rxml_sql">);}
 void start()
 {
   compat_level = my_configuration() && my_configuration()->compat_level();
- 
+  null_obj = compat_level >= 5.2 ? Val.null : Roxen.compat_5_1_null;
+
 #if ROXEN_COMPAT <= 1.3
   compat_default_host = query("hostname");
 #endif

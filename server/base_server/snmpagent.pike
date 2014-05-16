@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.26 2009/05/26 14:26:15 mast Exp $
+ * $Id$
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -776,7 +776,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.26 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.28 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

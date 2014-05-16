@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.169 2009/11/27 13:39:27 stewa Exp $
+// $Id$
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -373,6 +373,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "              cursor:   pointer;"
        "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
+       "         class='roxen-color-selector'"
        "         style='border-top:    1px solid #888888;"
        "                border-left:   1px solid #888888;"
        "                border-bottom: 2px solid #888888;"
@@ -391,9 +392,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    </tr><tr>"
        "      <td colspan='2' style='border-top: 1px solid #888888'"
        "        ><img src='/internal-roxen-pixel-000000'"
+       "              class='black'"
        "              width='76' height='10' style='cursor: pointer'"
        "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
        "        /><img src='/internal-roxen-pixel-ffffff'"
+       "               class='white'"
        "               width='76' height='10' style='cursor: pointer'"
        "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
        "        /></td>"
@@ -713,6 +716,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   string method = this_object()->wizard_method || "method=\"get\"";
 
 #ifdef USE_WIZARD_COOKIE
+  // FIXME: If this is enabled there may be trouble with the state
+  // getting mixed up between wizards when one wizard initiates
+  // another. The state should be extended with a wizard identifier
+  // then.
   string state_form = "";
   id->add_response_header("Set-Cookie",
 			  sprintf("WizardState=%s; path=/",
@@ -786,7 +793,72 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 }
 
 
+mapping|string wizard_cancel_exit (mapping state, string default_return_url,
+				   RequestID id)
+{
+  return http_redirect ((state->cancel_url && state->cancel_url[0]) ||
+			default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
+mapping|string wizard_done_exit (mapping state, string default_return_url,
+				 RequestID id)
+{
+  return http_redirect ((state->done_url && state->done_url[0]) ||
+			default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
+
+mapping(string:array) wizard_get_state (RequestID id)
+//! Decodes the wizard state and incorporates it into
+//! id->real_variables, letting existing variables override those from
+//! the wizard state. Returns the wizard state without overrides.
+{
+  mapping(string:array) s = id->misc->wizard_state;
+  if (s) return s;
+
+  string state_str;
+#ifdef USE_WIZARD_COOKIE
+  state_str = id->real_variables->_page && id->cookies->WizardState;
+#else
+  state_str = id->real_variables->_state && id->real_variables->_state[0];
+#endif
+  if (state_str)
+    s = decompress_state(state_str);
+  else {
+    s = ([]);
+    if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
+	id->referer && sizeof (id->referer)) {
+      // Define return_to_referrer to use the Referer to go back to
+      // the previous place after the wizard is done. This currently
+      // doesn't use a stack, so if we're coming here from another
+      // wizard return then we ignore the referrer so that the
+      // ordinary "cancel" url is used instead.
+      //
+      // Note that this only works with the assumption that the
+      // referring wizard (or other page) doesn't retain the _wiz_ret
+      // variable in later links.
+      string referrer = id->referer[0];
+      if (!has_value (referrer, "&_wiz_ret=") &&
+	  !has_value (referrer, "?_wiz_ret=")) {
+	if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
+	else referrer += "?_wiz_ret=";
+      }
+      s->cancel_url = s->done_url = ({referrer});
+    }
+  }
+
+  mapping(string:array) vars = id->real_variables;
+  foreach(s; string q; array var)
+    if (!vars[q])
+      vars[q] = var;
+
+  return id->misc->wizard_state = s;
+}
 
 mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
@@ -794,22 +866,10 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   int offset = 1;
   string wiz_name = "page_";
 
-#ifdef USE_WIZARD_COOKIE
-  mapping s = decompress_state(id->real_variables->_page
-			       && id->cookies->WizardState);
-#else
-  mapping s = decompress_state(id->real_variables->_state
-			       && id->real_variables->_state[0]);
-#endif
+  mapping(string:array) s = wizard_get_state (id);
 
   if(id->real_variables->cancel || id->real_variables["cancel.x"])
-     return http_redirect((s->cancel_url&&s->cancel_url[0])
-			  || cancel || id->not_query,
-			  @(id->conf?({id}):({})));
-
-  mapping å = id->real_variables;
-  foreach(indices(s), string q)
-     å[q] = å[q]||s[q];
+    return wizard_cancel_exit (s, cancel, id);
 
   //  Handle double posting of variables in select override widgets
   foreach(Array.uniq(id->real_variables->__select_override_vars || ({ }) ),
@@ -912,9 +972,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  res = c(id,@args);
 	}
 	if(res != -1)
-	  return (res
-		  || http_redirect(cancel || id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
 	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
   }
@@ -949,10 +1007,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			 "Probably infinite redirect loop in automaton.";
 
       if (v->_page == "cancel") {
-	string to =
-	  (s->cancel_url && s->cancel_url[0]) || cancel || id->not_query;
-	DEBUGMSG ("Wizard: Canceling with redirect to " + to + "\n");
-	return http_redirect(to, @(id->conf?({id}):({})));
+	DEBUGMSG ("Wizard: Canceling\n");
+	return wizard_cancel_exit (s, cancel, id);
       }
 
       if (!v->_page) v->_page = "done", oldpage = 0;
@@ -983,8 +1039,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  return "Internal error in wizard code: No wizard_done function.";
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	data = donefn (id, @args);
-	if (!data) return http_redirect(cancel||id->not_query,
-					@(id->conf?({id}):({})));
+	if (!data) return wizard_done_exit (s, cancel, id);
 	wiz_name = "done";
 	break;
       }
@@ -1032,9 +1087,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	mixed res = c(id,@args);
 	if(res != -1)
-	  return (res
-		  || http_redirect(cancel||id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
       }
       if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
       DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
@@ -1138,7 +1191,7 @@ string focused_wizard_menu;
 mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  
+
   //  Cannot clear wizard cache since it will trigger massive recompiles of
   //  wizards from inside SiteBuilder. It also breaks wizards which use
   //  persistent storage.

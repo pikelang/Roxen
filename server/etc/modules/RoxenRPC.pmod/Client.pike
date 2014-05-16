@@ -1,5 +1,5 @@
 /*
- * $Id: Client.pike,v 1.16 2008/05/12 13:31:04 mast Exp $
+ * $Id$
  */
 
 #define CHECK_IO_ERROR(FD, OP) do {					\

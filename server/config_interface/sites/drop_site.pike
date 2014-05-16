@@ -80,11 +80,28 @@ string|mapping parse( RequestID id )
 	
 	res += LOCALE(470,"If you do not want to delete this database, "
 		      "uncheck the checkmark in front of it");
-      else
-	res += LOCALE(471,"If you do not want to delete one or more of these "
-		      "databases, uncheck the checkmark in front of the ones"
-		      " you want to keep.");
-      res += "<ul>";
+      else {
+	res += "<p>" +
+	  LOCALE(471,"If you do not want to delete one or more of these "
+		 "databases, uncheck the checkmark in front of the ones"
+		 " you want to keep.") +
+	  #"</p>
+<script type='text/javascript'>
+  var check_all_toggle = 0;
+  function checkAll() {
+    var checkboxes = document.getElementById ('checkbox_list').
+      getElementsByTagName ('INPUT');
+    for (var i = 0; i < checkboxes.length; i++) {
+      checkboxes[i].checked = check_all_toggle;
+    }
+    check_all_toggle = !check_all_toggle;
+  }
+</script>
+<p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
+	  LOCALE(1065, "Uncheck/Check All") +
+	  "</gbutton></a></p>\n";
+      }
+      res += "<ul id='checkbox_list'>";
       int n;
       foreach( dead, string d )
       {
@@ -127,5 +144,5 @@ string|mapping parse( RequestID id )
   cf->stop();
   destruct( cf );
   
-  return Roxen.http_redirect( "", id );
+  return Roxen.http_redirect( "/sites/", id );
 }

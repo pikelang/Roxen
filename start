@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.4 2003/07/11 15:47:24 jonasw Exp $
+# $Id$
 
 # Can be set with '--config-dir=DIR'
 DIR=configurations

@@ -91,7 +91,7 @@ array(string|mixed) verify_set( mixed new_value )
 }
 
 void set_from_form( RequestID id )
-  //! Set this variable from the form variable in id->Variables,
+  //! Set this variable from the form variable in id->variables,
   //! if any are available. The default implementation simply sets
   //! the variable to the string in the form variables.
   //!

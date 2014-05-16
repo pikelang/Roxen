@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.710 2010/12/02 16:11:02 mast Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -215,6 +215,7 @@ mapping(RequestID:mapping) connection_get( )
 // It's nice to have the name when the rest of __INIT executes.
 string name = roxen->bootstrap_info->get();
 
+//! The hierarchal cache used for the HTTP protocol cache.
 class DataCache
 {
   protected typedef array(string|mapping(string:mixed))|string|
@@ -238,10 +239,11 @@ class DataCache
 
   // Heuristic to calculate the entry size. Besides the data itself,
   // we add the size of the key. Even though it's a shared string we
-  // can pretty much assume it has no other permanent refs. 128 is a
+  // can pretty much assume it has no other permanent refs. 1024 is a
   // constant penalty that accounts for the keypair in the mapping and
-  // that leaf entries are stored in arrays.
-#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 128)
+  // that leaf entries are stored in arrays and the metadata mapping.
+#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 1024)
+#define CALC_VARY_CB_SIZE(key) (sizeof (key) + 128)
 
   // Expire a single entry.
   protected void really_low_expire_entry(string key)
@@ -252,6 +254,11 @@ class DataCache
       if (e[1]->co_handle) {
 	remove_call_out(e[1]->co_handle);
       }
+      if (CacheKey cachekey = e[1]->key) {
+	destruct (cachekey);
+      }
+    } else if (!zero_type(e)) {
+      current_size -= CALC_VARY_CB_SIZE(key);
     }
   }
 
@@ -290,6 +297,8 @@ class DataCache
 	current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
 	m_delete(cache, key_prefix);
 	return;
+      } else if (!zero_type(val)) {
+	current_size -= CALC_VARY_CB_SIZE(key_prefix);
       }
       if (!val) {
 	return;
@@ -310,7 +319,7 @@ class DataCache
   }
 
   //! Clear ~1/10th of the cache.
-  protected void clear_some_cache()
+  void clear_some_cache()
   {
     // FIXME: Use an iterator to avoid indices() here.
     array(string) q = indices(cache);
@@ -322,7 +331,7 @@ class DataCache
 
     // The following code should be ~O(n * log(n)).
     sort(q);
-    for(int i = 0; i < sizeof(q)/10; i++) {
+    for(int i = 0; i < sizeof(q)/10 + 1; i++) {
       int r = random(sizeof(q));
       string key_prefix = q[r = random(sizeof(q))];
       if (!key_prefix) continue;
@@ -365,9 +374,13 @@ class DataCache
 			    (arrayp (old) ? "of size " + sizeof (old[0]) :
 			     sprintf ("%O", old)));
 	low_expire_entry(key);
+	old = UNDEFINED; // Ensure that current size is updated below.
 	SIMPLE_TRACE_LEAVE ("");
       }
       cache[key] = vary_cb;
+      if(!old) {
+	current_size += CALC_VARY_CB_SIZE(key);
+      }
 
       SIMPLE_TRACE_ENTER (this, "Registering vary cb %O", vary_cb);
 
@@ -393,6 +406,7 @@ class DataCache
 	key_frag = replace (key_frag, "\0", "\0\1");
       else key_frag = "";
       key += "\0\0" + key_frag;
+      entry_size += 2 + sizeof(key_frag);
     }
 
     array(string|mapping(string:mixed))|string|
@@ -604,6 +618,8 @@ int(0..1) http_compr_dynamic_reqs;
 Thread.Local gz_file_pool = Thread.Local();
 #endif
 
+int handler_queue_timeout;
+
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
 private mapping (int|string:string) log_format = ([]);
@@ -683,12 +699,7 @@ private void do_stop_all_modules (Thread.MutexKey stop_lock)
       STOP_MODULES (indices (p->provider_modules), "provider module");
     }
 
-  if (mixed err = catch {
-    if (object m = log_function && function_object (log_function)) {
-      destruct (m);
-      allmods[m] = 0;
-    }
-  }) report_error ("While stopping the logger: " + describe_backtrace (err));
+  end_logger();
 
   STOP_MODULES(indices (allmods), "unclassified module");
 #undef STOP_MODULES
@@ -711,7 +722,16 @@ void stop (void|int asynch)
 
     unregister_urls();
 
-    roxen.handle (do_stop_all_modules, lock);
+    if (roxen.handler_threads_on_hold())
+      // Run do_stop_all_modules synchronously if there are no handler
+      // threads running (typically during the RoxenTest_help self test).
+      do_stop_all_modules (lock);
+    else
+      // Seems meaningless to queue this in a handler thread and then
+      // just wait for it below if asynch isn't set - could just as
+      // well do the work in this thread then. But now isn't a good
+      // moment to mess around with it. /mast
+      roxen.handle (do_stop_all_modules, lock);
   }
 
   if (!asynch) stop_all_modules_mutex->lock (1);
@@ -906,8 +926,9 @@ protected mixed strip_fork_information(RequestID id)
     if (has_value(id->not_query, "..namedfork/") ||
 	has_suffix(id->not_query, "/rsrc") ||
 	has_value(lower_case(id->not_query), ".ds_store"))
-      //  Show 404 page
-      return error_file(id);
+      //  Skip elaborate error page since we get these e.g. for WebDAV
+      //  mounts in OS X Finder.
+      return Roxen.http_string_answer("No such file", "text/plain");
   }
   
   array a = id->not_query/"::";
@@ -1044,15 +1065,20 @@ array(function) filter_modules()
   return filter_module_cache;
 }
 
+void end_logger()
+{
+  if (mixed err = catch {
+      if (roxen.LogFile logger =
+	  log_function && function_object (log_function)) {
+	logger->close();
+      }
+    }) report_error ("While stopping the logger: " + describe_backtrace (err));
+  log_function = 0;
+}
 
 void init_log_file()
 {
-  if(log_function)
-  {
-    // Free the old one.
-    destruct(function_object(log_function));
-    log_function = 0;
-  }
+  end_logger();
   // Only try to open the log file if logging is enabled!!
   if(query("Log"))
   {
@@ -2739,9 +2765,10 @@ mapping error_file( RequestID id )
       //  The most popular 404 request ever? Skip the fancy error page.
       id->not_query == "/favicon.ico") {
     res = Roxen.http_string_answer("No such file", "text/plain");
+    res->error = 404;
   } else {
     id->root_id->misc->generate_file_not_found = 1;
-    string data = query("ZNoSuchFile");
+    string data = "<return code='404' />" + query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
     data = replace(data,({"$File", "$Me"}),
 		   ({"&page.virtfile;", "&roxen.server;"}));
@@ -2749,7 +2776,6 @@ mapping error_file( RequestID id )
     res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
     id->root_id->misc->generate_file_not_found = 0;
   }
-  res->error = 404;
   NOCACHE();
   return res;
 }
@@ -2763,11 +2789,10 @@ mapping auth_failed_file( RequestID id, string message )
 				 "<h2 align=center>Access Denied</h2>");
   id->root_id->misc->generate_auth_failed = 1;
   
-  string data = query("ZAuthFailed");
+  string data = "<return code='401' />" + query("ZAuthFailed");
   NOCACHE();
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
   id->root_id->misc->generate_auth_failed = 0;
-  res->error = 401;
   return res;
 }
 
@@ -2790,6 +2815,13 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
   else {
     Configuration oc = id->conf;
     id->not_query = fname;
+
+    // Make sure RXML defines don't survive <insert file/>.
+    // Fixes [bug 6631] where the return code for the outer
+    // RXML scope caused the <insert file/> to fail.
+    m_delete(id->misc, "defines");
+    m_delete(id->misc, "error_code");
+
     TRY_FIRST_MODULES (file, open_file (fname, mode, id,
 					internal_get, recurse_count + 1));
     fname = id->not_query;
@@ -3505,6 +3537,33 @@ int start(int num)
 					    "Number of queue runs longer than 15 seconds."),
 			     }),
 			   })
+			 }),
+			 ({
+			   UNDEFINED,
+			   SNMP.Counter(lambda()
+					{ return datacache->hits + datacache->misses; },
+			     "protCacheLookups",
+			     "Number of protocol cache lookups."),
+			   SNMP.Counter(lambda()
+					{ return datacache->hits; },
+			     "protCacheHits",
+			     "Number of protocol cache hits."),
+			   SNMP.Counter(lambda()
+					{ return datacache->misses; },
+			     "protCacheMisses",
+			     "Number of protocol cache misses."),
+			   SNMP.Gauge(lambda()
+				      { return sizeof(datacache->cache); },
+			     "protCacheEntries",
+			     "Number of protocol cache entries."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->max_size/1024; },
+			     "protCacheMaxSize",
+			     "Maximum size of protocol cache in KiB."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->current_size/1024; },
+			     "protCacheCurrSize",
+			     "Current size of protocol cache in KiB."),
 			 })
 		       }));
       SNMP.set_owner(mib, this_object());
@@ -3602,7 +3661,7 @@ void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
   if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
       module_post_callbacks[func]) {
     if (!mod_name)
-      sscanf (mod->module_local_id(), "%[^#]", mod_name);
+      sscanf (otomod[mod] || mod->module_local_id(), "%[^#]", mod_name);
     array(function(RoxenModule,mixed...:void)) cbs;
     if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
       func_cbs[mod_name] = (a -= ({0}));
@@ -3645,9 +3704,11 @@ void save(int|void all)
   {
     foreach(indices(modules[modname]->copies), int i)
     {
-      store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
-      if (mixed err = catch(modules[modname]->copies[i]->
-			    start(2, this_object(), 0)))
+      RoxenModule mod = modules[modname]->copies[i];
+      store(modname+"#"+i, mod->query(), 0, this);
+      if (mixed err = mod->start && catch {
+	  call_module_func_with_cbs (mod, "start", 2, this, 0);
+	})
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }
@@ -3725,7 +3786,7 @@ RoxenModule reload_module( string modname )
       nm = mi->instance( this_object(), 0, mod_copy);
       // If this is a faked module, let's call it a failure.
       if (nm->module_is_disabled)
-	report_notice (LOC_C(0, "Module is disabled") + "\n");
+	report_notice (LOC_C(1047, "Module is disabled") + "\n");
       else if( nm->not_a_module )
       {
 	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
@@ -3967,12 +4028,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " <i>trust levels</i> grants access to modules with higher"
 		   " <i>security levels</i>."
 		   "\n<p><h2>Definitions</h2><ul>"
-		   " <li>A requests initial Trust level is infinitely high.</li>"
+		   " <li>A requests initial trust level is infinitely high.</li>"
 		   " <li> A request will only be handled by a module if its"
 		   "     <i>trust level</i> is higher or equal to the"
 		   "     <i>security level</i> of the module.</li>"
 		   " <li> Each time the request is handled by a module the"
-		   "     <i>trust level</i> of the module will be set to the"
+		   "     <i>trust level</i> of the request will be set to the"
 		   "      lower of its <i>trust level</i> and the modules"
 	           "     <i>security level</i>, <i>unless</i> the security "
 	           "        level of the module is 0, which is a special "
@@ -3991,7 +4052,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " higher <i>security level</i> than the requests trust"
 		   " level.</p>"
 		   "\n<p>On the other hand, a request handled by the the"
-		   " \"Filsystem module\" could later be handled by the"
+		   " \"Filesystem module\" could later be handled by the"
 		   " \"CGI module\".</p>"));
 
       } else {
@@ -4017,6 +4078,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
+
+  if (me->not_a_module) nostart = 1;
 
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
@@ -4672,34 +4735,20 @@ the site carefully afterwards. A reload of the whole server
 configuration is required to propagate the change properly to all
 modules.</p>
 
-<p>Available compatibility levels:
-<table>
-<tr valign='top'><td>2.1&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.1.</td></tr>
-<tr valign='top'><td>2.2&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.2.</td></tr>
-<tr valign='top'><td>2.4&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen WebServer 2.4. This version is also
-  commonly known as 3.2 - the version number that applies to the
-  release of Roxen CMS which contains Roxen WebServer 2.4.</td></tr>
-<tr valign='top'><td>2.5&nbsp;&nbsp;</td>
-  <td>Corresponds to no released version. This compatibility level is
-  only used to turn on some optimizations that have compatibility
+<p>Compatibility level notes:</p>
+
+<ul>
+  <li>2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.</li>
+
+  <li>2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
-  the &lt;cache&gt; tag.</td></tr>
-<tr valign='top'><td>3.3&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 3.3.</td></tr>
-<tr valign='top'><td>3.4&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 3.4.</td></tr>
-<tr valign='top'><td>4.0&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 4.0.</td></tr>
-<tr valign='top'><td>4.5&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 4.5.</td></tr>
-<tr valign='top'><td>5.0&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 5.0.</td></tr>
-<tr valign='top'><td>5.1&nbsp;&nbsp;</td>
-  <td>Corresponds to Roxen 5.1.</td></tr>
-</table></p>")));
+  the &lt;cache&gt; tag.</li>
+
+  <li>There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.</li>
+</ul>")));
 
   set ("compat_level", roxen.roxen_ver);
   // Note to developers: This setting can be accessed through
@@ -4803,7 +4852,7 @@ hyphens ('-') occur in the specifier names.</p>
 
 <h3>Format specifiers for both access and event logging</h3>
 
-<table><tbody valign='top'>
+<table class='hilite-1stcol'><tbody valign='top'>
 <tr><td>\\n \\t \\r</td>
     <td>Insert a newline, tab or linefeed character, respectively.</td></tr>
 <tr><td>$char(int)</td>
@@ -4851,7 +4900,7 @@ hyphens ('-') occur in the specifier names.</p>
 
 <h3>Format specifiers for access logging</h3>
 
-<table><tbody valign='top'>
+<table class='hilite-1stcol'><tbody valign='top'>
 <tr><td>$host</td>
     <td>The remote host name, or ip number.</td></tr>
 <tr><td>$vhost</td>
@@ -4871,6 +4920,9 @@ hyphens ('-') occur in the specifier names.</p>
     <td>Full requested resource, including any query fields.</td></tr>
 <tr><td>$protocol</td>
     <td>The protocol used (normally HTTP/1.1).</td></tr>
+<tr><td>$scheme</td>
+    <td>The URL scheme (e.g. http or https) derived from the port handler
+        module.</td></tr>
 <tr><td>$response</td>
     <td>The response code sent.</td></tr>
 <tr><td>$bin-response</td>
@@ -4934,7 +4986,7 @@ hyphens ('-') occur in the specifier names.</p>
     <td>A comma separated list of words (containing no whitespace)
     that describes how the request got handled by various caches:
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>protcache</td>
 	<td>The page is served from the HTTP protocol cache.</td></tr>
     <tr><td>protstore</td>
@@ -4947,10 +4999,22 @@ hyphens ('-') occur in the specifier names.</p>
     <tr><td>refresh</td>
 	<td>This is the finishing of the background refresh request
 	for the entry in the HTTP protocol cache.</td></tr>
+    <tr><td>icachedraw</td>
+	<td>A server-generated image had to be rendered from scratch.</td></tr>
+    <tr><td>icacheram</td>
+	<td>A server-generated image was found in the RAM cache.</td></tr>
+    <tr><td>icachedisk</td>
+	<td>A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).</td></tr>
     <tr><td>pcoderam</td>
 	<td>A hit in the RXML p-code RAM cache.</td></tr>
     <tr><td>pcodedisk</td>
 	<td>A hit in the RXML p-code persistent cache.</td></tr>
+    <tr><td>pcodestore</td>
+	<td>P-code is added to or updated in the persistent cache.</td></tr>
+    <tr><td>pcodestorefailed</td>
+	<td>An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).</td></tr>
     <tr><td>cachetag</td>
 	<td>RXML was evaluated without any cache miss in any RXML
 	&lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
@@ -4966,7 +5030,7 @@ hyphens ('-') occur in the specifier names.</p>
     <td>A comma separated list of words (containing no whitespace)
     that describes how the page has been evaluated:
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>xslt</td>
 	<td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
@@ -4984,9 +5048,7 @@ hyphens ('-') occur in the specifier names.</p>
 <p>The known event logging facilities and modules are described
 below.</p>
 
-<dl>"
-#ifdef NEW_RAM_CACHE
-		 #"\n
+<dl>
 <dt>Facility: roxen</dt>
     <dd><p>This is logging for systems in the Roxen WebServer core.
     For logging that is not related to any specific configuration, the
@@ -4994,7 +5056,7 @@ below.</p>
 
     <p>The known events are:</p>
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>ram-cache-gc</td>
 	<td>Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
@@ -5003,9 +5065,8 @@ below.</p>
 	<td>Logged when the RAM cache has performed a rebias of the
 	priority queue values. Is a problem only if it starts to
 	happen too often.</td></tr>
-    </tbody></table></dd>"
-#endif
-		 #"\n
+    </tbody></table></dd>
+
 <dt>Facility: sbfs</dt>
     <dd><p>A SiteBuilder file system.</p>
 
@@ -5023,7 +5084,7 @@ below.</p>
 
     <p>These extra format specifiers are defined where applicable:</p>
 
-    <table><tbody valign='top'>
+    <table class='hilite-1stcol'><tbody valign='top'>
     <tr><td>$ac-userid</td>
 	<td>The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.</td></tr>
@@ -5056,7 +5117,6 @@ below.</p>
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
 	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
 	 DLOCALE(31, "The log file. "
-	 ""
 	 "A file name. Some substitutions will be done:"
 	 "<pre>"
 	 "%y    Year  (e.g. '1997')\n"
@@ -5234,7 +5294,7 @@ also set 'URLs'."));
   defvar("http_compression_enabled", 1,
 	 DLOCALE(1000, "Compression: Enable HTTP compression"),
 	 TYPE_FLAG,
-	 DLOCALE(1001, 
+	 DLOCALE(1001,
 #"Whether to enable HTTP protocol compression. Many types of text
 content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
 enabling HTTP compression may improve the visitors' perception of the
@@ -5268,14 +5328,15 @@ low."))->add_changed_callback(lambda(object v)
 	    "application/javascript",
 	    "application/x-javascript",
 	    "application/json",
-	    "application/xhtml+xml" }),
+	    "application/xhtml+xml",
+	    "image/svg+xml" }),
 	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
 	 DLOCALE(1003, "The MIME types for which to enable compression. The "
 		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
 		 "but globbing on the general form (such as "
-		 "\"maintype/*subtype\") is not allowed and such globs will "
-		 "be silently ignored."))
+		 "\"maintype/*subtype\" or \"maintype/sub*\") is not allowed "
+		 "and such globs will be silently ignored."))
     ->add_changed_callback(lambda(object v) 
 			   { set_mimetypes(v->query()); 
 			   });
@@ -5570,7 +5631,96 @@ low."))->add_changed_callback(lambda(object v)
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(420, "What to return when an authentication attempt failed."));
 
+  if (!retrieve ("EnabledModules", this)["config_filesystem#0"]) {
+    // Do not use a handler queue timeout of the administration
+    // interface. You most probably don't want to get a 503 in your
+    // face when you're trying to reconfigure an overloaded server...
+    defvar("503-message", #"<html>
+<head>
+  <title>503 - Server Too Busy</title>
+  <style>
+    .header { font-family:  arial;
+            font-size:      20px;
+            line-height:    160% }
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='50' rightmargin='0' topmargin='50' bottommargin='0'
+      style='margin: 0; padding: 0'>
 
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr><td height='50'></td></tr>
+  <tr>
+    <td width='100'></td>
+    <td>
+      <div class='header'>503 &mdash; Server Too Busy</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>
+        The server is currently too busy to serve your request. Please try again in a few moments.
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr valign='bottom' height='100%'>
+    <td></td>
+    <td>
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+   </td>
+   <td></td>
+ </tr>
+</table>
+
+</body>
+</html>",
+	   DLOCALE(1048, "Server too busy message"),
+	   TYPE_TEXT_FIELD|VAR_PUBLIC,
+	   DLOCALE(1049, "What to return if the server is too busy. See also "
+		   "\"Handler queue timeout\"."));
+
+    defvar("handler_queue_timeout", 30,
+	   DLOCALE(1050, "Handler queue timeout"),
+	   TYPE_INT,
+	   DLOCALE(1051, #"Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+\"Server too busy message\" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load."))
+      ->add_changed_callback(lambda(object v)
+			     { handler_queue_timeout = v->query(); });
+    handler_queue_timeout = query("handler_queue_timeout");
+  }
 
 #ifdef SNMP_AGENT
   // SNMP stuffs

@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2009, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.28 2009/11/17 10:03:42 mast Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.70 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -801,10 +801,9 @@ class CGIScript
     DWERR(sprintf("Options: %O\n", options));
 
 #ifdef __NT__
-    if(!(pid = Process.create_process( nt_opencommand(command, arguments),
- 				       options )))
+    if(!(pid = Process.Process( nt_opencommand(command, arguments), options )))
 #else
-    if(!(pid = Process.create_process( ({ command }) + arguments, options )))
+    if(!(pid = Process.Process( ({ command }) + arguments, options )))
 #endif /* __NT__ */
       error("Failed to create CGI process.\n");
     if(query("kill_call_out"))

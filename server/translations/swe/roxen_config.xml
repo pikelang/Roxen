@@ -14,6 +14,7 @@
 <file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
@@ -224,7 +225,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
     &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
@@ -258,7 +259,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 &lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
     &lt;td&gt;Resource identifier. For events, this is either a path to a
     file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
-    resource identifier (otherwise). It is '-' for events that doesn't
+    resource identifier (otherwise). It is '-' for events that don't
     act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
     &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
@@ -272,7 +273,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
     &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
@@ -355,7 +356,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the request got handled by various caches:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
 	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
@@ -368,10 +369,22 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
 	&lt;td&gt;This is the finishing of the background refresh request
 	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedraw&lt;/td&gt;
+	&lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icacheram&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedisk&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestore&lt;/td&gt;
+	&lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestorefailed&lt;/td&gt;
+	&lt;td&gt;An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
 	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
 	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
@@ -387,7 +400,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the page has been evaluated:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
 	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
@@ -406,7 +419,6 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 below.&lt;/p&gt;
 
 &lt;dl&gt;
-
 &lt;dt&gt;Facility: roxen&lt;/dt&gt;
     &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
     For logging that is not related to any specific configuration, the
@@ -414,7 +426,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;The known events are:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
 	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
@@ -442,7 +454,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
 	&lt;td&gt;The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
@@ -485,19 +497,20 @@ below.&lt;/p&gt;
 </str>
 
 <str id="31">
-<o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+<o>The log file. A file name. Some substitutions will be done:&lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
 %h    Hour  (e.g. '00')
 %H    Hostname
 &lt;/pre&gt;</o>
 <t>Filen som Roxen loggar i. 
-Du kan använda några kontrollkoder för att få flera loggfiler och automatisk loggrotation:
+Du kan använda följande kontrollkoder:
 &lt;pre&gt;
 %y    År     (t.ex. '1997')
 %m    Månad  (t.ex. '08')
 %d    Datum  (t.ex. '10')
 %h    Timme  (t.ex. '00')
+%H    Datornamn
 &lt;/pre&gt;</t>
 </str>
 
@@ -1164,7 +1177,7 @@ Roxen använda?</t>
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
 &lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Do not increase this over 20 unless you have a very good reason to do so.&lt;/p&gt;</o>
 <t>Antalet trådar som Roxen skall använda.
-&lt;p&gt;Observera att även om värdet sätts till ett så kan Roxen hantera flera requester med en select-loop-baserad implementation.
+&lt;p&gt;Observera att även om värdet sätts till ett så kan Roxen hantera flera förfrågningar med en select-loop-baserad implementation.
 &lt;i&gt;Detta är användbart om du har flera CPU:er i servern eller många långsamma NFS-accesser.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Ange inte mer än 20 om du inte har goda skäl att göra så.&lt;/p&gt;</t>
 </str>
 
@@ -1218,19 +1231,6 @@ värdet av omgivningsvariablerna LC_MESSAGES och LANG.</t>
 <t>Roxen har stöd för att starta om automatiskt då och då. Eftersom Roxen är en
 monolitisk icke-forkande server (en enda långlivad process) så tenderar
 processen att växa med tiden. Det beror främst på minnesfragmentation men kan ibland även orsakas av minnesläckor.</t>
-</str>
-
-<str id="170">
-<o>Cache: Memory Cache Garbage Collect Interval</o>
-<t>Cache: Minnescachens rensningsintervall</t>
-</str>
-
-<str id="171">
-<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remembering what supports flags matches what client.</o>
-<t>Hur många sekunder som ska gå mellan varje gång som
-allt gammalt innehåll i cachen städas bort. Minnescachen
-används till många olika saker som till exempel att komma
-ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="172">
@@ -1750,14 +1750,40 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="305">
-<new/>
 <o>The modules security level is used to determine if a  request should be handled by the module.
 &lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the request will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
-<t></t>
+&lt;p&gt;On the other hand, a request handled by the the "Filesystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
+<t>Modulens säkerhetsnivå bestämmer om en förfrågan skall hanteras av modulen.
+&lt;p&gt;
+  &lt;h2&gt;Säkerhetsnivå vs pålitlighetsnivå&lt;/h2&gt;
+  Varje modul har en valbar &lt;i&gt;säkerhetsnivå&lt;/i&gt;. Varje förfrågan tilldelas en pålitlighetsnivå. Vid högre &lt;i&gt;pålitlighetsnivå&lt;/i&gt; ges tillgång till moduler med högre &lt;i&gt;säkerhetsnivå&lt;/i&gt;.
+&lt;p&gt;
+  &lt;h2&gt;Definitioner&lt;/h2&gt;
+  &lt;ul&gt;
+    &lt;li&gt;En förfrågans initiala pålitlighetsnivå är oändligt hög.&lt;/li&gt;
+    &lt;li&gt; En förfrågan kommer bara hanteras av en modul om dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt; är högre eller lika med modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;.&lt;/li&gt;
+    &lt;li&gt; Varje gång en förfrågan hanteras av en modul sätts förfrågans &lt;i&gt;pålitlighetsnivå&lt;/i&gt; till det lägre av dess &lt;i&gt;pålitlighetsnivå&lt;/i&gt; och modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;, &lt;i&gt;undantaget&lt;/i&gt; om modulens säkerhetsnivå är 0 vilket är ett specialfall som betyder att ingen ändring sker.&lt;/li&gt;
+  &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;
+  &lt;h2&gt;Exempel&lt;/h2&gt;
+  Moduler:
+  &lt;ul&gt;
+    &lt;li&gt;  Användarfilsystem, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 1&lt;/li&gt;
+    &lt;li&gt;  Filsystemsmodul, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 3&lt;/li&gt;
+    &lt;li&gt;  CGI-modul, &lt;i&gt;säkerhetsnivå&lt;/i&gt; 2&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/p&gt;
+&lt;p&gt;
+  En förfrågan hanterad av "Användarfilsystem" tilldelas en &lt;i&gt;pålitlighetsnivå&lt;/i&gt; på ett efter den modulens &lt;i&gt;säkerhetsnivå&lt;/i&gt;.
+  Den förfrågan kan senare inte hanteras av "CGI-modul" eftersom den modulen har en &lt;i&gt;säkerhetsnivå&lt;/i&gt; som är högre än förfrågans pålitlighetsnivå.
+&lt;/p&gt;
+&lt;p&gt;
+  Å andra sidan kan en förfrågan som hanteras av "Filsystemsmodul" senare hanteras av "CGI-modul".
+&lt;/p&gt;
+</t>
 </str>
 
 <str id="306">
@@ -2192,7 +2218,7 @@ det värde som din dators slumptalsfunktion har räknat fram åt dig.</t>
 
 <str id="166">
 <o>This filesystem serves the administration interface</o>
-<t>Det här filsystemet tillhandahåller konfigurationsinterfacets sidor</t>
+<t>Det här filsystemet tillhandahåller administratörsgränssnittets sidor</t>
 </str>
 
 <str id="168">
@@ -2268,11 +2294,6 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 <t>Kör fråga</t>
 </str>
 
-<str id="380">
-<o>While running %s: %s</o>
-<t>Under tiden som %s kördes: %s</t>
-</str>
-
 <str id="382">
 <o>Failed to enable %s</o>
 <t>Misslyckades med att öppna %s</t>
@@ -2300,8 +2321,8 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
   &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
  
   &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
-  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+  &lt;dd&gt;Requires an authenticated user. If the user name 'any' is used, any valid user will be OK; if the user name 'ANY' is used, a valid user is preferred, but not required. Otherwise, one of the listed users is required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires an authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
  
 &lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
 &lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
@@ -2417,7 +2438,6 @@ konfigurationsgränssnittsanvändare</t>
 </str>
 
 <str id="386">
-<new/>
 <o>&lt;p&gt;The compatibility level is used by different modules to select the
 right behavior to remain compatible with earlier Roxen versions. When
 a server configuration is created, this variable is set to the current
@@ -2430,33 +2450,45 @@ the site carefully afterwards. A reload of the whole server
 configuration is required to propagate the change properly to all
 modules.&lt;/p&gt;
 
-&lt;p&gt;Available compatibility levels:
-&lt;table&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.4. This version is also
-  commonly known as 3.2 - the version number that applies to the
-  release of Roxen CMS which contains Roxen WebServer 2.4.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to no released version. This compatibility level is
-  only used to turn on some optimizations that have compatibility
+&lt;p&gt;Compatibility level notes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.&lt;/li&gt;
+
+  &lt;li&gt;2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
-  the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 3.3.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;3.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;5.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 5.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;&lt;/p&gt;</o>
-<t></t>
+  the &amp;lt;cache&amp;gt; tag.&lt;/li&gt;
+
+  &lt;li&gt;There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.&lt;/li&gt;
+&lt;/ul&gt;</o>
+<t>&lt;p&gt;Kompatibilitetsnivån används av olika moduler för att välja
+korrekt beteende för att vara kompatibla med äldre Roxen-versioner. När
+en serverkonfiguration skapas sätts denna variabel till aktuell version.
+Efter detta ändras den aldrig automatiskt för att säkerställa att
+serverkonfigurationer som flyttas från äldre Roxen-versioner ligger kvar
+på rätt nivå..&lt;/p&gt;
+
+&lt;p&gt;Variabeln kan ändras manuellt men det kräver att sajten testas
+noggrant efteråt. Hela serverkonfigurationen behöver laddas om vid en
+ändring så att alla moduler ser det nya värdet.&lt;/p&gt;
+
+&lt;p&gt;Observationer om kompatibilitetsnivån:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2.4 gäller även versionen som gick under namnet 3.2. Det var en
+  release av Roxen CMS som innehöll Roxen WebServer 2.4.&lt;/li&gt;
+
+  &lt;li&gt;2.5 motsvarar ingen släppt version. Denna kompatibilitetsnivå
+  används endast för att aktivera några optimeringar som var inkompatibla
+  med 2.4, främst optimeringar av "cache static"-taggar inuti
+  &amp;lt;cache&amp;gt;-taggen.&lt;/li&gt;
+
+  &lt;li&gt;Det finns inga kompatibilitetsskillnader mellan 5.0 och 5.1 så
+  dessa två kompatibilitetsnivåer kan användas likvärdigt.&lt;/li&gt;
+&lt;/ul&gt;</t>
 </str>
 
 <str id="387">
@@ -2480,9 +2512,8 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="396">
-<new/>
 <o>Pike Tutorial</o>
-<t></t>
+<t>Pike-handledning</t>
 </str>
 
 <str id="397">
@@ -2666,13 +2697,21 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="442">
-<o>The name of the database. To make it easy on your users, use all lowercaps characters, and avoid 'odd' characters </o>
-<t>Namnet på databasen. Använd helst små bokstäver och undvik 'konstiga' tecken </t>
+<o>The name of the database. To make it easy on your users, please use
+all lowercase characters, and avoid 'odd' characters.</o>
+<t>Namnet på databasen. Använd helst små bokstäver och undvik 'konstiga' tecken.</t>
 </str>
 
 <str id="443">
-<o>The database type. Internal means that it will be created in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
-<t>Databastyp. Intern innebär att den skapas i Roxens MySQL-databas och dess rättigheter hanteras automatiskt av Roxen. Extern innebär att den lagras i en annan databas.</t>
+<o>The database type. &lt;i&gt;Internal&lt;/i&gt; means that it is created in the
+local Roxen MySQL server, or some other MySQL server specified in the
+URL setting of the chosen group. The permissions of the database are
+manged by Roxen. &lt;i&gt;External&lt;/i&gt; means that the database resides in
+another server, which can be another MySQL instance or something else.</o>
+<t>Databastyp. &lt;i&gt;Intern&lt;/i&gt; innebär att den skapas i Roxens interna MySQL-server
+eller i någon MySQL-server som anges i URL-inställningen för den valda gruppen. Databasens
+rättigheter hanteras automatiskt av Roxen. &lt;i&gt;Extern&lt;/i&gt; innebär att databasen
+ligger i en annan server, vilket innebär en annan MySQL-instans eller något annat.</t>
 </str>
 
 <str id="444">
@@ -2681,13 +2720,17 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="446">
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen</o>
-<t>Denna URL används endast för &lt;/i&gt;Extern&lt;i&gt; databas och har ingen betydelse för databaser internt i Roxen</t>
+<o>The URL to the database. It is only used for &lt;i&gt;external&lt;/i&gt;
+databases.</o>
+<t>URL:en för databasen. Den används endast för &lt;i&gt;externa&lt;/i&gt; databaser.</t>
 </str>
 
 <str id="447">
-<o>This group is used to group the databses. For external databases, the group can also be used to select which MySQL server the database should be created in</o>
-<t>Denna grupp används för att gruppera databaser. För externa databaser kan gruppen också nyttjas för att styra vilken MySQL-server som databasen skapas i</t>
+<o>The group to put the database in. For &lt;i&gt;internal&lt;/i&gt; databases, the
+URL setting in the group also specifies which MySQL server the
+database is created in.</o>
+<t>En grupp som databasen placeras i. För &lt;i&gt;interna&lt;/i&gt; databaser styr
+gruppens URL också vilken MySQL-server som databasen skapas i.</t>
 </str>
 
 <str id="448">
@@ -2706,21 +2749,20 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="451">
-<o>The groups are used mainly to group the databases in the
-Administration interface, but also to indicate the default MySQL server
-external databases will be created in.
+<o>&lt;p&gt;The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL
+server external databases will be created in.&lt;/p&gt;
 
-&lt;p&gt; If a group has a URL set, it will be used to select the database
-server in which the database will be created. Please note that this
-server must be a MySQL server, nothing else will work.
-</o>
-<t>Grupperna används främst för att gruppera databaserna i
+&lt;p&gt;If a group has a URL set, it will be used to select the database
+server in which the database will be created. Please note that it
+must be a MySQL server.&lt;/p&gt;</o>
+<t>&lt;p&gt;Grupperna används främst för att gruppera databaserna i
 administrationsgränssnittet men är också ett förval för var externa
-MySQL-databaser skall skapas.
+MySQL-databaser skall skapas.&lt;/p&gt;
 
-&lt;p&gt; Om en grupp ha en URL angiven kommer den styra vilken
+&lt;p&gt; Om en grupp har en URL angiven kommer den styra vilken
 databasserver som databasen skapas i. Observera att detta endast fungerar
-med en MySQL-server.
+med en MySQL-server.&lt;/p&gt;
 </t>
 </str>
 
@@ -2730,18 +2772,27 @@ med en MySQL-server.
 </str>
 
 <str id="453">
-<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, a ID will be selected automatically.</o>
-<t>Identifieraren för gruppen. Den används internt i Roxen och måste vara unik. Om du lämnar den som automatisk kommer ett ID tilldelas automatiskt.</t>
+<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, an identifier is selected automatically.</o>
+<t>Identifieraren för gruppen. Den används internt i Roxen och måste vara unik. Om du lämnar den som automatisk kommer en identifierare tilldelas automatiskt.</t>
 </str>
 
 <str id="454">
-<o>The name of the database group. This is what is shown in the configuration interface</o>
-<t>Namnet på databasgruppen. Det kommer vara synligt i konfigurationsgränssnittet</t>
+<o>The name of the database group. This is what is shown in the configuration interface.</o>
+<t>Namnet på databasgruppen. Det kommer vara synligt i konfigurationsgränssnittet.</t>
 </str>
 
 <str id="455">
-<o>This URL is only used when &lt;/i&gt;Internal&lt;i&gt; databases is created in this group, and it specified which MySQL server the datbase should be created in. As an example, if you want all databases created in the group to end up in the MySQL running on the host &lt;/i&gt;wyrm&lt;i&gt;, using the account with the username &lt;/i&gt;foo&lt;i&gt; and password &lt;/i&gt;bar&lt;i&gt;, set this URL to &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</o>
-<t>Denna URL används endast när &lt;/i&gt;Intern&lt;i&gt; databas skapas i denna grupp. Den anger vilken MySQL-server databasen skall skapas i. Till exempel, om du önskar att alla databaser skapade i denna grupp skall lagras i MySQL-servern som kör på datorn &lt;/i&gt;wyrm&lt;i&gt; med användarnamnet &lt;/i&gt;foo&lt;i&gt; och lösenordet &lt;/i&gt;bar&lt;i&gt;, ange URL:en &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</t>
+<o>This URL is used for &lt;i&gt;internal&lt;/i&gt; databases created in this group,
+and it specifies which MySQL server they should be created in. As an
+example, if you want all databases created in the group to end up in
+the MySQL running on the host &lt;i&gt;wyrm&lt;/i&gt;, using the account with
+the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set this URL to
+&lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</o>
+<t>Denna URL används för &lt;i&gt;interna&lt;/i&gt; databaser skapade i denna grupp och anger
+vilken MySQL-server de skall skapas i. Till exempel, om du önskar att alla databaser skapade i
+gruppen skall lagras i MySQL:en som kör på datorn &lt;i&gt;wyrm&lt;/i&gt; med användarnamnet
+&lt;i&gt;foo&lt;/i&gt; och lösenordet &lt;i&gt;bar&lt;/i&gt;, ange URL:en
+&lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</t>
 </str>
 
 <str id="456">
@@ -3132,33 +3183,28 @@ med en MySQL-server.
 </str>
 
 <str id="514">
-<new/>
 <o>Web Developer</o>
-<t></t>
+<t>Webbutvecklare</t>
 </str>
 
 <str id="515">
-<new/>
 <o>System Developer (Pike)</o>
-<t></t>
+<t>Systemutvecklare (Pike)</t>
 </str>
 
 <str id="516">
-<new/>
 <o>Administrator</o>
-<t></t>
+<t>Administratör</t>
 </str>
 
 <str id="517">
-<new/>
 <o>Forms And Response Module</o>
-<t></t>
+<t>Forms and Response-manualen</t>
 </str>
 
 <str id="519">
-<new/>
 <o>Tutorials</o>
-<t></t>
+<t>Handledningar</t>
 </str>
 
 <str id="520">
@@ -3197,27 +3243,23 @@ med en MySQL-server.
 </str>
 
 <str id="390">
-<new/>
 <o>System Developer (Java)</o>
-<t></t>
+<t>Systemutvecklare (Java)</t>
 </str>
 
 <str id="523">
-<new/>
 <o>Forum Module</o>
-<t></t>
+<t>Forum-modulen</t>
 </str>
 
 <str id="524">
-<new/>
 <o>Content Editor</o>
-<t></t>
+<t>Content Editor</t>
 </str>
 
 <str id="458">
-<new/>
 <o>FAQ</o>
-<t></t>
+<t>FAQ</t>
 </str>
 
 <str id="513">
@@ -3232,7 +3274,7 @@ med en MySQL-server.
 
 <str id="526">
 <o>requests</o>
-<t>requester</t>
+<t>förfrågningar</t>
 </str>
 
 <str id="527">
@@ -3313,13 +3355,19 @@ The file is searched for in parent directories in the same manner as the no such
 
 <str id="258">
 <o>Logging: Compress log file</o>
-<t>Loggning: Komprimera loggfiler</t>
+<t>Loggning: Komprimera loggfil</t>
 </str>
 
 <str id="259">
-<new/>
 <o>Path to a program to compress log files, e.g. &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; or &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;. &lt;b&gt;Note&amp;nbsp;1:&lt;/b&gt; The active log file is never compressed. Log rotation needs to be used using the "Log file" filename substitutions (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;). &lt;b&gt;Note&amp;nbsp;2:&lt;/b&gt; Compression is limited to scanning files with filename substitutions within a fixed directory (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;, not &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</o>
-<t></t>
+<t>Sökväg till ett program som komprimerar loggfiler, till exempel
+&lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; eller &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;.
+&lt;b&gt;Observera&amp;nbsp;1:&lt;/b&gt; Den aktiva loggfilen komprimeras aldrig.
+Loggrotation måste vara påslaget och använda "Loggfil"-kontrollkoder
+(t.ex. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;).
+&lt;b&gt;Observera&amp;nbsp;2:&lt;/b&gt; Komprimering söker endast efter filnamn
+med kontrollkoder inom en specifik katalog (t.ex. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;,
+ej &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</t>
 </str>
 
 <str id="532">
@@ -3338,7 +3386,6 @@ The file is searched for in parent directories in the same manner as the no such
 </str>
 
 <str id="535">
-<new/>
 <o>&lt;p&gt;This option can be used to produce dumps of all the threads in the
 debug log in situations where the Administration Interface doesn't
 respond.&lt;/p&gt;
@@ -3358,7 +3405,24 @@ environments; there you can just send a SIGQUIT signal to the pike
 process to get a thread dump.&lt;/p&gt;
 
 &lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
-<t></t>
+<t>&lt;p&gt;Detta tillval kan nyttjas för att skapa dumpar av alla trådar i
+debugloggen i situationer så administratörsgränssnittet inte svarar.&lt;/p&gt;
+
+&lt;p&gt;Det fungerar genom att söka efter en fil namngiven som
+"&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt;.dump_threads" i samma
+katalog som debugloggen.
+&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt; är namnet på serverns konfiguration, d.v.s.
+samma som grundnamnet på loggfilen (vanligtvis "default"). Om denna fil existerar skapas en tråddump och sedan
+raderas filen.
+
+Om en fil namngiven på formen "&lt;i&gt;&amp;lt;konfigurationsnamn&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;"
+existerar, där &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt; är ett heltal, kommer &lt;i&gt;n&lt;/i&gt; st tråddumpar skapas med en minuts
+mellanrum.&lt;/p&gt;
+
+&lt;p&gt;Observera att denna metod normalt sett inte är nödvändig i Unix-lika miljöer; där kan du helt enkelt
+skicka signalen SIGQUIT till pike-processen för att generera en tråddump.&lt;/p&gt;
+
+&lt;p&gt;Vid aktivering skapas en dedikerad tråd.&lt;/p&gt;</t>
 </str>
 
 <str id="536">
@@ -3444,13 +3508,11 @@ process to get a thread dump.&lt;/p&gt;
 </str>
 
 <str id="1000">
-<new/>
 <o>Compression: Enable HTTP compression</o>
-<t></t>
+<t>Komprimering: Aktivera HTTP-komprimering</t>
 </str>
 
 <str id="1001">
-<new/>
 <o>Whether to enable HTTP protocol compression. Many types of text
 content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
 enabling HTTP compression may improve the visitors' perception of the
@@ -3459,79 +3521,76 @@ power and bandwidth. Requests that end up in the protocol cache will
 be served in the compressed form directly from the protocol cache, so
 for such requests the processing power overhead can be held relatively
 low.</o>
-<t></t>
+<t>Bestämmer om HTTP-komprimering skall användas. Många sorters textinnehåll
+(HTML, CSS, JavaScript o.s.v.) kan komprimeras mycket så en aktivering kan
+förbättra besökarnas upplevda sajtprestanda. Det blir dock en kompromiss
+mellan serverns processorkapacitet och bandbredd. Förfrågningar som får träff
+i protokollcachen kommer besvaras i komprimerad form direkt från denna cache;
+i dessa fall kommer processorbelastningen bli förhållandevis låg.</t>
 </str>
 
 <str id="1002">
-<new/>
 <o>Compression: Enabled MIME-types</o>
-<t></t>
+<t>Komprimering: MIME-typer för aktivering</t>
 </str>
 
 <str id="1003">
-<new/>
 <o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype") is not allowed and such globs will be silently ignored.</o>
-<t></t>
+<t>De MIME-typer för vilka komprimering slås på. Tillåtna varianter är "huvudtyp/*" och "huvudtyp/undertyp"
+medan allmänna glob-uttryck (exempelvis "huvudtyp/*undertyp") är otillåtna och ignoreras utan förvarning.</t>
 </str>
 
 <str id="1004">
-<new/>
 <o>Compression: Minimum content size</o>
-<t></t>
+<t>Komprimering: Minsta innehållsstorlek</t>
 </str>
 
 <str id="1005">
-<new/>
 <o>The minimum file size for which to enable compression. (It might not be worth it to compress a request if it can fit into a single TCP/IP packet anyways.)</o>
-<t></t>
+<t>Minsta storlek där komprimering används. (Det kan vara bortkastat arbete att komprimera ett svar om det ändå får plats i ett enstaka TCP/IP-paket.)</t>
 </str>
 
 <str id="1006">
-<new/>
 <o>Compression: Maximum content size</o>
-<t></t>
+<t>Komprimering: Största innehållsstorlek</t>
 </str>
 
 <str id="1007">
-<new/>
 <o>The maximum file size for which to enable compression. Note that the general protocol cache entry size limit applies, so if the compression of dynamic requests is disabled, files larger than the protocol cache maximum file size setting will never be served compressed regardless of this setting.</o>
-<t></t>
+<t>Största storlek där komprimering används. Observera att protokollcachens ordinarie storleksbegränsning också spelar in; om komprimering av dynamiska förfrågningar är avstängd kommer filer större än protokollcachens maximala filstorleksvärde aldrig att levereras i komprimerad form oavsett denna inställning.</t>
 </str>
 
 <str id="1008">
-<new/>
 <o>Compression: Compression level</o>
-<t></t>
+<t>Komprimering: Komprimeringsgrad</t>
 </str>
 
 <str id="1009">
-<new/>
 <o>The compression level to use (integer between 1 and 9). Higher number means more compression at the cost of processing power and vice versa. You may need to restart the server for this setting to take effect.</o>
-<t></t>
+<t>Önskad komprimeringsgrad (heltal mellan 1 och 9). Ett högre värde ger bättre komprimering till priset av ökad processorbelastning och vice versa. Du kan behöva starta om servern för att ändringar skall slå igenom.</t>
 </str>
 
 <str id="1010">
-<new/>
 <o>Compression: Compress dynamic requests</o>
-<t></t>
+<t>Komprimeringsgrad: Komprimera dynamiska förfrågningar</t>
 </str>
 
 <str id="1011">
-<new/>
 <o>If enabled, even requests that aren't cacheable in the protocol cache will be compressed. If the site has many lightweight requests that are not protocol cacheable, the processing overhead may become relatively large with this setting turned on.</o>
-<t></t>
+<t>Om påslagen så kommer även förfrågningar som inte placeras i protokollcachen
+att komprimeras. Om sajten har många enkla förfrågningar som inte passar ihop med
+protokollcachen kommer processorbelastningen att öka förhållandevis mycket när
+denna inställning är på.</t>
 </str>
 
 <str id="1012">
-<new/>
 <o>SNMP sub-MIB</o>
-<t></t>
+<t>SNMP sub-MIB</t>
 </str>
 
 <str id="1013">
-<new/>
 <o>MIB suffix to 1.3.6.1.4.1.8614.1.1.2 identifying this site.</o>
-<t></t>
+<t>MIB-suffix till 1.3.6.1.4.1.8614.1.1.2 som identifierar denna sajt.</t>
 </str>
 
 <str id="1014">
@@ -3540,18 +3599,20 @@ low.</o>
 </str>
 
 <str id="1015">
-<new/>
 <o>Check MySQL tables on server start, and automatically repair if necessary. &lt;b&gt;Fast&lt;/b&gt; checks only tables that haven't been closed properly. &lt;b&gt;Normal&lt;/b&gt; checks for general errors. &lt;b&gt;Medium&lt;/b&gt; catches 99.99 % of all errors. Should be good enough for most cases. &lt;b&gt;Extended&lt;/b&gt; checks the tables VERY throughly.  Only use this in extreme cases as myisamchk should normally be able to find out if the table is OK even without this switch.</o>
-<t></t>
+<t>Kontrollerar MySQL-tabeller vid serverstart och reparerar dem automatiskt vid behov. 
+&lt;b&gt;Fast&lt;/b&gt; kontrollerar endast tabeller som inte stängts korrekt.
+&lt;b&gt;Normal&lt;/b&gt; kontrollerar allmänna fel.
+&lt;b&gt;Medium&lt;/b&gt; fångar 99.99 % av alla fel vilket skall räcka i normalfall.
+&lt;b&gt;Extended&lt;/b&gt; kontrollerar tabellerna VÄLDIGT noga. Använd endast i undantagsfall eftersom myisamchk förväntas avgöra om tabellen är OK även utan detta val.</t>
 </str>
 
 <str id="1016">
 <o>Logging: Dump threads for slow requests</o>
-<t>Loggning: Dumpa trådar vid långsamma requester</t>
+<t>Loggning: Dumpa trådar vid långsamma förfrågningar</t>
 </str>
 
 <str id="1017">
-<new/>
 <o>&lt;p&gt;This enables a monitor that dumps all the threads in the debug log
 whenever any request, background job or the backend thread has been
 running for more than a set number of seconds, which is configured
@@ -3572,26 +3633,44 @@ monitor to be disabled from the start by adding the define
 or in the DEFINES environment variable).&lt;/p&gt;
 
 &lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
-<t></t>
+<t>&lt;o&gt;&lt;p&gt;Detta aktiverar intern övervakning som dumpar alla trådar i
+debugloggen när någon förfrågan, bakgrundsjobb eller backend-tråden har
+kört i mer än det antal sekunder som anges i inställningarna "Timeout
+vid långsamma förfrågningar" och "Timeout vid långsam backend".&lt;/p&gt;
+
+&lt;p&gt;Denna inställning är en räknare: Ett positivt värde avbryter
+övervakningen efter att detta antal tråddumpar har skett, -1 aktiverar
+övervakningen permanent och noll stänger av den. Positiva värden är inte
+permanenta utan nollställs när servern startar om.&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Varning:&lt;/b&gt; Om du anger en för kort timeout i
+kombination med en hög eller obefintlig gräns kan debugloggen fyllas upp
+mycket snabbt och servern bli väldigt långsam på grund av loggningen.
+Om det sker och det är svårt att återställa inställningarna kan du tvinga
+bort övervakningen vid uppstart genom att ge startflaggan "NO_SLOW_REQ_BT"
+(d.v.s. lägg till "-DNO_SLOW_REQ_BT" till startscriptet eller i
+miljövariabeln DEFINES).&lt;/p&gt;
+
+&lt;p&gt;Vid aktivering skapas en dedikerad tråd.&lt;/p&gt;</t>
 </str>
 
 <str id="1018">
-<new/>
 <o>Feature disabled by NO_SLOW_REQ_BT define.</o>
-<t></t>
+<t>Funktionen avstängd via startflaggan NO_SLOW_REQ_BT.</t>
 </str>
 
 <str id="1019">
 <o>Logging: Slow request timeout</o>
-<t>Loggning: Timeout vid långsamma requester</t>
+<t>Loggning: Timeout vid långsamma förfrågningar</t>
 </str>
 
 <str id="1020">
-<new/>
 <o>&lt;p&gt;The timeout in seconds for requests or background jobs to trig a
 thread dump. Zero disables monitoring of those. See the "Dump threads
 for slow requests" setting for details.&lt;/p&gt;</o>
-<t></t>
+<t>&lt;p&gt;Timeout i sekunder vid förfrågningar och bakgrundsjobb innan en
+tråddump sker. Noll stänger av övervakningen. Se "Dumpa trådar vid
+långsamma förfrågningar" för mer information.&lt;/p&gt;</t>
 </str>
 
 <str id="1021">
@@ -3600,7 +3679,6 @@ for slow requests" setting for details.&lt;/p&gt;</o>
 </str>
 
 <str id="1022">
-<new/>
 <o>&lt;p&gt;The timeout in seconds for the backend thread to trig a thread
 dump. Zero disables monitoring of it. See the "Dump threads for slow
 requests" setting for details.&lt;/p&gt;
@@ -3614,7 +3692,18 @@ small.&lt;/p&gt;
 &lt;p&gt;Note that a good value for this is very dependent on hardware. The
 default setting here is conservative and probably should be lowered to
 be of real use.&lt;/p&gt;</o>
-<t></t>
+<t>&lt;p&gt;Timeout i sekunder för backend-tråden innan en tråddump sker.
+Noll stänger av övervakningen. Se "Dumpa trådar vid långsamma förfrågningar"
+för mer information.&lt;/p&gt;
+
+&lt;p&gt;Backend-tråden är en speciell tråd som hanterar huvuddelen av I/O
+och fördelar inkommande förfrågningar. Den bör aldrig bli upptagen i längre
+perioder eftersom servern då i praktiken blir oåtkomlig. Av den anledningen
+bör denna timeout vara låg.&lt;/p&gt;
+
+&lt;p&gt;Observera att vad som är ett bra timeout-värde i högsta grad beror
+på hårdvaran. Standardvärdet är konservativt satt och behöver sannolikt
+sänkas vid riktig användning.&lt;/p&gt;</t>
 </str>
 
 <str id="1023">
@@ -3638,13 +3727,16 @@ be of real use.&lt;/p&gt;</o>
 </str>
 
 <str id="1042">
-<new/>
 <o>
 	    &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
 	    This might take a long time to complete.&lt;br/&gt;
 	    The amount of time this takes depends on how large the tables are.&lt;br/&gt;
 	  </o>
-<t></t>
+<t>
+	    &lt;b&gt;Varning!&lt;/b&gt;&lt;br /&gt;
+	    Detta kan ta lång tid att slutföra.&lt;br/&gt;
+	    Tidsåtgången beror på hur stora tabellerna är.&lt;br/&gt;
+</t>
 </str>
 
 <str id="1026">
@@ -3787,4 +3879,121 @@ skräpsamling är inte nödvändig för att begränsa utrymmet.&lt;/p&gt;
 &lt;p&gt;Om denna skräpsamling sker för sällan kommer vissa RAM-cachar
 innehålla många ogiltiga poster vilket tränger undan giltiga poster. För
 täta intervall kan öka belastningen på servern i onödan.&lt;/p&gt;
+</t>
+</str>
+
+<str id="1047">
+<o>Module is disabled</o>
+<t>Modulen är avstängd</t>
+</str>
+
+<str id="1048">
+<o>Server too busy message</o>
+<t>Meddelande när servern är upptagen</t>
+</str>
+
+<str id="1049">
+<o>What to return if the server is too busy. See also "Handler queue timeout".</o>
+<t>Svar som skickas när servern är upptagen. Se även "Tidsgräns för hanteringskön".</t>
+</str>
+
+<str id="1050">
+<o>Handler queue timeout</o>
+<t>Tidsgräns för hanteringskön</t>
+</str>
+
+<str id="1051">
+<o>Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+"Server too busy message" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load.</o>
+<t>Förfrågningar som har väntat detta antal sekunder i hanteringskön kommer
+ej att behandlas. Istället skickas felkod 503 tillsammas med "Meddelande när
+servern är upptagen" till klienten. Detta kan hjälpa servern att reducera
+kölängden efter en belastningstopp.</t>
+</str>
+
+<str id="1052">
+<o>Proxy: Use proxy (experimental)</o>
+<t>Proxy: Använd proxy (experimentell)</t>
+</str>
+
+<str id="1053">
+<o>Use proxy for outgoing requests. E.g. when browsing external web sites through the Linkbrowser or when Insert cached-href fetches data from an external location.</o>
+<t>Använd en proxy för utgående förfrågningar. Exempelvis när man navigerar till externa webbsajter med Länkbrowsern eller när Insert cached-href hämtar data från
+en extern källa.</t>
+</str>
+
+<str id="1054">
+<o>Proxy: Proxy URL</o>
+<t>Proxy: Proxy-URL</t>
+</str>
+
+<str id="1055">
+<o>The URL of the proxy to use for outgoing requests.</o>
+<t>URL:en för proxyn för utgående förfrågningar.</t>
+</str>
+
+<str id="1056">
+<o>Proxy: Proxy username</o>
+<t>Proxy: Proxyns användarnamn</t>
+</str>
+
+<str id="1057">
+<o>Username for proxy authorization.</o>
+<t>Användarnamn för att autenticera mot proxyn.</t>
+</str>
+
+<str id="1058">
+<o>Proxy: Proxy password</o>
+<t>Proxy: Proxyns lösenord</t>
+</str>
+
+<str id="1059">
+<o>Password for proxy authorization.</o>
+<t>Lösenord för att autenticera mot proxyn.</t>
+</str>
+
+<str id="1060">
+<o>System load</o>
+<t>Systembelastning</t>
+</str>
+
+<str id="1061">
+<o>The directory the backup will be saved in. If you chose auto, Roxen
+will generate a directory name that includes the database name and
+today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
+<t>Katalogen som backupen lagras i. Om du väljer auto kommer Roxen
+att skapa ett katalognamn som inkluderar databasens namn och dagens
+datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
+</str>
+
+<str id="1062">
+<o>Error running query %d: %s</o>
+<t>Ett fel inträffade vid fråga %d: %s</t>
+</str>
+
+<str id="1063">
+<o>Error connecting to database: </o>
+<t>Ett fel inträffade vid anslutning mot databas: </t>
+</str>
+
+<str id="1064">
+<o>Tip: Put '--' on a line to ignore everything below it.</o>
+<t>Tips: Skriv '--' på en egen rad för att ignorera alla följande rader.</t>
+</str>
+
+<str id="1065">
+<o>Uncheck/Check All</o>
+<t>Välj ingen/alla</t>
+</str>
+
+<str id="1066">
+<o>SNMP status</o>
+<t>SNMP-status</t>
+</str>
+
+<str id="1067">
+<o>Global SNMP server statistics</o>
+<t>Global SNMP-serverstatistik</t>
 </str>

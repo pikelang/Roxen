@@ -1,5 +1,6 @@
-#charset iso-8859-5
-constant required_charset = "iso-8859-5";
+/*  -*- coding: koi8-r -*- */
+#charset koi8-r
+constant required_charset = "koi8-r";
 /* Bugs by: Per, jhs */
 /*
  * name = "Russian language plugin ";
@@ -8,15 +9,13 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.12 2009/03/23 19:16:56 grubba Exp $";
-constant _id = ({ "ru", "russian", "юЦААзьы" });
+constant cvs_version = "$Id$";
+constant _id = ({ "ru", "russian", "русский" });
 constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
-#define error(x) throw( ({ x, backtrace() }) )
-
 constant months = ({
-  "январь", "фебраль", "март", "апрель", "май",
-  "июнь", "июль", "августь", "сентябрь", "октябь",
+  "январь", "февраль", "март", "апрель", "май",
+  "июнь", "июль", "август", "сентябрь", "октябрь",
   "ноябрь", "декабрь" });
 
 constant days = ({
@@ -26,6 +25,24 @@ constant days = ({
 string ordered(int i)
 {
   return (string) i + "-е";
+}
+
+string numbered_month(int m)
+{
+  string month = months[m-1];
+  switch(month[-1]) {
+  case 'ь':
+  case 'й':
+    return month[..sizeof(month)-2] + "я";
+  case 'т':
+    return month + "а";
+  }
+  error("Invalid month: %O\n", month);
+}
+
+string short_month(int m)
+{
+  return numbered_month(m)[..2];
 }
 
 string date(int timestamp, mapping m)
@@ -49,16 +66,16 @@ string date(int timestamp, mapping m)
     if(t1["year"] != t2["year"])
       return month(t1["mon"]+1) + " " + (t1["year"]+1900);
     else
-      return "" + t1["mday"] + " " + month(t1["mon"]+1);
+      return "" + t1["mday"] + " " + numbered_month(t1["mon"]+1);
   }
   if(m["full"])
     return sprintf("%s, %s %s %d",
 		   ctime(timestamp)[11..15],
 		   ordered(t1["mday"]),
-		   month(t1["mon"]+1), t1["year"]+1900);
+		   numbered_month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
     return sprintf("%s %s %d", ordered(t1["mday"]),
-		   month(t1["mon"]+1), t1["year"]+1900);
+		   numbered_month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
     return ctime(timestamp)[11..15];

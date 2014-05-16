@@ -11,7 +11,7 @@ inherit "roxen-module://filesystem";
 
 #define EXPIRE_TIME 31536000
 
-constant cvs_version = "$Id: yui.pike,v 1.20 2010/09/02 14:57:46 marty Exp $";
+constant cvs_version = "$Id$";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
@@ -107,6 +107,35 @@ mixed find_file( string f, RequestID id )
 {
   if(is_hidden(f))
     return 0;
+  
+  //  Filter known security holes in SWF files in 2.4.0-2.8.1. These are
+  //  permanently disabled since Roxen itself has no use of it, and
+  //  shipping newer versions will not replace already expanded tar files.
+  string lc_f;
+#ifndef ENABLE_YUI2_SWF
+  if (has_prefix(f, "2.") &&
+      has_value(lc_f = lower_case(f), "swf")) {
+    //  Check for 2.8.1 or older
+    sscanf((f / "/")[0], "%[0-9.]", string yui_vers);
+    if (Array.oid_sort_func(yui_vers, "2.8.2") == -1) {
+      //  Vulnerable SWF files:
+      //
+      //    /build/charts/assets/charts.swf
+      //      MD5: 59c6e2c9ae7de87f11dd3db3336de8b6
+      //    /build/swfstore/swfstore.swf
+      //      MD5: f619420748b08a2d453c049ef190e2f3
+      //    /build/uploader/assets/uploader.swf
+      //      MD5: 52f36a13ac4ee2743531de3e29c0b55c
+      //
+      //  More info at <http://yuilibrary.com/support/2.8.2/>.
+      if (has_value(lc_f, "charts.swf") ||
+	  has_value(lc_f, "swfstore.swf") ||
+	  has_value(lc_f, "uploader.swf"))
+	return 0;
+    }
+  }
+#endif
+  
   mixed m = ::find_file(f,id);
 
   id->set_response_header ("Cache-Control",

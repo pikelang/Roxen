@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.24 2009/12/28 13:06:17 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 #include <module.h>

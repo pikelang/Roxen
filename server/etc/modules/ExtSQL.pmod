@@ -59,8 +59,8 @@ class sqlproxy {
     object pipe_other = pipe->pipe();
     mapping opts = ([ "fds": ({ pipe_other }) ]);
 
-    proc = Process.create_process( ({ "bin/roxen","bin/sqlhelper.pike" })
-				   , opts );
+    proc = Process.Process( ({ "bin/roxen","bin/sqlhelper.pike" })
+			    , opts );
     remote_call("connect",connect_string);
   }
   

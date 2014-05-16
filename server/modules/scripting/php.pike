@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.5 2008/08/15 12:33:55 mast Exp $
+// $Id$
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.5 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
@@ -246,12 +246,12 @@ class PHPScript
     DWERR(sprintf("Options: %O\n", options));
 
 #ifdef __NT__
-    if(!(pid = Process.create_process( nt_opencommand(query("command"),
-						      arguments),
- 				       options )))
+    if(!(pid = Process.Process( nt_opencommand(query("command"),
+					       arguments),
+				options )))
 #else
-    if(!(pid = Process.create_process( ({ query("command") }) + arguments,
-					options )))
+    if(!(pid = Process.Process( ({ query("command") }) + arguments,
+				options )))
 #endif /* __NT__ */
       error("Failed to create PHP process.\n");
     if(query("kill_call_out"))

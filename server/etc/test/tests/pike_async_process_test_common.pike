@@ -52,7 +52,7 @@ void run_pikescript( string p, string ... args  )
     return;
   }
 
-  test = Process.create_process( ({
+  test = Process.Process( ({
     getenv("PIKE"),
     combine_path( __FILE__, "../"+p ),
     http_url
@@ -69,7 +69,8 @@ void current_test_done()
       {
 	tests_failed++;
 	if( verbose ) report_debug(" FAILED\n");
-	report_debug(do_describe_error(IND("_desc")+" FAILED\n" ));
+	report_debug("################ " +
+		     do_describe_error(IND("_desc")+" FAILED\n" ));
 	report_debug(do_describe_error( fail ));
       }
       else if( verbose )

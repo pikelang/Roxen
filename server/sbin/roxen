@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: roxen,v 1.2 2005/12/21 13:57:57 noring Exp $
+# $Id$
 
 ROXEN_DIR=@ROXEN_DIR@
 

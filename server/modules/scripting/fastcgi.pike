@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.21 2010/04/08 13:36:34 grubba Exp $";
+constant cvs_version = "$Id$";
 
 #include <roxen.h>
 #include <module.h>
@@ -1000,8 +1000,8 @@ class FCGI
       DTFUNC("FCGI::start_new_script");
       PROCESS_DEBUG(sprintf("FCGI::start_new_script, argv: %O\n  options: %O\n",argv,options));
 
-      all_pids += ({ Process.create_process( /*({ "/bin/truss"}) +*/ argv,
-                                             options ) });
+      all_pids += ({ Process.Process( /*({ "/bin/truss"}) +*/ argv,
+				      options ) });
     }
 
     string values_cache = "";

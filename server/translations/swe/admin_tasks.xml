@@ -289,10 +289,7 @@ processen försvinner efter senast 15 minuter.</t>
 <t>version</t>
 </str>
 
-<str id="38">
-<o>backend thread</o>
-<t>backend-tråden</t>
-</str>
+
 
 <str id="39">
 <o>Thread</o>
@@ -449,16 +446,6 @@ processen försvinner efter senast 15 minuter.</t>
 <t>Antal</t>
 </str>
 
-<str id="293">
-<o>Hits</o>
-<t>Träffar</t>
-</str>
-
-<str id="294">
-<o>Misses</o>
-<t>Missar</t>
-</str>
-
 <str id="63">
 <o>Extended process status</o>
 <t>Utökad processinformation</t>
@@ -466,7 +453,7 @@ processen försvinner efter senast 15 minuter.</t>
 
 <str id="65">
 <o>Shows detailed process status on Solaris 2.5 and later.</o>
-<t>Visar detaljerad processinformaiton på Solaris 2.5 och senare.</t>
+<t>Visar detaljerad processinformation på Solaris 2.5 och senare.</t>
 </str>
 
 <str id="66">
@@ -551,7 +538,7 @@ demonstrationscertifikat som följer med Roxen.</t>
 
 <str id="93">
 <o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
-<t>Den önskade nyckelstorleken. Detta är en säkerhetsparameter; störree nycklar ger bättre säkerhet, men gör också att det tar längre tid att kontakta webserver.</t>
+<t>Den önskade nyckelstorleken. Detta är en säkerhetsparameter; större nycklar ger bättre säkerhet, men gör också att det tar längre tid att kontakta webserver.</t>
 </str>
 
 <str id="94">
@@ -560,8 +547,8 @@ demonstrationscertifikat som följer med Roxen.</t>
 </str>
 
 <str id="95">
-<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
-<t>Den största kända nyckel som har blivit knäckt bestod av 155 decimala siffror, d.v.s 512 bitar lång. Den bedriften krävde ungefär 8000 MIPS-år.&lt;p&gt;En 1024 bitar stor nyckel bör vara tillräckligt säker för de flesta tillämpningar, men du kan givetvis använda större nycklar än så om du så önskar.</t>
+<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 2048 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
+<t>Den största kända nyckel som har blivit knäckt bestod av 155 decimala siffror, d.v.s 512 bitar lång. Den bedriften krävde ungefär 8000 MIPS-år.&lt;p&gt;En 2048 bitar stor nyckel bör vara tillräckligt säker för de flesta tillämpningar, men du kan givetvis använda större nycklar än så om du så önskar.</t>
 </str>
 
 <str id="96">
@@ -571,12 +558,12 @@ demonstrationscertifikat som följer med Roxen.</t>
 
 <str id="97">
 <o>Where to store the file, may be relative to %s.</o>
-<t>Var filen ska sparas, kan vara relatvit till %s i filsystemet.</t>
+<t>Var filen ska sparas, kan vara relativt till %s i filsystemet.</t>
 </str>
 
 <str id="98">
 <o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
-<t>En fil i det riktiga filsystemet där den hemliga nyckeln kommer att sparas. Det här är det filnamn som du skiverin i nyckelfilsfältet när du konfigurerar en SSL-port.</t>
+<t>En fil i det riktiga filsystemet där den hemliga nyckeln kommer att sparas. Det här är det filnamn som du skiver in i nyckelfilsfältet när du konfigurerar en SSL-port.</t>
 </str>
 
 <str id="99">
@@ -628,7 +615,7 @@ Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält 
 
 <str id="108">
 <o>The organization name under which you are registered with some national or regional authority.</o>
-<t>Det officiellt registrerade organistationsnamnet.</t>
+<t>Det officiellt registrerade organisationsnamnet.</t>
 </str>
 
 <str id="109">
@@ -691,12 +678,12 @@ idag, vill du att certifikatet ska vara giltigt?</t>
 
 <str id="120">
 <o>Wrote %d-bit key in %s</o>
-<t>Skrev en %d-bittars nyckel i %s</t>
+<t>Skrev en %d-bitars nyckel i %s</t>
 </str>
 
 <str id="121">
 <o>Generate a Certificate Signing Request and an RSA key...</o>
-<t>Generera en certifikatsignerings förfrågan och en RSA nyckel...</t>
+<t>Generera en certifikatsigneringsförfrågan och en RSA-nyckel...</t>
 </str>
 
 <str id="122">
@@ -709,17 +696,17 @@ idag, vill du att certifikatet ska vara giltigt?</t>
 <t>Ett X.509-certifikat associerar ett s.k. 'Common Name' med en
 publik nyckel. En del certifikattillhandahållare tillåter utökade
 certifikat, som specifieras i PKCS#10. Ett utökat certifikat kan
-innehållan annan användbar information, förutom namnet på nyckeln.</t>
+innehålla annan användbar information, förutom namnet på nyckeln.</t>
 </str>
 
 <str id="124">
 <o>Email address</o>
-<t>Email adress</t>
+<t>Email-adress</t>
 </str>
 
 <str id="125">
 <o>An email address to be embedded in the certificate.</o>
-<t>En email adress att associera med certifikatet</t>
+<t>En email-adress att associera med certifikatet</t>
 </str>
 
 <str id="126">
@@ -777,7 +764,7 @@ för att identifiera dig.</t>
 <str id="40">
 <o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
 <t>För att använda SSL på din sajt så måste du först ha skapat ett
-nyckelpar. Den ena halvan ska hållas hemlig</t>
+nyckelpar. Den ena halvan ska hållas hemlig.</t>
 </str>
 
 <str id="42">
@@ -805,7 +792,7 @@ kan du använda den här för att byta vilken som körs.</t>
 
 <str id="46">
 <o>Change Roxen version</o>
-<t>Ändra roxenversion</t>
+<t>Ändra Roxenversion</t>
 </str>
 
 <str id="47">
@@ -837,7 +824,7 @@ kan du använda den här för att byta vilken som körs.</t>
 <o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t>Om du ändrar till en av de här Roxenversionerna så kommer du inte
 kunna byta tillbaka igen från administrationsgränssnittet, du måste
-istället editera filen %O manuellt och sedan ta ner server, och köra
+istället redigera filen %O manuellt och sedan ta ner server, och köra
 %O manuellt.</t>
 </str>
 
@@ -1191,10 +1178,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <t>Plattform:</t>
 </str>
 
-<str id="341">
-<o>Platform</o>
-<t>Plattform</t>
-</str>
+
 
 <str id="342">
 <o>Target version:</o>
@@ -1375,7 +1359,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 
 <str id="377">
 <o>Click on a patch for more information.</o>
-<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
+<t>Klicka på patchnamnet eller patch-ID:t för mer information.</t>
 </str>
 
 <str id="378">
@@ -1385,7 +1369,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 
 <str id="379">
 <o>Click on a Patch for more information.</o>
-<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
+<t>Klicka på patchnamnet eller patch-ID:t för mer information.</t>
 </str>
 
 <str id="380">
@@ -1506,16 +1490,39 @@ följs av en lagring av en ny post.</t>
 </str>
 
 <str id="401">
-<new/>
 <o>Note that the garbage collector referred to here is not the same as
 the one for the &lt;a
 href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
 cache&lt;/a&gt;. This is the low-level garbage collector used internally by
 the Pike interpreter.</o>
-<t></t>
+<t>Observera att skräpsamlaren som omnämns här inte är samma som används i 
+&lt;a href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxens
+minnescache&lt;/a&gt;. Detta är lågnivåskräpsamlaren som används internt i
+Pike-interpretatorn.</t>
 </str>
 
 <str id="402">
 <o>Cache</o>
 <t>Cache</t>
+</str>
+
+<str id="403">
+<o>References</o>
+<t>Referenser</t>
+</str>
+
+<str id="404">
+<o>Import</o>
+<t>Importera</t>
+</str>
+
+<str id="405">
+<o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
+<t>Du kan också använda kommandoradsverktyget bin/rxnpatch för att hantera
+patchar, exempelvis för att importera flera stycken på en gång.</t>
+</str>
+
+<str id="406">
+<o>Repeated action request ignored &amp;ndash; server process ID is different.</o>
+<t>Upprepad förfrågan ignorerad &amp;ndash; serverns process-ID är annorlunda.</t>
 </str>

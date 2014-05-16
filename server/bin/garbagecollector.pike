@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.24 2010/09/07 09:47:04 grubba Exp $";
+string cvs_version = "$Id$";
 
 //#define DEBUG
 

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.138 2011/01/13 16:05:31 mast Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -20,8 +20,6 @@
 #else
 # define CACHE_WERR(X...) 0
 #endif
-
-#ifdef NEW_RAM_CACHE
 
 int total_size_limit = 1024 * 1024;
 //! Maximum cache size for all cache managers combined. Start out with
@@ -70,8 +68,8 @@ void set_total_size_limit (int size)
   update_cache_size_balance();
 }
 
-class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
+class CacheEntry (mixed key, mixed data)
 {
   // FIXME: Consider unifying this with CacheKey. But in that case we
   // need to ensure "interpreter lock" atomicity below.
@@ -105,7 +103,7 @@ class CacheEntry (mixed key, mixed data)
       else
 	return sprintf ("%q", key);
     }
-    else if (objectp (key))
+    else if (intp (key) || floatp (key) || objectp (key))
       return sprintf ("%O", key);
     else
       return sprintf ("%t", key);
@@ -504,6 +502,7 @@ class CM_GreedyDual
   inherit CacheManager;
 
   class CacheEntry
+  //!
   {
     inherit global::CacheEntry;
 
@@ -526,8 +525,9 @@ class CM_GreedyDual
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O)",
-				     format_key(), size, value);
+      return flag == 'O' &&
+	sprintf ("CM_GreedyDual.CacheEntry(%O: %s, %db, %O)",
+		 pval, format_key(), size, value);
     }
   }
 
@@ -547,6 +547,26 @@ class CM_GreedyDual
   // significant bits remains when v(p) is added to it. In that case
   // max_used_pval only works as a flag, and we set it to
   // Int.NATIVE_MAX when that state is reached.
+
+#ifdef CACHE_DEBUG
+  protected void debug_check_priority_list()
+  // Assumes no concurrent access - run inside _disable_threads.
+  {
+    werror ("Checking priority_list with %d entries.\n",
+	    sizeof (priority_list));
+    CacheEntry prev;
+    foreach (priority_list; CacheEntry entry;) {
+      if (!prev)
+	prev = entry;
+      else if (prev >= entry)
+	error ("Found cache entries in wrong order: %O vs %O in %O\n",
+	       prev, entry, priority_list);
+      if (intp (entry->pval) && entry->pval > max_used_pval)
+	error ("Found %O with pval higher than max %O.\n",
+	       entry, max_used_pval);
+    }
+  }
+#endif
 
   int|float calc_value (string cache_name, CacheEntry entry,
 			int old_entry, mapping cache_context);
@@ -644,8 +664,11 @@ class CM_GreedyDual
 	else {
 	  // Got the lock so it can't be a race, i.e. the priority_list order
 	  // is funky. Have to rebuild it without interventions.
+#ifdef CACHE_DEBUG
+	  debug_check_priority_list();
+#endif
 	  report_warning ("Warning: Recovering from race inconsistency "
-			  "in %O->priority_list.\n", this);
+			  "in %O->priority_list (on %O).\n", this, entry);
 	  priority_list = (<>);
 	  foreach (lookup; string cache_name; mapping(mixed:CacheEntry) lm)
 	    foreach (lm;; CacheEntry entry)
@@ -718,6 +741,10 @@ class CM_GreedyDual
 	      }
 	    }
 
+#ifdef CACHE_DEBUG
+      debug_check_priority_list();
+#endif
+
       if (intp (max_pval))
 	max_used_pval = max_pval;
 
@@ -771,8 +798,9 @@ class CM_GDS_Time
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O, %O)",
-				     format_key(), size, value, cost);
+      return flag == 'O' &&
+	sprintf ("CM_GDS_Time.CacheEntry(%O: %s, %db, %O, %O)",
+		 pval, format_key(), size, value, cost);
     }
   }
 
@@ -851,8 +879,18 @@ class CM_GDS_Time
 #if 0
 	  // This assertion is disabled for now, since it doesn't work
 	  // correctly when entry creations are interleaved instead of
-	  // properly nested. FIXME: Need a better method to cope with
-	  // that.
+	  // properly nested.
+	  //
+	  // However, handling that would mean more overhead. Just to
+	  // detect interleaving we need to store the real timestamp
+	  // in save_start_hrtime, in addition to the one with
+	  // all_ctx[0] subtracted. And to evenly distribute the
+	  // overlapping time between the interleaved entries, we'd
+	  // have to track them and update their creation costs
+	  // afterwards. If all that work is concentrated to this
+	  // function (to keep save_start_hrtime as lean as possible
+	  // since it's called much more often), it'd be an O(n^2)
+	  // process.
 	  //
 	  // Also note that this assertion might trig if gettime_func
 	  // isn't monotonic (c.f. FIXME in CM_GDS_RealTime.gettime_func).
@@ -860,13 +898,28 @@ class CM_GDS_Time
 			   duration, start, all_ctx);
 #endif
 	  if (duration < 0)
-	    // Limit the breakage somewhat when the assertion isn't active.
+	    // Can get negative duration when entry creation is
+	    // interleaved. Consider this case (t_acc is all_ctx[0]):
+	    //
+	    //                  0                            t5
+	    // Create entry A:  |----------------------------|
+	    //                      t1               t3
+	    // Create entry B:      |----------------|
+	    //           t_acc == 0 ^         t2         t4
+	    // Create entry C:                |----------|
+	    //                     t_acc == 0 ^          ^ t_acc == t3
+	    //
+	    // When we get here for entry C, the accumulated time is
+	    // t3, which could be larger than t4 - t2, thereby causing
+	    // negative duration. Setting the duration to 0 here not
+	    // only affects this entry; it also gives too much time
+	    // (t4 - t3) to the entry A which encompasses both
+	    // interleaved entries. The error stops there, though.
 	    duration = 0;
 	  all_ctx[0] += duration;
 	  return duration;
 	}
       }
-#ifndef RUN_SELF_TEST
 #ifdef DEBUG
     // Note that this also happens if the caller calls cache_set()
     // several times to add the same entry. That should be avoided
@@ -875,14 +928,19 @@ class CM_GDS_Time
 	    "cannot determine entry creation time.\n%s\n",
 	    describe_backtrace (backtrace()));
 #endif
-#endif
     return 0;
   }
 
-  protected float mean_cost;
-  protected int mean_count = 0;
-  // This is not a real mean value since we (normally) don't keep
-  // track of the cost of each entry. Instead it's a decaying average.
+  protected mapping(string:array(float|int)) mean_costs = ([]);
+  // Stores the mean cost for all entries in each cache. The values
+  // are on the form ({mean, count}), where count is the number of
+  // samples that have contributed to the mean. These are not real
+  // mean values since we (normally) don't keep track of the cost of
+  // each entry. Instead it's a decaying average, where count is
+  // capped at 1000.
+  //
+  // FIXME: Nowadays we actually do keep track of the cost for each
+  // entry.
 
   float calc_value (string cache_name, CacheEntry entry,
 		    int old_entry, mapping cache_context)
@@ -891,14 +949,13 @@ class CM_GDS_Time
 	entry_create_hrtime (cache_name, entry->key, cache_context)) {
       float cost = entry->cost = (float) hrtime;
 
-      if (!mean_count) {
-	mean_cost = cost;
-	mean_count = 1;
+      if (array(float|int) mean_entry = mean_costs[cache_name]) {
+	[float mean_cost, int mean_count] = mean_entry;
+	mean_entry[0] = (mean_count * mean_cost + cost) / (mean_count + 1);
+	if (mean_count < 1000) mean_entry[1] = mean_count + 1;
       }
-      else {
-	mean_cost = (mean_count * mean_cost + cost) / (mean_count + 1);
-	if (mean_count < 1000) mean_count++;
-      }
+      else
+	mean_costs[cache_name] = ({cost, 1});
 
       return cost / entry->size;
     }
@@ -906,13 +963,16 @@ class CM_GDS_Time
     // Awkward situation: We don't have any cost for this entry. Just
     // use the mean cost of all entries in the cache, so it at least
     // isn't way off in either direction.
-    return mean_cost / entry->size;
+    if (array(float|int) mean_entry = mean_costs[cache_name])
+      return mean_entry[0] / entry->size;
+    else
+      return 0.0;		// Here goes nothing.. :P
   }
 
   void evict (int max_size)
   {
     ::evict (max_size);
-    if (!max_size) mean_count = 0;
+    if (!max_size) mean_costs = ([]);
   }
 
   string format_cost (float cost)
@@ -1350,11 +1410,25 @@ void cache_expire (void|string cache_name)
   // doesn't have to be quick.
   foreach (cache_name ? ({cache_name}) : indices (caches), string cn) {
     CACHE_WERR ("Emptying cache %O.\n", cn);
-    if (CacheManager mgr = caches[cn]) {
-      mgr->evict (0);
-      mgr->update_size_limit();
-    }
+    if (CacheManager mgr = caches[cn])
+      if (mapping(mixed:CacheEntry) lm = mgr->lookup[cn]) {
+	if (sizeof (mgr->lookup) == 1 || !cache_name) {
+	  // Only one cache in this manager, or zapping all caches.
+	  mgr->evict (0);
+	  mgr->update_size_limit();
+	}
+	else
+	  foreach (lm;; CacheEntry entry) {
+	    MORE_CACHE_WERR ("cache_expire: Removing %O\n", entry);
+	    mgr->remove_entry (cn, entry);
+	  }
+      }
   }
+}
+
+void cache_expire_by_prefix(string cache_name_prefix)
+{
+  map(filter(indices(caches), has_prefix, cache_name_prefix), cache_expire);
 }
 
 void flush_memory_cache (void|string cache_name) {cache_expire (cache_name);}
@@ -1393,7 +1467,7 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
 	MORE_CACHE_WERR ("cache_lookup (%O, %s): %s\n",
 			 cache_name, RXML.utils.format_short (key),
 			 entry->data ? "Timed out" : "Destructed");
-	return 0;
+	return UNDEFINED;
       }
 
       mgr->got_hit (cache_name, entry, cache_context);
@@ -1405,7 +1479,7 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
   mgr->got_miss (cache_name, key, cache_context);
   MORE_CACHE_WERR ("cache_lookup (%O, %s): Miss\n",
 		   cache_name, RXML.utils.format_short (key));
-  return 0;
+  return UNDEFINED;
 }
 
 mixed cache_peek (string cache_name, mixed key)
@@ -1421,7 +1495,7 @@ mixed cache_peek (string cache_name, mixed key)
 	  mgr->remove_entry (cache_name, entry);
 	  MORE_CACHE_WERR ("cache_peek (%O, %s): Timed out\n",
 			   cache_name, RXML.utils.format_short (key));
-	  return 0;
+	  return UNDEFINED;
 	}
 
 	MORE_CACHE_WERR ("cache_peek (%O, %s): Entry found\n",
@@ -1431,7 +1505,7 @@ mixed cache_peek (string cache_name, mixed key)
 
   MORE_CACHE_WERR ("cache_peek (%O, %s): Entry not found\n",
 		   cache_name, RXML.utils.format_short (key));
-  return 0;
+  return UNDEFINED;
 }
 
 mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
@@ -1488,10 +1562,11 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
 		   "collect_stats": 1,
 		   "collect_direct_externals": 1,
+		   "block_strings": -1
 		 ]);
   float t = gauge {
 #else
-#define opts 0
+      mapping opts = (["block_strings": -1]);
 #endif
 
       if (function(int|mapping:int) cm_cb =
@@ -1770,385 +1845,6 @@ protected void cache_clean()
 			    cache_clean);
 }
 
-#else  // !NEW_RAM_CACHE
-
-// Base the cache retention time on the time it took to
-// generate the entry.
-/* #define TIME_BASED_CACHE */
-
-#ifdef TIME_BASED_CACHE
-// A cache entry is an array with six elements
-#define ENTRY_SIZE 6
-#else /* !TIME_BASED_CACHE */
-// A cache entry is an array with four elements
-#define ENTRY_SIZE 4
-#endif /* TIME_BASED_CACHE */
-// The elements are as follows:
-// A timestamp when the entry was last used
-#define TIMESTAMP 0
-// The actual data
-#define DATA 1
-// A timeout telling when the data is no longer valid.
-#define TIMEOUT 2
-// The size of the entry, in bytes.
-#define SIZE 3
-#ifdef TIME_BASED_CACHE
-// The approximate time in µs it took to generate the data for the entry.
-#define HRTIME 4
-// The number of hits for this entry.
-#define HITS 5
-#endif /* TIME_BASED_CACHE */
-
-// The actual cache along with some statistics mappings.
-protected mapping(string:mapping(string:array)) cache;
-protected mapping(string:int) hits=([]), all=([]);
-
-#ifdef TIME_BASED_CACHE
-protected Thread.Local deltas = Thread.Local();
-#endif /* TIME_BASED_CACHE */
-
-#ifdef CACHE_DEBUG
-protected array(int) memory_usage_summary()
-{
-  int count, bytes;
-  foreach (_memory_usage(); string descr; int amount)
-    if (has_prefix (descr, "num_")) count += amount;
-    else if (has_suffix (descr, "_bytes")) bytes += amount;
-  return ({count, bytes});
-}
-#endif
-
-protected int sizeof_cache_entry (array entry)
-{
-  int res;
-
-#ifdef DEBUG_COUNT_MEM
-  mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
-		   "collect_stats": 1,
-		   "collect_direct_externals": 1,
-		 ]);
-  float t = gauge {
-#else
-#define opts 0
-#endif
-
-      if (function(int|mapping:int) cm_cb =
-	  objectp (entry[DATA]) && entry[DATA]->cache_count_memory)
-	res = cm_cb (opts) + Pike.count_memory (-1, entry);
-      else
-	res = Pike.count_memory (opts, entry);
-
-#ifdef DEBUG_COUNT_MEM
-    };
-  werror ("%s: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
-	  "rnd %d wqa %d\n",
-	  (objectp (entry[DATA]) ?
-	   sprintf ("%O", entry[DATA]) : sprintf ("%t", entry[DATA])),
-	  opts->lookahead, opts->size, t, opts->internal, opts->cyclic,
-	  opts->external, opts->visits, opts->revisits, opts->rounds,
-	  opts->work_queue_alloc);
-
-#if 0
-  if (opts->external) {
-    opts->collect_direct_externals = 1;
-    // Raise the lookahead to 1 to recurse the closest externals.
-    if (opts->lookahead < 1) opts->lookahead = 1;
-
-    if (function(int|mapping:int) cm_cb =
-	objectp (entry[DATA]) && entry[DATA]->cache_count_memory)
-      res = cm_cb (opts) + Pike.count_memory (-1, entry);
-    else
-      res = Pike.count_memory (opts, entry);
-
-    array exts = opts->collect_direct_externals;
-    werror ("Externals found using lookahead %d: %O\n",
-	    opts->lookahead, exts);
-#if 0
-    foreach (exts, mixed ext)
-      if (objectp (ext) && ext->locate_my_ext_refs) {
-	werror ("Refs to %O:\n", ext);
-	_locate_references (ext);
-      }
-#endif
-  }
-#endif
-#endif	// DEBUG_COUNT_MEM
-#undef opts
-
-  return res;
-}
-
-void flush_memory_cache (void|string in)
-{
-  CACHE_WERR ("flush_memory_cache(%O)\n", in);
-
-  if (in) {
-    m_delete (cache, in);
-    m_delete (hits, in);
-    m_delete (all, in);
-  }
-
-  else {
-#ifdef CACHE_DEBUG
-    //gc();
-    [int before_count, int before_bytes] = memory_usage_summary();
-#endif
-    foreach (cache; string cache_class; mapping(string:array) subcache) {
-#ifdef CACHE_DEBUG
-      int num_entries_before= sizeof (subcache);
-#endif
-      m_delete (cache, cache_class);
-      m_delete (hits, cache_class);
-      m_delete (all, cache_class);
-#ifdef CACHE_DEBUG
-      //gc();
-      [int after_count, int after_bytes] = memory_usage_summary();
-      CACHE_WERR ("  Flushed %O that had %d entries: "
-		  "Freed %d things and %d bytes\n",
-		  cache_class, num_entries_before,
-		  before_count - after_count, before_bytes - after_bytes);
-      before_count = after_count;
-      before_bytes = after_bytes;
-#endif
-    }
-  }
-
-  CACHE_WERR ("flush_memory_cache() done\n");
-}
-
-void cache_clear_deltas()
-{
-#ifdef TIME_BASED_CACHE
-  deltas->set(([]));
-#endif /* TIME_BASED_CACHE */
-}
-
-constant svalsize = 4*4;
-
-object cache_register (string cache_name, void|string|object manager)
-// Forward compat dummy.
-{
-  return 0;
-}
-
-// Expire a whole cache
-void cache_expire(string in)
-{
-  CACHE_WERR("cache_expire(%O)\n", in);
-  m_delete(cache, in);
-}
-
-// Lookup an entry in a cache
-mixed cache_lookup(string in, mixed what, void|mapping ignored)
-{
-  all[in]++;
-  int t=time(1);
-#ifdef TIME_BASED_CACHE
-  mapping deltas = this_program::deltas->get() || ([]);
-  if (deltas[in]) {
-    deltas[in][what] = gethrtime();
-  } else {
-    deltas[in] = ([ what : gethrtime() ]);
-  }
-#endif /* TIME_BASED_CACHE */
-  // Does the entry exist at all?
-  if(array entry = (cache[in] && cache[in][what]) )
-    // Is it time outed?
-    if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
-      m_delete (cache[in], what);
-      MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Timed out\n", in, what);
-    }
-    else {
-      // Update the timestamp and hits counter and return the value.
-      cache[in][what][TIMESTAMP]=t;
-      MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Hit\n", in, what);
-      hits[in]++;
-#ifdef TIME_BASED_CACHE
-      entry[HITS]++;
-#endif /* TIME_BASED_CACHE */
-      return entry[DATA];
-    }
-  else
-    MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Miss\n", in, what);
-  return ([])[0];
-}
-
-mixed cache_peek (string cache_name, mixed key)
-// Forward compat alias.
-{
-  return cache_lookup (cache_name, key);
-}
-
-// Return all indices used by a given cache or indices of available caches
-array(string) cache_indices(string|void in)
-{
-  if (in)
-    return (cache[in] && indices(cache[in])) || ({ });
-  else
-    return indices(cache);
-}
-
-// Return some fancy cache statistics.
-mapping(string:array(int)) status()
-{
-  mapping(string:array(int)) ret = ([ ]);
-  foreach (cache; string name; mapping(string:array) cache_class) {
-#ifdef DEBUG_COUNT_MEM
-    werror ("\nCache: %s\n", name);
-#endif
-    //  We only show names up to the first ":" if present. This lets us
-    //  group entries together in the status table.
-    string show_name = (name / ":")[0];
-    int size = 0;
-    foreach (cache_class; string idx; array entry) {
-      if (!entry[SIZE])
-	entry[SIZE] = Pike.count_memory (0, idx) + sizeof_cache_entry (entry);
-      size += entry[SIZE];
-    }
-    array(int) entry = ({ sizeof(cache[name]),
-			  hits[name],
-			  all[name],
-			  size });
-    if (!zero_type(ret[show_name]))
-      for (int idx = 0; idx <= 3; idx++)
-	ret[show_name][idx] += entry[idx];
-    else
-      ret[show_name] = entry;
-  }
-  return ret;
-}
-
-// Remove an entry from the cache. Removes the entire cache if no
-// entry key is given.
-void cache_remove(string in, mixed what)
-{
-  MORE_CACHE_WERR("cache_remove(%O, %O)\n", in, what);
-  if(!what)
-    m_delete(cache, in);
-  else
-    if(cache[in])
-      m_delete(cache[in], what);
-}
-
-// Add an entry to a cache
-mixed cache_set(string in, mixed what, mixed to, int|void tm,
-		void|mapping|int(1..1) ignored)
-{
-  MORE_CACHE_WERR("cache_set(%O, %O, %O)\n", in, what, /* to */ _typeof(to));
-  int t=time(1);
-  if(!cache[in])
-    cache[in]=([ ]);
-  cache[in][what] = allocate(ENTRY_SIZE);
-  cache[in][what][DATA] = to;
-  if(tm) cache[in][what][TIMEOUT] = t + tm;
-  cache[in][what][TIMESTAMP] = t;
-#ifdef TIME_BASED_CACHE
-  mapping deltas = this_program::deltas->get() || ([]);
-  cache[in][what][HRTIME] = gethrtime() - (deltas[in] && deltas[in][what]);
-  cache[in][what][HITS] = 1;
-  CACHE_WERR("[%O] HRTIME: %d\n", in, cache[in][what][HRTIME]);
-#endif /* TIME_BASED_CACHE */
-  return to;
-}
-
-// Clean the cache.
-void cache_clean()
-{
-  int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
-  int now=time(1);
-#ifdef CACHE_DEBUG
-  [int mem_count, int mem_bytes] = memory_usage_summary();
-  CACHE_WERR("cache_clean() [memory usage: %d things, %d bytes]\n",
-	     mem_count, mem_bytes);
-#endif
-
-  foreach(cache; string cache_class_name; mapping(string:array) cache_class)
-  {
-#ifdef CACHE_DEBUG
-    int num_entries_before = sizeof (cache_class);
-#endif
-    MORE_CACHE_WERR("  Class %O\n", cache_class_name);
-#ifdef DEBUG_COUNT_MEM
-    werror ("\nCache: %s\n", cache_class_name);
-#endif
-
-    foreach(cache_class; string idx; array entry)
-    {
-#ifdef DEBUG
-      if(!intp(entry[TIMESTAMP]))
-	error("Illegal timestamp in cache ("+cache_class_name+":"+idx+")\n");
-#endif
-      if(entry[TIMEOUT] && entry[TIMEOUT] < now) {
-	MORE_CACHE_WERR("    %O: Deleted (explicit timeout)\n", idx);
-	m_delete(cache_class, idx);
-      }
-      else {
-#ifdef TIME_BASED_CACHE
-	  if (entry[HRTIME] < 10*60*1000000) {	// 10 minutes.
-	    // Valid HRTIME entry.
-	    // Let an entry live for 5000 times longer than
-	    // it takes to create it times the 2-logarithm of
-	    // the number of hits.
-	    // Minimum one second.
-	    // 5000/1000000 = 1/200
-	    // FIXME: Adjust the factor dynamically?
-	    int t = [int](entry[HRTIME]*(entry[HITS]->size(2)))/200 + 1;
-	    if ((entry[TIMESTAMP] + t) < now)
-	    {
-	      m_delete(cache_class, idx);
-	      MORE_CACHE_WERR("    %O with lifetime %d seconds (%d hits): Deleted\n",
-			      idx, t, entry[HITS]);
-	    } else {
-	      MORE_CACHE_WERR("    %O with lifetime %d seconds (%d hits): Ok\n",
-			      idx, t, entry[HITS]);
-	    }
-	    continue;
-	  }
-#endif /* TIME_BASED_CACHE */
-
-	if(!entry[SIZE])
-	  entry[SIZE] = Pike.count_memory (0, idx) + sizeof_cache_entry (entry);
-	if(
-#ifdef OLD_RAM_CACHE_FIXED_GC
-	  entry[TIMEOUT]+1 < now
-#else
-	  entry[TIMESTAMP]+1 < now
-#endif
-	  && entry[TIMESTAMP] + gc_time - entry[SIZE] / 100 < now)
-	{
-	  m_delete(cache_class, idx);
-	  MORE_CACHE_WERR("    %O with size %d bytes: Deleted\n",
-			  idx, [int] entry[SIZE]);
-	}
-	else
-	  MORE_CACHE_WERR("    %O with size %d bytes: Ok\n",
-			  idx, [int] entry[SIZE]);
-      }
-    }
-
-    if(!sizeof(cache_class))
-      m_delete(cache, cache_class_name);
-
-#ifdef CACHE_DEBUG
-    [int new_mem_count, int new_mem_bytes] = memory_usage_summary();
-    CACHE_WERR("  Class %O: Cleaned up %d of %d entries "
-	       "[freed %d things and %d bytes]\n",
-	       cache_class_name,
-	       num_entries_before - sizeof (cache_class),
-	       num_entries_before,
-	       mem_count - new_mem_count,
-	       mem_bytes - new_mem_bytes);
-    mem_count = new_mem_count;
-    mem_bytes = new_mem_bytes;
-#endif
-  }
-
-  CACHE_WERR("cache_clean() done\n");
-  roxenp()->background_run (gc_time, cache_clean);
-}
-
-#endif	// !NEW_RAM_CACHE
-
 
 // --- Non-garbing "cache" -----------
 
@@ -2211,10 +1907,10 @@ private function(string:Sql.Sql) db;
 private int max_persistence;
 
 // The low level call for storing a session in the database
-private void store_session(string id, mixed data, int t) {
+private void store_session(string db_name, string id, mixed data, int t) {
   data = encode_value(data);
-  db("local")->query("REPLACE INTO session_cache VALUES (%s," + t + ",%s)",
-		     id, data);
+  db(db_name)->query("REPLACE INTO session_cache VALUES (%s,%d,%s)",
+		     id, t, data);
 }
 
 // GC that, depending on the sessions session_persistence either
@@ -2224,7 +1920,7 @@ private void session_cache_handler() {
   if(max_persistence>t) {
 
   clean:
-    foreach(indices(session_buckets[-1]), string id) {
+    foreach(session_buckets[-1]; string id; mixed data) {
       if(session_persistence[id]<t) {
 	m_delete(session_buckets[-1], id);
 	m_delete(session_persistence, id);
@@ -2234,12 +1930,12 @@ private void session_cache_handler() {
 	if(session_buckets[i][id]) {
 	  continue clean;
 	}
-      if(objectp(session_buckets[-1][id])) {
+      if(objectp(data)) {
 	m_delete(session_buckets[-1], id);
 	m_delete(session_persistence, id);
 	continue;
       }
-      store_session(id, session_buckets[-1][id], session_persistence[id]);
+      store_session("local", id, data, session_persistence[id]);
       m_delete(session_buckets[-1], id);
       m_delete(session_persistence, id);
     }
@@ -2256,54 +1952,67 @@ private void session_cache_destruct() {
   if(max_persistence>t) {
     report_notice("Synchronizing session cache");
     foreach(session_buckets, mapping(string:mixed) session_bucket)
-      foreach(indices(session_bucket), string id)
+      foreach(session_bucket; string id; mixed data)
 	if(session_persistence[id]>t) {
-	  store_session(id, session_bucket[id], session_persistence[id]);
+	  store_session("local", id, data, session_persistence[id]);
 	  m_delete(session_persistence, id);
 	}
   }
   report_notice("Session cache synchronized\n");
 }
 
-//! Removes the session data assiciate with @[id] from the
-//! session cache and session database.
+//! Removes the session data associated with @[id] from the session
+//! cache and session database.
+//!
+//! @[db_name] may be given to use another database than the default
+//! "local". That implictly disables the RAM based bucket cache.
 //!
 //! @seealso
 //!   set_session_data
-void clear_session(string id) {
-  m_delete(session_persistence, id);
-  foreach(session_buckets, mapping bucket)
-    m_delete(bucket, id);
-  db("local")->query("DELETE FROM session_cache WHERE id=%s", id);
+void clear_session(string id, void|string db_name) {
+  if (!db_name) {
+    m_delete(session_persistence, id);
+    foreach(session_buckets, mapping bucket)
+      m_delete(bucket, id);
+  }
+  db(db_name || "local")->query("DELETE FROM session_cache WHERE id=%s", id);
 }
 
 //! Returns the data associated with the session @[id].
 //! Returns a zero type upon failure.
 //!
+//! @[db_name] may be given to use another database than the default
+//! "local". That implictly disables the RAM based bucket cache.
+//!
 //! @seealso
 //!   set_session_data
-mixed get_session_data(string id) {
+mixed get_session_data(string id, void|string db_name) {
   mixed data;
-  foreach(session_buckets, mapping bucket)
-    if(data=bucket[id]) {
-      session_buckets[0][id] = data;
-      return data;
-    }
-  data = db("local")->query("SELECT data FROM session_cache WHERE id=%s", id);
+  if (!db_name)
+    foreach(session_buckets, mapping bucket)
+      if(data=bucket[id]) {
+	session_buckets[0][id] = data;
+	return data;
+      }
+  data = db(db_name || "local")->
+    query("SELECT data FROM session_cache WHERE id=%s", id);
   if(sizeof([array]data) &&
      !catch(data=decode_value( ([array(mapping(string:string))]data)[0]->data )))
     return data;
   return ([])[0];
 }
 
-//! Assiciates the session @[id] to the @[data]. If no @[id] is provided
+//! Associates the session @[id] to the @[data]. If no @[id] is provided
 //! a unique id will be generated. The session id is returned from the
 //! function. The minimum guaranteed storage time may be set with the
 //! @[persistence] argument. Note that this is a time stamp, not a time out.
-//! If @[store] is set, the @[data] will be stored in a database directly,
-//! and not when the garbage collect tries to delete the data. This
-//! will ensure that the data is kept safe in case the server restarts
-//! before the next GC.
+//!
+//! If @[store] is set, the @[data] will be stored in a database
+//! directly, and not when the garbage collect tries to delete the
+//! data. This will ensure that the data is kept safe in case the
+//! server restarts before the next GC. @[store] may also be the name
+//! of another database where the "session_cache" table resides. In
+//! that case the @[data] is always stored directly.
 //!
 //! @note
 //!   The @[data] must not contain any object, programs or functions, or the
@@ -2312,21 +2021,34 @@ mixed get_session_data(string id) {
 //! @seealso
 //!   get_session_data, clear_session
 string set_session_data(mixed data, void|string id, void|int persistence,
-			void|int(0..1) store) {
+			void|int(0..1)|string store) {
   if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
-  session_persistence[id] = persistence;
-  session_buckets[0][id] = data;
-  max_persistence = max(max_persistence, persistence);
-  if(store && persistence) store_session(id, data, persistence);
+  if (intp (store)) {
+    session_persistence[id] = persistence;
+    session_buckets[0][id] = data;
+    max_persistence = max(max_persistence, persistence);
+  }
+  if(store && persistence)
+    store_session(stringp (store) ? store : "local", id, data, persistence);
   return id;
+}
+
+int setup_session_table (string db_name)
+//! Creates a table "session_cache" with the proper definition in the
+//! given database.
+{
+  Sql.Sql conn = db (db_name);
+  if (!conn) return 0;
+  conn->query("CREATE TABLE IF NOT EXISTS session_cache ("
+	      "id CHAR(32) NOT NULL PRIMARY KEY, "
+	      "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
+	      "data BLOB NOT NULL)");
+  return 1;
 }
 
 // Sets up the session database tables.
 private void setup_tables() {
-  db("local")->query("CREATE TABLE IF NOT EXISTS session_cache ("
-		     "id CHAR(32) NOT NULL PRIMARY KEY, "
-		     "persistence INT UNSIGNED NOT NULL DEFAULT 0, "
-		     "data BLOB NOT NULL)");
+  setup_session_table ("local");
   master()->resolv("DBManager.is_module_table")
     ( 0, "local", "session_cache", "Used by the session manager" );
 }
@@ -2341,9 +2063,7 @@ void init_session_cache() {
 void init_call_outs()
 {
   roxenp()->background_run(60, cache_clean);
-#ifdef NEW_RAM_CACHE
   roxenp()->background_run (0, periodic_update_cache_size_balance);
-#endif
   roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 
   CACHE_WERR("Cache garb call outs installed.\n");
@@ -2352,9 +2072,6 @@ void init_call_outs()
 void create()
 {
   add_constant( "cache", this_object() );
-#ifndef NEW_RAM_CACHE
-  cache = ([ ]);
-#endif
 
   nongc_cache = ([ ]);
 

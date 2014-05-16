@@ -2229,17 +2229,19 @@ class Context
     return (string) ++last_internal_var_id;
   }
 
-  void signal_var_change (string var, void|string scope_name)
+  void signal_var_change (string var, void|string scope_name, void|mixed val)
   //! Call this when the variable @[var] in the specified scope has
   //! changed in some other way than by calling a function in this
   //! class. If necessary, this will register the variable and its
   //! current value in generated p-code (see @[set_misc] for further
   //! details). The current scope is used if @[scope_name] is left
-  //! out.
+  //! out. The caller can provide a overriding value which is needed when
+  //! modifying e.g. the outgoing headers via extra_heads.
   {
     if (array rec_chgs = misc->recorded_changes) {
       if (!scope_name) scope_name = "_";
-      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = scopes[scope_name][var];
+      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] =
+	zero_type (val) ? scopes[scope_name][var] : val;
     }
   }
 
@@ -2864,7 +2866,7 @@ protected void set_nil_arg (mapping(string:mixed) args, string arg,
 // Helper to do the work to assign nil to an attribute value.
 {
   if (type->sequential)
-    args[arg] = type->empty_value;
+    args[arg] = type->copy_empty_value();
   else if (req_args[arg]) {
     nil_for_nonseq_error (id, type, " in attribute %s", format_short (arg));
     args[arg] = nil;		// < 5.0 compat.
@@ -4236,6 +4238,9 @@ class Frame
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
 
+		    if (t->type_check) t->type_check(v);
+		    // FIXME: Add type-checking to the compiled code as well.
+
 		    if (t->sequential)
 		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
 					    sub_p_code->compile_text (comp)));
@@ -4707,7 +4712,7 @@ class Frame
 			THIS_TAG_DEBUG ("Setting content to empty value: %s\n",
 					format_short (
 					  content_type->empty_value));
-			content = content_type->empty_value;
+			content = content_type->copy_empty_value();
 		      }
 		      else if (flags & FLAG_CONTENT_VAL_REQ)
 			parse_error ("Missing value for nonsequential "
@@ -4896,7 +4901,7 @@ class Frame
 			    THIS_TAG_DEBUG (
 			      "Setting content to empty value: %s\n",
 			      format_short (content_type->empty_value));
-			    content = content_type->empty_value;
+			    content = content_type->copy_empty_value();
 			  }
 			  else if (flags & FLAG_CONTENT_VAL_REQ)
 			    parse_error ("Missing value for nonsequential "
@@ -5499,8 +5504,6 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
   return frame;
 }
 
-//! @decl class parse_frame (Type type, string to_parse);
-//!
 //! Returns a frame that, when evaluated, parses the given string
 //! according to the type (which typically has a parser set).
 //!
@@ -5512,6 +5515,7 @@ final class parse_frame
   inherit Frame;
   int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
+  //!
   protected void create (Type type, string to_parse)
   {
     if (type) {			// Might be created from decode or _clone_empty.
@@ -6354,7 +6358,7 @@ class Type
     // FOO
     if (res == nil) {
       if (sequential)
-	res = this->empty_value;
+	res = this->copy_empty_value();
       else
 	nil_for_nonseq_error (ctx->id, this);
     }
@@ -6415,8 +6419,10 @@ class Type
   //! "]", "?" and "=".
   //!
   //! If it doesn't contain a "/", it's treated as a type outside the
-  //! MIME system, e.g. "int" for an integer. Any type that can be
-  //! mapped to a MIME type should be so.
+  //! MIME system, e.g. "int" for an integer. In this case the name
+  //! should follow the Pike type syntax.
+  //!
+  //! Any type that can be mapped to a MIME type should be so.
 
   //! @decl constant string type_name;
   //!
@@ -6439,6 +6445,11 @@ class Type
   //!
   //! The empty value, i.e. what eval ("") would produce. Must be
   //! defined for every sequential type.
+
+  mixed copy_empty_value();
+  //! Returns an instance of @[empty_value] such that provided it's
+  //! possible to modify it destructively, such modifications don't
+  //! affect @[empty_value].
 
   Type supertype;
   //! The supertype for this type.
@@ -6795,6 +6806,7 @@ protected class TIgnore
   constant type_name = "RXML.t_ignore";
   constant sequential = 1;
   mixed empty_value = nil;
+  mixed copy_empty_value() {return nil;}
   Type supertype = t_any;
   Type conversion_type = 0;
   constant free_text = 1;
@@ -6873,6 +6885,9 @@ TArray t_array = TArray();
 //!
 //! Supertype: @[RXML.t_any]
 
+//!
+//! @seealso
+//!   @[t_array]
 class TArray
 {
   inherit TAny;
@@ -6880,6 +6895,7 @@ class TArray
   constant type_name = "RXML.t_array";
   constant sequential = 1;
   constant empty_value = ({});
+  mixed copy_empty_value() {return ({});}
   Type supertype = t_any;
 
   constant container_type = 1;
@@ -6946,6 +6962,9 @@ TMapping t_mapping = TMapping();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_mapping]
 class TMapping
 {
   inherit TAny;
@@ -6953,6 +6972,7 @@ class TMapping
   constant type_name = "RXML.t_mapping";
   constant sequential = 1;
   constant empty_value = ([]);
+  mixed copy_empty_value() {return ([]);}
   Type supertype = t_any_seq;
 
   constant container_type = 1;
@@ -6988,6 +7008,8 @@ TType t_type = TType();
 //! Supertype: @[RXML.t_any_seq]
 
 //!
+//! @seealso
+//!   @[t_type]
 protected class TType
 {
   inherit Type;
@@ -7030,6 +7052,9 @@ TParser t_parser = TParser();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_parser]
 protected class TParser
 {
   inherit Type;
@@ -7076,6 +7101,9 @@ TScalar t_scalar = TScalar();
 //!
 //! Supertype: @[RXML.t_any_seq]
 
+//!
+//! @seealso
+//!   @[t_scalar]
 class TScalar
 {
   inherit Type;
@@ -7112,6 +7140,9 @@ TNum t_num = TNum();
 //!
 //! Supertype: @[RXML.t_scalar]
 
+//!
+//! @seealso
+//!   @[t_num]
 class TNum
 {
   inherit Type;
@@ -7119,6 +7150,7 @@ class TNum
   constant type_name = "RXML.t_num";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7155,6 +7187,9 @@ TInt t_int = TInt();
 //!
 //! Supertype: @[RXML.t_num]
 
+//!
+//! @seealso
+//!   @[t_int]
 class TInt
 {
   inherit Type;
@@ -7162,6 +7197,7 @@ class TInt
   constant type_name = "RXML.t_int";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_num;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7195,6 +7231,9 @@ TFloat t_float = TFloat();
 //!
 //! Supertype: @[RXML.t_num]
 
+//!
+//! @seealso
+//!   @[t_float]
 class TFloat
 {
   inherit Type;
@@ -7202,6 +7241,7 @@ class TFloat
   constant type_name = "RXML.t_float";
   constant sequential = 0;
   constant empty_value = 0;
+  mixed copy_empty_value() {return 0;}
   Type supertype = t_num;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7249,6 +7289,8 @@ TString t_string = TString();
 //! normalization rules.
 
 //!
+//! @seealso
+//!   @[t_string]
 class TString
 {
   inherit Type;
@@ -7256,6 +7298,7 @@ class TString
   constant type_name = "RXML.t_string";
   constant sequential = 1;
   constant empty_value = "";
+  mixed copy_empty_value() {return "";}
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
@@ -7358,13 +7401,15 @@ TAnyText t_any_text = TAnyText();
 //! literal). If @[RXML.t_text] was used instead, it might throw
 //! errors at that point if the xml value contains tags.
 
+//!
+//! @seealso
+//!   @[t_any_text]
 class TAnyText
 {
   inherit TString;
   constant name = "text/*";
   constant type_name = "RXML.t_any_text";
   constant sequential = 1;
-  constant empty_value = "";
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant free_text = 1;
@@ -7376,6 +7421,9 @@ TText t_text = TText();
 //! type of text; @[RXML.t_any_text] represents that. Is sequential
 //! and allows free text.
 
+//!
+//! @seealso
+//!   @[t_text]
 class TText
 {
   inherit TAnyText;
@@ -7398,10 +7446,36 @@ class TText
   }
 }
 
+TNarrowText t_narrowtext = TNarrowText();
+//! The type for plain text that needs to be narrow (eg HTTP headers
+//! and similar).
+
+//!
+//! @seealso
+//!    @[t_narrowtext]
+class TNarrowText
+{
+  inherit TText;
+  constant name = "text/x-8bit";
+  constant type_name = "RXML.t_narrowtext";
+  Type supertype = t_text;
+  Type conversion_type = t_text;
+
+  void type_check(mixed val, void|string msg, mixed ... args)
+  {
+    ::type_check(val);
+    if (stringp(val) && (String.width(val) > 8)) {
+      type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
+    }
+  }
+}
+
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
 //!
+//! @seealso
+//!   @[t_xml]
 class TXml
 {
   inherit TText;
@@ -7586,6 +7660,9 @@ class TXml
 THtml t_html = THtml();
 //! (Currently) identical to t_xml, but tags it as "text/html".
 
+//!
+//! @seealso
+//!   @[t_html]
 class THtml
 {
   inherit TXml;
@@ -7602,6 +7679,172 @@ class THtml
   }
 
   constant decode = 0;		// Cover it; not needed here.
+}
+
+// Composite types:
+//
+// A few ad-hoc combinations since we lack a generic system for
+// building composite types.
+
+TStrOrInt t_str_or_int = TStrOrInt();
+//! Either a string or an integer. Not sequential.
+//!
+//! Supertype: @[RXML.t_scalar]
+
+//!
+//! @seealso
+//!   @[t_str_or_int]
+class TStrOrInt
+{
+  inherit TScalar;
+  constant name = "string|int";
+  constant type_name = "RXML.t_str_or_int";
+  Type supertype = t_scalar;
+  Type conversion_type = t_scalar;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!intp (val) && !stringp (val) && val != empty)
+      type_check_error (msg, args,
+			"Expected string or integer value, got %t.\n", val);
+  }
+
+  string|int encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string|int] val;
+	default: return [string|int] indirect_convert (val, from);
+      }
+    if (!stringp (val) && !intp (val))
+      // Cannot unambigiously use a cast for this type.
+      parse_error ("Cannot convert %s to string or integer.\n",
+		   format_short (val));
+    return [string|int] val;
+  }
+}
+
+//!
+//! @seealso
+//!   @[TArray]
+class TTypedArray
+{
+  inherit TArray;
+  Type supertype = t_array;
+
+  /* constant element_type_name; */
+  protected int element_type_p (mixed val);
+  protected mixed element_encode (mixed val);
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (val == empty) return;
+    if (!arrayp (val))
+      type_check_error (msg, args, "Expected array, got %t.\n", val);
+    foreach (val; int i; mixed ent)
+      if (!element_type_p (ent))
+	type_check_error (msg, args,
+			  "Expected %s at position %d, got %t.\n",
+			  this->element_type_name, i + 1, ent);
+  }
+
+  array encode (mixed val, void|Type from)
+  {
+    array res = ::encode (val, from);
+    foreach (res; int i; mixed ent)
+      res[i] = element_encode (ent);
+    return res;
+  }
+}
+
+TNumArray t_num_array = TNumArray();
+//! An array of numbers (i.e. floats or integers).
+//!
+//! Supertype: @[RXML.t_array]
+
+//!
+//! @seealso
+//!   @[t_num_array]
+class TNumArray
+{
+  inherit TTypedArray;
+  constant name = "array(number)";
+  constant type_name = "RXML.t_num_array";
+  constant element_type_name = "number";
+
+  protected int element_type_p (mixed val)
+    {return intp (val) || floatp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_num->encode (val);}
+}
+
+TIntArray t_int_array = TIntArray();
+//! An array of integers.
+//!
+//! Supertype: @[RXML.t_num_array]
+
+//!
+//! @seealso
+//!   @[t_int_array]
+class TIntArray
+{
+  inherit TTypedArray;
+  constant name = "array(int)";
+  constant type_name = "RXML.t_int_array";
+  Type supertype = t_num_array;
+  constant element_type_name = "int";
+
+  protected int element_type_p (mixed val)
+    {return intp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_int->encode (val);}
+}
+
+TStrArray t_str_array = TStrArray();
+//! An array of strings.
+//!
+//! Supertype: @[RXML.t_array]
+
+//!
+//! @seealso
+//!   @[t_str_array]
+class TStrArray
+{
+  inherit TTypedArray;
+  constant name = "array(string)";
+  constant type_name = "RXML.t_str_array";
+  constant element_type_name = "string";
+
+  protected int element_type_p (mixed val)
+    {return stringp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_string->encode (val);}
+}
+
+TMapArray t_map_array = TMapArray();
+//! An array of mappings.
+//!
+//! Supertype: @[RXML.t_array]
+
+//!
+//! @seealso
+//!   @[t_map_array]
+class TMapArray
+{
+  inherit TTypedArray;
+  constant name = "array(mapping)";
+  constant type_name = "RXML.t_map_array";
+  constant element_type_name = "mapping";
+
+  protected int element_type_p (mixed val)
+    {return mappingp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_mapping->encode (val);}
 }
 
 
@@ -8084,31 +8327,6 @@ protected class PikeCompile
     return id;
   }
 
-  string add_var (string type, void|string init)
-  {
-    string id =
-#ifdef DEBUG
-      pcid +
-#endif
-      "v" + p_comp_idnr++;
-    string txt;
-
-    if (init) {
-      COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      txt = predef::sprintf ("%s %s = %s;\n", type, id, init);
-    }
-    else {
-      COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      txt = predef::sprintf ("%s %s;\n", type, id);
-    }
-
-    Thread.MutexKey lock = mutex::lock();
-    code::add (txt);
-    cur_ids[id] = 1;
-
-    return id;
-  }
-
   string add_func (string rettype, string arglist, string def)
   {
     string id =
@@ -8118,12 +8336,19 @@ protected class PikeCompile
       "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    string txt =
-      predef::sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
+    string txt = predef::sprintf (
+      "# 1\n" // Workaround for pike 7.8 bug with large line numbers, [bug 6146].
+      "%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
     Thread.MutexKey lock = mutex::lock();
     code::add (txt);
     cur_ids[id] = 1;
+
+    // Be nice to the Pike compiler, and compile the code in segments.
+    if (code::_sizeof() >= 65536) {
+      lock = UNDEFINED;
+      compile();
+    }
 
     return id;
   }
@@ -8184,15 +8409,16 @@ protected class PikeCompile
     }
   }
 
-  object compile()
+  void compile()
   {
     Thread.MutexKey lock = mutex::lock();
-    object compiled = 0;
 
     string txt = code::get();
 
     if (txt != "") {
       COMP_MSG ("%O compile\n", this_object());
+
+      object compiled = 0;
 
       txt +=
 	"mixed _encode() { } void _decode(mixed v) { }\n"
@@ -8256,7 +8482,7 @@ protected class PikeCompile
       }
     }
 
-    return compiled;
+    return;
   }
 
   protected void destroy()
@@ -8267,9 +8493,9 @@ protected class PikeCompile
       string errmsg = "Still got unresolved delayed resolve places:\n";
       foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
-	errmsg +=
-	  replace (predef::sprintf ("  %O[%O]: %O", what, index, what[index]),
-		   "\n", "\n  ") + "\n";
+	errmsg += replace (predef::sprintf ("  %O[%O]: %O",
+					    what, index, what[index]),
+			   "\n", "\n  ") + "\n";
       }
       error (errmsg);
     }
@@ -9100,7 +9326,7 @@ class PCode
 	}
 
 	if (!ppos)
-	  return type->sequential ? type->empty_value : nil;
+	  return type->sequential ? type->copy_empty_value() : nil;
 	else
 	  if (type->sequential)
 	    return `+ (type->empty_value, @parts[..ppos - 1]);
@@ -9167,10 +9393,11 @@ class PCode
   //! exception unwinding and rewinding, checks for staleness, chained
   //! p-code or state updates. Mostly for internal use.
   {
-    if (!length)
-      return type->sequential ? comp->bind (type->empty_value) : "RXML.nil";
-
     string typevar = comp->bind (type);
+
+    if (!length)
+      return type->sequential ? typevar + "->copy_empty_value()" : "RXML.nil";
+
     array(string) parts = allocate (length);
 
     for (int pos = 0; pos < length; pos++) {
@@ -9448,7 +9675,7 @@ class PCodeEncoder
     this_program::default_config = default_config;
   }
 
-  protected string server_dir = getcwd() + "/";
+  protected string cwd = combine_path (getcwd()) + "/";
 
   string|array nameof(mixed what)
   {
@@ -9576,8 +9803,10 @@ class PCodeEncoder
     if (stringp (pike_name)) {
       sscanf (pike_name, "%1s%s", string cls, string path);
       if ((<"p", "o", "f">)[cls]) {
-	if (has_prefix (path, server_dir))
-	  pike_name = "Rf:" + cls + path[sizeof (server_dir)..];
+	if (has_prefix (path, cwd))
+	  pike_name = "Rf:" + cls + path[sizeof (cwd)..];
+	else if (has_prefix (path, roxenloader.server_dir))
+	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -9587,8 +9816,10 @@ class PCodeEncoder
     else {
       sscanf (pike_name[0], "%1s%s", string cls, string path);
       if ((<"p", "o", "f">)[cls]) {
-	if (has_prefix (path, server_dir))
-	  pike_name[0] = "Rf:" + cls + path[sizeof (server_dir)..];
+	if (has_prefix (path, cwd))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (cwd)..];
+	else if (has_prefix (path, roxenloader.server_dir))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -9627,8 +9858,6 @@ class PCodeDecoder
     this_program::default_config = default_config;
     this_program::check_tag_set_hash = check_tag_set_hash;
   }
-
-  protected string server_dir = getcwd() + "/";
 
   mixed thingof(string|array what)
   {
@@ -9696,9 +9925,13 @@ class PCodeDecoder
 	  }
 	  else if (!(config = roxen->get_configuration (what[1])))
 	    error ("Cannot find configuration %O.\n", what[1]);
-	  if (config->compat_level() != what[2])
-	    p_code_stale_error ("P-code is stale - the compatibility level "
-				"has changed since it was encoded.\n");
+	  int int_enc_compat_level = (int) round (what[2] * 1000);
+	  if ((int) (config->compat_level() * 1000) != int_enc_compat_level)
+	    p_code_stale_error ("P-code is stale - it was encoded with "
+				"compatibility level %O, "
+				"but now running with %O.\n",
+				int_enc_compat_level / 1000.0,
+				config->compat_level());
 	  ENCODE_DEBUG_RETURN (config);
 	}
 
@@ -9714,7 +9947,7 @@ class PCodeDecoder
 
 	default:
 	  if (sscanf (what[0], "Rf:%1s%s", string cls, string path) == 2)
-	    what[0] = cls + server_dir + path;
+	    what[0] = cls + roxenloader.server_dir + "/" + path;
 	  ENCODE_DEBUG_RETURN (::thingof (what));
       }
     }
@@ -9740,7 +9973,7 @@ class PCodeDecoder
 
 	default:
 	  if (sscanf (what, "Rf:%1s%s", string cls, string path) == 2)
-	    what = cls + server_dir + path;
+	    what = cls + roxenloader.server_dir + "/" + path;
 	  ENCODE_DEBUG_RETURN (::thingof (what));
       }
     }
@@ -9909,19 +10142,14 @@ class Nil
   inherit Empty;
 
   constant is_rxml_null_value = 1;
-  //! Used in some places to test for a null value.
+  //! Used to test for a false value in a boolean rxml context.
   //!
-  //! Note that @[RXML.nil] represents an undefined value (i.e. the
-  //! RXML counterpart to Pike @[UNDEFINED]) rather than a null/nil
-  //! value (despite its misleading name). However in tests it's
-  //! convenient to lump @[RXML.nil] together with null values since
-  //! one typically want to test both that the value exists and that
-  //! it isn't null (like e.g. @expr{<if variable="_.foo">@} does).
+  //! This constant lumps together various special objects like
+  //! @[RXML.nil], @[Roxen.false], and @[Roxen.null] that should be
+  //! considered false in boolean contexts.
   //!
-  //! Therefore this flag is set in @[RXML.nil] too, and that also
-  //! makes it easier to inherit @[RXML.Nil] to create null value
-  //! classes. (Only the globally unique @[RXML.nil] instance is
-  //! treated as undefined by the @[RXML] module anyway.)
+  //! @note
+  //! The name is confusing, for historical reasons.
 
   int `!() {return 1;}
   string _sprintf (int flag) {return flag == 'O' && "RXML.nil";}
@@ -10122,11 +10350,20 @@ protected void init_parsers()
   p->add_entity ("lt", 0);
   p->add_entity ("gt", 0);
   p->add_entity ("amp", 0);
+  // FIXME: The following quotes ought to be filtered only in
+  //        attribute contexts.
+  p->add_entity ("quot", 0);
+  p->add_entity ("apos", 0);
+  // The following three are also in the parser_charref_table.
+  p->add_entity ("#34", 0);	// quot
+  p->add_entity ("#39", 0);	// apos
+  p->add_entity ("#x22", 0);	// quot
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
       TRY_DECODE_CHREF (chref,
-			if ((<"<", ">", "&">)[chr]) return ({p->current()}););
+			if ((<"<", ">", "&", "\"", "\'">)[chr])
+			  return ({p->current()}););
       return ({p->current()});
     });
   tolerant_xml_safe_charref_decode_parser = p;

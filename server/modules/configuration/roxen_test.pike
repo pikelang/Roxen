@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.85 2010/11/19 15:20:15 marty Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -58,8 +58,41 @@ void background_failure()
   // describe_backtrace() (roxenloader.pike), in self test mode. We
   // need to check whether it's for us or not by checking if we're
   // running currently.
-  if (is_running())
+  if (is_running()) {
+    // Log something to make these easier to locate in the noisy test logs.
+    report_error ("################ Background failure\n");
     bkgr_fails++;
+  }
+}
+
+void schedule_tests (int|float delay, function func, mixed... args)
+{
+  // Run the tests in a normal handler thread so that real background
+  // jobs can run as usual.
+  call_out (roxen.handle, delay,
+	    lambda (function func, array args) {
+	      // Meddle with the busy_threads counter, so that this
+	      // handler thread running the tests doesn't delay the
+	      // background jobs.
+	      roxen->busy_threads--;
+	      mixed err = catch (func (@args));
+	      roxen->busy_threads++;
+	      if (err) throw (err);
+	    }, func, args);
+}
+
+void schedule_tests_single_thread (int|float delay,
+				   function func, mixed... args)
+{
+  // The opposite of schedule_tests, i.e. tries to ensure no other
+  // jobs gets executed in parallel by either background_run or a
+  // roxen.handle.
+  call_out (lambda (function func, array args) {
+	      roxen->hold_handler_threads();
+	      mixed err = catch (func (@args));
+	      roxen->release_handler_threads (0);
+	      if (err) throw (err);
+	    }, delay, func, args);
 }
 
 int do_continue(int _tests, int _fails)
@@ -70,7 +103,7 @@ int do_continue(int _tests, int _fails)
   running = 1;
   tests += _tests;
   fails += _fails;
-  roxen.background_run (0.5, do_tests);
+  schedule_tests (0.5, do_tests);
   return 1;
 }
 
@@ -96,7 +129,7 @@ void start(int n, Configuration c)
   if(is_ready_to_start())
   {
     running = 1;
-    roxen.background_run (0.5, do_tests);
+    schedule_tests (0.5, do_tests);
   }
 }
 
@@ -202,12 +235,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
-    report_debug (indent (2, sprintf ("Error at line %d:",
+    report_error (indent (2, sprintf ("################ Error at line %d:",
 				      file_parser->at_line())));
     if( strlen( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
-    report_debug( indent(2, message ) );
+    report_error( indent(2, message ) );
   };
 
   string test_ok(  )
@@ -285,7 +318,11 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 				    !objectp (err) || !err->is_RXML_Backtrace ||
 				    err->type != m["ignore-errors"]))
 			 {
-			   test_error("Failed (backtrace): %s",describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error("Failed (backtrace): %s",
+				      master()->describe_backtrace(err));
 			   throw(1);
 			 }
 
@@ -418,8 +455,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			   int i;
 			   c = map(c/"\n", lambda(string in) {
 					     return sprintf("%3d: %s", ++i, in); }) * "\n";
-			   werror("Error while compiling test\n%s\n\nBacktrace\n%s\n",
-				  c, describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error ("Error while compiling test\n%s\n\n"
+				       "Backtrace:\n%s\n",
+				       c, master()->describe_backtrace(err));
 			   throw(1);
 			 }
 			 string r = test->test(res);
@@ -436,6 +477,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			       default:
 				 test_error("Could not <add> %O; "
 					    "unknown variable.\n", m->what);
+				 throw (1);
 				 break;
 			       case "prestate":
 				 id->prestate[m->name] = 1;
@@ -482,14 +524,17 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 		   "login" : lambda(Parser.HTML p, mapping m) {
 			       id->realauth = m->user + ":" + m->password;
 			       id->request_headers->authorization =
-				 "Basic " + MIME.encode_base64 (id->realauth);
+				 "Basic " + MIME.encode_base64 (id->realauth, 1);
 			       conf->authenticate(id);
 			     },
     ]) );
 
   if( mixed error = catch(parser->finish(c)) ) {
     if (error != 1)
-      test_error ("Failed to parse test: " + describe_backtrace (error));
+      // Use master()->describe_backtrace() to bypass background_failure() and
+      // avoid counting this error twice.
+      test_error ("Failed to parse test: " +
+		  master()->describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -501,7 +546,9 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 class TagTestData {
   inherit RXML.Tag;
   constant name = "test-data";
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
   array(RXML.Type) result_types = ({RXML.t_html (RXML.PXml)});
+
   class Frame {
     inherit RXML.Frame;
 
@@ -581,7 +628,7 @@ void run_xml_tests(string data) {
     bkgr_fails = 0;
   }
 
-  continue_find_tests();
+  continue_run_tests();
 }
 
 
@@ -603,11 +650,12 @@ void run_pike_tests(object test, string path)
       bkgr_fails = 0;
     }
 
-    continue_find_tests();
+    continue_run_tests();
   };
 
   if(!test)
     return;
+
   if( mixed error = catch(test->low_run_tests(conf, update_num_tests)) ) {
     if (error != 1) throw (error);
     update_num_tests( 1, 1 );
@@ -617,61 +665,56 @@ void run_pike_tests(object test, string path)
 
 // --- Mission control ------------------------
 
-array(string) tests_to_run;
-ADT.Stack file_stack = ADT.Stack();
+array(string) test_files;
 
-void continue_find_tests( )
+void continue_run_tests( )
 {
-  while( string file = file_stack->pop() )
-  {
-    if( Stdio.Stat st = file_stat( file ) )
+  if (sizeof (test_files)) {
+    string file = test_files[0];
+    test_files = test_files[1..];
+
+    report_debug("\nRunning test %s\n",file);
+
+    if (has_suffix (file, ".xml"))
     {
-      if( file!="CVS" && st->isdir )
-      {
-	string dir = file+"/";
-	foreach( get_dir( dir ), string f )
-	  file_stack->push( dir+f );
+      string data = Stdio.read_file(file);
+      int single_thread;
+      // If the file contains a pi <?single-thread?> then it's run with the
+      // handler threads disabled (see the single_thread constant in
+      // pike_test_common.pike).
+      Roxen.get_xml_parser()->add_quote_tag ("?single-thread",
+					     lambda() {single_thread = 1;},
+					     "?")
+			    ->finish (data);
+      if (single_thread)
+	schedule_tests_single_thread (0, run_xml_tests, data);
+      else
+	schedule_tests (0, run_xml_tests, data);
+      return;
+    }
+    else			// Pike test.
+    {
+      object test;
+      mixed error;
+      tests++;
+      if( error=catch( test=compile_file(file)( verbose ) ) ) {
+	// Use master()->describe_backtrace() to bypass background_failure()
+	// and avoid counting this error twice.
+	report_error("################ Failed to compile %s:\n%s", file,
+		     master()->describe_backtrace(error));
+	fails++;
       }
-      else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
+      else
       {
-	report_debug("\nFound test file %s\n",file);
-	int done;
-	foreach( tests_to_run, string p ) {
-	  if( !has_prefix(p, "RoxenTest_") )
-	    p = "RoxenTest_" + p;
-	  if( glob( "*"+p+"*", file ) )
-	  {
-	    if(glob("*.xml",file))
-	    {
-	      roxen.background_run (0, run_xml_tests, Stdio.read_file(file));
-	      return;
-	    }
-	    else if(glob("*.pike",file))
-	    {
-	      object test;
-	      mixed error;
-	      tests++;
-	      if( error=catch( test=compile_file(file)( verbose ) ) ) {
-		report_error("Failed to compile %s:\n%s", file,
-			     describe_backtrace(error));
-		fails++;
-	      }
-	      else
-	      {
-		roxen.background_run (0, run_pike_tests,test,file);
-		return;
-	      }
-	    }
-	    done++;
-	    break;
-	  }
-	}
-	if( !done )
-	  report_debug( "Skipped (not matched by --tests argument)\n" );
+	if (test->single_thread)
+	  schedule_tests_single_thread (0, run_pike_tests, test, file);
+	else
+	  schedule_tests (0, run_pike_tests,test,file);
+	return;
       }
     }
   }
-  
+
   running = 0;
   finished = 1;
   if(is_last_test_configuration())
@@ -690,20 +733,64 @@ void continue_find_tests( )
 void do_tests()
 {
   if(time() - roxen->start_time < 2 ) {
-    roxen.background_run (0.2, do_tests);
+    schedule_tests (0.2, do_tests);
     return;
   }
-  report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
+  report_debug("\nStarting roxen self test in %s\n",
+	       query("selftestdir"));
 
-  tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  array(string) tests_to_run =
+    Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  foreach( tests_to_run; int i; string p )
+    if( !has_prefix(p, "RoxenTest_") )
+      tests_to_run[i] = "RoxenTest_" + p;
+
   verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
 
   conf->rxml_tag_set->handle_run_error = rxml_error;
   conf->rxml_tag_set->handle_parse_error = rxml_error;
 
+  test_files = ({});
+  mapping(string:int) matched_pos = ([]);
+  ADT.Stack file_stack = ADT.Stack();
   file_stack->push( 0 );
   file_stack->push( combine_path(query("selftestdir"), "tests" ));
-  roxen.background_run (0, continue_find_tests);
+
+file_loop:
+  while( string file = file_stack->pop() )
+  {
+    if( Stdio.Stat st = file_stat( file ) )
+    {
+      if( file!="CVS" && st->isdir )
+      {
+	string dir = file+"/";
+	foreach( get_dir( dir ), string f )
+	  file_stack->push( dir+f );
+      }
+      else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
+      {
+	foreach( tests_to_run; int i; string p ) {
+	  if( glob( "*/"+p+"*", file ) )
+	  {
+	    if (has_suffix (file, ".xml") || has_suffix (file, ".pike")) {
+	      test_files += ({file});
+	      matched_pos[file] = i;
+	    }
+	    continue file_loop;
+	  }
+	}
+	report_debug( "Skipped test %s\n", file);
+      }
+    }
+  }
+
+  // The order should not be significant ...
+  test_files = Array.shuffle (test_files);
+
+  // ... but let the caller control the order in case it turns out to be.
+  sort (map (test_files, matched_pos), test_files);
+
+  schedule_tests (0, continue_run_tests);
 }
 
 // --- Some tags used in the RXML tests ---------------
@@ -782,7 +869,9 @@ class TagEmitTESTER {
 		(["data":RXML.nil]),
 		(["data":TestNull()]),
 		(["data":RXML.empty]),
-		(["data":EntityDyn()]) });
+		(["data":EntityDyn()]),
+		(["data": Val.null]),
+	     });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",

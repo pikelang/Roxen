@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.16 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

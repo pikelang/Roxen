@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.13 2009/04/29 21:46:58 mast Exp $
+ * $Id$
  */
 inherit "wizard";
 
@@ -27,6 +27,8 @@ string fix_port(string p)
   if (a[0] == "0.0.0.0") {
     a[0] = "*";
   }
+  if (has_value (a[0], ":"))
+    a[0] = "[" + a[0] + "]";
   if (a[1] == "0") {
     a[1] = "ANY";
   }
@@ -84,7 +86,11 @@ string parse( RequestID id )
 	      if (local_port)
 		local_port = fix_port (local_port);
 	      else {
-		if ((<System.EBADF, System.ENOTCONN>)[f->errno()]) {
+		if ((<System.EBADF, System.ENOTCONN,
+#if constant (System.EAFNOSUPPORT)
+		      System.EAFNOSUPPORT,
+#endif
+		      System.EINVAL>)[f->errno()]) {
 		  // A socket that getsockname(2) doesn't like. Assume
 		  // it's a unix socket if we get these errors. Don't
 		  // know how portable it is - only tested on Linux.

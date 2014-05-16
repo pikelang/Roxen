@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.22 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 // 
 
@@ -189,7 +189,7 @@ class Handler
           opts["gid"] = settings->set_gid;
 	else if (settings->set_uid && settings->set_gid != -1)
         {
-	  // If we have set the uid, create_process may change the
+	  // If we have set the uid, Process.Process may change the
 	  // group ID to the user's primary group ID, which is not
 	  // what we want here.
 	  opts["gid"] = system.getgid();
@@ -199,10 +199,10 @@ class Handler
 
       mixed bt;
       if (bt = catch {
-        proc = Process.create_process(command, opts);
+        proc = Process.Process(command, opts);
 	  })
 	{
-	  werror("ExtScript, create_process failed: " +
+	  werror("ExtScript, Process.Process failed: " +
                  describe_backtrace(bt) + "\n");
           return ({ -1, "unable to start helper process" });
         }

@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.14 2005/12/21 13:50:38 noring Exp $
+ * $Id$
  */
 
 #include <roxen.h>

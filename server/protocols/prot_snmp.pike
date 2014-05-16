@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.18 2010/10/29 14:04:12 wellhard Exp $
+ * $Id$
  *
  * SNMP protocol support.
  *
@@ -82,7 +82,7 @@ class SNMP_Port {
       }
     }; 
     //# error ...
-    udp_errno = errno();
+    udp_errno = ::errno();
     DWRITE("protocol.create: can't bind to the socket.\n");
   }
 
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.18 $"/" ")[1],
+			   ("$Revision: 2.21 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -254,6 +254,18 @@ class RoxenGlobalMIB
       memusage_time = time(1);
     }
     return memusage_data;
+  }
+  
+  protected int pike_memusage_time;
+  protected mapping(string:int) pike_memusage_data;
+  protected mapping(string:int) update_pike_memusage()
+  {
+    if(!pike_memusage_data || time(1) != pike_memusage_time)
+    {
+      pike_memusage_data = Debug.memory_usage();
+      pike_memusage_time = time(1);
+    }
+    return pike_memusage_data;
   }
   
   protected void create()
@@ -449,6 +461,137 @@ class RoxenGlobalMIB
 		       "Number of call outs longer than 15 seconds."),
 		   }),
 		 }),
+	       }),
+	       ({
+		 UNDEFINED,
+		 ({
+		   UNDEFINED,
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_arrays; },
+		     "pikeNumArrays",
+		     "Number of pike arrays."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_call_outs; },
+		     "pikeNumCallOuts",
+		     "Number of pike call outs."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_callables; },
+		     "pikeNumCallables",
+		     "Number of pike callables."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_callbacks; },
+		     "pikeNumCallbacks",
+		     "Number of pike callbacks."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_frames; },
+		     "pikeNumFrames",
+		     "Number of pike Frames."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_mappings; },
+		     "pikeNumMappings",
+		     "Number of pike mappings."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_multisets; },
+		     "pikeNumMultisets",
+		     "Number of pike multisets."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_objects; },
+		     "pikeNumObjects",
+		     "Number of pike objects."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_programs; },
+		     "pikeNumPrograms",
+		     "Number of pike programs."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->num_strings; },
+		     "pikeNumStrings",
+		     "Number of pike strings."),
+		 }),
+		 ({
+		   UNDEFINED,
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->array_bytes/1024; },
+		     "pikeMemArray",
+		     "Size of pike arrays in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->call_out_bytes/1024; },
+		     "pikeMemCallOut",
+		     "Size of pike call outs in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->callable_bytes/1024; },
+		     "pikeMemCallable",
+		     "Size of pike callables in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->callback_bytes/1024; },
+		     "pikeMemCallback",
+		     "Size of pike callbacks in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->frame_bytes/1024; },
+		     "pikeMemFrame",
+		     "Size of pike frames in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->mapping_bytes/1024; },
+		     "pikeMemMapping",
+		     "Size of pike mappings in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->multiset_bytes/1024; },
+		     "pikeMemMultiset",
+		     "Size of pike multisets in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->object_bytes/1024; },
+		     "pikeMemObject",
+		     "Size of pike objects in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->program_bytes/1024; },
+		     "pikeMemProgram",
+		     "Size of pike programs in KiB."),
+		   SNMP.Gauge(lambda()
+			      { return update_pike_memusage()->string_bytes/1024; },
+		     "pikeMemString",
+		     "Size of pike strings in KiB."),
+		 })
+	       }),
+	       ({
+		 UNDEFINED,
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->alloc_threshold; },
+		   "gcAllocThreshold",
+		   "Threshold for gcNumAllocs when another automatic gc run is "
+		   "scheduled."),
+		 UNDEFINED,  /* Reserved for gc_time */
+		 UNDEFINED,  /* Reserved for last_garbage_ratio */
+		 UNDEFINED,  /* Reserved for last_garbage_strategy */
+		 SNMP.Tick(lambda()
+			   { return (time(1) - Debug.gc_status()->last_gc)*100; },
+		   "gcLastRun",
+		   "Time from last garbage-collector run in centiseconds."),
+		 UNDEFINED,  /* Reserved for non_gc_time */
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->num_allocs; },
+		   "gcNumAllocs",
+		   "Number of memory allocations since the last gc run."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->num_objects; },
+		   "gcNumObjects",
+		   "Number of arrays, mappings, multisets, objects and programs."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->objects_alloced; },
+		   "gcObjectsAlloced",
+		   "Decaying average over the number of allocated objects between "
+		   "gc runs."),
+		 SNMP.Gauge(lambda()
+			    { return Debug.gc_status()->objects_freed; },
+		   "gcObjectsFreed",
+		   "Decaying average over the number of freed objects in each gc run."),
+		 UNDEFINED,  /* Reserved for projected_garbage */
+		 SNMP.Counter(lambda()
+			    { return Debug.gc_status()->total_gc_cpu_time/10000000; },
+		   "gcTotalCpuTime",
+		   "Total CPU time spent inside the garbage collector in centiseconds."),
+		 SNMP.Counter(lambda()
+			    { return Debug.gc_status()->total_gc_real_time/10000000; },
+		   "gcTotalRealTime",
+		   "Total real time spent inside the garbage collector in centiseconds."),
 	       }),
 	     }));
   }
@@ -816,15 +959,14 @@ protected void bind(void|int ignore_eaddrinuse)
     error("Invalid address " + ip);
   }
 #endif /* System.EAFNOSUPPORT */
-#if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
-  if (
 #if constant(System.EADDRINUSE)
-      (port_obj->errno() == System.EADDRINUSE)
-#else /* !constant(System.EADDRINUSE) */
-      (port_obj->errno() == system.EADDRINUSE)
-#endif /* constant(System.EADDRINUSE) */
-      ) {
-    if (!ignore_eaddrinuse && (retries++ < 10)) {
+  if (port_obj->errno() == System.EADDRINUSE) {
+    if (ignore_eaddrinuse) {
+      // Told to ignore the bind problem.
+      bound = -1;
+      return;
+    }
+    if (retries++ < 10) {
       // We may get spurious failures on rebinding ports on some OS'es
       // (eg Linux, WIN32). See [bug 3031].
       report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
@@ -835,7 +977,7 @@ protected void bind(void|int ignore_eaddrinuse)
     }
   }
   else
-#endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+#endif /* constant(System.EADDRINUSE) */
   {
     report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
 		 get_url(), strerror(port_obj->errno()));

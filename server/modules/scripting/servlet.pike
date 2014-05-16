@@ -4,7 +4,7 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.25 2009/05/07 14:15:55 mast Exp $";
+string cvs_version = "$Id$";
 int thread_safe=1;
 constant module_unique = 0;
 

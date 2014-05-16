@@ -335,28 +335,22 @@ void set_up_ssl_variables( Protocol o )
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
-  string t, s;
+  string s = "nowhere";
+  string t;
 
   // FIXME: NT support.
 
   t = Stdio.read_bytes("/etc/resolv.conf");
-  if(t)
-  {
-    if(!sscanf(t, "domain %s\n", s))
-      if(!sscanf(t, "search %s%*[ \t\n]", s))
-        s="nowhere";
-  } else {
-    s="nowhere";
+  if (!t) return s;
+
+  if (!sscanf(t, "domain %s\n", s) && !sscanf(t, "search %s%*[ \t\n]", s)) {
+    return s;
   }
-  s = "host."+s;
-  sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown";
-  }
+
+  if (has_prefix(s, ".")) s = s[1..];
+  if (has_suffix(s, ".")) s = s[..sizeof(s)-2];
+  if (!sizeof(s)) return "unknown";
+
   return s;
 }
 
@@ -910,8 +904,6 @@ be of real use.</p>"));
 	{return !query("suicide_engage");}
     );
 
-#ifdef NEW_RAM_CACHE
-
   defvar ("mem_cache_gc_2", 5 * 60,
 	  LOCALE(1045, "Cache: Memory cache GC interval"),
 	  TYPE_INT,
@@ -956,20 +948,6 @@ the Roxen instance of the MySQL server).</p>"));
     lambda (Variable.Int v) {
       cache.set_total_size_limit (v->query() * 1024 * 1024);
     });
-
-#else  // !NEW_RAM_CACHE
-
-  defvar("mem_cache_gc",
-	 Variable.Int(300, 0, 
-		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
-		      LOCALE(171, "The number of seconds between every garbage collect "
-			     "(removal of old content) from the memory cache. The "
-			     "memory cache is used for various tasks like remembering "
-			     "what supports flags matches what client.")))
-	 ->set_range(1, 60*60*24);
-	 // Note that the upper limit is arbitrary.
-
-#endif	// !NEW_RAM_CACHE
 
   defvar("replicate", 0,
 	 LOCALE(163, "Enable replication system" ),
@@ -1085,6 +1063,25 @@ the Roxen instance of the MySQL server).</p>"));
   defvar("global_position",
 	 Variable.Variable(0, VAR_INVISIBLE));
 
+#ifdef ENABLE_OUTGOING_PROXY
+  defvar("use_proxy", 0,
+	 LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+	 LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
+		"external web sites through the Linkbrowser or when Insert "
+		"cached-href fetches data from an external location."));
+  
+  defvar("proxy_url", "",
+	 LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
+	 LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
+  
+  defvar("proxy_username", "",
+         LOCALE(1056, "Proxy: Proxy username"), TYPE_STRING,
+         LOCALE(1057, "Username for proxy authorization."));
+  
+  defvar("proxy_password", "",
+         LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
+         LOCALE(1059, "Password for proxy authorization."));
+#endif
 }
 
 

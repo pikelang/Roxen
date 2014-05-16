@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: kerberos.pike,v 1.5 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Support for Kerberos authentication";

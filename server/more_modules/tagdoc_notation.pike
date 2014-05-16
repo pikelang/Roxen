@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: tagdoc_notation.pike,v 2.4 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_name = "TagDoc Notation exemplifier";
 constant module_type = MODULE_TAG;
@@ -25,7 +25,7 @@ constant tagdoc = ([
 <attr name='age' value='number' required='required'><p>
   This is the documentation of the 'age' attribute to the <tag>example-tag</tag>.
   In this case the attribute accepts a number, e.g. &lt;example-tag age='42'&gt;&lt;/example-tag&gt;.
-  This attribute is required. If it doesn't exists in the tag you will get an RXML parse error.
+  This attribute is required. If it doesn't exist in the tag you will get an RXML parse error.
 </p></attr>
 
 <attr name='sort' value='up|down' default='up'><p>

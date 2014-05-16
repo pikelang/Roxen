@@ -65,7 +65,7 @@ int main(int argc, array(string) argv)
       exit(0);
       break;
     case "version":
-      werror("$Id: fixquota.pike,v 1.2 2000/08/28 05:31:52 per Exp $\n");
+      werror("$Id$\n");
       exit(0);
       break;
     }

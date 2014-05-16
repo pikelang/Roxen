@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.41 2009/05/07 14:15:54 mast Exp $
+ * $Id$
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2009, Roxen IS.
@@ -120,6 +120,20 @@ void post_start()
 
 void start(int num, Configuration conf)
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
+    // Don't do anything - config_filesystem will reload us.
+    return;
+
+#ifndef ENABLE_UPDATE_CLIENT
+  // This update system isn't in use, so drop this module.
+  roxen.background_run (0, lambda (Configuration conf) {
+			     conf->disable_module (module_local_id());
+			     conf->save();
+			     conf->save_me();
+			   }, conf);
+  return;
+#endif
+
   if(conf && !inited)
   {
     inited++;
@@ -669,7 +683,7 @@ mapping get_headers()
 		 "user-agent": roxen->real_version ]);
 
   if(sizeof(query("userpassword")))
-    m->authorization="Basic "+MIME.encode_base64(query("userpassword"));
+    m->authorization="Basic "+MIME.encode_base64(query("userpassword"), 1);
   return m;
 }
 

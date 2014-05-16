@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.164 2010/05/19 07:36:28 noring Exp $
+// $Id$
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.15 2010/03/29 12:06:12 jonasw Exp $
+ * $Id$
  */
 #include <stat.h>
 #include <roxen.h>
@@ -70,7 +70,8 @@ string make_environment_summary()
   string res = make_headline("Environment");
   res+=sprintf("  %-30s %s\n", "Roxen version:", roxen_version());
   res+=sprintf("  %-30s %s\n", "Pike version:", version());
-  res+=sprintf("  %-30s %s\n", "Working directory:", getcwd());
+  res+=sprintf("  %-30s %s\n", "Logical server directory:", roxenloader.server_dir);
+  res+=sprintf("  %-30s %s\n", "Physical working directory:", getcwd());
   res+=sprintf("  %-30s %s", "Time:", ctime(time()));
   res+=sprintf("  %-30s %s\n", "Host:", gethostname());
 #ifdef __NT__

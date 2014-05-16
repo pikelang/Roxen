@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.24 2008/08/15 12:33:54 mast Exp $
+//! $Id$
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 

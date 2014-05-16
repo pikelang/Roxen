@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.26 2009/05/26 14:15:37 grubba Exp $
+' $Id$
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -97,7 +97,7 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.26 2009/05/26 14:15:37 grubba Exp $")
+  tf.writeLine("# Created by $Id$")
   tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("# DEBUG: " & rest & ";")
   tf.writeLine("")

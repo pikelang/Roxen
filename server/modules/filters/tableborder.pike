@@ -26,7 +26,7 @@ inherit "module";
 "with(location)"                          \
   "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
 
-constant cvs_version = "$Id: tableborder.pike,v 1.17 2009/05/08 13:02:16 anders Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table/Image Border Unveiler";

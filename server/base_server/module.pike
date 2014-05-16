@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.244 2010/06/28 06:57:57 marty Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -66,6 +66,10 @@ void report_notice(sprintf_format fmt, sprintf_args ... args)
   { predef::report_notice(fmt, @args); }
 void report_debug(sprintf_format fmt, sprintf_args ... args)
   { predef::report_debug(fmt, @args); }
+void report_warning_sparsely (sprintf_format fmt, sprintf_args ... args)
+  {predef::report_warning_sparsely (fmt, @args);}
+void report_error_sparsely (sprintf_format fmt, sprintf_args ... args)
+  {predef::report_error_sparsely (fmt, @args);}
 
 void log_event (string facility, string action, string resource,
 		void|mapping(string:mixed) info)
@@ -371,14 +375,16 @@ string location_url()
 	}
 	continue;
       }
-    return (string)uri + loc[1..];
+    uri->path += loc[1..];
+    return (string)uri;
   }
   if(candidate_uri) {
     report_warning("Warning: Could not find any suitable ports, continuing anyway. "
 		   "Please make sure that your Primary Server URL matches "
 		   "at least one port. Primary Server URL: %O, URLs: %s.\n",
 		 world_url, short_array(urls));
-    return (string)candidate_uri + loc[1..];
+    candidate_uri->path += loc[1..];
+    return (string)candidate_uri;
   }
   return 0;
 }
@@ -484,8 +490,12 @@ class DefaultPropertySet
       RequestID sub_id = id->clone_me();
       sub_id->misc->common = id->misc->common;
 
-      sub_id->not_query = query_location() + path;
-      sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+      sub_id->raw_url = sub_id->not_query = query_location() + path;
+      if ((sub_id->raw_url != id->raw_url) && (id->raw_url != id->not_query)) {
+	// sub_id->raw_url = replace (id->raw_url, id->not_query, sub_id->not_query);
+	sub_id->raw_url = sub_id->not_query +
+	  (({ "" }) + (id->raw_url/"?")[1..]) * "?";
+      }
       sub_id->method = "HEAD";
 
       mapping(string:mixed)|int(-1..0)|object res = find_file (path, sub_id);
@@ -569,8 +579,9 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
 					      int depth, RequestID id,
 					      multiset(string)|void filt)
 {
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
 
   mapping(string:mixed) recurse (string path, int depth) {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
@@ -656,8 +667,10 @@ mapping(string:mixed) patch_properties(string path,
     properties->unroll();
     throw (err);
   } else {
+    string prefix = map((query_location()[1..] + path)/"/",
+			Roxen.http_encode_url)*"/";
     MultiStatus.Prefixed result =
-      id->get_multi_status()->prefix (id->url_base() + query_location()[1..] + path);
+      id->get_multi_status()->prefix (id->url_base() + prefix);
     int any_failed;
     foreach(results, mapping(string:mixed) answer) {
       if (any_failed = (answer && (answer->error >= 300))) {
@@ -1726,9 +1739,9 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
     return Roxen.http_status(403, "Source and destination overlap.");
   }
 
-  string loc = query_location();
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + loc[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
 
   mapping(string:mixed) recurse(string source, string destination) {
     // Note: Already got an extra TRACE_ENTER level on entry here.
@@ -1874,8 +1887,9 @@ protected mapping(string:mixed) move_collection(
   mapping(string:mixed) res = find_file(source, tmp_id);
   if (!res || res->error != 501) return res;
   // Not implemented. Fall back to COPY + DELETE.
+  string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
-    id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
+    id->get_multi_status()->prefix (id->url_base() + prefix);
   res = copy_collection(source, destination, behavior, overwrite, result, id);
   if (res && (res->error >= 300 || !sizeof(res))) {
     // Copy failed.
@@ -2029,6 +2043,35 @@ mixed get_value_from_file(string path, string index, void|string pre)
   //  work correctly.
   return compile_string((pre || "") + file->read(), path)[index];
 }
+
+#if constant(roxen.FSGarbWrapper)
+//! Register a filesystem path for automatic garbage collection.
+//!
+//! @param path
+//!   Path in the real filesystem to garbage collect.
+//!
+//! @param max_age
+//!   Maximum allowed age in seconds for files.
+//!
+//! @param max_size
+//!   Maximum total size in bytes for all files under the path.
+//!   Zero to disable the limit.
+//!
+//! @param max_files
+//!   Maximum number of files under the path.
+//!   Zero to disable the limit.
+//!
+//! @returns
+//!   Returns a roxen.FSGarbWrapper object. The garbage collector
+//!   will be removed when this object is destructed (eg via
+//!   refcount-garb).
+roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
+				    int|void max_size, int|void max_files)
+{
+  return roxen.register_fsgarb(module_identifier(), path, max_age,
+			       max_size, max_files);
+}
+#endif
 
 private mapping __my_tables = ([]);
 
@@ -2242,3 +2285,10 @@ Sql.Sql get_my_sql( int|void read_only, void|string charset )
 {
   return DBManager.cached_get( my_db, _my_configuration, read_only, charset );
 }
+
+// Callback used by the DB browser, if defined, for custom formatting
+// of database fields.
+int|string format_db_browser_value (string db_name, string table_name,
+				    string column_name, array(string) col_names,
+				    array(string) col_types, array(string) row,
+				    RequestID id);

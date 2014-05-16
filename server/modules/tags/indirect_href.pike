@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.35 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 

@@ -6,7 +6,7 @@
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.12 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "throttlelib";

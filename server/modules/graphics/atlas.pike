@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.22 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -254,7 +254,9 @@ constant tagdoc=([
 "atlas":({ #"<desc type='cont'><p><short>
 
  Draws a map.</short> The map shows either the world, regions (Africa, Europe,
- etc) or countries. It's a known bug that the map is not entierly up to date.</p>
+ etc) or countries. It's a known bug that the map is not entierly up to date. 
+ It is possible to pass attributes, such as the alt attribute, to the resulting 
+ tag by including them in the atlas tag.</p>
 
 <ex><atlas/></ex>
 

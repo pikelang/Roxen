@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.50 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe=1;
 
@@ -109,7 +109,7 @@ from the mail's MIME headers will be taken.");
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.50 $"/" ")[1];
+string revision = ("$Revision: 1.52 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -265,12 +265,21 @@ class TagEmail {
 			      })
 		    )*"\r\n";
 	}
-
+	
 	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
 	content_disp = ((args->disposition || "attachment") +
 			(aname ? "; filename=\""+aname+"\"" : ""));
-	content_id   = args->cid || "nocid";
-
+	
+	//  Use "nocid" for first attachment (backwards compatibility)
+	//  but counter-based strings for subsequent attachments.
+	if (args->cid)
+	  content_id = args->cid;
+	else {
+	  int nocid_counter = id->misc["_email_nocid_"]++;
+	  content_id =
+	    nocid_counter ? sprintf("cid_%05d", nocid_counter) : "nocid";
+	}
+	
 	error = catch {
 	  m = MIME.Message(body,
 			   ([ 
@@ -864,7 +873,9 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <attr name='cid' value='Content-ID'><p>
  The content-id to use for the attachment.
- The default id is \"nocid\".
+ The default id is \"nocid\" for the first attachment without custom
+ content-id (for backwards compatibility), and a counter-based string for
+ subsequent attachments.
 </p>
 </attr>
 

@@ -1,4 +1,4 @@
-# $Id: supports,v 1.92 2005/10/21 09:31:02 jonasw Exp $
+# $Id$
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.

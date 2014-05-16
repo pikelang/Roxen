@@ -23,13 +23,15 @@ class Server(string dir,
   Calendar.Day get_date_from_cvsid( string data )
   {
     string q;
-    if( !sscanf( data, "%*s$Id: %*s,v %s\n", q ) )
+    if (sscanf( data, "%*s$Id: %*s,v %s\n", q ) < 3)
       return 0;
     return Calendar.dwim_day( (q/" ")[1] );
   }
 
   Calendar.Day reldate()
   {
+    return 0;
+
     Calendar.Day d2, d = get_date_from_cvsid( version_h );
     if( !d )
     {
@@ -81,6 +83,8 @@ array available_versions()
 
 string nice_relative_date( object t )
 {
+  if (!t)
+    return "n/a";
   if( t->how_many( Calendar.Month() ) )
     if( t->how_many( Calendar.Month() ) == 1 )
       return sprintf( (string)_(43,"1 month") );
@@ -140,7 +144,7 @@ string parse( RequestID id )
     res += "</td>";
 
     Calendar.Day d = f->reldate();
-    Calendar.Day diff = d->distance( Calendar.now() );
+    Calendar.Day diff = d && d->distance( Calendar.now() );
 
     warn += f->cannot_change_back;
     res +=
@@ -148,8 +152,8 @@ string parse( RequestID id )
       "<td>"+(f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
       "</td>"
       "<td></td>"
-      "<td>"+(d->set_language( roxen.get_locale()+"_UNICODE" )
-	      ->format_ext_ymd())+
+      "<td>"+(d ? d->set_language( roxen.get_locale()+"_UNICODE" )
+	      ->format_ext_ymd() : "n/a")+
       "</td>"
       "<td></td>"
       "<td>"+nice_relative_date( diff )+"</td>"
@@ -188,7 +192,7 @@ string parse( RequestID id )
     "<br clear='all'/>\n"
     "<br />";
   
-  res += "<submit-gbutton>"+_(138,"Change version")+"</submit-gbutton> "
+  res += "<submit-gbutton align='middle'>"+_(138,"Change version")+"</submit-gbutton> "
     "<cf-cancel href='./?class="+action+"'/>";
 	      
   return res;

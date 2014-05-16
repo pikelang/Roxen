@@ -1,5 +1,5 @@
 //
-// $Id: Server.pike,v 1.7 2009/05/07 14:15:53 mast Exp $
+// $Id$
 //
 // Roxen HTTP RPC
 //

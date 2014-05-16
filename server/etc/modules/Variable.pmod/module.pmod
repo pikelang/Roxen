@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.117 2009/10/13 11:55:27 mast Exp $
+// $Id$
 
 #include <module.h>
 #include <roxen.h>
@@ -530,10 +530,10 @@ class Variable
     //! Return all form variables preficed with path().
   {
     string p = path();
-    array names = glob( p+"*", indices(id->variables) );
+    array names = glob( p+"*", indices(id->real_variables) );
     mapping res = ([ ]);
     foreach( sort(names), string n )
-      res[ n[strlen(p).. ] ] = id->variables[ n ];
+      res[ n[strlen(p).. ] ] = id->real_variables[ n ][0];
     return res;
   }
 
@@ -545,7 +545,7 @@ class Variable
   }
   
   int(0..1) set_from_form( RequestID id, void|int(0..1) force )
-    //! Set this variable from the form variable in id->Variables,
+    //! Set this variable from the form variable in id->variables,
     //! if any are available. The default implementation simply sets
     //! the variable to the string in the form variables. @[force]
     //! forces the variable to be set even if the variable already
@@ -776,13 +776,16 @@ class Float
     if( _max != no_limit && _min != no_limit )
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
     string value;
-    if (_may_be_empty && (float)query() == (float)0)
-      value = "";
-    else
-      value = query()==""? "" : _format( (float)query() );
+    catch {
+      if (_may_be_empty && (float)query() == (float)0)
+	value = "";
+      else
+	value = query()==""? "" : _format( (float)query() );
+    };
     
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
 
     return input(path(), value, size, additional_args);
   }
@@ -883,7 +886,8 @@ class Int
     string value = (query() == 0 && _is_empty)? "" : (string)query();
 
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
 
     return input(path(), value, size, additional_args);
   }
@@ -928,7 +932,8 @@ class String
   string render_form( RequestID id, void|mapping additional_args )
   {
     additional_args = additional_args || ([]);
-    additional_args->type="text";
+    if (!additional_args->type)
+      additional_args->type="text";
     return input(path(), (string)query(), width, additional_args);
   }
 }
@@ -1006,7 +1011,7 @@ class Text
 // Password
 // =====================================================================
 class Password
-//! Password variable (uses crypt)
+//! Password variable (uses crypt_password)
 {
   inherit String;
   int width = 20;
@@ -1017,7 +1022,7 @@ class Password
     mapping val;
     if( sizeof( val = get_form_vars(id)) && 
         val[""] && strlen(val[""]) ) {
-      set( crypt( val[""] ) );
+      set( crypt_password( val[""] ) );
       return 1;
     }
     return 0;
@@ -1655,7 +1660,7 @@ class List
       if( sscanf( vv, ".set.%d", rn ) && (vv == ".set."+rn) )
       {
 	if ((rn >= 0) && (rn < sizeof(l))) {
-	  m_delete( id->variables, path()+vv );
+	  m_delete( id->real_variables, path()+vv );
 	  l[rn] = transform_from_form( vl[vv], vl );
 	  m_delete( vl, vv );
 	} else {
@@ -1668,21 +1673,21 @@ class List
       if( sscanf( vv, ".up.%d.x%*s", rn ) == 2 )
       {
         do_goto = 1;
-        m_delete( id->variables, path()+vv );
+        m_delete( id->real_variables, path()+vv );
         m_delete( vl, vv );
         l = l[..rn-2] + l[rn..rn] + l[rn-1..rn-1] + l[rn+1..];
       }
       else  if( sscanf( vv, ".down.%d.x%*s", rn )==2 )
       {
         do_goto = 1;
-        m_delete( id->variables, path()+vv );
+        m_delete( id->real_variables, path()+vv );
         l = l[..rn-1] + l[rn+1..rn+1] + l[rn..rn] + l[rn+2..];
       }
     // then the possible add.
     if( vl[".new.x"] )
     {
       do_goto = 1;
-      m_delete( id->variables, path()+".new.x" );
+      m_delete( id->real_variables, path()+".new.x" );
       l += ({ transform_from_form( "",vl ) });
     }
 
@@ -1691,7 +1696,7 @@ class List
       if( sscanf( vv, ".delete.%d.x%*s", rn )==2 )
       {
         do_goto = 1;
-        m_delete( id->variables, path()+vv );
+        m_delete( id->real_variables, path()+vv );
         l = l[..rn-1] + l[rn+1..];
       }
 
@@ -2124,7 +2129,7 @@ string input(string name, string value, int size,
 
   args->name=name;
   if(value)
-    args->value=value;
+    args->value = Roxen.html_encode_string(value);
   if(!args->size && size)
     args->size=(string)size; 
 
@@ -2136,6 +2141,8 @@ string input(string name, string value, int size,
     else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
     else render+="'"+replace(args[attr], "'", "&#39;")+"'";
   }
+
+// render = "<tt>" + Roxen.html_encode_string(name) + "</tt><br />\n" + render;
 
   if(noxml) return render+">";
   return render+" />";

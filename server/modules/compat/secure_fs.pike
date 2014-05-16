@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.33 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>

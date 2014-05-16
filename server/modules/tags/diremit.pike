@@ -259,7 +259,8 @@ constant tagdoc=([
 </p></desc>
 
 <attr name='directory' value='path'><p>
- Apply the listing to this directory.</p>
+ List this directory. The default is to list the directory containing
+ the currently requested page.</p>
 </attr>
 
 <attr name='thumbnail-size' value='number'><p>

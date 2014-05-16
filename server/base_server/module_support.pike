@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.146 2010/11/17 19:02:49 mast Exp $
+// $Id$
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -39,7 +39,7 @@ int dump( string file, program|void p );
 protected program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
-    file = combine_path(getcwd(), file);
+    file = combine_path(roxenloader.server_dir, file);
 
   program p;
 
@@ -578,10 +578,11 @@ class ModuleInfo( string sname, string filename )
 
     foreach( dirlist, string file ) {
 	Stdio.Stat s;
+	string fpath = combine_path(dir, file);
         if( file[0] != '.' &&
-	    (s=file_stat( dir+file )) && s->isdir
+	    (s=file_stat( fpath )) && s->isdir
 	    && !nomods[file] ) {
-	  rec_find_module_files (what, dir+file+"/", files);
+	  rec_find_module_files (what, fpath, files);
 	  continue;
 	}
 
@@ -593,14 +594,19 @@ class ModuleInfo( string sname, string filename )
         if( strip_extention(file) == what )
         {
 	  
-	  if( (< "pike", "so", "jar", "class" >)[ extension( file ) ] )
+	  if( (< "pike", "so" >)[ extension( file ) ] ||
+	      ( (< "class", "jar" >)[extension(file)] && got_java()))
           {
+	    //  Skip inner classes in Java
+	    if (has_value(file, "$") && has_suffix(file, ".class"))
+	      continue;
+	    
             Stdio.File f = Stdio.File();
-	    if( !f->open( dir+file, "r" ) )
+	    if( !f->open( fpath, "r" ) )
 	      report_error ("Failed to open %s: %s\n",
-			    dir + file, strerror (f->errno()));
+			    fpath, strerror (f->errno()));
 	    else if( (f->read( 4 ) != "#!NO" ) )
-	      files[dir + file] = 1;
+	      files[fpath] = 1;
 	  }
         }
     }
@@ -609,6 +615,7 @@ class ModuleInfo( string sname, string filename )
   int find_module( string sn )
   {
     foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+      dir = roxen_path (dir);
       multiset(string) files = (<>);
       rec_find_module_files (sn, dir, files);
       if (sizeof (files)) {
@@ -722,21 +729,26 @@ protected void rec_find_all_modules( string dir,
     foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
+	string fpath = combine_path(dir, file);
 	if( (< "so", "pike">)[ extension( file ) ] ||
 	    (<"class", "jar">)[extension (file)] && got_java())
         {
+	  //  Skip inner classes in Java
+	  if (has_value(file, "$") && has_suffix(file, ".class"))
+	    continue;
+	  
 	  Stdio.File f = Stdio.File();
-	  if (!f->open( dir+file, "r" ))
+	  if (!f->open( fpath, "r" ))
 	    report_warning ("Failed to open %s: %s\n",
-			    dir + file, strerror (f->errno()));
+			    fpath, strerror (f->errno()));
 	  else if( (f->read( 4 ) != "#!NO" ) )
-	    modules[dir + file] = strip_extention (file);
+	    modules[fpath] = strip_extention (file);
 	}
-	else if( (s = file_stat( dir+file )) &&
+	else if( (s = file_stat( fpath )) &&
 		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
-	  rec_find_all_modules( dir+file+"/", modules );
+	  rec_find_all_modules( fpath, modules );
     }
 }
 
@@ -775,6 +787,7 @@ array(ModuleInfo) all_modules()
   array(string) possible = ({});
 
   foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+    dir = roxen_path (dir);
     mapping(string:string) module_files = ([]);
     rec_find_all_modules( dir, module_files );
 
@@ -821,7 +834,7 @@ array(string) find_all_pike_module_directories()
 
   all_pike_module_cache = ({});
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
-    all_pike_module_cache += recurse( dir );
+    all_pike_module_cache += recurse( roxen_path (dir) );
   return all_pike_module_cache;
 }
 

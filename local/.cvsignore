@@ -1,3 +1,5 @@
 environment
+environment2
 site_templates
 patches
+*.pem

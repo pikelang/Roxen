@@ -926,8 +926,9 @@ class CacheKey
 
   protected void destroy()
   {
-    foreach (destruction_cbs, [CacheDestructionCB cb, array args]) {
-      cb (this, @args);
+    foreach (destruction_cbs, [CacheDestructionCB cb, int remove_at_activation,
+			       array args]) {
+      if (cb) cb (this, @args);
     }
 
 #if 0
@@ -937,11 +938,17 @@ class CacheKey
 #endif
   }
 
-  void add_destruction_cb (CacheDestructionCB cb, mixed... args)
+  void add_destruction_cb (CacheDestructionCB cb, int remove_at_activation,
+			   mixed... args)
   //! Register a callback that will be called when this cache key is
-  //! destructed. See also @[add_activation_cb].
+  //! destructed. If @[remove_at_activation] is set, the callback will
+  //! be removed when this key is activated. Also, attempts to add
+  //! callbacks with the @[remove_at_activation] flag set when the key
+  //! is already active will be silently ignored. See also
+  //! @[add_activation_cb].
   {
-    destruction_cbs += ({({cb, args })});
+    if (activation_cbs || !remove_at_activation)
+      destruction_cbs += ({({ cb, remove_at_activation, args })});
   }
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
@@ -971,10 +978,11 @@ class CacheKey
   //! @[cb] should not be a lambda that contains references to this
   //! object.
   {
-    // Relying on the interpreter lock here.
-    if (activation_cbs)
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (this && activation_cbs) {
       activation_cbs += ({({cb, args})});
+      // ^^^ Relying on the interpreter lock to here.
+    }
     else {
 #if 0
       werror ("Key %O already active - calling %O(%{%O, %})\n", this, cb, args);
@@ -986,10 +994,11 @@ class CacheKey
   void add_activation_list (array(array(CacheActivationCB|array)) cbs)
   // For internal use by merge_activation_list.
   {
-    // Relying on the interpreter lock here.
-    if (activation_cbs)
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (this && activation_cbs) {
       activation_cbs += cbs;
+      // ^^^ Relying on the interpreter lock to here.
+    }
     else
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
@@ -1008,9 +1017,8 @@ class CacheKey
   //! right away. If this key already is active then zero is returned
   //! and nothing is done.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // vvv Relying on the interpreter lock from here.
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (objectp (merge_target) && merge_target->add_activation_list) {
 	merge_target->add_activation_list (cbs);
 	// ^^^ Relying on the interpreter lock up to this call.
@@ -1032,10 +1040,20 @@ class CacheKey
   //! Activate the cache key. This must be called when the key is
   //! stored in a cache. Return nonzero if any callbacks got called.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // Relying on the interpreter lock here too.
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       activation_cbs = 0;
+      // ^^^ Relying on the interpreter lock to here.
+
+      array _destruction_cbs = destruction_cbs;
+      // Remove destruction callbacks set to be removed at activation.
+      _destruction_cbs = filter (_destruction_cbs,
+				lambda (array(CacheDestructionCB|int|array) arg)
+				{
+				  return !arg[1];
+				});
+      if (this) destruction_cbs = _destruction_cbs;
+
       foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
 	werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
@@ -1050,8 +1068,9 @@ class CacheKey
   int activated()
   //! Returns nonzero iff the key is activated.
   {
-    // Relying on the interpreter lock here.
-    return !activation_cbs;
+    return this &&
+      // Relying on the interpreter lock here.
+      !activation_cbs;
   }
 
   int activate_if_necessary()
@@ -1062,12 +1081,11 @@ class CacheKey
   // request but might still be in the recursive case. Ignore if you
   // can.
   {
-    // Relying on the interpreter lock here.
-    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
+    // vvv Relying on the interpreter lock from here.
+    if (array(array(CacheActivationCB|array)) cbs = this && activation_cbs) {
       if (sizeof (cbs)) {
-	if (this)
-	  // Relying on the interpreter lock here.
-	  activation_cbs = 0;
+	activation_cbs = 0;
+	// ^^^ Relying on the interpreter lock to here.
 	foreach (cbs, [CacheActivationCB cb, array args]) {
 #if 0
 	  werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
@@ -1425,6 +1443,8 @@ class RequestID
     //! Contains the set of cookies that have been zapped in some way.
     protected mapping(string:string) eaten = ([]);
 
+
+    // cf RFC 6265.
     protected void create(string|array(string)|mapping(string:string)|void
 			  contents)
     {
@@ -1442,22 +1462,27 @@ class RequestID
       array tmp = arrayp(contents) ? contents : ({ contents});
   
       foreach(tmp, string cookieheader) {
-    
-	foreach(((cookieheader/";") - ({""})), string c)
+	foreach(cookieheader/";", string c)
 	{
-	  string name, value;
-	  while(sizeof(c) && c[0]==' ') c=c[1..];
-	  if(sscanf(c, "%s=%s", name, value) == 2)
-	  {
+	  array(string) pair = c/"=";
+	  if (sizeof(pair) < 2) continue;
+	  string name = String.trim_whites(pair[0]);
+	  string value = String.trim_whites(pair[1..]*"=");
+	  if (has_prefix(value, "\"") && has_suffix(value, "\""))
+	    value = value[1..sizeof(value)-2];
+	  catch {
 	    value=_Roxen.http_decode_string(value);
+	  };
+	  catch {
 	    name=_Roxen.http_decode_string(name);
-	    real_cookies[ name ]=value;
+	  };
+	  real_cookies[ name ]=value;
+	  
 #ifdef OLD_RXML_CONFIG
-	    // FIXME: Really ought to register this one...
-	    if( (name == "RoxenConfig") && strlen(value) )
-	      config =  mkmultiset( value/"," );
+	  // FIXME: Really ought to register this one...
+	  if( (name == "RoxenConfig") && strlen(value) )
+	    config =  mkmultiset( value/"," );
 #endif
-	  }
 	}
       }
     }
@@ -2104,6 +2129,9 @@ class RequestID
   void register_vary_callback(string|void vary,
 			      function(string, RequestID: string|int)|void cb)
   {
+    if (!(vary || cb)) {
+      error("Vary: At least one of the arguments MUST be specified.\n");
+    }
     // Don't generate a vary header for the Host header.
     if (vary != "host") {
       if (!misc->vary) {
@@ -2400,7 +2428,7 @@ class RequestID
   //! ensure that the new header is registered properly in the RXML
   //! p-code cache. That's the primary reason to used it instead of
   //! adding the header directly to
-  //! @tt{misc->defines[" _extra_heads"]@} or @tt{misc->moreheads@}.
+  //! @tt{misc->defines[" _extra_heads"]@} and/or @tt{misc->moreheads@}.
   //!
   //! @note
   //! Although case is insignificant in http header names, it is
@@ -2412,8 +2440,7 @@ class RequestID
   //! @[set_response_header], @[add_or_set_response_header],
   //! @[get_response_headers], @[remove_response_headers]
   {
-    mapping(string:string|array(string)) hdrs =
-      misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
     if (!hdrs) hdrs = misc->moreheads = ([]);
 
     // Essentially Roxen.add_http_header inlined. Can't refer to it
@@ -2430,10 +2457,9 @@ class RequestID
     }
     else
       cur_val = value;
-
-    if (hdrs == misc->moreheads)
-      hdrs[name] = cur_val;
-    else if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
+    object /*(RXML.Context)*/ ctx;
+    if (misc->defines && misc->defines[" _extra_heads"] &&
+	(ctx = RXML_CONTEXT))
       ctx->set_var (name, cur_val, "header");
     else
       hdrs[name] = cur_val;
@@ -2463,15 +2489,12 @@ class RequestID
   //! @[add_or_set_response_header], @[get_response_headers],
   //! @[remove_response_headers]
   {
-    if (misc->defines && misc->defines[" _extra_heads"]) {
-      misc->defines[" _extra_heads"][name] = value;
-      if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
-	ctx->signal_var_change (name, "header");
-    }
-    else {
-      if (!misc->moreheads) misc->moreheads = ([]);
-      misc->moreheads[name] = value;
-    }
+    if (!misc->moreheads) misc->moreheads = ([]);
+    misc->moreheads[name] = value;
+    object/*(RXML.Context)*/ ctx;
+    if (misc->defines && misc->defines[" _extra_heads"] &&
+	(ctx = RXML_CONTEXT))
+      ctx->signal_var_change (name, "header", value);
   }
 
   void add_or_set_response_header (string name, string value)
@@ -2490,6 +2513,7 @@ class RequestID
 	  "Content-Language": 1,
 	  "Pragma": 1,
 	  "Proxy-Authenticate": 1,
+	  "Set-Cookie": 1,
 	  "Trailer": 1,
 	  "Transfer-Encoding": 1,
 	  "Upgrade": 1,
@@ -2531,29 +2555,27 @@ class RequestID
   //! i.e. headers that have been set using @[add_response_header] or
   //! @[set_response_header].
   {
-    array(string) res = ({});
-
-    foreach (({misc->defines && misc->defines[" _extra_heads"],
-	       misc->moreheads}),
-	     mapping(string:string|array(string)) hdrs)
-      if (hdrs) {
-	if (array(string)|string cur_val = hdrs[name]) {
-	  if (!value_prefix)
-	    res += arrayp (cur_val) ? cur_val : ({cur_val});
-	  else {
-	    if (arrayp (cur_val)) {
-	      foreach (cur_val, string val)
-		if (MATCH_TOKEN_PREFIX (val, value_prefix))
-		  res += ({val});
-	    }
-	    else
-	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
-		res += ({cur_val});
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
+    if (hdrs) {
+      if (array(string)|string cur_val = hdrs[name]) {
+	if (!value_prefix)
+	  return arrayp (cur_val) ? cur_val : ({cur_val});
+	else {
+	  if (arrayp (cur_val)) {
+	    array(string) res = ({});
+	    foreach (cur_val, string val)
+	      if (MATCH_TOKEN_PREFIX (val, value_prefix))
+		res += ({val});
+	    return res;
 	  }
+	  else
+	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
+	      return ({cur_val});
 	}
       }
+    }
 
-    return res;
+    return ({});
   }
 
   int remove_response_headers (string name, void|string value_prefix)
@@ -2569,7 +2591,7 @@ class RequestID
   //!
   //! @note
   //! This function only removes headers in
-  //! @tt{misc->defines[" _extra_heads"]@} and @tt{misc->moreheads@},
+  //! @tt{misc->defines[" _extra_heads"]@} and/or @tt{misc->moreheads@},
   //! i.e. headers that have been set using @[add_response_header] or
   //! @[set_response_header]. It's possible that a matching header
   //! gets sent anyway if it gets added later or through other means
@@ -2577,34 +2599,32 @@ class RequestID
   {
     int removed;
 
-    foreach (({misc->defines && misc->defines[" _extra_heads"],
-	       misc->moreheads}),
-	     mapping(string:string|array(string)) hdrs)
-      if (hdrs) {
-	if (array(string)|string cur_val = hdrs[name]) {
-	  if (!value_prefix) {
-	    m_delete (hdrs, name);
-	    removed = 1;
-	  }
-	  else {
-	    if (arrayp (cur_val)) {
-	      foreach (cur_val; int i; string val)
-		if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
-		  cur_val[i] = 0;
-		  removed = 1;
-		}
-	      cur_val -= ({0});
-	      if (sizeof (cur_val)) hdrs[name] = cur_val;
-	      else m_delete (hdrs, name);
-	    }
-	    else
-	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
-		m_delete (hdrs, name);
+    mapping(string:string|array(string)) hdrs = misc->moreheads;
+    if (hdrs) {
+      if (array(string)|string cur_val = hdrs[name]) {
+	if (!value_prefix) {
+	  m_delete (hdrs, name);
+	  removed = 1;
+	}
+	else {
+	  if (arrayp (cur_val)) {
+	    foreach (cur_val; int i; string val)
+	      if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
+		cur_val[i] = 0;
 		removed = 1;
 	      }
+	    cur_val -= ({0});
+	    if (sizeof (cur_val)) hdrs[name] = cur_val;
+	    else m_delete (hdrs, name);
 	  }
+	  else
+	    if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
+	      m_delete (hdrs, name);
+	      removed = 1;
+	    }
 	}
       }
+    }
 
     return removed;
   }
@@ -3569,6 +3589,8 @@ class MultiStatus
 
     // Sort this because some client (which one?) requires collections
     // to come before the entries they contain.
+    // Encode the hrefs because some clients (eg MacOS X) assume that
+    // they are proper URLs (eg including fragment).
     foreach(sort(indices(status_set)), string href) {
       SimpleElementNode response_node =
 	SimpleElementNode("DAV:response", ([]))->
@@ -3593,24 +3615,46 @@ class MultiStatus
     ]);
   }
 
+  //! MultiStatus with a fix prefix.
+  //!
+  //! This object acts as a proxy for its parent.
   class Prefixed (protected string href_prefix)
   {
+    //! Get the parent @[MultiStatus] object.
     MultiStatus get_multi_status() {return MultiStatus::this;}
+
+    //! Add a property for a path.
+    //!
+    //! @note
+    //!   Note that the segments of the path will be
+    //!   encoded with @[Roxen.http_encode_url()].
     void add_property(string path, string prop_name,
 		      void|int(0..0)|string|array(SimpleNode)|SimpleNode|
 		      MultiStatusStatus|mapping(string:mixed) prop_value)
     {
+      path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
     }
+
+    //! Add a status for a path.
+    //!
+    //! @note
+    //!   Note that the segments of the path will be
+    //!   encoded with @[Roxen.http_encode_url()].
     void add_status (string path, int status_code,
 		     void|string message, mixed... args)
     {
+      path = map(path/"/", Roxen->http_encode_url)*"/";
       MultiStatus::add_status (href_prefix + path, status_code, message, @args);
     }
+
+    //!
     void add_namespace (string namespace)
     {
       MultiStatus::add_namespace (namespace);
     }
+
+    //!
     MultiStatus.Prefixed prefix(string href_prefix) {
       return this_program (this_program::href_prefix + href_prefix);
     }
@@ -3960,7 +4004,7 @@ class User( UserDB database )
   //! implementation uses the crypted_password() method.
   {
     string c = crypted_password();
-    return !sizeof(c) || crypt(password, c);
+    return !sizeof(c) || verify_password(password, c);
   }
 
   int uid();

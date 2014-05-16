@@ -8,7 +8,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.22 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "ja", "japanese", "日本語" });
 constant _aliases =  ({ "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
 			"日本語",

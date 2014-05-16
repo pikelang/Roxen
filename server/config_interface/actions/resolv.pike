@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.38 2009/03/17 16:37:52 jonasw Exp $
+ * $Id$
  */
 inherit "wizard";
 inherit "../logutil";
@@ -31,7 +31,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
   if(!m) return "";
 
   string name;
-  catch (name = Roxen.get_modfullname (m));
+  catch (name = Roxen.html_encode_string(Roxen.get_modfullname (m)));
   if (!name) return "<font color='red'>Unavailable</font>";
 
   Configuration c;
@@ -86,13 +86,14 @@ mapping vtimes = ([]);
 void trace_enter_ol(string type, function|object module, void|int timestamp)
 {
   level++;
-
-  string font="";
-  if(level>2) font="<font size=-1>";
-  resolv += ((prev_level >= level ? "<br />\n" : "") +
-	     anchor("")+"<li>"+
-	     Roxen.html_encode_string(type) + " " + module_name(module) +
-	     "<br />\n" + font + "<ol style='padding-left: 3ex'>");
+  resolv +=
+    (/*((prev_level >= level ? "<br />\n" : "")*/ "" +
+     anchor("") +
+     "<li class='timing open'>" +
+     "<span class='toggle' onmousedown='return toggle_vis(event, this.parentNode);'></span>" +
+     Roxen.html_encode_string(type) + " " + module_name(module) +
+     "<div class='inner'>"
+     "<ol class='timing'>");
 
 #if efun(gethrvtime)
   // timestamp is cputime.
@@ -132,21 +133,47 @@ string format_time (int hrrstart, int hrvstart, int timestamp)
 
 void trace_leave_ol(string desc, void|int timestamp)
 {
-  string efont="";
-  if(level>2) efont="</font>";
-
   string html_desc = Roxen.html_encode_string(desc || "");
   if (has_value(html_desc, "\n"))
     html_desc = "<pre>" + html_desc + "</pre>\n";
   else if (html_desc != "")
     html_desc += "<br />\n";
   resolv +=
-    "</ol>" + efont + "\n" + html_desc +
+    "</ol>\n" + html_desc +
 #ifdef HAVE_TRACE_TIME
-    "<i>" + format_time (rtimes[level], vtimes[level], timestamp) + "</i>"
+    "<i class='timing'>" + format_time (rtimes[level], vtimes[level], timestamp) + "</i>"
 #endif
-    ;
+    "</div></li>";
   level--;
+}
+
+string resolv_describe_backtrace(mixed err)
+{
+  catch {
+    return describe_backtrace(err);
+  };
+  catch {
+    return sprintf("Thrown value: %O\n", err);
+  };
+  return sprintf("Unformatable %t value.\n", err);
+}
+
+mapping|int resolv_get_file(object c, object nid)
+{
+  mixed err = catch {
+      return c->get_file(nid);
+    };
+
+  if (!level) {
+    trace_enter_ol("", this_object());
+  }
+  trace_leave_ol(sprintf("Uncaught exception thrown:\n\n%s\n",
+			 resolv_describe_backtrace(err)));
+
+  while(level) {
+    trace_leave_ol("");
+  }
+  return ([]);
 }
 
 void resolv_handle_request(object c, object nid)
@@ -176,7 +203,7 @@ void resolv_handle_request(object c, object nid)
     }
   } while(again);
 
-  if(!c->get_file(nid))
+  if(!resolv_get_file(c, nid))
   {
     foreach(c->last_modules(), funp)
     {
@@ -223,6 +250,36 @@ string parse( RequestID id )
     "<pre>UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj</pre></td>"
     "</tr></table>\n"
     "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
+
+  res +=
+    #"<script language='javascript'>
+        function toggle_vis(evt, li_elem) {
+          var items = [ li_elem ];
+          if (evt.shiftKey) {
+            //  Include all sibling <li> elements
+            items = [ ];
+            var candidates = li_elem.parentNode.children;
+            for (var i = 0; i < candidates.length; i++)
+              if (candidates[i].nodeType == 1 &&
+                  candidates[i].tagName.toLowerCase() == 'li')
+                items.push(candidates[i]);
+          }
+          var is_open = li_elem.className.match('open');
+          var from_cls = is_open ? 'open' : 'closed';
+          var to_cls = is_open ? 'closed' : 'open';
+          for (var j = 0; j < items.length; j++) {
+            items[j].className = items[j].className.replace(from_cls, to_cls);
+          }
+          if (evt.preventDefault) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          } else {
+            evt.cancelBubble = true;
+            evt.returnValue = false;
+          }
+          return false;
+        }
+      </script>";
 
   nid = roxen.InternalRequestID();
   nid->client = id->client;
@@ -287,14 +344,14 @@ string parse( RequestID id )
       nid->pragma = (<>);
 
     resolv =
-      "<hr noshade size='1' width='100%'/>\n" +
+      "<hr />\n" +
       LOCALE(179, "Canonic URL: ") +
       Roxen.html_encode_string(canonic_url) + "<br />\n" +
       LOCALE(32, "Resolving")+" " +
       link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
       " "+LOCALE(33, "in")+" " +
       link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
-      "<ol style='padding-left: 3ex'>";
+      "<ol class='timing'>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
@@ -303,7 +360,7 @@ string parse( RequestID id )
     {
       nid->rawauth
         = "Basic "+MIME.encode_base64(id->variables->user+":"+
-                                      id->variables->password);
+                                      id->variables->password, 1);
       nid->realauth=id->variables->user+":"+id->variables->password;
     }
 

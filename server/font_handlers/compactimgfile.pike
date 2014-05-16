@@ -168,17 +168,18 @@ void update_font_list()
   {
     foreach( get_dir( dir )||({}), string pd )
     {
-      if( Stdio.is_dir( dir+pd ) )
-        rec_find_in_dir( dir+pd+"/" );
+      string fpath = combine_path(dir, pd);
+      if( Stdio.is_dir( fpath ) )
+        rec_find_in_dir( fpath );
       else if( glob( "*.cif", pd ) )
       {
-        CIF t = open_tar( dir+pd );
+        CIF t = open_tar( fpath );
         if( Stdio.File f = t->open( "fontname", "r" ) ) {
 	  string name = f->read();
 	  if( Stdio.File f = t->open( "fontinfo", "r" ) )
-	    font_list[font_name( "<name>"+name+"</name>"+f->read() )] = dir+pd;
+	    font_list[font_name( "<name>"+name+"</name>"+f->read() )] = fpath;
 	  else
-	    font_list[font_name( name )] = dir+pd;
+	    font_list[font_name( name )] = fpath;
 	}
         else
           destruct( t );
@@ -187,5 +188,5 @@ void update_font_list()
   };
 
   foreach(roxen->query("font_dirs"), string dir)
-    rec_find_in_dir( dir );
+    rec_find_in_dir( roxen_path (dir) );
 }

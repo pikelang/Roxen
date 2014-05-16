@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: hosts.pike,v 1.40 2010/03/16 13:47:01 jonasw Exp $
+// $Id$
 
 #include <roxen.h>
 

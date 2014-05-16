@@ -16,7 +16,7 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.44 2003/05/09 12:14:04 anders Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Counter";
 constant thread_safe = 1;

@@ -8,6 +8,7 @@
   <var name='roxen_test#0'>      <int>1</int> </var>
   <var name='rxmlparse#0'>       <int>1</int> </var>
   <var name='rxmltags#0'>        <int>1</int> </var>
+  <var name='additional_rxml#0'> <int>1</int> </var>
   <var name='sqltag#0'>          <int>1</int> </var>
 </region>
 
@@ -136,7 +137,7 @@ page.
 %3c/body%3e
 </str></var>
   <var name='comment'>           <str></str> </var>
-  <var name='compat_level'>      <str>5.0</str> </var>
+  <var name='compat_level'>      <str>5.2</str> </var>
   <var name='data_cache_file_max_size'> <int>50</int> </var>
   <var name='data_cache_size'>   <int>2048</int> </var>
   <var name='default_server'>    <int>0</int> </var>

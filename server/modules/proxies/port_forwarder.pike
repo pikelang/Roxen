@@ -24,7 +24,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.14 2009/05/26 14:20:25 mast Exp $";
+constant cvs_version="$Id$";
 
 
 

@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.28 2009/05/07 14:15:55 mast Exp $";
+       "$Id$";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 

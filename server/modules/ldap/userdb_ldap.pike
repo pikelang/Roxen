@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.15 2009/05/07 14:15:55 mast Exp $";
+  "$Id$";
 inherit UserDB;
 inherit "module";
 
@@ -99,51 +99,13 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
       }
     }
 
-    // Digests {CRYPT}, {SH1}, {SSHA}, {MD5} and {SMD5}
-    string sv, salt;
-    if (sizeof(pass) > 6)
-      switch (upper_case(pass[..4])) {
-	case "{SHA}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.SHA1()->update(password)->digest()));
-	  DEBUGLOG ("Trying SHA digest ...");
-	  break;
-
-	case "{SSHA" :
-	  if (sizeof(pass) > 7 && pass[5] == '}') {
-	    if(sscanf(MIME.decode_base64(pass[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
-	      break;
-	    flg = (pass[6..] == MIME.encode_base64(Crypto.SHA1()->update(password+salt)->digest()+salt));
-	    DEBUGLOG ("Trying SSHA digest ...");
-	  }
-	  break;
-
-	case "{MD5}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.MD5()->update(password)->digest()));
-	  DEBUGLOG ("Trying MD5 digest ...");
-	  break;
-
-	case "{SMD5" :
-	  if (sizeof(pass) > 7 && pass[5] == '}') {
-	    if(sscanf(MIME.decode_base64(pass[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
-	      break;
-	    flg = (pass[6..] == MIME.encode_base64(Crypto.MD5()->update(password+salt)->digest()+salt));
-	    DEBUGLOG ("Trying SMD5 digest ...");
-	  }
-	  break;
-
-	case "{CRYP" :
-	  if (sizeof(pass) > 7 && pass[5..6] == "T}") {
-	    flg = !crypt(password,pass[7..]);
-	    DEBUGLOG ("Trying CRYPT digest ...");
-	  }
-	  break;
-
-	default:
-	  flg = pass == password;
-	  break;
-      } // switch
-    else
+    if (has_prefix(pass, "{")) {
+      // RFC 2307
+      // Digests {CRYPT}, {SH1}, {SSHA}, {MD5} and {SMD5}.
+      flg = verify_password(password, pass);
+    } else {
       flg = pass == password;
+    }
 
     if(flg) {
       DEBUGLOG("pass_auth("+name()+") successed.");

@@ -2,7 +2,7 @@
 //
 inherit "module";
 
-constant cvs_version = "$Id: language.pike,v 1.3 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 

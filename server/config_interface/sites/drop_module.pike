@@ -12,9 +12,9 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file=/template />\n"
+  return sprintf( "<use file=/template />"
                   "<tmpl title=''>"
-                  "<topmenu base='&cf.num-dotdots;' selected='sites' />\n"
+                  "<topmenu base='&cf.num-dotdots;' selected='sites' />"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"

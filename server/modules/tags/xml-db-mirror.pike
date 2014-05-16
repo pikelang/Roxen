@@ -367,6 +367,12 @@ int(0..1) import_xml(string path, string xml)
   SimpleNode root;
   mixed err = catch {
       xml = Parser.XML.autoconvert(xml);
+	  // BOM handling...
+      if (has_prefix(xml, "\xef\xbb\xbf")) {
+        xml = utf8_to_string(xml)[1..];
+      } else if (has_prefix(xml, "\xfeff")) {
+        xml = xml[1..];
+      }
       root = simple_parse_input(xml, iso_entities, 0);
     };
   if (err) {
@@ -613,6 +619,7 @@ constant tagdoc = ([
 
 <p>The returned records will contain all known fields as well as a special
    <tt>_id</tt> field with the record ID.</p>
+</desc>
 
 <attr name='db' value='string' required='required'>
   <p>Name of XML-DB database to use. This corresponds to the <tt>name</tt>
@@ -648,7 +655,8 @@ constant tagdoc = ([
   <p>When enabled the search will match substrings and allow for <tt>*</tt>
      and <tt>?</tt> wildcards.</p>
 </attr>
-"
+",
+  ([ ])
   })
 ]);
 #endif

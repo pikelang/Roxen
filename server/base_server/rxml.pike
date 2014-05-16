@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.333 2009/05/07 14:15:53 mast Exp $
+// $Id$
 
 
 inherit "rxmlhelp";
@@ -162,7 +162,8 @@ protected class RXMLTagSet
 
     misc[" _ok"] = misc[" _prev_ok"] = 1;
     misc[" _error"] = 200;
-    ctx->add_scope ("header", misc[" _extra_heads"] = ([ ]));
+    if (!id->misc->moreheads) id->misc->moreheads = ([]);
+    ctx->add_scope ("header", misc[" _extra_heads"] = id->misc->moreheads);
     if(id->misc->stat) misc[" _stat"] = id->misc->stat;
   }
 
@@ -173,7 +174,8 @@ protected class RXMLTagSet
 
     mapping extra_heads = ctx->get_scope ("header");
 #ifdef DEBUG
-    if (extra_heads != misc[" _extra_heads"])
+    if ((extra_heads != misc[" _extra_heads"]) ||
+	(misc[" _extra_heads"] != id->misc->moreheads))
       // Someone has probably replaced either of these mappings, which
       // should never be done since they'll get out of synch then.
       // Most likely it's some old code that has replaced
@@ -182,14 +184,10 @@ protected class RXMLTagSet
       // error is more likely to be discovered.
       report_warning ("Warning: The \"header\" scope %O and "
 		      "RXML_CONTEXT->misc[\" _extra_heads\"] %O "
-		      "isn't the same mapping.\n",
-		      extra_heads, misc[" _extra_heads"]);
+		      "and id->misc->moreheads %O "
+		      "aren't the same mapping.\n",
+		      extra_heads, misc[" _extra_heads"], id->misc->moreheads);
 #endif
-    if(sizeof(extra_heads))
-      if (id->misc->moreheads)
-	id->misc->moreheads |= extra_heads;
-      else
-	id->misc->moreheads = extra_heads;
 
     if (mapping orig_defines = ctx->id_defines) {
       SIMPLE_TRACE_LEAVE ("Finishing nested RXML parse - "
@@ -268,8 +266,10 @@ string parse_rxml(string what, RequestID id,
     ctx->misc = id->misc->defines = defines;
     if (!defines[" _error"])
       defines[" _error"] = 200;
+    if (!id->misc->moreheads) id->misc->moreheads = ([]);
     if (!defines[" _extra_heads"])
-      ctx->add_scope ("header", defines[" _extra_heads"] = ([ ]));
+      ctx->add_scope ("header",
+		      defines[" _extra_heads"] = id->misc->moreheads);
     if (!defines[" _stat"] && id->misc->stat)
       defines[" _stat"] = id->misc->stat;
   }

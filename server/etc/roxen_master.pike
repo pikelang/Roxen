@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.155 2010/01/13 14:35:14 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -852,39 +852,30 @@ program low_findprog(string pname, string ext,
   return 0;
 }
 
-program handle_inherit (string pname, string current_file, object|void handler)
+program cast_to_program(string pname, string current_file, object|void handler)
 {
-  if (has_prefix (pname, "roxen-module://")) {
-    pname = pname[sizeof ("roxen-module://")..];
-    if (object modinfo = roxenp()->find_module (pname))
-      if (program ret = cast_to_program (modinfo->filename, current_file, handler))
-	return ret;
-    return 0;
-  }
-  if (has_prefix(pname, "roxen-path://")) {
+  if (has_prefix(pname, "roxen-module://")) {
+    pname = pname[sizeof("roxen-module://")..];
+    object modinfo = roxenp()->find_module(pname);
+    if (!modinfo) return 0;
+    pname = modinfo->filename;
+  } else if (has_prefix(pname, "roxen-path://")) {
     //  Expand variables such as $SERVERDIR and $LOCALDIR if we have
     //  roxen_path() available.
     pname = pname[sizeof("roxen-path://")..];
-    if (function roxen_path_fn = all_constants()["roxen_path"]) {
-      pname = roxen_path_fn(pname);
-    }
+    function roxen_path_fn = all_constants()["roxen_path"];
+    if (!roxen_path_fn) return 0;
+    pname = roxen_path_fn(pname);
   }
-  return ::handle_inherit (pname, current_file, handler);
+
+  return ::cast_to_program(pname, current_file, handler);
 }
 
-#if 0
 void handle_error(array(mixed)|object trace)
 {
-  catch {
-    if (arrayp (trace) && sizeof (trace) == 2 &&
-	arrayp (trace[1]) && !sizeof (trace[1]))
-      // Don't report the special compilation errors thrown above. Pike
-      // calls this if resolv() or similar throws.
-      return;
-  };
+  werror ("Internal server error: ");
   ::handle_error (trace);
 }
-#endif
 
 void compile_warning(string file,int line,string err)
 {

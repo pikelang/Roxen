@@ -18,12 +18,11 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.123 2010/01/26 17:51:36 jonasw Exp $";
+  "$Id$";
 
 constant path = "config_interface/";
 
 object charset_decoder;
-Sql.Sql docs;
 
 // NOTE: If we ever want to support more than one template, this
 // optimization has to be removed, or at least changed to index on the
@@ -74,7 +73,7 @@ string real_file( mixed f, mixed id )
 
   if (f == "")
     return path;
-  if( docs && sscanf( f, "docs/%s", f ) )
+  if( sscanf( f, "docs/%s", f ) )
     return 0;
   array(string|array) stat_info = low_stat_file(f, id);
   return stat_info && stat_info[0];
@@ -86,8 +85,10 @@ mapping get_docfile( string f )
   if( f=="" || f[-1] == '/' )
     return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
 
-  if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
-                              "/"+f )) )
+  Sql.Sql docs = DBManager.get( "docs", my_configuration());
+
+  if( docs && sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
+				      "/"+f )) )
     return q[0];
 }
 
@@ -98,7 +99,7 @@ array(int)|Stat stat_file( string f, object id )
   if (f == "")
     return file_stat(path);
 
-  if( docs && sscanf( f, "docs/%s", f ) )
+  if( sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
       return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
 
@@ -117,6 +118,25 @@ mapping logged_in = ([]);
 int last_cache_clear_time;
 mixed find_file( string f, RequestID id )
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver) {
+    // The config interface always runs with the current compatibility
+    // level. Have to reload all modules after changing it, and that
+    // cannot be done directly from here since we'll get recursive
+    // locks then.
+    roxen.background_run (
+      0, lambda (RequestID id) {
+	   Configuration conf = my_configuration();
+	   report_notice ("Adjusting compat level from %s to %s "
+			  "for the config interface\n",
+			  conf->query ("compat_level"), roxen.roxen_ver);
+	   conf->set ("compat_level", roxen.roxen_ver);
+	   conf->save (1);
+	   conf->reload_all_modules();
+	   id->send_result (conf->get_file (id));
+	 }, id);
+    return Roxen.http_pipe_in_progress();
+  }
+
   int is_docs;
   User user;
   string locale = "standard";
@@ -265,7 +285,7 @@ mixed find_file( string f, RequestID id )
       id->set_output_charset( encoding );
   }
 
-  if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
+  if( (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
     if( f == "docs" )
       return Roxen.http_redirect( id->not_query+"/", id );
@@ -405,6 +425,7 @@ void start(int n, Configuration cfg)
     mixed err;
     array(mapping(string:string)) old_version;
     int ver;
+    Sql.Sql docs;
     if( !(docs = DBManager.get( "docs", cfg ) ) ||
 	(err = catch( old_version = DBManager.get( "docs", cfg )
 		      ->query("SELECT contents FROM docs where name='_version'") )) ||
@@ -440,7 +461,6 @@ void start(int n, Configuration cfg)
       else
       {
 	report_warning( "There is no documentation available\n");
-	docs = 0;
       }
     }
     string am = query( "auth_method" );
@@ -500,25 +520,6 @@ void zap_old_modules()
     my_configuration()->disable_module( "awizard#0" );
   if( my_configuration()->find_module("config_userdb#0") )
     my_configuration()->disable_module( "config_userdb#0" );
-}
-
-void ready_to_receive_requests()
-{
-  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
-    // The config interface always runs with the current compatibility
-    // level. Have to reload all modules after changing it, and that
-    // cannot be done directly from here since we'll get recursive
-    // locks then.
-    roxen.background_run (
-      0, lambda () {
-	   Configuration conf = my_configuration();
-	   report_notice ("Adjusted compat level from %s to %s "
-			  "for the config interface\n",
-			  conf->query ("compat_level"), roxen.roxen_ver);
-	   conf->set ("compat_level", roxen.roxen_ver);
-	   conf->save (1);
-	   conf->reload_all_modules();
-	 });
 }
 
 void create()

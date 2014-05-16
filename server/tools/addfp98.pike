@@ -7,7 +7,7 @@
  * Script originally provided by Mike Knott <mknott@cybermedia-inc.com>
  * Minor modifications by Leif Stensson <leif@roxen.com>
  *
- * $Id: addfp98.pike,v 1.2 2000/03/16 18:08:33 nilsson Exp $
+ * $Id$
  */
 
 #!/usr/local/bin/pike

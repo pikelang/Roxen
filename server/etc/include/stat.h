@@ -1,4 +1,4 @@
-// $Id: stat.h,v 1.5 2000/08/28 05:31:12 per Exp $
+// $Id$
 #include <config.h>
 
 #define S_IFMT   0170000

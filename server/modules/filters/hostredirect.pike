@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.39 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 inherit "module";
@@ -46,17 +46,33 @@ void create()
          "[permanent] domain [url][path][%p]\n</pre>"
          "<strong>Examples:</strong><pre>"
          "    ab.domain.org             http://my.university.edu/~me/ab/%p\n"
-         "    bc.domain.com             %u/bc/%p\n"
+         "    bc.domain.com             %u/bc/%p%q\n"
          "    default                   %u/serverlist.html</pre>"
-         "<p>A <tt>%p</tt> in the 'to' field will be replaced with the full "
-         "path, and <tt>%u</tt> will be replaced with this server's URL "
-         "(useful if you want to send a redirect instead of doing an "
-         "internal one).</p>\n"
-         "<p>Internal redirects will always have the path added, whether you "
-         "use <tt>%p</tt> or not. however for HTTP redirects <tt>%p</tt> "
-         "is mandatory if you want the path. <strong><tt>default</tt> "
-         "will never add a path, even if <tt>%p</tt> is present"
-         ".</strong> in fact if <tt>%p</tt> is included it will "
+	 "<p><strong>There are several patterns that can be used "
+	 "in the 'to' field:</strong></p>\n"
+	 "<dl>\n"
+	 "<dh><tt>%p</tt> (Path)</dh>\n"
+         "<dd>A <tt>%p</tt> in the 'to' field will be replaced with the full "
+         "path of the request.</dd>\n"
+	 "<dh><tt>%q</tt> (Query)</dh>\n"
+	 "<dd>A <tt>%q</tt> in the 'to' field will be replaced with the "
+	 "query string (if any). Note that the query string will be prepended "
+	 "with <tt>?</tt> if there's no <tt>?</tt> earlier in the 'to' "
+	 "field, and with <tt>&amp;</tt> otherwise. Note also that for "
+	 "internal redirects the query variables are passed along to "
+	 "the redirect target without any need to use <tt>%q</tt>.</dd>\n"
+	 "<dh><tt>%u</tt> (URL)</dh>\n"
+	 "<dd>A <tt>%u</tt> in the 'to' field will be replaced with this "
+	 "server's URL (useful if you want to send an external redirect "
+	 "instead of doing an internal one).</dd>\n"
+	 "</dl>\n"
+         "<p>Internal redirects will always have the path and query variables "
+	 "added, whether you use <tt>%p</tt> and/or <tt>%q</tt> or not. "
+	 "However for HTTP redirects <tt>%p</tt> and/or <tt>%q</tt> are "
+	 "mandatory if you want to propagate the path and/or query variables "
+	 "respectively. <strong><tt>default</tt> will never add a path, "
+	 "even if <tt>%p</tt> is present.</strong> "
+         "In fact if <tt>%p</tt> is included it will "
          "just stay and probably not produce the expected result.</p>"
        );
   
@@ -218,7 +234,7 @@ int|mapping first_try(RequestID id)
   to = replace(to, "%u", url);
   return_code = rcode[host];
 
-  string to_prefix = to - "%p";
+  string to_prefix = (to/"%p")[0];
 
   if((host != "default") && (search(to, "%p") != -1))
   {
@@ -228,6 +244,20 @@ int|mapping first_try(RequestID id)
 
     to = replace(to, "%p", id->not_query);
     path = 1;
+  }
+
+  array(string) segments = to/"%q";
+  if (sizeof(segments) > 1) {
+    if (sizeof(id->query || "")) {
+      foreach(segments[..<1]; int i; string seg) {
+	if (i || has_value(seg, "?")) {
+	  segments[i] += "&";
+	} else {
+	  segments[i] += "?";
+	}
+      }
+    }
+    to = segments * (id->query || "");
   }
 
   if((strlen(to) > 6 &&

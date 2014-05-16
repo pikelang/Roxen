@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.57 2009/12/08 20:38:45 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -14,11 +14,18 @@ constant module_doc  = "Creates a self-verifying form.";
 // maxlength is excluded so that it gets exported. value is included
 // since not all widgets have a value attribute, and those who do add
 // it themselves.
-constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim",
+constant ARGS=(< "type", "min", "max", "scope", "trim",
 		 "regexp", "glob", "minlength", "case", "date",
 		 "mode", "fail-if-failed", "ignore-if-false", "ignore-if-gone",
 		 "ignore-if-failed", "ignore-if-verified", "optional", "value",
 		 "disable-domain-check", >);
+
+// pass along some HTML5-specific attributes (<type>:<attribute>)
+constant HTML5_ARGS = (< "number:min", "number:max" >);
+
+constant HTML5_TYPES = (< "number", "email", "url", "tel", "date", "datetime",
+			  "datetime-local", "search", "month", "week", "time",
+			  "color", "range", >);
 
 constant forbidden = ({"\\", ".", "[", "]", "^",
 		       "$", "(", ")", "*", "+", "|"});
@@ -86,9 +93,12 @@ class VInputFrame {
     }
 #endif
 
+    int(0..1) no_html5 = 0;
+
     var = id->misc->vform_objects[args->name];
 
     switch(args->type) {
+    case "number": // fall through
     case "int":
       if(!var) var=Variable.Int(args->value||"");
       // FIXME: Should check invalid integer formats in min and max.
@@ -105,10 +115,19 @@ class VInputFrame {
       if(!var) var=Variable.Email(args->value||"");
       if(args["disable-domain-check"]) var->disable_domain_check();
       break;
+    case "datetime":
+    case "datetime-local":
+      if (!args["date"]) args["date"] = "%Y-%M-%DT%h:%m";
+      // fall through
     case "date":
-     if(!var) var=Variable.Date(args->value||"");
-     if(args["date"]) var->set_date_type( args->date );
-     break;
+      if(!var) var=Variable.Date(args->value||"");
+      if(args["date"]) {
+	// Disable HTML5 if date format is incompatible
+	if (args["date"] != "%Y-%M-%D" && args["date"] != "%Y-%M-%DT%h:%m") no_html5 = 1;
+
+	var->set_date_type( args->date );
+      }
+      break;
     case "image":
       if(!var) var=Variable.Image( args->value||"", 0, 0, 0 );
       break;
@@ -119,6 +138,14 @@ class VInputFrame {
       if(!var) var=Variable.VerifiedPassword(args->value||"");
     case "text":
       if(!var) var=Variable.VerifiedText(args->value||"");
+    case "color": // fall through
+    case "tel":   // ...
+    case "week":
+    case "month":
+    case "time":
+    case "search":
+    case "url":
+    case "range":
     case "string":
       if(!var) var=Variable.VerifiedString(args->value||"");
       var->clear_verifications();
@@ -160,9 +187,14 @@ class VInputFrame {
           var->set_from_form( id, 1 );
         }
     }
+
+    string type = !no_html5 && HTML5_TYPES[args->type] && args->type;
+
     mapping new_args=([]);
     foreach(indices(args), string arg)
-      if(!ARGS[arg]) new_args[arg]=args[arg];
+      if(!ARGS[arg] || (type && HTML5_ARGS[type + ":" + arg])) new_args[arg]=args[arg];
+
+    if (type) new_args->type = type;
 
     vars=([ "input":var->render_form(id, new_args) ]);
     if(var->get_warnings()) vars->warning=var->get_warnings();

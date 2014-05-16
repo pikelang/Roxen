@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.22 2009/02/11 13:00:57 jonasw Exp $
+// $Id$
 //
 
 

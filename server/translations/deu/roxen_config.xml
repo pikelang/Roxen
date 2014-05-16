@@ -14,6 +14,7 @@
 <file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
@@ -265,7 +266,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
     &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
@@ -299,7 +300,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 &lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
     &lt;td&gt;Resource identifier. For events, this is either a path to a
     file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
-    resource identifier (otherwise). It is '-' for events that doesn't
+    resource identifier (otherwise). It is '-' for events that don't
     act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
     &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
@@ -313,7 +314,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
 
-&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
 &lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
     &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
@@ -396,7 +397,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the request got handled by various caches:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
 	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
@@ -409,10 +410,22 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
 	&lt;td&gt;This is the finishing of the background refresh request
 	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedraw&lt;/td&gt;
+	&lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icacheram&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedisk&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
 	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestore&lt;/td&gt;
+	&lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestorefailed&lt;/td&gt;
+	&lt;td&gt;An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
 	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
 	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
@@ -428,7 +441,7 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
     that describes how the page has been evaluated:
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
 	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
@@ -447,7 +460,6 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 below.&lt;/p&gt;
 
 &lt;dl&gt;
-
 &lt;dt&gt;Facility: roxen&lt;/dt&gt;
     &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
     For logging that is not related to any specific configuration, the
@@ -455,7 +467,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;The known events are:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
 	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
@@ -483,7 +495,7 @@ below.&lt;/p&gt;
 
     &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
 
-    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
 	&lt;td&gt;The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
@@ -566,7 +578,13 @@ $cache-status  -- Eine Komma-separierte Liste von Worten (ohne
 </str>
 
 <str id="31">
-<o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+<changed from="The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+%m    Month (e.g. '08')
+%d    Date  (e.g. '10' for the tenth)
+%h    Hour  (e.g. '00')
+%H    Hostname
+&lt;/pre&gt;"/>
+<o>The log file. A file name. Some substitutions will be done:&lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
 %h    Hour  (e.g. '00')
@@ -1253,16 +1271,6 @@ Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
 Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
-<str id="170">
-<o>Cache: Memory Cache Garbage Collect Interval</o>
-<t>Cache: Speichercache, Gargabe Collection Intervall</t>
-</str>
-
-<str id="171">
-<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remembering what supports flags matches what client.</o>
-<t>Wieviele Sekunden sollen zwischen zwei Ausführungen einer Garbage Collection im Speicher-Cache liegen? Der Speicher-Cache enthält u.a. die Supports-Daten.</t>
-</str>
-
 <str id="172">
 <o>Commented config files</o>
 <t>Kommentierte Konfigurationsdateien</t>
@@ -1791,12 +1799,18 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="305">
-<o>The modules security level is used to determine if a  request should be handled by the module.
+<changed from="The modules security level is used to determine if a  request should be handled by the module.
 &lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
 &lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
+&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;"/>
+<o>The modules security level is used to determine if a  request should be handled by the module.
+&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
+&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the request will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
+&lt;p&gt;On the other hand, a request handled by the the "Filesystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
 <t>Das Sicherheitslevel-Modul bestimmt, welches Modul eine Anfrage behandelt.
 &lt;p&gt;&lt;h2&gt;Sicherheit contra Vertrauen&lt;/h2&gt; Jedes Modul hat einen einstellbaren &lt;i&gt;Sicherheitslevel&lt;/i&gt;. Jede Anfrage besitzt einen Vertrauenspegel. Höhere &lt;i&gt;Vertrauenspegel&lt;/i&gt; gewähren Zugriffe auf Module mit höhrerem &lt;i&gt;Sicherheitslevel&lt;/i&gt;.
 &lt;p&gt;&lt;h2&gt;Definitionen&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;Der Vertrauenspegel einer Anfrage ist zu Beginn unendlich hoch.&lt;/li&gt; &lt;li&gt; Eine Anfrage wird durch ein Modul nur dann behandelt, wenn sein &lt;i&gt;Vertrauenspegel&lt;/i&gt; höher oder gleich dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls ist.&lt;/li&gt; &lt;li&gt; Bei jeder Behandlung eines Zugriffs durch ein Modul wird der &lt;i&gt;Vertrauenspegel&lt;/i&gt; des Moduls auf den kleineren Wert von &lt;i&gt;Vertrauenspegel&lt;/i&gt; und dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls gesetzt, &lt;i&gt;ausser&lt;/i&gt; der Sicherheitslevel des Moduls ist 0, was bedeutet, das keine Änderung vorgenommen werden soll.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
@@ -2315,11 +2329,6 @@ its log file directory.
 <t>Abfrage ausführen</t>
 </str>
 
-<str id="380">
-<o>While running %s: %s</o>
-<t>Bei Ausführung von %s: %s</t>
-</str>
-
 <str id="382">
 <o>Failed to enable %s</o>
 <t>Aktivierung von %s fehlgeschlagen</t>
@@ -2378,8 +2387,8 @@ its log file directory.
   &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
  
   &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
-  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+  &lt;dd&gt;Requires an authenticated user. If the user name 'any' is used, any valid user will be OK; if the user name 'ANY' is used, a valid user is preferred, but not required. Otherwise, one of the listed users is required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires an authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
  
 &lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
 &lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
@@ -2557,32 +2566,20 @@ the site carefully afterwards. A reload of the whole server
 configuration is required to propagate the change properly to all
 modules.&lt;/p&gt;
 
-&lt;p&gt;Available compatibility levels:
-&lt;table&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen WebServer 2.4. This version is also
-  commonly known as 3.2 - the version number that applies to the
-  release of Roxen CMS which contains Roxen WebServer 2.4.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to no released version. This compatibility level is
-  only used to turn on some optimizations that have compatibility
+&lt;p&gt;Compatibility level notes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.&lt;/li&gt;
+
+  &lt;li&gt;2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
   issues with 2.4, notably the optimization of cache static tags in
-  the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 3.3.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;3.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;5.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 5.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;/table&gt;&lt;/p&gt;</o>
+  the &amp;lt;cache&amp;gt; tag.&lt;/li&gt;
+
+  &lt;li&gt;There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.&lt;/li&gt;
+&lt;/ul&gt;</o>
 <t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
 
 &lt;p&gt;Diese Variable kann manuell geändert werden, die Site sollte danach jedoch ausführlich getestet werden. Ein Neustart der gesamten Server-Konfiguration ist notwendig, um die Änderung ordentlich an alle Module mitzuteilen.&lt;/p&gt;
@@ -2818,13 +2815,19 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="442">
-<o>The name of the database. To make it easy on your users, use all lowercaps characters, and avoid 'odd' characters </o>
+<changed from="The name of the database. To make it easy on your users, use all lowercaps characters, and avoid 'odd' characters "/>
+<o>The name of the database. To make it easy on your users, please use
+all lowercase characters, and avoid 'odd' characters.</o>
 <t>Der Name der Datenbank. Um es für Benutzer einfacher zu machen, sollten nur Kleinbuchstaben verwendet und auf komplizierte Zeichen verzichtet werden</t>
 </str>
 
 <str id="443">
 <changed from="The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database."/>
-<o>The database type. Internal means that it will be created in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
+<o>The database type. &lt;i&gt;Internal&lt;/i&gt; means that it is created in the
+local Roxen MySQL server, or some other MySQL server specified in the
+URL setting of the chosen group. The permissions of the database are
+manged by Roxen. &lt;i&gt;External&lt;/i&gt; means that the database resides in
+another server, which can be another MySQL instance or something else.</o>
 <t>Der Datenbank-Typ. Intern bedeutet, das die Datenbank in der Roxen MySQL Datenbank erstellt wird und die Rechte der Datenbank automatisch durch Roxen verwaltet werden. Extern bedeutet, dass die Datenbank in einer anderen Datenbank abgelegt wird.</t>
 </str>
 
@@ -2834,13 +2837,17 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="446">
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen</o>
+<changed from="This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen"/>
+<o>The URL to the database. It is only used for &lt;i&gt;external&lt;/i&gt;
+databases.</o>
 <t>Diese URL wird nur für lt;/i&gt;Externe&lt;i&gt; Datenbanken benutzt, und wird ignoriert für Datenbanken, die innerhalb von Roxen definiert wurden</t>
 </str>
 
 <str id="447">
 <changed from="This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in"/>
-<o>This group is used to group the databses. For external databases, the group can also be used to select which MySQL server the database should be created in</o>
+<o>The group to put the database in. For &lt;i&gt;internal&lt;/i&gt; databases, the
+URL setting in the group also specifies which MySQL server the
+database is created in.</o>
 <t>Diese Gruppe wird benutzt, um die Datenbanken zu gruppieren. Für interne Datenbanken kann diese Gruppe ebenfalls benutzt werden, um den MySQL-Server auszuwählen, in der die Datenbanken erstellt werden sollen</t>
 </str>
 
@@ -2868,14 +2875,13 @@ internal databases will be created in.
 server in which the database will be created, please note that this
 server must be a MySQL server, nothing else will work.
 "/>
-<o>The groups are used mainly to group the databases in the
-Administration interface, but also to indicate the default MySQL server
-external databases will be created in.
+<o>&lt;p&gt;The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL
+server external databases will be created in.&lt;/p&gt;
 
-&lt;p&gt; If a group has a URL set, it will be used to select the database
-server in which the database will be created. Please note that this
-server must be a MySQL server, nothing else will work.
-</o>
+&lt;p&gt;If a group has a URL set, it will be used to select the database
+server in which the database will be created. Please note that it
+must be a MySQL server.&lt;/p&gt;</o>
 <t>Die Gruppen werden hauptsächlich dazu benutzt, um die
 Datenbank-Gruppen im Administrations-Interface zu gruppieren. Zum anderen,
 um den standardmässigen MySQL-Server anzuzeigen, in der interne
@@ -2893,17 +2899,25 @@ Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
 </str>
 
 <str id="453">
-<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, a ID will be selected automatically.</o>
+<changed from="The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, a ID will be selected automatically."/>
+<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, an identifier is selected automatically.</o>
 <t>Der Identifikator der Gruppe. Dieser wird intern in Roxen benutzt, und muss eindeutig sein. Wenn Sie dies auf automatisch setzten, wird die ID automatisch gewählt.</t>
 </str>
 
 <str id="454">
-<o>The name of the database group. This is what is shown in the configuration interface</o>
+<changed from="The name of the database group. This is what is shown in the configuration interface"/>
+<o>The name of the database group. This is what is shown in the configuration interface.</o>
 <t>Der Name der Datenbank-gruppe. Dieser wird im Konfigurations-Interface angezeigt.</t>
 </str>
 
 <str id="455">
-<o>This URL is only used when &lt;/i&gt;Internal&lt;i&gt; databases is created in this group, and it specified which MySQL server the datbase should be created in. As an example, if you want all databases created in the group to end up in the MySQL running on the host &lt;/i&gt;wyrm&lt;i&gt;, using the account with the username &lt;/i&gt;foo&lt;i&gt; and password &lt;/i&gt;bar&lt;i&gt;, set this URL to &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</o>
+<changed from="This URL is only used when &lt;/i&gt;Internal&lt;i&gt; databases is created in this group, and it specified which MySQL server the datbase should be created in. As an example, if you want all databases created in the group to end up in the MySQL running on the host &lt;/i&gt;wyrm&lt;i&gt;, using the account with the username &lt;/i&gt;foo&lt;i&gt; and password &lt;/i&gt;bar&lt;i&gt;, set this URL to &lt;/i&gt;foo:bar@wyrm&lt;i&gt;"/>
+<o>This URL is used for &lt;i&gt;internal&lt;/i&gt; databases created in this group,
+and it specifies which MySQL server they should be created in. As an
+example, if you want all databases created in the group to end up in
+the MySQL running on the host &lt;i&gt;wyrm&lt;/i&gt;, using the account with
+the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set this URL to
+&lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</o>
 <t>Diese URL wird nur benutzt, wenn &lt;/i&gt;interne&lt;i&gt; Datenbanken in dieser Gruppe erstellt werden.  Sie gibt an, in welchem MySQL-Server die Datenbank erstellt werde soll. Als Beispiel: Wenn Sie alle Datenbanken in dieser Gruppe auf dem MySQL-Server auf dem Rechner &lt;/i&gt;wyrm&lt;i&gt; erstellen wollen, mit der Kennung &lt;/i&gt;foo&lt;i&gt; und dem Passwort &lt;/i&gt;bar&lt;i&gt;, setzen Sie diese URL auf &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</t>
 </str>
 
@@ -3990,5 +4004,136 @@ this GC is not required to keep the cache sizes down.&lt;/p&gt;
 &lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
 invalid cache entries, which could push out valid cache entries.
 Running it too often causes unnecessary server load.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1047">
+<new/>
+<o>Module is disabled</o>
+<t></t>
+</str>
+
+<str id="1048">
+<new/>
+<o>Server too busy message</o>
+<t></t>
+</str>
+
+<str id="1049">
+<new/>
+<o>What to return if the server is too busy. See also "Handler queue timeout".</o>
+<t></t>
+</str>
+
+<str id="1050">
+<new/>
+<o>Handler queue timeout</o>
+<t></t>
+</str>
+
+<str id="1051">
+<new/>
+<o>Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+"Server too busy message" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load.</o>
+<t></t>
+</str>
+
+<str id="1052">
+<new/>
+<o>Proxy: Use proxy (experimental)</o>
+<t></t>
+</str>
+
+<str id="1053">
+<new/>
+<o>Use proxy for outgoing requests. E.g. when browsing external web sites through the Linkbrowser or when Insert cached-href fetches data from an external location.</o>
+<t></t>
+</str>
+
+<str id="1054">
+<new/>
+<o>Proxy: Proxy URL</o>
+<t></t>
+</str>
+
+<str id="1055">
+<new/>
+<o>The URL of the proxy to use for outgoing requests.</o>
+<t></t>
+</str>
+
+<str id="1056">
+<new/>
+<o>Proxy: Proxy username</o>
+<t></t>
+</str>
+
+<str id="1057">
+<new/>
+<o>Username for proxy authorization.</o>
+<t></t>
+</str>
+
+<str id="1058">
+<new/>
+<o>Proxy: Proxy password</o>
+<t></t>
+</str>
+
+<str id="1059">
+<new/>
+<o>Password for proxy authorization.</o>
+<t></t>
+</str>
+
+<str id="1060">
+<new/>
+<o>System load</o>
+<t></t>
+</str>
+
+<str id="1061">
+<new/>
+<o>The directory the backup will be saved in. If you chose auto, Roxen
+will generate a directory name that includes the database name and
+today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
+<t></t>
+</str>
+
+<str id="1062">
+<new/>
+<o>Error running query %d: %s</o>
+<t></t>
+</str>
+
+<str id="1063">
+<new/>
+<o>Error connecting to database: </o>
+<t></t>
+</str>
+
+<str id="1064">
+<new/>
+<o>Tip: Put '--' on a line to ignore everything below it.</o>
+<t></t>
+</str>
+
+<str id="1065">
+<new/>
+<o>Uncheck/Check All</o>
+<t></t>
+</str>
+
+<str id="1066">
+<new/>
+<o>SNMP status</o>
+<t></t>
+</str>
+
+<str id="1067">
+<new/>
+<o>Global SNMP server statistics</o>
 <t></t>
 </str>

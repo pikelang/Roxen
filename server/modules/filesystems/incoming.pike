@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.20 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version= "$Id$";
 
 //<locale-token project="mod_incoming">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)

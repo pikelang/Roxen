@@ -11,7 +11,7 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.12 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version="$Id$";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000

@@ -1,6 +1,6 @@
 #! /bin/sh
 # Copyright (c) Roxen IS AB 2008-2009
-# $Id: rxnpatch,v 1.4 2010/07/08 11:48:35 grubba Exp $
+# $Id$
 
 dn="`dirname $0`"
 server=`cd "$dn"/../ && pwd`

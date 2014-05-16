@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.22 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG

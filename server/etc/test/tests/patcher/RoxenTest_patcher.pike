@@ -53,9 +53,10 @@ void run_tests(Configuration c)
   env->TEMP = temp_path;
 
   // Try importing and installing a patch directly through the lib. 
-  string patch_id = test_true(po->import_file, 
-			      combine_path(test_path, "2009-02-25T1124.rxp"), 
-			      0);
+  array(int|string) patch_ids = test_true(po->import_file, 
+					  combine_path(test_path, "2009-02-25T1124.rxp"), 
+					  0);
+  string patch_id = patch_ids[0];
   test_true(po->install_patch, patch_id, "self_test@localhost");
 
   // Create a patch using the lib.
@@ -66,7 +67,7 @@ void run_tests(Configuration c)
 		 "description"	: "This is test 2.",
 		 "originator"	: "self_test@localhost",
 		 "rxp_version"  : RoxenPatch.rxp_version,
-		 "version"      : po->parse_version(roxen_dist_version),
+		 "version"      : po->parse_version(po->get_server_version()),
 		 "depends"	: ({ "2009-02-25T1124" }),
 		 "replace"      : ({ 
 		                    ([ "source" : combine_path(test_path,
@@ -84,14 +85,14 @@ void run_tests(Configuration c)
 "rxnpatch"
 #endif
 );
-  Process.create_process p = test(Process.create_process,
-				  ({ clt_path, 
-				     "-O", "self_test@roxen.com",
-				     "--no-colour",
-				     "install", 
-				     combine_path(temp_path, 
-						  "2009-02-25T1628.rxp") }),
-				  ([ "env" : env ]) );
+  Process.Process p = test(Process.Process,
+			   ({ clt_path, 
+			      "-O", "self_test@roxen.com",
+			      "--no-colour",
+			      "install", 
+			      combine_path(temp_path, 
+					   "2009-02-25T1628.rxp") }),
+			   ([ "env" : env ]) );
   test_false(p && p->wait);
 
   // Create a patch using the command line tool and then install it.
@@ -105,16 +106,17 @@ void run_tests(Configuration c)
 		      "--patch=" + combine_path(test_path, "testfile.patch"),
 		      "-t", temp_path });
   Stdio.File desc = Stdio.File();
-  p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe(),
-	   					"env"	: env ]) );
+  p = test(Process.Process, clt_args, ([ "stdin" : desc.pipe(),
+					 "env"	: env ]) );
   
   test(desc.write, "Created by self_test.");
   test(desc.close);
   test_false(p && p->wait);
   
-  patch_id = test_true(po->import_file,
-		       combine_path(temp_path, "2009-02-25T1728.rxp"),
-		       0);
+  patch_ids = test_true(po->import_file,
+			combine_path(temp_path, "2009-02-25T1728.rxp"),
+			0);
+  patch_id = patch_ids[0];
 
   test_true(po->install_patch, patch_id, "self_test@localhost");
 

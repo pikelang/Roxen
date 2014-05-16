@@ -271,31 +271,6 @@ e</result>
 
 <test>
   <rxml>
-    <set variable="var.x" expr='(program) "nasty"'/>
-    &var.x;
-  </rxml>
-  <result>[Error (parse): Syntax error in expr attribute.]</result>
-</test>
-
-<test>
-  <rxml>
-    <set variable="var.x" expr='"(program)"'/>
-    &var.x;
-  </rxml>
-  <result>(program)</result>
-</test>
-
-<test>
-  <rxml type="any">
-    <set variable="var.x" split=",">2,3,4,3</set>
-    <set variable="var.x" expr="uniq (var.x)"/>
-    &var.x;
-  </rxml>
-  <equal>({"2", "3", "4"})</equal>
-</test>
-
-<test>
-  <rxml>
     <set variable="var.y" value=""/>
     <set variable="var.x">q &var.y;</set>
     &var.x;
@@ -656,6 +631,27 @@ e</result>
 <test>
 <rxml><set variable='var.foo' value='x'/><default value=a><select><option value=a></select></default></rxml>
 <result><select><option selected="selected" value=a></option></select></result>
+</test>
+
+<test>				<!-- [bug 6425] -->
+  <rxml type="string">
+    <define tag="form001">
+      <set variable="var.ro" value="write"/>
+      <for from="1" to="2" variable="var.ix">
+	<maketag name="input" type="tag">
+	  <if variable="var.ro">
+	    <attrib name="readonly">READONLY</attrib>
+	  </if>
+	</maketag>
+	<unset variable="var.ro" />
+      </for>
+    </define>
+    <form001/>
+  </rxml>
+  <result>
+    <input readonly='READONLY'/>
+    <input/>
+  </result>
 </test>
 
 
@@ -3683,6 +3679,16 @@ e</random></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.x" expr="0==0.0"/>&var.x;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="0==INT(0.0)"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
 <rxml><set variable="var.x" expr="1==1"/>&var.x;</rxml>
 <result>1</result>
 </test>
@@ -3702,6 +3708,142 @@ e</random></rxml>
 <result>5</result>
 </test>
 
+<test>
+<rxml><set variable="var.x" expr="3.14 == 314/1e2"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='(program) "nasty"'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Syntax error in expr attribute.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='"(program)"'/>
+    &var.x;
+  </rxml>
+  <result>(program)</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='sizeof("(program) \\\"nasty")'/>
+    &var.x;
+  </rxml>
+  <result>17</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='"si\"zeof(\\\\"(program)'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Syntax error in expr attribute.]</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr="uniq (var.x)"/>
+    &var.x;
+  </rxml>
+  <equal>({"2", "3", "4"})</equal>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.x" expr="test.pass - 1"/>
+    &var.x;
+  </rxml>
+  <result pass="1">0</result>
+  <result pass="2">1</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x..y" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='"&lt;" + var.x..y.1 + "&gt;"'/>
+    &var.x;
+  </rxml>
+  <equal>"<2>"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='-INT(var.x.-1)'/>
+    &var.x;
+  </rxml>
+  <equal>-3</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='"\"var.x.-1\""+"\"\\\"\\"+var.x.-1+"x.y"'/>
+    &var.x;
+  </rxml>
+  <equal>"\"var.x.-1\"\"\\\"\\3x.y"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x..y" type="int">17</set>
+    <set variable="var.x" expr='-var.x..y'/>
+    &var.x;
+  </rxml>
+  <equal>-17</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x-(var..y)" type="float">17</set>
+    <set variable="var.x" expr='-var("var.x-(var..y)")'/>
+    &var.x;
+  </rxml>
+  <equal>-17.0</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x-(var..y)" type="float">17</set>
+    <set variable="var.x" expr='-index("var","x-(var.y)")'/>
+    &var.x;
+  </rxml>
+  <equal>-17.0</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='blubb'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Error in expr attribute: Error resolving 'blubb'.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='foo'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Error in expr attribute: Error resolving 'foo'.]</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <scope>
+      <set variable="_.x" value="13"/>
+      <set variable="var.x" expr='_.x'/>
+    </scope>
+    &var.x;
+  </rxml>
+  <equal>"13"</equal>
+</test>
+
 <!-- ............................................................ -->
 <comment>Test elements</comment>
 <test>
@@ -3718,4 +3860,30 @@ e</random></rxml>
     <elements variable="var.foo"/>
   </rxml>
   <result>2</result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>sscanf</comment>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <sscanf variables="var.d,var.m,var.y"
+	    format="%s-%s-%s">&var.contents;</sscanf>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <nooutput>
+      <sscanf variables="var.d,var.m,var.y"
+	      format="%s-%s-%s">&var.contents;</sscanf>
+    </nooutput>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
 </test>
