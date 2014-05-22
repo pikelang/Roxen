@@ -2323,13 +2323,46 @@ class InternalProtocol
 }
 
 #if constant(SSL.sslfile)
+
+class SSLContext {
+#if constant(SSL.Context)
+  inherit SSL.Context;
+
+#if defined(DEBUG) || defined(SSL3_DEBUG)
+  SSL.Alert alert_factory(SSL.Connection con, int level, int description,
+			  SSL.Constants.ProtocolVersion version,
+			  string|void debug_message)
+  {
+    if (description != SSL.Constants.ALERT_close_notify) {
+      if (debug_message) {
+	werror("SSL %s: %s: %s",
+	       (level == SSL.Constants.ALERT_warning)?
+	       "WARNING":"ERROR",
+	       SSL.Constants.fmt_constant(description, "ALERT"),
+	       debug_message);
+      } else {
+	werror("SSL %s: %s\n",
+	       (level == SSL.Constants.ALERT_warning)?
+	       "WARNING":"ERROR",
+	       SSL.Constants.fmt_constant(description, "ALERT"));
+      }
+    }
+    return ::alert_factory(con, level, description, version, debug_message);
+  }
+#endif /* DEBUG || SSL3_DEBUG */
+
+#else
+  inherit SSL.context;
+#endif
+}
+
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
   inherit Protocol;
 
   // SSL context
-  SSL.context ctx = SSL.context();
+  SSLContext ctx = SSLContext();
 
   int cert_failure;
 
@@ -2552,7 +2585,7 @@ class SSLProtocol
 
     if (sizeof(ctx->cert_pairs)) {
       // We must reset the set of certificates.
-      ctx = SSL.context();
+      ctx = SSLContext();
       set_version();
       filter_preferred_suites();
     }
@@ -2832,8 +2865,11 @@ class SSLProtocol
   SSL.sslfile accept()
   {
     Stdio.File q = ::accept();
-    if (q)
-      return SSL.sslfile (q, ctx);
+    if (q) {
+      SSL.sslfile ssl = SSL.sslfile (q, ctx);
+      if (ssl->accept) ssl->accept();
+      return ssl;
+    }
     return 0;
   }
 
