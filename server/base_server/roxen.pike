@@ -3784,7 +3784,13 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("draw args: %O\n", args );
 #endif
-    mixed reply = draw_function( @copy_value(args), id );
+    mixed reply;
+    if (mixed err = catch {
+	reply = draw_function( @copy_value(args), id );
+      }) {
+      master()->handle_error(err);
+      return;
+    }
 
     if( !reply ) {
 #ifdef ARG_CACHE_DEBUG
@@ -4640,10 +4646,11 @@ class ImageCache
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
-	error("Draw callback %O did not generate any data.\n"
-	      "na: %O\n"
-	      "id: %O\n",
-	      draw_function, na, id);
+	report_error("Draw callback %O did not generate any data.\n"
+		     "na: %O\n"
+		     "id: %O\n",
+		     draw_function, na, id);
+	return 0;
       }
     }
     res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
