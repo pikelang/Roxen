@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.84 2009/03/23 12:31:14 grubba Exp $
+// $Id$
 
 //! Manages database aliases and permissions
 
@@ -229,6 +229,18 @@ private
 		  "  ADD COLUMN " + priv+ "_priv "
 		  "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
       }
+    }
+
+    if (db_version != mysql_version) {
+      // Make sure no table is broken after the upgrade.
+      foreach(db->list_dbs(), string dbname) {
+	werror("DBManager: Repairing tables in the local db %O...\n", dbname);
+	Sql.Sql sql = connect_to_my_mysql(0, dbname);
+	foreach(sql->list_tables(), string table) {
+	  sql->query("REPAIR TABLE `" + table + "`");
+	}
+      }
+      werror("DBManager: MySQL upgrade done.\n");
     }
   }
 
