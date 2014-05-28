@@ -4912,12 +4912,107 @@ class TagEmitLicenseWarnings {
 
 inherit "emit_object";
 
+#if constant(Parser.CSV)
+#define PARSER_CSV	Parser.CSV
+#else
+
+// Based on Parser.CSV from Pike 8.0.
+class PARSER_CSV {
+  inherit Parser.Tabular;
+
+  // NB: These variables were made non-private and got their
+  //     names prefixed with underscores in Pike 8.0.
+  Stdio.FILE _in;
+  int _eol;
+
+  // NB: We overload create() so that we can get at _in without
+  //     having to modify Parser.Tabular (where it is private).
+  void create(void|string|Stdio.File|Stdio.FILE input)
+  {
+    if (!input) input = " ";
+    if (stringp(input)) input = Stdio.FakeFile(input);
+    if (!input->unread) {
+      (_in = Stdio.FILE())->assign(input);
+    } else {
+      _in = input;
+    }
+    ::create(input);
+  }
+
+  int parsehead(void|string delimiters,void|string|object matchfieldname)
+  {
+    if(skipemptylines())
+      return 0;
+    string line=_in->gets();
+    if(!delimiters||!sizeof(delimiters))
+    {
+      int countcomma,countsemicolon,counttab;
+      countcomma=countsemicolon=counttab=0;
+      foreach(line;;int c)
+	switch(c)
+	{
+	case ',':countcomma++;
+	  break;
+	case ';':countsemicolon++;
+	  break;
+	case '\t':counttab++;
+	  break;
+        }
+      delimiters=countcomma>countsemicolon?countcomma>counttab?",":"\t":
+	countsemicolon>counttab?";":"\t";
+    }
+    _in->unread(line+"\n");
+
+    multiset delim=(<>);
+    foreach(delimiters;;int c)
+      delim+=(<c>);
+
+    array res=({ (["single":1]),0 });
+    mapping m=(["delim":delim]);
+
+    if(!objectp(matchfieldname))
+      matchfieldname=Regexp(matchfieldname||"");
+    _eol=0;
+    if(mixed err = catch {
+	_checkpoint checkp=_checkpoint();
+	do {
+	  string field=_getdelimword(m);
+	  res+=({ m+(["name":field]) });
+	  if(String.width(field)>8)
+	    field=string_to_utf8(field);  // FIXME dumbing it down for Regexp()
+	  if(!matchfieldname->match(field))
+	    throw(1);
+	}
+	while(!_eol);
+      })
+      switch(err) {
+      default:
+	throw(err);
+      case 1:
+	return 0;
+      }
+    setformat( ({res}) );
+    return 1;
+  }
+
+  mapping fetchrecord(void|array|mapping format)
+  {
+    mapping res=fetch(format);
+    if(!res)
+      return UNDEFINED;
+    foreach(res;;mapping v)
+      return v;
+  }
+}
+
+#endif
+
 class TagEmitCSV {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "csv";
 
-  class CSVResult(Parser.CSV csv)
+  class CSVResult(PARSER_CSV csv)
   {
     inherit EmitObject;
 
@@ -4937,18 +5032,18 @@ class TagEmitCSV {
 
   array|EmitObject get_dataset(mapping args, RequestID id)
   {
-    Parser.CSV csv;
+    PARSER_CSV csv;
     if (args->path) {
       string data = id->conf->try_get_file(args->path, id);
       if (stringp(data)) {
-	csv = Parser.CSV(data);
+	csv = PARSER_CSV(data);
       } else {
 	werror("Try get file failed with %O\n", data);
       }
     } else if (args->realpath) {
       Stdio.File file = Stdio.File();
       if (file->open(args->realpath, "r")) {
-	csv = Parser.CSV(file);
+	csv = PARSER_CSV(file);
       }
     } else if (!args->quiet) {
       RXML.run_error("Path to data not specified.\n");
