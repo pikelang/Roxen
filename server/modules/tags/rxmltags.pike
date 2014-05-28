@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.364 2002/04/15 14:49:20 wellhard Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4910,6 +4910,74 @@ class TagEmitLicenseWarnings {
   }
 }
 
+inherit "emit_object";
+
+class TagEmitCSV {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "csv";
+
+  class CSVResult(Parser.CSV csv)
+  {
+    inherit EmitObject;
+
+    protected mapping(string:mixed) really_get_row()
+    {
+      return csv->fetchrecord();
+    }
+  }
+
+  mapping(string:RXML.Type) opt_arg_types =
+    ([
+      "path": RXML.t_text(RXML.PEnt),
+      "realpath": RXML.t_text(RXML.PEnt),
+      "header": RXML.t_text(RXML.PEnt),
+      "delimiter": RXML.t_text(RXML.PEnt),
+    ]);
+
+  array|EmitObject get_dataset(mapping args, RequestID id)
+  {
+    Parser.CSV csv;
+    if (args->path) {
+      string data = id->conf->try_get_file(args->path, id);
+      if (stringp(data)) {
+	csv = Parser.CSV(data);
+      } else {
+	werror("Try get file failed with %O\n", data);
+      }
+    } else if (args->realpath) {
+      Stdio.File file = Stdio.File();
+      if (file->open(args->realpath, "r")) {
+	csv = Parser.CSV(file);
+      }
+    } else if (!args->quiet) {
+      RXML.run_error("Path to data not specified.\n");
+    }
+    if (!csv) {
+      if (!args->quiet) {
+	RXML.run_error("Data file not found.\n");
+      }
+      return ({});
+    }
+
+    if (args->header) {
+      // Explicit headerline.
+      if (!has_suffix(args->header, "\n")) args->header += "\n";
+      csv->_in->unread(args->header);
+    }
+
+    if (!csv->parsehead(args->delimiter)) {
+      if (!args->quiet) {
+	RXML.run_error("Failed to parse csv header.\n");
+      }
+      return ({});
+    }
+    // Trow away the header row.
+    csv->fetchrecord();
+    return CSVResult(csv);
+  }
+}
+
 // ---------------- API registration stuff ---------------
 
 string api_query_modified(RequestID id, string f, int|void by)
@@ -8037,6 +8105,38 @@ just got zapped?
  RXML-code. <tag>eval</tag> is then placed around the entity to get
  its content parsed.</p>
 </desc>",
+
+//----------------------------------------------------------------------
+
+"emit#csv":#"<desc type='plugin'><p><short>
+ Emit the fields from a file containing a comma-separated list of
+ values.</short>
+</p></desc>
+
+<attr name='path' value='string'><p>
+ Path in the virtual filesystem to the csv-file.
+</p></attr>
+<attr name='realpath' value='string'><p>
+ Path in the real filesystem to the csv-file.
+</p></attr>
+<attr name='header' value='string'><p>
+ Header line containing the field names for the csv-file.</p>
+
+ <p>CSV-files usually have a first line that contains the names for the
+ fields, but in some cases the file only contains data, in which case
+ this attribute needs to be set.</p>
+
+ <p>Note that the header line fields must be separated with the same
+ delimiter as the csv-file data.</p>
+</attr>
+<attr name='delimiter' value='string'><p>
+ Delimiter used to separate the fields in the csv-file.</p>
+
+ <p>The tag defaults to trying the delimiters <tt><b>,</b></tt>,
+ <tt><b>;</b></tt> and <b>TAB</b>. If it selects the wrong delimiter
+ the correct one can be explicitly specified by setting this attribute.</p>
+</attr>
+",
 
 //----------------------------------------------------------------------
 
