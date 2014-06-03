@@ -1,0 +1,32 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 8487c61df9a63bd28e42f14681eddcc59d19526e
+to: 92b3685161317b6e14dfbf2708666352aa29aaac
+originator: wellhardh@roxen.com
+depends: 2014-04-30T121847
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 5.4.69 by buildsystem.
+
+  * Version bumped to 5.4.70 by buildsystem.
+
+  * Document the modifiers ! (eliminate field padding) and E (alternate form) for
+    <date#strftime>.
+
+  * Tags: Added <emit#csv/>.
+    
+    Added RXML-support for emitting values from csv-files.
+    
+    Fixes [bug 7147]
+
+  * Tags: Survive without Parser.CSV.
+    
+    Pike 7.8 doesn't have Parser.CSV, so provide a fallback implementation.
+
+  * Tags: More stuff to survive without Parser.CSV.
+    
+    Parser.Tabular in Pike 7.8 lacks some stuff that Parser.CSV needs,
+    so incorporate it in the fallback code.
+
+  * Add SloppyDOM.DocumentWrapper to avoid cyclic garbage.
