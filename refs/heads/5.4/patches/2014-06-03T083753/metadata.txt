@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Documentation, emit#csv, SloppyDOM garbage
 from: 8487c61df9a63bd28e42f14681eddcc59d19526e
 to: 92b3685161317b6e14dfbf2708666352aa29aaac
 originator: wellhardh@roxen.com
@@ -7,12 +7,8 @@ restart: true
 
 Multiple fixes:
 
-  * Version bumped to 5.4.69 by buildsystem.
-
-  * Version bumped to 5.4.70 by buildsystem.
-
-  * Document the modifiers ! (eliminate field padding) and E (alternate form) for
-    <date#strftime>.
+  * Document the modifiers ! (eliminate field padding) and E
+    (alternate form) for <date#strftime>.
 
   * Tags: Added <emit#csv/>.
     
