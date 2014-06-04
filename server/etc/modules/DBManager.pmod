@@ -487,7 +487,7 @@ private
 
     if (db_version != mysql_version) {
       // Make sure no table is broken after the upgrade.
-      foreach(db->list_dbs(), string dbname) {
+      foreach(db->list_dbs() - ({ "information_schema" }), string dbname) {
 	werror("DBManager: Repairing tables in the local db %O...\n", dbname);
 	Sql.Sql sql = connect_to_my_mysql(0, dbname);
 	foreach(sql->list_tables(), string table) {
