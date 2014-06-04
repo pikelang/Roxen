@@ -234,9 +234,19 @@ private
     if (db_version != mysql_version) {
       // Make sure no table is broken after the upgrade.
       foreach(db->list_dbs(), string dbname) {
+	if (lower_case(dbname) == "information_schema") {
+	  // This is a virtual read-only db containing metadata
+	  // about the other tables, etc. Attempting to repair
+	  // any tables in it will cause errors to be thrown.
+	  continue;
+	}
 	werror("DBManager: Repairing tables in the local db %O...\n", dbname);
 	Sql.Sql sql = connect_to_my_mysql(0, dbname);
 	foreach(sql->list_tables(), string table) {
+	  // NB: Any errors from the repair other than access
+	  //     permission errors are in the return value.
+	  //
+	  // We ignore them for now.
 	  sql->query("REPAIR TABLE `" + table + "`");
 	}
       }
