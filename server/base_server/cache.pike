@@ -1170,10 +1170,19 @@ protected void update_cache_size_balance()
 	}
 	reserved_size += mgr_reserved_size[mgr] = reserved;
 
-	float lookups = mgr->has_cost ?
-	  mgr->cost_hits + mgr->cost_misses : mgr->hits + mgr->misses;
+	float hits;
+	float misses;
+	if (mgr->has_cost) {
+	  hits = mgr->cost_hits;
+	  misses = mgr->cost_misses;
+	} else {
+	  hits = mgr->hits;
+	  misses = mgr->misses;
+	}
+
+	float lookups = hits + misses;
 	float hit_rate_per_byte = lookups != 0.0 && mgr_used[mgr] ?
-	  mgr->hits / lookups / mgr_used[mgr] : 0.0;
+	  hits / lookups / mgr_used[mgr] : 0.0;
 
 	// add_rate is a measurement on how many new bytes a cache could put
 	// into use, and hit_rate_per_byte weighs in a projection on how
