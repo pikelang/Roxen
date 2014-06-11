@@ -2187,6 +2187,71 @@ class TagCache {
   constant cache_tag_save_loc = "RXML <cache> save";
   array(RXML.Type) result_types = ({RXML.t_any});
 
+  protected class CacheTagEntry (mixed data)
+  {
+    // Custom cache entry wrapper to try to count memory consumption
+    // more accurately than the gross underestimation that's performed
+    // by default. We'll recurse through PCode entries, their
+    // subentries and so on.
+    protected array(mixed) collect_things_recur (mixed input,
+						 void|int ignore_input)
+    {
+      constant limit = 1000;
+
+      array(mixed) result = ({});
+      ADT.Stack stack = ADT.Stack();
+
+      stack->push (input);
+      for (int i = 0; sizeof (stack) && i < limit; i++) {
+	mixed entry = stack->pop();
+
+	if (has_value (result, entry))
+	  continue;
+
+	result += ({ entry });
+
+	if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
+	  foreach (entry; mixed ind; mixed val) {
+	    if (!arrayp (entry))
+	      stack->push (ind);
+	    if (!multisetp (entry))
+	      stack->push (val);
+	  }
+	} else if (objectp (entry)) {
+	  if (entry->is_RXML_PCode)
+	    stack->push (entry->exec);
+	}
+      }
+
+      if (sizeof (stack))
+	report_error ("RXML <cache>: more than %d iterations in "
+		      "collect_things_recur.\n", limit);
+
+      return result;
+    }
+
+    int cache_count_memory (int|mapping opts)
+    {
+      array(mixed) things = collect_things_recur (data);
+      return Pike.count_memory (opts + ([ "lookahead": 5 ]), things);
+    }
+  }
+
+  mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
+		   void|mapping|int(1..1) cache_context)
+  {
+    CacheTagEntry entry
+      = cache.cache_set (cache_name, key, CacheTagEntry (data), timeout,
+			 cache_context);
+    return entry && entry->data;
+  }
+
+  mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
+  {
+    CacheTagEntry entry = cache.cache_lookup (cache_name, key, cache_context);
+    return entry && entry->data;
+  }
+
   protected class TimeOutEntry (
     TimeOutEntry next,
     // timeout_cache is a wrapper array to get a weak ref to the
