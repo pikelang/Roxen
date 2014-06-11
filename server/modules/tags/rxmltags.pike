@@ -2766,23 +2766,25 @@ class TagCache {
 	  else {
 	    if (!alternatives || key_level2) {
 	      alternatives = ([]);
-	      if (cache_id) {
-		// A persistent <cache> frame with a nonpersistent
-		// cache. The cache itself has gotten lost if we get
-		// here, so we need to readd it to the Roxen cache
-		// since we probably won't enter save() in this case.
-#ifdef DEBUG
-		if (!has_prefix (cache_id, "ci"))
-		  error ("Unexpected non-shared cache identifier: %O\n",
-			 cache_id);
-#endif
-		cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
-	      }
 	    }
 	    alternatives[key] =
 	      key_level2 ?
 	      ({ 0, evaled_content, key_level2 }) :
 	      evaled_content;
+
+	    if (cache_id) {
+	      // A persistent <cache> frame with a nonpersistent
+	      // cache. The cache itself has gotten lost if we get
+	      // here, so we need to readd it to the Roxen cache
+	      // since we probably won't enter save() in this case.
+#ifdef DEBUG
+	      if (!has_prefix (cache_id, "ci"))
+		error ("Unexpected non-shared cache identifier: %O\n",
+		       cache_id);
+#endif
+	      cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
+	    }
+
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
