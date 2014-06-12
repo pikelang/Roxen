@@ -1,0 +1,25 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 92b3685161317b6e14dfbf2708666352aa29aaac
+to: ffcdab18d8202faafaf99236203f39e1a03a201b
+originator: wellhardh@roxen.com
+depends: 2014-06-03T083753
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 5.4.71 by buildsystem.
+
+  * Add custom count_memory callback for <cache> tag.
+    
+    For more accurate entry size measurement.
+
+  * Cache Tag: add alternatives mapping to cache after adding entries.
+
+  * RAM cache: Fix cache manager balancing bug.
+    
+    cost_hits and hits were mixed up for cost-aware managers, leading to
+    gross underestimation of the hit ratio compared to non-cost managers.
+
+  * <default> tag: Avoid storing all "remaining" substrings on the stack at the same time.
+    
+    This problem could lead to OOM with large number of <option> elements.
