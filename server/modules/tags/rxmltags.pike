@@ -3400,16 +3400,23 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
 
   return ({ Roxen.make_tag(t, m, xml) });
 }
-array split_on_option( string what, Regexp r )
+
+array split_on_option (string input, Regexp r)
 {
-  string whatwhatwhat = string_to_utf8(what);
-  array a = r->split( whatwhatwhat );
-  if( !a )
-    return ({ what });
-  return split_on_option( utf8_to_string(a[0]), r ) + map(a[1..],utf8_to_string);
+  string remaining = string_to_utf8 (input);
+  array res = ({});
+  while (1) {
+    array a = r->split (remaining);
+    if (!a) {
+      return ({ utf8_to_string (remaining) }) + res;
+    }
+    remaining = a[0];
+    res = map (a[1..], utf8_to_string) + res;
+  }
 }
-private int|array internal_tag_select(string t, mapping m, string c, string name
-, multiset(string) value)
+
+private int|array internal_tag_select(string t, mapping m, string c,
+				      string name, multiset(string) value)
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
