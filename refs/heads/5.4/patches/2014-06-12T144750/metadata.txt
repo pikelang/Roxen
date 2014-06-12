@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Improved memory counting in ram cache, ram cache balancing, default tag memory
 from: 92b3685161317b6e14dfbf2708666352aa29aaac
 to: ffcdab18d8202faafaf99236203f39e1a03a201b
 originator: wellhardh@roxen.com
@@ -6,8 +6,6 @@ depends: 2014-06-03T083753
 restart: true
 
 Multiple fixes:
-
-  * Version bumped to 5.4.71 by buildsystem.
 
   * Add custom count_memory callback for <cache> tag.
     
