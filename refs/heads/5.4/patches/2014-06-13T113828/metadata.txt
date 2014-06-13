@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Optimiation for default tag
 from: ffcdab18d8202faafaf99236203f39e1a03a201b
 to: 685173d7cad4622e7a6bbc90e4c924a8fdde818b
 originator: wellhardh@roxen.com
@@ -6,10 +6,6 @@ depends: 2014-06-12T144750
 restart: true
 
 Multiple fixes:
-
-  * Version bumped to 5.4.72 by buildsystem.
-
-  * Version bumped to 5.4.73 by buildsystem.
 
   * <default>: Yet another factor ~2 speed increase by using Parser.HTML.
     
