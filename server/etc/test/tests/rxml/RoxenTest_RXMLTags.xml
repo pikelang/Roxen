@@ -538,7 +538,7 @@ e</result>
 <result><input><input checked="checked" type="checkbox" value="x" /><input checked="checked" type="radio" value="x" /></result>
 </test>
 
-<test no-canon="1">
+<test>
 <rxml><set variable='var.foo' value='x'/><default value='foo bar'><select><option value='foo bar'></option></select></default></rxml>
 <result><select><option value='foo bar' selected="selected"></option></select></result>
 </test>
@@ -620,7 +620,7 @@ e</result>
 
 <test>
 <rxml><set variable='var.foo' value='x'/><default value=g><select><option VALUE=g></option></select></default></rxml>
-<result><select><option VALUE=g selected="selected"></option></select></result>
+<result><select><option value=g selected="selected"></option></select></result>
 </test>
 
 <test>
@@ -631,6 +631,21 @@ e</result>
 <test>
 <rxml><set variable='var.foo' value='x'/><default value=a><select><option value=a></select></default></rxml>
 <result><select><option selected="selected" value=a></option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=a><select>A<option value=a>B</select></default></rxml>
+<result><select>A<option selected="selected" value=a>B</option></select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=x><select>A<option value="a"></option><option value="&var.foo;">B</option>&var.foo;</select></default></rxml>
+<result><select>A<option value="a"></option><option selected="selected" value=x>B</option>x</select></result>
+</test>
+
+<test>
+<rxml><set variable='var.foo' value='x'/><default value=b><select><option value="a" selected /><option value="b" /><option/></select></default></rxml>
+<result><select><option value="a"></option><option selected="selected" value="b"></option><option></option></select></result>
 </test>
 
 <test>				<!-- [bug 6425] -->

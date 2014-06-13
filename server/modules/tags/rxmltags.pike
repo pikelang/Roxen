@@ -3401,51 +3401,78 @@ private int|array internal_tag_input(string t, mapping m, string name, multiset(
   return ({ Roxen.make_tag(t, m, xml) });
 }
 
-array split_on_option (string input, Regexp r)
-{
-  string remaining = string_to_utf8 (input);
-  array res = ({});
-  while (1) {
-    array a = r->split (remaining);
-    if (!a) {
-      return ({ utf8_to_string (remaining) }) + res;
-    }
-    remaining = a[0];
-    res = map (a[1..], utf8_to_string) + res;
-  }
-}
-
 private int|array internal_tag_select(string t, mapping m, string c,
 				      string name, multiset(string) value)
 {
   if(name && m->name!=name) return ({ RXML.t_xml->format_tag(t, m, c) });
 
-  // Split input into an array with the layout
-  // ({ "option", option_args, stuff_before_next_option })*n
-  // e.g. "fox<OPtioN foo='bar'>gazink</option>" will yield
-  // tmp=({ "OPtioN", " foo='bar'", "gazink</option>" }) and
-  // ret="fox"
-  Regexp r = Regexp( "(.*)<([Oo][Pp][Tt][Ii][Oo][Nn])([^>]*)>(.*)" );
-  array(string) tmp=split_on_option(c,r);
-  string ret=tmp[0],nvalue;
-  int selected,stop;
-  tmp=tmp[1..];
+  string cur_tag;
+  mapping(string:mixed) cur_args;
+  string cur_data = "";
 
-  while(sizeof(tmp)>2) {
-    stop=search(tmp[2],"<");
-    if(sscanf(tmp[1],"%*svalue=%s",nvalue)!=2 &&
-       sscanf(tmp[1],"%*sVALUE=%s",nvalue)!=2)
-      nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
-    else if(!sscanf(nvalue, "\"%s\"", nvalue) && !sscanf(nvalue, "'%s'", nvalue))
-      sscanf(nvalue, "%s%*[ >]", nvalue);
-    selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(string_to_utf8(tmp[1]));
-    ret+="<"+tmp[0]+tmp[1];
-    if(value[nvalue] && !selected) ret+=" selected=\"selected\"";
-    ret+=">"+tmp[2];
-    if(!Regexp(".*</[Oo][Pp][Tt][Ii][Oo][Nn]")->match(string_to_utf8(tmp[2]))) ret+="</"+tmp[0]+">";
-    tmp=tmp[3..];
-  }
-  return ({ RXML.t_xml->format_tag(t, m, ret) });
+  string finish_tag()
+  {
+    string _cur_tag = cur_tag;
+    cur_tag = 0;
+    mapping(string:mixed) _cur_args = cur_args || ([]);
+    cur_args = 0;
+    string _cur_data = cur_data;
+    cur_data = "";
+
+    if (!_cur_args->selected && value[_cur_data])
+      _cur_args->selected = "selected";
+
+    if (_cur_tag)
+      return RXML.t_xml->format_tag (_cur_tag, _cur_args, _cur_data);
+
+    return _cur_data;
+  };
+
+  array process_tag (Parser.HTML p, mapping args)
+  {
+    string res = "";
+    string tag_name = p->tag_name();
+
+    m_delete (args, "/"); // Self-closed tag.
+
+    if (tag_name[-1] == '/') tag_name = tag_name[..<1];
+
+    res = finish_tag();
+
+    if (tag_name[0] != '/') {
+      cur_tag = tag_name;
+
+      if (value[args->value])
+	args->selected = "selected";
+      else
+	m_delete (args, "selected");
+
+      cur_args = args;
+    }
+
+    return ({ res });
+  };
+
+  Parser.HTML parser = Parser.HTML();
+  parser->xml_tag_syntax(0);
+
+  // Register opening, closing and self-closed tags directly rather
+  // than using add_container to be able to handle some odd cases in
+  // the testsuite (opening tags without closing tags, but with
+  // content, etc.)
+  parser->add_tag ("option", process_tag);
+  parser->add_tag ("/option", process_tag);
+  parser->add_tag ("option/", process_tag);
+  parser->_set_data_callback (lambda (Parser.HTML p, string c)
+			      {
+				cur_data += c;
+				return "";
+			      });
+  parser->ignore_unknown (1);
+  parser->case_insensitive_tag (1);
+  string res = parser->finish(c)->read() + finish_tag();
+
+  return ({ RXML.t_xml->format_tag (t, m, res) });
 }
 
 string simpletag_default( string t, mapping m, string c, RequestID id)
