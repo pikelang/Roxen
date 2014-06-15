@@ -175,6 +175,8 @@ private mapping(string:mixed) sexpr_constants = ([
   "reverse": reverse,
   "uniq": Array.uniq,
   "regexp_split": sexpr_funcs->regexp_split,
+  "basename": basename,
+  "dirname": dirname,
 
   "INT": sexpr_funcs->INT,
   "FLOAT": sexpr_funcs->FLOAT,
@@ -11852,6 +11854,14 @@ After: &var.language;<br /></ex>
      any) match. Returns <ent>roxen.false</ent> if the regexp doesn't
      match. The regexp follows
      <a href='http://www.pcre.org/'>PCRE</a> syntax.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>basename(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the basename of the path in <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>dirname(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the dirname of the path in <i>expr</i>.</p></c></row>
  </xtable>
 
  <p>Expressions for array operands:</p>
