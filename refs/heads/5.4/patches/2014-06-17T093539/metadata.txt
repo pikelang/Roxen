@@ -1,11 +1,9 @@
-subject: Roxen 5.4:   * Version bumped to 5.4.74 by buildsystem.
+subject: Roxen 5.4: Added basename and dirname in RXML expressions
 from: 685173d7cad4622e7a6bbc90e4c924a8fdde818b
 to: 6add51059b1a6e188a71e0d2bffe62ad10d8f1b5
 originator: wellhardh@roxen.com
 depends: 2014-06-13T113828
 restart: true
-
-  * Version bumped to 5.4.74 by buildsystem.
 
   * Allow RXML expressions to call basename() and dirname() for faster path
     manipulation.
