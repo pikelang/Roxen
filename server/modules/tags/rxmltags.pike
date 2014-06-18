@@ -5388,6 +5388,7 @@ class UserTag {
   int flags = RXML.FLAG_COMPILE_RESULT;
   RXML.Type content_type = RXML.t_xml;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
+  constant user_tag_comp_def_loc = "RXML UserTag PCode";
 
   // Note: We can't store the actual user tag definition directly in
   // this object; it won't work correctly in p-code since we don't
@@ -5402,6 +5403,7 @@ class UserTag {
       lookup_name = "tag\0" + name;
       flags |= moreflags;
     }
+    cache.cache_register (user_tag_comp_def_loc, "no_timings");
   }
 
   mixed _encode()
@@ -5442,6 +5444,14 @@ class UserTag {
     array tagdef;
     array(string|RXML.PCode) comp_def;
 
+    class CompDefCacheEntry (array(string|RXML.PCode) comp_def)
+    {
+      int cache_count_memory (int|mapping opts)
+      {
+	return Pike.count_memory (opts, @comp_def);
+      }
+    }
+
     array do_enter (RequestID id)
     {
       vars = 0;
@@ -5468,11 +5478,16 @@ class UserTag {
        UserTag ignored,
        mapping(string:UserTagContents.ExpansionFrame) preparsed_contents_tags,
        RXML.Type comp_type,
-       comp_def] = tagdef;
+       string comp_def_key] = tagdef;
+      if (comp_def_key) {
+	if (CompDefCacheEntry entry =
+	    cache_lookup (user_tag_comp_def_loc, comp_def_key))
+	  comp_def = entry->comp_def;
+      }
       vars = defaults+args;
       scope_name = def_scope_name || name;
 
-      if (comp_type != result_type)
+      if (!comp_def || comp_type != result_type)
 	comp_def = src_def + ({});
 
       if (content_text)
@@ -5541,7 +5556,19 @@ class UserTag {
     void exec_array_state_update()
     {
       tagdef[5] = result_type;
-      tagdef[6] = comp_def;
+
+      if (string old_key = tagdef[6])
+	cache_remove (user_tag_comp_def_loc, old_key);
+      string comp_def_key = "cdk" + roxen.new_uuid_string();
+
+      // Save comp_def in the RAM cache and use a string to reference
+      // it. This avoids a circular reference involving PCode objects,
+      // which in turn helps reduce garbage produced by user defined
+      // tags by quite a lot.
+      cache_set (user_tag_comp_def_loc, comp_def_key,
+		 CompDefCacheEntry (comp_def));
+      tagdef[6] = comp_def_key;
+
       RXML_CONTEXT->state_update();
     }
 
