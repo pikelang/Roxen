@@ -1,0 +1,12 @@
+subject: Roxen 5.4: Reduce garbage produced by UserTag Frame objects.
+from: 6add51059b1a6e188a71e0d2bffe62ad10d8f1b5
+to: f766895e45375208ae252b4f1ea6a8b43ced9645
+originator: wellhardh@roxen.com
+depends: 2014-06-17T093539
+restart: true
+
+Reduce garbage produced by UserTag Frame objects.
+
+The compiled PCode objects are now stored in the RAM cache rather than
+being referenced directly, which breaks a cyclic structure between resulting
+VariableChange and and PCode objects.
