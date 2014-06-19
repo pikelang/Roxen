@@ -1153,6 +1153,15 @@ class TagDebug {
     array do_return(RequestID id) {
       RXML.Context ctx = RXML_CONTEXT;
 
+      if (string sleep_time_str = args->sleep) {
+	float sleep_time = (float) sleep_time_str;
+	if (sleep_time > 0) {
+	  report_debug ("<debug>: [%s] %s: Sleeping for %.1f sec.\n",
+			id->conf->query_name(), id->not_query, sleep_time);
+	  sleep(sleep_time);
+	}
+      }
+
       if (string var = args->showvar) {
 	TAG_TRACE_ENTER("");
 	mixed val = RXML.user_get_var (var, args->scope);
@@ -10330,6 +10339,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='showid' value='string'>
  <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
+</attr>
+
+<attr name='sleep' value='int|float'>
+ <p>Delays RXML execution for the current request the specified number of
+    seconds.</p>
 </attr>
 
 <attr name='werror' value='string'>
