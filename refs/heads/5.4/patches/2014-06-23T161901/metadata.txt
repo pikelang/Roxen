@@ -1,0 +1,8 @@
+subject: Roxen 5.4: Implement <debug sleep="2.5"/> for delaying a request.
+from: f766895e45375208ae252b4f1ea6a8b43ced9645
+to: 4ed6d1b771db7c2ef128c113219fa480286734a2
+originator: frigolit@frigolit.net
+depends: 2014-06-18T155237
+restart: true
+
+Implement <debug sleep="2.5"/> for delaying a request.
