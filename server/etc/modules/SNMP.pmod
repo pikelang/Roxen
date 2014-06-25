@@ -58,9 +58,14 @@ class app_integer
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
-  constant cls = 1;
   constant type_name = "APPLICATION INTEGER";
+#if __VERSION__ < 8.0
+  constant cls = 1;
   constant tag = 0;
+#else
+  int cls = 1;
+  int tag = 0;
+#endif
   protected void create(int|function(:int) val, string|void name,
 			string|void doc_string)
   {
@@ -88,9 +93,14 @@ class app_octet_string
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
-  constant cls = 1;
   constant type_name = "APPLICATION OCTET_STRING";
+#if __VERSION__ < 8.0
+  constant cls = 1;
   constant tag = 0;
+#else
+  int cls = 1;
+  int tag = 0;
+#endif
   protected void create(string|function(:string) val, string|void name,
 			string|void doc_string)
   {
@@ -196,14 +206,22 @@ class String
 class Counter
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 1;
+#else
+  int tag = 1;
+#endif
   constant type_name = "COUNTER";
 }
 
 class Gauge
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 2;
+#else
+  int tag = 2;
+#endif
   constant type_name = "GAUGE";
 }
 
@@ -211,7 +229,11 @@ class Gauge
 class Tick
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 3;
+#else
+  int tag = 3;
+#endif
   constant type_name = "TICK";
   protected string _sprintf(int t)
   {
@@ -225,7 +247,11 @@ class Tick
 class Opaque
 {
   inherit app_octet_string;
+#if __VERSION__ < 8.0
   constant tag = 4;
+#else
+  int tag = 4;
+#endif
   constant type_name = "OPAQUE";
   protected string _sprintf(int t)
   {
@@ -237,7 +263,11 @@ class Opaque
 class Counter64
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 6;
+#else
+  int tag = 6;
+#endif
   constant type_name = "COUNTER64";
 }
 
