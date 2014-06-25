@@ -802,7 +802,7 @@ int send_response(array(Binding) bindings,
     });
   }
 
-  pdu = Protocols.LDAP.ldap_privates.asn1_context_sequence(2,
+  pdu = SNMP.ContextSequence(2,
 	       ({Standards.ASN1.Types.asn1_integer(id), // request-id
 		 Standards.ASN1.Types.asn1_integer(errcode), // error-status
 		 Standards.ASN1.Types.asn1_integer(erridx), // error-index

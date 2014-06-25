@@ -271,17 +271,49 @@ class Counter64
   constant type_name = "COUNTER64";
 }
 
+#if __VERSION__ < 8.0
+constant ContextOctetString =
+  Protocols.LDAP.ldap_privates.asn1_context_octet_string;
+constant ContextSequence =
+  Protocols.LDAP.ldap_privates.asn1_context_sequence;
+#else
+class ContextOctetString
+{
+  inherit Standards.ASN1.Types.OctetString;
+
+  int cls = 2;
+  constant type_name = "CONTEXT OCTET STRING";
+
+  protected void create(int tag, string(8bit) val)
+  {
+    this_program::tag = tag;
+    ::create(val);
+  }
+}
+
+class ContextSequence
+{
+  inherit Standards.ASN1.Types.Sequence;
+
+  int cls = 2;
+  constant type_name = "CONTEXT SEQUENCE";
+
+  protected void create(int tag, array arg)
+  {
+    this_program::tag = tag;
+    ::create(arg);
+  }
+}
+#endif
+
 //! No such object marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string NO_SUCH_OBJECT =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(0, "");
+ContextOctetString NO_SUCH_OBJECT = ContextOctetString(0, "");
 
 //! No such instance marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string NO_SUCH_INSTANCE =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(1, "");
+ContextOctetString NO_SUCH_INSTANCE = ContextOctetString(1, "");
 
 //! End of MIB marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string END_OF_MIB =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(2, "");
+ContextOctetString END_OF_MIB = ContextOctetString(2, "");
 
 //! The NULL counter.
 Counter NULL_COUNTER = Counter(0);
