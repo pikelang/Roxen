@@ -5274,8 +5274,8 @@ class UserTagContents
 	// content. This is poking in the internals; there ought to be
 	// some sort of interface here.
 	RXML.Context ctx = RXML_CONTEXT;
-	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->saved_scopes;
-	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->saved_hidden;
+	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->get_saved_scopes();
+	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->get_saved_hidden();
       }
       else
 	// Already have the result of the content evaluation.
@@ -5325,9 +5325,9 @@ class UserTagContents
 	// some sort of interface here.
 	RXML.Context ctx = RXML_CONTEXT;
 	mapping(string:mixed) orig_ctx_scopes = ctx->scopes;
-	ctx->scopes = upframe->saved_scopes;
+	ctx->scopes = upframe->get_saved_scopes();
 	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
-	ctx->hidden = upframe->saved_hidden;
+	ctx->hidden = upframe->get_saved_hidden();
 
 	RXML.PCode compiled_content = upframe->compiled_content;
 	if (compiled_content && !compiled_content->is_stale())
@@ -5391,6 +5391,17 @@ class UserTagContents
 RXML.TagSet user_tag_contents_tag_set =
   RXML.TagSet (this_module(), "_user_tag", ({UserTagContents()}));
 
+mapping(string:mapping(string:mixed)) usertag_saved_scopes = ([]);
+mapping(string:mapping(RXML.Frame:array)) usertag_saved_hidden = ([]);
+
+class CompDefCacheEntry (array(string|RXML.PCode) comp_def)
+{
+  int cache_count_memory (int|mapping opts)
+  {
+    return Pike.count_memory (opts, comp_def, @comp_def);
+  }
+}
+
 class UserTag {
   inherit RXML.Tag;
   string name, lookup_name;
@@ -5412,7 +5423,6 @@ class UserTag {
       lookup_name = "tag\0" + name;
       flags |= moreflags;
     }
-    cache.cache_register (user_tag_comp_def_loc, "no_timings");
   }
 
   mixed _encode()
@@ -5446,18 +5456,53 @@ class UserTag {
 
     mixed content_result;
     int got_content_result;
-    mapping(string:mixed) saved_scopes;
-    mapping(RXML.Frame:array) saved_hidden;
+
+    protected string _saved_id;
+
     int compile;
 
     array tagdef;
     array(string|RXML.PCode) comp_def;
 
-    class CompDefCacheEntry (array(string|RXML.PCode) comp_def)
+    string saved_id()
     {
-      int cache_count_memory (int|mapping opts)
-      {
-	return Pike.count_memory (opts, @comp_def);
+      return _saved_id || (_saved_id = roxen.new_uuid_string());
+    }
+
+    mapping(string:mixed) get_saved_scopes()
+    {
+      string sid = saved_id();
+      return usertag_saved_scopes[sid];
+    }
+
+    void set_saved_scopes(mapping(string:mixed) _scopes)
+    {
+      string sid = saved_id();
+      usertag_saved_scopes[sid] = _scopes;
+    }
+
+    mapping(RXML.Frame:array) get_saved_hidden()
+    {
+      string sid = saved_id();
+      return usertag_saved_hidden[sid];
+    }
+
+    void set_saved_hidden (mapping(RXML.Frame:array) _hidden)
+    {
+      string sid = saved_id();
+      usertag_saved_hidden[sid] = ([]) || _hidden;
+    }
+
+    void create()
+    {
+      cache.cache_register (user_tag_comp_def_loc, "no_timings");
+    }
+
+    void destroy()
+    {
+      if (string sid = _saved_id) {
+	m_delete (usertag_saved_scopes, sid);
+	m_delete (usertag_saved_hidden, sid);
       }
     }
 
@@ -5548,12 +5593,12 @@ class UserTag {
 	// <contents/>, thereby achieving static variable binding in
 	// the content. This is poking in the internals; there ought
 	// to be some sort of interface here.
-	saved_scopes = ctx->scopes + ([]);
-	saved_hidden = ctx->hidden + ([]);
+	set_saved_scopes (ctx->scopes + ([]));
+	set_saved_hidden (ctx->hidden + ([]));
       }
       else {
-	saved_scopes = ctx->scopes;
-	saved_hidden = ctx->hidden;
+	set_saved_scopes (ctx->scopes);
+	set_saved_hidden (ctx->hidden);
       }
 
       return comp_def;
