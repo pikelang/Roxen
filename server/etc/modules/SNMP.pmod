@@ -54,7 +54,7 @@ class OwnerInfo
 
 class app_integer
 {
-  inherit Standards.ASN1.Types.asn1_integer : integer;
+  inherit Standards.ASN1.Types.Integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
@@ -89,7 +89,7 @@ class app_integer
 
 class app_octet_string
 {
-  inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
+  inherit Standards.ASN1.Types.OctetString : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
@@ -124,7 +124,7 @@ class app_octet_string
 
 class OID
 {
-  inherit Standards.ASN1.Types.asn1_identifier : identifier;
+  inherit Standards.ASN1.Types.Identifier : identifier;
   inherit Documentation : doc;
   inherit OwnerInfo : owner_info;
   constant type_name = "OID";
@@ -147,7 +147,7 @@ class OID
 
 class Integer
 {
-  inherit Standards.ASN1.Types.asn1_integer : integer;
+  inherit Standards.ASN1.Types.Integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
@@ -176,7 +176,7 @@ class Integer
 
 class String
 {
-  inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
+  inherit Standards.ASN1.Types.OctetString : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
