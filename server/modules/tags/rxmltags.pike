@@ -2314,7 +2314,7 @@ class TagCache {
 	string full_key = get_full_key (key);
 	cache_set (cache_tag_alts_loc, full_key, entry, timeout);
 	if (!alternatives) alternatives = (<>);
-	alternatives[full_key] = 1;
+	alternatives[key] = 1;
       }
     }
 
@@ -2323,7 +2323,7 @@ class TagCache {
       string full_key = get_full_key (key);
       cache_remove (cache_tag_alts_loc, full_key);
       if (alternatives)
-	alternatives[full_key] = 0;
+	alternatives[key] = 0;
     }
 
     protected constant rxml_empty_replacement = (<"eMp ty__">);
