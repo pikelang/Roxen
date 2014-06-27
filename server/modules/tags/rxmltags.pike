@@ -2195,7 +2195,7 @@ class CacheTagEntry (mixed data)
   protected array(mixed) collect_things_recur (mixed input,
 					       void|int ignore_input)
   {
-    constant limit = 1000;
+    constant limit = 10000;
 
     array(mixed) result = ({});
     ADT.Stack stack = ADT.Stack();
