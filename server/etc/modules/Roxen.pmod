@@ -5886,15 +5886,15 @@ string generate_self_signed_certificate(string common_name,
   // These are the fields used by testca.pem.
   array(mapping(string:object)) name = ({
     ([ "organizationName":
-       Standards.ASN1.Types.asn1_printable_string("Roxen IS")
+       Standards.ASN1.Types.PrintableString("Roxen IS")
     ]),
     ([ "organizationUnitName":
-       Standards.ASN1.Types.asn1_printable_string("Automatic certificate")
+       Standards.ASN1.Types.PrintableString("Automatic certificate")
     ]),
     ([ "commonName":
        (Standards.ASN1.Types.asn1_printable_valid(common_name)?
-	Standards.ASN1.Types.asn1_printable_string:
-	Standards.ASN1.Types.asn1_broken_teletex_string)(common_name)
+	Standards.ASN1.Types.PrintableString:
+	Standards.ASN1.Types.BrokenTeletexString)(common_name)
     ]),
   });
 

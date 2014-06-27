@@ -753,9 +753,9 @@ int writemsg(string rem_addr, int rem_port, int version,
   string rawd;
   int msize;
 
-  msg = Standards.ASN1.Types.asn1_sequence(({
-	   Standards.ASN1.Types.asn1_integer(version),
-           Standards.ASN1.Types.asn1_octet_string(port_obj->snmp_community),
+  msg = Standards.ASN1.Types.Sequence(({
+	   Standards.ASN1.Types.Integer(version),
+           Standards.ASN1.Types.OctetString(port_obj->snmp_community),
 	   pdu}));
 
   DWRITE("protocol.writemsg: %O\n", msg);
@@ -794,7 +794,7 @@ int send_response(array(Binding) bindings,
 
   foreach(bindings, Binding binding) {
     vararr += ({
-      Standards.ASN1.Types.asn1_sequence(
+      Standards.ASN1.Types.Sequence(
 		   ({ SNMP.OID(binding->oid),
 		      binding->value,
 		   })
@@ -802,11 +802,11 @@ int send_response(array(Binding) bindings,
     });
   }
 
-  pdu = Protocols.LDAP.ldap_privates.asn1_context_sequence(2,
-	       ({Standards.ASN1.Types.asn1_integer(id), // request-id
-		 Standards.ASN1.Types.asn1_integer(errcode), // error-status
-		 Standards.ASN1.Types.asn1_integer(erridx), // error-index
-		 Standards.ASN1.Types.asn1_sequence(vararr)})
+  pdu = SNMP.ContextSequence(2,
+	       ({Standards.ASN1.Types.Integer(id), // request-id
+		 Standards.ASN1.Types.Integer(errcode), // error-status
+		 Standards.ASN1.Types.Integer(erridx), // error-index
+		 Standards.ASN1.Types.Sequence(vararr)})
 	       );
 
   // now we have PDU ...
