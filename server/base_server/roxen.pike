@@ -4501,7 +4501,7 @@ class ImageCache
     // Note: The OPTIMIZE TABLE step has been disabled. /mast
     int now = time();
     mapping info = localtime(now);
-    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    int wait = (int) (((24 - info->hour) + 24 + 4.5) % 24) * 3600 + random(500);
     background_run(wait, do_cleanup);
 
     //  Remove items older than one week
