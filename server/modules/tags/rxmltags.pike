@@ -2186,6 +2186,55 @@ mapping(string:Thread.Mutex) cache_mutexes =
   set_weak_flag( ([ ]), Pike.WEAK_VALUES);
 mapping(string:int) cache_mutex_concurrency = ([ ]);
 
+class CacheTagEntry (mixed data)
+{
+  // Custom cache entry wrapper to try to count memory consumption
+  // more accurately than the gross underestimation that's performed
+  // by default. We'll recurse through PCode entries, their
+  // subentries and so on.
+  protected array(mixed) collect_things_recur (mixed input,
+					       void|int ignore_input)
+  {
+    constant limit = 10000;
+
+    array(mixed) result = ({});
+    ADT.Stack stack = ADT.Stack();
+
+    stack->push (input);
+    for (int i = 0; sizeof (stack) && i < limit; i++) {
+      mixed entry = stack->pop();
+
+      if (has_value (result, entry))
+	continue;
+
+      result += ({ entry });
+
+      if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
+	foreach (entry; mixed ind; mixed val) {
+	  if (!arrayp (entry))
+	    stack->push (ind);
+	  if (!multisetp (entry))
+	    stack->push (val);
+	}
+      } else if (objectp (entry)) {
+	if (entry->is_RXML_PCode)
+	  stack->push (entry->exec);
+      }
+    }
+
+    if (sizeof (stack))
+      report_error ("RXML <cache>: more than %d iterations in "
+		    "collect_things_recur.\n", limit);
+
+    return result;
+  }
+
+  int cache_count_memory (int|mapping opts)
+  {
+    array(mixed) things = collect_things_recur (data);
+    return Pike.count_memory (opts + ([ "lookahead": 5 ]), things);
+  }
+}
 
 class TagCache {
   inherit RXML.Tag;
@@ -2195,58 +2244,8 @@ class TagCache {
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_eval_loc = "RXML <cache> eval";
-  constant cache_tag_save_loc = "RXML <cache> save";
+  constant cache_tag_alts_loc = "RXML <cache> alternatives";
   array(RXML.Type) result_types = ({RXML.t_any});
-
-  protected class CacheTagEntry (mixed data)
-  {
-    // Custom cache entry wrapper to try to count memory consumption
-    // more accurately than the gross underestimation that's performed
-    // by default. We'll recurse through PCode entries, their
-    // subentries and so on.
-    protected array(mixed) collect_things_recur (mixed input,
-						 void|int ignore_input)
-    {
-      constant limit = 1000;
-
-      array(mixed) result = ({});
-      ADT.Stack stack = ADT.Stack();
-
-      stack->push (input);
-      for (int i = 0; sizeof (stack) && i < limit; i++) {
-	mixed entry = stack->pop();
-
-	if (has_value (result, entry))
-	  continue;
-
-	result += ({ entry });
-
-	if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
-	  foreach (entry; mixed ind; mixed val) {
-	    if (!arrayp (entry))
-	      stack->push (ind);
-	    if (!multisetp (entry))
-	      stack->push (val);
-	  }
-	} else if (objectp (entry)) {
-	  if (entry->is_RXML_PCode)
-	    stack->push (entry->exec);
-	}
-      }
-
-      if (sizeof (stack))
-	report_error ("RXML <cache>: more than %d iterations in "
-		      "collect_things_recur.\n", limit);
-
-      return result;
-    }
-
-    int cache_count_memory (int|mapping opts)
-    {
-      array(mixed) things = collect_things_recur (data);
-      return Pike.count_memory (opts + ([ "lookahead": 5 ]), things);
-    }
-  }
 
   mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 		   void|mapping|int(1..1) cache_context)
@@ -2261,47 +2260,6 @@ class TagCache {
   {
     CacheTagEntry entry = cache.cache_lookup (cache_name, key, cache_context);
     return entry && entry->data;
-  }
-
-  protected class TimeOutEntry (
-    TimeOutEntry next,
-    // timeout_cache is a wrapper array to get a weak ref to the
-    // timeout_cache mapping for the frame. This way the mapping will
-    // be garbed when the frame disappears, in addition to the
-    // timeout.
-    array(mapping(string:array(int|RXML.PCode))) timeout_cache)
-    {}
-
-  protected TimeOutEntry timeout_list;
-
-  protected void do_timeouts()
-  {
-    int now = time (1);
-    for (TimeOutEntry t = timeout_list, prev; t; t = t->next) {
-      mapping(string:array(int|RXML.PCode)) cachemap = t->timeout_cache[0];
-      if (cachemap) {
-	foreach (cachemap; string key; array(int|RXML.PCode) val)
-	  if (val[0] < now) m_delete (cachemap, key);
-	prev = t;
-      }
-      else
-	if (prev) prev->next = t->next;
-	else timeout_list = t->next;
-    }
-    roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
-  }
-
-  protected void add_timeout_cache (
-    mapping(string:array(int|RXML.PCode)) timeout_cache)
-  {
-    if (!timeout_list)
-      roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
-    else
-      for (TimeOutEntry t = timeout_list; t; t = t->next)
-	if (t->timeout_cache[0] == timeout_cache) return;
-    timeout_list =
-      TimeOutEntry (timeout_list,
-		    set_weak_flag (({timeout_cache}), 1));
   }
 
   class Frame {
@@ -2337,7 +2295,47 @@ class TagCache {
     // alternatives.
 
     array(string|int) subvariables;
-    mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
+    multiset(string) alternatives;
+
+    string get_full_key (string key)
+    {
+      if (!cache_id) cache_id = roxen.new_uuid_string();
+      return cache_id + key;
+    }
+
+    RXML.PCode|array(int|RXML.PCode) get_alternative (string key)
+    {
+      return cache_lookup (cache_tag_alts_loc, get_full_key (key));
+    }
+
+    void set_alternative (string key, RXML.PCode|array(int|RXML.PCode) entry,
+			  void|int timeout)
+    {
+      if (!timeout && arrayp (entry))
+	timeout = entry[0] - time();
+      else if (timeout) {
+	if (arrayp (entry))
+	  entry[0] = timeout + time();
+	else
+	  entry = ({ timeout + time(), entry, 0 });
+      }
+
+      // A negative timeout means that the entry has already expired.
+      if (timeout >= 0) {
+	string full_key = get_full_key (key);
+	cache_set (cache_tag_alts_loc, full_key, entry, timeout);
+	if (!alternatives) alternatives = (<>);
+	alternatives[key] = 1;
+      }
+    }
+
+    void remove_alternative (string key)
+    {
+      string full_key = get_full_key (key);
+      cache_remove (cache_tag_alts_loc, full_key);
+      if (alternatives)
+	alternatives[key] = 0;
+    }
 
     protected constant rxml_empty_replacement = (<"eMp ty__">);
 
@@ -2561,7 +2559,7 @@ class TagCache {
 	retry_lookup = 0;
 	entry = args->shared ?
 	  cache_lookup (cache_tag_eval_loc, key) :
-	  alternatives && alternatives[key];
+	  get_alternative (key);
 	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
 	
       got_entry:
@@ -2610,7 +2608,7 @@ class TagCache {
 	    if (args->shared)
 	      cache_remove (cache_tag_eval_loc, key);
 	    else
-	      if (alternatives) m_delete (alternatives, key);
+	      remove_alternative (key);
 	  }
 	  
 	  else {
@@ -2742,32 +2740,16 @@ class TagCache {
 	}
 
 	else {
+	  if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp)
+	    comp->compile();
 	  if (timeout) {
 	    if (args["persistent-cache"] == "yes") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
-	    if (!alternatives || key_level2) {
-	      alternatives = ([]);
-	      if (!persistent_cache) add_timeout_cache (alternatives);
-	    }
-	    alternatives[key] =
-	      ({ time() + timeout, evaled_content, key_level2 });
-	    if (cache_id) {
-	      // A persistent <cache> frame with a nonpersistent
-	      // cache. We need to ensure the cache exists in the
-	      // roxen RAM cache with a fresh timeout, since we
-	      // probably won't enter save() after this.
-#ifdef DEBUG
-	      if (!has_prefix (cache_id, "ci"))
-		error ("Unexpected non-shared cache identifier: %O\n",
-		       cache_id);
-#endif
-	      // Avoid extra refs that mess up the size calculation in
-	      // cache_set.
-	      evaled_content = key = key_level2 = 0;
-	      cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
-	    }
+	    set_alternative (key,
+			     ({ time() + timeout, evaled_content, key_level2 }),
+			     timeout);
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
 			     timeout,
@@ -2775,26 +2757,10 @@ class TagCache {
 	  }
 
 	  else {
-	    if (!alternatives || key_level2) {
-	      alternatives = ([]);
-	    }
-	    alternatives[key] =
-	      key_level2 ?
-	      ({ 0, evaled_content, key_level2 }) :
-	      evaled_content;
-
-	    if (cache_id) {
-	      // A persistent <cache> frame with a nonpersistent
-	      // cache. The cache itself has gotten lost if we get
-	      // here, so we need to readd it to the Roxen cache
-	      // since we probably won't enter save() in this case.
-#ifdef DEBUG
-	      if (!has_prefix (cache_id, "ci"))
-		error ("Unexpected non-shared cache identifier: %O\n",
-		       cache_id);
-#endif
-	      cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
-	    }
+	    set_alternative (key,
+			     key_level2 ?
+			     ({ 0, evaled_content, key_level2 }) :
+			     evaled_content);
 
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
@@ -2835,45 +2801,43 @@ class TagCache {
 
     array save()
     {
+      mapping(string:RXML.PCode|array(int|RXML.PCode)) persistent_alts;
       if (alternatives) {
 	if (persistent_cache) {
-	  if (timeout) {
-	    // It's worth the effort to expunge stale entries before
-	    // we write the cache to disk.
-	    int now = time (1);
-	    foreach (alternatives; string key; array(int|RXML.PCode) entry)
-	      if (entry[0] < now) m_delete (alternatives, key);
-	  }
-	}
-
-	else {
-	  if (!cache_id && sizeof (alternatives)) {
-	    // Saving the frame of a nonpersistent cache, and it got
-	    // entries. Since the frame itself will probably go out of
-	    // memory after this, we put it into the RAM cache with a
-	    // unique identifier so that we find the cache again when
-	    // the tag is reinstated.
-	    cache_id = "ci" + roxen.new_uuid_string();
-	    cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
+	  persistent_alts = ([]);
+	  // Get the entries so we can store them persistently.
+	  foreach (alternatives; string key;) {
+	    object(RXML.PCode)|array(int|RXML.PCode) entry =
+	      get_alternative (key);
+	    if (entry)
+	      persistent_alts[key] = entry;
 	  }
 	}
       }
 
-      return ({cache_id, subvariables, persistent_cache,
-	       persistent_cache && alternatives});
+      return ({cache_id, subvariables, persistent_cache, persistent_alts });
     }
 
     void restore (array saved)
     {
-      [cache_id, subvariables, persistent_cache, alternatives] = saved;
+      mapping(string:RXML.PCode|array(int|RXML.PCode)) persistent_alts;
+      [cache_id, subvariables, persistent_cache, persistent_alts] = saved;
 
-      if (cache_id && has_prefix (cache_id, "ci")) {
-#ifdef DEBUG
-	if (alternatives)
-	  error ("Cache unexpectedly stored persistently.\n"
-		 "cache_id: %O, alternatives: %O)\n", cache_id, alternatives);
-#endif
-	alternatives = cache_lookup (cache_tag_save_loc, cache_id);
+      if (persistent_alts) {
+	foreach (persistent_alts; string key; object|array entry) {
+	  int timeout;
+	  if (arrayp (entry) && entry[0]) {
+	    timeout = entry[0] - time();
+	    if (timeout <= 0)
+	      continue;
+	  }
+	  // Put the persistently stored entries back into the RAM
+	  // cache. They might get expired over time (and hence won't
+	  // be encoded persistently if we're saved again), but then
+	  // they probably weren't that hot anyways. This method makes
+	  // sure we have control over memory usage.
+	  set_alternative (key, entry, timeout);
+	}
       }
     }
 
@@ -2886,7 +2850,7 @@ class TagCache {
   protected void create()
   {
     cache.cache_register (cache_tag_eval_loc);
-    cache.cache_register (cache_tag_save_loc, "no_timings");
+    cache.cache_register (cache_tag_alts_loc, "no_timings");
   }
 }
 
@@ -5274,8 +5238,8 @@ class UserTagContents
 	// content. This is poking in the internals; there ought to be
 	// some sort of interface here.
 	RXML.Context ctx = RXML_CONTEXT;
-	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->saved_scopes;
-	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->saved_hidden;
+	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->get_saved_scopes();
+	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->get_saved_hidden();
       }
       else
 	// Already have the result of the content evaluation.
@@ -5325,9 +5289,9 @@ class UserTagContents
 	// some sort of interface here.
 	RXML.Context ctx = RXML_CONTEXT;
 	mapping(string:mixed) orig_ctx_scopes = ctx->scopes;
-	ctx->scopes = upframe->saved_scopes;
+	ctx->scopes = upframe->get_saved_scopes();
 	mapping(RXML.Frame:array) orig_ctx_hidden = ctx->hidden;
-	ctx->hidden = upframe->saved_hidden;
+	ctx->hidden = upframe->get_saved_hidden();
 
 	RXML.PCode compiled_content = upframe->compiled_content;
 	if (compiled_content && !compiled_content->is_stale())
@@ -5391,6 +5355,17 @@ class UserTagContents
 RXML.TagSet user_tag_contents_tag_set =
   RXML.TagSet (this_module(), "_user_tag", ({UserTagContents()}));
 
+mapping(string:mapping(string:mixed)) usertag_saved_scopes = ([]);
+mapping(string:mapping(RXML.Frame:array)) usertag_saved_hidden = ([]);
+
+class CompDefCacheEntry (array(string|RXML.PCode) comp_def)
+{
+  int cache_count_memory (int|mapping opts)
+  {
+    return Pike.count_memory (opts, comp_def, @comp_def);
+  }
+}
+
 class UserTag {
   inherit RXML.Tag;
   string name, lookup_name;
@@ -5412,7 +5387,6 @@ class UserTag {
       lookup_name = "tag\0" + name;
       flags |= moreflags;
     }
-    cache.cache_register (user_tag_comp_def_loc, "no_timings");
   }
 
   mixed _encode()
@@ -5446,18 +5420,53 @@ class UserTag {
 
     mixed content_result;
     int got_content_result;
-    mapping(string:mixed) saved_scopes;
-    mapping(RXML.Frame:array) saved_hidden;
+
+    protected string _saved_id;
+
     int compile;
 
     array tagdef;
     array(string|RXML.PCode) comp_def;
 
-    class CompDefCacheEntry (array(string|RXML.PCode) comp_def)
+    string saved_id()
     {
-      int cache_count_memory (int|mapping opts)
-      {
-	return Pike.count_memory (opts, @comp_def);
+      return _saved_id || (_saved_id = roxen.new_uuid_string());
+    }
+
+    mapping(string:mixed) get_saved_scopes()
+    {
+      string sid = saved_id();
+      return usertag_saved_scopes[sid];
+    }
+
+    void set_saved_scopes(mapping(string:mixed) _scopes)
+    {
+      string sid = saved_id();
+      usertag_saved_scopes[sid] = _scopes;
+    }
+
+    mapping(RXML.Frame:array) get_saved_hidden()
+    {
+      string sid = saved_id();
+      return usertag_saved_hidden[sid];
+    }
+
+    void set_saved_hidden (mapping(RXML.Frame:array) _hidden)
+    {
+      string sid = saved_id();
+      usertag_saved_hidden[sid] = ([]) || _hidden;
+    }
+
+    void create()
+    {
+      cache.cache_register (user_tag_comp_def_loc, "no_timings");
+    }
+
+    void destroy()
+    {
+      if (string sid = _saved_id) {
+	m_delete (usertag_saved_scopes, sid);
+	m_delete (usertag_saved_hidden, sid);
       }
     }
 
@@ -5548,12 +5557,12 @@ class UserTag {
 	// <contents/>, thereby achieving static variable binding in
 	// the content. This is poking in the internals; there ought
 	// to be some sort of interface here.
-	saved_scopes = ctx->scopes + ([]);
-	saved_hidden = ctx->hidden + ([]);
+	set_saved_scopes (ctx->scopes + ([]));
+	set_saved_hidden (ctx->hidden + ([]));
       }
       else {
-	saved_scopes = ctx->scopes;
-	saved_hidden = ctx->hidden;
+	set_saved_scopes (ctx->scopes);
+	set_saved_hidden (ctx->hidden);
       }
 
       return comp_def;
