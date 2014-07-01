@@ -2251,6 +2251,17 @@ class TagCache {
     return entry && entry->data;
   }
 
+  mixed cache_peek (string cache_name, mixed key)
+  {
+    CacheTagEntry entry = cache.cache_peek (cache_name, key);
+    return entry && entry->data;
+  }
+
+  void cache_remove (string cache_name, mixed key)
+  {
+    cache.cache_remove (cache_name, key);
+  }
+
   class Frame {
     inherit RXML.Frame;
 
@@ -2297,8 +2308,13 @@ class TagCache {
       return cache_lookup (cache_tag_alts_loc, get_full_key (key));
     }
 
+    RXML.PCode|array(int|RXML.PCode) peek_alternative (string key)
+    {
+      return cache_peek (cache_tag_alts_loc, get_full_key (key));
+    }
+
     void set_alternative (string key, RXML.PCode|array(int|RXML.PCode) entry,
-			  void|int timeout)
+			  void|int timeout, void|int no_lookup)
     {
       if (!timeout && arrayp (entry))
 	timeout = entry[0] - time();
@@ -2312,7 +2328,7 @@ class TagCache {
       // A negative timeout means that the entry has already expired.
       if (timeout >= 0) {
 	string full_key = get_full_key (key);
-	cache_set (cache_tag_alts_loc, full_key, entry, timeout);
+	cache_set (cache_tag_alts_loc, full_key, entry, timeout, no_lookup);
 	if (!alternatives) alternatives = (<>);
 	alternatives[key] = 1;
       }
@@ -2797,9 +2813,10 @@ class TagCache {
 	  // Get the entries so we can store them persistently.
 	  foreach (alternatives; string key;) {
 	    object(RXML.PCode)|array(int|RXML.PCode) entry =
-	      get_alternative (key);
-	    if (entry)
+	      peek_alternative (key);
+	    if (entry) {
 	      persistent_alts[key] = entry;
+	    }
 	  }
 	}
       }
@@ -2820,12 +2837,13 @@ class TagCache {
 	    if (timeout <= 0)
 	      continue;
 	  }
+
 	  // Put the persistently stored entries back into the RAM
 	  // cache. They might get expired over time (and hence won't
 	  // be encoded persistently if we're saved again), but then
 	  // they probably weren't that hot anyways. This method makes
 	  // sure we have control over memory usage.
-	  set_alternative (key, entry, timeout);
+	  set_alternative (key, entry, timeout, 1);
 	}
       }
     }
@@ -2834,12 +2852,25 @@ class TagCache {
     {
       RXML_CONTEXT->state_update();
     }
+
+    void destroy()
+    {
+      // If our entries are stored persistently and the frame is
+      // destructed we can free some memory in the RAM cache. The
+      // entries will be restored from persistent storage by the
+      // restore() function above, when the frame is reinstantiated.
+      if (persistent_cache && alternatives) {
+	foreach (alternatives; string key;) {
+	  cache_remove (cache_tag_alts_loc, key);
+	}
+      }
+    }
   }
 
   protected void create()
   {
     cache.cache_register (cache_tag_eval_loc);
-    cache.cache_register (cache_tag_alts_loc, "no_timings");
+    cache.cache_register (cache_tag_alts_loc);
   }
 }
 
