@@ -337,10 +337,19 @@ class ModuleInfo( string sname, string filename )
 
     array register_module()
     {
-      string locked_desc =
-	LOCALE(511," The module is locked and not part of the license. "
-	       "To enable this module please select a valid license "
-	       "and restart the server.");
+      string locked_desc = "";
+
+      if (sizeof(config_locked)) {
+	locked_desc = "<p>" +
+	  LOCALE(511," The module is locked and not part of the license. "
+		 "To enable this module please select a valid license "
+		 "and restart the server.") +
+	  "</p>\n";
+	locked_desc +=
+	  sprintf("<p>" +
+		  LOCALE(0, "Required license feature: <tt>%s</tt>.") +
+		  "</p>\n", Roxen.html_encode_string(locked*":"));
+      }
       if (filename) {
 	return ({
 	  0, // type
@@ -348,7 +357,7 @@ class ModuleInfo( string sname, string filename )
 		  sname,filename),
 	  sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
 		  sname, get_name()||"unknown")+
-	  (sizeof(config_locked)?locked_desc:"")+
+	  locked_desc +
 	  get_compile_errors(),0,0
 	});
       } else {
@@ -357,7 +366,7 @@ class ModuleInfo( string sname, string filename )
 	  sprintf(LOCALE(357, "Load of %s failed: Module not found."), sname),
 	  sprintf(LOCALE(351, "The module %s (%s) could not be loaded."),
 		  sname, get_name()||"unknown")+
-	  (sizeof(config_locked)?locked_desc:"")+
+	  locked_desc +
 	  get_compile_errors(),0,0
 	});
       }
