@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1024 2009/02/19 16:27:10 jonasw Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -3953,7 +3953,9 @@ class ImageCache
     //  Setting the cacheable flag is done in order to get headers sent which
     //  cause the image to be cached in the client even when using https
     //  sessions.
-    RAISE_CACHE(INITIAL_CACHEABLE);
+    //
+    //  NB: Raise it above INITIAL_CACHEABLE to force an Expires header.
+    RAISE_CACHE(31557600);	// A year.
 
     //  With the new (5.0 and newer) arg-cache enabled by default we can
     //  allow authenticated images in the protocol cache. At this point
