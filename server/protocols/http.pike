@@ -2946,8 +2946,9 @@ void send_result(mapping|void result)
 	      skip = 1;
 	    }
 	  } else {
+	    //  Needs strict equality according to RFC 7233
 	    array(int) since_info = Roxen.parse_since(if_range);
-	    if (!since_info || (since_info[0] < misc->last_modified)) {
+	    if (!since_info || (since_info[0] != misc->last_modified)) {
 	      // Failed to parse since info, or the file has changed.
 	      skip = 1;
 	    }
@@ -3556,8 +3557,9 @@ void got_data(mixed fooid, string s, void|int chained)
 		    skip = 1;
 		  }
 		} else {
+		  //  Needs strict equality according to RFC 7233
 		  array(int) since_info = Roxen.parse_since(if_range);
-		  if (!since_info || (since_info[0] < file->last_modified)) {
+		  if (!since_info || (since_info[0] != file->last_modified)) {
 		    // Failed to parse since info, or the file has changed.
 		    skip = 1;
 		  }
