@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.34 2012/11/08 13:52:52 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -303,7 +303,7 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
 
 /* This class represents the database in which the data of the URL:s are stored */
 class HrefDatabase {
-  private constant request_table_def = "url VARCHAR(255) NOT NULL,"
+  private constant request_table_def = "url VARCHAR(768) NOT NULL,"
 				       "fetch_interval INT UNSIGNED NOT NULL,"
 				       "fresh_time INT UNSIGNED NOT NULL,"
 				       "ttl INT UNSIGNED NOT NULL,"
@@ -314,7 +314,7 @@ class HrefDatabase {
 				       "PRIMARY KEY (url, fetch_interval, "
 				       "fresh_time, ttl, timeout, time_of_day)";
   
-  private constant data_table_def = "url VARCHAR(255) NOT NULL,"
+  private constant data_table_def = "url VARCHAR(768) NOT NULL,"
 				    "data LONGBLOB,"
 				    "latest_write INT UNSIGNED,"
 				    "PRIMARY KEY (url)";
@@ -326,6 +326,21 @@ class HrefDatabase {
     //  Failure to create tables will lead to zero return values
     request_table = get_my_table("request", ({request_table_def}));
     data_table = get_my_table("data", ({data_table_def}));
+
+    //  Upgrade url field to hold longer strings. We must still respect a
+    //  limit of the PRIMARY KEY on 1000 bytes, so 768 is a good amount.
+    if (request_table) {
+      array(mapping) tbl_def = sql_query("DESCRIBE " + request_table + " url");
+      if (sizeof(tbl_def) && lower_case(tbl_def[0]->Type) != "varchar(768)")
+	sql_query("ALTER TABLE " + request_table +
+		  "     MODIFY url VARCHAR(768) NOT NULL");
+    }
+    if (data_table) {
+      array(mapping) tbl_def = sql_query("DESCRIBE " + data_table + " url");
+      if (sizeof(tbl_def) && lower_case(tbl_def[0]->Type) != "varchar(768)")
+	sql_query("ALTER TABLE " + data_table +
+		  "     MODIFY url VARCHAR(768) NOT NULL");
+    }
   }
 
   public void empty_db() {

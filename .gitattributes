@@ -302,7 +302,6 @@ worldmap binary
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
-/server/modules/tags/insert_cached_href.pike foreign_ident
 /server/modules/tags/kerberos.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/obox.pike foreign_ident
