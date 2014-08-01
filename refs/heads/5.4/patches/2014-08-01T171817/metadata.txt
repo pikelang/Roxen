@@ -1,0 +1,10 @@
+subject: Roxen 5.4:   * Dropped X-Forwarded-By for the more common X-Forwarded-Host. Updates [bug 7221].
+from: 3a90635f4a40f394351f7f270d0a9b51f65d8916
+to: 8d09559195a404ca48c3bf4d36bf4ea6b57b6e43
+originator: frigolit@frigolit.net
+depends: 2014-08-01T064857
+restart: true
+
+  * Dropped X-Forwarded-By for the more common X-Forwarded-Host. Updates [bug 7221].
+
+  * Care about potential paths in id->url_base() as well. Updates [bug 7221].
