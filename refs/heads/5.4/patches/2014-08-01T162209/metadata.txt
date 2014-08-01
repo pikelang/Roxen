@@ -1,8 +1,0 @@
-subject: Roxen 5.4: Use X-Forwarded-Host instead of X-Forwarded-By.
-from: 3a90635f4a40f394351f7f270d0a9b51f65d8916
-to: be38768976f1581f4fb91ddc051f135b977201b1
-originator: frigolit@frigolit.net
-depends: 2014-08-01T064857
-restart: true
-
-Dropped X-Forwarded-By for the more common X-Forwarded-Host. Updates [bug 7221].
