@@ -1388,7 +1388,7 @@ string make_absolute_url (string url, RequestID|void id,
 	uri = Standards.URI(uri->scheme + "://" + xf_host + uri->path);
       }
       else if (xf_proto) {
-	uri = Standards.URI(xf_proto + "://" + uri->host + uri->path);
+	uri = Standards.URI(xf_proto + "://" + uri->host + ":" + uri->port + uri->path);
       }
 
       url = (string)uri + url[1..];
