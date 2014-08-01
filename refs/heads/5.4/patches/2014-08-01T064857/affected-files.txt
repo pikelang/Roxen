@@ -1,0 +1,7 @@
+Modified files:
+  base_server/roxen.pike
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/Roxen.pmod
+  modules/tags/insert_cached_href.pike
+  modules/tags/rxmltags.pike
+  protocols/http.pike
