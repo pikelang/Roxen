@@ -1377,16 +1377,22 @@ string make_absolute_url (string url, RequestID|void id,
     if(id) {
       string url_base = id->url_base();
       string xf_proto = id->request_headers["x-forwarded-proto"];
-      string xf_by = id->request_headers["x-forwarded-by"];
+      string xf_host = id->request_headers["x-forwarded-host"];
 
-      if (xf_proto || id->request_headers["x-forwarded-by"]) {
+      if (xf_proto && xf_host) {
+	url_base = xf_proto + "://" + xf_host + "/";
+      }
+      else if (xf_proto) {
         Standards.URI uri = Standards.URI(id->url_base());
 
-	if (xf_proto && (< "http", "https" >)[xf_proto])
-	    uri->scheme = xf_proto;
+	if (xf_proto && (< "http", "https" >)[xf_proto]) {
+	  if (xf_proto == "https" && uri->scheme == "http" && uri->port == 80)
+	    uri->port = 443;
+	  else if (xf_proto == "http" && uri->scheme == "https" && uri->port == 443)
+	    uri->port = 80;
 
-        if (xf_by && glob("*:*", xf_by))
-	  sscanf(xf_by, "%*s:%d", uri->port);
+	  uri->scheme = xf_proto;
+	}
 
 	url_base = (string)uri;
       }
