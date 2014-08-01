@@ -1,0 +1,51 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 4ed6d1b771db7c2ef128c113219fa480286734a2
+to: 3a90635f4a40f394351f7f270d0a9b51f65d8916
+originator: frigolit@frigolit.net
+depends: 2014-06-23T161901
+restart: true
+
+Multiple fixes:
+
+  * UserTag: Store saved scopes in external mapping to avoid circular refs.
+    
+    Also moved the CompDefCacheEntry class out of the Frame/Tag classes to
+    avoid circularities originating from parent pointers.
+
+  * Move the CacheTagEntry class out of the TagCache class.
+    
+    To avoid circular refs due to parent pointers.
+
+  * TagCache: Store individual entries in Roxen's cache.
+    
+    This means we can avoid holding references to PCode objects through the
+    alternatives mapping, which helps break circularities. Also, the code
+    needed to store non-persistent entries from persistent frames in the
+    RAM cache could be removed thanks to the more generic cache handling.
+
+  * TagCache: Fix bug that prevented persistent saving of alternatives.
+
+  * PCode: Make sure to compile everything in PCode used by subevalers.
+    
+    This helps breaking up cycles, resulting in less garbage.
+
+  * 1000 iterations doesn't seem to be enough when collecting PCode objects.
+
+  * Schedule image cache cleanup around next 4:30 mark rather than next day.
+    
+    This fixes an issue where the cleanup wouldn't run if a periodic restart
+    was performed every night, before the 4:30 mark.
+
+  * TagCache: More efficient RAM cache utilisation.
+    
+    Alternatives entries are now stored in the cost-aware manager. Persistently
+    stored entries are restored with a flag to indicate that no cost calculation
+    should be performed, and they are subsequently removed when the frame is
+    destructed (if entries were stored persistently).
+
+  * If-Range date comparison should use strict equivalence and not less than as
+    noted in the RFC 7233 clarification of HTTP 1.1 Range Requests.
+
+  * Increase maximum URL length in <insert#cached-href> from 256 to 768 bytes.
+
+  * Handle X-Forwarded-By and X-Forwarded-Proto in make_absolute_url(). Partially fixes [bug 7221].
