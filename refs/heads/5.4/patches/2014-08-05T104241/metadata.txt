@@ -1,0 +1,8 @@
+subject: Roxen 5.4: Take special ports into consideration if X-Forwarded-Host is missing. Updates [bug 7221].
+from: 8d09559195a404ca48c3bf4d36bf4ea6b57b6e43
+to: cefd1481472b303a76d3fcebec9a660811640c8f
+originator: wellhardh@roxen.com
+depends: 2014-08-01T171817
+restart: true
+
+Take special ports into consideration if X-Forwarded-Host is missing. Updates [bug 7221].
