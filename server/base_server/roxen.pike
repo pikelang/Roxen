@@ -64,6 +64,14 @@ Thread.Thread backend_thread;
 # define THREAD_WERR(X)
 #endif
 
+#ifdef LOG_GC_VERBOSE
+#define LOG_GC_HISTOGRAM
+#endif
+
+#ifdef LOG_GC_HISTOGRAM
+#define LOG_GC_TIMESTAMPS
+#endif
+
 // Needed to get core dumps of seteuid()'ed processes on Linux.
 #if constant(System.dumpable)
 #define enable_coredumps(X)	System.dumpable(X)
@@ -6297,16 +6305,21 @@ int main(int argc, array tmp)
 				    werror("GC done after %dus\n",
 					   gethrtime() - gc_start);
 				  },
+#ifdef LOG_GC_HISTOGRAM
 			"destruct_cb":lambda(object o) {
+					// NB: These calls to sprintf(%O) can
+					//     take significant time.
 					gc_histogram[sprintf("%O", object_program(o))]++;
 #ifdef LOG_GC_VERBOSE
 					werror("GC cyclic reference in %O.\n",
 					       o);
 #endif
 				      },
+#endif /* LOG_GC_HISTOGRAM */
 			"done_cb":lambda(int n) {
 				    if (!n) return;
 				    werror("GC zapped %d things.\n", n);
+#ifdef LOG_GC_HISTOGRAM
 				    mapping h = gc_histogram;
 				    gc_histogram = ([]);
 				    if (!sizeof(h)) return;
@@ -6317,6 +6330,7 @@ int main(int argc, array tmp)
 				    foreach(reverse(i)[..9], string p) {
 				      werror("GC:  %s: %d\n", p, h[p]);
 				    }
+#endif /* LOG_GC_HISTOGRAM */
 				  },
 		     ]));
   if (!Pike.gc_parameters()->pre_cb) {
