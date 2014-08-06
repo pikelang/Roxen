@@ -1861,6 +1861,15 @@ void create_cluster(mapping(string:string|int|array(string)) options,
 
     string patch_name = (patch/"/")[-1];
 
+    if (sizeof(cluster_dir) + sizeof(patch_name) >= 100) {
+      // This is unlikely, but better safe than sorry...
+      werror("Too long filename (%d characters) to be added to cluster:\n"
+	     "\t%O.\n",
+	     sizeof(cluster_dir) + sizeof(patch_name),
+	     cluster_dir + patch_name);
+      exit(1);
+    }
+
     write("  %s (%d bytes)\n", patch_name, sizeof(blob));
 
     int mtime = Calendar.ISO.parse("%Y-%M-%DT%t", patch_name)->unix_time();
