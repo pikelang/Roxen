@@ -1066,7 +1066,10 @@ void display_status(mapping(string:string|int|array(string)) options,
       string path = (entry/"\t")[1..] * "\t";
       if (!has_prefix(path, cluster_path_prefix)) continue;
       if (!has_suffix(path, ".tgz")) continue;
-      cluster = path[sizeof(cluster_path_prefix)..<4];
+      // NB: The suffix ".tgz" is sorted after "-02.tgz",
+      //     so we need to compensate here.
+      string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+      if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
     }
     if (cluster) {
       // There's apparently a cluster.
@@ -1793,7 +1796,10 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     string path = (entry/"\t")[1..] * "\t";
     if (!has_prefix(path, cluster_path_prefix)) continue;
     if (!has_suffix(path, ".tgz")) continue;
-    cluster = path[sizeof(cluster_path_prefix)..<4];
+    // NB: The suffix ".tgz" is sorted after "-02.tgz",
+    //     so we need to compensate here.
+    string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+    if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
   }
   if (cluster) {
     // There's apparently a cluster.
@@ -1824,8 +1830,20 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   }
 
   mapping(string:int) lt = localtime(time());
-  string timestamp = sprintf("%04d-%02d-%02d",
-			     lt->year + 1900, lt->mon + 1, lt->mday);
+  string timestamp_base = sprintf("%04d-%02d-%02d",
+				  lt->year + 1900, lt->mon + 1, lt->mday);
+
+  // Find the next available timestamp and tag.
+  string timestamp = timestamp_base;
+  string tag;
+  int rev = 1;
+  while(1) {
+    tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
+    if (!git_try("rev-list", "--max-count=1", tag)) break;
+    rev++;
+    timestamp = sprintf("%s-%02d", timestamp_base, rev);
+  }
+
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
   string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
 
@@ -1842,6 +1860,15 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     string blob = git("cat-file", "blob", blob_sha1);
 
     string patch_name = (patch/"/")[-1];
+
+    if (sizeof(cluster_dir) + sizeof(patch_name) >= 100) {
+      // This is unlikely, but better safe than sorry...
+      werror("Too long filename (%d characters) to be added to cluster:\n"
+	     "\t%O.\n",
+	     sizeof(cluster_dir) + sizeof(patch_name),
+	     cluster_dir + patch_name);
+      exit(1);
+    }
 
     write("  %s (%d bytes)\n", patch_name, sizeof(blob));
 
@@ -1897,8 +1924,7 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, buf->get(),
 		"Created patch cluster " + (cluster/"/")[-1] +
 		" on branch " + branch + ".\n");
-  string tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
-  git("tag", "-f", tag, "refs/heads/rxnpatch/rxnpatch");
+  git("tag", tag, "refs/heads/rxnpatch/rxnpatch");
   git_push("origin", "refs/tags/" + tag);
 }
 
