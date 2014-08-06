@@ -1830,8 +1830,20 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   }
 
   mapping(string:int) lt = localtime(time());
-  string timestamp = sprintf("%04d-%02d-%02d",
-			     lt->year + 1900, lt->mon + 1, lt->mday);
+  string timestamp_base = sprintf("%04d-%02d-%02d",
+				  lt->year + 1900, lt->mon + 1, lt->mday);
+
+  // Find the next available timestamp and tag.
+  string timestamp = timestamp_base;
+  string tag;
+  int rev = 1;
+  while(1) {
+    tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
+    if (!git_try("rev-list", "--max-count=1", tag)) break;
+    rev++;
+    timestamp = sprintf("%s-%02d", timestamp_base, rev);
+  }
+
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
   string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
 
@@ -1903,8 +1915,7 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, buf->get(),
 		"Created patch cluster " + (cluster/"/")[-1] +
 		" on branch " + branch + ".\n");
-  string tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
-  git("tag", "-f", tag, "refs/heads/rxnpatch/rxnpatch");
+  git("tag", tag, "refs/heads/rxnpatch/rxnpatch");
   git_push("origin", "refs/tags/" + tag);
 }
 
