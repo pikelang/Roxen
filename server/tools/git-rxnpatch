@@ -1066,7 +1066,10 @@ void display_status(mapping(string:string|int|array(string)) options,
       string path = (entry/"\t")[1..] * "\t";
       if (!has_prefix(path, cluster_path_prefix)) continue;
       if (!has_suffix(path, ".tgz")) continue;
-      cluster = path[sizeof(cluster_path_prefix)..<4];
+      // NB: The suffix ".tgz" is sorted after "-02.tgz",
+      //     so we need to compensate here.
+      string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+      if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
     }
     if (cluster) {
       // There's apparently a cluster.
@@ -1793,7 +1796,10 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     string path = (entry/"\t")[1..] * "\t";
     if (!has_prefix(path, cluster_path_prefix)) continue;
     if (!has_suffix(path, ".tgz")) continue;
-    cluster = path[sizeof(cluster_path_prefix)..<4];
+    // NB: The suffix ".tgz" is sorted after "-02.tgz",
+    //     so we need to compensate here.
+    string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+    if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
   }
   if (cluster) {
     // There's apparently a cluster.
