@@ -3941,7 +3941,7 @@ class FTPSession
       }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
-#if 1
+#ifndef FTP_USE_HANDLER_THREADS
 	mixed err;
 	if (err = catch {
 	  this_object()["ftp_"+cmd](args);
