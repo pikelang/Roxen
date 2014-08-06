@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.143 2012/10/19 09:05:18 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3941,7 +3941,7 @@ class FTPSession
       }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
-#if 1
+#ifndef FTP_USE_HANDLER_THREADS
 	mixed err;
 	if (err = catch {
 	  this_object()["ftp_"+cmd](args);
