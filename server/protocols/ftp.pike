@@ -886,7 +886,7 @@ class LSFile
     return(combine_path(cwd, s));
   }
 
-  protected void list_next_directory()
+  protected int(0..1) list_next_directory()
   {
     if (dir_stack->ptr) {
       string short = dir_stack->pop();
@@ -982,8 +982,10 @@ class LSFile
     }
     if (!dir_stack->ptr) {
       output(0);		// End marker.
+      return 0;
     } else {
       name_directories = 1;
+      return 1;
     }
   }
 
@@ -1001,6 +1003,14 @@ class LSFile
   void set_id(mixed i)
   {
     id = i;
+  }
+
+  void fill_output_queue()
+  {
+    if (!sizeof(output_queue) || output_queue[-1]) {
+      while (list_next_directory())
+	;
+    }
   }
 
   string read(int|void n, int|void not_all)
@@ -2557,6 +2567,12 @@ class FTPSession
 
       file->file = LSFile(cwd, argv[1..], flags, session,
 			  file->mode, this_object());
+
+#ifdef FTP_USE_HANDLER_THREADS
+      // Create the listing synchronously when running in
+      // a handler thread.
+      file->file && file->file->fill_output_queue();
+#endif
     }
 
     if (!file->full_path) {
