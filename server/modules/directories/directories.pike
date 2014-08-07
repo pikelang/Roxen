@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.96 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -197,9 +197,10 @@ mapping parse_directory(RequestID id)
   // is set, a directory listing should be sent instead of the
   // indexfile.
 
+  array dir=id->conf->find_dir(f, id, 1)||({});
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles, string file)
+    foreach(indexfiles & dir, string file)
     {
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
@@ -214,7 +215,6 @@ mapping parse_directory(RequestID id)
     id->not_query = f;
   }
 
-  array dir=id->conf->find_dir(f, id, 1)||({});
   if(!sizeof(dir) || !dir[0])
     foreach(dir[1..], string file) 
     {
