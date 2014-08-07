@@ -886,7 +886,7 @@ class LSFile
     return(combine_path(cwd, s));
   }
 
-  protected void list_next_directory()
+  protected int(0..1) list_next_directory()
   {
     if (dir_stack->ptr) {
       string short = dir_stack->pop();
@@ -982,8 +982,10 @@ class LSFile
     }
     if (!dir_stack->ptr) {
       output(0);		// End marker.
+      return 0;
     } else {
       name_directories = 1;
+      return 1;
     }
   }
 
@@ -1001,6 +1003,14 @@ class LSFile
   void set_id(mixed i)
   {
     id = i;
+  }
+
+  void fill_output_queue()
+  {
+    if (!sizeof(output_queue) || output_queue[-1]) {
+      while (list_next_directory())
+	;
+    }
   }
 
   string read(int|void n, int|void not_all)
@@ -1532,6 +1542,12 @@ class FTPSession
   }
 
   int(0..1) busy;
+
+#ifdef FTP_USE_HANDLER_THREADS
+#define next_cmd()	call_out(low_next_cmd, 0)
+#else
+#define low_next_cmd()	next_cmd()
+#endif
 
   void send(int code, array(string) data, int|void enumerate_all)
   {
@@ -2551,6 +2567,12 @@ class FTPSession
 
       file->file = LSFile(cwd, argv[1..], flags, session,
 			  file->mode, this_object());
+
+#ifdef FTP_USE_HANDLER_THREADS
+      // Create the listing synchronously when running in
+      // a handler thread.
+      file->file && file->file->fill_output_queue();
+#endif
     }
 
     if (!file->full_path) {
@@ -3861,7 +3883,31 @@ class FTPSession
     }
   }
 
+#ifdef FTP_USE_HANDLER_THREADS
+  // Minimal layer for API compatibility with ADT.Queue.
+  protected class CommandQueue
+  {
+    inherit Thread.Queue;
+
+    protected int _sizeof()
+    {
+      return size();
+    }
+
+    void put(mixed value)
+    {
+      write(value);
+    }
+
+    mixed get()
+    {
+      return try_read();
+    }
+  }
+  private CommandQueue cmd_queue = CommandQueue();
+#else
   private ADT.Queue cmd_queue = ADT.Queue();
+#endif
 
   private void got_command(mixed ignored, string line)
   {
@@ -3896,16 +3942,22 @@ class FTPSession
       next_cmd();
   }
 
-  private void next_cmd()
+  private void low_next_cmd()
   {
+    // Protect against multiple call_outs.
+    if (busy || !sizeof(cmd_queue)) return;
+    busy = 1;
+
     array(string|array(string)) cmd_entry = cmd_queue->get();
-    if (!cmd_entry) return;
+    if (!cmd_entry) {
+      // Race?
+      busy = 0;
+      return;
+    }
 
     string line = cmd_entry[0];
     string cmd = cmd_entry[1];
     array(string) args = cmd_entry[2];
-
-    busy = 1;
 
     if (!line) {
       // Command queue terminator.
