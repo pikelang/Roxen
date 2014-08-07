@@ -1533,6 +1533,12 @@ class FTPSession
 
   int(0..1) busy;
 
+#ifdef FTP_USE_HANDLER_THREADS
+#define next_cmd()	call_out(low_next_cmd, 0)
+#else
+#define low_next_cmd()	next_cmd()
+#endif
+
   void send(int code, array(string) data, int|void enumerate_all)
   {
     DWRITE("FTP2: send(%d, %O)\n", code, data);
@@ -3861,7 +3867,31 @@ class FTPSession
     }
   }
 
+#ifdef FTP_USE_HANDLER_THREADS
+  // Minimal layer for API compatibility with ADT.Queue.
+  protected class CommandQueue
+  {
+    inherit Thread.Queue;
+
+    protected int _sizeof()
+    {
+      return size();
+    }
+
+    void put(mixed value)
+    {
+      write(value);
+    }
+
+    mixed get()
+    {
+      return try_read();
+    }
+  }
+  private CommandQueue cmd_queue = CommandQueue();
+#else
   private ADT.Queue cmd_queue = ADT.Queue();
+#endif
 
   private void got_command(mixed ignored, string line)
   {
@@ -3896,16 +3926,22 @@ class FTPSession
       next_cmd();
   }
 
-  private void next_cmd()
+  private void low_next_cmd()
   {
+    // Protect against multiple call_outs.
+    if (busy || !sizeof(cmd_queue)) return;
+    busy = 1;
+
     array(string|array(string)) cmd_entry = cmd_queue->get();
-    if (!cmd_entry) return;
+    if (!cmd_entry) {
+      // Race?
+      busy = 0;
+      return;
+    }
 
     string line = cmd_entry[0];
     string cmd = cmd_entry[1];
     array(string) args = cmd_entry[2];
-
-    busy = 1;
 
     if (!line) {
       // Command queue terminator.
