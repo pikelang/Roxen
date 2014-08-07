@@ -1692,7 +1692,12 @@ class FTPSession
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
 	if (use_ssl) {
+#if constant(SSL.File)
+	  fd = SSL.File(fd, port_obj->ctx);
+	  fd->accept();
+#else
 	  fd = SSL.sslfile (fd, port_obj->ctx);
+#endif
 	  DWRITE("FTP: Created an sslfile: %O\n", fd);
 	}
 	if(pasv_callback) {
@@ -1737,7 +1742,7 @@ class FTPSession
       return;
     }
 
-    object(Stdio.File) f = Stdio.File();
+    object(Stdio.File)|object(SSL.sslfile) f = Stdio.File();
 
     // FIXME: Race-condition: open_socket() for other connections will fail
     //        until the socket has been connected.
@@ -1770,7 +1775,12 @@ class FTPSession
     Stdio.File raw_connection = f;
 
     if (use_ssl) {
-      f = (object) SSL.sslfile (f, port_obj->ctx, 1, 0);
+#if constant(SSL.File)
+      f = SSL.File(f, port_obj->ctx);
+      f->connect();
+#else
+      f = SSL.sslfile (f, port_obj->ctx, 1, 0);
+#endif
     }
 
     f->set_nonblocking(lambda(mixed ignored, string data) {
