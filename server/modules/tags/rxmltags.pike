@@ -1540,7 +1540,14 @@ class TagInsert {
       // allow the plugins to have content if needed.
       flags |= RXML.FLAG_EMPTY_ELEMENT;
 
-      RXML.Tag plugin = get_plugins()[args->source];
+      mapping(string:RXML.Tag) plugins = get_plugins();
+      RXML.Tag plugin = plugins[args->source];
+      if (!plugin) {
+        plugins = args & plugins;
+        if (sizeof(plugins))
+          plugin = values(plugins)[0];
+      }
+
       if (plugin && plugin->do_enter) {
 	return plugin->do_enter(args, id, this);
       }
