@@ -77,7 +77,8 @@ void create()
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
 			   "lp", "smtp", "uucp", "nuucp", "listen",
 			   "nobody", "noaccess", "ftp", "news",
-			   "postmaster" }), _(8,"Banish list"),
+			   "postmaster", ".htaccess", "401.inc", "404.inc",
+			   "favicon.ico" }), _(8,"Banish list"),
 	 TYPE_STRING_LIST, 
 	 _(9,"This is a list of users who's home directories will not be "
 	   "mounted."));
@@ -141,6 +142,19 @@ void start()
   // This is needed to override the inherited filesystem module start().
 }
 
+protected int on_banish_list (string u)
+{
+  if (banish_list[u]) {
+    if(!banish_reported[u])
+      {
+	banish_reported[u] = 1;
+	USERFS_WERR(sprintf("User %s banished...\n", u));
+      }
+    return 1;
+  }
+  return 0;
+}
+
 protected array(string) find_user(string f, RequestID id)
 {
   string of = f;
@@ -199,6 +213,9 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   // FIXME: Use the find_user API instead.
   if(!dude_ok[ u ] || f == "")
   {
+    if (on_banish_list (u))
+      return 0;
+
     us = id->conf->userinfo( u, id );
 
     USERFS_WERR(sprintf("checking out %O: %O", u, us));
@@ -208,11 +225,6 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
       USERFS_WERR(sprintf("Bad password: %O? Banished? %O",
 			  (us?BAD_PASSWORD(us):1),
 			  banish_list[u]));
-      if(!banish_reported[u])
-      {
-	banish_reported[u] = 1;
-	USERFS_WERR(sprintf("User %s banished (%O)...\n", u, us));
-      }
       return 0;
     }
     if((f == "") && (strlen(of) && of[-1] != '/'))
@@ -290,6 +302,9 @@ string real_file(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     array(int) fs;
     if(query("homedir"))
     {
@@ -336,6 +351,9 @@ mapping|array find_dir(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     if(query("homedir"))
     {
       array(string) us;
@@ -373,6 +391,9 @@ array(int) stat_file(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     array us, st;
     us = id->conf->userinfo( u, id );
     if(query("homedir"))
