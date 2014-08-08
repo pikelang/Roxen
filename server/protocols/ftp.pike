@@ -1549,18 +1549,13 @@ class FTPSession
 #define low_next_cmd()	next_cmd()
 #endif
 
-  void send(int code, array(string) data, int|void enumerate_all)
+  void low_send(int code, array(string) data, int|void enumerate_all)
   {
-    DWRITE("FTP2: send(%d, %O)\n", code, data);
+    DWRITE("FTP2: low_send(%d, %O)\n", code, data);
 
     if (!data || end_marker) {
       end_marker = 1;
       ::set_write_callback(write_cb);
-      if (code >= 200) {
-	// Command finished, get the next.
-	busy = 0;
-	next_cmd();
-      }
       return;
     }
 
@@ -1589,6 +1584,14 @@ class FTPSession
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
     }
+  }
+
+  void send(int code, array(string) data, int|void enumerate_all)
+  {
+    DWRITE("FTP2: send(%d, %O)\n", code, data);
+
+    low_send(code, data, enumerate_all);
+
     if (code >= 200) {
       // Command finished, get the next.
       busy = 0;
