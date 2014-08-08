@@ -33,6 +33,7 @@ inherit "smtprelay";
 #endif
 inherit "hosts";
 inherit "disk_cache";
+inherit "fsgc";
 // inherit "language";
 inherit "supports";
 inherit "module_support";
@@ -170,7 +171,7 @@ int privs_level;
 
 protected class Privs
 {
-#if efun(seteuid)
+#if constant(seteuid)
 
   int saved_uid;
   int saved_gid;
@@ -280,11 +281,11 @@ protected class Privs
 		    (string)dbt(backtrace()[-2]));
 
     if (u[2]) {
-#if efun(cleargroups)
+#if constant(cleargroups)
       if (mixed err = catch { cleargroups(); })
 	master()->handle_error (err);
 #endif /* cleargroups */
-#if efun(initgroups)
+#if constant(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
 	master()->handle_error (err);
 #endif
@@ -399,7 +400,7 @@ protected class Privs
 
     seteuid(0);
     array u = getpwuid(saved_uid);
-#if efun(cleargroups)
+#if constant(cleargroups)
     if (mixed err = catch { cleargroups(); })
       master()->handle_error (err);
 #endif /* cleargroups */
@@ -412,9 +413,9 @@ protected class Privs
     enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
-#else /* efun(seteuid) */
+#else /* constant(seteuid) */
   void create(string reason, int|string|void uid, int|string|void gid){}
-#endif /* efun(seteuid) */
+#endif /* constant(seteuid) */
 }
 
 /* Used by read_config.pike, since there seems to be problems with
@@ -520,6 +521,9 @@ private void low_shutdown(int exit_code)
     destruct(argcache);
     destruct(cache);
 #ifdef THREADS
+#if constant(Filesystem.Monitor.basic)
+    stop_fsgarb();
+#endif
     if (mixed err = catch (stop_handler_threads()))
       master()->handle_error (err);
 #endif /* THREADS */
@@ -585,7 +589,7 @@ int is_shutting_down()
 #ifdef THREADS
 // function handle = threaded_handle;
 
-Thread do_thread_create(string id, function f, mixed ... args)
+Thread.Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
   name_thread( t, id );
@@ -2284,6 +2288,39 @@ class Protocol
 }
 
 #if constant(SSL.sslfile)
+
+class SSLContext {
+#if constant(SSL.Context)
+  inherit SSL.Context;
+
+#if defined(DEBUG) || defined(SSL3_DEBUG)
+  SSL.Alert alert_factory(SSL.Connection con, int level, int description,
+			  SSL.Constants.ProtocolVersion version,
+			  string|void debug_message)
+  {
+    if (description != SSL.Constants.ALERT_close_notify) {
+      if (debug_message) {
+	werror("SSL %s: %s: %s",
+	       (level == SSL.Constants.ALERT_warning)?
+	       "WARNING":"ERROR",
+	       SSL.Constants.fmt_constant(description, "ALERT"),
+	       debug_message);
+      } else {
+	werror("SSL %s: %s\n",
+	       (level == SSL.Constants.ALERT_warning)?
+	       "WARNING":"ERROR",
+	       SSL.Constants.fmt_constant(description, "ALERT"));
+      }
+    }
+    return ::alert_factory(con, level, description, version, debug_message);
+  }
+#endif /* DEBUG || SSL3_DEBUG */
+
+#else
+  inherit SSL.context;
+#endif
+}
+
 //! Base protocol for protocols that support upgrading to TLS.
 //!
 //! Exactly like Port, but contains settings for TLS.
@@ -2292,7 +2329,7 @@ class StartTLSProtocol
   inherit Protocol;
 
   // SSL context
-  SSL.context ctx = SSL.context();
+  SSLContext ctx = SSLContext();
 
   int cert_failure;
 
@@ -2324,7 +2361,67 @@ class StartTLSProtocol
     return;								\
   } while (0)
 
-  protected void filter_preferred_suites() {
+#if constant(SSL.ServerConnection)
+  protected void set_version()
+  {
+    ctx->min_version = query("ssl_min_version");
+  }
+#endif
+
+  protected void filter_preferred_suites()
+  {
+#if constant(SSL.ServerConnection)
+    int mode = query("ssl_suite_filter");
+    int bits = query("ssl_key_bits");
+
+    array(int) suites = ({});
+
+    if ((mode & 8) && !ctx->configure_suite_b) {
+      // FIXME: Warn: Suite B suites not available.
+      mode &= ~8;
+    }
+
+    if ((mode & 8) && ctx->configure_suite_b) {
+      // Suite B.
+      switch(mode) {
+      case 15:
+	// Strict mode.
+	ctx->configure_suite_b(bits, 2);
+	break;
+      case 14:
+	// Transitional mode.
+	ctx->configure_suite_b(bits, 1);
+	break;
+      default:
+	ctx->configure_suite_b(bits);
+	break;
+      }
+      suites = ctx->preferred_suites;
+
+      if (ctx->min_version < query("ssl_min_version")) {
+	set_version();
+      }
+    } else {
+      suites = ctx->get_suites(bits);
+
+      // Make sure the min version is restored in case we've
+      // switched from Suite B.
+      set_version();
+    }
+    if (mode & 4) {
+      // Ephemeral suites only.
+      suites = filter(suites,
+		      lambda(int suite) {
+			return (<
+			  SSL.Constants.KE_dhe_dss,
+			  SSL.Constants.KE_dhe_rsa,
+			  SSL.Constants.KE_ecdhe_ecdsa,
+			  SSL.Constants.KE_ecdhe_rsa,
+			>)[(SSL.Constants.CIPHER_SUITES[suite]||({ -1 }))[0]];
+		      });
+    }
+    ctx->preferred_suites = suites;
+#else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
     ctx->preferred_suites -= ({
@@ -2338,12 +2435,202 @@ class StartTLSProtocol
       SSL.Constants.SSL_null_with_null_null,
     });
 #endif
+#endif /* SSL.ServerConnection */
   }
 
+#if constant(Standards.X509)
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
+    cert_failure = 0;
+
+    array(string) certificates = ({});
+    array(object) decoded_certs = ({});
+    array(object) decoded_keys = ({});
+
+    void handle_pem_file(string pem_file, Variable.Variable conf_var)
+    {
+      string raw_cert;
+      SSL3_WERR (sprintf ("Reading PEM file %O\n", pem_file));
+      if( catch{ raw_cert = lopen(pem_file, "r")->read(); } )
+      {
+	CERT_WARNING (conf_var,
+		      LOC_M(8, "Reading PEM file %O failed: %s\n"),
+		      pem_file, strerror (errno()));
+	return;
+      }
+
+      Standards.PEM.Messages msgs = Standards.PEM.Messages(raw_cert);
+
+      foreach(msgs->fragments, string|Standards.PEM.Message msg) {
+	if (stringp(msg)) {
+	  if (String.trim_all_whites(msg) != "") {
+	    CERT_WARNING(conf_var,
+			 LOC_M(0, "Invalid PEM in %O.\n"),
+			 pem_file);
+	  }
+	  continue;
+	}
+	string body = msg->body;
+	if (msg->headers["dek-info"]) {
+	  mixed err = catch {
+	      body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
+						body, query("ssl_password"));
+	    };
+	  if (err) {
+	    CERT_WARNING(conf_var,
+			 LOC_M(0, "Invalid decryption password for %O.\n"),
+			 pem_file);
+	  }
+	}
+	switch(msg->pre) {
+	case "CERTIFICATE":
+	case "X509 CERTIFICATE":
+	  Standards.X509.TBSCertificate tbs =
+	    Standards.X509.decode_certificate(body);
+	  if (!tbs) {
+	    CERT_WARNING (conf_var,
+			  LOC_M(13, "Certificate not valid (DER).\n"));
+	    return;
+	  }
+	  certificates += ({ body });
+	  decoded_certs += ({ Standards.X509.decode_certificate(body) });
+	  break;
+	case "PRIVATE KEY":
+	case "RSA PRIVATE KEY":
+	case "DSA PRIVATE KEY":
+	case "ECDSA PRIVATE KEY":
+	  Crypto.Sign key = Standards.X509.parse_private_key(body);
+	  if (!key) {
+	    CERT_ERROR (conf_var,
+			LOC_M(11,"Private key not valid")+" (DER).\n");
+	    return;
+	  }
+	  decoded_keys += ({ key });
+	  break;
+	}
+      }
+    };
+
+    Variable.Variable Certificates = getvar("ssl_cert_file");
+    Variable.Variable KeyFile = getvar("ssl_key_file");
+
+    object privs = Privs("Reading cert file");
+
+    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
+      if (cert_file == "") continue;
+      handle_pem_file(cert_file, Certificates);
+    }
+
+    string key_file = String.trim_whites(KeyFile->query());
+    if (key_file != "") {
+      handle_pem_file(key_file, KeyFile);
+    } else {
+      KeyFile = Certificates;
+    }
+
+    privs = 0;
+
+    if (!sizeof(decoded_certs)) {
+      CERT_ERROR(Certificates, LOC_M(63,"No certificates found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(63,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
+    if (!sizeof(decoded_keys)) {
+      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M (17,"No private key found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
+    // FIXME: Only do this if there are certs loaded?
+    // We must reset the set of certificates.
+    ctx = SSLContext();
+    set_version();
+    filter_preferred_suites();
+
+    mapping(string:array(int)) cert_lookup = ([]);
+    foreach(decoded_certs; int no; Standards.X509.TBSCertificate tbs) {
+      cert_lookup[tbs->subject->get_der()] += ({ no });
+    }
+
+    foreach(decoded_keys, Crypto.Sign key) {
+      // FIXME: Multiple certificates with the same key?
+      array(int) cert_nos;
+      Standards.X509.TBSCertificate tbs;
+      foreach(decoded_certs; int no; tbs) {
+	if (tbs->public_key->pkc->public_key_equal(key)) {
+	  cert_nos = ({ no });
+	  break;
+	}
+      }
+      if (!cert_nos) {
+	CERT_ERROR (KeyFile,
+		    LOC_M(14, "Certificate and private key do not match.\n"));
+	continue;
+      }
+
+      // Build the certificate chain.
+      Standards.X509.TBSCertificate issuer;
+      do {
+	string issuer_der = tbs->issuer->get_der();
+	array(int) issuer_nos = cert_lookup[issuer_der];
+	if (!issuer_nos) break;
+
+	issuer = decoded_certs[issuer_nos[0]];
+
+	// FIXME: Verify that the issuer has signed the cert.
+
+	if (issuer != tbs) {
+	  cert_nos += ({ issuer_nos[0] });
+	} else {
+	  // Self-signed.
+	  issuer = UNDEFINED;
+	  break;
+	}
+      } while ((tbs = issuer));
+
+      report_notice("Adding %s certificate (%d certs) for %s\n",
+		    key->name(), sizeof(cert_nos), get_url());
+      ctx->add_cert(key, rows(certificates, cert_nos), ({ name }));
+    }
+
+#if 0
+    // FIXME: How do this in current Pike 8.0?
+    if (!sizeof(ctx->cert_pairs)) {
+      CERT_ERROR(Certificates,
+		 LOC_M(0,"No matching keys and certificates found.\n"));
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(0,"No matching keys and certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+#endif
+
+    if (!bound) {
+      bind (ignore_eaddrinuse);
+      if (old_cert_failure && bound)
+	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
+      if (!bound)
+	report_notice("Failed to bind port %s.\n", get_url());
+    }
+  }
+#else
+  // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
+  void certificates_changed(Variable.Variable|void ignored,
+			    void|int ignore_eaddrinuse)
+  {
+    int old_cert_failure = cert_failure;
+    cert_failure = 0;
 
     string raw_keydata;
     array(string) certificates = ({});
@@ -2493,9 +2780,7 @@ class StartTLSProtocol
       //dsa->use_random(ctx->random);
       ctx->dsa = dsa;
       /* Use default DH parameters */
-#if constant(SSL.Cipher)
-      ctx->dh_params = SSL.Cipher.DHParameters();
-#else
+#if constant(SSL.cipher)
       ctx->dh_params = SSL.cipher()->dh_parameters();
 #endif
 
@@ -2519,6 +2804,8 @@ class StartTLSProtocol
 	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
     }
   }
+#pragma deprecation_warnings
+#endif /* Tools.X509 */
 
   class CertificateListVariable
   {
@@ -2548,9 +2835,9 @@ class StartTLSProtocol
   {
     ctx->random = Crypto.Random.random_string;
 
-    filter_preferred_suites();
-
     set_up_ssl_variables( this_object() );
+
+    filter_preferred_suites();
 
     ::setup(pn, i);
 
@@ -2564,6 +2851,12 @@ class StartTLSProtocol
     //        at the same time.
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
+
+#if constant(SSL.ServerConnection)
+    getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
+    getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
+    getvar("ssl_min_version")->set_changed_callback(set_version);
+#endif
   }
 
   string _sprintf( )
@@ -2582,17 +2875,29 @@ class SSLProtocol
   SSL.sslfile accept()
   {
     Stdio.File q = ::accept();
-    if (q)
-      return SSL.sslfile (q, ctx);
+    if (q) {
+      SSL.sslfile ssl = SSL.sslfile (q, ctx);
+      if (ssl->accept) ssl->accept();
+      return ssl;
+    }
     return 0;
   }
 
+#if constant(SSL.Connection)
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    if (!sizeof(ctx->cert_pairs)) return;
+    ::bind (ignore_eaddrinuse);
+  }
+#else
   protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
     if (!ctx->certificates) return;
     ::bind (ignore_eaddrinuse);
   }
+#endif
 
   string _sprintf( )
   {
@@ -3379,6 +3684,15 @@ protected void engage_abs(int n)
     })
     master()->handle_error (err);
 #endif
+  report_debug("\nPending call_outs:\n");
+  if (mixed err = catch {
+      t = alarm(20);	// Restart the timeout timer.
+      foreach(call_out_info(), array info) {
+	report_debug("  %4d seconds: %O(%{%O, %})\n",
+		     info[0], info[2], info[3]);
+      }
+    })
+    master()->handle_error(err);
   low_engage_abs();
 }
 
@@ -5609,7 +5923,7 @@ private void fix_root(string to)
   if(!chroot(to))
   {
     report_debug("Roxen: Cannot chroot to "+to+": ");
-#if efun(real_perror)
+#if constant(real_perror)
     real_perror();
 #endif
     return;
@@ -5667,7 +5981,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 		  Stdio.File|void to2,
 		  function(:void)|void callback)
 {
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   if(!to2)
   {
     object p = fastpipe( );
@@ -5684,7 +5998,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
     if(to2) p->output(to2);
     p->input(from);
     return p;
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   }
 #endif
 }
@@ -5874,6 +6188,9 @@ protected class GCTimestamp
   }
 }
 
+protected int gc_start;
+
+protected mapping(string:int) gc_histogram = ([]);
 
 array argv;
 int main(int argc, array tmp)
@@ -5892,7 +6209,37 @@ int main(int argc, array tmp)
 #endif
 
 #ifdef LOG_GC_TIMESTAMPS
-  GCTimestamp();
+  Pike.gc_parameters(([ "pre_cb": lambda() {
+				    gc_start = gethrtime();
+				    werror("GC runs at %s", ctime(time()));
+				  },
+			"post_cb":lambda() {
+				    werror("GC done after %dus\n",
+					   gethrtime() - gc_start);
+				  },
+			"destruct_cb":lambda(object o) {
+					gc_histogram[sprintf("%O", object_program(o))]++;
+					werror("GC cyclic reference in %O.\n",
+					       o);
+				      },
+			"done_cb":lambda(int n) {
+				    if (!n) return;
+				    werror("GC zapped %d things.\n", n);
+				    mapping h = gc_histogram + ([]);
+				    if (!sizeof(h)) return;
+				    array i = indices(h);
+				    array v = values(h);
+				    sort(v, i);
+				    werror("GC histogram (accumulative):\n");
+				    foreach(reverse(i)[..9], string p) {
+				      werror("GC:  %s: %d\n", p, h[p]);
+				    }
+				  },
+		     ]));
+  if (!Pike.gc_parameters()->pre_cb) {
+    // GC callbacks not available.
+    GCTimestamp();
+  }
 #endif
 
   // For RBF
@@ -5991,7 +6338,7 @@ int main(int argc, array tmp)
   cache_clear_deltas();
   set_locale();
 
-#if efun(syslog)
+#if constant(syslog)
   init_logger();
 #endif
   init_garber();
@@ -6037,21 +6384,71 @@ int main(int argc, array tmp)
 #endif /* THREADS */
 
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
-    if (sizeof(roxenloader.package_directories) &&
-	(lfile_path(file_name) == file_name)) {
+    if (!sizeof(roxenloader.package_directories)) break;
+    string cert;
+    if (lfile_path(file_name) == file_name) {
       file_name = roxen_path (roxenloader.package_directories[-1] + "/" +
 			      file_name);
       report_notice("Generating a new certificate %s...\n", file_name);
-      string cert = Roxen.generate_self_signed_certificate("*");
+      cert = Roxen.generate_self_signed_certificate("*");
+#if constant(Standards.X509)
+    } else {
+      file_name = roxen_path (lfile_path(file_name));
+
+      // Check if we need to upgrade the cert.
+      //
+      // Certificates generated by old versions of Pike were
+      // plain X.509v1, while certificates generated by Pike 8.0
+      // and later are X.509v3 with some required extensions.
+
+      string old_cert = Stdio.read_bytes(file_name);
+      if (!old_cert) {
+	report_error("Failed to read certificate %s.\n", file_name);
+	continue;
+      }
 
       // Note: set_u_and_gid() hasn't been called yet,
       //       so there's no need for Privs.
+      Standards.PEM.Messages msgs = Standards.PEM.Messages(old_cert);
+
+      int upgrade_needed;
+
+      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+	if (!has_suffix(part, "CERTIFICATE")) continue;
+	Standards.X509.TBSCertificate tbs =
+	  Standards.X509.decode_certificate(msg->body);
+	upgrade_needed = (tbs->version < 3);
+	break;
+      }
+
+      if (!upgrade_needed || (sizeof(msgs->parts) != 2)) continue;
+
+      // NB: We reuse the old key.
+      Crypto.Sign key;
+      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+	if (!has_suffix(part, "PRIVATE KEY")) continue;
+	if (msg->headers["dek-info"]) {
+	  // Not supported here.
+	  break;
+	}
+	key = Standards.X509.parse_private_key(msg->body);
+      }
+      if (!key) continue;
+
+      report_notice("Renewing certificate: %O...\n", file_name);
+      cert = Roxen.generate_self_signed_certificate("*", key);
+#endif /* constant(Standards.X509) */
+    }
+
+    if (cert) {
+      // Note: set_u_and_gid() hasn't been called yet,
+      //       so there's no need for Privs.
       Stdio.File file = Stdio.File();
-      if (!file->open(file_name, "wxc", 0600)) {
+      if (!file->open(file_name, "wtc", 0600)) {
 	report_error("Couldn't create certificate file %s: %s\n", file_name,
 		     strerror (file->errno()));
       } else if (file->write(cert) != sizeof(cert)) {
-	rm(cert);
+	rm(file_name);
 	report_error("Couldn't write certificate file %s: %s\n", file_name,
 		     strerror (file->errno()));
       }
@@ -6082,6 +6479,9 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
+#if constant(Filesystem.Monitor.basic)
+  start_fsgarb();
+#endif
 #endif /* THREADS */
 
 #ifdef TEST_EUID_CHANGE
@@ -6228,8 +6628,10 @@ string check_variable(string name, mixed value)
     if (value)
       // Make sure restart_if_stuck is called from the backend thread.
       call_out(restart_if_stuck, 0, 1);
-    else
+    else {
       remove_call_out(restart_if_stuck);
+      alarm(0);
+    }
     break;
   case "abs_timeout":
     if (value < 0) {
@@ -7037,7 +7439,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // fun that trying to find the bug in the image-cache at the moment.
 
   // Note similar code in compile_log_format.
-
+  if (pattern == "")
+    return 0;
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)

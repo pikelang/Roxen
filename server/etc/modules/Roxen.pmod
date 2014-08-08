@@ -2565,138 +2565,199 @@ string strftime(string fmt, int t,
   mapping(string:string) m = (["type":"string"]);
   
   foreach(a[1..], string key) {
-    if(key=="") continue;
     int(0..1) prefix = 1;
-    if(key[0] == '!' && sizeof(key) > 1) {
-      prefix = 0;
-      key = key[1..];
-    }
-    switch(key[0]) {
-    case 'a':	// Abbreviated weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
-      else
-	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
-      break;
-    case 'A':	// Weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"day",id));
-      else
-	res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-		  "Thursday", "Friday", "Saturday" })[lt->wday];
-      break;
-    case 'b':	// Abbreviated month name
-    case 'h':	// Abbreviated month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
-      else
-	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
-      break;
-    case 'B':	// Month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"month",id));
-      else
-	res += ({ "January", "February", "March", "April", "May", "June",
-		  "July", "August", "September", "October", "November", "December" })[lt->mon];
-      break;
-    case 'c':	// Date and time
-      res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
-      break;
-    case 'C':	// Century number; 0-prefix
-      res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
-      break;
-    case 'd':	// Day of month [1,31]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->mday);
-      break;
-    case 'D':	// Date as %m/%d/%y
-      res += strftime("%m/%d/%y", t);
-      break;
-    case 'e':	// Day of month [1,31]; space-prefix
-      res += my_sprintf(prefix, "%2d", lt->mday);
-      break;
-    case 'E':
-    case 'O':
-      key = key[1..]; // No support for E or O extension.
-      break;
-    case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->hour);
-      break;
-    case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
-      res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
-      break;
-    case 'j':	// Day number of year [1,366]; 0-prefix
-      res += my_sprintf(prefix, "%03d", lt->yday);
-      break;
-    case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
-      res += my_sprintf(prefix, "%2d", lt->hour);
-      break;
-    case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
-      res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
-      break;
-    case 'm':	// Month number [1,12]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->mon + 1);
-      break;
-    case 'M':	// Minute [00,59]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->min);
-      break;
-    case 'n':	// Newline
-      res += "\n";
-      break;
-    case 'p':	// a.m. or p.m.
-      res += lt->hour<12 ? "a.m." : "p.m.";
-      break;
-    case 'P':	// am or pm
-      res += lt->hour<12 ? "am" : "pm";
-      break;
-    case 'r':	// Time in 12-hour clock format with %p
-      res += strftime("%l:%M %p", t);
-      break;
-    case 'R':	// Time as %H:%M
-      res += sprintf("%02d:%02d", lt->hour, lt->min);
-      break;
-    case 'S':	// Seconds [00,61]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->sec);
-      break;
-    case 't':	// Tab
-      res += "\t";
-      break;
-    case 'T':	// Time as %H:%M:%S
-    case 'X':
-      res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
-      break;
-    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-      res += my_sprintf(prefix, "%d", lt->wday + 1);
-      break;
-    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
-      res += my_sprintf(prefix, "%d", lt->wday);
-      break;
-    case 'x':	// Date
-      res += strftime("%a %b %d %Y", t);
-      break;
-    case 'y':	// Year [00,99]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->year % 100);
-      break;
-    case 'Y':	// Year [0000.9999]; 0-prefix
-      res += my_sprintf(prefix, "%04d", 1900 + lt->year);
-      break;
+    int(0..1) alternative_numbers = 0;
+    int(0..1) alternative_form = 0;
+    while (sizeof(key)) {
+      switch(key[0]) {
+	// Flags.
+      case '!':	// Inhibit numerical padding (Pike).
+	prefix = 0;
+	key = key[1..];
+	continue;
+      case 'E':	// Locale-dependent alternative form.
+	alternative_form = 1;
+	key = key[1..];
+	continue;
+      case 'O':	// Locale-dependent alternative numeric representation.
+	alternative_numbers = 1;
+	key = key[1..];
+	continue;
 
-    case 'U':	// Week number of year as a decimal number [00,53],
-		// with Sunday as the first day of week 1; 0-prefix
-      res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
-      break;
-    case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-      res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
-      break;
-    case 'W':	// Week number of year as a decimal number [00,53],
+	// Formats.
+      case 'a':	// Abbreviated weekday name
+	if (language)
+	  res += number2string(lt->wday+1,m,language(lang,"short_day",id));
+	else
+	  res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+	break;
+      case 'A':	// Weekday name
+	if (language)
+	  res += number2string(lt->wday+1,m,language(lang,"day",id));
+	else
+	  res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+		    "Thursday", "Friday", "Saturday" })[lt->wday];
+	break;
+      case 'b':	// Abbreviated month name
+      case 'h':	// Abbreviated month name
+	if (language)
+	  res += number2string(lt->mon+1,m,language(lang,"short_month",id));
+	else
+	  res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+	break;
+      case 'B':	// Month name
+	if (language) {
+	  if (alternative_form) {
+	    res += number2string(lt->mon+1,m,language(lang,"numbered_month",id));
+	  } else {
+	    res += number2string(lt->mon+1,m,language(lang,"month",id));
+	  }
+	} else
+	  res += ({ "January", "February", "March", "April", "May", "June",
+		    "July", "August", "September", "October", "November", "December" })[lt->mon];
+	break;
+      case 'c':	// Date and time
+	// FIXME: Should be preferred date and time for the locale.
+	res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
+				lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+	break;
+      case 'C':	// Century number; 0-prefix
+	res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
+	break;
+      case 'd':	// Day of month [1,31]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->mday);
+	break;
+      case 'D':	// Date as %m/%d/%y
+	res += strftime("%m/%d/%y", t);
+	break;
+      case 'e':	// Day of month [1,31]; space-prefix
+	res += my_sprintf(prefix, "%2d", lt->mday);
+	break;
+      case 'F':	// ISO 8601 date %Y-%m-%d
+	res += sprintf("%04d-%02d-%02d",
+		       1900 + lt->year, lt->mon + 1, lt->mday);
+	break;
+      case 'G':	// Year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%04d", 1899 + lt->year);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%04d", 1901 + lt->year);
+	  } else {
+	    res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	  }
+	}
+	break;
+      case 'g':	// Short year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%02d", (99 + lt->year) % 100);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%02d", (1 + lt->year) % 100);
+	  } else {
+	    res += my_sprintf(prefix, "%02d", (lt->year) % 100);
+	  }
+	}
+	break;
+      case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->hour);
+	break;
+      case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
+	res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
+	break;
+      case 'j':	// Day number of year [1,366]; 0-prefix
+	res += my_sprintf(prefix, "%03d", lt->yday);
+	break;
+      case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
+	res += my_sprintf(prefix, "%2d", lt->hour);
+	break;
+      case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
+	res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
+	break;
+      case 'm':	// Month number [1,12]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->mon + 1);
+	break;
+      case 'M':	// Minute [00,59]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->min);
+	break;
+      case 'n':	// Newline
+	res += "\n";
+	break;
+      case 'p':	// a.m. or p.m.
+	res += lt->hour<12 ? "a.m." : "p.m.";
+	break;
+      case 'P':	// am or pm
+	res += lt->hour<12 ? "am" : "pm";
+	break;
+      case 'r':	// Time in 12-hour clock format with %p
+	res += strftime("%I:%M:%S %p", t);
+	break;
+      case 'R':	// Time as %H:%M
+	res += sprintf("%02d:%02d", lt->hour, lt->min);
+	break;
+      case 's':	// Seconds since epoch.
+	res += my_sprintf(prefix, "%d", t);
+	break;
+      case 'S':	// Seconds [00,61]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->sec);
+	break;
+      case 't':	// Tab
+	res += "\t";
+	break;
+      case 'T':	// Time as %H:%M:%S
+      case 'X':	// FIXME: Time in locale preferred format.
+	res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
+	break;
+      case 'u':	// Weekday as a decimal number [1,7], Monday == 1
+	res += my_sprintf(prefix, "%d", 1 + ((lt->wday + 6) % 7));
+	break;
+      case 'U':	// Week number of current year [00,53]; 0-prefix
+		// Sunday is first day of week.
+	res += my_sprintf(prefix, "%02d", 1 + (lt->yday - lt->wday)/ 7);
+	break;
+      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
+	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
+	break;
+      case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
+	res += my_sprintf(prefix, "%d", lt->wday);
+	break;
+      case 'W':	// Week number of year as a decimal number [00,53],
 		// with Monday as the first day of week 1; 0-prefix
-      res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
-      break;
-    case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
+	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
+	break;
+      case 'x':	// Date
+		// FIXME: Locale preferred date format.
+	res += strftime("%a %b %d %Y", t);
+	break;
+      case 'y':	// Year [00,99]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->year % 100);
+	break;
+      case 'Y':	// Year [0000.9999]; 0-prefix
+	res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	break;
+      case 'z':	// Time zone as hour offset from UTC.
+		// Needed for RFC822 dates.
+	{
+	  int minutes = lt->timezone/60;
+	  int hours = minutes/60;
+	  minutes -= hours * 60;
+	  res += my_sprintf(prefix, "%+05d%", hours*100 + minutes);
+	}
+	break;
+      case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
+	break;
+      }
+      res+=key[1..];
+      break;
     }
-    res+=key[1..];
   }
   return replace(res, "\0", "%");
 }
@@ -5102,7 +5163,9 @@ string get_server_url(Configuration c)
   return c->get_url();
 }
 
+#ifndef NO_DNS
 static private array(string) local_addrs;
+#endif
 
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
@@ -5790,12 +5853,65 @@ void pop_color (string tagname, RequestID id)
   }
 }
 
-string generate_self_signed_certificate(string common_name)
+#if constant(Standards.X509)
+
+string generate_self_signed_certificate(string common_name,
+					Crypto.Sign|void key)
 {
   int key_size = 4096;	// Ought to be safe for a few years.
 
-  Crypto.RSA rsa = Crypto.RSA();
-  rsa->generate_key(key_size, Crypto.Random.random_string);
+  if (!key) {
+    key = Crypto.RSA();
+    key->generate_key(key_size, Crypto.Random.random_string);
+  }
+
+  string key_type = key->name();
+  if (has_prefix(key_type, "ECDSA") ||
+      has_suffix(key_type, "ECDSA")) {
+    key_type = "ECDSA";
+  }
+
+  string key_pem =
+    Standards.PEM.build(key_type + " PRIVATE KEY",
+			Standards.PKCS[key_type].private_key(key));
+
+  // These are the fields used by testca.pem.
+  array(mapping(string:object)) name = ({
+    ([ "organizationName":
+       Standards.ASN1.Types.PrintableString("Roxen IS")
+    ]),
+    ([ "organizationUnitName":
+       Standards.ASN1.Types.PrintableString("Automatic certificate")
+    ]),
+    ([ "commonName":
+       (Standards.ASN1.Types.asn1_printable_valid(common_name)?
+	Standards.ASN1.Types.PrintableString:
+	Standards.ASN1.Types.BrokenTeletexString)(common_name)
+    ]),
+  });
+
+  int ttl = 3652;	// 10 years.
+
+  /* Create a plain X.509 v3 certificate, with just default extensions. */
+  string cert =
+    Standards.X509.make_selfsigned_certificate(key, 24 * 3600 * ttl, name);
+
+  return Standards.PEM.build("CERTIFICATE", cert) + key_pem;
+}
+
+#else
+// NB: Several of the Tools.PEM and Tools.X509 APIs below
+//     have been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
+
+string generate_self_signed_certificate(string common_name, Crypto.RSA|void rsa)
+{
+  int key_size = 4096;	// Ought to be safe for a few years.
+
+  if (!rsa) {
+    rsa = Crypto.RSA();
+    rsa->generate_key(key_size, Crypto.Random.random_string);
+  }
 
   string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
 					   Standards.PKCS.RSA.private_key(rsa));
@@ -5823,6 +5939,9 @@ string generate_self_signed_certificate(string common_name)
 
   return Tools.PEM.simple_build_pem("CERTIFICATE", cert) + key;
 }
+
+#pragma deprecation_warnings
+#endif /* Standards.X509 */
 
 class LogPipe
 //! The write end of a pipe that will log to the debug log. Use

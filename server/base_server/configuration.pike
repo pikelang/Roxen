@@ -2815,6 +2815,13 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
   else {
     Configuration oc = id->conf;
     id->not_query = fname;
+
+    // Make sure RXML defines don't survive <insert file/>.
+    // Fixes [bug 6631] where the return code for the outer
+    // RXML scope caused the <insert file/> to fail.
+    m_delete(id->misc, "defines");
+    m_delete(id->misc, "error_code");
+
     TRY_FIRST_MODULES (file, open_file (fname, mode, id,
 					internal_get, recurse_count + 1));
     fname = id->not_query;
@@ -5287,7 +5294,7 @@ also set 'URLs'."));
   defvar("http_compression_enabled", 1,
 	 DLOCALE(1000, "Compression: Enable HTTP compression"),
 	 TYPE_FLAG,
-	 DLOCALE(1001, 
+	 DLOCALE(1001,
 #"Whether to enable HTTP protocol compression. Many types of text
 content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
 enabling HTTP compression may improve the visitors' perception of the
@@ -5321,14 +5328,15 @@ low."))->add_changed_callback(lambda(object v)
 	    "application/javascript",
 	    "application/x-javascript",
 	    "application/json",
-	    "application/xhtml+xml" }),
+	    "application/xhtml+xml",
+	    "image/svg+xml" }),
 	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
 	 DLOCALE(1003, "The MIME types for which to enable compression. The "
 		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
 		 "but globbing on the general form (such as "
-		 "\"maintype/*subtype\") is not allowed and such globs will "
-		 "be silently ignored."))
+		 "\"maintype/*subtype\" or \"maintype/sub*\") is not allowed "
+		 "and such globs will be silently ignored."))
     ->add_changed_callback(lambda(object v) 
 			   { set_mimetypes(v->query()); 
 			   });

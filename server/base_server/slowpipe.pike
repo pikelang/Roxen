@@ -72,7 +72,10 @@ void input (Stdio.File what, int len) {
     file_len = len;
   }
   fd_in = what;
-  fd_in->set_nonblocking();
+
+  if (fd_in->set_nonblocking) // doesn't exist for some virtual file types
+    fd_in->set_nonblocking();
+
 //   tosend+=what->read(len);
 }
 

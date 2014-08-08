@@ -375,14 +375,16 @@ string location_url()
 	}
 	continue;
       }
-    return (string)uri + loc[1..];
+    uri->path += loc[1..];
+    return (string)uri;
   }
   if(candidate_uri) {
     report_warning("Warning: Could not find any suitable ports, continuing anyway. "
 		   "Please make sure that your Primary Server URL matches "
 		   "at least one port. Primary Server URL: %O, URLs: %s.\n",
 		 world_url, short_array(urls));
-    return (string)candidate_uri + loc[1..];
+    candidate_uri->path += loc[1..];
+    return (string)candidate_uri;
   }
   return 0;
 }
@@ -2042,6 +2044,35 @@ mixed get_value_from_file(string path, string index, void|string pre)
   return compile_string((pre || "") + file->read(), path)[index];
 }
 
+#if constant(roxen.FSGarbWrapper)
+//! Register a filesystem path for automatic garbage collection.
+//!
+//! @param path
+//!   Path in the real filesystem to garbage collect.
+//!
+//! @param max_age
+//!   Maximum allowed age in seconds for files.
+//!
+//! @param max_size
+//!   Maximum total size in bytes for all files under the path.
+//!   Zero to disable the limit.
+//!
+//! @param max_files
+//!   Maximum number of files under the path.
+//!   Zero to disable the limit.
+//!
+//! @returns
+//!   Returns a roxen.FSGarbWrapper object. The garbage collector
+//!   will be removed when this object is destructed (eg via
+//!   refcount-garb).
+roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
+				    int|void max_size, int|void max_files)
+{
+  return roxen.register_fsgarb(module_identifier(), path, max_age,
+			       max_size, max_files);
+}
+#endif
+
 private mapping __my_tables = ([]);
 
 array(mapping(string:mixed)) sql_query( string query, mixed ... args )
@@ -2254,3 +2285,10 @@ Sql.Sql get_my_sql( int|void read_only, void|string charset )
 {
   return DBManager.cached_get( my_db, _my_configuration, read_only, charset );
 }
+
+// Callback used by the DB browser, if defined, for custom formatting
+// of database fields.
+int|string format_db_browser_value (string db_name, string table_name,
+				    string column_name, array(string) col_names,
+				    array(string) col_types, array(string) row,
+				    RequestID id);

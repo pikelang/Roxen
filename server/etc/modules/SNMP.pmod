@@ -54,13 +54,18 @@ class OwnerInfo
 
 class app_integer
 {
-  inherit Standards.ASN1.Types.asn1_integer : integer;
+  inherit Standards.ASN1.Types.Integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
-  constant cls = 1;
   constant type_name = "APPLICATION INTEGER";
+#if __VERSION__ < 8.0
+  constant cls = 1;
   constant tag = 0;
+#else
+  int cls = 1;
+  int tag = 0;
+#endif
   protected void create(int|function(:int) val, string|void name,
 			string|void doc_string)
   {
@@ -84,13 +89,18 @@ class app_integer
 
 class app_octet_string
 {
-  inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
+  inherit Standards.ASN1.Types.OctetString : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
-  constant cls = 1;
   constant type_name = "APPLICATION OCTET_STRING";
+#if __VERSION__ < 8.0
+  constant cls = 1;
   constant tag = 0;
+#else
+  int cls = 1;
+  int tag = 0;
+#endif
   protected void create(string|function(:string) val, string|void name,
 			string|void doc_string)
   {
@@ -114,7 +124,7 @@ class app_octet_string
 
 class OID
 {
-  inherit Standards.ASN1.Types.asn1_identifier : identifier;
+  inherit Standards.ASN1.Types.Identifier : identifier;
   inherit Documentation : doc;
   inherit OwnerInfo : owner_info;
   constant type_name = "OID";
@@ -137,7 +147,7 @@ class OID
 
 class Integer
 {
-  inherit Standards.ASN1.Types.asn1_integer : integer;
+  inherit Standards.ASN1.Types.Integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
@@ -166,7 +176,7 @@ class Integer
 
 class String
 {
-  inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
+  inherit Standards.ASN1.Types.OctetString : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
@@ -196,14 +206,22 @@ class String
 class Counter
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 1;
+#else
+  int tag = 1;
+#endif
   constant type_name = "COUNTER";
 }
 
 class Gauge
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 2;
+#else
+  int tag = 2;
+#endif
   constant type_name = "GAUGE";
 }
 
@@ -211,7 +229,11 @@ class Gauge
 class Tick
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 3;
+#else
+  int tag = 3;
+#endif
   constant type_name = "TICK";
   protected string _sprintf(int t)
   {
@@ -225,7 +247,11 @@ class Tick
 class Opaque
 {
   inherit app_octet_string;
+#if __VERSION__ < 8.0
   constant tag = 4;
+#else
+  int tag = 4;
+#endif
   constant type_name = "OPAQUE";
   protected string _sprintf(int t)
   {
@@ -237,21 +263,57 @@ class Opaque
 class Counter64
 {
   inherit app_integer;
+#if __VERSION__ < 8.0
   constant tag = 6;
+#else
+  int tag = 6;
+#endif
   constant type_name = "COUNTER64";
 }
 
+#if __VERSION__ < 8.0
+constant ContextOctetString =
+  Protocols.LDAP.ldap_privates.asn1_context_octet_string;
+constant ContextSequence =
+  Protocols.LDAP.ldap_privates.asn1_context_sequence;
+#else
+class ContextOctetString
+{
+  inherit Standards.ASN1.Types.OctetString;
+
+  int cls = 2;
+  constant type_name = "CONTEXT OCTET STRING";
+
+  protected void create(int tag, string(8bit) val)
+  {
+    this_program::tag = tag;
+    ::create(val);
+  }
+}
+
+class ContextSequence
+{
+  inherit Standards.ASN1.Types.Sequence;
+
+  int cls = 2;
+  constant type_name = "CONTEXT SEQUENCE";
+
+  protected void create(int tag, array arg)
+  {
+    this_program::tag = tag;
+    ::create(arg);
+  }
+}
+#endif
+
 //! No such object marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string NO_SUCH_OBJECT =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(0, "");
+ContextOctetString NO_SUCH_OBJECT = ContextOctetString(0, "");
 
 //! No such instance marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string NO_SUCH_INSTANCE =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(1, "");
+ContextOctetString NO_SUCH_INSTANCE = ContextOctetString(1, "");
 
 //! End of MIB marker.
-Protocols.LDAP.ldap_privates.asn1_context_octet_string END_OF_MIB =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string(2, "");
+ContextOctetString END_OF_MIB = ContextOctetString(2, "");
 
 //! The NULL counter.
 Counter NULL_COUNTER = Counter(0);

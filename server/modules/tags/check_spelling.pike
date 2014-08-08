@@ -70,6 +70,12 @@ void create() {
 	 "<tt>mywords.en.txt</tt> or <tt>mywords.en_US.txt</tt>. "
 	 "The plain-text files must also use UTF-8 encoding if you enable "
 	 "the UTF-8 support in the setting below.");
+
+  defvar("run_together_langs", "sv", "Languages with run-together words",
+	 TYPE_STRING,
+	 "A comma-separated list of language codes where run-together words "
+	 "are considered valid. This behavior is useful in languages such as "
+	 "Swedish but not appropriate for English.");
   
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
          "The default report type used, when not specified in the "
@@ -166,6 +172,29 @@ mapping(string:string) get_extra_dicts(void|int(0..1) include_empty)
 }
 
 
+//  Returns tuple < encoding, chars to skip > if the given data string
+//  starts with a BOM, and zero otherwise.
+array(string|int) get_encoding_from_bom(string data)
+{
+  //  We only care about UTF-8 and UTF-16 BE/LE:
+  //
+  //    EF BB BF   - UTF-8
+  //    FE FF      - UTF-16 big-endian
+  //    FF FE      - UTF-16 little-endian
+  if (sizeof(data) >= 3) {
+    if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+      return ({ "utf-8", 3 });
+  }
+  if (sizeof(data) >= 2) {
+    if (data[0] == 0xFE && data[1] == 0xFF)
+      return ({ "utf-16", 2 });
+    if (data[0] == 0xFF && data[1] == 0xFE)
+      return ({ "utf-16le", 2 });
+  }
+  return 0;
+}
+
+
 int process_extra_dict(string ed_path, string pd_path)
 {
   //  Make sure destination directory exists
@@ -183,11 +212,36 @@ int process_extra_dict(string ed_path, string pd_path)
     (use_utf8 ? ({ "--encoding", "utf-8" }) : ({ }) ) +
     ({ "create", "master", pd_path });
   report_notice("Spell Checker: Converting dictionary %s... ", ed_path);
+
+  //  Aspell doesn't like MS-DOS line endings so write a clean temp file.
+  //  We also heed any BOM that we find.
+  string in_data = Stdio.read_bytes(ed_path);
+  if (!in_data) {
+    report_notice("Error reading dictionary: %s\n", ed_path);
+    return -1;
+  }
+  if (array bom_data = get_encoding_from_bom(in_data)) {
+    //  Skip BOM bytes and recode to UTF-8 if currently in a different format
+    in_data = in_data[bom_data[1]..];
+    if (bom_data[0] != "utf-8") {
+      if (object dec = Locale.Charset.decoder(bom_data[0]))
+	in_data = string_to_utf8(dec->feed(in_data)->drain());
+    }
+  }
+  in_data = replace(in_data, ({ "\r\n", "\r" }), ({ "\n", "\n" }) );
+  string ed_cleaned_path = ed_path + ".tmp";
+  if (mixed err = catch {
+      Stdio.write_file(ed_cleaned_path, in_data);
+    }) {
+    report_notice("Error writing temp file: %s\n", ed_cleaned_path);
+    return -1;
+  }
   
-  Stdio.File in_file = Stdio.File(ed_path);
+  Stdio.File in_file = Stdio.File(ed_cleaned_path);
   Process.Process p = Process.Process(args, ([ "stdin": in_file ]) );
   in_file->close();
   int err = p->wait();
+  rm(ed_cleaned_path);
   report_notice((err ? "Error" : "OK") + "\n");
   return err;
 }
@@ -383,8 +437,13 @@ string run_spellcheck(string|array(string) words, void|string dict)
   array(string) ed_args = ({ });
   foreach (extra_dicts; string ed_path; string pd_path) {
     if (pd_path)
-      ed_args += ({ "--extra-dicts", pd_path });
+      ed_args += ({ "--add-extra-dicts", pd_path });
   }
+  
+  //  Should run-together words be considered?
+  array(string) run_together_langs =
+    map(query("run_together_langs") / ",", String.trim_all_whites);
+  int use_run_together = dict && has_value(run_together_langs, dict);
   
   object file1=Stdio.File();
   object file2=file1->pipe();
@@ -401,7 +460,8 @@ string run_spellcheck(string|array(string) words, void|string dict)
     return 0;
   }
   Process.Process p =
-    Process.Process(({ query("spellchecker"), "-a", "-C" }) +
+    Process.Process(({ query("spellchecker"), "-a" }) +
+		    (use_run_together ? ({ "-C" })       : ({ }) ) +
 		    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
 		    (stringp(words) ? ({ "-H" })         : ({ }) ) +
 		    (dict           ? ({ "-d", dict })   : ({ }) ) +

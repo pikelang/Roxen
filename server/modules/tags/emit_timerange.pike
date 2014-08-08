@@ -1257,7 +1257,7 @@ constant tagdoc = ([
     </p>
     <p>This attribute is <i>mandatory if the <att>query</att>
        attribute exists</i>.
-       This attribute does nothing if the query attribute doesn't exists.
+       This attribute does nothing if the query attribute doesn't exist.
     </p>
   </attr>
 

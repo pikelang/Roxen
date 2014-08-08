@@ -496,12 +496,11 @@ object get_conf( object mod )
   return mod;
 }
 
-mapping get_variable_section( string s, object mod, RequestID id )
+mapping low_variable_section(string|object localized_name,
+			     object mod, RequestID id)
 {
-  Variable.Variable var = mod->getvar( s );
   string section = RXML.get_var( "section", "form" );
-  LocaleString localized_name = var->name();
-  s = (string)localized_name;
+  string s = (string)localized_name;
   if( sscanf( s, "%s:%*s", s ) ) {
     string s2 = s;
     string old_loc;
@@ -526,6 +525,13 @@ mapping get_variable_section( string s, object mod, RequestID id )
       ((section=="Settings" || !section)?"selected":""),
     ]);
   return 0;
+}
+
+mapping get_variable_section( string s, object mod, RequestID id )
+{
+  Variable.Variable var = mod->getvar( s );
+  LocaleString localized_name = var->name();
+  return low_variable_section(localized_name, mod, id);
 }
 
 array get_variable_maps( object mod, 
@@ -627,6 +633,11 @@ array get_variable_sections( object mod, mapping m, RequestID id )
                        lambda( mapping q ) {
                          return !w[ q->section ]++;
                        });
+  if (mod == roxen && mod->register_fsgarb) {
+    variables += ({
+      low_variable_section(LOCALE(0, "Filesystem GC:"), mod, id),
+    });
+  }
   sort( variables->section, variables );
   return variables;
 }

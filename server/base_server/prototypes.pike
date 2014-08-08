@@ -2758,23 +2758,20 @@ class RequestID
   
   protected string charset_name(function|string what)
   {
-    switch (what) {
-    case string_to_unicode: return "ISO10646-1";
-    case string_to_utf8:    return "UTF-8";
-    default:                return upper_case((string) what);
-    }
+    if (what == string_to_unicode) return "ISO10646-1";
+    if (what == string_to_utf8) return "UTF-8";
+    return upper_case((string) what);
   }
 
   protected function charset_function(function|string what, int allow_entities)
   {
+    if (functionp(what)) return what;
     switch (what) {
     case "ISO-10646-1":
     case "ISO10646-1":
-    case string_to_unicode:
       return string_to_unicode;
       
     case "UTF-8":
-    case string_to_utf8:
       return string_to_utf8;
       
     default:
@@ -4007,7 +4004,7 @@ class User( UserDB database )
   //! implementation uses the crypted_password() method.
   {
     string c = crypted_password();
-    return !sizeof(c) || crypt(password, c);
+    return !sizeof(c) || verify_password(password, c);
   }
 
   int uid();

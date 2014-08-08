@@ -463,7 +463,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, args, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep(frame, "raw_tag_text"))
       frame->raw_tag_text = parser->raw_tag_text();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, parser->type, result);
@@ -478,7 +478,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, args, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep (frame, "raw_tag_text"))
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
@@ -503,7 +503,7 @@ class Tag
     Context ctx = parser->context;
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, 0, content);
-    if (!zero_type (frame->raw_tag_text))
+    if (object_variablep (frame, "raw_tag_text"))
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
@@ -3658,7 +3658,7 @@ class Frame
   {
 #ifdef MODULE_DEBUG
 #define CHECK_RAW_TEXT							\
-    if (zero_type (this_object()->raw_tag_text))			\
+    if (!object_variablep (this, "raw_tag_text"))			\
       fatal_error ("The variable raw_tag_text must be defined.\n");	\
     if (!stringp (this_object()->raw_tag_text))				\
       fatal_error ("raw_tag_text must have a string value.\n");
@@ -4237,6 +4237,9 @@ class Frame
 		    parser->finish (val); // Should not unwind.
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
+
+		    if (t->type_check) t->type_check(v);
+		    // FIXME: Add type-checking to the compiled code as well.
 
 		    if (t->sequential)
 		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
@@ -7443,6 +7446,30 @@ class TText
   }
 }
 
+TNarrowText t_narrowtext = TNarrowText();
+//! The type for plain text that needs to be narrow (eg HTTP headers
+//! and similar).
+
+//!
+//! @seealso
+//!    @[t_narrowtext]
+class TNarrowText
+{
+  inherit TText;
+  constant name = "text/x-8bit";
+  constant type_name = "RXML.t_narrowtext";
+  Type supertype = t_text;
+  Type conversion_type = t_text;
+
+  void type_check(mixed val, void|string msg, mixed ... args)
+  {
+    ::type_check(val);
+    if (stringp(val) && (String.width(val) > 8)) {
+      type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
+    }
+  }
+}
+
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
@@ -8309,7 +8336,7 @@ protected class PikeCompile
       "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    string txt = sprintf (
+    string txt = predef::sprintf (
       "# 1\n" // Workaround for pike 7.8 bug with large line numbers, [bug 6146].
       "%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
 
@@ -8318,7 +8345,10 @@ protected class PikeCompile
     cur_ids[id] = 1;
 
     // Be nice to the Pike compiler, and compile the code in segments.
-    if (code::_sizeof() >= 65536) compile();
+    if (code::_sizeof() >= 65536) {
+      lock = UNDEFINED;
+      compile();
+    }
 
     return id;
   }
@@ -8463,7 +8493,8 @@ protected class PikeCompile
       string errmsg = "Still got unresolved delayed resolve places:\n";
       foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
-	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+	errmsg += replace (predef::sprintf ("  %O[%O]: %O",
+					    what, index, what[index]),
 			   "\n", "\n  ") + "\n";
       }
       error (errmsg);
@@ -10319,11 +10350,20 @@ protected void init_parsers()
   p->add_entity ("lt", 0);
   p->add_entity ("gt", 0);
   p->add_entity ("amp", 0);
+  // FIXME: The following quotes ought to be filtered only in
+  //        attribute contexts.
+  p->add_entity ("quot", 0);
+  p->add_entity ("apos", 0);
+  // The following three are also in the parser_charref_table.
+  p->add_entity ("#34", 0);	// quot
+  p->add_entity ("#39", 0);	// apos
+  p->add_entity ("#x22", 0);	// quot
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
       TRY_DECODE_CHREF (chref,
-			if ((<"<", ">", "&">)[chr]) return ({p->current()}););
+			if ((<"<", ">", "&", "\"", "\'">)[chr])
+			  return ({p->current()}););
       return ({p->current()});
     });
   tolerant_xml_safe_charref_decode_parser = p;

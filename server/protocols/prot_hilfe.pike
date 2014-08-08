@@ -402,7 +402,7 @@ class Connection
 	}
 	break;
       case PASSWORD:
-	if( !crypt(line-"\n", user->password) )
+	if( !verify_password(line-"\n", user->password) )
 	{
 	  rl->readline->write("Wrong password\n");
 	  state=USER;
