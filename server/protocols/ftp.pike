@@ -3142,7 +3142,7 @@ class FTPSession
 
   void ftp_PBSZ(string args)
   {
-    if (!expect_argument("PROT", args)) return;
+    if (!expect_argument("PBSZ", args)) return;
 
     send(200, ({ "PBSZ=0" }));
   }
