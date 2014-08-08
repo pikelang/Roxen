@@ -2284,8 +2284,10 @@ class Protocol
 }
 
 #if constant(SSL.sslfile)
-class SSLProtocol
-//! Base protocol for SSL ports. Exactly like Port, but uses SSL.
+//! Base protocol for protocols that support upgrading to TLS.
+//!
+//! Exactly like Port, but contains settings for TLS.
+class StartTLSProtocol
 {
   inherit Protocol;
 
@@ -2542,21 +2544,6 @@ class SSLProtocol
     }
   }
 
-  SSL.sslfile accept()
-  {
-    Stdio.File q = ::accept();
-    if (q)
-      return SSL.sslfile (q, ctx);
-    return 0;
-  }
-
-  protected void bind (void|int ignore_eaddrinuse)
-  {
-    // Don't bind if we don't have correct certs.
-    if (!ctx->certificates) return;
-    ::bind (ignore_eaddrinuse);
-  }
-
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
     ctx->random = Crypto.Random.random_string;
@@ -2577,6 +2564,34 @@ class SSLProtocol
     //        at the same time.
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
+  }
+
+  string _sprintf( )
+  {
+    return "StartTLSProtocol(" + get_url() + ")";
+  }
+}
+
+class SSLProtocol
+//! Base protocol for SSL ports.
+//!
+//! Exactly like Port, but uses SSL.
+{
+  inherit StartTLSProtocol;
+
+  SSL.sslfile accept()
+  {
+    Stdio.File q = ::accept();
+    if (q)
+      return SSL.sslfile (q, ctx);
+    return 0;
+  }
+
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    if (!ctx->certificates) return;
+    ::bind (ignore_eaddrinuse);
   }
 
   string _sprintf( )
@@ -5914,6 +5929,7 @@ int main(int argc, array tmp)
 #endif
 
 #if constant(SSL.sslfile)
+  add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
 
