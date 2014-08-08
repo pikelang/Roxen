@@ -2591,12 +2591,11 @@ class SSLProtocol
       return;
     }
 
-    if (sizeof(ctx->cert_pairs)) {
-      // We must reset the set of certificates.
-      ctx = SSLContext();
-      set_version();
-      filter_preferred_suites();
-    }
+    // FIXME: Only do this if there are certs loaded?
+    // We must reset the set of certificates.
+    ctx = SSLContext();
+    set_version();
+    filter_preferred_suites();
 
     mapping(string:array(int)) cert_lookup = ([]);
     foreach(decoded_certs; int no; Standards.X509.TBSCertificate tbs) {
@@ -2644,6 +2643,8 @@ class SSLProtocol
       ctx->add_cert(key, rows(certificates, cert_nos), ({ name }));
     }
 
+#if 0
+    // FIXME: How do this in current Pike 8.0?
     if (!sizeof(ctx->cert_pairs)) {
       CERT_ERROR(Certificates,
 		 LOC_M(0,"No matching keys and certificates found.\n"));
@@ -2653,6 +2654,7 @@ class SSLProtocol
       cert_failure = 1;
       return;
     }
+#endif
 
     if (!bound) {
       bind (ignore_eaddrinuse);
@@ -2885,7 +2887,7 @@ class SSLProtocol
   protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
-    if (!sizeof(ctx->cert_pairs)) return;
+    // if (!sizeof(ctx->cert_pairs)) return;
     ::bind (ignore_eaddrinuse);
   }
 #else
