@@ -1528,9 +1528,29 @@ class FTPSession
       DWRITE("FTP2: write_cb(): Sending \"\"\n");
       return("");	// Shouldn't happen, but...
     } else {
-      string s = to_send->get();
+      string|int s = to_send->get();
 
-      DWRITE("FTP2: write_cb(): Sending \"%s\"\n", s);
+      if (s == 1) {
+	DWRITE("FTP2: write_cb(): STARTTLS.\n");
+
+	// NB: This callback is only called when the send buffers
+	//     are empty, and it is thus safe to switch to TLS.
+
+	// Switch to TLS.
+	if (!fd->renegotiate) {
+#if constant(SSL.File)
+	  fd = SSL.File(fd, port_obj->ctx);
+	  fd->accept();
+#else
+	  fd = SSL.sslfile(fd, port_obj->ctx);
+#endif
+	  // Restore the callbacks in the new SSL connection.
+	  ::set_write_callback(write_cb);
+	}
+	return "";
+      }
+
+      DWRITE("FTP2: write_cb(): Sending %O.\n", s);
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
@@ -2755,10 +2775,53 @@ class FTPSession
       destruct(pasv_port);
       pasv_port = 0;
     }
-    if (args != 1) {
-      // Not called by QUIT.
+    if (!args || !intp(args)) {
+      // Not called by QUIT or AUTH.
       send(220, ({ "Server ready for new user." }));
     }
+  }
+
+  void ftp_AUTH(string args)
+  {
+    if (!expect_argument("AUTH", args)) return;
+
+    args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
+
+    // RFC 4217 17:
+    // To request the TLS protocol in accordance with this document,
+    // the client MUST use 'TLS'
+    //
+    //    To maintain backward compatibility with older versions of this
+    //    document, the server SHOULD accept 'TLS-C' as a synonym for 'TLS'.
+    if (!(< "TLS", "SSL", "SSL-C", "TLS-C" >)[args]) {
+      // RFC 2228 AUTH:
+      // If the server does not understand the named security mechanism, it
+      // should respond with reply code 504.
+      send(504, ({ "Unknown authentication mechanism." }));
+      return;
+    }
+    if (!port_obj->ctx) {
+      // RFC 2228 AUTH:
+      // If the server is not willing to accept the named security
+      // mechanism, it should respond with reply code 534.
+      send(534, ({ "TLS not configured." }));
+      return;
+    }
+    // RFC 2228 AUTH:
+    // The AUTH command, if accepted, removes any state associated with
+    // prior FTP Security commands. The server must also require that the
+    // user reauthorize (that is, reissue some or all of the USER, PASS,
+    // and ACCT commands) in this case (see section 4 for an explanation
+    // of "authorize" in this context).
+    //
+    // RFC 4217 4.2 requires REIN.
+    ftp_REIN(2);
+
+    low_send(234, ({ "TLS enabled." }));
+    to_send->put(1);	// Switch to TLS marker.
+
+    busy = 0;
+    next_cmd();
   }
 
   void ftp_USER(string args)
@@ -3600,11 +3663,15 @@ class FTPSession
 				lambda(string s) {
 				  return(this_object()["ftp_"+s]);
 				}));
+    if (!port_obj->ctx) {
+      a -= ({ "AUTH" });
+    }
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
 			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
 			      "MLSD":"",
+			      "AUTH":"AUTH TLS",
 		    ])[s] || s);
 		  }) - ({ "" });
 
@@ -4000,7 +4067,7 @@ class FTPSession
 
     if (cmd_help[cmd]) {
       if (!logged_in) {
-	if (!(< "REIN", "USER", "PASS", "SYST",
+	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
 		"ACCT", "QUIT", "ABOR", "HELP" >)[cmd]) {
 	  send(530, ({ "You need to login first." }));
 
