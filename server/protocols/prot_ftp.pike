@@ -1,7 +1,12 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2009, Roxen IS.
 
+#if constant(StartTLSProtocol)
+inherit StartTLSProtocol;
+#else
 inherit Protocol;
+#endif
+
 constant supports_ipless = 0;
 constant name = "ftp";
 constant prot_name = "ftp";
