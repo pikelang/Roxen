@@ -2844,7 +2844,7 @@ class SSLProtocol
   protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
-    if (!sizeof(ctx->cert_pairs)) return;
+    // if (!sizeof(ctx->cert_pairs)) return;
     ::bind (ignore_eaddrinuse);
   }
 #else
