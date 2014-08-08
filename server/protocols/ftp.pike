@@ -1548,6 +1548,20 @@ class FTPSession
 	  ::set_write_callback(write_cb);
 	}
 	return "";
+      } else if (s == 2) {
+	DWRITE("FTP2: write_cb(): ENDTLS.\n");
+
+	if (fd->renegotiate &&
+	    !has_prefix(sprintf("%O", port_obj), "SSLProtocol")) {
+	  // Active StartTLS connection.
+	  fd = fd->shutdown();
+
+	  if (fd) {
+	    // Move the callbacks back to the raw connection.
+	    ::set_write_callback(write_cb);
+	  }
+	}
+	return "";
       }
 
       DWRITE("FTP2: write_cb(): Sending %O.\n", s);
@@ -2775,9 +2789,19 @@ class FTPSession
       destruct(pasv_port);
       pasv_port = 0;
     }
-    if (!args || !intp(args)) {
+    if (args != 1) {
       // Not called by QUIT or AUTH.
-      send(220, ({ "Server ready for new user." }));
+      low_send(220, ({ "Server ready for new user." }));
+
+      // RFC 4217 13:
+      //   When this command is processed by the server, the TLS
+      //   session(s) MUST be cleared and the control and data
+      //   connections revert to unprotected, clear communications.
+      to_send->put(2);	// End TLS marker.
+      use_ssl = 0;
+
+      busy = 0;
+      next_cmd();
     }
   }
 
@@ -2815,7 +2839,7 @@ class FTPSession
     // of "authorize" in this context).
     //
     // RFC 4217 4.2 requires REIN.
-    ftp_REIN(2);
+    ftp_REIN(1);
 
     low_send(234, ({ "TLS enabled." }));
     to_send->put(1);	// Switch to TLS marker.
