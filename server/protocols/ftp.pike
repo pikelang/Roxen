@@ -1794,11 +1794,19 @@ class FTPSession
     Stdio.File raw_connection = f;
 
     if (use_ssl) {
+      // RFC 4217 7:
+      // For i) and ii), the FTP client MUST be the TLS client and the FTP
+      // server MUST be the TLS server.
+      //
+      // That is to say, it does not matter which side initiates the
+      // connection with a connect() call or which side reacts to the
+      // connection via the accept() call; the FTP client, as defined in
+      // [RFC-959], is always the TLS client, as defined in [RFC-2246].
 #if constant(SSL.File)
       f = SSL.File(f, port_obj->ctx);
-      f->connect();
+      f->accept();
 #else
-      f = SSL.sslfile (f, port_obj->ctx, 1, 0);
+      f = SSL.sslfile (f, port_obj->ctx);
 #endif
     }
 
