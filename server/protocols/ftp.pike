@@ -2891,6 +2891,26 @@ class FTPSession
     next_cmd();
   }
 
+  void ftp_CCC(string args)
+  {
+    if (!fd->renegotiate) {
+      // Not AUTH TLS
+      send(533, ({ "Command connection not protected." }));
+      return;
+    }
+    if (master_session->my_fd->renegotiate) {
+      // ftps
+      send(534, ({ "Not allowed for ftps." }));
+      return;
+    }
+
+    low_send(200, ({ "TLS disabled." }));
+    to_send->put(2);	// Disable TLS marker.
+
+    busy = 0;
+    next_cmd();
+  }
+
   void ftp_USER(string args)
   {
     logout();
@@ -3187,6 +3207,11 @@ class FTPSession
   {
     if (!expect_argument("PBSZ", args)) return;
 
+    if (!fd->renegotiate) {
+      send(536, ({ "Only allowed for authenticated command connections." }));
+      return;
+    }
+
     send(200, ({ "PBSZ=0" }));
   }
 
@@ -3195,23 +3220,28 @@ class FTPSession
     if (!expect_argument("PROT", args)) return;
 
     args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
+
+    SSLMode wanted;
     switch(args) {
     case "C": // Clear.
-      use_ssl = SSL_NONE;
+      wanted = SSL_NONE;
       break;
     case "S": // Safe.
     case "E": // Confidential.
     case "P": // Private.
-      if (!fd->renegotiate) {
-	send(536, ({ sprintf("Only supported over TLS.") }));
-	return;
-      }
-      use_ssl = SSL_ALL;
+      wanted = SSL_ALL;
       break;
     default:
       send(504, ({ sprintf("Unknown protection level: %s", args) }));
       return;
     }
+
+    if (!fd->renegotiate) {
+      send(536, ({ sprintf("Only supported over TLS.") }));
+      return;
+    }
+
+    use_ssl = wanted;
     send(200, ({ "OK" }));
   }
 
@@ -3732,6 +3762,10 @@ class FTPSession
 				}));
     if (!port_obj->ctx) {
       a -= ({ "AUTH" });
+    }
+    if (master_session->my_fd->renegotiate) {
+      // ftps.
+      a -= ({ "CCC" });
     }
     a = Array.map(a,
 		  lambda(string s) {
