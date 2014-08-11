@@ -4259,6 +4259,11 @@ class FTPSession
 	   mkmapping(indices(conf), values(conf)), port_obj->urls);
 #endif /* 0 */
 
+    if (fd->renegotiate) {
+      // Default to PROT P for ftps (aka implicit ftp/ssl).
+      use_ssl = SSL_ALL;
+    }
+
     master_session = RequestID2();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
     master_session->conf = conf;
