@@ -161,10 +161,16 @@ void set_up_ftp_variables( Protocol o )
 		 "so depending on your network configuration you may need "
 		 "to disable them. "));
 
-  defvar( "require_starttls", 1, LOCALE(0, "Require AUTH TLS on ftps"),
-	  TYPE_FLAG,
-	  LOCALE(0, "Require the AUTH TLS command (RFC4217) before login."
-		 "This setting is only relevant for the ftps protocol."));
+  defvar( "require_starttls",
+	  Variable.IntChoice
+	  (0, ([
+	    -1: "Disabled",
+	     0: "Optional",
+	     1: "Required",
+	   ]), 0,
+	   LOCALE(0, "AUTH TLS"),
+	   LOCALE(0, "Whether to require the AUTH TLS command (RFC4217) "
+		  "before login.")));
 }
 
 

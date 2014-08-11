@@ -2847,7 +2847,8 @@ class FTPSession
       send(504, ({ "Unknown authentication mechanism." }));
       return;
     }
-    if (!port_obj->ctx) {
+    if ((port_obj->query_option("require_starttls") < 0) ||
+	!port_obj->ctx) {
       // RFC 2228 AUTH:
       // If the server is not willing to accept the named security
       // mechanism, it should respond with reply code 534.
@@ -3201,8 +3202,8 @@ class FTPSession
     case "S": // Safe.
     case "E": // Confidential.
     case "P": // Private.
-      if (!port_obj->ctx) {
-	send(536, ({ sprintf("Only supported over FTPS") }));
+      if (!fd->renegotiate) {
+	send(536, ({ sprintf("Only supported over TLS.") }));
 	return;
       }
       use_ssl = SSL_ALL;
@@ -4140,7 +4141,7 @@ class FTPSession
 	  return;
 	}
 	if (port_obj->ctx && !fd->renegotiate &&
-	    port_obj->query_option("require_starttls")) {
+	    (port_obj->query_option("require_starttls") == 1)) {
 	  if (!(< "REIN", "AUTH", "QUIT", "ABOR", "HELP", "SYST" >)[cmd]) {
 	    send(530, ({ "You need to AUTH TLS first." }));
 
