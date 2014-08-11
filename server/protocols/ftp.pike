@@ -1744,15 +1744,6 @@ class FTPSession
 	mark_fd(fd->query_fd(),
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
-	if (use_ssl) {
-#if constant(SSL.File)
-	  fd = SSL.File(fd, port_obj->ctx);
-	  fd->accept();
-#else
-	  fd = SSL.sslfile (fd, port_obj->ctx);
-#endif
-	  DWRITE("FTP: Created an sslfile: %O\n", fd);
-	}
 	if(pasv_callback) {
 	  pasv_callback(fd, "", @pasv_args);
 	  pasv_callback = 0;
@@ -1827,23 +1818,6 @@ class FTPSession
 
     Stdio.File raw_connection = f;
 
-    if (use_ssl) {
-      // RFC 4217 7:
-      // For i) and ii), the FTP client MUST be the TLS client and the FTP
-      // server MUST be the TLS server.
-      //
-      // That is to say, it does not matter which side initiates the
-      // connection with a connect() call or which side reacts to the
-      // connection via the accept() call; the FTP client, as defined in
-      // [RFC-959], is always the TLS client, as defined in [RFC-2246].
-#if constant(SSL.File)
-      f = SSL.File(f, port_obj->ctx);
-      f->accept();
-#else
-      f = SSL.sslfile (f, port_obj->ctx);
-#endif
-    }
-
     f->set_nonblocking(lambda(mixed ignored, string data) {
 			 DWRITE("FTP: async_connect ok. Got data.\n");
 			 f->set_nonblocking(0,0,0,0,0);
@@ -1894,6 +1868,19 @@ class FTPSession
   /*
    * Data connection handling
    */
+
+  enum SSLMode {
+    SSL_NONE = 0,
+    SSL_ACTIVE = 1,
+    SSL_PASSIVE = 2,
+    SSL_ALL = 3,
+  };
+
+  // Set to SSL_ALL by PROT S,E and P.
+  // Cleared by PROT C.
+  // Set to SSL_ACTIVE by AUTH SSL.
+  SSLMode use_ssl;
+
   private void send_done_callback(array(object) args)
   {
     DWRITE("FTP: send_done_callback()\n");
@@ -2080,6 +2067,29 @@ class FTPSession
 	send(150, ({ sprintf("Opening %s mode data connection for %s",
 			     modes[file->mode], file->full_path) }));
       }
+
+      SSLMode ssl_mask = SSL_ACTIVE;
+      if (pasv_port) ssl_mask = SSL_PASSIVE;
+
+      if (use_ssl & ssl_mask) {
+	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+
+	// RFC 4217 7:
+	// For i) and ii), the FTP client MUST be the TLS client and the FTP
+	// server MUST be the TLS server.
+	//
+	// That is to say, it does not matter which side initiates the
+	// connection with a connect() call or which side reacts to the
+	// connection via the accept() call; the FTP client, as defined in
+	// [RFC-959], is always the TLS client, as defined in [RFC-2246].
+#if constant(SSL.File)
+	fd = SSL.File(fd, port_obj->ctx);
+	fd->accept();
+#else
+	fd = SSL.sslfile(fd, port_obj->ctx);
+#endif
+	DWRITE("FTP: Created an sslfile: %O\n", fd);
+      }
     }
     else
     {
@@ -2177,6 +2187,21 @@ class FTPSession
     if (fd) {
       send(150, ({ sprintf("Opening %s mode data connection for %s.",
 			   modes[mode], args) }));
+
+      SSLMode ssl_mask = SSL_ACTIVE;
+      if (pasv_port) ssl_mask = SSL_PASSIVE;
+
+      if (use_ssl & ssl_mask) {
+	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+
+#if constant(SSL.File)
+	fd = SSL.File(fd, port_obj->ctx);
+	fd->accept();
+#else
+	fd = SSL.sslfile (fd, port_obj->ctx);
+#endif
+	DWRITE("FTP: Created an sslfile: %O\n", fd);
+      }
     } else {
       send(425, ({ "Can't build data connect: Connection refused." }));
       return;
@@ -2763,8 +2788,6 @@ class FTPSession
 
   // Set to 1 by EPSV ALL.
   int epsv_only;
-  // Set to 1 by PROT S,E and P, cleared by PROT C.
-  int use_ssl;
 
   void ftp_REIN(string|int args)
   {
@@ -2798,7 +2821,7 @@ class FTPSession
       //   session(s) MUST be cleared and the control and data
       //   connections revert to unprotected, clear communications.
       to_send->put(2);	// End TLS marker.
-      use_ssl = 0;
+      use_ssl = SSL_NONE;
 
       busy = 0;
       next_cmd();
@@ -2817,7 +2840,7 @@ class FTPSession
     //
     //    To maintain backward compatibility with older versions of this
     //    document, the server SHOULD accept 'TLS-C' as a synonym for 'TLS'.
-    if (!(< "TLS", "SSL", "SSL-C", "TLS-C" >)[args]) {
+    if (!(< "TLS", "SSL", "SSL-C", "TLS-C", "SSL-P", "TLS-P" >)[args]) {
       // RFC 2228 AUTH:
       // If the server does not understand the named security mechanism, it
       // should respond with reply code 504.
@@ -2843,6 +2866,25 @@ class FTPSession
 
     low_send(234, ({ "TLS enabled." }));
     to_send->put(1);	// Switch to TLS marker.
+
+    // Compatibility with early draft-murray-auth-ftp-ssl
+    // (drafts of RFC 4217).
+    if (args == "TLS-P") {
+      // AUTH TLS-P: Enable PROT P by default.
+      use_ssl = SSL_ALL;
+    } else if ((args == "SSL") || (args == "SSL-P")) {
+      // AUTH SSL: Enable PROT P by default in active mode.
+      //
+      // Use SSL/TLS for the data connection in active mode but
+      // not in passive mode. This behaviour probably has to do
+      // with the server initiating the connection in passive mode,
+      // which would imply it to be the SSL/TLS client.
+      //
+      // cf RFC 4217 (AUTH TLS) which solves this by having
+      // the server being the SSL/TLS server in both modes.
+      use_ssl = SSL_ACTIVE;
+    }
+    // NB: AUTH SSL-C is "Don't encrypt data channel".
 
     busy = 0;
     next_cmd();
@@ -3154,7 +3196,7 @@ class FTPSession
     args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
     switch(args) {
     case "C": // Clear.
-      use_ssl = 0;
+      use_ssl = SSL_NONE;
       break;
     case "S": // Safe.
     case "E": // Confidential.
@@ -3163,7 +3205,7 @@ class FTPSession
 	send(536, ({ sprintf("Only supported over FTPS") }));
 	return;
       }
-      use_ssl = 1;
+      use_ssl = SSL_ALL;
       break;
     default:
       send(504, ({ sprintf("Unknown protection level: %s", args) }));
