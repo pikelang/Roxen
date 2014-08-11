@@ -1528,9 +1528,43 @@ class FTPSession
       DWRITE("FTP2: write_cb(): Sending \"\"\n");
       return("");	// Shouldn't happen, but...
     } else {
-      string s = to_send->get();
+      string|int s = to_send->get();
 
-      DWRITE("FTP2: write_cb(): Sending \"%s\"\n", s);
+      if (s == 1) {
+	DWRITE("FTP2: write_cb(): STARTTLS.\n");
+
+	// NB: This callback is only called when the send buffers
+	//     are empty, and it is thus safe to switch to TLS.
+
+	// Switch to TLS.
+	if (!fd->renegotiate) {
+#if constant(SSL.File)
+	  fd = SSL.File(fd, port_obj->ctx);
+	  fd->accept();
+#else
+	  fd = SSL.sslfile(fd, port_obj->ctx);
+#endif
+	  // Restore the callbacks in the new SSL connection.
+	  ::set_write_callback(write_cb);
+	}
+	return "";
+      } else if (s == 2) {
+	DWRITE("FTP2: write_cb(): ENDTLS.\n");
+
+	if (fd->renegotiate &&
+	    !has_prefix(sprintf("%O", port_obj), "SSLProtocol")) {
+	  // Active StartTLS connection.
+	  fd = fd->shutdown();
+
+	  if (fd) {
+	    // Move the callbacks back to the raw connection.
+	    ::set_write_callback(write_cb);
+	  }
+	}
+	return "";
+      }
+
+      DWRITE("FTP2: write_cb(): Sending %O.\n", s);
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
@@ -1549,18 +1583,13 @@ class FTPSession
 #define low_next_cmd()	next_cmd()
 #endif
 
-  void send(int code, array(string) data, int|void enumerate_all)
+  void low_send(int code, array(string) data, int|void enumerate_all)
   {
-    DWRITE("FTP2: send(%d, %O)\n", code, data);
+    DWRITE("FTP2: low_send(%d, %O)\n", code, data);
 
     if (!data || end_marker) {
       end_marker = 1;
       ::set_write_callback(write_cb);
-      if (code >= 200) {
-	// Command finished, get the next.
-	busy = 0;
-	next_cmd();
-      }
       return;
     }
 
@@ -1589,6 +1618,14 @@ class FTPSession
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
     }
+  }
+
+  void send(int code, array(string) data, int|void enumerate_all)
+  {
+    DWRITE("FTP2: send(%d, %O)\n", code, data);
+
+    low_send(code, data, enumerate_all);
+
     if (code >= 200) {
       // Command finished, get the next.
       busy = 0;
@@ -1707,15 +1744,6 @@ class FTPSession
 	mark_fd(fd->query_fd(),
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
-	if (use_ssl) {
-#if constant(SSL.File)
-	  fd = SSL.File(fd, port_obj->ctx);
-	  fd->accept();
-#else
-	  fd = SSL.sslfile (fd, port_obj->ctx);
-#endif
-	  DWRITE("FTP: Created an sslfile: %O\n", fd);
-	}
 	if(pasv_callback) {
 	  pasv_callback(fd, "", @pasv_args);
 	  pasv_callback = 0;
@@ -1790,15 +1818,6 @@ class FTPSession
 
     Stdio.File raw_connection = f;
 
-    if (use_ssl) {
-#if constant(SSL.File)
-      f = SSL.File(f, port_obj->ctx);
-      f->connect();
-#else
-      f = SSL.sslfile (f, port_obj->ctx, 1, 0);
-#endif
-    }
-
     f->set_nonblocking(lambda(mixed ignored, string data) {
 			 DWRITE("FTP: async_connect ok. Got data.\n");
 			 f->set_nonblocking(0,0,0,0,0);
@@ -1849,6 +1868,19 @@ class FTPSession
   /*
    * Data connection handling
    */
+
+  enum SSLMode {
+    SSL_NONE = 0,
+    SSL_ACTIVE = 1,
+    SSL_PASSIVE = 2,
+    SSL_ALL = 3,
+  };
+
+  // Set to SSL_ALL by PROT S,E and P.
+  // Cleared by PROT C.
+  // Set to SSL_ACTIVE by AUTH SSL.
+  SSLMode use_ssl;
+
   private void send_done_callback(array(object) args)
   {
     DWRITE("FTP: send_done_callback()\n");
@@ -2035,6 +2067,29 @@ class FTPSession
 	send(150, ({ sprintf("Opening %s mode data connection for %s",
 			     modes[file->mode], file->full_path) }));
       }
+
+      SSLMode ssl_mask = SSL_ACTIVE;
+      if (pasv_port) ssl_mask = SSL_PASSIVE;
+
+      if (use_ssl & ssl_mask) {
+	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+
+	// RFC 4217 7:
+	// For i) and ii), the FTP client MUST be the TLS client and the FTP
+	// server MUST be the TLS server.
+	//
+	// That is to say, it does not matter which side initiates the
+	// connection with a connect() call or which side reacts to the
+	// connection via the accept() call; the FTP client, as defined in
+	// [RFC-959], is always the TLS client, as defined in [RFC-2246].
+#if constant(SSL.File)
+	fd = SSL.File(fd, port_obj->ctx);
+	fd->accept();
+#else
+	fd = SSL.sslfile(fd, port_obj->ctx);
+#endif
+	DWRITE("FTP: Created an sslfile: %O\n", fd);
+      }
     }
     else
     {
@@ -2132,6 +2187,21 @@ class FTPSession
     if (fd) {
       send(150, ({ sprintf("Opening %s mode data connection for %s.",
 			   modes[mode], args) }));
+
+      SSLMode ssl_mask = SSL_ACTIVE;
+      if (pasv_port) ssl_mask = SSL_PASSIVE;
+
+      if (use_ssl & ssl_mask) {
+	DWRITE("FTP: Initiating SSL/TLS connection.\n");
+
+#if constant(SSL.File)
+	fd = SSL.File(fd, port_obj->ctx);
+	fd->accept();
+#else
+	fd = SSL.sslfile (fd, port_obj->ctx);
+#endif
+	DWRITE("FTP: Created an sslfile: %O\n", fd);
+      }
     } else {
       send(425, ({ "Can't build data connect: Connection refused." }));
       return;
@@ -2718,8 +2788,6 @@ class FTPSession
 
   // Set to 1 by EPSV ALL.
   int epsv_only;
-  // Set to 1 by PROT S,E and P, cleared by PROT C.
-  int use_ssl;
 
   void ftp_REIN(string|int args)
   {
@@ -2745,9 +2813,82 @@ class FTPSession
       pasv_port = 0;
     }
     if (args != 1) {
-      // Not called by QUIT.
-      send(220, ({ "Server ready for new user." }));
+      // Not called by QUIT or AUTH.
+      low_send(220, ({ "Server ready for new user." }));
+
+      // RFC 4217 13:
+      //   When this command is processed by the server, the TLS
+      //   session(s) MUST be cleared and the control and data
+      //   connections revert to unprotected, clear communications.
+      to_send->put(2);	// End TLS marker.
+      use_ssl = SSL_NONE;
+
+      busy = 0;
+      next_cmd();
     }
+  }
+
+  void ftp_AUTH(string args)
+  {
+    if (!expect_argument("AUTH", args)) return;
+
+    args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
+
+    // RFC 4217 17:
+    // To request the TLS protocol in accordance with this document,
+    // the client MUST use 'TLS'
+    //
+    //    To maintain backward compatibility with older versions of this
+    //    document, the server SHOULD accept 'TLS-C' as a synonym for 'TLS'.
+    if (!(< "TLS", "SSL", "SSL-C", "TLS-C", "SSL-P", "TLS-P" >)[args]) {
+      // RFC 2228 AUTH:
+      // If the server does not understand the named security mechanism, it
+      // should respond with reply code 504.
+      send(504, ({ "Unknown authentication mechanism." }));
+      return;
+    }
+    if ((port_obj->query_option("require_starttls") < 0) ||
+	!port_obj->ctx) {
+      // RFC 2228 AUTH:
+      // If the server is not willing to accept the named security
+      // mechanism, it should respond with reply code 534.
+      send(534, ({ "TLS not configured." }));
+      return;
+    }
+    // RFC 2228 AUTH:
+    // The AUTH command, if accepted, removes any state associated with
+    // prior FTP Security commands. The server must also require that the
+    // user reauthorize (that is, reissue some or all of the USER, PASS,
+    // and ACCT commands) in this case (see section 4 for an explanation
+    // of "authorize" in this context).
+    //
+    // RFC 4217 4.2 requires REIN.
+    ftp_REIN(1);
+
+    low_send(234, ({ "TLS enabled." }));
+    to_send->put(1);	// Switch to TLS marker.
+
+    // Compatibility with early draft-murray-auth-ftp-ssl
+    // (drafts of RFC 4217).
+    if (args == "TLS-P") {
+      // AUTH TLS-P: Enable PROT P by default.
+      use_ssl = SSL_ALL;
+    } else if ((args == "SSL") || (args == "SSL-P")) {
+      // AUTH SSL: Enable PROT P by default in active mode.
+      //
+      // Use SSL/TLS for the data connection in active mode but
+      // not in passive mode. This behaviour probably has to do
+      // with the server initiating the connection in passive mode,
+      // which would imply it to be the SSL/TLS client.
+      //
+      // cf RFC 4217 (AUTH TLS) which solves this by having
+      // the server being the SSL/TLS server in both modes.
+      use_ssl = SSL_ACTIVE;
+    }
+    // NB: AUTH SSL-C is "Don't encrypt data channel".
+
+    busy = 0;
+    next_cmd();
   }
 
   void ftp_USER(string args)
@@ -3044,7 +3185,7 @@ class FTPSession
 
   void ftp_PBSZ(string args)
   {
-    if (!expect_argument("PROT", args)) return;
+    if (!expect_argument("PBSZ", args)) return;
 
     send(200, ({ "PBSZ=0" }));
   }
@@ -3056,16 +3197,16 @@ class FTPSession
     args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
     switch(args) {
     case "C": // Clear.
-      use_ssl = 0;
+      use_ssl = SSL_NONE;
       break;
     case "S": // Safe.
     case "E": // Confidential.
     case "P": // Private.
-      if (!port_obj->ctx) {
-	send(536, ({ sprintf("Only supported over FTPS") }));
+      if (!fd->renegotiate) {
+	send(536, ({ sprintf("Only supported over TLS.") }));
 	return;
       }
-      use_ssl = 1;
+      use_ssl = SSL_ALL;
       break;
     default:
       send(504, ({ sprintf("Unknown protection level: %s", args) }));
@@ -3589,11 +3730,15 @@ class FTPSession
 				lambda(string s) {
 				  return(this_object()["ftp_"+s]);
 				}));
+    if (!port_obj->ctx) {
+      a -= ({ "AUTH" });
+    }
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
 			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
 			      "MLSD":"",
+			      "AUTH":"AUTH TLS",
 		    ])[s] || s);
 		  }) - ({ "" });
 
@@ -3989,11 +4134,19 @@ class FTPSession
 
     if (cmd_help[cmd]) {
       if (!logged_in) {
-	if (!(< "REIN", "USER", "PASS", "SYST",
+	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
 		"ACCT", "QUIT", "ABOR", "HELP" >)[cmd]) {
 	  send(530, ({ "You need to login first." }));
 
 	  return;
+	}
+	if (port_obj->ctx && !fd->renegotiate &&
+	    (port_obj->query_option("require_starttls") == 1)) {
+	  if (!(< "REIN", "AUTH", "QUIT", "ABOR", "HELP", "SYST" >)[cmd]) {
+	    send(530, ({ "You need to AUTH TLS first." }));
+
+	    return;
+	  }
 	}
       }
       if (!port_obj->query_option("rfc2428_support") &&

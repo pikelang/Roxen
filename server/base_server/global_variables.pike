@@ -160,6 +160,17 @@ void set_up_ftp_variables( Protocol o )
 		 "Some firewalls don't handle these commands properly, "
 		 "so depending on your network configuration you may need "
 		 "to disable them. "));
+
+  defvar( "require_starttls",
+	  Variable.IntChoice
+	  (0, ([
+	    -1: "Disabled",
+	     0: "Optional",
+	     1: "Required",
+	   ]), 0,
+	   LOCALE(0, "AUTH TLS"),
+	   LOCALE(0, "Whether to require the AUTH TLS command (RFC4217) "
+		  "before login.")));
 }
 
 

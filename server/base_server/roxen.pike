@@ -2364,8 +2364,10 @@ class SSLContext {
 #endif
 }
 
-class SSLProtocol
-//! Base protocol for SSL ports. Exactly like Port, but uses SSL.
+//! Base protocol for protocols that support upgrading to TLS.
+//!
+//! Exactly like Port, but contains settings for TLS.
+class StartTLSProtocol
 {
   inherit Protocol;
 
@@ -2872,33 +2874,6 @@ class SSLProtocol
     }
   }
 
-  SSL.sslfile accept()
-  {
-    Stdio.File q = ::accept();
-    if (q) {
-      SSL.sslfile ssl = SSL.sslfile (q, ctx);
-      if (ssl->accept) ssl->accept();
-      return ssl;
-    }
-    return 0;
-  }
-
-#if constant(SSL.Connection)
-  protected void bind (void|int ignore_eaddrinuse)
-  {
-    // Don't bind if we don't have correct certs.
-    // if (!sizeof(ctx->cert_pairs)) return;
-    ::bind (ignore_eaddrinuse);
-  }
-#else
-  protected void bind (void|int ignore_eaddrinuse)
-  {
-    // Don't bind if we don't have correct certs.
-    if (!ctx->certificates) return;
-    ::bind (ignore_eaddrinuse);
-  }
-#endif
-
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
     ctx->random = Crypto.Random.random_string;
@@ -2926,6 +2901,46 @@ class SSLProtocol
     getvar("ssl_min_version")->set_changed_callback(set_version);
 #endif
   }
+
+  string _sprintf( )
+  {
+    return "StartTLSProtocol(" + get_url() + ")";
+  }
+}
+
+class SSLProtocol
+//! Base protocol for SSL ports.
+//!
+//! Exactly like Port, but uses SSL.
+{
+  inherit StartTLSProtocol;
+
+  SSL.sslfile accept()
+  {
+    Stdio.File q = ::accept();
+    if (q) {
+      SSL.sslfile ssl = SSL.sslfile (q, ctx);
+      if (ssl->accept) ssl->accept();
+      return ssl;
+    }
+    return 0;
+  }
+
+#if constant(SSL.Connection)
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    // if (!sizeof(ctx->cert_pairs)) return;
+    ::bind (ignore_eaddrinuse);
+  }
+#else
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    if (!ctx->certificates) return;
+    ::bind (ignore_eaddrinuse);
+  }
+#endif
 
   string _sprintf( )
   {
@@ -6375,6 +6390,7 @@ int main(int argc, array tmp)
 #endif
 
 #if constant(SSL.sslfile)
+  add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
 
