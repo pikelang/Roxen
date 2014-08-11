@@ -4135,14 +4135,15 @@ class FTPSession
     if (cmd_help[cmd]) {
       if (!logged_in) {
 	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
-		"ACCT", "QUIT", "ABOR", "HELP" >)[cmd]) {
+		"ACCT", "QUIT", "ABOR", "HELP", "FEAT" >)[cmd]) {
 	  send(530, ({ "You need to login first." }));
 
 	  return;
 	}
 	if (port_obj->ctx && !fd->renegotiate &&
 	    (port_obj->query_option("require_starttls") == 1)) {
-	  if (!(< "REIN", "AUTH", "QUIT", "ABOR", "HELP", "SYST" >)[cmd]) {
+	  if (!(< "REIN", "AUTH", "QUIT", "ABOR", "HELP", "SYST",
+		  "FEAT" >)[cmd]) {
 	    send(530, ({ "You need to AUTH TLS first." }));
 
 	    return;
