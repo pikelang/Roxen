@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.99 1999/05/01 18:18:55 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2172,8 +2172,11 @@ class FTPSession
     if (st[1] >= 0) {
       facts->size = (string)st[1];
       facts->type = "File";
-      facts["media-type"] = session->conf->type_from_filename(f) ||
-	"application/octet-stream";
+      string|array(string) ct = session->conf->type_from_filename(f);
+      if (arrayp(ct)) {
+	ct = (sizeof(ct) > 1) && ct[1];
+      }
+      facts["media-type"] = ct || "application/octet-stream";
     } else {
       facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
