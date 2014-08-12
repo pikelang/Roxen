@@ -2595,6 +2595,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 	throw(err);
       return dir;
     }
+    TRACE_LEAVE("");
     id->not_query=of;
   }
 #endif /* URL_MODULES */
