@@ -2924,7 +2924,7 @@ class FTPSession
     logged_in = 0;
     cwd = "/";
     master_session->method = "LOGIN";
-    if ((< 0, "ftp", "anonymous" >)[user]) {
+    if ((< 0, "", "ftp", "anonymous" >)[user]) {
       master_session->not_query = "Anonymous";
       user = 0;
       if (port_obj->query_option("anonymous_ftp")) {
@@ -2949,6 +2949,13 @@ class FTPSession
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
+      if (port_obj->ctx && !fd->renegotiate &&
+	  (port_obj->query_option("require_starttls") == 1)) {
+	conf->log(([ "error":403 ]), master_session);
+	send(530, ({ "You need to AUTH TLS first." }));
+
+	return;
+      }
       if (check_login()) {
 	send(331, ({ sprintf("Password required for %s.", user) }));
 	master_session->not_query = user;
@@ -2986,6 +2993,17 @@ class FTPSession
       } else {
 	send(503, ({ "Login with USER first." }));
       }
+      return;
+    }
+
+    if (port_obj->ctx && !fd->renegotiate &&
+	(port_obj->query_option("require_starttls") == 1)) {
+      // NB: Reachable through the following exotic command sequence:
+      //
+      //     AUTH TLS, USER, PASS, CCC, PASS
+      conf->log(([ "error":403 ]), master_session);
+      send(530, ({ "You need to AUTH TLS first." }));
+
       return;
     }
 
@@ -4176,15 +4194,6 @@ class FTPSession
 	  send(530, ({ "You need to login first." }));
 
 	  return;
-	}
-	if (port_obj->ctx && !fd->renegotiate &&
-	    (port_obj->query_option("require_starttls") == 1)) {
-	  if (!(< "REIN", "AUTH", "QUIT", "ABOR", "HELP", "SYST",
-		  "FEAT" >)[cmd]) {
-	    send(530, ({ "You need to AUTH TLS first." }));
-
-	    return;
-	  }
 	}
       }
       if (!port_obj->query_option("rfc2428_support") &&
