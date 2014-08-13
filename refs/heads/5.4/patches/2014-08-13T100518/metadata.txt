@@ -1,0 +1,71 @@
+subject: Roxen 5.4: Multiple fixes:
+from: cefd1481472b303a76d3fcebec9a660811640c8f
+to: 550f76b70c381fe79dd7ed19cb0531c305bc10a5
+originator: wellhardh@roxen.com
+depends: 2014-08-05T104241
+restart: true
+
+Multiple fixes:
+
+  * Rxnpatch: Support multiple revisions of clusters.
+    
+    Prepares for fixing [bug 7225].
+
+  * Rxnpatch: Support creation of multiple clusters on the same day.
+    
+    If a cluster already exists, a revision number will be appended
+    to the timestamp (starting with "-02") to make it unique.
+    
+    Fixes [bug 7225].
+
+  * Rxnpatch: Added some cluster creation paranoia.
+    
+    Cluster creation now aborts (instead of making an invalid tar file)
+    if a contained filename is too long (ie 100 characters or more).
+    This is unlikely to ever happen, but...
+
+  * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
+    
+    Conflicts:
+    	.gitattributes
+
+  * Debug: Moved gc histograms to a separate debug flag.
+    
+    The gc histograms are now enabled with -DLOG_GC_HISTOGRAMS
+    (or -DLOG_GC_VERBOSE).
+    
+    Fixes [bug 7197].
+
+  * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
+
+  * FTP: Improved command serialization when FTP_USE_HANDLER_THREADS.
+    
+    Now uses (a slightly modified) Thread.Queue instead of an ADT.Queue.
+    
+    Make sure that next_cmd()/low_next_cmd() always is executed from the
+    backend thread.
+    
+    Both of the above should reduce issues with race conditions.
+    
+    Fixes some of [bug 2748].
+
+  * FTP: Generate the ls(1) output synchronously in handler mode.
+    
+    Fixes some more of [bug 2748] and [bug 2779].
+
+  * Check index files against dir listing before stat.
+    
+    This can improve performance a whole lot if the underlying filesystem
+    is slow.
+
+  * Check banish list before looking up userinfo.
+    
+    This can improve performance quite a bit if the underlying user DB is slow,
+    typically with .htaccess lookups. Also added some defaults mentioned in
+    [bug 5956].
+
+  * FTP: Fixed bug in MLSD/MLST handling.
+    
+    It failed when there was an active content-type module.
+    
+    Fixes [bug 7229].
