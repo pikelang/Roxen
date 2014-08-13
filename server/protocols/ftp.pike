@@ -93,6 +93,11 @@
 
 #define FTP2_TIMEOUT	(5*60)
 
+#ifdef ENABLE_THREADS
+// Enable the use of handler threads.
+#define FTP_USE_HANDLER_THREADS
+#endif
+
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
