@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: FTP Fixes, GC histigrams, htaccess optimization
 from: cefd1481472b303a76d3fcebec9a660811640c8f
 to: 550f76b70c381fe79dd7ed19cb0531c305bc10a5
 originator: wellhardh@roxen.com
@@ -26,17 +26,12 @@ Multiple fixes:
 
   * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
     
-    Conflicts:
-    	.gitattributes
-
   * Debug: Moved gc histograms to a separate debug flag.
     
     The gc histograms are now enabled with -DLOG_GC_HISTOGRAMS
     (or -DLOG_GC_VERBOSE).
     
     Fixes [bug 7197].
-
-  * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
 
   * FTP: Improved command serialization when FTP_USE_HANDLER_THREADS.
     
