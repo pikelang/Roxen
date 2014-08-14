@@ -494,6 +494,12 @@ private
 	  // any tables in it will cause errors to be thrown.
 	  continue;
 	}
+	if (lower_case(dbname) == "performance_schema") {
+	  // This is a virtual read-only db containing metadata
+	  // about the other tables, etc. Attempting to repair
+	  // any tables in it will cause errors to be thrown.
+	  continue;
+	}
 	werror("DBManager: Repairing tables in the local db %O...\n", dbname);
 	Sql.Sql sql = connect_to_my_mysql(0, dbname);
 	foreach(sql->list_tables(), string table) {
