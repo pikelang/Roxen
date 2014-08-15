@@ -2079,7 +2079,7 @@ protected class SQLResKey
   {
     return real->fetch_row();
   }
-  static int|string fetch_json_result()
+  protected int|string fetch_json_result()
   {
     return real->fetch_json_result();
   }

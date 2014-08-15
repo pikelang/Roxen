@@ -2813,7 +2813,7 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-static constant xml_invalid_mappings = ([
+protected constant xml_invalid_mappings = ([
   "\0":"\22000",  "\1":"\22001",
   "\2":"\22002",  "\3":"\22003",
   "\4":"\22004",  "\5":"\22005",
@@ -5164,7 +5164,7 @@ string get_server_url(Configuration c)
 }
 
 #ifndef NO_DNS
-static private array(string) local_addrs;
+private array(string) local_addrs;
 #endif
 
 string get_world(array(string) urls) {

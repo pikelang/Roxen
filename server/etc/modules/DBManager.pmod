@@ -865,7 +865,7 @@ int is_mysql( string db )
   return !(db = db_url( db )) || has_prefix( db, "mysql://" );
 }
 
-static mapping(string:mixed) convert_obj_to_mapping(object|mapping o)
+protected mapping(string:mixed) convert_obj_to_mapping(object|mapping o)
 {
   if (mappingp(o)) return o;
   return mkmapping(indices(o), values(o));
