@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.86 2009/05/15 12:30:26 grubba Exp $
+// $Id$
 
 //! Manages database aliases and permissions
 
@@ -1458,7 +1458,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--all",
+  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
 			 "--complete-insert", "--compress",
 			 "--extended-insert", "--hex-blob",
 			 "--quick", "--quote-names" });
