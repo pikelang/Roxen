@@ -1804,7 +1804,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--all",
+  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
 			 "--complete-insert", "--compress",
 			 "--extended-insert", "--hex-blob",
 			 "--quick", "--quote-names" });
