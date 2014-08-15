@@ -297,12 +297,12 @@ private string try_decode_image(string data, void|string var) {
 
 // ----------------- Vary callbacks ----------------------
 
-static string client_ip_cb(string ignored, RequestID id)
+protected string client_ip_cb(string ignored, RequestID id)
 {
   return id->remoteaddr;
 }
 
-static string client_host_cb(string ignored, RequestID id)
+protected string client_host_cb(string ignored, RequestID id)
 {
   if (id->host) return id->host;
   return id->host=roxen.quick_ip_to_host(id->remoteaddr);
@@ -6946,7 +6946,7 @@ class TagEmit {
       return 0;
     }
  
-    static void cleanup()
+    protected void cleanup()
     {
       res = 0;
       ::cleanup();
@@ -7892,7 +7892,7 @@ class TagEmitValues {
   constant name="emit";
   constant plugin_name="values";
 
-  static mixed post_process_value(mixed val, mapping(string:mixed) m)
+  protected mixed post_process_value(mixed val, mapping(string:mixed) m)
   {
     if (arrayp(val)) {
       if (m->trimwhites || m->case) {

@@ -4387,7 +4387,7 @@ class Frame
   //!
   //! This function is called after @[do_return()],
   //! and also during exception processing.
-  static void cleanup() {}
+  protected void cleanup() {}
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
   // Note: It might be somewhat tricky to override this function,

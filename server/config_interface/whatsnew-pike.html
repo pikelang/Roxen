@@ -115,10 +115,10 @@ XML. This is also used in Roxen.
 
                
 
-<new-feature name='All constructor/destructor and operator overloading functions (LFUNs) may now be static.'>
+<new-feature name='All constructor/destructor and operator overloading functions (LFUNs) may now be protected.'>
 
                Callbacks used for overloading, as well as create and
-               destroy, may now be declared as static.
+               destroy, may now be declared as protected.
 </new-feature>
                
 
@@ -206,16 +206,16 @@ XML. This is also used in Roxen.
                    class Foo 
                    {
                      int a;
-                     static string b;
+                     protected string b;
 
-                     static void create(int _a, string _b) 
+                     protected void create(int _a, string _b)
                      {
                        a = _a;
                        b = _b;
                      }
                    }
 
-                   class Foo(int a, static string b) 
+                   class Foo(int a, protected string b)
                    {
                    }
 </pre>
