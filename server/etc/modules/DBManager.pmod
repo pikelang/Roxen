@@ -1648,6 +1648,11 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     return ({});
   }
 
+  // Old-style BACKUP format.
+  if (db->server_info() >= "mysql/5.5") {
+    error("Old-style MySQL BACKUP files are no longer supported!\n");
+  }
+
   array q =
     tables ||
     query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
@@ -1913,6 +1918,9 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 //! @note
 //!   Currently this function only works for internal databases.
 //!
+//! @note
+//!   This method is not supported in MySQL 5.5 and later.
+//!
 //! @seealso
 //!   @[dump()]
 {
@@ -1927,6 +1935,9 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 
   if( is_internal( dbname ) )
   {
+    if (db->server_info() >= "mysql/5.5") {
+      error("Old-style MySQL BACKUP files are no longer supported!\n");
+    }
     mkdirhier( directory+"/" );
     array tables = db_tables( dbname );
     array res = ({});
@@ -1994,6 +2005,13 @@ void timed_backup(int schedule_id)
 				sprintf("T%02d-%02d", lt->hour, lt->min));
 
 	switch(backup_info[0]->method) {
+	case "backup":
+	  // This method is not supported in MySQL 5.5 and later.
+	  if (connect_to_my_mysql(0, "roxen")->server_info() < "mysql/5.5") {
+	    backup(db, dir, "timed_backup");
+	    break;
+	  }
+	  // FALL_THROUGH
 	default:
 	  report_error("Unsupported database backup method: %O for DB %O\n"
 		       "Falling back to the default \"mysqldump\" method.\n",
@@ -2001,9 +2019,6 @@ void timed_backup(int schedule_id)
 	  // FALL_THROUGH
 	case "mysqldump":
 	  dump(db, dir, "timed_backup");
-	  break;
-	case "backup":
-	  backup(db, dir, "timed_backup");
 	  break;
 	}
 	int generations = (int)backup_info[0]->generations;
