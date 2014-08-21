@@ -1133,6 +1133,11 @@ class Patcher
 
 	array args = ({ patch_bin,
 			"-p0",
+#ifdef __NT__
+			// Make sure that patch doesn't mess around
+			// with EOL (cf [bug 7244]).
+			"--binary",
+#endif
 			// Reject file
 // 			"--global-reject-file=" +
 // 			   append_path(source_path, "rejects"),
