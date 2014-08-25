@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: htaccess, DB Backup, Static Resource
 from: 550f76b70c381fe79dd7ed19cb0531c305bc10a5
 to: dbb6b88e10658c458094b60df67c4c6825968409
 originator: wellhardh@roxen.com
@@ -39,7 +39,7 @@ Multiple fixes:
     
     Fixes some of [bug 6126], cf also [bug 7088].
 
-  * Don't crash on empty src attrs. Fixes [bug 7243].
+  * Static Resource: Don't crash on empty src attrs. Fixes [bug 7243].
 
   * RoxenPatch: Run patch in binary mode on WIN32.
     
