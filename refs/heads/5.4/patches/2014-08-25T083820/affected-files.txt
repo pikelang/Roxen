@@ -1,0 +1,6 @@
+Modified files:
+  base_server/configuration.pike
+  etc/modules/DBManager.pmod
+  etc/modules/RoxenPatch.pmod
+  etc/modules/VFS.pmod
+  modules/tags/static_resource.pike
