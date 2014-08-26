@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1506,6 +1506,7 @@ string query_mysql_data_dir()
 }
 
 string  my_mysql_path;
+protected string mysqld_version;
 
 string query_configuration_dir()
 {
@@ -2038,7 +2039,8 @@ void low_start_mysql( string datadir,
 				"*"
 #endif
   });
-  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
+  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "5.5.*", "5.6.*", "5.7.*",
+				 "6.*", "10.*", });
   
   void rotate_log(string path)
   {
@@ -2098,6 +2100,7 @@ void low_start_mysql( string datadir,
 		  "  %s\n\n", version, orig_version);
       }
     }
+    mysqld_version = version;
   }
   if (version_fatal_error) {
     report_debug("\n%s"
@@ -2157,8 +2160,29 @@ void low_start_mysql( string datadir,
   if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
-    args += ({ "--log-slow-queries="+slow_query_log+".1" });
+    if (mysqld_version > "5.6.") {
+      args += ({
+	"--slow-query-log-file="+slow_query_log+".1",
+	"--slow-query-log",
+	"--log-queries-not-using-indexes",
+      });
+    } else {
+      // NB: Deprecated in MySQL 5.1.29 and removed in MySQL 5.6.1.
+      args += ({ "--log-slow-queries="+slow_query_log+".1" });
+    }
     report_debug("Setting MySQL's slow query log to \"%s.1\"\n", slow_query_log);
+  }
+
+  if (log_queries_to_stdout) {
+    if (mysqld_version > "5.6.") {
+      args += ({
+	"--general-log-file=/dev/stdout",
+	"--general-log",
+      });
+    } else {
+      // NB: Deprecated in MySQL 5.1.29 and removed in MySQL 5.6.1.
+      args += ({"--log=/dev/stdout"});
+    }
   }
 
   // Create the configuration file.
