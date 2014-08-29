@@ -3286,7 +3286,7 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 5.0 requires Pike 7.8 or newer.
+Roxen " + roxen_ver + #" requires Pike 7.8 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
