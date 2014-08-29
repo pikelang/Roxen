@@ -3238,13 +3238,16 @@ void do_main( int argc, array(string) argv )
 		clear_connect_to_my_mysql_cache );  
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
-  report_debug(
-#"
+  report_debug(#"
+
+
 ------ FATAL ----------------------------------------------------
 SECURITY defined (the internal security system in roxen), but
 the pike binary has not been compiled --with-security. This makes
 it impossible for roxen to have any internal security at all.
 -----------------------------------------------------------------
+
+
 ");
   exit(-1);
 #endif
@@ -3252,8 +3255,9 @@ it impossible for roxen to have any internal security at all.
 
   if( (-1&0xffffffff) < 0 )
   {
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING -----------------------------------------------
 Roxen requires bignum support in Pike since version 2.4.
 Please recompile Pike with gmp / bignum support to run Roxen.
@@ -3262,12 +3266,14 @@ It might still be possible to start Roxen, but the
 functionality will be affected, and stange errors might occur.
 ---------------------------------------------------------------
 
+
 ");
   }
 
 #ifdef NOT_INSTALLED
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING -----------------------------------------------
 You are running with an un-installed Pike binary.
 
@@ -3277,12 +3283,12 @@ Pikes, as an example the module search paths are different, and
 some environment variables are ignored.
 ---------------------------------------------------------------
 
+
 ");
 #endif
 
 #if __VERSION__ < 7.8
-  report_debug(
-#"
+  report_debug(#"
 
 
 ******************************************************
@@ -3464,8 +3470,9 @@ the correct system time.
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
   add_constant("grbz",lambda(string d){return d;});
-  report_debug(
-#"
+  report_debug(#"
+
+
 ------- WARNING -----------------------------------------
 The Gz (zlib) module is not available.
 The default builtin font will not be available.
@@ -3473,6 +3480,7 @@ To get zlib support, install zlib from
 ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html
 and recompile pike, after removing the file 'config.cache'
 ----------------------------------------------------------
+
 
 ");
 #endif
@@ -3500,8 +3508,9 @@ and recompile pike, after removing the file 'config.cache'
     // We can load the builtin font.
     add_constant("__rbf", "font_handlers/rbf" );
 #else
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING ----------------------------------------------
 Neither the Image.TTF nor the Image.FreeType module is available.
 True Type fonts and the default font will not be available.
@@ -3515,6 +3524,7 @@ to recompile the pike binary, since the one included should
 already have the FreeType interface module, installing the 
 library should be enough.
 --------------------------------------------------------------
+
 
 " );
 #endif
