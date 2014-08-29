@@ -2631,13 +2631,12 @@ void low_start_mysql( string datadir,
 		      string uid,
 		      void|int log_queries_to_stdout)
 {
-  array MYSQL_GOOD_VERSION = ({ "5.0.*",
+  array MYSQL_GOOD_VERSION = ({ "5.5.*",
 #ifdef YES_I_KNOW_WHAT_I_AM_DOING
 				"*"
 #endif
   });
-  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "5.5.*", "5.6.*", "5.7.*",
-				 "6.*", "10.*", });
+  array MYSQL_MAYBE_VERSION = ({ "5.6.*", "5.7.*", "6.*", "10.*", });
   
   void rotate_log(string path)
   {
