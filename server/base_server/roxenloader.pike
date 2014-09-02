@@ -2799,6 +2799,7 @@ void low_start_mysql( string datadir,
 		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
+		     "default-storage-engine = MYISAM\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
 #endif
@@ -2822,8 +2823,7 @@ void low_start_mysql( string datadir,
     force = 1;
   }
 
-  if (!has_prefix(version, "5.1.") &&
-      !has_value(cfg_file, "character-set-server")) {
+  if ((version > "5.2.") && !has_value(cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
     // the default to latin1 to avoid breaking old
@@ -2841,6 +2841,25 @@ void low_start_mysql( string datadir,
     } else {
       report_warning("Mysql configuration file %s/my.cfg lacks\n"
 		     "character set entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
+  if ((version > "5.5.") && !has_value(cfg_file, "default-storage-engine")) {
+    // The default storage engine was changed to InnoDB in MySQL 5.5.
+    // We need to set the default to MyISAM to avoid breaking old code
+    // due to different parameter limits (eg key lengths).
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding default storage engine entry to %s/my.cfg.\n",
+		   datadir);
+      a[1] = "\n"
+	"default-storage-engine = MYISAM" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "storage engine entry, and automatic repairer failed.\n",
 		     datadir);
     }
   }
