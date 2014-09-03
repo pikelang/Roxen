@@ -2704,6 +2704,7 @@ class TagCache {
     array do_return (RequestID id)
     {
       if (key) {
+	int key_updated;
 	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
 	if (sizeof (subkeymap) > sizeof (keymap)) {
 	  // The test above assumes that no subtag removes entries in
@@ -2713,6 +2714,7 @@ class TagCache {
 	  // come to state_update later anyway if it should be called.
 	  add_subvariables_to_keymap();
 	  make_key_from_keymap (id, timeout);
+	  key_updated = 1;
 	}
 
 	if (args->shared) {
@@ -2742,7 +2744,8 @@ class TagCache {
 	    }
 	    set_alternative (key,
 			     ({ time() + timeout, evaled_content, key_level2 }),
-			     timeout);
+			     timeout,
+			     key_updated);
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
 			     timeout,
@@ -2753,7 +2756,9 @@ class TagCache {
 	    set_alternative (key,
 			     key_level2 ?
 			     ({ 0, evaled_content, key_level2 }) :
-			     evaled_content);
+			     evaled_content,
+			     UNDEFINED,
+			     key_updated);
 
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
