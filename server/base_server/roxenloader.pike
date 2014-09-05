@@ -1352,6 +1352,14 @@ protected int roxen_is_cms;
 protected string roxen_product_name;
 protected string roxen_product_code;
 
+protected string mysql_product_name;
+protected string mysql_version;
+
+protected constant mysql_good_versions = ({ "5.5.*", "5.6.*" });
+protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*" });
+protected constant mysql_maybe_versions = ({ "5.*", "6.*" });
+protected constant mariadb_maybe_versions = ({ "5.*", "10.*" });
+
 string roxen_version()
 //! @appears roxen_version
 {
@@ -1971,7 +1979,6 @@ string query_mysql_socket()
 }
 
 string  my_mysql_path;
-protected string mysqld_version;
 
 string query_configuration_dir()
 {
@@ -2631,13 +2638,6 @@ void low_start_mysql( string datadir,
 		      string uid,
 		      void|int log_queries_to_stdout)
 {
-  array MYSQL_GOOD_VERSION = ({ "5.5.*",
-#ifdef YES_I_KNOW_WHAT_I_AM_DOING
-				"*"
-#endif
-  });
-  array MYSQL_MAYBE_VERSION = ({ "5.6.*", "5.7.*", "6.*", "10.*", });
-  
   void rotate_log(string path)
   {
     rm(path+".5");
@@ -2663,38 +2663,50 @@ void low_start_mysql( string datadir,
   } else {
     //  Parse version string
     string orig_version = version;
+    string trailer;
     if (has_prefix (version, mysql_location->mysqld))
       // mysqld puts $0 first in the version string. Cut it off to
       // avoid possible false matches.
       version = version[sizeof (mysql_location->mysqld)..];
-    if (sscanf(lower_case(version), "%*s  ver %[0-9.]", version) != 2) {
+    if (sscanf(lower_case(version), "%*s  ver %[0-9.]%s",
+	       mysql_version, trailer) < 2) {
       version_fatal_error =
 	  sprintf("Failed to parse MySQL version string - got %q from:\n"
 		  "%O\n\n", version, orig_version);
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
     } else {
+      array(string) good_versions = mysql_good_versions;
+      array(string) maybe_versions = mysql_maybe_versions;
+      mysql_product_name = "MySQL";
+      if (has_prefix(trailer, "-mariadb")) {
+	mysql_product_name = "MariaDB";
+	good_versions = mariadb_good_versions;
+	maybe_versions = mariadb_maybe_versions;
+      }
       //  Determine if version is acceptable
-      if (has_value(glob(MYSQL_GOOD_VERSION[*], version), 1)) {
+      if (has_value(glob(good_versions[*], mysql_version), 1)) {
 	//  Everything is fine
-      } else if (has_value(glob(MYSQL_MAYBE_VERSION[*], version), 1)) {
+      } else if (has_value(glob(maybe_versions[*], mysql_version), 1)) {
 	//  Don't allow unless user gives special define
 #ifdef ALLOW_UNSUPPORTED_MYSQL
 	report_debug("\nWARNING: Forcing Roxen to run with unsupported "
-		     "MySQL version (%s).\n",
-		     version);
+		     "%s version (%s).\n",
+		     mysql_product_name, mysql_version);
 #else
 	version_fatal_error =
-	  sprintf("This version of MySQL (%s) is not officially supported "
+	  sprintf("This version of %s (%s) is not officially supported "
 		  "with Roxen.\n"
 		  "If you want to override this restriction, use this "
 		  "option:\n\n"
 		  "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
-		  version);
+		  mysql_product_name, mysql_version);
 #endif
       } else {
 	//  Version not recognized (maybe too old or too new) so bail out
 	version_fatal_error =
-	  sprintf("MySQL version %s detected:\n\n"
-		  "  %s\n", version, orig_version);
+	  sprintf("%s version %s detected:\n\n"
+		  "  %s\n", mysql_product_name, mysql_version, orig_version);
+#endif
       }
 #ifdef RUN_SELF_TEST
       if (version_fatal_error) {
@@ -2705,7 +2717,6 @@ void low_start_mysql( string datadir,
       }
 #endif
     }
-    mysqld_version = version;
   }
   if (version_fatal_error) {
     report_debug("\n%s"
@@ -2766,7 +2777,7 @@ void low_start_mysql( string datadir,
   if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
-    if (mysqld_version > "5.6.") {
+    if (mysql_version > "5.6.") {
       args += ({
 	"--slow-query-log-file="+slow_query_log+".1",
 	"--slow-query-log",
@@ -2780,7 +2791,7 @@ void low_start_mysql( string datadir,
   }
 
   if (log_queries_to_stdout) {
-    if (mysqld_version > "5.6.") {
+    if (mysql_version > "5.6.") {
       args += ({
 	"--general-log-file=/dev/stdout",
 	"--general-log",
@@ -2823,7 +2834,8 @@ void low_start_mysql( string datadir,
     force = 1;
   }
 
-  if ((version > "5.2.") && !has_value(cfg_file, "character-set-server")) {
+  if ((mysql_version > "5.2.") &&
+      !has_value(cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
     // the default to latin1 to avoid breaking old
@@ -2845,7 +2857,8 @@ void low_start_mysql( string datadir,
     }
   }
 
-  if ((version > "5.5.") && !has_value(cfg_file, "default-storage-engine")) {
+  if ((mysql_version > "5.5.") &&
+      !has_value(cfg_file, "default-storage-engine")) {
     // The default storage engine was changed to InnoDB in MySQL 5.5.
     // We need to set the default to MyISAM to avoid breaking old code
     // due to different parameter limits (eg key lengths).
