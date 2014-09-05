@@ -2774,10 +2774,16 @@ void low_start_mysql( string datadir,
     env->MYSQL_TCP_PORT = "0";
   }
 
+  string normalized_mysql_version =
+    map(mysql_version/".",
+	lambda(string d) {
+	  return ("000" + d)[<2..];
+	}) * ".";
+
   if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
-    if (mysql_version > "5.6.") {
+    if (normalized_mysql_version > "005.006.") {
       args += ({
 	"--slow-query-log-file="+slow_query_log+".1",
 	"--slow-query-log",
@@ -2791,7 +2797,7 @@ void low_start_mysql( string datadir,
   }
 
   if (log_queries_to_stdout) {
-    if (mysql_version > "5.6.") {
+    if (normalized_mysql_version > "005.006.") {
       args += ({
 	"--general-log-file=/dev/stdout",
 	"--general-log",
@@ -2834,7 +2840,7 @@ void low_start_mysql( string datadir,
     force = 1;
   }
 
-  if ((mysql_version > "5.2.") &&
+  if ((normalized_mysql_version > "005.002.") &&
       !has_value(cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
@@ -2857,7 +2863,7 @@ void low_start_mysql( string datadir,
     }
   }
 
-  if ((mysql_version > "5.5.") &&
+  if ((normalized_mysql_version > "005.005.") &&
       !has_value(cfg_file, "default-storage-engine")) {
     // The default storage engine was changed to InnoDB in MySQL 5.5.
     // We need to set the default to MyISAM to avoid breaking old code
