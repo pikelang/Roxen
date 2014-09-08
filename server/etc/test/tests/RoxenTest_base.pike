@@ -210,13 +210,18 @@ void run_tests( Configuration c )
 
   if (mysql_location && test_true(predef::`->, mysql_location, "basedir")) {
     // Check that the MySQL upgrade code is available.
-    if (Stdio.is_file(combine_path(mysql_location->basedir,
-				   "share/mysql",
-				   "mysql_fix_privilege_tables.sql"))) {
+    if (mysql_location->mysql_upgrade) {
+      // Upgrade script configured or found by parse_mysql_location().
+      test_true(Stdio.is_file, mysql_location->mysql_upgrade);
+    } else if (Stdio.is_file(combine_path(mysql_location->basedir,
+					  "share/mysql",
+					  "mysql_fix_privilege_tables.sql"))) {
+      // Old-style upgrade code. Gone in MySQL 5.5.
       test_true(Stdio.read_bytes,
 		combine_path(mysql_location->basedir,
 			     "share/mysql", "mysql_fix_privilege_tables.sql"));
     } else {
+      // Old-style upgrade code. Gone in MySQL 5.5.
       test_true(Stdio.read_bytes,
 		combine_path(mysql_location->basedir,
 			     "share", "mysql_fix_privilege_tables.sql"));
