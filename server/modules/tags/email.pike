@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.52 2011/01/21 08:46:30 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe=1;
 
@@ -269,6 +269,13 @@ class TagEmail {
 	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
 	content_disp = ((args->disposition || "attachment") +
 			(aname ? "; filename=\""+aname+"\"" : ""));
+
+	//  Decide on suitable charset. If data is wide string we use UTF-8,
+	//  otherwise nothing.
+	if (String.width(body) > 8) {
+	  content_type += "; charset=utf-8";
+	  body = string_to_utf8(body);
+	}
 	
 	//  Use "nocid" for first attachment (backwards compatibility)
 	//  but counter-based strings for subsequent attachments.

@@ -294,7 +294,6 @@ worldmap binary
 /server/modules/security/auth_httpcookie.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
-/server/modules/tags/email.pike foreign_ident
 /server/modules/tags/emit_exec.pike foreign_ident
 /server/modules/tags/emit_timerange.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
