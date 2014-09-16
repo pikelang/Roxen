@@ -1,0 +1,9 @@
+subject: Roxen 5.4: Handle wide-string attachments by converting to UTF-8 and adjusting the
+from: dbb6b88e10658c458094b60df67c4c6825968409
+to: 9f12332d8a403ed53892c97893e33e3008b66f08
+originator: wellhardh@roxen.com
+depends: 2014-08-25T083820
+restart: true
+
+Handle wide-string attachments by converting to UTF-8 and adjusting the
+Content-Type header accordingly. Fixes [bug 7252].
