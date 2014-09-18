@@ -1404,6 +1404,13 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLDEXE">
+      <DirectorySearch Id="FMariaDBLocation" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariaDBBase">
+          <DirectorySearch Id="FMariaDBBin" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
       <DirectorySearch Id="FMysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
         <DirectorySearch Id="FMysqlBase51">
           <DirectorySearch Id="FMysqlBin51" Path="bin">
@@ -1420,19 +1427,19 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHKEXE">
-      <RegistrySearch Id="Mariadb101Location" Root="HKLM"
+      <RegistrySearch Id="Mariaisam101Location" Root="HKLM"
         Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="Location" Type="raw">
         <DirectorySearch Id="MyisamBin1" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mariadb100Location" Root="HKLM"
+      <RegistrySearch Id="Mariaisam100Location" Root="HKLM"
         Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="Location" Type="raw">
         <DirectorySearch Id="MyisamBin2" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mariadb55Location" Root="HKLM"
+      <RegistrySearch Id="Mariaisam55Location" Root="HKLM"
         Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="Location" Type="raw">
         <DirectorySearch Id="MyisamBin3" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
@@ -1470,6 +1477,13 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYISAMCHKEXE">
+      <DirectorySearch Id="FMariaisamLocation5" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariaisamBase5">
+          <DirectorySearch Id="FMariaisamBin5" Path="bin">
+            <FileSearch LongName="myisamchk.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
       <DirectorySearch Id="FMyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
         <DirectorySearch Id="FMyisamBase5">
           <DirectorySearch Id="FMyisamBin5" Path="bin">
@@ -1529,6 +1543,13 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLADMINEXE">
+      <DirectorySearch Id="FMariadbadminLocation5" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariadbadminBase5">
+          <DirectorySearch Id="FMariadbadminBin5" Path="bin">
+            <FileSearch LongName="mysqladmin.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
       <DirectorySearch Id="FMysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
         <DirectorySearch Id="FMysqladminBase5">
           <DirectorySearch Id="FMysqladminBin5" Path="bin">
@@ -1538,9 +1559,9 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLBASE">
-      <RegistrySearchRef Id="Mariadb101Location" />
-      <RegistrySearchRef Id="Mariadb100Location" />
-      <RegistrySearchRef Id="Mariadb55Location" />
+      <RegistrySearchRef Id="MariaDB101Location" />
+      <RegistrySearchRef Id="MariaDB100Location" />
+      <RegistrySearchRef Id="MariaDB55Location" />
       <RegistrySearchRef Id="Mysql57Location" />
       <RegistrySearchRef Id="Mysql56Location" />
       <RegistrySearchRef Id="Mysql55Location" />
@@ -1550,6 +1571,7 @@ Click "Next" to start the installation.</Text>
       <RegistrySearchRef Id="Mysql50Location1" />
     </Property>
     <Property Id="FALLBACKMYSQLBASE">
+      <DirectorySearchRef Id="FMariaDBBase" Parent="FMariaDBLocation"/>
       <DirectorySearchRef Id="FMysqlBase51" Parent="FMysqlLocation51"/>
       <DirectorySearchRef Id="FMysqlBase5" Parent="FMysqlLocation5"/>
     </Property>
