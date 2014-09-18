@@ -1404,16 +1404,16 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLDEXE">
-      <DirectorySearch Id="MysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase51">
-          <DirectorySearch Id="MysqlBin51" Path="bin">
+      <DirectorySearch Id="FMysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqlBase51">
+          <DirectorySearch Id="FMysqlBin51" Path="bin">
             <FileSearch LongName="mysqld-nt.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
-      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase5">
-          <DirectorySearch Id="MysqlBin5" Path="bin">
+      <DirectorySearch Id="FMysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqlBase5">
+          <DirectorySearch Id="FMysqlBin5" Path="bin">
             <FileSearch LongName="mysqld.exe" />
           </DirectorySearch>
         </DirectorySearch>
@@ -1470,9 +1470,9 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYISAMCHKEXE">
-      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MyisamBase5">
-          <DirectorySearch Id="MyisamBin5" Path="bin">
+      <DirectorySearch Id="FMyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMyisamBase5">
+          <DirectorySearch Id="FMyisamBin5" Path="bin">
             <FileSearch LongName="myisamchk.exe" />
           </DirectorySearch>
         </DirectorySearch>
@@ -1529,9 +1529,9 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLADMINEXE">
-      <DirectorySearch Id="MysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqladminBase5">
-          <DirectorySearch Id="MysqladminBin5" Path="bin">
+      <DirectorySearch Id="FMysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqladminBase5">
+          <DirectorySearch Id="FMysqladminBin5" Path="bin">
             <FileSearch LongName="mysqladmin.exe" />
           </DirectorySearch>
         </DirectorySearch>
@@ -1550,8 +1550,8 @@ Click "Next" to start the installation.</Text>
       <RegistrySearchRef Id="Mysql50Location1" />
     </Property>
     <Property Id="FALLBACKMYSQLBASE">
-      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
-      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+      <DirectorySearchRef Id="FMysqlBase51" Parent="FMysqlLocation51"/>
+      <DirectorySearchRef Id="FMysqlBase5" Parent="FMysqlLocation5"/>
     </Property>
     <Property Id="MYSQLDEBUG2">
       <RegistrySearchRef Id="Mysql51Location" />
@@ -1566,10 +1566,10 @@ Click "Next" to start the installation.</Text>
       <RegistrySearchRef Id="Mysql50Location1" />
     </Property>
     <Property Id="MYSQLDEBUG5">
-      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+      <DirectorySearchRef Id="FMysqlBase5" Parent="FMysqlLocation5"/>
     </Property>
     <Property Id="MYSQLDEBUG51">
-      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
+      <DirectorySearchRef Id="FMysqlBase51" Parent="FMysqlLocation51"/>
     </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
