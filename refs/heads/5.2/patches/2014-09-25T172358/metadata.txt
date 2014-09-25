@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Misc fixes, Shellshock protection
 from: 7da43a4a57ab4d49ed82dd3cf3f5da1dea884327
 to: 33f0927e67c59bf7e0a17a57f9eba0dfc464ae65
 originator: wellhardh@roxen.com
@@ -15,12 +15,6 @@ Multiple fixes:
     mysql_upgrade about it.
     
     Fixes [bug 7007] and [bug 7018].
-
-  * Version bumped to 4.1.39 by distmaker.
-
-  * Version bumped to 5.2.388 by buildsystem.
-
-  * Version bumped to 5.2.389 by buildsystem.
 
   * Document the modifiers ! (eliminate field padding) and E (alternate form) for
     <date#strftime>.
@@ -97,9 +91,6 @@ Multiple fixes:
 
   * Increase maximum URL length in <insert#cached-href> from 256 to 768 bytes.
     
-    Conflicts:
-    	server/modules/tags/insert_cached_href.pike
-
   * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
 
   * Check index files against dir listing before stat.
