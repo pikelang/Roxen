@@ -1,0 +1,4 @@
+Modified files:
+  etc/modules/Roxen.pmod
+  modules/scripting/cgi.pike
+  modules/scripting/php.pike
