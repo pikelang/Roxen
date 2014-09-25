@@ -281,11 +281,9 @@ worldmap binary
 /server/modules/proxies/proxy.pike foreign_ident
 /server/modules/proxies/relay2.pike foreign_ident
 /server/modules/proxies/wais.pike foreign_ident
-/server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fastcgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
 /server/modules/scripting/perl.pike foreign_ident
-/server/modules/scripting/php.pike foreign_ident
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/scripting/piketag.pike foreign_ident
 /server/modules/scripting/servlet.pike foreign_ident

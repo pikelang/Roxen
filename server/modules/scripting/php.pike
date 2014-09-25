@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.6 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.6 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
@@ -317,6 +317,16 @@ class PHPScript
     m_delete(environment, "SERVER_NAME");
     m_delete(environment, "GATEWAY_INTERFACE");
     m_delete(environment, "REQUEST_METHOD");
+
+    // Protect against execution of arbitrary code in broken bash.
+    foreach(environment; string e; string v) {
+      if (has_prefix(v, "() {")) {
+	report_warning("CGI: Function definition in environment variable:\n"
+		       "CGI: %O=%O\n",
+		       e, v);
+	environment[e] = " " + v;
+      }
+    }
 
 #if 0
     if(environment->INDEX)
