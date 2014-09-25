@@ -1,9 +1,11 @@
-subject: Roxen 5.4:   * CGI: Protect against bash(1) vulnerability.
+subject: Roxen 5.4: Protection against Shellshock
 from: 9f12332d8a403ed53892c97893e33e3008b66f08
 to: 651fab367b0cd1303cd9babf5c4b6639ea2f1978
 originator: wellhardh@roxen.com
 depends: 2014-09-16T160615
 restart: true
+
+Multiple fixes:
 
   * CGI: Protect against bash(1) vulnerability.
     
