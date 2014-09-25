@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.62 2004/06/30 16:59:19 mast Exp $";
+constant cvs_version = "$Id$";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -888,6 +888,16 @@ class CGIScript
     tosend = id->data;
     if( id->method == "PUT" )
       ffd = id->my_fd;
+
+    // Protect against execution of arbitrary code in broken bash.
+    foreach(environment; string e; string v) {
+      if (has_prefix(v, "() {")) {
+	report_warning("CGI: Function definition in environment variable:\n"
+		       "CGI: %O=%O\n",
+		       e, v);
+	environment[e] = " " + v;
+      }
+    }
   }
 }
 

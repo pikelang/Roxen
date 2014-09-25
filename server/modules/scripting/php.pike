@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.1 2005/03/09 15:53:58 grubba Exp $
+// $Id$
 //
 // Support for files with php markup.
 //
@@ -308,6 +308,16 @@ class PHPScript
     m_delete(environment, "SERVER_NAME");
     m_delete(environment, "GATEWAY_INTERFACE");
     m_delete(environment, "REQUEST_METHOD");
+
+    // Protect against execution of arbitrary code in broken bash.
+    foreach(environment; string e; string v) {
+      if (has_prefix(v, "() {")) {
+	report_warning("CGI: Function definition in environment variable:\n"
+		       "CGI: %O=%O\n",
+		       e, v);
+	environment[e] = " " + v;
+      }
+    }
 
 #if 0
     if(environment->INDEX)
