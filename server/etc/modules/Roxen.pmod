@@ -1758,6 +1758,16 @@ mapping build_env_vars(string f, RequestID id, string path_info)
   new["SERVER_PORT"] = id->my_fd?
     ((id->my_fd->query_address(1)||"foo unknown")/" ")[1]: "Internal";
 
+  // Protect against execution of arbitrary code in broken bash.
+  foreach(new; string e; string v) {
+    if (has_prefix(v, "() {")) {
+      report_warning("ENV: Function definition in environment variable:\n"
+		     "ENV: %O=%O\n",
+		     e, v);
+      new[e] = " " + v;
+    }
+  }
+
   return new;
 }
 
@@ -1850,6 +1860,17 @@ mapping build_roxen_env_vars(RequestID id)
     else
       new["SUPPORTS"] = tmp;
   }
+
+  // Protect against execution of arbitrary code in broken bash.
+  foreach(new; string e; string v) {
+    if (has_prefix(v, "() {")) {
+      report_warning("ENV: Function definition in environment variable:\n"
+		     "ENV: %O=%O\n",
+		     e, v);
+      new[e] = " " + v;
+    }
+  }
+
   return new;
 }
 
