@@ -1,0 +1,144 @@
+subject: Roxen 5.2: Multiple fixes:
+from: 7da43a4a57ab4d49ed82dd3cf3f5da1dea884327
+to: 33f0927e67c59bf7e0a17a57f9eba0dfc464ae65
+originator: wellhardh@roxen.com
+depends: 2014-02-27T162904
+restart: true
+
+Multiple fixes:
+
+  * Fixed test of <replace/> that got broken by more quoting.
+
+  * Mysql: Fixed mysql_upgrade use on WIN32.
+    
+    Mysqld on WIN32 uses named pipes, so make sure to tell
+    mysql_upgrade about it.
+    
+    Fixes [bug 7007] and [bug 7018].
+
+  * Version bumped to 4.1.39 by distmaker.
+
+  * Version bumped to 5.2.388 by buildsystem.
+
+  * Version bumped to 5.2.389 by buildsystem.
+
+  * Document the modifiers ! (eliminate field padding) and E (alternate form) for
+    <date#strftime>.
+
+  * Tags: Added <emit#csv/>.
+    
+    Added RXML-support for emitting values from csv-files.
+    
+    Fixes [bug 7147]
+
+  * Tags: Survive without Parser.CSV.
+    
+    Pike 7.8 doesn't have Parser.CSV, so provide a fallback implementation.
+
+  * Tags: More stuff to survive without Parser.CSV.
+    
+    Parser.Tabular in Pike 7.8 lacks some stuff that Parser.CSV needs,
+    so incorporate it in the fallback code.
+
+  * Add SloppyDOM.DocumentWrapper to avoid cyclic garbage.
+
+  * Add custom count_memory callback for <cache> tag.
+    
+    For more accurate entry size measurement.
+
+  * Cache Tag: add alternatives mapping to cache after adding entries.
+
+  * RAM cache: Fix cache manager balancing bug.
+    
+    cost_hits and hits were mixed up for cost-aware managers, leading to
+    gross underestimation of the hit ratio compared to non-cost managers.
+
+  * Reduce garbage produced by UserTag Frame objects.
+    
+    The compiled PCode objects are now stored in the RAM cache rather than
+    being referenced directly, which breaks a cyclic structure between resulting
+    VariableChange and and PCode objects.
+
+  * UserTag: Store saved scopes in external mapping to avoid circular refs.
+    
+    Also moved the CompDefCacheEntry class out of the Frame/Tag classes to
+    avoid circularities originating from parent pointers.
+
+  * Move the CacheTagEntry class out of the TagCache class.
+    
+    To avoid circular refs due to parent pointers.
+
+  * TagCache: Store individual entries in Roxen's cache.
+    
+    This means we can avoid holding references to PCode objects through the
+    alternatives mapping, which helps break circularities. Also, the code
+    needed to store non-persistent entries from persistent frames in the
+    RAM cache could be removed thanks to the more generic cache handling.
+
+  * TagCache: Fix bug that prevented persistent saving of alternatives.
+
+  * PCode: Make sure to compile everything in PCode used by subevalers.
+    
+    This helps breaking up cycles, resulting in less garbage.
+
+  * 1000 iterations doesn't seem to be enough when collecting PCode objects.
+
+  * Schedule image cache cleanup around next 4:30 mark rather than next day.
+    
+    This fixes an issue where the cleanup wouldn't run if a periodic restart
+    was performed every night, before the 4:30 mark.
+
+  * TagCache: More efficient RAM cache utilisation.
+    
+    Alternatives entries are now stored in the cost-aware manager. Persistently
+    stored entries are restored with a flag to indicate that no cost calculation
+    should be performed, and they are subsequently removed when the frame is
+    destructed (if entries were stored persistently).
+
+  * Increase maximum URL length in <insert#cached-href> from 256 to 768 bytes.
+    
+    Conflicts:
+    	server/modules/tags/insert_cached_href.pike
+
+  * Enable execution of FTP requests in handler threads by -DFTP_USE_HANDLER_THREADS.
+
+  * Check index files against dir listing before stat.
+    
+    This can improve performance a whole lot if the underlying filesystem
+    is slow.
+
+  * Check banish list before looking up userinfo.
+    
+    This can improve performance quite a bit if the underlying user DB is slow,
+    typically with .htaccess lookups. Also added some defaults mentioned in
+    [bug 5956].
+
+  * Fixed request trace nesting inconsistency.
+
+  * Perform negative caching of (typically) htaccess files for 5 seconds.
+    
+    This avoids trying to stat the same files over and over in a single request.
+    Also added a 60 second timeout for positively cached files.
+
+  * Don't crash on empty src attrs. Fixes [bug 7243].
+
+  * Handle wide-string attachments by converting to UTF-8 and adjusting the
+    Content-Type header accordingly. Fixes [bug 7252].
+
+  * CGI: Protect against bash(1) vulnerability.
+    
+    bash(1) for some reason interprets environment variables with values
+    starting with "() {" as function definitions. These aliases are added
+    before any other processing.
+    
+    In addition to the above, most versions of bash(1) released prior to
+    2014-09-24 had a bug, where any code after the function definition
+    was executed immediately.
+    
+    This patch disables such functions by prefixing the value with a
+    single space.
+
+  * Scripting: Protect more places against Shellshock.
+    
+    Roxen.build_roxen_env_vars() and Roxen.build_env_vars() now
+    attempt to protect against Shellshock.
