@@ -1,0 +1,24 @@
+subject: Roxen 5.4:   * CGI: Protect against bash(1) vulnerability.
+from: 9f12332d8a403ed53892c97893e33e3008b66f08
+to: 651fab367b0cd1303cd9babf5c4b6639ea2f1978
+originator: wellhardh@roxen.com
+depends: 2014-09-16T160615
+restart: true
+
+  * CGI: Protect against bash(1) vulnerability.
+    
+    bash(1) for some reason interprets environment variables with values
+    starting with "() {" as function definitions. These aliases are added
+    before any other processing.
+    
+    In addition to the above, most versions of bash(1) released prior to
+    2014-09-24 had a bug, where any code after the function definition
+    was executed immediately.
+    
+    This patch disables such functions by prefixing the value with a
+    single space.
+
+  * Scripting: Protect more places against Shellshock.
+    
+    Roxen.build_roxen_env_vars() and Roxen.build_env_vars() now
+    attempt to protect against Shellshock.
