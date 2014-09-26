@@ -2817,6 +2817,7 @@ void low_start_mysql( string datadir,
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
 		     "default-storage-engine = MYISAM\n"
+		     "innodb-data-file-path=ibdata1:10M:autoextend\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
 #endif
@@ -2844,6 +2845,38 @@ void low_start_mysql( string datadir,
 		       ({ "", "", "", "", "", "",
 		       }));
     force = 1;
+  }
+
+  if ((normalized_mysql_version > "005.000.") &&
+      !has_value(normalized_cfg_file, "innodb-data-file-path")) {
+    // It seems the defaults for this variable have changed
+    // from "ibdata1:10M:autoextend" to "ibdata1:12M:autoextend".
+    // For some reason InnoDB doesn't always auto-detect correctly.
+    // cf [bug 7264].
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding innodb-data-file-path to %s/my.cfg.\n",
+		   datadir);
+      int initial = 10;	// 10 MB -- The traditional setting.
+      int bytes = Stdio.file_size(datadir + "/ibdata1");
+      if (bytes) {
+	// ibdata1 grows in increments of 8 MB.
+	// Assumes that the initial default size won't grow to 18 MB.
+	initial = ((bytes / 1024 * 1024) % 8) + 8;
+	if (initial < 10) initial += 8;
+      }
+      report_debug("%O\n",
+		   "ibdata1:" + initial + "M:autoextend");
+      a[1] = "\n"
+	"innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
+      cfg_file = a * "[mysql]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "InnoDB data file path entry, "
+		     "and automatic repairer failed.\n",
+		     datadir);
+    }
   }
 
   if ((normalized_mysql_version > "005.002.") &&
