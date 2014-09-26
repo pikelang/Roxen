@@ -2862,14 +2862,14 @@ void low_start_mysql( string datadir,
       if (bytes) {
 	// ibdata1 grows in increments of 8 MB.
 	// Assumes that the initial default size won't grow to 18 MB.
-	initial = ((bytes / 1024 * 1024) % 8) + 8;
+	initial = ((bytes / (1024 * 1024)) % 8) + 8;
 	if (initial < 10) initial += 8;
       }
       report_debug("%O\n",
 		   "ibdata1:" + initial + "M:autoextend");
       a[1] = "\n"
 	"innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
-      cfg_file = a * "[mysql]";
+      cfg_file = a * "[mysqld]";
       force = 1;
     } else {
       report_warning("Mysql configuration file %s/my.cfg lacks\n"
