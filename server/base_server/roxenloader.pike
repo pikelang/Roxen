@@ -2817,6 +2817,7 @@ void low_start_mysql( string datadir,
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
 		     "default-storage-engine = MYISAM\n"
+		     "innodb-data-file-path=ibdata1:10M:autoextend\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
 #endif
@@ -2826,22 +2827,60 @@ void low_start_mysql( string datadir,
 		     "bind-address = "+env->MYSQL_HOST+"\n" +
 		     (uid ? "user = " + uid : "") + "\n");
 
+  string normalized_cfg_file = replace(cfg_file, "_", "-");
+
   // Check if we need to update the contents of the config file.
   //
   // NB: set-variable became optional after MySQL 4.0.2,
   //     and was deprecated in MySQL 5.5.
-  if (has_value(cfg_file, "set-variable=") ||
-      has_value(cfg_file, "set-variable =")) {
+  if (has_value(normalized_cfg_file, "set-variable=") ||
+      has_value(normalized_cfg_file, "set-variable =")) {
     report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
     cfg_file = replace(cfg_file,
 		       ({ "set-variable=",
-			  "set-variable = ", "set-variable =" }),
-		       ({ "", "", "" }));
+			  "set-variable = ", "set-variable =",
+			  "set_variable=",
+			  "set_variable = ", "set_variable =",
+		       }),
+		       ({ "", "", "", "", "", "",
+		       }));
     force = 1;
   }
 
+  if ((normalized_mysql_version > "005.000.") &&
+      !has_value(normalized_cfg_file, "innodb-data-file-path")) {
+    // It seems the defaults for this variable have changed
+    // from "ibdata1:10M:autoextend" to "ibdata1:12M:autoextend".
+    // For some reason InnoDB doesn't always auto-detect correctly.
+    // cf [bug 7264].
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding innodb-data-file-path to %s/my.cfg.\n",
+		   datadir);
+      int initial = 10;	// 10 MB -- The traditional setting.
+      int bytes = Stdio.file_size(datadir + "/ibdata1");
+      if (bytes) {
+	// ibdata1 grows in increments of 8 MB.
+	// Assumes that the initial default size won't grow to 18 MB.
+	initial = ((bytes / 1024 * 1024) % 8) + 8;
+	if (initial < 10) initial += 8;
+      }
+      report_debug("%O\n",
+		   "ibdata1:" + initial + "M:autoextend");
+      a[1] = "\n"
+	"innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
+      cfg_file = a * "[mysql]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "InnoDB data file path entry, "
+		     "and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
   if ((normalized_mysql_version > "005.002.") &&
-      !has_value(cfg_file, "character-set-server")) {
+      !has_value(normalized_cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
     // the default to latin1 to avoid breaking old
@@ -2864,7 +2903,7 @@ void low_start_mysql( string datadir,
   }
 
   if ((normalized_mysql_version > "005.005.") &&
-      !has_value(cfg_file, "default-storage-engine")) {
+      !has_value(normalized_cfg_file, "default-storage-engine")) {
     // The default storage engine was changed to InnoDB in MySQL 5.5.
     // We need to set the default to MyISAM to avoid breaking old code
     // due to different parameter limits (eg key lengths).
