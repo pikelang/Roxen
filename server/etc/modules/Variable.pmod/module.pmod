@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.70 2001/11/01 14:58:53 grubba Exp $
+// $Id$
 
 #include <module.h>
 #include <roxen.h>
@@ -1303,7 +1303,8 @@ class List
       // Backward compatibility junk...
       return ({ "Compatibility: "
 		"Converted from TYPE_STRING to TYPE_STRING_LIST.\n",
-	       (to-" ")/"," });
+		map(to/",", global.String.trim_all_whites),
+      });
     }
     return ::verify_set(to);
   }

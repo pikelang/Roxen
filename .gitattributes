@@ -129,7 +129,6 @@ worldmap binary
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Server.pike foreign_ident
 /server/etc/modules/StateHandler.pmod foreign_ident
-/server/etc/modules/Variable.pmod/module.pmod foreign_ident
 /server/etc/more_extensions/apache foreign_ident
 /server/etc/more_extensions/chemical foreign_ident
 /server/etc/more_extensions/inlinetypes foreign_ident
