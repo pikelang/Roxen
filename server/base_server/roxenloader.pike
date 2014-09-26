@@ -2826,22 +2826,28 @@ void low_start_mysql( string datadir,
 		     "bind-address = "+env->MYSQL_HOST+"\n" +
 		     (uid ? "user = " + uid : "") + "\n");
 
+  string normalized_cfg_file = replace(cfg_file, "_", "-");
+
   // Check if we need to update the contents of the config file.
   //
   // NB: set-variable became optional after MySQL 4.0.2,
   //     and was deprecated in MySQL 5.5.
-  if (has_value(cfg_file, "set-variable=") ||
-      has_value(cfg_file, "set-variable =")) {
+  if (has_value(normalized_cfg_file, "set-variable=") ||
+      has_value(normalized_cfg_file, "set-variable =")) {
     report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
     cfg_file = replace(cfg_file,
 		       ({ "set-variable=",
-			  "set-variable = ", "set-variable =" }),
-		       ({ "", "", "" }));
+			  "set-variable = ", "set-variable =",
+			  "set_variable=",
+			  "set_variable = ", "set_variable =",
+		       }),
+		       ({ "", "", "", "", "", "",
+		       }));
     force = 1;
   }
 
   if ((normalized_mysql_version > "005.002.") &&
-      !has_value(cfg_file, "character-set-server")) {
+      !has_value(normalized_cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
     // the default to latin1 to avoid breaking old
@@ -2864,7 +2870,7 @@ void low_start_mysql( string datadir,
   }
 
   if ((normalized_mysql_version > "005.005.") &&
-      !has_value(cfg_file, "default-storage-engine")) {
+      !has_value(normalized_cfg_file, "default-storage-engine")) {
     // The default storage engine was changed to InnoDB in MySQL 5.5.
     // We need to set the default to MyISAM to avoid breaking old code
     // due to different parameter limits (eg key lengths).
