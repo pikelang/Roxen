@@ -1461,19 +1461,19 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariaisam55Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MyisamBin3" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariaisam101Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MyisamBin1" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariaisam100Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MyisamBin2" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
@@ -1529,19 +1529,19 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariadbadmin55Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MysqladminBin3" Path="bin">
           <FileSearch LongName="mysqladmin.exe" />
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariadbadmin101Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MysqladminBin1" Path="bin">
           <FileSearch LongName="mysqladmin.exe" />
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mariadbadmin100Location" Root="HKLM"
-        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="Location" Type="raw">
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MysqladminBin2" Path="bin">
           <FileSearch LongName="mysqladmin.exe" />
         </DirectorySearch>
