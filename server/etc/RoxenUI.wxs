@@ -986,7 +986,7 @@ Click "Next" to start the installation.</Text>
         </Control>
 
         <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL base directory:</Text>
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MariaDB or MySQL base directory:</Text>
         </Control>
         <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="MYSQLBASE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
@@ -1031,10 +1031,10 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
-          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MySQL Settings</Text>
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MariaDB and MySQL Settings</Text>
         </Control>
         <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL settings</Text>
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MariaDB and MySQL settings</Text>
         </Control>
         <Control Id="Control273" Type="Line" X="0" Y="252" Width="375" Height="6">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
