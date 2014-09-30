@@ -2654,11 +2654,13 @@ void low_start_mysql( string datadir,
 
   //  Start by verifying the mysqld version
   string version_fatal_error = 0;
-  string version = popen(({mysql_location->mysqld, "--version"}));
+  string version = popen(({ mysql_location->mysqld,
+			    "--version", "--no-defaults",
+			 }));
   if (!version) {
     version_fatal_error =
       sprintf("Unable to determine MySQL version with this command:\n\n"
-	      "  %s --version\n\n",
+	      "  %s --version --no-defaults\n\n",
 	      mysql_location->mysqld);
   } else {
     //  Parse version string
