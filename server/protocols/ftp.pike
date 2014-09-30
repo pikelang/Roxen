@@ -1856,7 +1856,7 @@ class FTPSession
 		    dataport_addr, dataport_port));
 #endif
 
-    if(catch{
+    if(mixed err = catch{
 	if (!(raw_connection->connect(dataport_addr, dataport_port))) {
 	  DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
 		 "FTP: local_addr: %O:%O (%O)\n",
@@ -1868,7 +1868,9 @@ class FTPSession
 	  return;
 	}
       }) {
-      DWRITE("FTP: Illegal internet address in connect in async comm.\n");
+      DWRITE("FTP: Illegal IP address (%s:%d) in async connect.\n",
+	     dataport_addr||"", dataport_port);
+      DWRITE("FTP: %s\n", describe_backtrace(err));
       destruct(f);
       fun(0, 0, @args);
       return;
