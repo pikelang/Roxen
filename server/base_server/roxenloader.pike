@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2028,11 +2028,13 @@ void low_start_mysql( string datadir,
 
   //  Start by verifying the mysqld version
   string version_fatal_error = 0;
-  string version = popen(({mysql_location->mysqld, "--version"}));
+  string version = popen(({ mysql_location->mysqld,
+			    "--version", "--no-defaults",
+			 }));
   if (!version) {
     version_fatal_error =
       sprintf("Unable to determine MySQL version with this command:\n\n"
-	      "  %s --version\n\n",
+	      "  %s --version --no-defaults\n\n",
 	      mysql_location->mysqld);
   } else {
     //  Parse version string
