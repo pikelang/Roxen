@@ -1862,7 +1862,8 @@ class FTPSession
 		 "FTP: local_addr: %O:%O (%O)\n",
 		 dataport_addr, dataport_port,
 		 strerror(raw_connection->errno()),
-		 local_addr, local_port-1, raw_connection->query_address(1));
+		 local_addr, local_port-1,
+		 raw_connection->is_open() && raw_connection->query_address(1));
 	  destruct(f);
 	  fun(0, 0, @args);
 	  return;
