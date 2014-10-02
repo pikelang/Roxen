@@ -1839,12 +1839,14 @@ class FTPSession
 			 fun(f, "", @args);
 		       },
 		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed\n");
+			 DWRITE("FTP: connect_and_send failed: %s (%d)\n",
+				strerror(f->errno()), f->errno());
 			 destruct(f);
 			 fun(0, 0, @args);
 		       },
 		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed\n");
+			 DWRITE("FTP: connect_and_send failed (oob): %s (%d)\n",
+				strerror(f->errno()), f->errno());
 			 destruct(f);
 			 fun(0, 0, @args);
 		       });
