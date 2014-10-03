@@ -127,7 +127,7 @@ string get_processed_dict_path(string extra_dict)
 {
   //  Hash the external path and return a corresponding item in $VARDIR
   string ed_hash =
-    lower_case(String.string2hex(Crypto.MD5()->hash(extra_dict)));
+    lower_case(String.string2hex(Crypto.MD5.hash(extra_dict)));
   return
     combine_path(getcwd(),
 		 roxen_path("$VARDIR/check_spelling/" + ed_hash + ".dict"));
