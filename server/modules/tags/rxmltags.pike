@@ -53,7 +53,7 @@ private Regexp.PCRE.Plain rxml_var_splitter =
 #define LETTER "A-Za-z"
   Regexp.PCRE.Studied
 #endif
-  ("^(.*?)"
+  ("(?s)^(.*?)"
    // Must start with a letter or "_" and contain at least one dot.
    // Also be as picky as possible when accepting a negation sign.
    "(["LETTER"_]["LETTER"_0-9]*(?:\\.(?:["LETTER"_0-9]+|-[0-9]+)?)+)"
