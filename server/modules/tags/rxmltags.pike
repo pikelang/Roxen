@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.646 2011/04/21 13:16:40 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -53,7 +53,7 @@ private Regexp.PCRE.Plain rxml_var_splitter =
 #define LETTER "A-Za-z"
   Regexp.PCRE.Studied
 #endif
-  ("^(.*?)"
+  ("(?s)^(.*?)"
    // Must start with a letter or "_" and contain at least one dot.
    // Also be as picky as possible when accepting a negation sign.
    "(["LETTER"_]["LETTER"_0-9]*(?:\\.(?:["LETTER"_0-9]+|-[0-9]+)?)+)"
