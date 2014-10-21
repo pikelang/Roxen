@@ -3833,7 +3833,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.pike-version;</rxml>
-<regexp>Pike v7.[2-9] release [0-9]+</regexp>
+<regexp>Pike v8.[0-9] release [0-9]+</regexp>
 </test>
 
 <test>

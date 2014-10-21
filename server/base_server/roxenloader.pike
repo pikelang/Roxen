@@ -1658,11 +1658,11 @@ int main(int argc, array(string) argv)
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
-#if __VERSION__ < 7.8
+#if __VERSION__ < 8.0
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 5.0 should be run with Pike 7.8 or newer.
+Roxen 6.0 should be run with Pike 8.0 or newer.
 ---------------------------------------------------------------
 ");
     exit(1);
@@ -3366,19 +3366,19 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 7.8
+#if __VERSION__ < 8.0
   report_debug(#"
 
 
 ******************************************************
-Roxen " + roxen_ver + #" requires Pike 7.8 or newer.
+Roxen " + roxen_ver + #" requires Pike 8.0 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.8 */
+#endif /* __VERSION__ < 8.0 */
 
 #if !constant (Mysql.mysql)
   report_debug (#"
