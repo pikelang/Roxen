@@ -1,0 +1,5 @@
+Modified files:
+  base_server/global_variables.pike
+  base_server/roxen.pike
+  etc/modules/RXML.pmod/module.pmod
+  modules/tags/rxmltags.pike
