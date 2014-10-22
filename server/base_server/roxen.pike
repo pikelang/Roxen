@@ -2629,6 +2629,10 @@ class SSLProtocol
 
     set_up_ssl_variables( this_object() );
 
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+    set_version();
+#endif
+
     filter_preferred_suites();
 
     ::setup(pn, i);
