@@ -6533,10 +6533,10 @@ int main(int argc, array tmp)
 
       int upgrade_needed;
 
-      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+      foreach(msgs->parts; string part; array(Standards.PEM.Message) msg) {
 	if (!has_suffix(part, "CERTIFICATE")) continue;
 	Standards.X509.TBSCertificate tbs =
-	  Standards.X509.decode_certificate(msg->body);
+	  Standards.X509.decode_certificate(msg[0]->body);
 	upgrade_needed = (tbs->version < 3);
 	break;
       }
@@ -6545,13 +6545,13 @@ int main(int argc, array tmp)
 
       // NB: We reuse the old key.
       Crypto.Sign key;
-      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+      foreach(msgs->parts; string part; array(Standards.PEM.Message) msg) {
 	if (!has_suffix(part, "PRIVATE KEY")) continue;
-	if (msg->headers["dek-info"]) {
+	if (msg[0]->headers["dek-info"]) {
 	  // Not supported here.
 	  break;
 	}
-	key = Standards.X509.parse_private_key(msg->body);
+	key = Standards.X509.parse_private_key(msg[0]->body);
       }
       if (!key) continue;
 
