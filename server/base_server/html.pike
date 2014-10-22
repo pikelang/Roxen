@@ -19,7 +19,7 @@ string input(string name, string value, void|int size,
 
   string render="<input";
 
-  foreach(indices(args), string attr) {
+  foreach([array(string)]indices(args), string attr) {
     render+=" "+attr+"=";
     if(!has_value(args[attr], "\"")) render+="\""+args[attr]+"\"";
     else if(!has_value(args[attr], "'")) render+="'"+args[attr]+"'";
