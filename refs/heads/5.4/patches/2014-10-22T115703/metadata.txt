@@ -1,35 +1,14 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Fix for POODLE, disable SSLv3 by default, expr newlines
 from: 651fab367b0cd1303cd9babf5c4b6639ea2f1978
 to: 0caf769f9060fcf58995112ab3324d48f682152f
 originator: wellhardh@roxen.com
 depends: 2014-09-25T162128
+depends: 2014-10-22T115101
 restart: true
 
 Multiple fixes:
 
-  * Pike 8.0: Unset variables are UNDEFINED.
-    
-    Use object_variablep() to test whether a variable exists in an object
-    (that's what it's for...) instead of zero_type() to check if it doesn't.
-    
-    Fixes issues with the config interface and Pike 8.0.
-
-  * Pike 8.0: String.Buffer contains a sprintf().
-    
-    PikeCompiler has inherited String.Buffer, so we need to make sure
-    not to call the inherited sprintf() when we want the global one.
-    
-    Fixes "Bad argument 1 to add(). Expected string|String.Buffer.".
-
-  * Pike 8.0: #if efun() is obsolete since 10 years back.
-    
-    Reduce warnings from cpp().
-
-  * Pike 8.0: Add support for some new SSL features.
-    
-    * Filter suites based on key length and key exchange method.
-    
-    * Reject clients with old versions of SSL/TLS.
+  * Add support for rejecting clients with old versions of SSL/TLS.
 
   * RXML: Fix parsing of <if expr> containing newlines.
     
@@ -43,6 +22,7 @@ Multiple fixes:
 
   * SSL: Disable support for SSL 3.0 by default.
     
-    Requires recent Pike 7.8 or later.
-    
     Blocks the POODLE attack.
+
+    Can be configured in the port variables using "Minimum supported
+    version of SSL/TLS".
