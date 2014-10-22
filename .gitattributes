@@ -65,14 +65,12 @@ worldmap binary
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
-/server/base_server/global_variables.pike foreign_ident
 /server/base_server/highlight_pike.pike foreign_ident
 /server/base_server/hosts.pike foreign_ident
 /server/base_server/html.pike foreign_ident
 /server/base_server/javamodule.pike foreign_ident
 /server/base_server/language.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
-/server/base_server/newdecode.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
@@ -124,9 +122,7 @@ worldmap binary
 /server/etc/Win32Installer.vbs foreign_ident
 /server/etc/env.d/nptl.pike foreign_ident
 /server/etc/extensions foreign_ident
-/server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
-/server/etc/include/request_trace.h foreign_ident
 /server/etc/include/roxen.h foreign_ident
 /server/etc/include/stat.h foreign_ident
 /server/etc/include/udp.h foreign_ident

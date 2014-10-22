@@ -171,7 +171,7 @@ int privs_level;
 
 protected class Privs
 {
-#if efun(seteuid)
+#if constant(seteuid)
 
   int saved_uid;
   int saved_gid;
@@ -281,11 +281,11 @@ protected class Privs
 		    (string)dbt(backtrace()[-2]));
 
     if (u[2]) {
-#if efun(cleargroups)
+#if constant(cleargroups)
       if (mixed err = catch { cleargroups(); })
 	master()->handle_error (err);
 #endif /* cleargroups */
-#if efun(initgroups)
+#if constant(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
 	master()->handle_error (err);
 #endif
@@ -400,7 +400,7 @@ protected class Privs
 
     seteuid(0);
     array u = getpwuid(saved_uid);
-#if efun(cleargroups)
+#if constant(cleargroups)
     if (mixed err = catch { cleargroups(); })
       master()->handle_error (err);
 #endif /* cleargroups */
@@ -413,9 +413,9 @@ protected class Privs
     enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
-#else /* efun(seteuid) */
+#else /* constant(seteuid) */
   void create(string reason, int|string|void uid, int|string|void gid){}
-#endif /* efun(seteuid) */
+#endif /* constant(seteuid) */
 }
 
 /* Used by read_config.pike, since there seems to be problems with
@@ -2326,7 +2326,67 @@ class SSLProtocol
     return;								\
   } while (0)
 
-  protected void filter_preferred_suites() {
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+  protected void set_version()
+  {
+    ctx->min_version = query("ssl_min_version");
+  }
+#endif
+
+  protected void filter_preferred_suites()
+  {
+#if constant(SSL.ServerConnection)
+    int mode = query("ssl_suite_filter");
+    int bits = query("ssl_key_bits");
+
+    array(int) suites = ({});
+
+    if ((mode & 8) && !ctx->configure_suite_b) {
+      // FIXME: Warn: Suite B suites not available.
+      mode &= ~8;
+    }
+
+    if ((mode & 8) && ctx->configure_suite_b) {
+      // Suite B.
+      switch(mode) {
+      case 15:
+	// Strict mode.
+	ctx->configure_suite_b(bits, 2);
+	break;
+      case 14:
+	// Transitional mode.
+	ctx->configure_suite_b(bits, 1);
+	break;
+      default:
+	ctx->configure_suite_b(bits);
+	break;
+      }
+      suites = ctx->preferred_suites;
+
+      if (ctx->min_version < query("ssl_min_version")) {
+	set_version();
+      }
+    } else {
+      suites = ctx->get_suites(bits);
+
+      // Make sure the min version is restored in case we've
+      // switched from Suite B.
+      set_version();
+    }
+    if (mode & 4) {
+      // Ephemeral suites only.
+      suites = filter(suites,
+		      lambda(int suite) {
+			return (<
+			  SSL.Constants.KE_dhe_dss,
+			  SSL.Constants.KE_dhe_rsa,
+			  SSL.Constants.KE_ecdhe_ecdsa,
+			  SSL.Constants.KE_ecdhe_rsa,
+			>)[(SSL.Constants.CIPHER_SUITES[suite]||({ -1 }))[0]];
+		      });
+    }
+    ctx->preferred_suites = suites;
+#else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
     ctx->preferred_suites -= ({
@@ -2340,6 +2400,7 @@ class SSLProtocol
       SSL.Constants.SSL_null_with_null_null,
     });
 #endif
+#endif /* SSL.ServerConnection */
   }
 
   // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
@@ -2497,9 +2558,7 @@ class SSLProtocol
       //dsa->use_random(ctx->random);
       ctx->dsa = dsa;
       /* Use default DH parameters */
-#if constant(SSL.Cipher)
-      ctx->dh_params = SSL.Cipher.DHParameters();
-#else
+#if constant(SSL.cipher)
       ctx->dh_params = SSL.cipher()->dh_parameters();
 #endif
 
@@ -2568,9 +2627,9 @@ class SSLProtocol
   {
     ctx->random = Crypto.Random.random_string;
 
-    filter_preferred_suites();
-
     set_up_ssl_variables( this_object() );
+
+    filter_preferred_suites();
 
     ::setup(pn, i);
 
@@ -2584,6 +2643,14 @@ class SSLProtocol
     //        at the same time.
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
+
+#if constant(SSL.ServerConnection)
+    getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
+    getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
+#endif
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+    getvar("ssl_min_version")->set_changed_callback(set_version);
+#endif
   }
 
   string _sprintf( )
@@ -5610,7 +5677,7 @@ private void fix_root(string to)
   if(!chroot(to))
   {
     report_debug("Roxen: Cannot chroot to "+to+": ");
-#if efun(real_perror)
+#if constant(real_perror)
     real_perror();
 #endif
     return;
@@ -5668,7 +5735,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 		  Stdio.File|void to2,
 		  function(:void)|void callback)
 {
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   if(!to2)
   {
     object p = fastpipe( );
@@ -5685,7 +5752,7 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
     if(to2) p->output(to2);
     p->input(from);
     return p;
-#if efun(spider.shuffle)
+#if constant(spider.shuffle)
   }
 #endif
 }
@@ -6024,7 +6091,7 @@ int main(int argc, array tmp)
   cache_clear_deltas();
   set_locale();
 
-#if efun(syslog)
+#if constant(syslog)
   init_logger();
 #endif
   init_garber();

@@ -1,5 +1,5 @@
 
-#if !efun(make_matrix)
+#if !constant(make_matrix)
 private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {

@@ -82,7 +82,7 @@ string pw_name(int uid)
 int getppid() {   return -1; }
 #endif
 
-#if efun(syslog)
+#if constant(syslog)
 #define  LOG_CONS   (1<<0)
 #define  LOG_NDELAY (1<<1)
 #define  LOG_PERROR (1<<2)
@@ -332,7 +332,7 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
   }
 
   if (sizeof(format)) {
-#if efun(syslog)
+#if constant(syslog)
     syslog_report (format, LOG_DEBUG);
 #endif
 
@@ -423,7 +423,7 @@ mixed query(string arg)
 // used for debug messages. Sent to the administration interface and STDERR.
 void init_logger()
 {
-#if efun(syslog)
+#if constant(syslog)
   int res;
   use_syslog = !! (query("LogA") == "syslog");
 
@@ -500,7 +500,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
 
 protected void syslog_report (string message, int level)
 {
-#if efun(syslog)
+#if constant(syslog)
   if(use_syslog && (loggingfield&level))
     foreach(message/"\n", message)
       syslog(level, replace(message+"\n", "%", "%%"));
@@ -521,7 +521,7 @@ void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,2,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
 #endif
 }
@@ -537,7 +537,7 @@ void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,1,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_NOTICE);
 #endif
 }
@@ -553,7 +553,7 @@ void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,3,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
 #endif
 }
@@ -567,7 +567,7 @@ void report_fatal(sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_EMERG);
 #endif
 }
@@ -582,7 +582,7 @@ void report_warning_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 2,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
 #endif
 }
@@ -597,7 +597,7 @@ void report_notice_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 1,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_NOTICE);
 #endif
 }
@@ -615,7 +615,7 @@ void report_error_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 3,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
 #endif
 }
@@ -630,7 +630,7 @@ void report_fatal_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 3,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_EMERG);
 #endif
 }
@@ -659,7 +659,7 @@ void report_warning_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now) return;
   sparsely_dont_log[message] = now + 10*60;
   nwrite([string]message,0,2,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
 #endif
 }
@@ -676,7 +676,7 @@ void report_error_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now) return;
   sparsely_dont_log[message] = now + 10*60;
   nwrite([string]message,0,3,MC);
-#if efun(syslog)
+#if constant(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
 #endif
 }
@@ -745,7 +745,7 @@ Process.Process spawne(string s, array(string) args, mapping|array env,
 {
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; }
-#if efun(geteuid)
+#if constant(geteuid)
   else { u=geteuid(); g=getegid(); }
 #endif
   return Process.Process(({s}) + (args || ({})), ([
@@ -1618,7 +1618,7 @@ void write_current_time()
   report_debug("\n** "+sprintf("%02d-%02d-%02d %02d:%02d", lt->year+1900,
 			       lt->mon+1, lt->mday, lt->hour, lt->min)+
                "   pid: "+pid+"   ppid: "+getppid()+
-#if efun(geteuid)
+#if constant(geteuid)
 	       (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
                "   uid: "+pw_name(getuid())+"\n\n");

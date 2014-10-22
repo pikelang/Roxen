@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.20 2009/04/21 15:54:52 mast Exp $
+// $Id$
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -23,9 +23,9 @@
 //   has been removed. The Resolve Path wizard will now quote all
 //   strings instead.
 
-#if efun (gethrvtime)
+#if constant (gethrvtime)
 #define HRTIME() gethrvtime()
-#elif efun (gethrtime)
+#elif constant (gethrtime)
 #define HRTIME() gethrtime()
 #else
 #define HRTIME() 0
