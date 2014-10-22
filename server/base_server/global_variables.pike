@@ -226,6 +226,107 @@ void set_up_ssl_variables( Protocol o )
 		   "You do not have to specify a key "
 		   "file, leave this field empty to use the "
 		   "certificate file only.")));
+
+#if constant(SSL.ServerConnection)
+  // Pike 8.0 and later has much more advanced support for SSL/TLS.
+
+  // 112 bits is the maximum strength to still retain the
+  // DES-3 suites, which are required in the TLS standards.
+  defvar("ssl_key_bits",
+	 Variable.Int(112, 0,
+		      LOCALE(0, "Cipher suite minimum strength"),
+		      LOCALE(0,
+			     "<p>The minimum number of bits to secure "
+			     "connections.</p>\n"
+			     "<p>Common ciphers (subject to availability) "
+			     "in order of bits:\n"
+			     "<dl>\n"
+			     "<dt>40</dt>\n"
+			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
+			     "<dt>56</dt>\n"
+			     "<dd>DES</dd>\n"
+			     "<dt>112</dt>\n"
+			     "<dd>3-DES (Note that this cipher is the "
+			     "minimum required cipher in many versions "
+			     "of TLS)</dd>\n"
+			     "<dt>128</dt>\n"
+			     "<dd>AES-128</dd>\n"
+			     "<dd>Camellia-128</dd>\n"
+			     "<dd>RC4</dd>\n"
+			     "<dt>256</dt>\n"
+			     "<dd>AES-256</dd>\n"
+			     "<dd>Camellia-256</dd>\n"
+			     "</dl>\n"
+			     "</p>\n")))->set_range(0, Variable.no_limit);
+
+  defvar("ssl_suite_filter",
+	 Variable.IntChoice(0,
+			    ([
+			      0: "Default",
+			      4: "Ephemeral key exchanges only",
+			      8: "Suite B (relaxed)",
+			      12: "Suite B (ephemeral only)",
+			      14: "Suite B (transitional)",
+			      15: "Suite B (strict)",
+			    ]),
+			    0,
+			    LOCALE(0, "Additional suite filtering"),
+			    LOCALE(0, "<p>Selects an additional cipher suite "
+				   "policy.</p>"
+				   "<p>The supported filter modes are:\n"
+				   "<dl>\n"
+				   "<dt>Default</dt>\n"
+				   "<dd>Use the default cipher suite selection "
+				   "policy, and allow all cipher suites that "
+				   "have sufficient strength.</dd>\n"
+				   "<dt>Ephemeral key exchanges only</dt>\n"
+				   "<dd>Only allow cipher suites that use a "
+				   "key exchange with ephemeral keys (aka "
+				   "\"Perfect Forward Security\"). Ie "
+				   "either ECDHE or DHE.</dd>\n"
+				   "<dt>Suite B (relaxed)</dt>\n"
+				   "<dd>Same as <b>Default</b>, but prefer the "
+				   "suites specified in <b>Suite B</b>.</dd>\n"
+				   "<dt>Suite B (ephemeral only)</dt>\n"
+				   "<dd>Same as <b>Ephemeral key exchanges "
+				   "only</b>, but prefer the suites specified "
+				   "in <b>Suite B</b>.</dd>\n"
+				   "<dt>Suite B (transitional)</dt>\n"
+				   "<dd>Support only the suites specified by "
+				   "RFCs 5430 and 6460.</dd>\n"
+				   "<dt>Suite B (strict)</dt>\n"
+				   "<dd>Support only the suites specified by "
+				   "RFC 6460.</dt>\n"
+				   "</dl>\n"
+				   "</p>\n"
+				   "<p>Note: Full Suite B operation is not "
+				   "supported in all configurations.</p>\n"
+				   "<p>Note: For full Suite B compliance a "
+				   "suitable certificate must also be "
+				   "used.</p>")));
+#endif /* SSL.ServerConnection */
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+  defvar("ssl_min_version",
+	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0,
+			    ([
+			      SSL.Constants.PROTOCOL_SSL_3_0:
+			      "SSL 3.0",
+			      SSL.Constants.PROTOCOL_TLS_1_0:
+			      "TLS 1.0 (aka SSL 3.1)",
+#if constant(SSL.Constants.PROTOCOL_TLS_1_2)
+			      SSL.Constants.PROTOCOL_TLS_1_1:
+			      "TLS 1.1",
+			      SSL.Constants.PROTOCOL_TLS_1_2:
+			      "TLS 1.2",
+#endif
+			    ]),
+			    0,
+			    LOCALE(0, "Minimum supported version of SSL/TLS"),
+			    LOCALE(0, "<p>Reject clients that want to use a "
+				   "version of SSL/TLS lower than the selected "
+				   "version.</p>\n")));
+#endif /* SSL.Constants.PROTOCOL_TLS_MAX */
 }
 
 
