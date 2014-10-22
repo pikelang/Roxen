@@ -2404,7 +2404,7 @@ class StartTLSProtocol
     return;								\
   } while (0)
 
-#if constant(SSL.ServerConnection)
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
   protected void set_version()
   {
     ctx->min_version = query("ssl_min_version");
@@ -2898,6 +2898,8 @@ class StartTLSProtocol
 #if constant(SSL.ServerConnection)
     getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
     getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
+#endif
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
     getvar("ssl_min_version")->set_changed_callback(set_version);
 #endif
   }
