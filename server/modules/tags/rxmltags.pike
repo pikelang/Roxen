@@ -2211,9 +2211,11 @@ class CacheTagEntry (mixed data)
       }
     }
 
+#ifdef DEBUG
     if (sizeof (stack))
       report_error ("RXML <cache>: more than %d iterations in "
 		    "collect_things_recur.\n", limit);
+#endif
 
     return result;
   }
