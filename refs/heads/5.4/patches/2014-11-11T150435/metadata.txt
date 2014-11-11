@@ -1,0 +1,8 @@
+subject: Roxen 5.4: Only complain about cache entry calculations under -DDEBUG.
+from: dd69da277bdad0622f70de60a652ff978b1f0ac6
+to: 793c2a005fa25b30fc9f3cd61e530f6b1175b86e
+originator: wellhardh@roxen.com
+depends: 2014-10-22T154753
+restart: true
+
+Only complain about cache entry calculations under -DDEBUG.
