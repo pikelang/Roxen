@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1057 2010/03/30 12:28:54 grubba Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -6409,7 +6409,7 @@ array(array(string|int|array)) security_checks = ({
   }), "user", }),
   ({ "group=%s",1,({ 1,
     lambda( string x ) {
-      return ({sprintf("(< %{%O, %}>)", x/"," )});
+      return ({sprintf("((multiset)(< %{%O, %}>))", x/"," )});
     },
     "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
     "        && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
