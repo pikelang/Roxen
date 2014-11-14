@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.207 2008/02/18 16:48:20 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -900,9 +900,24 @@ class ProtocolCacheKey
 //  Kludge for resolver problems
 static function _charset_decoder_func;
 
+// NB: This function is used as a vary callback. Thus:
+//     * It must not be defined in RequestID below, as
+//       then the protocol cache would hold references
+//       to old requests.
+//     * The somewhat odd arguments and return value.
 string browser_supports_vary(string ignored, RequestID id)
 {
-  return (string)!has_value(id->client||"", "MSIE");
+  int i;
+  // Vary doesn't work in MSIE <= 6.
+  if ((i = search(id->client||({}), "MSIE")) >= 0) {
+    int msie_major;
+    if (sizeof(id->client) > ++i) {
+      sscanf(id->client[i], "%d", msie_major);
+    }
+    // FIXME: Does it really work in MSIE 7?
+    if (msie_major < 7) return "0";
+  }
+  return "1";
 }
 
 class RequestID
