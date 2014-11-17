@@ -630,7 +630,7 @@ int things_to_do_when_not_sending_from_cache( )
       not_query = combine_path_unix ("/", f)[1..];
   }
 
-  supports->vary = (browser_supports_vary(UNDEFINED, this_object()) == "1");
+  supports->vary = 1;
 
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
