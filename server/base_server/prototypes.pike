@@ -1176,11 +1176,6 @@ class ProtocolCacheKey
 //  Kludge for resolver problems
 protected function _charset_decoder_func;
 
-string browser_supports_vary(string ignored, RequestID id)
-{
-  return (string)!has_value(id->client||"", "MSIE");
-}
-
 // This is a somewhat simplistic regexp that doesn't handle
 // quoted-string parameter values correctly. It's only used on content
 // types so we know wide strings aren't a problem.
@@ -1491,16 +1486,7 @@ class RequestID
       if (supports && zero_type(eaten[cookie])) {
 	VARY_WERROR("Looking at cookie %O from %s\n",
 		   cookie, describe_backtrace(({backtrace()[-2]})));
-	/* Workaround for MSIE 6's refusal to cache anything with
-	 * a Vary:Cookie header.
-	 */
-	register_vary_callback("user-agent", browser_supports_vary);
-	if (supports->vary) {
-	  register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
-	} else {
-	  register_vary_callback("user-agent",
-				 Roxen->get_cookie_callback(cookie));
-	}
+	register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
       }
       return real_cookies[cookie];
     }
