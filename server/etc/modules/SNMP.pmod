@@ -28,17 +28,11 @@ class Updateable(function(:mixed) fun)
   {
     if (fun) {
       mixed val = fun();
-      if (
-#if __VERSION__ < 7.6
-	  intp(val)
-#else
-	  0
-#endif
-	  ) {
-	this_object()->value = Gmp.mpz(val);
-      } else {
-	this_object()->value = val;
+      if (undefinedp (val)) {
+	werror ("SNMP: Got undefined value from callback\n%s\n",
+		describe_backtrace (backtrace()));
       }
+      this_object()->init (val);
       this_object()->der = UNDEFINED;
     }
   }
@@ -59,13 +53,8 @@ class app_integer
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
   constant type_name = "APPLICATION INTEGER";
-#if __VERSION__ < 8.0
-  constant cls = 1;
-  constant tag = 0;
-#else
   int cls = 1;
   int tag = 0;
-#endif
   protected void create(int|function(:int) val, string|void name,
 			string|void doc_string)
   {
@@ -94,13 +83,8 @@ class app_octet_string
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
   constant type_name = "APPLICATION OCTET_STRING";
-#if __VERSION__ < 8.0
-  constant cls = 1;
-  constant tag = 0;
-#else
   int cls = 1;
   int tag = 0;
-#endif
   protected void create(string|function(:string) val, string|void name,
 			string|void doc_string)
   {
@@ -206,22 +190,14 @@ class String
 class Counter
 {
   inherit app_integer;
-#if __VERSION__ < 8.0
-  constant tag = 1;
-#else
   int tag = 1;
-#endif
   constant type_name = "COUNTER";
 }
 
 class Gauge
 {
   inherit app_integer;
-#if __VERSION__ < 8.0
-  constant tag = 2;
-#else
   int tag = 2;
-#endif
   constant type_name = "GAUGE";
 }
 
@@ -229,11 +205,7 @@ class Gauge
 class Tick
 {
   inherit app_integer;
-#if __VERSION__ < 8.0
-  constant tag = 3;
-#else
   int tag = 3;
-#endif
   constant type_name = "TICK";
   protected string _sprintf(int t)
   {
@@ -247,11 +219,7 @@ class Tick
 class Opaque
 {
   inherit app_octet_string;
-#if __VERSION__ < 8.0
-  constant tag = 4;
-#else
   int tag = 4;
-#endif
   constant type_name = "OPAQUE";
   protected string _sprintf(int t)
   {
@@ -263,20 +231,10 @@ class Opaque
 class Counter64
 {
   inherit app_integer;
-#if __VERSION__ < 8.0
-  constant tag = 6;
-#else
   int tag = 6;
-#endif
   constant type_name = "COUNTER64";
 }
 
-#if __VERSION__ < 8.0
-constant ContextOctetString =
-  Protocols.LDAP.ldap_privates.asn1_context_octet_string;
-constant ContextSequence =
-  Protocols.LDAP.ldap_privates.asn1_context_sequence;
-#else
 class ContextOctetString
 {
   inherit Standards.ASN1.Types.OctetString;
@@ -304,7 +262,6 @@ class ContextSequence
     ::create(arg);
   }
 }
-#endif
 
 //! No such object marker.
 ContextOctetString NO_SUCH_OBJECT = ContextOctetString(0, "");
