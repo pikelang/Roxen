@@ -47,7 +47,8 @@ constant default_port = 161;
  */
 
 class SNMP_Port {
-  inherit Protocols.SNMP.protocol;
+  inherit Stdio.Port;
+  inherit Protocols.SNMP.protocol : snmp;
 
   protected int udp_errno = 0;
 
@@ -70,7 +71,7 @@ class SNMP_Port {
     // NOTE: We know stuff about how Protocols.SNP.protocol is implemented!
     udp_errno = 0;
     catch {
-      if (::bind(port, ip)) {
+      if (snmp::bind(port, ip)) {
 	DWRITE("protocol.bind: success!\n");
 
 	DWRITE("protocol.create: local adress:port bound: [%s:%d].\n",
@@ -82,14 +83,24 @@ class SNMP_Port {
       }
     }; 
     //# error ...
-    udp_errno = ::errno();
+    udp_errno = snmp::errno();
     DWRITE("protocol.create: can't bind to the socket.\n");
+  }
+
+  object|mapping snmp_der_decode (string data)
+  {
+    return Standards.ASN1.Decode.simple_der_decode (data, snmp_type_proc);
+  }
+
+  mapping get_snmp_errlist()
+  {
+    return snmp_errlist;
   }
 
   protected void create() {}
 }
 
-protected SNMP_Port port_obj;
+protected SNMP_Port|Stdio.Port port_obj;
 
 ADT.Trie mib = ADT.Trie();
 
@@ -483,7 +494,7 @@ class RoxenGlobalMIB
 		     "pikeNumCallbacks",
 		     "Number of pike callbacks."),
 		   SNMP.Gauge(lambda()
-			      { return update_pike_memusage()->num_frames; },
+			      { return update_pike_memusage()->num_pike_frames; },
 		     "pikeNumFrames",
 		     "Number of pike Frames."),
 		   SNMP.Gauge(lambda()
@@ -723,7 +734,7 @@ protected mapping(string:int|string|array) decode_asn1_msg(mapping rawd)
       "ip":rawd->ip,
       "port":rawd->port,
       "error-status":errno,
-      "error-string":port_obj->snmp_errlist[errno],
+      "error-string":port_obj->get_snmp_errlist()[errno],
       "error-index":pdu->elements[2]->value,
       "version":version,
       "community":xdec->elements[1]->value,
