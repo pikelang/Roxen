@@ -6398,7 +6398,7 @@ array(array(string|int|array)) security_checks = ({
   }), "ip", }),
   ({ "user=%s",1,({ 1,
     lambda( string x ) {
-      return ({sprintf("(< %{%O, %}>)", x/"," )});
+      return ({sprintf("((multiset)(< %{%O, %}>))", x/"," )});
     },
 
     "    if (((user || (user = authmethod->authenticate(id, userdb_module)))\n"
