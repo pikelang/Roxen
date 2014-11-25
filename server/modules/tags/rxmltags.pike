@@ -2202,6 +2202,8 @@ class CacheTagEntry (mixed data)
   protected array(mixed) collect_things_recur (mixed input,
 					       void|int ignore_input)
   {
+    // Note: limit is on visited nodes, not resulting entries. Don't
+    // raise above 100k without considering the stack limit below.
     constant limit = 10000;
 
     ADT.Queue queue = ADT.Queue();
@@ -2211,7 +2213,7 @@ class CacheTagEntry (mixed data)
     for (int i = 0; sizeof (queue) && i < limit; i++) {
       mixed entry = queue->read();
 
-      if (visited[entry])
+      if (functionp (entry) || visited[entry])
 	continue;
 
       visited[entry] = 1;
@@ -2241,7 +2243,9 @@ class CacheTagEntry (mixed data)
   int cache_count_memory (int|mapping opts)
   {
     array(mixed) things = collect_things_recur (data);
-    return Pike.count_memory (opts + ([ "lookahead": 5 ]), things);
+    // Note 100k entry stack limit (use 99k as an upper safety
+    // limit). Could split into multiple calls if necessary.
+    return Pike.count_memory (opts + ([ "lookahead": 5 ]), @things[..99000]);
   }
 }
 
