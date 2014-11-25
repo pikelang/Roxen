@@ -1,0 +1,11 @@
+subject: Roxen 5.4: Perform breadth-first traversal in collect_things_recur.
+from: 793c2a005fa25b30fc9f3cd61e530f6b1175b86e
+to: 65e62d1c6fdf76ab4c72c2320d46f79e0206cab1
+originator: wellhardh@roxen.com
+depends: 2014-11-11T150435
+restart: true
+
+Perform breadth-first traversal in collect_things_recur.
+
+This should make results more accurate when the traversal limit is reached.
+Also use a mapping to track visited things, to improve performance.
