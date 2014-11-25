@@ -2186,38 +2186,38 @@ class CacheTagEntry (mixed data)
   {
     constant limit = 10000;
 
-    array(mixed) result = ({});
-    ADT.Stack stack = ADT.Stack();
+    ADT.Queue queue = ADT.Queue();
+    mapping(mixed:int) visited = ([]);
 
-    stack->push (input);
-    for (int i = 0; sizeof (stack) && i < limit; i++) {
-      mixed entry = stack->pop();
+    queue->write (input);
+    for (int i = 0; sizeof (queue) && i < limit; i++) {
+      mixed entry = queue->read();
 
-      if (has_value (result, entry))
+      if (visited[entry])
 	continue;
 
-      result += ({ entry });
+      visited[entry] = 1;
 
       if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
 	foreach (entry; mixed ind; mixed val) {
 	  if (!arrayp (entry))
-	    stack->push (ind);
+	    queue->write (ind);
 	  if (!multisetp (entry))
-	    stack->push (val);
+	    queue->write (val);
 	}
       } else if (objectp (entry)) {
 	if (entry->is_RXML_PCode)
-	  stack->push (entry->exec);
+	  queue->write (entry->exec);
       }
     }
 
 #ifdef DEBUG
-    if (sizeof (stack))
+    if (sizeof (queue))
       report_error ("RXML <cache>: more than %d iterations in "
 		    "collect_things_recur.\n", limit);
 #endif
 
-    return result;
+    return indices (visited);
   }
 
   int cache_count_memory (int|mapping opts)
