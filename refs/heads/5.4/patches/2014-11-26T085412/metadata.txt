@@ -1,0 +1,12 @@
+subject: Roxen 5.4: Bugfix in CacheTagEntry.cache_count_memory.
+from: 65e62d1c6fdf76ab4c72c2320d46f79e0206cab1
+to: 437c940fa4c764091469bcdb6589cb6982831a14
+originator: wellhardh@roxen.com
+depends: 2014-11-25T122131
+restart: true
+
+Bugfix in CacheTagEntry.cache_count_memory.
+
+Collected objects are now provided individually to Pike.count_memory, rather
+than just counting the result array (which defeats the purpose of collecting
+all those objects to begin with).
