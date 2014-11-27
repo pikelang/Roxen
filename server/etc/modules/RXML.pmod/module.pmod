@@ -9549,6 +9549,55 @@ class PCode
       }
     }
   }
+
+  array(mixed) collect_things_recur()
+  {
+    // Note: limit is on visited nodes, not resulting entries. Don't
+    // raise above 100k without considering the stack limit below.
+    constant limit = 10000;
+
+    ADT.Queue queue = ADT.Queue();
+    mapping(mixed:int) visited = ([]);
+
+    queue->write (this);
+
+    for (int i = 0; sizeof (queue) && i < limit; i++) {
+      mixed entry = queue->read();
+
+      if (functionp (entry) || visited[entry])
+	continue;
+
+      visited[entry] = 1;
+
+      if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
+	foreach (entry; mixed ind; mixed val) {
+	  if (!arrayp (entry))
+	    queue->write (ind);
+	  if (!multisetp (entry))
+	    queue->write (val);
+	}
+      } else if (objectp (entry)) {
+	if (entry->is_RXML_PCode)
+	  queue->write (entry->exec);
+      }
+    }
+
+#ifdef DEBUG
+    if (int size = sizeof (queue))
+      werror ("PCode.collect_things_recur: more than %d iterations in "
+	      "cache_count_memory (%d entries left).\n", limit, size);
+#endif
+
+    return indices(visited);
+  }
+
+  int cache_count_memory (int|mapping opts)
+  {
+    array(mixed) things = collect_things_recur();
+    // Note 100k entry stack limit (use 99k as an upper safety
+    // limit). Could split into multiple calls if necessary.
+    return Pike.count_memory (opts + ([ "lookahead": 5 ]), @things[..99000]);
+  }
 }
 
 class RenewablePCode
