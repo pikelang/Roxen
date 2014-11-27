@@ -42,7 +42,7 @@ string parse( RequestID id )
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 
-     (Array.map(get_all_active_fd(),
+     (Array.map(Stdio.get_all_active_fd(),
 	  lambda(int fd)
 	  {
 	    object f = Stdio.File(fd);

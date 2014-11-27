@@ -93,19 +93,13 @@ mixed page_3(object id, object mc)
 
   array name = ({ });
   if (attrs->countryName)
-    name += ({(["countryName": asn1_printable_string (attrs->countryName)])});
+    name += ({([ "countryName": PrintableString(attrs->countryName) ])});
   foreach( ({ "stateOrProvinceName",
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
-      /* UTF8String is the recommended type. But it seems that
-       * netscape can't handle that. So when PrintableString doesn't
-       * suffice, we use latin1 but call it TeletexString (since at
-       * least netscape expects things that way). */
-      name += ({ ([ attr : (asn1_printable_valid (attrs[attr]) ?
-			    asn1_printable_string :
-			    asn1_broken_teletex_string) (attrs[attr]) ]) });
+      name += ({ ([ attr : UTF8String(attrs[attr]) ]) });
   }
 
   /* Create a plain X.509 v1 certificate, without any extensions */
