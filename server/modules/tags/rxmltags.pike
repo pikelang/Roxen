@@ -2188,54 +2188,25 @@ mapping(string:int) cache_mutex_concurrency = ([ ]);
 
 class CacheTagEntry (mixed data)
 {
-  // Custom cache entry wrapper to try to count memory consumption
-  // more accurately than the gross underestimation that's performed
-  // by default. We'll recurse through PCode entries, their
-  // subentries and so on.
-  protected array(mixed) collect_things_recur (mixed input,
-					       void|int ignore_input)
-  {
-    // Note: limit is on visited nodes, not resulting entries. Don't
-    // raise above 100k without considering the stack limit below.
-    constant limit = 10000;
-
-    ADT.Queue queue = ADT.Queue();
-    mapping(mixed:int) visited = ([]);
-
-    queue->write (input);
-    for (int i = 0; sizeof (queue) && i < limit; i++) {
-      mixed entry = queue->read();
-
-      if (functionp (entry) || visited[entry])
-	continue;
-
-      visited[entry] = 1;
-
-      if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
-	foreach (entry; mixed ind; mixed val) {
-	  if (!arrayp (entry))
-	    queue->write (ind);
-	  if (!multisetp (entry))
-	    queue->write (val);
-	}
-      } else if (objectp (entry)) {
-	if (entry->is_RXML_PCode)
-	  queue->write (entry->exec);
-      }
-    }
-
-#ifdef DEBUG
-    if (sizeof (queue))
-      report_error ("RXML <cache>: more than %d iterations in "
-		    "collect_things_recur.\n", limit);
-#endif
-
-    return indices (visited);
-  }
-
   int cache_count_memory (int|mapping opts)
   {
-    array(mixed) things = collect_things_recur (data);
+    array(mixed) things;
+
+    if (arrayp (data)) {
+      things = ({ data });
+      foreach (data, mixed thing) {
+	if (objectp (data) && data->is_RXML_PCode)
+	  things += data->collect_things_recur();
+	else
+	  things += ({ thing });
+      }
+    } else if (objectp (data) && data->is_RXML_PCode) {
+      things = data->collect_things_recur();
+    } else {
+      werror ("CacheTagEntry: Unknown data %O.\n", data);
+      return 0;
+    }
+
     // Note 100k entry stack limit (use 99k as an upper safety
     // limit). Could split into multiple calls if necessary.
     return Pike.count_memory (opts + ([ "lookahead": 5 ]), @things[..99000]);
@@ -2860,7 +2831,14 @@ class TagCache {
 	  // be encoded persistently if we're saved again), but then
 	  // they probably weren't that hot anyways. This method makes
 	  // sure we have control over memory usage.
-	  set_alternative (key, entry, timeout, 1);
+
+	  // FIXME: Ugly hack to get a low cost (since it's
+	  // reinstantiated from a persistent entry). Would be better
+	  // to save the original creation cost of the entry to reuse
+	  // here, but Roxen's cache doesn't have API's to get or set
+	  // entry cost currently.
+	  get_alternative (key);
+	  set_alternative (key, entry, timeout);
 	}
       }
     }
