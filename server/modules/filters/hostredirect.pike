@@ -146,7 +146,8 @@ string get_protocol(string ignored, RequestID id)
 {
   string prot = lower_case((id->prot/"/")[0]);
   // Check if the request is done via https.
-  if(id->my_fd && id->my_fd && id->my_fd->SSLConnection)
+  if(id->my_fd && id->my_fd->get_peer_certificate_info &&
+     id->my_fd->query_connection())
     prot = "https";
   dwerror("HR: get_protocol: %O\n", prot);
   return prot;
