@@ -1,0 +1,11 @@
+subject: Roxen 5.4: Improve cache size calculation of PCode objects in general.
+from: 437c940fa4c764091469bcdb6589cb6982831a14
+to: 4be6ddd7d844c19f3928321aca7d38f63c72eba7
+originator: wellhardh@roxen.com
+depends: 2014-11-26T085412
+restart: true
+
+Improve cache size calculation of PCode objects in general.
+
+Also trick the RAM cache manager to set a low cost on entries coming
+from persistent storage.
