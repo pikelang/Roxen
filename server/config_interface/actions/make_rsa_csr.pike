@@ -144,7 +144,7 @@ mixed page_4(object id, object mc)
 				cert_attrs) });
 
   object csr = CSR.build_csr(rsa,
-			     Certificate.build_distinguished_name(@name),
+			     Certificate.build_distinguished_name(name),
 			     csr_attrs);
 
   string re;
