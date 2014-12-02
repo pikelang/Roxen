@@ -11,7 +11,7 @@ constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
 constant months = ({
   "januar", "februar", "mars", "april", "mai",
   "juni", "juli", "august", "september", "oktober",
-  "november", "december" });
+  "november", "desember" });
 
 constant days = ({
   "søndag","mandag","tirsdag","onsdag",
