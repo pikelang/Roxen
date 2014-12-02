@@ -106,7 +106,7 @@ string describe_error(string err, array (int) times,
 			 @get_conf_url_to_module( module, lang ));
   }
 
-  return "<table><tr><td valign=\"top\"><imgs src=&usr.err-"+code+"; \n"
+  return "<table class='logitems'><tr><td><img src=&usr.err-"+code+"; \n"
 	 "alt=\"" + codetext[code-1] + "\" />"
 	  "</td><td>" + links + (nt?"":describe_times(times)+"<br />") +
 	  replace(fix_err(err), "\n", "<br />\n") + "</table>";

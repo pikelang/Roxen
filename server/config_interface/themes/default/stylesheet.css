@@ -84,6 +84,12 @@ div.bottom-div
 	padding-right: 10px;
 }
 
+table.logitems td:first-child {
+    vertical-align: top;
+    width: 20px;
+    padding-top: 4px;
+}
+
 ul.module-list
 {
 	font-size: 90%;
