@@ -39,7 +39,7 @@ mixed page_0(object id, object mc)
 mixed verify_0(object id, object mc)
 {
   int key_size = (int) id->variables->key_size;
-  if ( (key_size < 512) || (key_size > 1024) || (key_size % 64))
+  if ( !(<512, 576, 640, 704, 768, 832, 896, 960, 1024 >)[key_size])
   {
     id->variables->_error =
       LOCALE(135, "Invalid key size.");
@@ -60,9 +60,8 @@ mixed verify_0(object id, object mc)
   privs = 0;
 
   Crypto.DSA dsa = Crypto.DSA();
-  dsa->use_random(Crypto.Random.random_string);
-  dsa->generate_parameters(key_size);
-  dsa->generate_key();
+  dsa->set_random(Crypto.Random.random_string);
+  dsa->generate_key(key_size, 160);
 
   string key = Tools.PEM.simple_build_pem
     ("DSA PRIVATE KEY",
@@ -138,7 +137,7 @@ mixed page_3(object id, object mc)
   if (!dsa)
     return "<font color='red'>Invalid key.\n</font>";
 
-  dsa->use_random(Crypto.Random.random_string);
+  dsa->set_random(Crypto.Random.random_string);
 
   mapping attrs = ([]);
   string attr;
