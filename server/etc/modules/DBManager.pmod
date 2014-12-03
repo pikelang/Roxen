@@ -1743,7 +1743,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 
   string db_url = db_url_info->path;
 
-  if (db_url_info->local) {
+  if ((int)db_url_info->local) {
     db_url = replace(roxenloader->my_mysql_path, ({ "%user%", "%db%" }),
 		     ({ "ro", dbname || "mysql" }));
   }
