@@ -1377,6 +1377,10 @@ class RequestID
   //!     Originating @[RequestID] for recursive requests.
   //!   @member int "port"
   //!     Port number from the canonicalized host header.
+  //!
+  //!     Note that this may differ from the actual port number
+  //!     (available in @[port_obj->port]) if eg the server is
+  //!     found behind a load balancing proxy. cf [bug 7385].
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
   //!   @member mapping(string:array(string)) "post_variables"
