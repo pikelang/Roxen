@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.228 2009/01/21 13:07:29 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1090,6 +1090,10 @@ class RequestID
   //!     Originating @[RequestID] for recursive requests.
   //!   @member int "port"
   //!     Port number from the canonicalized host header.
+  //!
+  //!     Note that this may differ from the actual port number
+  //!     (available in @[port_obj->port]) if eg the server is
+  //!     found behind a load balancing proxy. cf [bug 7385].
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
   //!   @member mapping(string:array) "post_variables"
