@@ -2164,7 +2164,6 @@ void low_start_mysql( string datadir,
       args += ({
 	"--slow-query-log-file="+slow_query_log+".1",
 	"--slow-query-log",
-	"--log-queries-not-using-indexes",
       });
     } else {
       // NB: Deprecated in MySQL 5.1.29 and removed in MySQL 5.6.1.
