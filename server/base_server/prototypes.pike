@@ -1738,7 +1738,14 @@ class RequestID
 
   string extra_extension;
 
-  string data = "";
+  /*protected*/ string request_data = "";
+
+  void `->data=(string s)
+  {
+    request_data = s;
+  }
+
+  string `->data()
   //! The raw request body, containing non-decoded post variables et cetera.
   //!
   //! @note
@@ -1751,6 +1758,9 @@ class RequestID
   //!   is @expr{0x7fffffff@}), then additional data can be retrieved
   //!   from @[connection()]. This is typically the case with eg STOR
   //!   (aka PUT) and the ftp protocol.
+  {
+    return request_data;
+  }
 
   string leftovers = "";
   //! Raw data belonging to the next request.
@@ -1800,13 +1810,13 @@ class RequestID
 
   SimpleNode get_xml_data()
   {
-    if (!data || !sizeof(data)) return 0;
+    if (!request_data || !sizeof(request_data)) return 0;
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
-    DAV_WERROR("Parsing XML data: %O\n", data);
+    DAV_WERROR("Parsing XML data: %O\n", request_data);
     return xml_data =
-      Parser.XML.Tree.simple_parse_input(data,
+      Parser.XML.Tree.simple_parse_input(request_data,
 					 0,
 					 Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
   }
@@ -3271,7 +3281,7 @@ class RequestID
     c->raw = raw;
     c->query = query;
     c->not_query = not_query;
-    c->data = data;
+    c->request_data = request_data;
     c->extra_extension = extra_extension;
 
     c->realauth = realauth;

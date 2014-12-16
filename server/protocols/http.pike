@@ -677,7 +677,8 @@ int things_to_do_when_not_sending_from_cache( )
 //!     @value 3
 //!       Processing done.
 //!   @endint
-private int got_chunk_fragment(string fragment)
+private int got_chunk_fragment(string fragment,
+			       Stdio.Buffer|String.Buffer out_buffer)
 {
 #ifdef CONNECTION_DEBUG
   werror("HTTP[%s]: Fragment (length %d+%d/%d) ============================\n"
@@ -691,11 +692,11 @@ private int got_chunk_fragment(string fragment)
   int chunk_offset;
   if (misc->chunk_len) {
     if (misc->chunk_len >= sizeof(fragment)) {
-      data_buffer->add(fragment);      
+      out_buffer->add(fragment);
       misc->chunk_len -= sizeof(fragment);
       return 0; // More data needed (eg EOF marker).
     } else {
-      data_buffer->add(fragment[..misc->chunk_len - 1]);
+      out_buffer->add(fragment[..misc->chunk_len - 1]);
       chunk_offset = misc->chunk_len;
       misc->chunk_len = 0;
     }
@@ -724,41 +725,17 @@ private int got_chunk_fragment(string fragment)
     // FIXME: Currently we ignore the chunk_extras.
 
     if (sizeof(buf) < chunk_data_offset + misc->chunk_len) {
-      if (!data_buffer) {
-	// The 16384 is some reasonable extra padding to
-	// avoid having to realloc.
-	data_buffer =
-	  String.Buffer(sizeof(data) + misc->chunk_len + 16384);
-	if (sizeof(data)) data_buffer->add(data);
-	data = "";
-      }
-      data_buffer->add(buf[chunk_data_offset..]);
+      out_buffer->add(buf[chunk_data_offset..]);
       misc->chunk_len -= sizeof(buf) - chunk_data_offset;
       return 0; // More data needed for the chunk.
     } else if (misc->chunk_len) {
       string str =
 	buf[chunk_data_offset..chunk_data_offset + misc->chunk_len - 1];
-      if (sizeof(data) && !data_buffer) {
-	// The 16384 is some reasonable extra padding to
-	// avoid having to realloc.
-	data_buffer = String.Buffer(sizeof(data) + misc->chunk_len + 16384);
-	data_buffer->add(data);
-	data = "";
-      }
-      if (data_buffer) {
-	data_buffer->add(str);
-      } else {
-	data = str;
-      }
+      out_buffer->add(str);
       chunk_offset = chunk_data_offset + misc->chunk_len;
     } else {
-      // End marker for chunks!
-      if (data_buffer) {
-	data = data_buffer->get();
-	data_buffer = 0;
-      }
       chunk_offset = chunk_data_offset;
-      misc->len = sizeof(data);
+      wanted_data = misc->len = sizeof(out_buffer);
       misc->chunked = 2;
       break;
     }
@@ -858,7 +835,7 @@ private int parse_got( string new_data )
 	TIMER_END(parse_got);
 	return 0; // Not enough data
       }
-      [data, line, request_headers] = res;
+      [request_data, line, request_headers] = res;
     }
     hp = 0;
     TIMER_END(parse_got);
@@ -924,7 +901,7 @@ private int parse_got( string new_data )
 	  TIMER_END(parse_got_2);
 	  return 2;
 	}
-	data = ""; // no headers or extra data...
+	request_data = ""; // no headers or extra data...
 	sscanf( f, "%s%*[\r\n]", f );
 	if (sizeof(sl) == 1)
 	  NO_PROTO_CACHE();
@@ -937,7 +914,8 @@ private int parse_got( string new_data )
     TIMER_END(parse_got_2_parse_line);
     REQUEST_WERR(sprintf("HTTP: request line %O", line));
     REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
-    REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
+    REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(request_data),
+			 request_data));
     raw_url    = f;
     time       = predef::time(1);
     //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
@@ -973,8 +951,8 @@ private int parse_got( string new_data )
 	 if (has_value(misc->transfer_encoding, "chunked")) {
 	   misc->chunked = 1;
 	   misc->chunk_buf = "";
-	   new_data = data; // For got_chunk_fragment() below.
-	   data = "";
+	   new_data = request_data; // For got_chunk_fragment() below.
+	   request_data = "";
 	 }
 	 break;
        case "authorization":  rawauth = contents;              break;
@@ -1089,7 +1067,12 @@ private int parse_got( string new_data )
 
   TIMER_START(parse_got_2_more_data);
   if (misc->chunked) {
-    int ret = got_chunk_fragment(new_data);
+    if (!data_buffer) {
+      data_buffer = String.Buffer();
+      data_buffer->add (request_data);
+      request_data = "";
+    }
+    int ret = got_chunk_fragment(new_data, data_buffer);
     if (ret != 3) {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s (chunked).", method));
       ready_to_receive();
@@ -1101,9 +1084,9 @@ private int parse_got( string new_data )
   {
     int l = misc->len;
     wanted_data=l;
-    have_data=strlen(data);
+    have_data=strlen(request_data);
 	
-    if(strlen(data) < l)
+    if(strlen(request_data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
       ready_to_receive();
@@ -1111,13 +1094,13 @@ private int parse_got( string new_data )
       TIMER_END(parse_got_2);
       return 0;
     }
-    leftovers = data[l+2..];
-    data = data[..l+1];
+    leftovers = request_data[l+2..];
+    request_data = request_data[..l+1];
   } else {
-    leftovers = data;
-    data = "";
+    leftovers = request_data;
+    request_data = "";
   }
-  if (sizeof(data) && method == "POST") {
+  if (sizeof(request_data) && method == "POST") {
     // FIXME: Get this POST variable munching out of the backend thread!
 
     // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
@@ -1138,7 +1121,7 @@ private int parse_got( string new_data )
 	// applauncher did that). (This is safe for correct
 	// applauncher/x-www-form-urlencoded data since it doesn't
 	// contain any whitespace.)
-	string v = String.trim_all_whites (data);
+	string v = String.trim_all_whites (request_data);
 
 	// This will be charset decoded later in
 	// things_to_do_when_not_sending_from_cache.
@@ -1149,7 +1132,8 @@ private int parse_got( string new_data )
       case "multipart/form-data": {
 	// Set Guess to one in order to fix the incorrect quoting of paths
 	// from Internet Explorer when sending a file.
-	MIME.Message messg = MIME.Message(data, request_headers, UNDEFINED, 1);
+	MIME.Message messg = MIME.Message(request_data, request_headers,
+					  UNDEFINED, 1);
 	array(MIME.Message) parts = messg->body_parts;
 
 	if (!parts) {
@@ -1159,7 +1143,7 @@ private int parse_got( string new_data )
 		       "  data:\n"
 		       "%{    %O\"\\n\"\n%}",
 		       (array)request_headers,
-		       data/"\n");
+		       request_data/"\n");
 	  /* FIXME: Should this be reported to the client? */
 	}
 
@@ -1352,6 +1336,8 @@ void end(int|void keepit)
   if(keepit
      && !file->raw
      && misc->connection != "close"
+     && have_data == wanted_data // misc->connection should be "close"
+				 // otherwise, but just to be sure...
      && my_fd
      // Is this necessary now when this function no longer is called
      // from the close callback? /mast
@@ -2642,6 +2628,12 @@ void send_result(mapping|void result)
 
     mapping(string:string) heads = make_response_headers (file);
 
+    if (wanted_data && have_data != wanted_data) {
+      // We haven't read the entire request body for this request from
+      // the fd, so we need to close the connection.
+      heads["Connection"] = misc->connection = "close";
+    }
+
     // Notes about the variant headers:
     //
     // Date		Changes with every request.
@@ -3005,6 +2997,8 @@ protected void handle_request_from_queue( )
   }
 }
 
+protected int handled_request;
+
 void handle_request()
 {
   if (mixed err = catch {
@@ -3097,13 +3091,190 @@ void handle_request()
   }
 }
 
+protected class RequestStream
+{
+  constant is_request_stream = 1;
+  inherit Stdio.Stream;
+  Stdio.Buffer buf = Stdio.Buffer();
+  int read_bytes;
+
+  class RewindKey
+  {
+    int saved_bytes;
+    Stdio.Buffer.RewindKey buf_rewind_key;
+
+    void release()
+    {
+      buf_rewind_key->release();
+      destruct();
+    }
+
+    void rewind()
+    {
+      buf_rewind_key->rewind();
+      read_bytes = saved_bytes;
+    }
+
+    void create()
+    {
+      buf_rewind_key = buf->rewind_key();
+      saved_bytes = read_bytes;
+    }
+
+    void destroy (int reason)
+    {
+      if (reason > 1)
+	rewind();
+    }
+  }
+
+  RewindKey rewind_key()
+  {
+    return RewindKey();
+  }
+
+  protected function read_cb;
+  protected function write_cb;
+  protected function close_cb;
+  protected mixed callback_id;
+
+  function query_read_callback()
+  {
+    return read_cb;
+  }
+
+  function query_write_callback()
+  {
+    return write_cb;
+  }
+
+  function query_close_callback()
+  {
+    return close_cb;
+  }
+
+  void set_id (mixed id)
+  {
+    callback_id = id;
+  }
+
+  void set_nonblocking (function rcb, function wcb, function ccb)
+  {
+    my_fd->set_buffer_mode (buf, 0);
+    my_fd->set_nonblocking (my_read_cb, 0, my_close_cb);
+    read_cb = rcb;
+    write_cb = wcb;
+    close_cb = ccb;
+    my_read_cb (0, buf);
+  }
+
+  void set_blocking()
+  {
+    my_fd->set_blocking();
+  }
+
+  // FIXME: Support buffered mode callback (set_buffer_mode).
+
+  void my_read_cb (mixed unused, Stdio.Buffer buf)
+  {
+    if (read_cb && sizeof (buf)) {
+      string data = buf->try_read (min (wanted_data - read_bytes, 1024*1024));
+      read_bytes += sizeof (data);
+      read_cb (callback_id, data);
+      if (read_bytes == wanted_data)
+	call_out (my_close_cb, 0);
+      else if (read_bytes > wanted_data)
+	error ("Read too much!");
+    }
+  }
+
+  void my_close_cb (void|mixed unused)
+  {
+    if (close_cb)
+      close_cb (callback_id);
+  }
+
+  // FIXME: Nonblocking read from fd to avoid hanging?
+  string read (void|int bytes, void|int(0..1) not_all)
+  {
+    if (!not_all && Thread.this_thread() == roxen.backend_thread)
+      error ("Don't perform blocking reads from the backend thread. Thanks.");
+
+    if (!bytes || (bytes > wanted_data - read_bytes))
+      bytes = wanted_data - read_bytes;
+
+    if (sizeof (buf) < bytes && my_fd && (!not_all || !sizeof (buf))) {
+      my_fd->set_blocking();
+      if (string new_data = my_fd->read (bytes - sizeof (buf), not_all)) {
+	raw_bytes += sizeof (new_data);
+	have_data += sizeof (new_data);
+	buf->add (new_data);
+      }
+    }
+    string res = buf->try_read (bytes);
+    read_bytes += sizeof (res);
+
+    return res;
+  }
+
+  string content_type()
+  {
+    return request_headers["content-type"];
+  }
+
+  int(0..) _sizeof()
+  {
+    return wanted_data;
+  }
+
+  void close()
+  {
+    destruct();
+  }
+
+  string _sprintf()
+  {
+    return sprintf ("RequestStream(%O)", this_object(1)->_sprintf());
+  }
+
+  protected void create (string init_buf)
+  {
+    buf->add (init_buf);
+  }
+}
+
+RequestStream request_stream()
+{
+  return RequestStream (full_request_data || request_data);
+}
+
+/*protected*/ string full_request_data;
+
+void `->data=(string s)
+{
+  full_request_data = s;
+}
+
+string `->data()
+//! Compatibility with old API where id->data was used to get a string
+//! with the request body in it. Please use id->request_stream()
+//! instead.
+{
+  if (!full_request_data)
+    full_request_data = request_stream()->read();
+
+  return full_request_data;
+}
+
 /* We got some data on a socket.
  * =================================================
  */
 // array ccd = ({});
-void got_data(mixed fooid, string s, void|int chained)
+void got_data(mixed fooid, string|Stdio.Buffer s, void|int chained)
 {
   if (mixed err = catch {
+      // FIXME: True support for buffered mode.
+      if (objectp (s)) s = s->read();
 
 #ifdef CONNECTION_DEBUG
   if (wanted_data < 2000)
@@ -3119,6 +3290,22 @@ void got_data(mixed fooid, string s, void|int chained)
   // Keep track of how much data we've received.
   raw_bytes += sizeof(s);
 
+  // Note: this check applies to in-memory string data (headers, POST
+  // request data). However, PUT data isn't read into memory -- it's
+  // streamed by RequestStream.
+  int max_post_size = conf->max_post_size;
+  if (max_post_size && (raw_bytes > max_post_size)) {
+    my_fd->set_read_callback(0);
+    conf->received += raw_bytes - sizeof(leftovers);
+    conf->requests++;
+    // RequestID.make_response_headers assumes the supports multiset exists.
+    if (!supports) supports = (<>);
+    send_result (Roxen.http_status (Protocols.HTTP.HTTP_REQ_TOO_LARGE,
+				    "Request Entity Too Large"));
+    REQUEST_WERR("HTTP: Request Entity Too Large.");
+    return;
+  }
+
   if(wanted_data)
   {
     // NOTE: No need to make a data buffer if it's a small request.
@@ -3128,8 +3315,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	// The 16384 is some reasonable extra padding to
 	// avoid having to realloc.
 	data_buffer = String.Buffer(wanted_data + 16384);
-	data_buffer->add(data);
-	data = "";
+	data_buffer->add(request_data);
+	request_data = "";
       }
       data_buffer->add(s);
       have_data += strlen(s);
@@ -3146,13 +3333,18 @@ void got_data(mixed fooid, string s, void|int chained)
     }
     if (data_buffer) {
       data_buffer->add(s);
-      data = data_buffer->get();
+      request_data = data_buffer->get();
       data_buffer = 0;
     } else {
-      data += s;
+      request_data += s;
     }
   } else if (misc->chunked) {
-    if (!got_chunk_fragment(s)) {
+    if (!data_buffer) {
+      data_buffer = String.Buffer();
+      data_buffer->add (request_data);
+      request_data = "";
+    }
+    if (!got_chunk_fragment(s, data_buffer)) {
       REQUEST_WERR("HTTP: We want more data (chunked).");
 
       // Reset timeout.
@@ -3163,146 +3355,167 @@ void got_data(mixed fooid, string s, void|int chained)
 	my_fd->set_nonblocking(got_data, 0, close_cb);
       return;
     }
+    request_data += data_buffer->get();
+    data_buffer = 0;
     s = "";
   }
 
-    MARK_FD("HTTP got data");
-    raw += s;
+  MARK_FD("HTTP got data");
+  raw += s;
 
-    // The port has been closed, but old (probably keep-alive)
-    // connections remain.  Close those connections.
-    if( !port_obj ) 
-    {
-      if( conf )
-	conf->connection_drop( this_object() );
-      MARK_FD ("HTTP: Port closed.");
-      call_out (disconnect, 0);
+  // The port has been closed, but old (probably keep-alive)
+  // connections remain.  Close those connections.
+  if( !port_obj ) {
+    if( conf )
+      conf->connection_drop( this_object() );
+    MARK_FD ("HTTP: Port closed.");
+    call_out (disconnect, 0);
+    return;
+  }
+
+  switch( parse_got( s ) ) {
+  case 0:
+    REQUEST_WERR("HTTP: Request needs more data.");
+    if (chained)
+      my_fd->set_nonblocking(got_data, 0, close_cb);
+
+    if (method == "PUT" && !hp && !misc->chunked)
+      // We have all the headers but not all data. We may continue to
+      // send the request to a handler. The handling module may use
+      // id->request_stream() to get the data (or the less optimal
+      // id->data for compatibility).
+      //
+      // FIXME: Support streaming chunked PUTs.
+      break;
+
+    return;
+
+  case 1: {
+    string res = (prot||"HTTP/1.0")+" 500 Illegal request\r\n"
+      "Content-Length: 0\r\n"+
+      "Date: "+Roxen.http_date(predef::time())+"\r\n"
+      "\r\n";
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP[%s]: Response (length %d) =================================\n"
+	    "%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
+    REQUEST_WERR("HTTP: Stupid Client Error.");
+#endif
+    my_fd->write (res);
+    end();
+    return;			// Stupid request.
+  }
+
+  case 2:
+    REQUEST_WERR("HTTP: Done.");
+    end();
+    return;
+  }
+
+  if (handled_request)
+    return;
+
+  handled_request = 1;
+
+  if (data_buffer) {
+    // We might end up here if this is a PUT request (see "case 0:" above).
+    request_data = data_buffer->get();
+    data_buffer = 0;
+  }
+
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP[%s]: Request received -------------------------------------\n",
+	  DEBUG_GET_FD);
+#endif
+
+  if( method == "GET" || method == "HEAD" ) {
+    // NOTE: Setting misc->cacheable enables use of the RAM_CACHE.
+    misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
+#ifdef DEBUG_CACHEABLE
+    report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
+		 misc->cacheable);
+#endif
+  }
+
+  TIMER_START(find_conf);
+
+  string path;
+
+  // RFC 2068 5.1.2:
+  //
+  // To allow for transition to absoluteURIs in all requests in future
+  // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
+  // form in requests, even though HTTP/1.1 clients will only generate
+  // them in requests to proxies.
+  misc->prot_cache_key = raw_url;
+  if (has_prefix(raw_url, port_obj->url_prefix)) {
+    sscanf(raw_url[sizeof(port_obj->url_prefix)..], "%[^/]%s",
+	   misc->host, raw_url);
+  }
+
+  string canon_host = "*:";
+  if (string host = misc->host) {
+    // Parse and canonicalize the host header for use in the url
+    // used for port matching.
+    int port = port_obj->default_port;
+    if (has_prefix(host, "[")) {
+      //  IPv6 address
+      sscanf(lower_case(host), "[%s]:%d", host, port);
+      host = Protocols.IPv6.normalize_addr_basic (host) || host;
+      canon_host = "[" + host + "]:";
+    } else {
+      sscanf(lower_case(host), "%[^:]:%d", host, port);
+      canon_host = host + ":";
+    }
+    misc->hostname = host;
+    misc->port = port;
+  }
+
+  if( !conf || !(path = port_obj->path ) ||
+      (sizeof( path ) && !has_prefix(raw_url, path)) ) {
+    // FIXME: port_obj->name & port_obj->port are constant
+    // consider caching them?
+
+    // NB: Ignore the port number from the host header here, as
+    //     the client may access us via a load balancing proxy
+    //     or similar on a different port than our actual port.
+    //     cf [bug 7385].
+    string port_match_url = (port_obj->url_prefix +
+			     canon_host + port_obj->port +
+			     raw_url);
+    conf = port_obj->find_configuration_for_url(port_match_url, this);
+
+    // Note: The call above might have replaced port_obj from one
+    // bound to a specific interface to one bound to ANY.
+
+    if (misc->defaulted_conf > 1)
+      // Use the full url in the cache if a fallback configuration
+      // (with or without the default_server flag) was chosen.
+      misc->prot_cache_key = port_match_url;
+  }
+  else if( strlen(path) )
+    adjust_for_config_path( path );
+
+  TIMER_END(find_conf);
+
+  // The "http_request_init" provider hook allows modules to do
+  // things very early in the request path, before the request is
+  // put in the handler queue and before the protocol cache is
+  // queried.
+  //
+  // Use with great care; this is run in the backend thread, and
+  // some things in the id object are still not initialized.
+  foreach (conf->get_providers ("http_request_init"), RoxenModule mod)
+    if (mapping res = mod->http_request_init (this)) {
+      conf->received += raw_bytes - sizeof(leftovers);
+      conf->requests++;
+      // RequestID.make_response_headers assumes the supports multiset exists.
+      if (!supports) supports = (<>);
+      send_result (res);
       return;
     }
 
-    switch( parse_got( s ) )
-    {
-      case 0:
-	REQUEST_WERR("HTTP: Request needs more data.");
-	if (chained)
-	  my_fd->set_nonblocking(got_data, 0, close_cb);
-	return;
-
-      case 1: {
-	string res = (prot||"HTTP/1.0")+" 500 Illegal request\r\n"
-	  "Content-Length: 0\r\n"+
-	  "Date: "+Roxen.http_date(predef::time())+"\r\n"
-	  "\r\n";
-#ifdef CONNECTION_DEBUG
-	werror ("HTTP[%s]: Response (length %d) =================================\n"
-		"%O\n", DEBUG_GET_FD, sizeof (res), res);
-#else
-	REQUEST_WERR("HTTP: Stupid Client Error.");
-#endif
-	my_fd->write (res);
-	end();
-	return;			// Stupid request.
-      }
-    
-      case 2:
-	REQUEST_WERR("HTTP: Done.");
-	end();
-	return;
-    }
-
-#ifdef CONNECTION_DEBUG
-    werror ("HTTP[%s]: Request received -------------------------------------\n",
-	    DEBUG_GET_FD);
-#endif
-
-    if( method == "GET" || method == "HEAD" ) {
-      // NOTE: Setting misc->cacheable enables use of the RAM_CACHE.
-      misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
-#ifdef DEBUG_CACHEABLE
-      report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
-		   misc->cacheable);
-#endif
-    }
-
-    TIMER_START(find_conf);
-
-    string path;
-
-    // RFC 2068 5.1.2:
-    //
-    // To allow for transition to absoluteURIs in all requests in future
-    // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
-    // form in requests, even though HTTP/1.1 clients will only generate
-    // them in requests to proxies. 
-    misc->prot_cache_key = raw_url;
-    if (has_prefix(raw_url, port_obj->url_prefix)) {
-      sscanf(raw_url[sizeof(port_obj->url_prefix)..], "%[^/]%s",
-	     misc->host, raw_url);
-    }
-
-    string canon_host = "*:";
-    if (string host = misc->host) {
-      // Parse and canonicalize the host header for use in the url
-      // used for port matching.
-      int port = port_obj->default_port;
-      if (has_prefix(host, "[")) {
-	//  IPv6 address
-	sscanf(lower_case(host), "[%s]:%d", host, port);
-	host = Protocols.IPv6.normalize_addr_basic (host) || host;
-	canon_host = "[" + host + "]:";
-      } else {
-	sscanf(lower_case(host), "%[^:]:%d", host, port);
-	canon_host = host + ":";
-      }
-      misc->hostname = host;
-      misc->port = port;
-    }
-
-    if( !conf || !(path = port_obj->path ) ||
-	(sizeof( path ) && !has_prefix(raw_url, path)) ) {
-      // FIXME: port_obj->name & port_obj->port are constant
-      // consider caching them?
-
-      // NB: Ignore the port number from the host header here, as
-      //     the client may access us via a load balancing proxy
-      //     or similar on a different port than our actual port.
-      //     cf [bug 7385].
-      string port_match_url = (port_obj->url_prefix +
-			       canon_host + port_obj->port +
-			       raw_url);
-      conf = port_obj->find_configuration_for_url(port_match_url, this);
-
-      // Note: The call above might have replaced port_obj from one
-      // bound to a specific interface to one bound to ANY.
-
-      if (misc->defaulted_conf > 1)
-	// Use the full url in the cache if a fallback configuration
-	// (with or without the default_server flag) was chosen.
-	misc->prot_cache_key = port_match_url;
-    }
-    else if( strlen(path) )
-      adjust_for_config_path( path );
-
-    TIMER_END(find_conf);
-
-    // The "http_request_init" provider hook allows modules to do
-    // things very early in the request path, before the request is
-    // put in the handler queue and before the protocol cache is
-    // queried.
-    //
-    // Use with great care; this is run in the backend thread, and
-    // some things in the id object are still not initialized.
-    foreach (conf->get_providers ("http_request_init"), RoxenModule mod)
-      if (mapping res = mod->http_request_init (this)) {
-	conf->received += raw_bytes - sizeof(leftovers);
-	conf->requests++;
-	// RequestID.make_response_headers assumes the supports multiset exists.
-	if (!supports) supports = (<>);
-	send_result (res);
-	return;
-      }
-
-    if (rawauth)
+  if (rawauth)
     {
       /* Need to authenticate with the configuration */
       NO_PROTO_CACHE();
@@ -3310,42 +3523,42 @@ void got_data(mixed fooid, string s, void|int chained)
       realauth = 0;
       auth = 0;
       if (sizeof(y) >= 2)
-      {
-	y[1] = MIME.decode_base64(y[1]);
-	realauth = y[1];
-      }
+	{
+	  y[1] = MIME.decode_base64(y[1]);
+	  realauth = y[1];
+	}
     }
 
 
-    if( misc->proxyauth )
+  if( misc->proxyauth )
     {
       /* Need to authenticate with the configuration */
       NO_PROTO_CACHE();
       if (sizeof(misc->proxyauth) >= 2)
-      {
-	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
-	//
-	// FIXME: Obsolete API!
-	if (conf->auth_module)
-	  misc->proxyauth
-	    = conf->auth_module->auth(misc->proxyauth,this_object() );
-      }
+	{
+	  //    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
+	  //
+	  // FIXME: Obsolete API!
+	  if (conf->auth_module)
+	    misc->proxyauth
+	      = conf->auth_module->auth(misc->proxyauth,this_object() );
+	}
     }
 
-    conf->connection_add( this_object(), connection_stats );
-    conf->received += raw_bytes - sizeof(leftovers);
-    conf->requests++;
+  conf->connection_add( this_object(), connection_stats );
+  conf->received += raw_bytes - sizeof(leftovers);
+  conf->requests++;
 
-    CHECK_FD_SAFE_USE;
-    my_fd->set_close_callback(0);
-    my_fd->set_read_callback(0);
+  CHECK_FD_SAFE_USE;
+  my_fd->set_close_callback(0);
+  my_fd->set_read_callback(0);
 
-    remove_call_out(do_timeout);
+  remove_call_out(do_timeout);
 #ifdef RAM_CACHE
-    TIMER_START(cache_lookup);
-    array cv;
-    if(misc->cacheable && !misc->no_proto_cache &&
-       (cv = conf->datacache->get(misc->prot_cache_key, this)) )
+  TIMER_START(cache_lookup);
+  array cv;
+  if(misc->cacheable && !misc->no_proto_cache &&
+     (cv = conf->datacache->get(misc->prot_cache_key, this)) )
     {
       MY_TRACE_ENTER(sprintf("Checking entry %O", misc->prot_cache_key));
       if( !cv[1]->key ) {
@@ -3353,302 +3566,302 @@ void got_data(mixed fooid, string s, void|int chained)
 	conf->datacache->expire_entry(misc->prot_cache_key, this);
       }
       else 
-      {
-	int can_cache = 1;
-	string d = cv[ 0 ];
+	{
+	  int can_cache = 1;
+	  string d = cv[ 0 ];
 #ifdef DEBUG
-	if (!stringp (d))
-	  error ("Strange value from data cache for %O: %O\n", raw_url, cv);
+	  if (!stringp (d))
+	    error ("Strange value from data cache for %O: %O\n", raw_url, cv);
 #endif
-	file = cv[1];
+	  file = cv[1];
 	
-	if( sizeof(file->callbacks) )
-	{
-	  if( mixed e = catch 
-	  {
-	    foreach( file->callbacks, function f ) {
-	      if (!file->key) break;
-	      MY_TRACE_ENTER (sprintf ("Checking with %O", f));
-	      if( !f(this_object(), file->key ) )
-	      {
-		MY_TRACE_LEAVE ("Entry invalid according to callback");
-		MY_TRACE_LEAVE ("");
-		can_cache = 0;
-		break;
-	      }
-	      MY_TRACE_LEAVE ("");
-	    }
-	  } )
-	  {
-	    // Callback failed; in destructed object?
-	    if (e = catch {
-		werror("Cache callback internal server error:\n"
-		       "%s\n",
-		       describe_backtrace(e));
-		// Invalidate the key.
-		destruct(file->key);
-	      }) {
-	      // Fall back to a standard internal error.
-	      INTERNAL_ERROR( e );
-	      TIMER_END(cache_lookup);
-	      send_result();
-	      return;
-	    }
-	  }
-	}
-	if(roxen.invalidp(file->key))
-	{
-	  // Stale or invalid key.
-	  if (!file->key) {
-	    // Invalid.
-	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	    conf->datacache->expire_entry(misc->prot_cache_key, this);
-	    can_cache = 0;
-	  } else {
-	    cache_status["stale"] = 1;
-	    if (file->refresh > predef::time(1)) {
-	      // Stale and no refresh in progress.
-	      // We want a refresh as soon as possible,
-	      // so move the refresh time to now.
-	      // Note that we use the return value from m_delete()
-	      // to make sure we are free from races.
-	      // Note also that we check above that the change is needed,
-	      // so as to avoid the risk of starving the code below.
-	      if (m_delete(file, "refresh")) {
-		file->refresh = predef::time(1);
-	      }
-	    }
-	  }
-	}      
-	if( can_cache )
-	{
-#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
-	  Stat st;
-	  if( !file->rf || !file->mtime || 
-	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
-#endif
-	  {
-	    int refresh;
-	    if (file->refresh && (file->refresh <= predef::time(1))) {
-	      // We might need to refresh the entry.
-	      // Note that we use the return value from m_delete()
-	      // to make sure we are free from races.
-	      if (refresh = m_delete(file, "refresh")) {
-		refresh = 1 + predef::time(1) - refresh;
-	      }
-	    }
-
-	    int code = file->error;
-	    int len = sizeof(d);
-            mapping(string:string) variant_heads = ([]);
-	    // Make sure we don't mess with the RAM cache.
-	    file += ([]);
-#ifdef HTTP_COMPRESSION
-	    if(file->etag)
-	      variant_heads["ETag"] = file->etag;
-            if(file->encoding == "gzip") {
-              if(!misc->range && client_gzip_enabled()) {
-                variant_heads["Content-Encoding"] = file->encoding;
-                if(file->etag) {
-                  string etag = file->etag;
-		  if(etag[sizeof(etag)-1..] == "\"")
-                    etag = etag[..sizeof(etag)-2] + ";gzip\"";
-                  file->etag = variant_heads["ETag"] = etag;
-                }
-		// Perhaps set some gzip log status here?
-              } else {
-                d = gunzip_data(d);
-                len = sizeof(d);
-              }
-            }
-#endif
-	    if (none_match) {
-	      //  RFC 2616, Section 14.26:
-	      //
-	      //  If none of the entity tags match, then the server
-	      //  MAY perform the requested method as if the
-	      //  If-None-Match header field did not exist, but MUST
-	      //  also ignore any If-Modified-Since header field(s) in
-	      //  the request. That is, if no entity tags match, then
-	      //  the server MUST NOT return a 304 (Not Modified)
-	      //  response.
-	      if (none_match[file->etag] || (none_match["*"] && file->etag)) {
-		// Not modified.
-		code = 304;
-		d = "";
-		len = 0;
-	      }
-	    } else if (since && file->last_modified) {
-	      array(int) since_info = Roxen.parse_since( since );
-	      if ((since_info[0] >= file->last_modified) &&
-		  ((since_info[1] == -1) ||
-		   (since_info[1] == len))) {
-		// Not modified.
-		code = 304;
-		d = "";
-		len = 0;
-	      }
-	    }
-	    file->error = code;
-	    if (method == "HEAD") {
-	      d = "";
-	    }
-	    variant_heads += ([
-	      "Date":Roxen.http_date(predef::time(1)),
-	      "Content-Length":(string)len,
-	      "Content-Type":file->type,
-	      "Connection":misc->connection,
-	    ]);
-
-	    // Don't allow any downstream caching if the response is stale. One
-	    // reason for this is that if a client has been notified somehow
-	    // about the change that has made this entry stale, and then
-	    // proceeds to retrieve the resource to get the new version, it at
-	    // least shouldn't overcache the response if it's unlucky and gets
-	    // the old stale version. (One might consider disabling this if all
-	    // clients can be assumed to be end users.)
-	    if (cache_status->stale) {
-	      variant_heads["Cache-Control"] = "no-cache";
-	      // RFC2616, 14.9.3: "If a cache returns a stale response, /.../,
-	      // the cache MUST attach a Warning header to the stale response,
-	      // using Warning 110 (Response is stale)."
-	      variant_heads["Warning"] = "110 " +
-		replace (my_fd->query_address (1) || "roxen", " ", ":") +
-		" \"Response is stale - update is underway\" "
-		"\"" + variant_heads["Date"] + "\"";
-	    }
-	    else if (string cc = file->cache_control)
-	      variant_heads["Cache-Control"] = cc;
-
-	    string expires;
-	    if (expires = (cache_status->stale // See above.
-#ifndef DISABLE_VARY_EXPIRES_FALLBACK
-			   || (file->varies && (prot == "HTTP/1.0"))
-#endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
-			   ? Roxen->http_date(predef::time(1)-31557600) :
-			   file->expires)) {
-	      variant_heads["Expires"] = expires;
-	    }
-	    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-	    // content length when using keep-alive. So let's force a
-	    // close in that case.
-	    if( file->error/100 == 2 && file->len <= 0 )
+	  if( sizeof(file->callbacks) )
 	    {
-	      variant_heads->Connection = "close";
-	      misc->connection = "close";
-	    }
-	    if (misc->range) {
-	      // Handle byte ranges.
-	      int skip;
-	      string if_range;
-	      if (if_range = request_headers["if-range"]) {
-		// Check If-Range header (RFC 2068 14.27).
-		if (has_prefix(if_range, "\"")) {
-		  // ETag
-		  if (if_range != file->etag) {
-		    // ETag has changed.
-		    skip = 1;
+	      if( mixed e = catch 
+		{
+		  foreach( file->callbacks, function f ) {
+		    if (!file->key) break;
+		    MY_TRACE_ENTER (sprintf ("Checking with %O", f));
+		    if( !f(this_object(), file->key ) )
+		      {
+			MY_TRACE_LEAVE ("Entry invalid according to callback");
+			MY_TRACE_LEAVE ("");
+			can_cache = 0;
+			break;
+		      }
+		    MY_TRACE_LEAVE ("");
 		  }
-		} else {
-		  //  Needs strict equality according to RFC 7233
-		  array(int) since_info = Roxen.parse_since(if_range);
-		  if (!since_info || (since_info[0] != file->last_modified)) {
-		    // Failed to parse since info, or the file has changed.
-		    skip = 1;
+		} )
+		{
+		  // Callback failed; in destructed object?
+		  if (e = catch {
+		      werror("Cache callback internal server error:\n"
+			     "%s\n",
+			     describe_backtrace(e));
+		      // Invalidate the key.
+		      destruct(file->key);
+		    }) {
+		    // Fall back to a standard internal error.
+		    INTERNAL_ERROR( e );
+		    TIMER_END(cache_lookup);
+		    send_result();
+		    return;
+		  }
+		}
+	    }
+	  if(roxen.invalidp(file->key))
+	    {
+	      // Stale or invalid key.
+	      if (!file->key) {
+		// Invalid.
+		MY_TRACE_LEAVE ("Entry invalid due to zero key");
+		conf->datacache->expire_entry(misc->prot_cache_key, this);
+		can_cache = 0;
+	      } else {
+		cache_status["stale"] = 1;
+		if (file->refresh > predef::time(1)) {
+		  // Stale and no refresh in progress.
+		  // We want a refresh as soon as possible,
+		  // so move the refresh time to now.
+		  // Note that we use the return value from m_delete()
+		  // to make sure we are free from races.
+		  // Note also that we check above that the change is needed,
+		  // so as to avoid the risk of starving the code below.
+		  if (m_delete(file, "refresh")) {
+		    file->refresh = predef::time(1);
 		  }
 		}
 	      }
-	      if (!skip) {
-		file->data = d;
-		file->len = len;
-
-		// NOTE: Modifies both arguments destructively.
-		handle_byte_ranges(file, variant_heads);
-
-		d = file->data;
-		code = file->error;
-	      }
-	    }
-	    string full_headers = "";
-	    if (prot != "HTTP/0.9") {
-	      full_headers = prot + " " + code + file->hs +
-		Roxen.make_http_headers(variant_heads);
-	    }
-
-	    MY_TRACE_LEAVE ("Using entry from protocol cache");
-	    cache_status["protcache"] = 1;
-
-	    if (!refresh) {
-	      // No need to refresh the cached entry, so we just send it,
-	      // disconnect the cookie jar, and are done.
-	      if (objectp(cookies)) {
-		// Disconnect the cookie jar just before sending the reply.
-		real_cookies = cookies = ~cookies;
-	      }
-	      TIMER_END(cache_lookup);
-	      low_send_result(full_headers, d, sizeof(d));
-	      return;
-	    }
-	    // Create a new RequestID for sending the cached response,
-	    // so that it won't interfere with this one when it finishes.
-	    // We need to copy lots of stuff to keep the log functions happy.
-	    RequestID id = clone_me();
-	    id->hrtime = hrtime;
-	    id->my_fd = my_fd;
-	    id->file = file;
-	    id->kept_alive = kept_alive;
-	    id->cache_status = cache_status + (<>);
-	    id->eval_status = eval_status + (<>);
-	    id->output_charset = output_charset;
-	    id->input_charset = input_charset;
-	    id->auth = auth;
-	    id->throttle = throttle + ([]);
-	    id->throttler = throttler;
-	    conf->connection_add( id, connection_stats );
-	    TIMER_END(cache_lookup);
-	    id->low_send_result(full_headers, d, sizeof(d));
-
-	    method = "GET";
-	    remoteaddr = "127.0.0.1";
-	    host = 0;
-	    my_fd = 0;
-	    misc->connection = "close";
-	    misc->is_spci_refresh = 1;
-	    
-	    MY_TRACE_ENTER (
-	      sprintf("Starting refresh of stale entry "
-		      "(%d seconds past refresh time)", refresh - 1));
-	    cache_status["protcache"] = 0;
-	    cache_status["refresh"] = 1;
-	    cache_status["stale"] = 0;
-	    MY_TRACE_LEAVE("");
-	  }
+	    }      
+	  if( can_cache )
+	    {
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
-	  else
-	    MY_TRACE_LEAVE (
-	      sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
-		       st ? "mtime " + st->mtime : "gone", file->mtime));
+	      Stat st;
+	      if( !file->rf || !file->mtime || 
+		  ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
-	}
-	file = 0;
-      }
-    }
-    TIMER_END(cache_lookup);
-#endif	// RAM_CACHE
-    TIMER_START(parse_request);
-    if( things_to_do_when_not_sending_from_cache( ) )
-      return;
-    REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
-    REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
-    REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
-    TIMER_END(parse_request);
+		{
+		  int refresh;
+		  if (file->refresh && (file->refresh <= predef::time(1))) {
+		    // We might need to refresh the entry.
+		    // Note that we use the return value from m_delete()
+		    // to make sure we are free from races.
+		    if (refresh = m_delete(file, "refresh")) {
+		      refresh = 1 + predef::time(1) - refresh;
+		    }
+		  }
 
-    REQUEST_WERR("HTTP: Calling roxen.handle().");
-    queue_time = gethrtime();
-    queue_length = roxen.handle_queue_length();
-    roxen.handle(handle_request_from_queue);
-  })
-  {
+		  int code = file->error;
+		  int len = sizeof(d);
+		  mapping(string:string) variant_heads = ([]);
+		  // Make sure we don't mess with the RAM cache.
+		  file += ([]);
+#ifdef HTTP_COMPRESSION
+		  if(file->etag)
+		    variant_heads["ETag"] = file->etag;
+		  if(file->encoding == "gzip") {
+		    if(!misc->range && client_gzip_enabled()) {
+		      variant_heads["Content-Encoding"] = file->encoding;
+		      if(file->etag) {
+			string etag = file->etag;
+			if(etag[sizeof(etag)-1..] == "\"")
+			  etag = etag[..sizeof(etag)-2] + ";gzip\"";
+			file->etag = variant_heads["ETag"] = etag;
+		      }
+		      // Perhaps set some gzip log status here?
+		    } else {
+		      d = gunzip_data(d);
+		      len = sizeof(d);
+		    }
+		  }
+#endif
+		  if (none_match) {
+		    //  RFC 2616, Section 14.26:
+		    //
+		    //  If none of the entity tags match, then the server
+		    //  MAY perform the requested method as if the
+		    //  If-None-Match header field did not exist, but MUST
+		    //  also ignore any If-Modified-Since header field(s) in
+		    //  the request. That is, if no entity tags match, then
+		    //  the server MUST NOT return a 304 (Not Modified)
+		    //  response.
+		    if (none_match[file->etag] || (none_match["*"] && file->etag)) {
+		      // Not modified.
+		      code = 304;
+		      d = "";
+		      len = 0;
+		    }
+		  } else if (since && file->last_modified) {
+		    array(int) since_info = Roxen.parse_since( since );
+		    if ((since_info[0] >= file->last_modified) &&
+			((since_info[1] == -1) ||
+			 (since_info[1] == len))) {
+		      // Not modified.
+		      code = 304;
+		      d = "";
+		      len = 0;
+		    }
+		  }
+		  file->error = code;
+		  if (method == "HEAD") {
+		    d = "";
+		  }
+		  variant_heads += ([
+		    "Date":Roxen.http_date(predef::time(1)),
+		    "Content-Length":(string)len,
+		    "Content-Type":file->type,
+		    "Connection":misc->connection,
+		  ]);
+
+		  // Don't allow any downstream caching if the response is stale. One
+		  // reason for this is that if a client has been notified somehow
+		  // about the change that has made this entry stale, and then
+		  // proceeds to retrieve the resource to get the new version, it at
+		  // least shouldn't overcache the response if it's unlucky and gets
+		  // the old stale version. (One might consider disabling this if all
+		  // clients can be assumed to be end users.)
+		  if (cache_status->stale) {
+		    variant_heads["Cache-Control"] = "no-cache";
+		    // RFC2616, 14.9.3: "If a cache returns a stale response, /.../,
+		    // the cache MUST attach a Warning header to the stale response,
+		    // using Warning 110 (Response is stale)."
+		    variant_heads["Warning"] = "110 " +
+		      replace (my_fd->query_address (1) || "roxen", " ", ":") +
+		      " \"Response is stale - update is underway\" "
+		      "\"" + variant_heads["Date"] + "\"";
+		  }
+		  else if (string cc = file->cache_control)
+		    variant_heads["Cache-Control"] = cc;
+
+		  string expires;
+		  if (expires = (cache_status->stale // See above.
+#ifndef DISABLE_VARY_EXPIRES_FALLBACK
+				 || (file->varies && (prot == "HTTP/1.0"))
+#endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
+				 ? Roxen->http_date(predef::time(1)-31557600) :
+				 file->expires)) {
+		    variant_heads["Expires"] = expires;
+		  }
+		  // Some browsers, e.g. Netscape 4.7, don't trust a zero
+		  // content length when using keep-alive. So let's force a
+		  // close in that case.
+		  if( file->error/100 == 2 && file->len <= 0 )
+		    {
+		      variant_heads->Connection = "close";
+		      misc->connection = "close";
+		    }
+		  if (misc->range) {
+		    // Handle byte ranges.
+		    int skip;
+		    string if_range;
+		    if (if_range = request_headers["if-range"]) {
+		      // Check If-Range header (RFC 2068 14.27).
+		      if (has_prefix(if_range, "\"")) {
+			// ETag
+			if (if_range != file->etag) {
+			  // ETag has changed.
+			  skip = 1;
+			}
+		      } else {
+			//  Needs strict equality according to RFC 7233
+			array(int) since_info = Roxen.parse_since(if_range);
+			if (!since_info || (since_info[0] != file->last_modified)) {
+			  // Failed to parse since info, or the file has changed.
+			  skip = 1;
+			}
+		      }
+		    }
+		    if (!skip) {
+		      file->data = d;
+		      file->len = len;
+
+		      // NOTE: Modifies both arguments destructively.
+		      handle_byte_ranges(file, variant_heads);
+
+		      d = file->data;
+		      code = file->error;
+		    }
+		  }
+		  string full_headers = "";
+		  if (prot != "HTTP/0.9") {
+		    full_headers = prot + " " + code + file->hs +
+		      Roxen.make_http_headers(variant_heads);
+		  }
+
+		  MY_TRACE_LEAVE ("Using entry from protocol cache");
+		  cache_status["protcache"] = 1;
+
+		  if (!refresh) {
+		    // No need to refresh the cached entry, so we just send it,
+		    // disconnect the cookie jar, and are done.
+		    if (objectp(cookies)) {
+		      // Disconnect the cookie jar just before sending the reply.
+		      real_cookies = cookies = ~cookies;
+		    }
+		    TIMER_END(cache_lookup);
+		    low_send_result(full_headers, d, sizeof(d));
+		    return;
+		  }
+		  // Create a new RequestID for sending the cached response,
+		  // so that it won't interfere with this one when it finishes.
+		  // We need to copy lots of stuff to keep the log functions happy.
+		  RequestID id = clone_me();
+		  id->hrtime = hrtime;
+		  id->my_fd = my_fd;
+		  id->file = file;
+		  id->kept_alive = kept_alive;
+		  id->cache_status = cache_status + (<>);
+		  id->eval_status = eval_status + (<>);
+		  id->output_charset = output_charset;
+		  id->input_charset = input_charset;
+		  id->auth = auth;
+		  id->throttle = throttle + ([]);
+		  id->throttler = throttler;
+		  conf->connection_add( id, connection_stats );
+		  TIMER_END(cache_lookup);
+		  id->low_send_result(full_headers, d, sizeof(d));
+
+		  method = "GET";
+		  remoteaddr = "127.0.0.1";
+		  host = 0;
+		  my_fd = 0;
+		  misc->connection = "close";
+		  misc->is_spci_refresh = 1;
+	    
+		  MY_TRACE_ENTER (
+				  sprintf("Starting refresh of stale entry "
+					  "(%d seconds past refresh time)", refresh - 1));
+		  cache_status["protcache"] = 0;
+		  cache_status["refresh"] = 1;
+		  cache_status["stale"] = 0;
+		  MY_TRACE_LEAVE("");
+		}
+#ifndef RAM_CACHE_ASUME_STATIC_CONTENT
+	      else
+		MY_TRACE_LEAVE (
+				sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
+					 st ? "mtime " + st->mtime : "gone", file->mtime));
+#endif
+	    }
+	  file = 0;
+	}
+    }
+  TIMER_END(cache_lookup);
+#endif	// RAM_CACHE
+  TIMER_START(parse_request);
+  if( things_to_do_when_not_sending_from_cache( ) )
+    return;
+  REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
+  REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
+  REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
+  TIMER_END(parse_request);
+
+  REQUEST_WERR("HTTP: Calling roxen.handle().");
+  queue_time = gethrtime();
+  queue_length = roxen.handle_queue_length();
+  roxen.handle(handle_request_from_queue);
+    })
+    {
     report_error("Internal server error: " + describe_backtrace(err));
     disconnect();
   }
