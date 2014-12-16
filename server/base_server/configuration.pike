@@ -677,6 +677,7 @@ Thread.Local gz_file_pool = Thread.Local();
 #endif
 
 int handler_queue_timeout;
+int max_post_size;
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
@@ -5708,6 +5709,17 @@ server to cut down the queue length after spikes of heavy load."))
       ->add_changed_callback(lambda(object v)
 			     { handler_queue_timeout = v->query(); });
     handler_queue_timeout = query("handler_queue_timeout");
+
+    defvar("max_post_size", 128,
+	   DLOCALE(0, "Maximum POST Size"),
+	   TYPE_INT,
+	   DLOCALE(0, #"The maximum allowed size, in megabytes, of a POST
+request. Requests larger than this size will be rejected with a 413 Request
+Entity Too Large response. Set to 0 to disable (not recommended since a
+sufficiently large POST request will consume all available system memory.)"))
+      ->add_changed_callback(lambda(object v)
+			     { max_post_size = v->query() * 1024 * 1024; });
+    max_post_size = query("max_post_size") * 1024 * 1024;
   }
 
 #ifdef SNMP_AGENT
