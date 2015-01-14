@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: cgi.pike,v 2.30 2000/01/17 02:42:01 nilsson Exp $";
+constant cvs_version = "$Id$";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -405,7 +405,9 @@ class CGIWrapper
       if(!header || !value)
       {
         // Heavy DWIM. For persons who forget about headers altogether.
-        post += h+"\n";
+	if (mid->method != "HEAD") {
+	  post += h+"\n";
+	}
         continue;
       }
       header = trim(header);
@@ -479,6 +481,10 @@ class CGIWrapper
     headers = "";
 
     output( handle_headers( tmphead[..pos-1] ) );
+    if (mid->method == "HEAD") {
+      mode++;
+      return 1;
+    }
     output( tmphead[pos+skip..] );
 
     if(force_exit)

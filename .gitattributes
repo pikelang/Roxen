@@ -178,7 +178,6 @@ nn binary
 /server/modules/proxies/port_forwarder.pike foreign_ident
 /server/modules/proxies/proxy.pike foreign_ident
 /server/modules/proxies/wais.pike foreign_ident
-/server/modules/scripting/cgi.pike foreign_ident
 /server/modules/scripting/fpscript.pike foreign_ident
 /server/modules/scripting/newpikescript.pike foreign_ident
 /server/modules/scripting/oldcgi.pike foreign_ident
