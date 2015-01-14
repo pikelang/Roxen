@@ -397,7 +397,7 @@ class CGIWrapper
 
     string result = "", post="";
     string code = "200 OK";
-    int ct_received = 0, sv_received = 0;
+    int ct_received = 0, sv_received = 0, con_received = 0;
     foreach((headers-"\r") / "\n", string h)
     {
       string header, value;
@@ -433,6 +433,11 @@ class CGIWrapper
          result += header+": "+value+"\r\n";
          break;
 
+       case "connection":
+	 con_received=1;
+	 result += header+": "+value+"\r\n";
+	 break;
+
        default:
          result += header+": "+value+"\r\n";
          break;
@@ -442,6 +447,8 @@ class CGIWrapper
       result += "Server: "+roxen.version()+"\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
+    if(!con_received)
+      result += "Connection: close\r\n";
     return "HTTP/1.0 "+code+"\r\n"+result+"\r\n"+post;
   }
 
