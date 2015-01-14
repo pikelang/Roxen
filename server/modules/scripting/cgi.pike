@@ -427,7 +427,7 @@ class CGIWrapper
 
     string result = "", post="";
     string code = "200 OK";
-    int ct_received = 0, sv_received = 0;
+    int ct_received = 0, sv_received = 0, con_received = 0;
     foreach((headers-"\r") / "\n", string h)
     {
       string header, value;
@@ -435,7 +435,9 @@ class CGIWrapper
       if(!header || !value)
       {
         // Heavy DWIM. For persons who forget about headers altogether.
-        post += h+"\n";
+	if (mid->method != "HEAD") {
+	  post += h+"\n";
+	}
         continue;
       }
       header = String.trim_whites(header);
@@ -461,6 +463,11 @@ class CGIWrapper
          result += header+": "+value+"\r\n";
          break;
 
+       case "connection":
+	 con_received=1;
+	 result += header+": "+value+"\r\n";
+	 break;
+
        default:
          result += header+": "+value+"\r\n";
          break;
@@ -470,6 +477,8 @@ class CGIWrapper
       result += "Server: "+roxen.version()+"\r\n";
     if(!ct_received)
       result += "Content-Type: text/html\r\n";
+    if(!con_received)
+      result += "Connection: close\r\n";
     return "HTTP/1.0 "+code+"\r\n"+result+"\r\n"+post;
   }
 
@@ -513,6 +522,10 @@ class CGIWrapper
     headers = "";
 
     output( handle_headers( tmphead[..pos-1] ) );
+    if (mid->method == "HEAD") {
+      mode++;
+      return 1;
+    }
     output( tmphead[pos+skip..] );
 
     if(force_exit)
