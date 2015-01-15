@@ -33,12 +33,12 @@ protected string table;
 
 protected string encode_pw(string p)
 {
-  return Gmp.mpz( ~p, 256 )->digits( 9 );
+  return Gmp.mpz( ~p, 256 )->digits( 36 );
 }
 
 protected string decode_pw( string p )
 {
-  return ~Gmp.mpz( p, 9 )->digits( 256 );
+  return ~Gmp.mpz( p, 36 )->digits( 256 );
 }
 
 protected array(string) low_lookup_cookie( string cookie )
@@ -64,11 +64,13 @@ protected array(string) lookup_cookie( string cookie )
 
 protected string create_cookie( string u, string p )
 {
-  int i = (((hash(u) << 32) | hash(p)) << 32) | hash(u+p);
-  string c = i->digits(16);
+  string c =
+    String.string2hex(Crypto.SHA1.hash(COOKIE + u + "\0" + p + COOKIE);
   catch(get_my_sql()->query( "INSERT INTO "+table+" "
-		    "(cookie,name,password) VALUES "
-		    "(%s,%s,%s)", c, encode_pw(u), encode_pw(p) ));
+			     "(cookie,name,password,timeout) "
+			     "VALUES (%s,%s,%s)",
+			     c, encode_pw(u), encode_pw(p),
+			     time(1) + 31536000));
   return c;
 }
 
@@ -143,11 +145,24 @@ void start()
     get_my_table("",
 		 ({
 		   "cookie varchar(40) PRIMARY KEY NOT NULL",
-		   "password varchar(40) NOT NULL",
-		   "name varchar(40) NOT NULL"
+		   "password varchar(255) NOT NULL",
+		   "name varchar(255) NOT NULL",
+		   "timeout int NOT NULL",
 		 }),
 		 "Used to store the information nessesary to "
 		 "authenticate roxen users" );
+
+  Sql.Sql sql = get_my_sql();
+  if (!sizeof(sql->query("DESCRIBE " + table + " timeout"))) {
+    sql->query("ALTER TABLE " + table +
+	       " CHANGE password password varchar(255) NOT NULL");
+    sql->query("ALTER TABLE " + table +
+	       " CHANGE name name varchar(255) NOT NULL");
+    sql->query("ALTER TABLE " + table +
+	       " ADD timeout int NOT NULL");
+  }
+  sql->query("DELETE FROM " + table + " WHERE timeout < %d",
+	     time());
 }
 
 protected void create()
