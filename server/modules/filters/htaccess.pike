@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.72 2001/04/24 12:25:02 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -489,6 +489,7 @@ array(mapping) parse_groupfile( string f )
   mapping u2g = ([]);
   mapping groups = ([]);
   int gid = 10000;
+  f = replace(f, "\r", "\n");
   foreach( f / "\n", string r )
   {
     array q = r/":";
@@ -514,6 +515,7 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
   if( !f )  return ([]);
   mapping users = ([]);
   int uid = 10000;
+  f = replace(f, "\r", "\n");
   foreach( f/ "\n", string r )
   {
     array q = r/":";
