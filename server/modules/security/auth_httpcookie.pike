@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.12 2008/08/15 12:33:55 mast Exp $";
+  "$Id$";
 inherit AuthModule;
 inherit "module";
 
@@ -33,12 +33,12 @@ protected string table;
 
 protected string encode_pw(string p)
 {
-  return Gmp.mpz( ~p, 256 )->digits( 9 );
+  return Gmp.mpz( ~p, 256 )->digits( 36 );
 }
 
 protected string decode_pw( string p )
 {
-  return ~Gmp.mpz( p, 9 )->digits( 256 );
+  return ~Gmp.mpz( p, 36 )->digits( 256 );
 }
 
 protected array(string) low_lookup_cookie( string cookie )

@@ -304,7 +304,6 @@ worldmap binary
 /server/modules/scripting/servlet.pike foreign_ident
 /server/modules/scripting/webapp.pike foreign_ident
 /server/modules/security/auth_httpbasic.pike foreign_ident
-/server/modules/security/auth_httpcookie.pike foreign_ident
 /server/modules/security/htaccess.pike foreign_ident
 /server/modules/security/userdb_sql.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
