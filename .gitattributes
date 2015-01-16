@@ -285,7 +285,6 @@ worldmap binary
 /server/modules/misc/robots.txt.pike foreign_ident
 /server/modules/misc/wapadapter.pike foreign_ident
 /server/modules/misc/webdav.pike foreign_ident
-/server/modules/proxies/connect.pike foreign_ident
 /server/modules/proxies/ftpgateway.pike foreign_ident
 /server/modules/proxies/gopher.pike foreign_ident
 /server/modules/proxies/port_forwarder.pike foreign_ident
@@ -350,7 +349,6 @@ worldmap binary
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
 /server/protocols/ftp.pike foreign_ident
-/server/protocols/http.pike foreign_ident
 /server/protocols/prot_https.pike foreign_ident
 /server/protocols/prot_snmp.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident

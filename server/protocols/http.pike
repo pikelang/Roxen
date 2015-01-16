@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.580 2009/01/15 17:07:08 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -771,10 +771,7 @@ private int parse_got( string new_data )
 	  sscanf( method, "%s%*[\r\n]", method );
 	
 	clientprot = prot = "HTTP/0.9";
-	if(method != "PING")
-	  method = "GET"; // 0.9 only supports get.
-	else
-	{
+	if(method == "PING") {
 	  // FIXME: my_fd_busy.
 #ifdef CONNECTION_DEBUG
 	  werror ("HTTP[%s]: Response =============================================\n"
@@ -786,7 +783,9 @@ private int parse_got( string new_data )
 	  TIMER_END(parse_got_2_parse_line);
 	  TIMER_END(parse_got_2);
 	  return 2;
-	}
+	} else if (method != "CONNECT")
+	  method = "GET"; // 0.9 only supports get.
+
 	data = ""; // no headers or extra data...
 	sscanf( f, "%s%*[\r\n]", f );
 	if (sizeof(sl) == 1)
