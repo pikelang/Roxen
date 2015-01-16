@@ -147,7 +147,7 @@ void start()
 		   "cookie varchar(40) PRIMARY KEY NOT NULL",
 		   "password varchar(255) NOT NULL",
 		   "name varchar(255) NOT NULL",
-		   "timeout int NOT NULL",
+		   "timeout bigint NOT NULL",
 		 }),
 		 "Used to store the information nessesary to "
 		 "authenticate roxen users" );
@@ -159,7 +159,7 @@ void start()
     sql->query("ALTER TABLE " + table +
 	       " CHANGE name name varchar(255) NOT NULL");
     sql->query("ALTER TABLE " + table +
-	       " ADD timeout int NOT NULL");
+	       " ADD timeout bigint NOT NULL");
   }
   sql->query("DELETE FROM " + table + " WHERE timeout < %d",
 	     time());
