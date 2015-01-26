@@ -5117,7 +5117,9 @@ below.</p>
   getvar ("LogFormat")->cols = 80;
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
-  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
+  string log_suffix = ".%y-%m-%d";
+  if (name == "Administration Interface") log_suffix = ".%y-%m";
+  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log" + log_suffix,
 	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
 	 DLOCALE(31, "The log file. "
 	 "A file name. Some substitutions will be done:"
@@ -5129,8 +5131,16 @@ below.</p>
 	 "%H    Hostname\n"
 	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-  
-  defvar("LogFileCompressor", "",
+
+  string default_compressor = "";
+  foreach(({ "/bin/bzip2", "/usr/bin/bzip2", "/bin/gzip", "/usr/bin/gzip", }),
+	  string bin) {
+    if (Stdio.is_file(bin)) {
+      default_compressor = bin;
+      break;
+    }
+  }
+  defvar("LogFileCompressor", default_compressor,
 	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
 	 DLOCALE(259, "Path to a program to compress log files, "
 		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
