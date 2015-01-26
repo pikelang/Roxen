@@ -4653,7 +4653,9 @@ below.</p>
   getvar ("LogFormat")->cols = 80;
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
-  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log.%y-%m-%d",
+  string log_suffix = ".%y-%m-%d";
+  if (name == "Administration Interface") log_suffix = ".%y-%m";
+  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log" + log_suffix,
 	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
 	 DLOCALE(31, "The log file. "
 	 ""
