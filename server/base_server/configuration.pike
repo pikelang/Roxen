@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.645 2008/01/10 15:35:50 jonasw Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4666,8 +4666,16 @@ below.</p>
 	 "%H    Hostname\n"
 	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-  
-  defvar("LogFileCompressor", "",
+
+  string default_compressor = "";
+  foreach(({ "/bin/bzip2", "/usr/bin/bzip2", "/bin/gzip", "/usr/bin/gzip", }),
+	  string bin) {
+    if (Stdio.is_file(bin)) {
+      default_compressor = bin;
+      break;
+    }
+  }
+  defvar("LogFileCompressor", default_compressor,
 	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
 	 DLOCALE(259, "Path to a program to compress log files, "
 		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
