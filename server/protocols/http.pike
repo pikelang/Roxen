@@ -519,9 +519,16 @@ int things_to_do_when_not_sending_from_cache( )
 	      Roxen.get_decoder_for_client_charset (input_charset);
 	    mapping(string:array(string)) decoded_vars = ([]);
 	    foreach (misc->post_variables; string var; array(string) vals) {
-	      var = decoder (var);
+	      string dec_var = decoder (var);
 	      // We know the post_variables are first in the array values.
-	      decoded_vars[var] = real_variables[var][..sizeof (vals) - 1];
+	      if (real_variables[dec_var]) {
+		decoded_vars[dec_var] =
+		  real_variables[dec_var][..sizeof (vals) - 1];
+	      } else {
+		report_debug("Lost track of posted variable %O(%O).\n"
+			     "Original value: %O\n",
+			     dec_var, var, vals);
+	      }
 	    }
 	    misc->post_variables = decoded_vars;
 	  }
