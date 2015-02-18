@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: hosts.pike,v 1.40 2010/03/16 13:47:01 jonasw Exp $
+// $Id$
 
 #include <roxen.h>
 
@@ -115,6 +115,8 @@ string quick_ip_to_host(string ipnumber)
 
 string quick_host_to_ip(string h)
 {
+  if (!stringp (h) || !sizeof (h)) return h;
+
   if(h[-1] == '.') h=h[..strlen(h)-2];
   ISIP(h,return h);
   mapping cache_ctx = ([]);
