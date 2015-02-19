@@ -1,4 +1,4 @@
-subject: Roxen 5.2: Multiple fixes:
+subject: Roxen 5.2: Disable SSL 3, Persistent Disk Cache sice calculation fixes, reverse proxy, quick_host_to_ip
 from: 33f0927e67c59bf7e0a17a57f9eba0dfc464ae65
 to: c9fba7dedb496ae1550e36ba501a6a0ca25f26c7
 originator: wellhardh@roxen.com
@@ -6,30 +6,6 @@ depends: 2014-09-25T172358
 restart: true
 
 Multiple fixes:
-
-  * Pike 8.0: Unset variables are UNDEFINED.
-    
-    Use object_variablep() to test whether a variable exists in an object
-    (that's what it's for...) instead of zero_type() to check if it doesn't.
-    
-    Fixes issues with the config interface and Pike 8.0.
-
-  * Pike 8.0: String.Buffer contains a sprintf().
-    
-    PikeCompiler has inherited String.Buffer, so we need to make sure
-    not to call the inherited sprintf() when we want the global one.
-    
-    Fixes "Bad argument 1 to add(). Expected string|String.Buffer.".
-
-  * Pike 8.0: #if efun() is obsolete since 10 years back.
-    
-    Reduce warnings from cpp().
-
-  * Pike 8.0: Add support for some new SSL features.
-    
-    * Filter suites based on key length and key exchange method.
-    
-    * Reject clients with old versions of SSL/TLS.
 
   * SSL: Disable support for SSL 3.0 by default.
     
