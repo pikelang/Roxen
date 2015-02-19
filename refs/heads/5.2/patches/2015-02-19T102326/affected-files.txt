@@ -1,0 +1,13 @@
+Modified files:
+  base_server/global_variables.pike
+  base_server/hosts.pike
+  base_server/newdecode.pike
+  base_server/prototypes.pike
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  etc/include/config.h
+  etc/include/request_trace.h
+  etc/modules/GText.pmod
+  etc/modules/RXML.pmod/module.pmod
+  modules/tags/rxmltags.pike
+  protocols/http.pike
