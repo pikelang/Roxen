@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.48 2009/01/07 17:50:05 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 inherit "module";
@@ -95,10 +95,10 @@ absolute URL, either literally or by starting <i>target</i> with %u.");
 	 "in the redirect pattern.");
 }
 
-array(string) redirect_from = ({});
-array(string) redirect_to = ({});
+array(string(0..255)) redirect_from = ({});
+array(string(0..255)) redirect_to = ({});
 array(int) redirect_code = ({});
-mapping(string:array(string|int)) exact_patterns = ([]);
+mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 
 //! Mapping from filename to
 //! @array
@@ -109,41 +109,48 @@ mapping(string:array(string|int)) exact_patterns = ([]);
 //!   @item Stdio.Stat stat
 //!     Stat at the time of @[last_poll].
 //! @endarray
-mapping(string:array(int|Stdio.Stat)) dependencies = ([]);
+mapping(string(0..255):array(int|Stdio.Stat)) dependencies = ([]);
 
 void parse_redirect_string(string what, string|void fname)
 {
-  foreach(replace(what, "\t", " ")/"\n", string s)
+  foreach(replace(what, "\t", " ")/"\n",
+	  string(0..255) s)
   {
-    if (sscanf (s, "#include%*[\t ]<%s>", string file) == 2) {
+    if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
       dependencies[file] = ({
 	query("poll_interval"),
 	time(1),
 	file_stat(file)
       });
-      if(string contents=Stdio.read_bytes(file))
+      if(string(0..255) contents = Stdio.read_bytes(file))
 	parse_redirect_string(contents, file);
       else
 	report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
     else if (sizeof(s) && (s[0] != '#')) {
       int ret_code;
-      array(string) a = s/" " - ({""});
+      array(string(0..255)) a = s/" " - ({""});
       if (sizeof (a) && a[0] == "permanent") {
 	a = a[1..];
 	ret_code = 301;
       } else
 	ret_code = 302;
+      // FIXME: http_encode_invalids() generates upper-case hex-escapes, but
+      //        there may be verbatim lower-case escapes in the patterns.
       if(sizeof(a)>=3 && a[0]=="exact") {
-	if (exact_patterns[a[1]])
+	string(0..255) match_url = Roxen.http_encode_invalids(a[1]);
+	string(0..255) dest_url = Roxen.http_encode_invalids(a[1]);
+	if (exact_patterns[match_url])
 	  report_warning ("Duplicate redirect pattern %O.\n", s);
-	exact_patterns[a[1]] = ({ a[2], ret_code });
+	exact_patterns[match_url] = ({ dest_url, ret_code });
       }
       else if (sizeof(a)==2) {
-	if (search (redirect_from, a[0]) >= 0)
+	string(0..255) from_url = Roxen.http_encode_invalids(a[0]);
+	string(0..255) to_url = Roxen.http_encode_invalids(a[1]);
+	if (search (redirect_from, from_url) >= 0)
 	  report_warning ("Duplicate redirect pattern %O.\n", s);
-	redirect_from += ({a[0]});
-	redirect_to += ({a[1]});
+	redirect_from += ({ from_url });
+	redirect_to += ({ to_url });
 	redirect_code += ({ ret_code });
       }
       else if (sizeof (a))
@@ -222,8 +229,9 @@ mixed first_try(object id)
   if(id->misc->is_redirected)
     return 0;
 
+  string orig_url;
   string from;
-  from = id->not_query;
+  from = orig_url = Roxen.http_encode_invalids(id->not_query);
   if(id->query)
     if(sscanf(id->raw_url, "%*s?%s", string tmp))
       from += "?"+tmp;
@@ -256,14 +264,7 @@ mixed first_try(object id)
 	  continue;
 	}
 
-	//  We cannot call split on wide strings so we force UTF8 encoding
-	//  of the incoming URL in such cases. If that happens we also
-	//  convert the redirect pattern string so we don't get a mix of
-	//  different encodings in the destination URL.
-	int use_utf8 = String.width(from) > 8;
-
-	if(array foo = split(use_utf8 ? string_to_utf8(from) : from))
-	{
+	if(array foo = split(from)) {
 	  array bar = Array.map(foo, lambda(string s, mapping f) {
 				       return "$"+(f->num++);
 				     }, ([ "num":1 ]));
@@ -272,13 +273,7 @@ mixed first_try(object id)
 	  bar +=({ "%f", "%p" });
 
 	  string redir_to = redirect_to[i];
-	  if (use_utf8)
-	    redir_to = string_to_utf8(redir_to);
 	  to = replace(redir_to, (array(string)) bar, (array(string)) foo);
-	  if (use_utf8) {
-	    //  Try reverting the temporary UTF8 encoding
-	    catch { to = utf8_to_string(to); };
-	  }
 	  ret_code = redirect_code[i];
 	  break;
 	}
@@ -290,7 +285,7 @@ mixed first_try(object id)
 
   string url = id->url_base()[..<1];
   to = replace(to, "%u", url);
-  if(to == url + id->not_query || url == id->not_query)
+  if(to == url + orig_url || url == orig_url)
     return 0;
 
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
@@ -298,7 +293,7 @@ mixed first_try(object id)
   redirs++;
   if (sscanf (to, "%*[-+.a-zA-Z0-9]://%*c") == 2)
   {
-    to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+    to = replace(to, ({ "\000", " " }), ({"%00", "%20" }));
     return Roxen.http_low_answer( ret_code, "")
       + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
@@ -310,7 +305,8 @@ mixed first_try(object id)
       // And our destination (in case of chained redirects).
       id->misc->redirected_to = to;
     }
-    id->raw_url = Roxen.http_encode_invalids(to);
+    id->raw_url = to;
     id->not_query = id->scan_for_query( to );
+    id->not_query = utf8_to_string(Roxen.http_decode_string(id->not_query));
   }
 }
