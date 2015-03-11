@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.469 2012/01/07 17:15:05 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2129,7 +2129,20 @@ protected class SQLKey
 
   protected string _sprintf(int type)
   {
-    return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, db_name, real );
+    string display_name = db_name;
+    array(string) a = (db_name || "")/"://";
+    string prot = a[0];
+    string host = a[1..] * "://";
+    a = host/"@";
+    if (sizeof(a) > 1) {
+      host = a[-1];
+      a = (a[..<1] * "@")/":";
+      string user = a[0];
+      if (sizeof(a) > 1) {
+	display_name = prot + "://" + user + ":CENSORED@" + host;
+      }
+    }
+    return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, display_name, real );
   }
 }
 
