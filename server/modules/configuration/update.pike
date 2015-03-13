@@ -490,7 +490,7 @@ array(string) low_unpack_tarfile(Filesystem.Tar fs, string dir, mapping errors)
 {
   array(string) res=({ });
   foreach(sort(fs->get_dir(dir)), string entry)
-    if(fs->stat(entry)->isdir())
+    if(fs->stat(entry)->isdir)
       res += low_unpack_tarfile(fs, entry, errors);
     else
     {

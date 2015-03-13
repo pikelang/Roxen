@@ -184,7 +184,7 @@ int(0..1) verify_captcha(string response, string secret)
     string compact_time = elems[0];
     string hash = elems[1];
 
-    int ts = Gmp.mpz(compact_time, 36)->cast_to_int();
+    int ts = (int)Gmp.mpz(compact_time, 36);
 
     if (time(1) - ts < timeout &&
 	my_hash (compact_time + lower_case(response)) == hash &&

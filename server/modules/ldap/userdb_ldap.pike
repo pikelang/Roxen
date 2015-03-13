@@ -275,7 +275,7 @@ int username_parsing_is_positional() {
 
 int default_uid() {
 
-#if efun(geteuid)
+#if constant(geteuid)
   return(geteuid());
 #else
   return(0);

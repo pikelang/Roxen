@@ -3408,9 +3408,10 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
      case "http":
        return http_date (t);
 
+#pragma no_deprecation_warnings
      case "discordian":
 #if constant (spider.discdate)
-      array(string) not=spider.discdate(t);
+       array(string) not=spider.discdate(t);
       res=not[0];
       if(m->year)
 	res += " in the YOLD of "+not[1];
@@ -3459,6 +3460,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 #endif
   return res;
 }
+#pragma deprecation_warnings
 
 int time_dequantifier(mapping m, void|int t )
   //! Calculates an integer with how many seconds a mapping
