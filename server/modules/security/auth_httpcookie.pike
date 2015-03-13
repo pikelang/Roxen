@@ -65,7 +65,7 @@ protected array(string) lookup_cookie( string cookie )
 protected string create_cookie( string u, string p )
 {
   string c =
-    String.string2hex(Crypto.SHA1.hash(COOKIE + u + "\0" + p + COOKIE);
+    String.string2hex(Crypto.SHA1.hash(COOKIE + u + "\0" + p + COOKIE));
   catch(get_my_sql()->query( "INSERT INTO "+table+" "
 			     "(cookie,name,password,timeout) "
 			     "VALUES (%s,%s,%s)",
