@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: read_config.pike,v 1.72 2009/11/16 14:18:20 grubba Exp $
+// $Id$
 
 #include <module.h>
 
@@ -108,6 +108,12 @@ private void really_save_it( string cl, mapping data, int counter )
             " ("+strerror(fd->errno())+")"
             "\n");
 
+    if (fd->sync) {
+      // Make sure that the data is synced to the filesystem,
+      // some filesystems (eg ext4) otherwise may lose data
+      // on reboot due to inodes being updated before data.
+      fd->sync();
+    }
     fd->close();
 
     fd = open( new, "r" );
