@@ -35,13 +35,22 @@ array(string) list_all_configurations()
     }
     return ({});
   }
-  return map(filter(fii, lambda(string s){
-    if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
-       || s=="global_variables" || s=="global variables" || s=="server_version"
-       || s[0] == '_')
-      return 0;
-    return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
-  }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
+  return Array.uniq(map(filter(fii, lambda(string s){
+	  if(s == "CVS" || s == "Global_Variables" || s == "Global Variables" ||
+	     s == "global_variables" || s == "global variables" ||
+	     s == "server_version" ||
+	     s[0] == '_' || s[0] == '.' || s[0] == '#')
+	    return 0;
+	  return 1;
+	}), lambda(string s) {
+	  if (has_suffix(s, "~")) {
+	    if (has_suffix(s, "~2~"))
+	      s = s[..<3];
+	    else
+	      s = s[..<1];
+	  }
+	  return replace(utf8_to_string(s), "_", " ");
+	}));
 }
 
 
