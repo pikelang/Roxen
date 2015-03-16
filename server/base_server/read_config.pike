@@ -46,6 +46,8 @@ array(string) list_all_configurations()
 	  if (has_suffix(s, "~")) {
 	    if (has_suffix(s, "~2~"))
 	      s = s[..<3];
+	    else if (has_suffix(s, ".new~"))
+	      s = s[..<5];
 	    else
 	      s = s[..<1];
 	  }
@@ -220,24 +222,28 @@ mapping read_it(string cl)
   string base = configuration_dir + replace(cl, " ", "_");
   Stdio.File fd;
 
-  foreach(({ "", "~", "~2~" }), string suffix) {
+  foreach(({ "", ".new~", "~", "~2~" }), string suffix) {
     mixed err = catch {
 #ifdef DEBUG_CONFIG
 	report_debug("CONFIG: Trying " + base + suffix + "\n");
 #endif
 	fd = open(base + suffix, "r");
 	if (!fd) {
-	  report_warning("Failed to open configuration %sfile %O for %O.\n",
-			 sizeof(suffix)?"backup ":"",
-			 base + suffix, cl);
+	  if (suffix != ".new~") {
+	    report_warning("Failed to open configuration %sfile %O for %O.\n",
+			   sizeof(suffix)?"backup ":"",
+			   base + suffix, cl);
+	  }
 	  continue;
 	}
 
 	string data = fd->read();
 	if (!sizeof(data || "")) {
-	  report_error("Configuration %sfile %O for %O is truncated.\n",
-		       sizeof(suffix)?"backup ":"",
-		       base + suffix, cl);
+	  if (suffix != ".new~") {
+	    report_error("Configuration %sfile %O for %O is truncated.\n",
+			 sizeof(suffix)?"backup ":"",
+			 base + suffix, cl);
+	  }
 	  continue;
 	}
 
@@ -246,8 +252,8 @@ mapping read_it(string cl)
 	mapping res = decode_config_file( data );
 	if (sizeof(suffix)) {
 #ifdef DEBUG_CONFIG
-
-	  report_debug("CONFIG: Restoring " + base + "\n");
+	  report_debug("CONFIG: Restoring " + base + " from " +
+		       base + suffix + "\n");
 #endif
 	  mv(base + suffix, base);
 	}
