@@ -35,13 +35,24 @@ array(string) list_all_configurations()
     }
     return ({});
   }
-  return map(filter(fii, lambda(string s){
-    if(s=="CVS" || s=="Global_Variables" || s=="Global Variables"
-       || s=="global_variables" || s=="global variables" || s=="server_version"
-       || s[0] == '_')
-      return 0;
-    return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
-  }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
+  return Array.uniq(map(filter(fii, lambda(string s){
+	  if(s == "CVS" || s == "Global_Variables" || s == "Global Variables" ||
+	     s == "global_variables" || s == "global variables" ||
+	     s == "server_version" ||
+	     s[0] == '_' || s[0] == '.' || s[0] == '#')
+	    return 0;
+	  return 1;
+	}), lambda(string s) {
+	  if (has_suffix(s, "~")) {
+	    if (has_suffix(s, "~2~"))
+	      s = s[..<3];
+	    else if (has_suffix(s, ".new~"))
+	      s = s[..<5];
+	    else
+	      s = s[..<1];
+	  }
+	  return replace(utf8_to_string(s), "_", " ");
+	}));
 }
 
 
@@ -108,6 +119,12 @@ private void really_save_it( string cl, mapping data, int counter )
             " ("+strerror(fd->errno())+")"
             "\n");
 
+    if (fd->sync) {
+      // Make sure that the data is synced to the filesystem,
+      // some filesystems (eg ext4) otherwise may lose data
+      // on reboot due to inodes being updated before data.
+      fd->sync();
+    }
     fd->close();
 
     fd = open( new, "r" );
@@ -204,32 +221,54 @@ mapping read_it(string cl)
 
   string base = configuration_dir + replace(cl, " ", "_");
   Stdio.File fd;
-  mixed err = catch {
-    fd = open(base, "r");
-    if( fd )
-    {
-      string data = fd->read();
-      if( data && strlen( data ) )
-      {
+
+  foreach(({ "", ".new~", "~", "~2~" }), string suffix) {
+    mixed err = catch {
+#ifdef DEBUG_CONFIG
+	report_debug("CONFIG: Trying " + base + suffix + "\n");
+#endif
+	fd = open(base + suffix, "r");
+	if (!fd) {
+	  if (suffix != ".new~") {
+	    report_warning("Failed to open configuration %sfile %O for %O.\n",
+			   sizeof(suffix)?"backup ":"",
+			   base + suffix, cl);
+	  }
+	  continue;
+	}
+
+	string data = fd->read();
+	if (!sizeof(data || "")) {
+	  if (suffix != ".new~") {
+	    report_error("Configuration %sfile %O for %O is truncated.\n",
+			 sizeof(suffix)?"backup ":"",
+			 base + suffix, cl);
+	  }
+	  continue;
+	}
+
 	config_stat_cache[cl] = fd->stat();
 	fd->close();
-	return decode_config_file( data );
-      }
+	mapping res = decode_config_file( data );
+	if (sizeof(suffix)) {
+#ifdef DEBUG_CONFIG
+	  report_debug("CONFIG: Restoring " + base + " from " +
+		       base + suffix + "\n");
+#endif
+	  mv(base + suffix, base);
+	}
+	return res;
+      };
+
+    catch (fd->close());
+
+    if (err) {
+      report_error("Failed to read configuration %sfile %O for %O.\n"
+		   "%s\n",
+		   sizeof(suffix)?"backup ":"",
+		   base + suffix, cl,
+		   describe_backtrace(err));
     }
-  };
-
-  catch (fd->close());
-
-  if (err) {
-    string backup_file;
-    if (file_stat (base + "~2~")) backup_file = base + "~2~";
-    if (file_stat (base + "~")) backup_file = base + "~";
-    report_error("Failed to read configuration file (%s) for %O.%s\n"
-		 "%s\n",
-		 base, cl,
-		 backup_file ? " There is a backup file " + backup_file + ". "
-		 "You can try it instead by moving it to the original name. " : "",
-		 describe_backtrace(err));
   }
 
   return ([]);
