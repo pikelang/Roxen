@@ -39,7 +39,7 @@ array(string) list_all_configurations()
 	  if(s == "CVS" || s == "Global_Variables" || s == "Global Variables" ||
 	     s == "global_variables" || s == "global variables" ||
 	     s == "server_version" ||
-	     s[0] == '_' || s[0] == '.' || s[0] == '#')
+	     s[0] == '_' || s[0] == '.' || s[0] == '#' || s[-1] == '~')
 	    return 0;
 	  return 1;
 	}), lambda(string s) {
