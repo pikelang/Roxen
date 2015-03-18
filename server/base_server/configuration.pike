@@ -1514,7 +1514,10 @@ protected array(string) draw_saturation_bar(int hue,int brightness, int where,
 {
   Image.Image bar =
     small_version ? Image.Image(16, 128) : Image.Image(30, 256);
-  
+
+  hue &= 0xff;
+  brightness &= 0xff;
+
   for(int i=0;i<128;i++)
   {
     int j = i * 2;
