@@ -8026,7 +8026,7 @@ class TagEmitValues {
     }
 
     if(mappingp(m->values))
-      return map( indices(m->values),
+      return map( sort(indices(m->values)),
 		  lambda(mixed ind, mapping(string:mixed) m) {
 		    mixed val = post_process_value(m->values[ind], m);
 		    return (["index":ind,"value":val]);
@@ -8043,7 +8043,7 @@ class TagEmitValues {
     }
 
     if(multisetp(m->values))
-      return map( m->values,
+      return map( sort(m->values),
 		  lambda(mixed val, mapping(string:mixed) m) {
 		    val = post_process_value(val, m);
 		    return (["index":val]);
