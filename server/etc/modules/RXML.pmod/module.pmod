@@ -161,7 +161,7 @@ protected Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
 #define SET_TAG_SET(owner, name, value) do {				\
   mapping(string:TagSet|int) map =					\
     all_tag_sets[owner] ||						\
-    (all_tag_sets[owner] = set_weak_flag (([]), 1));			\
+    (all_tag_sets[owner] = set_weak_flag (([]), Pike.WEAK_VALUES));	\
   map[name] = (value);							\
 } while (0)
 
@@ -171,7 +171,8 @@ protected mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 protected mapping(string:Type) reg_types = ([]);
 // Maps each type name to a type object with the PNone parser.
 
-protected mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+protected mapping(mixed:string) reverse_constants =
+  set_weak_flag (([]), Pike.WEAK_INDICES);
 
 
 // Interface classes
@@ -6164,7 +6165,8 @@ class Type
       newtype = clone();
       newtype->parser_prog = newparser;
       newtype->parser_args = parser_args;
-      if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+      if (newparser->tag_set_eval)
+	newtype->_p_cache = set_weak_flag (([]), Pike.WEAK_INDICES);
       TDEBUG_MSG (" got args, can't cache\n");
     }
     else {
@@ -6177,7 +6179,8 @@ class Type
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->parser_prog = newparser;
-	  if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+	  if (newparser->tag_set_eval)
+	    newtype->_p_cache = set_weak_flag (([]), Pike.WEAK_INDICES);
 	  TDEBUG_MSG (" returning cloned type %O\n", newtype);
 	}
       else
