@@ -17,8 +17,11 @@ constant known_platforms = (< "macosx_ppc32",
 			      "rhel5_x86",
 			      "rhel5_x86_64",
 			      "rhel6_x86_64",
+			      "rhel7_x86_64",
 			      "sol10_x86_64",
-			      "win32_x86" >);
+			      "win32_x86",
+			      "win32_x86_64",
+>);
 
 //! All currently supported subfeatures.
 constant features = (<
