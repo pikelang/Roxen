@@ -501,6 +501,7 @@ void add_parse_module (RoxenModule mod)
 #endif
     rxml_tag_set->modules += ({mod});
     rxml_tag_set->imported += ({tag_set});
+    rxml_tag_set->changed();
 #ifdef THREADS
     lock = 0;
 #endif

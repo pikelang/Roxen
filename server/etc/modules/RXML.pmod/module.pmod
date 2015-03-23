@@ -1354,7 +1354,8 @@ protected class CompositeTagSet
     __object_marker->create (this_object());
 #endif
     // Make sure TagSet::`-> gets called.
-    this->imported = tag_sets;
+    TagSet me = this;
+    me->imported = tag_sets;
   }
 
   string _sprintf (void|int flag)
