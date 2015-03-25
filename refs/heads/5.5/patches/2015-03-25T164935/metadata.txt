@@ -1,0 +1,34 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 60a3849a813a40cb6a1e685118545884f5d41fa9
+to: 010db6b616c2997bec96a7a2aa0c825f1fce1c96
+originator: wellhardh@roxen.com
+depends: roxen/5.5.87
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 5.5.88 by buildsystem.
+
+  * Version bumped to 5.5.89 by buildsystem.
+
+  * Version bumped to 5.5.90 by buildsystem.
+
+  * Version bumped to 5.5.91 by buildsystem.
+
+  * Fix backtrace that occurred when quick_host_to_ip was called with "".
+
+  * Version bumped to 5.5.92 by buildsystem.
+
+  * Version bumped to 5.5.93 by buildsystem.
+
+  * Version bumped to 5.5.94 by buildsystem.
+
+  * Version bumped to 5.5.95 by buildsystem.
+
+  * Version bumped to 5.5.96 by buildsystem.
+
+  * Redirect: Normalize paths and urls to http-encoded utf-8.
+    
+    Improves handling of URLs containing characters outside latin-1.
+    
+    Fixes [bug 7432].
