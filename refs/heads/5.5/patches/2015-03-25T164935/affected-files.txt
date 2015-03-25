@@ -1,0 +1,4 @@
+Modified files:
+  base_server/hosts.pike
+  etc/include/version.h
+  modules/filters/redirect.pike
