@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Norwegian localization, dbmanager, reverse proxy, quick_host_to_ip, normalize paths in redirect
 from: 4be6ddd7d844c19f3928321aca7d38f63c72eba7
 to: e11b36cf2ea1c0c8a06db55039ff409ef3ceffe9
 originator: wellhardh@roxen.com
