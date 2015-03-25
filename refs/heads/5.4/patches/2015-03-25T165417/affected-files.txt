@@ -1,0 +1,7 @@
+Modified files:
+  base_server/hosts.pike
+  base_server/prototypes.pike
+  etc/modules/DBManager.pmod
+  languages/norwegian.pike
+  modules/filters/redirect.pike
+  protocols/http.pike
