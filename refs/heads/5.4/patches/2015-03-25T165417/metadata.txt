@@ -1,0 +1,32 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 4be6ddd7d844c19f3928321aca7d38f63c72eba7
+to: e11b36cf2ea1c0c8a06db55039ff409ef3ceffe9
+originator: wellhardh@roxen.com
+depends: 2014-11-28T082704
+restart: true
+
+Multiple fixes:
+
+  * Norwegian: december -> desember.
+
+  * DBManager: db_url_info->local needs to be casted to int.
+    
+    Fixes issues with dump() and external databases.
+    
+    Thanks to Arne Goedeke <el@laramies.com> for the report and patch.
+    
+    Fixes [bug 7386].
+
+  * Protocols: Improved support for reverse proxys. Fixes [bug 7385].
+    
+    Use the actual port number rather than the port number from the Host-
+    header when determining which configuration a request belongs to. They
+    may differ when eg the request comes via a proxy on a different port.
+
+  * Fix backtrace that occurred when quick_host_to_ip was called with "".
+
+  * Redirect: Normalize paths and urls to http-encoded utf-8.
+    
+    Improves handling of URLs containing characters outside latin-1.
+    
+    Fixes [bug 7432].
