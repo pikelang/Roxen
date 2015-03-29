@@ -1727,10 +1727,10 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
   add_package("$LOCALDIR");
   foreach(package_directories + ({ "." }), string dir) {
     dir = combine_path(dir, "packages");
-    foreach(sort(get_dir(dir) || ({})), string fname) {
+    foreach(sort(get_dir(roxen_path(dir)) || ({})), string fname) {
       if (fname == "CVS") continue;
       fname = combine_path(dir, fname);
-      if (Stdio.is_dir(fname)) {
+      if (Stdio.is_dir(roxen_path(fname))) {
 	add_package(fname);
       }
     }
