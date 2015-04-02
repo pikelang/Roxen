@@ -19,6 +19,11 @@ mapping actions = ([
 
 #define CU_AUTH id->misc->config_user->auth
 
+//  Size limit for single field and aggregated fields (per column)
+#define MAX_FIELD_FORMATTED_SIZE (32 * 1024)		//  32 K
+#define MAX_TOTAL_FORMATTED_SIZE (1024 * 1024)		//  1 MB
+
+
 #define VERIFY(X) do {						\
   if( !id->variables["yes.x"] )					\
   {								\
@@ -668,6 +673,10 @@ mapping|string parse( RequestID id )
     " font-weight: bold;"
     " background-color: &usr.matrix12;;"
     "}\n"
+    "#res span.warn_exp {"
+    " color: &usr.warncolor;;"
+    " white-space: nowrap;"
+    "}\n"
     "</style>\n";
   
   if( id->variables->action && actions[ id->variables->action ])
@@ -858,7 +867,10 @@ mapping|string parse( RequestID id )
       function(string,string,string,array(string),array(string),array(string),
 	       RequestID:string) format_col_cb =
 	m && m->format_db_browser_value;
-
+      array(int) formatted_total_size = allocate(sizeof(col_names), 0);
+      if (id->variables->exp_fields == "disabled")
+	format_col_cb = 0;
+      
       while( array q = big_q->fetch_row() )
       {
 	qrows++;
@@ -878,11 +890,31 @@ mapping|string parse( RequestID id )
 	    mixed tmp = q[i];
 	    int got_result;
 	    if (format_col_cb) {
-	      if (mixed formatted =
-		  format_col_cb (id->variables->db, id->variables->table,
-				 col_names[i], col_names, col_types, q, id)) {
-		qres += formatted;
+	      //  Check for excessive amount of formatted data
+	      if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
+		qres +=
+		  "<span class='warn_exp'>" +
+		  "Total formatted data length exceeded &ndash; limit your query."
+		  "</span>";
 		got_result = 1;
+	      } else if (mixed formatted =
+			 format_col_cb (id->variables->db, id->variables->table,
+					col_names[i], col_names, col_types, q,
+					id)) {
+		int formatted_len = sizeof(formatted);
+		if ((formatted_len >= MAX_FIELD_FORMATTED_SIZE) &&
+		    (id->variables->exp_fields == "auto")) {
+		  //  This field alone is too big to display
+		  qres +=
+		    "<span class='warn_exp'>" +
+		    "Skipping " + (formatted_len / 1024) + "K formatted data."
+		    "</span>";
+		  got_result = 1;
+		} else {
+		  formatted_total_size[i] += formatted_len;
+		  qres += formatted;
+		  got_result = 1;
+		}
 	      }
 	    }
 
@@ -1184,11 +1216,34 @@ mapping|string parse( RequestID id )
 
     // Query widget.
 
+    string formatter_options =
+      "<span style='font-size: smaller;'>Smart field formatters: </span>"
+      "<default variable='form.exp_fields'>"
+      "<select name='exp_fields'>"
+      " <option value='auto'>Enabled for data &lt; " + (MAX_FIELD_FORMATTED_SIZE / 1024) + "K</option>"
+      " <option value='disabled'>Disabled</option>"
+      " <option value='force'>Force expansion of long fields</option>"
+      "</select>"
+      "</default>"
+      "<br />";
+    
+    int db_has_formatters = 0;
+    if (id->variables->db) {
+      mapping(string:string) mod_info =
+	DBManager.module_table_info (id->variables->db, "");
+      Configuration c = !(<0, "">)[mod_info->conf] &&
+	roxen.find_configuration (mod_info->conf);
+      RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+	c->find_module (mod_info->module);
+      db_has_formatters = m && m->format_db_browser_value;
+    }
+    
     res +=
       "<a name='dbquery'></a><p>"
       "<textarea rows='12' cols='90' wrap='soft' name='query' "
       " style='font-size: 90%'>" +
-      Roxen.html_encode_string (id->variables->query) + "</textarea><br />"
+      Roxen.html_encode_string (id->variables->query) + "</textarea><br />" +
+      (db_has_formatters ? formatter_options : "") +
       "<table><tr><td>"
       "<submit-gbutton2 name=reset_q> "+_(378,"Reset query")+" </submit-gbutton2>"
       "</td><td>"
