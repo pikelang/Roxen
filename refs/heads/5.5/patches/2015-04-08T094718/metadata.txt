@@ -1,9 +1,11 @@
-subject: Roxen 5.5:   * Loader: Support packages in $LOCALDIR.
+subject: Roxen 5.5: Packages in $LOCALDIR, DB Browser limit
 from: 010db6b616c2997bec96a7a2aa0c825f1fce1c96
 to: 8f5d38ffc660666e30ed9579018d92e8a64532cc
 originator: wellhardh@roxen.com
 depends: 2015-03-25T164935
 restart: true
+
+Multiple fixes:
 
   * Loader: Support packages in $LOCALDIR.
     
