@@ -248,19 +248,25 @@ void set_up_ssl_variables( Protocol o )
 
   // 112 bits is the maximum strength to still retain the
   // DES-3 suites, which are required in the TLS standards.
+  //
+  // FIXME: The cipher strength list ought to be generated dynamically
+  //        from SSL.Constants.CIPHER_effective_keylengths.
   defvar("ssl_key_bits",
 	 Variable.Int(112, 0,
-		      LOCALE(0, "Cipher suite minimum key strength"),
+		      LOCALE(0, "Cipher suite minimum effective key strength"),
 		      LOCALE(0,
 			     "<p>The minimum number of bits to secure "
 			     "connections.</p>\n"
 			     "<p>Common ciphers (subject to availability) "
-			     "in order of bits:\n"
+			     "in order of effective key bits:\n"
 			     "<dl>\n"
-			     "<dt>40</dt>\n"
-			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>24</dt>\n"
 			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
-			     "<dt>56</dt>\n"
+			     "<dt>32</dt>\n"
+			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>38</dt>\n"
+			     "<dd>RC4</dd>\n"
+			     "<dt>40</dt>\n"
 			     "<dd>DES</dd>\n"
 			     "<dt>112</dt>\n"
 			     "<dd>3-DES (Note that this cipher is the "
@@ -269,10 +275,10 @@ void set_up_ssl_variables( Protocol o )
 			     "<dt>128</dt>\n"
 			     "<dd>AES-128</dd>\n"
 			     "<dd>Camellia-128</dd>\n"
-			     "<dd>RC4</dd>\n"
 			     "<dt>256</dt>\n"
 			     "<dd>AES-256</dd>\n"
 			     "<dd>Camellia-256</dd>\n"
+			     "<dd>ChaCha20</dd>\n"
 			     "</dl>\n"
 			     "</p>\n")))->set_range(0, Variable.no_limit);
 
