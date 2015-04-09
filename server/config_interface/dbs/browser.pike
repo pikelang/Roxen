@@ -248,10 +248,10 @@ today's date in <tt>$VARDIR/backup</tt> (%s)."),
     "</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
-    "<td valign=top align=right><cf-cancel href='"+
-      Roxen.html_encode_string(id->not_query)+
-      "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
+    "<cf-cancel href='"+ Roxen.html_encode_string(id->not_query)+
+    "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
+    "<td valign=top align=right><submit-gbutton2 name='ok'>"+_(201,"OK")+
+    "</submit-gbutton2></td>\n"
     "</td>\n</table>\n";
 }
 
@@ -359,6 +359,9 @@ mixed move_db( string db, RequestID id )
   if( !id->variables->url )
     id->variables->url  = DBManager.db_url( db ) || "";
 
+  if(!id->variables->what)
+    id->variables->what = "move";
+
   return
     "<gtext scale=0.6>"+_(414,"Copy or rename this database")+"</gtext><br />\n"
     +warning+
@@ -401,11 +404,10 @@ mixed move_db( string db, RequestID id )
     "</table>\n"+
     "<table width='100%'><tr><td>"
     "<input type=hidden name=action value='&form.action;' />"
-    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
+    "<cf-cancel href='" + Roxen.html_encode_string(id->not_query) +
+    "?db=" + Roxen.html_encode_string(id->variables->db) + "'/></td>\n"
     "<td align=right>"
-    "<cf-cancel href='"+Roxen.html_encode_string(id->not_query)+
-      "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'/>"
+    "<submit-gbutton2 name='ok'>" + _(201,"OK") + "</submit-gbutton2>"
     "</td>\n</table>\n";
 }
 
