@@ -343,6 +343,9 @@ mixed move_db( string db, RequestID id )
   if( !id->variables->url )
     id->variables->url  = DBManager.db_url( db ) || "";
 
+  if(!id->variables->what)
+    id->variables->what = "move";
+
   return
     "<gtext scale=0.6>"+_(414,"Copy or rename this database")+"</gtext><br />\n"
     +warning+
