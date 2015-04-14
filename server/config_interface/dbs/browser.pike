@@ -761,6 +761,9 @@ mapping|string parse( RequestID id )
       int qrows;
       qres += "<p>\n"
 	"<table id='res'><tr>";
+      // FIXME: Using id='res' above is wrong, as the tag
+      //        can be generated multiple times in the same
+      //        document.
       mixed e = catch {
 	multiset right_columns = (<>);
 	int h = gethrtime();
