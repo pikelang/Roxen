@@ -811,151 +811,177 @@ mapping|string parse( RequestID id )
 	// Query had no result or was empty/commented out.
 	continue;
 
-      int qrows;
-      qres += "<p>\n"
-	"<table id='res'><tr>";
-      multiset right_columns = (<>);
-      int column;
+      do {
+	int qrows;
+	qres += "<p>\n"
+	  "<table id='res'><tr>";
+	// FIXME: Using id='res' above is wrong, as the tag
+	//        can be generated multiple times in the same
+	//        document. See also similar code further below.
+	multiset right_columns = (<>);
+	int column;
 
-      array(string) col_types = ({});
-      array(string) col_names = ({});
+	array(string) col_types = ({});
+	array(string) col_names = ({});
 
-      foreach( big_q->fetch_fields(), mapping field )
-      {
-	switch( field->type  )
+	foreach( big_q->fetch_fields(), mapping field )
 	{
+	  switch( field->type  )
+	  {
 	  case "char":	// Actually a TINYINT.
+	  case "tiny integer":
 	  case "short":
 	  case "int":
+	  case "integer":
 	  case "long":
+	  case "long integer":
 	  case "int24":
 	  case "longlong":
 	    right_columns[column]=1;
-	  qres += "<th class='num'>";
-	  col_types += ({"int"});
-	  break;
+	    qres += "<th class='num'>";
+	    col_types += ({"int"});
+	    break;
+	  case "real":
 	  case "float":
 	  case "double":
 	    right_columns[column]=1;
-	  qres += "<th class='num'>";
-	  col_types += ({"float"});
-	  break;
+	    qres += "<th class='num'>";
+	    col_types += ({"float"});
+	    break;
 	  case "decimal":
 	  case "numeric":
 	    qres += "<th class='num'>";
-	  col_types += ({"string"});
-	  break;
+	    col_types += ({"string"});
+	    break;
 	  case "bit":
 	  default:
 	    qres += "<th>";
-	  col_types += ({"string"});
+	    col_types += ({"string"});
+	  }
+	  qres += Roxen.html_encode_string (field->name) + "</th>\n";
+	  col_names += ({ field->name });
+	  column++;
 	}
-	qres += Roxen.html_encode_string (field->name) + "</th>\n";
-	col_names += ({ field->name });
-	column++;
-      }
-      qres += "</tr>";
+	qres += "</tr>";
 
-      mapping(string:string) mod_info =
-	DBManager.module_table_info (id->variables->db, "");
+	mapping(string:string) mod_info =
+	  DBManager.module_table_info (id->variables->db, "");
 
-      Configuration c = !(<0, "">)[mod_info->conf] &&
-	roxen.find_configuration (mod_info->conf);
-      RoxenModule m = c && !(<0, "">)[mod_info->module] &&
-	c->find_module (mod_info->module);
+	Configuration c = !(<0, "">)[mod_info->conf] &&
+	  roxen.find_configuration (mod_info->conf);
+	RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+	  c->find_module (mod_info->module);
 
-      // Find any column formatter callback in the DB's owner
-      // module. See function prototype in base_server/module.pike.
-      function(string,string,string,array(string),array(string),array(string),
-	       RequestID:string) format_col_cb =
-	m && m->format_db_browser_value;
-      array(int) formatted_total_size = allocate(sizeof(col_names), 0);
-      if (id->variables->exp_fields == "disabled")
-	format_col_cb = 0;
+	// Find any column formatter callback in the DB's owner
+	// module. See function prototype in base_server/module.pike.
+	function(string,string,string,array(string),array(string),array(string),
+		 RequestID:string) format_col_cb =
+	  m && m->format_db_browser_value;
+	array(int) formatted_total_size = allocate(sizeof(col_names), 0);
+	if (id->variables->exp_fields == "disabled")
+	  format_col_cb = 0;
       
-      while( array q = big_q->fetch_row() )
-      {
-	qrows++;
-	qres += "<tr>";
-	for( int i = 0; i<sizeof(q); i++ ) {
-	  qres += right_columns[i] ? "<td class='num'>" : "<td>";
-	  if( !q[i] )
-	    qres += "<i>NULL</i>";
-	  else if( intp( q[i] ) || col_types[i] == "int" )
-	    qres += (string) (int) q[i];
-	  else if( floatp( q[i] ) || col_types[i] == "float" )
-	    qres += (string) (float) q[i];
-	  else if( is_image( q[i] ) )
-	    qres +=
-	      "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
-	  else {
-	    mixed tmp = q[i];
-	    int got_result;
-	    if (format_col_cb) {
-	      //  Check for excessive amount of formatted data
-	      if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
-		qres +=
-		  "<span class='warn_exp'>" +
-		  "Total formatted data length exceeded &ndash; limit your query."
-		  "</span>";
-		got_result = 1;
-	      } else if (mixed formatted =
-			 format_col_cb (id->variables->db, id->variables->table,
-					col_names[i], col_names, col_types, q,
-					id)) {
-		int formatted_len = sizeof(formatted);
-		if ((formatted_len >= MAX_FIELD_FORMATTED_SIZE) &&
-		    (id->variables->exp_fields == "auto")) {
-		  //  This field alone is too big to display
+	while( array q = big_q->fetch_row() )
+	{
+	  qrows++;
+	  qres += "<tr>";
+	  for( int i = 0; i<sizeof(q); i++ ) {
+	    qres += right_columns[i] ? "<td class='num'>" : "<td>";
+	    if( !q[i] )
+	      qres += "<i>NULL</i>";
+	    else if( intp( q[i] ) || col_types[i] == "int" )
+	      qres += (string) (int) q[i];
+	    else if( floatp( q[i] ) || col_types[i] == "float" )
+	      qres += (string) (float) q[i];
+	    else if( is_image( q[i] ) )
+	      qres +=
+		"<img src='browser.pike?image="+store_image( q[i] )+ "' />";
+	    else {
+	      mixed tmp = q[i];
+	      int got_result;
+	      if (format_col_cb) {
+		//  Check for excessive amount of formatted data
+		if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
 		  qres +=
 		    "<span class='warn_exp'>" +
-		    "Skipping " + (formatted_len / 1024) + "K formatted data."
+		    "Total formatted data length exceeded &ndash; limit your query."
 		    "</span>";
 		  got_result = 1;
-		} else {
-		  formatted_total_size[i] += formatted_len;
-		  qres += formatted;
-		  got_result = 1;
+		} else if (mixed formatted =
+			   format_col_cb (id->variables->db,
+					  id->variables->table,
+					  col_names[i], col_names,
+					  col_types, q, id)) {
+		  int formatted_len = sizeof(formatted);
+		  if ((formatted_len >= MAX_FIELD_FORMATTED_SIZE) &&
+		      (id->variables->exp_fields == "auto")) {
+		    //  This field alone is too big to display
+		    qres +=
+		      "<span class='warn_exp'>" +
+		      "Skipping " + (formatted_len / 1024) + "K formatted data."
+		      "</span>";
+		    got_result = 1;
+		  } else {
+		    formatted_total_size[i] += formatted_len;
+		    qres += formatted;
+		    got_result = 1;
+		  }
 		}
 	      }
-	    }
 
-	    if (!got_result) {
-	      if (is_deflated (tmp)) {
-		// is_deflated _may_ give false positives, hence the catch.
-		catch {
-		  tmp = Gz.inflate()->inflate (tmp);
-		};
-	      }
+	      if (!got_result) {
+		if (is_deflated (tmp)) {
+		  // is_deflated _may_ give false positives, hence the catch.
+		  catch {
+		    tmp = Gz.inflate()->inflate (tmp);
+		  };
+		}
 
-	      if( is_encode_value( tmp ) )
-		qres += format_decode_value(tmp);
-	      else if (String.width (tmp) > 8) {
-		// Let wide chars skip past the %q quoting, because
-		// it'll quote them to \u escapes otherwise.
-		string q = "";
-		int s;
-		foreach (tmp; int i; int c)
-		  if (c >= 256) {
-		    if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
-		    q += sprintf ("%c", c);
-		    s = i + 1;
-		  }
-		q += sprintf ("%q", tmp[s..])[1..<1];
-		qres += Roxen.html_encode_string (q);
+		if( is_encode_value( tmp ) )
+		  qres += format_decode_value(tmp);
+		else if (String.width (tmp) > 8) {
+		  // Let wide chars skip past the %q quoting, because
+		  // it'll quote them to \u escapes otherwise.
+		  string q = "";
+		  int s;
+		  foreach (tmp; int i; int c)
+		    if (c >= 256) {
+		      if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
+		      q += sprintf ("%c", c);
+		      s = i + 1;
+		    }
+		  q += sprintf ("%q", tmp[s..])[1..<1];
+		  qres += Roxen.html_encode_string (q);
+		}
+		else
+		  qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	      }
-	      else
-		qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
 	    }
+	    qres += "</td>";
 	  }
-	  qres += "</td>";
+	  qres += "</tr>\n";
 	}
-	qres += "</tr>\n";
-      }
 
-      qres += "</table>"+
-	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
-		 "\n</p>\n", qtime, qrows);
+	qres += "</table>"+
+	  sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
+		   "\n</p>\n", qtime, qrows);
+
+	if (!big_q->next_result) break;
+	h = gethrtime();
+	if (mixed err = catch (big_q = big_q->next_result())) {
+	  qres += "<p><font color='&usr.warncolor;'>"+
+	    sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
+		    replace (Roxen.html_encode_string (
+			       String.trim_all_whites (describe_error(err))),
+			     "\n", "<br/>\n"))+
+	    "</font></p>\n";
+	  break;
+	}
+	qtime = (gethrtime()-h)/1000000.0;
+	if (!big_q) break;
+
+	// More results available.
+      } while(1);
     }
   }
 
