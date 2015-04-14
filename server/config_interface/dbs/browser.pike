@@ -763,19 +763,20 @@ mapping|string parse( RequestID id )
 	"<table id='res'><tr>";
       // FIXME: Using id='res' above is wrong, as the tag
       //        can be generated multiple times in the same
-      //        document.
+      //        document. See also similar code further below.
       mixed e = catch {
 	multiset right_columns = (<>);
 	int h = gethrtime();
 	object big_q = db->big_query( q );
 	qtime = (gethrtime()-h)/1000000.0;
-	int column;
-	if( big_q )
-	{
-	  foreach( big_q->fetch_fields(), mapping field )
+	do {
+	  if( big_q )
 	  {
-	    switch( field->type  )
+	    int column;
+	    foreach( big_q->fetch_fields(), mapping field )
 	    {
+	      switch( field->type  )
+	      {
 	      case "decimal":
 	      case "float":
 	      case "int":
@@ -785,42 +786,51 @@ mapping|string parse( RequestID id )
 	      case "numeric":
 	      case "real":
 	      case "short":
+	      case "short":
 	      case "tiny integer":
 		right_columns[column]=1;
 		qres += "<th class='num'>";
 		break;
 	      default:
 		qres += "<th>";
+	      }
+	      qres += Roxen.html_encode_string (field->name) + "</th>\n";
+	      column++;
 	    }
-	    qres += Roxen.html_encode_string (field->name) + "</th>\n";
-	    column++;
-	  }
-	  qres += "</tr>";
+	    qres += "</tr>";
 
-	  while( array q = big_q->fetch_row() )
-	  {
-	    qrows++;
-	    qres += "<tr>";
-	    for( int i = 0; i<sizeof(q); i++ ) {
-	      qres += right_columns[i] ? "<td class='num'>" : "<td>";
-	      if( !q[i] )
-		qres += "<i>NULL</i>";
-	      else if( intp( q[i] ) || is_int(q[i]) )
-		qres += format_int((int)q[i]);
-	      else if( floatp( q[i] ) || is_float(q[i]) )
-		qres += format_float((float)q[i]);
-	      else if( is_image( q[i] ) )
-		qres +=
-		  "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
-	      else if( is_encode_value( q[i] ) )
-		qres += format_decode_value(q[i]);
-	      else
-		qres += Roxen.html_encode_string(q[i]);
-	      qres += "</td>";
+	    while( array q = big_q->fetch_row() )
+	    {
+	      qrows++;
+	      qres += "<tr>";
+	      for( int i = 0; i<sizeof(q); i++ ) {
+		qres += right_columns[i] ? "<td class='num'>" : "<td>";
+		if( !q[i] )
+		  qres += "<i>NULL</i>";
+		else if( intp( q[i] ) || is_int(q[i]) )
+		  qres += format_int((int)q[i]);
+		else if( floatp( q[i] ) || is_float(q[i]) )
+		  qres += format_float((float)q[i]);
+		else if( is_image( q[i] ) )
+		  qres +=
+		    "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
+		else if( is_encode_value( q[i] ) )
+		  qres += format_decode_value(q[i]);
+		else
+		  qres += Roxen.html_encode_string(q[i]);
+		qres += "</td>";
+	      }
+	      qres += "</tr>\n";
 	    }
-	    qres += "</tr>\n";
 	  }
-	}
+	  h = gethrtime();
+	  if (!big_q->next_result || !big_q->next_result())
+	    break;
+	  qtime += (gethrtime()-h)/1000000.0;
+	  qres += "</table>\n"
+	    "<table id='res'><tr>";
+	  // FIXME: Cf same tag above.
+	} while(1);
       };
       if( e ) {
 	qres += "<tr><td> <font color='&usr.warncolor;'>"+
