@@ -776,9 +776,16 @@ mapping|string parse( RequestID id )
 	  {
 	    switch( field->type  )
 	    {
-	      case "long":
+	      case "decimal":
+	      case "float":
 	      case "int":
+	      case "integer":
+	      case "long integer":
+	      case "long":
+	      case "numeric":
+	      case "real":
 	      case "short":
+	      case "tiny integer":
 		right_columns[column]=1;
 		qres += "<th class='num'>";
 		break;
