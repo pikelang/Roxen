@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.110 2007/04/26 15:07:51 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -346,12 +346,17 @@ class SqlEmitResponse {
 
   private mapping(string:mixed) really_get_row() {
     array val;
-    if(sqlres && (val = sqlres->fetch_row()))
-      fetched++;
-    else {
-      sqlres = 0;
-      return 0;
+    while (sqlres) {
+      if (val = sqlres->fetch_row()) {
+	fetched++;
+	break;
+      }
+      // Try the next set of results.
+      sqlres = (sqlres->next_result && sqlres->next_result());
+      // FIXME: Add result set counter.
     }
+    if (!sqlres)
+      return 0;
 
     if (my_configuration()->compat_level() > 4.5) {
       // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
@@ -479,9 +484,9 @@ class TagSQLTable {
       object res=do_sql_query(args, id, 1);
 
       int ascii=!!args->ascii;
-      string ret="";
 
-      if (res) {
+      while (res) {
+	string ret="";
 	string nullvalue=args->nullvalue||"";
 
 	if (!ascii) {
@@ -513,8 +518,14 @@ class TagSQLTable {
 					  "nullvalue":"","dbobj":""]), ret);
 
 	id->misc->defines[" _ok"] = 1;
-	result=ret;
-	return 0;
+	if (result)
+	  result += ret;
+	else
+	  result = ret;
+
+	if (!res->next_result || !(res = res->next_result()))
+	  return 0;
+	// There were more results, so loop.
       }
 
       id->misc->defines[" _ok"] = 0;
