@@ -877,7 +877,8 @@ class TagSQLTable {
 	  result = ret;
 
 	// Check if there where any more results.
-      } while (res->sqlres->next_result && res->sqlres->next_result());
+      } while (res->sqlres && res->sqlres->next_result &&
+	       res->sqlres->next_result());
     }
   }
 }
