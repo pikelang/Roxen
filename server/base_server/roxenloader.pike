@@ -3508,6 +3508,15 @@ library should be enough.
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
 
+  array(string) patches = get_dir("patches");
+  if (patches && sizeof(patches)) {
+    report_debug("Installed patches:\n");
+    foreach(sort(patches), string patch) {
+      report_debug("  %s\n", patch);
+    }
+    report_debug("\n");
+  }
+
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading Pike modules ... \b");
 
