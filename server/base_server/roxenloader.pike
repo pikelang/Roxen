@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2573,6 +2573,15 @@ library should be enough.
     argc = sizeof(hider);
     new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
+  }
+
+  array(string) patches = get_dir("patches");
+  if (patches && sizeof(patches)) {
+    report_debug("Installed patches:\n");
+    foreach(sort(patches), string patch) {
+      report_debug("  %s\n", patch);
+    }
+    report_debug("\n");
   }
 
   // These are here to allow dumping of roxen.pike to a .o file.
