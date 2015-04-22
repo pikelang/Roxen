@@ -10273,11 +10273,14 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>If this attribute is given to date, it will format the result
  according to the argument string.</p>
 
- <p>The <tt>!</tt> modifier can be inserted to get rid of extra field padding
- in any of the formatters below. For instance, use <tt>%!m</tt> to get the
- month value without zero padding. The <tt>E</tt> modifier accessses
- alternative forms of month names, e.g. <tt>%EB</tt> which in Russian locale
- gives a genitive form.</p>
+ <p>The <tt>!</tt> or <tt>-</tt> (dash) modifier can be inserted to
+ get rid of extra field padding in any of the formatters below. For
+ instance, use <tt>%!m</tt> to get the month value without zero
+ padding. The <tt>E</tt> modifier accessses alternative forms of month
+ names, e.g. <tt>%EB</tt> which in Russian locale gives a genitive
+ form. The <tt>^</tt> modifier can be used to convert the result
+ string to uppercase, while <tt>~</tt> capitalizes the result
+ string.</p>
 
 <xtable>
  <row><h>Format</h><h>Meaning</h></row>
