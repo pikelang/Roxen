@@ -2608,8 +2608,17 @@ string strftime(string fmt, int t,
     while (sizeof(key)) {
       switch(key[0]) {
 	// Flags.
-      case '!':	// Inhibit numerical padding (Pike).
+      case '!':	// Inhibit numerical padding (Roxen specific).
+      case '-':	// Inhibit numerical padding (glibc-style).
 	prefix = 0;
+	key = key[1..];
+	continue;
+      case '^':	// Upper-case (glibc-style).
+	m->case = "upper";
+	key = key[1..];
+	continue;
+      case '~':	// Capitalize (Roxen specific).
+	m->case = "capitalize";
 	key = key[1..];
 	continue;
       case 'E':	// Locale-dependent alternative form.
