@@ -1181,7 +1181,7 @@ class TagDebug {
 	result = "<pre>";
 	if (objectp (scope)) {
 	  result += sprintf ("[object scope %O]\n", scope);
-	  if (array(string) vars = ctx->list_vars (scope_name, 1)) {
+	  if (array(string) vars = ctx->list_var (scope_name, 1)) {
 	    mapping scope_map = ([]);
 	    foreach (vars, string var)
 	      scope_map[var] = ctx->get_var (var, scope_name);
