@@ -1,0 +1,18 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 8f5d38ffc660666e30ed9579018d92e8a64532cc
+to: 2d77ea59eaf0caadce44643d821253a41fead6d2
+originator: wellhardh@roxen.com
+depends: 2015-04-08T094718
+restart: true
+
+Multiple fixes:
+
+  * RoxenPatch: List installed patches at start.
+    
+    Fixes [bug 7462].
+
+  * Add a few (custom and glibc-inspired) modifiers to strftime.
+
+  * RXML: Fixed typo in <debug showscope=""/>.
+    
+    Fixes [bug 7463].
