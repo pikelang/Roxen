@@ -1,9 +1,11 @@
-subject: Roxen 5.4:   * Loader: Support packages in $LOCALDIR.
+subject: Roxen 5.4: List installed patches in debug log, $LOCALDIR
 from: e11b36cf2ea1c0c8a06db55039ff409ef3ceffe9
 to: 6a0dd8df7d1542016c082e7f4cb66db3a3f3160c
 originator: wellhardh@roxen.com
 depends: 2015-03-25T165417
 restart: true
+
+Multiple fixes:
 
   * Loader: Support packages in $LOCALDIR.
     
