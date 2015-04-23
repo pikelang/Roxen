@@ -1,4 +1,4 @@
-subject: Roxen 5.5: Multiple fixes:
+subject: Roxen 5.5: List patches in debug log, strftime additions, debug#showscope
 from: 8f5d38ffc660666e30ed9579018d92e8a64532cc
 to: 2d77ea59eaf0caadce44643d821253a41fead6d2
 originator: wellhardh@roxen.com
