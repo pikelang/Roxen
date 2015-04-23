@@ -1,0 +1,14 @@
+subject: Roxen 5.4:   * Loader: Support packages in $LOCALDIR.
+from: e11b36cf2ea1c0c8a06db55039ff409ef3ceffe9
+to: 6a0dd8df7d1542016c082e7f4cb66db3a3f3160c
+originator: wellhardh@roxen.com
+depends: 2015-03-25T165417
+restart: true
+
+  * Loader: Support packages in $LOCALDIR.
+    
+    This was broken when the defaults were changed to symbolic references.
+
+  * RoxenPatch: List installed patches at start.
+    
+    Fixes [bug 7462].
