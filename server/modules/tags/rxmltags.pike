@@ -113,6 +113,11 @@ private object sexpr_funcs = class SExprFunctions
 	RXML.parse_error (describe_error (err));
       return re->split2 (data) || Val.false;
     }
+
+    float exp(void|int x)
+    {
+      return predef::exp(intp(x) ? (float) x : x);
+    }
     
     float log(void|mixed x)
     {
@@ -137,6 +142,8 @@ private object sexpr_funcs = class SExprFunctions
   }();
 
 private mapping(string:mixed) sexpr_constants = ([
+  "this":0,
+  "this_function":0,
   "this_program":0,
 
   // The (function) casts below is to avoid very bulky types that
@@ -161,9 +168,35 @@ private mapping(string:mixed) sexpr_constants = ([
   "`<=": (function) `<=,
   "`>=": (function) `>=,
 
+  "arrayp": arrayp,
+  "callablep": callablep,
+  "floatp": floatp,
+  "functionp": functionp,
+  "intp": intp,
+  "mappingp": mappingp,
+  "multisetp": multisetp,
+  "objectp": objectp,
+  "programp": programp,
+  "stringp": stringp,
+  "undefinedp": undefinedp,
+  "zero_type": zero_type,
+
+  "has_index": has_index,
+  "has_prefix": has_prefix,
+  "has_suffix": has_suffix,
+  "has_value": has_value,
+
+  "indices": indices,
+  "values": values,
+  "reverse": reverse,
+
+  "combine_path": combine_path_unix,
+
   "equal": equal,
   "sizeof": sizeof,
+  "strlen": strlen,
   "pow":pow,
+  "exp": sexpr_funcs->exp,
   "log": sexpr_funcs->log,
   "abs": abs,
   "max": max,
