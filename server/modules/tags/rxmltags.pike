@@ -188,7 +188,6 @@ private mapping(string:mixed) sexpr_constants = ([
 
   "indices": indices,
   "values": values,
-  "reverse": reverse,
 
   "combine_path": combine_path_unix,
 
