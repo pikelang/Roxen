@@ -11826,6 +11826,82 @@ After: &var.language;<br /></ex>
  idea to use the <tt>INT()</tt> or <tt>FLOAT()</tt> functions on them
  before you do math.</p>
 
+ <p>Expressions for checking types:</p>
+
+ <xtable>
+   <row valign='top'>
+     <c><p><tt>arrayp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is an array,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>callablep(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a function
+	or similar, and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>floatp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a floating point number,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>functionp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a function,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>intp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is an integer,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>mappingp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a mapping,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>multisetp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a multiset,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>objectp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is an object,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>programp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a program,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>stringp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is a string,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>undefinedp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns 1 if the value of <i>expr</i> is UNDEFINED,
+	and 0 otherwise.</p></c></row>
+ </xtable>
+
+ <p>Expressions for checking contents:</p>
+
+ <xtable>
+   <row valign='top'>
+     <c><p><tt>has_index(<i>haystack</i>, <i>index</i>)</tt></p></c>
+     <c><p>Returns 1 if <i>index</i> is in the index domain of <i>haystack</i>,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>has_prefix(<i>string</i>, <i>prefix</i>)</tt></p></c>
+     <c><p>Returns 1 if <i>string</i> starts with <i>prefix</i>,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>has_suffix(<i>string</i>, <i>suffix</i>)</tt></p></c>
+     <c><p>Returns 1 if <i>string</i> ends with <i>suffix</i>,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>has_value(<i>haystack</i>, <i>value</i>)</tt></p></c>
+     <c><p>Returns 1 if <i>value</i> is in the value domain of <i>haystack</i>,
+	and 0 otherwise.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>indices(<i>expr</i>)</tt></p></c>
+     <c><p>Returns an array with all indices present in <i>expr</i>.</p></c></row>
+   <row valign='top'>
+     <c><p><tt>values(<i>expr</i>)</tt></p></c>
+     <c><p>Returns an array with all values present in <i>expr</i>.</p></c></row>
+ </xtable>
+
  <p>Expressions for numeric operands:</p>
 
  <xtable>
@@ -11886,7 +11962,13 @@ After: &var.language;<br /></ex>
      <c><p><tt>log(<i>expr</i>)</tt></p></c>
      <c><p>Returns the natural logarithm of the value <i>expr</i>. To get
         the logarithm in another base, divide the result with
-        <tt>log(<i>base</i>)</tt>.</p></c></row>
+        <tt>log(<i>base</i>)</tt>.
+	This is the inverse operation of <tt>exp()</tt>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>exp(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the natural exponential of the value <i>expr</i>.
+	This is the inverse operation of <tt>log()</tt>.</p></c></row>
 
    <row valign='top'>
      <c><p><tt>abs(<i>expr</i>)</tt></p></c>
@@ -11949,6 +12031,10 @@ After: &var.language;<br /></ex>
      <c><p>Returns the number of characters in <i>expr</i>.</p></c></row>
 
    <row valign='top'>
+     <c><p><tt>strlen(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the number of characters in <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
      <c><p><tt>search(<i>expr1</i>, <i>expr2</i>)</tt></p></c>
      <c><p>Returns the starting position of the first occurrence of the
      substring <i>expr2</i> inside <i>expr1</i>, counting from 1, or 0
@@ -11974,6 +12060,12 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>dirname(<i>expr</i>)</tt></p></c>
      <c><p>Returns the dirname of the path in <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>combine_path(<i>base</i>, <i>relative_path</i>, ...)</tt></p></c>
+     <c><p>Returns the combined path <i>base</i> + <tt>\"/\"</tt> +
+	<i>relative_path</i>, with any path-segments of <tt>'.'</tt> and
+	<tt>'..'</tt> handled and removed.</p></c>
  </xtable>
 
  <p>Expressions for array operands:</p>
