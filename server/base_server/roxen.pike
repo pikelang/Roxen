@@ -2400,7 +2400,7 @@ class SSLProtocol
 	set_version();
       }
     } else {
-      suites = ctx->get_suites(bits);
+      suites = ctx->get_suites(bits, 1);
 
       // Make sure the min version is restored in case we've
       // switched from Suite B.
