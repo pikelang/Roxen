@@ -179,7 +179,7 @@ class Connection
     if(!to && thread)
       error("Cannot change from threaded operation to non-threaded.\n");
     if(to)
-#if !efun(thread_create)
+#if !constant(thread_create)
       error("Cannot use threads, there are none in pike\n");
 #else
     {
