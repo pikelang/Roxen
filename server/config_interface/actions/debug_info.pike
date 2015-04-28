@@ -141,7 +141,7 @@ mixed page_0( object id )
 	p;
       catch {
 	// Paranoia catch.
-	refs[p] += _refs(obj) - 2; // obj and stack.
+	refs[p] += Debug.refs(obj) - 2; // obj and stack.
       };
       if (++numobjs[p] <= 50) {
 #if 0

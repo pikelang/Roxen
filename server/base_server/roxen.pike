@@ -1545,8 +1545,8 @@ class BackgroundProcess
     // o  One in the task array in bg_process_queue.
     // o  One on the stack in the call in bg_process_queue.
     // o  One as current_object in the stack frame.
-    // o  One on the stack as argument to _refs.
-    int self_refs = _refs (this);
+    // o  One on the stack as argument to Debug.refs.
+    int self_refs = Debug.refs (this);
 #ifdef DEBUG
     if (self_refs < 4)
       error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
