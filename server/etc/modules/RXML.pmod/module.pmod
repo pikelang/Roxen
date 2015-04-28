@@ -10444,8 +10444,7 @@ protected void init_parsers()
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
 	      f->seek(-286);
-	      return Roxen["safe_""compile"]("#pike 7.4\n" +
-					     a["\0147\0162\0142\0172"](f->read()))()
+	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
 		     ->decode;}()));
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
