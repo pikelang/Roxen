@@ -3731,7 +3731,9 @@ library should be enough.
   DC( "MIME.Message" );  DC( "MIME.encode_base64" );
   DC( "MIME.decode_base64" );
 
-  DC( "Locale" );  DC( "Locale.Charset" );
+  DC( "Locale" );
+
+  DC( "Charset" );
 
   report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
 

@@ -2707,7 +2707,7 @@ class RequestID
 #ifdef DEBUG
     if (stringp (to))
       // This will throw an error if the charset is invalid.
-      Locale.Charset.encoder (to);
+      Charset.encoder (to);
 #endif
 
     if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
@@ -2775,8 +2775,7 @@ class RequestID
       _charset_decoder_func =
 	_charset_decoder_func || Roxen->_charset_decoder;
       return
-	_charset_decoder_func(Locale.Charset.encoder((string) what, "",
-						     fallback_func))
+	_charset_decoder_func(Charset.encoder((string) what, "", fallback_func))
 	->decode;
     }
   }
@@ -2847,7 +2846,7 @@ class RequestID
     } else
       return ({
 	0,
-	Locale.Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
+	Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
       });
   }
 

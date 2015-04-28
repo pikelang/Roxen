@@ -1046,8 +1046,8 @@ proc: {
     // already is known.
 
     if (charset) {
-      Locale.Charset.Decoder decoder;
-      if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+      Charset.Decoder decoder;
+      if (mixed err = catch (decoder = Charset.decoder (charset))) {
 	err_msg = sprintf ("Unrecognized charset %q.\n", charset);
 	break proc;
       }
@@ -2908,10 +2908,10 @@ protected string low_roxen_encode(string val, string encoding)
 
    case "utf16":
    case "utf16be":
-     return Locale.Charset.encoder("utf16be")->feed(val)->drain();
+     return Charset.encoder("utf16be")->feed(val)->drain();
 
    case "utf16le":
-     return Locale.Charset.encoder("utf16le")->feed(val)->drain();
+     return Charset.encoder("utf16le")->feed(val)->drain();
 
   case "hex":
     if(String.width(val) > 8)
@@ -3093,11 +3093,11 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //!   @value "utf16"
 //!   @value "utf16be"
-//!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     (Big endian) UTF-16 encoding. C.f. @[Charset], encoder
 //!     @expr{"utf16be"@}.
 //!
 //!   @value "utf16le"
-//!     Little endian UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     Little endian UTF-16 encoding. C.f. @[Charset], encoder
 //!     @expr{"utf16le"@}.
 //!
 //!   @value "hex"
@@ -3578,24 +3578,24 @@ class _charset_decoder(object cs)
 
 protected class CharsetDecoderWrapper
 {
-  protected object decoder;
+  protected Charset.Decoder decoder;
   string charset;
 
   protected void create (string cs)
   {
     // Would be nice if it was possible to get the canonical charset
-    // name back from Locale.Charset so we could use that instead in
-    // the client_charset_decoders cache mapping.
-    decoder = Locale.Charset.decoder (charset = cs);
+    // name back from Charset so we could use that instead in the
+    // client_charset_decoders cache mapping.
+    decoder = Charset.decoder (charset = cs);
   }
 
   string decode (string what)
   {
-    object d = decoder;
+    Charset.Decoder d = decoder;
     // Relying on the interpreter lock here.
     decoder = 0;
     if (d) d->clear();
-    else d = Locale.Charset.decoder (charset);
+    else d = Charset.decoder (charset);
     string res = d->feed (what)->drain();
     decoder = d;
     return res;
@@ -6078,8 +6078,8 @@ LogPipe get_log_pipe()
   return LogPipe (read_end, write_end);
 }
 
-constant DecodeError = Locale.Charset.DecodeError;
-constant EncodeError = Locale.Charset.EncodeError;
+constant DecodeError = Charset.DecodeError;
+constant EncodeError = Charset.EncodeError;
 
 mapping(string:int) get_memusage()
 //! Returns a mapping of the memory used by the Roxen process.
@@ -6168,9 +6168,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! thing with that charset.
 //!
 //! If @[charset] is given then it's assumed to be a charset accepted
-//! by @[Locale.Charset]. If there are charset conversion errors in
-//! @[path] or in the file system then those paths are treated as
-//! nonexisting.
+//! by @[Charset]. If there are charset conversion errors in @[path]
+//! or in the file system then those paths are treated as nonexisting.
 //!
 //! @note
 //! Existing paths are cached without any time limit, but the cached
@@ -6194,8 +6193,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       cache_name += ":utf8";
       break;
     default:
-      Locale.Charset.Encoder enc = Locale.Charset.encoder (charset);
-      Locale.Charset.Decoder dec = Locale.Charset.decoder (charset);
+      Charset.Encoder enc = Charset.encoder (charset);
+      Charset.Decoder dec = Charset.decoder (charset);
       encode = lambda (string in) {return enc->feed (in)->drain();};
       decode = lambda (string in) {return dec->feed (in)->drain();};
       cache_name += ":" + enc->charset;
@@ -6257,7 +6256,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	    dec_ent = enc_ent;
 	  else if (mixed err = catch (dec_ent = decode (enc_ent))) {
 	    if (decode != utf8_to_string)
-	      // utf8_to_string doesn't throw Locale.Charset.DecodeErrors.
+	      // utf8_to_string doesn't throw Charset.DecodeErrors.
 	      if (!objectp (err) || !err->is_charset_decode_error)
 		throw (err);
 	    // Ignore file system paths that we cannot decode.

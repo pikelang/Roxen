@@ -408,7 +408,7 @@ class ToEBCDICWrapper
 
   int converted;
 
-  protected object converter = Locale.Charset.encoder("EBCDIC-US", "");
+  protected Charset.Encoder converter = Charset.encoder("EBCDIC-US", "");
 
   protected string convert(string s)
   {
@@ -423,7 +423,7 @@ class FromEBCDICWrapper
 
   int converted;
 
-  protected object converter = Locale.Charset.decoder("EBCDIC-US");
+  protected Charset.Decoder converter = Charset.decoder("EBCDIC-US");
 
   protected string convert(string s)
   {
@@ -727,7 +727,7 @@ class LSFile
 
   protected mapping(string:array|object) stat_cache = ([]);
 
-  protected object conv;
+  protected Charset.Encoder conv;
 
   protected array|object stat_file(string long, RequestID|void session)
   {
@@ -1058,7 +1058,7 @@ class LSFile
 
     if (output_mode == "E") {
       // EBCDIC
-      conv = Locale.Charset.encoder("EBCDIC-US", "");
+      conv = Charset.encoder("EBCDIC-US", "");
     }
 
     array(string) files = allocate(sizeof(argv));
@@ -2119,7 +2119,7 @@ class FTPSession
     case "E":
       // EBCDIC handling here.
       if (file->data) {
-	object conv = Locale.Charset.encoder("EBCDIC-US", "");
+	Charset.Encoder conv = Charset.encoder("EBCDIC-US", "");
 	file->data = conv->feed(file->data)->drain();
       }
       if(objectp(file->file) && file->file->set_nonblocking)

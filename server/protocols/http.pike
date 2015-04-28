@@ -1237,7 +1237,7 @@ private int parse_got( string new_data )
 	      string data = part->getdata();
 	      if (string charset = part->param->charset) {
 		if (mixed err = catch {
-		    data = Locale.Charset.decoder (charset)->
+		    data = Charset.decoder (charset)->
 		      feed (data)->drain();
 		  })
 		  report_debug ("Client %q sent data for %q which failed to "

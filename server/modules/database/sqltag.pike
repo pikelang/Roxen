@@ -587,7 +587,7 @@ inherit "emit_object";
 class SqlEmitResponse {
   inherit EmitObject;
   Sql.sql_result sqlres;
-  private Locale.Charset.Decoder decoder;
+  private Charset.Decoder decoder;
   private array(string) cols;
   private array(int(0..1)) charset_decode_col;
   private int fetched;
@@ -675,7 +675,7 @@ class SqlEmitResponse {
       cols = sqlres->fetch_fields()->name;
 
       if (charset) {
-	if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+	if (mixed err = catch (decoder = Charset.decoder (charset))) {
 #if defined (DEBUG) || defined (MODULE_DEBUG)
 	  werror ("Error getting decoder for charset %O: %s",
 		  charset, describe_error (err));
@@ -702,9 +702,9 @@ class SqlEmitResponse {
 #define GET_CHARSET_AND_ENCODE_QUERY(args, recode_charset) do {		\
     if (!recode_charset) recode_charset = default_recode_charset;	\
     if (!(<0, "none", "unicode", "broken-unicode">)[recode_charset]) {	\
-      Locale.Charset.Encoder encoder;					\
+      Charset.Encoder encoder;					\
       if (mixed err = catch {						\
-	  encoder = Locale.Charset.encoder (recode_charset);		\
+	  encoder = Charset.encoder (recode_charset);		\
 	}) {								\
 	DO_IF_DEBUG (							\
 	  werror ("Error getting encoder for charset %O: %s",		\

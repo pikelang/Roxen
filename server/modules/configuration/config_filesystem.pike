@@ -22,7 +22,7 @@ constant cvs_version =
 
 constant path = "config_interface/";
 
-object charset_decoder;
+Charset.Decoder charset_decoder;
 
 // NOTE: If we ever want to support more than one template, this
 // optimization has to be removed, or at least changed to index on the
@@ -221,7 +221,7 @@ mixed find_file( string f, RequestID id )
     if( encoding != "utf-8" &&
 	encoding != "iso-8859-1")
       catch {
-	charset_decoder=Locale.Charset.decoder( encoding );
+	charset_decoder = Charset.decoder( encoding );
       };
     else
       charset_decoder = 0;

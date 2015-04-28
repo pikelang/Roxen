@@ -571,7 +571,7 @@ void run_xml_tests(string data) {
   if (has_prefix (data, "<?xml")) {
     sscanf (data, "%[^\n]", string s);
     if (sscanf (s, "%*sencoding=\"%s\"", s) == 2)
-      data = Locale.Charset.decoder (s)->feed (data)->drain();
+      data = Charset.decoder (s)->feed (data)->drain();
   }
 
   ltests=0;

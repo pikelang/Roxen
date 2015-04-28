@@ -5505,13 +5505,13 @@ class ArgCache
   }
 }
 
-mapping cached_decoders = ([]);
+mapping(string:Charset.Decoder) cached_decoders = ([]);
 string decode_charset( string charset, string data )
 {
   // FIXME: This code is probably not thread-safe!
   if( charset == "iso-8859-1" ) return data;
   if( !cached_decoders[ charset ] )
-    cached_decoders[ charset ] = Locale.Charset.decoder( charset );
+    cached_decoders[ charset ] = Charset.decoder( charset );
   data = cached_decoders[ charset ]->feed( data )->drain();
   cached_decoders[ charset ]->clear();
   return data;

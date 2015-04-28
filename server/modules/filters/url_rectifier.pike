@@ -23,7 +23,7 @@ void start()
     if( enc == "utf-8" )
       decoders[ enc ] = utf8_to_string;
     else
-      decoders[ enc ]= Roxen._charset_decoder(Locale.Charset.decoder(enc))->decode;
+      decoders[ enc ]= Roxen._charset_decoder(Charset.decoder(enc))->decode;
 }
 
 string status()

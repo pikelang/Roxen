@@ -1821,8 +1821,7 @@ class TagInsertFile {
 
     if (args["decode-charset"]) {
       if (result_mapping->charset) {
-	object /*(Locale.Charset.Decoder)*/ decoder =
-	  Locale.Charset.decoder(result_mapping->charset);
+	Charset.Decoder decoder = Charset.decoder(result_mapping->charset);
 	result = decoder->feed(result)->drain();
       }
     }
@@ -2072,8 +2071,8 @@ class TagCharset
     array do_return( RequestID id )
     {
       if (string charset = args->in) {
-	Locale.Charset.Decoder dec;
-	if (catch (dec = Locale.Charset.decoder (charset)))
+	Charset.Decoder dec;
+	if (catch (dec = Charset.decoder (charset)))
 	  RXML.parse_error ("Invalid charset %q\n", charset);
 	if (mixed err = catch (content = dec->feed (content || "")->drain())) {
 	  if (objectp (err) && err->is_charset_decode_error)
@@ -2086,7 +2085,7 @@ class TagCharset
 	//  Verify that encoder exists since we'll get internal errors
 	//  later if it's invalid. (The same test also happens in
 	//  id->set_output_charset() but only in debug mode.)
-	if (catch { Locale.Charset.encoder(args->out); })
+	if (catch { Charset.encoder(args->out); })
 	  RXML.parse_error("Invalid charset %q\n", args->out);
 	id->set_output_charset( args->out );
       }
@@ -2126,8 +2125,8 @@ class TagRecode
 	      // the decoders also throw an error on this that isn't
 	      // typed as a DecodeError.
 	      RXML.run_error ("Cannot charset decode a wide string.\n");
-	    Locale.Charset.Decoder dec;
-	    if (catch (dec = Locale.Charset.decoder (charset)))
+	    Charset.Decoder dec;
+	    if (catch (dec = Charset.decoder (charset)))
 	      RXML.parse_error ("Invalid charset %q\n", charset);
 	    if (mixed err = catch (content = dec->feed (content)->drain())) {
 	      if (objectp (err) && err->is_charset_decode_error)
@@ -2144,8 +2143,8 @@ class TagRecode
 	int use_entity_fallback =
 	  lower_case(args["entity-fallback"] || "no") != "no";
 	string str_fallback = args["string-fallback"];
-	Locale.Charset.Encoder enc;
-	if (catch (enc = Locale.Charset.encoder (args->to, str_fallback,
+	Charset.Encoder enc;
+	if (catch (enc = Charset.encoder (args->to, str_fallback,
 						 use_entity_fallback &&
 						 lambda(string ch) {
 						   return "&#" + ch[0] + ";";

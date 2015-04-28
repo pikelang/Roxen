@@ -225,7 +225,7 @@ class Relay
         id->set_output_charset( charset );
         catch
         {
-          data = Locale.Charset.decoder(charset)->feed(data)->drain();
+          data = Charset.decoder(charset)->feed(data)->drain();
         };    
       }
       if( options->rewrite )

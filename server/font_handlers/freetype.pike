@@ -92,7 +92,7 @@ class FTFont
   inherit Font;
   protected int size;
   protected Image.FreeType.Face face;
-  protected object encoder;
+  protected Charset.Encoder encoder;
 
   array text_extents( string what )
   {
@@ -318,7 +318,7 @@ class FTFont
                               }]));
 
     if(encoding)
-      encoder = Locale.Charset.encoder(encoding, "");
+      encoder = Charset.encoder(encoding, "");
   }
 }
 

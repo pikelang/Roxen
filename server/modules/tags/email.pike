@@ -488,8 +488,8 @@ class TagEmail {
      // UTF8 -> dest. charset
      if(sizeof(chs))
      {
-       object /* Locate.Charset.encoder */ enc;
-       if (mixed err = catch (enc = Locale.Charset.encoder (chs)))
+       Charset.Encoder enc;
+       if (mixed err = catch (enc = Charset.encoder (chs)))
 	 if (has_prefix (describe_error (err), "Unknown character encoding"))
 	   parse_error ("Unknown charset %O.\n", chs);
 	 else
