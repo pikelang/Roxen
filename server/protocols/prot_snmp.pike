@@ -47,7 +47,6 @@ constant default_port = 161;
  */
 
 class SNMP_Port {
-  inherit Stdio.Port;
   inherit Protocols.SNMP.protocol : snmp;
 
   protected int udp_errno = 0;
@@ -59,6 +58,7 @@ class SNMP_Port {
   int listen_fd(int fd, mixed|void callback){}
   mixed set_id(mixed id){ return _id = id; }
   mixed query_id(){ return _id;}
+  int query_fd(){ return -1; }
   Stdio.File accept(){}
 
   int errno()
@@ -100,7 +100,7 @@ class SNMP_Port {
   protected void create() {}
 }
 
-protected SNMP_Port|Stdio.Port port_obj;
+protected SNMP_Port port_obj;
 
 ADT.Trie mib = ADT.Trie();
 
