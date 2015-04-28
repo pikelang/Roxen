@@ -140,9 +140,7 @@ class servlet {
   protected object context;
   protected string classname;
   int singlethreaded = 0;
-#if constant(thread_create)
   protected object lock;
-#endif
 
   void destroy()
   {
@@ -159,13 +157,11 @@ class servlet {
       req = request(context, req);
     }
     set_response_method(req, res);
-#if constant(thread_create)
     if(singlethreaded) {
       object key = lock->lock();
       servlet_service(s, req, res);
       key = 0;
     } else
-#endif
       servlet_service(s, req, res);
     check_exception();
     wrapup_method(res);
@@ -207,9 +203,7 @@ class servlet {
     if(!s->is_instance_of(servlet_ifc))
       error("class does not implement javax.servlet.Servlet\n");
     if(s->is_instance_of(singlethread_ifc)) {
-#if constant(thread_create)
       lock = Thread.Mutex();
-#endif
       singlethreaded = 1;
     }
   }

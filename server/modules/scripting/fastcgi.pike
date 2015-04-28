@@ -136,7 +136,6 @@ class FCGIChannel
       }
     }
 
-#if constant( thread_create )
     void read_thread()
     {
       DTFUNC("FCGIChannel::read_thread");
@@ -209,42 +208,6 @@ class FCGIChannel
       cond->signal();
       lock = 0;
     }
-#else
-    void write( string what )
-    {
-      wbuffer += what;
-      write_cb();
-    }
-
-    void write_cb( )
-    {
-      if( strlen(wbuffer) )
-      {
-	IO_DEBUG(sprintf("nonthreaded write_cb with wbuffer: %s\n",wbuffer));
-        written = fd->write( wbuffer );
-	IO_DEBUG(sprintf("nonthreaded write_cb wrote: %d\n",written));
-        if( written < 0 )
-          end_cb();
-        else
-          wbuffer = wbuffer[written..];
-      }
-    }
-
-    void read_cb( object f, string d )
-    {
-      IO_DEBUG(sprintf("Non threaded read_cb, string: %s\n   object :%O\n",d,f));
-      got_data( d );
-    }
-
-    void do_setup_channels()
-    {
-      IO_DEBUG(sprintf("Non threaded Setting up read/write/close callbacks for FD: %O\n",fd));
-      fd->set_id( 0 );
-      fd->set_read_callback( read_cb );
-      fd->set_write_callback( write_cb );
-      fd->set_close_callback( end_cb );
-    }
-#endif
 
     void end_cb()
     {
@@ -446,17 +409,12 @@ class Stream
     function read_callback, close_callback, close_callback_2;
     mixed fid;
 
-#if constant(thread_create)
     // Note: buffer is accessed both from the read_thread,
     //       and from other threads due to the implementation
     //       of set_blocking() and set_nonblocking().
     Thread.Mutex read_cb_mutex = Thread.Mutex();
 #define LOCK()		read_cb_mutex->lock()
 #define UNLOCK(KEY)	destruct(key)
-#else
-#define LOCK()	0
-#define UNLOCK(KEY)
-#endif
   }
 
   string _sprintf( )
@@ -533,18 +491,14 @@ class Stream
     {
       if( noblock )
       {
-#if constant( thread_create )
         while( !closed && !strlen( buffer ) ) sleep(0.1);
-#endif
 	mixed key = LOCK();
         string b = buffer;
         buffer="";
 	UNLOCK(key);
         return b;
       }
-#if constant( thread_create )
       while( !closed ) sleep( 0.1 );
-#endif
       mixed key = LOCK();
       string b = buffer;
       buffer=0;
@@ -553,17 +507,10 @@ class Stream
     }
     if( !closed && !noblock )
     {
-#if constant( thread_create )
       while( !closed && (strlen( buffer ) < nbytes) ) /* assume MT */
         sleep( 0.1 );
-#else
-      if( !closed && (strlen(buffer) < nbytes) )
-        error("Not enough data available, and waiting would block!\n" );
-#endif
     }
-#if constant( thread_create )
     while( !closed && !strlen( buffer ) ) sleep(0.1);
-#endif
     mixed key = LOCK();
     string b = buffer[..nbytes-1];
     buffer = buffer[nbytes..];
@@ -921,7 +868,6 @@ class FCGI
     {
       DTFUNC("FCGI::do_connect");
 
-#if constant(thread_create)
       THREAD_DEBUG(sprintf("FCGI::do_connect with fd: %O, q: %O\n",fd,q));
 
       IO_DEBUG(" Connecting...\n" );
@@ -931,10 +877,6 @@ class FCGI
         sleep( 0.1 );
       }
       q();
-#else
-      IO_DEBUG(sprintf("no thread_create: Connecting to %d...\n",(int)(socket->query_address()/" ")[1]));
-      fd->connect( "localhost",(int)(socket->query_address()/" ")[1]);
-#endif
       THREAD_DEBUG("FCGI::do_connect done");
     }
 
@@ -949,19 +891,11 @@ class FCGI
       Stdio.File fd = Stdio.File();
       fd->open_socket();
       FCGIChannel ch = FCGIChannel( fd );
-#if constant(thread_create)
       fd->set_blocking();
       mixed th;
       th = thread_create( do_connect,  fd, ch->setup_channels );
       THREAD_DEBUG(sprintf("%O::new_channel created thread id %O for do_connect()",
 			   this,th->id_number()));
-#else
-      fd->set_nonblocking( 0,
-                           ch->setup_channels,
-                           do_connect );
-      fd->set_id( fd );
-      do_connect( fd );
-#endif
       channels += ({ ch });
       ch->set_close_callback( lambda(object c)
                               {

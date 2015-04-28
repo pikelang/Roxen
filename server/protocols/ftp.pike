@@ -93,10 +93,8 @@
 
 #define FTP2_TIMEOUT	(5*60)
 
-#ifdef ENABLE_THREADS
 // Enable the use of handler threads.
 #define FTP_USE_HANDLER_THREADS
-#endif
 
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
@@ -106,11 +104,7 @@
 # define DWRITE(X ...)
 #endif
 
-#if constant(thread_create)
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
-#else /* !constant(thread_create) */
-#define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); FD->close(); FD = 0; } while(0)
-#endif /* constant(thread_create) */
 
 class RequestID2
 {

@@ -156,17 +156,10 @@ void run_tests( Configuration c )
 
 
   // 2: Test the interfaces in the config and module objects.
-#if !constant(thread_create)
-  report_notice("Threads not available, "
-		"skipping thread related UserDB tests\n");
-#endif
-  
   foreach( ({ m, c }), object o )
   {
     test( verify_user_list, user_list, o );
-#if constant(thread_create)
     do_thread_tests( o );
-#endif
   }
 
   // 3: Test functions in config object

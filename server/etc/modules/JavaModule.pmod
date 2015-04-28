@@ -127,14 +127,9 @@ protected mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
 protected mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
 protected mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
 
-#if constant(thread_create)
 #define LOCK() object _key=mutex->lock()
 #define UNLOCK() destruct(_key)
 protected object mutex=Thread.Mutex();
-#else
-#define LOCK() 0
-#define UNLOCK() 0
-#endif
 
 
 protected void check_exception(object|void e)

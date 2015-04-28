@@ -20,10 +20,8 @@ protected class RXMLTagSet
 
   string prefix = RXML_NAMESPACE;
 
-#if constant (thread_create)
   Thread.Mutex lists_mutex = Thread.Mutex();
   // Locks destructive changes to the arrays modules and imported.
-#endif
 
   array(RoxenModule) modules;
   // Each element in the imported array is the registered tag set of a
@@ -36,9 +34,7 @@ protected class RXMLTagSet
 
   void sort_on_priority()
   {
-#if constant (thread_create)
     Thread.MutexKey lock = lists_mutex->lock();
-#endif
     int i = search (imported, Roxen.entities_tag_set);
 #ifdef DEBUG
     if (i < 0) error ("Module list does not contain "

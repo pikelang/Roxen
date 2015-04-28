@@ -3824,14 +3824,9 @@ string make_http_headers(mapping(string:string|array(string)) heads,
 
 class QuotaDB
 {
-#if constant(thread_create)
   object(Thread.Mutex) lock = Thread.Mutex();
 #define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
-#else /* !constant(thread_create) */
-#define LOCK()
-#define UNLOCK()
-#endif /* constant(thread_create) */
 
   constant READ_BUF_SIZE = 256;
   constant CACHE_SIZE_LIMIT = 512;
@@ -6038,18 +6033,9 @@ class LogPipe
     roxen->name_thread(this_thread(), 0);
   }
 
-  protected void create (Stdio.File read_end, Stdio.File write_end,
-			 int use_read_thread)
+  protected void create (Stdio.File read_end, Stdio.File write_end)
   {
-#if constant(thread_create)
-    if (use_read_thread)
-      thread_create (log_pipe_read_thread, read_end);
-    else
-#endif
-    {
-      read_end->set_nonblocking (read_cb, 0, close_cb);
-      read_end->set_id (read_end);
-    }
+    thread_create (log_pipe_read_thread, read_end);
     assign (write_end);
   }
 
@@ -6080,21 +6066,16 @@ LogPipe get_log_pipe()
 {
   Stdio.File read_end = Stdio.File();
   Stdio.File write_end;
-  int use_read_thread;
   if (catch (write_end =
 	     read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK))) {
     // Some OS'es (notably Windows) can't create a nonblocking
     // interprocess pipe.
     read_end = Stdio.File();
     write_end = read_end->pipe (Stdio.PROP_IPC);
-    use_read_thread = 1;
-#if 0
-    report_debug ("Using read thread with a blocking pipe for logging.\n");
-#endif
   }
   if (!write_end) error ("Failed to create pipe: %s\n",
 			 strerror (read_end->errno()));
-  return LogPipe (read_end, write_end, use_read_thread);
+  return LogPipe (read_end, write_end);
 }
 
 constant DecodeError = Locale.Charset.DecodeError;

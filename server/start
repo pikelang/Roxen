@@ -139,30 +139,6 @@ setup_environment
 
 DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
 
-
-# Thread enabling.
-# FIXME: Ought to use case...esac.
-
-# Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  vers="`uname -r|sed -e 's/5.\([0-9]*\)/\1/p' -ed`"
-  if [ "$vers" -ge "5" ]; then
-#    if [ $verbose -gt 0 ] ; then
-#      dp "Solaris 2.5 or later detected. Using threads by default."
-#    fi
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
-fi
-# Darwin uses threads.
-if uname | grep 'Darwin' >/dev/null 2>&1; then
-  DEFINES="$DEFINES -DENABLE_THREADS"
-fi
-# Also enabled on Linux.
-if uname | grep 'Linux' >/dev/null 2>&1; then
-  DEFINES="$DEFINES -DENABLE_THREADS"
-fi
-
 gdb=no
 valgrind=
 truss=
@@ -308,7 +284,7 @@ parse_args() {
     DEFINES="-DENABLE_THREADS $DEFINES"
   ;;
   '--no-threads'|'--without-threads'|'--disable-threads')
-    DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//g'`"
+    echo "Thread support not optional -- ignoring $1" >&2
   ;;
   '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"

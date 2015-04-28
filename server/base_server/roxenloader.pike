@@ -3076,14 +3076,10 @@ void start_mysql (void|int log_queries_to_stdout)
 
   void start_tailf()
   {
-#if constant (thread_create)
     if( do_tailf_threaded ) {
       thread_create( do_tailf, 1, err_log );
       sleep(0.1);
-    }
-    else
-#endif
-    {
+    } else {
       do_tailf(0, err_log );
       void do_do_tailf( )
 	{
@@ -3327,6 +3323,20 @@ void do_main( int argc, array(string) argv )
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
 		clear_connect_to_my_mysql_cache );  
+
+#if !constant(thread_create)
+  report_debug(#"
+
+
+------ FATAL ----------------------------------------------------
+Roxen requires Pike with thread support.
+-----------------------------------------------------------------
+
+
+");
+  exit(-1);
+#endif
+
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
   report_debug(#"

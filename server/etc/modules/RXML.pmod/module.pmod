@@ -2599,11 +2599,7 @@ class Context
   }
 
 #ifdef MODULE_DEBUG
-#if constant (thread_create)
   Thread.Thread in_use;
-#else
-  int in_use;
-#endif
 #endif
 }
 
@@ -2896,7 +2892,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 //! A slightly faster way to access it is through the @[RXML_CONTEXT]
 //! macro in @tt{module.h@}.
 
-#if defined (MODULE_DEBUG) && constant (thread_create)
+#if defined (MODULE_DEBUG)
 
 // Got races in this debug check, but looks like we have to live with that. :/
 
