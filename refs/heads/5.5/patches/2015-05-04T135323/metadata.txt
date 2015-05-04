@@ -1,0 +1,8 @@
+subject: Roxen 5.5: Fix for bug where the ^ and ~ modifiers would affect the entire remaining string.
+from: 2d77ea59eaf0caadce44643d821253a41fead6d2
+to: 5bdf135e770f542939488dc3e6da87033124c29f
+originator: wellhardh@roxen.com
+depends: 2015-04-23T094116
+restart: true
+
+Fix for bug where the ^ and ~ modifiers would affect the entire remaining string.
