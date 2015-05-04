@@ -139,7 +139,7 @@ void parse_redirect_string(string what, string|void fname)
       //        there may be verbatim lower-case escapes in the patterns.
       if(sizeof(a)>=3 && a[0]=="exact") {
 	string(0..255) match_url = Roxen.http_encode_invalids(a[1]);
-	string(0..255) dest_url = Roxen.http_encode_invalids(a[1]);
+	string(0..255) dest_url = Roxen.http_encode_invalids(a[2]);
 	if (exact_patterns[match_url])
 	  report_warning ("Duplicate redirect pattern %O.\n", s);
 	exact_patterns[match_url] = ({ dest_url, ret_code });
