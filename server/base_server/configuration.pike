@@ -2269,7 +2269,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
 	if(fid)
 	{
-	  id->virtfile = loc;
+	  if (id)
+	    id->virtfile = loc;
 
 	  if(mappingp(fid))
 	  {
@@ -2524,28 +2525,39 @@ mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
   res = low_get_file(id, no_magic);
   TIMER_END(get_file);
 
-  // finally map all filter type modules.
-  // Filter modules are like TYPE_LAST modules, but they get called
-  // for _all_ files.
-  TIMER_START(filter_modules);
-  foreach(filter_module_cache||filter_modules(), tmp)
-  {
-    TRACE_ENTER("Filter module", tmp);
-    PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
-    if(res2=tmp(res,id))
+  // Note: id may be destructed at this point already (when the
+  // request is handled asynchronously,
+  // i.e. Roxen.http_pipe_in_progress() is returned, but
+  // id->send_result() finishes in another thread before the calling
+  // thread gets to this point.)
+  if (id && (!mappingp (res) || !res->pipe)) {
+    // finally map all filter type modules.
+    // Filter modules are like TYPE_LAST modules, but they get called
+    // for _all_ files.
+    TIMER_START(filter_modules);
+    foreach(filter_module_cache||filter_modules(), tmp)
     {
-      if(mappingp(res) && res->file && (res2->file != res->file))
-	destruct(res->file);
-      TRACE_LEAVE("Rewrote result.");
-      res=res2;
-    } else
-      TRACE_LEAVE("");
-    PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
+      TRACE_ENTER("Filter module", tmp);
+      PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
+      if(res2=tmp(res,id))
+      {
+	if(mappingp(res) && res->file && (res2->file != res->file))
+	  destruct(res->file);
+	TRACE_LEAVE("Rewrote result.");
+	res=res2;
+      } else
+	TRACE_LEAVE("");
+      PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
+    }
+    TIMER_END(filter_modules);
   }
-  TIMER_END(filter_modules);
 
-  root_id->misc->_request_depth--;
-  id->misc->internal_get = orig_internal_get;
+  if (root_id)
+    root_id->misc->_request_depth--;
+
+  if (id)
+    id->misc->internal_get = orig_internal_get;
+
   return res;
 }
 
