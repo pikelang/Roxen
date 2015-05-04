@@ -1,0 +1,3 @@
+Modified files:
+  modules/filters/redirect.pike
+  modules/tags/rxmltags.pike
