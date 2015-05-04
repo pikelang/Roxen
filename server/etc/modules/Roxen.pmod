@@ -2602,6 +2602,7 @@ string strftime(string fmt, int t,
   mapping(string:string) m = (["type":"string"]);
   
   foreach(a[1..], string key) {
+    m_delete (m, "case");
     int(0..1) prefix = 1;
     int(0..1) alternative_numbers = 0;
     int(0..1) alternative_form = 0;
