@@ -1,0 +1,8 @@
+subject: Roxen 5.5: Redirect: Fixed typo that broke exact redirects. Fixes [bug 7432].
+from: 5bdf135e770f542939488dc3e6da87033124c29f
+to: fe8bcfef96b9c3009513df7003673f848f50d6d7
+originator: wellhardh@roxen.com
+depends: 2015-05-04T135323
+restart: true
+
+Redirect: Fixed typo that broke exact redirects. Fixes [bug 7432].
