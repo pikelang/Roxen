@@ -1,9 +1,11 @@
-subject: Roxen 5.4:   * RXML: Fixed typo in <debug showscope=""/>.
+subject: Roxen 5.4: Fix in debug#showscope, exact redirects
 from: 6a0dd8df7d1542016c082e7f4cb66db3a3f3160c
 to: 32806536cc242ece62e60d569e564b32eb49bdca
 originator: wellhardh@roxen.com
 depends: 2015-04-23T160238
 restart: true
+
+Multiple fixes:
 
   * RXML: Fixed typo in <debug showscope=""/>.
     
