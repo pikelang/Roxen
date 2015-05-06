@@ -115,6 +115,8 @@ fi
 
 gdb=no
 
+daemonize=yes
+
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
@@ -201,6 +203,9 @@ parse_args() {
   ;;
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
+  ;;
+  '--without-daemon'|'--without-deamonize')
+    daemonize=no
   ;;
   '--quiet'|'-q')
     verbose=0
@@ -307,6 +312,9 @@ the default arguments.
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
                                   this argument must be the first one.
+
+      .B--without-daemonB.:           Do not detach from the started server.
+                                  This is typically used with launchd.
 
       .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
@@ -770,6 +778,12 @@ if [ -z "$once" ] ; then
     [ -z "$pidfile" ] || { echo "x" && echo $pid; } > $pidfile
     dp "Forked start script, pid $pid." 2>&3
     dp "Start script pid $pid."
+
+    if test "x$daemonize" = "xyes"; then :; else
+      trap "stop_roxen $pid TERM start \"$canonicalconf\" \"start script\"" 2 15
+      wait;
+      signal_exit
+    fi
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
