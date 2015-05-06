@@ -167,7 +167,10 @@ gdb=no
 valgrind=
 truss=
 
+daemonize=yes
+
 remove_dumped_passed=no
+
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
@@ -315,6 +318,9 @@ parse_args() {
   ;;
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
+  ;;
+  '--without-daemon'|'--without-deamonize')
+    daemonize=no
   ;;
   '--generations='*)
     GENERATIONS=`echo $1 | sed -e 's/--generations=//'`
@@ -483,6 +489,9 @@ the default arguments.
                                   this argument must be the first one.
 
       .B--strip-backslashB.:          Replace all \\ characters in URIs with /
+
+      .B--without-daemonB.:           Do not detach from the started server.
+                                  This is typically used with launchd.
 
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
@@ -1327,6 +1336,12 @@ if [ -z "$once" ] ; then
     trap "" 0
     dp "Forked start script, pid $start_pid." 2>&3
     dp "Start script pid $start_pid."
+
+    if test "x$daemonize" = "xyes"; then :; else
+      trap "stop_roxen $start_pid TERM start \"$canonicalconf\" \"start script\"" 2 15
+      wait;
+      signal_exit
+    fi
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
