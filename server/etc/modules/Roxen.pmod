@@ -3216,7 +3216,7 @@ string fix_relative( string file, RequestID|void id )
 //! is simplified to not contain any @expr{"."@} or @expr{".."@}
 //! segments.
 {
-  Standards.URI uri = Standards.URI("://");
+  Standards.URI uri = Standards.URI(":///");
   if (id) {
     uri = Standards.URI(id->not_query, uri);
   }
