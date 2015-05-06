@@ -1,0 +1,13 @@
+subject: Roxen 5.5: Start: Added --without-daemon.
+from: fe8bcfef96b9c3009513df7003673f848f50d6d7
+to: 4005e0157bc2ba3e88e0fbcb63348db03c01111d
+originator: wellhardh@roxen.com
+depends: 2015-05-04T155633
+restart: true
+
+Start: Added --without-daemon.
+
+This inhibits the detaching of the roxen process from the start script,
+and is needed to support some startup systems, notably launchd.
+
+Fixes some of [bug 7488].
