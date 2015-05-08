@@ -263,7 +263,7 @@ class Patcher
     // Verify server dir
     server_path = combine_and_check_path(server_dir);
     if (!server_path)
-      throw(({ "Cannot access server dir!" }));
+      error("Cannot access server dir!");
     
 //     write_mess("Server path set to %s\n", server_path);
  
@@ -276,7 +276,7 @@ class Patcher
       if(!mkdirhier(import_path))
       {
 	// If the dir does not exist and we failed to create it.
-	throw(({ "Can't access import dir!" }));
+	error("Can't access import dir!");
       }
     }
 //     write_mess("Import dir set to %s\n", import_path);
@@ -288,7 +288,7 @@ class Patcher
       if(!mkdirhier(installed_path))
       {
 	// If the dir does not exist and we failed to create it.
-	throw(({"Can't access installed dir!"}));
+	error("Can't access installed dir!");
       }
     }
 //     write_mess("Installed dir set to %s\n", installed_path);
@@ -308,7 +308,7 @@ class Patcher
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
     if (!is_file(version_h))
-      throw( ({ "Cannot access " + version_h  }) );
+      error("Cannot access " + version_h);
 
     object err = catch
     {
@@ -317,7 +317,7 @@ class Patcher
     };
     
     if (err)
-      throw(({"Can't fetch server version"}));
+      error("Can't fetch server version");
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
 
@@ -1861,8 +1861,8 @@ class Patcher
   {
     installed_path = combine_path(server_path, path);
     if (!is_dir(installed_path))
-      throw( ({ sprintf("Couldn't set %s as path for installed patches", 
-			installed_path) }) );
+      error(sprintf("Couldn't set %s as path for installed patches",
+		    installed_path));
   }  
   
   void set_imported_path(string path) 
@@ -1875,8 +1875,8 @@ class Patcher
   {
     import_path = combine_path(getcwd(), path);
     if (!is_dir(installed_path))
-      throw( ({ sprintf("Couldn't set %s as path for installed patches", 
-			import_path) }) );
+      error(sprintf("Couldn't set %s as path for installed patches",
+		    import_path));
   }
   
   void set_temp_dir(void | string path)
@@ -1901,7 +1901,7 @@ class Patcher
     else if (is_dir("/tmp/"))
       temp_path = "/tmp/";
     else
-      throw(({"Couldn't set a standard temp dir."}));
+      error("Couldn't set a standard temp dir.");
   }
 
   string get_temp_dir() { return temp_path; }
@@ -3055,7 +3055,7 @@ class Patcher
     Standards.URI new_uri(string url) {
       Standards.URI uri;
       mixed err = catch { uri = Standards.URI(url); };
-      if (err) { throw(sprintf("Malformed URL: %s", url || "")); }
+      if (err) { error(sprintf("Malformed URL: %s", url || "")); }
       return uri;
     };
 
@@ -3066,7 +3066,7 @@ class Patcher
       Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
 #endif
       if (query->status != 200) {
-	throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
+	error(sprintf("HTTP request for URL %s failed with status %d: %s.",
 		      (string)uri || "", query->status, query->status_desc || ""));
       }
       return query->data();
@@ -3074,7 +3074,7 @@ class Patcher
 
     // If not running in a dist we can't fetch patches
     if (dist_version == "")
-      throw("Not running a proper distribution.");
+      error("Not running a proper distribution.");
     
     // Get rxp action url
     Standards.URI uri = new_uri(RXP_ACTION_URL);
@@ -3086,7 +3086,7 @@ class Patcher
 
     // Get rxp cluster url
     if (!res || !sizeof(res))
-      throw("No rxp cluster URL was found.");
+      error("No rxp cluster URL was found.");
 
     Standards.URI uri2 = new_uri(res);
     string res2 = get_url(uri2); 
