@@ -4251,6 +4251,14 @@ class FTPSession
   {
     DWRITE("FTP2: terminate_connection()\n");
 
+    if (fd) {
+      // Close the command connection.
+      // Note that we have delayed the closing to reduce the risk of races.
+      fd->close();
+      destruct(fd);
+      fd = 0;
+    }
+
     logout();
 
     if (pasv_port) {
@@ -4270,14 +4278,13 @@ class FTPSession
   {
     DWRITE("FTP2: con_closed()\n");
 
-    send(0, 0);		// EOF marker.
-
     if (fd) {
-      // There's no reason to keep the command connection around any more.
-      fd->close();
-      destruct(fd);
-      fd = 0;
+      // Clear the read-side callbacks.
+      fd->set_close_callback(0);
+      fd->set_read_callback(0);
     }
+
+    send(0, 0);		// EOF marker.
 
     // Queue a command queue terminator.
     // This will terminate the connection as soon as all pending commands
