@@ -1543,9 +1543,9 @@ class FTPSession
 #else
 	  fd = SSL.sslfile(fd, port_obj->ctx);
 #endif
-	  // Restore the callbacks in the new SSL connection.
-	  ::set_write_callback(write_cb);
 	}
+	// Restore the callbacks in the new SSL connection.
+	::set_write_callback(write_cb);
 	return "";
       } else if (s == 2) {
 	DWRITE("FTP2: write_cb(): ENDTLS.\n");
@@ -1567,7 +1567,8 @@ class FTPSession
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
-      } else {
+      } else if (stringp(to_send->peek())) {
+	// Not about to switch TLS mode.
 	::set_write_callback(write_cb);
       }
       return(s);
@@ -2872,8 +2873,16 @@ class FTPSession
     // RFC 4217 4.2 requires REIN.
     ftp_REIN(1);
 
+    // Inform the client that we agree to switch to TLS.
     low_send(234, ({ "TLS enabled." }));
-    to_send->put(1);	// Switch to TLS marker.
+
+    // Make sure not to read any more from the fd before
+    // the TLS handshaking is done.
+    fd->set_read_callback(0);
+    fd->set_close_callback(0);
+
+    // Switch to TLS marker.
+    to_send->put(1);
 
     // Compatibility with early draft-murray-auth-ftp-ssl
     // (drafts of RFC 4217).
