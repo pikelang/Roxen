@@ -5357,6 +5357,7 @@ low."))->add_changed_callback(lambda(object v)
 	    "application/x-javascript",
 	    "application/json",
 	    "application/xhtml+xml",
+	    "image/x-icon",
 	    "image/svg+xml" }),
 	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
