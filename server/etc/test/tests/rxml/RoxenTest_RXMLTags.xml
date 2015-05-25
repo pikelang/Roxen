@@ -3902,3 +3902,24 @@ e</random></rxml>
   </rxml>
   <result>1972-12-13</result>
 </test>
+
+<!-- ............................................................ -->
+<comment>wash-html</comment>
+
+<add-module>html_wash</add-module>
+
+<test>
+  <rxml>
+    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
+  </rxml>
+  <result><h1>Foo</h1><p>bar &lt;a href="A"&gt;A&lt;/a&gt;.<br/>C.</p></result>
+</test>
+
+<test>
+  <rxml>
+    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes" remove-unwanted-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
+  </rxml>
+  <result><h1>Foo</h1><p>bar A.<br/>C.</p></result>
+</test>
+
+<drop-module>html_wash</drop-module>
