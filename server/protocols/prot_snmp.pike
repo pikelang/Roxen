@@ -461,6 +461,33 @@ class RoxenGlobalMIB
 		       "Number of call outs longer than 15 seconds."),
 		   }),
 		 }),
+#if constant(gethrdtime)
+		 ({
+		   UNDEFINED,
+		   SNMP.Counter(0, "unithreadQueueSize",
+				"Number of threads waiting to run "
+				"single threaded."),
+		   ({
+		     UNDEFINED,
+		     SNMP.Counter(lambda()
+				  { return gethrdtime()/10000; },
+		       "unithreadTime",
+		       "Single threaded real time in centiseconds."),
+		     UNDEFINED,	// User time.
+		   }),
+		   ({
+		     UNDEFINED,
+		     UNDEFINED,	// Num _disable_threads().
+		     UNDEFINED,	// >= 0.01s
+		     UNDEFINED,	// >= 0.05s
+		     UNDEFINED,	// >= 0.15s
+		     UNDEFINED,	// >= 0.5s
+		     UNDEFINED,	// >= 1s
+		     UNDEFINED,	// >= 5s
+		     UNDEFINED,	// >= 15s
+		   }),
+		 }),
+#endif
 	       }),
 	       ({
 		 UNDEFINED,
