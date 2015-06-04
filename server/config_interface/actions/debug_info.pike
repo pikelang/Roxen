@@ -114,6 +114,7 @@ mixed page_0( object id )
   mapping(string|program:array) allobj = ([]);
   mapping(string|program:int) numobjs = ([]);
   mapping(string:int) refs = ([]);
+  mapping(string:int) mem = ([]);
 
   object threads_disabled = _disable_threads();
 
@@ -142,6 +143,7 @@ mixed page_0( object id )
       catch {
 	// Paranoia catch.
 	refs[p] += Debug.refs(obj) - 2; // obj and stack.
+	mem[p] += Pike.count_memory (-1, obj);
       };
       if (++numobjs[p] <= 50) {
 #if 0
@@ -287,7 +289,7 @@ mixed page_0( object id )
       }
 
       table[i] = ({ color, progstr, objstr,
-		    numobjs[prog], change, refs[prog] });
+		    numobjs[prog], change, refs[prog], mem[prog] });
     }
     else table[i] = 0;
   }
@@ -303,7 +305,7 @@ mixed page_0( object id )
 	  progstr = prog;
       }
       else progstr = "";
-      table += ({({dec_color, progstr, entry[1], 0, -entry[0], 0})});
+      table += ({({dec_color, progstr, entry[1], 0, -entry[0], 0, 0})});
     }
     entry[0] = 0;
   }
@@ -323,6 +325,7 @@ mixed page_0( object id )
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"Bytes")) +
     "</tr>\n";
   string trim_path( string what )
   {
@@ -338,7 +341,8 @@ mixed page_0( object id )
 	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
       TCELL ("align='right'", entry[0], entry[5]) +
       TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) + "</tr>\n";
+      TCELL ("align='right'", entry[0], entry[4]) +
+      TCELL ("align='right'", entry[0], entry[6]) + "</tr>\n";
   res += "</table></p>\n";
 
   if (gc_status->non_gc_time)
