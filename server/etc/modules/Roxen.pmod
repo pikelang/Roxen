@@ -5914,7 +5914,7 @@ string generate_self_signed_certificate(string common_name,
 
   if (!key) {
     key = Crypto.RSA();
-    key->generate_key(key_size, Crypto.Random.random_string);
+    key->generate_key(key_size);
   }
 
   string key_type = key->name();
