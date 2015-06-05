@@ -1,0 +1,5 @@
+Modified files:
+  base_server/cache.pike
+  etc/include/version.h
+  etc/test/tests/rxml/RoxenTest_RXMLTags.xml
+  protocols/prot_snmp.pike
