@@ -1,0 +1,21 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 4005e0157bc2ba3e88e0fbcb63348db03c01111d
+to: e463b681cf160a56487d41d3d0ba819732b3906e
+originator: wellhardh@roxen.com
+depends: 2015-05-06T163801
+restart: true
+
+Multiple fixes:
+
+  * Testsuite: Added some minimal testing of <wash-html>.
+    
+    Fixes [bug 7499].
+
+  * SNMP: Added SNMP name space for _disable_threads().
+
+  * Version bumped to 5.5.97 by buildsystem.
+
+  * Cache manager_size_overhead when entries aren't added.
+    
+    The overhead will be recomputed when the number of added entries since the last
+    computation is above 10% of the total number of entries in the cache.
