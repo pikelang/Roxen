@@ -13,7 +13,9 @@
 
 inherit SSLProtocol;
 
-constant supports_ipless = 0;
+// SSL in Pike 8.0 and later supports SNI, and even in older versions
+// it is possible to use glob-certs that match several sites.
+constant supports_ipless = 1;
 constant name = "https";
 constant prot_name = "https";
 constant requesthandlerfile = "protocols/http.pike";
@@ -191,8 +193,15 @@ class http_fallback
 	my_fd->socket = 0;
       }
 
-      /* Redirect to a https-url */
-      Configuration conf = sizeof(urls) && values(urls)[0]->conf; // Should be just one possible config for https
+      /* Redirect to an https-url */
+      Configuration conf;
+      foreach(values(urls)->conf, conf) {
+	if (conf->query("default_server")) {
+	  // This configuration has been tagged as a default server.
+	  break;
+	}
+      }
+      // FIXME: Consider the case where the port has been remapped.
       fallback_redirect_request(raw_fd, data,
 				conf && conf->query("MyWorldLocation"),
 				port);
