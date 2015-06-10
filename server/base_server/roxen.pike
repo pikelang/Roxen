@@ -2560,44 +2560,47 @@ class SSLProtocol
     }
 
     foreach(decoded_keys, Crypto.Sign key) {
-      // FIXME: Multiple certificates with the same key?
-      array(int) cert_nos;
+      // NB: We need to support multiple certificates with the same key.
+      int found;
       Standards.X509.TBSCertificate tbs;
       foreach(decoded_certs; int no; tbs) {
-	if (tbs->public_key->pkc->public_key_equal(key)) {
-	  cert_nos = ({ no });
-	  break;
-	}
+	if (!tbs->public_key->pkc->public_key_equal(key))
+	  continue;
+
+	array(int) cert_nos = ({ no });
+
+	// Build the certificate chain.
+	Standards.X509.TBSCertificate issuer;
+	do {
+	  string issuer_der = tbs->issuer->get_der();
+	  array(int) issuer_nos = cert_lookup[issuer_der];
+	  if (!issuer_nos) break;
+
+	  issuer = decoded_certs[issuer_nos[0]];
+
+	  // FIXME: Verify that the issuer has signed the cert.
+
+	  if (issuer != tbs) {
+	    cert_nos += ({ issuer_nos[0] });
+	  } else {
+	    // Self-signed.
+	    issuer = UNDEFINED;
+	    break;
+	  }
+	} while ((tbs = issuer));
+
+	report_notice("Adding %s certificate (%d certs) for %s\n",
+		      key->name(), sizeof(cert_nos), get_url());
+	// FIXME: Ought to only add "*" for the certificate chains
+	//        belonging to the default server.
+	ctx->add_cert(key, rows(certificates, cert_nos), ({ name, "*" }));
+	found = 1;
       }
-      if (!cert_nos) {
+      if (!found) {
 	CERT_ERROR (KeyFile,
-		    LOC_M(14, "Certificate and private key do not match.\n"));
+		    LOC_M(14, "Private key without matching certificate.\n"));
 	continue;
       }
-
-      // Build the certificate chain.
-      Standards.X509.TBSCertificate issuer;
-      do {
-	string issuer_der = tbs->issuer->get_der();
-	array(int) issuer_nos = cert_lookup[issuer_der];
-	if (!issuer_nos) break;
-
-	issuer = decoded_certs[issuer_nos[0]];
-
-	// FIXME: Verify that the issuer has signed the cert.
-
-	if (issuer != tbs) {
-	  cert_nos += ({ issuer_nos[0] });
-	} else {
-	  // Self-signed.
-	  issuer = UNDEFINED;
-	  break;
-	}
-      } while ((tbs = issuer));
-
-      report_notice("Adding %s certificate (%d certs) for %s\n",
-		    key->name(), sizeof(cert_nos), get_url());
-      ctx->add_cert(key, rows(certificates, cert_nos), ({ name }));
     }
 
 #if 0
