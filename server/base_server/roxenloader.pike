@@ -23,7 +23,10 @@ mixed x = Calendar.Timezone; // #"!¤&"¤%/"&#¤!%#¤&#
 //
 private __builtin.__master new_master;
 
+#if constant(spider)
+// This ancient module has been removed in Pike 8.1.
 constant s = spider; // compatibility
+#endif
 
 // Enable decoding of wide string data from mysql.
 // Disabled since it isn't compatible enough - has to be enabled on a
