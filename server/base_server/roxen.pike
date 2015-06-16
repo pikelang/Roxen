@@ -2332,7 +2332,7 @@ class InternalProtocol
   }
 }
 
-#if constant(SSL.sslfile)
+#if constant(SSL.File)
 
 class SSLContext {
 #if constant(SSL.Context)
@@ -2926,11 +2926,11 @@ class SSLProtocol
 {
   inherit StartTLSProtocol;
 
-  SSL.sslfile accept()
+  SSL.File accept()
   {
     Stdio.File q = ::accept();
     if (q) {
-      SSL.sslfile ssl = SSL.sslfile (q, ctx);
+      SSL.File ssl = SSL.File (q, ctx);
       if (ssl->accept) ssl->accept();
       return ssl;
     }
@@ -2994,7 +2994,7 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
   foreach( glob( "prot_*.pike", get_dir("protocols") ), string s )
   {
     sscanf( s, "prot_%s.pike", s );
-#if !constant(SSL.sslfile)
+#if !constant(SSL.File)
     switch( s )
     {
       case "https":
@@ -3016,7 +3016,7 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
   foreach( glob("prot_*.pike",get_dir("../local/protocols")||({})), string s )
   {
     sscanf( s, "prot_%s.pike", s );
-#if !constant(SSL.sslfile)
+#if !constant(SSL.File)
     switch( s )
     {
       case "https":
@@ -6458,7 +6458,7 @@ int main(int argc, array tmp)
   call_out( show_timers, 30 );
 #endif
 
-#if constant(SSL.sslfile)
+#if constant(SSL.File)
   add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
 #endif

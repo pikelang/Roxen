@@ -1786,7 +1786,7 @@ class FTPSession
       return;
     }
 
-    object(Stdio.File)|object(SSL.sslfile) f = Stdio.File();
+    object(Stdio.File)|object(SSL.File) f = Stdio.File();
 
     // FIXME: Race-condition: open_socket() for other connections will fail
     //        until the socket has been connected.
