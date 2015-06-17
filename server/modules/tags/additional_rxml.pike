@@ -97,14 +97,14 @@ class AsyncHTTPClient {
     else
       url = _url;
 
-#if constant(SSL.sslfile) 	
+#if constant(SSL.File)
     if(url->scheme!="http" && url->scheme!="https")
       error("Protocols.HTTP can't handle %O or any other protocols than HTTP or HTTPS\n",
 	    url->scheme);
     
     con->https= (url->scheme=="https")? 1 : 0;
 #else
-    if(url->scheme!="http"	)
+    if(url->scheme!="http")
       error("Protocols.HTTP can't handle %O or any other protocol than HTTP\n",
 	    url->scheme);
     

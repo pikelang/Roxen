@@ -2086,7 +2086,7 @@ protected array(string) verify_port( string port )
 		       protocol, lower_case( protocol ))+"\n";  
     protocol = lower_case( protocol );
   }
-#if constant(SSL.sslfile)
+#if constant(SSL.File)
   // All is A-OK
 #else
   if( (protocol == "https" || protocol == "ftps") )

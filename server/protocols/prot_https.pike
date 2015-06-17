@@ -169,7 +169,7 @@ class fallback_redirect_request
 
 class http_fallback
 {
-  SSL.sslfile my_fd;
+  SSL.File my_fd;
 
   void ssl_alert_callback(object alert, object|int n, string data)
   {
@@ -224,7 +224,7 @@ class http_fallback
     my_fd = 0;          /* Not needed any more */
   }
 
-  void create(SSL.sslfile|Stdio.File fd)
+  void create(SSL.File|Stdio.File fd)
   {
     my_fd = fd;
     fd->set_alert_callback(ssl_alert_callback);
@@ -239,7 +239,7 @@ class http_fallback
 
 Stdio.File accept()
 {
-  object(Stdio.File)|SSL.sslfile q = ::accept();
+  object(Stdio.File)|SSL.File q = ::accept();
 
   if (q) {
     http_fallback(q);
