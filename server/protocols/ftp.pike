@@ -1529,6 +1529,7 @@ class FTPSession
     } else {
       string|int s = to_send->get();
 
+#if constant(SSL.File)
       if (s == 1) {
 	DWRITE("FTP2: write_cb(): STARTTLS.\n");
 
@@ -1537,12 +1538,8 @@ class FTPSession
 
 	// Switch to TLS.
 	if (!fd->renegotiate) {
-#if constant(SSL.File)
 	  fd = SSL.File(fd, port_obj->ctx);
 	  fd->accept();
-#else
-	  fd = SSL.sslfile(fd, port_obj->ctx);
-#endif
 	}
 	// Restore the callbacks in the new SSL connection.
 	::set_write_callback(write_cb);
@@ -1562,6 +1559,7 @@ class FTPSession
 	}
 	return "";
       }
+#endif
 
       DWRITE("FTP2: write_cb(): Sending %O.\n", s);
 
@@ -2076,6 +2074,7 @@ class FTPSession
       SSLMode ssl_mask = SSL_ACTIVE;
       if (pasv_port) ssl_mask = SSL_PASSIVE;
 
+#if constant(SSL.File)
       if (use_ssl & ssl_mask) {
 	DWRITE("FTP: Initiating SSL/TLS connection.\n");
 
@@ -2087,14 +2086,11 @@ class FTPSession
 	// connection with a connect() call or which side reacts to the
 	// connection via the accept() call; the FTP client, as defined in
 	// [RFC-959], is always the TLS client, as defined in [RFC-2246].
-#if constant(SSL.File)
 	fd = SSL.File(fd, port_obj->ctx);
 	fd->accept();
-#else
-	fd = SSL.sslfile(fd, port_obj->ctx);
-#endif
 	DWRITE("FTP: Created an sslfile: %O\n", fd);
       }
+#endif
     }
     else
     {
@@ -2196,17 +2192,15 @@ class FTPSession
       SSLMode ssl_mask = SSL_ACTIVE;
       if (pasv_port) ssl_mask = SSL_PASSIVE;
 
+#if constant(SSL.File)
       if (use_ssl & ssl_mask) {
 	DWRITE("FTP: Initiating SSL/TLS connection.\n");
 
-#if constant(SSL.File)
 	fd = SSL.File(fd, port_obj->ctx);
 	fd->accept();
-#else
-	fd = SSL.sslfile (fd, port_obj->ctx);
-#endif
 	DWRITE("FTP: Created an sslfile: %O\n", fd);
       }
+#endif
     } else {
       send(425, ({ "Can't build data connect: Connection refused." }));
       return;

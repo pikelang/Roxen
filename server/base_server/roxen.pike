@@ -2930,8 +2930,8 @@ class SSLProtocol
   {
     Stdio.File q = ::accept();
     if (q) {
-      SSL.File ssl = SSL.File (q, ctx);
-      if (ssl->accept) ssl->accept();
+      SSL.File ssl = SSL.File(q, ctx);
+      ssl->accept();
       return ssl;
     }
     return 0;
