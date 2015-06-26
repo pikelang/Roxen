@@ -68,9 +68,11 @@ private mixed notification_ttl_callback;
 //! Holds pending responses to be sent to the client on next poll.
 protected array(mapping) command_responses = ({});
 
+#ifdef DEBUG
 // Internal counter for debug purposes. Increments every time a
 // response is pushed to the response queue for the session.
 int response_counter = 0;
+#endif
 
 //! Adds a command response to the array of responses.
 //!
@@ -211,7 +213,8 @@ protected mixed session_killer;
 //! may be called whenever it's known that the session won't be
 //! touched for a prolonged period of time to prevent it from being
 //! killed. Upon every call, the TTL will be reset.
-void reset_session_timer() {
+void reset_session_timer()
+{
   if (session_killer)
     remove_call_out(session_killer);
 
@@ -231,7 +234,8 @@ protected void create(RequestID id) {
   reset_session_timer();
 }
 
-protected void destroy() {
+protected void destroy()
+{
   DWERROR("Destroying client session %O\n", this);
 
   foreach (subscriptions; SubscriptionID sid;)
@@ -251,7 +255,8 @@ protected void destroy() {
 DECLARE_OBJ_COUNT;
 //! @endignore
 
-protected string _sprintf(int t) {
+protected string _sprintf(int t)
+{
   return sprintf("ClientSession(%q, %d, %d%s)" + OBJ_COUNT,
 		 (session_id || "<no id>"),
 		 sizeof(command_responses),
@@ -275,6 +280,9 @@ protected void send_data(void|int force)
 //! the notification request has been reached, the @[force] argument
 //! should be !0, which causes an empty array to be sent to the
 //! client.
+//!
+//! @note
+//!   @[lfun::destroy()]-safe.
 {
   if (notification_id && objectp(notification_id)) {
     array(mapping) res = get_responses();
@@ -406,6 +414,9 @@ void cancel_subscription(string sid)
 //! @param sid
 //!   The subscription id string (which is defined by the client) that
 //!   is to be removed.
+//!
+//! @note
+//!   @[lfun::destroy()]-safe.
 {
   if (Subscription sub = m_delete (subscriptions, sid)) {
     DWERROR ("Canceling subscription %s for session %O.\n", sid, this);
