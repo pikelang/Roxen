@@ -172,7 +172,7 @@ void push_error(string action,
 }
 
 
-this_program reset_session()
+this_program reset_session(int(0..1) dont_inform_client)
 //! Sends a @[AFS.ClientMessages.reset_session] message to the client
 //! and clears all subscriptions and outgoing message queue.
 {
@@ -180,7 +180,9 @@ this_program reset_session()
   get_responses();
   foreach (subscriptions; SubscriptionID sid;)
     cancel_subscription (sid);
-  push_response(AFS.ClientMessages.reset_session, ([]));
+  if (!dont_inform_client) {
+    push_response(AFS.ClientMessages.reset_session, ([]));
+  }
   return this;
 }
 

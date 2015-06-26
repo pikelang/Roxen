@@ -47,7 +47,6 @@ mapping|int(0..0)|AFS.ClientSession
 //!    function returns.
 {
   string sid = id->variables["session_id"];
-
   if (!sid)
     return Roxen.raise_err(on_error, "No session id given!\n");
 
@@ -57,7 +56,7 @@ mapping|int(0..0)|AFS.ClientSession
   if (!cs) {
     // We need to create a new session
     if (mixed err = catch {
-	cs = AFS.ClientSession(id)->reset_session();
+	cs = AFS.ClientSession(id, this, session_hash);
       }) {
 #ifdef DEBUG_CLIENT_SESSION_CREATION
       werror("Unable to create session:\n%s\n",
@@ -70,9 +69,17 @@ mapping|int(0..0)|AFS.ClientSession
     // vvv Relying on the interpreter lock from here.
     if (AFS.ClientSession cs2 = client_sessions[session_hash])
       cs = cs2;
-    else
+    else {
       client_sessions[session_hash] = cs;
-    // ^^^ Relying on the interpreter lock to here.
+      // ^^^ Relying on the interpreter lock to here.
+      
+      //  Reset newly created session. To avoid unnecessarily inform the
+      //  client of this we inspect the AFS tag counter which should be very
+      //  low for a fresh login / reload.
+      int afs_tag_num = (int) id->variables["tag"];
+      int(0..1) dont_inform_client = afs_tag_num && (afs_tag_num < 10);
+      cs->reset_session(dont_inform_client);
+    }
 
     return cs;
 
