@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: argcache-garb.pike,v 1.2 2011/09/23 06:49:14 wellhard Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant module_type = MODULE_ZERO;
@@ -20,14 +20,14 @@ constant module_doc  =
   "cache objects longer then the remote purge time. This can lead to "
   "broken images.</p>";
 
+string site_name;
+
 void create(Configuration conf) 
 {
   defvar("garb_schedule",
 	 Variable.Schedule( ({ 2, 1, 1, 0, 5 }), 0,
 			    "Schedule",
 			    "When to automaticaly perform the GC") );
-
-  definvisvar( "last_garb", 0, TYPE_INT );
 
   defvar("purge_limit", 100000, "Purge limit",
 	 TYPE_INT,
@@ -42,6 +42,9 @@ void create(Configuration conf)
 	 TYPE_INT,
 	 "Purge remote argcache entries that has not been accessed in the specified number "
 	 "of days.");
+
+  if(conf)
+    site_name = conf->query_name();
 }
 
 mapping(string:function|array(function|string)) query_action_buttons()
@@ -110,6 +113,28 @@ void stop()
     garb_argcache_process->stop();
 }
 
+protected string get_state_path()
+{
+  return combine_path (getcwd(),
+                       getenv ("VARDIR") || "../var",
+                       "argcache_garb_state", Roxen.short_name(site_name)+".state");
+}
+
+protected void save_state(int value)
+{
+  string path = get_state_path();
+  Stdio.mkdirhier (dirname (path));
+  Stdio.write_file(path, sprintf("last_garb: %d\n", value));
+}
+
+protected int get_state()
+{
+  string path = get_state_path();
+  string s = Stdio.read_file(path) || "";
+  if(sscanf(s, "last_garb: %d\n", int value) >= 1)
+    return value;
+}
+
 void purge_db(Sql.Sql db, int days, string name)
 {
   create_index(db, name);
@@ -156,15 +181,14 @@ void create_index(Sql.Sql db, string name)
 
 void check_schedule()
 {
-  int next = getvar("garb_schedule")->get_next( query("last_garb") );
+  int next = getvar("garb_schedule")->get_next( get_state() );
 #ifdef ACGC_SCHEDULE_DEBUG
-  werror("Last     : %s", ctime(query("last_garb")));
+  werror("Last     : %s", ctime(get_state()));
   werror("Next dump: %s", ctime(next));
 #endif
   if (next >= 0) {
     if (next <= time(1)) {
-      set( "last_garb", time(1) );
-      save( );
+      save_state( time(1) );
       argcache_garb();
     }
     else if (garb_argcache_process) {

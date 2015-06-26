@@ -256,7 +256,6 @@ worldmap binary
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/memory_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
-/server/modules/misc/argcache-garb.pike foreign_ident
 /server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/implicit_use.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
