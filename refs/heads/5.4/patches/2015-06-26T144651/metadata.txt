@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: SNMP diable_threads, argcache-garb fix
 from: 32806536cc242ece62e60d569e564b32eb49bdca
 to: ff0e353ce9e8c93f93fae786d6e025c88ec96e97
 originator: wellhardh@roxen.com
@@ -7,11 +7,7 @@ restart: true
 
 Multiple fixes:
 
-  * Testsuite: Added some minimal testing of <wash-html>.
-    
-    Fixes [bug 7499].
-
-  * SNMP: Added SNMP name space for _disable_threads().
+  * SNMP: Added SNMP name space for _disable_threads(). Need new pike to work.
 
   * Moved last_garb timestamp from module variable to external state file.
     
