@@ -40,6 +40,7 @@
 
 constant NOTIFY_DELAY = 0.1;
 constant DEFAULT_SESSION_TTL = 60.0;
+constant THROTTLE_WINDOW = 2;
 
 //! Session time to live between requests
 float session_ttl = DEFAULT_SESSION_TTL;
@@ -59,6 +60,10 @@ private mapping(SubscriptionID:Subscription) subscriptions = ([]);
 //! Request waiting for server push notifications.
 private RequestID notification_id;
 
+//! Client tag associated with the long-standing poll request. Only valid
+//! when notification_id is set.
+private string notification_poll_tag;
+
 //! Pending callout to flush data to notification request.
 private mixed send_callout;
 
@@ -74,6 +79,104 @@ protected array(mapping) command_responses = ({});
 int response_counter = 0;
 #endif
 
+//! Pointer to the caller context that created us (i.e. where a global
+//! session table is kept).
+object my_parent_obj;
+
+//! Timestamps indexed on response hashes so we can detect if same message
+//! is delivered too frequently and needs throttling.
+mapping(string:int) sent_responses = ([]);
+
+
+//!  Modifies a response mapping in place with required members. Please
+//!  see @[push_response] for a description of input parameters.
+//!
+//!  @returns
+//!    If the response is already queued the return value is 0, otherwise
+//!    a reference to the modified @[resp] mapping.
+//!
+//! @note
+//!   @[lfun::destroy()]-safe.
+private mapping|int(0..0) prepare_response(AFS.Types.ClientMessage msg_type,
+					   mapping resp, void|string tag)
+{
+  ASSERT_IF_DEBUG(mappingp(resp));
+  resp->msg_type = msg_type;
+  resp->sid = session_id;
+  if (tag)
+    resp->tag = tag;
+
+  //  Compute hash for current response. The hash has no value to clients so
+  //  we'll zap it in get_responses().
+  string resp_hash =
+    resp->_hash ||
+    (resp->_hash = Crypto.MD5.hash(sprintf("%O", resp)));
+
+  return resp;
+}
+
+
+protected int(0..1) push_response_low(AFS.Types.ClientMessage msg_type,
+				      mapping resp, void|string tag,
+				      void|SubscriptionID subscription_id,
+				      void|int(0..1) do_throttle)
+{
+  // Only string indexes are supported by Standards.JSON.encode().
+  ASSERT_IF_DEBUG (!has_value (map (indices (resp), stringp), 0));
+
+  resp = resp + ([]);
+  if (subscription_id)
+    resp->subscription_id = subscription_id;
+
+  //  The _throttled entry is a timestamp identifying the earliest time of
+  //  delivery. We set a trivial past timestamp to indicate that it's
+  //  managed, but need to update it below before it's queued.
+  if (do_throttle)
+    resp->_throttled = 1;
+  
+  //  Add required members and skip duplicate responses
+  if (!prepare_response(msg_type, resp, tag))
+    return 0;
+
+  string hash = resp->_hash;
+  if (!hash)
+    return 0;
+  
+  //  If we already know the entry will be throttled we can compute next
+  //  wake-up time here.
+  float wakeup_delay = (float) NOTIFY_DELAY;
+  if (do_throttle) {
+    int now = time();
+    int last_ts = sent_responses[hash];
+    if (last_ts + THROTTLE_WINDOW > now)
+      wakeup_delay = (float) (last_ts + THROTTLE_WINDOW - now);
+
+    //  Make sure we have a reasonable delivery timestamp before putting it
+    //  in the queue (which might still be in the past if last_ts is zero).
+    //  This avoids the scan for immediate responses in set_notification_id()
+    //  to find a false candidate which would yield an unnecessary empty poll
+    //  result.
+    resp->_throttled = last_ts + THROTTLE_WINDOW;
+  }
+
+  command_responses += ({ resp });
+#ifdef DEBUG
+  response_counter++;
+#endif
+  DWERROR("Added response to %O\n", this);
+
+  if (notification_id && !send_callout) {
+    send_callout = call_out(roxen.handle, wakeup_delay, send_data);
+  }
+
+  //  Throttled messages are not yet known if they will be delivered or not,
+  //  so flag them as undelivered at this point. This means we won't perform
+  //  action logging for potentially suppressed messages in low_call_cb()
+  //  synchronously, but we'll instead log these during actual delivery.
+  return do_throttle ? 0 : 1;
+}
+
+
 //! Adds a command response to the array of responses.
 //!
 //! To prevent interference between third party extensions and the
@@ -85,6 +188,10 @@ int response_counter = 0;
 //! collide unintentionally.
 //!
 //! Description of the response mapping:
+//!
+//! @param resp
+//!   The response to a command. A command response mapping has
+//!   the following predefined fields:
 //!
 //! @mapping
 //! @member AFS.Types.ClientMessage "msg_type"
@@ -106,28 +213,30 @@ int response_counter = 0;
 //!   Session id for which this response is valid.
 //! @endmapping
 //!
-//!  @param resp
-//!        The response to a command. A command response mapping has
-//!        the following predefined fields:
+//! @param tag
+//!   The client-submitted tag associated to the request (see above).
 //!
-void push_response(AFS.Types.ClientMessage msg_type, mapping resp,
-		   void|string tag) {
-  ASSERT_IF_DEBUG(mappingp(resp));
+//! @returns
+//!    If the response is scheduled for later sending (barring any future
+//!    throttling), the return value is 1. A message that was rejected from
+//!    sending, e.g. as being considered stale or duplicate, returns 0.
+int(0..1) push_response(AFS.Types.ClientMessage msg_type, mapping resp,
+			void|string tag, void|SubscriptionID subscription_id)
+{
+  return push_response_low(msg_type, resp, tag, subscription_id);
+}
 
-  resp->msg_type = msg_type;
 
-  if (tag)
-    resp["tag"] = tag;
-
-  resp["sid"] = session_id;
-
-  command_responses += ({ resp });
-  response_counter++;
-  DWERROR("Added response to %O\n", this);
-
-  if (notification_id && !send_callout) {
-    send_callout = roxen.background_run(NOTIFY_DELAY, send_data);
-  }
+//! Same as @[push_response] but throttles sending so that similar messages
+//! aren't delivered too rapidly.
+int(0..1) push_throttled_response(AFS.Types.ClientMessage msg_type,
+				  mapping resp, void|string tag,
+				  void|SubscriptionID subscription_id)
+{
+  //  This return value should always be 0 as throttled responses are never
+  //  delivered instantly.
+  return
+    push_response_low(msg_type, resp, tag, subscription_id, 1);
 }
 
 
@@ -237,14 +346,70 @@ void destroy_session()
 //! Returns any pending response mappings and clears the response
 //! buffer.
 //!
+//! @param client_poll_tag
+//!   If the caller collects commands to send when a long-standing poll
+//!   terminates the tag of the poll request should be given here.
+//!
 //! @returns
 //!   An array of responses to commands (and/or notifications from the
 //!   server). Any mapping in the array will be a response mapping as
-//!   described in @[push_response()].
-array(mapping) get_responses() {
+//!   described in @[push_response()]. If @[client_poll_tag] was provided
+//!   the response will also include an entry with an empty response
+//!   mapping associated to the poll request tag (unless one exists already).
+//!
+//! @note
+//!   @[lfun::destroy()]-safe.
+array(mapping) get_responses(void|string client_poll_tag)
+{
   array(mapping) ret = command_responses;
   // Relying on the interpreter lock here.
   command_responses = ({});
+
+  //  Include a response to a pending poll
+  if (client_poll_tag) {
+    if (mapping poll_res =
+	prepare_response(AFS.ClientMessages.poll, ([ ]), client_poll_tag))
+      ret += ({ poll_res });
+  }
+
+  //  Throttle any entries that need to be delayed until a given time
+  array(mapping) delayed = ({ });
+  int now = time();
+  for (int i = sizeof(ret) - 1; i >= 0; i--) {
+    string hash = ret[i]->_hash;
+    if (hash && ret[i]->_throttled) {
+      //  If same hash has been seen too recently we compute earliest next
+      //  delivery and leave the message in the queue.
+      if (int last_ts = sent_responses[hash]) {
+	if (last_ts + THROTTLE_WINDOW > now) {
+	  ret[i]->_throttled = last_ts + THROTTLE_WINDOW;
+	  delayed += ({ ret[i] });
+	  ret = ret[..(i - 1)] + ret[(i + 1)..];
+	  continue;
+	}
+      }
+      
+      //  Item will be sent now so record the timestamp
+      sent_responses[hash] = now;
+    }
+  }
+  command_responses += delayed;
+
+  //  Clear any _hash value that the client doesn't need to see. If an entry
+  //  has a zero _hash it's a dead record that was merged into a newer
+  //  response and should be removed.
+  //
+  //  We also make another effort at removing duplicate hashes that would
+  //  have been queued up in parallel, preserving the latest entry if
+  //  possible.
+  mapping(string:int) dup_hash = ([ ]);
+  for (int i = sizeof(ret) - 1; i >= 0; i--) {
+    string item_hash;
+    if (!(item_hash = m_delete(ret[i], "_hash")) || dup_hash[item_hash]++) {
+      ret = ret[..(i - 1)] + ret[(i + 1)..];
+    }
+  }
+  
   DWERROR("Polling %d response(s) from %O\n", sizeof(ret), this);
   return ret;
 }
@@ -269,13 +434,28 @@ void reset_session_timer()
     remove_call_out(session_killer);
 
   session_killer = roxen.background_run(session_ttl, session_killer_cb);
-  last_activity = time();
+  int now = time();
+  last_activity = now;
+
+  //  Also a good time to clear any obsolete throttle hashes
+  int expired_ts = now - THROTTLE_WINDOW;
+  foreach (sent_responses; string hash; int ts) {
+    if (ts < expired_ts)
+      m_delete(sent_responses, hash);
+  }
 }
+
+//! Key in my_parent_obj's table of client sessions
+string client_session_key;
 
 //! Session id as requested by the client
 string session_id;
 
-protected void create(RequestID id) {
+protected void create(RequestID id, object _parent_obj,
+		      string _client_session_key)
+{
+  my_parent_obj = _parent_obj;
+  client_session_key = _client_session_key;
   session_id = id->variables["session_id"];
   ASSERT_IF_DEBUG(session_id);
 
@@ -312,6 +492,16 @@ protected string _sprintf(int t)
 // Notification handling below
 //
 
+protected void reqid_send_result (RequestID id, mapping res)
+{
+#if constant(System.CPU_TIME_IS_THREAD_LOCAL)
+  // Reset handler CPU time now that we're in the sending thread
+  // (backend) to avoid bogus timing -- [Bug 7129].
+  id->handle_vtime = gethrvtime();
+#endif
+  id->send_result (res);
+}
+
 protected void send_data(void|int force)
 //! Send pending messages to a waiting notification request.
 //! Depending on @[force] empty responses are ignored. This is useful
@@ -327,20 +517,28 @@ protected void send_data(void|int force)
 //! @note
 //!   @[lfun::destroy()]-safe.
 {
-  if (notification_id && objectp(notification_id)) {
-    array(mapping) res = get_responses();
+  if (notification_id) {
+    //  Temporarily clear notification_id prior to emptying the command queue
+    //  so that we don't risk any races if new push commands are generated
+    //  during this handling.
+    RequestID prev_notification_id = notification_id;
+    notification_id = 0;
+    array(mapping) commands = get_responses(notification_poll_tag);
 
-    if (sizeof(res) || force) {
-      mapping res = Roxen.http_low_answer(200, Standards.JSON.encode(res));
-      notification_id->set_output_charset("utf-8");
+    if (sizeof(commands) || force) {
+      // Reset handle_time, since we've just been waiting up until
+      // here -- [Bug 7129].
+      prev_notification_id->handle_time = gethrtime();
+      
+      mapping res = Roxen.http_low_answer(200, Standards.JSON.encode(commands));
+      prev_notification_id->set_output_charset("utf-8");
       res->type = "application/json";
 
       // send_result must be called in the backend thread to avoid
       // races, since the connection is in callback mode. It's in
       // callback mode because of the close callback
       // notify_conn_closed.
-      call_out (notification_id->send_result, 0, res);
-      notification_id = 0;
+      call_out (reqid_send_result, 0, prev_notification_id, res);
 
       // We probably have a TTL callback for the poll that we no longer
       // need, so let's remove that.
@@ -348,6 +546,10 @@ protected void send_data(void|int force)
 	remove_call_out(notification_ttl_callback);
 	notification_ttl_callback = 0;
       }
+    } else {
+      //  Bring back old notification ID if a new one hasn't been set
+      if (!notification_id)
+	notification_id = prev_notification_id;
     }
   }
 
@@ -390,11 +592,16 @@ protected void notification_timeout()
   notification_id = 0;
 }
 
-mapping set_notification_id(RequestID id, void|int ttl)
-//! Set the @[id] as the notification the current notification
-//! channel.  The client can expect async messages to arrive over the
-//! connection at some point. After a response has been received, the
-//! client must refresh the notification channel.
+mapping set_notification_id(RequestID id, string client_poll_tag, void|int ttl)
+//! Set the @[id] as the current notification channel. The client can
+//! expect async messages to arrive over the connection at some point.
+//! After a response has been received, the client must refresh the
+//! notification channel.
+//!
+//! @param client_poll_tag
+//!   Associates a client tag to the poll request that initiated this
+//!   notification channel. A corresponding poll response will be included
+//!   when the pending notification is completed.
 //!
 //! @note
 //! A client may only have at the most one notification channel at the
@@ -403,22 +610,62 @@ mapping set_notification_id(RequestID id, void|int ttl)
 //! @fixme
 //! How should we handle the second connection?
 {
-  ASSERT_IF_DEBUG(!notification_id);
-
-  // If there are pending messages or if the ttl is zero, just send
-  // a response right away.
-  if (sizeof(command_responses) || !ttl) {
-    mapping res =
-      Roxen.http_low_answer(200, Standards.JSON.encode(get_responses()));
+  if (notification_id) {
+    // Close the old connection. If there's queued data it'll get sent
+    // on the new one instead.
+    if (Stdio.File fd = notification_id->my_fd)
+      fd->close();
+    notify_conn_closed (0);
+  }
+ 
+  // If there are pending, non-throttled, messages or if the ttl is zero,
+  // just send a response right away including any present poll tag.
+  int now = time();
+  int earliest_send = Int.NATIVE_MAX;
+  int got_immediate_responses = !ttl;
+  if (!got_immediate_responses) {
+    foreach (command_responses, mapping ret) {
+      earliest_send = min(earliest_send, ret->_throttled);
+      if (earliest_send <= now) {
+	got_immediate_responses = 1;
+	break;
+      }
+    }
+  }
+  if (got_immediate_responses) {
+    string json = Standards.JSON.encode(get_responses(client_poll_tag));
+    mapping res = Roxen.http_low_answer(200, json);
     id->set_output_charset("utf-8");
     res->type = "application/json";
     return res;
   }
 
+  notification_id = id;
+  notification_poll_tag = client_poll_tag;
+  notification_ttl_callback = roxen.background_run(ttl, notification_timeout);
+
+  //  If queued items are waiting in a notification channel we will need a
+  //  wake-up call.
+ reschedule_callout:
+  if ((earliest_send < Int.NATIVE_MAX) && notification_id) {
+    //  May need to replan already scheduled call-out
+    int delay = earliest_send - now;
+    if (send_callout) {
+      if (find_call_out(send_callout) <= delay) {
+	//  Scheduled call comes first so leave it untouched
+	break reschedule_callout;
+      }
+      
+      //  We remove existing entry and replan it to the earlier time
+      remove_call_out(send_callout);
+    }
+    send_callout = call_out(roxen.handle, delay, send_data);
+  }
+
+  // This must be last since the backend might call notify_conn_closed
+  // at any time after this call, possibly even before this function returns.
   id->my_fd->set_nonblocking(0,0,notify_conn_closed);
 
-  notification_id = id;
-  notification_ttl_callback = roxen.background_run(ttl, notification_timeout);
   return Roxen.http_pipe_in_progress();
 }
 
@@ -448,6 +695,11 @@ void add_subscription(SubscriptionID sid, AFS.Types.ClientMessage cmt,
 
   subscriptions[sid] = subscription;
   subscribed_to[cmt] = 1;
+  if (my_parent_obj) {
+    if (!my_parent_obj->client_subscriptions[cmt])
+      my_parent_obj->client_subscriptions[cmt] = (< >);
+    my_parent_obj->client_subscriptions[cmt][subscription] = 1;
+  }
 }
 
 void cancel_subscription(string sid)
@@ -464,6 +716,11 @@ void cancel_subscription(string sid)
   if (Subscription sub = m_delete (subscriptions, sid)) {
     DWERROR ("Canceling subscription %s for session %O.\n", sid, this);
     subscribed_to[sub->cmt] = 0;
+    if (my_parent_obj) {
+      my_parent_obj->client_subscriptions[sub->cmt][sub] = 0;
+      if (!sizeof(my_parent_obj->client_subscriptions[sub->cmt]))
+	my_parent_obj->client_subscriptions[sub->cmt] = 0;
+    }
   }
 }
 
