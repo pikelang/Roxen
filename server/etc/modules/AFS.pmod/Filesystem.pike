@@ -22,26 +22,29 @@ mapping(string:AFS.ClientSession) client_sessions = ([]);
 //! @expr{@[REP.get_session()]->cs@} to get the session for the
 //! current request.
 
+mapping(AFS.Types.ClientMessage:multiset(AFS.ClientSession.Subscription))
+client_subscriptions = ([]);
+
+
 mapping|int(0..0)|AFS.ClientSession
   get_client_session(RequestID id, void|Roxen.OnError on_error)
 //! Attempts to get an existing session or create a new one if
 //! needed. The client must provide a session id in the HTTP
-//! variable session-id.
+//! variable session_id.
 //!
 //! @note
-//! May return @expr{0@} or throw an error (depending on the @[on_error]
-//! parameter) if no session ID was given in the session-id
-//! variable.
+//!    May return @expr{0@} or throw an error (depending on the @[on_error]
+//!    parameter) if no session ID was given in the session_id variable.
 //!
 //! @param on_error
-//!        A @[Roxen.OnError] value that describes how the function
-//!        should handle errors.
+//!    A @[Roxen.OnError] value that describes how the function
+//!    should handle errors.
 //!
 //! @returns
-//!        A ClientSession object if successful, or an HTTP response
-//!        mapping if the session couldn't be found/used. In the case
-//!        of error the @[on_error] value will determine how the
-//!        function returns.
+//!    A ClientSession object if successful, or an HTTP response
+//!    mapping if the session couldn't be found/used. In the case
+//!    of error the @[on_error] value will determine how the
+//!    function returns.
 {
   string sid = id->variables["session_id"];
 
@@ -78,9 +81,6 @@ mapping|int(0..0)|AFS.ClientSession
   cs->reset_session_timer();
   return cs;
 }
-
-mapping(AFS.Types.ClientMessage:multiset(AFS.ClientSession.Subscription))
-client_subscriptions = ([]);
 
 //! Register all @expr{"filesystem-actions"@} provider modules.
 //!
