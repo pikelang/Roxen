@@ -1,0 +1,19 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 32806536cc242ece62e60d569e564b32eb49bdca
+to: ff0e353ce9e8c93f93fae786d6e025c88ec96e97
+originator: wellhardh@roxen.com
+depends: 2015-05-04T161504
+restart: true
+
+Multiple fixes:
+
+  * Testsuite: Added some minimal testing of <wash-html>.
+    
+    Fixes [bug 7499].
+
+  * SNMP: Added SNMP name space for _disable_threads().
+
+  * Moved last_garb timestamp from module variable to external state file.
+    
+    This removes the need of calling save() and thus update the config
+    file after each garb run.
