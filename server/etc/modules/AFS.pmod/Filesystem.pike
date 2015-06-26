@@ -145,9 +145,9 @@ class PollAction
 			     ([ "poll_interval" : client_poll_interval ]),
 			     tag);
 
-	return cs->set_notification_id(id, client_poll_timeout);
+	return cs->set_notification_id(id, tag, client_poll_timeout);
       } else {
-	return cs->set_notification_id(id, timeout);
+	return cs->set_notification_id(id, tag, timeout);
       }
     }
 
