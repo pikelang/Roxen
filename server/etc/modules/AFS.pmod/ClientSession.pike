@@ -187,6 +187,53 @@ this_program reset_session(int(0..1) dont_inform_client)
 }
 
 
+//! Tear down the session and remove it from the list of sessions.
+//! The GC will clean it later.
+//!
+//! @note
+//!   @[lfun::destroy()]-safe.
+void destroy_session()
+{
+  DWERROR("Cleaning up after session %O.\n", this);
+  
+  // Cannot destruct here for two reasons: send_data registers a
+  // callback to send the response, and we aren't sure we'll never get
+  // called while the session still is in use by another thread.
+  //
+  // Also, we need to make sure it's really us before doing m_delete
+  // to avoid deleting another, legitimate, session with the same
+  // session_hash (session_hash is provided by the client, and new
+  // ClientSessions are set up by REP.get_client_session()).
+  if (mapping(string:AFS.ClientSession) client_sessions =
+      my_parent_obj && my_parent_obj->client_sessions) {
+    // Relying on the interpreter lock here.
+    if (client_sessions[client_session_key] == this)
+      m_delete (client_sessions, client_session_key);
+  }
+
+  foreach (subscriptions; SubscriptionID sid;)
+    cancel_subscription (sid);
+
+  // Clean up callouts and send any remaining data.
+  if (notification_ttl_callback) {
+    remove_call_out(notification_ttl_callback);
+    notification_ttl_callback = 0;
+  }
+
+  if (session_killer) {
+    remove_call_out(session_killer);
+    session_killer = 0;
+  }
+
+  if (send_callout) {
+    remove_call_out(send_callout);
+    send_callout = 0;
+  }
+
+  if (notification_id)
+    send_data (1);
+}
+
 //! Returns any pending response mappings and clears the response
 //! buffer.
 //!
@@ -202,12 +249,13 @@ array(mapping) get_responses() {
   return ret;
 }
 
-//! Callback when a for the session watchdog timer.
-protected void session_killer_cb() {
-  DWERROR("Session %O timed out.\n", this);
-  if (notification_id)
-    send_data (1);
+
+//! Callback for the session watchdog timer.
+protected void session_killer_cb()
+{
+  destroy_session();
 }
+
 
 protected mixed session_killer;
 
@@ -240,17 +288,10 @@ protected void destroy()
 {
   DWERROR("Destroying client session %O\n", this);
 
-  foreach (subscriptions; SubscriptionID sid;)
-    cancel_subscription (sid);
+  // Do the teardown work.
+  destroy_session();
 
-  if (session_killer)
-    remove_call_out(session_killer);
-  if (send_callout) {
-    DWERROR("Destroying client session with a pending send!\n");
-    remove_call_out(send_callout);
-  }
-  if (notification_ttl_callback)
-    remove_call_out(notification_ttl_callback);
+  my_parent_obj = 0;
 }
 
 //! @ignore
