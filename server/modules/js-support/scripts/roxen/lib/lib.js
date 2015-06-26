@@ -61,6 +61,8 @@
 	for (i = 0 ; i < len; i++)
 	  out[i] = arguments.callee(obj[i]);
 	return out;
+      } else if (obj === null) {
+        return null;
       } else if (typeof obj === "object") {
 	out = { };
 	for (i in obj)
@@ -133,7 +135,16 @@
       ROXEN.AFS.call("debug-log", {message: s});
     },
 
-    /**
+     escape: function (s) {
+      // We would love to use the "encodeURIComponent" function, but it
+      // encodes utf8 without using the %uXXXX standard encoding, which
+      // makes it unsuitable for reception on the server side. This
+      // implementation of escape uses %uXXXX, but we need to post process
+      // the '+' character since it's not handled at all by escape.
+      return escape(s).replace(/\+/g, "%2B");
+    },
+
+   /**
      * Escapes a string for use as an URI component. Like
      * encodeURIComponent, but also encodes ! ' ( ) * which are part
      * of the reserved set in RFC 3987.
@@ -271,7 +282,7 @@
      */
     log: function () {
       if (typeof console !== "undefined" && console.log) {
-        var args = [ ROXEN.getISOTimeString() + ": " ].
+        var args = [ ROXEN.getISOTimeString() + "(UTC): " ].
           concat(Array.prototype.slice.call(arguments));
         console.log.apply(console, args);
       }
@@ -451,6 +462,23 @@
      */
     toUTF8: function (s) {
       return unescape(encodeURIComponent(s));
+    },
+
+    /*
+     * Given a count number it returns either the singluar or plural phrase,
+     * or optionally the zero count phrase.
+     * @method count_inflection
+     * @param {Number} num      The count number to base the decision on.
+     * @param {String} singular The singular phrase if count is 1.
+     * @param {String} plural   The plural phrase if count is not 1 (including
+     *                          zero if opt_zero isn't available).
+     * @param {String} opt_zero The optional phrase to return for zero count.
+     */
+    count_inflection: function(num, singular, plural, opt_zero)
+    {
+      if ((num === 0) && opt_zero)
+        return opt_zero;
+      return (num == 1) ? singular : plural;
     },
 
     /**
