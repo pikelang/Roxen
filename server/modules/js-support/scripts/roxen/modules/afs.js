@@ -1,4 +1,5 @@
 /*global ROXEN, YAHOO */
+/* jshint indent: 2 */
 
 /**
  * Module interface to the new Action File System
@@ -118,13 +119,19 @@ ROXEN.AFS = function () {
   function request_failure (resp)
   {
     ROXEN.log("ROXEN.AFS: connection error: " +
-	      resp.status + " " + resp.statusText + "\n");
+	      resp.status + " " + resp.statusText);
 
     for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
-	ROXEN.log ("  AFS calling error callback: " + cb.name + "\n");
-      cb (resp);
+	ROXEN.log ("  AFS calling error callback: " + cb.name);
+      try {
+	cb (resp);
+      } catch (err) {
+	ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+	if (ROXEN.debug)
+	  throw err;
+      }
     }
 
     // Forget all ongoing calls since we cannot hope to receive any
@@ -142,14 +149,21 @@ ROXEN.AFS = function () {
 
   function json_parse_failure (err)
   {
-    ROXEN.log("ROXEN.AFS: JSON parse error: " + err + "\n");
+    ROXEN.log("ROXEN.AFS: JSON parse error: " + err);
 
     for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
-	ROXEN.log ("  AFS calling error callback: " + cb.name + "\n");
+	ROXEN.log ("  AFS calling error callback: " + cb.name);
       // FIXME: Need a flag to tell it apart from a connection error?
-      cb (err);
+
+      try {
+	cb (err);
+      } catch (err) {
+	ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+	if (ROXEN.debug)
+	  throw err;
+      }
     }
 
     // Forget all ongoing calls since we cannot hope to receive any
@@ -183,21 +197,29 @@ ROXEN.AFS = function () {
 
       if (tag) {
 	if (debug_log)
-	  ROXEN.log ("AFS response: " + msg.msg_type + ", tag " + tag + "\n");
+	  ROXEN.log ("AFS response: " + msg.msg_type + ", tag " + tag);
 
         var ent = tagged_callbacks[tag];
 	cb = ent && ent[0];
 	if (ent === undefined)
 	  ROXEN.log ("ROXEN.AFS: Warning: Got AFS response with " +
-		     "unknown tag: " + msg.msg_type + "\n");
+		     "unknown tag: " + msg.msg_type);
         else if (cb == -1) {
           if (debug_log > 1)
 	    ROXEN.log ("  AFS tagged callback was canceled");
 	  delete tagged_callbacks[tag];
         } else {
 	  if (debug_log > 1)
-	    ROXEN.log ("  AFS calling tagged callback: " + cb.name + "\n");
-	  cb (msg);
+	    ROXEN.log ("  AFS calling tagged callback: " + cb.name);
+          if (ROXEN.debug)
+            cb(msg);
+          else {
+            try {
+              cb(msg);
+            } catch (err) {
+              ROXEN.log("AFS: error in callback " + cb.name + ": " + err);
+            }
+          }
 	  // Assume no more than one response with a given tag. See
 	  // also AFS.ClientSession.push_response.
 	  delete tagged_callbacks[tag];
@@ -211,14 +233,18 @@ ROXEN.AFS = function () {
 
       else {
 	if (debug_log)
-	  ROXEN.log ("AFS response: " + msg.msg_type + "\n");
+	  ROXEN.log ("AFS response: " + msg.msg_type);
       }
 
       for (var j = 0; j < global_callbacks.length; j++) {
 	cb = global_callbacks[j];
 	if (debug_log > 2)
-	  ROXEN.log ("  AFS calling global callback: " + cb.name + "\n");
-	cb (msg);
+	  ROXEN.log ("  AFS calling global callback: " + cb.name);
+        try {
+          cb (msg);
+        } catch (err) {
+          ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+        }
       }
     }
 
@@ -257,10 +283,11 @@ ROXEN.AFS = function () {
       postargs = { };
     var postdata = [ ];
     var item = 0;
-    for (var idx in postargs) {
-      postdata[item++] =
-	encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
-    }
+    for (var idx in postargs)
+      if (postargs.hasOwnProperty(idx)) {
+	postdata[item++] =
+	  encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
+      }
     return call_or_post(action, "POST", args, postdata.join("&"), fn, scope);
   }
   
@@ -277,7 +304,7 @@ ROXEN.AFS = function () {
       if (debug_log)
 	ROXEN.log ("AFS call: " + action + " " +
 		   YAHOO.lang.JSON.stringify (args) +
-		   ", callback " + fn.name + ", tag " + tag + "\n");
+		   ", callback " + fn.name + ", tag " + tag);
       args.tag = tag;
       tagged_callbacks[tag] = [ fn, group ];
     }
@@ -422,7 +449,7 @@ ROXEN.AFS = function () {
     if (poll_timeout >= -1 && !poll_delay_timeout_id) {
       var delay = (after_error ? poll_error_delay : poll_delay) * 1000;
       if (debug_log > 2)
-	ROXEN.log ("AFS poll delay " + delay + " ms\n");
+	ROXEN.log ("AFS poll delay " + delay + " ms");
       poll_delay_timeout_id =
 	window.setTimeout (function () {
 	  poll_delay_timeout_id = undefined;
@@ -443,8 +470,12 @@ ROXEN.AFS = function () {
    * old open connections can still be delivered to them (subject to
    * change if necessary).
    *
-   * @param {String}   afs_actions_path   Path prefix for all AFS actions.
-   *                                      If not provided /actions/ is used.
+   * @param {String}   actions_prefix   Path prefix for all AFS actions.
+   *                                    If not provided /actions/ is used.
+   * @param {String}   session_var      Session variable name. Will be set to
+   *                                    "session_var" If not provided.
+   * @param {Number}   poll_timeout     Poll timeout in seconds, or -1 for
+   *                                    auto mode (default), and -2 to disable.
    */
   function init(options)
   {
@@ -458,7 +489,7 @@ ROXEN.AFS = function () {
     }
     
     if (debug_log)
-      ROXEN.log ("AFS init\n");
+      ROXEN.log ("AFS init");
 
     connection_ok = false;
     open_connections = 0;
@@ -498,7 +529,7 @@ ROXEN.AFS = function () {
       },
       failure: function  (o) {
         ROXEN.log("ROXEN.AFS: connection error: " +
-                   o.status + " " + o.statusText + "\n");
+                   o.status + " " + o.statusText);
         fn.call(scope, o, "AFS_REQUEST_FAILURE");
       }
     };
