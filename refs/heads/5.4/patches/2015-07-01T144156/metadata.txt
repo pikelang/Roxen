@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Cache manager_size_overhead when entries aren't added
 from: ff0e353ce9e8c93f93fae786d6e025c88ec96e97
 to: 9d7f2bfbdd0edcb0420a5d5aee0c644f055f114e
 originator: wellhardh@roxen.com
@@ -7,15 +7,8 @@ restart: true
 
 Multiple fixes:
 
-  * Version bumped to 5.4.75 by buildsystem.
-
-  * Version bumped to 5.4.76 by buildsystem.
-
-  * Fix testsuite issue reported in [bug 7520].
-
-  * Version bumped to 5.4.77 by buildsystem.
-
   * Cache manager_size_overhead when entries aren't added.
     
-    The overhead will be recomputed when the number of added entries since the last
-    computation is above 10% of the total number of entries in the cache.
+    The overhead will be recomputed when the number of added entries
+    since the last computation is above 10% of the total number of
+    entries in the cache.
