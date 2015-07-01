@@ -1,5 +1,37 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
+<!--
+     All <add-module> statements must precede the p-code tests since
+     altering the configuration bumps the RXML generation counter and
+     invalidates earlier p-code. Likewise <drop-module> statements should
+     follow all tests.
+
+     <drop-module> is a no-op in test pass #1, and same for <add-module>
+     in pass #2, so the pass loop won't affect p-code generation.
+-->
+
+<add-module>html_wash</add-module>
+
+
+
+<!-- ............................................................ -->
+<comment>wash-html</comment>
+
+<test>
+  <rxml>
+    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
+  </rxml>
+  <result><h1>Foo</h1><p>bar &lt;a href="A"&gt;A&lt;/a&gt;.<br/>C.</p></result>
+</test>
+
+<test>
+  <rxml>
+    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes" remove-unwanted-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
+  </rxml>
+  <result><h1>Foo</h1><p>bar A.<br/>C.</p></result>
+</test>
+
+
 <!-- ............................................................ -->
 <comment>Config image</comment>
 <test>
@@ -3903,23 +3935,8 @@ e</random></rxml>
   <result>1972-12-13</result>
 </test>
 
-<!-- ............................................................ -->
-<comment>wash-html</comment>
 
-<add-module>html_wash</add-module>
-
-<test>
-  <rxml>
-    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
-  </rxml>
-  <result><h1>Foo</h1><p>bar &lt;a href="A"&gt;A&lt;/a&gt;.<br/>C.</p></result>
-</test>
-
-<test>
-  <rxml>
-    <wash-html keep-tags="br" keep-containers="h1,p" close-tags="yes" remove-unwanted-tags="yes"><h1>Foo</h1><p>bar <a href="A">A</a>.<br/>C.</p></wash-html>
-  </rxml>
-  <result><h1>Foo</h1><p>bar A.<br/>C.</p></result>
-</test>
+<!-- Run any <drop-module> statements after all tests are done. See details
+     at the beginning of this file. -->
 
 <drop-module>html_wash</drop-module>
