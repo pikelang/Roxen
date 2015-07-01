@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.144 2012/09/24 08:07:03 wellhard Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -194,6 +194,13 @@ class CacheManager
   //! For functions in this class, a @[CacheStats] object does not
   //! exist only due to race, so the cache should just be ignored.
 
+  int cached_overhead_add_count;
+  //! Snapshot of @[entry_add_count] at the point the manager overhead
+  //! was computed.
+
+  int cached_overhead;
+  //! Cached manager overhead. Recomputed in manager_size_overhead().
+
   //! @decl program CacheEntry;
   //!
   //! The manager-specific class to use to create @[CacheEntry] objects.
@@ -324,10 +331,27 @@ class CacheManager
   //! Returns the size consumed by the manager itself, excluding the
   //! cache entries.
   {
+    // Return the cached overhead as long as the number of added
+    // entries since the last computation is less than 10% of the
+    // number of entries in the cache. The cache is a workaround for
+    // the horrific performance of Pike.count_memory (-1, m) on large
+    // mappings (addressed in Pike 8.1).
+    int num_entries;
+    foreach (stats;; CacheStats stats) {
+      if (stats) num_entries += stats->count;
+    }
+
+    if ((entry_add_count - cached_overhead_add_count) <
+	(num_entries / 10))
+      return cached_overhead;
+
     int res = (Pike.count_memory (-1, this, lookup) +
 	       Pike.count_memory (0, stats));
     foreach (lookup;; mapping(mixed:CacheEntry) lm)
       res += Pike.count_memory (-1, lm);
+
+    cached_overhead_add_count = entry_add_count;
+    cached_overhead = res;
     return res;
   }
 
