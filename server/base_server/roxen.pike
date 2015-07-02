@@ -4560,17 +4560,17 @@ class ImageCache
     int num;
 #if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
     int t = gethrtime();
-    report_debug("Cleaning "+name+" image cache ... ");
 #endif
     sync_meta();
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
-#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
-      report_debug("cleared\n");
-#endif
       QUERY( "DELETE FROM "+name );
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
+      int msec = (gethrtime() - t) / 1000;
+      report_debug("Image cache %s emptied (%dms).\n", name, msec);
+#endif
       num = -1;
       return;
     }
@@ -4607,9 +4607,12 @@ class ImageCache
 #endif
 
 #if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
-    report_debug("%s removed (%dms)\n",
-		 (num==-1?"all":num?(string)num:"none"),
-		 (gethrtime()-t)/1000);
+    int msec = (gethrtime() - t) / 1000;
+    if (num || (msec > 500)) {
+      report_debug("Image cache %s cleaned: %s removed (%dms)\n",
+		   name,
+		   (num == -1 ? "all" : num ? (string) num : "none"), msec);
+    }
 #endif
   }
 
