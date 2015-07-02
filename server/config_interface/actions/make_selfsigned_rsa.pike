@@ -102,8 +102,8 @@ mixed page_3(object id, object mc)
       name += ({ ([ attr : UTF8String(attrs[attr]) ]) });
   }
 
-  /* Create a plain X.509 v1 certificate, without any extensions */
-  string cert = Tools.X509.make_selfsigned_rsa_certificate
+  /* Create a plain X.509 v1 certificate, with default extensions and hash. */
+  string cert = Standards.X509.make_selfsigned_certificate
     (rsa, 24 * 3600 * (int) id->variables->ttl, name);
 
   string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
