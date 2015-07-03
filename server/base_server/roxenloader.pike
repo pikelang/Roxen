@@ -1557,7 +1557,8 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
     }
   }
 
-  roxen_is_cms = !!lfile_stat("modules/sitebuilder");
+  roxen_is_cms = !!lfile_stat("modules/sitebuilder") ||
+    !!lfile_stat("packages/sitebuilder");
 
   if(roxen_is_cms)
     roxen_product_name="Roxen CMS";
