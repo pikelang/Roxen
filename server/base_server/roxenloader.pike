@@ -1359,7 +1359,7 @@ void add_package(string package_dir)
   } else {
     report_debug("Adding package %s.\n", package_dir);
   }
-  package_directories = ({ package_dir }) + package_directories;
+  package_directories += ({ package_dir });
 
   string real_pkg_dir = roxen_path (package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
@@ -1370,13 +1370,12 @@ void add_package(string package_dir)
     master()->add_include_path(sub_dir);
   }
 
-  default_roxen_module_path = ({ combine_path(package_dir, "modules/") }) +
-    default_roxen_module_path;
+  default_roxen_module_path += ({ combine_path(package_dir, "modules/") });
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
-    default_roxen_module_path = ({ sub_dir }) + default_roxen_module_path;
+    default_roxen_module_path += ({ sub_dir });
   }
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
-    default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
+    default_roxen_font_path += ({ sub_dir });
   }
 }
 
