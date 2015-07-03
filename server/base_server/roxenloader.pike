@@ -1386,7 +1386,8 @@ object|void lopen(string filename, string mode, int|void perm)
   if( filename[0] != '/' ) {
     foreach(package_directories, string dir) {
       Stdio.File o;
-      if (o = open(combine_path(dir, filename), mode, perm)) return o;
+      if (o = open(combine_path(roxen_path(dir), filename), mode, perm))
+	return o;
     }
   }
   return open( filename, mode, perm );
@@ -1398,7 +1399,8 @@ object(Stdio.Stat) lfile_stat(string filename)
   if (filename[0] != '/') {
     foreach(package_directories, string dir) {
       Stdio.Stat res;
-      if (res = file_stat(combine_path(dir, filename))) return res;
+      if (res = file_stat(combine_path(roxen_path(dir), filename)))
+	return res;
     }
   }
   return file_stat(filename);
@@ -1409,7 +1411,7 @@ string lfile_path(string filename)
 {
   if (filename[0] != '/') {
     foreach(package_directories, string dir) {
-      string path = combine_path(dir, filename);
+      string path = combine_path(roxen_path(dir), filename);
       if (file_stat(path)) return path;
     }
   }
