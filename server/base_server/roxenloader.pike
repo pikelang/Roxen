@@ -1531,7 +1531,7 @@ void add_package(string package_dir)
     report_debug("Adding package %s.\n",
 		 roxen_path (package_dir));
   }
-  package_directories = ({ package_dir }) + package_directories;
+  package_directories += ({ package_dir });
 
   string real_pkg_dir = roxen_path (package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
@@ -1542,13 +1542,12 @@ void add_package(string package_dir)
     master()->add_include_path(sub_dir);
   }
 
-  package_module_path = ({ combine_path(package_dir, "modules/") }) +
-    package_module_path;
+  package_module_path += ({ combine_path(package_dir, "modules/") });
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
-    package_module_path = ({ sub_dir }) + package_module_path;
+    package_module_path += ({ sub_dir });
   }
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
-    default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
+    default_roxen_font_path += ({ sub_dir });
   }
 }
 
@@ -1559,7 +1558,8 @@ object|void lopen(string filename, string mode, int|void perm)
   if( filename[0] != '/' ) {
     foreach(package_directories, string dir) {
       Stdio.File o;
-      if (o = open(combine_path(dir, filename), mode, perm)) return o;
+      if (o = open(combine_path(roxen_path(dir), filename), mode, perm))
+	return o;
     }
   }
   return open( filename, mode, perm );
@@ -1571,7 +1571,8 @@ object(Stdio.Stat) lfile_stat(string filename)
   if (filename[0] != '/') {
     foreach(package_directories, string dir) {
       Stdio.Stat res;
-      if (res = file_stat(combine_path(dir, filename))) return res;
+      if (res = file_stat(combine_path(roxen_path(dir), filename)))
+	return res;
     }
   }
   return file_stat(filename);
@@ -1582,7 +1583,7 @@ string lfile_path(string filename)
 {
   if (filename[0] != '/') {
     foreach(package_directories, string dir) {
-      string path = combine_path(dir, filename);
+      string path = combine_path(roxen_path(dir), filename);
       if (file_stat(path)) return path;
     }
   }
