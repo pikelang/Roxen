@@ -3712,7 +3712,7 @@ library should be enough.
 
   DC( "Parser.HTML" );
 
-  if( DC("SSL.sslfile" ) )
+  if( DC("SSL.File" ) )
   {
     DC( "SSL.context" );
     DC( "Tools.PEM.pem_msg" );
