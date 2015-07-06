@@ -5930,7 +5930,7 @@ string generate_self_signed_certificate(string common_name,
   // These are the fields used by testca.pem.
   array(mapping(string:object)) name = ({
     ([ "organizationName":
-       Standards.ASN1.Types.PrintableString("Roxen IS")
+       Standards.ASN1.Types.PrintableString("Roxen AB")
     ]),
     ([ "organizationUnitName":
        Standards.ASN1.Types.PrintableString("Automatic certificate")
@@ -5971,7 +5971,7 @@ string generate_self_signed_certificate(string common_name, Crypto.RSA|void rsa)
   // These are the fields used by testca.pem.
   array(mapping(string:object)) name = ({
     ([ "organizationName":
-       Standards.ASN1.Types.asn1_printable_string("Roxen IS")
+       Standards.ASN1.Types.asn1_printable_string("Roxen AB")
     ]),
     ([ "organizationUnitName":
        Standards.ASN1.Types.asn1_printable_string("Automatic certificate")
