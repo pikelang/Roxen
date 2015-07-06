@@ -177,7 +177,7 @@ string certificate_parameters =
 	  "attributes are present. Do not abbreviate.")+ "</blockquote>"
 
    "<b>"+LOCALE(107,"Organization/Company")+"</b><br />\n"
-   "<var name='organizationName' type='string' default='Roxen IS'/><br />"
+   "<var name='organizationName' type='string' default='Roxen AB'/><br />"
    "<blockquote>"+
    LOCALE(108, "The organization name under which you are registered with some "
 	  "national or regional authority.")+ "</blockquote>"
