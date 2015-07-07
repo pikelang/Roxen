@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.307 2000/05/05 23:29:48 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1638,7 +1638,10 @@ public array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE(LOCALE->added_module_mountpoint());
     }
   }
-  if(!dir) return verbose ? ({0})+locks : ([])[0];
+  if(!dir) {
+    TRACE_LEAVE("No directory contents.\n");
+    return verbose ? ({0})+locks : ([])[0];
+  }
   if(sizeof(dir))
   {
     TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
