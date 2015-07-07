@@ -171,7 +171,6 @@ nn binary
 /server/modules/database/SQLuserdb.pike foreign_ident
 /server/modules/database/sqldb.pike foreign_ident
 /server/modules/database/sqltag.pike foreign_ident
-/server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/fnord.pike foreign_ident
 /server/modules/examples/newstyle_fnord.pike foreign_ident
