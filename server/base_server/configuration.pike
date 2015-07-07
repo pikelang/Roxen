@@ -2670,7 +2670,10 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("Added module mountpoint.");
     }
   }
-  if(!dir) return verbose ? ({0})+locks : ([])[0];
+  if(!dir) {
+    TRACE_LEAVE("No directory contents.\n");
+    return verbose ? ({0})+locks : ([])[0];
+  }
   if(sizeof(dir))
   {
     TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(dir)));
