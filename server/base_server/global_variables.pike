@@ -203,6 +203,11 @@ void set_up_http_variables( Protocol o )
 		"multiple requests."),0, do_set_cookie( o ));
 }
 
+protected int hide_if_empty(RequestID id, Variable.Variable var)
+{
+  return var->query() == "";
+}
+
 void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
@@ -210,11 +215,14 @@ void set_up_ssl_variables( Protocol o )
   defvar( "ssl_cert_file",
 	  o->CertificateListVariable
 	  ( ({ "demo_certificate.pem" }), 0,
-	     LOCALE(86, "SSL certificate file"),
-	     LOCALE(87, "The SSL certificate file(s) to use. "
-		    "If a path is relative, it will first be "
+	     LOCALE(86, "SSL certificate file(s)"),
+	     LOCALE(87, "<p>The SSL certificate file(s) to use.</p>\n"
+		    "<p>This is a list of certificates, "
+		    "intermediate and root certificates, and "
+		    "corresponding private key files in any order.</p>\n"
+		    "<p>If a path is relative, it will first be "
 		    "searched for relative to %s, "
-		    "and if not found there relative to %s. ")));
+		    "and if not found there relative to %s.</p>\n")));
 
   defvar( "ssl_key_file",
 	  o->KeyFileVariable
@@ -225,7 +233,10 @@ void set_up_ssl_variables( Protocol o )
 		   "relative to %s. "
 		   "You do not have to specify a key "
 		   "file, leave this field empty to use the "
-		   "certificate file only.")));
+		   "certificate file only. "
+		   "This field is obsolete, since the same setting "
+		   "can be done in <b>SSL certificate file(s)</b>.")))->
+    set_invisibility_check_callback(hide_if_empty);
 
 #if constant(SSL.ServerConnection)
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
