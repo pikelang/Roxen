@@ -269,7 +269,11 @@ void set_up_ssl_variables( Protocol o )
 			     "<dd>Camellia-256</dd>\n"
 			     "<dd>ChaCha20</dd>\n"
 			     "</dl>\n"
-			     "</p>\n")))->set_range(0, Variable.no_limit);
+			     "</p>\n"
+			     "<p>Cipher strengths lower than 112 bits are "
+			     "<b>NOT</b> recommended, and there are RFCs that "
+			     "prohibit the use of all those suites.</p>\n")))->
+    set_range(0, Variable.no_limit);
 
   defvar("ssl_suite_filter",
 	 Variable.IntChoice(0,
@@ -318,7 +322,7 @@ void set_up_ssl_variables( Protocol o )
 				   "used.</p>")));
 
   defvar("ssl_min_version",
-	 Variable.IntChoice(SSL.Constants.PROTOCOL_SSL_3_0,
+	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0,
 			    ([
 			      SSL.Constants.PROTOCOL_SSL_3_0:
 			      "SSL 3.0",
@@ -328,12 +332,18 @@ void set_up_ssl_variables( Protocol o )
 			      "TLS 1.1",
 			      SSL.Constants.PROTOCOL_TLS_1_2:
 			      "TLS 1.2",
+#if constant(SSL.Constants.PROTOCOL_TLS_1_3)
+			      SSL.Constants.PROTOCOL_TLS_1_3:
+			      "TLS 1.3",
+#endif
 			    ]),
 			    0,
 			    LOCALE(0, "Minimum supported version of SSL/TLS"),
 			    LOCALE(0, "<p>Reject clients that want to use a "
 				   "version of SSL/TLS lower than the selected "
-				   "version.</p>\n")));
+				   "version.</p>\n"
+				   "<p>Note: SSL 3.0 has been deprecated "
+				   "in RFC 7568.</p>\n")));
 #endif /* SSL.ServerConnection */
 }
 
