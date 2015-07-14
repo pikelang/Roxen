@@ -403,7 +403,8 @@ private
     string update_mysql;
 
     string mysql_version = db->server_info();
-    // Typically a string like "mysql/5.5.30-log" or "mysql/5.5.39-MariaDB-log".
+    // Typically a string like "mysql/5.5.30-log", "mysql/5.5.39-MariaDB-log" or
+    // "mysql/5.5.5-10.0.13-MariaDB-log".
     if (has_value(mysql_version, "/")) mysql_version = (mysql_version/"/")[1];
 
     string db_version;
@@ -412,7 +413,8 @@ private
       db_version =
 	Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
 				      "mysql_upgrade_info"));
-      // Typically a string like "5.5.30" or "5.5.39-MariaDB".
+      // Typically a string like "5.5.30", "5.5.39-MariaDB" or
+      // "10.0.13-MariaDB".
     };
     db_version = db_version && (db_version - "\n");
 
@@ -422,7 +424,8 @@ private
       db_version += "-log";
     }
 
-    if (db_version == mysql_version) {
+    // Comparing 5.5.5-10.0.13-MariaDB-log and 10.0.13-MariaDB-log
+    if (has_value(mysql_version, db_version)) {
       // Already up-to-date.
     } else {
       werror("Upgrading database from %s to %s...\n",
@@ -483,7 +486,7 @@ private
       }
     }
 
-    if (db_version != mysql_version) {
+    if (!has_value(mysql_version, db_version)) {
       // Make sure no table is broken after the upgrade.
       foreach(db->list_dbs(), string dbname) {
 	if (lower_case(dbname) == "information_schema") {
