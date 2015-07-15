@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1100 2011/12/27 18:47:13 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -5943,7 +5943,7 @@ int main(int argc, array tmp)
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
     if (sizeof(roxenloader.package_directories) &&
 	(lfile_path(file_name) == file_name)) {
-      file_name = roxenloader.package_directories[-1] + "/" + file_name;
+      file_name = roxenloader.package_directories[0] + "/" + file_name;
       report_notice("Generating a new certificate: %O...\n", file_name);
       string cert = Roxen.generate_self_signed_certificate("*");
 
