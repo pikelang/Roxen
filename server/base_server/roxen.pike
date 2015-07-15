@@ -6405,6 +6405,32 @@ int main(int argc, array tmp)
 	Standards.X509.TBSCertificate tbs =
 	  Standards.X509.decode_certificate(msg->body);
 	upgrade_needed = (tbs->version < 3);
+	if (!upgrade_needed) {
+	  // NB: This stuff is not only to work around that
+	  //     Standards.X509.algorithms is protected, but
+	  //     also to avoid having to know about how the
+	  //     X509 algorithm sequence is structured.
+	  class HashAlgVerifier {
+	    inherit Standards.X509.Verifier;
+	    constant type = "hash";
+	    class HashPKC {
+	      inherit Crypto.Sign.State;
+	      int(0..1) pkcs_verify(string(8bit) msg,
+				    Crypto.Hash h,
+				    string(8bit) sign)
+	      {
+		// Disallow SHA1 and shorter.
+		// Allow SHA224 and longer.
+		return h && (h->digest_size() >= 28);
+	      }
+	    };
+	    protected void create()
+	    {
+	      pkc = HashPKC();
+	    }
+	  };
+	  upgrade_needed = !HashAlgVerifier()->verify(tbs->algorithm, "", "");
+	}
 	break;
       }
 
