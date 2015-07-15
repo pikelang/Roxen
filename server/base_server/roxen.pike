@@ -6573,7 +6573,7 @@ int main(int argc, array tmp)
     if (!sizeof(roxenloader.package_directories)) break;
     string cert;
     if (lfile_path(file_name) == file_name) {
-      file_name = roxen_path (roxenloader.package_directories[-1] + "/" +
+      file_name = roxen_path (roxenloader.package_directories[0] + "/" +
 			      file_name);
       report_notice("Generating a new certificate %s...\n", file_name);
       cert = Roxen.generate_self_signed_certificate("*");
