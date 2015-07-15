@@ -427,7 +427,7 @@ private
     }
 
     // Comparing 5.5.5-10.0.13-MariaDB-log and 10.0.13-MariaDB-log
-    if (dbversion && has_value(mysql_version, db_version)) {
+    if (db_version && has_value(mysql_version, db_version)) {
       // Already up-to-date.
     } else {
       werror("Upgrading database from %s to %s...\n",
