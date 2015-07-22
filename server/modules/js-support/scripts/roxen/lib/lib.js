@@ -19,6 +19,20 @@
     },
 
     /**
+     * Returns the object keys as an array.
+     * @method indices
+     * @param  {Object}  o  The array.
+     * @return {Array}      The result.
+     */
+    indices: function(o) {
+      var res = [ ];
+      for (var key in o)
+	if (o.hasOwnProperty(key))
+	  res.push(key);
+      return res;
+    },
+
+    /**
      * Binds a function to a scope.
      * @method bind
      * @param  {Object}   o Scope.
@@ -570,6 +584,39 @@
 	this.logger.show();
 	this.logger_visible = true;
       }
+    },
+
+    weekStartsOnSunday: function() {
+      //  Date.getDay() returns locally-unaware 0-6 for Sun-Sat for a given
+      //  date. We can therefore only make a guess based on browser locale
+      //  extracted from the language setting.
+      //
+      //  C.f. <http://en.wikipedia.org/wiki/Seven-day_week#mediaviewer/File:First_Day_of_Week_World_Map.svg>.
+      //  (We don't list every single tiny country on the map below.)
+      var week_starts_on_sun =
+        [ "us", "cn", "jp", "ca",     //  US, China, Japan, Canada,
+	  "za", "zw", "ke",           //  South Africa, Zimbabwe, Kenya,
+	  "ph", "tw", "hk",           //  Philippines, Taiwan, Hong Kong
+	  "mx", "gt", "sv",           //  Mexico, Guatemala, El Salvador
+	  "ni", "cr", "pa",           //  Nicaragua, Costa Rica, Panama
+	  "co", "ve", "ec",           //  Colombia, Venezuela, Ecuador
+	  "pe", "br", "bo",           //  Peru, Brazil, Bolivia
+	  "cl", "ar", "il" ];         //  Chile, Argentina, Israel
+      var lang = navigator.language.toLowerCase();
+      if (lang.length >= 5) {
+	var country = lang.substr(3, 2);
+	if (week_starts_on_sun.indexOf(country) >= 0)
+	  return true;
+      }
+      return false;
+    },
+
+    shortDate: function(unixtime) {
+      var tm = new Date(unixtime * 1000);
+      var locale = "en-US";
+      var date_fmt = "%b %e, %Y";
+      return YAHOO.util.Date.format(tm, { format: date_fmt },
+				    locale).replace("  ", " ");
     },
 
     /**
