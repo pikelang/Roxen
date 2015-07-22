@@ -64,8 +64,12 @@ mapping(string:mixed) decode_args (mapping(string:array(string)) real_vars,
 {
   mapping(string:mixed) args = ([]);
   foreach (real_vars; string var; array(string) val) {
-    if (sizeof (val) > 1)
-      return Roxen.raise_err(on_error, "Multiple %O variables found.\n", var);
+    if (sizeof (val) > 1) {
+      //  Non-AFS variables may still be present in multiple copies, e.g.
+      //  when posting a form state.
+      if (req_arg_types[var] || opt_arg_types[var])
+	return Roxen.raise_err(on_error, "Multiple %O variables found.\n", var);
+    }
     args[var] = val[0];
   }
 
