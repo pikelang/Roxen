@@ -279,15 +279,23 @@ ROXEN.AFS = function () {
   }
   
   function post(action, args, postargs, fn, scope, group) {
-    if (!ROXEN.isObject(postargs))
+    if (ROXEN.isString(postargs)) {
+      //  ID or name of a <form> tag that should be encoded
+      YAHOO.util.Connect.setForm(postargs);
+      postargs = undefined;
+    } else if (!ROXEN.isObject(postargs)) {
       postargs = { };
+    }
+    
     var postdata = [ ];
-    var item = 0;
-    for (var idx in postargs)
-      if (postargs.hasOwnProperty(idx)) {
-	postdata[item++] =
-	  encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
-      }
+    if (postargs) {
+      var item = 0;
+      for (var idx in postargs)
+	if (postargs.hasOwnProperty(idx)) {
+	  postdata[item++] =
+	    encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
+	}
+    }
     return call_or_post(action, "POST", args, postdata.join("&"), fn, scope);
   }
   
