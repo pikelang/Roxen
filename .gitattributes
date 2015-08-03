@@ -214,7 +214,6 @@ worldmap binary
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/configuration/roxen_test.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
-/server/modules/database/sqltag.pike foreign_ident
 /server/modules/directories/indexfiles.pike foreign_ident
 /server/modules/examples/common_api.pike foreign_ident
 /server/modules/examples/filter.pike foreign_ident

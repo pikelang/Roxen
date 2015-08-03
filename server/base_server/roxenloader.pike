@@ -2331,8 +2331,12 @@ protected class SQLKey
 
   protected string _sprintf(int type)
   {
-    string display_name = db_name;
-    array(string) a = (db_name || "")/"://";
+    string display_name = db_name || "";
+    if (has_suffix(display_name, ":-")) {
+      // Unmangle the mangling from DBManager.sql_cache_get().
+      display_name = replace(display_name[..<2], ";", ":");
+    }
+    array(string) a = display_name/"://";
     string prot = a[0];
     string host = a[1..] * "://";
     a = host/"@";

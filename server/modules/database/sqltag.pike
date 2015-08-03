@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.124 2012/06/10 00:27:24 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -527,16 +527,16 @@ array|Sql.sql_result do_sql_query(mapping args, RequestID id,
     }
   }
 
-  if (ret_con) {
-    // NOTE: Use of this feature may lead to circularities...
-    args->dbobj=con;
-  }
   if(result && args->rowinfo) {
     int rows;
     if(arrayp(result)) rows=sizeof(result);
     if(objectp(result)) rows=result->num_rows();
     RXML.user_set_var(args->rowinfo, rows);
     if(objectp(result)) m_delete(args, "rowinfo");
+  }
+  if (ret_con) {
+    // NOTE: Use of this feature may lead to circularities...
+    args->dbobj=con;
   }
   return result;
 }
