@@ -2344,7 +2344,24 @@ protected class SQLKey
 
   protected string _sprintf(int type)
   {
-    return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, db_name, real );
+    string display_name = db_name || "";
+    if (has_suffix(display_name, ":-")) {
+      // Unmangle the mangling from DBManager.sql_cache_get().
+      display_name = replace(display_name[..<2], ";", ":");
+    }
+    array(string) a = display_name/"://";
+    string prot = a[0];
+    string host = a[1..] * "://";
+    a = host/"@";
+    if (sizeof(a) > 1) {
+      host = a[-1];
+      a = (a[..<1] * "@")/":";
+      string user = a[0];
+      if (sizeof(a) > 1) {
+	display_name = prot + "://" + user + ":CENSORED@" + host;
+      }
+    }
+    return sprintf( "SQLKey(%O, %O)" + OBJ_COUNT, display_name, real );
   }
 }
 
