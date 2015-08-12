@@ -874,6 +874,23 @@ private int parse_got( string new_data )
     hp = 0;
     TIMER_END(parse_got);
 
+    do {
+      mapping tmp = ([
+	"event"  : "BEGIN_REQUEST",
+	"tid"    : sprintf("0x%X", this_thread()->id_number()),
+	"remote" : remoteaddr,
+      ]);
+
+      // Indicate parent request if one exists
+      if (objectp(root_id) && (root_id != root_id->root_id)) {
+	tmp->subrequest = Val.True; // We should get rid of this one
+	tmp->prid = root_id->request_uuid;
+	werror("Subrequest detected!\n");
+      }
+      req_js_logger->log(tmp);
+    } while(0);
+
+
     // The following was earlier a separate function parse_got_2.
 
     TIMER_START(parse_got_2);
@@ -967,6 +984,13 @@ private int parse_got( string new_data )
 	return 2;
       }
     }
+
+    req_js_logger->log(([
+			 "event"       : "GOT_HEADERS",
+			 "headers"     : request_headers,
+			 "prot"        : prot,
+			 "data_length" : strlen(data),
+		       ]));
 
     TIMER_START(parse_got_2_parse_headers);
     foreach (request_headers; string linename; array|string contents)
@@ -1872,6 +1896,13 @@ void do_log( int|void fsent )
       }
 
       conf->log(file, this_object());
+
+      req_js_logger->log(([
+			   "event" : "LOG_REQUEST",
+			   "htime" : handle_time,
+			   "qtime" : queue_time,
+			   "rtime" : gethrtime()-hrtime,
+			 ]));
     }
   }
   if( !port_obj ) 
@@ -2519,6 +2550,10 @@ void send_result(mapping|void result)
 {
   TIMER_START(send_result);
 
+  req_js_logger->log(([
+		       "event"       : "SEND_RESULT_BEGIN",
+		     ]));
+
   if (my_fd)
     CHECK_FD_SAFE_USE;
 
@@ -2577,6 +2612,10 @@ void send_result(mapping|void result)
   {
     if((file->file == -1) || file->leave_me)
     {
+      req_js_logger->log(([
+			   "event"       : "SEND_RESULT_END",
+			   "msg"         : "No result",
+			 ]));
       TIMER_END(send_result);
       file = 0;
       pipe = 0;
@@ -3014,7 +3053,17 @@ void handle_request()
 
   REQUEST_WERR("HTTP: handle_request()");
   TIMER_START(handle_request);
-  
+  req_js_logger->log(([
+		       "event" : "HANDLE_REQUEST_BEGIN",
+		       "qtime" : queue_time,
+		     ]));
+#ifdef TIMERS
+#define LOG_HANDLE_END() do { req_js_logger->log((["event" : "HANDLE_REQUEST_END", "handle_time" : timers->handle_request ])); } while(0)
+#else
+#define LOG_HANDLE_END()
+#endif
+
+
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -3028,6 +3077,7 @@ void handle_request()
 	  "data":generate_bugreport( @err ),
 	]);
 	TIMER_END(handle_request);
+	LOG_HANDLE_END()
         send_result();
         return;
       } else {
@@ -3041,6 +3091,7 @@ void handle_request()
 	      "data":handle_error_file_request( @err ),
 	    ]);
 	  TIMER_END(handle_request);
+	  LOG_HANDLE_END();
           send_result();
           return;
 	}
@@ -3076,6 +3127,10 @@ void handle_request()
     if (result && result->pipe) {
       REQUEST_WERR("HTTP: handle_request: pipe in progress.");
       TIMER_END(handle_request);
+      req_js_logger->log(([
+			   "event" : "PIPE_BEGIN",
+			 ]));
+      LOG_HANDLE_END();
       return;
     }
     file = result;
@@ -3093,7 +3148,7 @@ void handle_request()
 
   TIMER_END(handle_request);
   send_result();
-
+  LOG_HANDLE_END();
   }) {
     call_out (disconnect, 0);
     report_error("Internal server error: " + describe_backtrace(err));
@@ -3283,6 +3338,13 @@ void got_data(mixed fooid, string s, void|int chained)
       adjust_for_config_path( path );
 
     TIMER_END(find_conf);
+
+    req_js_logger->log(([
+			 "event"       : "GOT_REQUEST",
+			 "data_length" : strlen(data),
+			 "path"        : path,
+			 "raw_url"     : raw_url,
+		       ]));
 
     // The "http_request_init" provider hook allows modules to do
     // things very early in the request path, before the request is
@@ -3644,8 +3706,14 @@ void got_data(mixed fooid, string s, void|int chained)
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
     queue_length = roxen.handle_queue_length();
+    req_js_logger->log(([
+			 "event"   : "ENTER_QUEUE",
+			 "qlen"    : queue_length,
+			 "vars"    : real_variables,
+			 "cookies" : cookies,
+		       ]));
     roxen.handle(handle_request_from_queue);
-  })
+    })
   {
     report_error("Internal server error: " + describe_backtrace(err));
     disconnect();
@@ -3751,7 +3819,6 @@ protected void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
-
 #if defined(DEBUG) && defined(THREADS)
   if (this_thread() != roxen->backend_thread)
     error ("Not called from backend\n");
