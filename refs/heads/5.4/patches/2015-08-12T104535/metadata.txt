@@ -1,0 +1,38 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 9d7f2bfbdd0edcb0420a5d5aee0c644f055f114e
+to: 7c9daa6b867ba7bc71f924b312bcf79a0d112da7
+originator: wellhardh@roxen.com
+depends: 2015-07-01T144156
+restart: true
+
+Multiple fixes:
+
+  * SQLKey: Censor SQL-URLs. Fixes [bug 7439].
+
+  * Loader: Reverse the packages search order.
+    
+    This is in preparation of fixing [bug 7530], and has the effect
+    that the first entry in the package directory search path always
+    is "$LOCALDIR".
+
+  * Loader: lopen() et all now use roxen_path().
+    
+    This should cause eg the RSA certificate action to once again
+    create the files where it expects them to be.
+    
+    Fixes [bug 7530].
+
+  * Branding: Support sitebuilder being a package.
+
+  * Version bumped to 5.4.78 by buildsystem.
+
+  * SQLKey: Improved censoring of passwords. Fixes [bug 7439] some more.
+    
+    This attempts to detect and undo the mangling done
+    by DBManager.sql_cache_get().
+
+  * TagSQLQuery: Removed remaining leakage of SQLKey to backtraces.
+    
+    The SQLKey could leak to the backtrace if an invalid rowinfo was used.
+    
+    Fixes remainder of [bug 7439}.
