@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.283 2012/01/23 12:50:52 grubba Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1201,6 +1201,15 @@ class RequestID
   DECLARE_OBJ_COUNT;
   //! @endignore
 #endif
+
+  // Generator for unique request UUIDs on the fly.
+  protected string _request_uuid;
+  string `request_uuid() {
+    return _request_uuid || (_request_uuid = Standards.UUID.make_version4()->str());
+  };
+  void `request_uuid=(mixed v) {
+    _request_uuid = (string)v;
+  };
 
   Configuration conf;
 

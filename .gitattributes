@@ -76,7 +76,6 @@ worldmap binary
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
-/server/base_server/prototypes.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
@@ -364,7 +363,6 @@ worldmap binary
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
 /server/protocols/ftp.pike foreign_ident
-/server/protocols/http.pike foreign_ident
 /server/protocols/prot_https.pike foreign_ident
 /server/protocols/prot_snmp.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.643 2012/01/24 16:15:47 grubba Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1350,6 +1350,7 @@ protected void cleanup_request_object()
   if( conf )
     conf->connection_drop( this_object() );
   xml_data = 0;
+  request_uuid = UNDEFINED;
 }
 
 void end(int|void keepit)
