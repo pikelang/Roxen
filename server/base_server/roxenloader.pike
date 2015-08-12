@@ -3,7 +3,8 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $
+// $Id$
+
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +37,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.473 2012/01/19 10:24:37 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1476,6 +1477,9 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
+  Logger.MainLogger main_logger = Logger.MainLogger();
+  add_constant("main_logger", main_logger);
+
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
