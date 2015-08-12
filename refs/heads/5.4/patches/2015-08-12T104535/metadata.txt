@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Censor SQL-URLs, support sitebuilder as a package
 from: 9d7f2bfbdd0edcb0420a5d5aee0c644f055f114e
 to: 7c9daa6b867ba7bc71f924b312bcf79a0d112da7
 originator: wellhardh@roxen.com
@@ -23,8 +23,6 @@ Multiple fixes:
     Fixes [bug 7530].
 
   * Branding: Support sitebuilder being a package.
-
-  * Version bumped to 5.4.78 by buildsystem.
 
   * SQLKey: Improved censoring of passwords. Fixes [bug 7439] some more.
     
