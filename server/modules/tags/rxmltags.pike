@@ -12064,7 +12064,7 @@ After: &var.language;<br /></ex>
      <c><p><tt>combine_path(<i>base</i>, <i>relative_path</i>, ...)</tt></p></c>
      <c><p>Returns the combined path <i>base</i> + <tt>\"/\"</tt> +
 	<i>relative_path</i>, with any path-segments of <tt>'.'</tt> and
-	<tt>'..'</tt> handled and removed.</p></c>
+	<tt>'..'</tt> handled and removed.</p></c></row>
  </xtable>
 
  <p>Expressions for array operands:</p>
