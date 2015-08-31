@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.685 2012/11/06 15:33:47 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1533,7 +1533,11 @@ class TagInsert {
       flags |= RXML.FLAG_EMPTY_ELEMENT;
 
       RXML.Tag plugin = get_plugins()[args->source];
-      if (plugin && plugin->do_enter) {
+
+      if (!plugin) RXML.parse_error("Unknown insertion source. "
+				    "Are the correct modules loaded?\n");
+
+      if (plugin->do_enter) {
 	return plugin->do_enter(args, id, this);
       }
     }
