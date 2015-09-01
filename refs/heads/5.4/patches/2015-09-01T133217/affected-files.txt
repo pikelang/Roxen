@@ -1,2 +1,0 @@
-Modified files:
-  modules/tags/rxmltags.pike
