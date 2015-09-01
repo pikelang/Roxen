@@ -1534,8 +1534,17 @@ class TagInsert {
 
       RXML.Tag plugin = get_plugins()[args->source];
 
-      if (!plugin) RXML.parse_error("Unknown insertion source. "
-				    "Are the correct modules loaded?\n");
+      if (!plugin) {
+	foreach(get_plugins(); string name; RXML.Tag p) {
+	  if (args[name]) {
+	    plugin = p;
+	    break;
+	  }
+	}
+
+	if (!plugin) RXML.parse_error("Unknown insertion source. "
+				      "Are the correct modules loaded?\n");
+      }
 
       if (plugin->do_enter) {
 	return plugin->do_enter(args, id, this);
