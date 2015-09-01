@@ -1,0 +1,16 @@
+subject: Roxen 5.4:   * <insert/>: Complain about missing plugins in do_enter().
+from: f30beeb922143b5574d9c2ebb4a7b7dcd7e206b1
+to: 66e71afce252ccb02ce819e6bcd78774cd7b2e04
+originator: wellhardh@roxen.com
+depends: roxen/5.4.88|2015-09-01T132937
+restart: true
+
+  * <insert/>: Complain about missing plugins in do_enter().
+    
+    Fixes [bug 7549].
+
+  * <insert/>: Don't require the source attribute.
+    
+    This got broken in the previous patch in Roxen 5.4 and earlier.
+    
+    Fixes some more of [bug 7549].
