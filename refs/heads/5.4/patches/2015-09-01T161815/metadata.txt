@@ -1,9 +1,11 @@
-subject: Roxen 5.4:   * <insert/>: Complain about missing plugins in do_enter().
+subject: Roxen 5.4: Insert tag warning
 from: f30beeb922143b5574d9c2ebb4a7b7dcd7e206b1
 to: 66e71afce252ccb02ce819e6bcd78774cd7b2e04
 originator: wellhardh@roxen.com
 depends: roxen/5.4.88|2015-09-01T132937
 restart: true
+
+Multiple fixes:
 
   * <insert/>: Complain about missing plugins in do_enter().
     
