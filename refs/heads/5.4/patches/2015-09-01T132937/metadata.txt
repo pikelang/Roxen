@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: TagCache, 5.4.88-2r
 from: 7c9daa6b867ba7bc71f924b312bcf79a0d112da7
 to: f30beeb922143b5574d9c2ebb4a7b7dcd7e206b1
 originator: wellhardh@roxen.com
@@ -7,37 +7,9 @@ restart: true
 
 Multiple fixes:
 
-  * RoxenPatch: Add platforms rhel7_x86_64 and win32_x86_64.
-    
-    Fixes [bug 7452] comment #2.
-
-  * Testsuite [RoxenPatch]: Added some more platforms to 2009-02-25T1124.rxp.
-    
-    Fixes testsuite failures on rhel7_x86_64 (and win32_x86_64).
-    
-    Also alters the title and description somewhat.
-
-  * Version bumped to 5.4.79 by buildsystem.
-
-  * Version bumped to 5.4.80 by buildsystem.
-
   * TagCache: Provide the "no preceding lookup" argument when the keymap has changed.
     
     The keymap may change because of "propagate" arguments in nested cache tags.
     Fixes [bug 7256].
 
-  * Version bumped to 5.4.81 by buildsystem.
-
-  * Version bumped to 5.4.82 by buildsystem.
-
-  * Version bumped to 5.4.83 by buildsystem.
-
-  * Version bumped to 5.4.84 by buildsystem.
-
-  * Version bumped to 5.4.85 by buildsystem.
-
-  * Version bumped to 5.4.86 by buildsystem.
-
-  * Version bumped to 5.4.87 by buildsystem.
-
-  * Version bumped to 5.4.88 by buildsystem.
+  * Sync with 5.4.88-r2.
