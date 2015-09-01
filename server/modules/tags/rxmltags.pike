@@ -684,14 +684,18 @@ class TagExpireTime {
     array do_return(RequestID id) {
       int t,t2;
       t = t2 = args["unix-time"] ? (int)args["unix-time"] : time(1);
+      int deltat = 0;
       if(!args->now) {
 	t = Roxen.time_dequantifier(args, t);
-	CACHE( max(t-t2,0) );
+	deltat = max(t-t2,0);
       }
-      if(t==t2) {
+      if(!deltat) {
 	NOCACHE();
 	id->add_response_header("Pragma", "no-cache");
 	id->add_response_header("Cache-Control", "no-cache");
+      } else {
+	CACHE( deltat );
+	id->add_response_header("Cache-Control", "max-age=" + deltat);
       }
 
       // It's meaningless to have several Expires headers, so just
