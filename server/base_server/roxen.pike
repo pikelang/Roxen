@@ -694,6 +694,14 @@ protected void slow_be_before_cb()
   if (Pike.Backend monitor = slow_be_call_out && slow_req_monitor) {
     monitor->remove_call_out (slow_be_call_out);
     slow_be_call_out = 0;
+
+    float backend_rtime =
+      (gethrtime() - thread_task_start_times[this_thread()]) / 1E6;
+    thread_task_start_times[this_thread()] = 0;
+
+    if (backend_rtime > slow_be_timeout) {
+      report_slow_thread_finished (this_thread(), backend_rtime);
+    }
   }
 }
 
@@ -704,10 +712,13 @@ protected void slow_be_after_cb()
 #ifdef DEBUG
   if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
 #endif
-  if (slow_be_timeout > 0.0)
-    if (Pike.Backend monitor = slow_req_monitor)
+  if (slow_be_timeout > 0.0) {
+    if (Pike.Backend monitor = slow_req_monitor) {
+      thread_task_start_times[this_thread()] = gethrtime();
       slow_be_call_out = monitor->call_out (dump_slow_req, slow_be_timeout,
 					    this_thread(), slow_be_timeout);
+    }
+  }
 }
 
 void slow_req_count_changed()
@@ -775,6 +786,8 @@ void slow_be_timeout_changed()
   }
 }
 
+protected int last_dump_hrtime;
+
 protected void dump_slow_req (Thread.Thread thread, float timeout)
 {
   object threads_disabled = _disable_threads();
@@ -797,10 +810,30 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
     report_debug ("###### %s 0x%x%s has been busy for more than %g seconds.\n",
 		  thread == backend_thread ? "Backend thread" : "Thread",
 		  thread->id_number(), th_name, timeout);
-    describe_all_threads (0, threads_disabled);
+    int hrnow = gethrtime();
+    if ((hrnow - last_dump_hrtime) / 1E6 < slow_req_timeout / 2) {
+      describe_thread (thread);
+    } else {
+      last_dump_hrtime = hrnow;
+      describe_all_threads (0, threads_disabled);
+    }
   }
 
   threads_disabled = 0; 	// Paranoia.
+}
+
+protected void report_slow_thread_finished (Thread.Thread thread,
+					    float time_spent)
+{
+  string th_name =
+    ((thread != backend_thread) && thread_name(thread, 1)) || "";
+  if (sizeof(th_name))
+    th_name = " - " + th_name + " -";
+
+  report_debug ("###### %s 0x%x%s finished after %.2f seconds.\n",
+		(thread == backend_thread ?
+		 "Backend thread" : "Thread"),
+		thread->id_number(), th_name, time_spent);
 }
 
 #endif	// !NO_SLOW_REQ_BT
@@ -921,6 +954,13 @@ local protected void handler_thread(int id)
 	    };
 	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
 	  thread_task_start_times[this_thread()] = 0;
+
+#ifndef NO_SLOW_REQ_BT
+	  if (slow_req_timeout > 0.0 &&
+	      handler_rtime > slow_req_timeout) {
+	    report_slow_thread_finished (this_thread(), handler_rtime);
+	  }
+#endif
 
 	  h=0;
 	  busy_threads--;
@@ -5749,6 +5789,27 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 #endif
 }
 
+// Dump a single thread.
+void describe_thread (Thread.Thread thread)
+{
+  int hrnow = gethrtime();
+  string thread_descr = "";
+  if (string th_name = thread_name(thread, 1))
+    thread_descr += " - " + th_name;
+  if (int start_hrtime = thread_task_start_times[thread])
+    thread_descr += sprintf (" - busy for %.3fs",
+			     (hrnow - start_hrtime) / 1e6);
+  report_debug(">> ### Thread 0x%x%s:\n",
+	       thread->id_number(),
+	       thread_descr);
+  // Use master()->describe_backtrace to sidestep the background
+  // failure wrapper that's active in RUN_SELF_TEST.
+  report_debug(">> " +
+	       replace (master()->describe_backtrace (thread->backtrace()),
+			"\n", "\n>> ") +
+	       "\n");
+}
+
 // Dump all threads to the debug log.
 void describe_all_threads (void|int ignored, // Might be the signal number.
 			   void|object threads_disabled)
@@ -5775,23 +5836,8 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
 	return a->id_number() > b->id_number();
     });
 
-  int hrnow = gethrtime();
   foreach (threads, Thread.Thread thread) {
-    string thread_descr = "";
-    if (string th_name = thread_name(thread, 1))
-      thread_descr += " - " + th_name;
-    if (int start_hrtime = thread_task_start_times[thread])
-      thread_descr += sprintf (" - busy for %.3fs",
-			       (hrnow - start_hrtime) / 1e6);
-    report_debug(">> ### Thread 0x%x%s:\n",
-		 thread->id_number(),
-		 thread_descr);
-    // Use master()->describe_backtrace to sidestep the background
-    // failure wrapper that's active in RUN_SELF_TEST.
-    report_debug(">> " +
-		 replace (master()->describe_backtrace (thread->backtrace()),
-			  "\n", "\n>> ") +
-		 "\n");
+    describe_thread (thread);
   }
 
   array(array) queue = handle_queue->peek_array();
