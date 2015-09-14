@@ -68,7 +68,6 @@ worldmap binary
 /server/base_server/hosts.pike foreign_ident
 /server/base_server/html.pike foreign_ident
 /server/base_server/javamodule.pike foreign_ident
-/server/base_server/language.pike foreign_ident
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident

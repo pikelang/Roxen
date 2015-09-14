@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: language.pike,v 1.42 2007/05/03 13:42:53 mast Exp $
+// $Id$
 
 #pragma strict_types
 
@@ -93,7 +93,9 @@ void set_default_locale(string def_loc)
     // Default locale from Globals
     tmp = def_loc;
   }
-  else if ((tmp = [string] (getenv("LC_MESSAGES") || getenv("LANG")))) {
+  else if ((tmp = [string] (getenv("LC_ALL") ||
+			    getenv("LC_MESSAGES") ||
+			    getenv("LANG")))) {
     // Try default locale from environment
     sscanf(tmp, "%s_%*s", tmp);   //Handle e.g. en_US
   }
