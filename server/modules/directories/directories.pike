@@ -219,11 +219,13 @@ mapping parse_directory(RequestID id)
     foreach(dir[1..], string file) 
     {
       string lock=id->conf->try_get_file(f+file, id);
-      if(lock) 
-      {
-	if(sizeof(lock)) 
-          return Roxen.http_string_answer(lock)+(["error":403]);
-	return Roxen.http_redirect(f[..sizeof(f)-3], id);
+      if(lock) {
+	if(!sizeof(lock)) {
+	  lock =
+	    "<html><head><title>Forbidden</title></head>\n"
+	    "<body><h1>Forbidden</h1></body></html>\n";
+	}
+	return Roxen.http_string_answer(lock)+(["error":403]);
       }
     }
   return Roxen.http_rxml_answer( template, id );
