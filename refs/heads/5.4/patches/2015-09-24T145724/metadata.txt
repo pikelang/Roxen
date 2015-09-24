@@ -1,0 +1,24 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 66e71afce252ccb02ce819e6bcd78774cd7b2e04
+to: cfaa1340235990dbe09f15dada71862e1f734490
+originator: wellhardh@roxen.com
+depends: 2015-09-01T161815
+restart: true
+
+Multiple fixes:
+
+  * Tracing: Added missing TRACE_LEAVE().
+
+  * Directories: Fixed broken redirect on empty lock file.
+
+  * Locale: LC_ALL should override all other locale settings.
+    
+    Fixes [bug 7559].
+
+  * RXML: Added cleaup() to TagCache.
+    
+    This moves unlocking of the cache mutex to the cleanup phase of RXML
+    parsing. This means that the mutex will be released also when errors
+    are thrown during evaluation of the content to be cached.
+    
+    Potential fix for [bug 7565].
