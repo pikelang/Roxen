@@ -2547,6 +2547,9 @@ class TagCache {
 			     (timeout ? " (" + timeout + "s timeout cache)" : ""),
 			     RXML.utils.format_short (keymap, 200));
 	    key = key_level2 = keymap = 0;
+	    // FIXME: The following is probably redundant
+	    //        (handled by cleanup() further below),
+	    //        but shouldn't hurt.
 	    if (mutex_key) {
 	      destruct(mutex_key);
 	      
@@ -2733,6 +2736,11 @@ class TagCache {
       }
 
       result += content;
+      return 0;
+    }
+
+    protected void cleanup()
+    {
       if (mutex_key) {
 	destruct(mutex_key);
 	
@@ -2748,7 +2756,6 @@ class TagCache {
 	  m_delete(cache_mutex_concurrency, mutex_id);
 	//  ^^^
       }
-      return 0;
     }
 
     array save()
