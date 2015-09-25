@@ -1,0 +1,5 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/language.pike
+  modules/directories/directories.pike
+  modules/tags/rxmltags.pike
