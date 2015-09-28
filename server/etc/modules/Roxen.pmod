@@ -3221,7 +3221,11 @@ string fix_relative( string file, RequestID|void id )
     uri = Standards.URI(id->not_query, uri);
   }
   uri = Standards.URI(file, uri);
-  uri->path = (uri->combine_uri_path("", uri->path)/"/" - ({ ".." })) * "/";  
+  if (uri->path != "") {
+    // NB: Without the above test "" will expand to "/".
+    //     cf [bug 7566].
+    uri->path = (uri->combine_uri_path("", uri->path)/"/" - ({ ".." })) * "/";
+  }
   string res = sprintf("%s", uri);
   // +(id->misc->path_info?id->misc->path_info:"");
   if (has_prefix(res, "://") && !has_prefix(file, "://") &&
