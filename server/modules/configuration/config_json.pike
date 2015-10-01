@@ -31,6 +31,8 @@ LocaleString module_doc = LOCALE (0, #"
 <li>PUT /rest/variables/abs_timeout - change the value of the \"abs_timeout\" global variable. The data body of the PUT request should be the JSON encoded value to set.</li>
 <li>POST /rest/configurations/CMS/modules/yui/ - add an instance of the YUI module to the configuration \"CMS\".</li>
 <li>DELETE /rest/configurations/CMS/modules/yui!0/ - remove instance #0 of the YUI module in the configuration \"CMS\".</li>
+<li>PUT /rest/configurations/CMS/modules/yui!0/actions/Reload - Reload the YUI module.</li>
+<li>PUT /rest/configurations/CMS/modules/insite_editor!0/actions/Clear Persistent Cache - call action button \"Clear Persistent Cache \" in the Insite Editor module.</li>
 </ul>
 </p>
 ");
@@ -49,25 +51,27 @@ class RESTResource
   array subresources = ({});
   protected mapping(string:RESTResource) sub_resource_map = ([]);
 
-  protected array(mixed) list (void|mixed parent);
-  protected mixed lookup_obj (string name, void|mixed parent);
-  protected mixed post_obj (string name, mixed value, mixed parent);
-  protected void delete_obj (string name, mixed parent);
-  protected mixed get_obj (mixed obj);
-  protected mixed put_obj (mixed obj, mixed value, mixed parent);
+  protected array(mixed) list (mixed parent, RequestID id);
+  protected mixed lookup_obj (string name, mixed parent, RequestID id);
+  protected mixed post_obj (string name, mixed value, mixed parent,
+			    RequestID id);
+  protected void delete_obj (string name, mixed parent, RequestID id);
+  protected mixed get_obj (mixed obj, RequestID id);
+  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id);
 
-  mixed handle_resource (array(string) path, string method, mixed client_data,
+  mixed handle_resource (array(string) path, RequestID id, mixed client_data,
 			 int(0..1) envelope, mixed parent)
   {
     if (!sizeof (path))
-      return list (parent);
+      return list (parent, id);
 
     string resource_name = path[0];
     mixed obj;
+    string method = id->method;
 
     if (method == "GET" || method == "PUT" || sizeof (path) > 1) {
       if (functionp (lookup_obj)) {
-	obj = lookup_obj (resource_name, parent);
+	obj = lookup_obj (resource_name, parent, id);
 	if (!obj)
 	  error ("Resource \"%s\" not found.\n", resource_name);
       } else {
@@ -77,7 +81,7 @@ class RESTResource
 
     if (sizeof (path) > 1) {
       if (RESTResource r = sub_resource_map[path[1]]) {
-	return r->handle_resource (path[2..], method, client_data, envelope,
+	return r->handle_resource (path[2..], id, client_data, envelope,
 				   obj);
       } else {
 	error ("Resource \"%s\" not found.\n", path[1]);
@@ -87,13 +91,13 @@ class RESTResource
 
     if (method == "POST") {
       if (functionp (post_obj)) {
-	obj = post_obj (resource_name, client_data, parent);
+	obj = post_obj (resource_name, client_data, parent, id);
       } else {
 	error ("Method \"%s\" not available here.\n", method);
       }
     } else if (method == "DELETE") {
       if (functionp (delete_obj)) {
-	delete_obj (resource_name, parent);
+	delete_obj (resource_name, parent, id);
       } else {
 	error ("Method \"%s\" not available here.\n", method);
       }
@@ -105,7 +109,7 @@ class RESTResource
     switch (method) {
     case "GET":
       if (functionp (get_obj)) {
-	value_res = get_obj (obj);
+	value_res = get_obj (obj, id);
 	got_value = 1;
       } else if (!envelope) {
 	error ("Method \"%s\" not available here.\n", method);
@@ -113,13 +117,13 @@ class RESTResource
       break;
     case "POST":
       if (functionp (get_obj)) {
-	value_res = get_obj (obj);
+	value_res = get_obj (obj, id);
 	got_value = 1;
       }
       break;
     case "PUT":
       if (functionp (put_obj)) {
-	value_res = put_obj (obj, client_data, parent);
+	value_res = put_obj (obj, client_data, parent, id);
 	got_value = 1;
 	method_handled = 1;
       } else {
@@ -152,12 +156,12 @@ class RESTVariables
   inherit RESTResource;
   constant name = "variables";
 
-  protected array(string|int) list (void|mixed parent)
+  protected array(string|int) list (mixed parent, RequestID id)
   {
     return indices (parent->query());
   }
 
-  protected mixed lookup_obj (string name, void|mixed parent)
+  protected mixed lookup_obj (string name, mixed parent, RequestID id)
   {
     Variable.Variable var = parent->getvar (name);
     if (!var)
@@ -165,12 +169,12 @@ class RESTVariables
     return var;
   }
 
-  protected mixed get_obj (mixed obj)
+  protected mixed get_obj (mixed obj, RequestID id)
   {
     return obj->query();
   }
 
-  protected mixed put_obj (mixed obj, mixed value, mixed parent)
+  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id)
   {
     string err;
     mixed mangled_value;
@@ -185,11 +189,86 @@ class RESTVariables
   }
 }
 
+class RESTModuleActions
+{
+  inherit RESTResource;
+  constant name = "actions";
+
+  protected array(string) list (mixed parent, RequestID id)
+  {
+    array(string) res = ({ "Reload" });
+
+    if (parent->query_action_buttons) {
+      mapping(string:function|array(function|string)) mod_buttons =
+	parent->query_action_buttons(id);
+      array(string) titles = indices(mod_buttons);
+      if (sizeof(titles)) {
+	res += Array.sort (titles);
+      }
+    }
+
+    return res;
+  }
+
+  protected mixed lookup_obj (string name, mixed parent, RequestID id)
+  {
+    if (name == "Reload") {
+      return lambda()
+	     {
+	       roxenloader.LowErrorContainer ec =
+		 roxenloader.LowErrorContainer();
+	       RoxenModule new_module;
+	       Configuration conf = parent->my_configuration();
+	       string mod_id = parent->module_local_id();
+	       string mod_id_2 = replace (mod_id, "#", "!");
+
+	       roxenloader.push_compile_error_handler (ec);
+	       new_module = conf->reload_module(mod_id);
+	       roxenloader.pop_compile_error_handler();
+
+	       if (sizeof (ec->get())) {
+		 report_debug (ec->get());
+		 error (ec->get());
+	       }
+	     };
+    } else if (function qab = parent->query_action_buttons) {
+      return lambda()
+	     {
+	       mapping(string:function|array(function|string)) buttons =
+		 qab (id);
+	       foreach(indices(buttons), string title) {
+		 // Is this typecast really needed? The return value of
+		 // query_action_buttons is defined as mapping(string:...)
+		 // after all... (Code copied from site_content.pike.)
+		 if ((string)name == (string)title) {
+		   function|array(function|string) action = buttons[title];
+		   if (arrayp(action))
+		     action[0](id);
+		   else
+		     action(id);
+		   break;
+		 }
+
+	       }
+	     };
+    }
+  }
+
+  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id)
+  {
+    if (obj) {
+      obj();
+      return 1;
+    }
+    return 0;
+  }
+}
+
 class RESTModules
 {
   inherit RESTResource;
   constant name = "modules";
-  array subresources = ({ RESTVariables() });
+  array subresources = ({ RESTVariables(), RESTModuleActions() });
 
   protected string encode_mod_name (string s)
   {
@@ -201,12 +280,13 @@ class RESTModules
     return replace (s, "!", "#");
   }
 
-  protected array(string) list (void|mixed parent)
+  protected array(string) list (mixed parent, RequestID id)
   {
     return map (indices (parent->enabled_modules), encode_mod_name);
   }
 
-  protected mixed post_obj (string name, mixed value, mixed parent)
+  protected mixed post_obj (string name, mixed value, mixed parent,
+			    RequestID id)
   {
     string module_name = decode_mod_name (name);
     ModuleInfo mod_info = roxen.find_module (module_name, 1);
@@ -217,14 +297,14 @@ class RESTModules
     return parent->enable_module (module_name, UNDEFINED, mod_info);
   }
 
-  protected void delete_obj (string name, mixed parent)
+  protected void delete_obj (string name, mixed parent, RequestID id)
   {
     string module_name = decode_mod_name (name);
     if (!parent->disable_module (module_name))
       error ("No such module %s.\n", module_name);
   }
 
-  protected mixed lookup_obj (string name, void|mixed parent)
+  protected mixed lookup_obj (string name, mixed parent, RequestID id)
   {
     string module_name = decode_mod_name (name);
     RoxenModule module = parent->find_module (module_name);
@@ -240,12 +320,12 @@ class RESTConfigurations
   constant name = "configurations";
   array subresources = ({ RESTModules() });
 
-  protected array(string) list (void|mixed parent)
+  protected array(string) list (mixed parent, RequestID id)
   {
     return roxen.configurations->name;
   }
 
-  protected mixed lookup_obj (string name)
+  protected mixed lookup_obj (string name, RequestID id)
   {
     Configuration conf = roxen.get_configuration (name);
     if (!conf)
@@ -289,7 +369,7 @@ mapping(string:mixed) find_file (string f, RequestID id)
 	    client_data = Standards.JSON.decode (id->data);
 	  }
 	  int envelope = id->variables["envelope"] == "1";
-	  json_res = r->handle_resource (segments[1..] - ({ "" }), id->method,
+	  json_res = r->handle_resource (segments[1..] - ({ "" }), id,
 					 client_data, envelope, roxen);
 	  got_result = 1;
 	}
