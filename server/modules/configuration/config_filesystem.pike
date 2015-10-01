@@ -485,7 +485,7 @@ void start(int n, Configuration cfg)
       "config_tags", "contenttypes",    "indexfiles", "atlas",
       "gbutton",     "graphic_text",    "pathinfo",   "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",  "rxmltags",
-      "tablist",     "cimg",		"gxml",
+      "tablist",     "cimg",		"gxml",       "config_json",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
 #endif
