@@ -50,11 +50,11 @@ class RESTResource
   protected mapping(string:RESTResource) sub_resource_map = ([]);
 
   protected array(mixed) list (void|mixed parent);
-  protected mixed get_obj (string name, void|mixed parent);
-  protected mixed create_obj (string name, mixed value, mixed parent);
+  protected mixed lookup_obj (string name, void|mixed parent);
+  protected mixed post_obj (string name, mixed value, mixed parent);
   protected void delete_obj (string name, mixed parent);
-  protected mixed get_value_from_obj (mixed obj);
-  protected mixed set_value_in_obj (mixed obj, mixed value, mixed parent);
+  protected mixed get_obj (mixed obj);
+  protected mixed put_obj (mixed obj, mixed value, mixed parent);
 
   mixed handle_resource (array(string) path, string method, mixed client_data,
 			 int(0..1) envelope, mixed parent)
@@ -66,8 +66,8 @@ class RESTResource
     mixed obj;
 
     if (method == "GET" || method == "PUT" || sizeof (path) > 1) {
-      if (functionp (get_obj)) {
-	obj = get_obj (resource_name, parent);
+      if (functionp (lookup_obj)) {
+	obj = lookup_obj (resource_name, parent);
 	if (!obj)
 	  error ("Resource \"%s\" not found.\n", resource_name);
       } else {
@@ -86,8 +86,8 @@ class RESTResource
     }
 
     if (method == "POST") {
-      if (functionp (create_obj)) {
-	obj = create_obj (resource_name, client_data, parent);
+      if (functionp (post_obj)) {
+	obj = post_obj (resource_name, client_data, parent);
       } else {
 	error ("Method \"%s\" not available here.\n", method);
       }
@@ -104,22 +104,22 @@ class RESTResource
     int method_handled = 0;
     switch (method) {
     case "GET":
-      if (functionp (get_value_from_obj)) {
-	value_res = get_value_from_obj (obj);
+      if (functionp (get_obj)) {
+	value_res = get_obj (obj);
 	got_value = 1;
       } else if (!envelope) {
 	error ("Method \"%s\" not available here.\n", method);
       }
       break;
     case "POST":
-      if (functionp (get_value_from_obj)) {
-	value_res = get_value_from_obj (obj);
+      if (functionp (get_obj)) {
+	value_res = get_obj (obj);
 	got_value = 1;
       }
       break;
     case "PUT":
-      if (functionp (set_value_in_obj)) {
-	value_res = set_value_in_obj (obj, client_data, parent);
+      if (functionp (put_obj)) {
+	value_res = put_obj (obj, client_data, parent);
 	got_value = 1;
 	method_handled = 1;
       } else {
@@ -157,7 +157,7 @@ class RESTVariables
     return indices (parent->query());
   }
 
-  protected mixed get_obj (string name, void|mixed parent)
+  protected mixed lookup_obj (string name, void|mixed parent)
   {
     Variable.Variable var = parent->getvar (name);
     if (!var)
@@ -165,12 +165,12 @@ class RESTVariables
     return var;
   }
 
-  protected mixed get_value_from_obj (mixed obj)
+  protected mixed get_obj (mixed obj)
   {
     return obj->query();
   }
 
-  protected mixed set_value_in_obj (mixed obj, mixed value, mixed parent)
+  protected mixed put_obj (mixed obj, mixed value, mixed parent)
   {
     string err;
     mixed mangled_value;
@@ -206,7 +206,7 @@ class RESTModules
     return map (indices (parent->enabled_modules), encode_mod_name);
   }
 
-  protected mixed create_obj (string name, mixed value, mixed parent)
+  protected mixed post_obj (string name, mixed value, mixed parent)
   {
     string module_name = decode_mod_name (name);
     ModuleInfo mod_info = roxen.find_module (module_name, 1);
@@ -224,7 +224,7 @@ class RESTModules
       error ("No such module %s.\n", module_name);
   }
 
-  protected mixed get_obj (string name, void|mixed parent)
+  protected mixed lookup_obj (string name, void|mixed parent)
   {
     string module_name = decode_mod_name (name);
     RoxenModule module = parent->find_module (module_name);
@@ -245,7 +245,7 @@ class RESTConfigurations
     return roxen.configurations->name;
   }
 
-  protected mixed get_obj (string name)
+  protected mixed lookup_obj (string name)
   {
     Configuration conf = roxen.get_configuration (name);
     if (!conf)
