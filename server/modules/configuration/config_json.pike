@@ -232,32 +232,29 @@ class RESTModuleActions
 	       }
 	     };
     } else if (function qab = parent->query_action_buttons) {
-      return lambda()
-	     {
-	       mapping(string:function|array(function|string)) buttons =
-		 qab (id);
-	       foreach(indices(buttons), string title) {
-		 // Is this typecast really needed? The return value of
-		 // query_action_buttons is defined as mapping(string:...)
-		 // after all... (Code copied from site_content.pike.)
-		 if ((string)name == (string)title) {
-		   function|array(function|string) action = buttons[title];
-		   if (arrayp(action))
-		     action[0](id);
-		   else
-		     action(id);
-		   break;
-		 }
+      mapping(string:function|array(function|string)) buttons =
+	qab (id);
+      foreach(indices(buttons), string title) {
+	// Is this typecast really needed? The return value of
+	// query_action_buttons is defined as mapping(string:...)
+	// after all... (Code copied from site_content.pike.)
+	if ((string)name == (string)title) {
+	  function|array(function|string) action = buttons[title];
+	  if (arrayp(action))
+	    return action[0];
 
-	       }
-	     };
+	  return action;
+	}
+      }
     }
+
+    return 0;
   }
 
   protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id)
   {
     if (obj) {
-      obj();
+      obj (id);
       return 1;
     }
     return 0;
