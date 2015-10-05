@@ -19,6 +19,8 @@ LocaleString module_doc = LOCALE (0, #"
 </ul>
 </p>
 
+<p>The resource specifier \"_all\" can be used to map an operation over all resources (see examples below).</p>
+
 <p>Examples:
 <ul>
 <li>GET /rest/variables/ - list global variables</li>
@@ -33,11 +35,14 @@ LocaleString module_doc = LOCALE (0, #"
 <li>DELETE /rest/configurations/CMS/modules/yui!0/ - remove instance #0 of the YUI module in the configuration \"CMS\".</li>
 <li>PUT /rest/configurations/CMS/modules/yui!0/actions/Reload - Reload the YUI module.</li>
 <li>PUT /rest/configurations/CMS/modules/insite_editor!0/actions/Clear Persistent Cache - call action button \"Clear Persistent Cache \" in the Insite Editor module.</li>
+<li>PUT /rest/configurations/_all/modules/insite_editor!0/actions/Clear Persistent Cache - call action button \"Clear Persistent Cache \" in the Insite Editor module in all configurations.</li>
+<li>GET /rest/configurations/_all/modules/_all/variables/mountpoint - get the value of the \"mountpoint\" variable in all modules across all configurations.
 </ul>
 </p>
 ");
 
 constant module_type = MODULE_LOCATION;
+constant resource_all = 1;
 
 protected void create()
 {
@@ -45,44 +50,108 @@ protected void create()
           LOCALE(0, "Where the REST API is mounted."));
 }
 
+typedef object RESTObj;
+typedef mixed RESTValue;
+
 //! Base resource class. Inherit and override applicable methods.
 class RESTResource
 {
   array subresources = ({});
   protected mapping(string:RESTResource) sub_resource_map = ([]);
 
-  protected array(mixed) list (mixed parent, RequestID id);
-  protected mixed lookup_obj (string name, mixed parent, RequestID id);
-  protected mixed post_obj (string name, mixed value, mixed parent,
-			    RequestID id);
-  protected void delete_obj (string name, mixed parent, RequestID id);
-  protected mixed get_obj (mixed obj, RequestID id);
-  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id);
+  protected array(string|int) list (RESTObj parent, RequestID id);
+  protected RESTObj lookup_resource (string name, RESTObj parent, RequestID id);
+  protected RESTObj post_resource (string name, RESTObj parent, RequestID id);
+  protected void delete_resource (string name, RESTObj parent, RequestID id);
+  protected RESTValue get_obj (RESTObj obj, RESTObj parent, RequestID id);
+  protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
+			       void|RESTValue value);
 
-  mixed handle_resource (array(string) path, RequestID id, mixed client_data,
-			 int(0..1) envelope, mixed parent)
+  protected mapping(string:mixed)|array(mixed)
+  apply_resource (function func,
+		  int|string resource,
+		  RESTObj parent,
+		  RequestID id,
+		  int(0..1) tolerant)
+  {
+    string method = id->method;
+    if (functionp (func)) {
+      array(string) resource_list =
+	resource == resource_all ? list (parent, id) : ({ resource });
+
+      mapping(string:RESTObj|mapping) res = mkmapping (resource_list,
+			map (resource_list,
+			     lambda (string resource)
+			     {
+			       RESTObj res;
+			       if (mixed err = catch {
+				   res = func (resource, parent, id);
+				 }) {
+				 if (tolerant)
+				   return ([ "apply_error":
+					     describe_error (err) ]);
+				 throw (err);
+			       }
+
+			       return res;
+			     }));
+      return filter (res,
+		     lambda (RESTObj obj)
+		     { return !mappingp (obj) || !obj->apply_error; });
+    } else {
+      error ("Method \"%s\" not available here.\n", method);
+    }
+  }
+
+  mapping(string:mixed)|array(mapping(string:mixed))|mixed
+  handle_resource (array(string) path, RequestID id, mixed client_data,
+		   int(0..1) envelope, RESTObj parent,
+		   void|int(0..1) tolerant)
   {
     if (!sizeof (path))
-      return list (parent, id);
+      return list (parent, id) + ({ "_all" });
 
-    string resource_name = path[0];
-    mixed obj;
+    int|string resource = path[0];
+    if (resource == "_all")
+      resource = resource_all;
+
+    mapping(string:RESTObj) objs;
     string method = id->method;
 
     if (method == "GET" || method == "PUT" || sizeof (path) > 1) {
-      if (functionp (lookup_obj)) {
-	obj = lookup_obj (resource_name, parent, id);
-	if (!obj)
-	  error ("Resource \"%s\" not found.\n", resource_name);
-      } else {
+      if (functionp (lookup_resource))
+	objs = apply_resource (lookup_resource, resource, parent, id,
+			       (tolerant || resource == resource_all));
+      else
 	error ("Method \"%s\" not available here.\n", method);
-      }
     }
 
     if (sizeof (path) > 1) {
       if (RESTResource r = sub_resource_map[path[1]]) {
-	return r->handle_resource (path[2..], id, client_data, envelope,
-				   obj);
+	mapping(string:RESTObj) res =
+	  map (objs,
+	       lambda (RESTObj obj)
+	       {
+		 mixed res = r->handle_resource (path[2..], id, client_data,
+						 envelope, obj,
+						 (tolerant ||
+						  resource == resource_all));
+		 if (zero_type (res))
+		   ([ "apply_error": "No such resource." ]);
+
+		 return res;
+	       });
+	res = filter (res,
+		      lambda (RESTObj obj)
+		      { return !mappingp (obj) || !obj->apply_error; });
+
+	if (resource == resource_all)
+	  return res;
+
+	if (sizeof (res))
+	  return values(res)[0];
+
+	return ([ "apply_error": "No such resource." ]);
       } else {
 	error ("Resource \"%s\" not found.\n", path[1]);
       }
@@ -90,26 +159,26 @@ class RESTResource
     }
 
     if (method == "POST") {
-      if (functionp (post_obj)) {
-	obj = post_obj (resource_name, client_data, parent, id);
+      if (functionp (post_resource)) {
+	objs = apply_resource (post_resource, resource, parent, id, tolerant);
       } else {
 	error ("Method \"%s\" not available here.\n", method);
       }
     } else if (method == "DELETE") {
-      if (functionp (delete_obj)) {
-	delete_obj (resource_name, parent, id);
+      if (functionp (delete_resource)) {
+	objs = apply_resource (delete_resource, resource, parent, id, tolerant);
       } else {
 	error ("Method \"%s\" not available here.\n", method);
       }
     }
 
-    mixed value_res;
+    mapping(string:RESTValue) value_res;
     int got_value;
     int method_handled = 0;
     switch (method) {
     case "GET":
       if (functionp (get_obj)) {
-	value_res = get_obj (obj, id);
+	value_res = map (objs, get_obj, parent, id);
 	got_value = 1;
       } else if (!envelope) {
 	error ("Method \"%s\" not available here.\n", method);
@@ -117,13 +186,13 @@ class RESTResource
       break;
     case "POST":
       if (functionp (get_obj)) {
-	value_res = get_obj (obj, id);
+	value_res = map (objs, get_obj, parent, id);
 	got_value = 1;
       }
       break;
     case "PUT":
       if (functionp (put_obj)) {
-	value_res = put_obj (obj, client_data, parent, id);
+	value_res = map (objs, put_obj, parent, id, client_data);
 	got_value = 1;
 	method_handled = 1;
       } else {
@@ -142,7 +211,15 @@ class RESTResource
       return res;
     }
 
-    return value_res;
+    if (got_value) {
+      if (resource == resource_all)
+	return value_res;
+
+      if (sizeof (value_res))
+	return values(value_res)[0];
+    }
+
+    return ([ "apply_error": "No such resource." ]);
   }
 
   protected void create()
@@ -156,12 +233,12 @@ class RESTVariables
   inherit RESTResource;
   constant name = "variables";
 
-  protected array(string|int) list (mixed parent, RequestID id)
+  protected array(string) list (RESTObj parent, RequestID id)
   {
     return indices (parent->query());
   }
 
-  protected mixed lookup_obj (string name, mixed parent, RequestID id)
+  protected RESTObj lookup_resource (string name, RESTObj parent, RequestID id)
   {
     Variable.Variable var = parent->getvar (name);
     if (!var)
@@ -169,12 +246,20 @@ class RESTVariables
     return var;
   }
 
-  protected mixed get_obj (mixed obj, RequestID id)
+  protected RESTValue get_obj (RESTObj obj, RESTObj parent, RequestID id)
   {
-    return obj->query();
+    mixed res = obj->query();
+    if (objectp (res)) {
+      // ModuleChoice. Return module identifier.
+      Configuration conf = parent->my_configuration();
+      return conf->otomod[res];
+    }
+
+    return res;
   }
 
-  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id)
+  protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
+			       RESTValue value)
   {
     string err;
     mixed mangled_value;
@@ -182,7 +267,7 @@ class RESTVariables
     if (err) {
       error (err);
     } else {
-      if (obj->low_set (mangled_value))
+      if (obj->set (mangled_value))
 	parent->save();
       return mangled_value;
     }
@@ -194,7 +279,7 @@ class RESTModuleActions
   inherit RESTResource;
   constant name = "actions";
 
-  protected array(string) list (mixed parent, RequestID id)
+  protected array(string) list (RESTObj parent, RequestID id)
   {
     array(string) res = ({ "Reload" });
 
@@ -210,7 +295,7 @@ class RESTModuleActions
     return res;
   }
 
-  protected mixed lookup_obj (string name, mixed parent, RequestID id)
+  protected RESTObj lookup_resource (string name, RESTObj parent, RequestID id)
   {
     if (name == "Reload") {
       return lambda()
@@ -251,7 +336,8 @@ class RESTModuleActions
     return 0;
   }
 
-  protected mixed put_obj (mixed obj, mixed value, mixed parent, RequestID id)
+  protected RESTValue put_obj (RESTObj obj, RESTObj parent, RequestID id,
+			       void|RESTValue value)
   {
     if (obj) {
       obj (id);
@@ -277,13 +363,12 @@ class RESTModules
     return replace (s, "!", "#");
   }
 
-  protected array(string) list (mixed parent, RequestID id)
+  protected array(string) list (RESTObj parent, RequestID id)
   {
     return map (indices (parent->enabled_modules), encode_mod_name);
   }
 
-  protected mixed post_obj (string name, mixed value, mixed parent,
-			    RequestID id)
+  protected RESTObj post_resource (string name, RESTObj parent, RequestID id)
   {
     string module_name = decode_mod_name (name);
     ModuleInfo mod_info = roxen.find_module (module_name, 1);
@@ -294,19 +379,20 @@ class RESTModules
     return parent->enable_module (module_name, UNDEFINED, mod_info);
   }
 
-  protected void delete_obj (string name, mixed parent, RequestID id)
+  protected void delete_resource (string name, RESTObj parent, RequestID id)
   {
     string module_name = decode_mod_name (name);
     if (!parent->disable_module (module_name))
       error ("No such module %s.\n", module_name);
   }
 
-  protected mixed lookup_obj (string name, mixed parent, RequestID id)
+  protected RESTObj lookup_resource (string name, RESTObj parent, RequestID id)
   {
     string module_name = decode_mod_name (name);
     RoxenModule module = parent->find_module (module_name);
-    if (!module)
+    if (!module || module->not_a_module) {
       error ("No such module \"%s\".\n", name);
+    }
     return module;
   }
 }
@@ -317,12 +403,12 @@ class RESTConfigurations
   constant name = "configurations";
   array subresources = ({ RESTModules() });
 
-  protected array(string) list (mixed parent, RequestID id)
+  protected array(string) list (RESTObj parent, RequestID id)
   {
     return roxen.configurations->name;
   }
 
-  protected mixed lookup_obj (string name, RequestID id)
+  protected RESTObj lookup_resource (string name, RequestID id)
   {
     Configuration conf = roxen.get_configuration (name);
     if (!conf)
