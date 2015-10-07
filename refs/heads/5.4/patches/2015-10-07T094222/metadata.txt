@@ -1,0 +1,8 @@
+subject: Roxen 5.4: cimg: Add defvar for default arguments.
+from: cfaa1340235990dbe09f15dada71862e1f734490
+to: cb8e6f9ad4b607bc3751619b4e90b1bbbab962e9
+originator: wellhardh@roxen.com
+depends: 2015-09-24T145724
+restart: true
+
+cimg: Add defvar for default arguments.
