@@ -244,6 +244,12 @@ void create()
 			      "This is not necessary, but might seem "
 			      "nicer, especially to people who try "
 			      "to mirror your site."));
+  defvar ("default_args",
+	  Variable.Mapping (([]), 0,
+			    "Default Arguments",
+			    "Arguments to add implicitly to cimg/cimg-url/"
+			    "emit#cimg calls. Explicit arguments will take "
+			    "precedence over any arguments specified here."));
 }
 
 void start()
@@ -432,6 +438,7 @@ mapping get_my_args( mapping args, RequestID id )
 
 mapping check_args( mapping args )
 {
+  args = query ("default_args") + args;
   if( !args->format )
     args->format = "png";
   if( !(args->src || args->data) )
