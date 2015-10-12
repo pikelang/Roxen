@@ -108,11 +108,11 @@ mixed stat_file( string f, RequestID id )
   return ::stat_file(f,id);
 }
 
-mixed find_file( string f, RequestID id )
+mixed low_find_file( string f, RequestID id )
 {
   if(is_hidden(f))
     return 0;
-  
+
   //  Filter known security holes in SWF files in 2.4.0-2.8.1. These are
   //  permanently disabled since Roxen itself has no use of it, and
   //  shipping newer versions will not replace already expanded tar files.
@@ -134,14 +134,49 @@ mixed find_file( string f, RequestID id )
       //
       //  More info at <http://yuilibrary.com/support/2.8.2/>.
       if (has_value(lc_f, "charts.swf") ||
-	  has_value(lc_f, "swfstore.swf") ||
-	  has_value(lc_f, "uploader.swf"))
-	return 0;
+          has_value(lc_f, "swfstore.swf") ||
+          has_value(lc_f, "uploader.swf"))
+        return 0;
     }
   }
 #endif
-  
-  mixed m = ::find_file(f,id);
+
+  return ::find_file(f,id);
+}
+
+mixed handle_combo(RequestID id)
+{
+  string data = "";
+  string type;
+
+  foreach(id->query / "&" - ({ "" }), string f) {
+    mixed fid = low_find_file(f, id);
+
+    if (!fid) continue;
+
+    if (fid->file) {
+      data += fid->file->read();
+    }
+    if (fid->type) {
+      type = fid->type;
+    }
+  }
+
+  return ([
+    "data" : data,
+    "type" : type,
+  ]);
+}
+
+mixed find_file( string f, RequestID id )
+{
+  mixed m;
+  if (f == "combo")
+    m = handle_combo(id);
+  else
+    m = low_find_file(f, id);
+
+  if (!m) return 0;
 
   id->set_response_header ("Cache-Control",
 			   sprintf ("public, max-age=%d", EXPIRE_TIME));
@@ -153,7 +188,7 @@ mixed find_file( string f, RequestID id )
 void create()
 {
   ::create();
-  
+
   defvar("mountpoint", "/yui/", LOCALE(15,"Mount point"),
 	 TYPE_LOCATION,
 	 LOCALE(16,"Where the module will be mounted in the site's virtual "
@@ -173,4 +208,3 @@ string query_name()
   sscanf ((string) module_name, "%*s:%*[ ]%s", string name);
   return name;
 }
-
