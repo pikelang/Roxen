@@ -8,7 +8,7 @@ class BaseLogger {
 
   enum {
     TRACE = 10,
-    DEBUG = 20,
+    DBG = 20,
     INFO = 30,
     WARN = 40,
     ERROR = 50,
