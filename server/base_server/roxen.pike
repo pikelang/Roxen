@@ -513,6 +513,7 @@ private void really_low_shutdown(int exit_code)
     })
     master()->handle_error (err);
 #endif
+  destruct(main_logger);
   roxenloader.real_exit( exit_code ); // Now we die...
 }
 
@@ -945,6 +946,19 @@ local protected void handler_thread(int id)
 
 	  int start_hrtime = gethrtime();
 	  thread_task_start_times[this_thread()] = start_hrtime;
+
+	  mapping log_entry = ([
+	    "thread_id" : sprintf("0x%X", this_thread()->id_number()),
+	    "event"     : "BEGIN_HANDLE",
+	    "hrtime"    : start_hrtime,
+	  ]);
+
+	  object tmp = functionp(h[0]) && function_object(h[0]);
+	  if (tmp && has_index(tmp, "request_uuid")) {
+	    log_entry->rid = tmp->request_uuid;
+	  }
+	  main_logger->log(log_entry);
+
 	  float handler_vtime = gauge {
 #ifndef NO_SLOW_REQ_BT
 	      if (h[0] != bg_process_queue &&
@@ -962,7 +976,13 @@ local protected void handler_thread(int id)
 		  h[0](@h[1]);
 		}
 	    };
-	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
+	  int end_hrtime = gethrtime();
+	  log_entry->event = "END_HANDLE";
+	  log_entry->hrtime = end_hrtime;
+	  log_entry->real_time = end_hrtime - start_hrtime;
+	  main_logger->log(log_entry);
+
+	  float handler_rtime = (end_hrtime - start_hrtime)/1E6;
 	  thread_task_start_times[this_thread()] = 0;
 
 #ifndef NO_SLOW_REQ_BT
