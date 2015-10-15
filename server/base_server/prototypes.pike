@@ -326,6 +326,14 @@ class Configuration
   mapping(string:int(1..1)) enabled_modules = ([]);
   mapping(string:array(int)) error_log=([]);
 
+  // The Configration logger class - allows overrides of the SocketLogger if needed.
+  class ConfigurationLogger {
+    inherit Logger.SocketLogger;
+  }
+
+  // Logger instance for this configuration.
+  object cfg_js_logger;
+
 #ifdef PROFILE
   mapping(string:array(int)) profile_map = ([]);
 #endif
@@ -1198,7 +1206,54 @@ class RequestID
   //! @endignore
 #endif
 
+  // Generator for unique request UUIDs on the fly.
+  protected string _request_uuid;
+  string `request_uuid() {
+    return _request_uuid || (_request_uuid = Standards.UUID.make_version4()->str());
+  };
+  void `request_uuid=(mixed v) {
+    _request_uuid = (string)v;
+  };
+
+  // Logger class for requests. Intended to have a parent logger in
+  // the parent request or its configuration.
+  class RequestLogger {
+    inherit Logger.BaseLogger;
+
+    void log(mapping|string data) {
+      // We find our parent logger by checking misc mapping, root
+      // request and finally configuration object.
+      //
+      // NOTE: We do not fall back to the global main_logger here as a
+      // design choice.
+      parent_logger = parent_logger ||
+	(misc->orig && misc->orig->req_js_logger) ||
+	(objectp(root_id) && root_id->req_js_logger != this && root_id->req_js_logger) ||
+	(conf && conf->cfg_js_logger);
+
+      if (!parent_logger) {
+	return; // Nowhere to log...
+      }
+
+      ::log(data);
+    }
+
+    mapping merge_defaults(mapping msg) {
+      // We always want the hrtime from the request as well as the thread id.
+      msg = msg + ([
+	"time"      : predef::time(),
+      // We want the current hrtime, not the start of the request...
+	"hrtime"    : gethrtime(),
+      ]);
+
+      msg->rid = request_uuid;
+
+      return ::merge_defaults(msg);
+    }
+  }
+
   Configuration conf;
+  object req_js_logger = RequestLogger();
 
   Protocol port_obj;
   //! The port object this request came from.
@@ -1563,6 +1618,10 @@ class RequestID
     {
       return fmt == 'O' && sprintf("CookieJar(%O)" + OBJ_COUNT,
 				   RequestID::this && real_cookies);
+    }
+
+    string encode_json(int flags) {
+      return Standards.JSON.encode(real_cookies);
     }
   }
 
