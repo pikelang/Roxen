@@ -1221,8 +1221,8 @@ class RequestID
 
   // Logger class for requests. Intended to have a parent logger in
   // the parent request or its configuration.
-  class RequestLogger {
-    inherit Logger.BaseLogger;
+  class RequestJSONLogger {
+    inherit Logger.BaseJSONLogger;
 
     void log(mapping|string data) {
       // We find our parent logger by checking misc mapping, root
@@ -1257,7 +1257,7 @@ class RequestID
   }
 
   Configuration conf;
-  object json_logger = RequestLogger();
+  object json_logger = RequestJSONLogger("server/handler", UNDEFINED);
 
   Protocol port_obj;
   //! The port object this request came from.

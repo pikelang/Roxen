@@ -4692,7 +4692,7 @@ protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 
-  json_logger = ConfigurationLogger(([ ]), UNDEFINED);
+  json_logger = ConfigurationLogger(combine_path_unix("conf", name), ([ ]), UNDEFINED);
 
 //   int st = gethrtime();
   roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
