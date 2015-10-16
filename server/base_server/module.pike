@@ -45,6 +45,19 @@ private string _module_identifier =
   }();
 protected mapping _api_functions = ([]);
 
+class ModuleJSONLogger {
+  inherit Logger.BaseJSONLogger;
+
+  void create(object parent_config) {
+    string name = combine_path_unix(parent_config->json_logger->logger_name,
+				    module_local_id());
+    ::create(name, UNDEFINED, parent_config->json_logger);
+  }
+}
+
+// Module local JSON logger
+private ModuleJSONLogger json_logger;
+
 string|array(string) module_creator;
 string module_url;
 RXML.TagSet module_tag_set;
@@ -80,6 +93,37 @@ void log_event (string facility, string action, string resource,
 {
   _my_configuration->log_event (facility || _module_local_identifier,
 				action, resource, info);
+}
+
+void json_log_trace(string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.TRACE); }
+void json_log_debug(string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.DBG); }
+void json_log_info (string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.INFO); }
+void json_log_warn (string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.WARN); }
+void json_log_error(string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.ERROR); }
+void json_log_fatal(string|mapping log_msg) { json_log_with_level(log_msg, Logger.BaseJSONLogger.FATAL); }
+
+// Helper method to force a specific logging level
+void json_log_with_level(string|mapping log_msg, int level) {
+  if (stringp(log_msg)) {
+    log_msg = ([
+      "msg" : log_msg,
+    ]);
+  }
+  log_msg->level = level;
+  json_log(log_msg);
+}
+
+// Log a message more or less verbatim via the JSON logger infrastructure
+void json_log(string|mapping log_msg) {
+  if (stringp(log_msg)) {
+    log_msg = ([
+      "msg" : log_msg,
+    ]);
+  }
+
+  if (json_logger && functionp(json_logger->log)) {
+    json_logger->log(log_msg);
+  }
 }
 
 string module_identifier()
@@ -207,6 +251,9 @@ final void set_configuration(Configuration c)
   if(_my_configuration && _my_configuration != c)
     error("set_configuration() called twice.\n");
   _my_configuration = c;
+
+  // if configuration changes, we should reinitialize our JSON logger too!
+  json_logger = ModuleJSONLogger(_my_configuration);
 }
 
 void set_module_creator(string|array(string) c)

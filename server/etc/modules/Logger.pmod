@@ -1,8 +1,14 @@
 //! Your average base class for loggers. This one outputs by default
 //! to stderr using the Roxen werror() method.
-class BaseLogger {
+class BaseJSONLogger {
+  constant BUNYAN_VERSION = 0;
+
   object parent_logger;
-  mapping defaults = ([
+  string logger_name = "unknown";
+  string hostname = (functionp(System.gethostname) && System.gethostname()) || "unknown";
+  int pid = System.getpid();
+
+  mapping|function defaults = ([
     "level" : INFO,
   ]);
 
@@ -16,12 +22,16 @@ class BaseLogger {
   };
 
   int default_log_level = INFO;
+  int drop_messages_below = 0;
 
   //! Override to allow early bailout in @[log()] if noone is
   //! listening. @[log()] will bail out if this method returns 0.
-  int should_log() {
+  int should_log(string|mapping msg) {
+    int level = (stringp(msg) && default_log_level) || msg->level || default_log_level;
+    if (level < drop_messages_below) return 0;
+
     if (parent_logger)
-      return parent_logger->should_log();
+      return parent_logger->should_log(msg);
 
     return 1;
   }
@@ -37,6 +47,19 @@ class BaseLogger {
     string res = Standards.JSON.encode(data);
   }
 
+
+  // Generate timestamps in ISO8601 extended format for Bunyan compatibility.
+  string get_bunyan_timestamp() {
+    array(int) tod = System.gettimeofday();
+    mapping gt = gmtime(tod[0]);
+    string ret = sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+			 1900 + gt->year, 1+gt->mon, gt->mday,
+			 gt->hour, gt->min, gt->sec,
+			 tod[1]/1000);
+
+    return ret;
+  }
+
   //! Override this method to implement custom merging of data into
   //! messages.
   //!
@@ -45,7 +68,16 @@ class BaseLogger {
   //! current time etc) is needed, overriding this method is your best
   //! bet.
   protected mapping merge_defaults(mapping msg) {
-    return defaults | msg;
+    mapping ret = ((functionp(defaults) && defaults()) || defaults) | msg;
+
+    // Now we ensure fields expected by Bunyan exists
+    ret->v = BUNYAN_VERSION;
+    ret->name = ret->name || logger_name;
+    ret->hostname = hostname;
+    ret->pid = pid;
+    ret->time = get_bunyan_timestamp();
+    ret->msg = ret->msg || "";
+    return ret;
   }
 
   //! Log an entry using this logger.
@@ -56,7 +88,7 @@ class BaseLogger {
   //! Overriding this method should not be needed.
   void log(mapping|string data) {
     // Check for early bailout
-    if (!should_log()) {
+    if (!should_log(data)) {
       return;
     }
 
@@ -72,6 +104,14 @@ class BaseLogger {
     }
   }
 
+  void set_name(void|string name) {
+    logger_name = name || "unknown";
+  }
+
+  void set_defaults(void|function|mapping new_defaults) {
+    defaults = new_defaults || ([]);
+  }
+
   //! Default parameter mapping and a parent logger object.
   //!
   //! The @[parent_logger] object is used to pass any log messages
@@ -79,13 +119,15 @@ class BaseLogger {
   //! does not log at it's own level if a parent logger is given. Instead,
   //! it will simply add its defaults and pass the complete log entry up
   //! to the parent which is then responsible for handling the actual logging.
-  void create(void|mapping|function defaults, void|object parent_logger) {
-    this_program::defaults = defaults || ([]);
+  void create(void|string logger_name, void|mapping|function defaults, void|object parent_logger) {
+    set_defaults(defaults);
     this_program::parent_logger = parent_logger;
+    set_name(logger_name);
   }
 
-  this_program child(void|mapping|function defaults) {
-    this_program new_logger = object_program(this)(defaults, this);
+  this_program child(string logger_name, void|mapping|function defaults) {
+    logger_name = combine_path_unix(this_program::logger_name, logger_name);
+    this_program new_logger = object_program(this)(logger_name, defaults, this);
     return new_logger;
   }
 }
@@ -97,7 +139,7 @@ class BaseLogger {
 // disk. destroy() will also take care of this, but isn't always
 // called on cleanup.
 class SocketLogger {
-  inherit Logger.BaseLogger;
+  inherit Logger.BaseJSONLogger;
 
   multiset(object) listeners = (<>);
   array(object) ports;
@@ -163,9 +205,9 @@ class SocketLogger {
     }
   };
 
-  int should_log() {
+  int should_log(string|mapping msg) {
     // If noone is listening there is no point in doing any work.
-    return sizeof(listeners);
+    return ::should_log(msg) && sizeof(listeners);
   }
 
   void do_log(mapping entry) {
@@ -258,8 +300,19 @@ class SocketLogger {
     }
   }
 
-  void create(void|mapping defaults, void|object parent_logger, void|string socket_path) {
-    ::create(defaults, parent_logger);
+  //
+  // We override the child() method because children should not have
+  // their own listening sockets - they should just relay messages to
+  // us...
+  //
+  BaseJSONLogger child(string logger_name, void|mapping|function defaults) {
+    logger_name = combine_path_unix(this_program::logger_name, logger_name);
+    BaseJSONLogger new_logger = BaseJSONLogger(logger_name, defaults, this);
+    return new_logger;
+  }
+
+  void create(string logger_name, void|mapping defaults, void|object parent_logger, void|string socket_path) {
+    ::create(logger_name, defaults, parent_logger);
 
     if (socket_path) {
       bind(socket_path);
@@ -268,21 +321,5 @@ class SocketLogger {
 
   void destroy() {
     unbind_all();
-  }
-}
-
-class MainLogger {
-  inherit Logger.SocketLogger;
-
-  mapping merge_defaults(mapping msg) {
-    mapping tmp = ([
-      "time" : time(),
-    ]);
-
-    return ::merge_defaults(msg) | tmp;
-  }
-
-  void create() {
-    ::create(0,0,"*:7702");
   }
 }
