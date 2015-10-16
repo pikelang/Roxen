@@ -4658,7 +4658,7 @@ void low_init(void|int modules_already_enabled)
 DataCache datacache;
 
 // Handle changes in js logger endpoints
-void js_log_endpoint_cb(object v) {
+void json_log_endpoint_cb(object v) {
   if (!json_logger) return;
 
   array new_endpoints = v->query();
@@ -4670,6 +4670,12 @@ void js_log_endpoint_cb(object v) {
   foreach(new_endpoints, string ep) {
     if (!ep || (ep == "")) continue;
     ep = roxen_path(ep);
+    string json_log_dir = combine_path(getcwd(), roxen.query_configuration_dir(), "_jsonlog");
+    if (!Stdio.exist(json_log_dir)) {
+      mkdir(json_log_dir, 0700);
+    }
+    ep = replace(ep, "$JSONLOGDIR", json_log_dir);
+
     if (!obsolete[ep]) {
       json_logger->bind(ep);
     }
@@ -5147,10 +5153,11 @@ below.</p>
 		 "the access counter log."), 
 	 0, lambda(){ return !query("Log");});
 
-  defvar("JSLogEndpoints", ({ "$LOGDIR/" + Roxen.short_name(name) + ".jslog" }),
-	 DLOCALE(0, "Logging: JS Logging endpoints"), TYPE_STRING_LIST,
-	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration"))
-    ->add_changed_callback(js_log_endpoint_cb);
+  defvar("JSONLogEndpoints", ({ "$JSONLOGDIR/" + Roxen.short_name(name) + ".jsonlog" }),
+	 DLOCALE(0, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
+	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration. "
+		 "$JSONLOGDIR will expand to <configuration directory>/_jsonlog where sockets should be reasonably secure."))
+    ->add_changed_callback(json_log_endpoint_cb);
 
   defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
 	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
