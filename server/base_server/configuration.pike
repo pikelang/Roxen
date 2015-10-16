@@ -720,7 +720,7 @@ void stop (void|int asynch)
   }
 
   if (!asynch) stop_all_modules_mutex->lock (1);
-  destruct(cfg_js_logger);
+  destruct(json_logger);
 }
 
 string|array(string) type_from_filename( string file, int|void to,
@@ -4659,10 +4659,10 @@ DataCache datacache;
 
 // Handle changes in js logger endpoints
 void js_log_endpoint_cb(object v) {
-  if (!cfg_js_logger) return;
+  if (!json_logger) return;
 
   array new_endpoints = v->query();
-  array old_endpoints = cfg_js_logger->get_bound_ports();
+  array old_endpoints = json_logger->get_bound_ports();
 
   multiset obsolete = (multiset)old_endpoints;
 
@@ -4671,14 +4671,14 @@ void js_log_endpoint_cb(object v) {
     if (!ep || (ep == "")) continue;
     ep = roxen_path(ep);
     if (!obsolete[ep]) {
-      cfg_js_logger->bind(ep);
+      json_logger->bind(ep);
     }
     obsolete[ep] = 0;
   }
 
   foreach((array)obsolete, string ep) {
     if (!ep || (ep == "")) continue;
-    cfg_js_logger->unbind(ep);
+    json_logger->unbind(ep);
   }
 }
 
@@ -4686,7 +4686,7 @@ protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 
-  cfg_js_logger = ConfigurationLogger(([ ]), UNDEFINED);
+  json_logger = ConfigurationLogger(([ ]), UNDEFINED);
 
 //   int st = gethrtime();
   roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );

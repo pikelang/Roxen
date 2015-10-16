@@ -332,7 +332,7 @@ class Configuration
   }
 
   // Logger instance for this configuration.
-  object cfg_js_logger;
+  object json_logger;
 
 #ifdef PROFILE
   mapping(string:array(int)) profile_map = ([]);
@@ -1233,7 +1233,7 @@ class RequestID
       parent_logger = parent_logger ||
 	(misc->orig && misc->orig->req_js_logger) ||
 	(objectp(root_id) && root_id->req_js_logger != this && root_id->req_js_logger) ||
-	(conf && conf->cfg_js_logger);
+	(conf && conf->json_logger);
 
       if (!parent_logger) {
 	return; // Nowhere to log...
