@@ -1231,8 +1231,8 @@ class RequestID
       // NOTE: We do not fall back to the global main_logger here as a
       // design choice.
       parent_logger = parent_logger ||
-	(misc->orig && misc->orig->req_js_logger) ||
-	(objectp(root_id) && root_id->req_js_logger != this && root_id->req_js_logger) ||
+	(misc->orig && misc->orig->json_logger) ||
+	(objectp(root_id) && root_id->json_logger != this && root_id->json_logger) ||
 	(conf && conf->json_logger);
 
       if (!parent_logger) {
@@ -1257,7 +1257,7 @@ class RequestID
   }
 
   Configuration conf;
-  object req_js_logger = RequestLogger();
+  object json_logger = RequestLogger();
 
   Protocol port_obj;
   //! The port object this request came from.
