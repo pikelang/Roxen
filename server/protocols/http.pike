@@ -873,7 +873,7 @@ private int parse_got( string new_data )
     do {
       mapping tmp = ([
 	"event"  : "BEGIN_REQUEST",
-	"tid"    : sprintf("0x%X", this_thread()->id_number()),
+	"tid"    : this_thread()->id_number(),
 	"remote" : remoteaddr,
       ]);
 
@@ -883,7 +883,7 @@ private int parse_got( string new_data )
 	tmp->prid = root_id->request_uuid;
 	werror("Subrequest detected!\n");
       }
-      req_js_logger->log(tmp);
+      json_logger->log(tmp);
     } while(0);
 
 
@@ -980,7 +980,7 @@ private int parse_got( string new_data )
       }
     }
 
-    req_js_logger->log(([
+    json_logger->log(([
 			 "event"       : "GOT_HEADERS",
 			 "headers"     : request_headers,
 			 "prot"        : prot,
@@ -1899,7 +1899,7 @@ void do_log( int|void fsent )
 
       conf->log(file, this_object());
 
-      req_js_logger->log(([
+      json_logger->log(([
 			   "event" : "LOG_REQUEST",
 			   "htime" : handle_time,
 			   "qtime" : queue_time,
@@ -2552,7 +2552,7 @@ void send_result(mapping|void result)
 {
   TIMER_START(send_result);
 
-  req_js_logger->log(([
+  json_logger->log(([
 		       "event"       : "SEND_RESULT_BEGIN",
 		     ]));
 
@@ -2614,7 +2614,7 @@ void send_result(mapping|void result)
   {
     if((file->file == -1) || file->leave_me)
     {
-      req_js_logger->log(([
+      json_logger->log(([
 			   "event"       : "SEND_RESULT_END",
 			   "msg"         : "No result",
 			 ]));
@@ -3057,12 +3057,12 @@ void handle_request()
 
   REQUEST_WERR("HTTP: handle_request()");
   TIMER_START(handle_request);
-  req_js_logger->log(([
+  json_logger->log(([
 		       "event" : "HANDLE_REQUEST_BEGIN",
 		       "qtime" : queue_time,
 		     ]));
 #ifdef TIMERS
-#define LOG_HANDLE_END() do { req_js_logger->log((["event" : "HANDLE_REQUEST_END", "handle_time" : timers->handle_request ])); } while(0)
+#define LOG_HANDLE_END() do { json_logger->log((["event" : "HANDLE_REQUEST_END", "handle_time" : timers->handle_request ])); } while(0)
 #else
 #define LOG_HANDLE_END()
 #endif
@@ -3131,7 +3131,7 @@ void handle_request()
     if (result && result->pipe) {
       REQUEST_WERR("HTTP: handle_request: pipe in progress.");
       TIMER_END(handle_request);
-      req_js_logger->log(([
+      json_logger->log(([
 			   "event" : "PIPE_BEGIN",
 			 ]));
       LOG_HANDLE_END();
@@ -3347,7 +3347,7 @@ void got_data(mixed fooid, string s, void|int chained)
 
     TIMER_END(find_conf);
 
-    req_js_logger->log(([
+    json_logger->log(([
 			 "event"       : "GOT_REQUEST",
 			 "data_length" : strlen(data),
 			 "path"        : path,
@@ -3715,7 +3715,7 @@ void got_data(mixed fooid, string s, void|int chained)
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
     queue_length = roxen.handle_queue_length();
-    req_js_logger->log(([
+    json_logger->log(([
 			 "event"   : "ENTER_QUEUE",
 			 "qlen"    : queue_length,
 			 "vars"    : real_variables,

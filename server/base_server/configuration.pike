@@ -735,7 +735,7 @@ void stop (void|int asynch)
   }
 
   if (!asynch) stop_all_modules_mutex->lock (1);
-  destruct(cfg_js_logger);
+  destruct(json_logger);
 }
 
 string|array(string) type_from_filename( string file, int|void to,
@@ -4704,11 +4704,11 @@ void low_init(void|int modules_already_enabled)
 DataCache datacache;
 
 // Handle changes in js logger endpoints
-void js_log_endpoint_cb(object v) {
-  if (!cfg_js_logger) return;
+void json_log_endpoint_cb(object v) {
+  if (!json_logger) return;
 
   array new_endpoints = v->query();
-  array old_endpoints = cfg_js_logger->get_bound_ports();
+  array old_endpoints = json_logger->get_bound_ports();
 
   multiset obsolete = (multiset)old_endpoints;
 
@@ -4716,15 +4716,21 @@ void js_log_endpoint_cb(object v) {
   foreach(new_endpoints, string ep) {
     if (!ep || (ep == "")) continue;
     ep = roxen_path(ep);
+    string json_log_dir = combine_path(getcwd(), roxen.query_configuration_dir(), "_jsonlog");
+    if (!Stdio.exist(json_log_dir)) {
+      mkdir(json_log_dir, 0700);
+    }
+    ep = replace(ep, "$JSONLOGDIR", json_log_dir);
+
     if (!obsolete[ep]) {
-      cfg_js_logger->bind(ep);
+      json_logger->bind(ep);
     }
     obsolete[ep] = 0;
   }
 
   foreach((array)obsolete, string ep) {
     if (!ep || (ep == "")) continue;
-    cfg_js_logger->unbind(ep);
+    json_logger->unbind(ep);
   }
 }
 
@@ -4732,7 +4738,7 @@ protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 
-  cfg_js_logger = ConfigurationLogger(([ ]), UNDEFINED);
+  json_logger = ConfigurationLogger(combine_path_unix("conf", name), ([ ]), UNDEFINED);
 
 //   int st = gethrtime();
   roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
@@ -5208,10 +5214,11 @@ below.</p>
 		 "the access counter log."), 
 	 0, lambda(){ return !query("Log");});
 
-  defvar("JSLogEndpoints", ({ "$LOGDIR/" + Roxen.short_name(name) + ".jslog" }),
-	 DLOCALE(0, "Logging: JS Logging endpoints"), TYPE_STRING_LIST,
-	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration"))
-    ->add_changed_callback(js_log_endpoint_cb);
+  defvar("JSONLogEndpoints", ({ "$JSONLOGDIR/" + Roxen.short_name(name) + ".jsonlog" }),
+	 DLOCALE(0, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
+	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration. "
+		 "$JSONLOGDIR will expand to <configuration directory>/_jsonlog where sockets should be reasonably secure."))
+    ->add_changed_callback(json_log_endpoint_cb);
 
   defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
 	 TYPE_STRING|VAR_PUBLIC|VAR_NO_DEFAULT,
