@@ -877,7 +877,7 @@ private int parse_got( string new_data )
     do {
       mapping tmp = ([
 	"event"  : "BEGIN_REQUEST",
-	"tid"    : sprintf("0x%X", this_thread()->id_number()),
+	"tid"    : this_thread()->id_number(),
 	"remote" : remoteaddr,
       ]);
 
