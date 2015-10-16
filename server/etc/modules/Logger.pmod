@@ -50,7 +50,12 @@ class BaseJSONLogger {
 
   // Generate timestamps in ISO8601 extended format for Bunyan compatibility.
   string get_bunyan_timestamp() {
-    array(int) tod = System.gettimeofday();
+    array(int) tod;
+#if constant(System.gettimeofday)
+    tod = System.gettimeofday();
+#else
+    tod = ({ time(1), 0, 0 });
+#endif
     mapping gt = gmtime(tod[0]);
     string ret = sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
 			 1900 + gt->year, 1+gt->mon, gt->mday,
