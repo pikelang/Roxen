@@ -1245,7 +1245,6 @@ class RequestID
     mapping merge_defaults(mapping msg) {
       // We always want the hrtime from the request as well as the thread id.
       msg = msg + ([
-	"time"      : predef::time(),
       // We want the current hrtime, not the start of the request...
 	"hrtime"    : gethrtime(),
       ]);
