@@ -1477,9 +1477,6 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
-  Logger.MainLogger main_logger = Logger.MainLogger();
-  add_constant("main_logger", main_logger);
-
   // For Pike 7.3
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.

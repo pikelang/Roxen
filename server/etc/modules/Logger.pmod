@@ -270,19 +270,3 @@ class SocketLogger {
     unbind_all();
   }
 }
-
-class MainLogger {
-  inherit Logger.SocketLogger;
-
-  mapping merge_defaults(mapping msg) {
-    mapping tmp = ([
-      "time" : time(),
-    ]);
-
-    return ::merge_defaults(msg) | tmp;
-  }
-
-  void create() {
-    ::create(0,0,"*:7702");
-  }
-}
