@@ -22,12 +22,16 @@ class BaseJSONLogger {
   };
 
   int default_log_level = INFO;
+  int drop_messages_below = 0;
 
   //! Override to allow early bailout in @[log()] if noone is
   //! listening. @[log()] will bail out if this method returns 0.
-  int should_log() {
+  int should_log(string|mapping msg) {
+    int level = (stringp(msg) && default_log_level) || msg->level || default_log_level;
+    if (level < drop_messages_below) return 0;
+
     if (parent_logger)
-      return parent_logger->should_log();
+      return parent_logger->should_log(msg);
 
     return 1;
   }
@@ -84,7 +88,7 @@ class BaseJSONLogger {
   //! Overriding this method should not be needed.
   void log(mapping|string data) {
     // Check for early bailout
-    if (!should_log()) {
+    if (!should_log(data)) {
       return;
     }
 
@@ -121,8 +125,9 @@ class BaseJSONLogger {
     set_name(logger_name);
   }
 
-  this_program child(void|mapping|function defaults) {
-    this_program new_logger = object_program(this)(defaults, this);
+  this_program child(string logger_name, void|mapping|function defaults) {
+    logger_name = combine_path_unix(this_program::logger_name, logger_name);
+    this_program new_logger = object_program(this)(logger_name, defaults, this);
     return new_logger;
   }
 }
@@ -200,9 +205,9 @@ class SocketLogger {
     }
   };
 
-  int should_log() {
+  int should_log(string|mapping msg) {
     // If noone is listening there is no point in doing any work.
-    return sizeof(listeners);
+    return ::should_log(msg) && sizeof(listeners);
   }
 
   void do_log(mapping entry) {
@@ -293,6 +298,17 @@ class SocketLogger {
     foreach(ports_by_path; string path; object port) {
       unbind(port);
     }
+  }
+
+  //
+  // We override the child() method because children should not have
+  // their own listening sockets - they should just relay messages to
+  // us...
+  //
+  BaseJSONLogger child(string logger_name, void|mapping|function defaults) {
+    logger_name = combine_path_unix(this_program::logger_name, logger_name);
+    BaseJSONLogger new_logger = BaseJSONLogger(logger_name, defaults, this);
+    return new_logger;
   }
 
   void create(string logger_name, void|mapping defaults, void|object parent_logger, void|string socket_path) {
