@@ -58,6 +58,11 @@ class Relay
     {
       switch( i )
       {
+      case "accept-encoding": 
+	// We need to support the stuff we pass on in the proxy
+	// otherwise we might end up with things like double
+	// gzipped data.
+	 break;
        case "connection": /* We do not support keep-alive yet. */
 	 res->Connection = "close";
          break;
