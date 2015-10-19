@@ -148,19 +148,36 @@ class Relay
     string do_rewrite( string what )
     {
       Parser.HTML p = Parser.HTML();
+      p->xml_tag_syntax(1);
 
-      function rewrite_what( string elem )
-      {
-	return lambda( string t, mapping a ) {
-		 if( a[elem] )
-		   a[elem] = rewrite( a[elem] );
-		 return ({Roxen.make_tag( p->tag_name(), a, 1 )});
-	       };
-      };
-       p->add_tag( "a", rewrite_what("href") );
-       p->add_tag( "img", rewrite_what("src") );
-       p->add_tag( "form", rewrite_what("action") );
-       return p->finish( what )->read();
+      p->_set_tag_callback( lambda(object p, string s) {
+			      string tag_name = p->tag_name();
+			      string rewrite_arg = 0;
+			      switch(tag_name) {
+			      case "a":
+				rewrite_arg = "href";
+				break;
+			      case "img":
+				rewrite_arg = "src";
+				break;
+			      case "form":
+				rewrite_arg = "action";
+				break;
+			      }
+			      if(rewrite_arg) {
+				mapping args = p->tag_args();
+				if(string val = args[rewrite_arg]) {
+				  string new_val = rewrite(val);
+				  if( val != new_val) {
+				    int is_closed = has_suffix(s,"/>");
+				    args[rewrite_arg] = new_val;
+				    return ({ Roxen.make_tag(tag_name, args, is_closed) });
+				  }
+				}
+			      }
+			    });
+
+      return p->finish( what )->read();
     };
 
 
