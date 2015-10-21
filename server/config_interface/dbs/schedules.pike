@@ -60,12 +60,20 @@ mapping|string parse( RequestID id )
     "</th><th align='left'>" + _(1029, "Time") +
     "</th><th align='left'>" + _(1030, "Generations") +
     "</th><th align='left'>" + _(1031, "Method") +
-    "</th></tr>\n";
+    "</th><th></th></tr>\n";
 
   foreach(db->query("SELECT id, schedule, period, offset, dir, "
 		    "       generations, method "
 		    "  FROM db_schedules "
 		    " ORDER BY id ASC"), mapping(string:string) schedule) {
+
+    if (schedule->id != "1") {
+      if (id->variables["delete-" + schedule->id + ".x"]) {
+	db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
+	continue;
+      }
+    }
+
     int period = (int)schedule->period;
     int offset = (int)schedule->offset;
     if (period) offset %= period;
@@ -124,7 +132,8 @@ mapping|string parse( RequestID id )
       "' />"
       "</td><td align='right'>";
     if (schedule->id != "1") {
-      res += "&nbsp;";
+      res += "<submit-gbutton name='delete-" + schedule->id + "'>" +
+	_(0, "Delete") + "</submit-gbutton>";
     } else {
       res += "<submit-gbutton name='new'>" + _(0, "New") + "</submit-gbutton>";
     }
