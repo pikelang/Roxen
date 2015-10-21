@@ -1,0 +1,38 @@
+subject: Roxen 5.4: Multiple fixes:
+from: cb8e6f9ad4b607bc3751619b4e90b1bbbab962e9
+to: 36e9fbd059235014b86850ad8530403ef6089d78
+originator: wellhardh@roxen.com
+depends: 2015-10-07T094222
+restart: true
+
+Multiple fixes:
+
+  * Fix for double zipped data
+
+  * Fix for erroneously closing tags during rewrite
+
+  * Static Resource: Don't attempt to stat paths with a leading double slash.
+    
+    In URL contexts, a leading double slash means protocol-relative link.
+
+  * DBManager: Default to not backing up external databases.
+    
+    Fixes some of [bug 7581].
+
+  * DBManager: Added db_schedule().
+    
+    Adds an API to get the name of the backup schedule for a database.
+
+  * DBs: List the backup schedules for the databases.
+
+  * DBs: Added interface to change the backup schedule for a db.
+    
+    Fixes some more of [bug 7581].
+
+  * DBs: Added interface to add new backup schedules.
+    
+    Also adds back the cancel button to the backup schedule browser.
+
+  * DBs: Added button to delete backup schedules.
+
+  * DBs: Implemented renaming of backup schedules.
