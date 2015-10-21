@@ -385,7 +385,7 @@ class CacheManager
     int startup = tot_period < cm_stats_avg_period;
     if (!startup) tot_period = (float) cm_stats_avg_period;
 
-    float our_weight = min (last_period / tot_period, 1.0);
+    float our_weight = min (tot_period != 0.0 && last_period / tot_period, 1.0);
     float old_weight = 1.0 - our_weight;
 
     if (startup) {
