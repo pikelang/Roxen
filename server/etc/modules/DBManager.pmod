@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.99 2010/11/25 10:34:18 grubba Exp $
+// $Id$
 
 //! Manages database aliases and permissions
 
@@ -2090,11 +2090,12 @@ void create_db( string name, string path, int is_internal,
 	   "VALUES (%s, %s, %s)",
 	   name, (is_internal?name:path), (is_internal?"1":"0") );
   }
-  if (!is_internal && !has_prefix(path, "mysql://")) {
+  if (!is_internal) {
+    // Don't attempt to backup external databases automatically.
     query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
-  }
-  if( is_internal )
+  } else {
     catch(query( "CREATE DATABASE `"+name+"`"));
+  }
   changed();
 }
 
