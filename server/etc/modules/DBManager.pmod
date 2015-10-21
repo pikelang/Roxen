@@ -2349,6 +2349,15 @@ string db_group( string db )
   return "internal";
 }
 
+string db_schedule( string db )
+{
+  array q = query("SELECT schedule FROM dbs, db_schedules "
+		  " WHERE schedule_id = db_schedules.id "
+		  "   AND name = %s", db);
+  if (!sizeof(q)) return UNDEFINED;
+  return q[0]->schedule;
+}
+
 string get_group_path( string db, string group )
 {
   mapping m = get_group( group );
@@ -2417,11 +2426,12 @@ void create_db( string name, string path, int is_internal,
 	   "VALUES (%s, %s, %s)",
 	   name, (is_internal?name:path), (is_internal?"1":"0") );
   }
-  if (!is_internal && !has_prefix(path, "mysql://")) {
+  if (!is_internal) {
+    // Don't attempt to backup external databases automatically.
     query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
-  }
-  if( is_internal )
+  } else {
     catch(query( "CREATE DATABASE `"+name+"`"));
+  }
   changed();
 }
 
