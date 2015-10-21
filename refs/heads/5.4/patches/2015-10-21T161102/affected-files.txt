@@ -1,0 +1,7 @@
+Modified files:
+  config_interface/dbs/browser.pike
+  config_interface/dbs/db_list.pike
+  config_interface/dbs/schedules.pike
+  etc/modules/DBManager.pmod
+  modules/proxies/relay2.pike
+  modules/tags/static_resource.pike
