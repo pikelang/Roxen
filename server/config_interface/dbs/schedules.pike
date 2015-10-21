@@ -40,6 +40,12 @@ mapping|string parse( RequestID id )
 	    }
 	    DBManager.start_backup_timer((int)schedule, period, offset);
 	  }
+	  if (id->variables["schedule-" + schedule]) {
+	    db->query("UPDATE db_schedules "
+		      "   SET schedule = %s "
+		      " WHERE id = %s",
+		      id->variables["schedule-" + schedule], schedule);
+	  }
 	}
       };
     if (err) master()->handle_error(err);
@@ -72,6 +78,15 @@ mapping|string parse( RequestID id )
 	db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
 	continue;
       }
+      res += "<tr><td colspan='6'><hr></td></tr>"
+	"<tr><td><input size='10em' name='schedule-" + schedule->id + "' "
+	"value='" + Roxen.html_encode_string(schedule->schedule) + "' />"
+	"</td>";
+    } else {
+      res += "<tr><td colspan='6'><hr></td></tr>"
+	"<tr><td>"
+	"<b>" + Roxen.html_encode_string(schedule->schedule) +"</b>"
+	"</td>\n";
     }
 
     int period = (int)schedule->period;
@@ -79,8 +94,7 @@ mapping|string parse( RequestID id )
     if (period) offset %= period;
     int day = offset/86400;
     int hour = (offset/3600)%24;
-    res += "<tr><td><b>" + Roxen.html_encode_string(schedule->schedule) +
-      "</b></td>\n"
+	res +=
       "<td><default name='period-" + schedule->id + "' value='" +
       (schedule->period?(schedule->period + ":" + (day*86400)):"") +
       "'><select name='period-" + schedule->id + "'>\n"
