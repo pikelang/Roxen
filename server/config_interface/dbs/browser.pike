@@ -14,6 +14,7 @@ mapping actions = ([
   "charset":({  _(536, "Change default character set"), change_charset, 0 }),
   "repair": ({  _(537, "Repair all tables"),     repair_db, 0 }),
   "optimize":({  _(538, "Optimize all tables"),   optimize_db, 0 }),
+  "schedule":({  _(0, "Change backup schedule"), change_schedule, 2 }),
 ]);
 
 
@@ -76,6 +77,50 @@ mixed change_charset( string db, RequestID id )
       "</submit-gbutton2>";
   }
   DBManager.set_db_default_charset( db, id->variables->default_charset );
+  return 0;
+}
+
+mixed change_schedule( string db, RequestID id )
+{
+  Sql.Sql sql = connect_to_my_mysql(0, "roxen");
+  if( !id->variables->backup_schedule )
+  {
+    string old_schedule, old_schedule_id;
+    array q = sql->query("SELECT schedule_id, schedule FROM dbs, db_schedules "
+			 " WHERE db_schedules.id = dbs.schedule_id "
+			 "   AND dbs.name = %s", db);
+    if (sizeof(q)) {
+      old_schedule = q[0]->schedule;
+      old_schedule_id = q[0]->schedule_id;
+    }
+    string res ="<br /><blockquote>"
+    "<input type=hidden name=action value='&form.action;' />"
+      "<h2>"+sprintf(_(539,"Changing backup schedule for %s"), db )+
+      "</h2>"+
+      (old_schedule?("<b>"+_(540, "Old backup schedule")+":</b> " +
+		     Roxen.html_encode_string(old_schedule)+"<br />"):"")+
+      "<b>"+_(541,"New backup schedule")+":</b> "
+      "<default name='backup_schedule' value='" + old_schedule_id + "'>"
+      "<select name='backup_schedule'>";
+    foreach(sql->query("SELECT schedule, id FROM db_schedules "
+		       " ORDER BY schedule"), mapping(string:string) schedule) {
+      res += sprintf("<option value='%s'>%s</option>",
+		     schedule->id,
+		     Roxen.html_encode_string(schedule->schedule));
+    }
+    res += sprintf("<option value='0'>%s</option>",
+		   Roxen.html_encode_string(_(0, "None"))) +
+      "</select></default>";
+    return res + "<submit-gbutton2 name='ok'>"+(201,"OK")+
+      "</submit-gbutton2>";
+  }
+  if (id->variables->backup_schedule == "0") {
+    sql->query("UPDATE dbs SET schedule_id = NULL "
+	       " WHERE name = %s", db);
+  } else {
+    sql->query("UPDATE dbs SET schedule_id = %d "
+	       " WHERE name = %s", (int)id->variables->backup_schedule, db);
+  }
   return 0;
 }
 
@@ -987,6 +1032,19 @@ mapping|string parse( RequestID id )
 	     "</a>")
     + "</li>";
 
+  string schedule = DBManager.db_schedule(id->variables->db);
+  if (schedule) {
+    res += "<li>" +
+      sprintf( (string)_(0, "Backuped via the %s backup schedule."),
+	       "<a href='schedules.html'>" +
+	       Roxen.html_encode_string(schedule) +
+	       "</a>") +
+      "</li>";
+  } else {
+    res += "<li><b>" +
+      _(0, "Not a member of any backup schedule.") +
+      "</b></li>";
+  }
   res += "</ul></p>\n";
 
   if (db) {
@@ -1206,15 +1264,24 @@ mapping|string parse( RequestID id )
 
   res += "<p>";
 
-#define ADD_ACTION(X) if(!actions[X][2] || \
-			 DBManager.is_internal(id->variables->db) ) \
+  int flags = DBManager.is_internal(id->variables->db)*3;
+  if (!flags) {
+    mapping(string:mixed) url_info =
+      DBManager.get_db_url_info(id->variables->db);
+    if (url_info && has_prefix(url_info->path, "mysql://")) {
+      // Is external mysql.
+      flags = 2;
+    }
+  }
+
+#define ADD_ACTION(X) if(!actions[X][2] || (actions[X][2] & flags) )	\
    res += sprintf("<a href='%s?db=%s&amp;action=%s'><gbutton>%s</gbutton></a>\n",\
 		  id->not_query, id->variables->db, X, actions[X][0] )
   
   switch( id->variables->db )
   {
     case "local":
-      foreach( ({ "move","backup","optimize","repair" }), string x )
+      foreach( ({ "move","backup","optimize","repair","schedule" }), string x )
 	ADD_ACTION( x );
       break;
       
