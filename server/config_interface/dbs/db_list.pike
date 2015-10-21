@@ -187,6 +187,11 @@ string|mapping parse( RequestID id )
 	res += "<td>remote</td>";
     }
 
+    // Backup schedule
+
+    res += "<td>" + (DBManager.db_schedule(db) ||
+		     ("<i>" + _(0, "NONE") + "</i>")) + "</td>";
+
     // Owner/info column
 
     mapping(string:string) db_mod_info = DBManager.module_table_info( db, "" );
@@ -221,7 +226,7 @@ string|mapping parse( RequestID id )
 	
   foreach( cats[0..0]+sort(cats[1..]); int i; array q ) {
     res += "<tbody>\n"
-      "<tr class='group-hdr'><th colspan='5'>" + (i ? "<br/>" : "") +
+      "<tr class='group-hdr'><th colspan='6'>" + (i ? "<br/>" : "") +
       "<a style='font-size: larger'"
       " href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a>"
       "</th></tr>\n"
@@ -231,6 +236,7 @@ string|mapping parse( RequestID id )
       // "<th class='num'>Rows</th>"
       "<th class='num'>Size</th>"
       "<th>Type</th>"
+      "<th>Backup Schedule</th>"
       "<th>Owner/info</th>"
       "</tr>\n" +
       rres[ q[1] ] +
