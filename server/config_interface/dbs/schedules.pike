@@ -35,9 +35,22 @@ mapping|string parse( RequestID id )
 		      period, offset, generations, method, dir, schedule);
 	    DBManager.start_backup_timer((int)schedule, period, offset);
 	  }
+	  if (id->variables["schedule-" + schedule]) {
+	    db->query("UPDATE db_schedules "
+		      "   SET schedule = %s "
+		      " WHERE id = %s",
+		      id->variables["schedule-" + schedule], schedule);
+	  }
 	}
       };
     if (err) master()->handle_error(err);
+  }
+
+  if (id->variables["new.x"]) {
+    db->query("INSERT INTO db_schedules (id, period) VALUES (NULL, 0)");
+    int new_id = db->master_sql->insert_id();
+    db->query("UPDATE db_schedules SET schedule = %s where id = %d",
+	      sprintf((string)_(0, "Schedule #%d"), new_id-1), new_id);
   }
 
   string res =
@@ -48,19 +61,35 @@ mapping|string parse( RequestID id )
     "</th><th align='left'>" + _(1029, "Time") +
     "</th><th align='left'>" + _(1030, "Generations") +
     "</th><th align='left'>" + _(1031, "Method") +
-    "</th></tr>\n";
+    "</th><th></th></tr>\n";
 
   foreach(db->query("SELECT id, schedule, period, offset, dir, "
 		    "       generations, method "
 		    "  FROM db_schedules "
 		    " ORDER BY id ASC"), mapping(string:string) schedule) {
+
+    if (schedule->id != "1") {
+      if (id->variables["delete-" + schedule->id + ".x"]) {
+	db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
+	continue;
+      }
+      res += "<tr><td colspan='6'><hr></td></tr>"
+	"<tr><td><input size='10em' name='schedule-" + schedule->id + "' "
+	"value='" + Roxen.html_encode_string(schedule->schedule) + "' />"
+	"</td>";
+    } else {
+      res += "<tr><td colspan='6'><hr></td></tr>"
+	"<tr><td>"
+	"<b>" + Roxen.html_encode_string(schedule->schedule) +"</b>"
+	"</td>\n";
+    }
+
     int period = (int)schedule->period;
     int offset = (int)schedule->offset;
     if (period) offset %= period;
     int day = offset/86400;
     int hour = (offset/3600)%24;
-    res += "<tr><td><b>" + Roxen.html_encode_string(schedule->schedule) +
-      "</b></td>\n"
+	res +=
       "<td><default name='period-" + schedule->id + "' value='" +
       (schedule->period?(schedule->period + ":" + (day*86400)):"") +
       "'><select name='period-" + schedule->id + "'>\n"
@@ -105,22 +134,32 @@ mapping|string parse( RequestID id )
       "<option value='backup'>" + _(1038, "Backup (internal databases only)") + "</option>\n"
       "</select></default></td>\n"
       "</tr>\n"
-      "<tr><td>&nbsp;</td><td colspan='3'>" +
+      "<tr><td>&nbsp;</td><td colspan='4'>" +
       _(1039, "Backup directory") +
-      ": <input size='60%' name='directory-" + schedule->id +
+      ": <input size='75%' name='directory-" + schedule->id +
       "' type='string' value='" + Roxen.html_encode_string(schedule->dir||"") +
       "' />"
-      + ("<br/>Default directory: "+roxen_path("$VARDIR/backup/")) +
-      "</td><td>&nbsp;</td></tr>\n";
+      "</td><td align='right'>";
+    if (schedule->id != "1") {
+      res += "<submit-gbutton name='delete-" + schedule->id + "'>" +
+	_(0, "Delete") + "</submit-gbutton>";
+    } else {
+      res += "<submit-gbutton name='new'>" + _(0, "New") + "</submit-gbutton>";
+    }
+    res += "</td></tr>\n";
     if (schedule->id == "1") {
-      res += "<tr><td>&nbsp;</td><td colspan='3'>" +
+      res += "<tr><td>&nbsp;</td><td colspan='4'>" +
 	_(1040, "Note: This schedule is also used to schedule backups for "
 	  "Roxen's internal databases.") +
 	"</td><td>&nbsp;</td></tr>\n";
     }
   }
 
-  res += "<tr><td align='right' colspan='5'>"
+  res += "<tr><td colspan='6'><hr></td></tr>"
+    "<tr><td align='left'><cf-cancel href=''/></td><td colspan='4'>" +
+    sprintf((string)_(0, "Default directory: %s"),
+	    Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
+    "</td><td align='right'>"
     "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
     "</tr>\n"
     "</table>\n";
