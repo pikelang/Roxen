@@ -45,6 +45,13 @@ mapping|string parse( RequestID id )
     if (err) master()->handle_error(err);
   }
 
+  if (id->variables["new.x"]) {
+    db->query("INSERT INTO db_schedules (id, period) VALUES (NULL, 0)");
+    int new_id = db->master_sql->insert_id();
+    db->query("UPDATE db_schedules SET schedule = %s where id = %d",
+	      sprintf((string)_(0, "Schedule #%d"), new_id-1), new_id);
+  }
+
   string res =
     "<h3>" + _(1026, "Backup schedules") + ":</h3>\n"
     "<table width='100%'>\n"
@@ -110,24 +117,33 @@ mapping|string parse( RequestID id )
       "<option value='backup'>" + _(1038, "Backup (internal databases only)") + "</option>\n"
       "</select></default></td>\n"
       "</tr>\n"
-      "<tr><td>&nbsp;</td><td colspan='3'>" +
+      "<tr><td>&nbsp;</td><td colspan='4'>" +
       _(1039, "Backup directory") +
-      ": <input size='60%' name='directory-" + schedule->id +
+      ": <input size='75%' name='directory-" + schedule->id +
       "' type='string' value='" + Roxen.html_encode_string(schedule->dir||"") +
       "' />"
-      + ("<br/>Default directory: "+roxen_path("$VARDIR/backup/")) +
-      "</td><td>&nbsp;</td></tr>\n";
+      "</td><td align='right'>";
+    if (schedule->id != "1") {
+      res += "&nbsp;";
+    } else {
+      res += "<submit-gbutton name='new'>" + _(0, "New") + "</submit-gbutton>";
+    }
+    res += "</td></tr>\n";
     if (schedule->id == "1") {
-      res += "<tr><td>&nbsp;</td><td colspan='3'>" +
+      res += "<tr><td>&nbsp;</td><td colspan='4'>" +
 	_(1040, "Note: This schedule is also used to schedule backups for "
 	  "Roxen's internal databases.") +
 	"</td><td>&nbsp;</td></tr>\n";
     }
   }
 
-  res += "<tr><td>"
-    "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
-    "<td align='right' colspan='4'><cf-cancel href=''/></td></tr>\n";
+  res += "<tr><td colspan='6'><hr></td></tr>"
+    "<tr><td align='left'><cf-cancel href=''/></td><td colspan='4'>" +
+    sprintf((string)_(0, "Default directory: %s"),
+	    Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
+    "</td><td align='right'>"
+    "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
+    "</tr>\n"
     "</table>\n";
 
   return Roxen.http_string_answer(res);
