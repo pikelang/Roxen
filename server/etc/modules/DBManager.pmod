@@ -2022,6 +2022,15 @@ string db_group( string db )
   return "internal";
 }
 
+string db_schedule( string db )
+{
+  array q = query("SELECT schedule FROM dbs, db_schedules "
+		  " WHERE schedule_id = db_schedules.id "
+		  "   AND name = %s", db);
+  if (!sizeof(q)) return UNDEFINED;
+  return q[0]->schedule;
+}
+
 string get_group_path( string db, string group )
 {
   mapping m = get_group( group );
