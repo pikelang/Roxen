@@ -75,7 +75,7 @@ mapping|string parse( RequestID id )
 
     if (schedule->id != "1") {
       if (id->variables["delete-" + schedule->id + ".x"]) {
-	db->query("UPDATE dbs SET schedule_id = 1 WHERE schedule_id = %s",
+	db->query("UPDATE dbs SET schedule_id = NULL WHERE schedule_id = %s",
 		  schedule->id);
 	db->query("DELETE FROM db_schedules WHERE id = %s", schedule->id);
 	continue;
