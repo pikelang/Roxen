@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: DB Backup, Survive SIGPIPE
 from: 36e9fbd059235014b86850ad8530403ef6089d78
 to: 9fd08baba253de1a25cd37a75cdb6f34b516815e
 originator: wellhardh@roxen.com
