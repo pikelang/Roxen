@@ -1,0 +1,29 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 36e9fbd059235014b86850ad8530403ef6089d78
+to: 9fd08baba253de1a25cd37a75cdb6f34b516815e
+originator: wellhardh@roxen.com
+depends: 2015-10-21T161102
+restart: true
+
+Multiple fixes:
+
+  * DBs: Fixed backup schedule buttons.
+    
+    "New" and "Delete" were broken due to the difference between
+    <submit-gbutton/> and <submit-gbutton2/>.
+    
+    "Cancel" was broken due to some browsers ignoring href="" since
+    the attribute was empty...
+
+  * DBs: Unlink any databases from the schedule before deleting it.
+
+  * DBs: Fixed unlinking of deleted backup schedules.
+
+  * I/O: Make sure to ignore SIGPIPE.
+    
+    Under some circumstances Stdio.sendfile() will use blocking I/O.
+    If the other end then closes the connection before all data is
+    sent sendfile() will fail with EPIPE and kill us with SIGPIPE.
+    We don't want to die...
+    
+    Fixes some of [bug 7582].
