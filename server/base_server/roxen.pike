@@ -6711,6 +6711,10 @@ int main(int argc, array tmp)
   }
 #endif
 
+  // Signals which need to be ignored
+  foreach( ({ "SIGPIPE" }), string sig)
+    catch( signal(signum(sig), 0) );
+
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
     catch( signal(signum(sig), async_sig_start(exit_when_done,0)) );
