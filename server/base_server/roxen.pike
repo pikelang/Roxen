@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.715 2001/08/24 17:35:49 mast Exp $";
+constant cvs_version="$Id$";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4042,6 +4042,10 @@ int main(int argc, array tmp)
       werror ("Backend thread can't read rootonly\n");
   }
 #endif
+
+  // Signals which need to be ignored
+  foreach( ({ "SIGPIPE" }), string sig)
+    catch( signal(signum(sig), 0) );
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
