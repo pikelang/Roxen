@@ -946,7 +946,7 @@ Sql.Sql get_sql_handler(string db_url)
   if (res && has_prefix(db_url, "mysql://")) {
     catch {
       // Restore the SIGPIPE signal handler.
-      signal(signum("SIGPIPE", 0));
+      signal(signum("SIGPIPE"), 0);
     };
   }
   return res;
@@ -2377,7 +2377,7 @@ string get_group_path( string db, string group )
       Sql.Sql sq = Sql.Sql( m->pattern+"mysql" );
       catch {
 	// Restore the SIGPIPE signal handler.
-	signal(signum("SIGPIPE", 0));
+	signal(signum("SIGPIPE"), 0);
       };
       sq->query( "CREATE DATABASE "+db );
     };
