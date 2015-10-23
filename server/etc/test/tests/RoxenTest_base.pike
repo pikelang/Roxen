@@ -199,9 +199,29 @@ void run_tests( Configuration c )
 #endif
 
   test_equal( "foo", Roxen.short_name, "foo" );
-  test_equal( "1_2", Roxen.short_name, "½" );
+  test_equal( "1_2", Roxen.short_name, "\xbd" );
   test_equal( "foo_bar", Roxen.short_name, "Foo/Bar" );
-  test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar§½" );
+  test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar\xa7\xbd" );
+
+  // Some MySQL configuration tests.
+
+  mapping(string:string) mysql_location =
+    test_true(roxenloader->parse_mysql_location);
+
+  if (mysql_location && test_true(predef::`->, mysql_location, "basedir")) {
+    // Check that the MySQL upgrade code is available.
+    if (Stdio.is_file(combine_path(mysql_location->basedir,
+				   "share/mysql",
+				   "mysql_fix_privilege_tables.sql"))) {
+      test_true(Stdio.read_bytes,
+		combine_path(mysql_location->basedir,
+			     "share/mysql", "mysql_fix_privilege_tables.sql"));
+    } else {
+      test_true(Stdio.read_bytes,
+		combine_path(mysql_location->basedir,
+			     "share", "mysql_fix_privilege_tables.sql"));
+    }
+  }
 
   // Test logging functions.
 
@@ -216,12 +236,17 @@ void run_tests( Configuration c )
     // Invariants -- must be supported by all protocols or bad things
     // will happen.
     int    time       = predef::time();
+    int    hrtime     = gethrtime();
     string remoteaddr = "194.52.182.122";
     string method     = "GET";
 
     string not_query  = "/the/requested/file";
     string prot       = "INTERNAL/1.0";
     string realauth   = "foo:bar";
+
+    mapping misc      = ([]);
+
+    void init_cookies() { }
   };
 
   FakeID http_id = FakeID(([ "RoxenUserID":"iieff1934"]),
@@ -235,25 +260,24 @@ void run_tests( Configuration c )
     "len":3611,
   ]);
 
-  function format1 = 
-    test_true( roxen.compile_log_format,
+  string format1 =
 	    ({
 	      "$ip_number",  "$bin-ip_number",  "$cern_date",  "$bin-date",
 	      "$method",     "$resource",  "$full_resource", "$protocol",
 	      "$response", "$bin-response", "$length", "$bin-length",
 	      "$referer", "$user_agent", "$user", "$user_id", "$request-time"
-	    }) * "$char(9999)"  + "$char(9999)");
+	    }) * "$char(9999)"  + "$char(9999)";
 
 
   array(string) logged;
   void do_log( string what ) {  logged = what/"\23417";  };
   
   time();
-  test( format1, do_log, http_id, fake_response );
+  test( roxen.run_log_format, format1, do_log, http_id, fake_response );
 
   test( verify_logged_data, logged, 0 );
 
-  test( format1, do_log, minimum_id, fake_response );
+  test( roxen.run_log_format, format1, do_log, minimum_id, fake_response );
 
   test( verify_logged_data, logged, 1 );
 }

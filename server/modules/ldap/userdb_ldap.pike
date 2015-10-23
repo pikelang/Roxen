@@ -1,6 +1,6 @@
 /*
 
-Copyright 2001, Roxen IS
+Copyright 2001 - 2009, Roxen IS
 
 Roxen 2.2+ LDAP directory user database module
 
@@ -18,11 +18,12 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.6 2001/05/25 08:59:52 hop Exp $";
+  "$Id$";
 inherit UserDB;
 inherit "module";
 
 constant name = "ldapuserdb";
+constant module_unique  = 0;
 
 //<locale-token project="mod_userdb_ldap">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_userdb_ldap",X,Y)
@@ -48,7 +49,7 @@ Thread.Mutex mt = Thread.Mutex(); // FIXME: what about unthreaded version ???
 class LDAPUser
 {
   inherit User;
-  static array pwent;
+  protected array pwent;
 
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
@@ -61,7 +62,7 @@ class LDAPUser
   array compat_userinfo()   { return pwent[0..6];    }
   string dn()		    { return pwent[7]; }
 
-  static void create( UserDB p, array _pwent )
+  protected void create( UserDB p, array _pwent )
   {
     ::create( p );
     pwent = _pwent;
@@ -75,7 +76,7 @@ class LDAPUser
 DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
     
     // check for nonacceptable password
-    if(!stringp(pass) || sizeof(pass) < 1) {
+    if(!stringp(pass) || sizeof(pass) < 1 || !sizeof(password)) {
       DEBUGLOG("pass_auth("+name()+") failed.");
       return 0; // FIXME: what about users with EMPTY password???
     }
@@ -103,7 +104,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
     if (sizeof(pass) > 6)
       switch (upper_case(pass[..4])) {
 	case "{SHA}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.sha()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.SHA1()->update(password)->digest()));
 	  DEBUGLOG ("Trying SHA digest ...");
 	  break;
 
@@ -111,13 +112,13 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.sha()->update(password+salt)->digest()+salt));
+	    flg = (pass[6..] == MIME.encode_base64(Crypto.SHA1()->update(password+salt)->digest()+salt));
 	    DEBUGLOG ("Trying SSHA digest ...");
 	  }
 	  break;
 
 	case "{MD5}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.md5()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.MD5()->update(password)->digest()));
 	  DEBUGLOG ("Trying MD5 digest ...");
 	  break;
 
@@ -125,7 +126,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.md5()->update(password+salt)->digest()+salt));
+	    flg = (pass[6..] == MIME.encode_base64(Crypto.MD5()->update(password+salt)->digest()+salt));
 	    DEBUGLOG ("Trying SMD5 digest ...");
 	  }
 	  break;
@@ -171,7 +172,6 @@ User find_user( string u )
 {
   mixed key = mt->lock();
   array(string) pwent;
-  string flt;
 
   DEBUGLOG ("find_user ("+u+")");
   if (u == "A. Nonymous") {
@@ -199,8 +199,7 @@ User find_user( string u )
   }
 
   // finding entry
-  flt = replace(dir->parse_url(query("CI_dir_server"))->filter||"", "%u%", u);
-  pwent = get_entry_dir(u, flt);
+  pwent = get_entry_dir(u, dir->parse_url(query("CI_dir_server"))->filter||"");
 
   // ROAMING access mode
   if(!access_mode_is_roaming()) {
@@ -239,13 +238,20 @@ array(string)|int get_entry_dir(string u, string filter) {
   array(string) dirinfo;
   object results;
 
+  filter = replace(filter, "%u%", u);
   // the server connection is successfully opened and binded
-  //dir->set_scope(1);
-  //dir->set_basedn(u_dn);
+  if(!username_parsing_is_positional()) {
+    array elems = u / query("CI_username_delimiter");
+    string udn = dir->parse_url(query("CI_dir_server"))->basedn||"";
+    for (int i=0; i<sizeof(elems); i++)
+      udn = replace(udn, "%"+(string)(i+1)+"%", elems[i]);
+    DEBUGLOG(sprintf("pos.parsing: base DN: %O", udn));
+    dir->set_basedn(udn);
+  }
   DEBUGLOG(sprintf("LDAPsearch: user: %O filter: %O", u, filter));
   err = catch(results=dir->search(filter)); // FIXME: set only interesting attrs!
   if (err || !objectp(results) || !results->num_entries()) {
-    DEBUGLOG ("no entry in directory, returning unknown");
+    DEBUGLOG (sprintf("no entry in directory, returning unknown. More debug info: %O", err));
     return 0;
   }
   if(results->num_entries() > 1) {
@@ -299,6 +305,11 @@ int access_mode_is_guest_or_roaming() {
   return access_mode_is_guest() & access_mode_is_roaming();
 }
 
+int username_parsing_is_positional() {
+
+  return !(query("CI_username_parse") == "positional");
+}
+
 
 int default_uid() {
 
@@ -334,6 +345,25 @@ void create()
 		   "<br/>But can be used for generic indirect user lookup as well."
 		   "</li></ol>",
 		({ "user", "guest", "roaming" }) );
+
+	defvar ("CI_username_parse", "none", "Username parsing",
+		   TYPE_STRING_LIST, "Method of parsing username:"
+		   "<ol>"
+		   "<li><b>none</b><br/>"
+		   "Parsing is disabled.</li>"
+		   "<li><b>positional</b><br/>"
+		   "The username is divided to arrray. The delimiter value is used "
+		   " for division. Elements can be used by using macro %n%, where "
+		   "'n' is the position in the array.</li>"
+		   "<li><b>regexp</b><br/>"
+		   "[unimplemented!].</li>",
+		({ "none", "positional", "regexp" }),
+		access_mode_is_user );
+
+
+	defvar ("CI_username_delimiter", ".", "Username delimiter",
+		   TYPE_STRING, "Delimiter used for splitting elements from username",
+		   0, access_mode_is_user );
 
 	// LDAP server:
         defvar ("CI_dir_server","ldap://localhost/??sub?(&(objectclass=person)(uid=%u%))","LDAP server URL",
@@ -438,6 +468,8 @@ void stop() {
 
   if (query("CI_use_cache"))
     cache_expire("ldapuserdb"+query("CI_dir_server"));
+  dir && dir->unbind();
+  dir = 0;
 }
 
 void close_dir() {

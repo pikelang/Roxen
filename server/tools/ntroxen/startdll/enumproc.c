@@ -3,6 +3,9 @@
 #include "EnumProc.h"
 #include <tlhelp32.h>
 #include <vdmdbg.h>
+#include <stdio.h>
+#include <string.h>
+
 
 //extern FoundProc;
 static FoundProc;
@@ -331,9 +334,28 @@ BOOL CALLBACK Proc( DWORD dw, WORD w16, /*LPCSTR*/ LPSTR lpstr, LPARAM lParam )
 	return TRUE;
 }
 
-
-BOOL KillMySql()
+void Kill(DWORD id)
 {
+  HANDLE hProc;
+
+  hProc = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, id);
+  if(hProc != NULL)
+				TerminateProcess(hProc, 0);
+  CloseHandle(hProc);
+}
+
+
+BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
+			unsigned int maxlen);
+
+BOOL KillMySql(const char *confdir)
+{
+  char pidfile[MAX_PATH];
+  char spid[20];
+  int pid = 0;
+  HANDLE hPid;
+  DWORD cpid;
+
 /*
   // Try to shutdown nicely
   system("mysql\\bin\\mysqladmin --user=rw --pipe shutdown >NUL: 2>&1");
@@ -358,15 +380,217 @@ BOOL KillMySql()
   if(!FoundProc)
     return TRUE;
 */
+
+
+  //  First choice is to kill via mysqladmin since that will avoid table
+  //  corruption. However, it relies on finding the binary at a given
+  //  path relative to the server so we'll preserve the brutal process
+  //  termination for situations where this isn't valid.
+  char short_pipe_path[_MAX_PATH];
+  TCHAR long_pipe_path[_MAX_PATH];
+  strcpy(short_pipe_path, confdir);
+  strcat(short_pipe_path, "\\_mysql\\pipe");
+  if (GetFullPathName(short_pipe_path, _MAX_PATH, long_pipe_path, NULL)) {
+    char cmd[4000];
+    char mysqladmin_path[_MAX_PATH];
+    
+    //  Convert full path into a valid MySQL pipe identifier on the form
+    //  "C_\path\to\configurations\_mysql\pipe".
+    if (long_pipe_path[1] == ':')
+      long_pipe_path[1] = '_';
+    
+    if (GetMySQLBinaryPath("mysqladmin", mysqladmin_path, _MAX_PATH)) {
+      sprintf(cmd, "\"%s\" "
+		   "-u rw "
+		   "--pipe "
+		   "--socket=\"%s\" "
+		   "shutdown "
+	      /*">NUL: 2>&1"*/,
+	      mysqladmin_path,
+	      long_pipe_path);
+      {
+	TCHAR cwd[_MAX_PATH];
+	STARTUPINFO info;
+	PROCESS_INFORMATION proc;
+	int ret;
+	
+	cwd[0] = 0;
+	GetCurrentDirectory(_MAX_PATH, cwd);
+	GetStartupInfo(&info);
+	/* info.wShowWindow = SW_HIDE; */
+	info.dwFlags |= STARTF_USESHOWWINDOW;
+	ret = CreateProcess(NULL,
+			    cmd,
+			    NULL,  /* process security attribute */
+			    NULL,  /* thread security attribute */
+			    1,     /* inherithandles */
+			    0,     /* create flags */
+			    NULL,  /* environment */
+			    cwd,   /* current dir */
+			    &info,
+			    &proc);
+	if (ret) {
+	  WaitForSingleObject(proc.hProcess, INFINITE);
+	  CloseHandle(proc.hThread);
+	  CloseHandle(proc.hProcess);
+	}
+      }
+    }
+  }
   
   Sleep(1000);
 
+  strcpy(pidfile, confdir);
+  strcat(pidfile, "\\_mysql\\mysql_pid");
+  hPid = CreateFile(pidfile,
+    GENERIC_READ,
+    FILE_SHARE_READ|FILE_SHARE_WRITE,
+    NULL,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    NULL);
+  if (hPid == INVALID_HANDLE_VALUE)
+    return TRUE;
+
+  if (ReadFile(hPid, spid, sizeof(spid)-1, &cpid, NULL) == 0)
+  {
+    CloseHandle(hPid);
+    return TRUE;
+  }
+  CloseHandle(hPid);
+  spid[cpid] = 0;
+  pid = atoi(spid);
+  if (pid > 0)
+    Kill(pid);
+
+  DeleteFile(pidfile);
+
+/*
   // Is any roxen_mysql.exe around? If Yes KILL!
   FoundProc = 0;
   EnumProcs(&Proc, RoxenMysql | KillProc);
   if(FoundProc)
     return FALSE;
-  
+*/  
 
   return TRUE;
+}
+
+
+BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
+			unsigned int maxlen)
+{
+  FILE *fd;
+  char basedir[_MAX_PATH];
+  
+  outPath[0] = 0;
+  basedir[0] = 0;
+  if (maxlen < 1)
+    return FALSE;
+  
+  //  We expect current directory to be server-x.y.z. Look for file named
+  //  mysql-location.txt which contains data on the following form:
+  //
+  //    # comments
+  //    key1 = value
+  //    key2 = value
+  //
+  //  We're interested in the key "basedir" (from which we can find the
+  //  bin\{program name} entry) or a direct key for the program in question.
+
+  if (fd = fopen("mysql-location.txt", "r")) {
+    char *key, *val, *p;
+    
+    while (1) {
+      char line[1000];
+      if (!fgets(line, sizeof(line), fd))
+	break;
+      
+      key = NULL;
+      val = NULL;
+      
+      //  Look for comment and terminate line
+      if (p = strchr(line, '#'))
+	*p = 0;
+      
+      //  Skip leading whitespace
+      p = line;
+      while (*p == ' ' || *p == '\t')
+	p++;
+      
+      //  Extract key name
+      key = p;
+      while (*p && !(*p == ' ' || *p == '\t' || *p == '='))
+	p++;
+      if (!*p)
+	continue;
+      if (*p == '=') {
+	*p++ = 0;
+      } else {
+	*p++ = 0;
+	while (*p == ' ' || *p == '\t')
+	  p++;
+	if (!*p || *p != '=')
+	  continue;
+	p++;
+      }
+      
+      //  Extract key value and trim whitespace and optional quotes
+      while (*p == ' ' || *p == '\t')
+	p++;
+      if (*p == '"' || *p == '\'')
+	p++;
+      val = p;
+      p = val + strlen(val) - 1;
+      while (p > val) {
+	if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+	  *p = 0;
+	else if (*p == '"' || *p == '\'') {
+	  *p = 0;
+	  break;
+	} else {
+	  break;
+	}
+	--p;
+      }
+      if (!strlen(val))
+	continue;
+      
+      //  Is this the key we are looking for?
+      if (_stricmp(key, inProgramName) == 0) {
+	//  Yes, direct match!
+	if (strlen(val) < maxlen)
+	  strcpy(outPath, val);
+	break;
+      }
+      
+      //  If base directory is given, save for later in case more specific
+      //  key remains to be seen.
+      if (_stricmp(key, "basedir") == 0) {
+	strcpy(basedir, val);
+      }
+    }
+    fclose(fd);
+    
+    //  If exact path isn't known, try built it from base directory
+    if (!strlen(outPath) && strlen(basedir)) {
+      if ((strlen(basedir) + strlen(inProgramName) + 9) < maxlen) {
+	strcpy(outPath, basedir);
+	strcat(outPath, "\\bin\\");
+	strcat(outPath, inProgramName);
+	strcat(outPath, ".exe");
+      }
+    }
+    
+    return strlen(outPath) ? TRUE : FALSE;
+  } else {
+    //  Take a guess by assuming default \mysql\bin\ subdirectory
+    if ((strlen(inProgramName) + 14) < maxlen) {
+      strcpy(outPath, "mysql\\bin\\");
+      strcat(outPath, inProgramName);
+      strcat(outPath, ".exe");
+      return TRUE;
+    }
+  }
+  return FALSE;
 }

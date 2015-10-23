@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: swedish.pike,v 1.16 2000/11/27 14:09:15 per Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "sv", "swedish", "svenska" });
 constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 
@@ -77,10 +77,10 @@ string date(int timestamp, mapping|void m)
   if(m["full"])
     return sprintf("%s, den %s %s %d",
 		   ctime(timestamp)[11..15],
-		   ordered(t1["mday"]),
+		   (string) t1["mday"],
 		   month(t1["mon"]+1), t1["year"]+1900);
   if(m["date"])
-    return sprintf("den %s %s %d", ordered(t1["mday"]),
+    return sprintf("den %s %s %d", (string)t1["mday"],
 		   month(t1["mon"]+1), t1["year"]+1900);
 
   if(m["time"])
@@ -92,7 +92,7 @@ string _number(int num)
   switch(num)
   {
    case 0:  return "";
-   case 1:  return "en";
+   case 1:  return "ett";
    case 2:  return "två";
    case 3:  return "tre";
    case 4:  return "fyra";
@@ -148,7 +148,7 @@ string number(int num)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

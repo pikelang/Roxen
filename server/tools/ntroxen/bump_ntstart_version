@@ -31,7 +31,7 @@ version_fixup()
     if [ "x$newbuild" = "x$checkbuild" ]
     then
         mv -f version.h.new version.h || status_fail ntstart
-        echo "Successfull bump to build $newbuild."
+        echo "Successful bump to build $newbuild."
     else
         echo "Version bump failed: $newbuild != $checkbuild."
         fail
@@ -43,11 +43,12 @@ version_fixup()
     #echo cvs ci -m "Version bumped to $version.$newbuild by buildsystem." version.h \
     if [ "x$nocvs" = "x" ]
     then
-        cvs ci -m "Version bumped to $version.$newbuild by buildsystem." version.h \
-  #      || fail
+	echo cvs ci -m "Version bumped to $version.$newbuild by distmaker." version.h
+	cvs ci -m "Version bumped to $version.$newbuild by distmaker." version.h \
+	|| fail
     fi
 
-    echo "$version.$newbuild" >../../VERSION
+    echo "$version.$newbuild" > VERSION
 
     VERSION="$version.$newbuild"
     export VERSION
@@ -56,13 +57,11 @@ version_fixup()
     if [ "x$nocvs" = "x" ]
     then
         echo Tagging...
-        echo cvs tag `echo "ntstart_$VERSION" | tr . _` || fail
+	echo cvs tag `echo "ntstart_$VERSION" | tr . _`
         cvs tag `echo "ntstart_$VERSION" | tr . _` || fail
     else
         echo No tagging!
     fi
-
-    #mv server server.tmp
 }
 
 # Main

@@ -1,26 +1,26 @@
 //
-// $Id: Client.pike,v 1.7 2000/03/17 14:28:27 nilsson Exp $
+// $Id$
 //
 // Roxen HTTP RPC
 //
-// Copyright © 1996 - 2000, Roxen IS
+// Copyright © 1996 - 2009, Roxen IS
 //
 
-static private int port;
-static private string host, path;
+private int port;
+private string host, path;
 
-static private object rpc;
+private object rpc;
 
-static private void disconnect()
+private void disconnect()
 {
   rpc = 0;
 }
 
-static private void establish()
+private void establish()
 {
   int rpc_port;
   object o = Stdio.File();
-  signal(signum("SIGALRM"), lambda() { throw("timeout"); });
+  signal(signum("SIGALRM"), lambda() { error("timeout"); });
   alarm(5);
   o->connect(host, port);
   o->write(sprintf("GET %s\r\n", "/"+combine_path(path, "rpc/")));
@@ -48,9 +48,8 @@ void create(string url)
   if(url[-1] == '/')
     url = url[0..(sizeof(url)-2)];
   
-  sscanf(url-"http://", "%s:%d/%s", host, port, path);
-  if(!port)
-    port = 80;
-  if(!path)
-    path = "";
+  Standards.URI uri = Standards.URI(url);
+  host = uri->host;
+  port = uri->port || 80;
+  path = uri->path || "";
 }

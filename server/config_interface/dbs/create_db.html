@@ -1,4 +1,5 @@
 <topmenu base="../" selected=dbs />
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 
 <content>
   <cv-split>
@@ -7,7 +8,10 @@
 
       <st-page>
          <table><td><td colspan=2><eval><insert file="new_db.pike"/></eval></td></tr>
-         <tr><td><eval>&var.go-on:none;</eval></td><td align=right><cf-cancel href=''/></td></tr></table>
+	 <tr>
+	   <td><cf-cancel href='./'/></td>
+	   <td align=right><eval>&var.go-on:none;</eval></td>
+	 </tr></table>
       </st-page>
     </subtablist>
   </cv-split>

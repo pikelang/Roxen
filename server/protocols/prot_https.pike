@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 
-// $Id: prot_https.pike,v 2.4 2001/08/23 05:33:44 nilsson Exp $
+// $Id$
 
 // --- Debug defines ---
 
@@ -31,29 +31,37 @@ class fallback_redirect_request
   void die()
   {
     SSL3_WERR(sprintf("fallback_redirect_request::die()"));
+    f->set_blocking();
     f->close();
-    destruct(f);
-    destruct(this_object());
   }
 
-  void write_callback(object id)
+  void write_callback()
   {
     SSL3_WERR(sprintf("fallback_redirect_request::write_callback()"));
-    int written = id->write(out);
+    int written = f->write(out);
     if (written <= 0)
       die();
-    out = out[written..];
-    if (!strlen(out))
-      die();
+    else {
+      out = out[written..];
+      if (!strlen(out))
+	die();
+    }
   }
 
-  void read_callback(object id, string s)
+  void timeout()
   {
-    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, \"%s\")\n", s));
+    SSL3_WERR("fallback_redirect_request::timeout()");
+    die();
+  }
+
+  void read_callback(mixed ignored, string s)
+  {
+    SSL3_WERR(sprintf("fallback_redirect_request::read_callback(X, %O)\n", s));
     in += s;
     string name;
     string prefix;
 
+    remove_call_out(timeout);
     if (search(in, "\r\n\r\n") >= 0)
     {
       //      werror("request = '%s'\n", in);
@@ -92,10 +100,28 @@ class fallback_redirect_request
 	     * but better safe than sorry...
 	     */
 	    string ip = (f->query_address(1)/" ")[0];
+	    /* RFC 3986 3.2.2. Host
+	     *
+	     * host       = IP-literal / IPv4address / reg-name
+	     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+	     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+	     *
+	     * IPv6address is as in RFC3513.
+	     */
+	    if (has_value(ip, ":")) {
+	      // IPv6
+	      ip = "[" + ip + "]";
+	    }
 	    prefix = "https://" + ip + ":" + port;
-	  } else if (prefix[..4] == "http:") {
-	    /* Broken MyWorldLocation -- fix. */
-	    prefix = "https:" + prefix[5..];
+	  } else {
+	    mixed err = catch {
+		object uri = Standards.URI(prefix);
+		uri->scheme = "https";
+		uri->port = port;
+		prefix = (string)uri;
+	      };
+	    if(err)
+	      report_error("Malformed Primary Server URL : %O\n", prefix);
 	  }
 	}
 	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
@@ -103,66 +129,108 @@ class fallback_redirect_request
       }
       f->set_read_callback(0);
       f->set_write_callback(write_callback);
+    } else {
+      if (sizeof(in) > 5) {
+	string q = replace(upper_case(in[..10]), "\t", " ");
+	if (!(has_prefix(q, "GET ") ||
+	      has_prefix(q, "HEAD ") ||
+	      has_prefix(q, "OPTIONS ") ||
+	      has_prefix(q, "PUT ") ||
+	      has_prefix(q, "PROPFIND "))) {
+	  // Doesn't look like a HTTP request.
+	  // Bail out.
+	  SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
+			    "Doesn't look like HTTP (method: %O)\n", q));
+	  die();
+	  return;
+	}
+      }
+      call_out(timeout, 30);
     }
   }
 
-  void create(object socket, string s, string l, int p)
+  void create(Stdio.File socket, string s, string l, int p)
   {
-    SSL3_WERR(sprintf("fallback_redirect_request(X, \"%s\", \"%s\", %d)", s, l||"CONFIG PORT", p));
+    SSL3_WERR(sprintf("fallback_redirect_request(X, %O, %O, %d)", s, l||"CONFIG PORT", p));
     f = socket;
-    default_prefix = l;
+    default_prefix = sizeof(l) && l;
     port = p;
     f->set_nonblocking(read_callback, 0, die);
-    f->set_id(f);
     read_callback(f, s);
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("fallback_redirect_request(%O)", f);
   }
 }
 
 class http_fallback
 {
-  object my_fd;
+  SSL.sslfile my_fd;
 
   void ssl_alert_callback(object alert, object|int n, string data)
   {
-    SSL3_WERR(sprintf("http_fallback(X, %O, \"%s\")", n, data));
+    SSL3_WERR(sprintf("http_fallback(X, %O, %O)", n, data));
     //  trace(1);
-    if ( (my_fd->current_write_state->seq_num == 0)
-	 && search(lower_case(data), "http"))
+    if (((my_fd->current_write_state||
+	  my_fd->query_connection()->current_write_state)->seq_num == 0) &&
+      search(lower_case(data), "http"))
     {
-      object raw_fd = my_fd->socket;
-      my_fd->socket = 0;
+      if (function close_cb = my_fd->query_close_callback())
+	// Pretend there was a close of the old fd. This is necessary
+	// to make the http RequestID cleanup and destruct itself
+	// properly.
+	close_cb (my_fd->query_id());
+      
+      Stdio.File raw_fd;
+      if (my_fd->shutdown) {
+	raw_fd = my_fd->shutdown();
+      } else {
+	raw_fd = my_fd->socket;
+	my_fd->socket = 0;
+      }
 
       /* Redirect to a https-url */
-      //    my_fd->set_close_callback(0);
-      //    my_fd->leave_me_alone = 1;
+      Configuration conf = sizeof(urls) && values(urls)[0]->conf; // Should be just one possible config for https
       fallback_redirect_request(raw_fd, data,
-				my_fd->config &&
-				my_fd->config->query("MyWorldLocation"),
+				conf && conf->query("MyWorldLocation"),
 				port);
-      destruct(my_fd);
-      destruct(this_object());
-      //    my_fd = 0; /* Forget ssl-object */
+
+      if (!my_fd->shutdown) {
+	// Old sslfile contains cyclic references.
+	destruct(my_fd);
+      }
+
+      // Break cyclic refs.
+      my_fd = 0;
     }
   }
 
-  void ssl_accept_callback(object id)
+  void ssl_accept_callback (mixed ignored)
   {
-    SSL3_WERR(sprintf("ssl_accept_callback(X)"));
-    id->set_alert_callback(0); /* Forget about http_fallback */
+    SSL3_WERR(sprintf("ssl_accept_callback()"));
+    my_fd->set_alert_callback(0); /* Forget about http_fallback */
+    my_fd->set_accept_callback(0);
     my_fd = 0;          /* Not needed any more */
   }
 
-  void create(object fd)
+  void create(SSL.sslfile|Stdio.File fd)
   {
     my_fd = fd;
     fd->set_alert_callback(ssl_alert_callback);
     fd->set_accept_callback(ssl_accept_callback);
   }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("http_fallback(%O)", my_fd);
+  }
 }
 
-object accept()
+Stdio.File accept()
 {
-  object q = ::accept();
+  object(Stdio.File)|SSL.sslfile q = ::accept();
 
   if (q) {
     http_fallback(q);

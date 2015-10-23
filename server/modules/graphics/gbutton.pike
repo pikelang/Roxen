@@ -1,7 +1,7 @@
 //  Button module. Generates graphical buttons for use in Roxen config
 //  interface, Roxen SiteBuilder and other places.
 //
-//  Copyright © 1999-2000 Roxen IS. Author: Jonas Walldén, <jonasw@roxen.com>
+//  Copyright © 1999 - 2009, Roxen IS. Author: Jonas Walldén, <jonasw@roxen.com>
 
 
 //  Usage:
@@ -10,7 +10,9 @@
 //     bgcolor         -- background color inside/outside button
 //     textcolor       -- button text color
 //     href            -- button URL
+//     target          -- target frame
 //     alt             -- alternative button alt text
+//     title           -- button tooltip
 //     border          -- image border
 //     state           -- enabled|disabled button state
 //     textstyle       -- normal|consensed text
@@ -25,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.88 2001/08/23 11:45:15 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -54,19 +56,19 @@ void create()
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
   if(!file->open(__FILE__,"r")) return 0;
-  string doc=compile_string("#define manual\n"+file->read())->gbuttonattr;
+  string doc=compile_string("#define manual\n"+file->read(), __FILE__)->gbuttonattr;
   string imagecache=button_cache->documentation();
 
   return ([
 
-"gbutton":#"<desc cont='cont'><p><short>
+"gbutton":#"<desc type='cont'><p><short>
  Creates graphical buttons.</short></p>
 </desc>"
 
 	   +doc
 	   +imagecache,
 
-"gbutton-url":#"<desc cont='cont'><p><short>
+"gbutton-url":#"<desc type='cont'><p><short>
  Generates an URI to the button.</short> <tag>gbutton-url</tag> takes
  the same attributes as <xref href='gbutton.tag' /> including the
  image cache attributes.</p>
@@ -105,8 +107,16 @@ constant gbuttonattr=#"
  Alternative button and alt text.</p>
 </attr>
 
+<attr name='title' value='string'><p>
+ Button tooltip.</p>
+</attr>
+
 <attr name='href' value='uri'><p>
  Button URI.</p>
+</attr>
+
+<attr name='target' value='string'><p>
+ Button target frame.</p>
 </attr>
 
 <attr name='textstyle' value='normal|condensed'><p>
@@ -121,6 +131,10 @@ constant gbuttonattr=#"
  Set text alignment. There are some alignment restrictions: when text
  alignment is either <i>left</i> or <i>right</i>, icons must
  also be aligned <i>left</i> or <i>right</i>.</p>
+</attr>
+
+<attr name='img-align' value=''><p>
+ Alignment passed on to the resulting <tag>img</tag>.</p>
 </attr>
 
 <attr name='state' value='enabled|disabled'><p>
@@ -162,8 +176,58 @@ constant gbuttonattr=#"
   <i>middle</i>.</p>
 </attr>
 
-<attr name='font' value='fontname'><p></p></attr>";
+<attr name='font' value='fontname'><p></p></attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
+</attr>";
 #endif
+
+//  Cached copy of conf->query("compat_level"). This setting is defined
+//  to require a module reload to take effect so we only query it when
+//  the module instance is created.
+float compat_level = (float) my_configuration()->query("compat_level");
 
 function TIMER( function f )
 {
@@ -185,6 +249,11 @@ void start()
   do_ext = query("ext");
 }
 
+void stop()
+{
+  destruct(button_cache);
+}
+
 string status() {
   array s=button_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n"
@@ -193,11 +262,16 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {
   button_cache->flush();
+  
+  //  It's possible that user code contains a number of stale URLs in
+  //  e.g. <cache> blocks so we can just as well flush the RAM cache to
+  //  reduce the risk of broken images.
+  cache.flush_memory_cache();
 }
 
 Image.Layer layer_slice( Image.Layer l, int from, int to )
@@ -230,7 +304,7 @@ Image.Layer stretch_layer( Image.Layer o, int x1, int x2, int w )
   return o;
 }
 
-array(Image.Layer) draw_button(mapping args, string text, object id)
+array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 {
   Image.Image  text_img;
   mapping      icon;
@@ -243,6 +317,10 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   int req_width, noframe;
 
   mapping ll = ([]);
+
+  //  Photoshop layers: don't let individual layers expand the image
+  //  beyond the bounds of the overall image.
+  mapping opts = ([ "crop_to_bounds" : 1 ]);
 
   void set_image( array layers )
   {
@@ -262,7 +340,29 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   };
 
   if( args->border_image )
-    set_image( roxen.load_layers(args->border_image, id) );
+  {
+    array(Image.Layer)|mapping tmp;
+
+#if constant(Sitebuilder)
+    //  Let SiteBuilder get a chance to decode its argument data
+    if (Sitebuilder.sb_start_use_imagecache) {
+      Sitebuilder.sb_start_use_imagecache(args, id);
+      tmp = roxen.load_layers(args->border_image, id, opts);
+      Sitebuilder.sb_end_use_imagecache(args, id);
+    } else
+#endif
+    {
+      tmp = roxen.load_layers(args->border_image, id, opts);
+    }
+    
+    if (mappingp(tmp)) {
+      if (tmp->error != 401)
+	report_debug("GButton: Failed to load frame image: %O (error: %O)\n",
+		     args->border_image, tmp->error);
+      return tmp;
+    }
+    set_image( tmp );
+  }
 
 
   //  otherwise load default images
@@ -344,11 +444,19 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   }
 
   //  Get icon
-  if (args->icn)
-    icon = roxen.low_load_image(args->icn, id);
-  else if (args->icd)
-    icon = roxen.low_decode_image(args->icd);
+  if (args->icn) {
+    //  Pass error mapping to find out possible errors when loading icon
+    mapping err = ([ ]);
+    icon = roxen.low_load_image(args->icn, id, err);
 
+    //  If icon loading fails due to missing authentication we reject the
+    //  gbutton request so that the browser can re-request it with proper
+    //  authentication headers.
+    if (!icon && err->error == 401)
+      return err;
+  } else if (args->icd)
+    icon = roxen.low_decode_image(args->icd);
+  
   int i_width = icon && icon->img->xsize();
   int i_height = icon && icon->img->ysize();
   int i_spc = i_width && sizeof(text) && 5;
@@ -356,26 +464,34 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
   //  Generate text
   if (sizeof(text))
   {
-    int os, dir;
-    Font button_font;
-    int th = text_height;
-    do
-    {
-      button_font = resolve_font( args->font+" "+th );
+    int min_font_size = 0;
+    int max_font_size = text_height * 2;
+    do {
+      //  Use binary search to find an appropriate font size. Since we prefer
+      //  font sizes which err on the small side (so we never extend outside
+      //  the given boundaries) we must round up when computing the next size
+      //  or we risk missing a good size.
+      int try_font_size = (max_font_size + min_font_size + 1) / 2;
+      Font button_font = resolve_font(args->font + " " + try_font_size);
       text_img = button_font->write(text);
-      os = text_img->ysize();
-      if( !dir )
-        if( os < text_height )
-          dir = 1;
-        else if( os > text_height )
-          dir =-1;
-      if( dir > 0 && os > text_height ) break;
-      else if( dir < 0 && os < text_height ) dir = 1;
-      else if( os == text_height ) break;
-      th += dir;
-    } while( (text_img->ysize() - text_height)
-             && (th>0 && th<text_height*2));
-
+      int real_height = text_img->ysize();
+      
+      //  Early bail for fixed-point fonts which are too large
+      if (real_height > try_font_size * 2)
+	break;
+      
+      //  Go up or down in size?
+      if (real_height == text_height)
+	break;
+      if (real_height > text_height)
+	max_font_size = try_font_size - 1;
+      else {
+	if (min_font_size == max_font_size)
+	  break;
+	min_font_size = try_font_size;
+      }
+    } while (max_font_size - min_font_size >= 0);
+    
     // fonts that can not be scaled.
     if( abs(text_img->ysize() - text_height)>2 )
       text_img = text_img->scale(0, text_height );
@@ -388,7 +504,8 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     if (args->cnd)
       text_img = text_img->scale((int) round(text_img->xsize() * 0.8),
 				 text_img->ysize());
-  }
+  } else
+    text_height = 0;
 
   int t_width = text_img && text_img->xsize();
 
@@ -410,9 +527,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     //  horizontally centered
     icn_x = left + (req_width - right - left - i_width) / 2;
     txt_x = left + (req_width - right - left - t_width) / 2;
-    if (args->icva == "above") {
+    if (args->icva == "above" || !text_height) {
       txt_y = middle;
-      icn_y = top + (middle - top - i_height) / 2;
+      icn_y = top + ((text_height ? middle : bottom) - top - i_height) / 2;
     } else {
       txt_y = top;
       icn_y = middle + (bottom - middle - i_height) / 2;
@@ -469,7 +586,7 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 	break;
       case "right":
 	icn_x = req_width - right - i_width;
-	txt_x = left + (icn_x - i_spc - t_width) / 2;
+	txt_x = left + (icn_x - i_spc - t_width - left) / 2;
 	break;
       }
       break;
@@ -694,22 +811,27 @@ mapping find_internal(string f, RequestID id)
   return button_cache->http_file_answer( (f/".")[0], id );
 }
 
-mapping __stat_cache = ([ ]);
 int get_file_stat( string f, RequestID id  )
 {
   int res;
-
+  mapping stat_cache;
+  
   //  -1 is used to cache negative results. When SiteBuilder crawler runs
   //  we must let the stat_file() run unconditionally to register
   //  dependencies properly.
-  if (!id->misc->persistent_cache_crawler)
-    if (res = __stat_cache[f])
-      return (res > 0) && res;
+  if (stat_cache = id->misc->gbutton_statcache) {
+    if (!id->misc->persistent_cache_crawler)
+      if (res = stat_cache[f])
+	return (res > 0) && res;
+  } else
+    stat_cache = id->misc->gbutton_statcache = ([ ]);
   
-  call_out( m_delete, 10, __stat_cache, f );
-  res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
-			     || file_stat( f )
-			     || ({ 0,0,0,0 }))[ST_MTIME] || -1;
+  int was_internal = id->misc->internal_get;
+  id->misc->internal_get = 1;
+  res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
+			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
+  if (!was_internal)
+    m_delete(id->misc, "internal_get");
   return (res > 0) && res;
 }
 
@@ -721,8 +843,14 @@ class ButtonFrame {
 //     int t = gethrtime();
     string fi = (args["frame-image"] ||
 		 id->misc->defines["gbutton-frame-image"]);
-    if( fi )
+    if( fi ) {
+      //  Reject empty file paths for sufficiently high compat_level
+      if (fi == "" && compat_level >= 5.2)
+	RXML.parse_error("Empty frame-image attribute not allowed.");
+      
       fi = Roxen.fix_relative( fi, id );
+    }
+    m_delete(args, "frame-image");
     
     //  Harmonize some attribute names to RXML standards...
     args->icon_src = args["icon-src"]       || args->icon_src;
@@ -732,6 +860,9 @@ class ButtonFrame {
     m_delete(args, "icon-src");
     m_delete(args, "icon-data");
     m_delete(args, "align-icon");
+
+    if (args->icon_src == "" && compat_level >= 5.2)
+      RXML.parse_error("Empty icon-src attribute not allowed.");
     
     mapping new_args =
       ([
@@ -776,29 +907,56 @@ class ButtonFrame {
 	"gamma":args["gamma"],
 	"crop":args["crop"],
       ]);
-    if( fi )
+
+    //  Remove extra layer attributes to avoid *-* copying below
+    m_delete(args, "extra-layers");
+    m_delete(args, "extra-left-layers");
+    m_delete(args, "extra-right-layers");
+    m_delete(args, "extra-background-layers");
+    m_delete(args, "extra-mask-layers");
+    m_delete(args, "extra-frame-layers");
+    
+    int timeout = Roxen.timeout_dequantifier(args);
+
+    if( fi ) {
       new_args->stat = get_file_stat( fi, id );
+#if constant(Sitebuilder)
+      //  The file we called get_file_stat() on above may be a SiteBuilder
+      //  file. If so we need to extend the argument data with e.g.
+      //  current language fork.
+      if (Sitebuilder.sb_prepare_imagecache)
+	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
+#endif
+    }
+
+    if (string icn_path = new_args->icn) {
+      new_args->stat_icn = get_file_stat(icn_path, id);
+#if constant(Sitebuilder)
+      if (Sitebuilder.sb_prepare_imagecache)
+	new_args = Sitebuilder.sb_prepare_imagecache(new_args, icn_path, id);
+#endif
+    }
 
     new_args->quant = args->quant || 128;
     foreach(glob("*-*", indices(args)), string n)
       new_args[n] = args[n];
 
+    //string fn;
     //  if( new_args->stat && (fn = id->conf->real_file( fi, id ) ) )
     //     Roxen.add_cache_stat_callback( id, fn, new_args->stat );
 
-    string fn;
 //     werror("mkurl took %dµs\n", gethrtime()-t );
 
 //     t = gethrtime();
     string img_src =
       query_absolute_internal_location(id) +
-      button_cache->store( ({ new_args, content }), id);
+      button_cache->store( ({ new_args, (string)content }), id, timeout);
 
     if(do_ext)
       img_src += "." + (new_args->format || "gif");
 
 //     werror("argcache->store took %dµs\n", gethrtime()-t );
-    return ({ img_src, new_args });
+    return ({ img_src, new_args, timeout });
   }
 }
 
@@ -829,21 +987,25 @@ class TagGButton {
       //  Peek at img-align and remove it so it won't be copied by "*-*" glob
       //  in mk_url().
       string img_align = args["img-align"];
+      string title = args->title;
       m_delete(args, "img-align");
       
-      [string img_src, mapping new_args]=mk_url(id);
+      [string img_src, mapping new_args, int timeout]=mk_url(id);
 
       mapping img_attrs = ([ "src"    : img_src,
-			     "alt"    : args->alt || content,
+			     "alt"    : args->alt || (string)content,
 			     "border" : args->border,
 			     "hspace" : args->hspace,
 			     "vspace" : args->vspace ]);
       if (img_align)
         img_attrs->align = img_align;
+      if (title)
+	img_attrs->title = title;
       
-      if (mapping size = button_cache->metadata( ({ new_args, content }),
-						 id, 1)) {
-	//  Image in cache (1 above prevents generation on-the-fly, i.e.
+      int no_draw = !id->misc->generate_images;
+      if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
+						 id, no_draw, timeout)) {
+	//  Image in cache (no_draw above prevents generation on-the-fly, i.e.
 	//  first image will lack sizes).
 	img_attrs->width = size->xsize;
 	img_attrs->height = size->ysize;
@@ -854,12 +1016,14 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href" : args->href ]);
+	mapping a_attrs = ([ "href"    : args->href,
+			     "onfocus" : "this.blur();" ]);
 
 	foreach(indices(args), string arg)
-	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/"
+	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
 		       "onmouseout/onmouseover/onkeypress/onkeyup/"
-		       "onkeydown" / "/", lower_case(arg)))
+		       "onkeydown/style/class/id/accesskey/",
+		       "/" + lower_case(arg) + "/"))
 	    a_attrs[arg] = args[arg];
 
 	result = Roxen.make_container("a", a_attrs, result);

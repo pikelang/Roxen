@@ -1,8 +1,8 @@
 /*
- * $Id: snmpagent.pike,v 1.12 2001/08/23 18:06:07 nilsson Exp $
+ * $Id$
  *
  * The Roxen SNMP agent
- * Copyright © 2001, Roxen IS.
+ * Copyright © 2001, Honza Petrous, hop@unibase.cz
  *
  * Author: Honza Petrous
  * January 2001
@@ -30,24 +30,15 @@ Developer notes:
 	- default value for snmpagent host/port variable in the config. int.
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
-	- cold_start trap code isn't completed
-	- tabular walking throught roxenis.app.webserver.* doesn't working
+	- vsStopTrap is generated even if the virtual server wasn't started
+
  Todos:
-    v1.0 todo:
-	- cold/warm start trap generation
-	- restart/stop
-	- 'basic' Roxen working variables
 
-    v1.1 todo:
-	- trap handling
 	- module reloading
-
-    v2.0 todo:
 	- Roxen.module API for registering MIB subtree
 
-    v3.0 todo:
 	- SNMP v3 
-	- security
+	- security (DES?)
 
 
  */
@@ -87,7 +78,7 @@ inherit Roxen;
 #define OBJ_TICK(x)		({"tick", x})
 #define OBJ_COUNT(x)		({"count", x})
 
-// The starting part of OID of every object will have, so we stripp it out
+// The starting part of OID of every object will have, so we strip it out
 // before making index from OID to the MIB DB
 #define MIBTREE_BASE				"1.3.6.1"
 
@@ -95,30 +86,66 @@ inherit Roxen;
 // enterprises.roxenis
 #define RISMIB_BASE				MIBTREE_BASE+"."+RISMIB_BASE_ADD
 #define RISMIB_BASE_WEBSERVER_ADD		"1.1"
-// enterprises.roxenis.app.roxen
+// enterprises.roxenis.app.webserver
 #define RISMIB_BASE_WEBSERVER			RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
+//
 // enterprises.roxenis.app.webserver.global
 #define RISMIB_BASE_WEBSERVER_GLOBAL		RISMIB_BASE_WEBSERVER+".1"
 // enterprises.roxenis.app.webserver.global.restart
 #define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
-// enterprises.roxenis.app.webserver.vsTable.vsEntry
-#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2.1"
+// enterprises.roxenis.app.webserver.global.vsCount
+#define RISMIB_BASE_WEBSERVER_GLOBAL_VS		RISMIB_BASE_WEBSERVER_GLOBAL+".2"
+//
+// enterprises.roxenis.app.webserver.vsTable
+#define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsIndex
-#define RISMIB_BASE_WEBSERVER_VS_INDEX		RISMIB_BASE_WEBSERVER_VS+".1"
+#define RISMIB_BASE_WEBSERVER_VS_INDEX		RISMIB_BASE_WEBSERVER_VS+".1.1"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsName
-#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".2"
+#define RISMIB_BASE_WEBSERVER_VS_NAME		RISMIB_BASE_WEBSERVER_VS+".1.2"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsDescription
-#define RISMIB_BASE_WEBSERVER_VS_DESC		RISMIB_BASE_WEBSERVER_VS+".3"
+#define RISMIB_BASE_WEBSERVER_VS_DESC		RISMIB_BASE_WEBSERVER_VS+".1.3"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsSent
-#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".4"
+#define RISMIB_BASE_WEBSERVER_VS_SDATA		RISMIB_BASE_WEBSERVER_VS+".1.4"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsReceived
-#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".5"
+#define RISMIB_BASE_WEBSERVER_VS_RDATA		RISMIB_BASE_WEBSERVER_VS+".1.5"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsHeaders
-#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".6"
+#define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".1.6"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsRequests
-#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".7"
+#define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".1.7"
+//
+// enterprises.roxenis.app.webserver.trapGlobal
+#define RISMIB_BASE_WEBSERVER_TRAPG		RISMIB_BASE_WEBSERVER+".3"
+// enterprises.roxenis.app.webserver.trapGlobal.serverDownTrap
+#define RISMIB_BASE_WEBSERVER_TRAPG_DOWN	RISMIB_BASE_WEBSERVER_TRAPG+".1"
+// enterprises.roxenis.app.webserver.trapVs
+#define RISMIB_BASE_WEBSERVER_TRAPVS		RISMIB_BASE_WEBSERVER+".4"
+// enterprises.roxenis.app.webserver.trapVs.vsExternalTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSEXT	RISMIB_BASE_WEBSERVER_TRAPVS+".1"
+// enterprises.roxenis.app.webserver.trapVs.vsStartTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSSTART	RISMIB_BASE_WEBSERVER_TRAPVS+".2"
+// enterprises.roxenis.app.webserver.trap.vsStopTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSSTOP	RISMIB_BASE_WEBSERVER_TRAPVS+".3"
+// enterprises.roxenis.app.webserver.trapVs.vsCongChangedTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSCONF	RISMIB_BASE_WEBSERVER_TRAPVS+".4"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
+
+#if !efunc(Array.oid_sort_func)
+int oid_sort_func(string a0,string b0) {
+    string a2="",b2="";
+    int a1, b1;
+    sscanf(a0,"%d.%s",a1,a2);
+    sscanf(b0,"%d.%s",b1,b2);
+    if (a1>b1) return 1;
+    if (a1<b1) return 0;
+    if (a2==b2) return 0;
+    return oid_sort_func(a2,b2);
+}
+#define OID_SORT_FUNC	oid_sort_func
+#else
+#define OID_SORT_FUNC	Array.oid_sort_func
+#endif
+
 
 //!
 class SNMPagent {
@@ -135,22 +162,24 @@ class SNMPagent {
   private int snmpenaauth;
   private mapping events;
   private mixed co;
-  private object th;
-  private static object mib;
-  private mapping vsdb;
+  private object mib;
+  private mapping vsdb;		// table of registered virtual servers
+  private array dtraps;		// delayed traps
 
-  array get_snmpinpkts() { return OBJ_COUNT(snmpinpkts); };
-  array get_snmpoutpkts() { return OBJ_COUNT(snmpoutpkts); };
-  array get_snmpbadver() { return OBJ_COUNT(snmpbadver); };
-  array get_snmpbadcommnames() { return OBJ_COUNT(snmpbadcommnames); };
-  array get_snmpbadcommuses() { return OBJ_COUNT(snmpbadcommuses); };
-  array get_snmpenaauth() { return OBJ_INT(snmpenaauth); };
+  array get_snmpinpkts() { return OBJ_COUNT(snmpinpkts); }
+  array get_snmpoutpkts() { return OBJ_COUNT(snmpoutpkts); }
+  array get_snmpbadver() { return OBJ_COUNT(snmpbadver); }
+  array get_snmpbadcommnames() { return OBJ_COUNT(snmpbadcommnames); }
+  array get_snmpbadcommuses() { return OBJ_COUNT(snmpbadcommuses); }
+  array get_snmpenaauth() { return OBJ_INT(snmpenaauth); }
 
-  array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); };
+  array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); }
 
+  int get_uptime() { return (time(1) - roxen->start_time)*100; }
 
   void create() {
     vsdb = ([]);
+    dtraps = ({});
     //disable();
   }
 
@@ -165,7 +194,7 @@ class SNMPagent {
       mib->register(SubMIBSnmp(this_object()));
       // enterprises.roxenis.*
       mib->register(SubMIBRoxenVS(this_object()));
-      mib->register(SubMIBRoxenVSName(this_object()));
+      mib->register(SubMIBRoxenVSTable(this_object()));
       mib->register(SubMIBRoxenBoot(this_object()));
     }
     if (!status())
@@ -235,6 +264,7 @@ class SNMPagent {
       errnum = 5 /*SNMP_ERR_GENERR*/;
       attrname = indices(pdata[msgid]->attribute[0])[0];
       LOG_EVENT("Bad community name", pdata[msgid]);
+      authfailure_trap(pdata[msgid]);
     } else
     foreach(pdata[msgid]->attribute, mapping attrs) {
       mixed attrval = values(attrs)[0];
@@ -264,7 +294,7 @@ class SNMPagent {
 		if(arrayp(val) && sizeof(val))
 		  setflg = val[0];
 		//rdata[attrname] += ({ "int", attrval });
-		rdata["1.3.6.1.2.1.1.3.0"] += get_uptime();
+		rdata["1.3.6.1.2.1.1.3.0"] += OBJ_TICK(get_uptime());
 		if (arrayp(val) && stringp(val[1]))
 		  report_warning(val[1]);
 		break;
@@ -286,6 +316,7 @@ class SNMPagent {
     if(!sizeof(rdata)) {
       if (!errnum) LOG_EVENT("No such name", pdata[msgid]);
       fd->get_response(([attrname:({"oid", attrname})]), pdata, errnum || 2 /*SNMP_NOSUCHNAME*/);
+      // future note: v2c, v3 protos want to return "endOfMibView"
     } else
       fd->get_response(rdata, pdata);
   }
@@ -300,7 +331,6 @@ class SNMPagent {
   private void real_start() {
 
     mixed err;
-    mapping data;
     array hp = query("snmp_hostport")/":";
     int p = (sizeof(hp)>1) ? (int)hp[1] : (int)SNMPAGENT_DEFAULT_PORT;
 
@@ -310,6 +340,12 @@ class SNMPagent {
     if(arrayp(err))
       RXML.run_error("SNMPagent: can't open UDP port " + hp[0]+":"+(string)(p||161)+"[" + err[0] + "].");
     SNMPAGENT_MSG(sprintf("SNMP UDP port %s:%d binded successfully.", hp[0], p||161));
+
+    // first we server dealyed traps
+    if(arrayp(dtraps) && sizeof(dtraps))
+      foreach(dtraps, array dtrap1)
+	fd->trap( @dtrap1 );
+    dtraps = ({});
 
     enabled = 1;
 #if NO_THREADS
@@ -362,33 +398,70 @@ class SNMPagent {
     SNMPAGENT_MSG("Shutdown complete.");
   }
 
-  //! Cold start notificator. Sends trap for all virtual servers in the vsarr.
-  void coldstart_trap(array(int) vsarr) {
+  // start/stop notificator
+  private void x_trap(string oid, array|void val) {
 
-	object uri;
+    object uri;
+    int rtype = 6;
+    mapping aval = ([oid: val]);
 
-    if(intp(vsarr))
-	  return;
-	foreach(vsarr, int vsid)
-	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] && sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
-	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
-			vsdb[vsid]->name, vsid,
-			vsdb[vsid]->variables["snmp_traphosts"]->query()));
-	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
-		  uri = Standards.URI(thost);
-		  SNMPAGENT_MSG(sprintf("Trap sent: %s", thost));
-/*
-		  fd->trap(
-		    ([RISMIB_BASE_WEBSERVER+".999.1.1":
-                        ({ "str", Standards.URI(vsdb[vsid]->variables["MyWorldLocation"]->query())->host}) ]),
-		    uri->host, uri->port);
-*/
-		}
-	  } else
-	    if(vsdb[vsid])
-	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
-			    vsdb[vsid] && vsdb[vsid]->name, vsid));
+    switch (oid) {
 
+	case "0"+RISMIB_BASE_WEBSERVER:		// flagged
+		oid = RISMIB_BASE_WEBSERVER;
+		rtype = 0;
+		break;
+
+	case "4"+RISMIB_BASE_WEBSERVER:		// flagged
+		oid = RISMIB_BASE_WEBSERVER;
+		rtype = 4;
+		break;
+
+	case RISMIB_BASE_WEBSERVER_TRAPG_DOWN:
+		break;
+
+    }
+    if(!arrayp(val))
+      aval = ([]);
+    foreach(query("snmp_global_traphosts"), string url) {
+      if(catch(uri = Standards.URI(url))) {
+	SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", url));
+	continue; // FIXME: what about possibility to add some warnings?
+      }
+      if(objectp(fd)) {
+	SNMPAGENT_MSG(sprintf("Trap sent: %s", url));
+	fd->trap( aval,
+			oid, rtype, 0,
+			get_uptime(),
+			0, uri->host, uri->port );
+      } else {
+	SNMPAGENT_MSG(sprintf("Trap delayed: %s", url));
+	dtraps += ({ ({ aval,
+			oid, rtype, 0,
+			get_uptime(),
+			0, uri->host, uri->port }) });
+      }
+    }
+  }
+
+  //! Start notificator.
+  void start_trap() {
+    x_trap("0"+RISMIB_BASE_WEBSERVER);
+  }
+
+  //! Stop notificator.
+  void stop_trap() {
+    x_trap(RISMIB_BASE_WEBSERVER_TRAPG_DOWN);
+  }
+
+  //! Virtual server start notificator
+  void vs_start_trap(int vsid) {
+    x_trap(RISMIB_BASE_WEBSERVER_TRAP_VSSTART+".0", OBJ_INT(vsid));
+  }
+
+  //! Virtual server stop notificator
+  void vs_stop_trap(int vsid) {
+    x_trap(RISMIB_BASE_WEBSERVER_TRAP_VSSTOP+".0", OBJ_INT(vsid));
   }
 
   //! Warm start notificator
@@ -397,13 +470,37 @@ class SNMPagent {
   }
 
   //! Authentication failure notificator
-  void authfailure_trap() {
-
+  void authfailure_trap(mapping data) {
+    x_trap("4"+RISMIB_BASE_WEBSERVER);
   }
 
   //! Enterprise specific trap notificator
-  void enterprise_trap() {
+  void enterprise_trap(int vsid, mapping attrvals) {
 
+    object uri;
+
+      if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] &&
+             sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
+	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
+			vsdb[vsid]->name, vsid,
+			vsdb[vsid]->variables["snmp_traphosts"]->query()));
+	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
+		  if(catch(uri = Standards.URI(thost))) {
+		    SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", thost));
+		    continue; // FIXME: what about possibility to add some warnings?
+		  }
+		  SNMPAGENT_MSG(sprintf("Enterprise trap sent: %s", thost));
+		  fd->trap(
+		    attrvals || ([RISMIB_BASE_WEBSERVER_TRAP_VSEXT+".0": OBJ_STR(vsdb[vsid]->name)]),
+		    RISMIB_BASE_WEBSERVER_TRAP_VSEXT, 6, 0,
+		    get_uptime(),
+		    0,
+		    uri->host, uri->port);
+		}
+	  } else
+	    if(vsdb[vsid])
+	      SNMPAGENT_MSG(sprintf("server %O(#%d) hasn't any traphosts.",
+			    vsdb[vsid] && vsdb[vsid]->name, vsid));
   }
 
   //! Adds virtual server to the DB of managed objects
@@ -483,7 +580,7 @@ class SNMPagent {
 private string|int oid_strip (string oid) { // note: this method must be public!
 
   array arr = oid / ".";
-  if (sizeof(arr) < 7)  // FIXME: exists oid with less octets?
+  if (sizeof(arr) < 5)  // FIXME: exists oid with less octets?
     return 0;
   oid = arr[4..] * ".";
   return oid;
@@ -573,9 +670,10 @@ class SubMIBManager {
   //! Returns array ({ nextoid, type, val }) or 0
   array|int getnext(string oid, mapping|void pkt) {
 
-    array(string) idxnums = Array.sort(indices(submibtab));
+    //array(string) idxnums = Array.sort(indices(submibtab));
+    array idxnums = Array.sort_array(indices(submibtab), OID_SORT_FUNC);
     int idx;
-    string soid;
+    string soid, manoid;
     array s;
 
     SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
@@ -588,12 +686,9 @@ class SubMIBManager {
       if(idx < sizeof(idxnums)-1)
 	return (({ MIBTREE_BASE+"."+(string)idxnums[idx+1],
                    @submibtab[idxnums[idx+1]]() }));
-      else
-	return 0;
     } else {
       int tlen = sizeof(tree/".");
       array sarr = soid/".";
-      //if(soid[..(sizeof(tree)-1)] == tree) { // only inside owned subtree
       if(sizeof(sarr)>=tlen && (sarr[..tlen-1]*".") == tree) {
         SNMPAGENT_MSG(name+": owned subtree found.");
         // hmm, now we have to find nearest subtree
@@ -604,24 +699,46 @@ class SubMIBManager {
 		     @submibtab[idxnums[idx]]() }));
 	  }
       }
+    }
 
-      SNMPAGENT_MSG(name+": foreign object detected.");
-      s = soid/".";
-      // hmm, now we have to try some of the registered managers
-      for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
-	SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
-        if(subtreeman[s[..cnt]*"."]) {
-	  // good, subtree manager exists
-	  string manoid = s[..cnt]*".";
-          SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
+    SNMPAGENT_MSG(name+": trying foreign object");
+    s = soid/".";
+    // hmm, now we have to try some of the registered managers
+    for(int cnt = sizeof(s)-1; cnt>0; cnt--) {
+      SNMPAGENT_MSG(sprintf("finding manager for tree %O", s[..cnt]*"."));
+      if(subtreeman[s[..cnt]*"."]) {
+	// good, subtree manager exists
+	manoid = s[..cnt]*".";
+	SNMPAGENT_MSG(sprintf("found subtree manager: %s(%O)",
 				subtreeman[manoid]->name, manoid));
-	  return subtreeman[manoid]->getnext(oid, pkt);
-        }
+	return subtreeman[manoid]->getnext(oid, pkt);
       }
+    }
 
+    SNMPAGENT_MSG(name+": trying nearest manager");
+    // OK, we have to find nearest oid manager
+    //idxnums = Array.sort(indices(subtreeman));
+    idxnums = Array.sort_array(indices(subtreeman), OID_SORT_FUNC);
+    idx = Array.search_array(idxnums, OID_SORT_FUNC, soid);
+    if(idx >= 0) {
+      manoid = idxnums[idx];
+      SNMPAGENT_MSG(sprintf("found nearest manager: %s(%O)",
+				subtreeman[manoid]->name, manoid));
+      return subtreeman[manoid]->getnext(MIBTREE_BASE+"."+manoid, pkt);
     }
 
     SNMPAGENT_MSG("Not found any suitable manager");
+    return 0;
+  }
+
+  int compare_oid(string oid1, string oid2) {
+
+    array o1 = oid1/".", o2 = oid2/".";
+    int len = sizeof(o1)<sizeof(o2)?sizeof(o1):sizeof(o2);
+
+    for (int idx = 0; idx < len; idx++)
+      if(o1[idx] > o2[idx])
+	return 1;
     return 0;
   }
 
@@ -650,15 +767,6 @@ class SubMIBManager {
     return ({ 0, 0});
   }
 
-  //! Tries to guess next OID. Usable to situation when GET_NEXT op
-  //! contains OID without .0
-  string|int oid_guess_next(string oid) {
-
-    if(oid_check(oid+".0"))
-      return oid+".1";
-    return 0;
-  }
-
   //! External function for MIB object returning nothing
   array get_null() { return OBJ_COUNT(0); }
 
@@ -668,7 +776,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.12 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.26 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -677,7 +785,7 @@ array get_sysoid() {
 }
 
 //! External function for MIB object 'system.sysUpTime'
-array get_uptime() {
+array get_sysuptime() {
   return OBJ_TICK((time(1) - roxen->start_time)*100);
 }
 
@@ -721,7 +829,7 @@ class SubMIBSystem {
 	  // system.sysObjectID
 	  "2.1.1.2.0": get_sysoid,
 	  // system.sysUpTime
-	  "2.1.1.3.0": get_uptime,
+	  "2.1.1.3.0": get_sysuptime,
 	  // system.sysContact
 	  "2.1.1.4.0": get_syscontact,
 	  // system.sysName
@@ -733,6 +841,20 @@ class SubMIBSystem {
 	]);
   } // create
 
+  array|int getnext(string oid, mapping|void pkt) {
+
+    array rv = ::getnext(oid, pkt);
+    mapping sm = ::subtreeman;
+
+    if(intp(rv)) {
+      ::subtreeman = subtreeman;
+      rv = ::getnext(oid, pkt);
+      ::subtreeman = sm;
+    }
+      return rv;
+  }
+   
+      
 } // SubMIBsystem
 
 
@@ -820,8 +942,8 @@ class SubMIBRoxenVS {
 
   inherit SubMIBManager;
 
-  constant name = "enterprises.roxenis.app.webserver.vsTable";
-  constant tree = RISMIB_BASE_WEBSERVER_VS - (MIBTREE_BASE+".");
+  constant name = "enterprises.roxenis.app.webserver.global.vsCount";
+  constant tree = RISMIB_BASE_WEBSERVER_GLOBAL_VS - (MIBTREE_BASE+".");
 
   void create(object agent) {
 
@@ -867,7 +989,7 @@ class SubMIBRoxenVS {
 
 //! roxenis enterprise subtree manager
 //! Manages the enterprises.roxenis.app.webserver.vsTable submib tree.
-class SubMIBRoxenVSName {
+class SubMIBRoxenVSTable {
 
   inherit SubMIBManager;
 
@@ -885,7 +1007,6 @@ class SubMIBRoxenVSName {
 
     string soid, vname;
     int vdata, idx;
-    array rval, arroid;
 
     SNMPAGENT_MSG(sprintf("%s: GET(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
     soid = oid_strip(oid);
@@ -897,11 +1018,11 @@ class SubMIBRoxenVSName {
     }*/
 
     // no, so we will try to find "tabular" object instead
-    if(sizeof((soid = soid - (tree + "."))/".") != 2)
-      return ({}); // exactly one point, please
+    if(sizeof((soid = soid - (tree + "."))/".") != 3 || (soid/".")[0] != "1")
+      return ({}); // exactly two points, please (vsEntry.vs<xxx>.<num>)
 
-    idx = ((int)(soid/".")[1])+1;
-    switch ((soid/".")[0]) {
+    idx = ((int)(soid/".")[2]);
+    switch ((soid/".")[1]) {
 
 	case "1": // VS_INDEX
     	  vname = agent->get_virtservname(idx);
@@ -954,53 +1075,83 @@ class SubMIBRoxenVSName {
 
     string soid, noid, vname;
     int idx, vdata;
-    array rval, arr;
+    array arr;
 
-    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O) from %s@%s:%d", name, oid, pkt->community, pkt->ip,pkt->port));
+    SNMPAGENT_MSG(sprintf("%s: GETNEXT(%O)", name, oid));
     soid = oid_strip(oid);
 
-    if(oid == (MIBTREE_BASE+"."+tree)) {
-      soid = "1.-1"; 			// special case
-      oid += ".1.-1";			// trash only
+    if(soid == tree) soid +=".";
+    arr = allocate(5);
+    switch(idx = sscanf(soid-(tree+"."), "%d.%d.%d.%s", arr[0], arr[1], arr[2], arr[3])) {
+
+	case 3:
+	  break;
+
+	case 0:
+	  arr[0] = 1;
+	case 1:
+	  arr[1] = 1;
+	case 2:
+	  arr[2] = 0;
+	  break;
+
+	default:
+	  return ({});
     }
-
-    arr = ((soid = soid - (tree + "."))/".");
-    if(sizeof(arr) == 1) {
-      soid = arr[0]+".-1"; 		// special case
-      oid += "."+soid;			// trash only
+    if(!stringp(agent->get_virtservname(arr[2]+1))) {  // check on correct index
+      SNMPAGENT_MSG(sprintf("DEB: idx:%O soid: %O arr: %O", idx, soid, arr));
+      arr[1]++;
+      if(arr[1] > 7)
+	    return ({}); // outside of current manager scope
+      arr[2] = 0;
     }
+    arr[2]++;
+    idx = arr[2];  
+    noid = MIBTREE_BASE+"."+tree + "."+(string)arr[0]+"."+(string)arr[1]+"."+(string)arr[2];
 
-    idx = (int)((soid/".")[1])+1;
-    noid = (reverse(reverse(oid/".")[1..])*".")+"."+(string)idx;
+    //SNMPAGENT_MSG(sprintf("DEB: arr:%O, soid: %O, noid: %O", arr, soid, noid));
 
-    switch ((soid/".")[0]) {
+    //switch ((soid/".")[1]) {
+    switch (arr[1]) {
 
-	case "1": // VS_NAME
-	  vname = agent->get_virtservname(idx+1);
+	case 1: // VS_INDEX
+	  vname = agent->get_virtservname(idx);  // only checking
+	  if(!stringp(vname))
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_INT(idx)}));
+
+	case 2: // VS_NAME
+	  vname = agent->get_virtservname(idx);
 	  if(!stringp(vname))
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_STR(vname)}));
 
-	case "2": // VS_SDATA
-	  vdata = agent->get_virtservsdata(idx+1);
+	case 3: // VS_DESCR
+	  vname = agent->get_virtservname(idx);  // FIXME:  change to descr!
+	  if(!stringp(vname))
+	    return ({}); // wrong index
+	  return (({noid, @OBJ_STR(vname)}));
+
+	case 4: // VS_SDATA
+	  vdata = agent->get_virtservsdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "3": // VS_SHDRS
-	  vdata = agent->get_virtservshdrs(idx+1);
+	case 5: // VS_RDATA
+	  vdata = agent->get_virtservrdata(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "4": // VS_RDATA
-	  vdata = agent->get_virtservrdata(idx+1);
+	case 6: // VS_SHDRS
+	  vdata = agent->get_virtservshdrs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
 
-	case "5": // VS_REQS
-	  vdata = agent->get_virtservreqs(idx+1);
+	case 7: // VS_REQS
+	  vdata = agent->get_virtservreqs(idx);
 	  if(vdata < 0)
 	    return ({}); // wrong index
 	  return (({noid, @OBJ_COUNT(vdata)}));
@@ -1024,16 +1175,15 @@ class SubMIBRoxenBoot {
   
   void create(object agentp) {
     agent = agentp;
-    submibtab = ([ ]);
+    submibtab = ([ tree+".0": lambda() { return OBJ_INT(0); }  ]);
   }
 
   // HACK! For testing purpose only!
   // Server restart = 1; server shutdown = 2
   array set(string oid, mixed val, mapping|void pkt) {
 
-    string soid, vname;
+    string soid;
     int setflg = 0;
-    array rval, arroid;
 
     SNMPAGENT_MSG(sprintf("SET(%s): %O = %O", name, oid, val));
     soid = oid_strip(oid);

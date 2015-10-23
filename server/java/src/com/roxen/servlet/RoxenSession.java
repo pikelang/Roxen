@@ -60,9 +60,25 @@ class RoxenSession implements javax.servlet.http.HttpSession
   {
     return previousAccessedTime;
   }
-
+  
+  public boolean isInvalidOrExpired(long now)
+  {
+    //  Used by RoxenSessionContext which manually garbage collects all
+    //  sessions which are either invalid or timed out. The parameter now
+    //  shoud be the current time in milliseconds which the caller can
+    //  supply in order to save a large number of the System calls.
+    if (now == 0)
+      now = System.currentTimeMillis();
+    return
+      invalidated ||
+      (maxInactiveInterval >= 0 &&
+       (now - lastAccessedTime) / 1000 >= maxInactiveInterval);
+  }
+  
   boolean access()
   {
+    if (invalidated)
+      return false;
     previousAccessedTime = lastAccessedTime;
     lastAccessedTime = System.currentTimeMillis();
     if(maxInactiveInterval>=0 &&

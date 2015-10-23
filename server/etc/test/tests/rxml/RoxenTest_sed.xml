@@ -1,0 +1,14 @@
+<use-module>sed</use-module>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo">xxx</set>
+    <sed>
+      <source variable="var.foo"/>
+      <destination variable="form.foo"/>
+      <e>s/x/yy/g</e>
+    </sed>
+    &form.foo;
+  </rxml>
+  <result>yyyyyy</result>
+</test>

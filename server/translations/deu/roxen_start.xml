@@ -18,7 +18,8 @@
 </str>
 
 <str id="3">
-<o>Registered %s for %s</o>
+<changed from="Registered %s for %s"/>
+<o>Registered URL %s for %O.</o>
 <t>Registriere %s für %s</t>
 </str>
 

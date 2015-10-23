@@ -1,14 +1,16 @@
-# $Id: extensions,v 1.48 2000/11/22 22:30:30 nilsson Exp $
+# $Id$
 #
 # ---- Extension database ----
-# The database used by the content typ module to map from extension to mime-type
-# (example: *.gif to image/gif). Lines are commented with ## to resolve name
-# conflicts (same extension mapping to several MIME-types). Up to date with IANA
-# MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
-# quite a few other mime types. They can be found in the file
-# more_extensions/chemical.
+# The database used by the content typ module to map from extension to
+# mime-type (example: *.gif to image/gif). Lines are commented with ## to
+# resolve name conflicts (same extension mapping to several MIME-types).
+# Up to date with IANA MIME-type listing 03-SEP-1999. Chemical/* is not
+# included since they collide with quite a few other mime types. They can
+# be found in the file more_extensions/chemical.
 #
 # Last synchronized with IANA media types list: 2000-09-20
+
+# Some mime-types from RFC 3023 have been added.
 
 # -------------------- Audio ---------------------
 
@@ -71,6 +73,8 @@ vqe	audio/x-twinvq-plugin
 vql	audio/x-twinvq
 vox	audio/voxware
 wav	audio/x-wav
+wax	audio/x-ms-wax
+wma	audio/x-ms-wma
 wtx	audio/x-wtx
 
 
@@ -109,10 +113,6 @@ wbmp    image/vnd.wap.wbmp
 # image/vnd.fujixerox.edmics-mmr
 # image/vnd.fst
 
-# Pending registration
-
-svg	image/svg
-
 # Other
 
 bmp	image/x-MS-bmp
@@ -144,6 +144,7 @@ pict	image/pict
 pnm	image/x-portable-anymap
 pntg	image/x-macpaint
 ppm	image/x-portable-pixmap
+psd	image/x-photoshop
 qif	image/x-quicktime
 qti	image/x-quicktime
 qtif	image/x-quicktime
@@ -153,6 +154,8 @@ rgb	image/x-rgb
 rip	image/rip
 rp	image/vnd.rn-realpix
 rs	image/x-sun-raster
+svg	image/svg+xml
+svgz	image/svg+xml
 svh	image/svh
 tga	image/x-targa
 wi	image/wavelet
@@ -208,6 +211,10 @@ vgm	video/x-videogram
 vgp	video/x-videogram-plugin
 vgx	video/x-videogram
 vos	video/vosaic
+wm	video/x-ms-wm
+wmv	video/x-ms-wmv
+wmx	video/x-ms-wmx
+wvx	video/x-ms-wvx
 xdr	video/x-videogram
 
 
@@ -256,6 +263,7 @@ wmls	text/vnd.wap.wmlscript
 # text/vnd.IPTC.NewsML
 # text/vnd.IPTC.NITF
 # text/vnd.curl
+manifest	text/cache-manifest
 
 # Other
 
@@ -265,6 +273,8 @@ cpp	text/x-c++-code
 etx	text/x-setext
 h	text/x-include-file
 hdml	text/x-hdml
+# MSIE 5+ HTML Component file.
+htc	text/x-component
 htt	text/webviewhtml
 pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
@@ -307,6 +317,7 @@ pdf	application/pdf
 zip	application/zip
 # application/macwriteii
 doc	application/msword
+docx	application/vnd.openxmlformats-officedocument.wordprocessingml.document
 dot	application/msword
 # application/remote-printing
 # application/mathematica
@@ -318,6 +329,28 @@ dot	application/msword
 # application/x400-bp
 # application/sgml
 # application/cals-1840
+
+# ISO 26300 - Open Document Format (ODF)
+
+odb	application/vnd.oasis.opendocument.database
+odc	application/vnd.oasis.opendocument.chart
+odf	application/vnd.oasis.opendocument.formula
+odg	application/vnd.oasis.opendocument.graphics
+odi	application/vnd.oasis.opendocument.image
+odm	application/vnd.oasis.opendocument.text-master
+odp	application/vnd.oasis.opendocument.presentation
+ods	application/vnd.oasis.opendocument.spreadsheet
+odt	application/vnd.oasis.opendocument.text
+otc	application/vnd.oasis.opendocument.chart-template
+otf	application/vnd.oasis.opendocument.formula-template
+otg	application/vnd.oasis.opendocument.graphics-template
+oth	application/vnd.oasis.opendocument.text-web
+oti	application/vnd.oasis.opendocument.image-template
+otp	application/vnd.oasis.opendocument.presentation-template
+ots	application/vnd.oasis.opendocument.spreadsheet-template
+ott	application/vnd.oasis.opendocument.text-template
+
+oxt	application/vnd.openofficeorg.extension
 # application/pgp-encrypted
 # application/pgp-signature
 # application/pgp-keys
@@ -330,11 +363,15 @@ xld	application/vnd.ms-excel
 xll	application/vnd.ms-excel
 xlm	application/vnd.ms-excel
 xls	application/vnd.ms-excel
+xlsx	application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
 xlt	application/vnd.ms-excel
 xlw	application/vnd.ms-excel
+xsl	application/xslt+xml
+xslt	application/xslt+xml
 ppa	application/vnd.ms-powerpoint
 pot	application/vnd.ms-powerpoint
 ppt	application/vnd.ms-powerpoint
+pptx	application/vnd.openxmlformats-officedocument.presentationml.presentation
 pps	application/vnd.ms-powerpoint
 pwz	application/vnd.ms-powerpoint
 # application/vnd.ms-project
@@ -451,6 +488,7 @@ p7s	application/x-pkcs7-signature
 # application/vnd.hp-hps
 # application/vnd.fujixerox.docuworks
 ##xml	application/xml
+dtd	application/xml-dtd
 # application/vnd.anser-web-funds-transfer-initiation
 # application/vnd.anser-web-certificate-issue-initiation
 # application/vnd.is-xpr
@@ -555,6 +593,31 @@ sdp	application/sdp
 # vnd.contact.cmsg
 # vnd.epson.esf
 
+# Old Open Office
+
+sxw	application/vnd.sun.xml.writer
+stw	application/vnd.sun.xml.writer.template
+sxc	application/vnd.sun.xml.calc
+stc	application/vnd.sun.xml.calc.template
+sxd	application/vnd.sun.xml.draw
+std	application/vnd.sun.xml.draw.template
+sxi	application/vnd.sun.xml.impress
+sti	application/vnd.sun.xml.impress.template
+sxg	application/vnd.sun.xml.writer.global
+sxm	application/vnd.sun.xml.math
+
+# Old Star Office
+
+sda	application/vnd.stardivision.draw
+sdc	application/vnd.stardivision.calc
+sdd	application/vnd.stardivision.impress
+sdp	application/vnd.stardivision.impress
+sds	application/vnd.stardivision.chart
+sdw	application/vnd.stardivision.writer
+sgl	application/vnd.stardivision.writer-global
+smf	application/vnd.stardivision.math
+vor	application/vnd.stardivision.writer
+
 # Other
 
 aab	application/x-authorware-bin
@@ -567,6 +630,7 @@ asd	application/astound
 asn	application/astound
 asp	application/x-asap
 asz	application/astound
+atom	application/atom+xml
 axs	application/olescript
 bcpio	application/x-bcpio
 bld	application/bld
@@ -612,6 +676,7 @@ gtar	application/x-gtar
 hdf	application/x-hdf
 hpf	application/x-icq
 ica	application/x-ica
+indd	application/x-indesign
 ins	application/x-internet-signup
 #ins	application/x-NET-install
 ips	application/x-ipscript
@@ -670,11 +735,14 @@ psr	application/datawindow
 ptlk	application/listenup
 qrt	application/quest
 quake	application/x-qplug-plugin
+qxd	application/quarkxpress
+qxp	application/quarkxpress
 rm	application/vnd.rn-realmedia
 rnx	application/vnd.rn-realplayer
 roff	application/x-troff
 ##rp	application/x-pn-realmedia
 rrf	application/x-InstallFromTheWeb
+rss	application/rss+xml
 rtc	application/rtc
 sca	application/x-supercard
 sc2	application/vnd.ms-schedule
@@ -682,6 +750,7 @@ scd	application/vnd.ms-schedule
 sch	application/vnd.ms-schedule
 #scm	application/x-icq
 sdf	application/e-score
+sgf	application/x-go-sgf
 sh	application/x-sh
 shar	application/x-shar
 shw	application/presentations
@@ -714,6 +783,7 @@ texi	application/x-texinfo
 texinfo	application/x-texinfo
 tgz	application/unix-tar	x-gzip
 tmv	application/x-Parable-Thing
+torrent	application/x-bittorrent
 tr	application/x-troff
 tsp	application/dsptype
 txi	application/x-texinfo
@@ -728,6 +798,8 @@ vmf	application/vocaltec-media-file
 wid	application/x-DemoShield
 wis	application/x-InstallShield
 wlt	application/x-mswallet
+wmd	application/x-ms-wmd
+wmz	application/x-ms-wmz
 wpc	application/wpc
 wri	application/x-write
 xcf	application/x-gimp

@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.55 2001/03/03 07:15:12 per Exp $";
+constant cvs_version = "$Id$";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -206,6 +206,8 @@ class Wrapper
   RequestID mid;
   mixed done_cb;
   int close_when_done;
+  int callback_disabled;
+
   void write_callback()
   {
     DWERR("Wrapper::write_callback()");
@@ -224,8 +226,18 @@ class Wrapper
       destroy();
     } else if( nelems > 0 ) {
       buffer = buffer[nelems..];
-      if(close_when_done && !strlen(buffer))
+      if(close_when_done && !strlen(buffer)) {
         destroy();
+	return;
+      }
+
+      // If the buffer just went below the low watermark, let it refill.
+      if (buffer_high && strlen(buffer) < buffer_low &&
+	  strlen(buffer)+nelems >= buffer_low && callback_disabled)
+      {
+	fromfd->set_nonblocking( read_callback, 0, close_callback );
+	callback_disabled = 0;
+      }
     }
   }
 
@@ -253,6 +265,13 @@ class Wrapper
       write_callback();
     } else
       buffer += what;
+
+    // If we have filled our buffer, stop asking for more data.
+    if (buffer_high && strlen(buffer) > buffer_high && !callback_disabled)
+    {
+      fromfd->set_nonblocking( 0, 0, 0 );
+      callback_disabled = 1;
+    }
   }
 
   void destroy()
@@ -289,7 +308,10 @@ class Wrapper
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
     tofd = tofdremote->pipe( ); // Stdio.PROP_NONBLOCK
-    fromfd->set_nonblocking( read_callback, 0, close_callback );
+
+    if (!tofd) {
+      error("Failed to create pipe. errno: %s\n", strerror(errno()));
+    }
 
 #ifdef CGI_DEBUG
     function read_cb = class
@@ -307,7 +329,15 @@ class Wrapper
 #else /* !CGI_DEBUG */
     function read_cb = lambda(){};
 #endif /* CGI_DEBUG */
+    /* NOTE: Thread-race:
+     *       close_callback may get called directly,
+     *       in which case both fds will get closed.
+     */
+    /* FIXME: What if the other end of tofd does a shutdown(3N)
+     *        on the backward direction?
+     */
     tofd->set_nonblocking( read_cb, write_callback, destroy );
+    fromfd->set_nonblocking( read_callback, 0, close_callback );
   }
 
 
@@ -490,7 +520,7 @@ class CGIWrapper
     return 1;
   }
 
-  static int mode;
+  protected int mode;
   void process( string what )
   {
     DWERR(sprintf("CGIWrapper::process(%O)", what));
@@ -513,11 +543,11 @@ mapping(string:object) nt_opencommands = ([]);
 
 class NTOpenCommand
 {
-  static array(string) line;
-  static array(string) repsrc;
-  static int starpos;
+  protected array(string) line;
+  protected array(string) repsrc;
+  protected int starpos;
 
-  static int expiry;
+  protected int expiry;
 
   int expired()
   {
@@ -527,13 +557,23 @@ class NTOpenCommand
   array(string) open(string file, array(string) args)
   {
     array(string) res;
-    res = map(line, replace, repsrc,
-              (({file})+args+
-               (sizeof(args)+1>=sizeof(repsrc)? ({}) :
-                allocate(sizeof(repsrc)-sizeof(args)-1, "")))
-              [..sizeof(repsrc)-1]);
-    if(starpos>=0)
-      res = res[..starpos-1]+args+res[starpos+1..];
+    if (repsrc) {
+      res = map(line, replace, repsrc,
+		(({file})+args+
+		 (sizeof(args)+1>=sizeof(repsrc)? ({}) :
+		  allocate(sizeof(repsrc)-sizeof(args)-1, "")))
+		[..sizeof(repsrc)-1]);
+      if(starpos>=0)
+	res = res[..starpos-1]+args+res[starpos+1..];
+    } else {
+      // Check for #!
+      string s = Stdio.read_file(file, 0, 1);
+      if (s && has_prefix(s, "#!")) {
+	res = Process.split_quoted_string(s[2..]) + ({ file }) + args;
+      } else {
+	error(sprintf("CGI: Unknown filetype %O\n", file));
+      }
+    }
     return res;
   }
 
@@ -545,11 +585,11 @@ class NTOpenCommand
       ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
       cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
     };
-    if(!ft)
-      error("Unknown extension "+ext+"\n");
-    else if(!cmd)
-      error("No open command for filetype "+ft+"\n");
-    else {
+    if(!ft || !cmd) {
+      // Unknown filetype/command.
+      // Will try #! in open().
+      repsrc = 0;
+    } else {
       line = cmd/" "-({""});
       starpos = search(line, "%*");
       int i=-1, n=0;
@@ -614,7 +654,7 @@ class CGIScript
 
     // Send input to script..
     if( tosend || ffd )
-      Stdio.sendfile(({tosend||""}),ffd,0,0,0,stdin,
+      Stdio.sendfile(({tosend||""}),ffd,-1,-1,0,stdin,
                      lambda(int i,mixed q){ stdin->close();stdin=0; });
     else
     {
@@ -650,9 +690,9 @@ class CGIScript
   }
 
   // HUP, PIPE, INT, TERM, KILL
-  static constant kill_signals = ({ 1, 13, 2, 15, 9 });
-  static constant kill_interval = 3;
-  static int next_kill;
+  protected constant kill_signals = ({ 1, 13, 2, 15, 9 });
+  protected constant kill_interval = 3;
+  protected int next_kill;
 
   void kill_script()
   {
@@ -704,6 +744,10 @@ class CGIScript
     stdin = stdin->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/);
 
 #if UNIX
+    ;{ string s;
+       if(sizeof(s=query("chroot")))
+	 options->chroot = s;
+     }
     if(!getuid())
     {
       if (uid >= 0) {
@@ -791,7 +835,7 @@ class CGIScript
         error("No real file associated with "+id->not_query+
               ", thus it's not possible to run it as a CGI script.\n");
     }
-    command = id->realfile;
+    command = combine_path(getcwd(), id->realfile);
 #if UNIX
 #define LIMIT(L,X,Y,M,N) if(query(#Y)!=N){if(!L)L=([]);L->X=query(#Y)*M;}
     [uid,gid,extra_gids] = verify_access( id );
@@ -821,11 +865,10 @@ class CGIScript
     environment =(query("env")?getenv():([]));
     environment |= global_env;
     environment |= Roxen.build_env_vars( id->realfile, id, id->misc->path_info );
-    environment |= Roxen.build_roxen_env_vars(id);
+    if (query("roxen_env"))
+      environment |= Roxen.build_roxen_env_vars(id);
     if(id->misc->ssi_env)
       environment |= id->misc->ssi_env;
-    if(id->misc->is_redirected)
-      environment["REDIRECT_STATUS"] = "1";
     if(id->rawauth && query("rawauth"))
       environment["HTTP_AUTHORIZATION"] = (string)id->rawauth;
     else
@@ -853,7 +896,7 @@ class CGIScript
 
 mapping(string:string) global_env = ([]);
 string searchpath, location;
-int handle_ext, noexec;
+int handle_ext, noexec, buffer_high, buffer_low;
 
 void start(int n, Configuration conf)
 {
@@ -866,6 +909,8 @@ void start(int n, Configuration conf)
 #endif
   module_dependencies(conf, ({ "pathinfo" }));
   location = query("location");
+  buffer_high = query("max_buffer") > 0 && query("max_buffer") * 1024;
+  buffer_low = buffer_high / 2;
   
   if(conf)
   {
@@ -984,14 +1029,14 @@ void create(Configuration conf)
   defvar("env", Variable.Flag(0, VAR_MORE, "Pass environment variables",
 	 "If this is set, all environment variables roxen has will be "
          "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
-         "This includes PATH. (For a quick test, try this script with "
+	 "This includes PATH. For a quick test, try this script with "
 	 "and without this variable set:"
 	 "<pre>"
 	 "#!/bin/sh\n\n"
          "echo Content-type: text/plain\n"
 	 "echo ''\n"
 	 "env\n"
-	 "</pre>)"));
+	 "</pre>"));
 
   defvar("rxml", Variable.Flag(0, VAR_MORE, "Parse RXML in CGI-scripts",
 	 "If this is set, the output from CGI-scripts handled by this "
@@ -1003,6 +1048,34 @@ void create(Configuration conf)
 	 "NAME=value\n"
 	 "NAME=value\n"
 	 "</pre>Please note that normal CGI variables will override these."));
+
+  defvar("roxen_env",
+	 Variable.Flag(1, VAR_MORE, "Extended environment variables",
+	   "<p>Pass extra enviroment variables to simplify "
+	   "cgi script authoring.</p>\n"
+	   "<table><tr><th align='left'>For each:</th>"
+	   "<th align='left'>Environment variable</th>"
+	   "<th align='left'>Notes</th></tr>\n"
+	   "<tr><td>Cookie</td>"
+	   "<td><tt>COOKIE_<i>cookiename</i>=<i>cookievalue</i></tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Variable</td>"
+	   "<td><tt>VAR_<i>variablename</i>=<i>variablename</i></tt></td>"
+	   "<td>Multiple values are separated with <tt>'#'</tt>.</td></tr>"
+	   "<tr><td>Variable</td>"
+	   "<td><tt>QUERY_<i>variablename</i>=<i>variablename</i></tt></td>"
+	   "<td>Multiple values are separated with "
+	   "<tt>' '</tt> (space).</td></tr>\n"
+	   "<tr><td>Prestate</td>"
+	   "<td><tt>PRESTATE_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Config</td>"
+	   "<td><tt>CONFIG_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Supports flag</td>"
+	   "<td><tt>SUPPORTS_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "</table>"));
 
   defvar("location", Variable.Location("/cgi-bin/", 0, "CGI-bin path",
 	 "This is where the module will be inserted in the "
@@ -1100,6 +1173,10 @@ void create(Configuration conf)
 	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
 	 0, getuid);
 
+  defvar("chroot", Variable.String("", VAR_MORE, "Chroot path",
+	 "This is the path that is chrooted to before running a program. "
+	 "No chrooting is done if left empty."));
+
   defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
 	 "will be run as this user. You can use either the user name or the "
@@ -1139,10 +1216,10 @@ void create(Configuration conf)
 				       "The maximum CPU time the script might "
 				       "use in seconds. -2 is unlimited."));
 
-  defvar("datasize", Variable.Int(-2, VAR_EXPERT, "Limits: Memory size",
+  defvar("datasize", Variable.Int(-2, VAR_MORE, "Limits: Memory size",
 	 "The maximum size of the memory used, in Kb. -2 is unlimited."));
 
-  defvar("filesize", Variable.Int(-2, VAR_EXPERT, "Limits: Maximum file size",
+  defvar("filesize", Variable.Int(-2, VAR_MORE, "Limits: Maximum file size",
 	 "The maximum size of any file created, in 512 byte blocks. -2 "
 	 "is unlimited."));
 
@@ -1154,7 +1231,7 @@ void create(Configuration conf)
          "On most systems, there is no limit, but some unix systems still "
          "have a static filetable (Linux and *BSD, basically)."));
 
-  defvar("stack", Variable.Int(-2, VAR_EXPERT, "Limits: Stack size",
+  defvar("stack", Variable.Int(-2, VAR_MORE, "Limits: Stack size",
 	 "The maximum size of the stack used, in kilobytes. -2 is unlimited."));
 #endif
 
@@ -1163,6 +1240,10 @@ void create(Configuration conf)
 					     "before killing scripts",
 	 "The maximum real time the script might run in minutes before it's "
 	 "killed. 0 means unlimited."));
+  defvar("max_buffer", 64, "Limits: Output buffer",
+	 TYPE_INT|VAR_MORE,
+	 "Maximum size of the output buffer in kilo bytes. "
+	 "0 means unlimited.");
 }
 
 int|string container_runcgi( string tag, mapping args, string cont, RequestID id )
@@ -1231,3 +1312,22 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
           (Roxen.html_encode_string(describe_backtrace(e)))+
           "</pre></font>");
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc = ([
+
+  "cgi" : #"<desc tag='tag'><p><short hide='hide'>Runs a CGI script.</short>
+Runs a CGI script and inserts the result into the page.</p></desc>
+
+<attr name='script' value='file'><p>
+ Path to the CGI file to be executed.</p>
+</attr>
+
+<attr name='cache' value='number' default='0'><p>
+ The number of seconds the result may be cached. If the attribute is
+ given, but without any value or \"0\" as value it will use 60 seconds.</p>
+</attr>
+",
+ ]);
+#endif

@@ -49,6 +49,7 @@ void run(object env)
           && (search( path, "locale/" ) == -1 ||
               search( path, "UTF-8" ) != -1 ) )
         check_fpath( path ); 
+    env->set_separator("RX_FONTPATH", ",");
     env->append( "RX_FONTPATH", (font_dirs*",") );
   }
 }

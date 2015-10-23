@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: mkdir,v 1.2 1997/08/18 01:21:07 grubba Exp $
+# $Id$
 #
 # Make a directory and all it's parents.
 # this is how mkdir works on most systems, but not all.

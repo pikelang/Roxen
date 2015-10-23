@@ -3,7 +3,7 @@
 if (-f "perlhelper")
   { do "perlhelper";}
 elsif (-f "perl/bin/perlhelper")
-  { do "perlhelper";}
+  { do "perl/bin/perlhelper";}
 else
   { exit 1;}
 

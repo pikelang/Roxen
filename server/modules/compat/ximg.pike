@@ -1,7 +1,7 @@
-// This is (not really) a roxen module. Copyright © 2000, Roxen IS.
+// This is (not really) a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: ximg.pike,v 1.9 2000/08/25 01:21:17 nilsson Exp $";
+constant cvs_version="$Id$";
 inherit "module";
 inherit "roxenlib";
 

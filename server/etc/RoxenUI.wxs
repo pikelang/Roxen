@@ -1,0 +1,1499 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2003/01/wi">
+  <Fragment Id="RoxenUI">
+    <CustomAction Id="DIRCA_TARGETDIR" Property="TARGETDIR" Value="[ProgramFilesFolder][Manufacturer]\[ROXEN_TITLE]" Execute="firstSequence" />
+    <CustomAction Id="DONT_INSTALL_SERVICE" Property="INSTALL_SERVICE" Value="0" Execute="firstSequence" />
+    <CustomAction Id="ERRCA_CANCELNEWERVERSION" Error="[VSDVERSIONMSG]" />
+    <CustomAction Id="ERRCA_UIANDADVERTISED" Error="[VSDUIANDADVERTISED]" />
+    <CustomAction Id="CustomTextA_SetProperty_EDIT3" Property="SERVER_PORT" Value="22202" Execute="firstSequence" />
+    <CustomAction Id="CustomTextA_SetProperty_EDIT2" Property="SERVER_PROTOCOL" Value="https" Execute="firstSequence" />
+    <CustomAction Id="CustomTextA_SetProperty_EDIT1" Property="SERVER_NAME" Value="Administration Interface" Execute="firstSequence" />
+    <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
+    <CustomAction Id="Override_CustomTextA_1" Property="Custom2Buttons_NextArgs" Value="[CustomTextA_NextArgs]" Execute="firstSequence" />
+    <CustomAction Id="Override_CustomTextA_2" Property="ConfirmInstallForm_PrevArgs" Value="[CustomTextA_PrevArgs]" Execute="firstSequence" />
+    <CustomAction Id="Disable_CustomTextB_Next" Property="CustomTextA_NextArgs" Value="[CustomTextB_NextArgs]" Execute="firstSequence" />
+    <CustomAction Id="Disable_CustomTextB_Prev" Property="ConfirmInstallForm_PrevArgs" Value="[CustomTextB_PrevArgs]" Execute="firstSequence" />
+    <CustomAction Id="Enable_CustomTextB_Next" Property="CustomTextA_NextArgs" Value="CustomTextB" Execute="firstSequence" />
+    <CustomAction Id="Enable_CustomTextB_Prev" Property="ConfirmInstallForm_PrevArgs" Value="CustomTextB" Execute="firstSequence" />
+    <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
+    <CustomAction Id="SetRemoveOldService" Property="RemoveOldService"
+      Value="[TARGETDIR]" Execute="immediate" />
+    <CustomAction Id="RemoveOldService" BinaryKey="RoxenInstaller"
+      VBScriptCall="RemoveOldService" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="StartRoxenService" BinaryKey="RoxenInstaller"
+      VBScriptCall="StartRoxenService" Execute="commit" Impersonate="no" />
+    <CustomAction Id="FallbackMysqldExe" Property="MYSQLDEXE"
+      Value="[FALLBACKMYSQLDEXE]" Execute="immediate" />
+    <CustomAction Id="FallbackMyisamchkExe" Property="MYISAMCHKEXE"
+      Value="[FALLBACKMYISAMCHKEXE]" Execute="immediate" />
+    <CustomAction Id="FallbackMysqladminExe" Property="MYSQLADMINEXE"
+      Value="[FALLBACKMYSQLADMINEXE]" Execute="immediate" />
+    <CustomAction Id="FallbackMysqlBase" Property="MYSQLBASE"
+      Value="[FALLBACKMYSQLBASE]" Execute="immediate" />
+    <CustomAction Id="CreateServerVersion" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateServerVersion" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetCreateConfigInterface"
+      Property="CreateConfigInterface"
+      Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
+      Execute="immediate" />
+    <CustomAction Id="CreateConfigInterface" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateConfigInterface" Execute="commit" Impersonate="no" />
+    <CustomAction Id="SetCreateMysqlLocation" Property="CreateMysqlLocation"
+      Value="[SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE];[MYSQLADMINEXE]" Execute="immediate" />
+    <CustomAction Id="CreateMysqlLocation" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateMysqlLocation" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="SetCreatePikeLocation" Property="CreatePikeLocation"
+      Value="[SERVERDIR]" Execute="immediate" />
+    <CustomAction Id="CreatePikeLocation" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreatePikeLocation" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="DontStartServer" Property="START_SERVER"
+      Value="0" Execute="immediate" />
+    <CustomAction Id="StartBrowser" Property="BROWSER"
+      ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
+      Execute="commit" Return="asyncNoWait" />
+    <CustomAction Id="ConsoleStartServer" Directory="TARGETDIR"
+      ExeCommand='"[TARGETDIR]ntstart"'
+      Execute="commit" Return="asyncNoWait" />
+    <CustomAction Id="SetCreateEnvironment"
+      Property="CreateEnvironment"
+      Value="[TARGETDIR]local/environment.ini"
+      Execute="immediate" />
+    <!-- FIXME: Consider using the MSI-builtin support for INI-files. -->
+    <CustomAction Id="CreateEnvironment" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateEnvironment" Execute="deferred" Impersonate="no" />
+    <UI>
+      <Property Id="ErrorDialog"><![CDATA[ErrorDialog]]></Property>
+      <Property Id="DefaultUIFont"><![CDATA[VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400]]></Property>
+      <Dialog Id="UserExitForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Interrupted</Text>
+        </Control>
+        <Control Id="BodyTextInstall" Type="Text" X="18" Y="63" Width="342" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installation was interrupted before [ProductName] could be installed. You need to restart the installer to try again.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="BodyTextRemove" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be removed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="FatalErrorForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Incomplete</Text>
+        </Control>
+        <Control Id="BodyTextInstall" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be removed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="BodyTextRemove" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be installed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="MaintenanceForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="FinishButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Finish</Text>
+          <Publish Property="REINSTALL" Value="ALL"><![CDATA[MaintenanceForm_Action="Repair"]]></Publish>
+          <Publish Event="Reinstall" Value="ALL"><![CDATA[MaintenanceForm_Action="Repair"]]></Publish>
+          <Publish Property="REMOVE" Value="ALL"><![CDATA[MaintenanceForm_Action="Remove"]]></Publish>
+          <Publish Event="Remove" Value="ALL"><![CDATA[MaintenanceForm_Action="Remove"]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="RepairRadioGroup" Type="RadioButtonGroup" X="18" Y="108" Width="348" Height="48" Property="MaintenanceForm_Action">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Setup Wizard</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Select whether you want to repair or remove [ProductName].</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="ResumeForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="FinishButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Finish</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Setup Wizard</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will resume the installation of [ProductName] on your computer.
+
+Click "Finish" to continue.</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminUserExitForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Interrupted</Text>
+        </Control>
+        <Control Id="BodyTextInstall" Type="Text" X="18" Y="63" Width="342" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installation was interrupted before [ProductName] could be installed. You need to restart the installer to try again.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="BodyTextRemove" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be removed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminFatalErrorForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Incomplete</Text>
+        </Control>
+        <Control Id="BodyTextInstall" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be removed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="BodyTextRemove" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer was interrupted before [ProductName] could be installed. You need to restart the installer to try again.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminMaintenanceForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="FinishButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Finish</Text>
+          <Publish Property="REINSTALL" Value="ALL"><![CDATA[AdminMaintenanceForm_Action="Repair"]]></Publish>
+          <Publish Event="Reinstall" Value="ALL"><![CDATA[AdminMaintenanceForm_Action="Repair"]]></Publish>
+          <Publish Property="REMOVE" Value="ALL"><![CDATA[AdminMaintenanceForm_Action="Remove"]]></Publish>
+          <Publish Event="Remove" Value="ALL"><![CDATA[AdminMaintenanceForm_Action="Remove"]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="RepairRadioGroup" Type="RadioButtonGroup" X="18" Y="108" Width="348" Height="48" Property="AdminMaintenanceForm_Action">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Setup Wizard</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Select whether you want to repair or remove [ProductName].</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminResumeForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="FinishButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Finish</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Setup Wizard</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will resume the installation of [ProductName] on your computer.
+
+Click "Finish" to continue.</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminFinishedForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Complete</Text>
+        </Control>
+        <Control Id="BodyTextInstall" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}A network image of [ProductName] has been successfully created.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] has been successfully removed.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="Cancel" Width="271" Height="78" Title="[ProductName]" NoMinimize="yes">
+        <Control Id="NoButton" Type="PushButton" X="198" Y="48" Width="65" Height="21" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;No</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="YesButton" Type="PushButton" X="126" Y="48" Width="65" Height="21">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Yes</Text>
+          <Publish Event="EndDialog" Value="Exit"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="6" Y="9" Width="258" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installation is not yet complete. Are you sure you want to exit?</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminProgressForm" Width="373" Height="287" Title="[ProductName]" Modeless="yes">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="ProgressBar" Type="ProgressBar" X="18" Y="108" Width="336" Height="15">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiProgressBar</Text>
+          <Subscribe Event="StopServices" Attribute="Progress" />
+          <Subscribe Event="DeleteServices" Attribute="Progress" />
+          <Subscribe Event="RemoveRegistryValues" Attribute="Progress" />
+          <Subscribe Event="RemoveFiles" Attribute="Progress" />
+          <Subscribe Event="MoveFiles" Attribute="Progress" />
+          <Subscribe Event="InstallFiles" Attribute="Progress" />
+          <Subscribe Event="WriteRegistryValues" Attribute="Progress" />
+          <Subscribe Event="WriteIniValues" Attribute="Progress" />
+          <Subscribe Event="StartServices" Attribute="Progress" />
+          <Subscribe Event="InstallAdminPackage" Attribute="Progress" />
+          <Subscribe Event="UnmoveFiles" Attribute="Progress" />
+          <Subscribe Event="SetProgress" Attribute="Progress" />
+        </Control>
+        <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
+          <Subscribe Event="ActionText" Attribute="Text"/>
+        </Control>
+        <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
+          <Subscribe Event="ActionData" Attribute="Text"/>
+        </Control>
+        <Control Id="InstalledBody" Type="Text" X="9" Y="63" Width="354" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] is being installed.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="RemovedBody" Type="Text" X="18" Y="63" Width="336" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] is being removed.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="RemoveBannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Removing [ProductName]</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="InstalledBannerText" Type="Text" X="9" Y="9" Width="255" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installing [ProductName]</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="FinishedForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="CloseButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Close</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installation Complete</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="138">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] has been successfully installed.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="BodyTextRemove" Type="Text" X="9" Y="63" Width="354" Height="138">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] has been successfully removed.
+
+Click "Close" to exit.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="UpdateText" Type="Text" X="9" Y="216" Width="354" Height="36">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="ProgressForm" Width="373" Height="287" Title="[ProductName]" Modeless="yes">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18" Disabled="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="ProgressBar" Type="ProgressBar" X="18" Y="108" Width="336" Height="15">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiProgressBar</Text>
+          <Subscribe Event="StopServices" Attribute="Progress" />
+          <Subscribe Event="DeleteServices" Attribute="Progress" />
+          <Subscribe Event="RemoveRegistryValues" Attribute="Progress" />
+          <Subscribe Event="RemoveFiles" Attribute="Progress" />
+          <Subscribe Event="MoveFiles" Attribute="Progress" />
+          <Subscribe Event="InstallFiles" Attribute="Progress" />
+          <Subscribe Event="WriteRegistryValues" Attribute="Progress" />
+          <Subscribe Event="WriteIniValues" Attribute="Progress" />
+          <Subscribe Event="StartServices" Attribute="Progress" />
+          <Subscribe Event="InstallAdminPackage" Attribute="Progress" />
+          <Subscribe Event="UnmoveFiles" Attribute="Progress" />
+          <Subscribe Event="SetProgress" Attribute="Progress" />
+        </Control>
+        <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
+          <Subscribe Event="ActionText" Attribute="Text"/>
+        </Control>
+        <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
+          <Subscribe Event="ActionData" Attribute="Text"/>
+        </Control>
+        <Control Id="InstalledBody" Type="Text" X="9" Y="63" Width="354" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] is being installed.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="RemovedBody" Type="Text" X="18" Y="63" Width="336" Height="12">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}[ProductName] is being removed.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="RemoveBannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Removing [ProductName]</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+        <Control Id="InstalledBannerText" Type="Text" X="9" Y="9" Width="255" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Installing [ProductName]</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminWelcomeForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[AdminWelcomeForm_NextArgs=""]]></Publish>
+          <Publish Event="NewDialog" Value="[AdminWelcomeForm_NextArgs]"><![CDATA[AdminWelcomeForm_NextArgs<>""]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[AdminWelcomeForm_PrevArgs]"><![CDATA[AdminWelcomeForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[AdminWelcomeForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[AdminWelcomeForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Network Setup Wizard</Text>
+        </Control>
+        <Control Id="CopyrightWarningText" Type="Text" X="9" Y="186" Width="354" Height="66">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}WARNING: This computer program is protected by copyright law and international treaties. Unauthorized duplication or distribution of this program, or any portion of it, may result in severe civil or criminal penalties, and will be prosecuted to the maximum extent possible under the law.</Text>
+        </Control>
+        <Control Id="WelcomeText" Type="Text" X="9" Y="63" Width="354" Height="114">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will guide you through the steps required to install [ProductName] on your computer.</Text>
+          <Condition Action="show"><![CDATA[Installed="" AND NOT RESUME]]></Condition>
+          <Condition Action="hide"><![CDATA[Installed<>"" OR RESUME]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminConfirmInstallForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[AdminConfirmInstallForm_NextArgs=""]]></Publish>
+          <Publish Event="NewDialog" Value="[AdminConfirmInstallForm_NextArgs]"><![CDATA[AdminConfirmInstallForm_NextArgs<>""]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[AdminConfirmInstallForm_PrevArgs]"><![CDATA[AdminConfirmInstallForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[AdminConfirmInstallForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[AdminConfirmInstallForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Confirm Installation</Text>
+        </Control>
+        <Control Id="BodyText1" Type="Text" X="9" Y="63" Width="354" Height="180">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer is ready to install [ProductName] on your computer.
+
+Click "Next" to start the installation.</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="AdminFolderForm" Width="373" Height="287" Title="[ProductName]" TrackDiskSpace="yes">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="SetTargetPath" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="DiskCost"><![CDATA[OutOfDiskSpace=1]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[AdminFolderForm_NextArgs="" AND OutOfDiskSpace<>1]]></Publish>
+          <Publish Event="NewDialog" Value="[AdminFolderForm_NextArgs]"><![CDATA[AdminFolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
+          <Publish Property="ALLUSERS" Value="2"><![CDATA[AdminFolderForm_AllUsers="ALL"]]></Publish>
+          <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
+        </Control>
+        <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Folder:</Text>
+        </Control>
+        <Control Id="FolderEdit" Type="PathEdit" X="18" Y="126" Width="258" Height="18" Property="TARGETDIR" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiPathEdit</Text>
+        </Control>
+        <Control Id="BrowseButton" Type="PushButton" X="282" Y="126" Width="84" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}B&amp;rowse...</Text>
+          <Publish Property="SelectFolderDialog_Property" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="SelectFolderDialog"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="DiskCostButton" Type="PushButton" X="282" Y="150" Width="84" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Disk Cost...</Text>
+          <Publish Event="SetTargetPath" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="DiskCost"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[AdminFolderForm_PrevArgs]"><![CDATA[AdminFolderForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[AdminFolderForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[AdminFolderForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Network Location</Text>
+        </Control>
+        <Control Id="Body" Type="Text" X="9" Y="63" Width="354" Height="48">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will create a network image at the following location.
+
+To create an image in this folder, click "Next". To use a different folder, enter it below or click "Browse".</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="DiskCost" Width="361" Height="192" Title="[ProductName] Disk Space" NoMinimize="yes" TrackDiskSpace="yes">
+        <Control Id="OKButton" Type="PushButton" X="288" Y="165" Width="66" Height="18" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}OK</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="VolumeCostList1" Type="VolumeCostList" X="6" Y="39" Width="348" Height="114" Sunken="yes" Removable="yes" Fixed="yes" Remote="yes" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}{116}{80}{80}{80}{80}</Text>
+        </Control>
+        <Control Id="AvailableBodyText" Type="Text" X="6" Y="9" Width="348" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The list below includes the drives you can install [ProductName] to, along with each drive's available and required disk space.</Text>
+          <Condition Action="show"><![CDATA[OutOfDiskSpace<>1]]></Condition>
+          <Condition Action="hide"><![CDATA[OutOfDiskSpace=1]]></Condition>
+        </Control>
+        <Control Id="RequiredBodyText" Type="Text" X="6" Y="9" Width="348" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The amount of required disk space exceeds the amount of available disk space. The highlighted items indicate the drives with insufficient disk space.</Text>
+          <Condition Action="show"><![CDATA[OutOfDiskSpace=1]]></Condition>
+          <Condition Action="hide"><![CDATA[OutOfDiskSpace<>1]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="SelectFolderDialog" Width="313" Height="223" Title="Browse for Folder" NoMinimize="yes">
+        <Control Id="OKButton" Type="PushButton" X="168" Y="198" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}OK</Text>
+          <Publish Event="SetTargetPath" Value="[SelectFolderDialog_Property]"><![CDATA[1]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="240" Y="198" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="Reset" Value="{}"><![CDATA[1]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="BrowseText" Type="Text" X="6" Y="9" Width="60" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Browse:</Text>
+        </Control>
+        <Control Id="FolderCombo" Type="DirectoryCombo" X="66" Y="6" Width="198" Height="120" Property="SelectFolderDialog_Property" Indirect="yes" Removable="yes" Fixed="yes" Remote="yes" RAMDisk="yes" Floppy="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiDirectoryCombo</Text>
+        </Control>
+        <Control Id="FolderUpButton" Type="PushButton" X="270" Y="6" Width="18" Height="18" Icon="yes" FixedSize="yes" IconSize="16" Text="[SFF_UpFldrBtn]">
+          <Publish Event="DirectoryListUp" Value="{}"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="NewFolderButton" Type="PushButton" X="288" Y="6" Width="18" Height="18" Icon="yes" FixedSize="yes" IconSize="16" Text="[SFF_NewFldrBtn]">
+          <Publish Event="DirectoryListNew" Value="{}"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="FolderList" Type="DirectoryList" X="6" Y="30" Width="300" Height="129" Property="SelectFolderDialog_Property" Sunken="yes" Indirect="yes" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiDirectoryList</Text>
+        </Control>
+        <Control Id="FolderText" Type="Text" X="6" Y="171" Width="60" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Folder:</Text>
+        </Control>
+        <Control Id="FolderPathEdit" Type="PathEdit" X="66" Y="168" Width="240" Height="18" Property="SelectFolderDialog_Property" Sunken="yes" Indirect="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiPathEdit</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="ErrorDialog" Width="330" Height="101" Title="[ProductName]" ErrorDialog="yes">
+        <Control Id="ErrorText" Type="Text" X="6" Y="9" Width="318" Height="48" Disabled="yes" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+        <Control Id="N" Type="PushButton" X="120" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;No</Text>
+          <Publish Event="EndDialog" Value="ErrorNo"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="Y" Type="PushButton" X="240" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Yes</Text>
+          <Publish Event="EndDialog" Value="ErrorYes"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="A" Type="PushButton" X="0" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}E&amp;xit Installation</Text>
+          <Publish Event="EndDialog" Value="ErrorAbort"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="C" Type="PushButton" X="42" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="EndDialog" Value="ErrorCancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="I" Type="PushButton" X="81" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}C&amp;ontinue</Text>
+          <Publish Event="EndDialog" Value="ErrorIgnore"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="O" Type="PushButton" X="159" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}OK</Text>
+          <Publish Event="EndDialog" Value="ErrorOk"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="R" Type="PushButton" X="198" Y="72" Width="81" Height="21" TabSkip="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Try Again</Text>
+          <Publish Event="EndDialog" Value="ErrorRetry"><![CDATA[]]></Publish>
+        </Control>
+      </Dialog>
+      <Dialog Id="ConfirmRemoveDialog" Width="271" Height="78" Title="Remove [ProductName]" NoMinimize="yes">
+        <Control Id="NoButton" Type="PushButton" X="198" Y="48" Width="65" Height="21" Default="yes" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;No</Text>
+          <Publish Property="WelcomeForm_ConfirmRemove" Value="No"><![CDATA[]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="YesButton" Type="PushButton" X="126" Y="48" Width="65" Height="21">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Yes</Text>
+          <Publish Property="WelcomeForm_ConfirmRemove" Value="Yes"><![CDATA[]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="6" Y="9" Width="258" Height="24">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}You have chosen to remove [ProductName] from your computer. Are you sure you want to remove it?</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="FilesInUse" Width="361" Height="177" Title="[ProductName] Files in Use" NoMinimize="yes">
+        <Control Id="RetryButton" Type="PushButton" X="99" Y="150" Width="81" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Try Again</Text>
+          <Publish Event="EndDialog" Value="Retry"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="ContinueButton" Type="PushButton" X="186" Y="150" Width="81" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Continue</Text>
+          <Publish Event="EndDialog" Value="Ignore"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="ExitButton" Type="PushButton" X="273" Y="150" Width="81" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}E&amp;xit Installation</Text>
+          <Publish Event="EndDialog" Value="Exit"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="ListFilesInUse" Type="ListBox" X="6" Y="51" Width="348" Height="90" Property="FileInUseProcess" Sunken="yes" Sorted="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiFilesInUse</Text>
+        </Control>
+        <Control Id="InstallBodyText" Type="Text" X="6" Y="9" Width="345" Height="36">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The following applications are using files which the installer must update. You can either close the applications and click "Try Again", or click "Continue" so that the installer continues the installation, and replaces these files when your system restarts.</Text>
+          <Condition Action="show"><![CDATA[REMOVE=""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE<>""]]></Condition>
+        </Control>
+        <Control Id="RemoveBodyText" Type="Text" X="6" Y="9" Width="345" Height="36">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The following applications are using files which the installer must remove. You can either close the applications and click "Try Again", or click "Continue" so that the installer continues the installation, and replaces these files when your system restarts.</Text>
+          <Condition Action="show"><![CDATA[REMOVE<>""]]></Condition>
+          <Condition Action="hide"><![CDATA[REMOVE=""]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="FolderForm" Width="373" Height="287" Title="[ProductName]" TrackDiskSpace="yes">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="SetTargetPath" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="DiskCost"><![CDATA[OutOfDiskSpace=1]]></Publish>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[FolderForm_NextArgs="" AND OutOfDiskSpace<>1]]></Publish>
+          <Publish Event="NewDialog" Value="[FolderForm_NextArgs]"><![CDATA[FolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
+          <Publish Property="ALLUSERS" Value="2"><![CDATA[FolderForm_AllUsers="ALL" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
+          <Publish Property="ALLUSERS" Value="{}"><![CDATA[FolderForm_AllUsers="ME" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
+	  <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
+          <Publish Event="DoAction" Value="FindRelatedProducts"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Folder:</Text>
+        </Control>
+        <Control Id="FolderEdit" Type="PathEdit" X="18" Y="126" Width="252" Height="18" Property="TARGETDIR" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiPathEdit</Text>
+        </Control>
+        <Control Id="BrowseButton" Type="PushButton" X="276" Y="126" Width="90" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}B&amp;rowse...</Text>
+          <Publish Property="SelectFolderDialog_Property" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="SelectFolderDialog"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="DiskCostButton" Type="PushButton" X="276" Y="150" Width="90" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Disk Cost...</Text>
+          <Publish Event="SetTargetPath" Value="TARGETDIR"><![CDATA[1]]></Publish>
+          <Publish Event="SpawnDialog" Value="DiskCost"><![CDATA[1]]></Publish>
+        </Control>
+        <Control Id="AllUsersRadioGroup" Type="RadioButtonGroup" X="24" Y="210" Width="342" Height="42" Property="FolderForm_AllUsers">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiRadioButtonGroup</Text>
+          <Condition Action="show"><![CDATA[VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Condition>
+          <Condition Action="hide"><![CDATA[NOT (VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1)]]></Condition>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[FolderForm_PrevArgs]"><![CDATA[FolderForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[FolderForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[FolderForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Select Installation Folder</Text>
+        </Control>
+        <Control Id="Body" Type="Text" X="9" Y="63" Width="354" Height="48">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will install [ProductName] to the following folder.
+
+To install in this folder, click "Next". To install to a different folder, enter it below or click "Browse".</Text>
+        </Control>
+        <Control Id="AllUsersText" Type="Text" X="18" Y="186" Width="348" Height="24">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}Install [ProductName] for yourself, or for anyone who uses this computer:</Text>
+          <Condition Action="show"><![CDATA[VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Condition>
+          <Condition Action="hide"><![CDATA[NOT (VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1)]]></Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="ConfirmInstallForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[ConfirmInstallForm_NextArgs=""]]></Publish>
+          <Publish Event="NewDialog" Value="[ConfirmInstallForm_NextArgs]"><![CDATA[ConfirmInstallForm_NextArgs<>""]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[ConfirmInstallForm_PrevArgs]"><![CDATA[ConfirmInstallForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[ConfirmInstallForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[ConfirmInstallForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Confirm Installation</Text>
+        </Control>
+        <Control Id="BodyText1" Type="Text" X="9" Y="63" Width="354" Height="60">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer is ready to install [ProductName] on your computer.
+
+Click "Next" to start the installation.</Text>
+        </Control>
+        <Control Id="StartServerText" Type="Text" X="9" Y="123" Width="354" Height="14">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Start server after installation</Text>
+        </Control>
+	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="137" Width="348" Height="48" Property="START_SERVER">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+	  <Condition Action="disable">NOT MYSQLDEXE</Condition>
+        </Control>
+        <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
+        </Control>
+	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
+        </Control>
+      </Dialog>
+      <Dialog Id="CustomTextA" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[(CustomTextA_NextArgs="") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Publish Event="NewDialog" Value="[CustomTextA_NextArgs]"><![CDATA[(CustomTextA_NextArgs<>"") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Condition Action="disable"><![CDATA[(ADM_PASS1="") AND (ADM_PASS2="")]]></Condition>
+          <Condition Action="enable"><![CDATA[(ADM_PASS1<>"") OR (ADM_PASS2<>"")]]></Condition>
+        </Control>
+
+        <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Server name</Text>
+        </Control>
+        <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="SERVER_NAME" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Protocol_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Protocol:</Text>
+        </Control>
+        <Control Id="PortLabel" Type="Text" X="201" Y="144" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Port:</Text>
+        </Control>
+        <Control Id="ProtocolSelector" Type="ComboBox" X="18" Y="156" Width="165" Height="18" Property="SERVER_PROTOCOL" Sunken="yes" ComboList="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+        <Control Id="Edit2" Type="Edit" X="201" Y="156" Width="165" Height="18" Property="SERVER_PORT" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Label3" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Administrative User:</Text>
+        </Control>
+        <Control Id="Edit3" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="ADM_USER" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+
+        <Control Id="Label4" Type="Text" X="18" Y="216" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Admin password:</Text>
+        </Control>
+        <Control Id="Label4_2" Type="Text" X="201" Y="216" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Password (again):</Text>
+        </Control>
+        <Control Id="Edit4" Type="Edit" X="18" Y="228" Width="165" Height="18" Property="ADM_PASS1" Sunken="yes" Password="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+        <Control Id="Edit4_2" Type="Edit" X="201" Y="228" Width="165" Height="18" Property="ADM_PASS2" Sunken="yes" Password="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[CustomTextA_PrevArgs]"><![CDATA[CustomTextA_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[CustomTextA_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[CustomTextA_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Administration Interface Settings</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Administration interface settings</Text>
+        </Control>
+        <Control Id="Control273" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Control278" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="CustomTextB" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[(CustomTextB_NextArgs="") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Publish Event="NewDialog" Value="[CustomTextB_NextArgs]"><![CDATA[(CustomTextB_NextArgs<>"") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Condition Action="disable"><![CDATA[(MYSQLDEXE="") AND (MYSQLBASE="")]]></Condition>
+          <Condition Action="enable"><![CDATA[(MYSQLDEXE<>"") OR (MYSQLBASE<>"")]]></Condition>
+        </Control>
+
+        <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL base directory:</Text>
+        </Control>
+        <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="MYSQLBASE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+
+        <Control Id="Mysqld_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Mysqld binary:</Text>
+        </Control>
+        <Control Id="MysqldEdit" Type="Edit" X="18" Y="156" Width="348" Height="18" Property="MYSQLDEXE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Myisamchk_Label" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Myisamchk binary:</Text>
+        </Control>
+        <Control Id="MyisamchkEdit" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="MYISAMCHKEXE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Mysqladmin_Label" Type="Text" X="18" Y="216" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Mysqladmin binary:</Text>
+        </Control>
+        <Control Id="MysqladminEdit" Type="Edit" X="18" Y="228" Width="348" Height="18" Property="MYSQLADMINEXE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[CustomTextB_PrevArgs]"><![CDATA[CustomTextA_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[CustomTextB_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[CustomTextB_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MySQL Settings</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL settings</Text>
+        </Control>
+        <Control Id="Control273" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Control278" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="WelcomeForm" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[WelcomeForm_NextArgs=""]]></Publish>
+          <Publish Event="NewDialog" Value="[WelcomeForm_NextArgs]"><![CDATA[WelcomeForm_NextArgs<>""]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[WelcomeForm_PrevArgs]"><![CDATA[WelcomeForm_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[WelcomeForm_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[WelcomeForm_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Welcome to the [ProductName] Setup Wizard</Text>
+        </Control>
+        <Control Id="CopyrightWarningText" Type="Text" X="9" Y="186" Width="354" Height="66">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}WARNING: This computer program is protected by copyright law and international treaties. Unauthorized duplication or distribution of this program, or any portion of it, may result in severe civil or criminal penalties, and will be prosecuted to the maximum extent possible under the law.</Text>
+        </Control>
+        <Control Id="WelcomeText" Type="Text" X="9" Y="63" Width="354" Height="114">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}The installer will guide you through the steps required to install [ProductName] on your computer.</Text>
+        </Control>
+      </Dialog>
+      <Dialog Id="Custom2Buttons" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[Custom2Buttons_NextArgs=""]]></Publish>
+          <Publish Event="NewDialog" Value="[Custom2Buttons_NextArgs]"><![CDATA[Custom2Buttons_NextArgs<>""]]></Publish>
+        </Control>
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[Custom2Buttons_PrevArgs]"><![CDATA[Custom2Buttons_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[Custom2Buttons_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[Custom2Buttons_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="Line1" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Line2" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Type of installation</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="21">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Select type of installation</Text>
+        </Control>
+        <Control Id="RadioButtonGroup" Type="RadioButtonGroup" X="18" Y="84" Width="348" Height="48" Property="INSTALLATION_TYPE">
+          <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+        </Control>
+      </Dialog>
+      <RadioButtonGroup Property="AdminMaintenanceForm_Action">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
+      </RadioButtonGroup>
+      <RadioButtonGroup Property="MaintenanceForm_Action">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
+      </RadioButtonGroup>
+      <RadioButtonGroup Property="FolderForm_AllUsers">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Everyone" X="0" Y="0" Width="342" Height="17" Value="ALL" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Just &amp;me" X="0" Y="18" Width="342" Height="17" Value="ME" />
+      </RadioButtonGroup>
+      <RadioButtonGroup Property="INSTALLATION_TYPE">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17" Value="2" />
+      </RadioButtonGroup>
+      <RadioButtonGroup Property="START_SERVER">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
+      </RadioButtonGroup>
+      <RadioButtonGroup Property="INSTALL_SERVICE">
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
+      </RadioButtonGroup>
+      <ComboBox Property="SERVER_PROTOCOL">
+	<ListItem Value="http" />
+	<ListItem Value="https" />
+      </ComboBox>
+      <TextStyle Id="VSI_MS_Sans_Serif13.0_0_0" FaceName="MS Sans Serif" Size="9" Red="0" Green="0" Blue="0" />
+      <TextStyle Id="VSI_MS_Sans_Serif16.0_1_0" FaceName="MS Sans Serif" Size="12" Red="0" Green="0" Blue="0" Bold="yes" />
+      <TextStyle Id="VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400" FaceName="MS Sans Serif" Size="9" Red="0" Green="0" Blue="0" />
+      <TextStyle Id="VSI_MS_Shell_Dlg13.0_0_0" FaceName="MS Shell Dlg" Size="9" Red="0" Green="0" Blue="0" />
+      <UIText Id="MenuLocal">Will be installed on local hard drive</UIText>
+      <UIText Id="SelParentCostNegNeg">This feature frees up [1] on your hard drive. It has [2] of [3] subfeatures selected. The subfeatures free up [4] on your hard drive.</UIText>
+      <UIText Id="SelNetworkNetwork">This feature will remain to be run from the network</UIText>
+      <UIText Id="SelNetworkLocal">This feature will change from run from network state to be installed on the local hard drive</UIText>
+      <UIText Id="SelNetworkAdvertise">This feature will change from run from network state to set to be installed when required</UIText>
+      <UIText Id="SelNetworkAbsent">This feature will be uninstalled completely, you won't be able to run it from the network</UIText>
+      <UIText Id="SelAbsentAbsent">This feature will remain uninstalled</UIText>
+      <UIText Id="ScriptInProgress">Gathering required information...</UIText>
+      <UIText Id="MenuCD">Will be installed to run from CD</UIText>
+      <UIText Id="SelChildCostNeg">This feature frees up [1] on your hard drive.</UIText>
+      <UIText Id="SelCDLocal">This feature will change from run from CD state to be installed on the local hard drive</UIText>
+      <UIText Id="MenuAbsent">Entire feature will be unavailable</UIText>
+      <UIText Id="SelCDAdvertise">This feature will change from run from CD state to set to be installed when required</UIText>
+      <UIText Id="MenuAllNetwork">Entire feature will be installed to run from network</UIText>
+      <UIText Id="SelLocalNetwork">This feature will be removed from your local hard drive, but will be still available to run from the network</UIText>
+      <UIText Id="SelAdvertiseNetwork">This feature will be available to run from the network</UIText>
+      <UIText Id="MenuAllLocal">Entire feature will be installed on local hard drive</UIText>
+      <UIText Id="SelAdvertiseLocal">This feature will be installed on your local hard drive</UIText>
+      <UIText Id="MenuAllCD">Entire feature will be installed to run from CD</UIText>
+      <UIText Id="SelCDAbsent">This feature will be uninstalled completely, you won't be able to run it from CD</UIText>
+      <UIText Id="MenuAdvertise">Feature will be installed when required</UIText>
+      <UIText Id="SelAdvertiseCD">This feature will be available to run from CD</UIText>
+      <UIText Id="bytes">bytes</UIText>
+      <UIText Id="SelAdvertiseAdvertise">Will be installed when required</UIText>
+      <UIText Id="AbsentPath" />
+      <UIText Id="MB">MB</UIText>
+      <UIText Id="SelAdvertiseAbsent">This feature will become unavailable</UIText>
+      <UIText Id="KB">KB</UIText>
+      <UIText Id="GB">GB</UIText>
+      <UIText Id="SelAbsentNetwork">This feature will be installed to run from the network</UIText>
+      <UIText Id="SelAbsentCD">This feature will be installed to run from CD</UIText>
+      <UIText Id="SelAbsentAdvertise">This feature will be set to be installed when required</UIText>
+      <UIText Id="SelAbsentLocal">This feature will be installed on the local hard drive</UIText>
+      <UIText Id="SelCDCD">This feature will remain to be run from CD</UIText>
+      <UIText Id="NewFolder">Folder|New Folder</UIText>
+      <UIText Id="MenuNetwork">Will be installed to run from network</UIText>
+      <UIText Id="SelLocalCD">This feature will be removed from your local hard drive, but will be still available to run from CD</UIText>
+      <UIText Id="SelLocalAbsent">This feature will be completely removed</UIText>
+      <UIText Id="SelCostPending">Compiling cost for this feature...</UIText>
+      <UIText Id="SelLocalLocal">This feature will remain on you local hard drive</UIText>
+      <UIText Id="SelChildCostPos">This feature requires [1] on your hard drive.</UIText>
+      <UIText Id="SelLocalAdvertise">This feature will be removed from your local hard drive, but will be set to be installed when required</UIText>
+      <UIText Id="SelParentCostNegPos">This feature frees up [1] on your hard drive. It has [2] of [3] subfeatures selected. The subfeatures require [4] on your hard drive.</UIText>
+      <UIText Id="SelParentCostPosNeg">This feature requires [1] on your hard drive. It has [2] of [3] subfeatures selected. The subfeatures free up [4] on your hard drive.</UIText>
+      <UIText Id="SelParentCostPosPos">This feature requires [1] on your hard drive. It has [2] of [3] subfeatures selected. The subfeatures require [4] on your hard drive.</UIText>
+      <UIText Id="TimeRemaining">Time remaining: {[1] minutes }{[2] seconds}</UIText>
+      <UIText Id="VolumeCostAvailable">Available</UIText>
+      <UIText Id="VolumeCostDifference">Difference</UIText>
+      <UIText Id="VolumeCostRequired">Required</UIText>
+      <UIText Id="VolumeCostSize">Disk Size</UIText>
+      <UIText Id="VolumeCostVolume">Volume</UIText>
+
+      <ProgressText Action="AllocateRegistrySpace" Template="Amount: [1] KB">Allocating registry space</ProgressText>
+      <ProgressText Action="AppSearch">Searching for previously installed applications</ProgressText>
+      <ProgressText Action="ConsoleStartServer">Starting Roxen</ProgressText>
+      <ProgressText Action="CostFinalize">Computing space requirements</ProgressText>
+      <ProgressText Action="CostInitialize">Computing space requirements</ProgressText>
+      <ProgressText Action="CreateServerVersion" Template="File: [TARGETDIR]\configurations\server_version">Creating administration interface</ProgressText>
+      <ProgressText Action="CreateConfigInterface" Template="File: [TARGETDIR]\configurations\AdministrationInterface">Creating administration interface</ProgressText>
+      <ProgressText Action="CreateEnviroment" Template="File: [TARGETDIR]\local\environment.ini">Creating environment.ini</ProgressText>
+      <ProgressText Action="CreateMysqlLocation" Template="File: [SERVERDIR]\mysql-location.txt">Creating mysql-location.txt</ProgressText>
+      <ProgressText Action="CreatePikeLocation" Template="File: [SERVERDIR]\pikelocation.txt">Creating pikelocation.txt</ProgressText>
+      <ProgressText Action="CreateShortcuts" Template="Shortcut: [1]">Creating shortcuts</ProgressText>
+      <ProgressText Action="DeleteServices" Template="Service: [1]">Deleting services</ProgressText>
+      <ProgressText Action="DuplicateFiles" Template="File: [9][1] ([6] bytes)">Installing duplicate files</ProgressText>
+      <ProgressText Action="ExecuteAction">Installing</ProgressText>
+      <ProgressText Action="FileCost">Computing space requirements</ProgressText>
+      <ProgressText Action="FindRelatedProducts" Template="Product: [1]">Searching for related products</ProgressText>
+      <ProgressText Action="INSTALL">Installing</ProgressText>
+      <ProgressText Action="InstallAdminPackage" Template="File: [9][1] ([6] bytes)">Installing administrative files</ProgressText>
+      <ProgressText Action="InstallFiles" Template="File: [9][1] ([6] bytes)">Installing new files</ProgressText>
+      <ProgressText Action="InstallFinalize">Finalizing</ProgressText>
+      <ProgressText Action="InstallInitialize">Initializing</ProgressText>
+      <ProgressText Action="InstallServices">Installing services</ProgressText>
+      <ProgressText Action="InstallValidate">Validating install</ProgressText>
+      <ProgressText Action="IsolateComponents">Installing DLLs</ProgressText>
+      <ProgressText Action="LaunchConditions">Evaluating launch conditions</ProgressText>
+      <ProgressText Action="MsiPublishAssemblies" Template="Assembly: [2], Context: [1]">Publishing assemblies</ProgressText>
+      <ProgressText Action="MsiUnpublishAssemblies" Template="Assembly: [2], Context: [1]">Unpublishing assemblies</ProgressText>
+      <ProgressText Action="ProcessComponents" Template="Product: [1], Component: [2]">Updating component registration</ProgressText>
+      <ProgressText Action="PublishFeatures" Template="Feature: [1]">Publishing product features</ProgressText>
+      <ProgressText Action="PublishProduct" Template="Product: [1]">Publishing product information</ProgressText>
+      <ProgressText Action="RegisterFonts" Template="Font: [1]">Registering fonts</ProgressText>
+      <ProgressText Action="RegisterProduct" Template="Product: [1]">Registering product</ProgressText>
+      <ProgressText Action="RegisterUser" Template="User: [1]">Registering user</ProgressText>
+      <ProgressText Action="RemoveExistingProducts" Template="Product: [1]">Removing old products</ProgressText>
+      <ProgressText Action="RemoveFiles" Template="File: [9][1]">Removing files</ProgressText>
+      <ProgressText Action="RemoveFolders" Template="Folder: [1]">Removing folders</ProgressText>
+      <ProgressText Action="RemoveRegistryValues" Template="Key: [1][2]">Removing registry values</ProgressText>
+      <ProgressText Action="RemoveShortcuts" Template="Shortcut: [1]">Removing shortcuts</ProgressText>
+      <ProgressText Action="Rollback" Template="Action: [1]">Rolling back actions</ProgressText>
+      <ProgressText Action="RollbackCleanup" Template="[1]">Removing backup files</ProgressText>
+      <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
+      <ProgressText Action="StopServices" Template="Service: [1]">Stopping services</ProgressText>
+      <ProgressText Action="SxsInstallCA">Installing Assemblies</ProgressText>
+      <ProgressText Action="SystemFolder.21022.08.Microsoft_VC90_CRT_x86.RTM.0138F525_6C8A_333F_A105_14AE030B9A54.">Please wait...</ProgressText>
+      <ProgressText Action="UnpublishFeatures" Template="Feature: [1]">Unpublishing product features</ProgressText>
+      <ProgressText Action="ValidateProductID">Validating Product ID</ProgressText>
+      <ProgressText Action="WindowsFolder.21022.08.Microsoft_VC90_CRT_x86.RTM.0138F525_6C8A_333F_A105_14AE030B9A54.">Please wait...</ProgressText>
+      <ProgressText Action="WriteRegistryValues" Template="Key: [1][2] = [3]">Writing values to registry</ProgressText>
+
+      <AdminUISequence>
+        <Show Dialog="AdminFatalErrorForm" OnExit="error" />
+        <Show Dialog="AdminUserExitForm" OnExit="cancel" />
+        <Show Dialog="AdminFinishedForm" OnExit="success" />
+        <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
+        <Show Dialog="AdminResumeForm" After="FileCost"><![CDATA[Installed="" AND RESUME]]></Show>
+        <Show Dialog="AdminMaintenanceForm" After="AdminResumeForm"><![CDATA[Installed<>""]]></Show>
+        <Show Dialog="AdminWelcomeForm" After="CostFinalize"><![CDATA[Installed="" AND NOT RESUME]]></Show>
+        <Show Dialog="AdminProgressForm" After="AdminWelcomeForm" />
+      </AdminUISequence>
+      <InstallUISequence>
+        <Show Dialog="FatalErrorForm" OnExit="error"><![CDATA[NOT HideFatalErrorForm]]></Show>
+        <Show Dialog="UserExitForm" OnExit="cancel" />
+        <Show Dialog="FinishedForm" OnExit="success" />
+        <Custom Action="ERRCA_UIANDADVERTISED" Before="AppSearch"><![CDATA[ProductState=1]]></Custom>
+        <Custom Action="CustomTextA_SetProperty_EDIT1" After="ValidateProductID" />
+        <Custom Action="CustomTextA_SetProperty_EDIT2" After="CustomTextA_SetProperty_EDIT1" />
+        <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
+        <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
+        <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
+        <Custom Action="FallbackMysqldExe" After="DIRCA_TARGETDIR">MYSQLDEXE=""</Custom>
+        <Custom Action="DontStartServer" After="FallbackMysqldExe">MYSQLDEXE=""</Custom>
+        <Show Dialog="WelcomeForm" After="IsolateComponents"><![CDATA[Installed="" AND NOT RESUME]]></Show>
+        <Custom Action="VSDCA_FolderForm_AllUsers" After="WelcomeForm"><![CDATA[Installed="" AND NOT RESUME AND ALLUSERS=1]]></Custom>
+        <Show Dialog="ResumeForm" After="VSDCA_FolderForm_AllUsers"><![CDATA[Installed="" AND RESUME]]></Show>
+        <Show Dialog="MaintenanceForm" After="ResumeForm"><![CDATA[Installed<>""]]></Show>
+        <Show Dialog="FolderForm" After="CostFinalize"><![CDATA[Installed="" AND NOT RESUME]]></Show>
+        <Show Dialog="ProgressForm" After="FolderForm" />
+      </InstallUISequence>
+    </UI>
+
+    <Property Id="AdminWelcomeForm_NextArgs"><![CDATA[AdminFolderForm]]></Property>
+    <Property Id="AdminFolderForm_PrevArgs"><![CDATA[AdminWelcomeForm]]></Property>
+    <Property Id="AdminFolderForm_NextArgs"><![CDATA[AdminConfirmInstallForm]]></Property>
+    <Property Id="AdminConfirmInstallForm_PrevArgs"><![CDATA[AdminFolderForm]]></Property>
+
+    <Property Id="FolderForm_NextArgs"><![CDATA[Custom2Buttons]]></Property>
+    <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
+    <Property Id="Custom2Buttons_NextArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextA_PrevArgs"><![CDATA[Custom2Buttons]]></Property>
+    <!--
+    <Property Id="CustomTextA_NextArgs"><![CDATA[CustomTextB]]></Property>
+    <Property Id="CustomTextB_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextB_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextB]]></Property>
+    -->
+    <Property Id="CustomTextA_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="CustomTextB_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextB_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <!-- -->
+
+    <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
+    <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
+    <Property Id="SFF_NewFldrBtn"><![CDATA[NewFldrBtn]]></Property>
+    <Property Id="FolderForm_AllUsers"><![CDATA[ALL]]></Property>
+    <Property Id="ARPCONTACT"><![CDATA[Roxen Internet Software]]></Property>
+    <Property Id="INSTALLATION_TYPE"><![CDATA[2]]></Property>
+    <Property Id="START_SERVER"><![CDATA[1]]></Property>
+    <Property Id="INSTALL_SERVICE"><![CDATA[1]]></Property>
+    <Property Id="VSDNETURLMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.  The .NET Framework can be obtained from the web.  Would you like to do this now?]]></Property>
+    <Property Id="AdminMaintenanceForm_Action"><![CDATA[Repair]]></Property>
+    <Property Id="VSDVERSIONMSG"><![CDATA[Unable to install because a newer version of this product is already installed.]]></Property>
+    <Property Id="MaintenanceForm_Action"><![CDATA[Repair]]></Property>
+    <Property Id="EDITA1"><![CDATA[1]]></Property>
+    <Property Id="VSDUIANDADVERTISED"><![CDATA[This advertised application will not be installed because it might be unsafe. Contact your administrator to change the installation user interface option of the package to basic.]]></Property>
+    <Property Id="SFF_UpFldrBtn"><![CDATA[UpFldrBtn]]></Property>
+    <Property Id="EDITA4"><![CDATA[1]]></Property>
+    <Property Id="EDITA3"><![CDATA[1]]></Property>
+    <Property Id="EDITA2"><![CDATA[1]]></Property>
+    <Property Id="VSDNETMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.]]></Property>
+    <Property Id="VSDINVALIDURLMSG"><![CDATA[The specified path '[2]' is unavailable. The Internet Information Server might not be running or the path exists and is redirected to another machine. Please check the status of this virtual directory in the Internet Services Manager.]]></Property>
+    <Property Id="NEWERPRODUCTFOUND" Secure="yes" />
+    <Property Id="UPGRADE" Secure="yes" />
+    <Property Id="BROWSER">explorer</Property>
+    <Property Id="TARGETDIR">
+      <ComponentSearch Id="NTSTART" Type="directory"
+        Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' />
+    </Property>
+    <Property Id="WSH">
+      <DirectorySearch Id="WSHDIR" Path="[SystemFolder]">
+        <FileSearch Id="WSHOM" Name="wshom.ocx" MinVersion="5.0.0.0"/>
+      </DirectorySearch>
+    </Property>
+    <Condition Message="Windows Scripting Host is required to run this installer.">Installed OR WSH</Condition>
+    <Property Id="OLDCONFIGDIR">
+      <DirectorySearch Id="OLDCONFIGURATIONS" Path="[TARGETDIR]..\configurations">
+	<FileSearch LongName="Global_Variables" MinSize="128" />
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYSQLLOCATIONLOCATION">
+      <DirectorySearch Id="MysqlLocationLocation" Path="[TARGETDIR]">
+        <FileSearch LongName="mysql-location.txt" />
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYSQLDEXE">
+      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin2" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysql51Location1" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin21" Path="bin">
+          <FileSearch LongName="mysqld-nt.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysql50Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin3" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysql50Location1" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin31" Path="bin">
+          <FileSearch LongName="mysqld-nt.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+    </Property>
+    <Property Id="FALLBACKMYSQLDEXE">
+      <DirectorySearch Id="MysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MysqlBase51">
+          <DirectorySearch Id="MysqlBin51" Path="bin">
+            <FileSearch LongName="mysqld-nt.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MysqlBase5">
+          <DirectorySearch Id="MysqlBin5" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYISAMCHKEXE">
+      <RegistrySearch Id="Myisam51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin2" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Myisam50Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin3" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+    </Property>
+    <Property Id="FALLBACKMYISAMCHKEXE">
+      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MyisamBase5">
+          <DirectorySearch Id="MyisamBin5" Path="bin">
+            <FileSearch LongName="myisamchk.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYSQLADMINEXE">
+      <RegistrySearch Id="Mysqladmin51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin2" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysqladmin50Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin3" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+    </Property>
+    <Property Id="FALLBACKMYSQLADMINEXE">
+      <DirectorySearch Id="MysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MysqladminBase5">
+          <DirectorySearch Id="MysqladminBin5" Path="bin">
+            <FileSearch LongName="mysqladmin.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYSQLBASE">
+      <RegistrySearchRef Id="Mysql51Location" />
+      <RegistrySearchRef Id="Mysql51Location1" />
+      <RegistrySearchRef Id="Mysql50Location" />
+      <RegistrySearchRef Id="Mysql50Location1" />
+    </Property>
+    <Property Id="FALLBACKMYSQLBASE">
+      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
+      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+    </Property>
+    <Property Id="MYSQLDEBUG2">
+      <RegistrySearchRef Id="Mysql51Location" />
+    </Property>
+    <Property Id="MYSQLDEBUG21">
+      <RegistrySearchRef Id="Mysql51Location1" />
+    </Property>
+    <Property Id="MYSQLDEBUG3">
+      <RegistrySearchRef Id="Mysql50Location" />
+    </Property>
+    <Property Id="MYSQLDEBUG31">
+      <RegistrySearchRef Id="Mysql50Location1" />
+    </Property>
+    <Property Id="MYSQLDEBUG5">
+      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+    </Property>
+    <Property Id="MYSQLDEBUG51">
+      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
+    </Property>
+    <AdminExecuteSequence>
+      <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
+      <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
+    </AdminExecuteSequence>
+    <InstallExecuteSequence>
+      <Custom Action="ERRCA_CANCELNEWERVERSION" After="FindRelatedProducts"><![CDATA[NEWERPRODUCTFOUND AND NOT Installed]]></Custom>
+      <Custom Action="CustomTextA_SetProperty_EDIT1" After="ValidateProductID" />
+      <Custom Action="CustomTextA_SetProperty_EDIT2" After="CustomTextA_SetProperty_EDIT1" />
+      <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
+      <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
+      <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
+      <Custom Action="DONT_INSTALL_SERVICE" After="DIRCA_TARGETDIR">NOT VersionNT</Custom>
+      <Custom Action="Override_CustomTextA_1" After="DONT_INSTALL_SERVICE">OLDCONFIGDIR&lt;&gt;""</Custom>
+      <Custom Action="Override_CustomTextA_2" After="Override_CustomTextA_1">OLDCONFIGDIR&lt;&gt;""</Custom>
+      <RemoveExistingProducts After="InstallInitialize" />
+      <StopServices Sequence="1900">VersionNT AND INSTALL_SERVICE="1"</StopServices>
+      <DeleteServices Sequence="2000">VersionNT AND INSTALL_SERVICE="1"</DeleteServices>
+      <InstallServices Sequence="5800">VersionNT AND INSTALL_SERVICE="1"</InstallServices>
+      <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="2" AND START_SERVER="1"</StartServices>
+      <Custom Action="StartRoxenService" After="StartServices">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</Custom>
+      <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
+      <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
+      <Custom Action="FallbackMysqldExe" Sequence="5100">MYSQLDEXE=""</Custom>
+      <Custom Action="FallbackMyisamchkExe" After="FallbackMysqldExe">MYISAMCHKEXE=""</Custom>
+      <Custom Action="FallbackMysqladminExe" After="FallbackMysqldExe">MYSQLADMINEXE=""</Custom>
+      <Custom Action="FallbackMysqlBase" After="FallbackMysqladminExe">MYSQLBASE=""</Custom>
+      <Custom Action="SetCreateMysqlLocation" After="FallbackMysqlBase" />
+      <Custom Action="CreateMysqlLocation" After="SetCreateMysqlLocation">REMOVE="" AND MYSQLLOCATIONLOCATION = ""</Custom>
+      <Custom Action="SetCreatePikeLocation" After="CreateMysqlLocation">REMOVE=""</Custom>
+      <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
+      <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
+      <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
+      <Custom Action="DontStartServer" After="CreateEnvironment">MYSQLDEXE=""</Custom>
+      <!-- <Custom Action="CreateServerVersion" Before="SetCreateConfigInterface">REMOVE=""</Custom> -->
+      <Custom Action="SetCreateConfigInterface" Before="CreateConfigInterface">REMOVE=""</Custom>
+      <Custom Action="CreateConfigInterface" Before="ConsoleStartServer">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
+      <Custom Action="ConsoleStartServer" Before="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
+    </InstallExecuteSequence>
+    <Binary Id="DefBannerBitmap" src="Banner.bmp" />
+    <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
+    <Binary Id="NewFldrBtn" src="NewFldrBtn.icon" />
+    <Binary Id="RoxenInstaller" src="Win32Installer.vbs" />
+  </Fragment>
+</Wix>

@@ -17,7 +17,7 @@ BOOL WINAPI Enum16( DWORD dwThreadId, WORD hMod16, WORD hTask16,
   PSZ pszModName, PSZ pszFileName, LPARAM lpUserDefined );
 BOOL CALLBACK Proc( DWORD dw, WORD w16, LPSTR lpstr, LPARAM lParam );
 
-BOOL KillMySql();
+BOOL KillMySql(const char *confdir);
 
 #ifdef __cplusplus
 }

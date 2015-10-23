@@ -11,7 +11,7 @@ string doc = LOCALE(36,
 		    "Shows a backtrace (stack) for each and every "
 		    "thread in Roxen.");
 
-static string last_id, last_from;
+protected string last_id, last_from;
 
 string get_id(string from)
 {
@@ -64,15 +64,78 @@ string format_backtrace(array bt, object id)
 
 mixed parse( RequestID id )
 {
-  string res="";
-  int thr=1;
+  // Disable all threads to avoid potential locking problems while we
+  // have the backtraces. It also gives an atomic view of the state.
+  object threads_disabled = _disable_threads();
 
-  foreach(all_threads(), object t)
-    res += (t==roxen->backend_thread?
-	    "<h3>"+LOCALE(38,"Backend thread")+"</h3>":
-            ("<h3>"+LOCALE(39,"Thread")+" "+(thr++)+"</h3>"))+"<ol> "+
-      format_backtrace(describe_backtrace(t->backtrace())/"\n",id)+
-      "</ol>";
+  array(Thread.Thread) threads = all_threads();
+
+  threads = Array.sort_array (
+    threads,
+    lambda (Thread.Thread a, Thread.Thread b) {
+      // Backend thread first, our thread last (since
+      // it typically only is busy doing this page),
+      // otherwise in id order.
+      if (a == roxen->backend_thread)
+	return 0;
+      else if (b == roxen->backend_thread)
+	return 1;
+      else if (a == this_thread())
+	return 1;
+      else if (b == this_thread())
+	return 0;
+      else
+	return a->id_number() > b->id_number();
+    });
+
+  string res =
+    #"
+    <style type='text/css'>
+      ol.open li   { display: list-item; }
+      ol.closed li { display: none; }
+      h3 {
+        cursor: pointer;
+        background: url('&usr.fold;') -4px 60% no-repeat;
+        padding-left: 18px;
+      }
+      h3.closed {
+        background-image: url('&usr.unfold;');
+      }
+    </style>
+    <script language='javascript'>
+     function toggle_vis(div_id, h3) {
+       var div = document.getElementById(div_id); 
+       var is_open = (div.className == 'open');
+       div.className = is_open ? 'closed' : 'open';
+       h3.className = is_open ? 'closed' : 'open';
+     }
+     </script>" +
+    "<font size='+1'><b>" + name + "</b></font>\n"
+    "<p><cf-refresh/></p>\n";
+  int div_num = 1;
+  for (int i = 0; i < sizeof (threads); i++) {
+    string open_state = (threads[i] == this_thread()) ? "closed" : "open";
+    res +=
+      sprintf ("<h3 class='%s' "
+	       " onclick='toggle_vis(\"%s\", this); return false;'>"
+	       "%s 0x%x%s</h3>\n"
+	       "<ol class='%s' id='%s'> %s</ol>\n",
+	       open_state,
+	       "bt_" + div_num,
+	       LOCALE(39,"Thread"), threads[i]->id_number(),
+#ifdef THREADS
+	       (threads[i] == roxen->backend_thread ?
+		" (" + LOCALE(38,"backend thread")+ ")" : ""),
+#else
+	       "",
+#endif
+	       open_state,
+	       "bt_" + div_num,
+	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
+				"\n", id));
+    div_num++;
+  }
+
   return res+"<p><cf-ok/></p>";
 }
 #endif /* constant(all_threads) */

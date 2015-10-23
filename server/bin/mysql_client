@@ -1,0 +1,51 @@
+#!/bin/sh
+#
+# Start the MySQL command line client and connect to the Roxen
+# internal MySQL database using the socket in the configuration
+# directory.
+#
+# The user defaults to "rw", which has read/write privileges
+# everywhere. Another user may be specified with -u, but it must be
+# the first argument then.
+#
+# $Id$
+
+dn="`dirname $0`"
+case "$dn" in 
+  ""|".")
+    cd .. || exit 1
+    ;;
+  *)
+    test "$dn" != "`pwd`" && { cd "$dn"/.. || exit 1; }
+    ;;
+esac
+
+user="-urw"
+case "$1" in
+  "-u")
+    shift
+    user="-u$1"
+    shift
+    ;;
+  "-u*")
+    user="$1"
+    shift
+    ;;
+esac
+
+if [ -f mysql-location.txt ]; then
+  MYSQL_BASE=`sed -n -e 's/^basedir[ \t]*=[ \t]*\(.*\)$/\1/p' < mysql-location.txt`
+else
+  # Assume old style Roxen installation.
+  MYSQL_BASE="`pwd`/mysql"
+fi
+
+socket="`pwd`/../configurations/_mysql/socket"
+if [ ! -w "$socket" ]; then
+  test_socket="`pwd`/../var/test_config/_mysql/socket"
+  test -w "$test_socket" && socket="$test_socket"
+fi
+
+LD_LIBRARY_PATH="$MYSQL_BASE/lib"
+export LD_LIBRARY_PATH
+exec $MYSQL_BASE/bin/mysql "$user" -S "$socket" "$@"

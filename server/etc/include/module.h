@@ -1,9 +1,16 @@
-// $Id: module.h,v 1.53 2001/07/31 09:32:26 per Exp $
+// -*- pike -*-
+//
+// $Id$
+
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
 #include <roxen.h>
 // compat
+//
+// NOTE: This used to be a valid lvalue.
+//       In the few places where it was used as an lvalue,
+//       use set("var", value).
 #define QUERY(var)	query( #var )
 
 // Like query, but for global variables.
@@ -13,12 +20,10 @@
 #define GLOBVAR(x) roxenp()->query(#x)
 #endif /* IN_ROXEN */
 
-#define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
-#define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
-#define ROXEN_MAJOR_VERSION 2
-#define ROXEN_MINOR_VERSION 2
+#define ROXEN_MAJOR_VERSION 5
+#define ROXEN_MINOR_VERSION 0
 
 
 #define TYPE_STRING            1
@@ -80,4 +85,21 @@
 #  define RXML_CONTEXT (_cur_rxml_context)
 #endif
 
+// Debug macros.
+
+#ifdef MODULE_DEBUG
+#  define DO_IF_MODULE_DEBUG(code...) code
+#else
+#  define DO_IF_MODULE_DEBUG(code...)
 #endif
+
+#ifdef RXML_VERBOSE
+#  define TAG_DEBUG_TEST(test) 1
+#elif defined (RXML_REQUEST_VERBOSE)
+#  define TAG_DEBUG_TEST(test)						\
+  ((test) || RXML_CONTEXT->id && RXML_CONTEXT->id->misc->rxml_verbose)
+#else
+#  define TAG_DEBUG_TEST(test) (test)
+#endif
+
+#endif	// !ROXEN_MODULE_H

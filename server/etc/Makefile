@@ -1,61 +1,63 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.2 2001/08/23 18:58:16 nilsson Exp $
+# $Id$
 #
 
-PIKE=/export/d1/nilsson/pike/7.3.11/bin/pike
-PIKEROOT=/home/nilsson/Pike/_7.3/
+PIKE=pike
+REFDOC=`$(PIKE) -x module --query system_doc_path`/src
 
-all: tree-split _html
+# Recursive make to avoid evaluating REFDOC above so many times.
+all:
+	$(MAKE) $(MAKE_FLAGS) PIKE="$(PIKE)" REFDOC="$(REFDOC)" modref
 
-tree-split: join _tree-split
+modref: build/modref.xml
+	rm -rf modref || /bin/true
+	@mkdir modref
+	@cp $(REFDOC)/structure/modref.css modref/style.css
+	@$(PIKE) $(REFDOC)/presentation/tree-split-autodoc.pike \
+	  build/modref.xml $(REFDOC)/structure/module_modref.html modref roxen
+	@mkdir modref/images
+#	cp build/images/* modref/images
+	@cp $(REFDOC)/src_images/next.gif $(REFDOC)/src_images/prev.gif modref/images
 
-_tree-split:
-	rm -rf manual-tree-split || /bin/true
-	@$(PIKE) $(PIKEROOT)autodoc/presentation/tree-split-autodoc.pike \
-	  manual.xml $(PIKEROOT)autodoc/tree-split-template.html manual-tree-split
-	@cp $(PIKEROOT)autodoc/tree-split-style.css manual-tree-split/style.css
-	@test -d manual-tree-split/images || mkdir manual-tree-split/images
-#	cp manual/images/* manual-tree-split/images
-	@cp $(PIKEROOT)autodoc/src_images/next.gif $(PIKEROOT)autodoc/src_images/prev.gif \
-	  manual-tree-split/images
+html: html_manual build/manual.xml
+#	cp build/images/* html_manual/images/
+	@$(PIKE) $(REFDOC)/presentation/make_html.pike --img=images/ build/manual.xml
 
-_html: html_manual
-#	cp manual/images/* html_manual/images/
-	@$(PIKE) $(PIKEROOT)autodoc/presentation/make_html.pike --img=images/ \
-	  manual.xml > html_manual/manual.html
-#	@(cd manual && $(MAKE) PIKE="$(PIKE)" html)
+traditional: traditional_manual build/traditional.xml
+#	cp build/images/* traditional_manual/images/
+	@$(PIKE) @(REFDOC)/presentation/make_html.pike --img=images/ build/traditional.xml
 
-extract: build/etc/Makefile build/base/Makefile
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" extract)
-	@(cd build/base && $(MAKE) PIKE="$(PIKE)" extract)
+build/manual.xml: build/autodoc.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/onepage.xml \
+	  build/autodoc.xml >build/manual.xml
 
-join: recursive_join
-	@$(MAKE) PIKE="$(PIKE)" XMLFILES="`echo build/*/*.xml`" manual.xml
+build/traditional.xml: build/autodoc.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/traditional.xml \
+	  build/autodoc.xml >build/traditional.xml
 
-recursive_join: extract
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" join)
-	@(cd build/base && $(MAKE) PIKE="$(PIKE)" join)
+build/modref.xml: build/autodoc.xml modref.xml
+	@$(PIKE) -x assemble_autodoc modref.xml build/autodoc.xml \
+	  >build/modref.xml
 
-manual.xml: $(XMLFILES) $(PIKEROOT)bin/join-autodoc.pike
-	@$(PIKE) $(PIKEROOT)bin/join-autodoc.pike --post-process manual.xml $(XMLFILES)
+build/autodoc.xml: build/etc build/base build/protocols force
+	$(PIKE) -x extract_autodoc -q --srcdir=modules --builddir=build/etc
+	$(PIKE) -x extract_autodoc -q --srcdir=../base_server \
+	  --builddir=build/base
+	$(PIKE) -x extract_autodoc -q --srcdir=../protocols \
+	  --builddir=build/protocols
+	pike_autodoc="$(REFDOC)/core_autodoc.xml"; \
+	  if [ -f "$$pike_autodoc" ]; then \
+	    echo "Joining with $$pike_autodoc."; \
+	  else \
+	    echo "$$pike_autodoc not found."; \
+	    pike_autodoc=""; \
+	  fi; \
+	  $(PIKE) -x join_autodoc --quiet --post-process build/autodoc.xml \
+	    $$pike_autodoc build/etc build/base build/protocols
 
-build/etc/Makefile: Makefile.in build/etc
-	@sed -e "s#@SRCDIR@#../../modules#" \
-	     -e "s#@PIKEROOT@#$(PIKEROOT)#" \
-	     -e "s#@ROOT@#../../#" \
-	     -e "s#@BUILDROOT@#../#" \
-	     -e "s#@EXTARGS@##" \
-	  <Makefile.in >build/etc/Makefile
-
-build/base/Makefile: Makefile.in build/base
-	@sed -e "s#@SRCDIR@#../../../base_server#" \
-	     -e "s#@PIKEROOT@#$(PIKEROOT)#" \
-	     -e "s#@ROOT@#../../#" \
-	     -e "s#@BUILDROOT@#../#" \
-	     -e "s#@EXTARGS@#--rootless#" \
-	  <Makefile.in >build/base/Makefile
+# Directories
 
 build/etc: build
 	@test -d build/etc || mkdir build/etc
@@ -63,12 +65,20 @@ build/etc: build
 build/base: build
 	@test -d build/base || mkdir build/base
 
+build/protocols: build
+	@test -d build/protocols || mkdir build/protocols
+
 build:
 	@test -d build || mkdir build
 
 html_manual:
 	@test -d html_manual || mkdir html_manual
 #	@test -d html_manual/images || mkdir html_manual/images
+
+traditional_manual:
+	@test -d traditional_manual || mkdir traditional_manual
+
+force:
 
 clean:
 	@rm -rf build || /bin/true

@@ -1,0 +1,22 @@
+--- test/testfile.txt
++++ test/testfile.txt	2009-03-12 17:01:37.000000000 +0100
+@@ -1,11 +1,15 @@
+-When you make your mark in the world,
+-watch out for guys with erasers.
+-		-- The Wall Street Journal
++As soon as we started programming, we found to our surprise that it wasn't as
++easy to get programs right as we had thought. Debugging had to be discovered.
++I can remember the exact instant when I realized that a large part of my life
++from then on was going to be spent in finding mistakes in my own programs.
++               -- Maurice Wilkes, discovers debugging, 1949
+ 
+ The difference between common-sense and paranoia is that common-sense is
+ thinking everyone is out to get you.  That's normal -- they are.  Paranoia
+ is thinking that they're conspiring.
+ 		-- J. Kegler
+ 
+-This is the replaced version 
++This is a patched version 
+ of the testfile.
++
++This file was created by --self_test

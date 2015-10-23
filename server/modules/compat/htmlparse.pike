@@ -1,4 +1,4 @@
-// This is (not really) a roxen module. Copyright © 2000, Roxen IS.
+// This is (not really) a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 inherit "module";

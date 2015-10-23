@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
-// Copyright © 1999 - 2000, Roxen IS.
+// Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.6 2001/08/09 13:13:21 nilsson Exp $
+// $Id$
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -23,22 +23,22 @@
 //! tag. The registration method then returns the given id,
 //! which may be a different one than the suggested id.
 //!
-//! @code{
+//! @code
 //!   string state_id = "my-tag";
 //!   object state = Page_state(id);
 //!   state_id = state->register_consumer(state_id, id);
-//! @}
+//! @endcode
 //!
-//! The it is a good idea to update the state object with
+//! Then it is a good idea to update the state object with
 //! the current page state, as given in the encoded state
 //! variable. This variable is typically URI-encoded and
 //! sent in a forms variable between pages.
 //!
-//! @code{
-//!   if(id->variables->state &&
-//!      !state->uri_decode(id->variables->state))
+//! @code
+//!   if(id->real_variables->__state &&
+//!      !state->uri_decode(id->real_variables->__state[0]))
 //!     RXML.run_error("Error in state.\n");
-//! @}
+//! @endcode
 //!
 //! It is now possible to retrieve the state associated
 //! with your page object by calling the get method in the
@@ -54,15 +54,15 @@
 //! your object has two states, 1 and 2, the following code
 //! would calculate the proper way to alter the state.
 //!
-//! @code{
+//! @code
 //!   string get_actions(string uri, int current_state,
 //!                      object state) {
-//!     return "<a href='" + uri + "?state=" +
-//!            state->uri_encode(1) + "'>1</a><br />"
-//!            "<a href='" + uri + "?state=" +
-//!            state->uri_encode(2) + "'>2</a>";
+//!     // encode_revisit_url places the encoded state in the variable
+//!     // __state by default.
+//!     return "<a href='" + state->encode_revisit_url(id, 1) + "'>1</a><br />"
+//!            "<a href='" + state->encode_revisit_url(id, 2) + "'>2</a>";
 //!   }
-//! @}
+//! @endcode
 
 
 // --- State code -------------------------------------------
@@ -180,7 +180,7 @@ class Page_state {
     return indices(id->misc->state->keys);
   }
 
-  static string low_encode_state(mapping state, void|mapping diff) {
+  protected string low_encode_state(mapping state, void|mapping diff) {
     string session_id = id->misc->state->session;
     if(session_id) {
       cache.set_session_data(state, session_id);
@@ -251,6 +251,38 @@ class Page_state {
     return replace(encode(value,key), ([ "+":"%2B", "/":"%2F", "=":"%3D" ]));
   }
 
+  string encode_revisit_url (RequestID id, mixed value,
+			     void|string|array key, void|string var)
+  //! Encode present state into an URL to revisit the current page,
+  //! according to @[id]. The encoded state is passed in the variable
+  //! @[var], which defaults to "__state" if not given. All other
+  //! variables that was sent in the URL from the client are retained.
+  //!
+  //! @note
+  //! The other variables in the URL have the values that were sent
+  //! from the client and not the values they have currently. That's a
+  //! feature, since the revisit URL will then "redo" the page in all
+  //! respects except the state change. Variables that were passed as
+  //! headers in a POST method are left out, which also is a feature
+  //! for the same reason, considering the intended use of POST.
+  {
+    string other_vars;
+
+    if (id->query) {
+      other_vars = "&" + id->query;
+      int i = search (other_vars, "&__state=");
+      if (i >= 0) {
+	int j = search (other_vars, "&", i + 1);
+	other_vars = other_vars[..i - 1] + (j > 0 ? other_vars[j..] : "");
+      }
+    }
+    else other_vars = "";
+
+    // Use a relative url. It's shorter and doesn't give problems when
+    // result p-code is replicated.
+    return (id->not_query / "/")[-1] +
+      "?" + (var || "__state") + "=" + uri_encode (value, key) + other_vars;
+  }
 }
 
 string decode_session_id(string state) {

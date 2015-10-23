@@ -1,35 +1,42 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2009, Roxen IS.
+
 #if constant(Image.FreeType.Face)
+#include <config.h>
 constant name = "FreeType fonts";
 constant doc = "Freetype 2.0 font loader. Uses freetype to render text from, among other formats, TrueType, OpenType and Postscript Type1 fonts.";
 constant scalable = 1;
 
 inherit FontHandler;
 
-static mapping ttf_font_names_cache;
+protected mapping ttf_font_names_cache;
 
-static string translate_ttf_style( string style )
+protected string translate_ttf_style( string style )
 {
-  switch( lower_case( (style-"-")-" " ) )
-  {
-   case "normal": case "regular":        return "nn";
-   case "italic":                        return "ni";
-   case "oblique":                       return "ni";
-   case "bold":                          return "bn";
-   case "bolditalic":case "italicbold":  return "bi";
-   case "black":                         return "Bn";
-   case "blackitalic":case "italicblack":return "Bi";
-   case "light":                         return "ln";
-   case "lightitalic":case "italiclight":return "li";
-  }
-  if(search(lower_case(style), "oblique"))
-    return "ni"; // for now.
-  return "nn";
+  //  Check for weight. Default is "n" for normal/regular/roman.
+  style = lower_case((style - "-") - " ");
+  string weight = "n"; 
+  if (has_value(style, "bold"))
+    weight = "b";
+  else if (has_value(style, "black"))
+    weight = "B";
+  else if (has_value(style, "light"))
+    weight = "l";
+  
+  //  Check for slant. Default is "n" for regular.
+  string slant = "n";
+  if (has_value(style, "italic") ||
+      has_value(style, "oblique"))
+    slant = "i";
+
+  //  Combine to full style
+  return weight + slant;
 }
 
-static void build_font_names_cache( )
+protected void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
-  ttf_font_names_cache=([]);
+  mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
     foreach(r_get_dir( dir )||({}), string fname)
@@ -51,15 +58,17 @@ static void build_font_names_cache( )
         {
           mapping n = ttf->info();
           string f = lower_case(n->family);
-          if(!ttf_font_names_cache[f])
-            ttf_font_names_cache[f] = ([]);
-          ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
+          if(!new_ttf_font_names_cache[f])
+            new_ttf_font_names_cache[f] = ([]);
+          new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
                                    = combine_path(dir+"/",fname);
         }
       }
     }
   };
   map( roxen->query("font_dirs"), traverse_font_dir );
+
+  ttf_font_names_cache = new_ttf_font_names_cache;
 }
 
 Thread.Mutex lock = Thread.Mutex();
@@ -67,10 +76,10 @@ Thread.Mutex lock = Thread.Mutex();
 class FTFont
 {
   inherit Font;
-  static int size;
-  static Image.FreeType.Face face;
-  static object encoder;
-  
+  protected int size;
+  protected Image.FreeType.Face face;
+  protected object encoder;
+
   array text_extents( string what )
   {
     Image.Image o = write( what );
@@ -82,13 +91,15 @@ class FTFont
     return size;
   }
 
-  static mixed do_write_char( int c )
+  protected mixed do_write_char( int c )
   {
-    catch{ return face->write_char( c ); };
+    if (mixed err = catch{ return face->write_char( c ); })
+      werror (describe_error (err));
     return 0;
   }
 
-  static Image.Image write_row( string text )
+  protected int line_height;
+  protected mapping low_write_row(int do_overshoot, string text, void|int _oversampling )
   {
     Image.Image res;
     int xp, ys;
@@ -96,6 +107,16 @@ class FTFont
       text = " ";
     array(int) tx = (array(int))text;
     array chars = map( tx, do_write_char );
+#ifdef FREETYPE_FIX_BROKEN_METRICS
+    foreach(chars, mapping c)
+      if(!c->ascender && !c->descender && !c->height) {
+	int oversampling = roxen->query("font_oversampling") ? 2 : 1;
+	c->ascender=(int)(size*0.98*oversampling);
+	c->descender=(int)(size*-0.23*oversampling);
+	c->height=(int)(size*1.39*oversampling);
+      }
+#endif
+     
     int i;
 
     for( i = 0; i<sizeof( chars ); i++ )
@@ -108,7 +129,7 @@ class FTFont
     chars  -= ({ 0 });
     
     if( !sizeof( chars ) )
-      return Image.Image(1,1);
+      return ([ "overshoot":0, "img":Image.Image(1,1) ]);
 
     int oc;
     array kerning = ({});
@@ -126,59 +147,107 @@ class FTFont
     for(int i = 0; i<sizeof(chars)-1; i++ )
       w += (int)(chars[i]->advance*x_spacing + kerning[i+1])+(fake_bold>0?1:0);
 
-    w += (int)(chars[-1]->img->xsize()+chars[-1]->x);
-    ys = chars[0]->height;
+    w += (int) ((chars[-1]->img->xsize() || chars[-1]->advance * x_spacing) +
+		chars[-1]->x);
+    ys = chars[0]->ascender-chars[0]->descender;
+    int overshoot = do_overshoot ? max(ys, @map(chars, lambda(mapping m) 
+						       {return m->y-m->descender;})) - ys
+                                 : 0 ; 
+    line_height = (int)chars[0]->height;
 			   
-    res = Image.Image( w, ys );
+    res = Image.Image( w, ys + overshoot );
 
     if( x_spacing < 0 )
       xp = w-(chars[0]->xsize+chars[0]->x);
-  
+
+#ifdef FREETYPE_RENDER_DEBUG
+    res->setcolor( 0,128,200 );
+    res->line( 0,0 + overshoot, res->xsize()-1, 0 + overshoot );
+    res->line( 0,ys+chars[0]->descender + overshoot, res->xsize()-1,
+	       ys+chars[0]->descender + overshoot );
+    res->line( 0,res->ysize()-1 + overshoot, res->xsize()-1, res->ysize()-1 + overshoot );
+#endif
     for( int i = 0; i<sizeof( chars); i++ )
     {
       mapping c = chars[i];
+#ifdef FREETYPE_RENDER_DEBUG
+       res->paste_alpha_color( c->img->copy()->clear( 100,100,100 ),
+ 			      ({255,255,255}),
+ 			      xp+c->x,
+ 			      ys+c->descender-c->y + overshoot );
+#endif
       res->paste_alpha_color( c->img, ({255,255,255}),
                               xp+c->x,
-                              ys+c->descender-c->y );
+                              overshoot + ys+c->descender-c->y );
       xp += (int)(c->advance*x_spacing) + kerning[i+1]+(fake_bold>0?1:0);
     }  
-    return res;
+    return ([ "overshoot":overshoot, 
+	      "ascender":chars[0]->ascender,
+	      "descender":chars[0]->descender,
+	      "height":chars[0]->height,
+	      "img":res ]);
   }
+  protected Image.Image write_row( string text ) {
+    return (Image.Image)((low_write_row(0, text))->img);
+  }	
 
   int fake_bold, fake_italic;
-  Image.Image write( string ... what )
+  Image.Image write( string ... what ) {
+    return ((low_write_with_info(what, 0))->img);
+  }
+
+  mapping write_with_info( string|array what, void|int oversampling ) {
+    return low_write_with_info(what, 1, oversampling);
+  }
+
+  mapping low_write_with_info(array|string what, void|int do_overshoot, void|int _oversampling )
   {
     object key = lock->lock();
-    face->set_size( 0, size );
+    if(stringp(what))
+      what = ({ what });
+    int oversampling = _oversampling || (roxen->query("font_oversampling") ? 2 : 1);
+    if( oversampling != 1 )
+      face->set_size( 0, size * oversampling );
+    else
+      face->set_size( 0, size );
     if( !sizeof( what ) )
-      return Image.Image( 1,height() );
+      return ([ "img" : Image.Image( 1,height() ) ]);
 
     // nbsp -> ""
-    what = map( (array(string))what, replace, " ", "" );
+    what = map( (array(string))what, replace, "\240", "" );
 
     if( encoder )
       what = Array.map(what, lambda(string s) {
                                return encoder->clear()->feed(s)->drain();
                              });
     
-    array(Image.Image) res = map( what, write_row );
+    array(mapping) res_with_info = map( what, lambda(string s) { return low_write_row(do_overshoot, s, _oversampling); });
+    array(Image.Image) res = res_with_info->img;
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
+				  (int)(res[0]->ysize()+
+					abs(line_height*(sizeof(res)-1)
+					    *y_spacing) ));
 
     float start;
-    if( y_spacing < 0 )
+    if( y_spacing < 0 ) {
       start = (float)rr->ysize()-res[0]->ysize();
+    }
+    int overshoot = res_with_info[0]->overshoot;
 
-    foreach( res, object r )
+    foreach( res_with_info, mapping ri )
     {
+      int yoffset = (int)start;
+      object r = ri->img;
+      //yoffset -= ri->overshoot;
+
       if( j_right )
-        rr->paste_alpha_color( r, 255,255,255, rr->xsize()-r->xsize(), (int)start );
+        rr->paste_alpha_color( r, 255,255,255, rr->xsize()-r->xsize(), yoffset );
       else if( j_center )
-        rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, (int)start );
+        rr->paste_alpha_color( r, 255,255,255,(rr->xsize()-r->xsize())/2, yoffset );
       else
-        rr->paste_alpha_color( r, 255,255,255, 0, (int)start );
-      start += r->ysize()*y_spacing;
+        rr->paste_alpha_color( r, 255,255,255, 0, yoffset );
+      start += floatp(y_spacing)?line_height*y_spacing:line_height+y_spacing;
     }
     if( fake_bold > 0 )
     {
@@ -189,12 +258,25 @@ class FTFont
 	  r2->paste_alpha_color( r3,  255, 255, 255, i, j-2 );
       rr = r2->paste_alpha_color( rr, 255,255,255, 1, -1 );
     }
+    rr->setcolor( 0,0,0 );
     if( fake_italic )
-      rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
-    return rr;
+      rr = rr->skewx( -(rr->ysize()/3) );
+    if( oversampling != 1 )
+      rr = rr->scale(1.0 / oversampling);
+    return ([ "oversampling" : oversampling,
+	      "overshoot" : overshoot / oversampling,
+	      "ascender": res_with_info[0]->ascender / oversampling,
+	      "descender": res_with_info[0]->descender / oversampling,
+	      "height": res_with_info[0]->height / oversampling,
+	      "img" : rr, 
+    ]);
   }
 
-  static void create(object r, int s, string fn, int fb, int fi)
+  string _sprintf() {
+    return "Freetype";
+  }
+
+  protected void create(object r, int s, string fn, int fb, int fi)
   {
     fake_bold = fb;
     fake_italic = fi;
@@ -202,7 +284,7 @@ class FTFont
     face = r; size = s;
 
     if( (fn2 = replace( fn, ".pfa", ".afm" )) != fn && r_file_stat( fn2 ) )
-      catch(face->attach_file( replace( fn, ".pfa", ".afm" ) ));
+      catch(face->attach_file( fn2 ));
 
     
     if(r_file_stat(fn+".properties"))
@@ -216,12 +298,12 @@ class FTFont
   }
 }
 
-array available_fonts()
+array available_fonts(int(0..1)|void force_reload)
 {
 #ifdef THREADS
   object key = lock->lock();
 #endif
-  if( !ttf_font_names_cache  ) build_font_names_cache( );
+  if( !ttf_font_names_cache || force_reload ) build_font_names_cache( );
   return indices( ttf_font_names_cache );
 }
 

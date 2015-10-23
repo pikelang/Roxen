@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
 inherit "module";
 #include <request_trace.h>
 
-constant cvs_version = "$Id: url_rectifier.pike,v 1.14 2001/03/30 14:49:24 jhs Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_LAST;
 constant module_name = "URL Rectifier";
@@ -46,6 +46,11 @@ mapping last_resort(RequestID id)
   function decode;
   string iq;
   int tries;
+
+  // Internal request do not have this method.
+  if(!id->decode_charset_encoding)
+    return 0;
+
   foreach(encodings, string encoding)
   {
     decode = decoders[ encoding ];

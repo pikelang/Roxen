@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.179 2001/08/14 09:45:00 stewa Exp $
+# $Id$
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -26,23 +26,29 @@ check_owner() {
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
 	if [ ! "x$2" = x ]; then
-	  ok=`ls -lgd . 2>/dev/null | grep $2 |wc -l`
+	  ok=`ls -lgd . 2>/dev/null | grep "$2" |wc -l`
 	  ok=`echo $ok`
 	  if [ "x$ok" = x1 ] ; then
 	    dp "The server directory is already readable by group $2"
 	  else
-	    chgrp -R "$2" .
-	    chmod -R g+r  .
+	    ok=`ls -ngd . 2>/dev/null | grep "$2" |wc -l`
+	    ok=`echo $ok`
+	    if [ "x$ok" = x1 ] ; then
+	      dp "The server directory is already readable by group $2"
+	    else
+	      chgrp -R "$2" .
+	      chmod -R g+r  .
+	    fi
 	  fi
 	fi
-        change_owner $1 $2 $DIR $VARDIR $LOGDIR
+	change_owner "$1" "$2" "$DIR" "$VARDIR" "$LOGDIR"
      fi
    fi
 }
 
 
 # Breaks on linux when using symlinks.
-dn="`dirname $0`"
+dn="`dirname "$0"`"
 case "$dn" in 
  ""|".")
   ;;
@@ -52,7 +58,7 @@ case "$dn" in
   if [ ! "$dn" = "`pwd`" ]
   then
     echo "          : Changing current directory to '$dn' (now `pwd`)" >&2
-    cd $dn
+    cd "$dn"
     echo "          : Got new directory as `pwd`" >&2
   fi
   ;;
@@ -62,16 +68,38 @@ esac
 
 # Can be set with '--config-dir=DIR'
 DIR=../configurations
+if [ ! "x$ROXEN_CONFIGDIR" = "x" ]
+then
+    DIR="$ROXEN_CONFIGDIR"
+fi
 LOGDIR=../logs
+if [ ! "x$ROXEN_LOGDIR" = "x" ]
+then
+    LOGDIR="$ROXEN_LOGDIR"
+fi
 FILES="default"
 program=base_server/roxenloader.pike
 VARDIR=../var
 LOCALDIR=../local
+if [ ! "x$ROXEN_DATADIR" = "x" ]
+then
+    VARDIR="$ROXEN_DATADIR"/var
+    LOCALDIR="$ROXEN_DATADIR"/local
+
+    if [ -d "$ROXEN_DATADIR"/license ]
+    then
+	ROXEN_LICENSEDIR="$ROXEN_DATADIR"/license
+    else
+	ROXEN_LICENSEDIR="$DIR"/_license
+    fi
+    export ROXEN_DATADIR ROXEN_LICENSEDIR
+fi
+export LOCALDIR LOGDIR VARDIR
 SELF_TEST_DIR=etc/test
 
 # Make LOCALDIR an absolute path
 if test -d $LOCALDIR/.; then
-  LOCALDIR=`cd $LOCALDIR; pwd`
+  LOCALDIR="`cd $LOCALDIR; pwd`"
 else :; fi
 
 if test -d $VARDIR/.; then :; else
@@ -82,8 +110,8 @@ fi
 
 pcdir="$VARDIR/`roxen_version`/precompiled/`uname -m | tr ' ' '_' `.`uname -r`"
 old_roxen_defines="$pcdir/old_roxen_defines"
-./mkdir -p $pcdir || exit 1
-chmod 1777 $pcdir
+./mkdir -p "$pcdir" || exit 1
+chmod 1777 "$pcdir"
 
 # Default verbosity level.
 verbose=1
@@ -103,26 +131,47 @@ setup_environment
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DRAM_CACHE"
+DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
+
+
+# Thread enabling.
+# FIXME: Ought to use case...esac.
 
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+  vers="`uname -r|sed -e 's/5.\([0-9]*\)/\1/p' -ed`"
+  if [ "$vers" -ge "5" ]; then
 #    if [ $verbose -gt 0 ] ; then
 #      dp "Solaris 2.5 or later detected. Using threads by default."
 #    fi
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
+# Darwin uses threads.
+if uname | grep 'Darwin' >/dev/null 2>&1; then
+  DEFINES="$DEFINES -DENABLE_THREADS"
+fi
+# Also enabled on Linux.
+if uname | grep 'Linux' >/dev/null 2>&1; then
+  DEFINES="$DEFINES -DENABLE_THREADS"
+fi
 
 gdb=no
+valgrind=
+truss=
 
+remove_dumped_passed=no
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
   # to roxenloader instead.
-  pass="$pass --remove-dumped"  
+
+  # Make sure that the argument isn't duplicated for every restart...
+  if [ "x$remove_dumped_passed" = "xyes" ]; then :; else
+    pass="$pass --remove-dumped"
+    remove_dumped_passed=yes
+  fi
 }
 
 ## Parse all arguments.
@@ -131,19 +180,19 @@ ARGS=""
 
 setup_for_tests() {
     # Kill roxen mysql if it's running...
-    if [ -f $VARDIR/test_config/_mysql/mysql_pid ] ; then
-      kill `cat $VARDIR/test_config/_mysql/mysql_pid`
+    if [ -f "$VARDIR/test_config/_mysql/mysql_pid" ] ; then
+      kill `cat "$VARDIR/test_config/_mysql/mysql_pid"`
     fi
     self_test=y
     DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
-    rm -rf $VARDIR/test_config*
-    cp -R $SELF_TEST_DIR/config $VARDIR/test_config
-    DIR=$VARDIR/test_config
-    if [ -f $SELF_TEST_DIR/scripts/setup.pike ] ; then
-      $PIKE $SELF_TEST_DIR/scripts/setup.pike $SELF_TEST_DIR $VARDIR
+    rm -rf "$VARDIR/test_config"*
+    DIR="$VARDIR/test_config"
+    if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then
+      $PIKE $DEFINES "$SELF_TEST_DIR/scripts/setup.pike" "$SELF_TEST_DIR" "$VARDIR"
     fi
-    once=1
-    remove_dumped=1
+    once=${once:-1}
+    debug=1
+    #remove_dumped=1
 }
 
 parse_args() {
@@ -156,13 +205,17 @@ parse_args() {
    ARGS="$ARGS $1"
   ;;
   --truss)
-     pike="truss $pike"
+     truss="truss"
    ;;
   --truss-c)
-     pike="truss -c $pike"
+     truss="truss -c"
+   ;;
+  --strace)
+     truss="strace"
    ;;
   --log-dir=*)
    LOGDIR=`echo $1 | sed -e 's/--log-dir=//'`
+   export LOGDIR
   ;;
   --debug-log=*)
    DEBUGLOG=`echo $1 | sed -e's/--debug-log=//'`
@@ -176,6 +229,9 @@ parse_args() {
   ;;
   '--with-security'|'--enable-security')
     DEFINES="$DEFINES -DSECURITY"
+  ;;
+  '--with-snmp-agent'|'--enable-snmp-agent')
+    DEFINES="$DEFINES -DSNMP_AGENT"
   ;;
 
   '--debug'|'--with-debug'|'--enable-debug')
@@ -193,8 +249,14 @@ parse_args() {
   '--strip-backslash'|'--without-backslash'|'--strip-back-slash')
     DEFINES="-DSTRIP_BSLASH $DEFINES"
   ;;
+  '--offline')
+    DEFINES="-DNO_DNS -DOFFLINE $DEFINES"
+  ;;
   '--without-ram-cache'|'--disable-ram-cache')
     DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
+  ;;
+  '--without-http-compression'|'--disable-http-compression')
+    DEFINES="`echo $DEFINES | sed -e 's/-DHTTP_COMPRESSION//g'`"
   ;;
   '--without-ram-cache-stat'|'--disable-ram-cache-stat')
     DEFINES="`-DRAM_CACHE_ASUME_STATIC_CONTENT`"
@@ -214,6 +276,23 @@ parse_args() {
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
   ;;
+  '--generations='*)
+    GENERATIONS=`echo $1 | sed -e 's/--generations=//'`
+    if test "$GENERATIONS" -gt 1; then :; else
+      echo "Invalid number of log generations: $GENERATIONS" >&2
+      echo "Using default: 5" >&2
+      GENERATIONS=5
+    fi
+  ;;
+  '--generations')
+    GENERATIONS="$2"
+    shift
+    if test "$GENERATIONS" -gt 1; then :; else
+      echo "Invalid number of log generations: $GENERATIONS" >&2
+      echo "Using default: 5" >&2
+      GENERATIONS=5
+    fi
+  ;;
   '--quiet'|'-q')
     verbose=0
   ;;
@@ -223,6 +302,9 @@ parse_args() {
   ;;
   '--remove-dumped')
      remove_dumped=1;
+  ;;
+  '--stop')
+     stop=1;
   ;;
 
   '--once')
@@ -243,11 +325,24 @@ parse_args() {
     once=2
     debug=0
   ;;
+  --valgrind|--valgrind=*)
+    valgrind="$1"
+    once=2
+    debug=0
+  ;;
   '--program')
     program="$2"
     once=2
     passhelp=1
+    keep_mysql=1
     shift
+    shift
+    # Pass any remaining arguments along to the program.
+    while [ ! c"$1" = "c" ] ; do
+      pass="$pass '`echo \"$1\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
+      shift
+    done
+    break
   ;;
   '--cd')
     cd_to="$2"
@@ -262,7 +357,10 @@ parse_args() {
   ;;
   -D*|-M*|-I*|-P*)
     # Argument passed along to Pike.
-    DEFINES="$DEFINES $1"
+    DEFINES="$DEFINES \"$1\""
+  ;;
+  --pikeargs=*)
+    PIKEARGS="$PIKEARGS "`expr "$1" : '--pikeargs=\(.*\)'`
   ;;
   '--version')
    if [ "x$passhelp" = "x1" ] ; then
@@ -278,20 +376,20 @@ parse_args() {
    fi
   ;;
   --self-test-dir=*)
-    SELF_TEST_DIR=`echo $1 | sed -e's/--self-test-dir=//'`
+    SELF_TEST_DIR=`echo $1 | sed -e's/^--self-test-dir=//'`
   ;;
   '--self-test')
-    setup_for_tests
+    do_setup_for_tests=1
   ;;
   '--self-test-quiet')
-    debug=-1
     SILENT_START=y
     do_pipe="| grep '  |'"
-    setup_for_tests
+    do_setup_for_tests=1
+    debug=-1
   ;;
   '--self-test-verbose')
     pass="$pass --tests-verbose=1"
-    setup_for_tests
+    do_setup_for_tests=1
   ;;
   '--help'|'-?')
    if [ "x$passhelp" = "x1" ] ; then
@@ -309,6 +407,10 @@ the default arguments.
 
       .B--help -?B.:                  This information.
 
+      .B--offlineB.:                  Indicate that there is no network 
+				  connection available. Disables DNS and some
+				  other similar things.
+
       .B--remove-dumpedB.:            Remove all dumped code, thus forcing
                                   a recompile.
 
@@ -324,7 +426,7 @@ the default arguments.
       .B--debug-log=FILEB.:           Use an alternate debuglog file.
 				  Defaults to .B../logs/debug/B.configdirname.B.1B..
 
-      .B--pid-file=FILEB.:            Store the roxen and startscript pids in this
+      .B--pid-file=FILEB.:            Store the Roxen and start script pids in this
 				  file. Defaults to .B../configurations/_roxen_pidB..
 
       .B--silent-startB.:             Inhibits output to stdout. If used,
@@ -332,15 +434,17 @@ the default arguments.
 
       .B--strip-backslashB.:          Replace all \\ characters in URIs with /
 
-      .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed
+      .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
 
-      .B--without-ram-cache-statB.:   Disable the stat that is usualy done
-                                  for files in the ram cache to ensure that
+      .B--without-ram-cache-statB.:   Disable the stat that is usually done
+				  for files in the protocol cache to ensure that
 				  they are not changed before they are sent.
                                   Improves performance at the cost of constant
                                   aggravation if the site is edited. Useful for
 				  truly static sites.
+
+      .B--without-http-compressionB.: Disable gzip compression for HTTP requests.
 
       .B--with-threadsB.:             If threads are available, use them.
 
@@ -357,6 +461,9 @@ the default arguments.
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
 
+      .B--generations=NUMBERB.:       Specify the number of generations for the
+                                  log rotation. Default: 5.
+
       .B--self-testB.:                Runs a testsuite.
       .B--self-test-verboseB.:        Runs a testsuite, report all tests.
       .B--self-test-quietB.:          Runs a testsuite, only report errors.
@@ -367,14 +474,18 @@ the default arguments.
 			   	  This is very useful when debugging. Implies
 				  --module-debug.
 
-      .B--keep-mysqlB.:               Don't shut down MySQL process when exiting
+      .B--stopB.:                     Stop the server.
+
+      .B--keep-mysqlB.:               Do not shut down MySQL process when exiting
 				  the start script. Useful during development
 				  or any other scenario where the start script
 				  is frequently terminated.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
-      .B--programB.:                  Start a different program with the roxen
+      .B--valgrind[=valgrind args]B.: Run the server in valgrind. Implies .B--onceB..
+
+      .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
                                   .B./start --program bin/install.pikeB. will
 				  start the installation program normally
@@ -386,6 +497,10 @@ the default arguments.
 
       .B--module-debugB.:             Enable more internal debug checks to
                                   simplify debugging of Roxen modules.
+
+      .B--mysql-log-queriesB.:        Instruct the MySQL server to log all
+                                  queries so that they end up in the Roxen
+                                  debug log.
 
       .B--fd-debugB.:                 Enable FD debug.
 
@@ -401,7 +516,9 @@ the default arguments.
                                   on exit. This is not intented for anything
                                   but debug. Slows the server down.
 
-  .BArguments passed to pike:B.
+      .B--with-snmp-agentB.:          Enable internal SNMP agent code.
+
+  .BArguments passed to Pike:B.
 
        .B-DDEFINEB.:                  Define the symbol .BDEFINEB..
 
@@ -414,7 +531,7 @@ the default arguments.
 				  Things will run more slowly, but it is very
                                   useful while developing code.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting Roxen with --debug
 
        .B-rTB.:                       Enable strict types.
 				  Same as adding #pragma strict-types
@@ -427,11 +544,11 @@ the default arguments.
 				  object variable with an untyped
 				  object) will generate warnings.
 
-				  Useful for module and roxen core
+				  Useful for module and Roxen core
 				  developers, but not so useful for
 				  the occasional pike-script-writer.
 
-				  Enabled when starting roxen with --debug
+				  Enabled when starting Roxen with --debug
 
        .B-s<size>B.:                  Set the stack size.
 
@@ -457,6 +574,8 @@ the default arguments.
 
        .B-wB.:                        Turn on Pike warnings.
 
+       .B--pikeargs=<args>B.:         Pass arbitrary arguments to Pike.
+
   .BEnvironment variables:B.
 
      .BLANGB.:                        Used to determine the default locale
@@ -472,18 +591,31 @@ EOF
     fi
    ;;
   *)
-    pass="$pass $1"
+    pass="$pass '`echo \"$1\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
    ;;
   esac
   shift
  done
+
+ if [ "x$do_setup_for_tests" = x1 ]; then
+   setup_for_tests
+ fi
 }
 
 if [ ! "X$ROXEN_ARGS" = "X" ]; then
   parse_args $ROXEN_ARGS
 fi
 
-parse_args $@
+parse_args "$@"
+
+if [ "$once" = "" ]; then :; else
+  # Once-mode.
+  if [ "x$passhelp" = "x1" ]; then :; else
+    # We're not using --program.
+    # Pass --once along to roxenloader.
+    pass="$pass --once=$once"
+  fi
+fi
 
 # The work has already been done above, but the debug printout is better
 # to have _after_ parse_args (consider --help and --version)
@@ -510,9 +642,9 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
   # Pike default Master-program
   if [ "x$PIKE_MASTER" = "x" ]; then
     if [ -f lib/master.pike ]; then
-      DEFINES="$DEFINES -m$roxendir/lib/master.pike"
+      DEFINES="$DEFINES \"-m$roxendir/lib/master.pike\""
     elif [ -f lib/pike/master.pike ]; then
-      DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike"
+      DEFINES="$DEFINES \"-m$roxendir/lib/pike/master.pike\""
     fi
   else
     # This is useful when using several different Pikes.
@@ -520,50 +652,54 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
     # PIKE_INCLUDE_PATH and PIKE_MODULE_PATH
     # they are handled automatically by the master,
     # so no need to do it here.
-    DEFINES="$DEFINES -m$PIKE_MASTER"
+    DEFINES="$DEFINES \"-m$PIKE_MASTER\""
   fi
 fi
 
 # Extra module-path
 #if [ -d etc/modules ]; then
-  DEFINES="$DEFINES -M$roxendir/etc/modules"
+  DEFINES="$DEFINES \"-M$roxendir/etc/modules\""
 #fi
+
+if [ -d "$LOCALDIR/pike_modules/." ]; then
+  DEFINES="$DEFINES \"-M$LOCALDIR/pike_modules\""
+fi
 
 # Extra include-path
 #if [ -d etc/include ]; then
-  DEFINES="$DEFINES -I$roxendir/etc/include"
+  DEFINES="$DEFINES \"-I$roxendir/etc/include\""
 #fi
 
-if [ -d $LOCALDIR/include/. ]; then
-  DEFINES="$DEFINES -I$LOCALDIR/include"
+if [ -d "$LOCALDIR/include/." ]; then
+  DEFINES="$DEFINES \"-I$LOCALDIR/include\""
 fi
 
 # Extra include-path (2)
 #if [ -d base_server ]; then
-  DEFINES="$DEFINES -I$roxendir/base_server"
+  DEFINES="$DEFINES \"-I$roxendir/base_server\" \"-P$roxendir/base_server\""
 #fi
 
-if [ -d $LOCALDIR/base_server/. ]; then
-  DEFINES="$DEFINES -I$LOCALDIR/base_server -P$LOCALDIR/base_server"
+if [ -d "$LOCALDIR/base_server/." ]; then
+  DEFINES="$DEFINES \"-I$LOCALDIR/base_server\" \"-P$LOCALDIR/base_server\""
 fi
 
 # Extra program-path
-DEFINES="$DEFINES -P`pwd`"
+DEFINES="$DEFINES \"-P`pwd`\""
 
 # Support for adding local pike-modules
-if [ -d $LOCALDIR/etc/. ]; then
+if [ -d "$LOCALDIR/etc/." ]; then
   # Extra module-path
-  if [ -d $LOCALDIR/etc/modules/. ]; then
-    DEFINES="$DEFINES -M$LOCALDIR/etc/modules"
+  if [ -d "$LOCALDIR/etc/modules/." ]; then
+    DEFINES="$DEFINES \"-M$LOCALDIR/etc/modules\""
   fi
 
   # Extra include-path
-  if [ -d $LOCALDIR/etc/include/. ]; then
-    DEFINES="$DEFINES -I$LOCALDIR/etc/include"
+  if [ -d "$LOCALDIR/etc/include/." ]; then
+    DEFINES="$DEFINES \"-I$LOCALDIR/etc/include\""
   fi
 
   # Extra program-path
-  DEFINES="$DEFINES -P$LOCALDIR/etc"
+  DEFINES="$DEFINES \"-P$LOCALDIR/etc\""
 fi
 
 # Extra kludge for HPUX
@@ -594,6 +730,15 @@ DEFINES="$DEBUG $DEFINES"
 
 ####### END PIKE OPTIONS
 
+####### START MySQL
+
+if [ -f "mysql-location.txt" ]; then :; else
+  if [ "x$passhelp" = "x1" ]; then :; else
+    dp "Warning: No mysql-location.txt"
+  fi
+fi
+
+####### END MySQL
 
 #
 # Some useful functions
@@ -603,30 +748,72 @@ cleanup_pid_file() {
   [ -z "$pidfile" ] || rm $pidfile
 }
 
+# NOTE: The following function needs to be reentrant.
 signal_exit() {
-  dp "Start script terminating."
+  test "x$once" != x2 && dp "Start script terminating."
   trap "" 2 15
-  if [ "x$ROXEN_PID" != "x" ]; then
+  if [ "x$ROXEN_PID" != "x" ] && \
+     kill -0 $ROXEN_PID 2>/dev/null; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
+    # FIXME: Consider exiting here.
   fi
   if [ "x$keep_mysql" = "x" ] ; then
-    if [ -f $DIR/_mysql/mysql_pid ] ; then
-      dp "Shutting down mysql."
-      kill `cat $DIR/_mysql/mysql_pid` 2>/dev/null
-      sleep 2
-      if [ -f $DIR/_mysql/mysql_pid ] ; then
-        kill -9 `cat $DIR/_mysql/mysql_pid` 2>/dev/null
+    if [ -f "$DIR/_mysql/mysql_pid" ] ; then
+	mysql_pidfile="$DIR/_mysql/mysql_pid"
+    elif [ -f "$ROXEN_DATADIR/mysql/mysql_pid" ] ; then
+	mysql_pidfile="$ROXEN_DATADIR/mysql/mysql_pid"
+    fi
+    if [ "x$mysql_pidfile" != "x" ] ; then
+      mysql_pid="`cat $mysql_pidfile 2>/dev/null`"
+      dp_no_nl "Shutting down MySQL."
+      kill "$mysql_pid" 2>/dev/null
+      # Give mysql 5 minutes to shut down.
+      timer=""
+      while [ -f "$mysql_pidfile" -a \
+	      "$timer" != "mmmmm" ] && \
+	    kill -0 "$mysql_pid" 2>/dev/null; do
+	sleep 2
+	timer=`echo "x$timer" | sed -e 's/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/m/'`
+	if [ "x$SILENT_START" != "xy" ]; then
+	  # Progress indicator.
+	  echo "." | tr -d '
+' >&2
+	fi
+      done
+      if [ "x$SILENT_START" != "xy" ]; then
+	echo >&2
       fi
-      rm -f $DIR/_mysql/mysql_pid 2>/dev/null
+      if kill -0 "$mysql_pid" 2>/dev/null; then
+        dp "Shutting down MySQL the hard way."
+        kill -9 "$mysql_pid" 2>/dev/null
+      fi
+      if [ -f "$mysql_pidfile" ] && \
+	 [ "$mysql_pid" = "`cat $mysql_pidfile`" ]; then
+        rm -f "$mysql_pidfile" 2>/dev/null
+      fi
     fi
   fi
-  dp "Start script terminated."
+  test "x$once" != x2 && dp "Start script terminated."
   exit 0
 }
 
 exit_fail() {
   exitcode=1
+}
+
+# This is a trick to get $ROXEN_PID and arguments containing spaces
+# correct at the same time.
+fork_roxen() {
+  if [ $verbose -gt 0 ]; then
+    dp "Server start command:"
+    for arg
+    do
+      dp "    $arg"
+    done
+  fi
+  "$@" &
+  ROXEN_PID=$!
 }
 
 start_roxen() {
@@ -636,26 +823,20 @@ start_roxen() {
   if [ x$remove_dumped = x1 ] ; then
     remove_old_dot_o_files "user request"
   fi
-  if [ x$DIR != x../configurations ] ; then
-    args="$DEFINES $ARGS $program --config-dir=$DIR $pass"
+  if [ "x$DIR" != "x../configurations" ] ; then
+    args="$PIKEARGS $DEFINES $ARGS $program --config-dir='`echo \"$DIR\" | sed -e \"s/'/'\\\"'\\\"'/g\"`' $pass"
   else
-    args="$DEFINES $ARGS $program $pass"
+    args="$PIKEARGS $DEFINES $ARGS $program $pass"
   fi
   if [ x"$cd_to" != x ] ; then
     cd "$cd_to"
   fi
-  if [ "x$gdb" = "xno" ]; then
-    if [ $verbose -gt 0 ]; then
-      if [ $verbose -gt 1 -o -z "$once" ] ; then
-        dp Executing $pike $args|sed -e "s!`pwd`!.!g"
-      else
-        dp "Using the '$pike' pike binary"|sed -e "s!`pwd`!.!g"
-      fi
-    fi
-
+  if [ "x$gdb" = "xno" -a "x$valgrind" = "x" ]; then
     if [ "x$once" = "x" ]; then
-      "$pike" $args 2>>"${DEBUGLOG}.1" 1>&2 &
-      ROXEN_PID=$!
+      if [ $verbose -gt 0 ]; then
+	dp "Executing $pike $args"|sed -e "s!`pwd`!.!g"
+      fi
+      eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
@@ -663,22 +844,21 @@ start_roxen() {
     else
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
-	  "$pike" $args 2>&1 &
-	  ROXEN_PID=$!
+	  eval "fork_roxen $truss \"$pike\" $args 2>&1"
 	  wait $ROXEN_PID 2>/dev/null 1>&2
 	  exitcode="$?"
 	  ROXEN_PID=""
 	else
-	  "$pike" $args 2>&1
+	  eval "$truss \"$pike\" $args" 2>&1
 	  exitcode="$?"
 	fi
       else
         trap exit_fail 1
-        eval "($pike $args || kill -1 $$) 2>&1  $do_pipe"
+	eval "(eval \"$truss \\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
         exit $exitcode
       fi
     fi
-  else
+  elif [ "x$gdb" != "xno" ]; then
     echo >.gdbinit handle SIGPIPE nostop noprint pass
     echo >>.gdbinit handle SIGUSR1 nostop noprint pass
     echo >>.gdbinit handle SIGUSR2 nostop noprint pass
@@ -687,6 +867,8 @@ start_roxen() {
       echo >>.gdbinit handle SIG38 nostop noprint pass
       echo >>.gdbinit handle SIG39 nostop noprint pass
     fi
+    echo >>.gdbinit break debug_fatal
+    echo >>.gdbinit break pike_gdb_breakpoint
     firstline=`head -1 "$pike" 2>/dev/null`
     if expr "x$firstline" : 'x#! */.*' >/dev/null; then
       # Looks like a script. gdb will not grok it, so we try passing
@@ -694,16 +876,22 @@ start_roxen() {
       # bin/pike script that is built by the top level Makefile in the
       # Pike source tree).
       dp "Executing $pike --gdb $args"
-      $pike --gdb $args
+      eval "\"$pike\" --gdb $args"
     else
       dp "Executing gdb $pike $args"
-      echo >>.gdbinit run $args
-      gdb $pike
+      echo >>.gdbinit "run $args"
+      gdb "$pike"
     fi
     rm .gdbinit
-  fi
-  if [ x$once = x1 ] ; then 
-   signal_exit
+  else
+    firstline=`head -1 "$pike" 2>/dev/null`
+    if expr "x$firstline" : 'x#! */.*' >/dev/null; then
+      dp "Executing $pike $valgrind $args"
+      eval "\"$pike\" \"$valgrind\" $args"
+    else
+      dp "Executing valgrind $pike $args"
+      valgrind `expr "$valgrind" : '--valgrind=\(.*\)'` "$pike"
+    fi
   fi
 }
 
@@ -715,15 +903,24 @@ start_roxen() {
 trap signal_exit 2 15
 trap "" 1
 
-if [ -z "$once" ]; then
-  # Fix the pid file. We don't do this if once is set, since that
-  # often signifies that it's not the real server starting up, but
-  # instead some other process, e.g. one given with --program.
-  [ -z "$pidfile" ] && pidfile=${ROXEN_PID_FILE:-$DIR/_roxen_pid}
-  pass="$pass --pid-file=$pidfile"
+if [ "$program" = "base_server/roxenloader.pike" ] ; then
+  # Starting a Roxen server. Fix the pid file.
+  [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
+  pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
+  # Check for stop.
+  if [ "$stop"x != x ] && [ -f "$pidfile" ]
+  then
+      pids=`cat "$pidfile"`
+      echo "$pids" | xargs kill
+      while kill -0 $pids 2>/dev/null
+      do
+	sleep 1
+      done
+      exit
+  fi
   # Avoid duplicate start scripts if we got a pid file.
   mypid=$$
-  test -f $pidfile && {
+  test -f "$pidfile" && {
     if read roxenpid && read scriptpid; then
       if kill -0 $scriptpid 2>/dev/null; then
 	dp "According to the pid file $pidfile,"
@@ -739,24 +936,24 @@ if [ -z "$once" ]; then
 	:
       else false; fi
     else false; fi
-  } < $pidfile && exit 1
+  } < "$pidfile" && exit 1
   # Minor race here.
-  { echo "x" && echo $mypid; } > $pidfile
+  { echo "x" && echo $mypid; } > "$pidfile"
   trap cleanup_pid_file 0
 fi
 
-PIKEVERSION="`$pike --version 2>&1|head -1`"
-LS="`ls -lL $pike 2>/dev/null`"
+PIKEVERSION="`\"$pike\" --version 2>&1|head -1`"
+LS="`ls -lL \"$pike\" 2>/dev/null`"
 LS="$LS `find etc/modules -ls 2>/dev/null`"
 LS="$LS `find base_server -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS"
 
 if [ "$program" = "base_server/roxenloader.pike" ] ; then
-  if [ "`cat $old_roxen_defines 2>/dev/null`" != "$VERSION_DATA" ] ; then
-    remove_old_dot_o_files "defines or pike version changed"
+  if [ "`cat \"$old_roxen_defines\" 2>/dev/null`" != "$VERSION_DATA" ] ; then
+    remove_old_dot_o_files "defines or Pike version changed"
   fi
-  echo "$VERSION_DATA" > $old_roxen_defines
+  echo "$VERSION_DATA" > "$old_roxen_defines"
 fi
 
 if [ -z "$once" ] ; then
@@ -769,6 +966,9 @@ if [ -z "$once" ] ; then
   else
     DEBUGDIR="`dirname "$DEBUGLOG"`"
   fi
+  LOGFILE="${DEBUGLOG}.1"
+  export LOGFILE
+
   # This duplicate of the logdir creation code is needed, check the 
   # redirect below
   if [ ! -d "$DEBUGDIR" ] ; then
@@ -776,6 +976,10 @@ if [ -z "$once" ] ; then
       dp "Failed to create log directory $DEBUGDIR."
       exit 1
     fi
+  fi
+  if [ -f "bin/setup_nsr.pike" ]; then
+    # Setup .nsr (Networker) files for the logfile directories.
+    eval "\"$pike\" $PIKEARGS $DEFINES bin/setup_nsr.pike --logdir=\"$LOGDIR\" --debugdir=\"$DEBUGDIR\""
   fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
@@ -803,36 +1007,54 @@ if [ -z "$once" ] ; then
 
 	dp "Server start at `date`"
 	dp "Debug log in ${DEBUGLOG}.1"
-	rotate $DEBUGLOG
+	rotate "$DEBUGLOG"
 	start_roxen
 
 	if [ "$exitcode" -eq "0" ] ; then
 	  # Clean shutdown.
 	  dp "Roxen WebServer shutdown."
+	  signal_exit
+	  # Not reached, but...
 	  exit 0
 	fi
 	if [ "$exitcode" -lt "0" ] ; then
 	  # Signal death.
-	  dp "Roxen WebServer died of signal $exitcode. Restarting..."
+	  dp "Roxen WebServer died of signal $exitcode."
 	else
          case "$exitcode" in
          100)
            dp "Changing Roxen WebServer version. Restarting."
+	   # We need to clean up the pid file, since we're mentioned in it...
+	   cleanup_pid_file
            cd .. && exec ./start "$@"
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
            ;;
+	 50)
+	   dp "Failed to open any port. Shutdown."
+	   keep_mysql=1
+	   signal_exit
+	   # Not reached, but...
+	   exit 50
+	   ;;
          *)
-           dp "Roxen WebServer down. Restarting."
+           dp "Roxen WebServer down with code $exitcode."
            ;;
          esac
 	fi
+	if [ -f "$LOCALDIR/restart_rc" ]; then
+	  dp "Running $LOCALDIR/restart_rc..."
+	  if /bin/sh "$LOCALDIR/restart_rc"; then :; else
+	    dp "$LOCALDIR/restart_rc failed with code $?."
+	  fi
+	fi
+	dp "Restarting..."
       done
     ) &
     # Minor race here wrt pid file contents.
     pid=$!
     trap "" 0
-    [ -z "$pidfile" ] || { echo "x" && echo $pid; } > $pidfile
+    [ -z "$pidfile" ] || { echo "x" && echo $pid; } > "$pidfile"
     dp "Forked start script, pid $pid." 2>&3
     dp "Start script pid $pid."
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
@@ -850,5 +1072,10 @@ if [ -z "$once" ] ; then
   exec </dev/null
 else
   start_roxen
+  if [ "$once" = "1" -a "$exitcode" = "50" ]; then
+    dp "Failed to open any port. Shutdown."
+    keep_mysql=1
+  fi
+  signal_exit
 fi
 

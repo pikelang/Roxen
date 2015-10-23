@@ -15,7 +15,7 @@ inherit "module";
 
 #include <roxen.h>
 
-constant cvs_version = "$Id: php4.pike,v 2.15 2001/03/03 07:15:12 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILE_EXTENSION;
 
@@ -109,7 +109,7 @@ class PHPScript
   {
     DWERROR(sprintf("PHP:PHPWrapper::send_headers(%d,%O)\n", code, headers));
     string result = "", post="";
-    string return_code = errors[code||200];
+    string return_code = (code||200) + " " + errors[code||200];
     int ct_received = 0, sv_received = 0;
     if(headers)
       foreach(indices(headers), string header)

@@ -19,10 +19,10 @@ constant BADARG     = 100;
 
 void setup_timeout( )
 {
-  void timeout() {  exit( TIMEOUT ); };
 #ifndef __NT__
+  void timeout() {  exit( TIMEOUT ); };
   signal( 14, timeout );
-  alarm( 5 );
+  alarm( 30 );
 #endif
 }
 

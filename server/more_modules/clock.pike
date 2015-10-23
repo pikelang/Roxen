@@ -1,6 +1,6 @@
 // This is a Clock Module.
 
-string cvs_version = "$Id: clock.pike,v 1.2 1996/12/01 19:18:48 per Exp $";
+string cvs_version = "$Id$";
 // One of the first modules written for Spinner, here for nostalgical
 // reasons.  It could be used as an example of how to write a simple
 // location module.
@@ -19,7 +19,7 @@ void create()
 	 "Clock location in filesystem.");
 }
 
-mixed *register_module()
+array(mixed) register_module()
 {
   return ({ 
     MODULE_LOCATION,

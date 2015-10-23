@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.8 2001/06/27 16:20:09 tomas Exp $
+ * $Id$
  */
 
 string dir;
@@ -60,6 +60,15 @@ void read_from_stdin()
 {
   while(!file_stat(key)) sleep(2);
   rm(key);
+
+  //  Ask for orderly shutdown. The signal has potentially already been
+  //  delivered but it doesn't hurt to make sure.
+  if (object rxn = roxen()) {
+    if (!rxn->is_shutting_down())
+      rxn->exit_when_done();
+  }
+  sleep(60);
+  werror("Roxen not shutting down nicely... forcing termination\n");
   exit(0);
 }
 
@@ -169,7 +178,7 @@ int main(int argc, array (string) argv)
 	   "Roxen log directory  : "+log_dir+"\n"
 	   "Roxen shutdown file  : "+(key || "None")+"\n"
 	   "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant (Nettle)
 	   "This version of Roxen has crypto algorithms available.\n"
 #endif
 	   );

@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
 <comment>Empty tests</comment>
 <test>
 <rxml>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890&amp;&lt;&gt;&#40;ÅäÖ</rxml>
@@ -14,7 +16,7 @@
 <result></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml>
     x
   		x
@@ -28,6 +30,17 @@
 </test>
 
 <test>
+<rxml>
+    x
+  		x
+  	 	 	     	x
+</rxml>
+<result>x
+  		x
+  	 	 	     	x</result>
+</test>
+
+<test>
 <rxml><set variable="var.x" value="Ensuring integrity between tests"/></rxml>
 <result></result>
 </test>
@@ -35,6 +48,20 @@
 <test>
 <rxml>&var.x;</rxml>
 <result></result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Basic syntax</comment>
+
+<test>
+  <rxml>&:amp;</rxml>
+  <result>&amp;</result>
+</test>
+
+<test>
+  <rxml>&:var.foo;</rxml>
+  <result>&var.foo;</result>
 </test>
 
 
@@ -61,6 +88,26 @@
 </test>
 
 <test>
+<rxml><true/><then>a<false/></then>b<else>c</else></rxml>
+<result>ab</result>
+</test>
+
+<test>
+<rxml><true/><then>a<false/></then>b<then>c</then></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><false/><else>a<true/></else>b<then>c</then></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><false/><else>a<true/></else>b<else>c</else></rxml>
+<result>ab</result>
+</test>
+
+<test>
 <rxml><set variable='var.x' value='2'/><true/><else>x<set variable='var.x' value='3'/></else>&var.x;</rxml>
 <result>2</result>
 </test>
@@ -68,6 +115,30 @@
 <test>
 <rxml><set variable='var.x' value='2'/><false/><then>x<set variable='var.x' value='3'/></then>&var.x;</rxml>
 <result>2</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define tag="t">
+      <if variable="_.a is t"/>
+      <then>
+	1t
+	<if variable="_.b is t"/>
+      </then>
+      <else>
+	1f
+	<if variable="_.c is t"/>
+      </else>
+      <then>2t</then>
+      <else>2f</else>
+    </define>
+
+    <t a="t" b="t"/>,
+    <t a="t" b=""/>, <!-- 1t2f would have been more logical. -->
+    <t a=""  c="t"/>,
+    <t a=""  c=""/>,
+  </rxml>
+  <result>1t2t,1t2t,1f2t,1f2f,</result>
 </test>
 
 
@@ -78,10 +149,12 @@
 <result>AA</result>
 </test>
 
+<!-- The following is only valid in 2.1 compat mode.
 <test>
 <rxml><case>aA</case></rxml>
 <result>aA</result>
 </test>
+-->
 
 <test>
 <rxml><case case=capitalize>aaAa</case></rxml>
@@ -93,9 +166,14 @@
 <result>aa</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><case case="upper">a &amp; &quot; <br /></case></rxml>
 <result>A &amp; &#34; <br /></result>
+</test>
+
+<test>
+  <rxml><case case="upper"></case></rxml>
+  <result></result>
 </test>
 
 
@@ -131,150 +209,150 @@
 <comment>Define/undefine</comment>
 <test>
 <rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
-<result>10</result>
+<glob>1[Error (parse): *]0</glob>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='a'>&_.b;&a.c;</define><a c='2' b='1'/></rxml>
 <result>12</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='q'>&_.args:none;</define><q a='b'/></rxml>
 <result>a="b"</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define variable='var.i'>b</define>a&var.i;<undefine variable='var.i'/>c&var.i;d</rxml>
 <result>abcd</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define variable="var.i" trimwhites="1"> a </define>x&var.i;</rxml>
 <result>xa</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define variable="var.i" trimwhites="1" />&var.i;</rxml>
 <result></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define container='x'><p ::='&_.args;'><contents/></p></define><x align='center'>hej</x></rxml>
 <result><p align="center">hej</p></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='a'>A</define><a/><define tag='b'><a/>B</define><b/></rxml>
 <result>AAB</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='q'>b</define>a<q/><undefine tag='q'/><q/></rxml>
 <result>ab<q/></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='x'>y</define><x/><if true><x/></if></rxml>
 <result>yy</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define container='x'>a<contents/>c</define><x>b</x><undefine container='x'/><x>d</x></rxml>
 <result>abc<x>d</x></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="ä">a</define><define tag="Ä">A</define>x<ä/><Ä/></rxml>
 <result>xaA</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='x'><attrib name='y'>z</attrib>a&_.y;</define><x/>b<x y='c'/></rxml>
 <result>azbac</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define container='x'><attrib name='y'>z</attrib>a<contents/>&_.y;d</define><x y='c'>b</x>e<x>b</x></rxml>
 <result>abcdeabzd</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define container='x'>::&_.contents;::</define>a<x>b</x>c</rxml>
 <result>a::b::c</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag='x'><attrib name="y">z</attrib>&_.rest-args:none;</define><x a="b"/></rxml>
 <result>a="b"</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x" trimwhites="1"> <attrib name="y"> </attrib> a&_.y; </define><x/></rxml>
 <result>a </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x" trimwhites="1" /><x trimwhites="1"/></rxml>
 <result></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"> <attrib name="y"> </attrib> a&_.y; </define><x trimwhites="1"/></rxml>
 <result>  a  </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"><!-- foo --><attrib name="y">y</attrib><?x?><attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
 <result><!-- foo --><?x?><attrib name="z">z</attrib>y</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"> <attrib name="y">y</attrib>x<attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
 <result> x<attrib name="z">z</attrib>y</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"><attrib name="y">y</attrib><![CDATA[]]><attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
 <result><![CDATA[]]><attrib name="z">z</attrib>y</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"><attrib name="y">y</attrib>&_.y;<attrib name="z">z</attrib>&_.y;&_.z;</define><x/></rxml>
 <result>y<attrib name="z">z</attrib>y</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define container="x"> a&_.contents; </define><x trimwhites="1">b </x></rxml>
 <result> ab </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x">&_.y;&x.y;</define><x y="z"/></rxml>
 <result>zz</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x" scope="p">&_.y;&p.y;</define><x y="z"/></rxml>
 <result>zz</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x">&var.x;</define><set variable="var.x">y</set><x/></rxml>
 <result>y</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x" preparse="1">&var.x;</define><set variable="var.x">y</set><x/></rxml>
 <result></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"><attrib name="y">1</attrib> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> &_.y;:&_.z;</define><x/></rxml>
 <result> <![CDATA[</attrib>]]> <attrib name="z">2</attrib> 1:</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><define tag="x"><attrib name="y">hej</attrib><maketag type="tag" name="&_.y;">
 <attrib name="foo">bar</attrib></maketag></define><x/></rxml>
 <result><hej foo="bar" /></result>
@@ -351,6 +429,886 @@
   <result>xyzxzyx</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="foo" preparse="y">
+      <trimlines>
+	&_.contents; &_.argument;
+      </trimlines>
+    </define>
+    <foo argument="x">y</foo>
+  </rxml>
+  <result>yx</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="foo" preparse="y" scope="s">
+      <trimlines>
+	&_.contents; &_.argument;
+	&s.contents; &s.argument;
+      </trimlines>
+    </define>
+    <foo argument="x">y</foo>
+  </rxml>
+  <result>yxyx</result>
+</test>
+
+<test>
+  <rxml
+    ><define tag=post>post</define
+    ><define tag=pre>pre<noparse><post/><date/></noparse></define
+    ><define container=foo preparse=""><pre/>&_.contents;<contents/>&_.arg;</define
+    ><foo arg="a">c</foo
+  ></rxml>
+  <result>pre<post/><date/>cca</result>
+</test>
+
+<test>
+  <rxml
+    ><set variable="var.foo">&:var.bar;</set
+    ><define tag=foo preparse="">&var.foo:none;</define
+    ><foo
+  /></rxml>
+  <result>&var.bar;</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="a/node()"/>
+<contents copy-of="processing-instruction()"/>
+<contents copy-of="processing-instruction(y)"/>
+<contents copy-of="processing-instruction()[-1]"/>
+<contents copy-of="comment()[1]"/>
+<contents value-of="processing-instruction(x)"/>
+<contents value-of="comment()"/>
+<contents copy-of="text()"/>
+</define
+    ><x>a&auml; &amp; b <?x &amp;  y?><!--c--> <?y?><a
+	x='&amp;'>&lt;foo<a x='1' g="'">y</a></a
+      ><b y='&lt;' p='q'
+      />&gt;<a x='2' y='p'><a x='3'/><a x='4'/></a
+    ><!--d--></x
+  ></rxml>
+  <result>&lt;foo<a x='1' g="'">y</a><a x='3'/><a x='4'/>
+<?x &amp;  y?><?y?>
+<?y?>
+<?y?>
+<!--c-->
+&amp;amp;  y
+c
+a&auml; &amp; b  &gt;
+</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*[-1]"/><contents/></define
+    ><x><a>A</a><b>B</b></x
+  ></rxml>
+  <result><b>B</b><a>A</a><b>B</b></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]"/>
+      &var.foo;
+      <contents copy-of="*[1]"/>
+      &var.foo;
+    </define>
+    <x>
+      <set variable="var.foo" value="first"/>
+      <set variable="var.foo" value="second"/>
+    </x>
+  </rxml>
+  <result>secondsecond</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="*[-1]"/>&var.foo;<contents copy-of="*[1]"/>&var.foo;</define
+    ><x><set variable="var.foo" value="&var.foo;x"/><first-tag/><last-tag/></x
+  ></rxml>
+  <result><last-tag/>x<first-tag/>x</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      ><contents copy-of="*[-1]"/>&var.foo;<contents eval copy-of="*[1]"/>&var.foo;</define
+    ><x><set variable="var.foo" value="&var.foo;x"/><first-tag/><last-tag/></x
+  ></rxml>
+  <result><last-tag/>x<first-tag/>xx</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"
+      >&_.contents;&var.foo;</define
+    ><set variable="var.foo" value="x"
+    /><x><set variable="var.foo" value="&var.foo;x"/></x
+  ></rxml>
+  <result>&lt;set variable=&#34;var.foo&#34; value=&#34;&amp;var.foo;x&#34;/&gt;x</result>
+</test>
+
+<test no-strip-ws="">
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result> a="up" b="down"</result>
+</test>
+
+<test no-strip-ws="">
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result> b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="y/@b"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <z a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="*[-1]"/>
+    </define>
+    <emit source="values" values="x">
+      <x>
+	<set variable="var.foo">first</set>
+	<set variable="var.foo" type="text/xml">
+	  start <!-- the start -->
+	  <p><emit source="values" values="1,2" split=",">[&_.value;]</emit></p>
+	  stop<?foo bar?>
+	</set>
+	&var.foo:none;
+      </x>
+    </emit>
+  </rxml>
+  <result>[1][2]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="*/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>up</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="*[-1]/@*"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <y a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="y/@b"/>
+    </define>
+    <set variable="var.foo">up</set>
+    <set variable="var.bar">down</set>
+    <x>
+      <z a="&var.foo;"/>
+      <y b="&var.bar;"/>
+    </x>
+  </rxml>
+  <result>b="down"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents copy-of="@b"/>
+    </define>
+    <x a="1" b="2">
+      <y b="3" c="4"/>
+    </x>
+  </rxml>
+  <result>b="2"</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" preparse="">
+      [<contents copy-of="*/text()"/>]
+    </define>
+    <x>
+      <a><set variable="var.foo" value="x"/></a>
+      &var.foo;|<b><insert variable="var.foo"/></b>
+    </x>
+  </rxml>
+  <result>[x]</result>
+</test>
+
+<test>
+  <rxml
+    ><define tag="y" preparse=""
+      ><maketag type="tag" name="made"
+	><attrib name="attr"><contents value-of="@a"/></attrib
+      ></maketag
+    ></define
+    ><y a="1" b="2"
+  /></rxml>
+  <result><made attr="1" /></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><c foo="gnu"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="b[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*[@foo='bar']"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="* [ @ foo = &quot;bar&quot; ]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result><a foo="bar"/><d foo="bar"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="* [ @ foo = &quot;bar &quot; ]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*/@foo[@foo]"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result>foo="bar" foo="gnu" foo="bar"</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="*/@foo[@foo='bar']"/></define
+    ><x><a foo="bar"/><b bar="foo"/><c foo="gnu"/><d foo="bar"/></x
+  ></rxml>
+  <result>foo="bar" foo="bar"</result>
+</test>
+
+<test>
+  <rxml
+    ><define container="x"><contents copy-of="a[@foo]/y"/></define
+    ><x><a foo="bar"><y id="1"/></a><a><y id="2"/></a><a foo="gnu"><y id="3"/></a></x
+  ></rxml>
+  <result><y id="1"/><y id="3"/></result>
+</test>
+
+<test>
+  <rxml><define variable="var.i" preparse=""><contents/></define></rxml>
+  <glob>[Error (parse): *]</glob>
+</test>
+
+<test>
+  <rxml
+    ><define tag="x"
+      ><define variable="var.i" preparse=""><contents/></define
+    ></define
+    ><x
+  /></rxml>
+  <glob>[Error (parse): *]</glob>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" scope="x">
+      <define variable="var.i" preparse=""><contents scope="x"/></define>
+      &var.i;
+    </define>
+    <x>wox</x>
+    &var.i;
+  </rxml>
+  <result>woxwox</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="values" values="y">
+      <define variable="var.i" preparse="">&_.value;</define>
+      &var.i;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="var.y" expr="&var.init; + 1"/>
+      <contents/>
+      <set variable="var.y" expr="&var.init; + 2"/>
+      <contents eval/>
+    </define>
+    <set variable="var.init" value="4"/>
+    <x>a&var.y;</x>|
+    <x>b&var.y;</x>|
+    <set variable="var.init" value="8"/>
+    <x>a&var.y;</x>|
+    <x>b&var.y;</x>|
+  </rxml>
+  <result>a5a6|b5b6|a9a10|b9b10|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="var.y" expr="&var.init; + 1"/>
+      <contents value-of="text()[-1]"/>
+      <set variable="var.y" expr="&var.init; + 2"/>
+      <contents eval value-of="text()[-1]"/>
+    </define>
+    <set variable="var.init" value="4"/>
+    <x><set variable="var.y" value="-&var.y;"/>ignored<!-- -->&var.y;</x>|
+    <x>ignored<!-- -->&var.y;</x>|
+    <set variable="var.init" value="8"/>
+    <x><set variable="var.y" value="-&var.y;"/>ignored<!-- -->&var.y;</x>|
+    <x>ignored<!-- -->&var.y;</x>|
+  </rxml>
+  <result>-5-6|56|-9-10|910|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" scope="x" preparse>
+      <define tag="y-text">y</define>
+      <define container="y" preparse>
+	[<y-text/>:<contents/>][x:<contents scope="x"/>]
+      </define>
+      <define tag="y-text">z</define>
+      <y>y-exp</y>
+    </define>
+    <x>x-exp</x>
+  </rxml>
+  <result>[y:y-exp][x:x-exp]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x" preparse>
+      <attrib name="foo">z</attrib>
+      <contents value-of="*[1]"/>
+      &_.foo;
+      <contents value-of="@foo"/>
+    </define>
+    <x><y>y</y></x>
+  </rxml>
+  <result>yzz</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents value-of="item" result-set=""/></set>
+      <emit source="values" variable="_.data" sort="value">
+	&_.value;<delimiter>|</delimiter>
+      </emit>
+    </define>
+    <x>
+      <item>måndag</item>
+      <item>tisdag</item>
+      <item>onsdag</item>
+      <item>torsdag</item>
+      <item>fredag</item>
+      <item>lördag</item>
+      <item>söndag</item>
+    </x>
+  </rxml>
+  <result>fredag|lördag|måndag|onsdag|söndag|tisdag|torsdag</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="elem/@attr" result-set=""/>
+    </define>
+    <set variable="var.a">
+      <x><elem attr="1" foo=""/><elem attr="2" bar=""/></x>
+    </set>
+    &var.a.1;|&var.a.2;
+  </rxml>
+  <result>1|2</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="elem/@*" result-set=""/>
+    </define>
+    <set variable="var.a">
+      <x><elem attr="1" foo="f"/><elem attr="2" bar="b"/></x>
+    </set>
+    <emit source="values" variable="var.a" sort="value">
+      &_.value;|
+    </emit>
+  </rxml>
+  <result>1|2|b|f|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents copy-of="item[@ok]" result-set=""/></set>
+      <emit source="values" variable="_.data" sort="value">&_.value:none;</emit>
+    </define>
+    <x>
+      slask
+      <item ok="ja"><veckostart>måndag</veckostart></item>
+      <item>tisdag</item>
+      <item ok="">onsdag</item>
+      <?item mupp ?>
+      <item>torsdag</item>
+      <item ok="">fredag</item>
+      <item ok="">lördag</item>
+      <item>söndag</item>
+    </x>
+  </rxml>
+  <result><item ok="">fredag</item><item ok="">lördag</item><item ok="">onsdag</item><item ok="ja"><veckostart>måndag</veckostart></item></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <set variable="_.data"><contents copy-of="item" result-set=""/></set>
+      &_.data.-1:none;
+      &_.data.1:none;
+    </define>
+    <x>
+      en
+      <item>två</item>
+      <?item tre ?>
+      <item>fyra</item>
+    </x>
+  </rxml>
+  <result><item>fyra</item><item>två</item></result>
+</test>
+
+<test>
+  <rxml
+    ><define container="fl"><contents copy-of="text()"/></define
+    ><fl><![CDATA[xyz]]></fl
+  ></rxml>
+  <result><![CDATA[xyz]]></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='datest'
+      ><contents copy-of=".//pcheck"
+    /></define
+    ><datest
+      ><pcheck>chk1</pcheck
+      ><pcheck>chk2</pcheck
+      ><p><pcheck>chk3</pcheck></p
+      ><pcheck>chk4</pcheck
+    ></datest
+  ></rxml>
+  <result><pcheck>chk1</pcheck><pcheck>chk2</pcheck><pcheck>chk3</pcheck><pcheck>chk4</pcheck></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='snyggtorkel'
+      ><contents copy-of=".//comment()"
+    /></define
+    ><snyggtorkel
+      ><!-- etta --><pcheck
+	><!-- tvåa --><p/><!-- trea --></pcheck
+      ><!-- fyra --><p
+    /></snyggtorkel
+  ></rxml>
+  <result><!-- etta --><!-- tvåa --><!-- trea --><!-- fyra --></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//."
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e>1<e id='1.1'/>23<e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//node()"
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e>1<e id='1.1'/>23<e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//*"
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e><e id='1.1'/><e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//e//e"
+    /></define
+    ><nisse
+      ><e id="1"
+	><e id="1.1"
+	  ><e id="1.1.1"
+	    ><e id="1.1.1.1"
+	  /></e
+	></e
+      ></e
+    ></nisse
+  ></rxml>
+  <result><e id="1.1"><e id="1.1.1"><e id="1.1.1.1"/></e></e><e id="1.1.1"><e id="1.1.1.1"/></e><e id="1.1.1.1"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//a/b//c"
+    /></define
+    ><nisse
+      ><a><x><c/></x></a
+      ><a><x><b><y><c/></y></b></x></a
+      ><x><a><y><a><b><z><c hit="yes"/></z></b></a></y></a></x
+    ></nisse
+  ></rxml>
+  <result><c hit="yes"/></result>
+</test>
+
+<test>
+  <rxml type="array">
+    <define container="elements">
+      <value type="array">
+	<value type="string">b <inc variable="var.x"/>&var.x;</value>
+	<contents/>
+	<value type="string">e <inc variable="var.x"/>&var.x;</value>
+      </value>
+    </define>
+    <value><inc variable="var.x"/>&var.x;</value>
+    <elements>
+      <value><inc variable="var.x"/>&var.x;</value>
+      <value><inc variable="var.x"/>&var.x;</value>
+    </elements>
+    <value><inc variable="var.x"/>&var.x;</value>
+  </rxml>
+  <equal>({1, ({"b2", 3, 4, "e5"}), 6})</equal>
+</test>
+
+<test>
+  <rxml type="mapping">
+    <define container="elements">
+      <value index="B"><inc variable="var.x"/>&var.x;</value>
+      <contents/>
+      <value index="E"><inc variable="var.x"/>&var.x;</value>
+    </define>
+    <value index="a"><inc variable="var.x"/>&var.x;</value>
+    <elements>
+      <value index="b"><inc variable="var.x"/>&var.x;</value>
+      <value index="c"><inc variable="var.x"/>&var.x;</value>
+    </elements>
+    <value index="d"><inc variable="var.x"/>&var.x;</value>
+  </rxml>
+  <equal>(["a": 1, "B": 2, "b": 3, "c": 4, "E": 5, "d": 6])</equal>
+</test>
+
+<test no-strip-ws="">
+  <rxml>
+    <define container="x">
+      <!-- comment -->
+      <maketag type="container" name="y">
+        <contents/>
+      </maketag>
+    </define>
+
+    <z>
+      <x>
+        <!-- comment 1 -->
+        foo
+      </x>
+    </z>
+
+    <z>
+      <x>
+        <!-- comment 2 -->
+        bar
+      </x>
+    </z>
+
+    [<value type="string">
+      &lt;z>
+        <x>
+          <!-- comment 3 -->
+          upp
+        </x>
+      &lt;/z>
+    </value>]
+
+    [<value type="string">
+      &lt;z>
+        <x>
+          <!-- comment 4 -->
+          ner
+        </x>
+      &lt;/z>
+    </value>]
+  </rxml>
+  <equal>
+    "\n"
+    "    \n"
+    "\n"
+    "    <z>\n"
+    "      \n"
+    "      <!-- comment -->\n"
+    "      <y>\n"
+    "        \n"
+    "        <!-- comment 1 -->\n"
+    "        foo\n"
+    "      \n"
+    "      </y>\n"
+    "    \n"
+    "    </z>\n"
+    "\n"
+    "    <z>\n"
+    "      \n"
+    "      <!-- comment -->\n"
+    "      <y>\n"
+    "        \n"
+    "        <!-- comment 2 -->\n"
+    "        bar\n"
+    "      \n"
+    "      </y>\n"
+    "    \n"
+    "    </z>\n"
+    "\n"
+    "    [<z><y>upp</y></z>]\n"
+    "\n"
+    "    [<z><y>ner</y></z>]\n"
+    "  "
+  </equal>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="tag">
+      <if variable="_.contents">"&_.contents;"</if>
+    </define>
+    [<tag/>,
+    <tag></tag>,
+    <tag> </tag>]
+  </rxml>
+  <!-- Note: This produced [,," "] in 4.5 and 5.0 release 1 and 2. -->
+  <result>["",""," "]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="tag">
+      <if sizeof="_.contents &gt; 0">"&_.contents;"</if>
+    </define>
+    [<tag/>,
+    <tag></tag>,
+    <tag> </tag>]
+  </rxml>
+  <result>[,," "]</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@type = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="17"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"x", "y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c[1]/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"x", "y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2">1</c>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17">2</c>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
@@ -380,6 +1338,58 @@
   <result>| A |</result>
 </test>
 
+<test>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.v;&_.v;&_.v:html;&_.v:none;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;&lt;&amp;&gt;<&></result>
+</test>
+
+<test>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.c;&_.c;&_.c:html;&_.v:none;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;&lt;&amp;&gt;<&></result>
+</test>
+
+<test>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.v;&_.v;&_.v:html;&_.v:none;</emit></rxml>
+  <result><&><&>&lt;&amp;&gt;<&></result>
+</test>
+
+<test>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.c;&_.c;&_.c:html;&_.v:none;</emit></rxml>
+  <result><&><&>&lt;&amp;&gt;<&></result>
+</test>
+
+<!-- client.tm is used below because it's a constant variable
+     that contains "<" and ">" in the output and that can't be
+     constant due to the nonstandard type conversion. -->
+
+<test>
+  <rxml type="text/html">&client.tm;&client.tm;</rxml>
+  <result>&lt;TM&gt;&lt;TM&gt;</result>
+</test>
+
+<test>
+  <rxml type="text/plain">&client.tm;&client.tm;</rxml>
+  <result><TM><TM></result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.a" type="string">17</set>
+    <set variable="var.b" type="int">&var.a:sql;</set>
+    &var.b;
+  </rxml>
+  <equal>17</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.a" type="string">17</set>
+    <set variable="var.b" type="int">&var.a;</set>
+    &var.b;
+  </rxml>
+  <equal>17</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>String number test</comment>
@@ -405,7 +1415,7 @@
 
 <test>
 <rxml><number num=61254312 type=memory /></rxml>
-<result>58.4 Mb</result>
+<result>58.4 MB</result>
 </test>
 
 
@@ -577,19 +1587,203 @@
 </test>
 
 <test>
+  <rxml type="string">
+    <set variable="var.n" value="4314351451313243221222"/>
+    <if variable="var.n > 4314351451313243221221">1</if>
+    <if variable="var.n &lt; 4314351451313243221223">1</if>
+  </rxml>
+  <result>11</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="1,2,3" split=","><if variable="_.value = 1">&_.value;</if></emit></rxml>
 <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1<!-- Bogus 2.2 behavior. --></if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>00100</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" value=""/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>11000</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo"></set>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>11000</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" value="0"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>10111</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" expr="0"/> <!-- Same as value='0' in 2.1. -->
+    <if variable="var.foo">1</if><else>0<!-- Reported 2.2 behavior. --></else>
+    <if variable="var.foo is ">1<!-- Reported bogus 2.2 behavior. --></if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1<!-- Reported 2.1 compat issue. --></if><else>0<!-- Bogus 2.2 behavior. --></else>
+    <if variable="var.foo = ?*">1</if><else>0<!-- Bogus 2.2 behavior. --></else>
+  </rxml>
+  <result>10111</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" value="1"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>10101</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" expr="1"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>10101</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cset variable="var.foo"></cset>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo != ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>11000</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="6">
+      <if variable="_.integer">1</if><else>0</else>
+      <if variable="_.float">1</if><else>0</else>
+      <if variable="_.string">1</if><else>0</else>
+      <if variable="_.array">1</if><else>0</else>
+      <if variable="_.multiset">1</if><else>0</else>
+      <if variable="_.mapping">1</if><else>0</else>
+      <if variable="_.object">1</if><else>0</else>
+      <if variable="_.program">1</if><else>0</else>
+      <if variable="_.zero_integer">1</if><else>0</else>
+      <if variable="_.zero_float">1</if><else>0</else>
+      <if variable="_.empty_string">1</if><else>0</else>
+      <if variable="_.empty_array">1</if><else>0</else>
+      <if variable="_.empty_multiset">1</if><else>0</else>
+      <if variable="_.empty_mapping">1</if><else>0</else>
+      <if variable="_.zero_int_array">1</if><else>0</else>
+      <if variable="_.zero_float_array">1</if><else>0</else>
+      <if variable="_.empty_string_array">1</if><else>0</else>
+      <if variable="_.empty_array_array">1</if><else>0</else>
+    </emit>
+  </rxml>
+  <result>111111111110111110</result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Variable existence and null values</comment>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo"/>
+    <if variable-exists="var.foo">foo exists</if>
+    <if variable-exists="var.bar">bar exists</if>
+  </rxml>
+  <result>foo exists</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      &TESTER.data;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <copy-scope from="TESTER" to="var"/>
+      &var.data;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <emit source="values" from-scope="TESTER" sort="index">
+	&_.index;=[&_.value;]
+      </emit>,
+    </emit>
+  </rxml>
+  <result>counter=[1],counter=[2]data=[],</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <insert variables="full" scope="TESTER"/>,
+    </emit>
+  </rxml>
+  <result>counter=1,counter=2
+data=TestNull(),</result>
 </test>
 
 
 <!-- ............................................................ -->
 <comment>Sort</comment>
+
 <test>
 <rxml><sort separator=,>1,3,5,0,8</sort></rxml>
 <result>0,1,3,5,8</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><sort>1
 3
 5
@@ -602,6 +1796,13 @@
 5
 8
 </result>
+</test>
+
+<test>
+  <rxml>
+    <sort></sort>
+  </rxml>
+  <result></result>
 </test>
 
 
@@ -647,8 +1848,9 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
-<result>18</result>
+  <!-- Used to return 18 in 4.5 and earlier. -->
+  <rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
+  <result>13</result>
 </test>
 
 <test>
@@ -661,6 +1863,55 @@ b</strlen></rxml>
 <result>0</result>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.x"><![CDATA[<>%&'"]]></set>
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <result>6</result>
+</test>
+
+<!-- The following rather tests conversion behavior between the
+     different text types. -->
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/*">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains a decoded entity from the PXml parser. -->
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <equal>13</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains an encoded entity since it's an xml value. -->
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains an encoded entity since it's an xml value.
+	 Using the <value> tag below we also insert it with the
+	 text/xml type. That would break if TagStrLen had content_type
+	 RXML.t_text. -->
+    <strlen><value type="text/xml">&var.x:none;</value></strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <strlen><value type="text/plain">&var.x:none;</value></strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>User Ifs</comment>
@@ -671,7 +1922,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><if q>X</if><else>Y</else></rxml>
-<result>Y</result>
+<glob>[Error (parse): *]Y</glob>
 </test>
 
 <test>
@@ -696,6 +1947,36 @@ b</strlen></rxml>
 <test>
   <rxml><cond><default>x</default></cond></rxml>
   <result>x</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2">a</case></cond></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2">a</case><default>b</default></cond></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 1">a</case><default>b</default></cond></rxml>
+<result>a</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2"/><default>b</default></cond></rxml>
+<result>b</result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 1"/><default>b</default></cond></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><cond><case match="1 == 2"/><case match="1 == 1"/><case match="1 == 1">a</case></cond></rxml>
+<result></result>
 </test>
 
 
@@ -739,6 +2020,52 @@ b</strlen></rxml>
 <test>
 <rxml><set variable='var.i' value='3'/><for variable='var.i' from='1' to='10' step='2'><insert variable='var.i'/></for></rxml>
 <result>13579</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <for variable='var.i' from='0' to='3' step='2'>
+      &var.i;
+    </for>
+  </rxml>
+  <result>02</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable='var.i' value='0'/>
+    <for from='0' to='3' step='2'>
+      &var.i;
+      <inc variable='var.i'/>
+    </for>
+  </rxml>
+  <result>01</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable='var.i' value='0'/>
+    <for from='0' to='-3' step='-2'>
+      &var.i;
+      <inc variable='var.i'/>
+    </for>
+  </rxml>
+  <result>01</result>
+</test>
+
+<test>
+  <rxml><for variable='var.i' from='0' to='-1' step='1'>x</for></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml><for variable='var.i' from='0' to='1' step='-1'>x</for></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml><for from='0' to='-1' step='1'>x</for></rxml>
+  <result></result>
 </test>
 
 
@@ -836,8 +2163,38 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><if exists="/internal-roxen-roxen">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if exists="internal-roxen-unit">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if exists="/internal-gopher-image">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
 <rxml><if exists="/does_not_exist">yes</if></rxml>
 <result></result>
+</test>
+
+<test>
+<rxml><if exists="/hidden.inv">yes</if></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><if internal-exists="/index.html">yes</if></rxml>
+<result>yes</result>
+</test>
+
+<test>
+<rxml><if internal-exists="/hidden.inv">yes</if></rxml>
+<result>yes</result>
 </test>
 
 <test>
@@ -916,6 +2273,11 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.basun" split=",">1,2</set><if sizeof="var.basun = 2">x</if></rxml>
+<result>x</result>
+</test>
+
+<test>
 <rxml><set variable="var.basun">abc</set><if sizeof="var.basun == 3">7</if></rxml>
 <result>7</result>
 </test>
@@ -960,74 +2322,118 @@ b</strlen></rxml>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- after="1" inclusive="1">X</if>Y</rxml>
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- before="1" inclusive="1">X</if>Y</rxml>
+ before="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d" days="-1"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d" days="1"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X</if><else>[&var.date;]</else>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ after="1">X[&var.date;]</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ before="1">X[&var.date;]</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ before="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="-1"/></set><if date="&var.date;"
+ after="1">X</if><else>[&var.date;]</else>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="1"/></set><if date="&var.date;"
+ before="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- after="1">X</if>Y</rxml>
+ after="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- after="1" inclusive="1">X</if>Y</rxml>
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- before="1">X</if>Y</rxml>
+ before="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- before="1" inclusive="1">X</if>Y</rxml>
+ before="1" inclusive="1">X</if><else>[&var.time;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
-<rxml><set variable="var.time"><date strftime="%H%M" minutes="-1"/></set><if time="&var.time;"
- after="1">X</if>Y</rxml>
-<result>XY</result>
+  <rxml>
+    <set variable="var.time"><date strftime="%H%M" minutes="-1"/></set>
+    <if variable="var.time is 2359">X</if>
+    <elseif time="&var.time;" after="1">X</elseif>
+    <else>[&var.time;]</else>
+  </rxml>
+  <result>X</result>
 </test>
 
 <test>
-<rxml><set variable="var.time"><date strftime="%H%M" minutes="1"/></set><if time="&var.time;"
- before="1">X</if>Y</rxml>
-<result>XY</result>
+  <rxml>
+    <set variable="var.time"><date strftime="%H%M" minutes="1"/></set>
+    <if variable="var.time is 0000">X</if>
+    <elseif time="&var.time;" before="1">X</elseif>
+    <else>[&var.time;]</else>
+  </rxml>
+  <result>X</result>
 </test>
 
 
@@ -1052,23 +2458,23 @@ b</strlen></rxml>
 <!-- ............................................................ -->
 <comment>Path emit plugin</comment>
 <test>
-<rxml><emit source="path" path="/a/b/c">&_.name; &_.path;|</emit></rxml>
-<result> /|a /a|b /a/b|c /a/b/c|</result>
+<rxml><emit source="path" path="/a/b/c">&_.name;,&_.path;|</emit></rxml>
+<result>,/|a,/a|b,/a/b|c,/a/b/c|</result>
 </test>
 
 <test>
-<rxml><emit source="path" path="/a/b/c" trim="/c">&_.name; &_.path;|</emit></rxml>
-<result> /|a /a|b /a/b|</result>
+<rxml><emit source="path" path="/a/b/c" trim="/c">&_.name;,&_.path;|</emit></rxml>
+<result>,/|a,/a|b,/a/b|</result>
 </test>
 
 <test>
-<rxml><emit source="path" path="/a/b/c" skip="1">&_.name; &_.path;|</emit></rxml>
-<result>a /a|b /a/b|c /a/b/c|</result>
+<rxml><emit source="path" path="/a/b/c" skip="1">&_.name;,&_.path;|</emit></rxml>
+<result>a,/a|b,/a/b|c,/a/b/c|</result>
 </test>
 
 <test>
-<rxml><emit source="path" path="/a/b/c" skip-end="1">&_.name; &_.path;|</emit></rxml>
-<result> /|a /a|b /a/b|</result>
+<rxml><emit source="path" path="/a/b/c" skip-end="1">&_.name;,&_.path;|</emit></rxml>
+<result>,/|a,/a|b,/a/b|</result>
 </test>
 
 
@@ -1124,22 +2530,22 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="values" values="abcdefgh" split="" maxrows="4">&_.value; </emit></rxml>
-<result>a b c d </result>
+<result>a b c d</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" test="2" maxrows="4">&_.data; </emit></rxml>
-<result>aa a aa a </result>
+<result>aa a aa a</result>
 </test>
 
 <test>
 <rxml><emit source="values" values="a,b,c" split="," maxrows="100">&_.value; </emit></rxml>
-<result>a b c </result>
+<result>a b c</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" maxrows="100">&_.c; </emit></rxml>
-<result>1 2 3 4 </result>
+<result>1 2 3 4</result>
 </test>
 
 <test>
@@ -1184,12 +2590,12 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="values" values="a,b,c,d,e" split="," skiprows="2">&_.value; </emit></rxml>
-<result>c d e </result>
+<result>c d e</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" skiprows="2">&_.c; </emit></rxml>
-<result>3 4 </result>
+<result>3 4</result>
 </test>
 
 <test>
@@ -1249,6 +2655,36 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><emit source="TESTER" sort="*d">&_.c;:</emit></rxml>
+<result>1:3:4:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*+d">&_.c;:</emit></rxml>
+<result>1:3:4:2:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*-d">&_.c;:</emit></rxml>
+<result>2:4:3:1:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="*e">&_.c;:</emit></rxml>
+<result>4:1:2:3:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="-*e">&_.c;:</emit></rxml>
+<result>3:2:1:4:</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="+*f">&_.c;:</emit></rxml>
+<result>2:1:4:3:</result>
+</test>
+
+<test>
 <rxml><emit source="TESTER" sort="a,d">&_.c;:</emit></rxml>
 <result>1:2:4:3:</result>
 </test>
@@ -1280,7 +2716,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3" sort="data"><set variable="x">1</set>&_.data;:</emit></rxml>
-<result>:0:a:</result>
+<result>:::0:a:</result>
 </test>
 
 <test>
@@ -1389,23 +2825,37 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><emit source="TESTER" sort="c" filter="a=??x" rowinfo="var.row">&_.c;:</emit>&var.row;</rxml>
-<result>1:2:4:3</result>
+<rxml><emit source="TESTER" rowinfo="var.row">&_.c;&var.row;:</emit>&var.row;</rxml>
+<result>14:24:34:44:4</result>
 </test>
 
 <test>
-<rxml><emit source="OTESTER" sort="c" filter="a=??x" rowinfo="var.row">&_.c;:</emit>&var.row;</rxml>
-<result>1:2:4:3</result>
+<rxml><emit source="OTESTER" rowinfo="var.row">&_.c;&var.row;:</emit>&var.row;</rxml>
+<result>14:24:34:44:4</result>
 </test>
 
 <test>
-<rxml><emit source="TESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.counter;,&_.c;:</emit>&var.row;</rxml>
-<result>1,:0</result>
+<rxml><emit source="TESTER" sort="c" filter="a=??x"
+ rowinfo="var.row">&_.c;&var.row;:</emit>&var.row;</rxml>
+<result>13:23:43:3</result>
 </test>
 
 <test>
-<rxml><emit source="OTESTER" sort="c" filter="a=basun" rowinfo="var.row" do-once="1">&_.counter;,&_.c;:</emit>&var.row;</rxml>
-<result>1,:0</result>
+<rxml><emit source="OTESTER" sort="c" filter="a=??x"
+ rowinfo="var.row">&_.c;&var.row;:</emit>&var.row;</rxml>
+<result>13:23:43:3</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" sort="c" filter="a=basun"
+ rowinfo="var.row" do-once="1">&_.counter;&var.row;,&_.c;:</emit>&var.row;</rxml>
+<result>10,:0</result>
+</test>
+
+<test>
+<rxml><emit source="OTESTER" sort="c" filter="a=basun"
+ rowinfo="var.row" do-once="1">&_.counter;&var.row;,&_.c;:</emit>&var.row;</rxml>
+<result>10,:0</result>
 </test>
 
 <test>
@@ -1482,22 +2932,22 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,01,</result>
+<result>aa,,,,01,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,01,</result>
+<result>aa,,,,01,</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,01,</result>
+<result>aa,,,,01,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,01,</result>
+<result>aa,,,,01,</result>
 </test>
 
 <test>
@@ -1580,62 +3030,79 @@ b</strlen></rxml>
 <result>1:2:3:4:0</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.num" value="1,2,3,4,5,6,7"/>
+      <emit source="values" variable="var.num" split=",">
+	&_.value;
+	<delimiter>
+	  <nocache>
+	    <random separator="#">_#_#_#_</random>
+	  </nocache>
+	</delimiter>
+      </emit>
+    </cache>
+  </rxml>
+  <result>1_2_3_4_5_6_7</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Values emit plugin</comment>
 <test>
 <rxml><set variable="var.foo">1</set><set variable="var.bar">2</set><emit source="values" from-scope="var"
 sort="index">&_.index;=&_.value; </emit></rxml>
-<result>bar=2 foo=1 </result>
+<result>bar=2 foo=1</result>
 </test>
 
 <test>
 <add what="rvariable" name="x" value="a,b,c" split="," />
 <rxml><emit source="values" variable="form.x">&_.value; </emit></rxml>
-<result>a b c </result>
+<result>a b c</result>
 </test>
 
 <test>
 <rxml><set variable="var.a">aa</set><set variable="var.b">AA</set><emit
  source="values" from-scope="var" case="lower">&_.value; </emit></rxml>
-<result>aa aa </result>
+<result>aa aa</result>
 </test>
 
 <test>
 <rxml><set variable="var.a">aa</set><set variable="var.b">AA</set><emit
  source="values" from-scope="var" case="upper">&_.value; </emit></rxml>
-<result>AA AA </result>
+<result>AA AA</result>
 </test>
 
 <test>
 <rxml><set variable="var.a">  a   </set><set variable="var.b">b    </set><emit
  source="values" from-scope="var" trimwhites="1">&_.value; </emit></rxml>
-<result>a b </result>
+<result>a b</result>
 </test>
 
 <test>
 <rxml><emit source="values" values="a,b,c" split=",">&_.value; </emit></rxml>
-<result>a b c </result>
+<result>a b c</result>
 </test>
 
 <test>
 <rxml><set variable="var.x">a&#0;b&#0;c</set><emit source="values" values="&var.x;">&_.value; </emit></rxml>
-<result>a b c </result>
+<result>a b c</result>
 </test>
 
 <test>
 <rxml><emit source="values" values="hello" advanced="chars">&_.value; </emit></rxml>
-<result>h e l l o </result>
+<result>h e l l o</result>
 </test>
 
 <test>
 <rxml><set variable="var.x">1
 2
 3</set><emit source="values" values="&var.x;" advanced="lines">&_.value; </emit></rxml>
-<result>1 2 3 </result>
+<result>1 2 3</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><set variable="var.x">This will demon-
 strate things. What? Hi, ho!  Blaha
 
@@ -1645,15 +3112,15 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><emit source="values" values="aa,AA,aA,Aa" split="," case="upper">&_.value; </emit></rxml>
-<result>AA AA AA AA </result>
+<result>AA AA AA AA</result>
 </test>
 
 <test>
 <rxml><emit source="values" values="aa,AA,aA,Aa" split="," case="lower">&_.value; </emit></rxml>
-<result>aa aa aa aa </result>
+<result>aa aa aa aa</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><emit source="values" values="  a   ,   b,c   " split="," trimwhites="1">&_.value; </emit></rxml>
 <result>a b c </result>
 </test>
@@ -1698,12 +3165,12 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><if rxml_test="xyz">1</if><use package="test_rxml_package"/><if rxml_test="xyz">2</if><if rxml_test="a">3</if></rxml>
-<result>2</result>
+<glob>[Error (parse): *]2</glob>
 </test>
 
 <test>
 <rxml><if rxml_test2="abc">1</if><use package="test_rxml_package"/><if rxml_test2="abc">2</if><if rxml_test2="a">3</if></rxml>
-<result></result>
+<glob>[Error (parse): *][Error (parse): *][Error (parse): *]</glob>
 </test>
 
 <test>
@@ -1749,7 +3216,7 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><number type="memory" num="14588"/></rxml>
-<result>14.2 kb</result>
+<result>14.2 kB</result>
 </test>
 
 <test>
@@ -1800,6 +3267,38 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 <result>zx</result>
 </test>
 
+<test>
+  <rxml>
+    <nooutput><p>foo</p></nooutput>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml>
+    <nooutput>
+      <value type="array"><value>17</value></value>
+      <value type="mapping"/>
+    </nooutput>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml>
+    <nooutput>
+      <p>foo</p>
+      <set variable="var.a">x</set>
+      <value type="array">
+	<value>17</value>
+	<set variable="var.b">y</set>
+      </value>
+    </nooutput>
+    &var.a;&var.b;
+  </rxml>
+  <result>xy</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Strlen tests</comment>
@@ -1847,7 +3346,34 @@ cd</rxml>
   <result>10</result>
 </test>
 
-<comment>Quoting tests missing</comment>
+
+<!-- ............................................................ -->
+<comment>Entity quoting</comment>
+
+<!-- Note that these tests a very incomplete -->
+
+<test>
+<rxml><set variable="var.x">&amp;f;&lt;b&gt;</set>&var.x:none;</rxml>
+<result>&f;<b></result>
+</test>
+
+<test>
+<rxml><set variable="var.x">&lt;$</set>&var.x:wml;</rxml>
+<result>&lt;$$</result>
+</test>
+
+<test>
+<rxml><set variable="var.x">&lt;$%a#å</set><case case="lower">&var.x:wml-url;</case></rxml>
+<!--
+  Behavior in 4.0 and earlier - strings with only ISO 8859-1 chars are
+  encoded straight off by the wml-url encoding while wider strings
+  first are UTF-8 encoded. I don't know what the WAP/WML standard says
+  about this. /mast
+
+  <result>%3c%24%25a%23%e5</result>
+-->
+<result>%3c%24%25a%23%c3%a5</result>
+</test>
 
 
 <!-- ............................................................ -->
@@ -1865,6 +3391,16 @@ cd</rxml>
 <test>
 <rxml><set variable="form.foo" value="x"/>&form.foo;</rxml>
 <result>x</result>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="form.foo" value="a,b" split=","/>
+    <value type="any">&form.foo;</value>
+    <value type="text/*">&form.foo;</value>
+    <value type="text/html">&form.foo;</value>
+  </rxml>
+  <equal>({({"a", "b"}), "a\0b", "a&#0;b"})</equal>
 </test>
 
 <test>
@@ -2153,13 +3689,23 @@ cd</rxml>
 </test>
 
 <test>
+  <rxml type="array">&client.accept-languages;</rxml>
+  <equal>({})</equal>
+</test>
+
+<test>
+  <rxml type="any">&client.accept-languages;</rxml>
+  <equal>RXML.nil</equal>
+</test>
+
+<test>
 <rxml>&client.authenticated;</rxml>
-<result>0</result>
+<result></result>
 </test>
 
 <test>
 <rxml>&client.host;</rxml>
-<result>127.0.0.1</result>
+<regexp>^(127\.0\.0\.1|localhost)$</regexp>
 </test>
 
 <test>
@@ -2311,6 +3857,16 @@ cd</rxml>
 </test>
 
 <test>
+<rxml>&roxen.time; <testsleep time="3"/>&roxen.time;</rxml>
+<pike>
+  array x=array_sscanf(res, "%d %d");
+  if(sizeof(x)!=2) return "\""+res+"\" doesn't match \"%d %d\".";
+  if(x[0]==x[1]) return "First time equals second.";
+  return 0;
+</pike>
+</test>
+
+<test>
 <rxml>&roxen.uptime;</rxml>
 <regexp>[0-9]+</regexp>
 </test>
@@ -2332,10 +3888,360 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>Roxen/2\.2\.[0-9]+</regexp>
+<regexp>Roxen/5\.2\.[0-9]+</regexp>
 </test>
 
 <test>
 <rxml>&roxen.unique-id;</rxml>
 <regexp>[0-9A-F]+</regexp>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Array variables</comment>
+
+<test>
+<rxml><if variable="var.foo">1</if><set variable="var.foo" split=","
+ >a,b</set><if variable="var.foo">2</if></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><set variable="var.foo" split=",">hej,san</set><if variable="var.foo = hej"
+ >1</if><if variable="var.foo = san">2</if><if variable="var.foo = sa">3</if></rxml>
+<result>12</result>
+</test>
+
+<test>
+<rxml><set variable="var.foo" split=",">hej,san</set><if variable="var.foo = h*"
+ >1</if><if variable="var.foo = t*">2</if><if variable="var.foo = s??">3</if></rxml>
+<result>13</result>
+</test>
+
+<test no-strip-ws="">
+  <rxml type="text/*">
+    <value type="text/*"> a</value>
+    <value> b</value>
+    c
+    <value>d</value>
+    e
+  </rxml>
+  <result>
+     a
+    b
+    c
+    d
+    e
+  </result>
+</test>
+
+<test no-strip-ws="">
+  <rxml type="string">
+    <value type="text/*"> a</value>
+    <value> b</value>
+    c
+    <value>d</value>
+    <value/>
+    e
+  </rxml>
+  <result> abcde</result>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    &var.x;
+  </rxml>
+  <equal>({"1", "2"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    <value>&var.x;</value>
+  </rxml>
+  <equal>({({"1", "2"})})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    <value type="array">&var.x;</value>
+  </rxml>
+  <equal>({({"1", "2"})})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">1,2</set>
+    <range from="2" to="-2">
+      abc
+      &var.x;
+      <range variable="var.x"/>
+    </range>
+  </rxml>
+  <equal>({"1", "2", "1"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">1,2</set>
+    <range from="2" to="-2">
+      abc
+      <value>&var.x;</value>
+      <range variable="var.x"/>
+    </range>
+  </rxml>
+  <equal>({({"1", "2"}), "1"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <value type="array">
+      <value>foo</value>
+      &roxen.no-such-variable;
+      <value>bar</value>
+      &roxen.locale;
+      <value type="int">17</value>
+      <value/>
+    </value>
+  </rxml>
+  <equal>({"foo", "bar", "eng", 17, 0})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    abc
+def
+    <value>foo</value>
+    <value type="int">17</value>
+    <value type="float">17</value>
+    <value type="array">0</value>
+  </rxml>
+  <equal>({"abc\ndef", "foo", 17, 17.0, ({"0"})})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="array">
+      <emit source="TESTER" test="4">
+	&_.a;
+      </emit>
+    </set>
+    &var.x;
+  </rxml>
+  <equal>({"1", "2", "3"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="int">&_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({1, 2, 3})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      &_.a; &_.b; &_.c;
+    </emit>
+  </rxml>
+  <equal>({"1", "aa", "ca", "2", "ba", "cb", "3", "ab", "ba"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="string"> &_.a;  &_.b; </value>
+    </emit>
+  </rxml>
+  <equal>({"1aa", "2ba", "3ab"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="array"> &_.a;  &_.b; </value>
+    </emit>
+  </rxml>
+  <equal>({({"1", "aa"}), ({"2", "ba"}), ({"3", "ab"})})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <if variable="_.a &gt; 1">
+	<value type="text/*"> &_.a;  &_.b; </value>
+      </if>
+    </emit>
+  </rxml>
+  <equal>({" 2  ba ", " 3  ab "})</equal>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Mapping variables</comment>
+
+<test>
+  <rxml type="mapping">
+    <value index="1">a</value>
+    <value index="2.3">b</value>
+    <value index="3s">c</value>
+  </rxml>
+  <equal>(["1": "a", "2.3": "b", "3s": "c"])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <value type="mapping">
+      <value index="1">a</value>
+      <value index="2.3">b</value>
+      <value index="3s">c</value>
+    </value>
+  </rxml>
+  <equal>(["1": "a", "2.3": "b", "3s": "c"])</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="mapping">
+      <value type="mapping">
+	<value index="1">a</value>
+	<value index="2.3">b</value>
+	<value index="3s">c</value>
+      </value>
+    </set>
+  </rxml>
+  <glob>[Error (parse): "index" attribute required in mapping context.]</glob>
+</test>
+
+<test>
+  <rxml type="mapping">
+    <value index="x" type="mapping">
+      <value index="1">a</value>
+      <value index="2.3">b</value>
+      <value index="3s">c</value>
+    </value>
+  </rxml>
+  <equal>(["x": (["1": "a", "2.3": "b", "3s": "c"])])</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="mapping">
+      <emit source="TESTER" test="4">
+	<if variable="_.a &gt; 1">
+	  <value index="&_.a;">&_.b;</value>
+	</if>
+      </emit>
+    </set>
+    <emit source="values" variable="var.x" sort="value">
+      &_.index;: &_.value;<br/>
+    </emit>
+  </rxml>
+  <result>
+    3: ab<br/>
+    2: ba<br/>
+  </result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Missing nonsequential values tests</comment>
+
+<test>
+  <rxml type="any">
+    <test-args req-string="x" req-int="1"
+	       opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.args" type="text/*">
+      req-string="x" req-int="1"
+      opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <test-args req-string="x" req-int="1"
+	       opt-string="" opt-int="" opt-float=""/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.args" type="text/*">
+      req-string="x" req-int="1"
+      opt-string="" opt-int="" opt-float=""
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml>
+    <test-args req-string="" req-int=""/>
+  </rxml>
+  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.args" type="text/*">
+      req-string="" req-int=""
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+</test>
+
+<test>
+  <rxml type="any">
+    <test-required-content>
+      <value type="int">17</value>
+    </test-required-content>
+  </rxml>
+  <equal>17</equal>
+</test>
+
+<test>
+  <rxml>
+    <test-required-content/>
+  </rxml>
+  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <test-required-content>
+    </test-required-content>
+  </rxml>
+  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
 </test>

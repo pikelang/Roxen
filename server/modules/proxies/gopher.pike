@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.25 2001/01/04 06:03:28 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -301,7 +301,13 @@ mapping find_file(string fi, object id)
 
   sscanf(fi, "%[^/]/%s", h, f);
   if(!f)  f="";
-  sscanf(h, "%s:%d", h, p);
+  if (has_prefix(h, "[")) {
+    //  IPv6
+    if (sscanf(h, "[%s]:%d", h, p))
+      h = "[" + h + "]";
+  } else {
+    sscanf(h, "%s:%d", h, p);
+  }
   if(!p)  p=70;
   GOPHER_WERR("host = "+h+"\nfile = "+f+"\nport = "+p);
   sscanf(id->raw_url, "%*s?%s", q);

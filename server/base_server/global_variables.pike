@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.81 2001/08/24 15:45:16 mast Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -25,8 +25,15 @@ mixed save()
 // less clobbered.
 
 private int(0..1) cache_disabled_p() { return !query("cache");         }
-private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
+#if efun(syslog)
+private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
+#endif
+
+protected void cdt_changed (Variable.Variable v);
+void slow_req_count_changed();
+void slow_req_timeout_changed();
+void slow_be_timeout_changed();
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -49,9 +56,54 @@ void set_up_hilfe_variables( Protocol o )
 	  LOCALE(309,"Require user with the 'hilfe' permission"), TYPE_FLAG,
 	  LOCALE(310,"If yes, require a user with the hilfe permission "
 		 "set, otherwise, any configuration interface user will "
-		 "work,  even one with only the view settings permission" ) );
+		 "be allowed, even one with only the view settings permission." ) );
 }
 
+#if 0
+void set_up_snmp_variables( Protocol o )
+{
+  function(DEFVAR) defvar = o->defvar;
+
+  defvar("snmp_community", ({"public:ro"}), "Community string",
+         TYPE_STRING_LIST,
+         "One community name per line. Default permissions are 'read-only'. "
+	 "'Read-write' permissions can be specified by appending :rw to the "
+	 "community name (for example mypub:rw).");
+/*
+  defvar("snmp_mode", "smart", "Agent mode",
+         TYPE_STRING_LIST,
+         "Standard SNMP server mode, muxed SNMP mode, "
+         "proxy, agentx or automatic (smart) mode.",
+         ({"smart", "agent", "agentx", "smux", "proxy" }));
+*/
+  defvar("snmp_global_traphosts", ({}),"Trap destinations",
+         TYPE_STRING_LIST,
+         "The SNMP traphost URL for sending common traps (like coldstart).");
+
+  defvar("snmp_syscontact","","System MIB: Contact",
+         TYPE_STRING,
+         "The textual identification of the contact person for this managed "
+         "node, together with information on how to contact this person.");
+  defvar("snmp_sysname","","System MIB: Name",
+         TYPE_STRING,
+         "An administratively-assigned name for this managed node. By "
+         "convention, this is the node's fully-qualified domain name.");
+  defvar("snmp_syslocation","","System MIB: Location",
+         TYPE_STRING,
+         "The physical location of this node (e.g., `telephone closet, 3rd "
+         "floor').");
+  defvar("snmp_sysservices",72,"System MIB: Services",
+         TYPE_INT,
+         "A value which indicates the set of services that this entity "
+         "primarily offers.");
+#if 0
+  defvar("site_id", 0,
+	 LOCALE(1012, "SNMP sub-MIB"), TYPE_INT,
+	 LOCALE(1013, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
+		"identifying this site."));
+#endif /* 0 */
+}
+#endif /* 0 */
 
 void set_up_ftp_variables( Protocol o )
 {
@@ -63,7 +115,7 @@ void set_up_ftp_variables( Protocol o )
           "              +--      Welcome to the Roxen FTP server      ---\n"
           "              +------------------------------------------------\n",
 	  LOCALE(60, "Welcome text"), TYPE_TEXT,
-          LOCALE(61, "The text shown to the user on connect") );
+          LOCALE(61, "The text shown to the user on connect.") );
 
   defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"), 
 	  TYPE_INT,
@@ -71,7 +123,10 @@ void set_up_ftp_variables( Protocol o )
           " 0 means unlimited.") );
 
   defvar( "named_ftp", 1,  LOCALE(64, "Allow named ftp"), TYPE_FLAG,
-          LOCALE(65, "If yes, non-anonymous users can connect") );
+          LOCALE(65, "If yes, non-anonymous users can connect. "
+		 "Note that for password authentication to be performed "
+		 "you will need to have the \"Authentication: Password\" "
+		 "module in your site.") );
 
   defvar( "guest_ftp", 1, 
 	  LOCALE(66, "Allow login with incorrect password/user"), 
@@ -82,13 +137,13 @@ void set_up_ftp_variables( Protocol o )
 
   defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"), 
 	  TYPE_FLAG,
-          LOCALE(69, "If yes, anonymous users is allowed to connect.") );
+          LOCALE(69, "If yes, anonymous users are allowed to connect.") );
 
   defvar( "shells", "",  LOCALE(70, "Shell database"), 
 	  TYPE_FILE,
           LOCALE(71, "If this string is set to anything but the empty string, "
-          "it should point to a file containing a list of valid shells. "
-          "Users with shells that does not figure in this list will not "
+          "it should specify a file containing a list of valid shells. "
+          "Users with shells that are not in this list will not "
           "be allowed to log in.") );
 
   defvar( "passive_port_min", 0, LOCALE(257, "Passive port minimum"),
@@ -98,6 +153,13 @@ void set_up_ftp_variables( Protocol o )
   defvar( "passive_port_max", 65535, LOCALE(321, "Passive port maximum"),
 	  TYPE_INT,
 	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
+
+  defvar( "rfc2428_support", 1, LOCALE(518, "Support EPRT/EPSV"),
+	  TYPE_FLAG,
+	  LOCALE(528, "Enable support for the EPRT and EPSV commands (RFC2428)."
+		 "Some firewalls don't handle these commands properly, "
+		 "so depending on your network configuration you may need "
+		 "to disable them. "));
 }
 
 
@@ -119,23 +181,22 @@ void set_up_http_variables( Protocol o )
 		 "disconnected (after a timeout). Setting this higher than "
 		 "14000 is not recommended if you have modem users."));
 
-  defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
+  defvar("show_internals", 0, LOCALE(72, "Show internal errors"),
 	 TYPE_FLAG,
 	 LOCALE(73, "Show 'Internal server error' messages to the user. "
 		"This is very useful if you are debugging your own modules "
 		"or writing Pike scripts."));
 
-  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique user id cookies"),
+  defvar("set_cookie", 0, LOCALE(74, "Logging: Set unique browser id cookies"),
 	 TYPE_FLAG,
-	 LOCALE(75, "If set to Yes, all users of your server whose clients "
-		"support cookies will get a unique 'user-id-cookie', this "
-		"can then be used in the log and in scripts to track "
-		"individual users."));
+	 LOCALE(75, "If set to Yes, all clients that accept cookies will get "
+		"a unique 'user-id-cookie', which can then be used in the log "
+		"and in scripts to track individual users."));
 
   defvar("set_cookie_only_once", 1,
 	 LOCALE(76, "Logging: Set ID cookies only once"),
 	 TYPE_FLAG,
-	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique user "
+	 LOCALE(77, "If set to Yes, Roxen will attempt to set unique browser "
 		"ID cookies only upon receiving the first request (and "
 		"again after some minutes). Thus, if the user doesn't allow "
 		"the cookie to be set, she won't be bothered with "
@@ -146,26 +207,31 @@ void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_cert_file", "demo_certificate.pem",
-	  LOCALE(86, "SSL certificate file"),
-	  TYPE_STRING,
-	  sprintf(LOCALE(87, "The SSL certificate file to use. The path "
-			 "is relative to %s")+"\n", getcwd() ));
+  defvar( "ssl_cert_file",
+	  o->CertificateListVariable
+	  ( ({ "demo_certificate.pem" }), 0,
+	     LOCALE(86, "SSL certificate file"),
+	     LOCALE(87, "The SSL certificate file(s) to use. "
+		    "If a path is relative, it will first be "
+		    "searched for relative to %s, "
+		    "and if not found there relative to %s. ")));
 
-
-  defvar( "ssl_key_file", "", LOCALE(88, "SSL key file"),
-	  TYPE_STRING,
-	  sprintf(LOCALE(89, "The SSL key file to use. The path is "
-			 "relative to %s, you do not have to specify a key "
-			 "file, leave this field empty to use the certificate "
-			 "file only")+"\n", getcwd() ));
+  defvar( "ssl_key_file",
+	  o->KeyFileVariable
+	  ( "", 0, LOCALE(88, "SSL key file"),
+	    LOCALE(89, "The SSL key file to use. If the path is "
+		   "relative, it will first be searched for "
+		   "relative to %s, and if not found there "
+		   "relative to %s. "
+		   "You do not have to specify a key "
+		   "file, leave this field empty to use the "
+		   "certificate file only.")));
 }
 
 
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
-  array f;
   string t, s;
 
   // FIXME: NT support.
@@ -226,7 +292,59 @@ void zap_all_module_caches( Variable.Variable v )
 
 void define_global_variables(  )
 {
-  int p;
+  Variable.Variable v;
+
+  defvar("myisamchk",
+	 Variable.Language("Fast check and repair",
+			   ({ "Disable check",
+			      "Fast check and repair",
+			      "Normal check and repair",
+			      "Medium check and repair",
+			      "Extended check and repair" }),
+			   0, LOCALE(1014, "MySQL table check"), 
+			   LOCALE(1015, "Check MySQL tables on server start, "
+				  "and automatically repair if necessary. "
+				  "<b>Fast</b> checks only tables that haven't "
+				  "been closed properly. "
+				  "<b>Normal</b> checks for general errors. "
+				  "<b>Medium</b> catches 99.99 % of all "
+				  "errors. Should be good enough for most "
+				  "cases. "
+				  "<b>Extended</b> checks the tables VERY "
+				  "throughly.  Only use this in extreme cases "
+				  "as myisamchk should normally be able to "
+				  "find out if the table is OK even without "
+				  "this switch.")))
+    ->set_changed_callback(lambda(Variable.Variable s)
+			   {
+			     string options = "";
+			     switch(query("myisamchk"))
+			     {
+			       case "Disable check":
+				 break;
+			       case "Fast check and repair":
+				 options += "--force --fast --silent\n"
+					    "--myisam-recover=QUICK,FORCE\n";
+				 break;
+			       case "Normal check and repair":
+				 options += "--force --check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       case "Medium check and repair":
+				 options += "--force --medium-check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       case "Extended check and repair":
+				 options += "--force --extend-check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       default:
+				 error("Unknown myisamchk level %O\n",
+				       query("myisamchk"));
+				 return;
+			     }
+			     Stdio.write_file(combine_path(roxenloader.query_configuration_dir(), "_mysql_table_check"), options);
+			   });
 
   defvar("port_options", PortOptions());
 
@@ -241,23 +359,24 @@ void define_global_variables(  )
 	  "<p>This is useful if you want to know if downloads were successful "
 	  "(the user has the complete file downloaded). The drawback is that "
 	  "bandwidth statistics on the log file will be incorrect. The "
-	  "statistics in Roxen will still be correct."));
+	  "statistics in Roxen will still be correct.</p>"));
 
   defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
-  defvar("font_dirs", ({"../local/fonts/", "nfonts/" })+
-#ifdef __NT__
-         ({combine_path(replace(getenv("SystemRoot"),"\\","/"),"fonts/")})
-#else
-         ((getenv("RX_FONTPATH")||"")/","-({""}))
-#endif
-         , LOCALE(94, "Font directories"), 
-	 TYPE_DIR_LIST,
+  defvar("font_dirs", roxenloader.default_roxen_font_path,
+         LOCALE(94, "Font directories"), TYPE_DIR_LIST,
 	 LOCALE(95, "This is where the fonts are located."));
 
-  defvar("logdirprefix", "../logs/", 
+  defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"), 
+	 TYPE_FLAG,
+	 LOCALE(522, "If set to Yes, fonts will be oversampled resulting "
+		"in higher quality but more fuzz. This will require clearing "
+		"of various graphics caches like the Graphic text and "
+		"GButton caches to take full effect."));
+
+  defvar("logdirprefix", getenv("LOGDIR") || "../logs/", 
 	 LOCALE(96, "Logging: Log directory prefix"),
 	 TYPE_STRING|VAR_MORE,
 	 LOCALE(97, "This is the default file path that will be prepended "
@@ -299,7 +418,7 @@ void define_global_variables(  )
 	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
 	 TYPE_INT, 
 	 LOCALE(107, "How many cache files (inodes) may be on disk before "
-		"a garbage collect is done ? May be left zero to disable "
+		"a garbage collect is done? May be left at zero to disable "
 		"this check."),
 	 0, cache_disabled_p);
 
@@ -307,7 +426,7 @@ void define_global_variables(  )
 	 LOCALE(108, "Cache: Proxy Disk Cache bytes per second"),
 	 TYPE_INT,
 	 LOCALE(109, "How file size should be treated during garbage collect. "
-	  "Each X bytes counts as a second, so that larger files will "
+	  "Each X bytes count as a second, so that larger files will "
 	  "be removed first."),
 	  0, cache_disabled_p);
 
@@ -316,16 +435,16 @@ void define_global_variables(  )
 	  TYPE_DIR,
 	  LOCALE(111, "This is the base directory where cached files will "
 		 "reside. To avoid mishaps, 'roxen_cache/' is always "
-		 "prepended to this variable."),
+		 "appended to this variable."),
 	 0, cache_disabled_p);
 
   defvar("hash_num_dirs", 500,
 	 LOCALE(112, "Cache: Proxy Disk Cache Number of hash directories"),
 	 TYPE_INT|VAR_MORE,
 	 LOCALE(113, "This is the number of directories to hash the contents "
-		"of the disk cache into.  Changing this value currently "
+		"of the disk cache into. Changing this value currently "
 		"invalidates the whole cache, since the cache cannot find "
-		"the old files.  In the future, the cache will be "
+		"the old files. In the future, the cache will be "
 		"recalculated when this value is changed."),
 	 0, cache_disabled_p);
 
@@ -386,6 +505,14 @@ void define_global_variables(  )
 	 LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
 	 0, ident_disabled_p);
   
+  defvar("config_header_string", "", 
+	 LOCALE(532, "Show this string in header"),
+	 TYPE_STRING /* |VAR_MORE */,
+	 LOCALE(533, "Enter a identifier that will be displayed in the head of "
+		   " config interface. This makes it easier to distinguish "
+		   "between different site configurations. "),
+	 0);
+  
   defvar("User", "", LOCALE(128, "Change uid and gid to"), 
 	 TYPE_STRING,
 	 LOCALE(129, #"\
@@ -396,8 +523,8 @@ be used. The syntax is user[:group].
 
 <p>A server restart is necessary for a change of this variable to take
 effect. Note that it also can lead to file permission errors if the
-Roxen process no longer can read files it previously has written,
-although the start script fixes this for the standard file locations."));
+Roxen process no longer can read files it previously has written.
+The start script attempts to fix this for the standard file locations.</p>"));
 
   defvar("permanent_uid", 0, LOCALE(130, "Change uid and gid permanently"),
 	 TYPE_FLAG,
@@ -406,7 +533,7 @@ although the start script fixes this for the standard file locations."));
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
+  defvar("ModuleDirs", roxenloader.default_roxen_module_path,
 	 LOCALE(132, "Module directories"), 
 	 TYPE_DIR_LIST,
 	 LOCALE(133, "This is a list of directories where Roxen should look "
@@ -478,8 +605,119 @@ although the start script fixes this for the standard file locations."));
 	 0, syslog_disabled);
 #endif // efun(syslog)
 
+  v = Variable.Flag (0, 0,
+		     LOCALE(534, "Logging: Dump threads by file polling"),
+		     LOCALE(535, #"\
+<p>This option can be used to produce dumps of all the threads in the
+debug log in situations where the Administration Interface doesn't
+respond.</p>
+
+<p>It works by checking for a file called \"<i>&lt;config
+name&gt;</i>.dump_threads\" in the same directory as the debug log.
+<i>&lt;config name&gt;</i> is the name of the server configuration,
+i.e. the same as the base name of the debug log files (typically
+\"default\"). If this file exists, a thread dump is generated and the
+file is deleted. If a file on the form \"<i>&lt;config
+name&gt;</i>.dump_threads.<i>&lt;n&gt;</i>\", where <i>&lt;n&gt;</i>
+is an integer, exists then <i>n</i> thread dumps are generated in one
+minute intervals.</p>
+
+<p>Note that this method normally isn't necessary in unix-like
+environments; there you can just send a SIGQUIT signal to the pike
+process to get a thread dump.</p>
+
+<p>Enabling this creates a dedicated thread.</p>"));
+  v->set_changed_callback (cdt_changed);
+  defvar ("dump_threads_by_file", v);
+
+  definvisvar ("slow_req_bt_permanent", 0, TYPE_FLAG)->
+    set_changed_callback (
+      lambda (Variable.Variable v) {
+	if (v->query())
+	  set ("slow_req_bt_count", -1);
+	else if (query ("slow_req_bt_count") < 0)
+	  set ("slow_req_bt_count", 0);
+      });
+
+  v = Variable.TmpInt (
+    0, 0,
+    LOCALE(1016, "Logging: Dump threads for slow requests"),
+    LOCALE(1017, #"\
+<p>This enables a monitor that dumps all the threads in the debug log
+whenever any request, background job or the backend thread has been
+running for more than a set number of seconds, which is configured
+with the \"Slow request timeout\" and \"Slow backend timeout\"
+settings.</p>
+
+<p>This setting is a counter: A positive number stops the monitor
+after that many thread dumps have been made, -1 enables the monitor
+permanently, and zero disables it. Positive numbers aren't persistent,
+so will be reset to zero whenever the server is restarted.</p>
+
+<p><b>Warning:</b> If you set the timeout too low, combined with a
+high or no limit, then the debug log can fill up very quickly and the
+server become very slow due to the amount of logging. If that happens
+and it gets difficult to change back the value then you can force the
+monitor to be disabled from the start by adding the define
+\"NO_SLOW_REQ_BT\" (i.e. add \"-DNO_SLOW_REQ_BT\" to the start script
+or in the DEFINES environment variable).</p>
+
+<p>Enabling this creates a dedicated thread.</p>"));
+  defvar ("slow_req_bt_count", v);
+  v->set_range (-1, Variable.no_limit);
+  v->set_changed_callback (
+    lambda (Variable.Variable v) {
+      int count = v->query();
+      set ("slow_req_bt_permanent", count < 0);
+#ifndef NO_SLOW_REQ_BT
+      slow_req_count_changed();
+#else
+      v->set_warning (LOCALE(1018, "Feature disabled by NO_SLOW_REQ_BT define."));
+#endif
+    });
+
+  v = defvar ("slow_req_bt_timeout", 10.0,
+	      LOCALE(1019, "Logging: Slow request timeout"),
+	      TYPE_FLOAT,
+	      LOCALE(1020, #"\
+<p>The timeout in seconds for requests or background jobs to trig a
+thread dump. Zero disables monitoring of those. See the \"Dump threads
+for slow requests\" setting for details.</p>"));
+  v->set_range (0.0, Variable.no_limit);
+  v->set_precision (3);
+#ifndef NO_SLOW_REQ_BT
+  v->set_changed_callback (lambda (Variable.Variable v) {
+			     slow_req_timeout_changed();
+			   });
+#endif
+
+  v = defvar ("slow_be_bt_timeout", 0.05,
+	      LOCALE(1021, "Logging: Slow backend timeout"),
+	      TYPE_FLOAT,
+	      LOCALE(1022, #"\
+<p>The timeout in seconds for the backend thread to trig a thread
+dump. Zero disables monitoring of it. See the \"Dump threads for slow
+requests\" setting for details.</p>
+
+<p>The backend thread is a special thread that manages most I/O and
+directs the incoming requests to the handler threads. It should never
+be occupied for a significant amount of time since that would make the
+server essentially unresponsive. Therefore this timeout should be
+small.</p>
+
+<p>Note that a good value for this is very dependent on hardware. The
+default setting here is conservative and probably should be lowered to
+be of real use.</p>"));
+  v->set_range (0.0, Variable.no_limit);
+  v->set_precision (3);
+#ifndef NO_SLOW_REQ_BT
+  v->set_changed_callback (lambda (Variable.Variable v) {
+			     slow_be_timeout_changed();
+			   });
+#endif
+
 #ifdef THREADS
-  defvar("numthreads", 5, LOCALE(150, "Number of threads to run"), 
+  defvar("numthreads", 15, LOCALE(150, "Number of threads to run"), 
 	 TYPE_INT,
 	 LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
@@ -492,7 +730,7 @@ although the start script fixes this for the standard file locations."));
 #endif // THREADS
 
 #ifndef __NT__
-  defvar("abs_engage", 0, LOCALE(154, "ABS: Enable Anti-Block-System"), 
+  defvar("abs_engage", 0, LOCALE(154, "Auto Restart: Enable Anti-Block-System"), 
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(155, "If set, the anti-block-system will be enabled. "
 		"This will restart the server after a configurable number of minutes if it "
@@ -503,14 +741,14 @@ although the start script fixes this for the standard file locations."));
 
 
 
-  defvar("abs_timeout", 5, LOCALE(156, "ABS: Timeout"),
+  defvar("abs_timeout", 5, LOCALE(156, "Auto Restart: ABS Timeout"),
 	 TYPE_INT_LIST|VAR_MORE,
 	 LOCALE(157, "If the server is unable to accept connection for this many "
 		"minutes, it will be restarted. You need to find a balance: "
 		"if set too low, the server will be restarted even if it's doing "
 		"legal things (like generating many images), if set too high you might "
 		"get a long downtime if the server for some reason locks up."),
-	 ({1,2,3,4,5,10,15}),
+	 ({1,2,3,4,5,10,15,30,60}),
 	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
@@ -521,14 +759,15 @@ although the start script fixes this for the standard file locations."));
 			   LOCALE(159, "Locale, used to localize all "
 				  "messages in Roxen. Standard means using "
 				  "the default locale, which varies "
-				  "according to the value of "
-				  "the 'LANG' environment variable.")))
+				  "according to the values of "
+				  "the 'LC_MESSAGES' and 'LANG' environment "
+				  "variables.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
 			      roxenp()->set_default_locale(query("locale"));
 			      roxenp()->set_locale();
 			    } );
 
-  string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
+  string secret=Crypto.MD5.hash(""+time(1)+random(100000));
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
 	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
@@ -537,10 +776,9 @@ although the start script fixes this for the standard file locations."));
 		"unique, non-guessable session id's. Change this "
 		"value into something that is hard to guess, unless "
 		"you are satisfied with what your computers random "
-		"generator has produced") );
+		"generator has produced.") );
 
-  secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
-    ->digest();
+  secret = Crypto.MD5.hash(""+time(1)+random(100000)+"x"+gethrtime());
 
   definvisvar("argcache_secret","",TYPE_STRING|VAR_NO_DEFAULT);
   set( "argcache_secret", secret );
@@ -553,8 +791,8 @@ although the start script fixes this for the standard file locations."));
 	 LOCALE(161, "If set, Roxen will automatically restart after a "
 		"configurable number of days. Since Roxen uses a monolith, "
 		"non-forking server model the process tends to grow in size "
-		"over time. This is mainly due to heap fragmentation but also "
-		"because of memory leaks.")
+		"over time. This is mainly due to heap fragmentation but "
+		"may also sometimes be because of memory leaks.")
 	  );
 
   definvisvar( "last_suicide", 0, TYPE_INT );
@@ -569,16 +807,61 @@ although the start script fixes this for the standard file locations."));
 	{return !query("suicide_engage");}
     );
 
-  defvar("mem_cache_gc",
-	 Variable.Int(300, 0, 
-		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
-		      LOCALE(171, "The number of seconds between every garbage collect "
-			     "(removal of old content) from the memory cache. The "
-			     "memory cache is used for various tasks like remembering "
-			     "what supports flags matches what client.")))
-	 ->set_range(1, 60*60*24);
-	 // Note that the upper limit is arbitrary.
+  defvar ("mem_cache_gc_2", 5 * 60,
+	  LOCALE(1045, "Cache: Memory cache GC interval"),
+	  TYPE_INT,
+	  LOCALE(1046, #"\
+<p>Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.</p>
 
+<p>Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.</p>"))
+    ->set_range (1, Variable.no_limit);
+
+  // This was the variable that used to control the gc interval, but
+  // since the effect of the gc is radically different now we
+  // intentionally use a different variable name to reset the value.
+  definvisvar ("mem_cache_gc", 300, TYPE_INT);
+
+  v = defvar ("mem_cache_size", 100,
+	      LOCALE(1043, "Cache: Memory cache size"),
+	      TYPE_INT,
+	      LOCALE(1044, #"\
+<p>Maximum size in MByte for all RAM caches taken together. This limit
+covers the caches visible in the <a
+href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>
+page.</p>
+
+<p>Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).</p>"));
+  v->set_range (1, Variable.no_limit);
+  v->set_changed_callback (
+    lambda (Variable.Int v) {
+      cache.set_total_size_limit (v->query() * 1024 * 1024);
+    });
+
+  defvar("replicate", 0,
+	 LOCALE(163, "Enable replication system" ),
+	 TYPE_FLAG,
+	 LOCALE(337,"If enabled, Roxen will enable various replication systems "
+		"needed to set up multiple frontend systems. You will need "
+		"a database named 'replicate' that resides in a shared mysql "
+		"server for this to work. Also, all servers has to have this "
+		"flag set. Roxen must be restarted before changes to this "
+		"variable takes effect." ) );
+  
   defvar("config_file_comments", 0,
 	 LOCALE(172, "Commented config files"),
 	 TYPE_FLAG,
@@ -586,19 +869,58 @@ although the start script fixes this for the standard file locations."));
 		"in the configuration files. Only useful if you read or "
 		"edit the config files directly."));
 
+#ifdef SMTP_RELAY
+  // SMTP stuff
 
+  defvar("mail_spooldir", "../var/spool/mqueue/",
+	 "SMTP: Mail queue directory", TYPE_DIR,
+	 "Directory where the mail spool queue is stored.");
+
+  defvar("mail_maxhops", 10, "SMTP: Maximum number of hops", TYPE_INT,
+	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
+	 "Zero means no limit.");
+
+  defvar("mail_bounce_size_limit", 262144,
+	 "SMTP: Maximum bounce size", TYPE_INT,
+	 "<p>Maximum size (bytes) of the embedded message in "
+	 "generated bounces.</p>"
+	 "<p>Set to zero for no limit.</p>"
+	 "<p>Set to -1 to disable bounces.</p>");
+
+  // Try to get our FQDN.
+  string hostname = gethostname();
+  array(string) hostinfo = gethostbyname(hostname);
+  if (hostinfo && sizeof(hostinfo)) {
+    hostname = hostinfo[0];
+  }
+
+  defvar("mail_hostname", hostname,
+	 "SMTP: Mailserver host name", TYPE_STRING,
+	 "This is the hostname used by the server in the SMTP "
+	 "handshake (EHLO & HELO).");
+
+  defvar("mail_postmaster",
+	 "Postmaster <postmaster@" + hostname + ">",
+	 "SMTP: Postmaster address", TYPE_STRING,
+	 "Email address of the postmaster.");
+
+  defvar("mail_mailerdaemon",
+	 "Mail Delivery Subsystem <MAILER-DAEMON@" + hostname + ">",
+	 "SMTP: Mailer daemon address", TYPE_STRING,
+	 "Email address of the mailer daemon.");
+#endif /* SMTP_RELAY */
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
   defvar("snmp_agent", 0, LOCALE(999, "SNMP: Enable SNMP agent"),
 	 TYPE_FLAG|VAR_MORE,
-	 "If set, the Roxen SNMP agent will be anabled. "
+	 "If set, the Roxen SNMP agent will be anabled."
 	 );
   defvar("snmp_community", ({"public:ro"}), "SNMP: Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
-	 "'Read-write' permissions can be specified by append :rw to the community "
-	 "name (for example mypub:rw).",
+	 "'Read-write' permissions can be specified by appending :rw to the "
+	 "community name (for example mypub:rw).",
 	 0, snmp_disabled);
 /*
   defvar("snmp_mode", "smart", "SNMP: Agent mode",
@@ -609,15 +931,16 @@ although the start script fixes this for the standard file locations."));
 */
   defvar("snmp_hostport", snmp_get_cif_domain(), "SNMP: IP address and port",
          TYPE_STRING,
-         "Agent listenning IP adress and port. Format: [[host]:port] "
-         "If host isn't set then will be use IP address of config interface",
+         "Agent listening IP adress and port. Format: [[host]:port] "
+         "If host isn't set then the IP address of the config interface "
+	 "will be used.",
 	 0, snmp_disabled);
-/*
-  defvar("snmp_traphost","","SNMP traps destinations",
-         TYPE_STRING,
-         "...",
+
+  defvar("snmp_global_traphosts", ({}),"SNMP: Trap destinations",
+         TYPE_STRING_LIST,
+         "The SNMP traphost URL for sending common traps (like coldstart).",
 	 0, snmp_disabled);
-*/
+
   defvar("snmp_syscontact","","SNMP: System MIB - Contact",
          TYPE_STRING,
          "The textual identification of the contact person for this managed "
@@ -643,6 +966,25 @@ although the start script fixes this for the standard file locations."));
   defvar("global_position",
 	 Variable.Variable(0, VAR_INVISIBLE));
 
+#ifdef ENABLE_OUTGOING_PROXY
+  defvar("use_proxy", 0,
+	 LOCALE(0, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+	 LOCALE(0, "Use proxy for outgoing requests. E.g. when browsing "
+		"external web sites through the Linkbrowser or when Insert "
+		"cached-href fetches data from an external location."));
+  
+  defvar("proxy_url", "",
+	 LOCALE(0, "Proxy: Proxy URL"), TYPE_STRING,
+	 LOCALE(0, "The URL of the proxy to use for outgoing requests."));
+  
+  defvar("proxy_username", "",
+         LOCALE(0, "Proxy: Proxy username"), TYPE_STRING,
+         LOCALE(0, "Username for proxy authorization."));
+  
+  defvar("proxy_password", "",
+         LOCALE(0, "Proxy: Proxy password"), TYPE_STRING,
+         LOCALE(0, "Password for proxy authorization."));
+#endif
 }
 
 
@@ -655,7 +997,7 @@ void restore_global_variables()
   getvar( "ModuleDirs" )->add_changed_callback( zap_all_module_caches );
 }
 
-static mapping(string:mixed) __vars = ([ ]);
+protected mapping(string:mixed) __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
 // set global, but non-persistent, variables in Roxen.

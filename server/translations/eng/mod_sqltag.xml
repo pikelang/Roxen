@@ -10,7 +10,7 @@
 </str>
 
 <str id="2">
-<o>The SQL tags module provides the tags &lt;tt&gt;&amp;lt;sqlquery&amp;gt;&lt;/tt&gt; and&lt;tt&gt;&amp;lt;sqltable&amp;gt;&lt;/tt&gt; as well as being a source to the &lt;tt&gt;&amp;lt;emit&amp;gt;&lt;/tt&gt; tag (&lt;tt&gt;&amp;lt;emit source="sql" ... &amp;gt;&lt;/tt&gt;).All tags send queries to SQL databases.</o>
+<o>The SQL tags module provides the tags &lt;tt&gt;&amp;lt;sqlquery&amp;gt;&lt;/tt&gt; and &lt;tt&gt;&amp;lt;sqltable&amp;gt;&lt;/tt&gt; as well as being a source to the &lt;tt&gt;&amp;lt;emit&amp;gt;&lt;/tt&gt; tag (&lt;tt&gt;&amp;lt;emit source="sql" ...&amp;gt;&lt;/tt&gt;). All tags send queries to SQL databases.</o>
 <t></t>
 </str>
 
@@ -25,10 +25,18 @@
 </str>
 
 <str id="5">
-<o>The default database that will be used if no &lt;i&gt;host&lt;/i&gt; attribute is given to the tags. The value is a database URL in this format:
-&lt;p&gt;&lt;blockquote&gt;&lt;pre&gt;&lt;i&gt;driver&lt;/i&gt;&lt;b&gt;://&lt;/b&gt;[&lt;i&gt;username&lt;/i&gt;[&lt;b&gt;:&lt;/b&gt;&lt;i&gt;password&lt;/i&gt;]&lt;b&gt;@&lt;/b&gt;]&lt;i&gt;host&lt;/i&gt;[&lt;b&gt;:&lt;/b&gt;&lt;i&gt;port&lt;/i&gt;][&lt;b&gt;/&lt;/b&gt;&lt;i&gt;database&lt;/i&gt;]
-&lt;/pre&gt;&lt;/blockquote&gt;
-&lt;p&gt;If the &lt;i&gt;SQL databases&lt;/i&gt; module is loaded, it's also possible to use an alias registered there. That's the recommended way, since this (usually sensitive) data is collected in one place then.</o>
+<o>
+&lt;p&gt;The default database that will be used if no "host" attribute
+is given to the tags. The value is a database URL on this format:&lt;/p&gt;
+
+&lt;blockquote&gt;&lt;i&gt;driver&lt;/i&gt;&lt;b&gt;://&lt;/b&gt;[&lt;i&gt;username&lt;/i&gt;[&lt;b&gt;:&lt;/b&gt;&lt;i&gt;password&lt;/i&gt;]&lt;b&gt;@&lt;/b&gt;]&lt;i&gt;host&lt;/i&gt;[&lt;b&gt;:&lt;/b&gt;&lt;i&gt;port&lt;/i&gt;][&lt;b&gt;/&lt;/b&gt;&lt;i&gt;database&lt;/i&gt;]&lt;/blockquote&gt;
+
+&lt;p&gt;where &lt;i&gt;driver&lt;/i&gt; is the database protocol, e.g. "odbc",
+"mysql", "oracle", "postgres", etc.&lt;/p&gt;
+
+&lt;p&gt;It is also possible to specify a database name from the "DBs" tab
+here, but the recommended way is to use the "Default database"
+setting instead.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -43,11 +51,99 @@
 </str>
 
 <str id="8">
-<o>If this is defined, it's the database this server will use as the default database</o>
+<o>&lt;p&gt;If this is set, it is the default database to connect to.&lt;/p&gt;
+
+&lt;p&gt;If both "Allow SQL URLs" and "Allowed databases" are disabled
+then this is the only database that the tags will use, and the
+"host" and "db" attributes are effectively disabled.&lt;/p&gt;</o>
 <t></t>
 </str>
 
 <str id="9">
 <o>Cannot find the module %s</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>Allow SQL URLs</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>&lt;p&gt;Allow generic SQL URLs in the "host" attribute to the tags. This
+can be a security hazard if users are allowed to write RXML - the
+server will make the connection as the user it is configured to run
+as.&lt;/p&gt;
+
+&lt;p&gt;In particular, allowing this makes it possible to write RXML that
+connects directly to the socket of Roxen's internal MySQL server,
+thereby bypassing the permissions set under the "DBs" tab. It is
+therefore strongly recommended to keep this disabled and instead
+configure all database connections through the "DBs" tab and
+the "Allowed databases" setting.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>Allowed databases</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>&lt;p&gt;A comma-separated list of the databases under the "DBs" tab that
+are allowed in the "db" attribute to the tags. The database in the
+"Default database" setting is also implicitly allowed. Set to "*"
+to make no restriction. In addition to this check, the permission
+settings under the "DBs" tab are applied.&lt;/p&gt;
+
+&lt;p&gt;By default no databases are allowed, thus forcing you to list all
+allowed databases here and/or in the "Default database" setting.
+Note that specifying "*" can be a security hazard since that makes
+it possible to access internal databases (some of which can contain
+sensitive security information). It is not possible to restrict access
+to those databases under the "DBs" tab since that would make them
+inaccessible to the internal modules too.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Support "module" attribute</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>&lt;p&gt;Support the deprecated "module" attribute to the tags.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Default charset</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>&lt;p&gt;The default value to use for the &lt;i&gt;charset&lt;/i&gt; attribute to the
+SQL tags. See the description of the same attribute for the "sql"
+emit source for more details.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>Security warning:</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Connections to arbitrary databases allowed. See the "Allow SQL URLs" setting.</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Connections to all configured database allowed. See the "Allowed databases" setting.</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>Connections to module databases allowed. See the "Support 'module' attribute" setting.</o>
 <t></t>
 </str>

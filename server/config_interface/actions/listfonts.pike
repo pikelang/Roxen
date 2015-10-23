@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.18 2001/06/15 19:51:32 k%123.org Exp $
+ * $Id$
  */
 
 #include <roxen.h>
@@ -33,7 +33,7 @@ string list_font(string font)
   
   if( mapping m = info[ fn ] )
   {
-    string res = "<p><font size=+1><b>"+
+    string res = "<p><font><b>"+
            (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
                                          capitalize)*" ")+
                   "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
@@ -44,7 +44,7 @@ string list_font(string font)
     res += "</table>";
     return res;
   }
-  return "<p><font size=+1><b>"+
+  return "<p><font><b>"+
          (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
           "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
@@ -55,7 +55,7 @@ string font_loaders( )
   foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
-    res += "<b><dt><font size=+1>"+fl->name+" ("+nf
+    res += "<b><dt><font>"+fl->name+" ("+nf
         +" font"+(nf==1?"":"s")+")</font></b></dt>"
         "<dd>"+fl->doc+"</dd><p />";
   }
@@ -71,14 +71,14 @@ string page_0(RequestID id)
               "<font size='+1'><b>" +
 	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
               font_loaders()+"<font size='+1'><b>" +
-	      LOCALE("dI","All available fonts") + "</b></font><p>");
-  foreach(sort(roxen.fonts.available_fonts()), string font)
+	      "<br />" + LOCALE("dI","All available fonts") + "</b></font><p>");
+  foreach(sort(roxen.fonts.available_fonts(1)), string font)
     res+=list_font(font);
-  res += ("</p><p>" + LOCALE(236,"Example text") +
+  res += ("</p><p>" + LOCALE(236,"Example text") + " "
 	  "<font size=-1><input name=text size=46 value='" +
 	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
 	  "'></p><p><table width='70%'><tr><td align='left'>"
-          "<cf-cancel href='?class=maintenance'/></td><td align='right'>"
+          "<cf-cancel href='?class=status'/></td><td align='right'>"
 	  "<cf-next/></td></tr></table></p>");
   return res;
 }
@@ -87,11 +87,12 @@ string page_1(RequestID id)
 {
   string res="";
   mapping v  = id->real_variables;
-  string txt = Roxen.html_encode_string( v->text && v->text[0] );
+  string txt = v->text && v->text[0];
   foreach(roxen.fonts.available_fonts(), string fn)
     res += Roxen.html_encode_string( fn )+":<br />\n"
-      "<gtext align='top' font='"+fn+"'>"+lower_case(txt)+"</gtext><br>"
-      "<gtext align='top' font='"+fn+"'>"+upper_case(txt)+"</gtext><p>";
+      "<gtext fontsize=16 align='top' font='"+fn+"'>"+Roxen.html_encode_string(txt)+"</gtext><br>"
+      "<gtext fontsize=32 align='top' font='"+fn+"'>"+Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
+      "<gtext fontsize=48 align='top' font='"+fn+"'>"+Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok/></p>";
 }
 

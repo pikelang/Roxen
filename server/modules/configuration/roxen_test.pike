@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.41 2001/08/21 14:33:27 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
 constant module_doc  = "Tests Roxen WebServer.";
 constant is_roxen_tester_module = 1;
@@ -13,107 +13,125 @@ constant is_roxen_tester_module = 1;
 Configuration conf;
 Stdio.File index_file;
 Protocol port;
-
-#ifdef SELF_TEST_DIR
-string self_test_dir = SELF_TEST_DIR;
-#else
-string self_test_dir = "/etc/test";
-#endif
+RoxenModule rxmlparser;
 
 int verbose;
+private int running;
+private int finished;
+
+int is_running()
+{
+  return running;
+}
+
+int is_not_finished()
+{
+  return !finished;
+}
+
+int is_ready_to_start()
+{
+  int ready = 1;
+  foreach(roxen.configurations, Configuration config)
+    if(config->call_provider("roxen_test", "is_running"))
+      ready = 0;
+  return ready;
+}
+
+int is_last_test_configuration()
+{
+  foreach(roxen.configurations, Configuration config)
+    if(config->call_provider("roxen_test", "is_not_finished"))
+      return 0;
+  return 1;
+}
+
+int tests, ltests, test_num;
+int fails, lfails;
+int pass;
+string tag_test_data;
+int bkgr_fails;
+
+void background_failure()
+{
+  // Called in all configurations/instances of this module, by
+  // describe_backtrace() (roxenloader.pike), in self test mode. We
+  // need to check whether it's for us or not by checking if we're
+  // running currently.
+  if (is_running())
+    bkgr_fails++;
+}
+
+void schedule_tests (int|float delay, function func, mixed... args)
+{
+  // Run the tests in a normal handler thread so that real background
+  // jobs can run as usual.
+  call_out (roxen.handle, delay,
+	    lambda (function func, array args) {
+	      // Meddle with the busy_threads counter, so that this
+	      // handler thread running the tests doesn't delay the
+	      // background jobs.
+	      roxen->busy_threads--;
+	      mixed err = catch (func (@args));
+	      roxen->busy_threads++;
+	      if (err) throw (err);
+	    }, func, args);
+}
+
+int do_continue(int _tests, int _fails)
+{
+  if(finished)
+    return 0;
+
+  running = 1;
+  tests += _tests;
+  fails += _fails;
+  schedule_tests (0.5, do_tests);
+  return 1;
+}
+
+string query_provides()
+{
+  return "roxen_test";
+}
+
+void create()
+{
+  defvar("selftestdir", "etc/test", "Self test directory", 
+         TYPE_STRING);
+}
 
 void start(int n, Configuration c)
 {
   conf=c;
   index_file = Stdio.File();
-  call_out( do_tests, 0.5 );
-}
 
-class FakePrefLang() {
+  module_dependencies (0, ({"rxmlparse"}), 1);
+  rxmlparser = conf->find_module ("rxmlparse");
 
-  int decoded=0;
-  int sorted=0;
-  array(string) subtags=({});
-  array(string) languages=({});
-  array(float) qualities=({});
-
-  array(string) get_languages() {
-    sort_lang();
-    return languages;
-  }
-
-  string get_language() {
-    if(!languages || !sizeof(languages)) return 0;
-    sort_lang();
-    return languages[0];
-  }
-
-  array(float) get_qualities() {
-    sort_lang();
-    return qualities;
-  }
-
-  float get_quality() {
-    if(!qualities || !sizeof(qualities)) return 0.0;
-    sort_lang();
-    return qualities[0];
-  }
-
-  void set_sorted(array(string) lang, void|array(float) q) {
-    languages=lang;
-    if(q && sizeof(q)==sizeof(lang))
-      qualities=q;
-    else
-      qualities=({1.0})*sizeof(lang);
-    sorted=1;
-    decoded=1;
-  }
-
-  void sort_lang() {
-    if(sorted && decoded) return;
-    array(float) q;
-    array(string) s=reverse(languages)-({""}), u=({});
-
-    if(!decoded) {
-      q=({});
-      s=Array.map(s, lambda(string x) {
-		       float n=1.0;
-		       string sub="";
-		       sscanf(lower_case(x), "%s;q=%f", x, n);
-		       if(n==0.0) return "";
-		       sscanf(x, "%s-%s", x, sub);
-		       q+=({n});
-		       u+=({sub});
-		       return x;
-		     });
-      s-=({""});
-      decoded=1;
-    }
-    else
-      q=reverse(qualities);
-
-    sort(q,s,u);
-    languages=reverse(s);
-    qualities=reverse(q);
-    subtags=reverse(u);
-    sorted=1;
+  if(is_ready_to_start())
+  {
+    running = 1;
+    schedule_tests (0.5, do_tests);
   }
 }
 
-RequestID get_id()
+void set_id_path (RequestID fake_id, string path)
 {
-  object id = roxen.InternalRequestID();
-  id->supports = (< "images" >);
-  id->client = ({ "RoxenTest" });
-  id->set_url("http://localhost/index.html");
+  fake_id->set_url("http://localhost:17369" + path);
+  string realpath =
+    combine_path_unix (query("selftestdir"), "filesystem" + path);
+  if (file_stat (realpath)) fake_id->realfile = realpath;
+}
 
-  id->realfile=self_test_dir+"/filesystem/index.html";
-  id->misc->stat = conf->stat_file("/index.html", id);
-  id->misc->pref_languages = FakePrefLang();
-  id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
-  NOCACHE();
+protected string ignore_errors = 0;
 
-  return id;
+string rxml_error(RXML.Backtrace err, RXML.Type type) {
+  //  if(verbose)
+  //  werror(describe_backtrace(err)+"\n");
+  if (ignore_errors && ignore_errors == err->type) return "";
+  return sprintf("[Error (%s): %s]", err->type,
+		 String.trim_all_whites(replace(err->msg, "\n", "")));
 }
 
 string canon_html(string in) {
@@ -129,36 +147,60 @@ string canon_html(string in) {
     })->finish (in)->read();
 }
 
+string strip_silly_ws (string in)
+// Silly whitespace is defined to be any whitespace next to tags,
+// comments, processing instructions, and at the beginning or end of
+// the whole string.
+{
+  return Roxen.get_xml_parser()->_set_data_callback (
+    lambda (Parser.HTML p, string data) {
+      return ({String.trim_all_whites (data)});
+    })->finish (in)->read();
+}
+
 
 // --- XML-based test files -------------------------------
 
-void xml_add_module(string t, mapping m, string c) {
+void xml_set_module_var(Parser.HTML file_parser, mapping m, string c) {
+  conf->find_module(m->module)->getvar(m->variable)->set(c);
+  return;
+}
+
+void xml_add_module(Parser.HTML file_parser, mapping m, string c) {
   conf->enable_module(c);
   return;
 }
 
-void xml_drop_module(string t, mapping m, string c) {
+void xml_drop_module(Parser.HTML file_parser, mapping m, string c) {
   conf->disable_module(c);
   return;
 }
 
-void xml_use_module(string t, mapping m, string c,
+void xml_dummy(Parser.HTML file_parser, mapping m, string c) {
+  return;
+}
+
+void xml_use_module(Parser.HTML file_parser, mapping m, string c,
 		    mapping ignored, multiset(string) used_modules) {
   conf->enable_module(c);
   used_modules[c] = 1;
   return;
 }
 
-int tests, ltests;
-int fails, lfails;
-void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
+void xml_test(Parser.HTML file_parser, mapping args, string c,
+	      mapping(int:RXML.PCode) p_code_cache) {
+
+  if (roxen.is_shutting_down()) return;
+
+  test_num++;
+  RXML.PCode p_code = p_code_cache[test_num];
+  if (pass == 2 && !p_code) return; // Not a test that produced p-code.
 
   ltests++;
   tests++;
 
-  string rxml="", res;
-  RXML.PCode p_code = p_code_cache[ltests];
-  int pass = p_code ? 2 : 1;
+  string rxml="";
+  mixed res;
 
   string indent( int l, string what )
   {
@@ -167,25 +209,30 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     string i = (" "*l+"|  ");
     return i+q*("\n"+i)+"\n";
   };
+
   string test_error( string message, mixed ... args )
   {
     if( sizeof( args ) )
       message = sprintf( message, @args );
-    message = (p_code ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
+    message = (pass == 2 ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
+    report_debug (indent (2, sprintf ("Error at line %d:",
+				      file_parser->at_line())));
     if( strlen( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
     report_debug( indent(2, message ) );
   };
+
   string test_ok(  )
   {
     rxml = "";
     if( verbose )
       report_debug( "PASS\n" );
   };
+
   string test_test( string test )
   {
     if( verbose && strlen( rxml ) )
@@ -193,23 +240,31 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     rxml = test;
     if( verbose )
     {
-      report_debug( "%4d %-69s %s  ",
-		    ltests, replace(test[..68],
-				    ({"\t","\n", "\r"}),
-				    ({"\\t","\\n", "\\r"}) ),
-		    p_code ? "(pass 2)" : "(pass 1)");
+      report_debug( "%4d %-69s (pass %d)  ",
+		    ltests, sprintf("%O", test)[..68], pass);
     }
   };
 
-  RequestID id = get_id();
-  int no_canon;
+  RequestID id = roxen.InternalRequestID();
+  id->conf = conf;
+  id->prot = "HTTP";
+  id->supports = (< "images" >);
+  id->client = ({ "RoxenTest" });
+  id->misc->pref_languages = PrefLanguages();
+  id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
+  NOCACHE();
+  set_id_path (id, "/index.html");
+
+  int no_canon, no_strip_silly_ws;
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml" :
 		       lambda(object t, mapping m, string c) {
 			 test_test( c );
+			 id->misc->stat = conf->stat_file ("/index.html", id);
 			 mixed err = catch {
-			   if (!p_code) {
+			   ignore_errors = m["ignore-errors"];
+			   if (pass == 1) {
 			     RXML.Type type = m->type ?
 			       RXML.t_type->encode (m->type) (
 				 conf->default_content_type->parser_prog) :
@@ -217,29 +272,78 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     if (m->parser)
 			       type = type (RXML.t_parser->encode (m->parser));
 			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
-			     parser->context->add_scope ("test", (["pass": pass]));
+			     parser->context->add_scope ("test", (["pass": 1]));
 			     parser->write_end (rxml);
+#ifdef GAUGE_RXML_TESTS
+			     werror ("Line %d: Test took %.3f us (pass 1)\n",
+				     file_parser->at_line(),
+				     gauge (res = parser->eval()) * 1e9);
+#else
 			     res = parser->eval();
+#endif
 			     parser->p_code->finish();
 			     p_code_cache[ltests] = parser->p_code;
 			   }
 			   else {
 			     RXML.Context ctx = p_code->new_context (id);
-			     ctx->add_scope ("test", (["pass": pass]));
+			     ctx->add_scope ("test", (["pass": 2]));
+#ifdef GAUGE_RXML_TESTS
+			     werror ("Line %d: Test took %.3f us (pass 2)\n",
+				     file_parser->at_line(),
+				     gauge (res = p_code->eval (ctx)) * 1e9);
+#else
 			     res = p_code->eval (ctx);
+#endif
 			   }
 			 };
-			 if(err)
+			 ignore_errors = 0;
+			 if(err && (!m["ignore-errors"] ||
+				    !objectp (err) || !err->is_RXML_Backtrace ||
+				    err->type != m["ignore-errors"]))
 			 {
-			   test_error("Failed (backtrace)\n");
-			   test_error("%s\n",describe_backtrace(err));
+			   test_error("Failed (backtrace): %s",describe_backtrace(err));
 			   throw(1);
 			 }
-			 if(!args["no-canon"])
+
+			 if(stringp (res) && !args["no-canon"])
 			   res = canon_html(res);
 			 else
 			   no_canon = 1;
+			 if (stringp (res) && !args["no-strip-ws"])
+			   res = strip_silly_ws (res);
+			 else
+			   no_strip_silly_ws = 1;
 		       },
+
+		       "test-in-file":
+		       lambda(object t, mapping m, string c) {
+			 test_test (tag_test_data = c);
+			 set_id_path (id, m->file);
+
+			 int logerrorsr = rxmlparser->query("logerrorsr");
+			 int quietr = rxmlparser->query("quietr");
+			 if(m["ignore-rxml-run-error"]) {
+			   rxmlparser->getvar("logerrorsr")->set(0);
+			   rxmlparser->getvar("quietr")->set(1);
+			 }
+
+			 res = conf->try_get_file(m->file, id);
+
+			 if(m["ignore-rxml-run-error"]) {
+			   rxmlparser->getvar("logerrorsr")->set(logerrorsr);
+			   rxmlparser->getvar("quietr")->set(quietr);
+			 }
+
+			 if(stringp (res) && !args["no-canon"])
+			   res = canon_html(res);
+			 else
+			   no_canon = 1;
+			 if (stringp (res) && !args["no-strip-ws"])
+			   res = strip_silly_ws (res);
+			 else
+			   no_strip_silly_ws = 1;
+		       },
+
 		       "result" :
 		       lambda(object t, mapping m, string c) {
 			 if (!m->pass || (int) m->pass == pass) {
@@ -255,45 +359,94 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   }
 			   if( !no_canon )
 			     c = canon_html( c );
-			   if(res != c) {
-			     if(m->not) return;
-			     test_error("Failed (result %O != %O)\n", res, c);
+			   if (!no_strip_silly_ws)
+			     c = strip_silly_ws (c);
+			   if (m->not ? res == c : res != c) {
+			     test_error("Failed\n(got: %O\nexpected: %O)\n",
+					res, c);
 			     throw(1);
 			   }
 			   test_ok( );
 			 }
 		       },
+
 		       "glob" :
 		       lambda(object t, mapping m, string c) {
-			 if( !glob(c, res) ) {
-			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
+			 if (m->not ? glob(c, res) : !glob(c, res)) {
+			   test_error("Failed\n(result %O\ndoes not match %O)\n",
 				      res, c);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
+
 		       "has-value" :
 		       lambda(object t, mapping m, string c) {
-			 if( !has_value(res, c) ) {
-			   if(m->not) return;
-			   test_error("Failed (result %O does not contain %O)\n",
+			 if (m->not ? has_value(res, c) : !has_value(res, c)) {
+			   test_error("Failed\n(result %O\ndoes not contain %O)\n",
 				      res, c);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
+
 		       "regexp" :
 		       lambda(object t, mapping m, string c) {
-			 if( !Regexp(c)->match(res) ) {
-			   if(m->not) return;
-			   test_error("Failed (result %O does not match %O)\n",
+			 if (m->not ? Regexp(c)->match(res) :
+			     !Regexp(c)->match(res)) {
+			   test_error("Failed\n(result %O\ndoes not match %O)\n",
 				      res, c);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+
+		       "equal":
+		       lambda(object t, mapping m, string c) {
+			 c = "constant c = (" + c + ");";
+			 program p;
+			 if (mixed err = catch (p = compile_string (c))) {
+			   test_error ("Failed\n(failed to compile %O)\n", c);
+			   throw (1);
+			 }
+			 mixed v;
+			 if (mixed err = catch (v = p()->c)) {
+			   test_error ("Failed\n(failed to clone and "
+				       "get value from %O)\n", c);
+			   throw (1);
+			 }
+			 if (m->not ? equal (res, v) : !equal (res, v)) {
+			   test_error("Failed\n(result %O\ndoes not match %O)\n",
+				      res, v);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+
+		       "pike" :
+		       lambda(object t, mapping m, string c) {
+			 c = "string test(string res) {\n" + c + "\n}";
+			 object test;
+			 mixed err = catch {
+			   test = compile_string(c)();
+			 };
+			 if(err) {
+			   int i;
+			   c = map(c/"\n", lambda(string in) {
+					     return sprintf("%3d: %s", ++i, in); }) * "\n";
+			   werror("Error while compiling test\n%s\n\nBacktrace\n%s\n",
+				  c, describe_backtrace(err));
+			   throw(1);
+			 }
+			 string r = test->test(res);
+			 if(r) {
+			   test_error("Failed (%s)\n", r);
 			   throw(1);
 			 }
 			 test_ok( );
 		       },
     ]) )
+
     ->add_tags( ([ "add" : lambda(object t, mapping m, string c) {
 			     switch(m->what) {
 			       default:
@@ -338,12 +491,21 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 				 break;
 			       case "request_header":
 			         id->request_headers[m->name] = m->value;
-			         break;
+				 break;
 			     }
 			   },
+
+		   "login" : lambda(Parser.HTML p, mapping m) {
+			       id->realauth = m->user + ":" + m->password;
+			       id->request_headers->authorization =
+				 "Basic " + MIME.encode_base64 (id->realauth);
+			       conf->authenticate(id);
+			     },
     ]) );
 
-  if( catch(parser->finish(c)) ) {
+  if( mixed error = catch(parser->finish(c)) ) {
+    if (error != 1)
+      test_error ("Failed to parse test: " + describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -352,107 +514,17 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   return;
 }
 
-string tag_test_data;
-class PrefLang {
-  array(string) get_languages()
-  {
-    return ({});
-  }
-    
-  string get_language()
-  {
-    return 0;
-  }
-  
-  void set_sorted(array(string) lang) {}
-}
-
-void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
-
-  ltests++;
-  tests++;
-  
-  string indent( int l, string what )
-  {
-    array q = what/"\n";
-    //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
-    string i = (" "*l+"|  ");
-    return i+q*("\n"+i)+"\n";
-  };
-  
-  string test_error( string message, mixed ... args )
-  {
-    if( sizeof( args ) )
-      message = sprintf( message, @args );
-    if( verbose )
-      report_debug("FAIL\n" );
-    report_debug( indent(2, message ) );
-  };
-  
-  string test_ok(  )
-  {
-    if( verbose )
-      report_debug( "PASS\n" );
-  };
-  string res;
-  Parser.HTML parser =
-    Roxen.get_xml_parser()->
-    add_containers( ([ "rxml":
-		       lambda(object t, mapping m, string c) {
-			 tag_test_data = c;
-			 
-			 mapping request_headers = ([]);
-			 if(args->admin && args->password)
-			   request_headers->authorization =
-			     "Basic " + MIME.encode_base64(args->user+":"+args->password);
-			 roxen.InternalRequestID id = roxen.InternalRequestID();
-			 id->misc->pref_languages = PrefLang();
-			 id->conf = conf;
-			 id->realauth = args->user+":"+args->password;
-			 id->request_headers = request_headers;
-			 id->prot = "HTTP";
-			 
-			 int logerrorsr =
-			   conf->find_module("rxmlparse")->query("logerrorsr");
-			 if(m["ignore-rxml-run-error"])
-			   conf->find_module("rxmlparse")->getvar("logerrorsr")->set(0);
-
-			 res = conf->try_get_file(args->file, id);
-			 if(m["ignore-rxml-run-error"])
-			   conf->find_module("rxmlparse")->getvar("logerrorsr")->
-			     set(logerrorsr);
-		       },
-
-		       "result":
-		       lambda(object t, mapping m, string c) {
-			 res = canon_html( res );
-			 c = canon_html( c );
-
-			 if(res != c) {
-			   if(m->not) return;
-			   test_error("Failed (result \"%s\" != \"%s\")\n", res, c);
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
-    ]));
-  
-  if( mixed error = catch(parser->finish(c)) ) {
-    //werror("Error: %s\n", describe_backtrace(error));
-    fails++;
-    lfails++;
-  }
-}
-
 class TagTestData {
   inherit RXML.Tag;
   constant name = "test-data";
+  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
   array(RXML.Type) result_types = ({RXML.t_html (RXML.PXml)});
+
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      return ({ tag_test_data });
+      return ({ tag_test_data||"" });
     }
   }
 }
@@ -466,42 +538,68 @@ void run_xml_tests(string data) {
   mapping(int:RXML.PCode) p_code_cache = ([]);
   multiset(string) used_modules = (<>);
 
+  // El cheapo xml header parser.
+  if (has_prefix (data, "<?xml")) {
+    sscanf (data, "%[^\n]", string s);
+    if (sscanf (s, "%*sencoding=\"%s\"", s) == 2)
+      data = Locale.Charset.decoder (s)->feed (data)->drain();
+  }
+
   ltests=0;
   lfails=0;
+
+  test_num = 0;
+  pass = 1;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_add_module,
-    "drop-module" : xml_drop_module,
+    "drop-module" : xml_dummy /* xml_drop_module */,
     "use-module": xml_use_module,
     "test" : xml_test,
-    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
-    add_quote_tag("!--","","--")->
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
-  data = Roxen.get_xml_parser()->add_quote_tag("!--","","--")->finish(data)->read();
-  if(ltests<sizeof(data/"</test>")-1)
-    report_warning("Possibly XML error in testsuite.\n");
+  if (roxen.is_shutting_down()) return;
+
+  int test_tags = 0;
+
+  Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+			->add_tags ((["test": lambda () {test_tags++;}]))
+			->finish (data);
+
+  if(test_tags != ltests)
+    report_warning("Possibly XML error in testsuite - "
+		   "got %d test tags but did %d tests.\n",
+		   test_tags, ltests);
 
   // Go through them again, evaluation from the p-code this time.
-  ltests=0;
+  test_num = 0;
+  pass = 2;
   Roxen.get_xml_parser()->add_containers( ([
-    "add-module" : xml_add_module,
+    "add-module" : xml_dummy /* xml_add_module */,
     "drop-module" : xml_drop_module,
     "test" : xml_test,
-    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
-    add_quote_tag("!--","","--")->
     set_extra (p_code_cache, used_modules)->
     finish(data);
+
+  if (roxen.is_shutting_down()) return;
 
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d.\n", ltests * 2, lfails);
-  continue_find_tests();
+  report_debug("Did %d tests, failed on %d%s.\n", ltests, lfails,
+	      bkgr_fails ?
+	       ", detected " + bkgr_fails + " background failures" : "");
+
+  if (bkgr_fails) {
+    fails += bkgr_fails;
+    bkgr_fails = 0;
+  }
+
+  continue_run_tests();
 }
 
 
@@ -513,24 +611,106 @@ void run_pike_tests(object test, string path)
   {
     tests+=tsts;
     fails+=fail;
-    report_debug("Did %d tests, failed on %d.\n", tsts, fail);
-    continue_find_tests();
+
+    report_debug("Did %d tests, failed on %d%s.\n", tsts, fail,
+		 bkgr_fails ?
+		 ", detected " + bkgr_fails + " background failures" : "");
+
+    if (bkgr_fails) {
+      fails += bkgr_fails;
+      bkgr_fails = 0;
+    }
+
+    continue_run_tests();
   };
 
   if(!test)
     return;
-  if( catch(test->low_run_tests(conf, update_num_tests)) )
+
+  if( mixed error = catch(test->low_run_tests(conf, update_num_tests)) ) {
+    if (error != 1) throw (error);
     update_num_tests( 1, 1 );
+  }
 }
 
 
 // --- Mission control ------------------------
 
-array(string) tests_to_run;
-ADT.Stack file_stack = ADT.Stack();
+array(string) test_files;
 
-void continue_find_tests( )
+void continue_run_tests( )
 {
+  if (sizeof (test_files)) {
+    string file = test_files[0];
+    test_files = test_files[1..];
+
+    report_debug("\nRunning test %s\n",file);
+
+    if (has_suffix (file, ".xml"))
+    {
+      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
+      return;
+    }
+    else			// Pike test.
+    {
+      object test;
+      mixed error;
+      tests++;
+      if( error=catch( test=compile_file(file)( verbose ) ) ) {
+	report_error("Failed to compile %s:\n%s", file,
+		     describe_backtrace(error));
+	fails++;
+      }
+      else
+      {
+	schedule_tests (0, run_pike_tests,test,file);
+	return;
+      }
+    }
+  }
+
+  running = 0;
+  finished = 1;
+  if(is_last_test_configuration())
+  {
+    // Note that e.g. the distmaker parses this string.
+    report_debug("\nDid a grand total of %d tests, %d failed.\n\n",
+		 tests, fails);
+    roxen.restart(0, fails > 127 ? 127 : fails);
+  }
+  else
+    foreach(roxen.configurations, Configuration config)
+      if(config->call_provider("roxen_test", "do_continue", tests, fails))
+	return;
+}
+
+void do_tests()
+{
+  if(time() - roxen->start_time < 2 ) {
+    schedule_tests (0.2, do_tests);
+    return;
+  }
+  report_debug("\nStarting roxen self test in %s\n",
+	       query("selftestdir"));
+
+  array(string) tests_to_run =
+    Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
+  foreach( tests_to_run; int i; string p )
+    if( !has_prefix(p, "RoxenTest_") )
+      tests_to_run[i] = "RoxenTest_" + p;
+
+  verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
+
+  conf->rxml_tag_set->handle_run_error = rxml_error;
+  conf->rxml_tag_set->handle_parse_error = rxml_error;
+
+  test_files = ({});
+  mapping(string:int) matched_pos = ([]);
+  ADT.Stack file_stack = ADT.Stack();
+  file_stack->push( 0 );
+  file_stack->push( combine_path(query("selftestdir"), "tests" ));
+
+file_loop:
   while( string file = file_stack->pop() )
   {
     if( Stdio.Stat st = file_stat( file ) )
@@ -543,60 +723,29 @@ void continue_find_tests( )
       }
       else if( glob("*/RoxenTest_*", file ) && file[-1]!='~')
       {
-	report_debug("\nFound test file %s\n",file);
-	int done;
-	foreach( tests_to_run, string p )
-	  if( glob( "*"+p+"*", file ) )
+	foreach( tests_to_run; int i; string p ) {
+	  if( glob( "*/"+p+"*", file ) )
 	  {
-	    if(glob("*.xml",file))
-	    {
-	      call_out( run_xml_tests, 0, Stdio.read_file(file) );
-	      return;
+	    if (has_suffix (file, ".xml") || has_suffix (file, ".pike")) {
+	      test_files += ({file});
+	      matched_pos[file] = i;
 	    }
-	    else if(glob("*.pike",file))
-	    {
-	      object test;
-	      mixed error;
-	      if( error=catch( test=compile_file(file)( verbose ) ) )
-		report_error("Failed to compile %s\n%s\n", file,
-			     describe_backtrace(error));
-	      else
-	      {
-		call_out( run_pike_tests,0,test,file );
-		return;
-	      }
-	    }
-	    done++;
-	    break;
+	    continue file_loop;
 	  }
-	if( !done )
-	  report_debug( "Skipped (not matched by --tests argument)\n" );
+	}
+	report_debug( "Skipped test %s\n", file);
       }
     }
   }
 
-  report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
-	       tests, fails);
-  if( fails > 127 )
-    fails = 127;
-  exit( fails );
+  // The order should not be significant ...
+  test_files = Array.shuffle (test_files);
+
+  // ... but let the caller control the order in case it turns out to be.
+  sort (map (test_files, matched_pos), test_files);
+
+  schedule_tests (0, continue_run_tests);
 }
-
-void do_tests()
-{
-  remove_call_out( do_tests );
-  if(time() - roxen->start_time < 2 ) {
-    call_out( do_tests, 0.2 );
-    return;
-  }
-
-  tests_to_run = Getopt.find_option(roxen.argv, 0,({"tests"}),0,"" )/",";
-  verbose = !!Getopt.find_option(roxen.argv, 0,({"tests-verbose"}),0, 0 );
-  file_stack->push( 0 );
-  file_stack->push( self_test_dir + "/tests" );
-  call_out( continue_find_tests, 0 );
-}
-
 
 // --- Some tags used in the RXML tests ---------------
 
@@ -612,8 +761,8 @@ class EntityDyn {
 
 class EntityCVal(string val) {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(val, type);
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+    return val;
   }
 }
 
@@ -624,13 +773,44 @@ class EntityVVal(string val) {
   }
 }
 
+class TestNull
+{
+  inherit RXML.Nil;
+  constant is_RXML_encodable = 1;
+  string _sprintf (int flag) {return flag == 'O' && "TestNull()";}
+}
+
 class TagEmitTESTER {
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "TESTER";
 
-  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+  array(mapping(string:mixed)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "6":
+      return ({(["integer":  17,
+		 "float":    17.0,
+		 "string":   "foo",
+		 "array":    ({1, 2.0, "3"}),
+		 "multiset": (<1, 2.0, "3">),
+		 "mapping":  ([1: "one", 2.0: 2, "3": 3]),
+		 "object":   class {}(),
+		 "program":  class {},
+		 "zero_integer":   0,
+		 "zero_float":     0.0,
+		 "empty_string":   "",
+		 "empty_array":    ({}),
+		 "empty_multiset": (<>),
+		 "empty_mapping":  ([]),
+		 "zero_int_array": ({0}),
+		 "zero_float_array": ({0.0}),
+		 "empty_string_array": ({""}),
+		 "empty_array_array": ({({})}),
+	       ])});
+
+    case "5":
+      return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
+
     case "4":
       return ({
 	([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
@@ -639,7 +819,11 @@ class TagEmitTESTER {
       });
 
     case "3":
-      return ({ (["data":"a"]), (["data":RXML.nil]), (["data":EntityDyn()]) });
+      return ({ (["data":"a"]),
+		(["data":RXML.nil]),
+		(["data":TestNull()]),
+		(["data":RXML.empty]),
+		(["data":EntityDyn()]) });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",
@@ -647,10 +831,10 @@ class TagEmitTESTER {
     case "1":
     default:
       return ({
-	([ "a":"kex", "b":"foo", "c":1, "d":"12foo" ]),
-	([ "a":"kex", "b":"boo", "c":2, "d":"foo" ]),
-	([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a" ]),
-	([ "a":"kox", "c":4, "d":"5foo4a" ])
+	([ "a":"kex",  "b":"foo",    "c":1, "d":"12foo",   "e":"-8",  "f": "0" ]),
+	([ "a":"kex",  "b":"boo",    "c":2, "d":"foo",     "e":"8",   "f": "-6.4" ]),
+	([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a", "e":"11",  "f": "1e6" ]),
+	([ "a":"kox",                "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23" ])
       });
     }
   }
@@ -681,4 +865,101 @@ class TagSEmitTESTER {
   constant skiprows = 1;
   constant maxrows = 1;
   constant sort = 1;
+}
+
+class TagTestSleep {
+  inherit RXML.Tag;
+  constant name = "testsleep";
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      sleep((int)args->time);
+    }
+  }
+}
+
+class TagTestArgs
+{
+  inherit RXML.Tag;
+  constant name = "test-args";
+
+  array(RXML.Type) result_types = ({RXML.t_mapping});
+
+  mapping(string:RXML.Type) req_arg_types = ([
+    "req-string": RXML.t_string (RXML.PEnt),
+    "req-int": RXML.t_int (RXML.PEnt),
+  ]);
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "opt-string": RXML.t_string (RXML.PEnt),
+    "opt-int": RXML.t_int (RXML.PEnt),
+    "opt-float": RXML.t_float (RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return()
+    {
+      result = args;
+    }
+  }
+}
+
+class TagTestContentReq
+{
+  inherit RXML.Tag;
+  constant name = "test-required-content";
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+
+  int flags = RXML.FLAG_CONTENT_VAL_REQ;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+  }
+}
+
+class TagTestMisc
+{
+  inherit RXML.Tag;
+  constant name = "test-misc";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return()
+    {
+      if (args->set)
+	RXML_CONTEXT->set_misc (args->set, content);
+      else if (args["set-prog"])
+	RXML_CONTEXT->set_misc (TagTestMisc, content);
+      else if (args->get)
+	return ({RXML_CONTEXT->misc[args->get]});
+      else if (args["get-prog"])
+	return ({RXML_CONTEXT->misc[TagTestMisc]});
+      return ({});
+    }
+  }
+}
+
+class TagRunError
+{
+  inherit RXML.Tag;
+  constant name = "run-error";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return()
+    {
+      run_error (args->message || "A test run error");
+    }
+  }
 }

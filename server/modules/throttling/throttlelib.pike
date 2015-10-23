@@ -1,13 +1,13 @@
 #!NO_MODULE
 /*
  * by Francesco Chemolli
- * Copyright © 1999 - 2000, Roxen IS.
+ * Copyright © 1999 - 2009, Roxen IS.
  *
  * Notice: this might look ugly, it's been designed to fit various kinds of
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.11 2000/05/23 22:08:33 kinkie Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "module";
@@ -24,8 +24,6 @@ string rules_doc="FIXME: override rules_doc";
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
-#define THROW(X) throw( X+"\n" )
 
 
 mapping rules;
@@ -95,8 +93,8 @@ string|void update_rules(string new_rules) {
   mapping my_rules=([]);
   array(string) my_rulenames=({});
   array(string) errors=({}); //contains the lines where parse errors occurred
-  string line, cmd;
-  array(string) lines, words;
+  string line;
+  array(string) lines;
 
   if (!new_rules || ! sizeof(new_rules)) {
     THROTTLING_DEBUG("new rules empty, returning");

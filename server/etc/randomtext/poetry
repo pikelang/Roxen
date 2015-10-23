@@ -1,6 +1,6 @@
 /// A Random Text Generator module rule file for silly English poetry.
 ///
-/// $Id: poetry,v 1.1 2000/02/01 18:21:51 leif Exp $
+/// $Id$
 
 ***animal***avoid-repeat
 fox
@@ -160,25 +160,22 @@ $RULE:query$
 
 
 ***body
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
-<br>
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
+<br />
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
 ---
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
-<br>
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
+<br />
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
 ---
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
-<br>
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
-<br>
-$RULE:line$<br>$RULE:line$<br>$RULE:line$<br>
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
+<br />
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
+<br />
+$RULE:line$<br />$RULE:line$<br />$RULE:line$<br />
 
 ***main
 <b>$RULE:title$</b>
 <p>
 $RULE:body$
-
-
-
-
+</p>

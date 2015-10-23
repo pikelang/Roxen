@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 //
 // A filesystem for the roxen administration interface.
 #include <module.h>
@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.93 2001/08/20 18:41:55 mast Exp $";
+  "$Id$";
 
 constant path = "config_interface/";
 
@@ -85,6 +85,7 @@ mapping get_docfile( string f )
   array q;
   if( f=="" || f[-1] == '/' )
     return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
+
   if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
                               "/"+f )) )
     return q[0];
@@ -94,51 +95,14 @@ mapping get_docfile( string f )
 
 array(int)|Stat stat_file( string f, object id )
 {
-//   while( strlen( f ) && (f[0] == '/' ))
-//     f = f[1..];
-#if 0
-#ifdef CFFS_DEBUG
-  int depth = 1;
-  RequestID nid = id;
-  while( nid->misc->orig )
-  {
-    depth++;
-    nid = nid->misc->orig;
-  }
-  string db_indent = ("   "*(depth-1));
-  werror(db_indent+"sf: "+f+"\n"+
-	 db_indent+"  path_info="+id->misc->path_info+"\n"+
-	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
-	 ", iter="+(id->misc->reqno++)+"\n");
-#endif
-#endif
   if (f == "")
-  {
-#if 0
-#ifdef CFFS_DEBUG
-    werror( db_indent+"Returning stat of "+path+"\n");
-#endif
-#endif
     return file_stat(path);
-  }
 
   if( docs && sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
-    {
-#if 0
-#ifdef CFFS_DEBUG
-      werror( db_indent+"was docfile\n");
-#endif
-#endif
       return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
-    }
 
   array(string|Stat) ret = low_stat_file(f, id);
-#if 0
-#ifdef CFFS_DEBUG
-  werror( db_indent+(ret?"Found":"Not found")+"\n");
-#endif
-#endif
   return ret && ret[1];
 }
 
@@ -146,10 +110,6 @@ constant base ="<use file='%s'/><tmpl title='%s'>%s</tmpl>";
 
 mixed find_dir( string f, object id )
 {
-//   while( strlen( f ) && (f[0] == '/' ))
-//     f = f[1..];
-  // FIXME: Add support for getdir in the doc directories (must query
-  // mysql)
   return get_dir(path + f );
 }
 
@@ -157,23 +117,36 @@ mapping logged_in = ([]);
 int last_cache_clear_time;
 mixed find_file( string f, RequestID id )
 {
-#ifdef CFFS_DEBUG
-  int depth = 1;
-  RequestID nid = id;
-  while( nid->misc->orig )
-  {
-    depth++;
-    nid = nid->misc->orig;
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver) {
+    // The config interface always runs with the current compatibility
+    // level. Have to reload all modules after changing it, and that
+    // cannot be done directly from here since we'll get recursive
+    // locks then.
+    roxen.background_run (
+      0, lambda (RequestID id) {
+	   Configuration conf = my_configuration();
+	   report_notice ("Adjusting compat level from %s to %s "
+			  "for the config interface\n",
+			  conf->query ("compat_level"), roxen.roxen_ver);
+	   conf->set ("compat_level", roxen.roxen_ver);
+	   conf->save (1);
+	   conf->reload_all_modules();
+	   id->send_result (conf->get_file (id));
+	 }, id);
+    return Roxen.http_pipe_in_progress();
   }
-  string db_indent = ("   "*(depth-1));
-  werror(db_indent+"ff: "+f+"\n"+
-	 db_indent+"  path_info="+id->misc->path_info+"\n"+
-	 db_indent+"  iget="+id->misc->internal_get+", depth="+depth+
-	 ", iter="+(id->misc->reqno++)+"\n");
-#endif
+
   int is_docs;
   User user;
   string locale = "standard";
+  string encoding;
+
+  // Can get false alarms from the warning "Tag set ... created during
+  // RXML evaluation" in RXML.TagSet.create in here since modules
+  // containing TagSets are compiled and instantiated from within the
+  // rxml parse pass in the config interface. Thus it's disabled by a
+  // special ad-hoc flag.
+  id->misc->disable_tag_set_creation_warning = 1;
 
   if( (time(1) - last_cache_clear_time) > 4 )
   {
@@ -184,14 +157,15 @@ mixed find_file( string f, RequestID id )
   if( !id->misc->internal_get )
   {
     string host;
-    if( array h = gethostbyaddr( id->remoteaddr ) )
-      host = h[0];
-    else
+//     if( array h = gethostbyaddr( id->remoteaddr ) )
+//       host = h[0];
+//     else
       host = id->remoteaddr;
 
     // Patch it in. This is needed for the image-cache authentication handling.
     id->conf->set_userdb_module_cache( ({ roxen.config_userdb_module }) );
 
+  request_auth:
     if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
     {
       if( !id->misc->cf_theme )
@@ -205,21 +179,44 @@ mixed find_file( string f, RequestID id )
 		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
-#ifdef CFFS_DEBUG
-      werror( db_indent+"  uid="+user->name()+"\n" );
-#endif
+
+      //  If we got here through an auth redirect, jump back to original
+      //  location. We'll pass an empty auth_redir to catch redirect loops.
+      if (string auth_redir = id->variables->auth_redir)
+	if (sizeof(auth_redir)) {
+	  auth_redir +=
+	    (has_value(auth_redir, "?") ? "&" : "?") + "auth_redir=";
+	  return Roxen.http_redirect(auth_redir, id);
+	}
+      m_delete(id->real_variables, "auth_redir");
     }
     else
     {
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Returning login fail\n" );
-#endif
+      //  We exclude theme resources from authentication since we often
+      //  cannot prevent repeated auth dialogs despite the redirect below.
+      if (has_prefix(f, "themes/") &&
+	  (< "png", "gif", "jpg", "css", "xcf", "ico" >)[(f / ".")[-1]]) {
+	//  Fake some settings
+	roxen.adminrequest_get_context(" no-auth ", host, id);
+	break request_auth;
+      }
+      
+      //  Authenticate in root directory to avoid repeated browser dialogs.
+      //  We add an exception for the change_user wizard.
+      string mountpt = query("location");
+      if (id->method == "GET" &&
+	  !id->variables->auth_redir && (id->not_query != mountpt) &&
+	  (id->not_query != (mountpt + "change_user.pike"))) {
+	string redir = Roxen.http_encode_url(id->raw_url);
+	return Roxen.http_redirect(mountpt + "?auth_redir=" + redir, id);
+      }
+      
       report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
-      return id->conf->authenticate_throw( id, "Roxen configuration",
+      return id->conf->authenticate_throw( id, "Roxen Administration Interface",
 					   roxen.config_userdb_module );
     }
 
-    string encoding = config_setting( "charset" );
+    encoding = config_setting( "charset" );
     if( encoding != "utf-8" &&
 	encoding != "iso-8859-1")
       catch {
@@ -227,7 +224,6 @@ mixed find_file( string f, RequestID id )
       };
     else
       charset_decoder = 0;
-    id->set_output_charset( encoding );
     id->since = 0;
     catch 
     {
@@ -280,16 +276,21 @@ mixed find_file( string f, RequestID id )
       type = "text/html";
     else
       type = id->conf->type_from_filename( id->not_query );
+
+    if( locale != "standard" ) 
+      roxen.set_locale( locale );
+
+    if (glob("text*", type))
+      id->set_output_charset( encoding );
   }
 
-  if( docs && (sscanf( f, "docs/%s", f ) ))
+  if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
+    if( f == "docs" )
+      return Roxen.http_redirect( id->not_query+"/", id );
     if( mapping m = get_docfile( f ) )
     {
       is_docs = 1;
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Documentation, getting from SQL\n" );
-#endif
       string data = m->contents;
       m = 0;
       if( type == "text/html" )
@@ -299,81 +300,57 @@ mixed find_file( string f, RequestID id )
         sscanf( data, "%*s<br clear=\"all\">%s", data );
         sscanf( data, "%s</body>", data );
         retval = "<topmenu selected='docs' base='"+query_location()+"'/>"
-               "<content>"+data+"</content>";
+	  "<define container='dox'>"
+	  "<if variable='usr.doc-content-box = ?*'>"
+	  "<subtablist><st-page>"
+	  "<contents/>"
+	  "</st-page></subtablist>"
+	  "</if>"
+	  "<else>"
+	  "<contents/>"
+	  "</else>"
+	  "</define>"
+	  "<content>"
+	  "<dox>"
+	  "<div class='doc'>"
+	  +data+
+	  "</div>"
+	  "</dox>"
+	  "</content>";
         if( title )
           retval="<title>: Docs "+Roxen.html_encode_string(title)+"</title>" +
                            retval;
       } else
         retval = data;
-    } else
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Was documentation, but no such file\n" )
-#endif
-	;
+    }
   }
   else
   {
     array(string|array) stat_info = low_stat_file( f, id );
     if( !stat_info ) // No such luck...
-    {
-#ifdef CFFS_DEBUG
-      werror( db_indent+"Returning no such file\n" );
-#endif
       return 0;
-    }
+
     [string realfile, array stat] = stat_info;
     switch( stat[ ST_SIZE ] )
     {
      case -1:  case -3: case -4:
-#ifdef CFFS_DEBUG
-      werror( db_indent+"device or special, returning no such file\n" );
-#endif
        return 0; /* Not suitable (device or no file) */
      case -2: /* directory */
-#ifdef CFFS_DEBUG
-      werror( db_indent+"directory, returning dir indicator\n" );
-#endif
        return -1;
-//      default:
-//        if (f[-1] == '/')
-//        {
-// #ifdef CFFS_DEBUG
-// 	 werror( db_indent+"No such file, waiting for pathinfo\n" );
-// #endif
-//          return 0;	/* Let the PATH_INFO module handle it */
-//        }
     }
     id->realfile = realfile;
     retval = Stdio.File( realfile, "r" );
     if( id->misc->internal_get )
-    {
-#ifdef CFFS_DEBUG
-      if( retval )
-	werror( db_indent+"normal file, internal get, quick (unparsed) return\n" );
-      else
-	werror( db_indent+"Was normal file, but open failed (internal get, quick (unparsed) return)\n" );
-#endif
       return retval;
-    }
   }
 
 #ifdef DEBUG
   if( id->variables["content-type"] )
-  {
-#ifdef CFFS_DEBUG
-    werror( db_indent+"normal file, forced type, quick return\n" );
-#endif
     return Roxen.http_file_answer( retval, id->variables["content-type"] );
-  }
 #endif
   
   if( !retval )
-  {
-#ifdef CFFS_DEBUG
-    werror( db_indent+"file exists, but open failed\n" );
-#endif
     return 0;
-  }
 
   if( type  == "text/html" )
   {
@@ -401,8 +378,6 @@ mixed find_file( string f, RequestID id )
       id->misc->defines = ([]);
     id->misc->defines[" _stat"] = id->misc->stat;
      
-    if( locale != "standard" ) 
-      roxen.set_locale( locale );
     mixed error;
     error = catch( retval = Roxen.http_rxml_answer( data, id ) );
     if( locale != "standard" )
@@ -420,17 +395,23 @@ mixed find_file( string f, RequestID id )
 
     if( id->method != "GET" && id->real_variables->__redirect )
     {
-      string url = id->raw_url;
-      url+="?v="+random(4711)->digits(32);
+      while( id->misc->orig )
+	id = id->misc->orig;
+      string url = Roxen.http_decode_string(id->raw_url);
+      if( id->misc->request_charset_decoded )
+	if( charset_decoder )
+	  url = charset_decoder()->clear()->feed( url )->drain();
+	else
+	  url = utf8_to_string( url );
+      url+="?rv="+random(471187)->digits(32);
       if( id->real_variables->section )
 	url += "&section="+id->real_variables->section[0];
       retval = Roxen.http_redirect( url, id );
     }
+  } else {
+    // Most likely cacheable for quite a while.
+    id->misc->cacheable = 100000;	// 2 days, 4:46:40
   }
-#ifdef CFFS_DEBUG
-  werror( db_indent+"returning "+
-	  (stringp( retval )?"parsed data":"normal file")+"\n" );
-#endif
   if( stringp( retval ) )
     retval = Roxen.http_string_answer( retval, type );
   return retval;
@@ -440,48 +421,45 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if( !(docs = DBManager.cached_get( "docs", cfg ) ) )
+    mixed err;
+    array(mapping(string:string)) old_version;
+    int ver;
+    if( !(docs = DBManager.get( "docs", cfg ) ) ||
+	(err = catch( old_version = DBManager.get( "docs", cfg )
+		      ->query("SELECT contents FROM docs where name='_version'") )) ||
+	((!sizeof(old_version) || old_version[0]->contents!=roxen_version()) &&
+	 (ver=1)) )
     {
-      if( DBManager.cached_get( "docs" ) )
-        report_warning( "The database 'docs' exists, but this server can "
-                        "not read from it.\n"
-                        "Documentation will be unavailable.\n" );
-      else
+      if( !err && DBManager.get( "docs" ) && !ver )
+	report_warning( "The database 'docs' exists, but this server can "
+			"not read from it.\n"
+			"Documentation will be unavailable.\n" );
+      else if( file_stat( "etc/docs.frm" ) )
       {
-        Filesystem.System T;
-        catch(T = Filesystem.Tar( "config_interface/docs.tar" ));
-        if( !T )
-          report_notice( "Failed to open the documentation tar-file.\n");
-        else
-        {
-	  report_notice( "Creating the 'docs' database\n");
-          DBManager.create_db( "docs", "docs", 1 );
+	if( !err && ver )
+	{
+	  report_notice("Removing old 'docs' database.\n");
+	  DBManager.drop_db("docs");
+	}
+	// Restore from "backup".
+	if( !err )
+	{
+	  report_notice("Creating the 'docs' database.\n");
+	  DBManager.create_db( "docs", 0, 1 );
+	  DBManager.is_module_db( this_module(), "docs", "All documentation");
 	  foreach( roxen->configurations, Configuration c )
 	    DBManager.set_permission( "docs", c, DBManager.READ );
-          DBManager.set_permission( "docs", cfg, DBManager.WRITE );
-          docs = DBManager.get( "docs", cfg );
-          catch(docs->query( "DROP TABLE docs" ));
-          docs->query( "CREATE TABLE docs "
-                     "(name VARCHAR(80) PRIMARY KEY,contents MEDIUMBLOB)");
-	  DBManager.is_module_table( this_object(), "docs", "docs",
-				     "The Roxen documentation.");
-	  
-          void rec_process( string dir )
-          {
-            foreach( T->get_dir( dir ), string f )
-            {
-              if( T->stat( f )->isdir() )
-                rec_process( f );
-              else
-              {
-                if( search( f, "internal-roxen" ) != -1 ) continue;
-                docs->query( "INSERT INTO docs VALUES (%s,%s)", f,
-                             T->open(f, "r")->read());
-              }
-            }
-          };
-          rec_process("/");
-        }
+	}
+	DBManager.restore( "docs", getcwd()+"/etc/", "docs", ({ "docs" }) );
+	DBManager.set_permission( "docs", cfg, DBManager.WRITE );
+	DBManager.get( "docs", cfg )->query("REPLACE docs set name='_version', contents='"+roxen_version()+"'");
+	DBManager.set_permission( "docs", cfg, DBManager.READ );
+	docs = DBManager.get( "docs", cfg );
+      }
+      else
+      {
+	report_warning( "There is no documentation available\n");
+	docs = 0;
       }
     }
     string am = query( "auth_method" );
@@ -502,11 +480,11 @@ void start(int n, Configuration cfg)
     if( cfg->find_module( "avg_profiling#0" ) )
       cfg->disable_module( "avg_profiling#0" );
 #endif
-    cfg->add_modules(({
-      "config_tags", "contenttypes",    "indexfiles",
-      "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
-      "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
-      "tablist",     "update",          "cimg",
+    module_dependencies(cfg, ({
+      "config_tags", "contenttypes",    "indexfiles", "atlas",
+      "gbutton",     "graphic_text",    "pathinfo",   "javascript_support",
+      "pikescript",  "translation_mod", "rxmlparse",  "rxmltags",
+      "tablist",     "cimg",		"gxml",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
 #endif
@@ -542,7 +520,6 @@ void zap_old_modules()
   if( my_configuration()->find_module("config_userdb#0") )
     my_configuration()->disable_module( "config_userdb#0" );
 }
-
 
 void create()
 {

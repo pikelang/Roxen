@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.16 2001/05/08 09:44:10 wellhard Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -45,9 +45,9 @@ class TagWashHtml
 
   string unparagraphify(string s)
   {
-    return replace(s,
-		   ({ "</p>\n<p>", "</p><p>", "<p>", "</p>" }),
-		   ({ "\n\n",      "\n\n",    "",    "" }) );
+    return replace(replace(s, ({ "<P>", "</P>" }), ({ "<p>", "</p>" })),
+		   ({ "</p>\n<p>", "</p>\r\n<p>", "</p><p>", "<p>", "</p>" }),
+		   ({ "\n\n",      "\n\n",        "\n\n",    "",    "" }) );
   }
 
   array parse_arg_array(string s)
@@ -58,43 +58,80 @@ class TagWashHtml
     return ((s - " ")/",") - ({ "" });
   }
 
-  string safe_container(string tag, mapping m, string cont)
+  array safe_container(Parser.HTML p, mapping args, string cont,
+			string close_tags, mapping keep_attrs)
   {
-    return replace(Roxen.make_tag(tag, m),
-		   ({ "<",">" }), ({ "\0[","\0]" }) ) + cont+"\0[/"+tag+"\0]";
+    string tag = lower_case(p->tag_name());
+    if(keep_attrs)
+      args &= (keep_attrs[tag] || ({ }));
+    Parser.HTML parser = p->clone();
+    string res = parser->finish(cont)->read();
+    return ({ replace(Roxen.make_tag(tag, args), ({ "<",">" }), ({ "\0[","\0]" })) +
+	      res + "\0[/"+tag+"\0]" });
   }
 
-  string safe_tag(string tag, mapping m, string close_tags)
+  array safe_tag(Parser.HTML p, mapping args,
+		  string close_tags, mapping keep_attrs)
   {
-    return replace(RXML.t_xml->format_tag(tag, m, 0, (close_tags?0:
-						      RXML.FLAG_COMPAT_PARSE|
-						      RXML.FLAG_EMPTY_ELEMENT)),
-		   ({ "<",">" }), ({ "\0[","\0]" }) );
+    string tag = lower_case(p->tag_name());
+    if(keep_attrs)
+      args &= (keep_attrs[tag] || ({ }));
+    
+    return ({ replace(RXML.t_xml->format_tag(tag, args, 0, (close_tags?0:
+							    RXML.FLAG_COMPAT_PARSE|
+							    RXML.FLAG_EMPTY_ELEMENT)),
+		      ({ "<",">" }), ({ "\0[","\0]" }) ) });
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
-		     string close_tags)
+		     string close_tags, string keep_attributes)
   {
+    // Replace < and > with \1 and \2 in stead of quoting with &lt; and &gt; to
+    // be able regexp match on single characters.
+    // \0 is used to keep allowed tags.
     s -= "\0";
-    mapping allowed_tags =
-      mkmapping(keep_tags, allocate(sizeof(keep_tags), safe_tag));
+    s -= "\1";
+    s -= "\2";
 
-    mapping allowed_containers =
-      mkmapping(keep_containers,
-		allocate(sizeof(keep_containers), safe_container));
+    mapping keep_attrs;
+    if(keep_attributes)
+    {
+      keep_attrs = ([ ]);
+      foreach(keep_attributes/",", string entry)
+      {
+	if(sscanf(entry, "%s:%s", string tag, string attr) == 2)
+	  keep_attrs[tag] = (keep_attrs[tag] || ({ })) + ({ attr });
+      }
+    }
 
-    return replace(
-      parse_html(s, allowed_tags, allowed_containers, close_tags),
-      ({ "<",    ">",    "&",     "\0[", "\0]" }),
-      ({ "&lt;", "&gt;", "&amp;", "<",   ">" }));
+    Parser.HTML parser = Parser.HTML();
+    parser->case_insensitive_tag(1);
+    parser->set_extra(close_tags, keep_attrs);
+    
+    foreach(keep_tags, string tag)
+      parser->add_tag(tag, safe_tag);
+    
+    foreach(keep_containers, string container)
+      parser->add_container(container, safe_container);
+    
+    return replace(parser->finish(s)->read(),
+		   ({ "<",  ">",  "&",     "\0[", "\0]" }),
+		   ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
-  string linkify(string s)
+  string linkify(string s, string|void target)
   {
     string fix_link(string l)
     {
-      if(l[0..6] == "http://" || l[0..7] == "https://" || l[0..5] == "ftp://")
+      if (has_prefix(l, "http://") ||
+	  has_prefix(l, "https://") ||
+	  has_prefix(l, "ftp://") ||
+	  has_prefix(l, "mailto:"))
 	return l;
+      
+      if (has_prefix(l, "ftp."))
+	return "ftp://" + l;
+
       return "http://"+l;
     };
 
@@ -104,15 +141,32 @@ class TagWashHtml
 			       { return ({ p->current() }); });
     parser->_set_data_callback(
       lambda(Parser.HTML p, string data)
-      { return ({ link_regexp->
-		  replace(data, lambda(string link)
+      { return ({ utf8_to_string(link_regexp->
+		  replace(string_to_utf8(data), lambda(string link)
 				{
 				  link = fix_link(link);
-				  return "<a href='"+link+"'>"+
+				  return "<a href='"+link+"'"+(target?" "+Roxen.make_tag_attributes((["target":target])):"")+">"+
 				    link+"</a>";
-				}) }); });
+				}) ) }); });
 
-    return parser->finish(s)->read();
+    string res = parser->finish(s)->read();
+    parser = 0;			// Avoid trampoline garbage.
+    return res;
+  }
+
+  string remove_illegal_chars(string s)
+  {
+    string result = "";
+
+    while(sizeof(s))
+    {
+      string rest = "";
+      sscanf(s, "%s%*[\x0-\x8\xb\xc\xe-\x1f\x7f-\x84\x86-\x9f]%s", s, rest);
+      result += s;
+      s = rest;
+    }
+
+    return result;
   }
 
   string unlinkify(string s)
@@ -144,13 +198,20 @@ class TagWashHtml
 	result = filter_body(result,
 			     parse_arg_array(args["keep-tags"]),
 			     parse_arg_array(args["keep-containers"]),
-			     args["close-tags"]);
+			     args["close-tags"],
+			     args["keep-attributes"]);
 
       if(args->paragraphify)
 	result = paragraphify(result);
 
       if(args["linkify"])
-	result = linkify(result);
+	result = linkify(result, args["link-target"]);
+
+      if (!args["keep-all"])
+	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
+
+      if(args["remove-illegal-xml-chars"])
+	result = remove_illegal_chars(result);
 
       return 0;
     }
@@ -162,15 +223,18 @@ class TagWashHtml
     opt_arg_types = ([ "keep-all":RXML.t_text(RXML.PXml),
 		       "keep-tags":RXML.t_text(RXML.PXml),
 		       "keep-containers":RXML.t_text(RXML.PXml),
+		       "keep-attributes":RXML.t_text(RXML.PXml),
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
+                       "link-target":RXML.t_text(RXML.PXml),
                        "unlinkify":RXML.t_text(RXML.PXml),
 		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
+#define VALID_CHARS "[^ \t\n\r<>\"'`(){}|\1\2]"
     link_regexp =
-      Regexp("(((http)|(https)|(ftp))://([^ \t\n\r<]+)(\\.[^ \t\n\r<>\"]+)+)|"
-	     "(((www)|(ftp))(\\.[^ \t\n\r<>\"]+)+)");
+      Regexp("(((http)|(https)|(ftp))://(" VALID_CHARS "+)(\\." VALID_CHARS "+)+)|"
+	     "(((www)|(ftp))(\\." VALID_CHARS "+)+)");
   }
 }
 
@@ -179,7 +243,7 @@ class TagWashHtml
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"wash-html":#"<desc cont='cont'><p><short hide='hide'>
+"wash-html":#"<desc type='cont'><p><short hide='hide'>
  Turns a text into HTML.</short>This tag is mostly useful for turning
  user freetext input from a form into HTML intelligently, by turning
  sections of the text separated by more than one newline into
@@ -193,43 +257,64 @@ constant tagdoc=([
  keep-tags and keep-containers. This attribute is useful together with
  the attributes <att>unparagraphify</att> and <att>unlink</att>.</p>
 
-<ex type='vert'>
-<wash-html keep-all=''>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+<ex><wash-html keep-all='1'>
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
-  <hr>A little image:<img src='/internal-roxen-next'>.
-</wash-html>
-</ex>
+  <hr />A little image:<img src='/internal-roxen-next' />.
+</wash-html></ex>
 </attr>
 
 <attr name='keep-tags' value='list'><p>
  Comma-separated array of empty element <tag>tags</tag> not to
- filter. Quote all other empty element tags i.e. transform \"&lt;\",
+ filter. Quote all other empty element tags, i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
-<ex type='vert'>
-<wash-html keep-tags='hr'>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+<ex><wash-html keep-tags='hr'>
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
-  <hr />A litle image:<img src='/internal-roxen-next'>.
-</wash-html>
-</ex>
+  <hr />A litle image:<img src='/internal-roxen-next' />.
+</wash-html></ex>
 </attr>
 
 <attr name='keep-containers' value='list'><p>
  Comma-separated array of <tag>container</tag>...<tag>/</tag> tags not
- to filter. Quote all other container tags e.i. transform \"&lt;\",
+ to filter. Quote all other container tags, i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
-<ex type='vert'>
-<wash-html keep-containers='b'>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+<ex><wash-html keep-containers='b'>
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
-  <hr>A little image:<img src='/internal-roxen-next'>.
+  <hr />A little image:<img src='/internal-roxen-next' />.
 </wash-html>
 </ex>
+</attr>
+
+<attr name='keep-attributes' value='list'><p>
+ List of attributes to preserve in keep-containers and keep-tags.
+ If the attribute is omitted all attributes for tags will be
+ preserved. The format is tag1:attribute1,tag1:attribute2,tag2:attribute1...
+ Useful for allowing tags but not attributes, i.e. allow the &lt;quote&gt;
+ tag but not attributes such as onclick etc.</p>
+
+<ex><wash-html keep-containers=\"a,font\">
+  <a href=\"http://docs.roxen.com\">Roxen docs</a>
+  <font style=\"color:red;\">Text</font>
+</wash-html></ex>
+
+<p>Note that all attributes for preserved tags are kept.</p>
+
+<ex><wash-html keep-containers=\"a,font\" keep-attributes=\"a:href\">
+  <a href=\"http://docs.roxen.com\">Roxen docs</a>
+  <font style=\"color:red;\">Text</font>
+</wash-html></ex>
+
+<p>Only the href attribute for the a tag is kept.</p>
+
 </attr>
 
 <attr name='linkify'><p>
@@ -238,25 +323,38 @@ constant tagdoc=([
  \"http://\", \"https://\", \"ftp://\", \"www.\" or \"http.\" will be
  converted to a clickable link with the text as the link label.</p>
 
-<ex type='vert'>
-<wash-html linkify='' keep-containers='a' keep-tags='br'>
+<ex><wash-html linkify='a' keep-containers='a' keep-tags='br'>
   <a href=\"http://docs.roxen.com\">Roxen docs</a><br />
   http://pike.roxen.com<br />
   www.roxen.com
-</wash-html>
-</ex>
+</wash-html></ex>
+</attr>
+
+<attr name='link-target'><p>
+  If the linkify attribute is used, set the link target to this.</p> 
 </attr>
 
 <attr name='unlinkify'><p>
  Undo a linkify-conversion. Only the links that has the same label as
  address will be converted to plain text.</p>
 
-<ex type='vert'>
-<wash-html unlinkify='' keep-tags='br' keep-containers='a'>
+<ex><wash-html unlinkify='1' keep-tags='br' keep-containers='a'>
   <a href=\"http://www.roxen.com\">http://www.roxen.com</a><br />
   <a href=\"http://www.roxen.com\">Roxen IS</a>
-</wash-html>
-</ex>
+</wash-html></ex>
+</attr>
+
+<attr name='remove-illegal-xml-chars'><p>
+ Removes illegal and discouraged XML characters. Legal characters 
+ include #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] |
+ [#x10000-#x10FFFF]. Discouraged characters include
+ [#x7F-#x84], [#x86-#x9F], [#xFDD0-#xFDDF],
+ [#1FFFE-#x1FFFF], [#2FFFE-#x2FFFF], [#3FFFE-#x3FFFF],
+ [#4FFFE-#x4FFFF], [#5FFFE-#x5FFFF], [#6FFFE-#x6FFFF],
+ [#7FFFE-#x7FFFF], [#8FFFE-#x8FFFF], [#9FFFE-#x9FFFF],
+ [#AFFFE-#xAFFFF], [#BFFFE-#xBFFFF], [#CFFFE-#xCFFFF],
+ [#DFFFE-#xDFFFF], [#EFFFE-#xEFFFF], [#FFFFE-#xFFFFF],
+ [#10FFFE-#x10FFFF]</p>
 </attr>
 
 <attr name='paragraphify'><p>
@@ -264,28 +362,24 @@ constant tagdoc=([
  attribute automatically makes the next text element into a
  paragraph.</p>
 
-<ex type='vert'>
-<wash-html paragraphify=''>
+<ex-src><wash-html paragraphify='1'>
 A Paragraph
 
-An other paragraph.
-And some more text to the same paragraph.
-</wash-html>
-</ex>
+Another paragraph.
+Some more text to the same paragraph.
+</wash-html></ex-src>
 </attr>
 
-<attr name='unparagraphify'><p>
- Turn paragraph breaks into double newlines instead.</p>
+<attr name='unparagraphify'>
+<p>Turn paragraph breaks into double newlines instead.</p>
 
-<ex type='vert'>
-<pre><wash-html unparagraphify=''>
-<p>A Paragraph<p>
+<ex-src><wash-html unparagraphify='1'>
+<p>A Paragraph</p>
+<p>Another paragraph.
+Some more text to the same paragraph.</p>
+</wash-html></ex-src>
 
-<p>An other paragraph.
-And some more text to the same paragraph.</p>
-</wash-html></pre>
-</ex><p>
- The <tag>pre</tag> is only used in the example for layout-purposes.</p>
+<p>The <tag>pre</tag> is only used in the example for layout-purposes.</p>
 </attr>
 
 <attr name='close-tags'><p>

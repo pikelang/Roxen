@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.124 2001/08/24 14:43:46 nilsson Exp $
+// $Id$
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -30,7 +30,7 @@ string describe_exts( RoxenModule m, string func )
 
 string describe_location( RoxenModule m, RequestID id )
 {
-  string mp = m->query_location();
+  string mp = m->query_location && m->query_location();
   return mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
 		      m->my_configuration()->get_url(), mp[1..], mp) : "";
 }
@@ -38,39 +38,41 @@ string describe_location( RoxenModule m, RequestID id )
 string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(<>), conts=(<>);
-  RXML.TagSet new=m && m->query_tag_set();
+  RXML.TagSet new=m && m->query_tag_set && m->query_tag_set();
   if(!new) return "";
 
   foreach(indices(new->get_tag_names()), string name) {
     if(tags[name] || conts[name])
       continue;
     if(new->get_tag(name)->flags & RXML.FLAG_EMPTY_ELEMENT)
-      tags+=(< replace(name,"#"," ") >);
+      tags+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
     else
-      conts+=(< replace(name,"#"," ") >);
+      conts+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
   }
 
-  array pi=indices(new->get_proc_instr_names());
+  array pi=map(indices(new->get_proc_instr_names()), Roxen.html_encode_string);
 
   return 
-    Roxen.html_encode_string(String.implode_nicely(map(sort(indices(tags)-
-							    ({"\x266a"})),
-						       lambda(string tag) {
-							 return "<"+tag+(tag[0]=='/'?"":"/")+">";
-						       } ) +
-						   map(sort(indices(conts)),
-						       lambda(string tag) {
-							 return "<"+tag+"></>";
-						       } ) +
-						   map(sort(pi),
-						       lambda(string tag) {
-							 return "<?"+tag+" ?>";
-						       } )));
+      String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+(tag[0]=='/'?"":"/")+"&gt;</nobr>";
+				} ) +
+			    map(sort(indices(conts)),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+"/&gt;&lt;/&gt;</nobr>";
+				} ) +
+			    map(sort(pi),
+				lambda(string tag) {
+				  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
+				} ),
+			    LOCALE("cw","and"));
 }
 
 string describe_provides( RoxenModule m, int q )
 {
-  array(string)|multiset(string)|string provides = m && m->query_provides();
+  array(string)|multiset(string)|string provides = m &&
+						   m->query_provides &&
+						   m->query_provides();
   if (multisetp(provides))
     provides = sort((array(string))provides);
   if( arrayp(provides) )
@@ -88,31 +90,31 @@ do                                                                      \
    if(t&X)                                                              \
      if( Y )                                                            \
        res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
-               "<td valign='top'><b>" + #X + "</b> (</td>"     \
-               "<td valign='top'>"+Y(m,Z)+")</td></tr></table>");         \
+               "<td valign='top'><nobr>" + #X + " (</nobr></td>"     \
+               "<td valign='top'>"+(Y)(m,Z)+")</td></tr></table>");	\
      else                                                               \
-       res += "<b>" + #X + "</b><br />";                                 \
+       res += #X + "<br />";                                 \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
   T(MODULE_LOCATION,   describe_location,                       id);
-  T(MODULE_URL,                        0,                        0);
+  T(MODULE_URL,                 (mixed)0,                        0);
   T(MODULE_FILE_EXTENSION, describe_exts,  "query_file_extensions");
   T(MODULE_TAG,            describe_tags,                        0);
-  T(MODULE_LAST,                       0,                        0);
-  T(MODULE_FIRST,                      0,                        0);
-  T(MODULE_AUTH,                       0,                        0);
-  T(MODULE_TYPES,                      0,                        0);
-  T(MODULE_DIRECTORIES,                0,                        0);
-  T(MODULE_PROXY,                      0,                        0);
-  T(MODULE_LOGGER,                     0,                        0);
-  T(MODULE_FILTER,                     0,                        0);
+  T(MODULE_LAST,                (mixed)0,                        0);
+  T(MODULE_FIRST,               (mixed)0,                        0);
+  T(MODULE_AUTH,                (mixed)0,                        0);
+  T(MODULE_TYPES,               (mixed)0,                        0);
+  T(MODULE_DIRECTORIES,         (mixed)0,                        0);
+  T(MODULE_PROXY,               (mixed)0,                        0);
+  T(MODULE_LOGGER,              (mixed)0,                        0);
+  T(MODULE_FILTER,              (mixed)0,                        0);
   T(MODULE_PROVIDER,   describe_provides,                        0);
-  T(MODULE_PROTOCOL,                   0,                        0);
-  T(MODULE_CONFIG,                     0,                        0);
-  T(MODULE_SECURITY,                   0,                        0);
-  T(MODULE_USERDB,                     0,                        0);
-  T(MODULE_EXPERIMENTAL,               0,                        0);
+  T(MODULE_PROTOCOL,            (mixed)0,                        0);
+  T(MODULE_CONFIG,              (mixed)0,                        0);
+  T(MODULE_SECURITY,            (mixed)0,                        0);
+  T(MODULE_USERDB,              (mixed)0,                        0);
+  T(MODULE_EXPERIMENTAL,        (mixed)0,                        0);
 
   return res;
 }
@@ -184,11 +186,16 @@ string buttons( Configuration c, string mn, RequestID id )
     }
     else if(mod->query_action_buttons)
     {
-      mapping buttons=mod->query_action_buttons("standard");
+      mapping(string:function|array(function|string)) buttons =
+	mod->query_action_buttons(id);
       foreach(indices(buttons), string title)
 	if( (string)a==(string)title )
 	{
-	  buttons[title](id);
+	  function|array(function|string) action = buttons[title];
+	  if (arrayp(action))
+	    action[0](id);
+	  else
+	    action(id);
 	  break;
 	}
     }
@@ -200,7 +207,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
   string buttons = 
          "<input type=hidden name=section value='" +
-         (section||LOCALE(299,"Information")) + "'>";
+         (section||"Status") + "'>";
 
   // Do not allow reloading of modules _in_ the configuration interface.
   // It's not really all that good an idea, I promise.
@@ -213,10 +220,6 @@ string buttons( Configuration c, string mn, RequestID id )
   if( sizeof( mod->error_log ) )
     buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
 
-  if(mod->query_action_buttons)
-    foreach( indices(mod->query_action_buttons("standard")), string title )
-      buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
-
   // Nor is it a good idea to drop configuration interface modules.
   // It tends to make things rather unstable.
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
@@ -225,10 +228,31 @@ string buttons( Configuration c, string mn, RequestID id )
     buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
             path[0]+"&drop="+mn+"'>"+
             LOCALE(252, "Drop Module")+"</link-gbutton></a>";
+
+  //  Add action buttons produced by the module itself
+  if (mod->query_action_buttons) {
+    mapping(string:function|array(function|string)) mod_buttons =
+      mod->query_action_buttons(id);
+    array(string) titles = indices(mod_buttons);
+    if (sizeof(titles)) {
+      buttons +=
+	" <img src='/internal-roxen-pixel-888888' "
+	"      width='1' height='15' hspace='5' align='center' />";
+      foreach(sort(titles), string title) {
+	function|array(function|string) action = mod_buttons[title];
+	if (arrayp(action))
+	  buttons += action[1];
+	else
+	  buttons += "<submit-gbutton>" + title + "</submit-gbutton>";
+      }
+    }
+  }
+
+
   return buttons;
 }
 
-string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
+string get_eventlog(RoxenModule o, RequestID id, int|void no_links )
 {
   mapping log = o->error_log;
   if(!sizeof(log)) return "";
@@ -248,7 +272,129 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
       sprintf(LOCALE(472,"%d entries skipped. Present in log on disk."),
 	      sizeof( report )-999 );
 
-  return "<h2>"+LOCALE(216, "Events")+"</h2>" + (report[..1000]*"");
+  return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
+}
+
+string get_module_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
+{
+  if (!o->query_snmp_mib) return "";
+
+  Configuration conf = o->my_configuration();
+
+  // NOTE: Duplicates code in configuration.pike:call_low_start_callbacks()!
+  array(int) segment = conf->generate_module_oid_segment(o);
+  array(int) oid_prefix =
+    conf->query_oid() + ({ 8, 2 }) + segment[..sizeof(segment)-2];
+
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol|array(Protocol)) port_info =
+      roxen.urls[url];
+
+    Protocol prot;
+    foreach((port_info && port_info->ports) || ({}), Protocol any_prot) {
+      if ((any_prot->prot_name != "snmp") || (!any_prot->mib)) continue;
+      prot = any_prot;
+      break;
+    }
+    if (!prot) continue;
+
+    // Normalize the path.
+    string path = port_info->path || "";
+    if (has_prefix(path, "/")) path = path[1..];
+    if (has_suffix(path, "/")) path = path[..sizeof(path)-2];
+
+    array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
+			       segment[-1] });
+
+    ADT.Trie mib = ADT.Trie();
+    mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
+    mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
+					 oid_suffix[..0],
+					 o, moduleinfo, UNDEFINED));
+    return "<h3>SNMP</h3>\n" + get_snmp_values(mib, mib->first());
+  }
+
+  return "";
+}
+
+string get_site_snmp(Configuration conf)
+{
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol|array(Protocol)) port_info =
+      roxen.urls[url];
+
+    Protocol prot;
+    foreach((port_info && port_info->ports) || ({}), Protocol any_prot) {
+      if ((any_prot->prot_name != "snmp") || (!any_prot->mib)) continue;
+      prot = any_prot;
+      break;
+    }
+    if (!prot) continue;
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
+
+      return "<h3>SNMP</h3>\n" +
+	get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
+    }
+  }
+
+  return "";
+}
+
+string get_snmp_values(ADT.Trie mib,
+		       array(int) oid_start,
+		       void|array(int) oid_ignore)
+{
+  array(string) res = ({
+    "<th align='left'>Name</th>"
+    "<th align='left'>Value</th>"
+  });
+
+  for (array(int) oid = oid_start; oid; oid = mib->next(oid)) {
+    if (oid_ignore && has_prefix((string)oid, (string)oid_ignore)) continue;
+    string oid_string = ((array(string)) oid) * ".";
+    string name = "";
+    string doc = "";
+    mixed val = "";
+    mixed err = catch {
+	val = mib->lookup(oid);
+	if (zero_type(val)) continue;
+	if (objectp(val)) {
+	  if (val->update_value) {
+	    val->update_value();
+	  }
+	  name = val->name || "";
+	  doc = val->doc || "";
+	  val = sprintf("%s", val);
+	}
+	val = (string)val;
+      };
+    if (err) {
+      name = "Error";
+      val = "";
+      doc = "<tt>" +
+	replace(Roxen.html_encode_string(describe_backtrace(err)),
+		"\n", "<br />\n") +
+	"</tt>";
+    }
+    res += ({
+	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
+		"<td>%s</td>",
+		oid_string,
+		Roxen.html_encode_string(name),
+		Roxen.html_encode_string(val)),
+    });
+    if (sizeof(doc)) {
+      res += ({
+	sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
+      });
+    }
+  }
+
+  return "<table><tr>" +
+    res * "</tr>\n<tr>" +
+    "</tr></table>\n";
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -283,13 +429,15 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons="";
   if( config_perm( "Add Module" ) )
-    dbuttons += "<h2>"+LOCALE(196, "Tasks")+"</h2>"+buttons( c, mn, id );
+    dbuttons += "<h3>"+LOCALE(196, "Tasks")+"</h3>"+buttons( c, mn, id );
   RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
     return "";
 
   ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+
+  string snmp = get_module_snmp(m, mi, id);
 
   string eventlog = get_eventlog( m, id );
 
@@ -328,32 +476,45 @@ string find_module_doc( string cn, string mn, RequestID id )
     dbuttons += "<font color='&usr.warncolor;'><pre>"+
       .State->current_compile_errors[ cn+"!"+mn ]+
       "</pre></font>";
+  string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
+  fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
+  fnas = "<tr><td nowrap=''>"+
+    ((fnas/":</b>")*":</b></td><td><img src='/internal-roxen-unit' width=10 height=1 /></td><td>") +
+    "</td></tr>\n";
   return
-    replace( "<br /><b><font size='+2'>" +
+    replace( "<b><h2>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
-	     + "</font></b><br />"
-                  + EC(TRANSLATE(m->info(id))) + "</p><p>"
+	     + "</h2></b>"
+                  + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
-                  + eventlog + dbuttons +
+                  + dbuttons + snmp + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
-		    "<h2>Developer information</h2>" +
-                    "<b>Identifier:</b> " + mi->sname + "<br />\n"
-		    "<b>Thread safe:</b> " + 
-		    (m->thread_safe ? 
+		    "<h3>Developer information</h3>"
+		    "<table border=0 cellpadding=0 cellspacing=0>"
+                    "<tr nowrap=''><td><b>Identifier:</b></td>"
+		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+		    "<td>" + mi->sname + "</td></tr>\n"
+		    "<td nowrap=''><b>Thread safe:</b></td>"
+		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+		    "<td>" + (m->thread_safe ? 
 		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../actions/?action"
-		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
-		    "<b>Number of accesses:</b> " + my_accesses +
+		    "=locks.pike&class=status'>more info</a>)</small></td></tr>\n"
+		    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
+		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+		    "<td>" + my_accesses +
 #endif
-                    "<br /><br />\n<table border='0' cellspacing='0' cellpadding='0'>"
-		    "<tr><td valign='top'><b>Type:</b> </td><td "
-                    "valign='top'>" + describe_type( m, mi->type, id ) +
-                    "</td></tr></table><br />\n" +
-                    EC(TRANSLATE(m->file_name_and_stuff())) +
+                    "</td></tr>\n"
+		    "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
+		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+		    "<td valign='top'>" + describe_type( m, mi->type, id ) +
+                    "</td></tr>\n"
+                    + fnas +
+		    "</table>\n" +		    
 		    homepage + creators  
-		    + "<h2>"+LOCALE(261,"Inherit tree")+"</h2>"+
+		    + "<h3>"+LOCALE(261,"Inherit tree")+"</h3>"+
                     program_info( m ) +
                     "<dl>" + 
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
@@ -384,9 +545,22 @@ string find_module_documentation( string conf, string mn, RequestID id )
     RXML.TagSet tags=m->query_tag_set();
     if(!tags) return "";
     id = id->clone_me();
-    id->conf = c;
+
+    if (has_prefix (mn, "rxmltags!"))
+      // Ugly kludge: The rxmltags tagdoc has rxml examples that require a
+      // late compat level to render correctly, so we switch to the admin
+      // UI config since it always uses the latest compat level.
+      id->conf = roxen.get_admin_configuration();
+    else
+      id->conf = c;
+
+    mapping(string:int) documented_tags = ([]);
     foreach(sort(indices(tags->get_tag_names())), string name)
-      full_doc += "<p>"+c->find_tag_doc( name, id, 1 )+"</p>";
+    {
+      string tag_doc = id->conf->find_tag_doc( name, id, 1, 0, documented_tags);
+      if (tag_doc && sizeof(tag_doc))
+	full_doc += "<p>"+tag_doc+"</p>";
+    }
   }
 
   return "<br />"+full_doc;
@@ -399,52 +573,93 @@ string module_page( RequestID id, string conf, string module )
 
   string section = RXML.get_var( "section", "form" );
 
-  if( section == "Information" || RXML.get_var( "info_section_is_it", "form" ) )
-    return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
+  if( section == "Status" || RXML.get_var( "info_section_is_it", "form" ) )
+    return find_module_doc( conf, module, id );
 
   if( section == "Docs" )
-    return
-      "<blockquote>"+find_module_documentation( conf, module, id )+"</blockquote>";
+    return find_module_documentation( conf, module, id );
   
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
 }
 
+array(Protocol|array(string)) get_port_for(string url)
+{
+  mapping(string:Configuration|Protocol|string) url_data =
+    roxen->urls[roxen->normalize_url (url, 1)];
+  if(!url_data) {
+    return ({ 0, ({ url }) });
+  }
+  return ({ url_data->port, ({ roxen->normalize_url (url) }) });
+}
+
 string port_for( string url, int settings )
 {
-  if(!roxen->urls[url] ) return "";
-  Protocol p = roxen->urls[url]->port;
+  return low_port_for(get_port_for(url), settings);
+}
+
+string low_port_for(array(Protocol|array(string)) port_info, int settings)
+{
+  [ Protocol p, array(string) urls ] = port_info;
+  if(!urls) {
+    return "";
+  }
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
-  string res =(settings?"<table border=0 cellspacing=0 cellpadding=2>":"")+
+
+  string url =			// FIXME: Report the others too.
+    roxen->normalize_url (urls[0], 1);
+  string res =
 #"
-  <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
-"'/><set variable='var.url' value='"+Roxen.http_encode_string(url)+#"'/>
+  <set variable='var.port' value='"+
+    Roxen.html_encode_string(p->get_key())+ #"'/>
+  <set variable='var.urlconf' value='"+
+    Roxen.html_encode_string (replace (p->urls[url]->conf->name, " ", "-"))+#"'/>
   <emit source='ports' scope='port'>
     <if variable='var.port is &_.port;'>"+
     (settings?
 #"
+ <table border=0 cellspacing=0 cellpadding=4 width='100%'>
    <tr bgcolor='&usr.content-titlebg;'>
-      <td>
+      <td colspan=2>
         <font color='&usr.content-titlefg;' size=+1>
           <b>&_.name;</b>
 	</font>
       </td>
     </tr>
     <tr>
-      <td>":"")+#"
-        <if variable='_.warning != '>
+      <td colspan=2>":"")+#"
+        <if variable='_.warning = ?*'>
            <font color='&usr.warncolor;'><b>&_.warning;</b></font>
            <br clear='all' />
         </if>
-        <emit source='port-urls' port='&_.port;'>
-          <if not variable='_.url is &var.url;'>
-          "+LOCALE(323,"Shared with ")+
-#"<a href='../&_.conf;/'>&_.confname;</a>
-          </if>
-        </emit>
-      "+(settings?
+        <unset variable='var.end'/>
+	<emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'
+	      distinct='conf'>"
+    // No whitespace in this emit
+	  "<if not variable='_.conf is &var.urlconf;'>"
+            "<if not='' variable='var.end'>"
+              "<set variable='var.end' value='.'/>"
+              +LOCALE(323,"Shared with ")+
+            "</if>"
+            "<elseif variable='var.rowinfo = &_.counter;'>"
+              " "+LOCALE("cw","and")+" "
+            "</elseif>"
+            "<else>"
+              ", "
+            "</else>"
+            "<a href='../&_.conf;/'>&_.confname;</a>"
+          "</if>"
+        "</emit>"
+        "&var.end;"+#"
+      </td>
+    </tr>
+    <tr>
+      <td><img src='/internal-roxen-unit' width=20 height=1/></td>
+      <td>
+"
+      +(settings?
 #"<cfg-variables nosave='' source='port-variables' port='&port.port;'/>
-  <br clear='all' /></td></tr>
+  </td></tr>
   ":"")+#"
     </if>
   </emit>";
@@ -491,46 +706,76 @@ string parse( RequestID id )
        return "<cfg-variables source='config-variables' "
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
+    case "ModulePriorities":
+      return module_priorities_page(id, conf);
+       
+
      case "Ports":
-       string res = "<br />\n<blockquote>"
-	 "<input type=hidden name='section' value='Ports' />";
-       foreach( conf->query( "URLs" ), string url )
-       {
-	 res += port_for( url, 1 );
+       string res = 
+	 "<input type=hidden name='section' value='Ports' />"
+	 "<cfg-variables source='config-variables' "
+	 " configuration='"+path[0]+"' section='Ports'/><br clear='all'/>";
+
+       array(string) urls = conf->query("URLs");
+       array(array(Protocol|array(string))) ports =
+	 map(conf->query("URLs"), get_port_for);
+       mapping(Protocol:array(Protocol|array(string))) prot_info = ([]);
+       foreach(ports, array(Protocol|array(string)) port) {
+	 array(Protocol|array(string)) prev;
+	 if (prev = prot_info[port[0]]) {
+	   if (prev[1]) {
+	     prev[1] += port[1];
+	   } else {
+	     prev[1] = port[1];
+	   }
+	   port[0] = 0;
+	   port[1] = 0;
+	 } else {
+	   prot_info[port[0]] = port;
+	 }
        }
-       return res+"</blockquote><cf-save/><br />\n";
+       res += map(ports, low_port_for, 1)*"";
+       return res+"<br /><cf-save/>\n";
        break;
 
      case 0:
      case "":
      case "Status":
-       res = "<br />\n<blockquote><h1>" +
- 	 LOCALE(38,"URLs") + "</h1>";
+       res = "\n<h1>" +
+ 	 LOCALE(299,"URLs") + "</h1>";
+       res += "<table>";
        foreach( conf->query( "URLs" ), string url )
        {
-         int open = (roxen->urls[ url ] 
-                     && roxen->urls[ url ]->port 
-                     && roxen->urls[ url ]->port->bound);
+	 url = (url/"#")[0];
+	 string match_url = roxen.normalize_url (url, 1);
+	 
+         int open = (roxen->urls[ match_url ] 
+                     && roxen->urls[ match_url ]->port 
+                     && roxen->urls[ match_url ]->port->bound);
+	 
          if( !open )
-           res += url + " "+port_for(url,0);
+           res += "<tr><td valign='top'>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
          else if(search(url, "*")==-1)
-           res += ("<a target='server_view' href='"+url+"'>"+
-                   url+"</a> "+port_for(url,0)+"<br />\n");
+           res += ("<tr><td valign='top'>" + "<a target='server_view' href='"+url+"'>"+
+                   url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += ("<a target='server_view' href='"+
+	   res += ("<tr><td valign='top'><a target='server_view' href='"+
                    replace(url, "*", gethostname() )+"'>"+
-                   url+"</a> "+port_for(url,0)+"<br />\n");
+                   url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
          else
-	   res += url + " "+port_for(url,0)+"<br />\n";
+	   res += "<tr><td valign='top'>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
        }
+       res += "</table>\n";
 
        res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
 
        res += "<br /><table><tr><td valign=\"top\">"
 	 "<h2>"+LOCALE(260, "Request status")+"</h2>";
        res += status(conf);
-       res += "</td><td valign=top>"
-	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
+       res += "</td>"
+	 "<td><img src='/internal-roxen-unit' width='10' height='1' /></td>"
+	 "<td valign=top>"
+	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='100%'>\n";
 
        int total = conf->datacache->hits+conf->datacache->misses;
 
@@ -539,18 +784,21 @@ string parse( RequestID id )
 
        res += 
            sprintf("<tr><td><b>" + LOCALE(293, "Hits") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>%%</td></tr>\n",
                    conf->datacache->hits,
                    conf->datacache->hits*100 / total );
        res += 
            sprintf("<tr><td><b>" + LOCALE(294, "Misses") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>%%</td></tr>\n",
                    conf->datacache->misses,
                    conf->datacache->misses*100 / total );
 
        res += 
            sprintf("<tr><td><b>" + LOCALE(295, "Entries") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>Kb</td></tr>\n",
                    sizeof( conf->datacache->cache ),
                    (conf->datacache->current_size / 1024 ) );
        
@@ -588,9 +836,149 @@ string parse( RequestID id )
        res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
        if( sizeof( conf->error_log ) )
 	 res+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
-       return res+"<br />\n";
+       res += "<br />\n";
+       res += get_site_snmp(conf);
+       return res;
     }
   } else
     return module_page( id, path[0], path[2] );
   return "";
 }
+
+
+
+string module_priorities_page( RequestID id, Configuration c)
+{
+
+  array modids = map( indices( c->otomod )-({0}),
+		      lambda(mixed q){ return c->otomod[q]; });
+
+  array mod_types = ({ 
+    ([ "title" : "First Try Modules", "type" : MODULE_FIRST  ]), 
+    ([ "title" : "Filter Modules",    "type" : MODULE_FILTER ]), 
+    ([ "title" : "Last Try Modules",  "type" : MODULE_LAST   ]), 
+    
+  });
+  
+  array mods = map( modids,
+		   lambda(string q) {
+		     object mod = roxen.find_module( (q/"#")[0] );
+		     object modi = c->find_module(q);
+		     int c = (int)((q/"#")[-1]);
+		     return ([
+		       "id":q,
+		       "name":mod->get_name(),
+		       "name2":mod->get_name()+(c?" #"+(c+1):""),
+		       "modi":modi,
+		       "instance":c,
+		       "pri":modi->query("_priority"),
+		       "type":modi->module_type,
+		     ]);
+		   } );
+
+ 
+  string res = "<input type=hidden name='section' value='ModulePriorities' />";
+
+  res += "<cf-save/>";
+
+  res += "<h1>Module priorities for site "+Roxen.roxen_encode(c->name,"html")+"</h1>";
+  res += "9 is highest and 0 is lowest.<br /><br />";
+
+  res += "<table border='0' cellpadding='0' cellspacing='2'>";
+
+  mapping modules_seen = ([ ]);
+
+  foreach(mod_types, mapping mt) {
+    res += "<tr><td colspan='3'><h2>"+mt->title+"</h2></td></tr>\n";
+
+    array _mods = Array.filter(mods, lambda(mapping m) { return m->type & mt->type; });
+
+    foreach( _mods, mapping m ) {
+      int modpri = m->pri;
+      string varname = "prichange_"+replace(m->id,"#","!");
+      if(id->variables[varname]) {
+	modpri = (int)(id->variables[varname]);
+	if(modpri < 0)
+	  modpri = 0;
+	if(modpri > 9)
+	  modpri = 9;
+
+	if(m->pri != modpri) {
+	  m->oldpri = m->pri;
+	  m->pri = modpri;
+	  m->modi->getvar("_priority")->set(m->pri);
+	  if( m->modi->save_me )
+	    m->modi->save_me();
+	  else
+	    m->modi->save();
+	}
+      }
+    }
+
+    _mods = Array.sort_array(_mods, lambda(mapping m1, mapping m2) { 
+				      if(m2->pri==m1->pri) 
+					return m2->name2 > m1->name2;
+				      return m2->pri > m1->pri;
+				    }
+			     );
+
+    mapping seen_pri = ([ ]);
+    int pri_warn = 0;
+
+    foreach( _mods, mapping m ) {
+      
+      res += "<tr><td>" + m->name2 + "</td>";
+      res+= "<td><img src='/internal-roxen-unit' width='20' height='1'/></td>";
+
+      res += "<td> Priority: ";
+
+      if(seen_pri[m->pri])
+	pri_warn = 1;
+      else
+	seen_pri[m->pri] = 1;
+
+      if(!modules_seen[m->name2]) {
+	res += "<select name='prichange_"+replace(m->id,"#","!")+"'>";
+	foreach( ({ 0,1,2,3,4,5,6,7,8,9 }), int pri) {
+	  if(m->pri == pri)
+	    res+="<option selected='selected' value='"+pri+"'>"+pri+"</option>";
+	  else
+	    res+="<option value='"+pri+"'>"+pri+"</option>";
+	}
+	res+="</select>";
+	modules_seen[m->name2] = 1;
+      } else {
+	res += (string)m->pri + " (change above)";
+      }
+
+
+      res+="</td></tr>\n";
+      
+      res += "<tr><td colspan='3'>";
+
+      if(m->oldpri)
+	res += "<imgs src='&usr.err-1;'/> Priority changed from " + m->oldpri + " to " + m->pri +".";
+
+      res += "</td></tr>";
+    }
+    
+    if(pri_warn) {
+      res += "<tr><td colspan='3'>";
+      res+= "<br /><imgs src='&usr.err-2;'/> Some modules have the same priority and will be called in random order.";
+      res += "</td></tr>";
+    }
+
+    res += "<tr><td colspan='3'>";
+    res+= "<img src='/internal-roxen-unit' width='1' height='20'/>";
+    res += "</td></tr>";
+
+  }
+  
+  res += "</table>";
+
+  res += "<cf-save/>";
+
+  return res;
+}
+
+

@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc="Copy the contents of another channel to this channel. Supported 'source' channels are 'red' 'green' 'value' 'saturation' and 'image'";
 

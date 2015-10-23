@@ -1,4 +1,4 @@
-# $Id: supports,v 1.90 2001/08/08 21:45:51 js Exp $
+# $Id$
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -76,10 +76,9 @@
 #! trade - The browser supports the &trade; entity.
 #! unknown - The browser is not known, hence the supports classes can not be trusted.
 #! vrml - The browser supports VRML.
-#! wbmp0 - The browser supports Wireless Bitmap Picture Format, type 0.
-# wml1.0 and wml1.1 are so different that you cannot use a support variable.
-#! wml1.0 - The browser supports Wireless Markup Language 1.0.
-#! wml1.1 - The browser supports Wireless Markup Language 1.1.
+# Keep the flags wbmp0, wml1.0 and wml1.1 for compatibility.
+#! wbmp - The browser supports Wireless Bitmap Picture Format.
+#! wml - The browser supports Wireless Markup Language 1.1.
 # </flags>
 #!
 #! Supports variables
@@ -141,7 +140,8 @@
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
 .*compatible.*opera.[4-9].*	trade
-.*compatible.*opera.[5-9].*	*javascript=1.3
+.*compatible.*opera.[5-9].*	*javascript=1.3, stylesheets
+
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push, -layer, -js_global_event
@@ -166,6 +166,16 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 				js_image_object, js_inner_html, pjpeginline,\
 				pnginline, stylesheets, tables, tablecolor, tableimages,\
 				*javascript=1.5
+
+# section opera {
+.*		basic, tables, jpeginline, font, imagealign,\
+		cookies, push, pull, backgrounds, ssl,\
+		java, frames, autogunzip, js_image_object, javascript,\
+		align, center, images \
+		*javascript=1.5, js_global_event,\
+		js_inner_html, pnginline, trade, stylesheets
+# }
+
 
 #section netsurfer {
 # Netsurfer is a popular commercial Web browser for NEXTSTEP. for more
@@ -297,26 +307,26 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 #
 
 #section nokia {
-^nokia7110.*	phone, wml1.1, wbmp0
-^nokia.7110.*	wml1.1, wbmp0
-.*		wml1.1, wbmp0
+^nokia7110.*	phone, wml1.1, wbmp0, wml, wbmp
+^nokia.7110.*	wml1.1, wbmp0, wml, wbmp
+.*		wml1.1, wbmp0, wml, wbmp
 # }
 
 #section wapide-sdk {
-.*		wml1.1, wbmp0
+.*		wml1.1, wbmp0, wml, wbmp
 # }
 
 #section up.browser {
-.*		wml1.1, wbmp0
+.*		wml1.1, wbmp0, wml, wbmp
 .*si25.*	phone, wml1.0, wbmp0, -wml1.1, *width=90, *height=33
 # }
 
 #section mc218 {
-.*		wml1.1, gifinline
+.*		wml1.1, wml, gifinline
 # }
 
 #section jigsaw {
-.*		wml1.1, wbmp0
+.*		wml1.1, wbmp0, wml, wbmp
 # }
 
 #

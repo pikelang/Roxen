@@ -1,6 +1,8 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.8 2001/08/24 14:46:09 nilsson Exp $";
+constant cvs_version= "$Id$";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;
@@ -31,7 +33,7 @@ void create()
 	   "root/dir/)") );
 }
 
-string mp, error_msg;
+string mp;
 
 Filesystem.Tar tar;
 
@@ -48,7 +50,7 @@ void start()
   tar = 0;
   if( catch(tar = Filesystem.Tar( tf )) )
   {
-    report_error( "Failed to open tar-file "+tf+"!" );
+    report_error( "Failed to open tar-file "+tf+"!\n" );
     tar = 0;
   }
   else if( strlen( path ) )

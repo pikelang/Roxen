@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.3 2000/09/18 17:34:46 grubba Exp $ */
+/* $Id$ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0
@@ -15,7 +15,7 @@ string doc = LOCALE(50,
 		    "List all active FTP sessions and what files they are "
 		    "currently transferring.");
 
-static string describe_ftp(object ftp)
+protected string describe_ftp(object ftp)
 {
   string res = "<tr>";
 

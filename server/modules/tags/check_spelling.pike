@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -6,12 +6,18 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.16 2001/03/08 14:35:46 per Exp $";
+constant cvs_version = "$Id$";
 
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
 constant module_doc = 
-#"Checks for misspelled words inside the <tt>&lt;spell&gt;</tt> tag.";
+#"Checks for misspelled words using the <tt>&lt;emit#spellcheck&gt;</tt> or
+<tt>&lt;spell&gt;</tt> tags.";
+
+array(string) query_provides()
+{
+  return ({ "spellchecker" });
+}
 
 mapping find_internal(string f, RequestID id)
 {
@@ -26,19 +32,41 @@ mapping find_internal(string f, RequestID id)
 }
 
 void create() {
-  defvar("spellchecker","/usr/bin/ispell",
+  defvar("spellchecker",
+#ifdef __NT__
+	 lambda() {
+	   catch {
+	     // RegGetValue() throws if the key isn't found.
+	     return replace(RegGetValue(HKEY_LOCAL_MACHINE,
+					"SOFTWARE\\Aspell",
+					"Path") + "\\aspell.exe", "\\", "/");
+	   };
+	   // Reasonable default.
+	   return "C:/Program Files/Aspell/bin/aspell.exe";
+	 }(),
+#else
+	 "/usr/bin/aspell",
+#endif
 	 "Spell checker", TYPE_STRING,
          "Spell checker program to use.");
 
   defvar("dictionary", "american", "Default dictionary", TYPE_STRING,
-         "The default dictionary used, when not specified in the tag.");
+         "The default dictionary used, when not specified in the "
+	 "&lt;spell&gt; tag.");
 
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
-         "The default report type used, when not specified in the tag.",
+         "The default report type used, when not specified in the "
+	 "&lt;spell&gt; tag.",
          ({ "popup","table" }) );
 
   defvar("prestate", "", "Prestate",TYPE_STRING,
-         "If specified, only check spelling when this prestate is present.");
+         "If specified, only check spelling in the &lt;spell&gt; tag "
+	 "when this prestate is present.");
+
+  defvar("use_utf8", 1, "Enable UTF-8 support",
+	 TYPE_FLAG,
+	 "If set takes advantage of UTF-8 support in Aspell. NOTE: Requires "
+	 "Aspell version 0.60 or later.");
 
 }
 
@@ -66,7 +94,7 @@ string do_spell(string q, mapping args, string content,RequestID id)
   string dict=args->dictionary || query("dictionary");
   if(!sizeof(dict)) dict="american";
 
-  string text=Protocols.HTTP.unentity(content);
+  string text=Parser.parse_html_entities (content, 1);
 
   text=replace(text,({"\n","\r"}),({" "," "}));
   text=Array.everynth((replace(text,">","<")/"<"),2)*" ";
@@ -99,15 +127,13 @@ function getObj(obj) {
     return eval(\"document.all.\" + obj);
 }
 
-function getRecursiveLeft(o)
-{
+function getRecursiveLeft(o) {
   if(o.tagName == \"BODY\")
     return o.offsetLeft;
   return o.offsetLeft + getRecursiveLeft(o.offsetParent);
 }
 
-function getRecursiveTop(o)
-{
+function getRecursiveTop(o) {
   if(o.tagName == \"BODY\")
     return o.offsetTop;
   return o.offsetTop + getRecursiveTop(o.offsetParent);
@@ -131,8 +157,7 @@ function showPopup(popupid,e) {
   }
 }
 
-function checkPopupCoord(e)
-{
+function checkPopupCoord(e) {
   p = getObj(spellcheckpopup);
   if(isNav4) {
     x=e.pageX;
@@ -198,26 +223,61 @@ class TagSpell {
   }
 }
 
-array spellcheck(array(string) words,string dict) {
-  array res=({ });
-
+string run_spellcheck(string|array(string) words, void|string dict)
+// Returns 0 on failure.
+{
   object file1=Stdio.File();
   object file2=file1->pipe();
   object file3=Stdio.File();
   object file4=file3->pipe();
   string spell_res;
+  int use_utf8 = query("use_utf8");
 
-  Process.create_process( ({ query("spellchecker"),"-a","-d",dict }) ,(["stdin":file2,"stdout":file4 ]) );
+  if(stringp(words))
+    words = replace(words, "\n", " ");
+  if(!Stdio.exist(query("spellchecker")))
+  {
+    werror("check_spelling: Missing binary in %s\n", query("spellchecker"));
+    return 0;
+  }
+  Process.Process p =
+    Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
+			   (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
+                           (stringp(words) ? ({ "-H" })         : ({ }) ) +
+                           (dict           ? ({ "-d", dict })   : ({ }) ),
+                           ([ "stdin":file2,"stdout":file4 ]));
 
+  string text = stringp(words) ?
+               " "+words /* Extra space to ignore aspell commands
+                            (potential security problem), compensated
+                            below. */ :
+               " "+words*"\n "+"\n" /* Compatibility mode. */;
 
-  file1->write(" "+words*"\n "+"\n");
-  file1->close();
+  //  Aspell 0.60 or later understands UTF-8 encoding natively
+  if (use_utf8)
+    text = string_to_utf8(text);
+  else
+    text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
+  
+  Stdio.sendfile(({ text }), 0, 0, -1, 0, file1,
+                 lambda(int bytes) { file1->close(); });
+
   file2->close();
   file4->close();
   spell_res=file3->read();
   file3->close();
+  
+  if (use_utf8 && spell_res)
+    catch { spell_res = utf8_to_string(spell_res); };
+  
+  return p->wait() == 0 ? spell_res : 0;
+}
 
-  array ispell_data=spell_res/"\n";
+array spellcheck(array(string) words,string dict)
+{
+  array res=({ });
+
+  array ispell_data = (run_spellcheck(words, dict) || "")/"\n";
 
   if(sizeof(ispell_data)>1) {
     int i,row=0,pos=0,pos2;
@@ -246,11 +306,85 @@ array spellcheck(array(string) words,string dict) {
   }
 }
 
+class TagEmitSpellcheck {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "spellcheck";
+
+  mapping(string:RXML.Type) req_arg_types = ([
+      "text" : RXML.t_text(RXML.PEnt),
+    ]);
+  
+  array get_dataset(mapping args, RequestID id)
+  {
+    array(mapping(string:string)) entries = ({});
+
+    string dict = args["dict"];
+    string text = args["text"];
+    if(text)
+    {
+      string s = run_spellcheck(text, dict);
+      if(!s)
+      {
+	if(args["error"])
+	  RXML.user_set_var(args["error"], "checkfailed");
+	return ({});
+      }
+      foreach(s/"\n", string line)
+      {
+	line -= "\r";   // Needed for aspell on Windows.
+	if(!sizeof(line))
+	  continue;
+
+	switch(line[0])
+	{
+	  case '*':
+	    // FIXME: Optimisation: Make aspell not send this!
+	    continue;
+	    
+	  case '&':
+	    if(sscanf(line, "& %s %*d %d: %s", string word, int offset, string suggestions) == 4)
+	      entries += ({ ([ "word":word,
+			       "offset":offset-1 /* For extra space (see above)! */,
+			       "suggestions":suggestions ]) });
+	    continue;
+	    
+	  case '#':
+	    if(sscanf(line, "# %s %d", string word, int offset) == 2)
+	      entries += ({ ([ "word":word,
+			       "offset":offset-1 /* For extra space (see above)! */ ]) });
+	    continue;
+	}
+      }
+    }
+
+    return entries;
+  }
+}
+
 
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"spell":#"<desc cont='cont'><p><short>
+"emit#spellcheck":({ #"<desc type='plugin'><p><short>
+  Lists from a text words that are not found in a
+  dictionary using aspell.</short></p>
+</desc>
+
+<attr name='text' value='string'><p>The text to be spell checked. Tags are allowed in the text.</p></attr>
+
+<attr name='dict' value='string'><p>Optionally select a dictionary.</p></attr>
+
+<attr name='error' value='string'><p>Variable to set if an error occurs.</p></attr>
+",
+ ([
+   "&_.word;":#"<desc type='entity'><p>The word not found in the dictionary.</p></desc>",
+   "&_.offset;":#"<desc type='entity'><p>Character offset to the word in the text.</p></desc>",
+   "&_.suggestions;":#"<desc type='entity'><p>If present, a comma and space separated list of suggested word replacements.</p></desc>"
+ ])
+}),
+
+"spell":#"<desc type='cont'><p><short>
  Checks words for spelling problems.</short> The spellchecker uses the ispell dictionary.
 </p></desc>
 

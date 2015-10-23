@@ -4,24 +4,32 @@
 <language>eng</language>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
+<file>../config_interface/actions/connections.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
+<file>../config_interface/actions/debug_summary.pike</file>
 <file>../config_interface/actions/feature_list.pike</file>
 <file>../config_interface/actions/flush.pike</file>
 <file>../config_interface/actions/ftpstatus.pike</file>
 <file>../config_interface/actions/generate_rsa.pike</file>
+<file>../config_interface/actions/licensestatus.pike</file>
 <file>../config_interface/actions/listfonts.pike</file>
 <file>../config_interface/actions/locks.pike</file>
 <file>../config_interface/actions/make_rsa_csr.pike</file>
 <file>../config_interface/actions/make_selfsigned_dsa.pike</file>
 <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
+<file>../config_interface/actions/make_site_template.pike</file>
 <file>../config_interface/actions/openfiles.pike</file>
+<file>../config_interface/actions/patcher.pike</file>
+<file>../config_interface/actions/pike_profiling.pike</file>
 <file>../config_interface/actions/proc.pike</file>
 <file>../config_interface/actions/reloadconfigurations.pike</file>
+<file>../config_interface/actions/request_profiling.pike</file>
 <file>../config_interface/actions/resolv.pike</file>
 <file>../config_interface/actions/restart.pike</file>
 <file>../config_interface/actions/ssl_common.pike</file>
 <file>../config_interface/actions/tablist.pike</file>
 <file>../config_interface/actions/threads.pike</file>
+<file>../config_interface/actions/upload_license.pike</file>
 
 <str id="1">
 <o>Pike memory usage information</o>
@@ -29,7 +37,7 @@
 </str>
 
 <str id="2">
-<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t></t>
 </str>
 
@@ -279,7 +287,7 @@
 </str>
 
 <str id="38">
-<o>Backend thread</o>
+<o>backend thread</o>
 <t></t>
 </str>
 
@@ -309,7 +317,7 @@
 </str>
 
 <str id="231">
-<o>Debug information</o>
+<o>Debug Information</o>
 <t></t>
 </str>
 
@@ -394,7 +402,7 @@
 </str>
 
 <str id="68">
-<o>supportdb</o>
+<o>Supports database</o>
 <t></t>
 </str>
 
@@ -754,13 +762,8 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <t></t>
 </str>
 
-<str id="41">
-<o>Change roxen version...</o>
-<t></t>
-</str>
-
 <str id="42">
-<o>If you have more than one roxen version installed
+<o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t></t>
@@ -787,7 +790,7 @@ change the currently running version.</o>
 </str>
 
 <str id="47">
-<o>Changing roxen version</o>
+<o>Shutting down and changing Roxen version</o>
 <t></t>
 </str>
 
@@ -812,7 +815,7 @@ change the currently running version.</o>
 </str>
 
 <str id="137">
-<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t></t>
 </str>
 
@@ -833,5 +836,655 @@ change the currently running version.</o>
 
 <str id="140">
 <o>Unavailable features</o>
+<t></t>
+</str>
+
+<str id="141">
+<o>Source</o>
+<t></t>
+</str>
+
+<str id="142">
+<o>Program</o>
+<t></t>
+</str>
+
+<str id="143">
+<o>Clones</o>
+<t></t>
+</str>
+
+<str id="144">
+<o>Create site template</o>
+<t></t>
+</str>
+
+<str id="145">
+<o>Create a site template from a site configuration</o>
+<t></t>
+</str>
+
+<str id="146">
+<o>Coundn't find configuration</o>
+<t></t>
+</str>
+
+<str id="147">
+<o>Select configuration to base the template on.</o>
+<t></t>
+</str>
+
+<str id="148">
+<o>Selected configuration</o>
+<t></t>
+</str>
+
+<str id="149">
+<o>Coundn't create directory</o>
+<t></t>
+</str>
+
+<str id="150">
+<o>Failed to create template file</o>
+<t></t>
+</str>
+
+<str id="151">
+<o>Failed to write template file</o>
+<t></t>
+</str>
+
+<str id="152">
+<o>Site template created successfully.</o>
+<t></t>
+</str>
+
+<str id="154">
+<o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
+<t></t>
+</str>
+
+<str id="155">
+<o>Failed to write CSR to %s.</o>
+<t></t>
+</str>
+
+<str id="156">
+<o>Active connections</o>
+<t></t>
+</str>
+
+<str id="157">
+<o>All currently active connections</o>
+<t></t>
+</str>
+
+<str id="158">
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="159">
+<o>Sent (Mib)</o>
+<t></t>
+</str>
+
+<str id="160">
+<o>Kibyte/s</o>
+<t></t>
+</str>
+
+<str id="161">
+<o>Total bandwidth</o>
+<t></t>
+</str>
+
+<str id="163">
+<o>Debug summary</o>
+<t></t>
+</str>
+
+<str id="164">
+<o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
+<t></t>
+</str>
+
+<str id="165">
+<o>License status</o>
+<t></t>
+</str>
+
+<str id="166">
+<o>Show information about the installed licenses and their usage.</o>
+<t></t>
+</str>
+
+<str id="168">
+<o>Upload a new Roxen license file.</o>
+<t></t>
+</str>
+
+<str id="169">
+<o>The garbage collector freed %d of %d things (%d%%).</o>
+<t></t>
+</str>
+
+<str id="170">
+<o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
+<t></t>
+</str>
+
+<str id="172">
+<o>Garbage collector status</o>
+<t></t>
+</str>
+
+<str id="173">
+<o>Internal inconsistency</o>
+<t></t>
+</str>
+
+<str id="174">
+<o>Object(s) missing in object link list.</o>
+<t></t>
+</str>
+
+<str id="175">
+<o>Warning</o>
+<t></t>
+</str>
+
+<str id="176">
+<o>Number of objects changed during object walkthrough (probably due to automatic gc call) - the list below is not complete.</o>
+<t></t>
+</str>
+
+<str id="177">
+<o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
+<t></t>
+</str>
+
+<str id="178">
+<o>Total</o>
+<t></t>
+</str>
+
+<str id="179">
+<o>Canonic URL: </o>
+<t></t>
+</str>
+
+<str id="180">
+<o>Upload license...</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Download</o>
+<t></t>
+</str>
+
+<str id="153">
+<o>Download Debug Log</o>
+<t></t>
+</str>
+
+<str id="162">
+<o>Pike profiling information</o>
+<t></t>
+</str>
+
+<str id="167">
+<o>Show some information about how much time has been spent in various functions. Mostly useful for developers.</o>
+<t></t>
+</str>
+
+<str id="181">
+<o>Request profiling information</o>
+<t></t>
+</str>
+
+<str id="182">
+<o>Show some information about how how much time has been spent in requests. Mostly useful for developers.</o>
+<t></t>
+</str>
+
+<str id="183">
+<o>All times are in microseconds.</o>
+<t></t>
+</str>
+
+<str id="184">
+<o>NOTE: This information is only available if the server has been stared with &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</o>
+<t></t>
+</str>
+
+<str id="185">
+<o>This information is only available if the pike binary has been compiled with &lt;tt&gt;--with-profiling&lt;/tt&gt;.</o>
+<t></t>
+</str>
+
+<str id="186">
+<o>Refresh</o>
+<t></t>
+</str>
+
+<str id="187">
+<o>Reset</o>
+<t></t>
+</str>
+
+<str id="188">
+<o>Unable to parse URL.</o>
+<t></t>
+</str>
+
+<str id="296">
+<o>HTTP auth</o>
+<t></t>
+</str>
+
+<str id="297">
+<o>Form variables</o>
+<t></t>
+</str>
+
+<str id="325">
+<o>HTTP Cookies</o>
+<t></t>
+</str>
+
+<str id="326">
+<o>Patch management</o>
+<t></t>
+</str>
+
+<str id="327">
+<o>Show information about the available patches and their status.</o>
+<t></t>
+</str>
+
+<str id="328">
+<o>Installed by:</o>
+<t></t>
+</str>
+
+<str id="329">
+<o>Installed:</o>
+<t></t>
+</str>
+
+<str id="330">
+<o>Unknown</o>
+<t></t>
+</str>
+
+<str id="331">
+<o>Uninstalled:</o>
+<t></t>
+</str>
+
+<str id="332">
+<o>Uninstalled by:</o>
+<t></t>
+</str>
+
+<str id="333">
+<o>Description:</o>
+<t></t>
+</str>
+
+<str id="334">
+<o>Originator:</o>
+<t></t>
+</str>
+
+<str id="335">
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="336">
+<o>No</o>
+<t></t>
+</str>
+
+<str id="337">
+<o>Flags:</o>
+<t></t>
+</str>
+
+<str id="338">
+<o>Platforms:</o>
+<t></t>
+</str>
+
+<str id="339">
+<o>All platforms</o>
+<t></t>
+</str>
+
+<str id="340">
+<o>Platform:</o>
+<t></t>
+</str>
+
+<str id="341">
+<o>Platform</o>
+<t></t>
+</str>
+
+<str id="342">
+<o>Target version:</o>
+<t></t>
+</str>
+
+<str id="343">
+<o>All versions</o>
+<t></t>
+</str>
+
+<str id="344">
+<o>installed</o>
+<t></t>
+</str>
+
+<str id="345">
+<o>imported</o>
+<t></t>
+</str>
+
+<str id="346">
+<o>unavailable</o>
+<t></t>
+</str>
+
+<str id="347">
+<o>Dependencies:</o>
+<t></t>
+</str>
+
+<str id="348">
+<o>None</o>
+<t></t>
+</str>
+
+<str id="349">
+<o>New file:</o>
+<t></t>
+</str>
+
+<str id="350">
+<o>New files:</o>
+<t></t>
+</str>
+
+<str id="351">
+<o>Replaced file:</o>
+<t></t>
+</str>
+
+<str id="352">
+<o>Replaced files:</o>
+<t></t>
+</str>
+
+<str id="353">
+<o>Deleted file:</o>
+<t></t>
+</str>
+
+<str id="354">
+<o>Deleted files:</o>
+<t></t>
+</str>
+
+<str id="355">
+<o>Patched file:</o>
+<t></t>
+</str>
+
+<str id="356">
+<o>Patched files:</o>
+<t></t>
+</str>
+
+<str id="357">
+<o>No patches found</o>
+<t></t>
+</str>
+
+<str id="358">
+<o>Uninstall selected patches</o>
+<t></t>
+</str>
+
+<str id="359">
+<o>Install selected patches</o>
+<t></t>
+</str>
+
+<str id="360">
+<o>Importing</o>
+<t></t>
+</str>
+
+<str id="361">
+<o>Patch successfully imported.</o>
+<t></t>
+</str>
+
+<str id="362">
+<o>Could not import patch.</o>
+<t></t>
+</str>
+
+<str id="363">
+<o>Uninstalling</o>
+<t></t>
+</str>
+
+<str id="364">
+<o>Done!</o>
+<t></t>
+</str>
+
+<str id="365">
+<o>Failed to uninstall the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="366">
+<o>Patch uninstalled successfully. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="367">
+<o>%d out of %d patches sucessfully uninstalled. See the log below for details.</o>
+<t></t>
+</str>
+
+<str id="368">
+<o>The server needs to be restarted.</o>
+<t></t>
+</str>
+
+<str id="369">
+<o>Would you like to do  that now?</o>
+<t></t>
+</str>
+
+<str id="370">
+<o>Installing</o>
+<t></t>
+</str>
+
+<str id="371">
+<o>Failed to install the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="372">
+<o>Patch successfully installed. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="373">
+<o>Import a New Patch</o>
+<t></t>
+</str>
+
+<str id="374">
+<o>Select local file to upload:</o>
+<t></t>
+</str>
+
+<str id="375">
+<o>Imported Patches</o>
+<t></t>
+</str>
+
+<str id="376">
+<o>These are patches that are not currently installed; they are imported but not applied. It should be safe to remove them from disk. They can be found in local/patches/.</o>
+<t></t>
+</str>
+
+<str id="377">
+<o>Click on a patch for more information.</o>
+<t></t>
+</str>
+
+<str id="378">
+<o>Installed Patches</o>
+<t></t>
+</str>
+
+<str id="379">
+<o>Click on a Patch for more information.</o>
+<t></t>
+</str>
+
+<str id="380">
+<o>Configure cache settings</o>
+<t></t>
+</str>
+
+<str id="381">
+<o>The configured maximum size %s is divided dynamically between the
+cache managers based on the usage for the last half hour. If the
+caches are not full then all free space is assigned to each one of
+them. They will shrink to the configured maximum size as they fill up.</o>
+<t></t>
+</str>
+
+<str id="382">
+<o>Cache manager</o>
+<t></t>
+</str>
+
+<str id="383">
+<o>Size limit</o>
+<t></t>
+</str>
+
+<str id="384">
+<o>Input rate</o>
+<t></t>
+</str>
+
+<str id="385">
+<o>Cost HR</o>
+<t></t>
+</str>
+
+<str id="386">
+<o>Cache manager: </o>
+<t></t>
+</str>
+
+<str id="387">
+<o>Lookups</o>
+<t></t>
+</str>
+
+<str id="388">
+<o>Size/entry</o>
+<t></t>
+</str>
+
+<str id="389">
+<o>Byte HR</o>
+<t></t>
+</str>
+
+<str id="390">
+<o>Create cost</o>
+<t></t>
+</str>
+
+<str id="391">
+<o>Cost/entry</o>
+<t></t>
+</str>
+
+<str id="392">
+<o>&lt;i&gt;Cost HR&lt;/i&gt; is the cost hit rate, i.e. every hit and miss is
+weighted with the cost for each entry according to the cost metric of
+the cache manager. Note that it uses the approximation that every
+cache miss is followed by the addition of a new cache entry.</o>
+<t></t>
+</str>
+
+<str id="393">
+<o>Garbage Collector</o>
+<t></t>
+</str>
+
+<str id="394">
+<o>The garbage collector has not run yet.</o>
+<t></t>
+</str>
+
+<str id="395">
+<o>%d seconds since the last garbage collection. The following statistics are over approximately the last hour.</o>
+<t></t>
+</str>
+
+<str id="396">
+<o>Time spent in the garbage collector:</o>
+<t></t>
+</str>
+
+<str id="397">
+<o>Size of garbage collected entries:</o>
+<t></t>
+</str>
+
+<str id="398">
+<o>stale</o>
+<t></t>
+</str>
+
+<str id="399">
+<o>timed out</o>
+<t></t>
+</str>
+
+<str id="400">
+<o>Garbage collection ratio:</o>
+<t></t>
+</str>
+
+<str id="401">
+<o>Note that the garbage collector referred to here is not the same as
+the one for the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
+cache&lt;/a&gt;. This is the low-level garbage collector used internally by
+the Pike interpreter.</o>
+<t></t>
+</str>
+
+<str id="402">
+<o>Cache</o>
 <t></t>
 </str>

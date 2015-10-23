@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1998 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "roxenlib";
@@ -56,14 +56,14 @@ Image.Image get_channel( Image.Layer from, string channel )
 
 Image.Layer add_channel( Image.Layer to, string channel, object img, int xp, int yp )
 {
-  Image.image i = get_channel( to, channel );
+  Image.Image i = get_channel( to, channel );
   if(!i)
   {
     if(!xp && !yp)
       i = img;
     else
     {
-      i = Image.image( img->xsize()+xp, img->ysize()+yp );
+      i = Image.Image( img->xsize()+xp, img->ysize()+yp );
       i->paste( img, xp, yp );
     }
   }
@@ -124,8 +124,8 @@ string internal_parse_layer(string t, mapping m, string c, int line,
   l->set_alpha_value( 1.0 - ((float)m->opaque_value/100.0) );
 
   if( m->width && m->height )
-    l->set_image( Image.image( (int)m->width, (int)m->height ),
-                  Image.image( (int)m->width, (int)m->height ) );
+    l->set_image( Image.Image( (int)m->width, (int)m->height ),
+                  Image.Image( (int)m->width, (int)m->height ) );
 
 
   /* generate the image and the mask.. */

@@ -3,8 +3,8 @@
 inherit Variable.String;
 
 constant type="Email";
-static int check_domain=1;
-static int _may_be_empty=0;
+protected int check_domain=1;
+protected int _may_be_empty=0;
 
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>
@@ -26,6 +26,9 @@ array(string) verify_set( string new_value ) {
   if(arrayp(tmp)) return tmp;
   new_value=tmp;
 
+  if(!has_value(new_value, "@"))
+    return ({ LOCALE(512,"This does not look like a valid email address."), new_value });
+
   string user, domain;
   sscanf(new_value, "%s@%s", user, domain);
 
@@ -36,7 +39,7 @@ array(string) verify_set( string new_value ) {
     return ({ LOCALE(314,"The email address domain contains forbidden characters."), new_value });
 
   sscanf(lower_case(user),
-	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._]%s", tmp); // More characters?
+	 "%*[-abcdefghijklmnopqrstuvwxyz0123456789._+]%s", tmp); // More characters?
   if(sizeof(tmp))
     return ({ LOCALE(315,"The email address user contains forbidden characters."), new_value });
 
@@ -54,15 +57,51 @@ array(string) verify_set( string new_value ) {
     return ({ "Du ska inte ha något!", "krukon@pugo.org" });
 #endif
 
-  if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
+#ifndef NO_DNS
+  if(check_domain &&
+#ifdef __NT__
+     !get_mx(domain) /* Workaround for [bug 3992] */
+#else
+     !Protocols.DNS.client()->get_primary_mx(domain)
+#endif
+     )
     return ({ sprintf(LOCALE(319,"The domain %s could not be found."),domain),
 	      new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
+#endif /* !NO_DNS */
 
   return ({ 0, new_value });
 }
 
-static string|array(string) mailparser(string address)
+#if constant(Thread.Queue)
+
+class DNSclient
+{
+  Protocols.DNS.async_client dns = Protocols.DNS.async_client();
+  Thread.Queue queue = Thread.Queue();
+  string result;
+  void got_result(mixed mx)
+  {
+    if (mx && sizeof(mx))
+      result = mx[0];
+    queue->write(".");
+  }
+  void create(string domain)
+  {
+    dns->get_mx(domain, got_result);
+    queue->read();
+  }
+  string data() { return result; }
+}
+
+string get_mx(string domain)
+{
+  object client = DNSclient(domain);
+  return client->data();
+}
+#endif
+
+protected string|array(string) mailparser(string address)
 //! A futile attempt to comply with RFC 822
 {
   string new="";
@@ -87,7 +126,7 @@ static string|array(string) mailparser(string address)
     if(c=="(") comment_level++;
     if(c==")") {
       if(!comment_level)
-	return ({ "Mismatched paranthesis", address });
+	return ({ "Mismatched parenthesis", address });
       c="";
       comment_level--;
     }

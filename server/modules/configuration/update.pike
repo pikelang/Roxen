@@ -1,8 +1,8 @@
 /*
- * $Id: update.pike,v 1.32 2001/08/13 18:17:07 per Exp $
+ * $Id$
  *
  * The Roxen Update Client
- * Copyright © 2000, Roxen IS.
+ * Copyright © 2000 - 2009, Roxen IS.
  *
  * Author: Johan Schön
  * January-March 2000, June 2001
@@ -46,7 +46,7 @@ constant module_doc = "This is the update client. "
                       "website, feel free to enter your username and password in "
                       "the settings tab.";
 
-function(void:Sql.sql) db;
+function(void:Sql.Sql) db;
 object updater;
 SqlMapping pkginfo, misc, installed;
 
@@ -57,8 +57,8 @@ int inited;
 class SqlMapping
 {
   string table;
-  function(void:Sql.sql) db;
-  void create(function(void:Sql.sql) _db, string _table)
+  function(void:Sql.Sql) db;
+  void create(function(void:Sql.Sql) _db, string _table)
   {
     db=_db;
     table=_table;
@@ -111,18 +111,34 @@ void post_start()
   installed=SqlMapping(db, "update_installed")
     ;
   mkdirhier(roxen_path(query("pkgdir")+"/foo"));
+#ifndef OFFLINE
   if(query("do_external_updates"))
     updater=UpdateInfoFiles();
+#endif
   UPDATE_NOISES("db == %O", ({ db }));
 }
 
 void start(int num, Configuration conf)
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
+    // Don't do anything - config_filesystem will reload us.
+    return;
+
+#ifndef ENABLE_UPDATE_CLIENT
+  // This update system isn't in use, so drop this module.
+  roxen.background_run (0, lambda (Configuration conf) {
+			     conf->disable_module (module_local_id());
+			     conf->save();
+			     conf->save_me();
+			   }, conf);
+  return;
+#endif
+
   if(conf && !inited)
   {
     inited++;
     UPDATE_NOISE("Initializing...");
-#if !constant(thread_create)
+#ifndef THREADS
     call_out( post_start, 1 );
 #else
     thread_create( post_start );
@@ -149,14 +165,14 @@ void create()
 	 TYPE_STRING,
 	 "Format: username@host:password. "
 	 "Will not use auth if left empty.");
-  defvar("do_external_updates",1,"Connect to update.roxen.com for updates",
+  defvar("do_external_updates",0,"Connect to update.roxen.com for updates",
 	 TYPE_FLAG,
          "Turn this off if you're inside a firewall and/or don't want to "
 	 "reveal anything to the outside world.");
   Locale.register_project("update_client", "translations/%L/update_client.xml");
 }
 
-static string describe_time_period( int amnt )
+protected string describe_time_period( int amnt )
 {
   if(amnt < 0) return LOC_U(18,"some time");
   amnt/=60;
@@ -768,12 +784,16 @@ class GetPackage
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+
 		  pkgnum+".tar HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -843,12 +863,16 @@ class GetInfoFile
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
 		  ".info HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -944,7 +968,11 @@ class UpdateInfoFiles
 
   void create()
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     set_callbacks(request_ok, request_fail);
     call_out(do_request,1);
+#endif
   }
 }

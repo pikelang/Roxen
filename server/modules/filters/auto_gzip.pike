@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: auto_gzip.pike,v 1.11 2000/10/12 22:59:11 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "Automatic sending of compressed files";

@@ -1,12 +1,11 @@
-// This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.116 2001/08/24 14:57:52 grubba Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
 #include <version.h>
 #include <module.h>
-#include <variables.h>
 #include <stat.h>
 #define roxen roxenp()
 
@@ -15,6 +14,95 @@
 #else
 # define HTTP_WERR(X)
 #endif
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
+
+// Error handling tools
+
+enum OnError {
+  THROW_INTERNAL = 0,	//! Throw a generic error.
+  THROW_RXML,		//! Throw an RXML run error.
+  LOG_ERROR,		//! Log the error and return @expr{0@} (zero).
+  RETURN_ZERO,		//! Return @expr{0@} (zero).
+};
+//! Flags to control the error handling in various functions taking an
+//! argument of this type.
+//!
+//! Typical use is as an argument to a function that in turn
+//! calls @[raise_err()] in order to handle an error.
+//!
+//! @note
+//!   This covers only specific types of errors that the function might
+//!   generate. Other errors might throw internal exceptions or return
+//!   zero. See the function docs.
+//!
+//! @seealso
+//!   @[raise_err()]
+
+int(0..0) raise_err (OnError on_error, sprintf_format msg,
+		     sprintf_args... args)
+//! Trig an error according to @[on_error].
+//!
+//! Typical use is as an expression in a @expr{return@} statement.
+//!
+//! @param on_error
+//!   Method to signal the error:
+//!   @int
+//!     @value THROW_INTERNAL
+//!       Throw a generic exception (@expr{"internal server error"@}).
+//!       Use this for error conditions that never should
+//!       happen if the code is correct. This is the default.
+//!   
+//!     @value THROW_RXML
+//!       Throw the error as a RXML run error.
+//!       Convenient in rxml tag implementations.
+//!   
+//!     @value LOG_ERROR
+//!       Print a message using @[report_error] and
+//!       return @expr{0@} (zero).
+//!   
+//!     @value RETURN_ZERO
+//!       Just return @expr{0@} (zero).
+//!   @endint
+//!
+//! @param msg
+//!   Error message.
+//!
+//! @param args
+//!   @[sprintf()] parameters for @[msg] (if any).
+//!
+//! @returns
+//!   If the function returns, it will always be the
+//!   value @expr{0@} (zero).
+//!
+//! @seealso
+//!   @[OnError]
+{
+  switch(on_error) {
+    case LOG_ERROR: report_error(msg, @args); break;
+    case RETURN_ZERO: break;
+    case THROW_RXML: RXML.run_error(msg, @args);
+    default: error(msg, @args);
+  }
+  return 0;
+}
+
+
+// Thunks to be able to access the cache from here, since this module
+// is compiled and instantiated before cache.pike.
+function cache_lookup =
+  lambda (mixed... args) {
+    return (cache_lookup = all_constants()["cache_lookup"]) (@args);
+  };
+function cache_set =
+  lambda (mixed... args) {
+    return (cache_set = all_constants()["cache_set"]) (@args);
+  };
+function cache_remove =
+  lambda (mixed... args) {
+    return (cache_remove = all_constants()["cache_remove"]) (@args);
+  };
 
 object|array(object) parse_xml_tmpl( string ttag, string itag,
 				     string xml_file,
@@ -49,6 +137,7 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
 			       }
 			     } );
     string code = p->feed( tmpl )->finish()->read();
+    p = 0;			// To avoid trampoline garbage.
     return compile_string( code, xml_file )();
   };
 
@@ -91,9 +180,12 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
 			->feed( c )
 			->finish();
 		      data += ({ row });
+		      p = 0;	// To avoid trampoline garbage.
 		    } )
     ->feed( Stdio.read_file( xml_file ) )
     ->finish();
+
+  p = 0;			// To avoid trampoline garbage.
 
   if( ident )
   {
@@ -130,6 +222,89 @@ string http_roxen_id_cookie()
     http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
+protected mapping(string:function(string, RequestID:string)) cookie_callbacks =
+  ([]);
+protected class CookieChecker(string cookie)
+{
+  string `()(string path, RequestID id)
+  {
+    if (!id->real_cookies) {
+      id->init_cookies();
+    }
+    // Note: Access the real_cookies directly to avoid registering callbacks.
+    return id->real_cookies[cookie];
+  }
+  string _sprintf(int c)
+  {
+    return c == 'O' && sprintf("CookieChecker(%O)", cookie);
+  }
+}
+function(string, RequestID:string) get_cookie_callback(string cookie)
+{
+  function(string, RequestID:string) cb = cookie_callbacks[cookie];
+  if (cb) return cb;
+  cb = CookieChecker(cookie);
+  return cookie_callbacks[cookie] = cb;
+}
+
+protected mapping(string:function(string, RequestID:string)) lang_callbacks = ([ ]);
+
+protected class LangChecker(multiset(string) known_langs, string header,
+			    string extra)
+{
+  string `()(string path, RequestID id)
+  {
+    string proto_key = "";
+
+    switch (header) {
+    case "accept-language":
+      //  Make sure the Accept-Language header has been parsed for this request
+      PrefLanguages pl = id->misc->pref_languages;
+      if (!pl) {
+	id->init_pref_languages();
+	pl = id->misc->pref_languages;
+      }
+      proto_key = filter(pl->get_languages(), known_langs) * ",";
+      break;
+
+    case "cookie":
+      if (!id->real_cookies)
+	id->init_cookies();
+      
+      //  Avoid cookie jar tracking
+      if (string cookie_val = id->real_cookies[extra]) {
+	if (known_langs[cookie_val])
+	  proto_key = cookie_val;
+      }
+      break;
+    }
+    
+    return proto_key;
+  }
+  
+  string _sprintf(int c)
+  {
+    return (c == 'O') && sprintf("LangChecker(%O,%O,%O)",
+				 indices(known_langs) * "+", header, extra);
+  }
+}
+
+function(string, RequestID:string) get_lang_vary_cb(multiset(string) known_langs,
+						    string header, string extra)
+{
+  string key = sort(indices(known_langs)) * "+" + "|" + header + "|" + extra;
+  return
+    lang_callbacks[key] ||
+    (lang_callbacks[key] = LangChecker(known_langs, header, extra));
+}
+
+//! Return id->remoteaddr.
+//!
+//! Useful to use with @[RequestID()->register_vary_callback()].
+string get_remoteaddr(string ignored, RequestID id)
+{
+  return id->remoteaddr;
+}
 
 // These five functions are questionable, but rather widely used.
 string msectos(int t)
@@ -183,17 +358,53 @@ string decode_mode(int m)
   return s;
 }
 
-mapping add_http_header(mapping to, string name, string value)
+mapping(string:mixed) add_http_header(mapping(string:mixed) to,
+				      string name, string value)
+//! Adds a header @[name] with value @[value] to the header style
+//! mapping @[to] (which commonly is @tt{id->defines[" _extra_heads"]@})
+//! if no header with that value already exist.
+//!
+//! @note
+//! This function doesn't notify the RXML p-code cache, which makes it
+//! inappropriate to use for updating @tt{id->defines[" _extra_heads"]@}
+//! in RXML tags (which has been its primary use). Use
+//! @[RequestID.add_response_header] instead.
 {
   if(to[name]) {
-    if(arrayp(to[name]))
-      to[name] += ({ value });
-    else
-      to[name] = ({ to[name], value });
+    if(arrayp(to[name])) {
+      if (search(to[name], value) == -1)
+	to[name] += ({ value });
+    } else {
+      if (to[name] != value)
+	to[name] = ({ to[name], value });
+    }
   }
   else
     to[name] = value;
   return to;
+}
+
+mapping(string:mixed) merge_http_headers (mapping(string:mixed) a,
+					  mapping(string:mixed) b)
+//! Merges two response header mappings as if @[add_http_header] was
+//! called for @[a] with every header in @[b], except that it isn't
+//! destructive on @[a].
+{
+  mapping(string:mixed) res = a ^ b;
+  foreach (a & b; string name;) {
+    string|array(string) a_val = a[name], b_val = b[name];
+    if (a_val == b_val)
+      // Shortcut for the string case (usually). This also ensures
+      // that same-string values don't become arrays with a single
+      // element.
+      res[name] = a_val;
+    else {
+      if (!arrayp (a_val)) a_val = ({a_val});
+      if (!arrayp (b_val)) b_val = ({b_val});
+      res[name] = a_val | b_val;
+    }
+  }
+  return res;
 }
 
 int is_mysql_keyword( string name )
@@ -270,7 +481,7 @@ string short_name(string|Configuration long_name)
     return "x"+id[..19];
 
   while( strlen(string_to_utf8( id )) > 20 )
-    id = id[..strlen(id)-1];
+    id = id[..strlen(id)-2];
 
   return string_to_utf8( id );
 }
@@ -285,22 +496,129 @@ int _match(string w, array (string) a)
 }
 
 
-// --- From the old 'http' file ---------------------------------
+string canonicalize_http_header (string header)
+//! Returns the given http header on the canonical capitalization form
+//! as given in RFC 2616. E.g. @expr{"content-type"@} or
+//! @expr{"CONTENT-TYPE"@} is returned as @expr{"Content-Type"@}.
+//! Returns zero if the given string isn't a known http header.
+//!
+//! @seealso
+//! @[RequestID.add_response_header]
+{
+  return ([
+    // RFC 2616 section 4.5: General Header Fields
+    "cache-control":		"Cache-Control",
+    "connection":		"Connection",
+    "date":			"Date",
+    "pragma":			"Pragma",
+    "trailer":			"Trailer",
+    "transfer-encoding":	"Transfer-Encoding",
+    "upgrade":			"Upgrade",
+    "via":			"Via",
+    "warning":			"Warning",
+    // RFC 2616 section 5.3: Request Header Fields
+    "accept":			"Accept",
+    "accept-charset":		"Accept-Charset",
+    "accept-encoding":		"Accept-Encoding",
+    "accept-language":		"Accept-Language",
+    "authorization":		"Authorization",
+    "expect":			"Expect",
+    "from":			"From",
+    "host":			"Host",
+    "if-match":			"If-Match",
+    "if-modified-since":	"If-Modified-Since",
+    "if-none-match":		"If-None-Match",
+    "if-range":			"If-Range",
+    "if-unmodified-since":	"If-Unmodified-Since",
+    "max-forwards":		"Max-Forwards",
+    "proxy-authorization":	"Proxy-Authorization",
+    "range":			"Range",
+    "referer":			"Referer",
+    "te":			"TE",
+    "user-agent":		"User-Agent",
+    // RFC 2616 section 6.2: Response Header Fields
+    "accept-ranges":		"Accept-Ranges",
+    "age":			"Age",
+    "etag":			"ETag",
+    "location":			"Location",
+    "proxy-authenticate":	"Proxy-Authenticate",
+    "retry-after":		"Retry-After",
+    "server":			"Server",
+    "vary":			"Vary",
+    "www-authenticate":		"WWW-Authenticate",
+    // RFC 2616 section 7.1: Entity Header Fields
+    "allow":			"Allow",
+    "content-encoding":		"Content-Encoding",
+    "content-language":		"Content-Language",
+    "content-length":		"Content-Length",
+    "content-location":		"Content-Location",
+    "content-md5":		"Content-MD5",
+    "content-range":		"Content-Range",
+    "content-type":		"Content-Type",
+    "expires":			"Expires",
+    "last-modified":		"Last-Modified",
+    // The obsolete RFC 2068 defined this header for compatibility (19.7.1.1).
+    "keep-alive":		"Keep-Alive",
+    // RFC 2965
+    "cookie":			"Cookie",
+    "cookie2":			"Cookie2",
+    "set-cookie2":		"Set-Cookie2",
+  ])[lower_case (header)];
+}
 
-mapping http_low_answer( int errno, string data )
-//! Return a result mapping with the error and data specified. The
-//! error is infact the status response, so '200' is HTTP Document
-//! follows, and 500 Internal Server error, etc.
+mapping(string:mixed) http_low_answer( int status_code, string data )
+//! Return a result mapping with the specified HTTP status code and
+//! data. @[data] is sent as the content of the response and is
+//! tagged as text/html.
+//!
+//! @note
+//! The constants in @[Protocols.HTTP] can be used for status codes.
 {
   if(!data) data="";
-  HTTP_WERR("Return code "+errno+" ("+data+")");
+  HTTP_WERR("Return code "+status_code+" ("+data+")");
   return
     ([
-      "error" : errno,
+      "error" : status_code,
       "data"  : data,
       "len"   : strlen( data ),
       "type"  : "text/html",
       ]);
+}
+
+mapping(string:mixed) http_status (int status_code,
+				   void|string message, mixed... args)
+//! Return a response mapping with the specified HTTP status code and
+//! optional message. As opposed to @[http_low_answer], the message is
+//! raw text which can be included in more types of responses, e.g.
+//! inside multistatus responses in WebDAV. The message may contain
+//! line feeds ('\n') and ISO-8859-1 characters in the ranges 32..126
+//! and 128..255. Line feeds are converted to spaces if the response
+//! format doesn't allow them.
+//!
+//! If @[args] is given, @[message] is taken as an @[sprintf] style
+//! format which is applied to them.
+{
+  if (message) {
+    if (sizeof (args)) message = sprintf (message, @args);
+    HTTP_WERR ("Return status " + status_code + " " + message);
+    return (["error": status_code, "rettext": message]);
+  }
+  else {
+    HTTP_WERR ("Return status " + status_code);
+    return (["error": status_code]);
+  }
+}
+
+mapping(string:mixed) http_method_not_allowed (
+  string allowed_methods, void|string message, mixed... args)
+//! Make a HTTP 405 method not allowed response with the required
+//! Allow header containing @[allowed_methods], which is a comma
+//! separated list of HTTP methods, e.g. @expr{"GET, HEAD"@}.
+{
+  mapping(string:mixed) response =
+    http_status (Protocols.HTTP.HTTP_METHOD_INVALID, message, @args);
+  response->extra_heads = (["Allow": allowed_methods]);
+  return response;
 }
 
 //! Returns a response mapping indicating that the module or script
@@ -313,15 +631,15 @@ mapping http_low_answer( int errno, string data )
 //! want to glue together request headers and close the socket on your
 //! own, you are free to do so. The method @[RequestID.connection()]
 //! gives you the Stdio.File object for the current client connection.
-mapping http_pipe_in_progress()
+  mapping(string:mixed) http_pipe_in_progress()
 {
   HTTP_WERR("Pipe in progress");
   return ([ "file":-1, "pipe":1, ]);
 }
 
-mapping http_rxml_answer( string rxml, RequestID id,
-                          void|Stdio.File file,
-                          void|string type )
+mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
+					void|Stdio.File file,
+					void|string type )
 //! Convenience functions to use in Roxen modules. When you just want
 //! to return a string of data, with an optional type, this is the
 //! easiest way to do it if you don't want to worry about the internal
@@ -341,13 +659,13 @@ mapping http_rxml_answer( string rxml, RequestID id,
 }
 
 
-mapping http_try_again( float delay )
+mapping(string:mixed) http_try_again( float delay )
 //! Causes the request to be retried in @[delay] seconds.
 {
   return ([ "try_again_later":delay ]);
 }
 
-static class Delayer
+protected class Delayer
 {
   RequestID id;
   int resumed;
@@ -397,10 +715,10 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
 //! }
 {
   Delayer delay = Delayer( id, max_delay );
-  return ({delay, ([ "try_again":delay ]) });
+  return ({delay, ([ "try_again_later":delay ]) });
 }
 
-mapping http_string_answer(string text, string|void type)
+mapping(string:mixed) http_string_answer(string text, string|void type)
 //! Generates a result mapping with the given text as the request body
 //! with a content type of `type' (or "text/html" if none was given).
 {
@@ -408,7 +726,8 @@ mapping http_string_answer(string text, string|void type)
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
-mapping http_file_answer(Stdio.File text, string|void type, void|int len)
+mapping(string:mixed) http_file_answer(Stdio.File text,
+				       string|void type, void|int len)
 //! Generate a result mapping with the given (open) file object as the
 //! request body, the content type defaults to text/html if none is
 //! given, and the length to the length of the file object.
@@ -417,78 +736,603 @@ mapping http_file_answer(Stdio.File text, string|void type, void|int len)
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
-static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
-static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
+protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+protected constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
+string log_date(int t) {
+  mapping(string:int) lt = localtime(t);
+  return(sprintf("%04d-%02d-%02d",
+		 1900+lt->year,lt->mon+1, lt->mday));
+}
+ 
+string log_time(int t) {
+  mapping(string:int) lt = localtime(t);
+  return(sprintf("%02d:%02d:%02d",
+		 lt->hour, lt->min, lt->sec));
+}
 
-static int chd_lt;
-static string chd_lf;
+// CERN date formatter. Note similar code in LogFormat in roxen.pike.
+
+protected int chd_lt;
+protected string chd_lf;
 
 string cern_http_date(int t)
 //! Return a date, formated to be used in the common log format
 {
-  if( t == chd_lt ) return chd_lf;
+  if( t == chd_lt )
+    // Interpreter lock assumed here.
+    return chd_lf;
 
   string c;
   mapping(string:int) lt = localtime(t);
-  int tzh = lt->timezone/3600 - lt->isdst;
+  int tzh = lt->timezone/3600;
   if(tzh > 0)
     c="-";
   else {
     tzh = -tzh;
     c="+";
   }
+
+  c = sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+	      lt->mday, months[lt->mon], 1900+lt->year,
+	      lt->hour, lt->min, lt->sec, c, tzh);
+
   chd_lt = t;
-  return(chd_lf=sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
-		 lt->mday, months[lt->mon], 1900+lt->year,
-		 lt->hour, lt->min, lt->sec, c, tzh));
+  // Interpreter lock assumed here.
+  chd_lf = c;
+
+  return c;
 }
 
-string http_date(int t)
+constant http_status_messages = ([
+  100:"Continue",
+  101:"Switching Protocols",
+  102:"Processing",
+
+  200:"OK",
+  201:"Created",		// URI follows
+  202:"Accepted",
+  203:"Non-Authoritative Information",	// Provisional Information
+  204:"No Content",
+  205:"Reset Content",
+  206:"Partial Content",	// Byte Ranges
+  207:"Multi-Status",
+  226:"IM Used",		// RFC 3229
+
+  300:"Multiple Choices",	// Moved
+  301:"Moved Permanently",	// Permanent Relocation
+  302:"Found",
+  303:"See Other",
+  304:"Not Modified",
+  305:"Use Proxy",
+  // RFC 2616 10.3.7: 306 not used but reserved.
+  307:"Temporary Redirect",
+
+  400:"Bad Request",
+  401:"Unauthorized",		// Access denied
+  402:"Payment Required",
+  403:"Forbidden",
+  404:"Not Found",		// No such file or directory
+  405:"Method Not Allowed",
+  406:"Not Acceptable",
+  407:"Proxy Authentication Required", // Proxy authorization needed
+  408:"Request Timeout",
+  409:"Conflict",
+  410:"Gone",			// This document is no more. It has gone to meet its creator. It is gone. It will not be back. Give up. I promise. There is no such file or directory.",
+  411:"Length Required",
+  412:"Precondition Failed",
+  413:"Request Entity Too Large",
+  414:"Request-URI Too Long",
+  415:"Unsupported Media Type",
+  416:"Requested Range Not Satisfiable",
+  417:"Expectation Failed",
+  418:"I'm a teapot",
+  // FIXME: What is 419?
+  420:"Server temporarily unavailable",
+  421:"Server shutting down at operator request",
+  422:"Unprocessable Entity",
+  423:"Locked",
+  424:"Failed Dependency",
+
+  500:"Internal Server Error.",
+  501:"Not Implemented",
+  502:"Bad Gateway",		// Gateway Timeout
+  503:"Service Unavailable",
+  504:"Gateway Timeout",
+  505:"HTTP Version Not Supported",
+  506:"Variant Also Negotiates",
+  507:"Insufficient Storage",
+]);
+
+string http_status_message (int status_code)
+//! Returns the standard message that corresponds to the given HTTP
+//! status code.
+{
+  return http_status_messages[status_code];
+}
+
+string http_date( mixed t )
 //! Returns a http_date, as specified by the HTTP-protocol standard.
 //! This is used for logging as well as the Last-Modified and Time
 //! headers in the reply.
 {
-  mapping(string:int) l = gmtime( t );
+  mapping(string:int) l = gmtime( (int)t );
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
 }
 
+string parse_http_response (string response,
+			    void|mapping(string:mixed) response_map,
+			    void|mapping(string:string) headers,
+			    void|int|string on_error)
+//! Parses a raw http response and converts it to a response mapping
+//! suitable to return from @[RoxenModule.find_file] etc.
+//!
+//! The charset, if any is found, is used to decode the body. If a
+//! charset isn't found in the Content-Type header, some heuristics is
+//! used on the body to try to find one.
+//!
+//! @param response
+//!   The raw http response message, starting with formatted headers
+//!   that are terminated by an empty line.
+//!
+//! @param response_map
+//!   If this is set, it's filled in as a response mapping. The body
+//!   of the response is included in @expr{@[response_map]->data@}.
+//!
+//! @param headers
+//!   If this is set, it's filled in with all the http headers from
+//!   the response. The indices are lowercased, but otherwise the
+//!   headers aren't processed much (see also @[_Roxen.HeaderParser]).
+//!
+//! @param on_error
+//!   What to do if a parse error occurs. Throws a normal error if
+//!   zero, throws an RXML run error if 1, or ignores it and tries to
+//!   recover if -1. If it's a string then it's logged in the debug
+//!   log with the string inserted to explain the context.
+//!
+//! @returns
+//! Returns the body of the response message, with charset decoded if
+//! applicable.
+{
+  array parsed = Roxen.HeaderParser()->feed (response);
+  if (!parsed) {
+    string err_msg = "Could not find http headers.\n";
+    if (stringp (on_error))
+      werror ("Error parsing http response%s: %s",
+	      on_error != "" ? " " + on_error : "", err_msg);
+    else if (on_error == 0)
+      error (err_msg);
+    else if (on_error == 1)
+      RXML.run_error (err_msg);
+    return response;
+  }
+
+  mapping(string:string) hdr = parsed[2];
+  if (headers)
+    foreach (hdr; string name; string val)
+      headers[name] = val;
+
+  return low_parse_http_response (hdr, parsed[0], response_map, on_error);
+}
+
+string low_parse_http_response (mapping(string:string) headers,
+				string body,
+				void|mapping(string:mixed) response_map,
+				void|int|string on_error,
+				void|int(0..1) ignore_unknown_ce)
+//! Similar to @[parse_http_response], but takes a http response
+//! message that has been split into headers in @[headers] and the
+//! message body in @[body].
+//!
+//! The indices in @[headers] are assumed to be in lower case.
+//!
+//! @param ignore_unknown_ce
+//!   If set, unknown Content-Encoding headers will be ignored and
+//!   parsing will continue on the verbatim body data.
+{
+  string err_msg;
+
+proc: {
+    if (response_map) {
+      if (string lm = headers["last-modified"])
+	// Let's just ignore parse errors in the date.
+	response_map->last_modified = parse_since (lm)[0];
+    }
+
+    string type, subtype, charset;
+
+    if (string ct = headers["content-type"]) {
+      // Use the MIME module to parse the Content-Type header. It
+      // doesn't need the data.
+      MIME.Message m = MIME.Message ("", (["content-type": ct]), 0, 1);
+      type = m->type;
+      subtype = m->subtype;
+      charset = m->charset;
+      if (charset == "us-ascii" && !has_value (lower_case (ct), "us-ascii"))
+	// MIME.Message is a bit too "convenient" and defaults to
+	// "us-ascii" if no charset is specified.
+	charset = 0;
+      if (response_map)
+	response_map->type = type + "/" + subtype;
+    }
+
+    if (string ce = headers["content-encoding"]) {
+      switch(lower_case(ce)) {
+      case "gzip":
+	{
+	  Stdio.FakeFile f = Stdio.FakeFile(body, "rb");
+	  Gz.File gz = Gz.File(f, "rb");
+	  body = gz->read();
+	}
+	break;
+      case "deflate":
+	body = Gz.inflate(-15)->inflate(body);
+	break;
+      default:
+	if (!ignore_unknown_ce) {
+	  err_msg = sprintf("Content-Encoding %O not supported.\n", ce);
+	  break proc;
+	}
+      }
+    }
+
+    if (!charset) {
+      // Guess the charset from the content. Adapted from insert#href,
+      // insert#cached-href and SiteBuilder.pmod.
+      if (type == "text" ||
+	  (type == "application" &&
+	   (subtype == "xml" || has_prefix (subtype || "", "xml-")))) {
+
+	if (subtype == "html") {
+	  Parser.HTML parser = Parser.HTML();
+	  parser->case_insensitive_tag(1);
+	  parser->lazy_entity_end(1);
+	  parser->ignore_unknown(1);
+	  parser->match_tag(0);
+	  parser->add_quote_tag ("!--", "", "--");
+	  parser->add_tag (
+	    "meta",
+	    lambda (Parser.HTML p, mapping m)
+	    {
+	      string val = m->content;
+	      if(val && m["http-equiv"] &&
+		 lower_case(m["http-equiv"]) == "content-type") {
+		MIME.Message m =
+		  MIME.Message ("", (["content-type": val]), 0, 1);
+		charset = m->charset;
+		if (charset == "us-ascii" &&
+		    !has_value (lower_case (val), "us-ascii"))
+		  charset = 0;
+		throw (0);	// Done.
+	      }
+	    });
+	  if (mixed err = catch (parser->finish (body))) {
+	    err_msg = describe_error (err);
+	    break proc;
+	  }
+	}
+
+	else if (subtype == "xml" || has_prefix (subtype || "", "xml-")) {
+	  // Look for BOM, then an xml header. The BOM is stripped off
+	  // since we use it to decode the data here.
+	  if (sscanf (body, "\xef\xbb\xbf%s", body))
+	    charset = "utf-8";
+	  else if (sscanf (body, "\xfe\xff%s", body))
+	    charset = "utf-16";
+	  else if (sscanf (body, "\xff\xfe\x00\x00%s", body))
+	    charset = "utf-32le";
+	  else if (sscanf (body, "\xff\xfe%s", body))
+	    charset = "utf-16le";
+	  else if (sscanf (body, "\x00\x00\xfe\xff%s", body))
+	    charset = "utf-32";
+
+	  else if (sizeof(body) > 6 &&
+		   has_prefix(body, "<?xml") &&
+		   Parser.XML.isspace(body[5]) &&
+		   sscanf(body, "<?%s?>", string hdr)) {
+	    hdr += "?";
+	    if (sscanf(lower_case(hdr), "%*sencoding=%s%*[\n\r\t ?]",
+		       string xml_enc) == 3)
+	      charset = xml_enc - "'" - "\"";
+	  }
+	}
+      }
+    }
+
+    if (charset) {
+      Locale.Charset.Decoder decoder;
+      if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+	err_msg = sprintf ("Unrecognized charset %q.\n", charset);
+	break proc;
+      }
+      if (mixed err = catch (body = decoder->feed (body)->drain())) {
+	if (objectp (err) && err->is_charset_decode_error) {
+	  err_msg = describe_error (err);
+	  break proc;
+	}
+	throw (err);
+      }
+    }
+
+    if (response_map)
+      response_map->data = body;
+
+    return body;
+  }
+
+  // Get here on error.
+  if (stringp (on_error))
+    werror ("Error parsing http response%s: %s",
+	    on_error != "" ? " " + on_error : "", err_msg);
+  else if (on_error == 0)
+    error (err_msg);
+  else if (on_error == 1)
+    RXML.run_error ("Error parsing http response: " + err_msg);
+
+  return body;
+}
+
+//! Returns a timestamp formatted according to ISO 8601 Date and Time
+//! RFC 2518 23.2. No fraction, UTC only.
+string iso8601_date_time(int ts, int|void ns)
+{
+  mapping(string:int) gmt = gmtime(ts);
+  if (zero_type(ns)) {
+    return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ",
+		   1900 + gmt->year, gmt->mon+1, gmt->mday,
+		   gmt->hour, gmt->min, gmt->sec);
+  }
+  return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%09dZ",
+		 1900 + gmt->year, gmt->mon+1, gmt->mday,
+		 gmt->hour, gmt->min, gmt->sec, ns);
+}
+
+#if !defined (MODULE_DEBUG) ||						\
+  defined (ENABLE_INHERENTLY_BROKEN_HTTP_ENCODE_STRING_FUNCTION)
+// Since http_encode_string is broken by design we don't define it in
+// module debug mode, so that modules still using it can be detected
+// easily during compilation. If you for some reason choose to
+// disregard the STRONG deprecation of this function, then you can use
+// the other define above to always enable it.
 string http_encode_string(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! a URL. Specifically, nul, space, tab, newline, linefeed, %, ' and
 //! " are quoted.
+//!
+//! @note
+//! This function is STRONGLY deprecated since using it almost
+//! invariably leads to incorrect encoding: It doesn't encode URI
+//! special chars like "/", ":", "?" etc, presumably with the
+//! intention to be used on an entire URI string. Still, since it
+//! encodes "%", that URI string can't contain any prior encoded chars
+//! from the URI component strings. Thus, the result is that "%"
+//! easily gets incorrectly double-encoded with this function.
+//!
+//! Either use @[http_encode_url] to encode the URI component strings
+//! before they are pasted together to the complete URI, or use
+//! @[http_encode_invalids] on the complete URI to only encode any
+//! chars that can't occur raw in the HTTP protocol.
 {
   return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
-		 ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22"}));
+		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
+}
+#endif
+
+string http_encode_invalids (string f)
+//! Encode dangerous chars to be included as a URL in an HTTP message
+//! or header field. This includes control chars, space and the quote
+//! chars @expr{'@} and @expr{"@}. Note that chars allowed in a quoted
+//! string (RFC 2616 section 2.2) are not encoded. This function may
+//! be used on a complete URI since it doesn't encode any URI special
+//! chars, including the escape char @expr{%@}.
+//!
+//! @note
+//! Eight bit chars and wider are encoded using UTF-8 followed by http
+//! escaping, as mandated by RFC 3987, section 3.1 and appendix B.2 in
+//! the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars).
+//! (It should work regardless of the charset used in the XML document
+//! the URL might be inserted into.)
+//!
+//! @seealso
+//! @[http_encode_url]
+{
+  return replace (
+    string_to_utf8 (f), ({
+      // Encode all chars outside the set of reserved characters
+      // (RFC 3986, section 2.2) and unreserved chars (section 2.3).
+      //
+      // Control chars
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\177",
+      // Others
+      " ", "\"",
+      // Encoded by legacy (presumably since it's used to delimit
+      // attributes in xml). The single quote is valid but may be
+      // escaped without changing its meaning in URI's according to
+      // RFC 2396 section 2.3. FIXME: In the successor RFC 3986 it is
+      // however part of the reserved set and ought therefore not be
+      // encoded.
+      "'",
+      // FIXME: The following chars are invalid according to RFC 3986,
+      // but can we add them without compatibility woes?
+      //"<", ">", "\\", "^", "`", "{", "|", "}",
+      // All eight bit chars (this is fast with the current replace()
+      // implementation).
+      "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
+      "\210", "\211", "\212", "\213", "\214", "\215", "\216", "\217",
+      "\220", "\221", "\222", "\223", "\224", "\225", "\226", "\227",
+      "\230", "\231", "\232", "\233", "\234", "\235", "\236", "\237",
+      "\240", "\241", "\242", "\243", "\244", "\245", "\246", "\247",
+      "\250", "\251", "\252", "\253", "\254", "\255", "\256", "\257",
+      "\260", "\261", "\262", "\263", "\264", "\265", "\266", "\267",
+      "\270", "\271", "\272", "\273", "\274", "\275", "\276", "\277",
+      "\300", "\301", "\302", "\303", "\304", "\305", "\306", "\307",
+      "\310", "\311", "\312", "\313", "\314", "\315", "\316", "\317",
+      "\320", "\321", "\322", "\323", "\324", "\325", "\326", "\327",
+      "\330", "\331", "\332", "\333", "\334", "\335", "\336", "\337",
+      "\340", "\341", "\342", "\343", "\344", "\345", "\346", "\347",
+      "\350", "\351", "\352", "\353", "\354", "\355", "\356", "\357",
+      "\360", "\361", "\362", "\363", "\364", "\365", "\366", "\367",
+      "\370", "\371", "\372", "\373", "\374", "\375", "\376", "\377",
+    }),
+    ({
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
+      "%7F",
+      "%20", "%22",
+      "%27",
+      "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+      "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
+      "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+      "%98", "%99", "%9A", "%9B", "%9C", "%9D", "%9E", "%9F",
+      "%A0", "%A1", "%A2", "%A3", "%A4", "%A5", "%A6", "%A7",
+      "%A8", "%A9", "%AA", "%AB", "%AC", "%AD", "%AE", "%AF",
+      "%B0", "%B1", "%B2", "%B3", "%B4", "%B5", "%B6", "%B7",
+      "%B8", "%B9", "%BA", "%BB", "%BC", "%BD", "%BE", "%BF",
+      "%C0", "%C1", "%C2", "%C3", "%C4", "%C5", "%C6", "%C7",
+      "%C8", "%C9", "%CA", "%CB", "%CC", "%CD", "%CE", "%CF",
+      "%D0", "%D1", "%D2", "%D3", "%D4", "%D5", "%D6", "%D7",
+      "%D8", "%D9", "%DA", "%DB", "%DC", "%DD", "%DE", "%DF",
+      "%E0", "%E1", "%E2", "%E3", "%E4", "%E5", "%E6", "%E7",
+      "%E8", "%E9", "%EA", "%EB", "%EC", "%ED", "%EE", "%EF",
+      "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7",
+      "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
+    }));
 }
 
 string http_encode_cookie(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! the value string or name string in a cookie.
+//!
+//! @note
+//! This encodes with the same kind of %-escapes as
+//! @[http_encode_url], and that isn't an encoding specified by the
+//! cookie RFC 2965. It works because there is a nonstandard decoding
+//! of %-escapes in the Roxen HTTP protocol module.
 {
-  return replace(f, ({ "=", ",", ";", "%" }), ({ "%3d", "%2c", "%3b", "%25"}));
+  // FIXME: There are numerous invalid chars that this doesn't encode,
+  // e.g. 8 bit and wide chars.
+  return replace(
+    f, ({
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\177",
+      "=", ",", ";", "%",
+    }), ({
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
+      "%7F",
+      "%3D", "%2C", "%3B", "%25",
+    }));
 }
 
 string http_encode_url (string f)
-//! Encodes any string to be used as a literal in a URL. This means
-//! that in addition to the characters encoded by
-//! @[http_encode_string], it encodes all URL special characters, i.e.
-//! /, #, ?, & etc.
+//! Encode any string to be used as a component part in a URI. This
+//! means that all URI reserved and excluded characters are escaped,
+//! i.e. everything except @expr{A-Z@}, @expr{a-z@}, @expr{0-9@},
+//! @expr{-@}, @expr{.@}, @expr{_@}, and @expr{~@} (see RFC 3986
+//! section 2.3).
+//!
+//! @note
+//! Eight bit chars and wider are encoded using UTF-8 followed by http
+//! escaping, as mandated by RFC 3987, section 3.1 and appendix B.2 in
+//! the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars).
+//! (It should work regardless of the charset used in the XML document
+//! the URL might be inserted into.)
+//!
+//! @seealso
+//! @[http_encode_invalids]
 {
-  return replace (f, ({"\000", " ", "\t", "\n", "\r", "%", "'", "\"", "#",
-		       "&", "?", "=", "/", ":", "+"}),
-		  ({"%00", "%20", "%09", "%0a", "%0d", "%25", "%27", "%22", "%23",
-		    "%26", "%3f", "%3d", "%2f", "%3a", "%2b"}));
+  return replace (
+    string_to_utf8 (f), ({
+      // Control chars
+      "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+      "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+      "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+      "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      "\177",
+      // RFC 3986, section 2.2, gen-delims
+      ":", "/", "?", "#", "[", "]", "@",
+      // RFC 3986, section 2.2, sub-delims
+      "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=",
+      // Others outside the unreserved chars (RFC 3986, section 2.2)
+      " ", "\"", "%", "<", ">", "\\", "^", "`", "{", "|", "}",
+      // Compat note: "!", "(", ")" and "*" were not encoded in 4.5
+      // and earlier since they were part of the unreserved set in the
+      // superseded URI RFC 2396.
+      // All eight bit chars (this is fast with the current replace()
+      // implementation).
+      "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
+      "\210", "\211", "\212", "\213", "\214", "\215", "\216", "\217",
+      "\220", "\221", "\222", "\223", "\224", "\225", "\226", "\227",
+      "\230", "\231", "\232", "\233", "\234", "\235", "\236", "\237",
+      "\240", "\241", "\242", "\243", "\244", "\245", "\246", "\247",
+      "\250", "\251", "\252", "\253", "\254", "\255", "\256", "\257",
+      "\260", "\261", "\262", "\263", "\264", "\265", "\266", "\267",
+      "\270", "\271", "\272", "\273", "\274", "\275", "\276", "\277",
+      "\300", "\301", "\302", "\303", "\304", "\305", "\306", "\307",
+      "\310", "\311", "\312", "\313", "\314", "\315", "\316", "\317",
+      "\320", "\321", "\322", "\323", "\324", "\325", "\326", "\327",
+      "\330", "\331", "\332", "\333", "\334", "\335", "\336", "\337",
+      "\340", "\341", "\342", "\343", "\344", "\345", "\346", "\347",
+      "\350", "\351", "\352", "\353", "\354", "\355", "\356", "\357",
+      "\360", "\361", "\362", "\363", "\364", "\365", "\366", "\367",
+      "\370", "\371", "\372", "\373", "\374", "\375", "\376", "\377",
+    }),
+    ({
+      "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+      "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
+      "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+      "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
+      "%7F",
+      "%3A", "%2F", "%3F", "%23", "%5B", "%5D", "%40",
+      "%21","%24","%26","%27","%28","%29","%2A","%2B","%2C","%3B","%3D",
+      "%20","%22","%25","%3C","%3E","%5C","%5E","%60","%7B","%7C","%7D",
+      "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+      "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
+      "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+      "%98", "%99", "%9A", "%9B", "%9C", "%9D", "%9E", "%9F",
+      "%A0", "%A1", "%A2", "%A3", "%A4", "%A5", "%A6", "%A7",
+      "%A8", "%A9", "%AA", "%AB", "%AC", "%AD", "%AE", "%AF",
+      "%B0", "%B1", "%B2", "%B3", "%B4", "%B5", "%B6", "%B7",
+      "%B8", "%B9", "%BA", "%BB", "%BC", "%BD", "%BE", "%BF",
+      "%C0", "%C1", "%C2", "%C3", "%C4", "%C5", "%C6", "%C7",
+      "%C8", "%C9", "%CA", "%CB", "%CC", "%CD", "%CE", "%CF",
+      "%D0", "%D1", "%D2", "%D3", "%D4", "%D5", "%D6", "%D7",
+      "%D8", "%D9", "%DA", "%DB", "%DC", "%DD", "%DE", "%DF",
+      "%E0", "%E1", "%E2", "%E3", "%E4", "%E5", "%E6", "%E7",
+      "%E8", "%E9", "%EA", "%EB", "%EC", "%ED", "%EE", "%EF",
+      "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6", "%F7",
+      "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF",
+    }));
+}
+
+//! Compatibility alias for @[http_encode_url].
+string correctly_http_encode_url(string f) {
+  return http_encode_url (f);
 }
 
 string add_pre_state( string url, multiset state )
 //! Adds the provided states as prestates to the provided url.
 {
+#ifdef MODULE_DEBUG
   if(!url)
     error("URL needed for add_pre_state()\n");
+#endif
   if(!state || !sizeof(state))
     return url;
   string base;
@@ -501,25 +1345,32 @@ string add_pre_state( string url, multiset state )
   return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
-//! Simply returns a http-redirect message to the specified URL. If
-//! the url parameter is just a virtual (possibly relative) path, the
-//! current id object must be supplied to resolve the destination URL.
-//! If no prestates are provided, the current prestates in the request id
-//! object will be added to the URL, if the url is a local absolute or relative
-//! URL.
+string make_absolute_url (string url, RequestID|void id,
+			  multiset|void prestates, mapping|void variables)
+//! Returns an absolute URL built from the components: If @[url] is a
+//! virtual (possibly relative) path, the current @[RequestID] object
+//! must be supplied in @[id] to resolve the absolute URL.
+//!
+//! If no @[prestates] are provided, the current prestates in @[id]
+//! are added to the URL, provided @[url] is a local absolute or
+//! relative URL.
+//!
+//! If @[variables] is given it's a mapping containing variables that
+//! should be appended to the URL. Each index is a variable name and
+//! the value can be a string or an array, in which case a separate
+//! variable binding is added for each string in the array. That means
+//! that e.g. @[RequestID.real_variables] can be used as @[variables].
+//!
+//! @[url] is encoded using @[http_encode_invalids] so it may contain
+//! eight bit chars and wider. All variable names and values in
+//! @[variables] are thoroughly encoded using @[http_encode_url] so
+//! they should not be encoded in any way to begin with.
 {
-  // If we don't get any URL we don't know what to do.
-  // But we do!  /per
-  if(!url)
-    url = "";
-
   // If the URL is a local relative URL we make it absolute.
-  if(!has_value(url, "://") && (!strlen(url)||url[0]!='/'))
-    url = fix_relative(url, id);
-
+  url = fix_relative(url, id);
+  
   // Add protocol and host to local absolute URLs.
-  if(url[0]=='/') {
+  if (has_prefix (url, "/")) {
     if(id) {
       url = id->url_base() + url[1..];
       if (!prestates) prestates = id->prestate;
@@ -534,9 +1385,55 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
   if(prestates && sizeof(prestates))
     url = add_pre_state (url, prestates);
 
-  HTTP_WERR("Redirect -> "+http_encode_string(url));
-  return http_low_answer( 302, "")
-    + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
+  if( String.width( url )>8 && !has_value( url, "?" ) )
+    url += "?magic_roxen_automatic_charset_variable="+
+      magic_charset_variable_value;
+
+  url = http_encode_invalids (url);
+  if (variables) {
+    string concat_char = has_value (url, "?") ? "&" : "?";
+    foreach (indices (variables), string var) {
+      var = http_encode_url (var);
+      mixed val = variables[var];
+      if (stringp (val)) {
+	url += concat_char + var + "=" + http_encode_url (val);
+	concat_char = "&";
+      }
+      else if (arrayp (val))
+	foreach (val, mixed part)
+	  if (stringp (part)) {
+	    url += concat_char + var + "=" + http_encode_url (part);
+	    concat_char = "&";
+	  }
+    }
+  }
+
+  return url;
+}
+
+mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
+		       mapping|void variables, void|int http_code)
+//! Returns a http-redirect message to the specified URL. The absolute
+//! URL that is required for the @expr{Location@} header is built from
+//! the given components using @[make_absolute_url]. See that function
+//! for details.
+//!
+//! If @[http_code] is nonzero, it specifies the http status code to
+//! use in the response. It's @[Protocols.HTTP.HTTP_FOUND] (i.e. 302)
+//! by default.
+{
+  // If we don't get any URL we don't know what to do.
+  // But we do!  /per
+  if(!url)
+    url = "";
+
+  url = make_absolute_url (url, id, prestates, variables);
+
+  HTTP_WERR("Redirect -> "+url);
+
+  return http_status( http_code || Protocols.HTTP.HTTP_FOUND,
+		      "Redirect to " + url)
+    + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
 mapping http_stream(Stdio.File from)
@@ -548,45 +1445,64 @@ mapping http_stream(Stdio.File from)
   return ([ "raw":1, "file":from, "len":-1, ]);
 }
 
-mapping http_auth_required(string realm, string|void message)
-//! Generates a result mapping that will instruct the web browser that
-//! the user needs to authorize himself before being allowed access.
-//! `realm' is the name of the realm on the server, which will
-//! typically end up in the browser's prompt for a name and password
-//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
-//! optional message is the message body that the client typically
-//! shows the user, should he decide not to authenticate himself, but
-//! rather refraim from trying to authenticate himself.
+mapping(string:mixed) http_digest_required(mapping(string:string) challenge,
+					   string|void message)
+//! Generates a result mapping that instructs the browser to
+//! authenticate the user using Digest authentication (see RFC 2617
+//! section 3).
 //!
-//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
-//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
-//! For more info, see RFC 2617.
+//! The optional message is the message body that the client typically
+//! shows the user if he or she decides to abort the authentication
+//! request.
 {
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
-  HTTP_WERR("Auth required ("+realm+")");
+  HTTP_WERR(sprintf("Auth required (%O)", challenge));
+  string digest_challenge = "";
+  foreach(challenge; string key; string val) {
+    // FIXME: This doesn't work with all Digest directives. E.g. the
+    // algorithm gets incorrectly quoted.
+    digest_challenge += sprintf(" %s=%O", key, val);
+  }
   return http_low_answer(401, message)
-    + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
+    + ([ "extra_heads":([ "WWW-Authenticate":"Digest"+digest_challenge,]),]);
 }
 
-mapping http_proxy_auth_required(string realm, void|string message)
-//! Generates a result mapping that will instruct the client end that
-//! it needs to authenticate itself before being allowed access.
-//! `realm' is the name of the realm on the server, which will
-//! typically end up in the browser's prompt for a name and password
-//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
-//! optional message is the message body that the client typically
-//! shows the user, should he decide not to authenticate himself, but
-//! rather refraim from trying to authenticate himself.
+mapping(string:mixed) http_auth_required(string realm, string|void message,
+					 void|RequestID id)
+//! Generates a result mapping that instructs the browser to
+//! authenticate the user using Basic authentication (see RFC 2617
+//! section 2). @[realm] is the name of the realm on the server, which
+//! will typically end up in the browser's prompt for a name and
+//! password (e.g. "Enter username for @i{realm@} at @i{hostname@}:").
 //!
-//! In HTTP terms, this sends a <tt>407 Proxy authentication
-//! failed</tt> response with the header <tt>Proxy-Authenticate: basic
-//! realm="`realm'"</tt>. For more info, see RFC 2617.
+//! The optional message is the message body that the client typically
+//! shows the user if he or she decides to abort the authentication
+//! request.
+{
+  HTTP_WERR("Auth required ("+realm+")");
+  if (id) {
+    return id->conf->auth_failed_file( id, message )
+      + ([ "extra_heads":([ "WWW-Authenticate":
+			    sprintf ("Basic realm=%O", realm)])]);
+  }
+  if(!message)
+    message = "<h1>Authentication failed.</h1>";
+  return http_low_answer(401, message)
+    + ([ "extra_heads":([ "WWW-Authenticate":
+			  sprintf ("Basic realm=%O", realm)])]);
+}
+
+mapping(string:mixed) http_proxy_auth_required(string realm,
+					       void|string message)
+//! Similar to @[http_auth_required], but returns a 407
+//! Proxy-Authenticate header (see RFC 2616 section 14.33).
 {
   if(!message)
-    message = "<h1>Proxy authentication failed.\n</h1>";
+    message = "<h1>Proxy authentication failed.</h1>";
   return http_low_answer(407, message)
-    + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
+    + ([ "extra_heads":([ "Proxy-Authenticate":
+			  sprintf ("Basic realm=%O", realm)])]);
 }
 
 
@@ -600,11 +1516,31 @@ string extract_query(string from)
   return "";
 }
 
+protected string mk_env_var_name(string name)
+{
+  name = replace(name, " ", "_");
+  string res = "";
+  do {
+    string ok_part="";
+    sscanf(name, "%[A-Za-z0-9_]%s", ok_part, name);
+    res += ok_part;
+    if (sizeof(name)) {
+      res += "_";
+      name = name[1..];
+    }
+  } while (sizeof(name));
+  return res;
+}
+
 mapping build_env_vars(string f, RequestID id, string path_info)
 //! Generate a mapping with environment variables suitable for use
 //! with CGI-scripts or SSI scripts etc.
 //!
 //! @mapping
+//!   @member string REQUEST_URI
+//!     URI requested by the user.
+//!   @member string REDIRECT_URL
+//!     Target of the first internal redirect.
 //!   @member string INDEX
 //!   @member string SCRIPT_NAME
 //!   @member string PATH_INFO
@@ -636,18 +1572,14 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   mapping(string:string) new = ([]);
-  RequestID tmpid;
 
   if(id->query && strlen(id->query))
     new->INDEX=id->query;
 
   if(path_info && strlen(path_info))
   {
-    string t, t2;
     if(path_info[0] != '/')
       path_info = "/" + path_info;
-
-    t = t2 = "";
 
     // Kludge
     if ( ([mapping(string:mixed)]id->misc)->path_info == path_info ) {
@@ -660,27 +1592,48 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     new["PATH_INFO"]=path_info;
 
 
+    // FIXME: Consider looping over the splitted path.
+    string trailer = "";
     while(1)
     {
       // Fix PATH_TRANSLATED correctly.
-      t2 = id->conf->real_file(path_info, id);
-      if(t2)
+      string translated_base = id->conf->real_file(path_info, id);
+      if (translated_base)
       {
-	new["PATH_TRANSLATED"] = t2 + t;
+	new["PATH_TRANSLATED"] = combine_path_unix(translated_base, trailer);
 	break;
       }
       array(string) tmp = path_info/"/" - ({""});
       if(!sizeof(tmp))
 	break;
-      path_info = "/" + (tmp[0..sizeof(tmp)-2]) * "/";
-      t = tmp[-1] +"/" + t;
+      path_info = "/" + (tmp[..sizeof(tmp)-2]) * "/";
+      trailer = tmp[-1] + "/" + trailer;
     }
   } else
     new["SCRIPT_NAME"]=id->not_query;
-  tmpid = id;
-  while(tmpid->misc->orig)
+
+  // Find the original request.
+  RequestID tmpid = id;
+  RequestID previd;
+  while(tmpid->misc->orig) {
     // internal get
-    tmpid = tmpid->misc->orig;
+    tmpid = (previd = tmpid)->misc->orig;
+  }
+
+  // The original URL.
+  new["REQUEST_URI"] =
+    tmpid->misc->redirected_raw_url || tmpid->raw_url;
+
+  if(tmpid->misc->is_redirected || previd) {
+    // Destination of the first internal redirect.
+    if (tmpid->misc->redirected_to) {
+      new["REDIRECT_URL"] =
+	Roxen.http_encode_invalids(tmpid->misc->redirected_to);
+    } else if (previd) {
+      new["REDIRECT_URL"] = previd->raw_url;
+    }
+    new["REDIRECT_STATUS"] = "200";
+  }
 
   // Begin "SSI" vars.
   array(string) tmps;
@@ -730,7 +1683,7 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 				    ({ " ", "-", "\0", "=" }),
 				    ({ "_", "_", "", "_" }));
 
-      new[hh] = replace(hdrs[h], ({ "\0" }), ({ "" }));
+      new[mk_env_var_name(hh)] = replace(hdrs[h], ({ "\0" }), ({ "" }));
     }
     if (!new["HTTP_HOST"]) {
       if(objectp(id->my_fd) && id->my_fd->query_address(1))
@@ -845,22 +1798,23 @@ mapping build_roxen_env_vars(RequestID id)
   new["COOKIES"] = "";
   foreach(indices(id->cookies), tmp)
     {
-      new["COOKIE_"+tmp] = id->cookies[tmp];
-      new["COOKIES"]+= tmp+" ";
+      new["COOKIE_"+mk_env_var_name(tmp)] = id->cookies[tmp];
+      new["COOKIES"]+= mk_env_var_name(tmp)+" ";
     }
 
   foreach(indices(id->config), tmp)
     {
-      new["CONFIG_"+replace(tmp, " ", "_")]="true";
+      tmp = mk_env_var_name(tmp);
+      new["CONFIG_"+tmp]="true";
       if(new["CONFIGS"])
-	new["CONFIGS"] += " " + replace(tmp, " ", "_");
+	new["CONFIGS"] += " " + tmp;
       else
-	new["CONFIGS"] = replace(tmp, " ", "_");
+	new["CONFIGS"] = tmp;
     }
 
   foreach(indices(id->variables), tmp)
   {
-    string name = replace(tmp," ","_");
+    string name = mk_env_var_name(tmp);
     if (mixed value = id->variables[tmp])
       if (!catch (value = (string) value) && (sizeof(value) < 8192)) {
 	// Some shells/OS's don't like LARGE environment variables
@@ -876,20 +1830,22 @@ mapping build_roxen_env_vars(RequestID id)
 
   foreach(indices(id->prestate), tmp)
   {
-    new["PRESTATE_"+replace(tmp, " ", "_")]="true";
+    tmp = mk_env_var_name(tmp);
+    new["PRESTATE_"+tmp]="true";
     if(new["PRESTATES"])
-      new["PRESTATES"] += " " + replace(tmp, " ", "_");
+      new["PRESTATES"] += " " + tmp;
     else
-      new["PRESTATES"] = replace(tmp, " ", "_");
+      new["PRESTATES"] = tmp;
   }
 
   foreach(indices(id->supports), tmp)
   {
-    new["SUPPORTS_"+replace(tmp-",", " ", "_")]="true";
+    tmp = mk_env_var_name(tmp-",");
+    new["SUPPORTS_"+tmp]="true";
     if (new["SUPPORTS"])
-      new["SUPPORTS"] += " " + replace(tmp, " ", "_");
+      new["SUPPORTS"] += " " + tmp;
     else
-      new["SUPPORTS"] = replace(tmp, " ", "_");
+      new["SUPPORTS"] = tmp;
   }
   return new;
 }
@@ -935,6 +1891,7 @@ array(string|RXML.PCode) compile_rxml (string what, RequestID id)
   RXML.Parser parser = get_rxml_parser (id, 0, 1);
   parser->write_end (what);
   array(string|RXML.PCode) res = ({parser->eval(), parser->p_code});
+  res[1]->finish();
   //parser->type->give_back (parser); // RXML.PXml is not resettable anyway.
   return res;
 }
@@ -960,9 +1917,14 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
 //! Returns a parser object for parsing and evaluating a string as
 //! RXML in a new context. @[type] may be used to set the top level
 //! type to parse. It defaults to the standard type and parser for
-//! RXML code. If @[make_p_code] is nonzero, the parser is initialized
-//! with an @[RXML.PCode] object to collect p-code during the
-//! evaluation.
+//! RXML code.
+//!
+//! If @[make_p_code] is nonzero, the parser is initialized with an
+//! @[RXML.PCode] object to collect p-code during the evaluation. When
+//! the parser is finished, the p-code is available in the variable
+//! @[RXML.Parser.p_code]. The p-code itself is not finished, though;
+//! @[RXML.PCode.finished] should be called in it before use to
+//! compact it, although that isn't mandatory.
 {
   RXML.Parser parser = id->conf->rxml_tag_set->get_parser (
     type || id->conf->default_content_type, id, make_p_code);
@@ -971,9 +1933,9 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
   return parser;
 }
 
-static int(0..0) return_zero() {return 0;}
+protected int(0..0) return_zero() {return 0;}
 
-static Parser.HTML xml_parser =
+protected Parser.HTML xml_parser =
   lambda() {
     Parser.HTML p = Parser.HTML();
     p->lazy_entity_end (1);
@@ -1281,30 +2243,63 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in)
+string make_tag_attributes(mapping(string:string) in,
+			   void|int preserve_roxen_entities)
 {
-  if(!in || !sizeof(in)) return "";
-  string res="";
-  foreach(indices(in), string a)
-    res+=" "+a+"=\""+html_encode_string((string)in[a])+"\"";
+  if (!in || !sizeof(in))
+    return "";
+
+  //  Special quoting which leaves Roxen entities (e.g. &page.path;)
+  //  unescaped.
+  string quote_fn(string text)
+  {
+    string out = "";
+    int pos = 0;
+    while ((pos = search(text, "&")) >= 0) {
+      if ((sscanf(text[pos..], "&%[^ <>;&];", string entity) == 1) &&
+	  search(entity, ".") >= 0) {
+	out += html_encode_string(text[..pos - 1]) + "&" + entity + ";";
+	text = text[pos + strlen(entity) + 2..];
+      } else {
+	out += html_encode_string(text[..pos]);
+	text = text[pos + 1..];
+      }
+    }
+    return out + html_encode_string(text);
+  };
+  
+  string res = "";
+  array(string) sorted_attrs = sort(indices(in));
+  if (preserve_roxen_entities) {
+    foreach(sorted_attrs, string a)
+      res += " " + a + "=\"" + quote_fn((string) in[a]) + "\"";
+  } else {
+    foreach(sorted_attrs, string a)
+      res += " " + a + "=\"" + html_encode_string((string) in[a]) + "\"";
+  }
   return res;
 }
 
-string make_tag(string name, mapping(string:string) args, void|int xml)
-//! Returns an empty element tag `name', with the tag arguments dictated
-//! by the mapping `args'. If the flag xml is set, slash character will be
-//! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
+string make_tag(string name, mapping(string:string) args, void|int xml,
+		void|int preserve_roxen_entities)
+//! Returns an empty element tag @[name], with the tag arguments dictated
+//! by the mapping @[args]. If the flag @[xml] is set, slash character will
+//! be added in the end of the tag. Use RXML.t_xml->format_tag(name, args)
+//! instead.
 {
-  return "<"+name+make_tag_attributes(args)+(xml?" /":"")+">";
+  string attrs = make_tag_attributes(args, preserve_roxen_entities);
+  return "<" + name + attrs + (xml ? " /" : "" ) + ">";
 }
 
-string make_container(string name, mapping(string:string) args, string content)
-//! Returns a container tag `name' encasing the string `content', with
-//! the tag arguments dictated by the mapping `args'. Use
+string make_container(string name, mapping(string:string) args, string content,
+		      void|int preserve_roxen_entities)
+//! Returns a container tag @[name] encasing the string @[content], with
+//! the tag arguments dictated by the mapping @[args]. Use
 //! RXML.t_xml->format_tag(name, args, content) instead.
 {
   if(args["/"]=="/") m_delete(args, "/");
-  return make_tag(name,args)+content+"</"+name+">";
+  return make_tag(name, args, 0,
+		  preserve_roxen_entities) + content + "</" + name + ">";
 }
 
 string add_config( string url, array config, multiset prestate )
@@ -1368,23 +2363,24 @@ string simplify_path(string file)
 		       !has_value (file, "//")))
     return file;
 
-  int t2,t1;
+  int relative, got_slashdot_suffix;
 
   [string prefix, file] = win_drive_prefix(file);
 
-  if(file[0] != '/')
-    t2 = 1;
+  if (!has_prefix (file, "/"))
+    relative = 1;
 
-  if(strlen(file) > 1
-     && file[-2]=='/'
-     && ((file[-1] == '/') || (file[-1]=='.'))
-	)
-    t1=1;
+  // The following used to test for "//" at the end (thus replacing
+  // that too with "/."). That must be some kind of old confusion
+  // (dates back to at least roxenlib.pike 1.1 from 11 Nov 1996).
+  // /mast
+  if (has_suffix (file, "/."))
+    got_slashdot_suffix = 1;
 
   file=combine_path("/", file);
 
-  if(t1) file += "/.";
-  if(t2) return prefix + file[1..];
+  if(got_slashdot_suffix) file += "/.";
+  if(relative) return prefix + file[1..];
 
   return prefix + file;
 }
@@ -1481,22 +2477,56 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Hb" })
-string sizetostring( int size )
-  //! Returns the size as a memory size string with suffix,
-  //! e.g. 43210 is converted into "42.2 kb.
-{
-  if(size<0) return "--------";
-  float s = (float)size;
-  size=0;
+protected constant size_suffix =
+  ({ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" });
 
-  if(s<1024.0) return (int)s+" bytes";
-  while( s > 1024.0 )
+string sizetostring( int|float size )
+  //! Returns the size as a memory size string with suffix,
+  //! e.g. 43210 is converted into "42.2 kB". To be correct
+  //! to the latest standards it should really read "42.2 KiB",
+  //! but we have chosen to keep the old notation for a while.
+  //! The function knows about the quantifiers kilo, mega, giga,
+  //! tera, peta, exa, zetta and yotta.
+{
+  int neg = size < 0;
+  int|float abs_size = abs (size);
+
+  if (abs_size < 1024) {
+    if (intp (size))
+      return size + " " + size_suffix[0];
+    return size < 10.0 ?
+      sprintf ("%.2f %s", size, size_suffix[0]) :
+      sprintf ("%.0f %s", size, size_suffix[0]);
+  }
+
+  float s = (float) abs_size;
+  size=0;
+  while( s >= 1024.0 )
   {
     s /= 1024.0;
-    size ++;
+    if (++size == sizeof (size_suffix) - 1) break;
   }
-  return sprintf("%.1f %s", s, PREFIX[ size ]);
+  if (neg) s = -s;
+  return sprintf("%.1f %s", s, size_suffix[ size ]);
+}
+
+string format_hrtime (int hrtime, void|int pad)
+//! Returns a nicely formatted string for a time lapse value expressed
+//! in microseconds. If @[pad] is nonzero then the value is formatted
+//! right justified in a fixed-length string.
+{
+  if (hrtime < 1000000)
+    return sprintf (pad ? "%7.3f ms" : "%.3f ms", hrtime / 1e3);
+  else if (hrtime < 60 * 1000000)
+    return sprintf (pad ? "%8.3f s" : "%.3f s", hrtime / 1e6);
+  else if (hrtime < 60 * 60 * 1000000)
+    return sprintf (pad ? "%3d:%02d min" : "%d:%02d min",
+		    hrtime / (60 * 1000000), (hrtime / 1000000) % 60);
+  else
+    return sprintf (pad ? "%4d:%02d:%02d" : "%d:%02d:%02d",
+		    hrtime / (60 * 60 * 1000000),
+		    (hrtime / (60 * 1000000)) % 60,
+		    (hrtime / 1000000) % 60);
 }
 
 string html_decode_string(LocaleString str)
@@ -1512,7 +2542,16 @@ string html_encode_tag_value(LocaleString str)
   return "\"" + replace((string)str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
-string strftime(string fmt, int t)
+protected string my_sprintf(int prefix, string f, int arg)
+//! Filter prefix option in format string if prefix = 0.
+{
+  if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
+    f = "%" + format;
+  return sprintf(f, arg);
+}
+
+string strftime(string fmt, int t,
+		void|string lang, void|function language, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
 {
   if(!sizeof(fmt)) return "";
@@ -1520,72 +2559,93 @@ string strftime(string fmt, int t)
   fmt=replace(fmt, "%%", "\0");
   array(string) a = fmt/"%";
   string res = a[0];
-
+  mapping(string:string) m = (["type":"string"]);
+  
   foreach(a[1..], string key) {
     if(key=="") continue;
+    int(0..1) prefix = 1;
+    if(key[0] == '!' && sizeof(key) > 1) {
+      prefix = 0;
+      key = key[1..];
+    }
     switch(key[0]) {
     case 'a':	// Abbreviated weekday name
-      res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+      if (language)
+	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
+      else
+	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
       break;
     case 'A':	// Weekday name
-      res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-		"Thursday", "Friday", "Saturday" })[lt->wday];
+      if (language)
+	res += number2string(lt->wday+1,m,language(lang,"day",id));
+      else
+	res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+		  "Thursday", "Friday", "Saturday" })[lt->wday];
       break;
     case 'b':	// Abbreviated month name
     case 'h':	// Abbreviated month name
-      res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+      if (language)
+	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
+      else
+	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
       break;
     case 'B':	// Month name
-      res += ({ "January", "February", "March", "April", "May", "June",
-		"July", "August", "September", "October", "November", "December" })[lt->mon];
+      if (language)
+	res += number2string(lt->mon+1,m,language(lang,"month",id));
+      else
+	res += ({ "January", "February", "March", "April", "May", "June",
+		  "July", "August", "September", "October", "November", "December" })[lt->mon];
       break;
     case 'c':	// Date and time
       res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
 			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
       break;
     case 'C':	// Century number; 0-prefix
-      res += sprintf("%02d", 19 + lt->year/100);
+      res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
       break;
     case 'd':	// Day of month [1,31]; 0-prefix
-      res += sprintf("%02d", lt->mday);
+      res += my_sprintf(prefix, "%02d", lt->mday);
       break;
     case 'D':	// Date as %m/%d/%y
       res += strftime("%m/%d/%y", t);
       break;
     case 'e':	// Day of month [1,31]; space-prefix
-      res += sprintf("%2d", lt->mday);
+      res += my_sprintf(prefix, "%2d", lt->mday);
       break;
     case 'E':
     case 'O':
       key = key[1..]; // No support for E or O extension.
       break;
     case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
-      res += sprintf("%02d", lt->hour);
+      res += my_sprintf(prefix, "%02d", lt->hour);
       break;
     case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
-      res += sprintf("%02d", 1 + (lt->hour + 11)%12);
+      res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
       break;
     case 'j':	// Day number of year [1,366]; 0-prefix
-      res += sprintf("%03d", lt->yday);
+      res += my_sprintf(prefix, "%03d", lt->yday);
       break;
     case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
-      res += sprintf("%2d", lt->hour);
+      res += my_sprintf(prefix, "%2d", lt->hour);
       break;
     case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
-      res += sprintf("%2d", 1 + (lt->hour + 11)%12);
+      res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
       break;
     case 'm':	// Month number [1,12]; 0-prefix
-      res += sprintf("%02d", lt->mon + 1);
+      res += my_sprintf(prefix, "%02d", lt->mon + 1);
       break;
     case 'M':	// Minute [00,59]; 0-prefix
-      res += sprintf("%02d", lt->min);
+      res += my_sprintf(prefix, "%02d", lt->min);
       break;
     case 'n':	// Newline
       res += "\n";
       break;
     case 'p':	// a.m. or p.m.
       res += lt->hour<12 ? "a.m." : "p.m.";
+      break;
+    case 'P':	// am or pm
+      res += lt->hour<12 ? "am" : "pm";
       break;
     case 'r':	// Time in 12-hour clock format with %p
       res += strftime("%l:%M %p", t);
@@ -1594,7 +2654,7 @@ string strftime(string fmt, int t)
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]; 0-prefix
-      res += sprintf("%02d", lt->sec);
+      res += my_sprintf(prefix, "%02d", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
@@ -1604,31 +2664,31 @@ string strftime(string fmt, int t)
       res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
       break;
     case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-      res += sprintf("%d", lt->wday + 1);
+      res += my_sprintf(prefix, "%d", lt->wday + 1);
       break;
     case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
-      res += sprintf("%d", lt->wday);
+      res += my_sprintf(prefix, "%d", lt->wday);
       break;
     case 'x':	// Date
       res += strftime("%a %b %d %Y", t);
       break;
     case 'y':	// Year [00,99]; 0-prefix
-      res += sprintf("%02d", lt->year % 100);
+      res += my_sprintf(prefix, "%02d", lt->year % 100);
       break;
     case 'Y':	// Year [0000.9999]; 0-prefix
-      res += sprintf("%04d", 1900 + lt->year);
+      res += my_sprintf(prefix, "%04d", 1900 + lt->year);
       break;
 
     case 'U':	// Week number of year as a decimal number [00,53],
 		// with Sunday as the first day of week 1; 0-prefix
-      res += sprintf("%02d", ((lt->yday-1+lt->wday)/7));
+      res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
       break;
     case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-      res += sprintf("%02d", Calendar.ISO.Second(t)->week_no());
+      res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
       break;
     case 'W':	// Week number of year as a decimal number [00,53],
 		// with Monday as the first day of week 1; 0-prefix
-      res += sprintf("%02d", ((lt->yday+(5+lt->wday)%7)/7));
+      res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
       break;
     case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
@@ -1677,8 +2737,11 @@ string get_modfullname (RoxenModule module)
       };
     if (!(name && sizeof (name)) && module->query_name)
       name = module->query_name();
-    if (!(name && sizeof (name)))
+    if (!(name && sizeof (name))) {
       name = [string]module->register_module()[1];
+      sscanf (module->module_local_id(), "%*s#%d", int mod_copy);
+      if (mod_copy) name += " # " + mod_copy;
+    }
     if (mappingp (name))
       name = name->standard;
     return (string) name;
@@ -1686,27 +2749,77 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-string roxen_encode( string val, string encoding )
-//! Quote strings in a multitude of ways. Used primarily by entity quoting.
-//! The encoding string can be any of the following:
-//! none   - No encoding
-//! http   - HTTP encoding
-//! cookie - HTTP cookie encoding
-//! url    - HTTP encoding, including special characters in URL:s
-//! html   - HTML encofing, for generic text in html documents.
-//! pike   - Pike string quoting, for use in e.g. the <pike></pike> tag.
-//! js     - Javascript string quoting.
-//! mysql  - MySQL quoting.
-//! oracle - Oracle quoting.
-//! mysql-pike - MySQL quoting followed by Pike string quoting.
+static constant xml_invalid_mappings = ([
+  "\0":"\22000",  "\1":"\22001",
+  "\2":"\22002",  "\3":"\22003",
+  "\4":"\22004",  "\5":"\22005",
+  "\6":"\22006",  "\7":"\22007",
+  "\b":"\22010",  "\13":"\22013",
+  "\14":"\22014", "\16":"\22016",
+  "\17":"\22017", "\20":"\22020",
+  "\21":"\22021", "\22":"\22022",
+  "\23":"\22023", "\24":"\22024",
+  "\25":"\22025", "\26":"\22026",
+  "\27":"\22027", "\30":"\22030",
+  "\31":"\22031", "\32":"\22032",
+  "\33":"\22033", "\34":"\22034",
+  "\35":"\22035", "\36":"\22036",
+  "\37":"\22037", "\177":"\22041",
+  "\xFFFE":"", "\xFFFF":"" // Invalid unicode chars in XML!
+]);
+
+string encode_xml_invalids(string s)
+//! Remap control characters not valid in XML-documents to their
+//! corresponding printable code points (@tt{U2400 - U2421@}).
+{
+  return replace(s, xml_invalid_mappings);
+}
+
+//! Encode a single segment of @[roxen_encode()].
+//!
+//! See @[roxen_encode()] for details.
+protected string low_roxen_encode(string val, string encoding)
 {
   switch (encoding) {
    case "":
    case "none":
      return val;
 
+   case "utf8":
+   case "utf-8":
+     return string_to_utf8(val);
+
+   case "utf16":
+   case "utf16be":
+     return Locale.Charset.encoder("utf16be")->feed(val)->drain();
+
+   case "utf16le":
+     return Locale.Charset.encoder("utf16le")->feed(val)->drain();
+
+  case "hex":
+    if(String.width(val) > 8)
+      RXML.run_error(  "Cannot hex encode wide characters.\n" );
+    return String.string2hex(val);
+
+   case "base64":
+   case "base-64":
+   case "b64":
+     return MIME.encode_base64(val);
+   
+  case "md5":
+  case "sha1":
+  case "sha256":
+    if (String.width(val) > 8)
+      RXML.run_error("Cannot hash wide characters.\n");
+    return Crypto[upper_case(encoding)]->hash(val);
+    
+   case "quotedprintable":
+   case "quoted-printable":
+   case "qp":
+     return MIME.encode_qp(val);
+
    case "http":
-     return http_encode_string (val);
+     return http_encode_invalids (val);
 
    case "cookie":
      return http_encode_cookie (val);
@@ -1714,8 +2827,25 @@ string roxen_encode( string val, string encoding )
    case "url":
      return http_encode_url (val);
 
+   case "wml-url":
+     // Note: In 4.0 and earlier, this encoding was ambiguous since 8
+     // bit strings were %-encoded according to the ISO 8859-1 charset
+     // while wider strings first were UTF-8 encoded and then
+     // %-encoded. Although unlikely, it might be possible that the
+     // old ambiguous encoding is the one mandated by the WAP/WML
+     // standard - I haven't been able to verify it. /mast
+     return http_encode_url(val);
+
    case "html":
      return html_encode_string (val);
+
+   case "invalids":
+   case "xmlinvalids":
+   case "xml-invalids":
+     return encode_xml_invalids(val);
+
+   case "wml":
+     return replace(html_encode_string(val), "$", "$$");
 
    case "dtag":
      // This is left for compatibility...
@@ -1733,18 +2863,37 @@ string roxen_encode( string val, string encoding )
    case "js":
    case "javascript":
      return replace (val,
-		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
+		    ({ "\b", "\014", "\n", "\r", "\t", "\\",
+		       "'", "\"",
+		       "</", "<!--"}),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
-		       "\\'", "\\\"" }));
+		       "\\'", "\\\"",
+		       "<\\/", "<\\!--" }));
 
    case "mysql":
+     // Note: Quotes the single-quote (') in traditional sql-style,
+     //       for maximum compatibility with other sql databases.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
-		    ({ "\\\"" , "\\'", "\\\\" }) );
+		    ({ "\\\"" , "''", "\\\\" }) );
 
    case "sql":
    case "oracle":
      return replace (val, "'", "''");
+
+  case "bytea":
+    return replace (val,
+		    ({ "'", "\\", "\0", "&" }),
+		    ({ "\\'", "\\\\\\\\", "\\\\000", "\\\\046" }) );
+
+   case "csv":
+     if (sizeof(val) &&
+	 ((<' ', '\t'>)[val[0]] || (<' ', '\t'>)[val[-1]] ||
+	  has_value(val, ",") || has_value(val, ";") ||
+	  has_value(val, "\"") || has_value(val, "\n"))) {
+       return "\"" + replace(val, "\"", "\"\"") + "\"";
+     }
+     return val;
 
    case "mysql-dtag":
      // This is left for compatibility
@@ -1771,25 +2920,192 @@ string roxen_encode( string val, string encoding )
   }
 }
 
-string fix_relative( string file, RequestID id )
-//! Turns a relative (or already absolute) virtual path into an
-//! absolute virtual path, that is, one rooted at the virtual server's
-//! root directory. The returned path is @[simplify_path()]:ed.
+//! Quote strings in a multitude of ways. Used primarily by entity quoting.
+//!
+//! The @[encoding] string is split on @expr{"."@}, and encoded in order.
+//!
+//! The segments in the split @[encoding] string can be any of
+//! the following:
+//! @string
+//!   @value ""
+//!   @value "none"
+//!     No encoding.
+//!
+//!   @value "utf8"
+//!   @value "utf-8"
+//!     UTF-8 encoding. C.f. @[string_to_utf8].
+//!
+//!   @value "utf16"
+//!   @value "utf16be"
+//!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     @expr{"utf16be"@}.
+//!
+//!   @value "utf16le"
+//!     Little endian UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     @expr{"utf16le"@}.
+//!
+//!   @value "hex"
+//!     Hexadecimal encoding, e.g. @expr{"foo"@} is encoded to
+//!     @expr{"666f6f"@}. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[String.string2hex].
+//!
+//!   @value "base64"
+//!   @value "base-64"
+//!   @value "b64"
+//!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[MIME.encode_base64].
+//!
+//!   @value "md5"
+//!   @value "sha1"
+//!   @value "sha256"
+//!     Message digest using supplied hash algorithm. Requires octet
+//!     (i.e. non-wide) strings. Note that the result is a binary string
+//!     so apply e.g. hex encoding afterward to get a printable value.
+//!     C.f. @[Crypto.MD5.hash], @[Crypto.SHA1.hash] and
+//!     @[Crypto.SHA256.hash].
+//!
+//!   @value "quotedprintable"
+//!   @value "quoted-printable"
+//!   @value "qp"
+//!     Quoted-Printable MIME encoding. Requires octet (i.e. non-wide)
+//!     strings. C.f. @[MIME.encode_qp].
+//!
+//!   @value "http"
+//!     HTTP encoding (i.e. using @expr{%xx@} style escapes) of
+//!     characters that never can occur verbatim in URLs. Other
+//!     URL-special chars, including @expr{%@}, are not encoded. 8-bit
+//!     and wider chars are encoded according to the IRI standard (RFC
+//!     3987). C.f. @[Roxen.http_encode_invalids].
+//!
+//!   @value "url"
+//!     Similar to the @expr{"http"@} encoding, but encodes all URI
+//!     reserved and excluded chars, that otherwise could have special
+//!     meaning; see RFC 3986. This includes @expr{:@}, @expr{/@},
+//!     @expr{%@}, and quote chars. C.f. @[Roxen.http_encode_url].
+//!
+//!   @value "cookie"
+//!     Nonstandard HTTP-style encoding for cookie values. The Roxen
+//!     HTTP protocol module automatically decodes incoming cookies
+//!     using this encoding, so by using this for @expr{Set-Cookie@}
+//!     headers etc you will get back the original value in the
+//!     @expr{cookie@} scope. Note that @[Roxen.set_cookie] and the
+//!     RXML @expr{<set-cookie>@} tag already does this encoding for
+//!     you. C.f. @[Roxen.http_encode_cookie].
+//!
+//!   @value "html"
+//!     HTML encoding, for generic text in html documents. This means
+//!     encoding chars like @expr{<@}, @expr{&@}, and quotes using
+//!     character reference entities.
+//!
+//!   @value "wml"
+//!     HTML encoding, and doubling of any @tt{$@}'s.
+//!
+//!   @value "csv"
+//!     CSV (Comma Separated Values) encoding. Properly quotes all
+//!     separator characters in CSV records (comma, semicolon, double-quotes
+//!     leading spaces and newlines).
+//!
+//!   @value "pike"
+//!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@}
+//!     tag. This means backslash escapes for chars that cannot occur
+//!     verbatim in Pike string literals.
+//!
+//!   @value "js"
+//!   @value "javascript"
+//!     Javascript string quoting, i.e. using backslash escapes for
+//!     @expr{"@}, @expr{\@}, and more.
+//!
+//!     For safe use inside @tt{<script>@} elements, it quotes some
+//!     additional character sequences:
+//!
+//!     @ul
+//!     @item
+//!       @tt{</@} is quoted as @tt{<\/@} according to appendix B.3.2
+//!       in the HTML 4.01 spec.
+//!     @item
+//!       @tt{<!--@} is quoted as @tt{<\!--@} according to 4.3.1.2 in
+//!       the HTML 5 spec.
+//!     @endul
+//!
+//!     Both are harmless in Javascript string literals in other
+//!     contexts.
+//!
+//!   @value "mysql"
+//!     MySQL quoting. This also means backslash escapes, except the
+//!     @expr{'@} character which is quoted in SQL style as
+//!     @expr{''@}.
+//!
+//!   @value "sql"
+//!   @value "oracle"
+//!     SQL/Oracle quoting, i.e. @expr{'@} is encoded as @expr{''@}.
+//!
+//!     NOTE: Do NOT use this quoting method when creating
+//!           sql-queries intended for MySQL!
+//!
+//!   @value "bytea"
+//!     PostgreSQL quoting for BYTEA (binary) values.
+//!
+//!   @value "mysql-pike"
+//!     Compat. MySQL quoting followed by Pike string quoting.
+//!     Equvivalent to using @expr{"mysql.pike"@}.
+//!
+//!   @value "wml-url"
+//!     Compat alias for @expr{"url"@}.
+//!
+//!   @value "dtag"
+//!   @value "stag"
+//!     Compat. @expr{"dtag"@} encodes @expr{"@} as @expr{"'"'"@}, and
+//!     @expr{"stag"@} encodes @expr{'@} as @expr{'"'"'@}. They were
+//!     used frequently before rxml 2.0 to quote rxml attributes, but
+//!     are no longer necessary.
+//!
+//!   @value "mysql-dtag"
+//!   @value "sql-dtag"
+//!   @value "oracle-dtag"
+//!     Compat. Same as @expr{"mysql.dtag"@}, @expr{"sql.dtag"@}, and
+//!     @expr{"oracle.dtag@}, respectively.
+//! @endstring
+//!
+//! Returns zero if the encoding isn't recognized.
+//!
+//! @example
+//!   UTF8-encode a string for use in a Mysql query in an HTML page:
+//!   @expr{roxen_encode(val, "utf8.mysql.html")@}.
+string roxen_encode(string val, string encoding)
 {
-  string path = id->not_query;
-  if( !search( file, "http:" ) )
-    return file;
+  foreach(encoding/".", string enc) {
+    if (!(val = low_roxen_encode(val, enc)))
+      return 0;
+  }
+  return val;
+}
 
-  [string prefix, file] = win_drive_prefix(file);
-
+string fix_relative( string file, RequestID|void id )
+//! Using @expr{@[id]->not_query@}, turns a relative (or already
+//! absolute) virtual path into an absolute virtual path, i.e. one
+//! rooted at the virtual server's root directory. The returned path
+//! is simplified to not contain any @expr{"."@} or @expr{".."@}
+//! segments.
+{
+  Standards.URI uri = Standards.URI("://");
+  if (id) {
+    uri = Standards.URI(id->not_query, uri);
+  }
+  uri = Standards.URI(file, uri);
+  uri->path = (uri->combine_uri_path("", uri->path)/"/" - ({ ".." })) * "/";  
+  string res = sprintf("%s", uri);
   // +(id->misc->path_info?id->misc->path_info:"");
-  if(file != "" && file[0] == '/')
-    ;
-  else if(file != "" && file[0] == '#')
-    file = path + file;
-  else
-    file = dirname(path) + "/" +  file;
-  return simplify_path(prefix + file);
+  if (has_prefix(res, "://") && !has_prefix(file, "://") &&
+      (!id || !has_prefix(id->not_query, "://"))) {
+    // No scheme.
+    if (!has_prefix(file, "//") &&
+	(!id || !has_prefix(id->not_query, "//"))) {
+      // No host.
+      return res[sizeof("://")..];
+    }
+    return res[1..];
+  }
+  return res;
 }
 
 Stdio.File open_log_file( string logfile )
@@ -1837,11 +3153,12 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   if (m->adjust) t+=(int)m->adjust;
 
   string lang;
-  if(id->misc->defines->theme_language) lang=id->misc->defines->theme_language;
+  if(id && id->misc->defines && id->misc->defines->theme_language)
+    lang=id->misc->defines->theme_language;
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
-    return strftime(m->strftime, t);
+    return strftime(m->strftime, t, lang, language, id);
 
   if (m->part)
   {
@@ -1922,9 +3239,12 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 		     (eris->year+1900), eris->mon+1, eris->mday,
 		     eris->hour, eris->min, eris->sec);
 
+     case "http":
+       return http_date (t);
+
      case "discordian":
-#if efun(discdate)
-      array(string) not=discdate(t);
+#if constant (spider.discdate)
+      array(string) not=spider.discdate(t);
       res=not[0];
       if(m->year)
 	res += " in the YOLD of "+not[1];
@@ -1935,8 +3255,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
       return "Discordian date support disabled";
 #endif
      case "stardate":
-#if efun(stardate)
-      return (string)stardate(t, (int)m->prec||1);
+#if constant (spider.stardate)
+      return (string)spider.stardate(t, (int)m->prec||1);
 #else
       return "Stardate support disabled";
 #endif
@@ -1974,23 +3294,101 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   return res;
 }
 
-int time_dequantifier(mapping m)
+int time_dequantifier(mapping m, void|int t )
   //! Calculates an integer with how many seconds a mapping
   //! that maps from time units to an integer can be collapsed to.
-  //! E.g. (["minutes":2]) results in 120.
+  //! E.g. (["minutes":"2"]) results in 120.
   //! Valid units are seconds, minutes, beats, hours, days, weeks,
   //! months and years.
 {
-  float t = 0.0;
-  if (m->seconds) t+=((float)(m->seconds));
-  if (m->minutes) t+=((float)(m->minutes))*60;
-  if (m->beats)   t+=((float)(m->beats))*86.4;
-  if (m->hours)   t+=((float)(m->hours))*3600;
-  if (m->days)    t+=((float)(m->days))*86400;
-  if (m->weeks)   t+=((float)(m->weeks))*604800;
-  if (m->months)  t+=((float)(m->months))*(24*3600*30.436849);
-  if (m->years)   t+=((float)(m->years))*(3600*24*365.242190);
+  int initial = t;
+  if (m->seconds) t+=(int)(m->seconds);
+  if (m->minutes) t+=(int)(m->minutes)*60;
+  if (m->beats)   t+=(int)((float)(m->beats)*86.4);
+  if (m->hours)   t+=(int)(m->hours)*3600;
+  if (m->days) {
+    int days = (int)m->days;
+    if(initial) {
+      if(days<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Day()*abs(days))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Day()*days)->unix_time();
+    }
+    else
+      t+=days*24*3600;
+  }
+  if (m->weeks) {
+    int weeks = (int)m->weeks;
+    if(initial) {
+      if(weeks<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Week()*abs(weeks))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Week()*weeks)->unix_time();
+    }
+    else
+      t+=weeks*604800;
+  }
+  if (m->months) {
+    int mon = (int)m->months;
+    if(initial) {
+      if(mon<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Month()*abs(mon))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Month()*mon)->unix_time();
+    }
+    else
+      t+=(int)(mon*24*3600*30.436849);
+  }
+  if (m->years) {
+    int year = (int)m->years;
+    if(initial) {
+      if(year<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Year()*abs(year))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Year()*(int)m->years)->unix_time();
+    }
+    else
+      t+=(int)((float)(m->years)*3600*24*365.242190);
+  }
   return (int)t;
+}
+
+//! This function is typically used to conveniently calculate
+//! timeout values for eg the @[roxen.ArgCache] and @[roxen.ImageCache].
+//!
+//! It's similar to @[time_dequantifier()], but returns time relative
+//! to @expr{time(1)@}, and modifies the argument mapping @[args]
+//! destructively.
+//!
+//! @returns
+//!   Returns @[UNDEFINED] if no timeout was specified, and seconds
+//!   since @expr{time(1)@} otherwise.
+int timeout_dequantifier(mapping args)
+{
+  int res = UNDEFINED;
+
+  if (args["unix-time"]) {
+    // "unix-time" isn't handled by time_dequantifier().
+    res = (int)args["unix-time"] - time(1);
+  }
+
+  res = time_dequantifier(args, res);
+
+  if (!zero_type(res)) {
+    foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+	       "days", "weeks", "months", "years" }), string arg) {
+      m_delete(args, arg);
+    }
+  }
+  return res;
 }
 
 class _charset_decoder(object cs)
@@ -2001,44 +3399,238 @@ class _charset_decoder(object cs)
   }
 }
 
-function get_client_charset_decoder( string едц, RequestID|void id )
-  //! Returns a decoder for the clients charset, given the clients
-  //! encoding of the string "едц". See the roxen-automatic-charset-variable
-  //! tag.
+protected class CharsetDecoderWrapper
 {
-  switch( (едц/"\0")[0] )
+  protected object decoder;
+  string charset;
+
+  protected void create (string cs)
   {
-   case "edv":
-     report_notice( "Warning: Non 8-bit safe client detected (%s)",
-                    (id?id->client*"":"unknown client"));
-     return 0;
-
-   case "едц":
-     return 0;
-
-   case "\33-Aедц":
-     id && id->set_output_charset && id->set_output_charset( "iso-2022" );
-     return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
-
-   case "ГҐГ¤Г¶":
-   case "ГҐГ¤":
-     id && id->set_output_charset && id->set_output_charset( "utf-8" );
-     return utf8_to_string;
-
-   case "\214\212\232":
-     id && id->set_output_charset && id->set_output_charset( "mac" );
-     return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
-
-   case "\0е\0д\0ц":
-     id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
-     return unicode_to_string;
+    // Would be nice if it was possible to get the canonical charset
+    // name back from Locale.Charset so we could use that instead in
+    // the client_charset_decoders cache mapping.
+    decoder = Locale.Charset.decoder (charset = cs);
+    werror ("created %O from %O\n", decoder, cs);
   }
-  report_warning( "Unable to find charset decoder for едц == %O\n",едц);
+
+  string decode (string what)
+  {
+    object d = decoder;
+    // Relying on the interpreter lock here.
+    decoder = 0;
+    if (d) d->clear();
+    else d = Locale.Charset.decoder (charset);
+    string res = d->feed (what)->drain();
+    decoder = d;
+    return res;
+  }
+}
+
+protected multiset(string) charset_warned_for = (<>);
+
+constant magic_charset_variable_placeholder = "__MaGIC_RoxEn_Actual___charseT";
+constant magic_charset_variable_value = "едц&#x829f;@" + magic_charset_variable_placeholder;
+
+protected mapping(string:function(string:string)) client_charset_decoders = ([
+  "http": http_decode_string,
+  "html": Parser.parse_html_entities,
+  "utf-8": utf8_to_string,
+  "utf-16": unicode_to_string,
+]);
+
+protected function(string:string) make_composite_decoder (
+  function(string:string) outer, function(string:string) inner)
+{
+  // This is put in a separate function to minimize the size of the
+  // dynamic frame for this lambda.
+  return lambda (string what) {
+	   return outer (inner (what));
+	 };
+}
+
+function(string:string) get_decoder_for_client_charset (string charset)
+//! Returns a decoder function for the given charset, which is on the
+//! form returned by @[get_client_charset].
+{
+  if (function(string:string) dec = client_charset_decoders[charset])
+    // This always succeeds to look up the special values "http" and "html".
+    return dec;
+
+  if (sscanf (charset, "%s|%s", string outer_cs, string inner_cs)) {
+    function(string:string) outer = client_charset_decoders[outer_cs];
+    if (!outer)
+      outer = client_charset_decoders[outer_cs] =
+	CharsetDecoderWrapper (outer_cs)->decode;
+    return client_charset_decoders[charset] =
+      make_composite_decoder (outer, get_decoder_for_client_charset (inner_cs));
+  }
+
+  return client_charset_decoders[charset] =
+    CharsetDecoderWrapper (charset)->decode;
+}
+
+string get_client_charset (string едц)
+//! Returns charset used by the client, given the clients encoding of
+//! the string @[magic_charset_variable_value]. See the
+//! @expr{<roxen-automatic-charset-variable>@} RXML tag.
+//!
+//! The return value is usually a charset name, but it can also be any
+//! of:
+//!
+//! @dl
+//!   @item "http"
+//!     It was URI-encoded (i.e. using @expr{%XX@} style escapes).
+//!   @item "html"
+//!     It was encoded using HTML character entities.
+//! @enddl
+//!
+//! Furthermore, some cases of double encodings are also detected. In
+//! these cases the returned string is a list of the charset names or
+//! values described above, separated by @expr{"|"@}, starting with
+//! the encoding that was used first.
+//!
+//! @seealso
+//! @[get_client_charset_decoder], @[get_decoder_for_client_charset]
+{
+  //  If the first character is "%" the whole request is most likely double
+  //  encoded. We'll undo the decoding by combining the charset decoder with
+  //  http_decode_string().
+  if (has_prefix(едц, "%") && !has_prefix(едц, "%%")) {
+    report_notice("Warning: Double HTTP encoding detected: %s\n", едц);
+    string cs = get_client_charset (http_decode_string(едц));
+    if (cs) {
+      return cs + "|http";
+    } else {
+      return "http";
+    }
+  }
+
+  // Netscape and Safari seem to send "?" for characters that can't be
+  // represented by the current character set while IE encodes those
+  // characters as entities, while Opera uses "\201" or "?x829f;"...
+  string test = едц;
+  sscanf (test, "%s\0", test);
+  string test2 = test;
+  sscanf (test2, "%s@%s", test2, string charset);
+  test2 = replace(test2, ({ "\201",  "?x829f;", }), ({ "?", "?", }));
+
+  test = replace(test2,
+		 ({ "&aring;", "&#229;", "&#xe5;",
+		    "&auml;", "&#228;", "&#xe4;",
+		    "&ouml;", "&#246;", "&#xf6;",
+		    "&#33439;","&#x829f;", }),
+		 ({ "?", "?", "?",
+		    "?", "?", "?",
+		    "?", "?", "?",
+		    "?", "?", }));
+  
+  switch( test ) {
+  case "edv":
+  case "edv?":
+    report_notice( "Warning: Non 8-bit safe client detected.\n");
+    return 0;
+
+  case "едц?":
+    if (test2 != test)
+      return "html";
+    // FALL_THROUGH
+  case "едц":
+    return "iso-8859-1";
+    
+  case "\33-Aедц":
+  case "\33-A\345\344\366\33$Bgl":
+    return "iso-2022-jp";
+    
+  case "+AOUA5AD2-":
+  case "+AOUA5AD2gp8-":
+    return "utf-7";
+     
+  case "ГҐГ¤Г¶?":
+    if (test != test2) {
+      return "html|utf-8";
+    }
+    // FALL_THROUGH
+  case "ГҐГ¤Г¶":
+  case "ГҐГ¤":
+  case "ГҐГ¤Г¶\350\212\237":
+  case "\357\277\275\357\277\275\357\277\275\350\212\237":
+    return "utf-8";
+
+  case "\214\212\232?":
+    if (test != test2) {
+      return "html|mac";
+    }
+    // FALL_THROUGH
+  case "\214\212\232":
+    return "mac";
+    
+  case "\0е\0д\0ц":
+  case "\0е\0д\0ц\202\237":
+     return "utf-16";
+     
+  case "\344\214":
+  case "???\344\214":
+  case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
+    return "shift_jis";
+  }
+
+  // If the actual charset is valid, return a decoder for that charset
+  if (charset)
+    catch {
+      get_decoder_for_client_charset (charset);
+      return charset;
+    };
+  
+  if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
+    charset_warned_for[test] = 1;
+    report_warning( "Unable to find charset decoder for %O "
+		    "(vector %O, charset %O).\n",
+		    едц, test, charset);
+  }
+}
+
+function(string:string) get_client_charset_decoder( string едц,
+						    RequestID|void id )
+//! Returns a decoder for the client's charset, given the clients
+//! encoding of the string @[magic_charset_variable_value]. See the
+//! @expr{<roxen-automatic-charset-variable>@} RXML tag.
+//!
+//! @seealso
+//! @[get_client_charset]
+{
+  string charset = get_client_charset (едц);
+
+  if (function(string|function:void) f = id && id->set_output_charset)
+    switch (charset) {
+      case "iso-2022-jp":		f ("iso-2022"); break;
+      case "utf-7":			f ("utf-7"); break;
+      case "html|utf-8": case "utf-8":	f ("utf-8"); break;
+      case "html|mac": case "mac":	f ("mac"); break;
+      case "utf-16":			f (string_to_unicode); break;
+      case "shift_jis":			f ("shift_jis"); break;
+    }
+
+  return get_decoder_for_client_charset (charset);
 }
 
 
 // Low-level C-roxen optimization functions.
 inherit _Roxen;
+
+// This symbol is added by roxenloader if an old _Roxen.make_http_headers()
+// is detected.
+#if constant(HAVE_OLD__Roxen_make_http_headers)
+string make_http_headers(mapping(string:string|array(string)) heads,
+			 int(0..1)|void no_terminator)
+{
+  string res = ::make_http_headers(heads);
+  if (no_terminator) {
+    // Remove the terminating CRLF.
+    return res[..sizeof(res)-3];
+  }
+  return res;
+}
+#endif /* constant(HAVE_OLD__Roxen_make_http_headers) */
 
 /*
  * TODO:
@@ -2053,22 +3645,17 @@ inherit _Roxen;
 #define QD_WRITE(X)
 #endif /* QUOTA_DEBUG */
 
-#undef CACHE
-#undef NOCACHE
-#define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
-#define NOCACHE(id) ([mapping(string:mixed)]id->misc)->cacheable=0
-
 
 class QuotaDB
 {
-#if constant(create_thread)
+#if constant(thread_create)
   object(Thread.Mutex) lock = Thread.Mutex();
 #define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
-#else /* !constant(create_thread) */
+#else /* !constant(thread_create) */
 #define LOCK()
 #define UNLOCK()
-#endif /* constant(create_thread) */
+#endif /* constant(thread_create) */
 
   constant READ_BUF_SIZE = 256;
   constant CACHE_SIZE_LIMIT = 512;
@@ -2087,15 +3674,15 @@ class QuotaDB
 
   int next_offset;
 
-  static class QuotaEntry
+  protected class QuotaEntry
   {
     string name;
     int data_offset;
 
-    static int usage;
-    static int quota;
+    protected int usage;
+    protected int quota;
 
-    static void store()
+    protected void store()
     {
       LOCK();
 
@@ -2108,7 +3695,7 @@ class QuotaDB
       UNLOCK();
     }
 
-    static void read()
+    protected void read()
     {
       LOCK();
 
@@ -2191,52 +3778,9 @@ class QuotaDB
 
       store();
     }
-
-#if !constant(set_weak_flag)
-    static int refs;
-
-    void add_ref()
-    {
-      refs++;
-    }
-
-    void free_ref()
-    {
-      if (!(--refs)) {
-	destruct();
-      }
-    }
   }
 
-  static class QuotaProxy
-  {
-    static object(QuotaEntry) master;
-
-    function(string, int:int) check_quota;
-    function(string, int:int) allocate;
-    function(string, int:int) deallocate;
-    function(string, int:void) set_usage;
-    function(string:int) get_usage;
-
-    void create(object(QuotaEntry) m)
-    {
-      master = m;
-      master->add_ref();
-      check_quota = master->check_quota;
-      allocate = master->allocate;
-      deallocate = master->deallocate;
-      set_usage = master->set_usage;
-      get_usage = master->get_usage;
-    }
-
-    void destroy()
-    {
-      master->free_ref();
-    }
-#endif /* !constant(set_weak_flag) */
-  }
-
-  static object read_entry(int offset, int|void quota)
+  protected object read_entry(int offset, int|void quota)
   {
     QD_WRITE(sprintf("QuotaDB::read_entry(%O, %O)\n", offset, quota));
 
@@ -2274,7 +3818,7 @@ class QuotaDB
     return QuotaEntry(key, data_offset, quota);
   }
 
-  static Stdio.File open(string fname, int|void create_new)
+  protected Stdio.File open(string fname, int|void create_new)
   {
     Stdio.File f = Stdio.File();
     string mode = create_new?"rwc":"rw";
@@ -2288,7 +3832,7 @@ class QuotaDB
     return(f);
   }
 
-  static void init_index_acc()
+  protected void init_index_acc()
   {
     /* Set up the index accellerator.
      * sizeof(index_acc) ~ sqrt(sizeof(index))
@@ -2424,7 +3968,7 @@ class QuotaDB
     }
   }
 
-  static object low_lookup(string key, int quota)
+  protected object low_lookup(string key, int quota)
   {
     QD_WRITE(sprintf("QuotaDB::low_lookup(%O, %O)\n", key, quota));
 
@@ -2529,20 +4073,12 @@ class QuotaDB
       QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): User in active objects.\n",
 		       key, quota));
 
-#if constant(set_weak_flag)
       return res;
-#else /* !constant(set_weak_flag) */
-      return QuotaProxy(res);
-#endif /* constant(set_weak_flag) */
     }
     if (res = low_lookup(key, quota)) {
       active_objects[key] = res;
 
-#if constant(set_weak_flag)
       return res;
-#else /* !constant(set_weak_flag) */
-      return QuotaProxy(res);
-#endif /* constant(set_weak_flag) */
     }
 
     QD_WRITE(sprintf("QuotaDB::lookup(%O, %O): New user.\n", key, quota));
@@ -2586,9 +4122,7 @@ class QuotaDB
     data_file = open(base_name + ".data", create_new);
     object index_file = open(base_name + ".index", 1);
 
-#if constant(set_weak_flag)
     set_weak_flag(active_objects, 1);
-#endif /* constant(set_weak_flag) */
 
     /* Initialize the new_entries table. */
     array index_st = index_file->stat();
@@ -2671,36 +4205,36 @@ class EScope(string scope)
     return scope == "_" ? ctx->current_scope() : scope;
   }
 
-  static mixed `[]( string what )
+  protected mixed `[]( string what )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->get_var( what, scope );
   }
 
-  static mixed `->( string what )
+  protected mixed `->( string what )
   {
     return `[]( what );
   }
 
-  static mixed `[]=( string what, mixed nval )
+  protected mixed `[]=( string what, mixed nval )
   {
     RXML.Context ctx = RXML.get_context( );  
     ctx->set_var( what, nval, scope );
     return nval;
   }
 
-  static mixed `->=( string what, mixed nval )
+  protected mixed `->=( string what, mixed nval )
   {
     return `[]=( what, nval );
   }
 
-  static array(string) _indices( )
+  protected array(string) _indices( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->list_var( scope );
   } 
 
-  static array(string) _values( )
+  protected array(string) _values( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return map( ctx->list_var( scope ), `[] );
@@ -2718,16 +4252,19 @@ class SRestore
   }
 }
 
-SRestore add_scope_constants( string|void name )
+SRestore add_scope_constants( string|void name, function|void add_constant )
 {
   SRestore res = SRestore();
   mapping ac = all_constants();
+  if(!add_constant)
+    add_constant = predef::add_constant;
   if(!name) name = "";
   if( RXML.get_context() )
   {
     foreach( RXML.get_context()->list_scopes()|({"_"}), string scope )
     {
-      res->osc[ name+scope ] = ac[ name+scope ];
+      if( add_constant == predef::add_constant )
+	res->osc[ name+scope ] = ac[ name+scope ];
       add_constant( name+scope, EScope( scope ) );
     }
   }
@@ -2794,6 +4331,36 @@ string encode_charref (string char)
 
 // RXML complementary stuff shared between configurations.
 
+class ScopeRequestHeader {
+  inherit RXML.Scope;
+
+  mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    string|array(string) val = (c || RXML_CONTEXT)->id->request_headers[var];
+    if(!val)
+      return RXML.nil;
+    if(type)
+    {
+      if(arrayp(val) && type->subtype_of (RXML.t_any_text))
+	val *= "\0";
+      return type->encode(val);
+    }
+    return val;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    return indices((c || RXML_CONTEXT)->id->request_headers);
+  }
+
+  array(string) _values(void|RXML.Context c) {
+    return values((c || RXML_CONTEXT)->id->request_headers);
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && "RXML.Scope(request-header)";
+  }
+}
+
 class ScopeRoxen {
   inherit RXML.Scope;
 
@@ -2814,41 +4381,51 @@ class ScopeRoxen {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
+    
+    mixed val = c->misc->scope_roxen[var];
+    if(!zero_type(val))
+    {
+      if (objectp(val) && val->rxml_var_eval) return val;
+      return ENCODE_RXML_TEXT(val, type);
+    }
+    
     switch(var)
     {
+     case "nodename":
+       return uname()->nodename;
      case "uptime":
-       CACHE(c->id,1);
+       c->id->lower_max_cache (1);
        return ENCODE_RXML_INT(time(1)-roxenp()->start_time, type);
      case "uptime-days":
-       CACHE(c->id,3600*2);
+       c->id->lower_max_cache (3600 * 2);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600/24, type);
      case "uptime-hours":
-       CACHE(c->id,1800);
+       c->id->lower_max_cache (1800);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600, type);
      case "uptime-minutes":
-       CACHE(c->id,60);
+       c->id->lower_max_cache (60);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/60, type);
      case "hits-per-minute":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_INT(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
 			      type);
      case "hits":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_INT(c->id->conf->requests, type);
      case "sent-mb":
-       CACHE(c->id,10);
+       c->id->lower_max_cache (10);
        // FIXME: Use float here instead?
        return ENCODE_RXML_TEXT(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)), type);
      case "sent":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_INT(c->id->conf->sent, type);
      case "sent-per-minute":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        return ENCODE_RXML_INT(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
 			      type);
      case "sent-kbit-per-second":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_TEXT(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
 						(time(1)-roxenp()->start_time || 1))),
@@ -2860,39 +4437,86 @@ class ScopeRoxen {
      case "version":
        return ENCODE_RXML_TEXT(roxenp()->version(), type);
      case "base-version":
-       return ENCODE_RXML_TEXT(__roxen_version__, type);
+       return ENCODE_RXML_TEXT(roxen_ver, type);
      case "build":
-       return ENCODE_RXML_TEXT(__roxen_build__, type);
+       return ENCODE_RXML_TEXT(roxen_build, type);
+     case "dist-version":
+       return ENCODE_RXML_TEXT(roxen_dist_version, type);
+     case "dist-os":
+       return ENCODE_RXML_TEXT(roxen_dist_os, type);
+     case "product-name":
+       return ENCODE_RXML_TEXT(roxen_product_name, type);     
      case "time":
-       CACHE(c->id,1);
-       return ENCODE_RXML_INT(time(1),  type);
+       c->id->lower_max_cache (1);
+       return ENCODE_RXML_INT(time(),  type);
      case "server":
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
-     case "domain":
-       sscanf(c->id->url_base(), "%*s://%[^:/]", string tmp);
-       return ENCODE_RXML_TEXT(tmp, type);
+      case "domain": {
+	//  Handle hosts and adresses including IPv6 format
+	Standards.URI u = Standards.URI(c->id->url_base());
+	string tmp = u && u->host;
+	if (tmp && has_value(tmp, ":"))
+	  tmp = "[" + tmp + "]";
+	return ENCODE_RXML_TEXT(tmp || "", type);
+      }
      case "locale":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
      case "path":
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      case "unique-id":
        return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
-     default:
-       return RXML.nil;
+
+     case "license-type": {
+       object key = c->id->conf->getvar("license")->get_key();
+       return ENCODE_RXML_TEXT(key?key->type():"none", type);
+     }
+     case "license-warnings": {
+       object key = c->id->conf->getvar("license")->get_key();
+       return ENCODE_RXML_TEXT(key?sizeof(key->get_warnings()):0, type);
+     }
+
+    case "auto-charset-variable":
+      return ENCODE_RXML_TEXT("magic_roxen_automatic_charset_variable", type);
+    case "auto-charset-value":
+      return ENCODE_RXML_TEXT(magic_charset_variable_value, type);
     }
-    :: `[] (var, c, scope);
+    
+    return RXML.nil;
   }
 
-  array(string) _indices() {
-    return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
-	     "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
-             "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
-	     "pike-version", "version", "time", "server", "domain",
-	     "locale", "path"});
+  mixed `[]= (string var, mixed val, void|RXML.Context c, 
+	      void|string scope_name) {
+    if (!c) c = RXML_CONTEXT;
+    return c->misc->scope_roxen[var]=val;
   }
 
-  string _sprintf() { return "RXML.Scope(roxen)"; }
+  array(string) _indices(void|RXML.Context c) {
+    if (!c) c = RXML_CONTEXT;
+    return
+      Array.uniq(indices(c->misc->scope_roxen) +
+		 ({ "uptime", "uptime-days", "uptime-hours", "uptime-minutes",
+		    "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
+		    "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
+		    "pike-version", "version", "time", "server", "domain",
+		    "locale", "path", "auto-charset-variable",
+		    "auto-charset-value" }) );
+  }
+
+  void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
+    if (!c) c = RXML_CONTEXT;
+    predef::m_delete(c->misc->scope_roxen, var);
+  }
+
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(roxen)"; }
+}
+
+int get_ssl_strength(string ignored, RequestID id)
+{
+  if (!id->my_fd || !id->my_fd->get_peer_certificate_info ||
+      !id->my_fd->query_connection())
+    return 0;
+  return id->my_fd->query_connection()->session->cipher_spec->key_bits;
 }
 
 class ScopePage {
@@ -2903,10 +4527,26 @@ class ScopePage {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
+    
+    mixed val;
+    if(converter[var])
+      val = c->misc[converter[var]];
+    else
+      val = c->misc->scope_page[var];
+    if(!zero_type(val))
+    {
+      if (objectp (val) && val->rxml_var_eval)
+	return val;
+      return ENCODE_RXML_TEXT(val, type);
+    }
+    
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
+      case "mountpoint":
+	string s = c->id->virtfile || "";
+	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
@@ -2918,23 +4558,16 @@ class ScopePage {
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
-	c->id->misc->cacheable = 0;
-	if (!c->id->my_fd || !c->id->my_fd->session) return ENCODE_RXML_INT(0, type);
-	return ENCODE_RXML_INT(c->id->my_fd->session->cipher_spec->key_bits, type);
+	c->id->register_vary_callback("host", get_ssl_strength);
+	return ENCODE_RXML_INT(get_ssl_strength("", c->id), type);
       case "dir":
 	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
       case "counter":
 	return ENCODE_RXML_INT(++c->misc->internal_counter, type);
     }
-    mixed val;
-    if(converter[var])
-      val = c->misc[converter[var]];
-    else
-      val = c->misc->scope_page[var];
-    if( zero_type(val) ) return RXML.nil;
-    if (objectp (val) && val->rxml_var_eval) return val;
-    return ENCODE_RXML_TEXT(val, type);
+    
+    return RXML.nil;
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
@@ -2950,12 +4583,12 @@ class ScopePage {
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
-      ({ "pathinfo", "realfile", "virtroot", "virtfile", "path", "query",
+      ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path", "query",
 	 "url", "last-true", "language", "scope", "filesize", "self",
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
-    return ind + ({"pathinfo"});
+    return Array.uniq(ind);
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
@@ -2975,7 +4608,7 @@ class ScopePage {
     predef::m_delete(c->misc->scope_page, var);
   }
 
-  string _sprintf() { return "RXML.Scope(page)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(page)"; }
 }
 
 class ScopeCookie {
@@ -2983,7 +4616,8 @@ class ScopeCookie {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
-    NOCACHE(c->id);
+    if (c->id->conf->compat_level() < 5.0)
+      c->id->set_max_cache (0);
     return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
 
@@ -2992,6 +4626,11 @@ class ScopeCookie {
       RXML.parse_error ("Cannot set cookies of type %t.\n", val);
     if (!c) c = RXML_CONTEXT;
     if(c->id->cookies[var]!=val) {
+      // Note: We should not use c->set_var here to propagate the
+      // change event, since this code is called by it. It's also
+      // called dynamically to install the p-coded changes in the
+      // cookie scope, so we don't use c->id->add_response_header
+      // below.
       c->id->cookies[var]=val;
       add_http_header(c->misc[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
 		      "="+http_encode_cookie( val )+
@@ -3002,21 +4641,24 @@ class ScopeCookie {
 
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
-    NOCACHE(c->id);
+    if (c->id->conf->compat_level() < 5.0)
+      c->id->set_max_cache (0);
     return indices(c->id->cookies);
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if (!c) c = RXML_CONTEXT;
     if(!c->id->cookies[var]) return;
+    // Note: The same applies here as in `[]= above.
     predef::m_delete(c->id->cookies, var);
     add_http_header(c->misc[" _extra_heads"], "Set-Cookie",
 		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
-  string _sprintf() { return "RXML.Scope(Cookie)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(Cookie)"; }
 }
 
+RXML.Scope scope_request_header=ScopeRequestHeader();
 RXML.Scope scope_roxen=ScopeRoxen();
 RXML.Scope scope_page=ScopePage();
 RXML.Scope scope_cookie=ScopeCookie();
@@ -3167,6 +4809,12 @@ class FormScope
     else return q;
   }
 
+  void _m_delete (string var, void|RXML.Context ctx, void|string scope_name)
+  {
+    if (!ctx) ctx = RXML_CONTEXT;
+    predef::m_delete (ctx->id->real_variables, var);
+  }
+
   array _indices( void|RXML.Context ctx )
   {
     if(!ctx) ctx = RXML_CONTEXT;
@@ -3181,7 +4829,9 @@ RXML.TagSet entities_tag_set = class
 {
   inherit RXML.TagSet;
 
-  void prepare_context (RXML.Context c) {
+  void entities_prepare_context (RXML.Context c) {
+    c->add_scope("request-header", scope_request_header);
+    c->misc->scope_roxen=([]);
     c->add_scope("roxen",scope_roxen);
     c->misc->scope_page=([]);
     c->add_scope("page",scope_page);
@@ -3196,6 +4846,7 @@ RXML.TagSet entities_tag_set = class
   void create()
   {
     ::create (0, "entities_tag_set");
+    prepare_context = entities_prepare_context;
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
     add_string_entities (parser_charref_table);
@@ -3209,7 +4860,7 @@ constant monthnum=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
 		    "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
 
 #define MAX_SINCE_CACHE 16384
-static mapping(string:int) since_cache=([ ]);
+protected mapping(string:int) since_cache=([ ]);
 array(int) parse_since(string date)
 {
   if(!date || sizeof(date)<14) return({0,-1});
@@ -3222,11 +4873,12 @@ array(int) parse_since(string date)
   if(!(t=since_cache[dat])) {
     int day, year = -1, month, hour, minute, second;
     string m;
-    if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    if((sscanf(dat, "%d-%d-%d %d:%d:%d", year, month, day, hour, minute, second)>2) ||
+       (sscanf(dat, "%d-%d-%dT%d:%d:%d", year, month, day, hour, minute, second)>2))
     {
-      month=monthnum[m];
-    } else if(dat[2]==',') { // I bet a buck that this never happens
-      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
+      // ISO-format.
+    } else if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    {
       month=monthnum[m];
     } else if(!(int)dat) {
       sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
@@ -3281,28 +4933,35 @@ void set_cookie( RequestID id,
                  string value, 
                  int|void expire_time_delta, 
                  string|void domain, 
-                 string|void path )
-//! Set the cookie specified by 'name' to 'value'.
-//! Sends a Set-Cookie header.
-//! 
-//! The expire_time_delta, domain and path arguments are optional.
+                 int(1..1)|string|void path )
+//! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
+//! header in the response that will be made from @[id].
 //!
+//! @param expire_time_delta
 //! If the expire_time_delta variable is -1, the cookie is set to
-//! expire five years in the future. If it is 0 or ommited, no expire
-//! information is sent to the client. This usualy results in the cookie
-//! being kept until the browser is exited. 
+//! expire five years in the future. -2 will set the expiration time to
+//! posix time 1 and add the argument Max-Age, set to 0. If expire_time_delta
+//! is 0 or ommited, no expire information is sent to the client. This
+//! usualy results in the cookie being kept until the browser is exited.
+//!
+//! @param path
+//! A path argument will always be added to the Set-Cookie header unless
+//! @[path] is 1. It will otherwise be set to the provided string, or ""
+//! if no string is provided.
 {
   if( expire_time_delta == -1 )
     expire_time_delta = (3600*(24*365*5));
   string cookie = (http_encode_cookie( name )+"="+
                    http_encode_cookie( value ));
-  if( expire_time_delta )
+
+  if( expire_time_delta == -2 )
+    cookie += "; expires="+http_date(1)+"; Max-Age=0";
+  else if( expire_time_delta )
     cookie += "; expires="+http_date( expire_time_delta+time(1) );
+
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
-  if( path!="" ) cookie += "; path="+http_encode_cookie( path||"/" );
-  if(!id->misc->moreheads)
-    id->misc->moreheads = ([]);
-  add_http_header( id->misc->moreheads, "Set-Cookie",cookie );
+  if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
+  id->add_response_header ("Set-Cookie", cookie);
 }
 
 void remove_cookie( RequestID id,
@@ -3314,7 +4973,7 @@ void remove_cookie( RequestID id,
 //! Sends a Set-Cookie header with an expire time of 00:00 1/1 1970.
 //! The domain and path arguments are optional.
 {
-  set_cookie( id, name, value, -time(1)+1, domain, path );
+  set_cookie( id, name, value, -2, domain, path );
 }
 
 void add_cache_stat_callback( RequestID id, string file, int mtime )
@@ -3359,38 +5018,114 @@ string get_server_url(Configuration c)
   return c->get_url();
 }
 
+static private array(string) local_addrs;
+
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
 
-  string url=urls[0];
+  string url = urls[0];
+  mapping(string:Standards.URI) uris = ([ ]);
+  foreach (urls, string u)
+    uris[u] = Standards.URI(u);
+  
   foreach( ({"http:","https:","ftp:"}), string p)
     foreach(urls, string u)
-      if(u[0..sizeof(p)-1]==p) {
-	url=u;
+      if (has_prefix(u, p)) {
+	uris[u]->fragment = 0;
+	url = (string) uris[u];
+	uris[url] = uris[u];
 	break;
       }
+  
+  Standards.URI uri = uris[url];
+  string server = uri->host;
+  if (server == "::")
+    server = "*";
+  if (!has_value(server, "*")) return (string)uri;
 
-  string protocol, server, path="";
-  int port;
-  if(sscanf(url, "%s://%s:%d/%s", protocol, server, port, path)!=4 &&
-     sscanf(url, "%s://%s:%d", protocol, server, port)!=3 &&
-     sscanf(url, "%s://%s/%s", protocol, server, path)!=3 &&
-     sscanf(url, "%s://%s", protocol, server)!=2 )
-    return 0;
+  // The host part of the URL is a glob.
+  // Lets find some suitable hostnames and IPs to match it against.
 
   array hosts=({ gethostname() }), dns;
-  catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
+
+#ifndef NO_DNS
+  catch(dns=roxen->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2]+dns[1];
+  if (!local_addrs) {
+    string ifconfig =
+      Process.locate_binary(({ "/sbin", "/usr/sbin", "/bin", "/usr/bin",
+			       "/etc" }), "ifconfig");
+    local_addrs = dns[1];
+    if (ifconfig) {
+      foreach(Process.run(({ ifconfig, "-a" }),
+			  ([ "env":getenv() +
+			     ([
+			       // Make sure the output is not affected
+			       // by the locale. cf [bug 5898].
+			       "LC_ALL":"C",
+			       "LANG":"C",
+			     ])]))->stdout/"\n", string line) {
+	int i;
+
+	// We need to parse lines with the following formats:
+	//
+	// IPv4:
+	//   inet 127.0.0.1			Solaris, MacOS X.
+	//   inet addr:127.0.0.1		Linux.
+	//
+	// IPv6:
+	//   inet6 ::1				MacOS X.
+	//   inet6 ::1/128			Solaris.
+	//   inet6 addr: ::1/128		Linux, note the space!
+	//   inet6 fe80::ffff/10		Solaris.
+	//   inet6 fe80::ffff%en0		MacOS X, note the suffix!
+	//   inet6 addr: fe80::ffff/64		Linux, note the space!
+	while ((i = search(line, "inet")) >= 0) {
+	  line = line[i..];
+	  string addr;
+	  if (has_prefix(line, "inet ")) {
+	    line = line[5..];
+	  } else if (has_prefix(line, "inet6 ")) {
+	    line = line[6..];
+	  }
+	  if (has_prefix(line, "addr: ")) {
+	    line = line[6..];
+	  } else if (has_prefix(line, "addr:")) {
+	    line = line[5..];
+	  }
+	  sscanf(line, "%[^ ]%s", addr, line);
+	  if (addr && sizeof(addr)) {
+	    addr = (addr/"/")[0];	// We don't care about the prefix bits.
+	    addr = (addr/"%")[0];	// MacOS X.
+	    local_addrs += ({ addr });
+	  }
+	}
+      }
+      local_addrs = Array.uniq(local_addrs);
+    }
+    foreach(local_addrs, string addr) {
+      if ((dns = Protocols.DNS.gethostbyaddr(addr)) && sizeof(dns)) {
+	if (dns[0]) {
+	  hosts += ({ dns[0] });
+	}
+	hosts += dns[1] + ({ addr });
+	if ((sizeof(dns[2]) != 1) || (dns[2][0] != addr)) {
+	  hosts += dns[2];
+	}
+      }
+    }
+    hosts = Array.uniq(hosts);
+    // werror("Hosts: %O\n", hosts);
+  }
+#endif /* !NO_DNS */
 
   foreach(hosts, string host)
-    if(glob(server, host)) {
-      server=host;
+    if (glob(server, host)) {
+      uri->host = host;
       break;
     }
-
-  if(port) return sprintf("%s://%s:%d/%s", protocol, server, port, path);
-  return sprintf("%s://%s/%s", protocol, server, path);
+  return (string) uri;
 }
 
 RoxenModule get_owning_module (object|function thing)
@@ -3443,69 +5178,343 @@ Configuration get_owning_config (object|function thing)
   return 0;
 }
 
+// A slightly modified Array.dwim_sort_func used as emits sort
+// function.
+protected int dwim_compare(string a0,string b0)
+{
+  string a2="",b2="";
+  int a1,b1;
+  sscanf(a0,"%[^0-9]%d%s",a0,a1,a2);
+  sscanf(b0,"%[^0-9]%d%s",b0,b1,b2);
+  if (a0>b0) return 1;
+  if (a0<b0) return -1;
+  if (a1>b1) return 1;
+  if (a1<b1) return -1;
+  if (a2==b2) return 0;
+  return dwim_compare(a2,b2);
+}
+
+protected int strict_compare (mixed a, mixed b)
+// This one does a more strict compare than dwim_compare. It only
+// tries to convert values from strings to floats or ints if they are
+// formatted exactly as floats or ints. That since there still are
+// places where floats and ints are represented as strings (e.g. in
+// sql query results). Then it compares the values with `<.
+//
+// This more closely resembles how 2.1 and earlier compared values.
+{
+  if (stringp (a)) {
+    if (sscanf (a, "%d%*[ \t]%*c", int i) == 2) a = i;
+    else if (sscanf (a, "%f%*[ \t]%*c", float f) == 2) a = f;
+  }
+  if (stringp (b)) {
+    if (sscanf (b, "%d%*[ \t]%*c", int i) == 2) b = i;
+    else if (sscanf (b, "%f%*[ \t]%*c", float f) == 2) b = f;
+  }
+
+  int res;
+  if (mixed err = catch (res = b < a)) {
+    // Assume we got a "cannot compare different types" error.
+    // Compare the types instead.
+    a = sprintf ("%t", a);
+    b = sprintf ("%t", b);
+    res = b < a;
+  }
+  if (res)
+    return 1;
+  else if (a < b)
+    return -1;
+  else
+    return 0;
+}
+
+array(mapping(string:mixed)|object) rxml_emit_sort (
+  array(mapping(string:mixed)|object) dataset, string sort_spec,
+  void|float compat_level)
+//! Implements the sorting used by @expr{<emit sort=...>@}. @[dataset]
+//! is the data to sort, and @[sort_spec] is the sort order on the
+//! form specified by the @expr{sort@} attribute to @expr{<emit>@}.
+{
+  array(string) raw_fields = (sort_spec - " ")/"," - ({ "" });
+
+  class FieldData {
+    string name;
+    int order, string_cast, lcase;
+    function(mixed,mixed:int) compare;
+    mapping value_cache = ([]);
+  };
+
+  array(FieldData) fields = allocate (sizeof (raw_fields));
+
+  for (int idx = 0; idx < sizeof (raw_fields); idx++) {
+    string raw_field = raw_fields[idx];
+    FieldData field = fields[idx] = FieldData();
+    int i;
+
+  field_flag_scan:
+    for (i = 0; i < sizeof (raw_field); i++)
+      switch (raw_field[i]) {
+	case '-':
+	  if (field->order) break field_flag_scan;
+	  field->order = '-';
+	  break;
+	case '+':
+	  if (field->order) break field_flag_scan;
+	  field->order = '+';
+	  break;
+	case '*':
+	  if (compat_level && compat_level > 2.2) {
+	    if (field->compare) break field_flag_scan;
+	    field->compare = strict_compare;
+	  }
+	  break;
+	case '^':
+	  if (compat_level && compat_level > 3.3) {
+	    if (field->lcase) break field_flag_scan;
+	    field->lcase = 1;
+	  }
+	  break;
+	  // Fall through.
+	default:
+	  break field_flag_scan;
+      }
+    field->name = raw_field[i..];
+
+    if (!field->compare) {
+      if (compat_level && compat_level > 2.1) {
+	field->compare = dwim_compare;
+	field->string_cast = 1;
+      }
+      else
+	field->compare = strict_compare;
+    }
+  }
+
+  RXML.Context ctx;
+
+  return Array.sort_array (
+    dataset,
+    lambda (mapping(string:mixed)|object ma, mapping(string:mixed)|object mb)
+    {
+      foreach (fields, FieldData field) {
+	string name = field->name;
+	int string_cast = field->string_cast, lcase = field->lcase;
+	mapping value_cache = field->value_cache;
+	mixed a = ma[name], b = mb[name];
+	int eval_a = objectp (a) && a->rxml_var_eval;
+	int eval_b = objectp (b) && b->rxml_var_eval;
+
+	if (string_cast || lcase || eval_a) {
+	  mixed v = value_cache[a];
+	  if (zero_type (v)) {
+	    if (eval_a) {
+	      if (!ctx) ctx = RXML_CONTEXT;
+	      v = a->rxml_const_eval ? a->rxml_const_eval (ctx, name, "") :
+		a->rxml_var_eval (ctx, name, "", RXML.t_text);
+	    }
+	    else v = a;
+	    if (string_cast) v = RXML.t_string->encode (v);
+	    if (lcase && stringp (v)) v = lower_case (v);
+	    value_cache[a] = v;
+	  }
+	  a = v;
+	}
+
+	if (string_cast || lcase || eval_b) {
+	  mixed v = value_cache[b];
+	  if (zero_type (v)) {
+	    if (eval_b) {
+	      if (!ctx) ctx = RXML_CONTEXT;
+	      v = b->rxml_const_eval ? b->rxml_const_eval (ctx, name, "") :
+		b->rxml_var_eval (ctx, name, "", RXML.t_text);
+	    }
+	    else v = b;
+	    if (string_cast) v = RXML.t_string->encode (v);
+	    if (lcase && stringp (v)) v = lower_case (v);
+	    value_cache[b] = v;
+	  }
+	  b = v;
+	}
+
+	int tmp;
+	switch (field->order) {
+	  case '-': tmp = field->compare (b, a); break;
+	  default:
+	  case '+': tmp = field->compare (a, b); break;
+	}
+	if (tmp > 0)
+	  return 1;
+	else if (tmp < 0)
+	  return 0;
+      }
+      return 0;
+    });
+}
+
+// FIXME: Having a Roxen.sql_null that is different from but `== equal
+// to pikes Sql.NULL isn't good. We should remove this class, but then
+// a lot of type conversion functions in RXML.pmod need special cases
+// for Sql.NULL.
+
+class SqlNull
+//! The class for @[Roxen.sql_null]. Avoid creating more instances of
+//! this.
+{
+  inherit RXML.Nil;
+  constant is_RXML_encodable = 1;
+
+#if constant(Sql.Null)
+  inherit Sql.Null;
+#else
+  constant is_sql_null = 1;
+  //! Nonzero recognition constant.
+
+  // Treat these objects as indistinguishable from each other. We
+  // ought to ensure that there's only one in the pike process
+  // instead, but that's tricky to solve in the PCode codec.
+  int `== (mixed other)
+    {return objectp (other) && other->is_sql_null;}
+  int __hash() {return 17;}
+
+  string _sprintf (int flag) {return flag == 'O' && "sql_null";}
+#endif
+
+  int _encode() {return 0;}
+  void _decode (int dummy) {}
+}
+
+SqlNull sql_null = SqlNull();
+//! Used primarily by emit#sql to represent the SQL NULL value in
+//! RXML. Similar to @[RXML.nil], except that it is a valid value for
+//! an RXML variable. Like @[RXML.nil], it is false in a boolean
+//! context (i.e. @[`!] returns true).
+
 #ifdef REQUEST_TRACE
-static string trace_msg (RequestID id, string msg, string name)
+protected string trace_msg (mapping id_misc, string msg,
+			    string|int name_or_time, int enter)
 {
-  msg = html_decode_string (
-    Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-    finish (msg)->read());
-
   array(string) lines = msg / "\n";
-  if (lines[-1] == "") lines = lines[..sizeof (lines) - 2];
+  if (lines[-1] == "") lines = lines[..<1];
 
-  if (sizeof (lines))
-    report_debug ("%s%s%-40s  %s\n",
-		  map (lines[..sizeof (lines) - 2],
+  if (sizeof (lines)) {
+#if TOSTR (REQUEST_TRACE) == "TIMES"
+    string byline = sprintf ("%*s%c %s",
+			     id_misc->trace_level + 1, "",
+			     enter ? '>' : '<',
+			     lines[-1]);
+#else
+    string byline = sprintf ("%*s%s",
+			     id_misc->trace_level + 1, "",
+			     lines[-1]);
+#endif
+
+    string info;
+    if (stringp (name_or_time))
+      info = name_or_time;
+    else if (name_or_time >= 0)
+      info = "time: " + format_hrtime (name_or_time, sizeof (byline) <= 40);
+    if (info)
+      byline = sprintf ("%-40s  %s", byline, info);
+
+    report_debug (map (lines[..<1],
 		       lambda (string s) {
-			 return sprintf ("%s%*s%s\n", id->misc->trace_id_prefix,
-					 id->misc->trace_level + 1, "", s);
-		       }) * "",
-		  id->misc->trace_id_prefix,
-		  sprintf ("%*s%s", id->misc->trace_level + 1, "", lines[-1]),
-		  name);
+			 return sprintf ("%s%*s%s\n", id_misc->trace_id_prefix,
+					 id_misc->trace_level + 1, "", s);
+		       }) * "" +
+		  id_misc->trace_id_prefix +
+		  byline +
+		  "\n");
+  }
 }
 
-void trace_enter (RequestID id, string msg, object|function thing)
+void trace_enter (RequestID id, string msg, object|function thing,
+		  int timestamp)
 {
-  if (!id->misc->trace_level) {
-    id->misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
-      all_constants()->id_trace_level_rotate_counter++ % 7];
-    report_debug ("%s%s Request handled by: %O\n",
-		  id->misc->trace_id_prefix, id->misc->trace_id_prefix[..0],
-		  id->conf);
+  if (id) {
+    // Replying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
+
+    if (function(string,mixed,int:void) trace_enter =
+	[function(string,mixed,int:void)] id_misc->trace_enter)
+      trace_enter (msg, thing, timestamp);
+
+    if (zero_type (id_misc->trace_level)) {
+      id_misc->trace_id_prefix = ({"%%", "##", "||", "**", "@@", "$$", "&&"})[
+	all_constants()->id_trace_level_rotate_counter++ % 7];
+#ifdef ID_OBJ_DEBUG
+      report_debug ("%s%s %O: Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id, id && id->conf);
+#else
+      report_debug ("%s%s Request handled by: %O\n",
+		    id_misc->trace_id_prefix, id_misc->trace_id_prefix[..0],
+		    id->conf);
+#endif
+    }
+
+    string name;
+    if (thing) {
+      name = get_modfullname (get_owning_module (thing));
+      if (name)
+	name = "mod: " + name;
+      else if (Configuration conf = get_owning_config (thing))
+	name = "conf: " + conf->query_name();
+      else
+	name = sprintf ("obj: %O", thing);
+    }
+    else name = "";
+
+    trace_msg (id_misc, msg, name, 1);
+    int l = ++id_misc->trace_level;
+
+#if TOSTR (REQUEST_TRACE) == "TIMES"
+    array(int) tt = id_misc->trace_times;
+    array(string) tm = id_misc->trace_msgs;
+    if (!tt) {
+      tt = id_misc->trace_times = allocate (10);
+      tm = id_misc->trace_msgs = allocate (10);
+    }
+    else if (sizeof (tt) <= l) {
+      tt = (id_misc->trace_times += allocate (sizeof (tt)));
+      tm = (id_misc->trace_msgs += allocate (sizeof (tm)));
+    }
+    tt[l] = timestamp - id_misc->trace_overhead;
+    sscanf (msg, "%[^\n]", tm[l]);
+#endif
   }
-
-  string name;
-  if (thing) {
-    name = get_modfullname (get_owning_module (thing));
-    if (name)
-      name = "mod: " + html_decode_string (
-	Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-	finish (name)->read());
-    else if (Configuration conf = get_owning_config (thing))
-      name = "conf: " + conf->query_name();
-    else
-      name = sprintf ("obj: %O", thing);
-  }
-  else name = "";
-
-  trace_msg (id, msg, name);
-  id->misc->trace_level++;
-
-  if(function(string,mixed ...:void) _trace_enter =
-     [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)->trace_enter)
-    _trace_enter (msg, thing);
 }
 
-void trace_leave (RequestID id, string desc)
+void trace_leave (RequestID id, string desc, void|int timestamp)
 {
-  if (id->misc->trace_level) id->misc->trace_level--;
+  if (id) {
+    // Replying on the interpreter lock here. Necessary since requests
+    // can finish and be destructed asynchronously which typically
+    // leads to races in the TRACE_LEAVE calls in low_get_file.
+    mapping id_misc = id->misc;
 
-  if (sizeof (desc)) trace_msg (id, desc, "");
+    string msg = desc;
+    string|int name_or_time = "";
+#if TOSTR (REQUEST_TRACE) == "TIMES"
+    if (int l = id_misc->trace_level) {
+      if (array(int) tt = id_misc->trace_times)
+	if (sizeof (tt) > l) {
+	  name_or_time = timestamp - id_misc->trace_overhead - tt[l];
+	  if (desc == "") msg = id_misc->trace_msgs[l];
+	}
+      id_misc->trace_level--;
+    }
+#else
+    if (id_misc->trace_level) id_misc->trace_level--;
+#endif
 
-  if(function(string:void) _trace_leave =
-     [function(string:void)]([mapping(string:mixed)]id->misc)->trace_leave)
-    _trace_leave (desc);
+    if (sizeof (msg)) trace_msg (id_misc, msg, name_or_time, 0);
+
+    if (function(string,int:void) trace_leave =
+	[function(string:void)] id_misc->trace_leave)
+      trace_leave (desc, timestamp);
+  }
 }
 #endif
 
@@ -3622,4 +5631,268 @@ void pop_color (string tagname, RequestID id)
 		ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
   }
+}
+
+string generate_self_signed_certificate(string common_name)
+{
+  int key_size = 4096;	// Ought to be safe for a few years.
+
+  Crypto.RSA rsa = Crypto.RSA();
+  rsa->generate_key(key_size, Crypto.Random.random_string);
+
+  string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
+					   Standards.PKCS.RSA.private_key(rsa));
+
+  // These are the fields used by testca.pem.
+  array(mapping(string:object)) name = ({
+    ([ "organizationName":
+       Standards.ASN1.Types.asn1_printable_string("Roxen IS")
+    ]),
+    ([ "organizationUnitName":
+       Standards.ASN1.Types.asn1_printable_string("Automatic certificate")
+    ]),
+    ([ "commonName":
+       (Standards.ASN1.Types.asn1_printable_valid(common_name)?
+	Standards.ASN1.Types.asn1_printable_string:
+	Standards.ASN1.Types.asn1_broken_teletex_string)(common_name)
+    ]),
+  });
+
+  int ttl = 3652;	// 10 years.
+
+  /* Create a plain X.509 v1 certificate, without any extensions */
+  string cert = Tools.X509.make_selfsigned_rsa_certificate
+    (rsa, 24 * 3600 * ttl, name);
+
+  return Tools.PEM.simple_build_pem("CERTIFICATE", cert) + key;
+}
+
+class LogPipe
+//! The write end of a pipe that will log to the debug log. Use
+//! @[get_log_pipe] to create an instance.
+{
+  inherit Stdio.File;
+
+  protected string prefix = "";
+  protected string line_buf = "";
+
+  protected void read_cb (Stdio.File read_end, string data)
+  {
+    line_buf += data;
+    while (sscanf (line_buf, "%[^\n]%*c%s", string line, string rest) == 3) {
+      werror (prefix + line + "\n");
+      line_buf = rest;
+    }
+  }
+
+  protected void close_cb (Stdio.File read_end)
+  {
+    if (line_buf != "")
+      werror (prefix + line_buf + "\n");
+    read_end->set_read_callback (0);
+    read_end->set_close_callback (0);
+    read_end->set_id (0);
+  }
+
+  protected void log_pipe_read_thread (Stdio.File read_end)
+  {
+    while (1) {
+      string data = read_end->read (1024, 1);
+      if (!data || data == "") break;
+      read_cb (read_end, data);
+    }
+    close_cb (read_end);
+  }
+
+  protected void create (Stdio.File read_end, Stdio.File write_end,
+			 int use_read_thread)
+  {
+#if constant(thread_create)
+    if (use_read_thread)
+      thread_create (log_pipe_read_thread, read_end);
+    else
+#endif
+    {
+      read_end->set_nonblocking (read_cb, 0, close_cb);
+      read_end->set_id (read_end);
+    }
+    assign (write_end);
+  }
+
+  void set_prefix (string prefix)
+  //! Sets a string that will be prefixed to each line that is logged
+  //! via this pipe.
+  {
+    LogPipe::prefix = prefix;
+  }
+}
+
+LogPipe get_log_pipe()
+//! Returns a pipe suitable to bind to @expr{"stdout"@} and
+//! @expr{"stderr"@} in a @[Process.create_process] call to get the
+//! output from the created process into the debug log. The log data
+//! is line buffered to avoid mixing output from different processes
+//! on the same line.
+//!
+//! @note
+//! Don't forget to close the returned pipe after the call to
+//! @[Process.create_process]. Otherwise the pipe will remain intact
+//! after the process has exited and you'll get an fd leak.
+//!
+//! @note
+//! The standard backend is used (when possible) to echo the data that
+//! arrives on the pipe. If it's hung then data that arrives on the
+//! pipe won't show in the debug log.
+{
+  Stdio.File read_end = Stdio.File();
+  Stdio.File write_end;
+  int use_read_thread;
+  if (catch (write_end =
+	     read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK))) {
+    // Some OS'es (notably Windows) can't create a nonblocking
+    // interprocess pipe.
+    read_end = Stdio.File();
+    write_end = read_end->pipe (Stdio.PROP_IPC);
+    use_read_thread = 1;
+#if 0
+    report_debug ("Using read thread with a blocking pipe for logging.\n");
+#endif
+  }
+  if (!write_end) error ("Failed to create pipe: %s\n",
+			 strerror (read_end->errno()));
+  return LogPipe (read_end, write_end, use_read_thread);
+}
+
+constant DecodeError = Locale.Charset.DecodeError;
+constant EncodeError = Locale.Charset.EncodeError;
+
+mapping(string:int) get_memusage()
+//! Returns a mapping of the memory used by the Roxen process.
+//!
+//! @returns
+//!   @mapping
+//!     @member string "resident"
+//!       Resident memory in KiB.
+//!     @member string "virtual"
+//!       Virtual memory in KiB.
+//!   @endmapping
+//!
+//! @note
+//!   Uses the @tt{ps@} binary in unix and @tt{wmic@} on Windows.
+//! @note
+//!   Is a bit expensive on Windows.
+{
+  constant default_value = ([ "virtual":0, "resident":0 ]);
+  string res;
+#ifdef __NT__
+  constant divisor = 1024;
+  if(mixed err = catch { 
+      res = Process.run( ({ "wmic", "process", "where",
+			    "ProcessId=" + (string)getpid(),
+			    "get", "ProcessId,VirtualSize,WorkingSetSize" }) )->stdout;
+    })
+  {
+#ifdef MODULE_DEBUG
+    werror("The wmic command failed with: %O\n", describe_backtrace(err));
+#endif
+    return default_value;
+  }
+#else
+  constant divisor = 1;
+  string ps_location =
+    Process.locate_binary( ({ "/sbin", "/usr/sbin", "/bin", "/usr/bin" }), "ps");
+  if(!ps_location)
+    return default_value;
+  
+  if(mixed err = catch { 
+      res = Process.run( ({ ps_location, "-o", "pid,vsz,rss",
+			    (string)getpid() }) )->stdout;
+    })
+  {
+#ifdef MODULE_DEBUG
+    werror("The ps command failed with: %O\n", describe_backtrace(err));
+#endif
+    return default_value;
+  }
+#endif
+  array rows = (res / "\n") - ({ "" });
+  if(sizeof(rows) < 2)
+    return default_value;
+  
+  array values = (rows[1]/" ") - ({ "" });
+  if(sizeof(values) < 3)
+    return default_value;
+  
+  return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
+}
+
+string lookup_real_path_case_insens (string path, void|int no_warn)
+//! Looks up the given path case insensitively to a path in the real
+//! file system. I.e. all segments in @[path] that exist in the file
+//! system when matched case insensitively are converted to the same
+//! case they have when listed by @[get_dir]. Segments that don't
+//! exist are kept as-is.
+//!
+//! If a segment ambiguously matches several entries in a directory
+//! then it and all remaining segments are returned as-is. A warning
+//! is also logged in this case, unless @[no_warn] is nonzero.
+//!
+//! The given path is assumed to be absolute, and it is normalized
+//! with @[combine_path] before being checked. If there's a trailing
+//! slash then it's kept intact.
+//!
+//! Existing paths are cached without any time limit, but the cached
+//! paths are always verified to still exist before being reused. Thus
+//! the only overcaching effect that can occur is if the underlying
+//! file system is case insensitive and some path segment only has
+//! changed in case.
+{
+  ASSERT_IF_DEBUG (is_absolute_path (path));
+
+  string recur (string path)
+  {
+    string lc_path = lower_case (path);
+    if (string cached = cache_lookup ("case_insens_paths", lc_path)) {
+      if (Stdio.exist (cached)) {
+	// werror ("path %q -> %q (cached)\n", path, cached);
+	return cached;
+      }
+      cache_remove ("case_insens_paths", lc_path);
+    }
+
+    string dir = dirname (path);
+    if (dir != "" && dir != path) dir = recur (dir);
+
+  search_dir:
+    if (array(string) dir_list = get_dir (dir)) {
+      string lc_name = basename (lc_path);
+      string real_name;
+      foreach (dir_list, string ent)
+	if (lower_case (ent) == lc_name) {
+	  if (real_name) {
+	    if (!no_warn)
+	      report_warning ("Ambiguous path %q matches both %q and %q "
+			      "in %q.\n", path, real_name, ent, dir);
+	    break search_dir;
+	  }
+	  real_name = ent;
+	}
+      if (real_name) {
+	string real_path = combine_path (dir, real_name);
+	// werror ("path %q -> %q\n", path, real_path);
+	cache_set ("case_insens_paths", lc_path, real_path);
+	return real_path;
+      }
+    }
+
+    // Nonexisting file or dir - keep the case in that part.
+    // werror ("path %q -> %q (nonexisting)\n", path, combine_path (dir, basename (path)));
+    return combine_path (dir, basename (path));
+  };
+
+  path = combine_path (path);
+  if (has_suffix (path, "/"))
+    return recur (path[..<1]) + "/";
+  else
+    return recur (path);
 }

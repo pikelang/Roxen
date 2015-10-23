@@ -1,8 +1,11 @@
 /*
- * $Id: Server.pike,v 1.18 2001/04/18 20:54:25 js Exp $
+ * $Id$
  */
 
-#define error(X) throw(({X, backtrace()}))
+#define CHECK_IO_ERROR(FD, OP) do {					\
+    if (int err = (FD)->errno())					\
+      error ("Error " OP " to %O: %s\n", (FD), strerror (err));		\
+  } while (0)
 
 class Connection
 {
@@ -21,8 +24,11 @@ class Connection
   
   void write_data()
   {
-    if(strlen(sending))
-      sending = sending[client->write(sending)..];
+    if(strlen(sending)) {
+      int l = client->write(sending);
+      CHECK_IO_ERROR (client, "writing");
+      sending = sending[l..];
+    }
   }
 
   mapping classes = ([]);
@@ -137,6 +143,7 @@ class Connection
       while(strlen(data) < 8)
       {
 	data += client->read(4000,1);
+	CHECK_IO_ERROR (client, "reading");
 	if(!strlen(data))
 	{
 	  destruct();
@@ -144,8 +151,10 @@ class Connection
 	}
       }
       sscanf(data, "%4c%s", len,data);
-      if(strlen(data) < len)
+      if(strlen(data) < len) {
 	data += client->read(len-strlen(data));
+	CHECK_IO_ERROR (client, "reading");
+      }
       if(err = catch {
 	mixed val = decode_value(data);
 	if(arrayp(val))
@@ -251,7 +260,7 @@ mixed do_call(object con, string in, string fun, mixed args)
 {
   mixed me;
 
-  if(fun=="create") error("Create is not a valid identifier.\n");
+  if(fun=="create") error("\"create\" is not a valid identifier.\n");
 
   if(!(me = identifiers[in]))  error("Identifier "+in+" not valid.\n");
 
@@ -305,7 +314,10 @@ int low_got_connection(object c)
   {
     int len;
     c->write("?");
-    sscanf(c->read(4), "%4c", len);
+    CHECK_IO_ERROR (c, "writing");
+    string in = c->read(4);
+    CHECK_IO_ERROR (c, "reading");
+    sscanf(in, "%4c", len);
     
     werror("Expected "+pass_key+" got "+tmp+"\n");
     connections -= ({ con });
@@ -339,9 +351,16 @@ void got_connection(object on)
 {
   if (!on) return;
   object c = on->accept();
-  string addr = c->query_address();
-  if(low_got_connection(c))
+  if (!c) {
+    int err = on->errno();
+    error ("Failed to accept connection on %s: %s\n",
+	   on->query_address() || "unknown port", strerror (err));
+  }
+
+  if(low_got_connection(c)) {
     c->write("=");
+    CHECK_IO_ERROR (c, "writing");
+  }
   else
   {
     // werror("Got refused connection from "+addr+"\n");
@@ -363,9 +382,12 @@ void create(string|object host, int|string|void p, string|void key)
   if(objectp(host))
   {
     if(!low_got_connection(host))
+      // werror?
       werror("Remote host failed authentication test.\n");
-    else
+    else {
       host->write("=");
+      CHECK_IO_ERROR (host, "writing");
+    }
   } 
   else 
   {
@@ -373,9 +395,11 @@ void create(string|object host, int|string|void p, string|void key)
     if(host) 
     {
        if(!port->bind(p, got_connection, host))
-	  error("Failed to bind to port\n");
+	 error("Failed to bind to port %s:%d: %s\n",
+	       host, p, strerror (port->errno()));
     } 
     else if(!port->bind(p, got_connection))
-       error("Failed to bind to port\n");
+      error("Failed to bind to port %d: %s\n",
+	    p, strerror (port->errno()));
   }
 }

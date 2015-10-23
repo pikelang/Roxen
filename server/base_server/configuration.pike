@@ -1,9 +1,11 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 //
-// A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.472 2001/08/24 14:45:01 nilsson Exp $";
+// @appears Configuration
+//! A site's main configuration
+
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -11,6 +13,9 @@ constant cvs_version = "$Id: configuration.pike,v 1.472 2001/08/24 14:45:01 nils
 #include <timers.h>
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 // --- Locale defines ---
 //<locale-token project="roxen_start">   LOC_S  </locale-token>
@@ -37,6 +42,11 @@ constant cvs_version = "$Id: configuration.pike,v 1.472 2001/08/24 14:45:01 nils
 
 
 #ifdef AVERAGE_PROFILING
+
+#if !constant(gethrvtime)
+#define gethrvtime()	gethrtime()
+#endif /* !constant(gethrvtime) */
+
 class ProfStack
 {
   array current_stack = ({});
@@ -121,10 +131,10 @@ class ProfInfo( string url )
   void dump( )
   {
     write( "\n"+url+": \n" );
-    ADT.Table t = ADT.Table->table( summarize_table(),
-				    ({ "What", "Calls",
-				       "Time", "CPU",
-				       "t/call(ms)", "cpu/call(ms)" }));
+    ADT.Table.table t = ADT.Table.table( summarize_table(),
+					 ({ "What", "Calls",
+					    "Time", "CPU",
+					    "t/call(ms)", "cpu/call(ms)" }));
 
     write( ADT.Table.ASCII.encode( t )+"\n" );
 
@@ -170,17 +180,47 @@ void avg_prof_leave( string name, string type, RequestID id )
 inherit Configuration;
 inherit "basic_defvar";
 
+protected mapping(RequestID:mapping) current_connections =
+  set_weak_flag( ([ ]), 1 );
+
+void connection_add( RequestID id, mapping data )
+//! Add a connection. The data mapping can contain things such as
+//! currently sent bytes.
+//!
+//! See protocols/http.pike and slowpipe.pike for more information.
+//!
+//! You are not in any way forced to use this method from your
+//! protocol module. The information is only used for debug purposes
+//! in the configuration interface.
+//!
+//! You have to keep a reference to the mapping on your own, none is
+//! kept by the configuration object.
+{
+  current_connections[id] = data;
+}
+
+mapping connection_drop( RequestID id )
+//! Remove a connection from the list of currently active connections.
+//! Returns the mapping previously added with connection_add, if any.
+{
+  return m_delete( current_connections, id );
+}
+
+mapping(RequestID:mapping) connection_get( )
+//! Return all currently active connections.
+{
+  return current_connections;
+}
+
 // It's nice to have the name when the rest of __INIT executes.
 string name = roxen->bootstrap_info->get();
 
-// Trivial cache (actually, it's more or less identical to the 200+
-// lines of C in HTTPLoop. But it does not have to bother with the
-// fact that more than one thread can be active in it at once. Also,
-// it does not have to delay free until all current connections using
-// the cache entry is done...)
 class DataCache
 {
-  mapping(string:array(string|mapping(string:mixed))) cache = ([]);
+  protected typedef array(string|mapping(string:mixed))|string|
+		    function(string, RequestID:string|int) EntryType;
+
+  mapping(string:EntryType) cache = ([]);
 
   int current_size;
   int max_size;
@@ -190,50 +230,243 @@ class DataCache
 
   void flush()
   {
+#ifndef RAM_CACHE_NO_RELOAD_FLUSH
     current_size = 0;
     cache = ([]);
+#endif
   }
 
-  static void clear_some_cache()
+  // Heuristic to calculate the entry size. Besides the data itself,
+  // we add the size of the key. Even though it's a shared string we
+  // can pretty much assume it has no other permanent refs. 128 is a
+  // constant penalty that accounts for the keypair in the mapping and
+  // that leaf entries are stored in arrays.
+#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 128)
+
+  // Expire a single entry.
+  protected void really_low_expire_entry(string key)
   {
-    array q = indices( cache );
+    EntryType e = m_delete(cache, key);
+    if (arrayp(e)) {
+      current_size -= CALC_ENTRY_SIZE (key, e[0]);
+      if (e[1]->co_handle) {
+	remove_call_out(e[1]->co_handle);
+      }
+      if (CacheKey cachekey = e[1]->key) {
+	destruct (cachekey);
+      }
+    }
+  }
+
+  // NOTE: Avoid using this function if possible! O(n)
+  protected int low_expire_entry(string key_prefix)
+  {
+    if (!key_prefix) return 0;
+    if (arrayp(cache[key_prefix])) {
+      // Leaf node. No need to loop.
+      really_low_expire_entry(key_prefix);
+      return 1;
+    }
+    // Inner node. Find all its children.
+    int res = 0;
+    foreach(indices(cache); int ind; string key) {
+      if (!key) continue;
+      if (has_prefix(key, key_prefix)) {
+	really_low_expire_entry(key);
+	res++;
+      }
+    }
+    return res;
+  }
+
+  void expire_entry(string key_prefix, RequestID|void id)
+  {
+    if (!id) {
+      low_expire_entry(key_prefix);
+      return;
+    }
+    string url = key_prefix;
+    sscanf(url, "%[^\0]", url);
+    while(1) {
+      EntryType val;
+      if (arrayp(val = cache[key_prefix])) {
+	current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
+	m_delete(cache, key_prefix);
+	return;
+      }
+      if (!val) {
+	return;
+      }
+
+      string|array(string) key_frag;
+      if (stringp(val)) {
+	key_frag = id->request_headers[val];
+      } else {
+	key_frag = val(url, id);
+      }
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key_prefix += "\0\0" + key_frag;
+    }
+  }
+
+  //! Clear ~1/10th of the cache.
+  protected void clear_some_cache()
+  {
+    // FIXME: Use an iterator to avoid indices() here.
+    array(string) q = indices(cache);
     if(!sizeof(q))
     {
       current_size=0;
       return;
     }
-    for( int i = 0; i<sizeof( q )/10; i++ )
-      expire_entry( q[random(sizeof(q))] );
-  }
 
-  void expire_entry( string url )
-  {
-    if( cache[ url ] )
-    {
-      current_size -= strlen(cache[url][0]);
-      m_delete( cache, url );
+    // The following code should be ~O(n * log(n)).
+    sort(q);
+    for(int i = 0; i < sizeof(q)/10; i++) {
+      int r = random(sizeof(q));
+      string key_prefix = q[r = random(sizeof(q))];
+      if (!key_prefix) continue;
+      for(;r < sizeof(q); r++,i++) {
+	if (!q[r]) continue;
+	if (!has_prefix(q[r], key_prefix)) break;
+	really_low_expire_entry(q[r]);
+	q[r] = 0;
+      }
     }
   }
 
-  void set( string url, string data, mapping meta, int expire )
+  void set(string url, string data, mapping meta, int expire, RequestID id)
   {
-    if( strlen( data ) > max_size ) return;
-    call_out( expire_entry, expire, url );
-    current_size += strlen( data );
-    cache[url] = ({ data, meta });
+    int entry_size = CALC_ENTRY_SIZE (url, data);
+
+    if( entry_size > max_file_size ) {
+      // NOTE: There's a possibility of a stale entry remaining in the
+      //       cache until it expires, rather than being replaced here.
+      SIMPLE_TRACE_ENTER (this, "Result of size %d is too large "
+			  "to store in the protocol cache (limit %d)",
+			  entry_size, max_file_size);
+      SIMPLE_TRACE_LEAVE ("");
+      return;
+    }
+
+    SIMPLE_TRACE_ENTER (this, "Storing result of size %d in the protocol cache "
+			"using key %O (expire in %ds)",
+			entry_size, url, expire);
+    string key = url;
+
+    foreach(id->misc->vary_cb_order || ({}),
+	    string|function(string, RequestID: string|int) vary_cb) {
+      array(string|mapping(string:mixed))|string|
+	function(string, RequestID:string|int) old = cache[key];
+      if (old && (old != vary_cb)) {
+	SIMPLE_TRACE_ENTER (this, "Registering vary cb %O - conflicts with "
+			    "existing entry %s, old entry expired",
+			    vary_cb,
+			    (arrayp (old) ? "of size " + sizeof (old[0]) :
+			     sprintf ("%O", old)));
+	low_expire_entry(key);
+	SIMPLE_TRACE_LEAVE ("");
+      }
+      cache[key] = vary_cb;
+
+      SIMPLE_TRACE_ENTER (this, "Registering vary cb %O", vary_cb);
+
+      string key_frag;
+      if (stringp(vary_cb)) {
+	string|array(string) header = id->request_headers[vary_cb];
+	if (arrayp(header)) key_frag = header * ",";
+	else key_frag = header;
+      } else {
+	int|string frag = vary_cb(url, id);
+	if (intp(frag) && frag) {
+	  key_frag = frag->digits(256);
+	} else {
+	  key_frag = frag;
+	}
+      }
+
+      SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
+			  key_frag || "");
+
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key += "\0\0" + key_frag;
+    }
+
+    array(string|mapping(string:mixed))|string|
+      function(string, RequestID:string) old = cache[key];
+    if (old) {
+      SIMPLE_TRACE_LEAVE ("Entry conflicts with existing entry %s, "
+			  "old entry expired",
+			  (arrayp (old) ? "of size " + sizeof (old[0]) :
+			   sprintf ("%O", old)));
+      low_expire_entry(key);
+    }
+    else
+      SIMPLE_TRACE_LEAVE ("");
+
+    current_size += entry_size;
+    cache[key] = ({ data, meta });
+
+    // Only the actual cache entry is expired.
+    // FIXME: This could lead to lots and lots of call outs.. :P
+    meta->co_handle = call_out(really_low_expire_entry, expire, key);
     int n;
     while( (current_size > max_size) && (n++<10))
       clear_some_cache();
   }
   
-  array(string|mapping(string:mixed)) get( string url )
+  array(string|mapping(string:mixed)) get(string url, RequestID id)
   {
-    mixed res;
-    if( res = cache[ url ] )  
-      hits++;
-    else
-      misses++;
-    return res;
+    SIMPLE_TRACE_ENTER (this, "Looking up entry for %O in the protocol cache",
+			url);
+
+    array(string|mapping(string:mixed))|string|
+      function(string, RequestID:string|int) res;
+    string key = url;
+    while(1) {
+      id->misc->protcache_cost++;
+      if (arrayp(res = cache[key])) {
+	hits++;
+	SIMPLE_TRACE_LEAVE ("Found entry of size %d", sizeof (res[0]));
+	return [array(string|mapping(string:mixed))]res;
+      }
+      if (!res) {
+	misses++;
+	SIMPLE_TRACE_LEAVE ("Found no entry");
+	return UNDEFINED;
+      }
+
+      SIMPLE_TRACE_ENTER (this, "Found vary cb %O", res);
+
+      string key_frag;
+      if (stringp(res)) {
+	string|array(string) header = id->request_headers[res];
+	if (arrayp(header)) key_frag = header * ",";
+	else key_frag = header;
+      } else {
+	int|string frag = res(url, id);
+	if (intp(frag) && frag) {
+	  key_frag = frag->digits(256);
+	} else {
+	  key_frag = frag;
+	}
+      }
+
+      SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
+			  key_frag || "");
+
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key += "\0\0" + key_frag;
+    };
   }
 
   void init_from_variables( )
@@ -247,7 +480,7 @@ class DataCache
       clear_some_cache();
   }
 
-  static void create()
+  protected void create()
   {
     init_from_variables();
   }
@@ -286,7 +519,7 @@ string get_doc_for( string region, string variable )
 
 string query_internal_location(RoxenModule|void mod)
 {
-  return query("InternalLoc")+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  return internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
 }
 
 string query_name()
@@ -301,6 +534,15 @@ string comment()
   return query("comment");
 }
 
+private float cached_compat_level;
+
+float compat_level()
+{
+  if (cached_compat_level == 0.0)
+    cached_compat_level = (float) query ("compat_level");
+  return cached_compat_level;
+}
+
 /* A 'pri' is one of the ten priority objects. Each one holds a list
  * of modules for that priority. They are all merged into one list for
  * performance reasons later on.
@@ -311,10 +553,65 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
+array(int) query_oid()
+{
+  return SNMP.RIS_OID_WEBSERVER + ({ 2 });
+}
+
+//! @returns
+//!   Returns an array with two elements:
+//!   @array
+//!     @elem array(int) oid
+//!
+//!     @elem array(int) oid_suffix
+//!   @endarray
+array(int) generate_module_oid_segment(RoxenModule me)
+{
+  string s = otomod[me];
+  array(string) a = s/"#";
+  return ({ sizeof(a[0]), @((array(int))a[0]), ((int)a[1]) + 1 });
+}
+
+ADT.Trie generate_module_mib(array(int) oid,
+			     array(int) oid_suffix,
+			     RoxenModule me,
+			     ModuleInfo moduleinfo,
+			     ModuleCopies module)
+{
+  array(int) segment = generate_module_oid_segment(me);
+  return SNMP.SimpleMIB(oid,
+			oid_suffix + segment,
+			({
+			  UNDEFINED,
+			  SNMP.Integer(segment[-1], "moduleCopy"),
+			  SNMP.String(otomod[me],
+				      "moduleIdentifier"),
+			  SNMP.Integer(moduleinfo->type,
+				       "moduleType"),
+			  SNMP.String(me->cvs_version || "",
+				      "moduleVersion"),
+			}));
+}
+
+// Cache some configuration variables.
+private int sub_req_limit = 30;
+private string internal_location = "/_internal/";
+
+#ifdef HTTP_COMPRESSION
+int(0..1) http_compr_enabled;
+mapping(string:int) http_compr_main_mimes = ([]);
+mapping(string:int) http_compr_exact_mimes = ([]);
+int http_compr_minlen;
+int http_compr_maxlen;
+int(0..1) http_compr_dynamic_reqs;
+Thread.Local gz_file_pool = Thread.Local();
+#endif
+
+int handler_queue_timeout;
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
-private mapping (int:string) log_format = ([]);
+private mapping (int|string:string) log_format = ([]);
 
 // A list of priority objects
 array (Priority) pri = allocate_pris();
@@ -326,6 +623,11 @@ mapping modules = ([]);
 mapping (RoxenModule:string) otomod = ([]);
 //! A mapping from the module objects to module names
 
+int module_set_counter = 1;
+//! Incremented whenever the set of enabled modules changes, or if a
+//! module is reloaded.
+
+mapping(string:int) counters = ([]);
 
 // Caches to speed up the handling of the module search.
 // They are all sorted in priority order, and created by the functions
@@ -341,54 +643,41 @@ private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
 void unregister_urls()
 {
-  foreach( registered_urls, string url )
-    roxen.unregister_url(url);
+  foreach( registered_urls + failed_urls, string url )
+    roxen.unregister_url(url, this_object());
   registered_urls = ({});
 }
 
-private int num_modules = 0;
-#ifdef THREADS
-private Thread.Condition modules_stopped = Thread.Condition();
-#endif
 private void safe_stop_module (RoxenModule mod, string desc)
 {
-  if (mixed err = catch (mod && mod->stop && mod->stop()))
+  if (mixed err = catch (mod && mod->stop &&
+			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
-  if (!--num_modules)
-#ifdef THREADS
-    modules_stopped->signal()
-#endif
-      ;
 }
 
-void stop (void|int asynch)
-//! Unregisters the urls and calls stop in all modules. Uses the
-//! handler threads to lessen the impact if a module hangs. Doesn't
-//! wait for all modules to finish if @[asynch] is nonzero.
-{
-  unregister_urls();
+private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
 
-  multiset allmods = mkmultiset (indices (otomod));
-  num_modules = 17;
+private void do_stop_all_modules (Thread.MutexKey stop_lock)
+{
+  mapping(RoxenModule:string) allmods = otomod + ([]);
 
   if (types_module) {
-    num_modules++;
-    roxen.handle (safe_stop_module, types_module, "type module");
-    allmods[types_module] = 0;
+    safe_stop_module (types_module, "type module");
+    m_delete (allmods, types_module);
   }
+
   if (dir_module) {
-    num_modules++;
-    roxen.handle (safe_stop_module, dir_module, "directory module");
-    allmods[dir_module] = 0;
+    safe_stop_module (dir_module, "directory module");
+    m_delete (allmods, dir_module);
   }
+
   for(int i=0; i<10; i++)
     if (Priority p = pri[i]) {
 #define STOP_MODULES(MODS, DESC)					\
       foreach(MODS, RoxenModule m)					\
         if (allmods[m]) {						\
-	  num_modules++;						\
-	  roxen.handle (safe_stop_module, m, DESC);			\
-	  allmods[m] = 0;						\
+	  safe_stop_module (m, DESC);					\
+	  m_delete (allmods, m);					\
 	}
       STOP_MODULES (p->url_modules, "url module");
       STOP_MODULES (p->logger_modules, "logging module");
@@ -398,52 +687,63 @@ void stop (void|int asynch)
       STOP_MODULES (p->first_modules, "first module");
       STOP_MODULES (indices (p->provider_modules), "provider module");
     }
+
   if (mixed err = catch {
     if (object m = log_function && function_object (log_function)) {
       destruct (m);
       allmods[m] = 0;
     }
   }) report_error ("While stopping the logger: " + describe_backtrace (err));
+
   STOP_MODULES(indices (allmods), "unclassified module");
 #undef STOP_MODULES
 
-  if (!asynch) {
-    num_modules -= 17;
-    if (num_modules) {
-#ifdef THREADS
-      // Relying on the interpreter lock here.
-      modules_stopped->wait();
-#else
-      error ("num_modules shouldn't be nonzero here when running nonthreaded.\n");
-#endif
-    }
-  }
+  destruct (stop_lock);
 }
 
-string type_from_filename( string file, int|void to, string|void myext )
+void stop (void|int asynch)
+//! Unregisters the urls and calls stop in all modules. Uses a handler
+//! thread to lessen the impact if a module hangs. Doesn't wait for
+//! all modules to finish if @[asynch] is nonzero.
+{
+  if (Thread.MutexKey lock = stop_all_modules_mutex->trylock()) {
+#ifdef SNMP_AGENT
+    if(query("snmp_process") && objectp(roxen->snmpagent)) {
+      roxen->snmpagent->vs_stop_trap(get_config_id());
+      roxen->snmpagent->del_virtserv(get_config_id());
+    }
+#endif
+
+    unregister_urls();
+
+    roxen.handle (do_stop_all_modules, lock);
+  }
+
+  if (!asynch) stop_all_modules_mutex->lock (1);
+}
+
+string|array(string) type_from_filename( string file, int|void to,
+					 string|void myext )
 {
   array(string)|string tmp;
   if(!types_fun)
     return to?({ "application/octet-stream", 0 }):"application/octet-stream";
 
-  string ext=myext || Roxen.extension(file);
+  string ext = lower_case(myext || Roxen.extension(file));
 
   if(tmp = types_fun(ext))
   {
-    mixed tmp2,nx;
-    if(tmp[0] == "strip")
+    // FIXME: Ought to support several levels of "strip".
+    if (tmp[0] == "strip")
     {
-      tmp2=file/".";
-      if(sizeof(tmp2) > 2)
-	nx=tmp2[-2];
-      if(nx && (tmp2=types_fun(nx)))
-	tmp[0] = tmp2[0];
-      else if(tmp2=types_fun("default"))
-	tmp[0] = tmp2[0];
-      else
-	tmp[0]="application/octet-stream";
+      array(string) tmp2 = file/".";
+      string nx;
+      if (sizeof(tmp2) > 2)
+	nx = lower_case(tmp2[-2]);
+      tmp[0] = (nx && types_fun(nx)) || types_fun("default") ||
+	"application/octet-stream";
     }
-  } else if(!(tmp = types_fun("default"))) {
+  } else if (!(tmp = types_fun("default"))) {
     tmp = ({ "application/octet-stream", 0 });
   }
   return to?tmp:tmp[0];
@@ -459,7 +759,10 @@ array (RoxenModule) get_providers(string provides)
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      foreach(indices(pri[i]->provider_modules), RoxenModule d)
+      array(RoxenModule) modules = indices(pri[i]->provider_modules);
+      array(string) module_identifiers = modules->module_identifier();
+      sort(module_identifiers, modules);
+      foreach(modules, RoxenModule d)
 	if(pri[i]->provider_modules[ d ][ provides ])
 	  provider_module_cache[provides] += ({ d });
     }
@@ -480,7 +783,7 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
 //! Maps the function "fun" over all matching provider modules.
 {
   array (RoxenModule) prov = get_providers(provides);
-  array error;
+  mixed error;
   array a=({ });
   mixed m;
   foreach(prov, RoxenModule mod)
@@ -489,9 +792,8 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
       continue;
     if(functionp(mod[fun]))
       error = catch(m=mod[fun](@args));
-    if(arrayp(error)) {
-      error[0] = "Error in map_providers(): "+error[0];
-      report_debug(describe_backtrace(error));
+    if(error) {
+      report_debug("Error in map_providers(): " + describe_backtrace(error));
     }
     else
       a += ({ m });
@@ -508,15 +810,9 @@ mixed call_provider(string provides, string fun, mixed ... args)
   {
     function f;
     if(objectp(mod) && functionp(f = mod[fun])) {
-      mixed error;
-      if (arrayp(error = catch {
-	mixed ret;
-	if (ret = f(@args)) {
-	  return ret;
-	}
-      })) {
-	error[0] = "Error in call_provider(): "+error[0];
-	throw(error);
+      mixed ret;
+      if (ret = f(@args)) {
+	return ret;
       }
     }
   }
@@ -524,7 +820,7 @@ mixed call_provider(string provides, string fun, mixed ... args)
 
 array (function) file_extension_modules(string ext)
 {
-  if(!file_extension_module_cache[ext])
+  if(!file_extension_module_cache[ext = lower_case(ext)])
   {
     int i;
     file_extension_module_cache[ext]  = ({ });
@@ -558,7 +854,7 @@ array (function) url_modules()
   return url_module_cache;
 }
 
-static mapping api_module_cache = ([]);
+protected mapping api_module_cache = ([]);
 mapping api_functions(void|RequestID id)
 {
   return api_module_cache+([]);
@@ -602,26 +898,50 @@ array (function) last_modules()
   return last_module_cache;
 }
 
-#ifdef __NT__
-static mixed strip_fork_information(RequestID id)
+protected mixed strip_fork_information(RequestID id)
 {
+  if (uname()->sysname == "Darwin") {
+    //  Look for Mac OS X special filenames that are used access files in
+    //  magic ways:
+    //
+    //    foo.txt/..namedfork/data     (same as foo.txt)
+    //    foo.txt/..namedfork/rsrc     (resource fork of foo.txt)
+    //    foo.txt/rsrc                 (resource fork of foo.txt)
+    //    .DS_Store                    (Finder info file with catalog data)
+    if (has_value(id->not_query, "..namedfork/") ||
+	has_suffix(id->not_query, "/rsrc") ||
+	has_value(lower_case(id->not_query), ".ds_store"))
+      //  Show 404 page
+      return error_file(id);
+  }
+  
   array a = id->not_query/"::";
-  id->not_query = a[0]-":";
+  //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
+  //  e.g. "/internal-roxen-colorbar:x,y,z" and several others.
+  //  id->not_query = a[0]-":";
+  id->not_query = a[0];
   id->misc->fork_information = a[1..];
   return 0;
 }
-#endif /* __NT__ */
 
 array (function) first_modules()
 {
   if(!first_module_cache)
   {
     int i;
-    first_module_cache=({
+    first_module_cache = ({ });
+    
+    //  Add special fork handlers on Windows and Mac OS X
+    if (
 #ifdef __NT__
-      strip_fork_information,	// Always first!
-#endif /* __NT__ */
-    });
+	1 ||
+#endif
+	uname()->sysname == "Darwin") {
+      first_module_cache= ({
+	strip_fork_information,	// Always first!
+      });
+    }
+    
     for(i=9; i>=0; i--)
     {
       array(RoxenModule) d; RoxenModule p;
@@ -743,32 +1063,41 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = roxen.LogFile( logfile )->write;
+      log_function = roxen.LogFile(logfile, query("LogFileCompressor"))->write;
   }
-}
-
-// Parse the logging format strings.
-private inline string fix_logging(string s)
-{
-  sscanf(s, "%*[\t ]%s", s);
-  return s;
 }
 
 private void parse_log_formats()
 {
-  string b;
   array foo=query("LogFormat")/"\n";
-  foreach(foo, b)
-    if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
+  log_format = ([]);
+  foreach(foo; int i; string b)
+    if(strlen(b) && b[0] != '#') {
+      if (sscanf (b, "%d:%*[\t ]%s", int status, b))
+	log_format[status] = b;
+      else if (sscanf (b, "*:%*[\t ]%s", b))
+	log_format[0] = b;
+      else if (sscanf (b, "%[-_.#a-zA-Z0-9*]/%[-_.#a-zA-Z0-9*]:%*[\t ]%s",
+		       string facility, string action, b) >= 2)
+	log_format[facility + "/" + action] = b;
+      else
+	// Ought to be an error when the variable is set, but that's
+	// not entirely backward compatible.
+	report_warning ("Unrecognized format on line %d "
+			"in log format setting: %O\n", i + 1, b);
+    }
 }
 
 void log(mapping file, RequestID request_id)
 {
   // Call all logging functions
-  foreach(logger_module_cache||logger_modules(), function f)
-    if( f( request_id, file ) )
-      return;
+  array(function) log_funs = logger_module_cache||logger_modules();
+  if (sizeof(log_funs)) {
+    request_id->init_cookies(1);
+    foreach(log_funs, function f)
+      if( f( request_id, file ) )
+	return;
+  }
 
   if( !log_function ) 
     return; // No file is open for logging.
@@ -778,11 +1107,97 @@ void log(mapping file, RequestID request_id)
     return;
 
   string form;
-  if(!(form=log_format[file->error])) 
+  if(!(form=log_format[(int) file->error]))
     form = log_format[0];
   if(!form) return;
 
   roxen.run_log_format( form, log_function, request_id, file );
+}
+
+void log_event (string facility, string action, string resource,
+		void|mapping(string:mixed) info)
+//! Log an event.
+//!
+//! This function is primarily intended for logging arbitrary internal
+//! events for performance monitoring purposes. The events are sent to
+//! the access log, where they typically are formatted in a CommonLog
+//! lookalike format.
+//!
+//! The intention is to extend this function to be able to collect
+//! statistics of these events for polling by e.g. SNMP.
+//!
+//! @param facility
+//!   An identifier for the module or subsystem that the event comes
+//!   from. This defaults to the module identifier returned by
+//!   @[RoxenModule.module_local_id] when the @[RoxenModule.log_event]
+//!   wrapper is used. It should be unique within the configuration.
+//!   Valid characters are @expr{[-_.#a-zA-Z0-9]@} but the first
+//!   character has to be alphanumeric.
+//!
+//! @param action
+//!   An identifier for the specific event within the facility. Should
+//!   be enumerable. Valid characters are @expr{[-_.#a-zA-Z0-9]@}.
+//!
+//! @param resource
+//!   Identifies the resource that the event acts on. Pass zero if a
+//!   resource isn't applicable.
+//!
+//!   If applicable, this is the path within the virtual file system
+//!   of the module, beginning with a "@expr{/@}".
+//!
+//!   Otherwise it is some other string, not beginning with
+//!   "@expr{/@}", that has a format suitable for describing the
+//!   resource handled by the facility, e.g. "@expr{pclass:17@}".
+//!
+//!   This string should preferably contain URI valid chars only, but
+//!   other chars are allowed and will be encoded if necessary.
+//!
+//! @param info
+//!   An optional mapping containing arbitrary info about the event.
+//!   The entries here can be accessed as @expr{$@} format specifiers
+//!   in the @expr{LogFormat@} configuration variable.
+//!
+//!   The values must be castable to strings. The strings should
+//!   preferably contain URI valid chars only, but other chars are
+//!   allowed and will be encoded if necessary.
+//!
+//!   The strings should preferably never be empty. If a string might
+//!   be, it should be documented in the doc blurb for the
+//!   @expr{LogFormat@} configuration variable.
+//!
+//!   Most but not all of the predefined format specifiers can be
+//!   overridden this way, but if any is overridden it should map very
+//!   closely to the syntax and semantics of the original.
+//!
+//!   Note that "@expr{_@}" cannot be used in names in the indices
+//!   here since the log formatter code replaces "@expr{_@}" with
+//!   "@expr{-@}" before doing lookups.
+//!
+//! @note
+//! Events should be documented in the doc blurb for the
+//! @expr{LogFormat@} configuration variable.
+{
+  // Currently this bypasses logger modules. Might change in the future.
+
+  if( !log_function ) 
+    return; // No file is open for logging.
+
+  if(do_not_log_patterns &&
+     Roxen._match("0.0.0.0", do_not_log_patterns))
+    return;
+
+  sscanf (facility, "%[^#]", string modname);
+
+  if (string format =
+      log_format[facility + "/" + action] ||
+      log_format[facility + "/*"] ||
+      // Also try without the module copy number if the facility
+      // appears to be a module identifier.
+      modname != "" && (log_format[modname + "/" + action] ||
+			log_format[modname + "/*"]) ||
+      log_format["*/*"])
+    roxen.run_log_event_format (format, log_function,
+				facility, action, resource || "-", info);
 }
 
 array(string) userinfo(string u, RequestID|void id)
@@ -798,7 +1213,7 @@ array(string) userinfo(string u, RequestID|void id)
   User uid;
   foreach( user_databases(), UserDB m )
     if( uid = m->find_user( u ) )
-      return uid->compat_userinfo(id);
+      return uid->compat_userinfo();
 }
 
 array(string) userlist(RequestID|void id)
@@ -862,6 +1277,8 @@ User authenticate( RequestID id, UserDB|void database)
 //! id->misc->authenticated_user is always set to the return value.
 {
   User u;
+  if (!zero_type (u = id->misc->authenticated_user))
+    return u;
   foreach( auth_modules(), AuthModule method )
     if( u = method->authenticate( id, database ) )
       return id->misc->authenticated_user = u;
@@ -870,7 +1287,7 @@ User authenticate( RequestID id, UserDB|void database)
 mapping authenticate_throw( RequestID id, string realm,
 			    UserDB|void database)
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
-//! friends. If no @[database] is specified, all datbases in the
+//! friends. If no @[database] is specified, all databases in the
 //! current configuration are searched in priority order.
 {
   mapping m;
@@ -985,10 +1402,8 @@ private mapping internal_gopher_image(string from)
   // File not found.
 }
 
-private static int nest = 0;
-
 #ifdef MODULE_LEVEL_SECURITY
-private mapping misc_cache=([]);
+private mapping(RoxenModule:array) security_level_cache = set_weak_flag (([]), 1);
 
 int|mapping check_security(function|RoxenModule a, RequestID id,
 			   void|int slevel)
@@ -1001,23 +1416,36 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
   //     1  May be bad -- Restriction encountered, and test failed.
   //    ~0  OK -- Test passed.
 
-  if(!(seclevels = misc_cache[ a ]))
-  {
-    RoxenModule mod = Roxen.get_owning_module (a);
-    if(mod && mod->query_seclevels)
-      misc_cache[ a ] = seclevels = ({
-	mod->query_seclevels(),
-	mod->query("_seclvl"),
-      });
-    else
-      misc_cache[ a ] = seclevels = ({0,0});
+  if (RoxenModule mod = Roxen.get_owning_module (a)) {
+    // Only store the module objects in the cache and not `a' directly
+    // since it can be (in) an object that is very short lived.
+    if (!(seclevels = security_level_cache[mod])) {
+      if(mod->query_seclevels)
+	seclevels = ({
+	  mod->query_seclevels(),
+	  mod->query("_seclvl"),
+	});
+      else
+	seclevels = ({0,0});
+      security_level_cache[mod] = seclevels;
+    }
   }
+  else
+    seclevels = ({0,0});
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
+    // Regarding memory cache: This won't have any impact, since it's
+    // always the same, regardless of the client requesting the file.
     return 1;
 
   mixed err;
   if( function(RequestID:int|mapping) f = seclevels[0] )
+    // And here we don't have to take notice of the RAM-cache either,
+    // since the security patterns themselves does that.
+    //
+    // All patterns that varies depending on the client must use
+    // NOCACHE(), to force the request to be uncached.
+    //
     err=catch { return f( id ); };
   else
     return 0; // Ok if there are no patterns.
@@ -1043,7 +1471,7 @@ void invalidate_cache()
   file_extension_module_cache = ([]);
   provider_module_cache = ([]);
 #ifdef MODULE_LEVEL_SECURITY
-  misc_cache = ([ ]);
+  security_level_cache = set_weak_flag (([ ]), 1);
 #endif
 }
 
@@ -1060,26 +1488,81 @@ void clear_memory_caches()
 }
 
 //  Returns tuple < image, mime-type >
-static array(string) draw_saturation_bar(int hue,int brightness, int where)
+protected array(string) draw_saturation_bar(int hue,int brightness, int where,
+					    int small_version)
 {
-  Image.Image bar=Image.Image(30,256);
-
+  Image.Image bar =
+    small_version ? Image.Image(16, 128) : Image.Image(30, 256);
+  
   for(int i=0;i<128;i++)
   {
-    int j = i*2;
-    bar->line(0,j,29,j,@hsv_to_rgb(hue,255-j,brightness));
-    bar->line(0,j+1,29,j+1,@hsv_to_rgb(hue,255-j,brightness));
+    int j = i * 2;
+    array color = hsv_to_rgb(hue, 255 - j, brightness);
+    if (small_version) {
+      bar->line(0, i, 15, i, @color);
+    } else {
+      bar->line(0, j, 29, j, @color);
+      bar->line(0, j + 1,29, j + 1, @color);
+    }
   }
 
-  where = 255-where;
-  bar->line(0,where,29,where, 255,255,255);
-
+  if (where >= 0 && where <= 255) {
+    where = 255 - where;
+    int hilite = (brightness > 128) ? 0 : 255;
+    if (small_version)
+      bar->line(0, where / 2, 15, where / 2, hilite, hilite, hilite);
+    else
+      bar->line(0, where, 29, where, hilite, hilite, hilite);
+  }
+  
 #if constant(Image.JPEG) && constant(Image.JPEG.encode)
   return ({ Image.JPEG.encode(bar), "image/jpeg" });
 #else
   return ({ Image.PNG.encode(bar), "image/png" });
 #endif
 }
+
+
+#if constant(Image.GIF) && constant(Image.PNG)
+array(mapping) spinner_data = 0;
+
+//  Returns tuple < image, mime type >
+protected array(string) draw_spinner(string bgcolor)
+{
+  //  Parse color
+  array color = parse_color(bgcolor);
+  
+  //  Load all spinner PNGs
+  if (!spinner_data) {
+    array(mapping) temp_spinner_data = ({ });
+    for (int i = 0; i < 12; i++) {
+      string src = lopen("roxen-images/spinner" + i + ".png", "r")->read();
+      temp_spinner_data += ({ Image.PNG._decode(src) });
+    }
+    spinner_data = temp_spinner_data;
+  }
+  
+  //  Create non-transparent Image object for each frame
+  array(Image.Image) frames = ({ });
+  foreach(spinner_data, mapping data) {
+    Image.Image frame = Image.Image(17, 17, @color);
+    frame->paste_mask(data->image, data->alpha);
+    frames += ({ frame });
+  }
+  
+  //  Create animated GIF using colortable based on first frame (all of
+  //  them have the same set of colors)
+  Image.Colortable colors = Image.Colortable(frames[0]);
+  string res = Image.GIF.header_block(17, 17, colors);
+  foreach(frames, Image.Image frame)
+    res += Image.GIF.render_block(frame, colors, 0, 0, 0, 1);
+  res +=
+    Image.GIF.netscape_loop_block(0) +
+    Image.GIF.end_block();
+  
+  return ({ res, "image/gif" });
+}
+#endif
 
 
 // Inspired by the internal-gopher-... thingie, this is the images
@@ -1091,10 +1574,22 @@ private mapping internal_roxen_image( string from, RequestID id )
   sscanf(from, "%s.xcf", from);
   sscanf(from, "%s.png", from);
 
+#if constant(Image.GIF) && constant(Image.PNG)
+  //  Animated spinner image
+  if (has_prefix(from, "spinner-")) {
+    array(string) spinner = draw_spinner(from[8..]);
+    return ([ "data" : spinner[0],
+	      "type" : spinner[1],
+	      "stat" : ({ 0, 0, 0, 900000000, 0, 0, 0 }) ]);
+  }
+#endif
+
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
-  if(sscanf(from, "%*s:%d,%d,%d", hue, bright,w)==4) {
-    array bar = draw_saturation_bar(hue, bright, w);
+  string colorbar;
+  if(sscanf(from, "%s:%d,%d,%d", colorbar, hue, bright,w)==4) {
+    array bar = draw_saturation_bar(hue, bright, w,
+				    colorbar == "colorbar-small");
     return Roxen.http_string_answer(bar[0], bar[1]);
   }
 
@@ -1190,14 +1685,14 @@ string examine_return_mapping(mapping m)
       case 302: // redirect
 	 if (m->extra_heads &&
 	     (m->extra_heads->location))
-	   res = sprintf("Returned redirect to %s ", m->extra_heads->location);
+	   res = sprintf("Returned redirect to %O ", m->extra_heads->location);
 	 else
 	   res = "Returned redirect, but no location header. ";
 	 break;
 
       case 401:
 	 if (m->extra_heads["www-authenticate"])
-	   res = sprintf("Returned authentication failed: %s ",
+	   res = sprintf("Returned authentication failed: %O ",
 			 m->extra_heads["www-authenticate"]);
 	 else
 	   res = "Returned authentication failed. ";
@@ -1208,20 +1703,20 @@ string examine_return_mapping(mapping m)
 	 break;
 
       default:
-	 res = sprintf("Returned %d. ", m->error);
+	 res = sprintf("Returned %O. ", m->error);
    }
 
    if (!zero_type(m->len))
       if (m->len<0)
 	 res += "No data ";
       else
-	 res += sprintf("%d bytes ", m->len);
+	 res += sprintf("%O bytes ", m->len);
    else if (stringp(m->data))
      res += sprintf("%d bytes ", strlen(m->data));
    else if (objectp(m->file))
       if (catch {
 	 Stat a=m->file->stat();
-	 res += sprintf("%d bytes ", a[1]-m->file->tell());
+	 res += sprintf("%O bytes ", a[1]-m->file->tell());
       })
 	res += "? bytes ";
 
@@ -1230,12 +1725,284 @@ string examine_return_mapping(mapping m)
 
    if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
-      res += sprintf(" of %s", m->type||m->extra_heads["content-type"]);
+      res += sprintf(" of %O", m->type||m->extra_heads["content-type"]);
    }
 
-   res+="<br />";
-
    return res;
+}
+
+//! Find all applicable locks for this user on @[path].
+multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+			     int(0..1) exclude_shared, RequestID id)
+{
+  SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
+		     path, recursive, exclude_shared);
+  multiset(DAVLock) locks = (<>);
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    SIMPLE_TRACE_ENTER(function_object(func),
+		       "Finding locks in %O.", loc);
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      TRACE_LEAVE("Skip this module.");
+      continue;
+    }
+    TRACE_ENTER(sprintf("subpath: %O", subpath),
+		function_object(func)->find_locks);
+    multiset(DAVLock) sub_locks =
+      function_object(func)->find_locks(subpath, recursive,
+					exclude_shared, id);
+    TRACE_LEAVE("");
+    if (sub_locks) {
+      SIMPLE_TRACE_LEAVE("Got some locks: %O", sub_locks);
+      locks |= sub_locks;
+    } else {
+      TRACE_LEAVE("Got no locks.");
+    }
+  }
+  SIMPLE_TRACE_LEAVE("Returning %O", locks);
+  return locks;
+}
+
+//! Check if there are any applicable locks for this user on @[path].
+DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
+{
+  LockFlag state = 0;
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    int check_above;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "";
+      check_above = 1;
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+    int/*LockFlag*/|DAVLock lock_info =
+      function_object(func)->check_locks(subpath, recursive, id);
+    if (objectp(lock_info)) {
+      if (!check_above) {
+	return lock_info;
+      } else {
+	lock_info = LOCK_OWN_BELOW; // We have a lock on some subpath.
+      }
+    }
+    else
+      if (check_above && (lock_info & 1))
+	// Convert LOCK_*_AT to LOCK_*_BELOW.
+	lock_info &= ~1;
+    if (lock_info > state) state = lock_info;
+    if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
+    if (function_object(func)->webdav_opaque) break;
+  }
+  return state;
+}
+
+protected multiset(DAVLock) active_locks = (<>);
+
+//! Unlock the lock represented by @[lock] on @[path].
+//!
+//! @returns
+//!   Returns a result-mapping on error, and @expr{0@} (zero) on success.
+mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
+{
+  // Canonicalize path.
+  if (!has_suffix(path, "/")) path+="/";
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      mapping(string:mixed) ret =
+	function_object(func)->unlock_file(path[sizeof(loc)..], lock, id);
+
+      // FIXME: Semantics for partial unlocking?
+      if (ret) return ret;
+    } else if (lock->recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      mapping(string:mixed) ret =
+	function_object(func)->unlock_file("/", lock, id);
+
+      // FIXME: Semantics for partial unlocking?
+      if (ret) return ret;
+    }
+    if (function_object(func)->webdav_opaque) break;
+  }
+  active_locks[lock] = 0;
+  // destruct(lock);
+  return 0;
+}
+
+//! Force expiration of any locks that have timed out.
+int expire_locks(RequestID id)
+{
+  int t = time(1);
+  int min_time = 0x7fffffff;
+  foreach(active_locks; DAVLock lock;) {
+    if (lock->expiry_time) {
+      if (lock->expiry_time < t) {
+	unlock_file(lock->path, lock, id);
+      } else if (lock->expiry_time < min_time) {
+	min_time = lock->expiry_time;
+      }
+    }
+  }
+  return min_time - t;
+}
+
+mixed expire_lock_loop_handle;
+
+protected void expire_lock_loop()
+{
+  int t = expire_locks(0);	// NOTE: Called with RequestID 0!
+
+  if (sizeof(active_locks)) {
+    t = max (t, 1); // Wait at least one second before the next run.
+    t = min (t, 3600); // Expire locks at least once every hour.
+
+    if (expire_lock_loop_handle)
+      remove_call_out (expire_lock_loop_handle);
+
+    expire_lock_loop_handle = roxen.background_run(t, expire_lock_loop);
+  }
+}
+
+//! Refresh a lock.
+//!
+//! Update the expiry time for the lock.
+void refresh_lock(DAVLock lock)
+{
+  if (lock->expiry_delta) {
+    // Use time() instead of time(1) to avoid expiring the lock too
+    // early if the returned time is old. Probably unlikely, but
+    // anyways.
+    lock->expiry_time = lock->expiry_delta + time();
+  }
+}
+
+//! Attempt to lock @[path].
+//!
+//! @param path
+//!   Path to lock.
+//!
+//! @param locktype
+//!   Type of lock (currently only @expr{"DAV:write"@} is defined).
+//!
+//! @param lockscope
+//!   Scope of lock either @expr{"DAV:exclusive"@} or
+//!   @expr{"DAV:shared"@}.
+//!
+//! @param expiry_delta
+//!   Idle time in seconds before the lock expires. @expr{0@} (zero)
+//!   means no expiry.
+//!
+//! @returns
+//!   Returns a result mapping on failure,
+//!   and the resulting @[DAVLock] on success.
+mapping(string:mixed)|DAVLock lock_file(string path,
+					int(0..1) recursive,
+					string lockscope,
+					string locktype,
+					int(0..) expiry_delta,
+					array(Parser.XML.Tree.Node) owner,
+					RequestID id)
+{
+  // Canonicalize path.
+  if (!has_suffix(path, "/")) path+="/";
+
+  // First check if there's already some lock on path that prevents
+  // us from locking it.
+  int/*LockFlag*/|DAVLock lock_info = check_locks(path, recursive, id);
+
+  if (!intp(lock_info)) {
+    // We already hold a lock that prevents us.
+    if (id->request_headers->if) {
+      return Roxen.http_status(412, "Precondition Failed");
+    } else {
+      return Roxen.http_status(423, "Locked");
+    }
+  } else if (lockscope == "DAV:exclusive" ?
+	     lock_info >= LOCK_SHARED_BELOW :
+	     lock_info >= LOCK_OWN_BELOW) {
+    // Some other lock prevents us.
+    return Roxen.http_status(423, "Locked");
+  }
+
+  // Create the new lock.
+
+  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
+  DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
+			 expiry_delta, owner);
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+
+    mapping(string:mixed) lock_error =
+      function_object(func)->lock_file(subpath, lock, id);
+    if (lock_error) {
+      // Failure. Unlock the new lock.
+      foreach(location_module_cache||location_modules(),
+	      [string loc2, function func2])
+      {
+	if (has_prefix(path, loc2)) {
+	  // path == loc2 + subpath.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file(path[sizeof(loc2)..],
+						lock, id);
+	} else if (recursive && has_prefix(loc2, path)) {
+	  // loc2 == path + ignored.
+	  mapping(string:mixed) ret =
+	    function_object(func2)->unlock_file("/", lock, id);
+	}
+	if (func == func2) break;
+      }
+      // destruct(lock);
+      return lock_error;
+    }
+    if (function_object(func)->webdav_opaque) break;
+  }
+
+  if (expiry_delta) {
+    // Lock with timeout.
+    // FIXME: Race-conditions.
+    if (!sizeof(active_locks)) {
+      // Start the lock expiration loop.
+      active_locks[lock] = 1;
+      expire_lock_loop();
+    } else {
+      active_locks[lock] = 1;
+    }
+  }
+
+  // Success.
+  return lock;
 }
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
@@ -1243,7 +2010,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! modules except last and filter type modules are mapped, in order,
 //! and the first one that returns a suitable response is used. If
 //! `no_magic' is set to one, the internal magic roxen images and the
-//! <ref>find_internal()</ref> callbacks will be ignored.
+//! @[find_internal()] callbacks will be ignored.
 //!
 //! The return values 0 (no such file) and -1 (the data is a
 //! directory) are only returned when `no_magic' was set to 1;
@@ -1285,13 +2052,20 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        ) {
       switch(type) {
        case "roxen":
+	//  Mark all /internal-roxen-* as cacheable even though the user might be
+	//  authenticated (which normally disables protocol-level caching).
+	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
+	PROTO_CACHE();
+	id->set_response_header("Cache-Control", "public, max-age=31536000");
+	
 	TRACE_LEAVE("Magic internal roxen image");
         if(loc=="unit" || loc=="pixel-of-destiny")
 	{
 	  TIMER_END(internal_magic);
 	  return (["data":"GIF89a\1\0\1\0\200ÿ\0ÀÀÀ\0\0\0!ù\4\1\0\0\0\0,"
 		   "\0\0\0\0\1\0\1\0\0\1\1""2\0;",
-		   "type":"image/gif" ]);
+		   "type":"image/gif",
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	if(has_prefix(loc, "pixel-"))
 	{
@@ -1299,7 +2073,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  return (["data":sprintf("GIF89a\1\0\1\0\200\0\0\0\0\0%c%c%c,\0\0\0"
 				  "\0\1\0\1\0\0\2\2L\1\0;",
 				  @parse_color(loc[6..])),
-		   "type":"image/gif" ]);
+		   "type":"image/gif",
+		   "stat": ({0, 0, 0, 900000000, 0, 0, 0})]);
 	}
 	TIMER_END(internal_magic);
 	return internal_roxen_image(loc, id);
@@ -1313,13 +2088,13 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #endif
 
     // Locate internal location resources.
-    if(!search(file, query("InternalLoc")))
+    if(has_prefix(file, internal_location))
     {
       TRACE_ENTER("Magic internal module location", 0);
       RoxenModule module;
       string name, rest;
       function find_internal;
-      if(2==sscanf(file[strlen(query("InternalLoc"))..], "%s/%s", name, rest) &&
+      if(2==sscanf(file[strlen(internal_location)..], "%s/%s", name, rest) &&
 	 (module = find_module(replace(name, "!", "#"))) &&
 	 (find_internal = module->find_internal))
       {
@@ -1359,8 +2134,10 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    {
 #ifdef MODULE_LEVEL_SECURITY
 	      int oslevel = slevel;
-	      slevel = misc_cache[ find_internal ][1];
-	      // misc_cache from
+	      array slca;
+	      if(slca = security_level_cache[ Roxen.get_owning_module (find_internal) ])
+		slevel = slca[1];
+	      // security_level_cache from
 	      // check_security
 	      id->misc->seclevel = slevel;
 #endif
@@ -1414,11 +2191,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       }
       if(objectp( tmp ))
       {
-	array err;
+	mixed err;
 
-	nest ++;
+	id->misc->get_file_nest++;
 	err = catch {
-	  if( nest < 20 )
+	  if( id->misc->get_file_nest < 20 )
 	    tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	  else
 	  {
@@ -1427,7 +2204,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 		  +file+".\n");
 	  }
 	};
-	nest = 0;
+	id->misc->get_file_nest = 0;
 	if(err) throw(err);
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
@@ -1443,7 +2220,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     foreach(location_module_cache||location_modules(), tmp)
     {
       loc = tmp[0];
-      if(!search(file, loc))
+      if(has_prefix(file, loc))
       {
 	TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
@@ -1472,7 +2249,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
 	  if(mappingp(fid))
 	  {
-	    TRACE_LEAVE("");
+	    TRACE_LEAVE(""); // Location module [...]
 	    TRACE_LEAVE(examine_return_mapping(fid));
 	    TIMER_END(location_modules);
 	    return fid;
@@ -1481,8 +2258,10 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 #ifdef MODULE_LEVEL_SECURITY
 	    int oslevel = slevel;
-	    slevel = misc_cache[ tmp[1] ][1];
-	    // misc_cache from
+	    array slca;
+	    if(slca = security_level_cache[ Roxen.get_owning_module (tmp[1]) ])
+	      slevel = slca[1];
+	    // security_level_cache from
 	    // check_security
 	    id->misc->seclevel = slevel;
 #endif
@@ -1510,11 +2289,12 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	// the mountpoint is /local/. It will slow things down, but...
 
 	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
+	TRACE_LEAVE("");
 	TRACE_LEAVE("Returning data");
 
 	// Keep query (if any).
 	// FIXME: Should probably keep config <foo>
-	string new_query = Roxen.http_encode_string(id->not_query) + "/" +
+	string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
 	new_query=Roxen.add_pre_state(new_query, id->prestate);
 
@@ -1539,6 +2319,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       LOCK(dir_module);
       TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
+      TRACE_LEAVE("");
       UNLOCK();
       PROF_LEAVE(dir_module->module_name,"directory");
     }
@@ -1558,7 +2339,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   // Map the file extensions, but only if there is a file...
   TIMER_START(extension_module);
   if(objectp(fid) &&
-     (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id))))
+     (tmp = file_extension_modules(loc =
+				   lower_case(Roxen.extension(id->not_query,
+							      id)))))
   {
     foreach(tmp, funp)
     {
@@ -1608,11 +2391,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(content_type_module);
     if(stringp(id->extension)) {
       id->not_query += id->extension;
-      loc = Roxen.extension(id->not_query, id);
+      loc = lower_case(Roxen.extension(id->not_query, id));
     }
     TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
-    TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
+    TRACE_LEAVE(tmp?sprintf("Returned type %O %s.", tmp[0], tmp[1]||"")
 		: "Missing type.");
     if(tmp)
     {
@@ -1632,51 +2415,84 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   return fid;
 }
 
-mixed handle_request( RequestID id  )
+#define TRY_FIRST_MODULES(FILE, RECURSE_CALL) do {			\
+    TIMER_START(first_modules);						\
+    foreach(first_module_cache||first_modules(), function funp)		\
+    {									\
+      TRACE_ENTER ("First try module", funp);				\
+      if(FILE = funp( id )) {						\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+      if(id->conf != this_object()) {					\
+	TRACE_ENTER (sprintf ("Configuration changed to %O - "		\
+			      "redirecting", id->conf), 0);		\
+	TRACE_LEAVE ("");						\
+	TIMER_END (first_modules);					\
+	TIMER_END (handle_request);					\
+	return id->conf->RECURSE_CALL;					\
+      }									\
+    }									\
+    TIMER_END(first_modules);						\
+  } while (0)
+
+#define TRY_LAST_MODULES(FILE, RECURSE_CALL) do {			\
+    mixed ret;								\
+    TIMER_START(last_modules);						\
+    foreach(last_module_cache||last_modules(), function funp) {		\
+      TRACE_ENTER ("Last try module", funp);				\
+      if(ret = funp(id)) {						\
+	if (ret == 1) {							\
+	  TRACE_LEAVE ("Request rewritten - try again");		\
+	  TIMER_END(last_modules);					\
+	  TIMER_END(handle_request);					\
+	  return RECURSE_CALL;						\
+	}								\
+	TRACE_LEAVE ("Got response");					\
+	break;								\
+      }									\
+      TRACE_LEAVE ("No response");					\
+    }									\
+    FILE = ret;								\
+    TIMER_END(last_modules);						\
+  } while (0)
+
+mixed handle_request( RequestID id, void|int recurse_count)
 {
-  function funp;
   mixed file;
   REQUEST_WERR("handle_request()");
+
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
+    return 0;
+  }
+
   TIMER_START(handle_request);
-  TIMER_START(first_modules);
-  foreach(first_module_cache||first_modules(), funp)
-  {
-    if(file = funp( id ))
-      break;
-    if(id->conf != this_object()) {
-      REQUEST_WERR("handle_request(): Redirected (2)");
-      return id->conf->handle_request(id);
-    }
-  }
-  TIMER_END(first_modules);
+  TRY_FIRST_MODULES (file, handle_request (id, recurse_count + 1));
   if(!mappingp(file) && !mappingp(file = get_file(id)))
-  {
-    mixed ret;
-    TIMER_START(last_modules);
-    foreach(last_module_cache||last_modules(), funp) if(ret = funp(id)) break;
-    if (ret == 1) {
-      REQUEST_WERR("handle_request(): Recurse");
-      TIMER_END(last_modules);
-      TIMER_END(handle_request);
-      return handle_request(id);
-    }
-    file = ret;
-    TIMER_END(last_modules);
-  }
+    TRY_LAST_MODULES (file, handle_request(id, recurse_count + 1));
   TIMER_END(handle_request);
+
   REQUEST_WERR("handle_request(): Done");
   MERGE_TIMERS(roxen);
   return file;
 }
 
-mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
+mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
 //! Return a result mapping for the id object at hand, mapping all
 //! modules, including the filter modules. This function is mostly a
-//! wrapper for <ref>low_get_file()</ref>.
+//! wrapper for @[low_get_file()].
 {
   TIMER_START(get_file);
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
+  RequestID root_id = id->root_id || id;
+  root_id->misc->_request_depth++;
+  if(sub_req_limit && root_id->misc->_request_depth > sub_req_limit)
+    error("Subrequest limit reached. (Possibly an insertion loop.)");
 
   mapping|int res;
   mapping res2;
@@ -1694,7 +2510,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
     PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
     if(res2=tmp(res,id))
     {
-      if(res && res->file && (res2->file != res->file))
+      if(mappingp(res) && res->file && (res2->file != res->file))
 	destruct(res->file);
       TRACE_LEAVE("Rewrote result.");
       res=res2;
@@ -1704,6 +2520,7 @@ mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
   }
   TIMER_END(filter_modules);
 
+  root_id->misc->_request_depth--;
   id->misc->internal_get = orig_internal_get;
   return res;
 }
@@ -1739,19 +2556,19 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
     }
     if(objectp( remap ))
     {
-      array err;
-      nest ++;
+      mixed err;
+      id->misc->find_dir_nest++;
 
       TRACE_LEAVE("Recursing");
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
+	if( id->misc->find_dir_nest < 20 )
 	  dir = (id->conf || this_object())->find_dir( file, id );
 	else
 	  error("Too deep recursion in roxen::find_dir() while mapping "
 		+file+".\n");
       };
-      nest = 0;
+      id->misc->find_dir_nest = 0;
       TRACE_LEAVE("");
       if(err)
 	throw(err);
@@ -1830,7 +2647,6 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 
 array(int)|Stat stat_file(string file, RequestID id)
 {
-  string loc;
   mixed s, tmp;
 #ifdef THREADS
   Thread.MutexKey key;
@@ -1839,72 +2655,76 @@ array(int)|Stat stat_file(string file, RequestID id)
 
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
+  if (has_prefix(file, internal_location)) {
+    TRACE_LEAVE("");
+    return 0;
+  }
+  
 #ifdef URL_MODULES
   // Map URL-modules
-  foreach(url_modules(), function funp)
+  string of = id->not_query;
+  id->not_query = file;
+  foreach(url_module_cache||url_modules(), function funp)
   {
-    string of = id->not_query;
-    id->not_query = file;
-
     TRACE_ENTER("URL module", funp);
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
 
-    if(mappingp( tmp )) {
-      id->not_query = of;
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returned 'No thanks'.");
-      return 0;
-    }
-    if(objectp( tmp ))
-    {
-      file = id->not_query;
-
-      array err;
-      nest ++;
-      TRACE_LEAVE("Recursing");
-      err = catch {
-	if( nest < 20 )
-	  tmp = (id->conf || this_object())->stat_file( file, id );
-	else
-	  error("Too deep recursion in roxen::stat_file() while mapping "
-		+file+".\n");
-      };
-      nest = 0;
-      if(err)
-	throw(err);
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Returning data");
-      return tmp;
+    if (tmp) {
+      if(mappingp( tmp )) {
+	id->not_query = of;
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returned 'No thanks'.");
+	return 0;
+      }
+      if(objectp( tmp ))
+      {
+	mixed err;
+	id->misc->stat_file_nest++;
+	TRACE_LEAVE("Recursing");
+	err = catch {
+	    if( id->misc->stat_file_nest < 20 )
+	      tmp = (id->conf || this_object())->stat_file(id->not_query, id );
+	    else
+	      error("Too deep recursion in roxen::stat_file() while mapping "
+		    +file+".\n");
+	  };
+	id->not_query = of;
+	id->misc->stat_file_nest = 0;
+	if(err)
+	  throw(err);
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returning data");
+	return tmp;
+      }
     }
     TRACE_LEAVE("");
-    id->not_query = of;
   }
+  id->not_query = of;
 #endif
 
   // Map location-modules.
-  foreach(location_modules(), tmp)
-  {
-    loc = tmp[0];
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function fun]) {
     if((file == loc) || ((file+"/")==loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
       TRACE_LEAVE("Exact match.");
       TRACE_LEAVE("");
-      return ({ 0775, -3, 0, 0, 0, 0, 0 });
+      return Stdio.Stat(({ 0775, -3, 0, 0, 0, 0, 0 }));
     }
-    if(!search(file, loc))
+    if(has_prefix(file, loc))
     {
-      TRACE_ENTER(sprintf("Location module [%s] ", loc), tmp[1]);
+      TRACE_ENTER(sprintf("Location module [%s] ", loc), fun);
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) {
+      if(check_security(fun, id)) {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied");
 	continue;
       }
 #endif
-      if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
+      if(s=function_object(fun)->stat_file(file[strlen(loc)..], id))
       {
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Stat ok.");
@@ -1918,90 +2738,114 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 mapping error_file( RequestID id )
 {
-  string data = query("ZNoSuchFile");
-  NOCACHE();
+  mapping res;
+  // Avoid recursion in 404 messages.
+  if (id->root_id->misc->generate_file_not_found ||
+      //  The most popular 404 request ever? Skip the fancy error page.
+      id->not_query == "/favicon.ico") {
+    res = Roxen.http_string_answer("No such file", "text/plain");
+  } else {
+    id->root_id->misc->generate_file_not_found = 1;
+    string data = query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
-  data = replace(data,({"$File", "$Me"}),
-                 ({"&page.virtfile;", "&roxen.server;"}));
+    data = replace(data,({"$File", "$Me"}),
+		   ({"&page.virtfile;", "&roxen.server;"}));
 #endif
-  mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+    res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+    id->root_id->misc->generate_file_not_found = 0;
+  }
   res->error = 404;
+  NOCACHE();
+  return res;
+}
+
+mapping auth_failed_file( RequestID id, string message )
+{
+  // Avoid recursion in 401 messages. This could occur if the 401
+  // messages used files that also cause access denied.
+  if(id->root_id->misc->generate_auth_failed)
+    return Roxen.http_low_answer(401, "<title>Access Denied</title>"
+				 "<h2 align=center>Access Denied</h2>");
+  id->root_id->misc->generate_auth_failed = 1;
+  
+  string data = query("ZAuthFailed");
+  NOCACHE();
+  mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  id->root_id->misc->generate_auth_failed = 0;
+  res->error = 401;
   return res;
 }
 
 // this is not as trivial as it sounds. Consider gtext. :-)
-array open_file(string fname, string mode, RequestID id, void|int internal_get)
+array open_file(string fname, string mode, RequestID id, void|int internal_get,
+		void|int recurse_count)
 {
-  if( id->conf && (id->conf != this_object()) )
-    return id->conf->open_file( fname, mode, id, internal_get );
-
-  Configuration oc = id->conf;
-  string oq = id->not_query;
-  function funp;
   mapping|int(0..1) file;
+  string oq = id->not_query;
 
-  id->not_query = fname;
+  if( id->conf && (id->conf != this_object()) )
+    return id->conf->open_file( fname, mode, id, internal_get, recurse_count );
 
-  foreach(first_modules(), funp)
-    if(file = funp( id ))
-      break;
-    else if(id->conf && (id->conf != oc))
-    {
-      return id->conf->open_file(fname, mode,id, internal_get);
-    }
-  fname = id->not_query;
-
-  if(search(mode, "R")!=-1) //  raw (as in not parsed..)
-  {
-    string f;
-    mode -= "R";
-    if(f = real_file(fname, id))
-    {
-      //      report_debug("opening "+fname+" in raw mode.\n");
-      return ({ open(f, mode), ([]) });
-    }
-//     return ({ 0, (["error":302]) });
+  if (recurse_count > 50) {
+    TRACE_ENTER ("Looped " + recurse_count +
+		 " times in internal redirects - giving up", 0);
+    TRACE_LEAVE ("");
   }
 
-  if(mode=="r")
-  {
+  else {
+    Configuration oc = id->conf;
+    id->not_query = fname;
+    TRY_FIRST_MODULES (file, open_file (fname, mode, id,
+					internal_get, recurse_count + 1));
+    fname = id->not_query;
+
+    if(search(mode, "R")!=-1) //  raw (as in not parsed..)
+    {
+      string f;
+      mode -= "R";
+      if(f = real_file(fname, id))
+      {
+	// report_debug("opening "+fname+" in raw mode.\n");
+	return ({ open(f, mode), ([]) });
+      }
+      // return ({ 0, (["error":302]) });
+    }
+
+    if(mode!="r") {
+      id->not_query = oq;
+      return ({ 0, (["error":501, "data":"Not implemented." ]) });
+    }
+
     if(!file)
     {
       file = get_file( id, 0, internal_get );
-      if(!file) {
-	foreach(last_modules(), funp) if(file = funp( id ))
-	  break;
-	if (file == 1) {
-	  // Recurse.
-	  return open_file(id->not_query, mode, id, internal_get);
-	}
-      }
+      if(!file)
+	TRY_LAST_MODULES (file, open_file (id->not_query, mode, id,
+					   internal_get, recurse_count + 1));
     }
+  }
 
-    if(!mappingp(file))
-    {
-      if(id->misc->error_code)
-	file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
-      else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
-	file = Roxen.http_low_answer(501, "Not implemented.");
-      else
-        file = error_file( id );
+  if(!mappingp(file))
+  {
+    if(id->misc->error_code)
+      file = Roxen.http_low_answer(id->misc->error_code, "Failed" );
+    else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
+      file = Roxen.http_low_answer(501, "Not implemented.");
+    else
+      file = error_file( id );
 
-      id->not_query = oq;
-
-      return ({ 0, file });
-    }
-
-    if( file->data )
-    {
-      file->file = StringFile(file->data);
-      m_delete(file, "data");
-    }
     id->not_query = oq;
-    return ({ file->file, file });
+
+    return ({ 0, file });
+  }
+
+  if( file->data )
+  {
+    file->file = StringFile(file->data);
+    m_delete(file, "data");
   }
   id->not_query = oq;
-  return ({ 0, (["error":501, "data":"Not implemented." ]) });
+  return ({ file->file || StringFile(""), file });
 }
 
 
@@ -2042,18 +2886,18 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
       report_debug("conf->find_dir_stat(\"%s\"): url_module returned mapping:%O\n",
 		  file, tmp);
 #endif /* MODULE_DEBUG */
-      TRACE_LEAVE("Returned mapping."+sprintf("%O", tmp));
+      TRACE_LEAVE("Returned mapping.");
       TRACE_LEAVE("");
       return 0;
     }
     if(objectp( tmp ))
     {
-      array err;
-      nest ++;
+      mixed err;
+      id->misc->find_dir_stat_nest++;
 
       file = id->not_query;
       err = catch {
-	if( nest < 20 )
+	if( id->misc->find_dir_stat_nest < 20 )
 	  tmp = (id->conf || this_object())->find_dir_stat( file, id );
 	else {
 	  TRACE_LEAVE("Too deep recursion");
@@ -2061,7 +2905,7 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
 		+file+".\n");
 	}
       };
-      nest = 0;
+      id->misc->find_dir_stat_nest = 0;
       if(err)
 	throw(err);
 #ifdef MODULE_DEBUG
@@ -2087,25 +2931,32 @@ mapping(string:array(mixed)) find_dir_stat(string file, RequestID id)
     {
       /* file == loc + subpath */
 #ifdef MODULE_LEVEL_SECURITY
-      if(check_security(tmp[1], id)) continue;
+      if(check_security(tmp[1], id)) {
+	TRACE_LEAVE("Security check failed.");
+	continue;
+      }
 #endif
       RoxenModule c = function_object(tmp[1]);
       string f = file[strlen(loc)..];
       if (c->find_dir_stat) {
-	TRACE_ENTER("Has find_dir_stat().", 0);
+	SIMPLE_TRACE_ENTER(c, "Calling find_dir_stat().");
 	if (d = c->find_dir_stat(f, id)) {
-          TRACE_ENTER("Returned mapping."+sprintf("%O", d), c);
+	  SIMPLE_TRACE_LEAVE("Returned mapping with %d entries.", sizeof (d));
 	  dir = d | dir;
-	  TRACE_LEAVE("");
 	}
-	TRACE_LEAVE("");
-      } else if(d = c->find_dir(f, id)) {
-	TRACE_ENTER("Returned array.", 0);
-	dir = mkmapping(d, Array.map(d, lambda(string fn)
-                                        {
-                                          return c->stat_file(f + fn, id);
-                                        })) | dir;
-	TRACE_LEAVE("");
+	else
+	  SIMPLE_TRACE_LEAVE("Returned zero.");
+      } else {
+	SIMPLE_TRACE_ENTER(c, "Calling find_dir().");
+	if(d = c->find_dir(f, id)) {
+	  SIMPLE_TRACE_LEAVE("Returned array with %d entries.", sizeof (d));
+	  dir = mkmapping(d, Array.map(d, lambda(string fn)
+					  {
+					    return c->stat_file(f + fn, id);
+					  })) | dir;
+	}
+	else
+	  SIMPLE_TRACE_LEAVE("Returned zero.");
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
@@ -2184,9 +3035,70 @@ string real_file(string file, RequestID id)
   }
 }
 
+array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
+{
+  RequestID fake_id;
+  array(int)|Stat res;
+
+  if(!objectp(id))
+    error("No ID passed to 'try_stat_file'\n");
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+
+  fake_id = make_fake_id(s, id);
+
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->method = "GET";
+
+  res = stat_file(fake_id->not_query, fake_id);
+
+  destruct (fake_id);
+  return res;
+}
+
+protected RequestID make_fake_id (string s, RequestID id)
+{
+  RequestID fake_id;
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc->common )
+    id->misc->common = ([]);
+
+  fake_id = id->clone_me();
+
+  fake_id->misc->common = id->misc->common;
+  fake_id->conf = this_object();
+
+  fake_id->raw_url=s;
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
+  s = http_decode_string(s);
+
+  s = Roxen.fix_relative (s, id);
+
+  // s is sent to Unix API's that take NUL-terminated strings...
+  if (search(s, "\0") != -1)
+    sscanf(s, "%s\0", s);
+
+  fake_id->not_query=s;
+
+  return fake_id;
+}
+
 int|string try_get_file(string s, RequestID id,
-                        int|void status, int|void nocache,
-			int|void not_internal)
+			int|void stat_only, int|void nocache,
+			int|void not_internal,
+			mapping|void result_mapping)
 //! Convenience function used in quite a lot of modules. Tries to read
 //! a file into memory, and then returns the resulting string.
 //!
@@ -2200,113 +3112,220 @@ int|string try_get_file(string s, RequestID id,
 //! sent directly to the client. Internal requests are recognized by
 //! the id->misc->internal_get flag being non-zero.
 {
-  string res, q, cache_key;
-  RequestID fake_id;
+  string res;
+  RequestID fake_id = make_fake_id (s, id);
   mapping m;
 
-  if(!objectp(id))
-    error("No ID passed to 'try_get_file'\n");
-
-  // id->misc->common makes it possible to pass information to
-  // the originating request.
-  if ( !id->misc )
-    id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
-
-  fake_id = id->clone_me();
-
-  fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
+  fake_id->method = "GET";
 
-  if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
-    s = fake_id->scan_for_query (s);
+  array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
 
-  s = Roxen.fix_relative (s, id);
+  m = a[1];
 
-  fake_id->raw_url=s;
-  fake_id->not_query=s;
+  // Propagate vary callbacks from the subrequest.
+  id->propagate_vary_callbacks(fake_id);
 
-  if(!(m = get_file(fake_id,0,!not_internal))) {
-    // Might be a PATH_INFO type URL.
-    m_delete (fake_id->misc, "path_info");
-    array a = open_file( s, "r", fake_id, !not_internal );
-    if(a && a[0]) {
-      m = a[1];
-      m->file = a[0];
-    }
-    else {
-      destruct (fake_id);
-      return 0;
-    }
+  if (result_mapping) {
+    foreach(indices(m), string i)
+      result_mapping[i] = m[i];
+    if (string|function(string:string) charset = fake_id->get_output_charset())
+      // Note that a "charset" field currently isn't supported very
+      // much in a response mapping. In particular, the http protocol
+      // module doesn't look at it.
+      //
+      // Maybe we should read in the result and decode it using this
+      // charset instead, just like we do in the m->raw case below.
+      result_mapping->charset = charset;
+    result_mapping->last_modified = fake_id->misc->last_modified;
+  }
+
+  if(a[0]) {
+    m->file = a[0];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
   }
 
   CACHE( fake_id->misc->cacheable );
   destruct (fake_id);
 
-  if (!mappingp(m) && !objectp(m)) {
-    report_error("try_get_file(%O, %O, %O, %O): m = %O is not a mapping.\n",
-		 s, id, status, nocache, m);
-    return 0;
-  }
-
   // Allow 2* and 3* error codes, not only a few specific ones.
   if (!(< 0,2,3 >)[m->error/100]) return 0;
 
-  if(status) return 1;
+  if(stat_only) return 1;
 
   if(m->data)
     res = m->data;
   else
     res="";
-  m->data = 0;
 
   if( objectp(m->file) )
   {
     res += m->file->read();
-    destruct(m->file);
-    m->file = 0;
+    if (m->file) {
+      // Some wrappers may destruct themselves in read()...
+      destruct(m->file);
+    }
   }
 
-  if(m->raw)
-  {
-    res -= "\r";
-    if(!sscanf(res, "%*s\n\n%s", res))
-      sscanf(res, "%*s\n%s", res);
+  if(m->raw) {
+    if (compat_level() > 5.0)
+      res = Roxen.parse_http_response (res, result_mapping, 0, "from " + s);
+    else {
+      // This function used to simply toss the headers and return the
+      // data as-is, losing the content type and charset. Need to be
+      // bug compatible with the lack of charset handling, since
+      // callers might be compensating. (The old code also deleted all
+      // CR's in the whole body, regardless of content type(!), but we
+      // don't have to be bug compatible with that at least.)
+      sscanf (res, "%*s\r\n\r\n%s", res) ||
+	sscanf (res, "%*s\n\n%s", res) ||
+	sscanf (res, "%*s\r\n%s", res) ||
+	sscanf (res, "%*s\n%s", res);
+    }
   }
+
   return res;
 }
 
-int(0..1) is_file(string virt_path, RequestID id)
-//! Is `virt_path' a file in our virtual filesystem?
+mapping(string:string) try_get_headers(string s, RequestID id,
+				       int|void not_internal)
+//! Like @[try_get_file] but performs a HEAD request and only returns
+//! the response headers. Note that the returned headers are as they
+//! would be in a formatted response by the http protocol module,
+//! which is completely different from a response mapping.
 {
-  return !!stat_file(virt_path, id);
+  RequestID fake_id = make_fake_id (s, id);
+  mapping m;
+
+  fake_id->misc->internal_get = !not_internal;
+  fake_id->method = "HEAD";
+
+  array a = open_file( s, "r", fake_id, !not_internal );
+  if(a && a[1]) {
+    if (a[0]) a[0]->close();
+    m = a[1];
+  }
+  else {
+    destruct (fake_id);
+    return 0;
+  }
+
+  CACHE( fake_id->misc->cacheable );
+
+  if (!m->raw)
+    m = fake_id->make_response_headers (m);
+
+  else {
+    Roxen.HeaderParser hp = Roxen.HeaderParser();
+    array res;
+
+    if(m->data)
+      res = hp->feed (m->data);
+
+    if (!res && objectp(m->file))
+    {
+      hp->feed (m->file->read());
+      if (m->file) {
+	// Some wrappers may destruct themselves in read()...
+	destruct(m->file);
+      }
+    }
+
+    m = res && res[2];
+  }
+
+  destruct (fake_id);
+  return m;
+}
+
+mapping(string:mixed) try_put_file(string path, string data, RequestID id)
+{
+  TIMER_START(try_put_file);
+
+  // id->misc->common is here for compatibility; it's better to use
+  // id->root_id->misc.
+  if ( !id->misc )
+    id->misc = ([]);
+
+  RequestID fake_id = make_fake_id(path, id);
+  
+  fake_id->root_id->misc->_request_depth++;
+  if(sub_req_limit && fake_id->root_id->misc->_request_depth > sub_req_limit)
+    error("Subrequest limit reached. (Possibly an insertion loop.)");
+
+  fake_id->method = "PUT";
+  fake_id->data = data;
+  fake_id->misc->len = sizeof(data);
+  fake_id->misc->internal_get = 1;
+
+  mapping(string:mixed) res = low_get_file(fake_id, 1);
+  TIMER_END(try_put_file);
+  return res;
+}
+
+int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
+//! Is @[virt_path] a file in our virtual filesystem? If @[internal] is
+//! set, internal files is "visible" as well.
+{
+  if(internal) {
+    int(0..1) was_internal = id->misc->internal_get;
+    id->misc->internal_get = 1;
+    int(0..1) res = !!stat_file(virt_path, id);
+    if(!was_internal)
+      m_delete(id->misc, "internal_get");
+    return res;
+  }
+  if(stat_file(virt_path, id) ||
+     has_suffix(virt_path, "/internal-roxen-unit"))
+    return 1;
+  string f = (virt_path/"/")[-1];
+  if( sscanf(f, "internal-roxen-%s", f) ) {
+    if(internal_roxen_image(f, id) ||
+       has_prefix(f, "pixel-"))
+      return 1;
+    return 0;
+  }
+  if( sscanf(f, "internal-gopher-%s", f) &&
+      internal_gopher_image(f) )
+    return 1;
+  return 0;
 }
 
 array registered_urls = ({}), failed_urls = ({ });
 array do_not_log_patterns = 0;
-void start(int num)
+int start(int num)
 {
   fix_my_url();
+
+#if 0
+  report_debug(sprintf("configuration:start():\n"
+		       "  registered_urls: ({ %{%O, %}})\n"
+		       "  failed_urls:     ({ %{%O, %}})\n"
+		       "  URLs:            ({ %{%O, %}})\n",
+		       registered_urls,
+		       failed_urls,
+		       query("URLs")));
+#endif /* 0 */
 
   // Note: This is run as root if roxen is started as root
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
     registered_urls -= ({ url });
-    roxen.unregister_url( url );
+    roxen.unregister_url(url, this_object());
   }
 
   failed_urls = ({ });
 
   foreach( (query( "URLs" )-registered_urls), string url )
+  {
     if( roxen.register_url( url, this_object() ) )
       registered_urls += ({ url });
     else
       failed_urls += ({ url });
+  }
   if( !datacache )
     datacache = DataCache( );
   else
@@ -2318,11 +3337,324 @@ void start(int num)
   if(!sizeof(do_not_log_patterns))
     do_not_log_patterns = 0;
 
+  if( query("throttle") )
+  {
+    if( !throttler )
+      throttler=.throttler();
+    throttler->throttle(query("throttle_fill_rate"),
+                        query("throttle_bucket_depth"),
+                        query("throttle_min_grant"),
+                        query("throttle_max_grant"));
+  }
+  else if( throttler )
+  {
+    // This is done to give old connections more bandwidth.
+    throttler->throttle( 1000000000, 1000000000, // 800Mbit.
+			 1024, 65536 );
+    // and new connections does not even have to care.
+    throttler = 0;
+  }
+
 #ifdef SNMP_AGENT
   if(query("snmp_process") && objectp(roxen->snmpagent))
       roxen->snmpagent->add_virtserv(get_config_id());
 #endif
 
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+    
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie mib =
+	SNMP.SimpleMIB(query_oid(), oid_suffix,
+		       ({
+			 UNDEFINED,
+			 UNDEFINED,
+			 SNMP.String(query_name, "siteName"),
+			 SNMP.String(comment, "siteComment"),
+			 SNMP.Counter64(lambda() { return sent; },
+					"sent"),
+			 SNMP.Counter64(lambda() { return received; },
+					"received"),
+			 SNMP.Counter64(lambda() { return hsent; },
+					"sentHeaders"),
+			 SNMP.Counter64(lambda() { return requests; },
+					"numRequests"),
+			 UNDEFINED,	// NOTE: Reserved for modules!
+			 ({
+			   UNDEFINED,
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return request_acc_time/10000; },
+				 "requestTime",
+				 "Accumulated total request time "
+				 "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "requestNumRuns",
+					    "Total number of request runs."),
+			       SNMP.Counter(lambda() { return request_num_runs_001s; },
+					    "requestNumRuns001s",
+					    "Number of request runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_005s; },
+					    "requestNumRuns005s",
+					    "Number of request runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_015s; },
+					    "requestNumRuns015s",
+					    "Number of request runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_05s; },
+					    "requestNumRuns05s",
+					    "Number of request runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_1s; },
+					    "requestNumRuns1s",
+					    "Number of request runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return request_num_runs_5s; },
+					    "requestNumRuns5s",
+					    "Number of request runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_15s; },
+					    "requestNumRuns15s",
+					    "Number of request runs longer than 15 seconds."),
+			     }),
+			   }),
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return handle_acc_time/10000; },
+				 "handleTime",
+				 "Accumulated total handle time "
+			       "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "handleNumRuns",
+					    "Total number of handle runs."),
+			       SNMP.Counter(lambda() { return handle_num_runs_001s; },
+					    "handleNumRuns001s",
+					    "Number of handle runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_005s; },
+					    "handleNumRuns005s",
+					    "Number of handle runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_015s; },
+					    "handleNumRuns015s",
+					    "Number of handle runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_05s; },
+					    "handleNumRuns05s",
+					    "Number of handle runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_1s; },
+					    "handleNumRuns1s",
+					    "Number of handle runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return handle_num_runs_5s; },
+					    "handleNumRuns5s",
+					    "Number of handle runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_15s; },
+					    "handleNumRuns15s",
+					    "Number of handle runs longer than 15 seconds."),
+			     }),
+			   }),
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return queue_acc_time/10000; },
+				 "queueTime",
+				 "Accumulated total queue time "
+				 "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "queueNumRuns",
+					    "Total number of queue runs."),
+			       SNMP.Counter(lambda() { return queue_num_runs_001s; },
+					    "queueNumRuns001s",
+					    "Number of queue runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_005s; },
+					    "queueNumRuns005s",
+					    "Number of queue runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_015s; },
+					    "queueNumRuns015s",
+					    "Number of queue runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_05s; },
+					    "queueNumRuns05s",
+					    "Number of queue runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_1s; },
+					    "queueNumRuns1s",
+					    "Number of queue runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return queue_num_runs_5s; },
+					    "queueNumRuns5s",
+					    "Number of queue runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_15s; },
+					    "queueNumRuns15s",
+					    "Number of queue runs longer than 15 seconds."),
+			     }),
+			   })
+			 }),
+			 ({
+			   UNDEFINED,
+			   SNMP.Counter(lambda()
+					{ return datacache->hits + datacache->misses; },
+			     "protCacheLookups",
+			     "Number of protocol cache lookups."),
+			   SNMP.Counter(lambda()
+					{ return datacache->hits; },
+			     "protCacheHits",
+			     "Number of protocol cache hits."),
+			   SNMP.Counter(lambda()
+					{ return datacache->misses; },
+			     "protCacheMisses",
+			     "Number of protocol cache misses."),
+			   SNMP.Gauge(lambda()
+				      { return sizeof(datacache->cache); },
+			     "protCacheEntries",
+			     "Number of protocol cache entries."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->max_size/1024; },
+			     "protCacheMaxSize",
+			     "Maximum size of protocol cache in KiB."),
+			   SNMP.Gauge(lambda()
+				      { return datacache->current_size/1024; },
+			     "protCacheCurrSize",
+			     "Current size of protocol cache in KiB."),
+			 })
+		       }));
+      SNMP.set_owner(mib, this_object());
+      prot->mib->merge(mib);
+    }
+  }
+
+  if (retrieve ("EnabledModules", this)["config_filesystem#0"])
+    return 1;			// Signal that this is the admin UI config.
+  return 0;
+}
+
+// ([func: ([mod_name: ({cb, cb, ...})])])
+protected mapping(string:
+		  mapping(string:
+			  array(function(RoxenModule,mixed...:void))))
+  module_pre_callbacks = ([]), module_post_callbacks = ([]);
+
+void add_module_pre_callback (string mod_name, string func,
+			      function(RoxenModule,mixed...:void) cb)
+{
+  ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
+  mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+    module_pre_callbacks[func] || (module_pre_callbacks[func] = ([]));
+  if (func_cbs[mod_name] && has_value (func_cbs[mod_name], cb))
+    return;
+  func_cbs[mod_name] += ({cb});
+}
+
+void delete_module_pre_callback (string mod_name, string func,
+				 function(RoxenModule,mixed...:void) cb)
+{
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_pre_callbacks[func])
+    if (func_cbs[mod_name])
+      func_cbs[mod_name] -= ({cb});
+}
+
+void add_module_post_callback (string mod_name, string func,
+			       function(RoxenModule,mixed...:void) cb)
+{
+  ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
+  mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+    module_post_callbacks[func] || (module_post_callbacks[func] = ([]));
+  if (func_cbs[mod_name] && has_value (func_cbs[mod_name], cb))
+    return;
+  func_cbs[mod_name] += ({cb});
+}
+
+void delete_module_post_callback (string mod_name, string func,
+				  function(RoxenModule,mixed...:void) cb)
+{
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_post_callbacks[func])
+    if (func_cbs[mod_name])
+      func_cbs[mod_name] -= ({cb});
+}
+
+void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
+{
+  string mod_name;
+
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_pre_callbacks[func]) {
+    sscanf (mod->module_local_id(), "%[^#]", mod_name);
+    array(function(RoxenModule,mixed...:void)) cbs;
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
+      func_cbs[mod_name] = (a -= ({0}));
+      cbs = a;
+    }
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[0]) {
+      func_cbs[0] = (a -= ({0}));
+      if (cbs) cbs += a; else cbs = a;
+    }
+    if (cbs) {
+      foreach (cbs, function(RoxenModule,mixed...:void) cb) {
+#ifdef MODULE_CB_DEBUG
+	werror ("Calling callback before %O->%s: %O\n", mod, func, cb);
+#endif
+	if (mixed err = catch (cb (mod, @args)))
+	  report_error ("Error calling callback %O before %O->%s:\n%s\n",
+			cb, mod, func, describe_backtrace (err));
+      }
+    }
+  }
+
+  // Exceptions thrown here are the responsibility of the caller.
+#ifdef MODULE_CB_DEBUG
+  werror ("Calling %O->%s (%s)\n", mod, func,
+	  map (args, lambda (mixed arg)
+		       {return sprintf ("%O", arg);}) * ", ");
+#endif
+  mod[func] (@args);
+
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_post_callbacks[func]) {
+    if (!mod_name)
+      sscanf (otomod[mod] || mod->module_local_id(), "%[^#]", mod_name);
+    array(function(RoxenModule,mixed...:void)) cbs;
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
+      func_cbs[mod_name] = (a -= ({0}));
+      cbs = a;
+    }
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[0]) {
+      func_cbs[0] = (a -= ({0}));
+      if (cbs) cbs += a; else cbs = a;
+    }
+    if (cbs) {
+      foreach (cbs, function(RoxenModule,mixed...:void) cb) {
+#ifdef MODULE_CB_DEBUG
+	werror ("Calling callback after %O->%s: %O\n", mod, func, cb);
+#endif
+	if (mixed err = catch (cb (mod, @args)))
+	  report_error ("Error calling callback %O after %O->%s:\n%s\n",
+			cb, mod, func, describe_backtrace (err));
+      }
+    }
+  }
 }
 
 void save_me()
@@ -2340,13 +3672,16 @@ void save(int|void all)
     start(2);
   }
 
+  store( "EnabledModules", enabled_modules, 1, this_object());
   foreach(indices(modules), string modname)
   {
     foreach(indices(modules[modname]->copies), int i)
     {
-      store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
-      if (mixed err = catch(modules[modname]->copies[i]->
-			    start(2, this_object())))
+      RoxenModule mod = modules[modname]->copies[i];
+      store(modname+"#"+i, mod->query(), 0, this);
+      if (mixed err = mod->start && catch {
+	  call_module_func_with_cbs (mod, "start", 2, this, 0);
+	})
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }
@@ -2357,7 +3692,6 @@ void save(int|void all)
 int save_one( RoxenModule o )
 //! Save all variables in a given module.
 {
-  mapping mod;
   if(!o)
   {
     store("spider#0", variables, 0, this_object());
@@ -2371,7 +3705,8 @@ int save_one( RoxenModule o )
   store(q, o->query(), 0, this_object());
   invalidate_cache();
   mixed error;
-  if( error = catch( o->start(2, this_object()) ) )
+  if( o->start &&
+      (error = catch( call_module_func_with_cbs (o, "start", 2, this, 0) )) )
   {
     if( objectp(error ) )
       error = (array)error;
@@ -2395,63 +3730,103 @@ int save_one( RoxenModule o )
 RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
-  ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
+  sscanf (modname, "%s#%d", string base_modname, int mod_copy);
+  ModuleInfo mi = roxen.find_module( base_modname );
 
   if( !old_module ) return 0;
 
-  master()->clear_compilation_failures();
+  // Temporarily shift out of the rxml parsing context if we're inside
+  // any (e.g. due to delayed loading from inside the admin
+  // interface).
+  RXML.Context old_ctx = RXML.get_context();
+  RXML.set_context (0);
+  mixed err = catch {
 
-  if( !old_module->not_a_module )
-  {
-    save_one( old_module );
-    master()->refresh_inherit( object_program( old_module ) );
-    master()->refresh( object_program( old_module ), 1 );
+      master()->clear_compilation_failures();
+
+      if( !old_module->not_a_module )
+      {
+	save_one( old_module );
+	master()->refresh_inherit( object_program( old_module ) );
+	master()->refresh( object_program( old_module ), 1 );
+      }
+
+      array old_error_log = (array) old_module->error_log;
+
+      RoxenModule nm;
+
+      // Load up a new instance.
+      nm = mi->instance( this_object(), 0, mod_copy);
+      // If this is a faked module, let's call it a failure.
+      if (nm->module_is_disabled)
+	report_notice (LOC_C(0, "Module is disabled") + "\n");
+      else if( nm->not_a_module )
+      {
+	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
+	RXML.set_context (old_ctx);
+	return old_module;
+      }
+
+      disable_module( modname, nm );
+      destruct( old_module ); 
+
+      mixed err = catch {
+	  mi->update_with( nm,0 ); // This is sort of nessesary...
+	};
+      if (err)
+	if (stringp (err)) {
+	  // Error from the register_module call. We can't enable the old
+	  // module now, and I don't dare changing the order so that
+	  // register_module starts to get called before the old module is
+	  // destructed. /mast
+	  report_error (err);
+	  report_error(LOC_C(385,"Reload failed")+"\n");
+	  RXML.set_context (old_ctx);
+	  return 0;			// Use a placeholder module instead?
+	}
+	else
+	  throw (err);
+      enable_module( modname, nm, mi );
+
+      foreach (old_error_log, [string msg, array(int) times])
+	nm->error_log[msg] += times;
+
+      nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
+      RXML.set_context (old_ctx);
+      return nm;
+
+    };
+  RXML.set_context (old_ctx);
+  throw (err);
+}
+
+void reload_all_modules()
+{
+  if (!inited)
+    enable_all_modules();
+  else {
+    foreach (enabled_modules; string modname;)
+      reload_module (modname);
   }
-
-  array old_error_log = (array) old_module->error_log;
-
-  RoxenModule nm;
-
-  // Load up a new instance.
-  nm = mi->instance( 0 );
-  // If this is a faked module, let's call it a failure.
-  if( nm->not_a_module )
-  {
-    old_module->report_error(LOC_C(385,"Reload failed")+"\n");
-    return old_module;
-  }
-
-  disable_module( modname );
-
-  mi->update_with( nm,0 ); // This is sort of nessesary...
-
-  enable_module( modname, nm, mi );
-
-  foreach (old_error_log, [string msg, array(int) times])
-    nm->error_log[msg] += times;
-
-  nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
-  return nm;
 }
 
 #ifdef THREADS
 Thread.Mutex enable_modules_mutex = Thread.Mutex();
-#define MODULE_LOCK \
-  Thread.MutexKey enable_modules_lock = enable_modules_mutex->lock (2)
+#define MODULE_LOCK(TYPE) \
+  Thread.MutexKey enable_modules_lock = enable_modules_mutex->lock (TYPE)
 #else
-#define MODULE_LOCK
+#define MODULE_LOCK(TYPE)
 #endif
 
-static int enable_module_batch_msgs;
+protected int enable_module_batch_msgs;
 
 RoxenModule enable_module( string modname, RoxenModule|void me, 
                            ModuleInfo|void moduleinfo, 
-                           int|void nostart )
+                           int|void nostart, int|void nosave )
 {
-  MODULE_LOCK;
+  MODULE_LOCK (2);
   int id;
   ModuleCopies module;
-  int pr;
   mixed err;
   int module_type;
 
@@ -2464,7 +3839,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
 
-  roxen->bootstrap_info->set (({this_object(), modname + "#" + id}));
+#ifdef DEBUG
+  if (mixed init_info = roxen->bootstrap_info->get())
+    if (arrayp (init_info))
+      error ("Invalid recursive call to enable_module while enabling %O/%s.\n",
+	     init_info[0], init_info[1]);
+#endif
 
 #ifdef MODULE_DEBUG
   int start_time = gethrtime();
@@ -2479,7 +3859,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
       return 0;
     }
   }
@@ -2501,7 +3880,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !me )
   {
-    if(err = catch(me = moduleinfo->instance(this_object())))
+    if(err = catch(me = moduleinfo->instance(this_object(), 0, id)))
     {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
@@ -2515,44 +3894,44 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
 #endif
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
       return module[id];
     }
   }
 
   if(module[id] && module[id] != me)
   {
-    if( module[id]->stop )
-      catch( module[id]->stop() );
-//     if( err = catch( disable_module( modname+"#"+id ) ) )
-//       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
-//                                                   describe_backtrace(err)));
+    // Don't know when this happens, because reload_module has already
+    // called disable_module on the old instance.
+    if( module[id]->stop ) {
+      if (err = catch( call_module_func_with_cbs (module[id], "stop", me) )) {
+	string bt=describe_backtrace(err);
+	report_error("disable_module(): " +
+		     LOC_M(44, "Error while disabling module %s%s"),
+		     descr, (bt ? ":\n"+bt : "\n"));
+      }
+    }
   }
 
   me->set_configuration( this_object() );
 
   module_type = moduleinfo->type;
-  if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
-                     MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
-                     MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
-                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST))
+  if (module_type & MODULE_TYPE_MASK)
   {
-    if(module_type != MODULE_CONFIG)
+    if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
 	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
 		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
-		   "called in random order"),
+		   "called in random order."),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
-	roxen->bootstrap_info->set (0);
 	throw(err);
       }
     }
 
 #ifdef MODULE_LEVEL_SECURITY
-    if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER)) != 0 )
+    if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER|MODULE_USERDB)) != 0 )
     {
 //       me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
 // 		 TYPE_STRING,
@@ -2582,10 +3961,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 			 "  <dd>Match the remote IP-address.</dd>\n"
 			 " \n"
 			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
-			 "  <dd>Requires a authenticated user. If the user name 'any' is used, any "
-			 "valid user will be OK. Otherwise, one of the listed users are required.</dd>"
+			 "  <dd>Requires an authenticated user. If the user name 'any' is used, any "
+			 "valid user will be OK; if the user name 'ANY' is used, "
+			 "a valid user is preferred, but not required. "
+			 "Otherwise, one of the listed users is required.</dd>"
 			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
-			 "<dd>Requires a authenticated user with a group. If the group name "
+			 "<dd>Requires an authenticated user with a group. If the group name "
 			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
 			 "listed groups are required.</dd>\n"
 			 " \n"
@@ -2598,7 +3979,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 			 " HH:mm format.</dd>\n"
 			 "<dt>CMD <b>day</b>=<i>day[,day,...]</i> [return]</dt>\n"
 			 "<dd>Only allow access during certain days. Day is either a numerical "
-			 "    value (monday=1, sunday=7) or a string (monday, thuesday etc)</dd>"
+			 "    value (Monday=1, Sunday=7) or a string (monday, tuesday etc)</dd>"
 			 "</dl><p>\n"
 			 "  pattern is always a glob pattern (* = any characters, ? = any character).\n"
 			 "</p><p>\n"
@@ -2656,72 +4037,64 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
 
+  if (!module[id])
+    counters[moduleinfo->counter]++;
+
+  module[ id ] = me;
+  otomod[ me ] = modname+"#"+id;
+  module_set_counter++;
+
+  // Below we may have recursive calls to this function. They may
+  // occur already in setvars due to e.g. automatic dependencies in
+  // Variable.ModuleChoice.
+
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
 
-  module[ id ] = me;
-  otomod[ me ] = modname+"#"+id;
+  if (me->not_a_module) nostart = 1;
 
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
 #ifdef MODULE_DEBUG
-  if (enable_module_batch_msgs)
-    report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+  if (enable_module_batch_msgs) {
+    if(moduleinfo->config_locked[this_object()])
+      report_debug("\bLocked %6.1fms\n", (gethrtime()-start_time)/1000.0);
+    else if (me->not_a_module)
+      report_debug("\bN/A %6.1fms\n", (gethrtime()-start_time)/1000.0);
+    else
+      report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
+  }
+#else
+  if(moduleinfo->config_locked[this_object()])
+    report_error("   Error: \"%s\" not loaded (license restriction).\n",
+		 moduleinfo->get_name());
+  else if (me->not_a_module)
+    report_debug("   Note: \"%s\" not available.\n", moduleinfo->get_name());
 #endif
   if( !enabled_modules[modname+"#"+id] )
   {
     enabled_modules[modname+"#"+id] = 1;
-    store( "EnabledModules", enabled_modules, 1, this_object());
+    if(!nosave)
+      store( "EnabledModules", enabled_modules, 1, this_object());
   }
 
-  if (!has_stored_vars)
+  if (!has_stored_vars && !nosave)
     store (modname + "#" + id, me->query(), 0, this_object());
 
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
 
-  roxen->bootstrap_info->set (0);
   return me;
 }
 
 void call_start_callbacks( RoxenModule me, 
                            ModuleInfo moduleinfo, 
-                           ModuleCopies module )
+			   ModuleCopies module,
+			   void|int newly_added)
 {
-  if(!me) return;
-  if(!moduleinfo) return;
-  if(!module) return;
-
   call_low_start_callbacks(  me, moduleinfo, module );
-
-  mixed err;
-  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
-  {
-#ifdef MODULE_DEBUG
-    if (enable_module_batch_msgs) 
-      report_debug("\bERROR\n");
-#endif
-    string bt=describe_backtrace(err);
-    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-    got_no_delayed_load = -1;
-    /* Clean up some broken references to this module. */
-//     m_delete(otomod, me);
-//     m_delete(module->copies, search( module->copies, me ));
-//     destruct(me);
-//     return 0;
-  }
-  if( inited && me->ready_to_receive_requests )
-    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
-    {
-#ifdef MODULE_DEBUG
-      if (enable_module_batch_msgs) report_debug("\bERROR\n");
-#endif
-      report_error( "While calling ready_to_receive_requests:\n"+
-		    describe_backtrace( q ) );
-      got_no_delayed_load = -1;
-    }
+  call_high_start_callbacks (me, moduleinfo, newly_added);
 }
 
 void call_low_start_callbacks( RoxenModule me, 
@@ -2762,10 +4135,10 @@ void call_low_start_callbacks( RoxenModule me,
       {
 	string foo;
 	foreach( me->query_file_extensions(), foo )
-	  if(pri[pr]->file_extension_modules[foo] )
-	    pri[pr]->file_extension_modules[foo]+=({me});
+	  if(pri[pr]->file_extension_modules[foo = lower_case(foo)] )
+	    pri[pr]->file_extension_modules[foo] += ({me});
 	  else
-	    pri[pr]->file_extension_modules[foo]=({me});
+	    pri[pr]->file_extension_modules[foo] = ({me});
       }
     }) {
 #ifdef MODULE_DEBUG
@@ -2829,7 +4202,75 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+    
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie sub_mib = generate_module_mib(query_oid() + ({ 8, 1 }),
+					     oid_suffix, me, moduleinfo, module);
+      SNMP.set_owner(sub_mib, this_object(), me);
+
+      prot->mib->merge(sub_mib);
+
+      if (me->query_snmp_mib) {
+	array(int) segment = generate_module_oid_segment(me);
+	sub_mib = me->query_snmp_mib(query_oid() + ({ 8, 2 }) +
+				     segment[..sizeof(segment)-2],
+				     oid_suffix + ({ segment[-1] }));
+	SNMP.set_owner(sub_mib, this_object(), me);
+	prot->mib->merge(sub_mib);
+      }
+    }
+  }
+
   invalidate_cache();
+}
+
+void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
+				void|int newly_added)
+{
+  // This is icky, but I don't know if it's safe to remove. /mast
+  if(!me) return;
+  if(!moduleinfo) return;
+
+  mixed err;
+  if((me->start) &&
+     (err = catch( call_module_func_with_cbs (me, "start",
+					      0, this, newly_added) ) ) )
+  {
+#ifdef MODULE_DEBUG
+    if (enable_module_batch_msgs) 
+      report_debug("\bERROR\n");
+#endif
+    string bt=describe_backtrace(err);
+    report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
+			moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
+    got_no_delayed_load = -1;
+  }
+  if( inited && me->ready_to_receive_requests )
+    if( mixed q = catch( me->ready_to_receive_requests( this_object() ) ) ) 
+    {
+#ifdef MODULE_DEBUG
+      if (enable_module_batch_msgs) report_debug("\bERROR\n");
+#endif
+      report_error( "While calling ready_to_receive_requests:\n"+
+		    describe_backtrace( q ) );
+      got_no_delayed_load = -1;
+    }
 }
 
 // Called from the administration interface.
@@ -2846,33 +4287,15 @@ string check_variable(string name, mixed value)
   case "URLs":
     fix_my_url();
     return 0;
-  case "throttle":
-    if (value) {
-      THROTTLING_DEBUG("configuration: Starting throttler up");
-      throttler=.throttler();
-      throttler->throttle(query("throttle_fill_rate"),
-                          query("throttle_bucket_depth"),
-                          query("throttle_min_grant"),
-                          query("throttle_max_grant"));
-    } else {
-      if (throttler) { //check, or get a backtrace the first time it's set
-        THROTTLING_DEBUG("configuration: Stopping throttler");
-        destruct(throttler);
-        throttler=0;
-      }
-    }
-    return 0;
-  case "throttle_fill_rate":
-  case "throttle_bucket_depth":
-  case "throttle_min_grant":
-  case "throttle_max_grant":
-    THROTTLING_DEBUG("configuration: setting throttling parameter: "+
-                     name+"="+value);
-    throttler->throttle(query("throttle_fill_rate"),
-                        query("throttle_bucket_depth"),
-                        query("throttle_min_grant"),
-                        query("throttle_max_grant"));
-    return 0;
+//    case "throttle":
+//      // There was code here to sett the throttling. That's not a
+//      // good idea. Moved to start. The code now also avoids
+//      // creating new throttle objects each time a value is changed.
+//    case "throttle_fill_rate":
+//    case "throttle_bucket_depth":
+//    case "throttle_min_grant":
+//    case "throttle_max_grant":
+//      return 0;
 #ifdef SNMP_AGENT
   case "snmp_process":
     if (objectp(roxen->snmpagent)) {
@@ -2946,13 +4369,24 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_LOGGER )
     for(pr=0; pr<10; pr++)
       pri[pr]->logger_modules -= ({ me });
+
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      SNMP.remove_owned(prot->mib, this_object(), me);
+    }
+  }
 }
 
-int disable_module( string modname, int|void nodest )
+int disable_module( string modname, void|RoxenModule new_instance )
 {
-  MODULE_LOCK;
+  MODULE_LOCK (2);
   RoxenModule me;
-  int id, pr;
+  int id;
   sscanf(modname, "%s#%d", modname, id );
 
   if( datacache ) datacache->flush();
@@ -2971,9 +4405,14 @@ int disable_module( string modname, int|void nodest )
 
   me = module[id];
   m_delete(module->copies, id);
+  module_set_counter++;
 
   if(!sizeof(module->copies))
     m_delete( modules, modname );
+
+  if (moduleinfo->counter) {
+    counters[moduleinfo->counter]--;
+  }
 
   invalidate_cache();
 
@@ -2986,7 +4425,9 @@ int disable_module( string modname, int|void nodest )
   }
 
   if(me->stop)
-    if (mixed err = catch (me->stop())) {
+    if (mixed err = catch (
+	  call_module_func_with_cbs (me, "stop", new_instance)
+	)) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
 		   LOC_M(44, "Error while disabling module %s%s"),
@@ -2999,8 +4440,9 @@ int disable_module( string modname, int|void nodest )
 
   clean_up_for_module( moduleinfo, me );
 
-  if( !nodest )
+  if( !new_instance )
   {
+    // Not a reload, so it's being dropped.
     m_delete( enabled_modules, modname + "#" + id );
     m_delete( forcibly_added, modname + "#" + id );
     store( "EnabledModules",enabled_modules, 1, this_object());
@@ -3060,18 +4502,18 @@ mapping(string:string) sql_urls = ([]);
 
 constant sql_cache_get = DBManager.sql_cache_get;
 
-Sql.Sql sql_connect(string db)
+Sql.Sql sql_connect(string db, void|string charset)
 {
   if (sql_urls[db])
-    return sql_cache_get(sql_urls[db]);
+    return sql_cache_get(sql_urls[db], 0, charset);
   else
-    return sql_cache_get(db);
+    return sql_cache_get(db, 0, charset);
 }
 
 // END SQL
 #endif
 
-static string my_url;
+protected string my_url, my_host;
 
 void fix_my_url()
 {
@@ -3083,9 +4525,22 @@ void fix_my_url()
     my_url = "";
   else
     if (!has_suffix (my_url, "/")) my_url += "/";
+
+  if (sscanf (my_url, "%*s://[%s]", string hostv6) == 2 ||
+      sscanf (my_url, "%*s://%[^:/]", string hostv4) == 2)
+    my_host = hostv6 ? "[" + hostv6 + "]" : hostv4;
+  else
+    my_host = 0;
 }
 
+//! Returns some URL for accessing the configuration. (Should be
+//! used instead of querying MyWorldLocation directly.)
 string get_url() {return my_url;}
+
+//! Returns the host part of the URL returned by @[get_url]. Returns
+//! zero when @[get_url] cannot return any useful value (i.e. it
+//! returns the empty string).
+string get_host() {return my_host;}
 
 array after_init_hooks = ({});
 mixed add_init_hook( mixed what )
@@ -3096,8 +4551,8 @@ mixed add_init_hook( mixed what )
     after_init_hooks |= ({ what });
 }
 
-static int got_no_delayed_load = 0;
-// 0 -> enabled delayed loading, 1 -> disable delayed loading,
+protected int got_no_delayed_load = 0;
+// 0 -> enable delayed loading, 1 -> disable delayed loading,
 // -1 -> don't change.
 
 void fix_no_delayed_load_flag()
@@ -3111,9 +4566,21 @@ void fix_no_delayed_load_flag()
 
 void enable_all_modules()
 {
-  MODULE_LOCK;
-  low_init( );
-  fix_no_delayed_load_flag();
+  MODULE_LOCK (0);
+
+  // Temporarily shift out of the rxml parsing context if we're inside
+  // any (e.g. due to delayed loading from inside the admin
+  // interface).
+  RXML.Context old_ctx = RXML.get_context();
+  RXML.set_context (0);
+  mixed err = catch {
+
+      low_init( );
+      fix_no_delayed_load_flag();
+
+    };
+  RXML.set_context (old_ctx);
+  if (err) throw (err);
 }
 
 void low_init(void|int modules_already_enabled)
@@ -3125,21 +4592,26 @@ void low_init(void|int modules_already_enabled)
   if (!modules_already_enabled)
     report_debug("\nEnabling all modules for "+query_name()+"... \n");
 
-  if (!modules_already_enabled) {
+  if (!modules_already_enabled)
+  {
+    // Ugly kludge: We let enabled_modules lie about the set of currently
+    //              enabled modules during the init, so that
+    //              module_dependencies() doesn't perform duplicate work.
     enabled_modules = retrieve("EnabledModules", this_object());
 //     roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
 //     roxenloader.push_compile_error_handler( ec );
 
-    array modules_to_process = indices( enabled_modules );
+    array modules_to_process = sort(indices( enabled_modules ));
     string tmp_string;
 
-    array err;
+    mixed err;
     forcibly_added = ([]);
     enable_module_batch_msgs = 1;
     foreach( modules_to_process, tmp_string )
     {
       if( !forcibly_added[ tmp_string ] )
-	if(err = catch( enable_module( tmp_string )))
+	if(err = catch( enable_module( tmp_string, UNDEFINED, UNDEFINED,
+				       UNDEFINED, 1)))
 	{
 	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
 		       +"\n%s\n", tmp_string, describe_backtrace(err));
@@ -3147,11 +4619,7 @@ void low_init(void|int modules_already_enabled)
 	}
     }
     enable_module_batch_msgs = 0;
-    roxenloader.pop_compile_error_handler();
-// if( strlen( ec->get() ) )
-// report_error( "While enabling modules in "+name+":\n"+ec->get() );
-// if( strlen( ec->get_warnings() ) )
-// report_warning( "While enabling modules in "+name+":\n"+ec->get_warnings());
+//      roxenloader.pop_compile_error_handler();
     forcibly_added = ([]);
   }
     
@@ -3179,34 +4647,34 @@ void low_init(void|int modules_already_enabled)
 		  "\n\n", query_name(), (gethrtime()-start_time)/1000000.0);
 
 #ifdef SNMP_AGENT
-  // Cold start trap after real virt.serv. loading
-  if(objectp(roxen->snmpagent))
-        roxen->snmpagent->coldstart_trap(({ get_config_id() }));
+  // Start trap after real virt.serv. loading
+  if(query("snmp_process") && objectp(roxen->snmpagent))
+    roxen->snmpagent->vs_start_trap(get_config_id());
 #endif
 
 }
 
 DataCache datacache;
 
-static void create()
+protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 //   int st = gethrtime();
   roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
 
   // for now only these two. In the future there might be more variables.
-  defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),
+  defvar( "data_cache_size", 131072, DLOCALE(274, "Cache:Cache size"),
           TYPE_INT| VAR_PUBLIC,
           DLOCALE(275, "The size of the data cache used to speed up requests "
                   "for commonly requested files, in KBytes"));
 
-  defvar( "data_cache_file_max_size", 50, DLOCALE(276, "Cache:Max file size"),
+  defvar( "data_cache_file_max_size", 256, DLOCALE(276, "Cache:Max file size"),
           TYPE_INT | VAR_PUBLIC,
           DLOCALE(277, "The maximum size of a file that is to be considered for "
-                  "the cache"));
+		  "the cache, in KBytes."));
 
 
-  defvar("default_server", 0, DLOCALE(20, "Default site"),
+  defvar("default_server", 0, DLOCALE(20, "Ports: Default site"),
 	 TYPE_FLAG| VAR_PUBLIC,
 	 DLOCALE(21, "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
@@ -3227,19 +4695,35 @@ static void create()
   defvar("compat_level", Variable.StringChoice (
 	   "", roxen.compat_levels, VAR_NO_DEFAULT,
 	   DLOCALE(246, "Compatibility level"),
-	   DLOCALE(386, "The compatibility level is used by different modules to select "
-		   "the right behavior to remain compatible with earlier Roxen "
-		   "versions. When a server configuration is created, this variable "
-		   "is set to the latest version. After that it's never changed "
-		   "automatically, thereby ensuring that server configurations "
-		   "migrated from earlier Roxen versions is kept at the right "
-		   "compatibility level.\n"
-		   "<p>\n"
-		   "This variable may be changed manually, but it's advisable to "
-		   "test the site carefully afterwards. A reload of the whole "
-		   "server configuration is required to propagate the change properly "
-		   "to all modules.")));
-  set ("compat_level", roxen.__roxen_version__);
+	   DLOCALE(386, #"\
+<p>The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.</p>
+
+<p>This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.</p>
+
+<p>Compatibility level notes:</p>
+
+<ul>
+  <li>2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.</li>
+
+  <li>2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &lt;cache&gt; tag.</li>
+
+  <li>There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.</li>
+</ul>")));
+
+  set ("compat_level", roxen.roxen_ver);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that
   // call is not entirely cheap. It's therefore advisable to put it in
@@ -3247,58 +4731,345 @@ static void create()
   // frequently. It's perfectly all right to do that in e.g. the
   // module start function, since the documentation explicitly states
   // that a reload of all modules is necessary to propagate a change
-  // the setting.
-
-  defvar("LogFormat",
-	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
-	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
-	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
-	 DLOCALE(26, "Logging: Format"),
-	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(27, #"What format to use for logging. The syntax is:
-<pre>response-code or *: Log format for that response code
-
-Log format is normal characters, or one or more of the variables below:
-
-\\n \\t \\r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.\n
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &lt;cache&gt; tag misses.
-                  nocache   -- No hit in any known cache.
-</pre>"), 0, lambda(){ return !query("Log");});
+  // of the setting.
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));
+
+  defvar("LogFormat", #"\
+# The default format follows the Combined Log Format, a slight
+# extension of the Common Log Format - see
+# http://httpd.apache.org/docs/1.3/logs.html#combined
+*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referrer\" \"$user-agent-raw\"
+
+# The following line is an extension of the above that adds useful
+# cache info. If you enable this you have to comment out or delete the
+# line above.
+#*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referrer\" \"$user-agent-raw\" $cache-status $eval-status $request-time
+
+# You might want to enable some of the following lines to get logging
+# of various internal activities in the server. The formats below are
+# somewhat similar to the Common Log Format standard, but they might
+# still break external log analysis tools.
+
+# To log commits and similar filesystem changes in a sitebuilder file system.
+#sbfs/commit: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
+#sbfs/*: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
+
+# Catch-all for internal log messages.
+#*/*: 0.0.0.0 - - [$cern-date] \"$action $resource $facility\" - -",
+	 DLOCALE(26, "Logging: Format"),
+	 TYPE_TEXT_FIELD|VAR_MORE,
+	 // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
+	 // $real-resource, $real-full-resource, $real-cs-uri-stem,
+
+	 /* Removed doc for would-be $request-vtime.
+<tr><td>$request-vtime</td>
+    <td>The virtual time the request took (seconds). This measures the
+    virtual time spent by the Roxen process. Note however that the
+    accuracy is comparably low on many OS:es, typically much lower
+    than $request-time. Also note that this isn't supported on all
+    platforms.</td></tr>
+	 */
+
+	 DLOCALE(27, #"\
+Describes the format to use for access logging. The log file can also
+receive messages for various internal activities.
+
+Empty lines and lines beginning with '<code>#</code>' are ignored.
+Other lines describes how to log either an access or an internal
+event.
+
+<p>A line to format an access logging message is one of:</p>
+
+<pre><i>&lt;response code&gt;</i>: <i>&lt;log format&gt;</i>
+*: <i>&lt;log format&gt;</i>
+</pre>
+
+<p><i>&lt;response code&gt;</i> is an HTTP status code. The
+corresponding <i>&lt;log format&gt;</i> is used for all responses
+matching that code. It's described in more detail below. If
+'<code>*</code>' is used instead of a response code then that line
+matches all responses that aren't matched by any specific response
+code line.</p>
+
+<p>A line to format an event logging message is one of:</p>
+
+<pre><i>&lt;facility&gt;</i>/<i>&lt;action&gt;</i>: <i>&lt;log format&gt;</i>
+<i>&lt;facility&gt;</i>/*: <i>&lt;log format&gt;</i>
+*/*: <i>&lt;log format&gt;</i>
+</pre>
+
+<p><i>&lt;facility&gt;</i> matches an identifier for the Roxen module
+or subsystem that the event comes from. Facility identifiers always
+starts with a character in <code>[a-zA-Z0-9]</code> and contains only
+characters in <code>[-_.#a-zA-Z0-9]</code>. If '<code>*</code>' is
+used instead of <i>&lt;facility&gt;</i> then that line matches all
+facilities that aren't matched by any other line.</p>
+
+<p><i>&lt;action&gt;</i> matches an identifier for a specific kind of
+event logged by a facility. An action identifier contains only
+characters in <code>[-_.#a-zA-Z0-9]</code>. '<code>*</code>' may be
+used instead of an <i>&lt;action&gt;</i> to match all events logged by
+a facility that aren't matched by any other line.</p>
+
+<p><i>&lt;log format&gt;</i> consists of literal characters and the
+special specifiers described below. All specifiers are not applicable
+for all kinds of messages. If an unknown or inapplicable specifier is
+encountered it typically expands to '<code>-</code>', but in some
+cases it expands to a dummy value that is syntactically compatible
+with what it usually expands to.</p>
+
+<p>For compatibility, underscores ('_') may be used wherever
+hyphens ('-') occur in the specifier names.</p>
+
+<h3>Format specifiers for both access and event logging</h3>
+
+<table><tbody valign='top'>
+<tr><td>\\n \\t \\r</td>
+    <td>Insert a newline, tab or linefeed character, respectively.</td></tr>
+<tr><td>$char(int)</td>
+    <td>Insert the (1 byte) character specified by the integer. E.g.
+    '<code>$char(36)</code>' inserts a literal '<code>$</code>'
+    character.</td></tr>
+<tr><td>$wchar(int)</td>
+    <td>Insert the specified integer using 2 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.</td></tr>
+<tr><td>$int(int)</td>
+    <td>Insert the specified integer using 4 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.</td></tr>
+<tr><td>$^</td>
+    <td>Suppress newline at the end of the logentry.</td></tr>
+<tr><td>$date</td>
+    <td>Local date formatted like '<code>2001-01-17</code>'.</td></tr>
+<tr><td>$time</td>
+    <td>Local time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$cern-date</td>
+    <td>Local date and time in CERN Common Log file format, i.e.
+    like '<code>17/Jan/2001:13:00:00 +0200</code>'.</td></tr>
+<tr><td>$utc-date</td>
+    <td>UTC date formatted like '<code>2001-01-17</code>'.</td></tr>
+
+<tr><td>$utc-time</td>
+    <td>UTC time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$bin-date</td>
+    <td>Unix time as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$resource</td>
+    <td>Resource identifier. For events, this is either a path to a
+    file (if it begins with '<code>/</code>') or some other kind of
+    resource identifier (otherwise). It is '-' for events that don't
+    act on any specific resource.</td></tr>
+<tr><td>$server-uptime</td>
+    <td>Server uptime in seconds.</td></tr>
+<tr><td>$server-cputime</td>
+    <td>Server cpu (user+system) time in milliseconds.</td></tr>
+<tr><td>$server-usertime</td>
+    <td>Server cpu user time in milliseconds.</td></tr>
+<tr><td>$server-systime</td>
+    <td>Server cpu system time in milliseconds.</td></tr>
+</tbody></table>
+
+<h3>Format specifiers for access logging</h3>
+
+<table><tbody valign='top'>
+<tr><td>$host</td>
+    <td>The remote host name, or ip number.</td></tr>
+<tr><td>$vhost</td>
+    <td>The Host request-header sent by the client, or '-' if none.</td></tr>
+<tr><td>$ip-number</td>
+    <td>The remote ip number.</td></tr>
+<tr><td>$bin-ip-number</td>
+    <td>The remote host ip as a binary integer number.</td></tr>
+<tr><td>$xff</td>
+    <td>The remote host name/ip taken from the X-Forwarded-For header, or
+        '-' if none is provided. If multiple headers or multiple values are
+        given the first value is logged; this should correspond to the
+        originating computer.</td></tr>
+<tr><td>$method</td>
+    <td>Request method.</td></tr>
+<tr><td>$full-resource</td>
+    <td>Full requested resource, including any query fields.</td></tr>
+<tr><td>$protocol</td>
+    <td>The protocol used (normally HTTP/1.1).</td></tr>
+<tr><td>$response</td>
+    <td>The response code sent.</td></tr>
+<tr><td>$bin-response</td>
+    <td>The response code sent as a binary short number.</td></tr>
+<tr><td>$length</td>
+    <td>The length of the data section of the reply.</td></tr>
+<tr><td>$bin-length</td>
+    <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$queue-length</td>
+    <td>Number of jobs waiting to be processed by the handler threads
+    at the time this request was added to the queue.</td></tr>
+<tr><td>$queue-time</td>
+    <td>Time in seconds that the request spent in the internal handler
+    queue, waiting to be processed by a handler thread.</td></tr>
+<tr><td>$handle-time</td>
+    <td>Time in seconds spent processing the request in a handler
+    thread. This measures the server processing time, excluding I/O
+    and time spent in the handler queue. Note however that this
+    measures real time, not virtual process time. I.e. if there are
+    other handler threads or processes using the CPU then this might
+    not accurately show the time that the Roxen server spent on the
+    request. Also note that if a handler thread has to wait for
+    responses from other servers then that wait time is included in
+    this measurement.</td></tr>
+<tr><td>$handle-cputime</td>
+    <td>CPU time in seconds spent processing the request in a handler
+    thread. Similar to $handle-time, but only includes the actual CPU
+    time spent on this request only. Time spent waiting for responses
+    from external server is not included here. Note that this time
+    might have very low accuracy on some platforms. There are also
+    platforms where this measurement isn't available at all, and in
+    that case this fields expands to \"-\".</td></tr>
+<tr><td>$request-time</td>
+    <td>Time in seconds that the whole request took on the server
+    side, including I/O time for receiving the request and sending the
+    response. Note that this measures real time - see $handle-time for
+    further discussion.</td></tr>
+<tr><td>$etag</td>
+    <td>The entity tag (aka ETag) header of the result.</td></tr>
+<tr><td>$referrer</td>
+    <td>The header 'referer' from the request, or '-'.</td></tr>
+<tr><td>$referer</td>
+    <td>Same as $referrer. Common misspelling kept for
+    compatibility.</td></tr>
+<tr><td>$user-agent</td>
+    <td>The header 'User-Agent' from the request, or '-'.</td></tr>
+<tr><td>$user-agent-raw</td>
+    <td>Same, but spaces in the name are not encoded to %20.</td></tr>
+<tr><td>$user</td>
+    <td>The name of the user, if any is given using the HTTP basic
+    authentication method.</td></tr>
+<tr><td>$user-id</td>
+    <td>A unique user ID, if cookies are supported, by the client,
+    otherwise '0'.</td></tr>
+<tr><td>$content-type</td>
+    <td>Resource MIME type.</td></tr>
+<tr><td>$cookies</td>
+    <td>All cookies sent by the browser, separated by ';'.</td></tr>
+
+<tr><td>$cache-status</td>
+    <td>A comma separated list of words (containing no whitespace)
+    that describes how the request got handled by various caches:
+
+    <table><tbody valign='top'>
+    <tr><td>protcache</td>
+	<td>The page is served from the HTTP protocol cache.</td></tr>
+    <tr><td>protstore</td>
+	<td>The page is stored in the HTTP protocol cache.</td></tr>
+    <tr><td>stale</td>
+	<td>There is a stale entry in the HTTP protocol cache. A
+	refresh is underway in the background and the stale entry is
+	sent in the meantime to avoid a long response time and server
+	congestion.</td></tr>
+    <tr><td>refresh</td>
+	<td>This is the finishing of the background refresh request
+	for the entry in the HTTP protocol cache.</td></tr>
+    <tr><td>pcoderam</td>
+	<td>A hit in the RXML p-code RAM cache.</td></tr>
+    <tr><td>pcodedisk</td>
+	<td>A hit in the RXML p-code persistent cache.</td></tr>
+    <tr><td>cachetag</td>
+	<td>RXML was evaluated without any cache miss in any RXML
+	&lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
+	miss.</td></tr>
+    <tr><td>xsltcache</td>
+	<td>There is a hit XSLT cache.</td></tr>
+    <tr><td>nocache</td>
+	<td>No hit in any known cache, and not added to the HTTP
+	protocol cache.</td></tr>
+    </tbody></table></td></tr>
+
+<tr><td>$eval-status</td>
+    <td>A comma separated list of words (containing no whitespace)
+    that describes how the page has been evaluated:
+
+    <table><tbody valign='top'>
+    <tr><td>xslt</td>
+	<td>XSL transform.</td></tr>
+    <tr><td>rxmlsrc</td>
+	<td>RXML evaluated from source.</td></tr>
+    <tr><td>rxmlpcode</td>
+	<td>RXML evaluated from compiled p-code.</td></tr>
+    </tbody></table></td></tr>
+
+<tr><td>$protcache-cost</td>
+    <td>The lookup depth in the HTTP protocol module low-level cache.</td></tr>
+</tbody></table>
+
+<h3>Event logging</h3>
+
+<p>The known event logging facilities and modules are described
+below.</p>
+
+<dl>
+<dt>Facility: roxen</dt>
+    <dd><p>This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.</p>
+
+    <p>The known events are:</p>
+
+    <table><tbody valign='top'>
+    <tr><td>ram-cache-gc</td>
+	<td>Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).</td></tr>
+    <tr><td>ram-cache-rebase</td>
+	<td>Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.</td></tr>
+    </tbody></table></dd>
+
+<dt>Facility: sbfs</dt>
+    <dd><p>A SiteBuilder file system.</p>
+
+    <p>The actions <code>commit</code>, <code>purge</code>,
+    <code>mkdir</code>, <code>set-dir-md</code>, and
+    <code>rmdir</code> are logged for file system changes except those
+    in edit areas.</p>
+
+    <p>The action <code>crawl-file</code> is logged for files that are
+    crawled by the persistent cache crawler.</p>
+
+    <p>The actions <code>file-change</code> and
+    <code>dir-change-flat</code> are logged when external file and
+    directory changes are detected (and this feature is enabled).</p>
+
+    <p>These extra format specifiers are defined where applicable:</p>
+
+    <table><tbody valign='top'>
+    <tr><td>$ac-userid</td>
+	<td>The ID number of the AC identity whose edit area was used.
+	Zero for the common view area.</td></tr>
+    <tr><td>$workarea</td>
+	<td>The unique tag for the work area. Empty for the main work
+	area.</td></tr>
+    <tr><td>$commit-type</td>
+	<td>The type of file commit, one of <code>create</code>,
+	<code>edit</code>, <code>delete</code>, and
+	<code>undelete</code>.</td></tr>
+    <tr><td>$revision</td>
+	<td>The committed revision number, a dotted decimal.</td></tr>
+    <tr><td>$comment</td>
+	<td>The commit message.</td></tr>
+    <tr><td>$request-time</td>
+	<td>This is set for the action <code>crawl-file</code>. It's
+	similar to <code>$request-time</code> for normal requests,
+	except that it measures the whole time it took for the
+	persistent cache crawler to process the page. That includes
+	all crawled variants and the saving of the entry to the
+	database.</td></tr>
+    </tbody></table></dd>
+</dl>"), 0, lambda(){ return !query("Log");});
+
+  // Make the widget above a bit larger.
+  getvar ("LogFormat")->rows = 20;
+  getvar ("LogFormat")->cols = 80;
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
@@ -3314,7 +5085,21 @@ $cache-status  -- A comma separated list of words (containing no
 	 "%H    Hostname\n"
 	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-
+  
+  defvar("LogFileCompressor", "",
+	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
+	 DLOCALE(259, "Path to a program to compress log files, "
+		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
+		 "<b>Note&nbsp;1:</b> The active log file is never compressed. "
+		 "Log rotation needs to be used using the \"Log file\" "
+		 "filename substitutions "
+		 "(e.g. <tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>). "
+		 "<b>Note&nbsp;2:</b> Compression is limited to scanning files "
+		 "with filename substitutions within a fixed directory (e.g. "
+		 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
+		 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
+	 0, lambda(){ return !query("Log");});
+  
   defvar("NoLog", ({ }),
 	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
          DLOCALE(33, "Don't log requests from hosts with an IP number which "
@@ -3328,7 +5113,7 @@ $cache-status  -- A comma separated list of words (containing no
 	 "to generate default URLs, and to generate email addresses."));
 
   defvar("MyWorldLocation", "",
-         DLOCALE(36, "Primary Server URL"), TYPE_URL|VAR_PUBLIC,
+         DLOCALE(36, "Ports: Primary Server URL"), TYPE_URL|VAR_PUBLIC,
 	 DLOCALE(37, #"\
 This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
@@ -3340,22 +5125,30 @@ blank.
 also set 'URLs'."));
   
   defvar("URLs", 
-         Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
-           DLOCALE(38, "URLs"), 
-	   DLOCALE(39, "Bind to these URLs. You can use '*' and '?' to perform"
+         Variable.PortList( ({"http://*/#ip=;nobind=0;"}), VAR_INITIAL|VAR_NO_DEFAULT,
+           DLOCALE(38, "Ports: URLs"),
+	   DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
-		   "all IP-numbers on your machine).  The possible protocols "
-		   "are http, https, ftp, ftps, hilfe and tetris.")));
+		   "all IP-numbers on your machine).  If you specify a IP# in "
+		   "the field it will take precedence over the hostname.")));
 
-  defvar("InternalLoc", "/_internal/",
+  defvar("InternalLoc", internal_location,
 	 DLOCALE(40, "Internal module resource mountpoint"),
-         TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
+	 TYPE_LOCATION|VAR_MORE,
          DLOCALE(41, "Some modules may want to create links to internal "
 		 "resources. This setting configures an internally handled "
 		 "location that can be used for such purposes.  Simply select "
 		 "a location that you are not likely to use for regular "
-		 "resources."));
-
+		 "resources."))
+    ->add_changed_callback(lambda(object v) { internal_location = v->query(); });
+  
+  defvar("SubRequestLimit", sub_req_limit,
+	 "Subrequest depth limit",
+	 TYPE_INT | VAR_MORE,
+	 "A limit for the number of nested sub requests for each request. "
+	 "This is intented to catch unintended infinite loops when for "
+	 "example inserting files in RXML. 0 for no limit." )
+    ->add_changed_callback(lambda(object v) { sub_req_limit = v->query(); });
 
   // Throttling-related variables
 
@@ -3433,9 +5226,126 @@ also set 'URLs'."));
 		 "As an example, if the file /foo/bar/not_there.html is "
 		 "wanted, and this list contains the default value of 404.inc,"
 		 " these files will be searched for, in this order:</p><br /> "
-		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
-		 
+		 " /foo/bar/404.inc, /foo/404.inc and /404.inc."
+		 "<p>\n"
+		 "The inclusion file can access the form variables "
+		 "form.orig-file and form.orig-url to identify the original "
+		 "page that was requested.") );
 
+  defvar("401-files", ({ }),
+	 DLOCALE(411, "Authentication failed message override files"),
+	 TYPE_STRING_LIST|VAR_PUBLIC,
+	 DLOCALE(412,
+		 "With each authentication required response this file is "
+		 "sent and displayed if the authentication fails or the user "
+		 "choose not to authenticate at all.<p>\n"
+		 "The file is searched for in parent directories in the same "
+		 "manner as the no such file message override files.") );
+
+  defvar("license",
+	 License.
+	 LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 
+			 VAR_NO_DEFAULT, DLOCALE(39, "License file"),
+			 DLOCALE(336, "The license file for this configuration."),
+			 this_object()));
+
+#ifdef HTTP_COMPRESSION
+  defvar("http_compression_enabled", 1,
+	 DLOCALE(1000, "Compression: Enable HTTP compression"),
+	 TYPE_FLAG,
+	 DLOCALE(1001, 
+#"Whether to enable HTTP protocol compression. Many types of text
+content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
+enabling HTTP compression may improve the visitors' perception of the
+site's performance. It's however a trade-off between server processing
+power and bandwidth. Requests that end up in the protocol cache will
+be served in the compressed form directly from the protocol cache, so
+for such requests the processing power overhead can be held relatively
+low."))->add_changed_callback(lambda(object v) 
+			      { http_compr_enabled = v->query(); });
+  http_compr_enabled = query("http_compression_enabled");
+
+  void set_mimetypes(array(string) mimetypes)
+  {
+    array main_mimes = ({});
+    array exact_mimes = ({});
+
+    foreach(mimetypes, string m) {
+      if(has_suffix(m, "/*"))
+	main_mimes += ({ m[..sizeof(m)-3] });
+      else if(!has_value(m, "*"))
+	exact_mimes += ({ m });
+    }
+
+    http_compr_exact_mimes = mkmapping(exact_mimes, 
+				       ({ 1 }) * sizeof(exact_mimes));
+    http_compr_main_mimes = mkmapping(main_mimes,
+				      ({ 1 }) * sizeof(main_mimes));
+  };
+  defvar("http_compression_mimetypes", 
+	 ({ "text/*", 
+	    "application/javascript",
+	    "application/x-javascript",
+	    "application/json",
+	    "application/xhtml+xml" }),
+	 DLOCALE(1002, "Compression: Enabled MIME-types"),
+	 TYPE_STRING_LIST,
+	 DLOCALE(1003, "The MIME types for which to enable compression. The "
+		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
+		 "but globbing on the general form (such as "
+		 "\"maintype/*subtype\") is not allowed and such globs will "
+		 "be silently ignored."))
+    ->add_changed_callback(lambda(object v) 
+			   { set_mimetypes(v->query()); 
+			   });
+  set_mimetypes(query("http_compression_mimetypes"));
+
+  defvar("http_compression_min_size", 1024,
+	 DLOCALE(1004, "Compression: Minimum content size"),
+	 TYPE_INT,
+	 DLOCALE(1005, "The minimum file size for which to enable compression. "
+		 "(It might not be worth it to compress a request if it can "
+		 "fit into a single TCP/IP packet anyways.)"))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_minlen = v->query(); });
+  http_compr_minlen = query("http_compression_min_size");
+
+  defvar("http_compression_max_size", 1048576,
+	 DLOCALE(1006, "Compression: Maximum content size"),
+	 TYPE_INT,
+	 DLOCALE(1007, "The maximum file size for which to enable compression. "
+		 "Note that the general protocol cache entry size limit "
+		 "applies, so if the compression of dynamic requests is "
+		 "disabled, files larger than the protocol cache maximum "
+		 "file size setting will never be served compressed "
+		 "regardless of this setting."))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_maxlen = v->query(); });
+  http_compr_maxlen = query("http_compression_max_size");
+
+  Variable.Int comp_level = 
+    Variable.Int(1, 0, DLOCALE(1008, "Compression: Compression level"),
+		 DLOCALE(1009, "The compression level to use (integer between 1 "
+			 "and 9). Higher number means more compression at the"
+			 " cost of processing power and vice versa. You may "
+			 "need to restart the server for this setting to "
+			 "take effect."));
+  comp_level->set_range(1, 9);
+  defvar("http_compression_level", comp_level);
+		 
+  defvar("http_compression_dynamic_reqs", 1,
+	 DLOCALE(1010, "Compression: Compress dynamic requests"),
+	 TYPE_FLAG,
+	 DLOCALE(1011, "If enabled, even requests that aren't cacheable in the "
+		 "protocol cache will be compressed. If the site has many "
+		 "lightweight requests that are not protocol cacheable, the "
+		 "processing overhead may become relatively large with this "
+		 "setting turned on."))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_dynamic_reqs = v->query(); });
+  http_compr_dynamic_reqs = query("http_compression_dynamic_reqs");
+#endif  
+  
 
   class NoSuchFileOverride
   {
@@ -3459,63 +5369,316 @@ also set 'URLs'."));
     {
       ::create(
 #"<nooutput><emit source=values scope=ef variable='modvar.site.404-files'>
-   <set variable='var.base' value=''/>
-   <emit source='path'>
-     <append variable='var.base' value='/&_.name;'/>
-     <set variable='var.404' value='&var.base;/&ef.value;'/>
-     <if exists='&var.404;'>
-       <set variable='var.errfile' from='var.404'/>
-     </if>
-   </emit>
+   <if not='' variable='ef.value is '>
+     <set variable='var.base' value=''/>
+     <emit source='path'>
+       <append variable='var.base' value='/&_.name;'/>
+       <set variable='var.404' value='&var.base;/&ef.value;'/>
+       <if exists='&var.404;'>
+         <set variable='var.errfile' from='var.404'/>
+       </if>
+     </emit>
+   </if>
 </emit>
-</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
     }
   };
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"<html><head>
-<title>404 - Page not found</title>
+  defvar("404-message", #"<html>
+<head>
+  <title>404 - Page Not Found</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
 </head>
-<body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
+      style='margin: 0; padding: 0'>
 
-<if nserious=''><set variable='var.404' value='-sorry' /></if>
-
-<table width=\"100%\"  border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
   <tr>
-    <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/internal-roxen-404' /></td>
+    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td valign='bottom'><img src='/internal-roxen-page-not-found-2' /></td>
+    <td></td>
+  </tr><tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td colspan='2'>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td width='356'>
+      <div class='msg'>
+        If you feel this is a configuration error, please contact
+        the administrators of this server or the author of the
+        <if referrer=''>
+          <a href='&client.referrer;'>referring page</a>.
+        </if><else>
+          referring page.
+        </else>
+      </div>
+    </td>
     <td>&nbsp;</td>
-    <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-      <b>Roxen WebServer &roxen.base-version;&nbsp;</b></font></td>
-  </tr>
-  <tr>
-    <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='3'></td>
+    <td>
+      <img src='/internal-roxen-unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+      <img src='/internal-roxen-unit' height='15' />
+    </td>
+    <td></td>
   </tr>
 </table>
 
-<font face=\"lucida,helvetica,arial\">
-<h2>&nbsp;Unable to retrieve &page.virtfile;.</h2>
-<br /><br />
-<blockquote>
-
-If you feel that this is a configuration error,
-please contact the administrators of this
-webserver or the author of the
-<if referrer=''>
-<a href=\"&client.referrer;\">referring</a>
-</if><else>
-referring
-</else>
-page.
-
-</blockquote>
-</font>
 </body>
-",
+</html>",
 	 DLOCALE(58, "No such file message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
+
+
+  class AuthFailedOverride
+  {
+    // compatibility with old config-files.
+    inherit Variable.Variable;
+
+    int check_visibility( RequestID id, int more_mode,
+			  int expert_mode, int devel_mode,
+			  int initial, int|void variable_in_cfif )
+    {
+      return 0;
+    }
+
+    void set( string newval )
+    {
+      if( search(newval,"emit source=values") == -1 )
+	variables[ "401-message" ]->set( newval );
+    }
+
+    void create()
+    {
+      ::create(
+#"<nooutput><emit source=values scope=ef variable='modvar.site.401-files'>
+   <if not='' variable='ef.value is '>
+     <set variable='var.base' value=''/>
+     <emit source='path'>
+       <append variable='var.base' value='/&_.name;'/>
+       <set variable='var.401' value='&var.base;/&ef.value;'/>
+       <if exists='&var.401;'>
+         <set variable='var.errfile' from='var.401'/>
+       </if>
+     </emit>
+   </if>
+</emit>
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
+    }
+  };
+  
+  defvar("ZAuthFailed", AuthFailedOverride() );
+
+  defvar("401-message", #"<html>
+<head>
+  <title>401 - Authentication Failed</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
+      style='margin: 0; padding: 0'>
+
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/internal-roxen-401' /></td>
+    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td valign='bottom'><img src='/internal-roxen-authentication-failed' /></td>
+    <td></td>
+  </tr><tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td colspan='2'>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td width='356'>
+      <div class='msg'>
+        If you feel this is a configuration error, please contact
+        the administrators of this server or the author of the
+        <if referrer=''>
+          <a href='&client.referrer;'>referring page</a>.
+        </if><else>
+          referring page.
+        </else>
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='3'></td>
+    <td>
+      <img src='/internal-roxen-unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+      <img src='/internal-roxen-unit' height='15' />
+    </td>
+    <td></td>
+  </tr>
+</table>
+
+</body>
+</html>",
+	 DLOCALE(413, "Authentication failed message"),
+	 TYPE_TEXT_FIELD|VAR_PUBLIC,
+	 DLOCALE(420, "What to return when an authentication attempt failed."));
+
+  if (!retrieve ("EnabledModules", this)["config_filesystem#0"]) {
+    // Do not use a handler queue timeout of the administration
+    // interface. You most probably don't want to get a 503 in your
+    // face when you're trying to reconfigure an overloaded server...
+    defvar("503-message", #"<html>
+<head>
+  <title>503 - Server Too Busy</title>
+  <style>
+    .header { font-family:  arial;
+            font-size:      20px;
+            line-height:    160% }
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='50' rightmargin='0' topmargin='50' bottommargin='0'
+      style='margin: 0; padding: 0'>
+
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr><td height='50'></td></tr>
+  <tr>
+    <td width='100'></td>
+    <td>
+      <div class='header'>503 &mdash; Server Too Busy</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <div class='msg'>
+        The server is currently too busy to serve your request. Please try again in a few moments.
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr>
+  <tr valign='bottom' height='100%'>
+    <td></td>
+    <td>
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+   </td>
+   <td></td>
+ </tr>
+</table>
+
+</body>
+</html>",
+	   DLOCALE(0, "Server too busy message"),
+	   TYPE_TEXT_FIELD|VAR_PUBLIC,
+	   DLOCALE(0, "What to return if the server is too busy. See also "
+		   "\"Handler queue timeout\"."));
+
+    defvar("handler_queue_timeout", 30,
+	   DLOCALE(0, "Handler queue timeout"),
+	   TYPE_INT,
+	   DLOCALE(0, #"Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+\"Server too busy message\" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load."))
+      ->add_changed_callback(lambda(object v)
+			     { handler_queue_timeout = v->query(); });
+    handler_queue_timeout = query("handler_queue_timeout");
+  }
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
@@ -3529,19 +5692,13 @@ page.
                 " specific objects.",
          0, snmp_disabled);
   defvar("snmp_traphosts", ({ }),
-                 "SNMP: Trap hosts", TYPE_STRING_LIST,
-         "The remote nodes, where should be sent traps.", 0, snmp_disabled);
-
-  if (query("snmp_process")) {
-    if(objectp(roxen()->snmpagent)) {
-      int servid;
-      servid = roxen()->snmpagent->add_virtserv(get_config_id());
-      // todo: make invisible varibale and set it to this value for future reference
-      // (support for per-reload persistence of server index?)
-    } else
-      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
+                 "SNMP: Trap host URLs", TYPE_STRING_LIST,
+         "The remote nodes, where should be sent traps."
+	 "<p>\n"
+	 "The URL syntax is: snmptrap://community@hostname:portnumber"
+	 "</p><br/>",
+	 0, snmp_disabled);
 #endif
-
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
 
@@ -3555,28 +5712,32 @@ page.
   setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
-  if (query("throttle"))
-  {
-    throttler=.throttler();
-    throttler->throttle(query("throttle_fill_rate"),
-                        query("throttle_bucket_depth"),
-                        query("throttle_min_grant"),
-                        query("throttle_max_grant"));
+
+#ifdef SNMP_AGENT
+  if (query("snmp_process")) {
+    if(objectp(roxen()->snmpagent)) {
+      int servid;
+      servid = roxen()->snmpagent->add_virtserv(get_config_id());
+      // todo: make invisible varibale and set it to this value for future reference
+      // (support for per-reload persistence of server index?)
+    } else
+      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");
   }
+#endif
 }
 
-static int arent_we_throttling_server () {
+protected int arent_we_throttling_server () {
   return !query("throttle");
 }
-static int arent_we_throttling_request() {
+protected int arent_we_throttling_request() {
   return !query("req_throttle");
 }
 
 #ifdef SNMP_AGENT
-private static int(0..1) snmp_disabled() {
+private int(0..1) snmp_disabled() {
   return (!snmp_global_disabled() && !query("snmp_process"));
 }
-private static int(0..1) snmp_global_disabled() {
+private int(0..1) snmp_global_disabled() {
   return (!objectp(roxen->snmpagent));
 }
 #endif

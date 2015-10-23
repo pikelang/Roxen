@@ -25,7 +25,7 @@ mixed transform_from_form( string what,mapping v )
   return what;
 }
 
-static int _current_count = time()*100+(gethrtime()/10000);
+protected int _current_count = time()*100+(gethrtime()/10000);
 int(0..1) set_from_form(RequestID id)
 {
   int rn, do_goto;
@@ -48,7 +48,7 @@ int(0..1) set_from_form(RequestID id)
   if( vl[".new.x"] )
   {
     do_goto = 1;
-    m_delete( id->variables, path()+".new.x" );
+    m_delete( id->real_variables, path()+".new.x" );
     new[""] = transform_from_form( "",vl );
   }
 
@@ -96,8 +96,14 @@ int(0..1) set_from_form(RequestID id)
       query = "";
     else
       query += "&";
-    query += "random="+random(4949494)+(section?"&section="+section:"");
 
+    //  The URL will get a fragment identifier below and since some
+    //  broken browsers (MSIE) incorrectly includes the fragment in
+    //  the last variable value we'll place section before random.
+    query +=
+      (section ? ("section=" + section + "&") : "") +
+      "random=" + random(4949494);
+    
     nid->misc->moreheads =
       ([
 	"Location":nid->not_query+(nid->misc->path_info||"")+
@@ -119,6 +125,9 @@ array(string) render_row(string prefix, mixed val, int width)
 	    Variable.input( prefix+"b", val[1], width ) });
 }
 
+LocaleString key_title = LOCALE(376, "Name");
+LocaleString val_title = LOCALE(473, "Value");
+
 string render_view( RequestID id, void|mapping additional_args )
 {
   mapping val = query();
@@ -126,8 +135,8 @@ string render_view( RequestID id, void|mapping additional_args )
 
   if(sizeof(val))
   {
-    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>" + key_title + "</th>"
+      "<th align='left'>" + val_title + "</th></tr>";
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
@@ -154,8 +163,8 @@ string render_form( RequestID id, void|mapping additional_args )
   mapping val = query();
 
   if(sizeof(val)) {
-    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>" + key_title + "</th>"
+      "<th align='left'>" + val_title + "</th></tr>";
 
     foreach( sort(indices(val)), mixed var ) {
       res += "<tr>\n<td><font size='-1'>"+

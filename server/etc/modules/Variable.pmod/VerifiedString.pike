@@ -17,6 +17,10 @@ int default_on_error = 0;
 #define AND 2
 int logic_mode = AND;
 
+void clear_verifications() {
+  verifications = ({});
+}
+
 array(string) verify_set( string new_value ) {
   string warn;
   foreach(verifications, function(string:array(string)) verify) {

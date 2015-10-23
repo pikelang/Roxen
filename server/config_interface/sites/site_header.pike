@@ -11,6 +11,15 @@ string module_global_page( RequestID id, Configuration conf )
 
 string module_page( RequestID id, string conf, string module )
 {
+  string section = RXML.get_var( "section", "form" );
+  if( !section )
+    section =
+      RXML.get_var( "lastmlmode", "usr" ) ||
+      RXML.get_var( "moduletab", "usr" );
+
+  RXML.set_var( "lastmlmode", section, "usr" );
+  RXML.set_var( "section", section, "form" );
+
   return 
 #"<emit source='module-variables-sections'
   configuration='"+conf+#"'
@@ -40,7 +49,7 @@ mixed parse( RequestID id )
    case "settings":
      return
        Roxen.http_string_answer(
-	 "<emit source='config-variables-sections' add-status='1' "
+	 "<emit source='config-variables-sections' add-module-priorities='1' add-status='1' "
 	 "      configuration='"+path[0]+"'>\n"
 	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
 	 "       href='?section=&_.section:http;'>&_.sectionname;</tab>"

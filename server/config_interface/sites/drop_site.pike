@@ -51,17 +51,22 @@ string|mapping parse( RequestID id )
 	dead += ({ db });
     }
 
+    // Never ever drop these.
+    dead -= ({ "roxen", "mysql", "local", "replicate" });
+
     res += "<b>"+
       LOCALE(468,"This site listens to the following ports:")+"</b><br />\n";
 
     res += "<ul>\n";
     foreach( cf->query( "URLs" ), string url )
+    {
+      url = (url/"#")[0];
 #if constant(gethostname)
       res += "<li> "+replace(url,"*",gethostname())+"\n";
 #else
       res += "<li> "+url+"\n";
 #endif
-      
+    }      
     res += "</ul\n>";
     
     if( sizeof( dead ) )
@@ -75,25 +80,39 @@ string|mapping parse( RequestID id )
 	
 	res += LOCALE(470,"If you do not want to delete this database, "
 		      "uncheck the checkmark in front of it");
+      else {
+	res += "<p>" +
+	  LOCALE(471,"If you do not want to delete one or more of these "
+		 "databases, uncheck the checkmark in front of the ones"
+		 " you want to keep.") +
+	  #"</p>
+<script type='text/javascript'>
+  var check_all_toggle = 0;
+  function checkAll() {
+    var checkboxes = document.getElementById ('checkbox_list').
+      getElementsByTagName ('input');
+    for (var i = 0; i < checkboxes.length; i++) {
+      if (check_all_toggle)
+	checkboxes[i].setAttribute ('checked', 'checked');
       else
-	res += LOCALE(471,"If you do not want to delete one or more of these "
-		      "databases, uncheck the checkmark in front of the ones"
-		      " you want to keep");
-      res += "<table>";
+	checkboxes[i].removeAttribute ('checked');
+    }
+    check_all_toggle = !check_all_toggle;
+  }
+</script>
+<p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
+	  LOCALE(0, "Uncheck/check all") +
+	  "</gbutton></a></p>\n";
+      }
+      res += "<ul id='checkbox_list'>";
       int n;
       foreach( dead, string d )
       {
-	if( n & 3 )
-	  res += "</td><td>";
-	else if( n )
-	  res += "</td></tr><tr><td>\n";
-	else
-	  res += "<tr><td>";
-	n++;
-	res += "<input name='del_db_"+d+"' type=checkbox checked=checked />"+
-	  d+"<br />";
+	res += "<li style='list-style-image: none; list-style-type: none'>"
+	  "<input name='del_db_"+d+"' id='del_db_"+d+"' type=checkbox checked=checked />"
+	  "<label for='del_db_"+d+"'>"+d+"</label></li>\n";
       }
-      res += "</td></tr></table>";
+      res += "</ul>";
       res += "</blockquote>";
     }
     // 2: Tables
@@ -107,7 +126,7 @@ string|mapping parse( RequestID id )
       "<td align='left'><submit-gbutton2 name='really'> "+
       LOCALE(249,"Drop old site") +
       " </submit-gbutton2></td><td align='right'>"
-      "<cf-cancel/></td></tr></table>";
+      "<cf-cancel href='./'/></td></tr></table>";
     
     return res + 
       "</st-page></subtablist></td></tr></table>"
@@ -128,5 +147,5 @@ string|mapping parse( RequestID id )
   cf->stop();
   destruct( cf );
   
-  return Roxen.http_redirect( "", id );
+  return Roxen.http_redirect( "/sites/", id );
 }

@@ -1,7 +1,9 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: filter.pike,v 1.1 2000/07/20 15:03:52 jhs Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_FILTER;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "
@@ -13,7 +15,7 @@ int handled;
 int seen;
 
 mapping|void filter(mapping|void result, RequestID id)
-//! The <pi>filter()</pi> method is called for all files just before the
+//! The @[filter()] method is called for all files just before the
 //! final resulting page is sent back to the browser. In effect, filter
 //! modules are essentially MODULE_LAST modules that get called for all
 //! requests, not only failed requests. The result parameter is either a
@@ -33,10 +35,13 @@ mapping|void filter(mapping|void result, RequestID id)
 {
   seen++;
   last_seen = result;
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result                       // If nobody had anything to say, neither do we.
   || !stringp(result->data)        // Got a file descriptor. Hardly ever happens anyway.
   || !id->prestate->filterpass     // No prestate, no action for this module.
-  || !glob("text/*", result->type) // Only touch content types we're interested in.
+  || !glob("text/*", type)         // Only touch content types we're interested in.
     )
     return 0;
 

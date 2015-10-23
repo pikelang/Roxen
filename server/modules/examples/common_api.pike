@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 inherit "module";
 // All roxen modules must inherit module.pike
 #include <roxen.h>
@@ -9,7 +11,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
 // end of the locale related stuff
 
-constant cvs_version="$Id: common_api.pike,v 1.7 2001/01/29 05:40:30 per Exp $";
+constant cvs_version="$Id$";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).

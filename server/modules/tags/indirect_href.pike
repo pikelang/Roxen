@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 // This module makes it possible to write symbolic names instead of
 // absoulte hrefs.
@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.30 2001/08/23 02:07:02 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -55,7 +55,7 @@ void start()
 class TagAI {
   inherit RXML.Tag;
   string name;
-  mapping(string:object/*(RXML.Type)*/) req_arg_types = (["name":RXML.t_text(RXML.PEnt)]);
+  mapping(string:object(RXML.Type)) req_arg_types = (["name":RXML.t_text(RXML.PEnt)]);
 
   void create() {
     if(variables->tagname)
@@ -87,7 +87,7 @@ class TagAI {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "ai":#"<desc cont='cont'><p><short>
+  "ai":#"<desc type='cont'><p><short>
  Makes it possible to use a database of links.</short> Each link is referred
  to by a symbolic name instead of the URL.</p>
 

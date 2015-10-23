@@ -3,10 +3,10 @@
 all: ntstartexe ntstartdll
 
 ntstartexe:
-	rntany msdev ntroxen.dsw /MAKE "ntstart - Release" $(REBUILD)
+	rntany devenv ntroxen.sln /build Release /project ntstart $(REBUILD)
 
 ntstartdll:
-	rntany msdev ntroxen.dsw /MAKE "startdll - Release" $(REBUILD)
+	rntany devenv ntroxen.sln /build Release /project startdll $(REBUILD)
 
 release: bump_version all
 

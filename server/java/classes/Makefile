@@ -26,3 +26,6 @@ module_classes : $(SRCDIR)/com/roxen/roxen/*.java
 compile_modules: roxen_module.jar 
 	CLASSPATH=roxen_module.jar find $(MODULEDIR) -name '*.java' \
 		-exec $(JAVAC) $(JAVAFLAGS) {} \;
+
+clean:
+	-rm com/roxen/servlet/*.class roxen_module.jar roxen_servlet.jar

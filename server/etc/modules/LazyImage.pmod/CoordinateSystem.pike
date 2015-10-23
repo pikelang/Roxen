@@ -11,12 +11,11 @@ constant operation_name = "coordinate-system";
 //!                The default is a fully opaque layer.
 
 
-static
+protected
 {
-  mapping data = ([]);
-
-  void parse_data()
+  mapping parse_data(string d)
   {
+    mapping data = ([]);
     mapping current_data = ([]);
     Parser.HTML p = Parser.HTML();
     p->xml_tag_syntax( 2 );
@@ -56,22 +55,23 @@ static
 				  return c;
 				} );
 
-    p->feed( args->data )->finish();
+    p->feed( d )->finish();
+    return data;
   }
     
   LazyImage.Layers process( LazyImage.Layers layers )
   {
-    parse_data();
+    mapping data = args->parsed_data;
 
     Image.Layer lab_l = Image.Layer();
-    int x_inner = translate_coordinate( args->xsize,0 ),
-      y_inner = translate_coordinate( args->ysize,0 );
+    int x_inner = translate_coordinate( args->xsize,0,layers ),
+      y_inner = translate_coordinate( args->ysize,0,layers );
 
     lab_l->set_misc_value( "name", args->name||"coordinate-system.labels" );
 
     lab_l->set_mode( translate_mode( args->mode ) );
-    int xo = translate_coordinate( args->xoffset, lab_l),
-      yo = translate_coordinate( args->yoffset, lab_l);
+    int xo = translate_coordinate( args->xoffset, lab_l,layers),
+      yo = translate_coordinate( args->yoffset, lab_l,layers);
     lab_l->set_offset( xo, yo );
 
 
@@ -79,12 +79,38 @@ static
 
     string do_sprintf( string format, mixed data )
     {
-      switch( strlen(format)?format[-1]:'f' )
+      string f = "f";
+      sscanf(format-"%%", "%*s%%%*s%[bduoxXcfgGeEFtsqOHn]", f);
+      switch( f )
       {
-	case 's': return sprintf( format, (string) data );
-	case 'd': return sprintf( format, (int) data );
-	case 'f': 
-	default:  return sprintf( format, (float)data );
+	case "n":
+	case "t":
+	case "O":
+	  // mixed
+	  return sprintf( format, data );
+	case "s":
+	case "q":
+	case "H":
+	  // string
+	  return sprintf( format, (string) data );
+	case "b":
+	case "d":
+	case "u":
+	case "o":
+	case "x":
+	case "X":
+	case "c":
+	  // int
+	  return sprintf( format, (int) data );
+	case "f":
+	case "g":
+	case "G":
+	case "e":
+	case "E":
+	case "F":
+	default:
+	  // float
+	  return sprintf( format, (float) data );
       }
     };
       
@@ -101,9 +127,9 @@ static
 	  array ll = ({});						   \
 	  string c = String.trim_all_whites(ld[1]);			   \
 									   \
-	  float step = translate_coordinate_f( l->step,lab_l );		   \
-	  float le = translate_coordinate_f( l->end,lab_l );		   \
-	  float ls = translate_coordinate_f( l->start,lab_l );		   \
+	  float step = translate_coordinate_f( l->step,lab_l,layers );	   \
+	  float le = translate_coordinate_f( l->end,lab_l,layers );	   \
+	  float ls = translate_coordinate_f( l->start,lab_l,layers );	   \
 									   \
 	  if( !l->format )						   \
 	    ll = map( c/"\n", String.trim_all_whites );			   \
@@ -121,15 +147,15 @@ static
 	    (l->font || d->args->font || args->font || "default")+" "+	   \
 	    (translate_coordinate(l->fontsize||				   \
 				  d->args->fontsize||			   \
-				  args->fontsize,0)||32);		   \
+				  args->fontsize,0,layers)||32);	   \
 	  Font f = resolve_font( font );				   \
 									   \
 	  if( !f )							   \
 	    RXML.parse_error("Cannot find the font ("+font+")\n");	   \
-	  array labels=map(map(ll,parse_variables,lab_l ),f->write);	   \
+	  array labels=map(map(ll,parse_variables,lab_l,layers ),f->write);\
 									   \
 	  if( l->rotate )						   \
-	    labels=labels->rotate(translate_coordinate_f(l->rotate,lab_l), \
+	    labels=labels->rotate(translate_coordinate_f(l->rotate,lab_l,layers), \
                                   255,255,255)->autocrop();		   \
           else								   \
    	     labels = labels->autocrop();				   \
@@ -160,11 +186,11 @@ static
     yedge += YPAD;
 
     if( data->x &&
-	translate_coordinate_f(data->x->args->start,lab_l)!=0.0 )
+	translate_coordinate_f(data->x->args->start,lab_l,layers)!=0.0 )
       twiddle_x = 1;
       
     if( data->y &&
-	translate_coordinate_f(data->y->args->start,lab_l)!=0.0 )
+	translate_coordinate_f(data->y->args->start,lab_l,layers)!=0.0 )
       twiddle_y = 1;
 
     int width =  x_inner + xedge + XPAD;
@@ -178,19 +204,19 @@ static
     lab_l->set_image( img, alpha );
 
     /* place labels on image */
-    if( data->x && data->x->labels )					       
-    {									       
-      mapping d   = data->x;						       
+    if( data->x && data->x->labels )
+    {
+      mapping d   = data->x;
       int     i; 
-      float   x0 = translate_coordinate_f( d->args->start,lab_l );
-      float   x1 = translate_coordinate_f( d->args->end,lab_l );
-      foreach( d->labels||({}), array ld )				       
-      {								       
-	mapping  l = ld[0];						       
-	array   ll = xlabels[i++];  				               
-	float step = translate_coordinate_f( l->step,lab_l );
-	float   le = translate_coordinate_f( l->end,lab_l );
-	float   ls = translate_coordinate_f( l->start,lab_l );
+      float   x0 = translate_coordinate_f( d->args->start,lab_l,layers );
+      float   x1 = translate_coordinate_f( d->args->end,lab_l,layers );
+      foreach( d->labels||({}), array ld )
+      {
+	mapping  l = ld[0];
+	array   ll = xlabels[i++];
+	float step = translate_coordinate_f( l->step,lab_l,layers );
+	float   le = translate_coordinate_f( l->end,lab_l,layers );
+	float   ls = translate_coordinate_f( l->start,lab_l,layers );
 	Image.Color color = translate_color( l->color||
 					     d->args->color||
 					     args->color );
@@ -225,20 +251,20 @@ static
     {									       
       mapping d   = data->y;
       int     i; 
-      float   x0 = translate_coordinate_f( d->args->start,lab_l );
-      float   x1 = translate_coordinate_f( d->args->end,lab_l );
-      foreach( d->labels||({}), array ld )				       
-      {								       
-	mapping  l = ld[0];						       
-	float step = translate_coordinate_f( l->step,lab_l );
-	float   le = translate_coordinate_f( l->end,lab_l );
-	float   ls = translate_coordinate_f( l->start,lab_l );
-	array   ll = ylabels[i++];  				               
+      float   x0 = translate_coordinate_f( d->args->start,lab_l,layers );
+      float   x1 = translate_coordinate_f( d->args->end,lab_l,layers );
+      foreach( d->labels||({}), array ld )
+      {
+	mapping  l = ld[0];
+	float step = translate_coordinate_f( l->step,lab_l,layers );
+	float   le = translate_coordinate_f( l->end,lab_l,layers );
+	float   ls = translate_coordinate_f( l->start,lab_l,layers );
+	array   ll = ylabels[i++];
 	Image.Color color = translate_color( l->color||
 					     d->args->color||
 					     args->color );
 	int j;
-	  
+
 	void place_label( float p, int i )
 	{
 	  if( sizeof( ll ) <= i )
@@ -279,8 +305,8 @@ static
 			 clear(translate_color( a->color||args->color ))),
 			(alpha=alpha->copy()->clear(0,0,0) ));
       frame->set_mode( translate_mode( a->mode || args->mode ) );
-      frame->set_offset( translate_coordinate( args->xoffset, lab_l),
-			 translate_coordinate( args->yoffset, lab_l)+YPAD );
+      frame->set_offset( translate_coordinate( args->xoffset, lab_l,layers),
+			 translate_coordinate( args->yoffset, lab_l,layers)+YPAD );
       frame->set_misc_value( "name", args->name||"coordinate-system.frame" );
 
 	
@@ -318,7 +344,7 @@ static
 	
       alpha = alpha->polygone(@LazyImage.make_polygon_from_line
 			      (translate_coordinate_f
-			       ((a->width||"1.0"),frame ),
+			       ((a->width||"1.0"),frame,layers ),
 			       coords,
 			       translate_cap_style( args->cap ),
 			       translate_join_style( args->join ) ));
@@ -328,8 +354,8 @@ static
     if( data->x && data->x->ticks )
     {
       array po = ({});
-      float x0 = translate_coordinate_f( data->x->args->start,lab_l );
-      float x1 = translate_coordinate_f( data->x->args->end,lab_l );
+      float x0 = translate_coordinate_f( data->x->args->start,lab_l,layers );
+      float x1 = translate_coordinate_f( data->x->args->end,lab_l,layers );
       void draw_tick( float p, float h, float w, Image.Image i )
       {
 	int y = (int)((height-yedge-YPAD) - (h/2))+
@@ -343,12 +369,12 @@ static
       };
       foreach( data->x->ticks, mapping l )
       {
-	float step = translate_coordinate_f( l->step,lab_l );
-	float   le = translate_coordinate_f( l->end,lab_l );
-	float   ls = translate_coordinate_f( l->start,lab_l );
+	float step = translate_coordinate_f( l->step,lab_l,layers );
+	float   le = translate_coordinate_f( l->end,lab_l,layers );
+	float   ls = translate_coordinate_f( l->start,lab_l,layers );
 
-	float   h = translate_coordinate_f( l->length,lab_l );
-	float   w = translate_coordinate_f( l->width,lab_l );
+	float   h = translate_coordinate_f( l->length,lab_l,layers );
+	float   w = translate_coordinate_f( l->width,lab_l,layers );
 	Image.Image i = Image.Image( (int)w, (int)h, 255,255,255 );
 	if( step > 0.0 )						       
 	  for( float p=ls; p < le; (p += step) )
@@ -362,8 +388,8 @@ static
     if( data->y && data->y->ticks )
     {
       array po = ({});
-      float x0 = translate_coordinate_f( data->y->args->start,lab_l );
-      float x1 = translate_coordinate_f( data->y->args->end,lab_l );
+      float x0 = translate_coordinate_f( data->y->args->start,lab_l,layers );
+      float x1 = translate_coordinate_f( data->y->args->end,lab_l,layers );
       void draw_tick( float p, float h, float w, Image.Image i )
       {
 	int y = (int)((height-yedge-YPAD)-
@@ -374,12 +400,12 @@ static
       };
       foreach( data->y->ticks, mapping l )
       {
-	float step = translate_coordinate_f( l->step,lab_l );
-	float   le = translate_coordinate_f( l->end,lab_l );
-	float   ls = translate_coordinate_f( l->start,lab_l );
+	float step = translate_coordinate_f( l->step,lab_l,layers );
+	float   le = translate_coordinate_f( l->end,lab_l,layers );
+	float   ls = translate_coordinate_f( l->start,lab_l,layers );
 
-	float   h = translate_coordinate_f( l->length,lab_l );
-	float   w = translate_coordinate_f( l->width,lab_l );
+	float   h = translate_coordinate_f( l->length,lab_l,layers );
+	float   w = translate_coordinate_f( l->width,lab_l,layers );
 	Image.Image i = Image.Image( (int)h, (int)w, 255,255,255 );
 	if( step > 0.0 )						       
 	  for( float p=ls; p < le; (p += step) )
@@ -399,10 +425,8 @@ static
 
   LazyImage.Arguments check_args( LazyImage.Arguments a )
   {
-    // FIXME: Perhaps do the parsing here, and then
-    // a->data sprintf( "%O", data ) or something
-    // once the debugging is done, to avoid the fact that
-    // white-space changes give the image a new ID.
+    a->parsed_data = parse_data(a->data);
+    m_delete(a, "data");
     return a;
   }
 };

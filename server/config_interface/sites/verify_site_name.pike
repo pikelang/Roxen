@@ -29,8 +29,13 @@ int check_config_name(string name)
 
 mixed parse( RequestID id )
 {
+  string n = id->variables->name;
+  string p, e;
+  int c;
+  while( sscanf( n, "%s<%x>%s", p, c, e ) )
+    n = p+sprintf("%c",c)+e;
   id->variables->name=
-    (replace(id->variables->name||"","\000"," ")/" "-({""}))*" ";
+    (replace(n||"","\000"," ")/" "-({""}))*" ";
   if( check_config_name( id->variables->name ) )
     return Roxen.http_string_answer("error");
   return "";

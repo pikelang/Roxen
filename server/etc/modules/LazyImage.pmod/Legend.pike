@@ -1,13 +1,11 @@
 inherit LazyImage.LazyImage;
 constant operation_name = "legend";
 
-static
+protected
 {
-  array labels = ({});
-
   LazyImage.Layers process( LazyImage.Layers layers )
   {
-    Image.Layer res;
+    array labels = args->parsed_labels;
     int col = 2;
       
     if( args->columns )
@@ -23,7 +21,7 @@ static
       
     int height;
     string font = (args->font||"default")+" "+
-      (height=(translate_coordinate(args->fontsize,0)||16));
+      (height=(translate_coordinate(args->fontsize,0,layers)||16));
     Image.Font f = resolve_font( font );
 
     foreach( labels, mapping l )
@@ -139,8 +137,8 @@ static
 	case "0%":
       }
     }
-    xp = translate_coordinate( args->xoffset, background||border||lab );
-    yp = translate_coordinate( args->xoffset, background||border||lab );
+    xp = translate_coordinate( args->xoffset, background||border||lab,layers );
+    yp = translate_coordinate( args->xoffset, background||border||lab,layers );
     foreach( ({ background, lab, border }), Image.Layer l )
     {
       if(!l) continue;
@@ -154,7 +152,7 @@ static
   {
     if( !args->labels )
       RXML.parse_error("Expected labels in legend\n");
-    labels = ({});
+    array labels = ({});
     void parse_label( Parser.HTML h, mapping m, string c )
     {
       labels += ({ ([ "contents":c ])+m });
@@ -162,5 +160,7 @@ static
     Parser.HTML h = Parser.HTML()->add_container("label", parse_label);
     h->xml_tag_syntax( 2 );
     h->feed( args->labels )->finish();
+    args->parsed_labels = labels;
+    m_delete(args, "labels");
   }
 };

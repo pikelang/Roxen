@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.6 2001/04/18 12:48:59 leif Exp $
+# $Id$
 
 package Roxen::Internal;
  
@@ -271,16 +271,15 @@ package Roxen::_helper;
 
 use IO::Handle;
 
-my ($infd, $outfd) = (-1, -1);
 my ($cmdin ) = (new IO::Handle);
 my ($cmdout) = (new IO::Handle);
 
-for(; $ARGV[0] =~ /^-/; shift @ARGV)
-{ if ($ARGV[0] =~ /^--cmdsocket=(\d+)$/)
-   { $infd = $1; $outfd = $1;}
-  else
-   { die "Invalid option: $ARGV[0]\n";}
-}
+#  for(; $ARGV[0] =~ /^-/; shift @ARGV)
+#  { if ($ARGV[0] =~ /^--cmdsocket=(\d+)$/)
+#     { $infd = $1; $outfd = $1;}
+#    else
+#     { die "Invalid option: $ARGV[0]\n";}
+#  }
 
 sub diag
 {
@@ -366,8 +365,8 @@ tie(*STDOUT, 'Roxen::TieStdio');
 { my ($cmd, $var, $len, $data) = ();
   my ($starttime, $runcount)   = (time, 0);
 
-  $cmdin->fdopen($infd, "r") or die "Unable to open command input.\n";
-  $cmdout->fdopen($outfd, "w") or die "Unable to open command output.\n";
+  $cmdin->fdopen(0, "r") or die "Unable to open command input.\n";
+  $cmdout->fdopen(1, "w") or die "Unable to open command output.\n";
   $cmdout->autoflush(1);
 
   $Roxen::Request::req_req = Roxen::Request->new();
@@ -450,7 +449,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
       if ($cmd eq "P")
         { Sendreply(""); }
       elsif ($cmd eq "V")
-        { Sendreply('Roxen Perl Helper: $Id: perlhelper,v 1.6 2001/04/18 12:48:59 leif Exp $'); }
+        { Sendreply('Roxen Perl Helper: $Id$'); }
       else
         { die "perlhelper $$/MLQQ: exiting.\n"; }
     }

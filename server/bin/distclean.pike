@@ -1,7 +1,7 @@
 // This script removes all files listed in .distignore-files as well
 // as the .distignore-files themselves.
 //
-// Copyright © 2000, Roxen IS.
+// Copyright © 2000 - 2009, Roxen IS.
 
 void my_rm(string path) {
   if( Stdio.recursive_rm(path) )

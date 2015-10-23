@@ -1,64 +1,376 @@
-<use-module>sqltag</use-module>
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Test iso-8859-1 table. RoxenTest_dbmanager contains tests with a
+     utf-8 table. -->
 
 <test>
-<rxml><sqlquery db="local" query="CREATE TABLE __test (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-a VARCHAR(255))"/>&page.last-true;</rxml>
-<result>1</result>
+  <rxml>
+    <sqlquery db="local"
+	      query="CREATE TABLE __test (
+		       id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		       a VARCHAR(255),
+		       b VARBINARY(255)
+		     ) CHARSET latin1"/>
+    &page.last-true;
+  </rxml>
+  <result>1</result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="INSERT INTO __test (a) VALUES ('hej')"/>&page.last-true;</rxml>
-<result>1</result>
+  <rxml>
+    <sqlquery db="local"
+	      query="INSERT INTO __test (a) VALUES ('&foo.bar:mysql;')"/>
+    <emit source="sql" db="local" query="SELECT count(*) AS n FROM __test">
+      &_.n;
+    </emit>
+  </rxml>
+  <glob>[Error (parse): *]*0</glob>
 </test>
 
 <test>
-<rxml><sqlquery db="local" mysql-insert-id="var.id"
- query="INSERT INTO __test (a) VALUES ('hopp')"/>&page.last-true;:&var.id;</rxml>
-<result>1:2</result>
+  <rxml>
+    <sqlquery db="local" query="INSERT INTO __test (a) VALUES ('hej')"/>
+    &page.last-true;
+  </rxml>
+  <result>1</result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="INSERT INTO __test (a) VALUES (NULL)"/>&page.last-true;</rxml>
-<result>1</result>
+  <rxml>
+    <sqlquery db="local" mysql-insert-id="var.id"
+	      query="INSERT INTO __test (a) VALUES ('hopp')"/>
+  &page.last-true;:&var.id;
+  </rxml>
+  <result>1:2</result>
 </test>
 
 <test>
-<rxml><emit source="sql" db="local" query="SELECT id FROM __test">&_.id;&_.a;:</emit></rxml>
-<result>1:2:3:</result>
+  <rxml>
+    <sqlquery db="local" query="INSERT INTO __test (a) VALUES (NULL)"/>
+    &page.last-true;
+  </rxml>
+  <result>1</result>
 </test>
 
 <test>
-<rxml><emit source="sql" db="local" query="SELECT id FROM __test"
- maxrows="1" remainderinfo="var.rem">&_.id;</emit>:&var.rem;</rxml>
-<result>1:2</result>
+  <rxml>
+    <sqlquery db="local" query="INSERT INTO __test (c) VALUES ('foo')"/>
+    &page.last-true;
+  </rxml>
+  <glob>[Error (run): *]*0</glob>
 </test>
 
 <test>
-<rxml><sqltable db="local" query="SELECT * FROM __test"/></rxml>
-<result><table><tr><th>id</th><th>a</th></tr>
-<tr><td>1</td><td>hej</td></tr>
-<tr><td>2</td><td>hopp</td></tr>
-<tr><td>3</td><td></td></tr>
-</table></result>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT id FROM __test"
+	  rowinfo="var.row">
+      &_.id;|&_.a;|&var.row;:
+    </emit>
+    &var.row;
+  </rxml>
+  <result>1||3:2||3:3||3:3</result>
 </test>
 
 <test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT id FROM __test"
+	  maxrows="1" remainderinfo="var.rem">
+      &_.id;
+    </emit>
+    &var.rem;
+  </rxml>
+  <equal>({"1", 2})</equal>
+</test>
+
+<test>
+  <rxml>
+    <sqltable db="local" query="SELECT * FROM __test"/>
+  </rxml>
+  <result>
+<table><tr><th>id</th><th>a</th><th>b</th></tr>
+<tr><td>1</td><td>hej</td><td></td></tr>
+<tr><td>2</td><td>hopp</td><td></td></tr>
+<tr><td>3</td><td></td><td></td></tr>
+</table>
+  </result>
+</test>
+
+<test no-strip-ws="">
 <rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" rowinfo="var.r"/>&var.r;</rxml>
-<result>1	hej
-2	hopp
-3	
+<result>1	hej	
+2	hopp	
+3		
 3</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" nullvalue="x"/></rxml>
-<result>1	hej
-2	hopp
-3	x
+<result>1	hej	x
+2	hopp	x
+3	x	x
 </result>
 </test>
 
 <test>
-<rxml><sqlquery db="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
-<result>1</result>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT NULL as foo">
+      [&sql.foo;]
+      <copy-scope from="sql" to="var"/>
+      [&var.foo;]
+    </emit>
+  </rxml>
+  <result>[][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT NULL as foo">
+      <if variable="sql.foo">a</if><else>b</else>
+    </emit>
+  </rxml>
+  <result>b</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT a FROM __test">
+      &_.a;,
+      <if variable-exists="_.a">exists</if>,
+      <if variable="_.a">not null</if>;
+    </emit>
+  </rxml>
+  <result>hej,exists,not null;hopp,exists,not null;,exists,;</result>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="*a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="^a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
+  <!-- Preparation for the charset tests below: Check that we've got
+       real unicode in the rxml here. -->
+  <rxml type="array">
+    <set variable="var.x" value="aå€"/>
+    &var.x;
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <equal>({"a\345\u20ac", 3})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <!-- Get the following result because the Sql.mysql defaults to
+       unicode encode mode, so the wide strings are converted to
+       latin1. But we get back the latin1 values straight since
+       unicode decode mode isn't enabled. -->
+  <equal>({
+    "a\345\200", "3", "a\345\200", "3",
+    "b\345", "2", "b\345", "2",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="cp1252, latin1"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="cp1252, latin1"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="cp1252, latin1"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\345\u20ac", "3", "a\345\u20ac", "3",
+    "b\345", "2", "b\345", "2",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="broken-unicode"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="broken-unicode"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="broken-unicode"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\345\u20ac", "3", "a\303\245\342\202\254", "6",
+    "b\345", "2", "b\303\245", "3",
+  })</equal>
+</test>
+
+<!-- Currently disabled due to mysql lib dependency. :(
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="unicode"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="unicode"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="unicode"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\345\u20ac", "3", "a\303\245\342\202\254", "6",
+    "b\345", "2", "b\303\245", "3",
+  })</equal>
+</test>
+-->
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="utf8"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\345\u20ac", "3", "a\345\u20ac", "6",
+    "b\345", "2", "b\345", "3",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="utf8"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+	  binary-result="b">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\345\u20ac", "3", "a\303\245\342\202\254", "6",
+    "b\345", "2", "b\303\245", "3",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="utf8"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+	  binary-result="a, b">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\303\245\342\202\254", "3", "a\303\245\342\202\254", "6",
+    "b\303\245", "2", "b\303\245", "3",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('aå€', 'aå€')"/>
+    <sqlquery db="local" charset="utf8"
+	      query="INSERT INTO __test (a, b) VALUES ('bå', 'bå')"/>
+    <emit source="sql" db="local" charset="utf8"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test"
+	  binary-result="">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\303\245\342\202\254", "3", "a\303\245\342\202\254", "6",
+    "b\303\245", "2", "b\303\245", "3",
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <sqlquery db="local" query="DELETE FROM __test"/>
+    <set variable="var.a" value="aå€"/>
+    <set variable="var.b" value="bå"/>
+    <sqlquery db="local" charset="none, utf8"
+	      query="INSERT INTO __test (a, b)
+		     VALUES ('&var.a:utf8;', '&var.a:utf8;')"/>
+    <sqlquery db="local" charset="none, utf8"
+	      query="INSERT INTO __test (a, b)
+		     VALUES ('&var.b:utf8;', '&var.b:utf8;')"/>
+    <emit source="sql" db="local" charset="none, utf8"
+	  query="SELECT a, LENGTH(a) AS al, b, LENGTH(b) AS bl FROM __test">
+      &_.a; &_.al; &_.b; &_.bl;
+    </emit>
+  </rxml>
+  <equal>({
+    "a\303\245\342\202\254", "3", "a\303\245\342\202\254", "6",
+    "b\303\245", "2", "b\303\245", "3",
+  })</equal>
+</test>
+
+<test>
+  <rxml>
+    <sqlquery db="local" query="DROP TABLE __test"/>
+    &page.last-true;
+  </rxml>
+  <result>1</result>
 </test>

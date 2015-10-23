@@ -1,15 +1,16 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2001, Roxen IS.
-// $Id: javamodule.pike,v 1.5 2001/06/17 20:07:09 nilsson Exp $
+// Copyright © 1999 - 2009, Roxen IS.
+// $Id$
 
 #include <module.h>
 inherit "module";
 
+#if constant(JavaModule.ModuleWrapper)
 inherit JavaModule.ModuleWrapper;
 
 
-static string my_filename;
-static Configuration my_conf;
+protected string my_filename;
+protected Configuration my_conf;
 
 
 string file_name_and_stuff()
@@ -28,3 +29,4 @@ void create(Configuration conf, string filename)
     init(my_conf = conf);
   }
 }
+#endif

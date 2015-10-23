@@ -1,73 +1,128 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.101 2001/08/23 22:21:35 per Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
 
+protected int got_java_flag = 0;	// 1: yes, -1: no, 0: unknown.
+
+int got_java()
+//! @appears roxen.got_java
+//!
+//! Used to check dynamically whether Java support is available. If it
+//! is then this function will initialize a JVM.
+{
+  if (!got_java_flag) {
+    object jvm;
+    if (mixed err = catch (jvm = master()->resolv ("Java.jvm")))
+      report_error ("Failed to initialize Java JVM: %s\n",
+#ifdef DEBUG
+		    describe_backtrace (err)
+#else
+		    describe_error (err)
+#endif
+		   );
+    got_java_flag = jvm ? 1 : -1;
+  }
+  return got_java_flag > 0;
+}
+
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
 int dump( string file, program|void p );
 
-program my_compile_file(string file, void|int silent)
+// Throws strings.
+protected program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
-    file = replace(getcwd()+"/"+file, "//", "/");
+    file = combine_path(getcwd(), file);
 
   program p;
 
   ErrorContainer e = ErrorContainer();
   master()->set_inhibit_compile_errors(e);
-  catch 
+  mixed err = catch
   {
     p  = (program)( file );
   };
   master()->set_inhibit_compile_errors(0);
+  if (err &&
+      (!objectp (err) || (!err->is_cpp_error && !err->is_compilation_error)))
+    throw (err);
 
   string q = e->get();
-  if( !p )
+  if (sizeof (q))
   {
-    if( strlen( q ) )
-    {
-      report_error("Failed to compile module %s:\n%s", file, q);
-      if( strlen( e->get_warnings() ) )
-        report_warning( e->get_warnings() );
-    }
-    throw( "" );
+    if (!p)
+      report_error ("Failed to compile module %s:\n%s", file, q);
+    else
+      report_error ("Errors during compilation of %s:\n%s", file, q);
+    if( strlen( q = e->get_warnings() ) )
+      report_warning (q);
   }
-  if ( strlen(q = e->get_warnings() ) )
+  else if ( strlen( q = e->get_warnings() ) )
   {
-    report_warning(sprintf("Warnings during compilation of %s:\n"
-                           "%s", file, q));
+    report_warning ("Warnings during compilation of %s:\n%s", file, q);
   }
+
+  if (!p) throw ("");
 
   if (p->dont_dump_program)
   {
-#ifdef MODULE_DEBUG
+#if defined (ENABLE_DUMPING) && defined (MODULE_DEBUG)
     if (!silent)
       report_debug("\b[dontdump] \b");
 #endif
   }
 #ifdef MODULE_DEBUG
   else
-    switch (e->last_dump_status) {
-     case 1: // dumped
-       if (!silent) report_debug("\b[dump] \b");
-       break;
-     case -1:
-       if (!silent) report_debug("\b[nodump] \b");
-     case 0:
-    }
+    dump( file, p );
+//     switch (e->last_dump_status) {
+//      case 1: // dumped
+//        if (!silent) report_debug("\b[dump] \b");
+//        break;
+//      case -1:
+//        if (!silent) report_debug("\b[nodump] \b");
+//      case 0:
+//     }
 #endif
   return p;
 }
 
-function|program load( string what, void|int silent )
+// Throws strings.
+protected function|program load( string what, void|int silent )
 {
+//   werror("Load "+what+"\n");
   return my_compile_file( what, silent );
+}
+
+protected int check_ambiguous_module (string name, array(string) files)
+// A module can be loaded from more than one file. Report this and see
+// if it really is ambiguous.
+{
+  string module_code = master()->master_read_file (files[0]);
+
+  foreach (files[1..], string file)
+    if (master()->master_read_file (file) != module_code) {
+      report_error ("Module %O occurs in several ambiguous places:\n"
+		    "%{  %s\n%}"
+		    "The content is different - "
+		    "the module is ignored.\n", name, files);
+      // NB: This can be a compat problem in really flaky installations
+      // which just happen to load the right module consistently, or if
+      // there are only insignificant differences between them.
+      return 1;
+    }
+
+  report_warning ("Module %O occurs in several ambiguous places:\n"
+		  "%{  %s\n%}"
+		  "The content is the same - "
+		  "one will be used at random.\n", name, files);
+  return 0;
 }
 
 //
@@ -88,7 +143,7 @@ function|program load( string what, void|int silent )
 //
 //  This is stored in a ConfigurationIFCache instance.
 //
-object module_cache; // Cannot be ConfigurationIFCache, load order problems
+object module_cache; // Cannot be ConfigIFCache, load order problems
 
 class BasicModule
 {
@@ -97,9 +152,9 @@ class BasicModule
   mapping error_log = ([]);
   constant is_module = 1;
   constant faked = 1;
-  static Configuration _my_configuration;
-  static string _module_local_identifier;
-  static string _module_identifier =
+  protected Configuration _my_configuration;
+  protected string _module_local_identifier;
+  protected string _module_identifier =
     lambda() {
       mixed init_info = roxenp()->bootstrap_info->get();
       if (arrayp (init_info)) {
@@ -108,16 +163,22 @@ class BasicModule
       }
     }();
 
-  void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
-  void report_error( mixed ... args )  { predef::report_error( @args );  }
-  void report_notice( mixed ... args ) { predef::report_notice( @args ); }
-  void report_debug( mixed ... args )  { predef::report_debug( @args );  }
-
+  void report_fatal(sprintf_format fmt, sprintf_args ... args)
+    { predef::report_fatal(fmt, @args); }
+  void report_error(sprintf_format fmt, sprintf_args ... args)
+    { predef::report_error(fmt, @args); }
+  void report_warning(sprintf_format fmt, sprintf_args ... args)
+    { predef::report_warning(fmt, @args); }
+  void report_notice(sprintf_format fmt, sprintf_args ... args)
+    { predef::report_notice(fmt, @args); }
+  void report_debug(sprintf_format fmt, sprintf_args ... args)
+    { predef::report_debug(fmt, @args); }
+  
   string file_name_and_stuff() { return ""; }
   string module_identifier() {return _module_identifier;}
   string module_local_id() {return _module_local_identifier;}
   Configuration my_configuration() { return _my_configuration; }
-  nomask void set_configuration(Configuration c)
+  final void set_configuration(Configuration c)
   {
     if(_my_configuration && _my_configuration != c)
       error("set_configuration() called twice.\n");
@@ -135,7 +196,7 @@ class BasicModule
   void save_me() {}
   void save() {}
   string comment() { return ""; }
-  array query_seclevels() { return ({}); }
+  function(RequestID:int|mapping) query_seclevels() { return 0; }
   mapping api_functions() { return ([]); }
 }
 
@@ -145,16 +206,18 @@ class FakeModuleInfo( string sname )
   constant filename = "NOFILE";
   constant type = 0;
   constant multiple_copies = 0;
+  constant locked = 0;
+  constant config_locked = ([]);
   string name, description;
   
   void save()  { }
   void update_with( RoxenModule mod, string what )  { }
   int init_module( string what )  { }
-  int rec_find_module( string what, string dir )  { }
   int find_module( string sn )  { }
   int check (void|int force) { }
+  int unlocked(object /*License.Key*/ key, Configuration|void conf) { }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return "FakeModuleInfo("+sname+")";
   }
@@ -182,11 +245,38 @@ class FakeModuleInfo( string sname )
 	0,1
       });
     }
+    string query_location()
+    {
+      return 0;
+    }
+    object query_tag_set()
+    {
+      return 0;
+    }
+    array(string)|multiset(string)|string query_provides()
+    {
+      return 0;
+    }
   }
 
-  RoxenModule instance( Configuration conf, void|int silent )
+  RoxenModule instance( Configuration conf, void|int silent,
+			void|int copy_num )
   {
-    return NotAModule();
+    // conf is zero if we're making the dummy instance for the
+    // ModuleInfo class. Find a fallback for bootstrap_info just to
+    // avoid returning zero from RoxenModule.my_configuration().
+    Configuration bootstrap_conf = conf ||
+      roxenp()->get_admin_configuration() ||
+      // There should be at least one configuration present here.
+      roxenp()->configurations[0];
+
+    roxenp()->bootstrap_info->set (({bootstrap_conf,
+				     sname + "#" + copy_num}));
+ 
+    RoxenModule ret = NotAModule();
+
+    roxenp()->bootstrap_info->set (0);
+    return ret;
   }
 }
 
@@ -194,11 +284,14 @@ class ModuleInfo( string sname, string filename )
 {
   int last_checked;
   int type, multiple_copies;
+  array(string) locked;
+  string counter;
+  mapping(Configuration:int) config_locked = ([]);
 
   mapping|string name;
   mapping|string description;
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return "ModuleInfo("+sname+")";
   }
@@ -229,51 +322,144 @@ class ModuleInfo( string sname, string filename )
     }
   }
 
-  static class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
+  protected class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
   {
     inherit BasicModule;
     constant not_a_module = 1;
 
     string get_compile_errors()
     {
-      return ("<pre><font color='&usr.warncolor;'>"+
-	      Roxen.html_encode_string( ec->get()+"\n"+
-					ec->get_warnings() ) +
-	      "</font></pre>");
+      return ec?("<pre><font color='&usr.warncolor;'>"+
+		 Roxen.html_encode_string( ec->get()+"\n"+
+					   ec->get_warnings() ) +
+		 "</font></pre>"):"";
     }
 
     array register_module()
     {
+      string locked_desc =
+	LOCALE(511," The module is locked and not part of the license. "
+	       "To enable this module please select a valid license "
+	       "and restart the server.");
+      if (filename) {
+	return ({
+	  0, // type
+	  sprintf(LOCALE(350,"Load of %s (%s) failed"),
+		  sname,filename),
+	  sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
+		  sname, get_name()||"unknown")+
+	  (sizeof(config_locked)?locked_desc:"")+
+	  get_compile_errors(),0,0
+	});
+      } else {
+	return ({
+	  0, // type
+	  sprintf(LOCALE(357, "Load of %s failed: Module not found."), sname),
+	  sprintf(LOCALE(351, "The module %s (%s) could not be loaded."),
+		  sname, get_name()||"unknown")+
+	  (sizeof(config_locked)?locked_desc:"")+
+	  get_compile_errors(),0,0
+	});
+      }
+    }
+    
+    string _sprintf()
+    {
+      return sprintf("LoadFailed(%s)", sname);
+    }
+  }
+
+  protected class DisabledModule
+  {
+    inherit BasicModule;
+    constant not_a_module = 1;
+    constant module_is_disabled = 1;
+    array register_module()
+    {
       return ({
 	0, // type
-	sprintf(LOCALE(350,"Load of %s (%s) failed"),
-		sname,filename),
-	sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
-		sname, get_name()||"unknown")+
-	get_compile_errors(),0,0
+	"Disabled module '"+sname+"'",
+	"The module "+sname+" is disabled.",
+	0,1
       });
+    }
+    string query_location()
+    {
+      return 0;
+    }
+    object query_tag_set()
+    {
+      return 0;
+    }
+    array(string)|multiset(string)|string query_provides()
+    {
+      return 0;
     }
   }
   
-  RoxenModule instance( Configuration conf, void|int silent )
+  RoxenModule instance( Configuration conf, void|int silent,
+			void|int copy_num)
   {
-//     werror("Instance %O <%O,%O,%O,%O,%O>\n", this_object(),
-// 	  time()-last_checked,type,multiple_copies,name,description);
+    // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
+    //        time()-last_checked,type,multiple_copies,name,description,locked);
+    if (!filename && !find_module(sname)) {
+      // Module not found.
+      return silent?0:LoadFailed(0);
+    }
+
+    // conf is zero if we're making the dummy instance for the
+    // ModuleInfo class. Find a fallback for bootstrap_info just to
+    // avoid returning zero from RoxenModule.my_configuration().
+    Configuration bootstrap_conf = conf ||
+      roxenp()->get_admin_configuration() ||
+      // There should be at least one configuration present here.
+      roxenp()->configurations[0];
+
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
     {
-#if constant(Java.jvm)
-      if( filename[sizeof(filename)-6..]==".class" ||
-	  filename[sizeof(filename)-4..]==".jar" )
-	return ((program)"javamodule.pike")(conf, filename);
+      if( (has_suffix (filename, ".class") || has_suffix (filename, ".jar")) &&
+	  got_java()) {
+	program java_wrapper = (program)"javamodule.pike";
+	roxenp()->bootstrap_info->set (({bootstrap_conf,
+					 sname + "#" + copy_num}));
+	RoxenModule ret = java_wrapper(conf, filename);
+	roxenp()->bootstrap_info->set (0);
+	return ret;
+      }
+      // Check if the module is locked. Throw an empty string to not
+      // generate output, this is handled later.
+      object key = conf && conf->getvar("license")->get_key();
+      if(locked && !(key && unlocked(key, conf))) {
+	config_locked[conf] = 1;
+#ifdef RUN_SELF_TEST
+	werror ("Locked module: %O lock: %O\n",
+		(string) (name || sname), locked * ":");
 #endif
-      return load( filename, silent )( conf );
+	throw( "" );
+      }
+      else
+	m_delete(config_locked, conf);
+      function|program prog = load( filename, silent );
+      roxenp()->bootstrap_info->set (({bootstrap_conf,
+				       sname + "#" + copy_num}));
+      RoxenModule ret = prog( conf );
+      roxenp()->bootstrap_info->set (0);
+      if (ret->module_is_disabled) {
+	destruct (ret);
+	return DisabledModule();
+      }
+      return ret;
     };
     roxenloader.pop_compile_error_handler( );
+    roxenp()->bootstrap_info->set (0);
     if( err )
       if( stringp( err ) )
-	report_error(err+"\n");
+      {
+	if( sizeof( err ) )
+	  report_error(err+"\n");
+      }
       else
 	report_error( describe_backtrace( err ) );
     if( !silent )
@@ -281,7 +467,7 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
-  static mixed encode_string( mixed what )
+  protected mixed encode_string( mixed what )
   {
     if( objectp( what ) && what->get_identifier ) // locale string.
     {
@@ -292,7 +478,7 @@ class ModuleInfo( string sname, string filename )
     return what;
   }
 
-  static LocaleString decode_string( mixed what )
+  protected LocaleString decode_string( mixed what )
   {
     if( arrayp( what ) )
     {
@@ -314,10 +500,13 @@ class ModuleInfo( string sname, string filename )
 	       "multiple_copies":multiple_copies,
 	       "name":encode_string(name),
 	       "description":encode_string(description),
+	       "locked":locked && locked * ":",
+	       "counter":counter,
              ]) );
   }
 
 
+  // Throws strings.
   void update_with( RoxenModule mod, string what )
   {
     if(!what)
@@ -338,6 +527,13 @@ class ModuleInfo( string sname, string filename )
       multiple_copies = !data[4];
     else
       multiple_copies = 1;
+    if( sizeof( data ) > 5) {
+      if (data[5]) locked = (stringp(data[5])?data[5]:sname)/":";
+    }
+    if( sizeof( data ) > 6 )
+      counter = data[6];
+    else
+      counter = sname;
     last_checked = file_stat( filename )[ ST_MTIME ];
     save();
   }
@@ -350,6 +546,8 @@ class ModuleInfo( string sname, string filename )
       RoxenModule mod = instance( 0, 1 );
       if(!mod)
         throw(sprintf("Failed to instance %s (%s)\n", sname,what));
+      if (mod->module_is_disabled)
+	return 0;
       if(!mod->register_module)
         throw(sprintf("The module %s (%s) has no register_module function\n",
                       sname, what ));
@@ -357,34 +555,35 @@ class ModuleInfo( string sname, string filename )
       destruct( mod );
       return 1;
     };
-    if( stringp( q ) )
-      report_debug( q );
-    else if( q && sizeof(q) )
-      report_debug(describe_backtrace(q));
+    if (q)
+      if( stringp( q ) )
+	report_debug( q );
+      else
+	report_debug(describe_backtrace(q));
     return 0;
   }
 
 
-  static constant nomods = (< "pike-modules", "CVS" >);
+  protected constant nomods = (< "pike-modules", "CVS", ".svn", ".git" >);
 
-  int rec_find_module( string what, string dir )
+  protected void rec_find_module_files (string what, string dir,
+					multiset(string) files)
   {
+    if (r_file_stat(combine_path(dir, ".nomodules")) ||
+	r_file_stat(combine_path(dir, ".no_modules")))
+      return;
     array dirlist = r_get_dir( dir );
+    if (!dirlist)
+      return;
 
-    if( !dirlist || sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
-      return 0;
-
-    foreach( dirlist, string file )
-      catch
-      {
+    foreach( dirlist, string file ) {
 	Stdio.Stat s;
         if( file[0] != '.' &&
 	    (s=file_stat( dir+file )) && s->isdir
-	    && !nomods[file] )
-          if( rec_find_module( what, dir+file+"/" ) )
-            return 1;
-	  else
-	    continue;
+	    && !nomods[file] ) {
+	  rec_find_module_files (what, dir+file+"/", files);
+	  continue;
+	}
 
         if( strlen( file ) < 3 )
 	  continue;
@@ -398,20 +597,28 @@ class ModuleInfo( string sname, string filename )
           {
             Stdio.File f = Stdio.File();
 	    if( !f->open( dir+file, "r" ) )
-	      throw( "Failed to open "+dir+file+"\n");
-            if( (f->read( 4 ) != "#!NO" ) )
-              if( init_module( dir+file ) )
-                return 1;
-          }
+	      report_error ("Failed to open %s: %s\n",
+			    dir + file, strerror (f->errno()));
+	    else if( (f->read( 4 ) != "#!NO" ) )
+	      files[dir + file] = 1;
+	  }
         }
-      };
+    }
   }
 
   int find_module( string sn )
   {
-    foreach( roxenp()->query( "ModuleDirs" ), string dir )
-      if( rec_find_module( sn, dir ) )
-        return 1;
+    foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+      multiset(string) files = (<>);
+      rec_find_module_files (sn, dir, files);
+      if (sizeof (files)) {
+	if (sizeof (files) > 1 &&
+	    check_ambiguous_module (sn, indices (files)))
+	  return 0;
+	else
+	  return init_module (Multiset.Iterator (files)->index());
+      }
+    }
   }
 
   int check (void|int force)
@@ -420,7 +627,8 @@ class ModuleInfo( string sname, string filename )
     {
       if( data->sname && data->sname != sname )
       {
-        report_fatal( "Inconsistency in module cache. Ouch\n");
+        report_fatal( "Inconsistency in module cache. Ouch (%O != %O)\n",
+		      data->sname, sname);
         return find_module(sname);
       }
       if( filename && (data->filename != filename ))
@@ -439,6 +647,8 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = decode_string( data->name );
             description = decode_string( data->description );
+	    locked = data->locked && data->locked/":";
+	    counter = data->counter || sname;
             return 1;
           }
           else
@@ -451,6 +661,36 @@ class ModuleInfo( string sname, string filename )
       return init_module( roxen_path( filename ) );
     else
       return find_module( sname );
+  }
+
+  int unlocked(object /*License.Key*/ key, Configuration|void conf)
+  {
+    // NOTE: The locked string is module:feature:mode.
+    switch(sizeof(locked)) {
+    case 0:
+      break;
+    case 1:
+      if (!key->is_module_unlocked(locked[0]))
+	return 0;
+      break;
+    default:
+    case 3:
+      if (!sizeof(locked[1])) {
+	if (!key->is_module_unlocked(locked[0], locked[2]))
+	  return 0;
+	break;
+      }
+      // FALL_THROUGH
+    case 2:
+      int val;	// Note: Use of zero_type() to promote old licenses.
+      if (!(val = key->get_module_feature(@locked)) && !zero_type(val))
+	return 0;
+      break;
+    }
+    if (!conf) return 1;
+    int|string cnt = key->get_module_feature(counter, "instances");
+    if (!cnt || cnt == "*") return 1;
+    return conf->counters[counter] < cnt;
   }
 }
 
@@ -470,41 +710,34 @@ string extension( string from )
 }
 
 mapping(string:ModuleInfo) modules;
-array rec_find_all_modules( string dir )
+protected void rec_find_all_modules( string dir,
+				     mapping(string:string) modules )
 {
-  array modules = ({});
-  catch
-  {
     Stdio.Stat s;
-    array dirlist = r_get_dir( dir ) - ({"CVS"});
+    if (r_file_stat(combine_path(dir, ".nomodules")) ||
+	r_file_stat(combine_path(dir, ".no_modules")))
+      return;
+    array(string) dirlist = (r_get_dir( dir ) || ({ }) ) - ({"CVS"});
 
-    if( (search( dirlist, ".nomodules" ) != -1) ||
-        (search( dirlist, ".no_modules" ) != -1) )
-      return ({});
-
-    foreach( dirlist, string file )
-      catch
-      {
+    foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
-        if( (< "so", "pike",
-#if constant(Java.jvm)
-	       "class", "jar"
-#endif
-	>)[ extension( file ) ] )
+	if( (< "so", "pike">)[ extension( file ) ] ||
+	    (<"class", "jar">)[extension (file)] && got_java())
         {
-          Stdio.File f = open( dir+file, "r" );
-          if( (f->read( 4 ) != "#!NO" ) )
-            modules |= ({ strip_extention( file ) });
-        }
-        else if( (s = file_stat( dir+file )) &&
+	  Stdio.File f = Stdio.File();
+	  if (!f->open( dir+file, "r" ))
+	    report_warning ("Failed to open %s: %s\n",
+			    dir + file, strerror (f->errno()));
+	  else if( (f->read( 4 ) != "#!NO" ) )
+	    modules[dir + file] = strip_extention (file);
+	}
+	else if( (s = file_stat( dir+file )) &&
 		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
-          modules |= rec_find_all_modules( dir+file+"/" );
-      };
-  };
-  return modules;
+	  rec_find_all_modules( dir+file+"/", modules );
+    }
 }
 
 array(ModuleInfo) all_modules_cache;
@@ -539,14 +772,30 @@ array(ModuleInfo) all_modules()
     module_cache = roxenp()->ConfigIFCache( "modules" ); 
   }
 
-  array possible = ({});
+  array(string) possible = ({});
 
-  foreach( roxenp()->query( "ModuleDirs" ), string dir )
-    possible |= rec_find_all_modules( dir );
+  foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+    mapping(string:string) module_files = ([]);
+    rec_find_all_modules( dir, module_files );
+
+    array(string) module_names = Array.uniq (values (module_files));
+    if (sizeof (module_names) < sizeof (module_files)) {
+      mapping(string:array(string)) inv = ([]);
+      foreach (module_files; string file; string name)
+	inv[name] += ({file});
+      foreach (inv; string name; array(string) files)
+	if (sizeof (files) > 1 && check_ambiguous_module (name, files))
+	  m_delete (inv, name);
+      module_names = indices (inv);
+    }
+
+    possible |= module_names;
+  }
 
   map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
-  sort( tmp->get_name(), tmp );
+  tmp = filter( tmp, "get_name" );
+  sort( (array(string))(tmp->get_name()), tmp );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
   return all_modules_cache = tmp;
@@ -576,6 +825,11 @@ array(string) find_all_pike_module_directories()
   return all_pike_module_cache;
 }
 
+// List of modules that have been renamed
+protected constant module_aliases = ([
+  "whitespace_sucker":"whitespace_remover",
+]);
+
 ModuleInfo find_module( string name, int|void noforce )
 {
   if( !modules )
@@ -589,8 +843,16 @@ ModuleInfo find_module( string name, int|void noforce )
 
   modules[ name ] = ModuleInfo( name,0 );
 
-  if( !modules[ name ]->check() )
+  if( !modules[ name ]->check() ) {
+    // Failed to load module.
     m_delete( modules, name );
+    // Check for alias.
+    if (module_aliases[name]) {
+      report_notice("The module %s has been renamed %s.\n",
+		    name, module_aliases[name]);
+      return modules[ name ] = find_module(module_aliases[name], noforce);
+    }
+  }
 
   if( !modules[ name ] && !noforce )
     return FakeModuleInfo( name );

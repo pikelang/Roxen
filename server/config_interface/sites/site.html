@@ -1,22 +1,27 @@
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 <eval><insert file='check-valid-url.pike' /></eval>
 
 <else>
 <topmenu base="&cf.num-dotdots;" selected="sites" />
 
-<nooutput><eval><insert file="site_header.pike"/></eval></nooutput>
+<nooutput>
+  <st-tabs>
+    <eval><insert file="site_header.pike"/></eval>
+  </st-tabs>
+</nooutput>
+
 <set variable='var.js-code'></set>
 <content>
   <cv-leftside>
-    <img src="/internal-roxen-unit" width='1' height="30" alt="" /><br />
     <eval><insert file="config_left_item.pike" nocache="1" /> </eval>
   </cv-leftside>
+  <eval>&var.js-code:none;</eval>
 
     <cv-split>
       <subtablist width="100%">
        <st-tabs> 
 <insert file="site_header.pike"/></st-tabs>
        <st-page>
-  <eval>&var.js-code:none;</eval>
          <eval><insert file="site_content.pike" nocache="1" /></eval>
        </st-page>
      </subtablist>

@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc = "If channel is 'image', skews both channels in the layer by 'amount' pixels. Otherwise skew the mask only.";
 

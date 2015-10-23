@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc = "points='x0,y0, x1,y1, ...' color='color'. Draws in the mask channel as well if the current channel is the image channel.";
 

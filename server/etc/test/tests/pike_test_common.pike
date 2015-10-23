@@ -4,25 +4,28 @@ int verbose;
 void create( int vb ) { verbose = vb; }
 
 
-string describe_arglist( array args )
+string describe_test (function|string cb, array args)
 {
-  array res = ({});
-  foreach( args, mixed arg )
-    if( mappingp(arg) || arrayp(arg) )
-      res+=({sprintf("%t<%d>",arg,sizeof(arg))});
-    else if( objectp( arg ) )
-      if( arg->is_module )
-	res += ({ sprintf("%s",arg->my_configuration()->otomod[arg])});
-      else if( arg->is_configuration )
-	res += ({ sprintf("%s", arg->name ) });
-      else
-	res += ({ sprintf("%O", arg ) });
-    else
-      res+=({sprintf("%O",arg)});
-  return replace(res * ", ","%","%%");
+  if (!stringp (cb)) {
+    object describer = master()->Describer();
+    return describer->describe (cb) +
+      "(" + describer->describe_comma_list (args, 512) + ")";
+  }
+  if (sizeof (args))
+    catch {return sprintf (cb, @args);};
+  return cb;
 }
 
-void report_1st(function cb, array args, function check )
+string pad_to_column (string str, int col, string cont_prefix)
+{
+  array(string) split = str / "\n";
+  if (sizeof (split) > 1 && split[-1] == "") split = split[..<1];
+  if (sizeof (split[-1]) > col) split += ({""});
+  split[-1] += " " * (col - sizeof (split[-1]));
+  return split * ("\n" + cont_prefix);
+}
+
+void report_1st(function|string|array cb, array args, function check )
 {
   if( !verbose )
     return;
@@ -34,44 +37,73 @@ void report_1st(function cb, array args, function check )
   else if( check != check_is_configuration &&
 	   check == check_is_module )
     checkid = '~';
-  report_error("%3d %c%-66s  ", current_test,
-	       checkid,sprintf("%O("+describe_arglist( args )+")",cb)[..65]
-	       );
+
+  if (arrayp (cb))
+    // Got line number info.
+    report_error ("%3d  %s:%d:\n"
+		  "   %c %s  ",
+		  current_test, cb[0], cb[1], checkid,
+		  pad_to_column (describe_test (cb[2], args),
+				 66, sprintf ("   %c ", checkid)));
+  else
+    report_error("%3d%c %s  ", current_test, checkid,
+		 pad_to_column (describe_test (cb, args),
+				66, sprintf ("   %c ", checkid)));
 }
 
 string indent( int l, string what )
 {
   array q = what/"\n";
-//   if( q[-1] == "" )  q = q[..sizeof(q)-2];
+  int trailing_nl = q[-1] == "";
+  if (trailing_nl) q = q[..<1];
   string i = (" "*l+"|  ");
-  return i+q*("\n"+i)+"\n";
+  return i+q*("\n"+i) + (trailing_nl ? "\n" : "");
+}
+
+void log (string msg, mixed... args)
+{
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  report_debug (indent (2, msg));
+}
+
+void log_verbose (string msg, mixed... args)
+{
+  if (!verbose) return;
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  report_debug (indent (2, msg));
 }
 
 string do_describe_error( mixed err )
 {
-  if( stringp( err ) )
-    return indent(2,err + (strlen(err)?(err[-1] == '\n' ? "": "\n" ):""));
-  catch {
-    err = (array)err;
-    err[1] = err[1][sizeof(err[1])-3..];
-    return indent(2, describe_backtrace( err ) );
-  };
-  return indent(2, describe_backtrace( err ) );
+  if (!stringp (err)) err = describe_backtrace (err);
+  if (has_suffix (err, "\n")) err = err[..<1];
+  return indent(2, err) + "\n";
 }
 
-void report_test_failure( mixed err, function cb, array args, int st )
+void report_test_failure( mixed err,
+			  function|string|array cb, array args, int st )
 {
   if( verbose ) 
     report_debug(" FAILED\n");
-  report_debug(do_describe_error(sprintf( "%O( %s ) FAILED\n",
-					  cb, describe_arglist( args ))));
+  else {
+    if (arrayp (cb)) {
+      // Got line number info.
+      report_debug (indent (2, sprintf ("%s:%d:   FAILED",
+					cb[0], cb[1])) + "\n" +
+		    do_describe_error(describe_test (cb[2], args)));
+    }
+    else
+      report_debug(do_describe_error(describe_test (cb, args) + "   FAILED"));
+  }
+
   if( err )
     report_debug( do_describe_error( err ) );
+  report_debug ("\n");
   tests_failed++;
 }
 
 
-void report_test_ok( mixed err, function cb, array args, int st )
+void report_test_ok( mixed err, function|string|array cb, array args, int st )
 {
   if( verbose )
   {
@@ -85,14 +117,15 @@ void report_test_ok( mixed err, function cb, array args, int st )
 }
 
 
-mixed test_generic( function check_return, function cb, mixed ... args )
+mixed test_generic( function check_return, function|array cb, mixed ... args )
 {
   current_test++;
   mixed result;
   report_1st( cb, args, check_return );
   int st = gethrtime();
+  function test_fn = arrayp (cb) ? cb[2] : cb;
   mixed err = catch {
-    result = cb( @args );
+    result = test_fn( @args );
   };
   if( check_return )
     check_return( result, err, cb, args,st );
@@ -103,8 +136,32 @@ mixed test_generic( function check_return, function cb, mixed ... args )
   return result;
 }
 
+mixed test_really_generic( function check_return, function(void:mixed) test_fn,
+			   string|array test_text, array test_text_args )
+{
+  current_test++;
+  mixed result;
+  int st = gethrtime();
+  mixed err = catch {
+      result = test_fn();
+  };
 
-void check_error( mixed res, mixed err, function cb, array args,int st )
+  // Write out the test after running it, since the macros change
+  // test_text_args in the test.
+  report_1st( test_text, test_text_args, check_return );
+
+  if( check_return )
+    check_return( result, err, test_text, test_text_args,st );
+  else if( err )
+    report_test_failure( err, test_text, test_text_args,st );
+  else
+    report_test_ok( err, test_text, test_text_args,st );
+  return result;
+}
+
+
+void check_error( mixed res, mixed err,
+		  function|string|array cb, array args, int st )
 {
   if( err )
     report_test_ok( err, cb, args, st );
@@ -112,7 +169,8 @@ void check_error( mixed res, mixed err, function cb, array args,int st )
     report_test_failure( "Expected error", cb, args, st ); 
 }
 
-void check_is_module( mixed res, mixed err, function cb, array args, int st )
+void check_is_module( mixed res, mixed err,
+		      function|string|array cb, array args, int st )
 {
   if( err )
     report_test_failure( err, cb, args, st );
@@ -124,8 +182,8 @@ void check_is_module( mixed res, mixed err, function cb, array args, int st )
       report_test_ok( err, cb, args, st );
 }
 
-void check_is_configuration( mixed res, mixed err, function cb, array args,
-			     int st)
+void check_is_configuration( mixed res, mixed err,
+			     function|string|array cb, array args, int st)
 {
   if( err )
     report_test_failure( err, cb, args, st );
@@ -136,19 +194,30 @@ void check_is_configuration( mixed res, mixed err, function cb, array args,
       report_test_ok( err, cb, args, st );
 }
 
+void silent_check_true( mixed res, mixed err,
+			function|string|array cb, array args, int st )
+{
+  if (err || !res)
+    report_test_failure( err, cb, args, st );
+  else
+    report_test_ok( 0, cb, args, st );
+}
 
-void check_true( mixed res, mixed err, function cb, array args, int st )
+void check_true( mixed res, mixed err,
+		 function|string|array cb, array args, int st )
 {
   if( err )
     report_test_failure( err, cb, args, st );
   else
     if( !res )
-      report_test_failure( "expected non-zero, got 0", cb, args, st);
+      report_test_failure( sprintf ("expected non-zero, got %O", res),
+			   cb, args, st);
     else
       report_test_ok( err, cb, args, st );
 }
 
-void check_false( mixed res, mixed err, function cb, array args, int st )
+void check_false( mixed res, mixed err,
+		  function|string|array cb, array args, int st )
 {
   if( err )
     report_test_failure( err, cb, args, st );
@@ -163,7 +232,7 @@ void check_false( mixed res, mixed err, function cb, array args, int st )
 function check_is( mixed m )
 {
   return
-    lambda( mixed res, mixed err, function cb, array args, int st )
+    lambda( mixed res, mixed err, function|string|array cb, array args, int st )
     {
       if( err )
 	report_test_failure( err, cb, args, st );
@@ -184,7 +253,7 @@ mixed pass( mixed arg )
 function check_equal( mixed m )
 {
   return
-    lambda( mixed res, mixed err, function cb, array args, int st )
+    lambda( mixed res, mixed err, function|string|array cb, array args, int st )
     {
       if( err )
 	report_test_failure( err, cb, args, st );
@@ -200,46 +269,52 @@ function check_equal( mixed m )
 function check_not_equal( mixed m )
 {
   return
-    lambda( mixed res, mixed err, function cb, array args, int st )
+    lambda( mixed res, mixed err, function|string|array cb, array args, int st )
     {
       if( err )
 	report_test_failure( err, cb, args, st );
       else
 	if( equal( res, m ))
-	  report_test_failure(sprintf("Got %O, expected %O", res,m),
+	  report_test_failure(sprintf("Got %O, expected different value", res),
 			      cb,args,st);
 	else
 	  report_test_ok( err, cb, args, st );
     };
 }
 
+mixed cpp_test_true (string file, int line, function(void:mixed) test_fn,
+		     string test_text, array test_text_args)
+{
+  return test_really_generic (silent_check_true, test_fn,
+			      ({file, line, test_text}), test_text_args);
+}
 
-mixed test( function f, mixed ... args )
+mixed test( function|array f, mixed ... args )
 {
   return test_generic( 0, f, @args );
 }
 
-mixed test_true( function f, mixed ... args )
+mixed test_true( function|array f, mixed ... args )
 {
   return test_generic( check_true, f, @args );
 }
 
-mixed test_false( function f, mixed ... args )
+mixed test_false( function|array f, mixed ... args )
 {
   return test_generic( check_false, f, @args );
 }
 
-mixed test_error( function f, mixed ... args )
+mixed test_error( function|array f, mixed ... args )
 {
   return test_generic( check_error, f, @args );
 }
 
-mixed test_equal( mixed what, function f, mixed ... args )
+mixed test_equal( mixed what, function|array f, mixed ... args )
 {
   return test_generic( check_equal( what ), f, @args );
 }
 
-mixed test_not_equal( mixed what, function f, mixed ... args )
+mixed test_not_equal( mixed what, function|array f, mixed ... args )
 {
   return test_generic( check_not_equal( what ), f, @args );
 }
@@ -253,7 +328,10 @@ void low_run_tests( Configuration c,
   mixed err = catch {
     run_tests( c );
   };
-  if( err )
+  if( err ) {
     write( describe_backtrace( err ) );
-  go_on(  current_test, tests_failed  );
+    go_on (++current_test, ++tests_failed);
+  }
+  else
+    go_on (++current_test, tests_failed);
 }

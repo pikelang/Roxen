@@ -1,6 +1,6 @@
 
 #if !efun(make_matrix)
-static private mapping (int:array(array(int))) matrixes = ([]);
+private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
   if(matrixes[size]) return matrixes[size];
@@ -37,6 +37,26 @@ Image.Image outline(Image.Image on, Image.Image with,
 			  (int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
 			  (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
   return on;
+}
+
+Image.Image do_tile(Image.Image source, int xsize, int ysize)
+{
+  Image.Image res = Image.Image(xsize, ysize);
+  for(int x=0; x<xsize; x+=source->xsize())
+    for(int y=0; y<ysize; y+=source->ysize())
+      res->paste(source, x, y);
+  return res;
+}
+
+Image.Image do_mirrortile(Image.Image source, int xsize, int ysize)
+{
+  Image.Image quad = Image.Image(source->xsize()*2,source->ysize()*2);
+  quad->paste(source,0,0);
+  quad->paste(source->mirrorx(),source->xsize(),0);
+  quad->paste(source->mirrory(),0,source->ysize());
+  quad->paste(source->mirrorx()->mirrory(),source->xsize(),
+	      source->ysize());
+  return do_tile(quad, xsize, ysize);
 }
 
 array white = ({ 255,255,255 });
@@ -106,7 +126,7 @@ Image.Image load_image(string f,string bd, object|void id)
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
   Stdio.File file;
-  Image.image img=Image.image();
+  Image.Image img=Image.Image();
 
   if(!(file=open(fix_relative(f,bd),"r")) || (!(data=file->read())))
     return 0;
@@ -120,14 +140,22 @@ Image.Image load_image(string f,string bd, object|void id)
 #endif /* constant(roxen) */
 
 
-array(Image.Image) make_text_image(
+//  Returns error mapping if subresources (e.g. background or texture)
+//  cannot be loaded.
+array(Image.Image)|mapping make_text_image(
   mapping args, Image.Font font, string text, RequestID id)
 {
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
-  Image.Image text_alpha=font->write(@(text/"\n"));
+  mapping text_info;
+  if(font->write_with_info)
+    text_info = font->write_with_info(text/"\n", (int)args->oversampling);
+  else
+    text_info = ([ "img" : font->write(@(text/"\n")) ]);
+  Image.Image text_alpha= text_info->img;
   int extend_alpha = 0;
-  int xoffset=0, yoffset=0;
+  int overshoot = (int)text_info->overshoot;
+  int xoffset=0, yoffset= -overshoot;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
     text_alpha = Image.Image(10,10, 0,0,0);
@@ -139,7 +167,7 @@ array(Image.Image) make_text_image(
   int tysize=text_alpha->ysize(); // Size of the text, in pixels.
 
   int xsize=txsize; // image size, in pixels
-  int ysize=tysize;
+  int ysize=tysize - overshoot;
 
   if(args->bevel)
   {
@@ -210,60 +238,63 @@ array(Image.Image) make_text_image(
 
   Image.Image background,foreground;
 
+#if constant(Sitebuilder)
+  if (Sitebuilder.sb_start_use_imagecache) {
+    Sitebuilder.sb_start_use_imagecache(args, id);
+  }
+#endif
+
   if(args->texture)
   {
     extend_alpha = 1;
-    Image.Image t = roxen.load_image(args->texture,id);
+    mapping err = ([ ]);
+    Image.Image t = roxen.load_image(args->texture, id, err);
     if( t )
     {
       foreground = t;
       if(args->tile)
       {
-	Image.Image b2 = Image.Image(xsize,ysize);
-	for(int x=0; x<xsize; x+=foreground->xsize())
-	  for(int y=0; y<ysize; y+=foreground->ysize())
-	    b2->paste(foreground, x, y);
-	foreground = b2;
+	foreground = do_tile(foreground, xsize, ysize);
       } else if(args->mirrortile) {
-	Image.Image b2 = Image.Image(xsize,ysize);
-	Image.Image b3 = Image.Image(foreground->xsize()*2,foreground->ysize()*2);
-	b3->paste(foreground,0,0);
-	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-	b3->paste(foreground->mirrory(),0,foreground->ysize());
-	b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		  foreground->ysize());
-	foreground = b3;
-	for(int x=0; x<xsize; x+=foreground->xsize())
-	{
-	  for(int y=0; y<ysize; y+=foreground->ysize())
-	    if(y%2)
-	      b2->paste(foreground->mirrory(), x, y);
-	    else
-	      b2->paste(foreground, x, y);
-	  foreground = foreground->mirrorx();
-	}
-	foreground = b2;
+	foreground = do_mirrortile(foreground, xsize, ysize);
       }
-    } else
+    } else {
+      if (err->error == Protocols.HTTP.HTTP_UNAUTH)
+	return err;
       werror("Failed to load image for "+args->texture+"\n");
+    }
   }
   int background_is_color;
-  if(args->background &&
-     ((background = roxen.load_image(args->background, id)) ||
-      (sizeof(args->background)>1 &&
-       (background=Image.Image(xsize,ysize,
-                               @(parse_color(args->background[1..]))))
-       && (background_is_color=1))))
-  {
+  Image.Image alpha;
+  mapping err = ([ ]);
+  mapping(string:string|Image.Image) bg_info =
+    args->background && roxen.low_load_image(args->background, id, err);
+  if (!bg_info && err->error == Protocols.HTTP.HTTP_UNAUTH)
+    return err;
+  if (bg_info) {
+    background = bg_info->img;
+  } else if (args->background && sizeof(args->background) > 1) {
+    if (background =
+	Image.Image(xsize,ysize, @(parse_color(args->background[1..]))))
+      background_is_color = 1;
+  }
+  if (background) {
     extend_alpha = 1;
-    Image.Image alpha;
-    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
-    {
-      xsize=max(xsize,alpha->xsize());
-      ysize=max(ysize,alpha->ysize());
-      if((float)args->scale)
-	alpha=alpha->scale(1/(float)args->scale);
-      background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+    if (args->alpha && background_is_color) {
+      if (alpha = roxen.load_image(args->alpha, id, err)) {
+	xsize=max(xsize,alpha->xsize());
+	ysize=max(ysize,alpha->ysize());
+	if((float)args->scale)
+	  alpha=alpha->scale(1/(float)args->scale);
+	background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+      } else {
+	if (err->error == Protocols.HTTP.HTTP_UNAUTH)
+	  return err;
+      }
+    } else if (bg_info) {
+      alpha = bg_info->alpha;
+      if((float)args->scale >= 0.1 && alpha)
+	alpha = alpha->scale(1.0/(float)args->scale);
     }
 
     if((float)args->scale >= 0.1 && !alpha)
@@ -271,30 +302,11 @@ array(Image.Image) make_text_image(
 
     if(args->tile)
     {
-      Image.Image b2 = Image.Image(xsize,ysize);
-      for(int x=0; x<xsize; x+=background->xsize())
-	for(int y=0; y<ysize; y+=background->ysize())
-	  b2->paste(background, x, y);
-      background = b2;
+      background = do_tile(background, xsize, ysize);
+      if (alpha) alpha = do_tile(alpha, xsize, ysize);
     } else if(args->mirrortile) {
-      Image.Image b2 = Image.Image(xsize,ysize);
-      Image.Image b3 = Image.Image(background->xsize()*2,background->ysize()*2);
-      b3->paste(background,0,0);
-      b3->paste(background->mirrorx(),background->xsize(),0);
-      b3->paste(background->mirrory(),0,background->ysize());
-      b3->paste(background->mirrorx()->mirrory(),background->xsize(),
-		background->ysize());
-      background = b3;
-      for(int x=0; x<xsize; x+=background->xsize())
-      {
-	for(int y=0; y<ysize; y+=background->ysize())
-	  if(y%2)
-	    b2->paste(background->mirrory(), x, y);
-	  else
-	    b2->paste(background, x, y);
-	background = background->mirrorx();
-      }
-      background = b2;
+      background = do_mirrortile(background, xsize, ysize);
+      if (alpha) alpha = do_mirrortile(alpha, xsize, ysize);
     }
     xsize = max(xsize,background->xsize());
     ysize = max(ysize,background->ysize());
@@ -302,19 +314,28 @@ array(Image.Image) make_text_image(
     if(alpha)
       background->paste_alpha_color(alpha->invert(),@bgcolor);
 
-    switch(lower_case(args->talign||"left")) {
-    case "center":
-      xoffset = (xsize/2 - txsize/2);
-      yoffset = (ysize/2 - tysize/2);
-      break;
-    case "right":
-      xoffset = (xsize - txsize);
-      break;
-    case "left":
-    }
   } else
     background = Image.Image(xsize, ysize, @bgcolor);
 
+#if constant(Sitebuilder)
+  if (Sitebuilder.sb_end_use_imagecache) {
+    Sitebuilder.sb_end_use_imagecache(args, id);
+  }
+#endif
+  
+  int xsize2 = (int)args->xsize || xsize;
+  int ysize2 = (int)args->ysize || ysize;
+  switch(lower_case(args->talign||"left")) {
+  case "center":
+    xoffset = (xsize2/2 - txsize/2);
+    yoffset = (ysize2/2 - tysize/2);
+    break;
+  case "right":
+    xoffset = (xsize2 - txsize);
+    break;
+       case "left":
+  }
+  
   if(args->move)
   {
     int dx,dy;
@@ -326,6 +347,9 @@ array(Image.Image) make_text_image(
     }
   }
 
+  if(!zero_type(args["baselineoffset"]) && text_info->ascender)
+    yoffset += (-text_info->ascender + (int)args["baselineoffset"]);
+  
   if(args->border)
   {
     extend_alpha = 1;
@@ -362,10 +386,15 @@ array(Image.Image) make_text_image(
   if( xs != background->xsize() ||
       ys != background->ysize() )
   {
-    if(!args->rescale)
+    if(!args->rescale) {
       background = background->copy(0,0,xs-1,ys-1);
-    else
+      if(alpha)
+       alpha = alpha->copy(0,0,xs-1,ys-1);
+    } else {
       background = background->scale(xs, ys);
+      if(alpha)
+	alpha = alpha->scale(xs, ys);
+    }
   }
 
   if(args->bgturbulence)
@@ -426,7 +455,7 @@ array(Image.Image) make_text_image(
     int sd = ((int)args->shadow+10)*2;
     int sdist = ((int)(args->shadow/",")[-1])+2;
     Image.Image ta = text_alpha->copy();
-    ta = ta->color(256-sd,256-sd,256-sd);
+    ta = ta->color(255-sd,255-sd,255-sd);
     array sc = parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -443,7 +472,7 @@ array(Image.Image) make_text_image(
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, min((sdist/2),1))->color(256,256,256);
+    ta = ta->blur( min(sdist,1) );
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -505,11 +534,12 @@ array(Image.Image) make_text_image(
 				 background->xsize() - xoffset - 1,
 				 background->ysize() - yoffset - 1);
 
-  if (extend_alpha) {
+  if (extend_alpha && !args["no-auto-alpha"]) {
     Image.Image ext = background->distancesq( @bgcolor );
     ext->gamma( 8 );
     text_alpha |= ext;
-  }
+  } else if(args["no-auto-alpha"] && alpha)
+    text_alpha |= alpha;
 
   if(args->rotate)
   {

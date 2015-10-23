@@ -1,15 +1,14 @@
-/*
- * Locale stuff.
- * <locale-token project="roxen_config">_</locale-token>
- */
+// Locale stuff.
+// <locale-token project="roxen_config">_</locale-token>
+
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "small";
 constant box_initial = 1;
 
-String box_name = _(263,"News from www.roxen.com");
-String box_doc  = _(281,"The news headlines from www.roxen.com");
+LocaleString box_name = _(263,"News from www.roxen.com");
+LocaleString box_doc  = _(281,"The news headlines from www.roxen.com");
 
 string isodate( string date )
 {
@@ -19,7 +18,8 @@ string isodate( string date )
 string extract_nonfluff( string from )
 {
   string res = "";
-  string last_a, last_date;
+  string last_a, last_date="";
+  int list_style = sizeof(RXML.user_get_var("list-style-boxes", "usr"));
   string parse_div( Parser.HTML p, mapping m, string c )
   {
     if( m->class == "smalltext" )
@@ -32,16 +32,24 @@ string extract_nonfluff( string from )
     last_a = m->href;
     if( !strlen( last_a ) || last_a == "/" )
       return;
-    if(search( last_a, "archive.xml" ) == -1 )
+    if(search( last_a, "index.xml" ) == -1 )
       return;
-    last_a = "http://www.roxen.com/press-ir/news/"+last_a;
-    res += "<tr><td valign=top><a href='"+last_a+"'><font size=-1>"+c+"</font></a></td>"
-      "<td valign=top><font size=-1>"+isodate(lower_case(last_date))+"</font></td></tr>\n";
+    last_a = "http://www.roxen.com"+last_a;
+    if (list_style)
+      res += "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"
+	"<a href='"+last_a+"'><font size=-1>"+c+"</font></a></li>\n";
+    else
+      res += "<tr><td valign=top><a href='"+last_a+"'><font size=-1>"+c+
+	"</font></a></td></tr>\n";
+
   };
   Parser.HTML( )->add_containers((["a":parse_a,"div":parse_div]))
     ->finish( from )->read();
 
-  return "<table>"+res+"</table>";
+  if (list_style)
+    return "<ul>"+res+"</ul>";
+  else
+    return "<table>"+res+"</table>";
 }
 
 string parse( RequestID id )

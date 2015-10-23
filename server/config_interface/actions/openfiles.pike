@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.7 2001/08/24 16:26:05 jhs Exp $
+ * $Id$
  */
 inherit "wizard";
 
@@ -27,6 +27,8 @@ string fix_port(string p)
   if (a[0] == "0.0.0.0") {
     a[0] = "*";
   }
+  if (has_value (a[0], ":"))
+    a[0] = "[" + a[0] + "]";
   if (a[1] == "0") {
     a[1] = "ANY";
   }
@@ -36,7 +38,7 @@ string fix_port(string p)
 string parse( RequestID id )
 {
   return
-    ("<h1>" +LOCALE(23, "Active filedescriptors")+ "</h1>\n"+
+    ("<font size='+1'><b>" +LOCALE(23, "Active filedescriptors")+ "</b></font>\n"+
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 
@@ -45,6 +47,9 @@ string parse( RequestID id )
 	  {
 	    object f = Stdio.File(fd);
 	    object stat = f->stat();
+	    if (!stat)
+	      return sprintf("%-5s  %-9s  %-10s   %-12s",
+			     (string) fd, "Unknown", "?", "(error " + f->errno() + ")");
 
 	    string type = ([
 	      "reg":"File",
@@ -64,6 +69,7 @@ string parse( RequestID id )
 
 	    string details = "-";
 
+	  format_details:
 	    if (stat->isreg) {
 	      if (stat->size == 1) {
 		details = "1 byte";
@@ -74,17 +80,42 @@ string parse( RequestID id )
 		details += sprintf(", inode: %d", stat->ino);
 	      }
 	    } else if (stat->issock) {
-	      string remote_port = f->query_address();
+
+
 	      string local_port = f->query_address(1);
-	      if (!remote_port) {
-		if (local_port != "0.0.0.0 0") {
-		  type = "Port";
-		  details = fix_port(local_port);
+	      if (local_port)
+		local_port = fix_port (local_port);
+	      else {
+		if ((<System.EBADF, System.ENOTCONN,
+#if constant (System.EAFNOSUPPORT)
+		      System.EAFNOSUPPORT,
+#endif
+		      System.EINVAL>)[f->errno()]) {
+		  // A socket that getsockname(2) doesn't like. Assume
+		  // it's a unix socket if we get these errors. Don't
+		  // know how portable it is - only tested on Linux.
+		  // /mast
+		  type = "Unix";
+		  break format_details;
 		}
+
+		local_port =
+		  "(Cannot get local port: "+ strerror (f->errno()) + ")";
+	      }
+
+	      string remote_port = f->query_address();
+	      if (remote_port)
+		remote_port = fix_port (remote_port);
+	      else if (f->errno() != System.ENOTCONN)
+		remote_port =
+		  "(Cannot get remote port: "+ strerror (f->errno()) + ")";
+
+	      if (!remote_port) {
+		type = "Port";
+		details = local_port + " (listen)";
 	      } else {
 		details = sprintf("%s &lt;=&gt; %s",
-				  fix_port(local_port),
-				  fix_port(remote_port));
+				  local_port, remote_port);
 	      }
 	    }
 

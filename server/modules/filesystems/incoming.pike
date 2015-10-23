@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.16 2001/05/16 07:50:59 per Exp $";
+constant cvs_version= "$Id$";
 
 //<locale-token project="mod_incoming">_</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)
@@ -16,19 +16,19 @@ _(2,"This file system is used only for uploads, the files that are uploaded\n"
 "This is considered a nice way to treat people who try to "
 "use your FTP site for warez distribution.");
 
-static class decaying_file {
+protected class decaying_file {
 
   inherit Stdio.File;
 
-  static int rate, left;
-  static function other_read_callback;
-  static int crot;
+  protected int rate, left;
+  protected function other_read_callback;
+  protected int crot;
 
 
   constant rotten_bits = "muahaha!(%/?\"&?¡/&?(/?_,-.,_:;Ñ¬¾´";
 
 
-  static string decay(string data)
+  protected string decay(string data)
   {
     if(sizeof(data)<=left) {
       left -= sizeof(data);
@@ -56,7 +56,7 @@ static class decaying_file {
     return r;
   }
 
-  static mixed my_read_callback(mixed id, string data)
+  protected mixed my_read_callback(mixed id, string data)
   {
     if(stringp(data))
       data = decay(data);
@@ -118,7 +118,7 @@ void create()
 	 lambda(){ return !query("bitrot"); });
 }
 
-static mixed not_allowed( object id )
+protected mixed not_allowed( object id )
 {
   id->misc->moreheads = (id->misc->moreheads||([]))|(["Allow":"PUT"]);
   return http_low_answer (
@@ -129,7 +129,7 @@ static mixed not_allowed( object id )
 #define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(X))
 
 
-static mixed lose_file( string f, object id )
+protected mixed lose_file( string f, object id )
 {
   object o;
   int size = FILE_SIZE( f = path + f );

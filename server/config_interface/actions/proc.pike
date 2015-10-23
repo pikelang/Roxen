@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.8 2001/08/23 09:19:34 jonasw Exp $
+ * $Id$
  */
 
 inherit "wizard";
@@ -17,7 +17,7 @@ void create()
 {
   if(!file_stat("/usr/proc/bin/"))
   {
-    throw("Only available under Solaris 2.5 and newer\n");
+    error ("Only available under Solaris 2.5 and newer\n");
   }
 }
 

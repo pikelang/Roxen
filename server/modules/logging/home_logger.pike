@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.30 2000/11/13 08:52:10 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <config.h>
@@ -102,10 +102,6 @@ class CacheFile {
       call_out( really_timeout, 1 );
     } else {
       close();
-      remove_call_out( really_timeout );
-      set_file = 0;
-      ready = 1;
-      move_this_to_tail();
     }
   }
 
@@ -118,6 +114,19 @@ class CacheFile {
   {
     mapping lc = localtime( time() );
     return sprintf("%4d-%02d-%02d", lc->year+1900, lc->mon+1, lc->mday);
+  }
+
+  int close(string|void how)
+  {
+    int ret = 1;
+    remove_call_out(really_timeout);
+    if (set_file) {
+      catch { ret = ::close(how); };
+    }
+    set_file = 0;
+    ready = 1;
+    move_this_to_tail();
+    return ret;
   }
 
   int open(string s, string|void mode)
@@ -241,13 +250,12 @@ private void parse_log_formats()
 
 string start()
 {
-  object f;
   if(cache_head) destruct(cache_head);
   cache_head = CacheFile(query("num"), mutex);
   parse_log_formats();
 }
 
-static void do_log(mapping file, object request_id, function log_function)
+protected void do_log(mapping file, object request_id, function log_function)
 {
   string form;
   if(!(form=log_format[file->error]))  form = log_format[0];

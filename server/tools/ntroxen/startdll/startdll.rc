@@ -8,7 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "winres.h"
-
+#include "roxenmsg.rc"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -35,7 +35,7 @@ END
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
     "#include ""winres.h""\r\n"
-    "\0"
+    "#include ""roxenmsg.rc""\0"
 END
 
 3 TEXTINCLUDE DISCARDABLE 
@@ -74,7 +74,7 @@ BEGIN
             VALUE "FileDescription", "startdll Module\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "startdll\0"
-            VALUE "LegalCopyright", "Copyright 2001\0"
+            VALUE "LegalCopyright", "Copyright 2009\0"
             VALUE "OriginalFilename", "startdll.DLL\0"
             VALUE "ProductName", "startdll Module\0"
             VALUE "ProductVersion", "1, 0, 0, 1\0"
@@ -105,7 +105,7 @@ IDR_Startdll            REGISTRY MOVEABLE PURE  "startdll.rgs"
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_SERVICENAME         "RoxenService"
-    IDS_SERVICEDESC         "Roxen WebServer"
+    IDS_SERVICEDESC         "Roxen CMS"
 END
 
 #endif    // English (U.S.) resources

@@ -1,3 +1,5 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 // randomtext.pike -- random text generator module
 //
 // By Leif Stensson.
@@ -58,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.6 2001/05/04 13:54:24 leif Exp $";
+string version = "$Id$";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";
@@ -131,7 +133,7 @@ void start()
     searchpath = searchpath[0..sizeof(searchpath)-2];
 }
 
-static int isalnum(string c)
+protected int isalnum(string c)
 {
   if (!stringp(c) || sizeof(c) != 1)
     return 0;
@@ -140,10 +142,10 @@ static int isalnum(string c)
   return 0;
 }
 
-static int isidchar(string c)
+protected int isidchar(string c)
   { return isalnum(c) || c == "-" || c == "_";}
 
-static int isopchar(string c)
+protected int isopchar(string c)
   { return (< "+", "-", "*", "/", "%", "!", "=", "<", ">" >)[c];}
 
 mixed evalexpr(string expr, mapping args)
@@ -406,7 +408,7 @@ string rtt_parse(mapping sections, string sec, mapping args, int depth)
 }
 
 string rtt_read(string path)
-{ int lineno = 0; string line, mode = 0, tmp;
+{ int lineno = 0; string line, mode = 0;
   mapping sections = ([ "steps": 0 ]);
   string this_section = "***";
   int secindex = -1;

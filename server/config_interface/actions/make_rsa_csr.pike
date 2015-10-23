@@ -1,8 +1,8 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.6 2000/09/09 03:11:55 lange Exp $
+ * $Id$
  */
 
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant (Nettle)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -71,14 +71,14 @@ mixed page_3(object id, object mc)
 
 mixed page_4(object id, object mc)
 {
-  object file = Stdio.File();
+  object file;
 
   object privs = Privs("Reading private RSA key");
-  if (!file->open(id->variables->key_file, "r"))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     privs = 0;
     return "<font color='red'>Could not open key file: "
-      + strerror(file->errno()) + "\n</font>";
+      + strerror(errno()) + "\n</font>";
   }
   privs = 0;
   string s = file->read(0x10000);
@@ -107,7 +107,7 @@ mixed page_4(object id, object mc)
 	      "emailAddress", "challengePassword"}), attr)
   {
     if (id->variables[attr]) {
-      attrs[attr] = String.trim_whites(id->variables[attr]);
+      attrs[attr] = global.String.trim_whites(id->variables[attr]);
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
@@ -171,16 +171,24 @@ mapping wizard_done( object id )
 {
   object privs = Privs("Storing CSR request.");
   mv( id->variables->save_in_file, id->variables->save_in_file+"~" );
-  Stdio.write_file( id->variables->save_in_file, id->variables->csr );
+  string fname = combine_path(getcwd(), "../local",
+			      id->variables->save_in_file);
+  Stdio.File file = open(fname, "cwx", 0644);
+  privs = 0;
+  if (!file || file->write(id->variables->csr) != sizeof(id->variables->csr)) {
+    return http_string_answer(sprintf("<p>" +
+				      LOCALE(155, "Failed to write CSR to %s.")+
+				      "</p>\n<p><cf-cancel href='?class=&form.class;'/></p>\n",
+				      fname));
+  }
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
 				     "</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->csr),
-				     combine_path(getcwd(),
-						  id->variables->save_in_file)) );
+				     fname));
 }
 
 
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.rsa) */
+#endif /* constant (Nettle) */

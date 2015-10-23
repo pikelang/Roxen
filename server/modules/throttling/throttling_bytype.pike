@@ -1,12 +1,12 @@
 /*
  * by Francesco Chemolli
- * This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+ * This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
  *
  * Notice: this might look ugly, it's been designed to be split into
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.8 2000/05/15 20:05:41 kinkie Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "throttlelib";
@@ -49,6 +49,9 @@ constant module_unique = 1;
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {
   if (!res) return 0;
-  return low_find_rule(res->type, rulenames, rules);
+  string|array(string) type = res->type;
+  if (arrayp(type))
+    type = type[0];
+  return low_find_rule(type, rulenames, rules);
 }
 

@@ -7,8 +7,8 @@
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
 <file>../config_interface/actions/index.html</file>
-<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/Box.pmod</file>
+<file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
 <file>../config_interface/boxes/megatokyo.pike</file>
@@ -18,18 +18,32 @@
 <file>../config_interface/cv_startpage_tabs.pike</file>
 <file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
+<file>../config_interface/dbs/create_db.html</file>
+<file>../config_interface/dbs/create_group.html</file>
+<file>../config_interface/dbs/db_list.pike</file>
+<file>../config_interface/dbs/db_maintenance.pike</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
+<file>../config_interface/dbs/db_optimizeall.html</file>
+<file>../config_interface/dbs/db_optimizeall_ajax.pike</file>
+<file>../config_interface/dbs/db_repairall.html</file>
+<file>../config_interface/dbs/db_repairall_ajax.pike</file>
 <file>../config_interface/dbs/edit_group.pike</file>
 <file>../config_interface/dbs/import_dbs.pike</file>
 <file>../config_interface/dbs/index.html</file>
+<file>../config_interface/dbs/maintenance.html</file>
 <file>../config_interface/dbs/new_db.pike</file>
 <file>../config_interface/dbs/new_group.pike</file>
+<file>../config_interface/dbs/permissions.html</file>
 <file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/schedules.html</file>
+<file>../config_interface/dbs/schedules.pike</file>
+<file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
 <file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
+<file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
 <file>../config_interface/sites/config_left_item.pike</file>
@@ -40,10 +54,12 @@
 <file>../config_interface/sites/index.html</file>
 <file>../config_interface/sites/log.pike</file>
 <file>../config_interface/sites/new_site.html</file>
+<file>../config_interface/sites/site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
 <file>../config_interface/statusinfo.pike</file>
 <file>../config_interface/template</file>
+<file>../config_interface/template-insert</file>
 <file>../config_interface/topmenu.pike</file>
 <file>../config_interface/user_delete.pike</file>
 <file>../config_interface/user_form.pike</file>
@@ -52,10 +68,10 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Mapping.pike</file>
-<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
+<file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
@@ -101,7 +117,8 @@
 </str>
 
 <str id="13">
-<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
+<changed from="The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order"/>
+<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order.</o>
 <t>De prioriteit van de module. 9 is het hoogst, 0 is het laagst. Modules met dezelfde prioriteit worden in willekeurige volgorde geladen.</t>
 </str>
 
@@ -116,8 +133,8 @@
 </str>
 
 <str id="20">
-<o>Default site</o>
-<t>Dit is de standaard site</t>
+<o>Ports: Default site</o>
+<t>Ports: Dit is de standaard site</t>
 </str>
 
 <str id="21">
@@ -184,48 +201,300 @@ $user          -- the name of the auth user used, if any
 $user_id       -- A unique user ID, if cookies are supported,
                   by the client, otherwise '0'
 &lt;/pre&gt;"/>
-<o>What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
+<o>Describes the format to use for access logging. The log file can also
+receive messages for various internal activities.
 
-Log format is normal characters, or one or more of the variables below:
+Empty lines and lines beginning with '&lt;code&gt;#&lt;/code&gt;' are ignored.
+Other lines describes how to log either an access or an internal
+event.
 
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
+&lt;p&gt;A line to format an access logging message is one of:&lt;/p&gt;
 
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
-                  nocache   -- No hit in any known cache.
-&lt;/pre&gt;</o>
+&lt;pre&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt; is an HTTP status code. The
+corresponding &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; is used for all responses
+matching that code. It's described in more detail below. If
+'&lt;code&gt;*&lt;/code&gt;' is used instead of a response code then that line
+matches all responses that aren't matched by any specific response
+code line.&lt;/p&gt;
+
+&lt;p&gt;A line to format an event logging message is one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; matches an identifier for the Roxen module
+or subsystem that the event comes from. Facility identifiers always
+starts with a character in &lt;code&gt;[a-zA-Z0-9]&lt;/code&gt; and contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. If '&lt;code&gt;*&lt;/code&gt;' is
+used instead of &lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; then that line matches all
+facilities that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; matches an identifier for a specific kind of
+event logged by a facility. An action identifier contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. '&lt;code&gt;*&lt;/code&gt;' may be
+used instead of an &lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; to match all events logged by
+a facility that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; consists of literal characters and the
+special specifiers described below. All specifiers are not applicable
+for all kinds of messages. If an unknown or inapplicable specifier is
+encountered it typically expands to '&lt;code&gt;-&lt;/code&gt;', but in some
+cases it expands to a dummy value that is syntactically compatible
+with what it usually expands to.&lt;/p&gt;
+
+&lt;p&gt;For compatibility, underscores ('_') may be used wherever
+hyphens ('-') occur in the specifier names.&lt;/p&gt;
+
+&lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
+
+&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
+    &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
+    &lt;td&gt;Insert the (1 byte) character specified by the integer. E.g.
+    '&lt;code&gt;$char(36)&lt;/code&gt;' inserts a literal '&lt;code&gt;$&lt;/code&gt;'
+    character.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$wchar(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 2 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$int(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 4 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$^&lt;/td&gt;
+    &lt;td&gt;Suppress newline at the end of the logentry.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$date&lt;/td&gt;
+    &lt;td&gt;Local date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$time&lt;/td&gt;
+    &lt;td&gt;Local time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cern-date&lt;/td&gt;
+    &lt;td&gt;Local date and time in CERN Common Log file format, i.e.
+    like '&lt;code&gt;17/Jan/2001:13:00:00 +0200&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$utc-date&lt;/td&gt;
+    &lt;td&gt;UTC date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$utc-time&lt;/td&gt;
+    &lt;td&gt;UTC time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-date&lt;/td&gt;
+    &lt;td&gt;Unix time as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
+    &lt;td&gt;Resource identifier. For events, this is either a path to a
+    file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
+    resource identifier (otherwise). It is '-' for events that doesn't
+    act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
+    &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-cputime&lt;/td&gt;
+    &lt;td&gt;Server cpu (user+system) time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-usertime&lt;/td&gt;
+    &lt;td&gt;Server cpu user time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-systime&lt;/td&gt;
+    &lt;td&gt;Server cpu system time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
+
+&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
+    &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
+    &lt;td&gt;The Host request-header sent by the client, or '-' if none.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$ip-number&lt;/td&gt;
+    &lt;td&gt;The remote ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-ip-number&lt;/td&gt;
+    &lt;td&gt;The remote host ip as a binary integer number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$xff&lt;/td&gt;
+    &lt;td&gt;The remote host name/ip taken from the X-Forwarded-For header, or
+        '-' if none is provided. If multiple headers or multiple values are
+        given the first value is logged; this should correspond to the
+        originating computer.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$method&lt;/td&gt;
+    &lt;td&gt;Request method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$full-resource&lt;/td&gt;
+    &lt;td&gt;Full requested resource, including any query fields.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$protocol&lt;/td&gt;
+    &lt;td&gt;The protocol used (normally HTTP/1.1).&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$response&lt;/td&gt;
+    &lt;td&gt;The response code sent.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-response&lt;/td&gt;
+    &lt;td&gt;The response code sent as a binary short number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$length&lt;/td&gt;
+    &lt;td&gt;The length of the data section of the reply.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-length&lt;/td&gt;
+    &lt;td&gt;Same, but as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-length&lt;/td&gt;
+    &lt;td&gt;Number of jobs waiting to be processed by the handler threads
+    at the time this request was added to the queue.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds that the request spent in the internal handler
+    queue, waiting to be processed by a handler thread.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds spent processing the request in a handler
+    thread. This measures the server processing time, excluding I/O
+    and time spent in the handler queue. Note however that this
+    measures real time, not virtual process time. I.e. if there are
+    other handler threads or processes using the CPU then this might
+    not accurately show the time that the Roxen server spent on the
+    request. Also note that if a handler thread has to wait for
+    responses from other servers then that wait time is included in
+    this measurement.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-cputime&lt;/td&gt;
+    &lt;td&gt;CPU time in seconds spent processing the request in a handler
+    thread. Similar to $handle-time, but only includes the actual CPU
+    time spent on this request only. Time spent waiting for responses
+    from external server is not included here. Note that this time
+    might have very low accuracy on some platforms. There are also
+    platforms where this measurement isn't available at all, and in
+    that case this fields expands to "-".&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds that the whole request took on the server
+    side, including I/O time for receiving the request and sending the
+    response. Note that this measures real time - see $handle-time for
+    further discussion.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$etag&lt;/td&gt;
+    &lt;td&gt;The entity tag (aka ETag) header of the result.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referrer&lt;/td&gt;
+    &lt;td&gt;The header 'referer' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referer&lt;/td&gt;
+    &lt;td&gt;Same as $referrer. Common misspelling kept for
+    compatibility.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent&lt;/td&gt;
+    &lt;td&gt;The header 'User-Agent' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent-raw&lt;/td&gt;
+    &lt;td&gt;Same, but spaces in the name are not encoded to %20.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user&lt;/td&gt;
+    &lt;td&gt;The name of the user, if any is given using the HTTP basic
+    authentication method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-id&lt;/td&gt;
+    &lt;td&gt;A unique user ID, if cookies are supported, by the client,
+    otherwise '0'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$content-type&lt;/td&gt;
+    &lt;td&gt;Resource MIME type.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cookies&lt;/td&gt;
+    &lt;td&gt;All cookies sent by the browser, separated by ';'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$cache-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes how the request got handled by various caches:
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
+	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
+	&lt;td&gt;The page is stored in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;stale&lt;/td&gt;
+	&lt;td&gt;There is a stale entry in the HTTP protocol cache. A
+	refresh is underway in the background and the stale entry is
+	sent in the meantime to avoid a long response time and server
+	congestion.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
+	&lt;td&gt;This is the finishing of the background refresh request
+	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
+	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
+	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
+	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
+	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
+	miss.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
+	&lt;td&gt;There is a hit XSLT cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;nocache&lt;/td&gt;
+	&lt;td&gt;No hit in any known cache, and not added to the HTTP
+	protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$eval-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes how the page has been evaluated:
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
+	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from source.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlpcode&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from compiled p-code.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$protcache-cost&lt;/td&gt;
+    &lt;td&gt;The lookup depth in the HTTP protocol module low-level cache.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Event logging&lt;/h3&gt;
+
+&lt;p&gt;The known event logging facilities and modules are described
+below.&lt;/p&gt;
+
+&lt;dl&gt;
+
+&lt;dt&gt;Facility: roxen&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.&lt;/p&gt;
+
+    &lt;p&gt;The known events are:&lt;/p&gt;
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
+	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-rebase&lt;/td&gt;
+	&lt;td&gt;Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+
+&lt;dt&gt;Facility: sbfs&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;A SiteBuilder file system.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;commit&lt;/code&gt;, &lt;code&gt;purge&lt;/code&gt;,
+    &lt;code&gt;mkdir&lt;/code&gt;, &lt;code&gt;set-dir-md&lt;/code&gt;, and
+    &lt;code&gt;rmdir&lt;/code&gt; are logged for file system changes except those
+    in edit areas.&lt;/p&gt;
+
+    &lt;p&gt;The action &lt;code&gt;crawl-file&lt;/code&gt; is logged for files that are
+    crawled by the persistent cache crawler.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;file-change&lt;/code&gt; and
+    &lt;code&gt;dir-change-flat&lt;/code&gt; are logged when external file and
+    directory changes are detected (and this feature is enabled).&lt;/p&gt;
+
+    &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
+	&lt;td&gt;The ID number of the AC identity whose edit area was used.
+	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$workarea&lt;/td&gt;
+	&lt;td&gt;The unique tag for the work area. Empty for the main work
+	area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$commit-type&lt;/td&gt;
+	&lt;td&gt;The type of file commit, one of &lt;code&gt;create&lt;/code&gt;,
+	&lt;code&gt;edit&lt;/code&gt;, &lt;code&gt;delete&lt;/code&gt;, and
+	&lt;code&gt;undelete&lt;/code&gt;.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$revision&lt;/td&gt;
+	&lt;td&gt;The committed revision number, a dotted decimal.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$comment&lt;/td&gt;
+	&lt;td&gt;The commit message.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+	&lt;td&gt;This is set for the action &lt;code&gt;crawl-file&lt;/code&gt;. It's
+	similar to &lt;code&gt;$request-time&lt;/code&gt; for normal requests,
+	except that it measures the whole time it took for the
+	persistent cache crawler to process the page. That includes
+	all crawled variants and the saving of the entry to the
+	database.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+&lt;/dl&gt;</o>
 <t>Welk formaat te gebruiken in het logboek. De synatix is:
 &lt;pre&gt;response-code of *: formaat for deze respons-code
 
@@ -313,8 +582,8 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="36">
-<o>Primary Server URL</o>
-<t>URL van de Primaire server</t>
+<o>Ports: Primary Server URL</o>
+<t>Ports: URL van de Primaire server</t>
 </str>
 
 <str id="37">
@@ -331,14 +600,8 @@ also set 'URLs'.</o>
 </str>
 
 <str id="38">
-<o>URLs</o>
-<t>URL's</t>
-</str>
-
-<str id="39">
-<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris."/>
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, https, ftp, ftps, hilfe and tetris.</o>
-<t>Luister naar deze URL's. Gebruik '*' en '?' voor patronen (bij gebruik van deze tekens wordt standaard naa alle ip nummers op de machine geluisterd. Mogelijke protocollen zijn http, fhttp (een snellere variant van het HTTP protocol, maar niet 100% compatibel met alle modules) https, ftp, ftps, gopher en tetris.</t>
+<o>Ports: URLs</o>
+<t>Ports: URL's</t>
 </str>
 
 <str id="40">
@@ -454,7 +717,7 @@ also set 'URLs'.</o>
 
 <str id="61">
 <new/>
-<o>The text shown to the user on connect</o>
+<o>The text shown to the user on connect.</o>
 <t></t>
 </str>
 
@@ -478,7 +741,7 @@ also set 'URLs'.</o>
 
 <str id="65">
 <new/>
-<o>If yes, non-anonymous users can connect</o>
+<o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
 <t></t>
 </str>
 
@@ -502,7 +765,7 @@ also set 'URLs'.</o>
 
 <str id="69">
 <new/>
-<o>If yes, anonymous users is allowed to connect.</o>
+<o>If yes, anonymous users are allowed to connect.</o>
 <t></t>
 </str>
 
@@ -514,7 +777,7 @@ also set 'URLs'.</o>
 
 <str id="71">
 <new/>
-<o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
+<o>If this string is set to anything but the empty string, it should specify a file containing a list of valid shells. Users with shells that are not in this list will not be allowed to log in.</o>
 <t></t>
 </str>
 
@@ -532,13 +795,13 @@ also set 'URLs'.</o>
 
 <str id="74">
 <new/>
-<o>Logging: Set unique user id cookies</o>
+<o>Logging: Set unique browser id cookies</o>
 <t></t>
 </str>
 
 <str id="75">
 <new/>
-<o>If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users.</o>
+<o>If set to Yes, all clients that accept cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
 <t></t>
 </str>
 
@@ -550,11 +813,9 @@ also set 'URLs'.</o>
 
 <str id="77">
 <new/>
-<o>If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
+<o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
 <t></t>
 </str>
-
-
 
 <str id="86">
 <new/>
@@ -564,7 +825,7 @@ also set 'URLs'.</o>
 
 <str id="87">
 <new/>
-<o>The SSL certificate file to use. The path is relative to %s</o>
+<o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
 <t></t>
 </str>
 
@@ -576,7 +837,7 @@ also set 'URLs'.</o>
 
 <str id="89">
 <new/>
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
+<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
 <t></t>
 </str>
 
@@ -588,7 +849,7 @@ also set 'URLs'.</o>
 
 <str id="91">
 <new/>
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -613,6 +874,18 @@ also set 'URLs'.</o>
 <str id="95">
 <new/>
 <o>This is where the fonts are located.</o>
+<t></t>
+</str>
+
+<str id="521">
+<new/>
+<o>Font oversampling</o>
+<t></t>
+</str>
+
+<str id="522">
+<new/>
+<o>If set to Yes, fonts will be oversampled resulting in higher quality but more fuzz. This will require clearing of various graphics caches like the Graphic text and GButton caches to take full effect.</o>
 <t></t>
 </str>
 
@@ -684,7 +957,7 @@ also set 'URLs'.</o>
 
 <str id="107">
 <new/>
-<o>How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check.</o>
+<o>How many cache files (inodes) may be on disk before a garbage collect is done? May be left at zero to disable this check.</o>
 <t></t>
 </str>
 
@@ -696,7 +969,7 @@ also set 'URLs'.</o>
 
 <str id="109">
 <new/>
-<o>How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first.</o>
+<o>How file size should be treated during garbage collect. Each X bytes count as a second, so that larger files will be removed first.</o>
 <t></t>
 </str>
 
@@ -708,7 +981,7 @@ also set 'URLs'.</o>
 
 <str id="111">
 <new/>
-<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable.</o>
+<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always appended to this variable.</o>
 <t></t>
 </str>
 
@@ -720,7 +993,7 @@ also set 'URLs'.</o>
 
 <str id="113">
 <new/>
-<o>This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed.</o>
+<o>This is the number of directories to hash the contents of the disk cache into. Changing this value currently invalidates the whole cache, since the cache cannot find the old files. In the future, the cache will be recalculated when this value is changed.</o>
 <t></t>
 </str>
 
@@ -804,7 +1077,15 @@ also set 'URLs'.</o>
 
 <str id="129">
 <new/>
-<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening,
+change to this user-id and group-id when the port has been opened. If
+you specify a symbolic username, the default group of that user will
+be used. The syntax is user[:group].
+
+&lt;p&gt;A server restart is necessary for a change of this variable to take
+effect. Note that it also can lead to file permission errors if the
+Roxen process no longer can read files it previously has written.
+The start script attempts to fix this for the standard file locations.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -945,7 +1226,7 @@ also set 'URLs'.</o>
 
 <str id="154">
 <new/>
-<o>ABS: Enable Anti-Block-System</o>
+<o>Auto Restart: Enable Anti-Block-System</o>
 <t></t>
 </str>
 
@@ -957,7 +1238,7 @@ also set 'URLs'.</o>
 
 <str id="156">
 <new/>
-<o>ABS: Timeout</o>
+<o>Auto Restart: ABS Timeout</o>
 <t></t>
 </str>
 
@@ -975,7 +1256,7 @@ also set 'URLs'.</o>
 
 <str id="159">
 <new/>
-<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the values of the 'LC_MESSAGES' and 'LANG' environment variables.</o>
 <t></t>
 </str>
 
@@ -987,7 +1268,7 @@ also set 'URLs'.</o>
 
 <str id="161">
 <new/>
-<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
+<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but may also sometimes be because of memory leaks.</o>
 <t></t>
 </str>
 
@@ -1150,7 +1431,8 @@ also set 'URLs'.</o>
 </str>
 
 <str id="201">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>Ok</t>
 </str>
 
@@ -1283,18 +1565,6 @@ also set 'URLs'.</o>
 <t>Instellingen</t>
 </str>
 
-<str id="258">
-<new/>
-<o>Add module</o>
-<t></t>
-</str>
-
-<str id="259">
-<new/>
-<o>Drop module</o>
-<t></t>
-</str>
-
 <str id="251">
 <o>Add Module</o>
 <t>Voeg module toe</t>
@@ -1360,7 +1630,7 @@ also set 'URLs'.</o>
 
 <str id="272">
 <new/>
-<o>Reload module list</o>
+<o>Reload Module List</o>
 <t></t>
 </str>
 
@@ -1390,7 +1660,7 @@ also set 'URLs'.</o>
 
 <str id="277">
 <new/>
-<o>The maximum size of a file that is to be considered for the cache</o>
+<o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
 <t></t>
 </str>
 
@@ -1408,31 +1678,31 @@ also set 'URLs'.</o>
 
 <str id="280">
 <new/>
-<o>normal</o>
+<o>Normal</o>
 <t></t>
 </str>
 
 <str id="282">
 <new/>
-<o>fast</o>
+<o>Fast</o>
 <t></t>
 </str>
 
 <str id="284">
 <new/>
-<o>faster</o>
+<o>Faster</o>
 <t></t>
 </str>
 
 <str id="286">
 <new/>
-<o>compact</o>
+<o>Compact</o>
 <t></t>
 </str>
 
 <str id="288">
 <new/>
-<o>really compact</o>
+<o>Really compact</o>
 <t></t>
 </str>
 
@@ -1478,21 +1748,9 @@ also set 'URLs'.</o>
 <t></t>
 </str>
 
-<str id="no">
-<new/>
-<o>No</o>
-<t></t>
-</str>
-
 <str id="298">
 <new/>
 <o>Event log cleared by %s from %s</o>
-<t></t>
-</str>
-
-<str id="299">
-<new/>
-<o>Information</o>
 <t></t>
 </str>
 
@@ -1552,25 +1810,25 @@ also set 'URLs'.</o>
 
 <str id="238">
 <new/>
-<o>alphabetical</o>
+<o>Alphabetical</o>
 <t></t>
 </str>
 
 <str id="239">
 <new/>
-<o>as defined</o>
+<o>As defined</o>
 <t></t>
 </str>
 
 <str id="240">
 <new/>
-<o>alphabetical, changed first</o>
+<o>Alphabetical, changed first</o>
 <t></t>
 </str>
 
 <str id="241">
 <new/>
-<o>as defined, changed first</o>
+<o>As defined, changed first</o>
 <t></t>
 </str>
 
@@ -1642,7 +1900,8 @@ also set 'URLs'.</o>
 <str id="308">
 <new/>
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
-As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.&lt;p&gt;
+The inclusion file can access the form variables form.orig-file and form.orig-url to identify the original page that was requested.</o>
 <t></t>
 </str>
 
@@ -1654,19 +1913,13 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 <str id="310">
 <new/>
-<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
+<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will be allowed, even one with only the view settings permission.</o>
 <t></t>
 </str>
 
 <str id="311">
 <new/>
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
-</str>
-
-<str id="312">
-<new/>
-<o>Could not interpret the date</o>
 <t></t>
 </str>
 
@@ -1766,12 +2019,6 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="336">
-<new/>
-<o>Added / to the end of %s</o>
-<t></t>
-</str>
-
 <str id="338">
 <new/>
 <o>Changed %s to %s</o>
@@ -1850,46 +2097,10 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="352">
-<new/>
-<o>Found trailing data after the date. </o>
-<t></t>
-</str>
-
-<str id="353">
-<new/>
-<o>Month must be at least 1. </o>
-<t></t>
-</str>
-
-<str id="354">
-<new/>
-<o>Month must be 12 or less. </o>
-<t></t>
-</str>
-
-<str id="355">
-<new/>
-<o>Day must be at least 1.</o>
-<t></t>
-</str>
-
-<str id="356">
-<new/>
-<o>%s does not appear to be a valid date.</o>
-<t></t>
-</str>
-
-<str id="357">
-<new/>
-<o>Day must be %d or less.</o>
-<t></t>
-</str>
-
 <str id="5">
-<changed from="Number of requests:"/>
+<new/>
 <o>Interface language</o>
-<t>Aantal verzoeken:</t>
+<t></t>
 </str>
 
 <str id="19">
@@ -1907,11 +2118,11 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="153">
 <new/>
 <o>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;Fast&lt;/dt&gt;&lt;dd&gt;Like Normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;Faster&lt;/dt&gt;&lt;dd&gt;Like Normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Really compact&lt;/dt&gt;&lt;dd&gt;Like Compact, but no module classes.&lt;/dd&gt;
 &lt;/dl&gt;</o>
 <t></t>
 </str>
@@ -1955,15 +2166,14 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <str id="270">
 <new/>
 <o>
-The name of the configuration must contain characters
-other than space and tab, it should not end with
-~, and it must not be 'CVS', 'Global Variables' or
-'global variables', nor the name of an existing
-configuration, and the character '/' cannot be
-used. This name will show up in the sites menu, a
-lowercased, filesystem-friendly version will become
-the virtual server's configuration file name as well
-as the name of its log file directory.
+The name of the configuration must contain characters other than space
+and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
+'#', '$', '%', '&amp;amp;', '=', ';', ':', '_', '&amp;lt;', '&amp;gt;', '|', '*',
+and it must not be 'CVS', 'Global Variables' or 'global variables',
+nor the name of an existing configuration. This name will show up in
+the sites menu, a lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well as the name of
+its log file directory.
 </o>
 <t></t>
 </str>
@@ -2144,7 +2354,7 @@ as the name of its log file directory.
 
 <str id="9">
 <new/>
-<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
+<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced.</o>
 <t></t>
 </str>
 
@@ -2220,21 +2430,9 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="373">
-<new/>
-<o>Key</o>
-<t></t>
-</str>
-
 <str id="374">
 <new/>
 <o>rows</o>
-<t></t>
-</str>
-
-<str id="375">
-<new/>
-<o>KiB</o>
 <t></t>
 </str>
 
@@ -2252,7 +2450,7 @@ as the name of its log file directory.
 
 <str id="378">
 <new/>
-<o>Clear query</o>
+<o>Reset query</o>
 <t></t>
 </str>
 
@@ -2265,12 +2463,6 @@ as the name of its log file directory.
 <str id="380">
 <new/>
 <o>While running %s: %s</o>
-<t></t>
-</str>
-
-<str id="381">
-<new/>
-<o>Failed to connect</o>
 <t></t>
 </str>
 
@@ -2311,7 +2503,7 @@ as the name of its log file directory.
 &lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
 &lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
 &lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
-&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (Monday=1, Sunday=7) or a string (monday, tuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
   pattern is always a glob pattern (* = any characters, ? = any character).
 &lt;/p&gt;&lt;p&gt;
   return means that reaching this command results in immediate
@@ -2359,12 +2551,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="324">
-<new/>
-<o>Ports</o>
-<t></t>
-</str>
-
 <str id="14">
 <new/>
 <o>Module list mode</o>
@@ -2373,13 +2559,13 @@ as the name of its log file directory.
 
 <str id="15">
 <new/>
-<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
 <t></t>
 </str>
 
 <str id="17">
 <new/>
-<o>Folded with javascript popup</o>
+<o>Folded with JavaScript popup</o>
 <t></t>
 </str>
 
@@ -2391,7 +2577,7 @@ as the name of its log file directory.
 
 <str id="123">
 <new/>
-<o>Unfolded (old style)</o>
+<o>Unfolded (Old style)</o>
 <t></t>
 </str>
 
@@ -2434,9 +2620,44 @@ as the name of its log file directory.
 
 <str id="386">
 <new/>
-<o>The compatibility level is used by different modules to select the right behavior to remain compatible with earlier Roxen versions. When a server configuration is created, this variable is set to the latest version. After that it's never changed automatically, thereby ensuring that server configurations migrated from earlier Roxen versions is kept at the right compatibility level.
-&lt;p&gt;
-This variable may be changed manually, but it's advisable to test the site carefully afterwards. A reload of the whole server configuration is required to propagate the change properly to all modules.</o>
+<o>&lt;p&gt;The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.&lt;/p&gt;
+
+&lt;p&gt;This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.&lt;/p&gt;
+
+&lt;p&gt;Available compatibility levels:
+&lt;table&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.4. This version is also
+  commonly known as 3.2 - the version number that applies to the
+  release of Roxen CMS which contains Roxen WebServer 2.4.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to no released version. This compatibility level is
+  only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.3&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 3.3.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;3.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;5.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 5.0.&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -2464,42 +2685,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <t></t>
 </str>
 
-<str id="390">
-<new/>
-<o>Release notes</o>
-<t></t>
-</str>
-
-<str id="391">
-<new/>
-<o>Web Site Creator</o>
-<t></t>
-</str>
-
-<str id="392">
-<new/>
-<o>Administrator Manual</o>
-<t></t>
-</str>
-
-<str id="393">
-<new/>
-<o>User Manual</o>
-<t></t>
-</str>
-
-<str id="394">
-<new/>
-<o>RXML Tutorial</o>
-<t></t>
-</str>
-
-<str id="395">
-<new/>
-<o>Programmer Manual</o>
-<t></t>
-</str>
-
 <str id="396">
 <new/>
 <o>Pike Tutorial</o>
@@ -2524,15 +2709,9 @@ This variable may be changed manually, but it's advisable to test the site caref
 <t></t>
 </str>
 
-<str id="400">
-<new/>
-<o>Update</o>
-<t></t>
-</str>
-
 <str id="401">
 <new/>
-<o>Copy or move database</o>
+<o>Copy or rename database</o>
 <t></t>
 </str>
 
@@ -2568,7 +2747,7 @@ This variable may be changed manually, but it's advisable to test the site caref
 
 <str id="407">
 <new/>
-<o>It is not possible to connect to %s</o>
+<o>It is not possible to connect to %s.</o>
 <t></t>
 </str>
 
@@ -2580,41 +2759,19 @@ This variable may be changed manually, but it's advisable to test the site caref
 
 <str id="409">
 <new/>
-<o>%s is an internal database, used by roxen.Please select another name</o>
+<o>%s is an internal database, used by Roxen. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="410">
 <new/>
-<o>%s is a mysql keyword, used by mysql.Please select another name</o>
-<t></t>
-</str>
-
-<str id="411">
-<new/>
-<o>While copying %s.%s: The source database does not support %s.
-The copy will not contain all metadata</o>
-<t></t>
-</str>
-
-<str id="412">
-<new/>
-<o>The source database used the string %s as a fieldname.
-This is reserved in newer MySQL versions.
-Substituting with %s</o>
-<t></t>
-</str>
-
-<str id="413">
-<new/>
-<o>Failed to copy data from source table.
-</o>
+<o>%s is a MySQL keyword, used by MySQL. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="414">
 <new/>
-<o>Move or copy this database</o>
+<o>Copy or rename this database</o>
 <t></t>
 </str>
 
@@ -2632,7 +2789,7 @@ Substituting with %s</o>
 
 <str id="417">
 <new/>
-<o>Move database</o>
+<o>Rename database</o>
 <t></t>
 </str>
 
@@ -2648,27 +2805,9 @@ Substituting with %s</o>
 <t></t>
 </str>
 
-<str id="420">
-<new/>
-<o>The new name of the database. You do not have to change the name if you change the database type from internal to external, or change the URL of an external database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters</o>
-<t></t>
-</str>
-
-<str id="421">
-<new/>
-<o>The database type. Internal means that it will be stored in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
-<t></t>
-</str>
-
 <str id="422">
 <new/>
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen </o>
-<t></t>
-</str>
-
-<str id="423">
-<new/>
-<o>Are you sure you want to delete the database %s?</o>
+<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
 <t></t>
 </str>
 
@@ -2690,27 +2829,21 @@ Substituting with %s</o>
 <t></t>
 </str>
 
-<str id="427">
-<new/>
-<o>the deleted module %s from %s</o>
-<t></t>
-</str>
-
 <str id="428">
 <new/>
-<o>Defined by %s</o>
+<o>Defined by %s.</o>
 <t></t>
 </str>
 
 <str id="429">
 <new/>
-<o>The table is known as '%s' in the module</o>
+<o>The table is known as %O in the module.</o>
 <t></t>
 </str>
 
 <str id="430">
 <new/>
-<o>The table is an anymous table defined by the module</o>
+<o>The table is an anonymous table defined by the module.</o>
 <t></t>
 </str>
 
@@ -2741,17 +2874,6 @@ Substituting with %s</o>
 <str id="435">
 <new/>
 <o>When the group is created, the checked databases will be imported as well</o>
-<t></t>
-</str>
-
-<str id="436">
-<new/>
-<o>The &lt;i&gt;shared&lt;/i&gt; database contains data
-          should be shared between multiple-frontend servers, the
-          &lt;i&gt;local&lt;/i&gt; database contains data that should &lt;b&gt;not&lt;/b&gt;
-          be shared. The &lt;i&gt;docs&lt;/i&gt; database contains all
-          documentation.
-          </o>
 <t></t>
 </str>
 
@@ -2793,19 +2915,13 @@ Substituting with %s</o>
 
 <str id="443">
 <new/>
-<o>The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database.</o>
+<o>The database type. Internal means that it will be created in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
 <t></t>
 </str>
 
 <str id="444">
 <new/>
 <o>URL</o>
-<t></t>
-</str>
-
-<str id="445">
-<new/>
-<o>Category</o>
 <t></t>
 </str>
 
@@ -2817,7 +2933,7 @@ Substituting with %s</o>
 
 <str id="447">
 <new/>
-<o>This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in</o>
+<o>This group is used to group the databses. For external databases, the group can also be used to select which MySQL server the database should be created in</o>
 <t></t>
 </str>
 
@@ -2843,10 +2959,10 @@ Substituting with %s</o>
 <new/>
 <o>The groups are used mainly to group the databases in the
 Administration interface, but also to indicate the default MySQL server
-internal databases will be created in.
+external databases will be created in.
 
 &lt;p&gt; If a group has a URL set, it will be used to select the database
-server in which the database will be created, please note that this
+server in which the database will be created. Please note that this
 server must be a MySQL server, nothing else will work.
 </o>
 <t></t>
@@ -2885,12 +3001,6 @@ server must be a MySQL server, nothing else will work.
 <str id="457">
 <new/>
 <o>A database group named %s already exists</o>
-<t></t>
-</str>
-
-<str id="458">
-<new/>
-<o>%s is a MySQL keyword, used by MySQL.Please select another name</o>
 <t></t>
 </str>
 
@@ -2968,7 +3078,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="471">
 <new/>
-<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep</o>
+<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep.</o>
 <t></t>
 </str>
 
@@ -3162,5 +3272,888 @@ server must be a MySQL server, nothing else will work.
 <str id="78">
 <new/>
 <o>All database backups currently available</o>
+<t></t>
+</str>
+
+<str id="79">
+<new/>
+<o>&lt;p&gt;No backups are currently available. To make a backup of a database, focus on it in the Databases tab, and click on the make backup button. Please note that you can only make backups of databases managed by Roxen.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="80">
+<new/>
+<o>No data entered.
+</o>
+<t></t>
+</str>
+
+<str id="81">
+<new/>
+<o>Data is not a float.
+</o>
+<t></t>
+</str>
+
+<str id="82">
+<new/>
+<o>Found the string %O trailing after the float.
+</o>
+<t></t>
+</str>
+
+<str id="83">
+<new/>
+<o>Data is not an integer
+</o>
+<t></t>
+</str>
+
+<str id="84">
+<new/>
+<o>Found the string %O trailing after the integer.
+</o>
+<t></t>
+</str>
+
+<str id="85">
+<new/>
+<o>Default module tab</o>
+<t></t>
+</str>
+
+<str id="162">
+<new/>
+<o>The tab that will be selected by default when you select a module.</o>
+<t></t>
+</str>
+
+<str id="163">
+<new/>
+<o>Enable replication system</o>
+<t></t>
+</str>
+
+<str id="337">
+<new/>
+<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that resides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
+<t></t>
+</str>
+
+<str id="361">
+<new/>
+<o>Are you sure you want to delete the database %s and the data?</o>
+<t></t>
+</str>
+
+<str id="362">
+<new/>
+<o>Are you sure you want to delete the database %s? No data will be deleted from the remote database.</o>
+<t></t>
+</str>
+
+<str id="503">
+<new/>
+<o>Group</o>
+<t></t>
+</str>
+
+<str id="299">
+<new/>
+<o>URLs</o>
+<t></t>
+</str>
+
+<str id="324">
+<new/>
+<o>Change group for this database</o>
+<t></t>
+</str>
+
+<str id="423">
+<new/>
+<o>Changing group for %s</o>
+<t></t>
+</str>
+
+<str id="445">
+<new/>
+<o>Old group</o>
+<t></t>
+</str>
+
+<str id="504">
+<new/>
+<o>New group</o>
+<t></t>
+</str>
+
+<str id="505">
+<new/>
+<o>%d bytes</o>
+<t></t>
+</str>
+
+<str id="506">
+<new/>
+<o>Member of the %s database group.</o>
+<t></t>
+</str>
+
+<str id="507">
+<new/>
+<o>Cannot list fields in %s databases</o>
+<t></t>
+</str>
+
+<str id="373">
+<new/>
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
+<t></t>
+</str>
+
+<str id="508">
+<new/>
+<o>Ports</o>
+<t></t>
+</str>
+
+<str id="509">
+<new/>
+<o>Select site</o>
+<t></t>
+</str>
+
+<str id="510">
+<new/>
+<o>Bind this port: </o>
+<t></t>
+</str>
+
+<str id="39">
+<new/>
+<o>License file</o>
+<t></t>
+</str>
+
+<str id="336">
+<new/>
+<o>The license file for this configuration.</o>
+<t></t>
+</str>
+
+<str id="511">
+<new/>
+<o> The module is locked and not part of the license. To enable this module please select a valid license and restart the server.</o>
+<t></t>
+</str>
+
+<str id="514">
+<new/>
+<o>Web Developer</o>
+<t></t>
+</str>
+
+<str id="515">
+<new/>
+<o>System Developer (Pike)</o>
+<t></t>
+</str>
+
+<str id="516">
+<new/>
+<o>Administrator</o>
+<t></t>
+</str>
+
+<str id="517">
+<new/>
+<o>Forms And Response Module</o>
+<t></t>
+</str>
+
+<str id="519">
+<new/>
+<o>Tutorials</o>
+<t></t>
+</str>
+
+<str id="520">
+<new/>
+<o>Refresh</o>
+<t></t>
+</str>
+
+<str id="312">
+<new/>
+<o>(none)</o>
+<t></t>
+</str>
+
+<str id="352">
+<new/>
+<o>Delete group</o>
+<t></t>
+</str>
+
+<str id="353">
+<new/>
+<o>You can not delete this group because it is not empty.</o>
+<t></t>
+</str>
+
+<str id="354">
+<new/>
+<o>Are you sure you want to delete the group %s?</o>
+<t></t>
+</str>
+
+<str id="355">
+<new/>
+<o>Please give a name for the group.</o>
+<t></t>
+</str>
+
+<str id="356">
+<new/>
+<o>Configuration %O not found.</o>
+<t></t>
+</str>
+
+<str id="390">
+<new/>
+<o>System Developer (Java)</o>
+<t></t>
+</str>
+
+<str id="523">
+<new/>
+<o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<new/>
+<o>Content Editor</o>
+<t></t>
+</str>
+
+<str id="458">
+<new/>
+<o>FAQ</o>
+<t></t>
+</str>
+
+<str id="513">
+<new/>
+<o>No modules</o>
+<t></t>
+</str>
+
+<str id="525">
+<new/>
+<o>Other</o>
+<t></t>
+</str>
+
+<str id="526">
+<new/>
+<o>requests</o>
+<t></t>
+</str>
+
+<str id="527">
+<new/>
+<o>hits</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Select site to drop.</o>
+<t></t>
+</str>
+
+<str id="no">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="357">
+<new/>
+<o>Load of %s failed: Module not found.</o>
+<t></t>
+</str>
+
+<str id="512">
+<new/>
+<o>This does not look like a valid email address.</o>
+<t></t>
+</str>
+
+<str id="518">
+<new/>
+<o>Support EPRT/EPSV</o>
+<t></t>
+</str>
+
+<str id="528">
+<new/>
+<o>Enable support for the EPRT and EPSV commands (RFC2428).Some firewalls don't handle these commands properly, so depending on your network configuration you may need to disable them. </o>
+<t></t>
+</str>
+
+<str id="529">
+<new/>
+<o>the database %s does already exist</o>
+<t></t>
+</str>
+
+<str id="530">
+<new/>
+<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<t></t>
+</str>
+
+<str id="411">
+<new/>
+<o>Authentication failed message override files</o>
+<t></t>
+</str>
+
+<str id="412">
+<new/>
+<o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
+The file is searched for in parent directories in the same manner as the no such file message override files.</o>
+<t></t>
+</str>
+
+<str id="413">
+<new/>
+<o>Authentication failed message</o>
+<t></t>
+</str>
+
+<str id="420">
+<new/>
+<o>What to return when an authentication attempt failed.</o>
+<t></t>
+</str>
+
+<str id="421">
+<new/>
+<o>List Type</o>
+<t></t>
+</str>
+
+<str id="531">
+<new/>
+<o>Really Compact</o>
+<t></t>
+</str>
+
+<str id="258">
+<new/>
+<o>Logging: Compress log file</o>
+<t></t>
+</str>
+
+<str id="259">
+<new/>
+<o>Path to a program to compress log files, e.g. &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; or &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;. &lt;b&gt;Note&amp;nbsp;1:&lt;/b&gt; The active log file is never compressed. Log rotation needs to be used using the "Log file" filename substitutions (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;). &lt;b&gt;Note&amp;nbsp;2:&lt;/b&gt; Compression is limited to scanning files with filename substitutions within a fixed directory (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;, not &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</o>
+<t></t>
+</str>
+
+<str id="532">
+<new/>
+<o>Show this string in header</o>
+<t></t>
+</str>
+
+<str id="533">
+<new/>
+<o>Enter a identifier that will be displayed in the head of  config interface. This makes it easier to distinguish between different site configurations. </o>
+<t></t>
+</str>
+
+<str id="534">
+<new/>
+<o>Logging: Dump threads by file polling</o>
+<t></t>
+</str>
+
+<str id="535">
+<new/>
+<o>&lt;p&gt;This option can be used to produce dumps of all the threads in the
+debug log in situations where the Administration Interface doesn't
+respond.&lt;/p&gt;
+
+&lt;p&gt;It works by checking for a file called "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads" in the same directory as the debug log.
+&lt;i&gt;&amp;lt;config name&amp;gt;&lt;/i&gt; is the name of the server configuration,
+i.e. the same as the base name of the debug log files (typically
+"default"). If this file exists, a thread dump is generated and the
+file is deleted. If a file on the form "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;", where &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;
+is an integer, exists then &lt;i&gt;n&lt;/i&gt; thread dumps are generated in one
+minute intervals.&lt;/p&gt;
+
+&lt;p&gt;Note that this method normally isn't necessary in unix-like
+environments; there you can just send a SIGQUIT signal to the pike
+process to get a thread dump.&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="536">
+<new/>
+<o>Change default character set</o>
+<t></t>
+</str>
+
+<str id="537">
+<new/>
+<o>Repair all tables</o>
+<t></t>
+</str>
+
+<str id="538">
+<new/>
+<o>Optimize all tables</o>
+<t></t>
+</str>
+
+<str id="539">
+<new/>
+<o>Changing default character set for %s</o>
+<t></t>
+</str>
+
+<str id="540">
+<new/>
+<o>Old default character set</o>
+<t></t>
+</str>
+
+<str id="541">
+<new/>
+<o>New default character set</o>
+<t></t>
+</str>
+
+<str id="542">
+<new/>
+<o>the deleted site %O</o>
+<t></t>
+</str>
+
+<str id="543">
+<new/>
+<o>%s in %s</o>
+<t></t>
+</str>
+
+<str id="544">
+<new/>
+<o>the deleted module %s in %s</o>
+<t></t>
+</str>
+
+<str id="545">
+<new/>
+<o>the deleted module %s</o>
+<t></t>
+</str>
+
+<str id="546">
+<new/>
+<o>Internal data that cannot be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="547">
+<new/>
+<o>Internal data that may be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="548">
+<new/>
+<o>Default charset:</o>
+<t></t>
+</str>
+
+<str id="549">
+<new/>
+<o>No defined databases.
+</o>
+<t></t>
+</str>
+
+<str id="550">
+<new/>
+<o>Site Permissions</o>
+<t></t>
+</str>
+
+<str id="551">
+<new/>
+<o>Module Priorities</o>
+<t></t>
+</str>
+
+<str id="1000">
+<new/>
+<o>Compression: Enable HTTP compression</o>
+<t></t>
+</str>
+
+<str id="1001">
+<new/>
+<o>Whether to enable HTTP protocol compression. Many types of text
+content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
+enabling HTTP compression may improve the visitors' perception of the
+site's performance. It's however a trade-off between server processing
+power and bandwidth. Requests that end up in the protocol cache will
+be served in the compressed form directly from the protocol cache, so
+for such requests the processing power overhead can be held relatively
+low.</o>
+<t></t>
+</str>
+
+<str id="1002">
+<new/>
+<o>Compression: Enabled MIME-types</o>
+<t></t>
+</str>
+
+<str id="1003">
+<new/>
+<o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype") is not allowed and such globs will be silently ignored.</o>
+<t></t>
+</str>
+
+<str id="1004">
+<new/>
+<o>Compression: Minimum content size</o>
+<t></t>
+</str>
+
+<str id="1005">
+<new/>
+<o>The minimum file size for which to enable compression. (It might not be worth it to compress a request if it can fit into a single TCP/IP packet anyways.)</o>
+<t></t>
+</str>
+
+<str id="1006">
+<new/>
+<o>Compression: Maximum content size</o>
+<t></t>
+</str>
+
+<str id="1007">
+<new/>
+<o>The maximum file size for which to enable compression. Note that the general protocol cache entry size limit applies, so if the compression of dynamic requests is disabled, files larger than the protocol cache maximum file size setting will never be served compressed regardless of this setting.</o>
+<t></t>
+</str>
+
+<str id="1008">
+<new/>
+<o>Compression: Compression level</o>
+<t></t>
+</str>
+
+<str id="1009">
+<new/>
+<o>The compression level to use (integer between 1 and 9). Higher number means more compression at the cost of processing power and vice versa. You may need to restart the server for this setting to take effect.</o>
+<t></t>
+</str>
+
+<str id="1010">
+<new/>
+<o>Compression: Compress dynamic requests</o>
+<t></t>
+</str>
+
+<str id="1011">
+<new/>
+<o>If enabled, even requests that aren't cacheable in the protocol cache will be compressed. If the site has many lightweight requests that are not protocol cacheable, the processing overhead may become relatively large with this setting turned on.</o>
+<t></t>
+</str>
+
+<str id="1012">
+<new/>
+<o>SNMP sub-MIB</o>
+<t></t>
+</str>
+
+<str id="1013">
+<new/>
+<o>MIB suffix to 1.3.6.1.4.1.8614.1.1.2 identifying this site.</o>
+<t></t>
+</str>
+
+<str id="1014">
+<new/>
+<o>MySQL table check</o>
+<t></t>
+</str>
+
+<str id="1015">
+<new/>
+<o>Check MySQL tables on server start, and automatically repair if necessary. &lt;b&gt;Fast&lt;/b&gt; checks only tables that haven't been closed properly. &lt;b&gt;Normal&lt;/b&gt; checks for general errors. &lt;b&gt;Medium&lt;/b&gt; catches 99.99 % of all errors. Should be good enough for most cases. &lt;b&gt;Extended&lt;/b&gt; checks the tables VERY throughly.  Only use this in extreme cases as myisamchk should normally be able to find out if the table is OK even without this switch.</o>
+<t></t>
+</str>
+
+<str id="1016">
+<new/>
+<o>Logging: Dump threads for slow requests</o>
+<t></t>
+</str>
+
+<str id="1017">
+<new/>
+<o>&lt;p&gt;This enables a monitor that dumps all the threads in the debug log
+whenever any request, background job or the backend thread has been
+running for more than a set number of seconds, which is configured
+with the "Slow request timeout" and "Slow backend timeout"
+settings.&lt;/p&gt;
+
+&lt;p&gt;This setting is a counter: A positive number stops the monitor
+after that many thread dumps have been made, -1 enables the monitor
+permanently, and zero disables it. Positive numbers aren't persistent,
+so will be reset to zero whenever the server is restarted.&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Warning:&lt;/b&gt; If you set the timeout too low, combined with a
+high or no limit, then the debug log can fill up very quickly and the
+server become very slow due to the amount of logging. If that happens
+and it gets difficult to change back the value then you can force the
+monitor to be disabled from the start by adding the define
+"NO_SLOW_REQ_BT" (i.e. add "-DNO_SLOW_REQ_BT" to the start script
+or in the DEFINES environment variable).&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1018">
+<new/>
+<o>Feature disabled by NO_SLOW_REQ_BT define.</o>
+<t></t>
+</str>
+
+<str id="1019">
+<new/>
+<o>Logging: Slow request timeout</o>
+<t></t>
+</str>
+
+<str id="1020">
+<new/>
+<o>&lt;p&gt;The timeout in seconds for requests or background jobs to trig a
+thread dump. Zero disables monitoring of those. See the "Dump threads
+for slow requests" setting for details.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1021">
+<new/>
+<o>Logging: Slow backend timeout</o>
+<t></t>
+</str>
+
+<str id="1022">
+<new/>
+<o>&lt;p&gt;The timeout in seconds for the backend thread to trig a thread
+dump. Zero disables monitoring of it. See the "Dump threads for slow
+requests" setting for details.&lt;/p&gt;
+
+&lt;p&gt;The backend thread is a special thread that manages most I/O and
+directs the incoming requests to the handler threads. It should never
+be occupied for a significant amount of time since that would make the
+server essentially unresponsive. Therefore this timeout should be
+small.&lt;/p&gt;
+
+&lt;p&gt;Note that a good value for this is very dependent on hardware. The
+default setting here is conservative and probably should be lowered to
+be of real use.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1023">
+<new/>
+<o>Undocumented</o>
+<t></t>
+</str>
+
+<str id="381">
+<new/>
+<o>Failed to connect</o>
+<t></t>
+</str>
+
+<str id="1024">
+<new/>
+<o>Contains all documentation.</o>
+<t></t>
+</str>
+
+<str id="1025">
+<new/>
+<o>Unknown database</o>
+<t></t>
+</str>
+
+<str id="1042">
+<new/>
+<o>
+	    &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
+	    This might take a long time to complete.&lt;br/&gt;
+	    The amount of time this takes depends on how large the tables are.&lt;br/&gt;
+	  </o>
+<t></t>
+</str>
+
+<str id="1026">
+<new/>
+<o>Backup schedules</o>
+<t></t>
+</str>
+
+<str id="1027">
+<new/>
+<o>Schedule</o>
+<t></t>
+</str>
+
+<str id="1028">
+<new/>
+<o>Period</o>
+<t></t>
+</str>
+
+<str id="1029">
+<new/>
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="1030">
+<new/>
+<o>Generations</o>
+<t></t>
+</str>
+
+<str id="1031">
+<new/>
+<o>Method</o>
+<t></t>
+</str>
+
+<str id="1032">
+<new/>
+<o>Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,Fridays,Saturdays</o>
+<t></t>
+</str>
+
+<str id="1033">
+<new/>
+<o>Every Hour</o>
+<t></t>
+</str>
+
+<str id="1034">
+<new/>
+<o>Every Day</o>
+<t></t>
+</str>
+
+<str id="1035">
+<new/>
+<o>At</o>
+<t></t>
+</str>
+
+<str id="1036">
+<new/>
+<o>Unlimited</o>
+<t></t>
+</str>
+
+<str id="1037">
+<new/>
+<o>MySQLDump (recommended)</o>
+<t></t>
+</str>
+
+<str id="1038">
+<new/>
+<o>Backup (internal databases only)</o>
+<t></t>
+</str>
+
+<str id="1039">
+<new/>
+<o>Backup directory</o>
+<t></t>
+</str>
+
+<str id="1040">
+<new/>
+<o>Note: This schedule is also used to schedule backups for Roxen's internal databases.</o>
+<t></t>
+</str>
+
+<str id="1041">
+<new/>
+<o>Are you sure you want to restore the default value?</o>
+<t></t>
+</str>
+
+<str id="1043">
+<new/>
+<o>Cache: Memory cache size</o>
+<t></t>
+</str>
+
+<str id="1044">
+<new/>
+<o>&lt;p&gt;Maximum size in MByte for all RAM caches taken together. This limit
+covers the caches visible in the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cache status&lt;/a&gt;
+page.&lt;/p&gt;
+
+&lt;p&gt;Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1045">
+<new/>
+<o>Cache: Memory cache GC interval</o>
+<t></t>
+</str>
+
+<str id="1046">
+<new/>
+<o>&lt;p&gt;Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.&lt;/p&gt;
+
+&lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.&lt;/p&gt;</o>
 <t></t>
 </str>

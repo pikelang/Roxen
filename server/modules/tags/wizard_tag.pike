@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.29 2001/03/08 14:35:49 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -147,8 +147,8 @@ string tag_wizard(string t, mapping args, string contents, object id,
 
   if(mappingp(res))
   {
-    id->misc->defines[" _error"] = res->error;
-    id->misc->defines[" _extra_heads"] = res->extra_heads;
+    RXML_CONTEXT->set_misc (" _error", res->error);
+    RXML_CONTEXT->extend_scope ("header", res->extra_heads);
     return res->data||(res->file&&res->file->read())||"";
   }
   return res;

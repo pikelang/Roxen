@@ -40,79 +40,91 @@ und dass die Gruppen-Datenbank korrekt ist.
 </str>
 
 <str id="6">
-<o>Failed to bind %s://%s:%d/ (%s)</o>
+<changed from="Failed to bind %s://%s:%d/ (%s)"/>
+<o>Failed to bind %s (%s)</o>
 <t>Fehlschlag bei bind() auf %s://%s:%d/ (%s)</t>
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file failed!</o>
+<changed from="SSL3: Reading cert-file failed!"/>
+<o>Reading certificate file %O failed: %s
+</o>
 <t>SSL3: Zertifikat-Datei kann nicht gelesen werden!</t>
 </str>
 
 <str id="9">
-<o>SSL3: Reading key-file failed!</o>
+<changed from="SSL3: Reading key-file failed!"/>
+<o>Reading key file %O failed: %s
+</o>
 <t>SSL3: Schlüssel-Datei kann nicht gelesen werden!</t>
 </str>
 
 <str id="10">
-<o>SSL3: No certificate found.</o>
+<changed from="SSL3: No certificate found."/>
+<o>No certificate found in %O.
+</o>
 <t>SSL3: Kein Zertifikat gefunden.</t>
 </str>
 
 <str id="11">
-<o>SSL3: Private rsa key not valid</o>
+<changed from="SSL3: Private rsa key not valid"/>
+<o>Private rsa key not valid</o>
 <t>SSL3: Privater RSA-Schlüssel ungültig</t>
 </str>
 
 <str id="13">
-<o>SSL3: Certificate not valid (DER).</o>
+<changed from="SSL3: Certificate not valid (DER)."/>
+<o>Certificate not valid (DER).
+</o>
 <t>SSL3: Zertifikat ungültig (DER).</t>
 </str>
 
 <str id="14">
-<o>SSL3: Certificate and private key do not match.</o>
+<changed from="SSL3: Certificate and private key do not match."/>
+<o>Certificate and private key do not match.
+</o>
 <t>SSL3: Zertifikat und privater Schlüssel passen nicht zusammen.</t>
 </str>
 
 <str id="15">
-<o>SSL3: Private dsa key not valid</o>
+<changed from="SSL3: Private dsa key not valid"/>
+<o>Private dsa key not valid</o>
 <t>SSL3: Privater dsa-Schlüssel ungültig</t>
 </str>
 
 <str id="17">
-<o>SSL3: No private key found.</o>
+<changed from="SSL3: No private key found."/>
+<o>No private key found.
+</o>
 <t>SSL3: Privater Schlüssel nicht gefunden.</t>
 </str>
 
 <str id="19">
-<o>Bad URL '%s' for server `%s'</o>
+<changed from="Bad URL '%s' for server `%s'"/>
+<o>Bad URL %O for server %O.</o>
 <t>Ungültige URL '%s' für Server '%s'</t>
 </str>
 
 <str id="20">
-<o>Cannot register URL %s, already registered by %s!</o>
+<changed from="Cannot register URL %s, already registered by %s!"/>
+<o>Cannot register URL %s - already registered by %s.</o>
 <t>URL %s kann nicht verwendet werden, wird bereits von %s benutzt!</t>
 </str>
 
 <str id="21">
-<o>Cannot register URL %s, cannot find the protocol %s!</o>
+<changed from="Cannot register URL %s, cannot find the protocol %s!"/>
+<o>Cannot register URL %s - cannot find the protocol %s.</o>
 <t>URL %s kann nicht verwendet werden, Protokoll %s wird nicht gefunden!</t>
 </str>
 
-<str id="22">
-<o>Binding the port on IP %s failed
-   for URL %s!
-</o>
-<t>bind() für Port auf IP-Adresse %s fehlgeschlagen für URL %s!</t>
-</str>
-
 <str id="23">
-<o>Cannot register URL %s!</o>
+<changed from="Cannot register URL %s!"/>
+<o>Failed to register URL %s for %O.</o>
 <t>URL %s kann nicht verwendet werden!</t>
 </str>
 
 <str id="24">
-<o>It is only possible to change uid and gid if the server is running as root.</o>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t>uid und gid können nur gewechselt werden, wenn der Server unter der root-Kennung läuft.</t>
 </str>
 
@@ -243,11 +255,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t>bind() für %O fehlgeschlagen, wahrscheinlich ist dieser Host unbekannt. Ersetzung durch ANY</t>
 </str>
 
-<str id="7">
-<o>The protocol '%s' is not available</o>
-<t>Protokoll '%s' ist nicht verfügbar</t>
-</str>
-
 <str id="12">
 <o>Hilfe</o>
 <t>Hilfe</t>
@@ -264,7 +271,8 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="38">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>OK</t>
 </str>
 
@@ -337,4 +345,43 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <o>Syntax error in security patterns: Expected 'allow' or 'deny'
 </o>
 <t>Syntaxfehler in Security-Muster: 'allow' oder 'deny' erwartet</t>
+</str>
+
+<str id="61">
+<changed from="Not binding the port %O, disabled in configuration"/>
+<o>Not binding the port %O - disabled in configuration.</o>
+<t>Port %O nicht gebunden, in Konfiguration deaktiviert</t>
+</str>
+
+<str id="62">
+<new/>
+<o>Attempt %d. Retrying in 1 minute.</o>
+<t></t>
+</str>
+
+<str id="65">
+<new/>
+<o>Cannot open port %s for URL %s - IPv6 support disabled.
+</o>
+<t></t>
+</str>
+
+<str id="63">
+<new/>
+<o>No certificates found.
+</o>
+<t></t>
+</str>
+
+<str id="64">
+<new/>
+<o>TLS port %s opened.
+</o>
+<t></t>
+</str>
+
+<str id="66">
+<new/>
+<o>Uncaught error in background process:</o>
+<t></t>
 </str>

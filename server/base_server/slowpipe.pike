@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2001, Roxen IS.
+// Copyright © 1999 - 2009, Roxen IS.
 //
 //
 // A throttling pipe connection
@@ -10,15 +10,15 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.10 2001/06/17 20:07:10 nilsson Exp $";
+constant cvs_version="$Id$";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
-#define THROTTLING_DEBUG(X) report_debug("slowpipe: "+X+"\n")
+#define THROTTLING_DEBUG(X) if(file_len>0x6fffffff)report_debug("slowpipe: "+X+"\n")
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
+private mapping status = ([]);
 private Stdio.File outfd=0; //assigned by output
 private string tosend="";
 private function done_callback;
@@ -36,6 +36,7 @@ private int bucket=0x7fffffff;
 private int fill_rate=0; //if != 0, we're throttling
 private int max_depth=0;
 private int initial_bucket=0;
+private string host;
 
 
 //API functions
@@ -48,12 +49,14 @@ int bytes_sent() {
 //set the fileobject to write to. Also start the writing process up
 void output (Stdio.File fd) {
   THROTTLING_DEBUG("output to "+fd->query_address());
+  catch(host = (fd->query_address()/" ")[0]);
   outfd=fd;
   last_write=writing_starttime=time(1);
   bucket=initial_bucket; //need to initialize it here, or ftp
                          //will cause problems with long-lived sessions..
-  fd->set_nonblocking(0,write_some,0);
+  outfd->set_nonblocking(lambda(){},write_some,check_for_closing);
   call_out(check_for_closing,10);
+  call_out( write_some, 0.1 );
 }
 
 //add a fileobject to the write-queue
@@ -64,9 +67,22 @@ void input (Stdio.File what, int len) {
   if (len<=0)
     file_len=0x7fffffff;
   else
+  {
+    status->len = len;
     file_len = len;
+  }
   fd_in = what;
+  fd_in->set_nonblocking();
 //   tosend+=what->read(len);
+}
+
+// This mapping will be updated when data is sent.
+void set_status_mapping( mapping m )
+{
+  foreach( indices( status ), string x )
+    m[x] = status[x];
+  status = m;
+  status->start = time();
 }
 
 //add a string to the write-queue
@@ -101,23 +117,41 @@ void assign_throttler(void|object throttler_object) {
 private void write_some () {
   int towrite;
   //have we finished?
-
   if( !strlen(tosend) )
   {
     if( fd_in )
     {
       catch(tosend = fd_in->read( min( file_len, 32768 ) ));
-      file_len -= strlen( tosend );
-      if( (file_len <= 0) || (strlen( tosend ) == 0) )
+      if( !tosend || !strlen(tosend) )
+      {
+	tosend = "";
+	THROTTLING_DEBUG("read: errno: "+fd_in->errno()+"\n");
+	if( fd_in->errno() == 11 )
+	{
+	  remove_call_out( write_some );
+	  call_out( write_some, 0.01 );
+	}
+	else
+	{
+	  catch(fd_in->close());
+	  fd_in = 0;
+	  finish();
+	}
+	return;
+      }
+      else
+	file_len -= strlen( tosend );
+      if( (file_len <= 0)  )
       {
 	catch(fd_in->close());
 	fd_in = 0;
       }
-      write_some();
+    }
+    else
+    {
+      finish();
       return;
     }
-    finish();
-    return;
   }
   THROTTLING_DEBUG("write_some: still "+strlen(tosend)+" bytes to be sent");
 
@@ -145,15 +179,20 @@ private void write_some () {
   if (!throttler)
     finally_write(towrite);
   else
-    throttler->request(towrite,finally_write);
+    throttler->request(towrite,finally_write,host);
 }
 
 void finally_write(int howmuch) {
   THROTTLING_DEBUG("slowpipe: finally_write. howmuch="+howmuch);
   int written;
   //actual write
-  written=outfd->write( tosend[..howmuch-1] );
+  if( catch (written=outfd->write( tosend[..howmuch-1] )) )
+  {
+    finish();
+    return;
+  }
   THROTTLING_DEBUG("slowpipe: actually wrote "+written);
+  status->written += written;
   if (written==-1) {
     finish();
     return;
@@ -169,25 +208,25 @@ void finally_write(int howmuch) {
 
 void check_for_closing()
 {
-  THROTTLING_DEBUG("slowpipe: check_for_closing "+
-                   (outfd?outfd->query_address():"unknown")
-                   );
-  if(!outfd || !outfd->query_address()) {
+  if(!outfd || catch(outfd->query_address()) || !outfd->query_address()) {
 #ifdef FD_DEBUG
     write("Detected closed FD. Self-Destructing.\n");
 #endif
     finish();
-  } else
-    call_out(check_for_closing, 10);
+  }
+  else
+    call_out(check_for_closing, 2);
 }
 
-void finish() {
+void finish()
+{
+  status->closed = 1;
   int delta=time(1)-writing_starttime;
   if (!delta) delta=1; //avoid division by zero errors
   THROTTLING_DEBUG("slowpipe: cleaning up and leaving ("+
                    delta+" sec, "+(sent?(sent/delta):0)+" bps)");;
   if (outfd) {
-    outfd->set_blocking();
+    catch(outfd->set_blocking());
     outfd=0;
   }
   tosend=0;

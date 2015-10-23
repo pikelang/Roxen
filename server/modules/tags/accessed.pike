@@ -1,19 +1,36 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
 #include <module.h>
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.44 2001/08/23 21:02:01 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
-string status() {
-  return counter->size()+" entries in the accessed database.<br />";
+string status()
+{
+  string backend = query("backend");
+  string res = "<b>Backend:</b> " + backend + "<br />\n";
+ 
+  if (backend == "SQL database")
+    res += "<b>Database:</b> " + query("db") + "<br />\n";
+  
+  int entries;
+  if ( mixed err = catch {
+      entries = counter->size();
+    })
+  {
+    return res + "<font color='red'>Unable to connect to database</font>";
+  }
+  
+  return res +
+    "<b>Entries:</b> " + entries + " entries in the accessed "
+    "database.<br />";
 }
 
 void create(Configuration c) {
@@ -36,6 +53,18 @@ void create(Configuration c) {
 	 "Select a accessed database backend",
          ({ "File database", "SQL database", "Memory database" }) );
 
+  string default_db = "local";
+#if constant(WS_REPLICATE)
+  default_db = "replicate";
+#endif
+  
+  defvar("db",
+	 Variable.DatabaseChoice(default_db, 0, "Database",
+				 "The database where data are stored."))->
+    set_invisibility_check_callback(
+      lambda(RequestID id, Variable.Variable var)
+      { return query("backend") != "SQL database"; });
+  
   //------ File database settings
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
 	 "Access database file", TYPE_FILE|VAR_MORE,
@@ -48,23 +77,16 @@ void create(Configuration c) {
 	 "8 seconds. This saves resourses on servers with many sites.",
 	 0, lambda(){ return query("backend")!="File database"; } );
 
-  //------ SQL database settings
-  defvar("sqldb",
-	 Variable.DatabaseChoice( "shared", 0, "SQL Database", 
-				  "What database to use for the "
-				  "database backend." ) )
-    ->set_invisibility_check_callback(
-      lambda(Variable.Variable v, RequestID id) {
-	return query("backend")!="SQL database";
-      } );
-  getvar("sqldb")
-    ->set_configuration_pointer( my_configuration );
 }
+
+#if __VERSION__ > 7.2
+#define parse_accessed_database spider.parse_accessed_database
+#endif
 
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
-  "&page.accessed;":#"<desc ent='ent'><p>
+  "&page.accessed;":#"<desc type='entity'><p>
  Generates an access counter that shows how many times the page has
  been accessed. Needs the accessed module.
 </p></desc>",
@@ -164,7 +186,7 @@ constant tagdoc=([
  normal date related attributes can be used. Also see: <xref
  href='date.tag' />.</p>
 
- <ex><accessed since=\"\"/></ex>
+ <ex><accessed since=\"1\"/></ex>
 </attr>
 
 <attr name='type' value='number|string|roman|iso|discordian|stardate|mcdonalds|linus|ordered'><p>
@@ -172,9 +194,9 @@ constant tagdoc=([
  useful together with the since attribute.</p>
 
  <ex><accessed type=\"roman\"/></ex>
- <ex><accessed since=\"\" type=\"iso\"/></ex>
- <ex><accessed since=\"\" type=\"discordian\"/></ex>
- <ex><accessed since=\"\" type=\"stardate\"/></ex>
+ <ex><accessed since=\"1\" type=\"iso\"/></ex>
+ <ex><accessed since=\"1\" type=\"discordian\"/></ex>
+ <ex><accessed since=\"1\" type=\"stardate\"/></ex>
  <ex><accessed type=\"mcdonalds\"/></ex>
  <ex><accessed type=\"linus\"/></ex>
  <ex><accessed type=\"ordered\"/></ex>
@@ -225,8 +247,11 @@ class Entity_page_accessed {
   }
 }
 
-void set_entities(RXML.Context c) {
-  c->set_var("accessed", Entity_page_accessed(), "page");
+void set_entities(RXML.Context c)
+{
+  //  Kludge to avoid scope errors when running self-tests
+  if (c->exist_scope("page"))
+    c->set_var("accessed", Entity_page_accessed(), "page");
 }
 
 
@@ -260,8 +285,8 @@ class FileCounter {
     }
   }
 
-  static string olf; // Used to avoid reparsing of the accessed index file...
-  static mixed names_file_callout_id;
+  protected string olf; // Used to avoid reparsing of the accessed index file...
+  protected mixed names_file_callout_id;
   inline void open_names_file()
   {
     if(objectp(names_file)) return;
@@ -274,7 +299,7 @@ class FileCounter {
   object db_lock = Thread.Mutex();
 #endif /* THREADS */
 
-  static void close_db_file(object db)
+  protected void close_db_file(object db)
   {
 #ifdef THREADS
     mixed key = db_lock->lock();
@@ -284,7 +309,7 @@ class FileCounter {
     }
   }
 
-  static mixed db_file_callout_id;
+  protected mixed db_file_callout_id;
   inline mixed open_db_file()
   {
     mixed key;
@@ -297,9 +322,8 @@ class FileCounter {
       if(db_file_callout_id) remove_call_out(db_file_callout_id);
       database=open(module::query("Accesslog")+".db", "wrc");
       if (!database) {
-	throw(({ sprintf("Failed to open \"%s.db\". "
-			 "Insufficient permissions or out of fd's?\n",
-			 module::query("Accesslog")), backtrace() }));
+	error ("Failed to open \"%s.db\": %s\n",
+	       module::query("Accesslog"), strerror (errno()));
       }
       if (module::query("close_db")) {
 	db_file_callout_id = call_out(close_db_file, 9, database);
@@ -308,7 +332,7 @@ class FileCounter {
     return key;
   }
 
-  static int mdc;
+  protected int mdc;
   int main_database_created() {
     if(!mdc) {
       mixed key = open_db_file();
@@ -385,7 +409,7 @@ class FileCounter {
   }
 
   void reset(string file) {
-    int p, n;
+    int p;
 
     mixed key = open_db_file();
 
@@ -412,7 +436,7 @@ class SQLCounter {
   
   void create()
   {
-    set_my_db( module::query( "sqldb" ) );
+    set_my_db( module::query("db") );
     
     if( create_sql_tables( defs,
 			   "Hits per file database for the accessed tag "
@@ -440,7 +464,7 @@ class SQLCounter {
   private string fix_file(string file)
   {
     if(sizeof(file)>255)
-      file="//"+MIME.encode_base64(Crypto.md5()->update(file)->digest(),1);
+      file="//"+MIME.encode_base64(Crypto.MD5()->update(file)->digest(),1);
     return file;
   }
 
@@ -516,11 +540,10 @@ int log(RequestID id, mapping file) {
 
   // Although we are not 100% sure we should make a count,
   // nothing bad happens if we shouldn't and still do.
-  int a, b=sizeof(id->realfile);
+  string f = id->not_query;
   foreach(query("extcount"), string tmp)
-    if(a=sizeof(tmp) && b>a &&
-       id->realfile[b-a..]=="."+tmp) {
-      counter->add(id->not_query, 1);
+    if(has_suffix(f, "."+tmp)) {
+      counter->add(f, 1);
       id->misc->accessed = "1";
     }
 
@@ -535,11 +558,13 @@ string tag_accessed(string tag, mapping m, RequestID id)
   NOCACHE();
 
   if(m->reset) {
-    if( !query("restrict") || !search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
+    if( !query("restrict") || 
+	!m->file ||
+	!search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
 		 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
     {
-      counter->reset(m->file);
-      return "Number of counts for "+m->file+" is now 0.<br />";
+      counter->reset(m->file || id->not_query);
+      return "Number of counts for "+(m->file || id->not_query)+" is now 0.<br />";
     }
     else
       // On a web hotell you don't want the guests to be alowed to reset

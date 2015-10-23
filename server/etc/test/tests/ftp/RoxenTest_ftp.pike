@@ -1,4 +1,4 @@
-// $Id: RoxenTest_ftp.pike,v 1.1 2001/08/24 12:04:06 grubba Exp $
+// $Id$
 //
 // Tests of the ftp protocol module.
 //
@@ -15,6 +15,7 @@ string simple_check()
     5:"Connection closed",
     6:"Write failed",
     7:"Bad protocol code",
+    8:"Bad data",
   ]));
 }
 
@@ -25,7 +26,7 @@ function run(string script, int testno)
 	   if (!http_url) {
 	     foreach(c->query("URLs"), string url) {
 	       if(has_prefix( url, "ftp://")) {
-		 http_url = url;
+		 http_url = (url/"#")[0];
 	       }
 	     }
 	     if(!http_url) {

@@ -1,10 +1,10 @@
 // This is a roxen protocol module.
-// Copyright © 1997 - 2001, Roxen IS.
+// Copyright © 1997 - 2009, Roxen IS.
 
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.65 2001/08/23 05:33:43 nilsson Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -33,6 +33,7 @@
  * RFC 775	DIRECTORY ORIENTED FTP COMMANDS
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
+ * RFC 2228	FTP Security Extensions
  * RFC 2428	FTP Extensions for IPv6 and NATs
  *
  * IETF draft 12 Extended Directory Listing, TVFS,
@@ -47,6 +48,7 @@
  * RFC 691	One More Try on the FTP
  * RFC 724	Proposed Official Standard for the
  * 		Format of ARPA Network Messages
+ * RFC 4217	Securing FTP with TLS
  *
  * RFC's describing gateways and proxies:
  *
@@ -55,29 +57,29 @@
  * More or less obsolete RFC's:
  *
  * RFC 412	User FTP documentation
- * *RFC 438	FTP server-server interaction
- * *RFC 448	Print files in FTP
- * *RFC 458	Mail retrieval via FTP
- * *RFC 463	FTP comments and response to RFC 430
- * *RFC 468	FTP data compression
+ * RFC 438	FTP server-server interaction
+ * RFC 448	Print files in FTP
+ * RFC 458	Mail retrieval via FTP
+ * RFC 463	FTP comments and response to RFC 430
+ * RFC 468	FTP data compression
  * *RFC 475	FTP and network mail system
- * *RFC 478	FTP server-server interaction - II
- * *RFC 479	Use of FTP by the NIC Journal
- * *RFC 480	Host-dependent FTP parameters
- * *RFC 505	Two solutions to a file transfer access problem
- * *RFC 506	FTP command naming problem
- * *RFC 520	Memo to FTP group: Proposal for File Access Protocol
- * *RFC 532	UCSD-CC Server-FTP facility
+ * RFC 478	FTP server-server interaction - II
+ * RFC 479	Use of FTP by the NIC Journal
+ * RFC 480	Host-dependent FTP parameters
+ * RFC 505	Two solutions to a file transfer access problem
+ * RFC 506	FTP command naming problem
+ * RFC 520	Memo to FTP group: Proposal for File Access Protocol
+ * RFC 532	UCSD-CC Server-FTP facility
  * RFC 542	File Transfer Protocol for the ARPA Network
  * RFC 561	Standardizing Network Mail Headers
- * *RFC 571	Tenex FTP problem
- * *RFC 630	FTP error code usage for more reliable mail service
- * *RFC 686	Leaving well enough alone
- * *RFC 697	CWD Command of FTP
+ * RFC 571	Tenex FTP problem
+ * RFC 630	FTP error code usage for more reliable mail service
+ * RFC 686	Leaving well enough alone
+ * RFC 697	CWD Command of FTP
  * RFC 751	SURVEY OF FTP MAIL AND MLFL
  * RFC 754	Out-of-Net Host Addresses for Mail
  *
- * (RFC's marked with * are not available from http://www.roxen.com/rfc/)
+ * (RFC's marked with * are not available from http://rfc.roxen.com/)
  */
 
 
@@ -112,12 +114,12 @@ class RequestID2
   mapping file;
 
 #ifdef FTP2_DEBUG
-  static void trace_enter(mixed a, mixed b)
+  protected void trace_enter(mixed a, mixed b)
   {
     write("FTP: TRACE_ENTER(%O, %O)\n", a, b);
   }
 
-  static void trace_leave(mixed a)
+  protected void trace_leave(mixed a)
   {
     write("FTP: TRACE_LEAVE(%O)\n", a);
   }
@@ -158,39 +160,56 @@ class RequestID2
   {
   }
 
+  protected constant __num = ({ 0 });
+  int _num;
+
+  void destroy()
+  {
+#ifdef FTP_REQUESTID_DEBUG
+    report_debug("REQUESTID: Destroy request id #%d.\n", _num);
+#endif
+  }
+
   void create(object|void m_rid)
   {
+#ifdef FTP_REQUESTID_DEBUG
+    _num = ++__num[0];
+    if (m_rid) {
+      report_debug("REQUESTID: New request id #%d (CHILD to #%d).\n",
+		   _num, m_rid->_num);
+    } else {
+      report_debug("REQUESTID: New request id #%d (MASTER).\n", _num);
+    }
+#else
     DWRITE("REQUESTID: New request id.\n");
+#endif
 
     if (m_rid) {
       object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (!(< "create", "connection", "configuration",
-                "__INIT", "clone_me", "end", "ready_to_receive",
-		"send", "scan_for_query", "send_result", "misc",
-		"url_base" >)[var]) {
-#ifdef FTP2_DEBUG
+	if (object_variablep(o, var)) {
+#ifdef DEBUG
 	  if (catch {
-#endif /* FTP2_DEBUG */
+#endif /* DEBUG */
 	    o[var] = m_rid[var];
-#ifdef FTP2_DEBUG
+#ifdef DEBUG
 	  }) {
 	    report_error("FTP2: "
 			 "Failed to copy variable %s (value:%O)\n",
 			 var, m_rid[var]);
 	  }
-#endif /* FTP2_DEBUG */
+#endif /* DEBUG */
 	}
       }
-      o["misc"] = m_rid["misc"] + ([ ]);
+      o->misc = m_rid->misc + ([]);
     } else {
       // Defaults...
       client = ({ "ftp" });
       prot = "FTP";
       clientprot = "FTP";
-      real_variables = ([]);
-      misc = ([]);
-      cookies = ([]);
+      variables = FakedVariables(real_variables = ([]));
+      misc = (["pref_languages": PrefLanguages()]);
+      cookies = CookieJar();
       throttle = ([]);
       client_var = ([]);
       request_headers = ([]);
@@ -201,6 +220,7 @@ class RequestID2
       pragma = (<>);
       rest_query = "";
       extra_extension = "";
+      root_id = this_object();
     }
     time = predef::time(1);
 #ifdef FTP2_DEBUG
@@ -210,32 +230,42 @@ class RequestID2
   }
 };
 
-class FileWrapper(static private object f,
-		  static private string data,
-		  static private object ftpsession)
+class FileWrapper
 {
-  static string convert(string s);
+  protected string convert(string s);
 
-  static private function read_cb;
-  static private function close_cb;
-  static private mixed id;
+  private function read_cb;
+  private function close_cb;
+  private mixed id;
 
-  static private void read_callback(mixed i, string s)
+  private object f;
+  private string data;
+  private object ftpsession;
+
+  int is_file;
+
+  protected void create(object f_, string data_, object ftpsession_)
+  {
+    f = f_;
+    data = data_;
+    ftpsession = ftpsession_;
+
+    is_file = f_->is_file;
+  }
+
+  private void read_callback(mixed i, string s)
   {
     read_cb(id, convert(s));
     ftpsession->touch_me();
   }
 
-  static private void close_callback(mixed i)
+  private void close_callback(mixed i)
   {
-    close_cb(id);
-    if (f) {
-      BACKEND_CLOSE(f);
-    }
     ftpsession->touch_me();
+    close_cb(id);
   }
 
-  static private void delayed_nonblocking(function w_cb)
+  private void delayed_nonblocking(function w_cb)
   {
     string d = data;
     data = 0;
@@ -308,11 +338,20 @@ class FileWrapper(static private object f,
 
   void close()
   {
-    ftpsession->touch_me();
+    if (ftpsession)
+      ftpsession->touch_me();
     if (f) {
       f->set_blocking();
       BACKEND_CLOSE(f);
     }
+  }
+
+  string query_address(int|void loc)
+  {
+    if (!f->query_address) {
+      werror("%O->query_address(%O)\n", f, loc);
+    }
+    return f->query_address(loc);
   }
 }
 
@@ -322,7 +361,7 @@ class ToAsciiWrapper
 
   int converted;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\r\n", "\r\n", "\r\n" })));
@@ -335,7 +374,7 @@ class FromAsciiWrapper
 
   int converted;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
 #ifdef __NT__
@@ -356,7 +395,7 @@ class BinaryWrapper
 {
   inherit FileWrapper;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     return(s);
   }
@@ -370,9 +409,9 @@ class ToEBCDICWrapper
 
   int converted;
 
-  static object converter = Locale.Charset.encoder("EBCDIC-US", "");
+  protected object converter = Locale.Charset.encoder("EBCDIC-US", "");
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(converter->feed(s)->drain());
@@ -385,9 +424,9 @@ class FromEBCDICWrapper
 
   int converted;
 
-  static object converter = Locale.Charset.decoder("EBCDIC-US");
+  protected object converter = Locale.Charset.decoder("EBCDIC-US");
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(converter->feed(s)->drain());
@@ -395,17 +434,28 @@ class FromEBCDICWrapper
 }
 
 
-class PutFileWrapper(static object from_fd,
-		     static object session,
-		     static object ftpsession)
+class PutFileWrapper
 {
-  static int response_code = 226;
-  static string response = "Stored.";
-  static string gotdata = "";
-  static int closed, recvd;
-  static function other_read_callback;
+  protected int response_code = 226;
+  protected array(string) response = ({"Stored."});
+  protected string gotdata = "";
+  protected int closed, recvd;
+  protected function other_read_callback;
 
-#include <variables.h>
+  protected object from_fd;
+  protected object session;
+  protected object ftpsession;
+
+  int is_file;
+
+  protected void create(object from_fd_, object session_, object ftpsession_)
+  {
+    from_fd = from_fd_;
+    session = session_;
+    ftpsession = ftpsession_;
+
+    is_file = from_fd->is_file;
+  }
 
   int bytes_received()
   {
@@ -417,13 +467,12 @@ class PutFileWrapper(static object from_fd,
     DWRITE("FTP: PUT: close()\n");
     ftpsession->touch_me();
     if(how != "w" && !closed) {
-      ftpsession->send(response_code, ({ response }));
+      ftpsession->send(response_code, response);
       closed = 1;
       session->conf->received += recvd;
       session->file->len = recvd;
       session->conf->log(session->file, session);
-      session->file = 0;
-      session->my_fd = from_fd;
+      destruct(session);
     }
     if (how) {
       return from_fd->close(how);
@@ -443,7 +492,7 @@ class PutFileWrapper(static object from_fd,
     return r;
   }
 
-  static mixed my_read_callback(mixed id, string data)
+  protected mixed my_read_callback(mixed id, string data)
   {
     DWRITE("FTP: PUT: my_read_callback(X, \"%s\")\n", data||"");
     ftpsession->touch_me();
@@ -500,7 +549,7 @@ class PutFileWrapper(static object from_fd,
         else
           code = 550;
 	response_code = code;
-        response = msg;
+	response = ({msg});
       }
       gotdata = gotdata[n+1..];
     }
@@ -516,7 +565,10 @@ class PutFileWrapper(static object from_fd,
     }
 
     // Cut away the code.
-    response = ((result->rettext || errors[result->error])/" ")[1..] * " ";
+    if (result->rettext)
+      response = result->rettext / "\n";
+    else
+      response = ({Roxen.http_status_messages[result->error] || ""});
     gotdata = result->data || "";
 
     close();
@@ -524,6 +576,9 @@ class PutFileWrapper(static object from_fd,
 
   string query_address(int|void loc)
   {
+    if (!from_fd->query_address) {
+      werror("%O->query_address(%O)\n", from_fd, loc);
+    }
     return from_fd->query_address(loc);
   }
 }
@@ -552,10 +607,10 @@ class PutFileWrapper(static object from_fd,
 #define LS_FLAG_U       0x40000
 #define LS_FLAG_v	0x80000
 
-class LS_L(static RequestID master_session,
-	   static int|void flags)
+class LS_L(protected RequestID master_session,
+	   protected int|void flags)
 {
-  static constant decode_mode = ({
+  protected constant decode_mode = ({
     ({ S_IRUSR, S_IRUSR, 1, "r" }),
     ({ S_IWUSR, S_IWUSR, 2, "w" }),
     ({ S_IXUSR|S_ISUID, S_IXUSR, 3, "x" }),
@@ -573,10 +628,10 @@ class LS_L(static RequestID master_session,
     ({ S_IXOTH|S_ISVTX, S_IXOTH|S_ISVTX, 9, "t" })
   });
 
-  static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  static string name_from_uid(int uid)
+  protected string name_from_uid(int uid)
   {
     User user;
     foreach(master_session->conf->user_databases(), UserDB user_db) {
@@ -615,7 +670,10 @@ class LS_L(static RequestID master_session,
 	user = name_from_uid(st[5]);
       }
 
-      // FIXME: Convert st[6] to symbolic group name.
+      if (!stringp(st[6])) {
+	// FIXME: Convert st[6] to symbolic group name.
+	if (!st[6]) group = "wheel";
+      }
     }
 
     string ts;
@@ -647,37 +705,36 @@ class LS_L(static RequestID master_session,
 
 class LSFile
 {
-  static inherit LS_L;
+  protected inherit LS_L;
 
-  static string cwd;
-  static array(string) argv;
-  static object ftpsession;
+  protected string cwd;
+  protected array(string) argv;
+  protected object ftpsession;
 
-  static array(string) output_queue = ({});
-  static int output_pos;
-  static string output_mode = "A";
+  protected array(string) output_queue = ({});
+  protected int output_pos;
+  protected string output_mode = "A";
 
-  static mapping(string:array|object) stat_cache = ([]);
+  protected mapping(string:array|object) stat_cache = ([]);
 
-  static object conv;
+  protected object conv;
 
-  static array|object stat_file(string long, RequestID|void session)
+  protected array|object stat_file(string long, RequestID|void session)
   {
     array|object st = stat_cache[long];
     if (zero_type(st)) {
-      if (!session) {
-	session = RequestID2(master_session);
-	session->method = "DIR";
-      }
+      session = RequestID2(session || master_session);
+      session->method = "DIR";
       long = replace(long, "//", "/");
       st = session->conf->stat_file(long, session);
       stat_cache[long] = st;
+      destruct(session);
     }
     return st;
   }
 
   // FIXME: Should convert output somewhere below.
-  static void output(string s)
+  protected void output(string s)
   {
     if(stringp(s)) {
       // ls is always ASCII-mode...
@@ -690,7 +747,7 @@ class LSFile
     output_queue += ({ s });
   }
 
-  static string quote_non_print(string s)
+  protected string quote_non_print(string s)
   {
     return(replace(s, ({
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
@@ -707,7 +764,7 @@ class LSFile
     })));
   }
 
-  static string list_files(array(string) files, string|void dir)
+  protected string list_files(array(string) files, string|void dir)
   {
     dir = dir || cwd;
 
@@ -807,18 +864,18 @@ class LSFile
   }
 
 #if constant (ADT.Stack)
-  static ADT.Stack dir_stack = ADT.Stack();
+  protected ADT.Stack dir_stack = ADT.Stack();
 #else
-  static object(Stack.stack) dir_stack = Stack.stack();
+  protected object(Stack.stack) dir_stack = Stack.stack();
 #endif
-  static int name_directories;
+  protected int name_directories;
 
-  static string fix_path(string s)
+  protected string fix_path(string s)
   {
     return(combine_path(cwd, s));
   }
 
-  static void list_next_directory()
+  protected void list_next_directory()
   {
     if (dir_stack->ptr) {
       string short = dir_stack->pop();
@@ -835,6 +892,8 @@ class LSFile
       err = catch {
 	dir = session->conf->find_dir_stat(long, session);
       };
+
+      destruct(session);
 
       if (err) {
 	report_error("FTP: LSFile->list_next_directory(): "
@@ -926,7 +985,7 @@ class LSFile
     return -1;
   }
 
-  static mixed id;
+  protected mixed id;
 
   void set_id(mixed i)
   {
@@ -1002,6 +1061,7 @@ class LSFile
 	output(short + ": not found\n");
 	session->conf->log(([ "error":404 ]), session);
       }
+      destruct(session);
     }
 
     DWRITE("FTP: LSFile: %d files, %d directories\n",
@@ -1017,6 +1077,7 @@ class LSFile
       session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
+      destruct(session);
     }
     if (dir_stack->ptr) {
       name_directories = dir_stack->ptr &&
@@ -1030,16 +1091,16 @@ class LSFile
 }
 
 class TelnetSession {
-  static object fd;
-  static object conf;
+  protected object fd;
+  protected object conf;
 
-  static private mapping cb;
-  static private mixed id;
-  static private function(mixed|void:string) write_cb;
-  static private function(mixed, string:void) read_cb;
-  static private function(mixed|void:void) close_cb;
+  private mapping cb;
+  private mixed id;
+  private function(mixed|void:string) write_cb;
+  private function(mixed, string:void) read_cb;
+  private function(mixed|void:void) close_cb;
 
-  static private constant TelnetCodes = ([
+  private constant TelnetCodes = ([
     236:"EOF",		// End Of File
     237:"SUSP",		// Suspend Process
     238:"ABORT",	// Abort Process
@@ -1065,9 +1126,9 @@ class TelnetSession {
   ]);
 
   // Some prototypes needed by Pike 0.5
-  static private void got_data(mixed ignored, string s);
-  static private void send_data();
-  static private void got_oob(mixed ignored, string s);
+  private void got_data(mixed ignored, string s);
+  private void send_data();
+  private void got_oob(mixed ignored, string s);
 
   void set_write_callback(function(mixed|void:string) w_cb)
   {
@@ -1077,13 +1138,13 @@ class TelnetSession {
     }
   }
 
-  static private string to_send = "";
-  static private void send(string s)
+  private string to_send = "";
+  private void send(string s)
   {
     to_send += s;
   }
 
-  static private void send_data()
+  private void send_data()
   {
     if (!sizeof(to_send)) {
       to_send = write_cb(id);
@@ -1122,8 +1183,12 @@ class TelnetSession {
     }
   }
 
-  static private mapping(string:function) default_cb = ([
+  private mapping(string:function) default_cb = ([
     "BRK":lambda() {
+	    if (fd) {
+	      fd->close();
+	      fd = 0;
+	    }
 	    destruct();
 	    throw(0);
 	  },
@@ -1138,9 +1203,9 @@ class TelnetSession {
 	 },
   ]);
 
-  static private int sync = 0;
+  private int sync = 0;
 
-  static private void got_oob(mixed ignored, string s)
+  private void got_oob(mixed ignored, string s)
   {
     DWRITE("TELNET: got_oob(\"%s\")\n", s);
 
@@ -1150,8 +1215,8 @@ class TelnetSession {
     }
   }
 
-  static private string rest = "";
-  static private void got_data(mixed ignored, string s)
+  private string rest = "";
+  private void got_data(mixed ignored, string s)
   {
     DWRITE("TELNET: got_data(\"%s\")\n", s);
 
@@ -1166,6 +1231,9 @@ class TelnetSession {
     // RFC 1123 4.1.2.10
 
     array lines = s/"\r\n";
+
+    // Censor the raw string.
+    s = sprintf("string(%d bytes)", sizeof(s));
 
     int lineno;
     for(lineno = 0; lineno < sizeof(lines); lineno++) {
@@ -1286,7 +1354,7 @@ class FTPSession
 
   inherit "roxenlib";
 
-  static private constant cmd_help = ([
+  private constant cmd_help = ([
     // FTP commands in reverse RFC order.
 
     // The following is a command suggested by the author of ncftp.
@@ -1306,6 +1374,16 @@ class FTPSession
     // These are from RFC 2428
     "EPRT":"<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)",
     "EPSV":"[<sp> net-prt|ALL] (Extended Address Passive Mode)",
+
+    // These are from RFC 2228 (FTP Security Extensions)
+    "AUTH":"security-mechanism (Authentication/Security Mechanism)",
+    "ADAT":"security-data (Authentication/Security Data)",
+    "PBSZ":"<sp> size (Protection Buffer SiZe)",
+    "PROT":"<sp> [ C | S | E | P ] (Data Channel Protection Level)",
+    "CCC":"(Clear Command Channel)",
+    "MIC":"command (Integrity Protected Command)",
+    "CONF":"command (Confidentiality Protected Command)",
+    "ENC":"command (Privacy Protected Command)",
 
     // These are in RFC 1639
     "LPRT":"<sp> <long-host-port> (Long Port)",
@@ -1389,31 +1467,31 @@ class FTPSession
     "MLFL":"(Mail file)",
   ]);
 
-  static private constant site_help = ([
+  private constant site_help = ([
     "CHMOD":"<sp> mode <sp> file",
     "UMASK":"<sp> mode",
     "PRESTATE":"<sp> prestate",
   ]);
 
-  static private constant modes = ([
+  private constant modes = ([
     "A":"ASCII",
     "E":"EBCDIC",
     "I":"BINARY",
     "L":"LOCAL",
   ]);
 
-  static private int time_touch = time();
+  private int time_touch = time();
 
-  static private object(ADT.Queue) to_send = ADT.Queue();
+  private object(ADT.Queue) to_send = ADT.Queue();
 
-  static private int end_marker = 0;
+  private int end_marker = 0;
 
   void touch_me()
   {
     time_touch = time();
   }
 
-  static private string write_cb()
+  private string write_cb()
   {
     touch_me();
 
@@ -1442,6 +1520,8 @@ class FTPSession
     }
   }
 
+  int(0..1) busy;
+
   void send(int code, array(string) data, int|void enumerate_all)
   {
     DWRITE("FTP2: send(%d, %O)\n", code, data);
@@ -1449,6 +1529,11 @@ class FTPSession
     if (!data || end_marker) {
       end_marker = 1;
       ::set_write_callback(write_cb);
+      if (code >= 200) {
+	// Command finished, get the next.
+	busy = 0;
+	next_cmd();
+      }
       return;
     }
 
@@ -1477,28 +1562,33 @@ class FTPSession
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
     }
+    if (code >= 200) {
+      // Command finished, get the next.
+      busy = 0;
+      next_cmd();
+    }
   }
 
-  static private RequestID master_session;
+  private RequestID master_session;
 
-  static private string dataport_addr;
-  static private int dataport_port;
+  private string dataport_addr;
+  private int dataport_port;
 
-  static private string mode = "A";
+  private string mode = "A";
 
-  static private string cwd = "/";
+  private string cwd = "/";
 
-  static private User auth_user;
-  //! Authenticated user.
+  private User auth_user;
+  // Authenticated user.
 
-  static private string user;
-  static private string password;
-  static private int logged_in;
+  private string user;
+  private string password;
+  private int logged_in;
 
-  static private object curr_pipe;
-  static private int restart_point;
+  private object curr_pipe;
+  private int restart_point;
 
-  static private multiset|int allowed_shells = 0;
+  private multiset|int allowed_shells = 0;
 
   // On a multihomed server host, the default data transfer port
   // (L-1) MUST be associated with the same local IP address as
@@ -1506,6 +1596,7 @@ class FTPSession
   // RFC 1123 4.1.2.12
   string local_addr;
   int local_port;
+  string e_mode = "1";	/* IPv4 */
 
   // The listen port object
   roxen.Protocol port_obj;
@@ -1514,7 +1605,7 @@ class FTPSession
    * Misc
    */
 
-  static private int check_shell(string shell)
+  private int check_shell(string shell)
   {
     // FIXME: Should the shell database be protocol specific or
     // virtual-server specific?
@@ -1546,7 +1637,7 @@ class FTPSession
     return 1;
   }
 
-  static private string fix_path(string s)
+  private string fix_path(string s)
   {
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
@@ -1566,13 +1657,14 @@ class FTPSession
   /*
    * PASV handling
    */
-  static private object pasv_port;
-  static private function(object, mixed:void) pasv_callback;
-  static private mixed pasv_args;
-  static private array(object) pasv_accepted = ({});
+  private object pasv_port;
+  private function(object, mixed ...:void) pasv_callback;
+  private mixed pasv_args;
+  private array(object) pasv_accepted = ({});
 
   void pasv_accept_callback(mixed id)
   {
+    DWRITE("FTP: pasv_accept_callback(%O)...\n", id);
     touch_me();
 
     if(pasv_port) {
@@ -1588,6 +1680,10 @@ class FTPSession
 	mark_fd(fd->query_fd(),
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
+	if (use_ssl) {
+	  fd = SSL.sslfile (fd, port_obj->ctx);
+	  DWRITE("FTP: Created an sslfile: %O\n", fd);
+	}
 	if(pasv_callback) {
 	  pasv_callback(fd, "", @pasv_args);
 	  pasv_callback = 0;
@@ -1598,8 +1694,8 @@ class FTPSession
     }
   }
 
-  static private void ftp_async_accept(function(object,mixed ...:void) fun,
-				       mixed ... args)
+  private void ftp_async_accept(function(object,mixed ...:void) fun,
+				mixed ... args)
   {
     DWRITE("FTP: async_accept(%O, %@O)...\n", fun, args);
     touch_me();
@@ -1617,8 +1713,8 @@ class FTPSession
    * PORT handling
    */
 
-  static private void ftp_async_connect(function(object,string,mixed ...:void) fun,
-					mixed ... args)
+  private void ftp_async_connect(function(object,string,mixed ...:void) fun,
+				 mixed ... args)
   {
     DWRITE("FTP: async_connect(%O, %@O)...\n", fun, args);
 
@@ -1636,7 +1732,7 @@ class FTPSession
     //        until the socket has been connected.
 
     object privs;
-    if(local_port-1 < 1024)
+    if(local_port-1 < 1024 && geteuid())
       privs = Privs("FTP: Opening the data connection on " + local_addr +
 		    ":" + (local_port-1) + ".");
 
@@ -1660,15 +1756,26 @@ class FTPSession
     }
     privs = 0;
 
+    Stdio.File raw_connection = f;
+
+    if (use_ssl) {
+      f = (object) SSL.sslfile (f, port_obj->ctx, 1, 0);
+    }
+
     f->set_nonblocking(lambda(mixed ignored, string data) {
 			 DWRITE("FTP: async_connect ok. Got data.\n");
-			 f->set_nonblocking(0,0,0);
+			 f->set_nonblocking(0,0,0,0,0);
 			 fun(f, data, @args);
 		       },
 		       lambda(mixed ignored) {
 			 DWRITE("FTP: async_connect ok.\n");
-			 f->set_nonblocking(0,0,0);
+			 f->set_nonblocking(0,0,0,0,0);
 			 fun(f, "", @args);
+		       },
+		       lambda(mixed ignored) {
+			 DWRITE("FTP: connect_and_send failed\n");
+			 destruct(f);
+			 fun(0, 0, @args);
 		       },
 		       lambda(mixed ignored) {
 			 DWRITE("FTP: connect_and_send failed\n");
@@ -1677,12 +1784,24 @@ class FTPSession
 		       });
 
 #ifdef FD_DEBUG
-    mark_fd(f->query_fd(), sprintf("ftp communication: %s:%d -> %s:%d",
-				   local_addr, local_port - 1,
-				   dataport_addr, dataport_port));
+    mark_fd(raw_connection->query_fd(),
+	    sprintf("ftp communication: %s:%d -> %s:%d",
+		    local_addr, local_port - 1,
+		    dataport_addr, dataport_port));
 #endif
 
-    if(catch(f->connect(dataport_addr, dataport_port))) {
+    if(catch{
+	if (!(raw_connection->connect(dataport_addr, dataport_port))) {
+	  DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
+		 "FTP: local_addr: %O:%O (%O)\n",
+		 dataport_addr, dataport_port,
+		 strerror(raw_connection->errno()),
+		 local_addr, local_port-1, raw_connection->query_address(1));
+	  destruct(f);
+	  fun(0, 0, @args);
+	  return;
+	}
+      }) {
       DWRITE("FTP: Illegal internet address in connect in async comm.\n");
       destruct(f);
       fun(0, 0, @args);
@@ -1693,7 +1812,7 @@ class FTPSession
   /*
    * Data connection handling
    */
-  static private void send_done_callback(array(object) args)
+  private void send_done_callback(array(object) args)
   {
     DWRITE("FTP: send_done_callback()\n");
 
@@ -1702,10 +1821,13 @@ class FTPSession
 
     if(fd)
     {
+      //DWRITE("FTP: fd: %O: %O\n", fd, mkmapping(indices(fd), values(fd)));
       if (fd->set_blocking) {
 	fd->set_blocking();       // Force close() to flush any buffers.
       }
-      BACKEND_CLOSE(fd);
+      call_out(fd->close, 0);
+      fd = 0;
+      //BACKEND_CLOSE(fd);
     }
     curr_pipe = 0;
 
@@ -1713,20 +1835,17 @@ class FTPSession
       session->conf->log(session->file, session);
       session->file = 0;
     }
-
+    destruct(session);
     send(226, ({ "Transfer complete." }));
   }
 
-  static private mapping|array|object stat_file(string fname,
-						object|void session)
+  private mapping|array|object stat_file(string fname,
+					 object|void session)
   {
     mapping file;
 
-    if (!session) {
-      session = RequestID2(master_session);
-      session->method = "STAT";
-    }
-
+    session = RequestID2(session || master_session);
+    session->method = "STAT";
     session->not_query = fname;
 
     foreach(conf->first_modules(), function funp) {
@@ -1737,12 +1856,13 @@ class FTPSession
 
     if (!file) {
       fname = replace(fname, "//", "/");
-      return(conf->stat_file(fname, session));
+      file = conf->stat_file(fname, session);
     }
-    return(file);
+    destruct(session);
+    return file;
   }
 
-  static private int expect_argument(string cmd, string args)
+  private int expect_argument(string cmd, string args)
   {
     if ((< "", 0 >)[args]) {
       send(504, ({ sprintf("Syntax: %s %s", cmd, cmd_help[cmd]) }));
@@ -1751,8 +1871,8 @@ class FTPSession
     return 1;
   }
 
-  static private void send_error(string cmd, string f, mapping file,
-				 object session)
+  private void send_error(string cmd, string f, mapping file,
+			  object session)
   {
     switch(file && file->error) {
     case 301:
@@ -1765,12 +1885,15 @@ class FTPSession
       }
       break;
     case 401:
-    case 403:
       send(530, ({ sprintf("'%s': %s: Access denied.",
 			   cmd, f) }));
       break;
+    case 403:
+      send(451, ({ sprintf("'%s': %s: Forbidden.",
+			   cmd, f) }));
+      break;
     case 405:
-      send(530, ({ sprintf("'%s': %s: Method not allowed.",
+      send(550, ({ sprintf("'%s': %s: Method not allowed.",
 			   cmd, f) }));
       break;
     case 500:
@@ -1788,16 +1911,20 @@ class FTPSession
     session->conf->log(file, session);
   }
 
-  static private int open_file(string fname, object session, string cmd)
+  private mapping open_file(string fname, object session, string cmd)
   {
     object|array|mapping file;
 
     file = stat_file(fname, session);
 
+    // The caller is assumed to have made a new session object for us
+    // but not to set not_query in it..
+    session->not_query = fname;
+
     if (objectp(file) || arrayp(file)) {
       array|object st = file;
       file = 0;
-      if (st && (st[1] < 0) && !((<"RMD", "CHMOD">)[cmd])) {
+      if (st && (st[1] < 0) && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
 	send(550, ({ sprintf("%s: not a plain file.", fname) }));
 	return 0;
       }
@@ -1808,7 +1935,7 @@ class FTPSession
 	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
 	return 0;
       }
-    } else if ((< "STOR", "APPE", "MKD", "MOVE" >)[cmd]) {
+    } else if ((< "STOR", "APPE", "MKD", "XMKD", "MOVE" >)[cmd]) {
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	report_error("FTP: Error opening file \"%s\"\n"
@@ -1818,6 +1945,8 @@ class FTPSession
       }
     }
 
+    // file is a mapping.
+
     session->file = file;
 
     if (!file || (file->error && (file->error >= 300))) {
@@ -1826,6 +1955,11 @@ class FTPSession
       return 0;
     }
 
+    //  If data is a wide string we flatten it according to the charset
+    //  preferences in the current ID object.
+    if (file->data && String.width(file->data) > 8)
+      file->data = session->output_encode(file->data, 0)[1];
+    
     file->full_path = fname;
     file->request_start = time(1);
 
@@ -1838,13 +1972,13 @@ class FTPSession
       }
     }
 
-    return 1;
+    return file;
   }
 
-  static private void connected_to_send(object fd, string ignored,
-					mapping file, object session)
+  private void connected_to_send(object fd, string ignored,
+				 mapping file, object session)
   {
-    DWRITE("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file);
+    DWRITE("FTP: connected_to_send(%O, %O, %O, X)\n", fd, ignored, file);
 
     touch_me();
 
@@ -1868,6 +2002,7 @@ class FTPSession
     else
     {
       send(425, ({ "Can't build data connect: Connection refused." }));
+      destruct(session);
       return;
     }
     switch(file->mode) {
@@ -1951,7 +2086,7 @@ class FTPSession
     pipe->output(fd);
   }
 
-  static private void connected_to_receive(object fd, string data, string args)
+  private void connected_to_receive(object fd, string data, string args)
   {
     DWRITE("FTP: connected_to_receive(X, %O, %O)\n", data, args);
 
@@ -1985,12 +2120,13 @@ class FTPSession
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
 
-    if (open_file(args, session, "STOR")) {
-      if (!(session->file->pipe)) {
+    mapping file;
+    if (file = open_file(args, session, "STOR")) {
+      if (!(file->pipe)) {
 	if (fd) {
 	  BACKEND_CLOSE(fd);
 	}
-	switch(session->file->error) {
+	switch(file->error) {
 	case 401:
 	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
 	  break;
@@ -2004,24 +2140,26 @@ class FTPSession
 	  send(550, ({ sprintf("%s: Error opening file.", args) }));
 	  break;
 	}
-	session->conf->log(session->file, session);
+	session->conf->log(file, session);
+	destruct(session);
 	return;
       }
-      master_session->file = session->file;
+      master_session->file = file;
     } else {
       // Error message has already been sent.
       if (fd) {
 	BACKEND_CLOSE(fd);
       }
+      destruct(session);
     }
   }
 
-  static private void discard_data_connection() {
+  private void discard_data_connection() {
     if(pasv_port && sizeof(pasv_accepted))
       pasv_accepted = pasv_accepted[1..];
   }
 
-  static private void connect_and_send(mapping file, object session)
+  private void connect_and_send(mapping file, object session)
   {
     DWRITE("FTP: connect_and_send(%O)\n", file);
 
@@ -2032,7 +2170,7 @@ class FTPSession
     }
   }
 
-  static private void connect_and_receive(string arg)
+  private void connect_and_receive(string arg)
   {
     DWRITE("FTP: connect_and_receive(\"%s\")\n", arg);
 
@@ -2065,7 +2203,7 @@ class FTPSession
     }
   }
 
-  static private string my_combine_path(string base, string part)
+  private string my_combine_path(string base, string part)
   {
     if ((sizeof(part) && (part[0] == '/')) ||
         (sizeof(base) && (base[0] == '/'))) {
@@ -2088,11 +2226,11 @@ class FTPSession
     }
   }
 
-  static private constant IFS = (<" ", "\t">);
-  static private constant Quote = (< "\'", "\"", "\`", "\\" >);
-  static private constant Specials = IFS|Quote;
+  private constant IFS = (<" ", "\t">);
+  private constant Quote = (< "\'", "\"", "\`", "\\" >);
+  private constant Specials = IFS|Quote;
 
-  static private array(string) split_command_line(string cmdline)
+  private array(string) split_command_line(string cmdline)
   {
     // Check if we need to handle quoting at all...
     int need_quoting;
@@ -2155,7 +2293,7 @@ class FTPSession
     return res;
   }
 
-  static private array(string) glob_expand_command_line(string cmdline)
+  private array(string) glob_expand_command_line(string cmdline)
   {
     DWRITE("glob_expand_command_line(\"%s\")\n", cmdline);
 
@@ -2166,8 +2304,6 @@ class FTPSession
     for(index = 0; index < sizeof(args); index++) {
 
       // Glob-expand args[index]
-
-      array (int) st;
 
       // FIXME: Does not check if "*" or "?" was quoted!
       if (replace(args[index], ({"*", "?"}), ({ "", "" })) != args[index]) {
@@ -2204,6 +2340,7 @@ class FTPSession
                   }
                 }
               }
+	      destruct(id);
             }
             matches = new_matches;
           } else {
@@ -2236,8 +2373,10 @@ class FTPSession
 				   object id = RequestID2(m_id);
 				   id->method = "LIST";
 				   id->not_query = combine_path(cwd, short);
-				   return(id->conf->stat_file(id->not_query,
-							      id));
+				   mapping res =
+				     id->conf->stat_file(id->not_query, id);
+				   destruct(id);
+				   return res;
 				 }, cwd, master_session);
           if (sizeof(matches)) {
             args[index] = matches;
@@ -2256,7 +2395,7 @@ class FTPSession
    * LS handling
    */
 
-  static private constant ls_options = ({
+  private constant ls_options = ({
     ({ ({ "-A", "--almost-all" }),	LS_FLAG_A,
        "do not list implied . and .." }),
     ({ ({ "-a", "--all" }),		LS_FLAG_a|LS_FLAG_A,
@@ -2307,13 +2446,13 @@ class FTPSession
        "output version information and exit" }),
   });
 
-  static private array(array(string)|string|int)
+  private array(array(string)|string|int)
     ls_getopt_args = Array.map(ls_options,
 			       lambda(array(array(string)|int|string) entry) {
 				 return({ entry[1], Getopt.NO_ARG, entry[0] });
 			       });
 
-  static private string ls_help(string ls)
+  private string ls_help(string ls)
   {
     return sprintf("Usage: %s [OPTION]... [FILE]...\n"
 		   "List information about the FILEs "
@@ -2416,7 +2555,7 @@ class FTPSession
 
   string make_MDTM(int t)
   {
-    mapping lt = localtime(t);
+    mapping lt = gmtime(t);
     return sprintf("%04d%02d%02d%02d%02d%02d",
 		   lt->year + 1900, lt->mon + 1, lt->mday,
 		   lt->hour, lt->min, lt->sec);
@@ -2536,6 +2675,8 @@ class FTPSession
 
   // Set to 1 by EPSV ALL.
   int epsv_only;
+  // Set to 1 by PROT S,E and P, cleared by PROT C.
+  int use_ssl;
 
   void ftp_REIN(string|int args)
   {
@@ -2543,6 +2684,9 @@ class FTPSession
 
     // FIXME: What about EPSV ALL mode? RFC 2428 doesn't say.
     // I guess that it shouldn't be reset.
+
+    // Compatibility...
+    m_delete(master_session->misc, "home");
 
     dataport_addr = 0;
     dataport_port = 0;
@@ -2649,13 +2793,17 @@ class FTPSession
     master_session->misc->user = user;           // Loophole for new API
     master_session->misc->password = password;  // Otherwise we have to emulate
                                                // the Authentication header
+    // Compatibility...
+    m_delete(master_session->misc, "home");
 
-    auth_user = master_session->conf->authenticate(master_session);
+    RequestID2 session = RequestID2 (master_session);
+
+    auth_user = session->conf->authenticate(session);
 
     if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
 	send(530, ({ sprintf("User %s access denied.", user) }));
-	conf->log(([ "error":401 ]), master_session);
+	conf->log(([ "error":401 ]), session);
       } else {
 	// Guest user.
 	string u = user;
@@ -2663,27 +2811,49 @@ class FTPSession
 	if (login()) {
 	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
 	  logged_in = -1;
-	  conf->log(([ "error":200 ]), master_session);
-	  DWRITE("FTP: Guest-user: %O\n", master_session->realauth);
+	  conf->log(([ "error":200 ]), session);
+	  DWRITE("FTP: Guest-user: %O\n", session->realauth);
 	} else {
 	  send(530, ({
 	    sprintf("Too many anonymous/guest users (%d).",
 		    port_obj->query_option("ftp_user_session_limit"))
 	  }));
-	  conf->log(([ "error":403 ]), master_session);
+	  conf->log(([ "error":403 ]), session);
 	}
       }
+      destruct (session);
       return;
     }
 
     // Authentication successful
 
+    // Transfer entries traditionally set by auth modules in id->misc
+    // so that they get propagated to id->misc in all subsequent
+    // subrequests.
+    //
+    // We can't copy the whole misc mapping to the master RequestID;
+    // that can cause various stuff set during the auth check to be
+    // around for too long - the lifespan of id->misc must generally
+    // not be longer than a single (http style) request.
+    {
+      mapping ses_misc = session->misc, mses_misc = master_session->misc;
+      foreach (({"authenticated_user", "user", "password", "uid", "gid",
+		 "gecos", "home", "shell"}), string field) {
+	mixed val = ses_misc[field];
+	if (zero_type (val))
+	  m_delete (mses_misc, field);
+	else
+	  mses_misc[field] = val;
+      }
+    }
+
     if (!port_obj->query_option("named_ftp") ||
-	!check_shell(master_session->misc->shell)) {
+	!check_shell(auth_user->shell())) {
       send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
-      conf->log(([ "error":402 ]), master_session);
+      conf->log(([ "error":402 ]), session);
       auth_user = 0;
+      destruct (session);
       return;
     }
 
@@ -2692,27 +2862,35 @@ class FTPSession
 	sprintf("Too many concurrent sessions (limit is %d).",
 		port_obj->query_option("ftp_user_session_limit"))
       }));
-      conf->log(([ "error":403 ]), master_session);
+      conf->log(([ "error":403 ]), session);
+      destruct (session);
       return;
     }
 
-    if (stringp(master_session->misc->home)) {
+    if (stringp(auth_user->homedir())) {
       // Check if it is possible to cd to the users home-directory.
-      if ((master_session->misc->home == "") ||
-	  (master_session->misc->home[-1] != '/')) {
-	master_session->misc->home += "/";
+      string home = auth_user->homedir();
+      if ((home == "") || (home[-1] != '/')) {
+	home += "/";
       }
 
-      array(int)|object st = conf->stat_file(master_session->misc->home,
-					     master_session);
+      // Compatibility...
+      master_session->misc->home = home;
+
+      RequestID2 stat_session = RequestID2(master_session);
+      stat_session->method = "STAT";
+      array(int)|object st = conf->stat_file(home, stat_session);
+      destruct(stat_session);
 
       if (st && (st[1] < 0)) {
-	cwd = master_session->misc->home;
+	cwd = home;
       }
     }
+
     logged_in = 1;
     send(230, ({ sprintf("User %s logged in.", user) }));
-    conf->log(([ "error":202 ]), master_session);
+    conf->log(([ "error":202 ]), session);
+    destruct (session);
   }
 
   void ftp_CWD(string args)
@@ -2737,12 +2915,14 @@ class FTPSession
       send(550, ({ sprintf("%s: No such file or directory, or access denied.",
 			   ncwd) }));
       session->conf->log(session->file || ([ "error":404 ]), session);
+      destruct(session);
       return;
     }
 
     if (!(< -2, -3 >)[st[1]]) {
       send(504, ({ sprintf("%s: Not a directory.", ncwd) }));
       session->conf->log(([ "error":400 ]), session);
+      destruct(session);
       return;
     }
 
@@ -2783,6 +2963,7 @@ class FTPSession
     session->method = "CWD";	// Restore it again.
     send(250, reply);
     session->conf->log(([ "error":200, "len":sizeof(reply*"\n") ]), session);
+    destruct(session);
   }
 
   void ftp_XCWD(string args)
@@ -2818,6 +2999,38 @@ class FTPSession
     ftp_QUIT(args);
   }
 
+  void ftp_PBSZ(string args)
+  {
+    if (!expect_argument("PROT", args)) return;
+
+    send(200, ({ "PBSZ=0" }));
+  }
+
+  void ftp_PROT(string args)
+  {
+    if (!expect_argument("PROT", args)) return;
+
+    args = upper_case(replace(args, ({ " ", "\t" }), ({ "", "" })));
+    switch(args) {
+    case "C": // Clear.
+      use_ssl = 0;
+      break;
+    case "S": // Safe.
+    case "E": // Confidential.
+    case "P": // Private.
+      if (!port_obj->ctx) {
+	send(536, ({ sprintf("Only supported over FTPS") }));
+	return;
+      }
+      use_ssl = 1;
+      break;
+    default:
+      send(504, ({ sprintf("Unknown protection level: %s", args) }));
+      return;
+    }
+    send(200, ({ "OK" }));
+  }
+
   void ftp_PORT(string args)
   {
     if (epsv_only) {
@@ -2843,6 +3056,8 @@ class FTPSession
 
   void ftp_EPRT(string args)
   {
+    // Specified by RFC 2428:
+    // Extensions for IPv6 and NATs.
     if (epsv_only) {
       send(530, ({ "'EPRT': Method not allowed in EPSV ALL mode." }));
       return;
@@ -2859,21 +3074,31 @@ class FTPSession
     }
     array(string) segments = args/delimiter;
 
-    if (sizeof(args) != 4) {
+    if (sizeof(segments) != 5) {
       send(501, ({ "I don't understand your parameters." }));
       return;
     }
-    if (segments[1] != "1") {
-      // FIXME: No support for IPv6 yet.
-      send(522, ({ "Network protocol not supported, use (1)" }));
+    if (!(<"1","2">)[segments[1]]) {
+      send(522, ({ "Network protocol not supported, use (1 or 2)" }));
       return;
     }
-    if ((sizeof(segments[2]/".") != 4) ||
-	sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
-      send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
-      return;
+    if (segments[1] == "1") {
+      // IPv4.
+      if ((sizeof(segments[2]/".") != 4) ||
+	  sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
+	send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
+	return;
+      }
+    } else {
+      // IPv6.
+      // FIXME: Improve the validation?
+      if (sizeof(replace(lower_case(segments[2]), ".:0123456789abcdef"/"",
+			 allocate(18, "")))) {
+	send(501, ({ sprintf("Bad IPv6 address: '%s'", segments[2]) }));
+	return;
+      }
     }
-    if (!((int)segments[3])) {
+    if ((((int)segments[3]) <= 0) || (((int)segments[3]) > 65535)) {
       send(501, ({ sprintf("Bad port number: '%s'", segments[3]) }));
       return;
     }
@@ -2895,6 +3120,11 @@ class FTPSession
 
     if (epsv_only) {
       send(530, ({ "'PASV': Method not allowed in EPSV ALL mode." }));
+      return;
+    }
+
+    if (e_mode != "1") {
+      send(530, ({ "'PASV': Method not allowed on IPv6 connections." }));
       return;
     }
 
@@ -2924,7 +3154,7 @@ class FTPSession
 	return;
       }
     }
-    send(227, ({ sprintf("Entering Passive Mode. %s,%d,%d",
+    send(227, ({ sprintf("Entering Passive Mode. (%s,%d,%d)",
 			 replace(local_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
   }
@@ -2936,18 +3166,18 @@ class FTPSession
     int min;
     int max;
 
-    if (args && args != "1") {
+    if (!(< 0, e_mode >)[args]) {
       if (lower_case(args) == "all") {
 	epsv_only = 1;
 	send(200, ({ "Entering EPSV ALL mode." }));
       } else {
-	// FIXME: No support for IPv6 yet.
-	send(522, ({ "Network protocol not supported, use (1)" }));
+	send(522, ({ "Network protocol not supported, use " + e_mode + "." }));
       }
       return;
     }
     if (pasv_port)
       destruct(pasv_port);
+
     pasv_port = Stdio.Port(0, pasv_accept_callback, local_addr);
     /* FIXME: Hmm, getting the address from an anonymous port seems not
      * to work on NT...
@@ -2958,7 +3188,7 @@ class FTPSession
     max = port_obj->query_option("passive_port_max");
     if ((port < min) || (port > max)) {
       if (max > 65535) max = 65535;
-      if (min < 0) min = 0;
+      if (min < 1) min = 1;
       for (port = min; port <= max; port++) {
 	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
 	  break;
@@ -3018,33 +3248,37 @@ class FTPSession
     session->method = "GET";
     session->not_query = args;
 
-    if (open_file(args, session, "RETR")) {
+    mapping file;
+    if (file = open_file(args, session, "RETR")) {
       if (restart_point) {
-	if (session->file->data) {
-	  if (sizeof(session->file->data) >= restart_point) {
-	    session->file->data = session->file->data[restart_point..];
+	if (file->data) {
+	  if (sizeof(file->data) >= restart_point) {
+	    file->data = file->data[restart_point..];
 	    restart_point = 0;
 	  } else {
-	    restart_point -= sizeof(session->file->data);
-	    m_delete(session->file, "data");
+	    restart_point -= sizeof(file->data);
+	    m_delete(file, "data");
 	  }
 	}
 	if (restart_point) {
-	  if (!(session->file->file && session->file->file->seek &&
-		(session->file->file->seek(restart_point) != -1))) {
+	  if (!(file->file && file->file->seek &&
+		(file->file->seek(restart_point) != -1))) {
 	    restart_point = 0;
 	    send(550, ({ "'RETR': Error restoring restart point." }));
 	    discard_data_connection();
+	    destruct(session);
 	    return;
 	  }
 	  restart_point = 0;
 	}
       }
 
-      connect_and_send(session->file, session);
+      connect_and_send(file, session);
     }
-    else
+    else {
       discard_data_connection();
+      destruct(session);
+    }
   }
 
   void ftp_STOR(string args)
@@ -3093,7 +3327,7 @@ class FTPSession
    * Handling of file moving
    */
 
-  static private string rename_from; // rename from
+  private string rename_from; // rename from
 
   void ftp_RNFR(string args)
   {
@@ -3102,11 +3336,7 @@ class FTPSession
     }
     args = fix_path(args);
 
-    RequestID session = RequestID2(master_session);
-
-    session->method = "STAT";
-
-    if (stat_file(args, session)) {
+    if (stat_file(args)) {
       send(350, ({ sprintf("%s ok, waiting for destination name.", args) }) );
       rename_from = args;
     } else {
@@ -3135,6 +3365,7 @@ class FTPSession
       session->conf->log(([ "error":200 ]), session);
     }
     rename_from = 0;
+    destruct(session);
   }
 
 
@@ -3171,6 +3402,7 @@ class FTPSession
     } else {
       send_error("MLST", args, session->file, session);
     }
+    destruct(session);
   }
 
   void ftp_MLSD(string args)
@@ -3191,12 +3423,14 @@ class FTPSession
       session->file = ([]);
       session->file->full_path = args;
       send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+      // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
 	session->file->error = 405;
       }
       send_error("MLSD", args, session->file, session);
       discard_data_connection();
+      destruct(session);
     }
   }
 
@@ -3210,15 +3444,15 @@ class FTPSession
 
     RequestID session = RequestID2(master_session);
 
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
     session->method = "DELETE";
 
     if (open_file(args, session, "DELE")) {
       send(250, ({ sprintf("%s deleted.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_RMD(string args)
@@ -3231,7 +3465,7 @@ class FTPSession
 
     RequestID session = RequestID2(master_session);
 
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
     session->method = "DELETE";
 
@@ -3239,6 +3473,7 @@ class FTPSession
 
     if (!st) {
       send_error("RMD", args, session->file, session);
+      destruct(session);
       return;
     } else if (st[1] != -2) {
       if (st[1] == -3) {
@@ -3248,14 +3483,15 @@ class FTPSession
 	send(504, ({ sprintf("%s is not a directory.", args) }));
 	session->conf->log(([ "error":405 ]), session);
       }
+      destruct(session);
       return;
     }
 
     if (open_file(args, session, "RMD")) {
       send(250, ({ sprintf("%s deleted.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_XRMD(string args)
@@ -3274,14 +3510,14 @@ class FTPSession
     RequestID session = RequestID2(master_session);
 
     session->method = "MKDIR";
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
 
     if (open_file(args, session, "MKD")) {
       send(257, ({ sprintf("\"%s\" created.", args) }));
       session->conf->log(([ "error":200 ]), session);
-      return;
     }
+    destruct(session);
   }
 
   void ftp_XMKD(string args)
@@ -3328,15 +3564,13 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
-    mapping|array|object st = stat_file(args, session);
+    mapping|array|object st = stat_file(args);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("MDTM", args, st, session);
-      return;
+      send_error("MDTM", args, st, master_session);
+    } else {
+      send(213, ({ make_MDTM(st[3]) }));
     }
-    send(213, ({ make_MDTM(st[3]) }));
   }
 
   void ftp_SIZE(string args)
@@ -3346,21 +3580,19 @@ class FTPSession
     }
     args = fix_path(args);
 
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
-    mapping|array|object st = stat_file(args, session);
+    mapping|array|object st = stat_file(args);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("SIZE", args, st, session);
+      send_error("SIZE", args, st, master_session);
       return;
     }
     int size = st[1];
     if (size < 0) {
-      send_error("SIZE", args, ([ "error":405, ]), session);
-      return;
+      send_error("SIZE", args, ([ "error":405, ]), master_session);
       // size = 512;
+    } else {
+      send(213, ({ (string)size }));
     }
-    send(213, ({ (string)size }));
   }
 
   void ftp_STAT(string args)
@@ -3381,6 +3613,20 @@ class FTPSession
        * should include current values of all transfer parameters and
        * the status of connections.
        */
+      string local_addr = fd->query_address(1);
+      if (has_value(local_addr, ":")) {
+	// IPv6.
+	local_addr = "[" + replace(local_addr, " ", "]:");
+      } else {
+	local_addr = replace(local_addr, " ", ":");
+      }
+      string remote_addr = fd->query_address();
+      if (has_value(remote_addr, ":")) {
+	// IPv6.
+	remote_addr = "[" + replace(remote_addr, " ", "]:");
+      } else {
+	remote_addr = replace(remote_addr, " ", ":");
+      }
       send(211,
 	   sprintf("%s FTP server status:\n"
 		   "Version %s\n"
@@ -3389,10 +3635,10 @@ class FTPSession
 		   "Logged in %s\n"
 		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
 		   "End of status",
-		   replace(fd->query_address(1), " ", ":"),
+		   local_addr,
 		   roxen.version(),
 		   port_obj->sorted_urls * "\nListening on ",
-		   replace(fd->query_address(), " ", ":"),
+		   remote_addr,
 		   user?sprintf("as %s", user):"anonymously",
 		   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
 		   [mode],
@@ -3403,20 +3649,17 @@ class FTPSession
       return;
     }
     string long = fix_path(args);
-    RequestID session = RequestID2(master_session);
-    session->method = "STAT";
     mapping|array|object st = stat_file(long);
 
     if (!arrayp(st) && !objectp(st)) {
-      send_error("STAT", long, st, session);
-      return;
+      send_error("STAT", long, st, master_session);
+    } else {
+      string s = LS_L(master_session)->ls_l(args, st);
+
+      send(213, sprintf("status of \"%s\":\n"
+			"%s"
+			"End of Status", args, s)/"\n");
     }
-
-    string s = LS_L(master_session)->ls_l(args, st);
-
-    send(213, sprintf("status of \"%s\":\n"
-		      "%s"
-		      "End of Status", args, s)/"\n");
   }
 
   void ftp_NOOP(string args)
@@ -3528,6 +3771,7 @@ class FTPSession
 			   fname, mode) }));
       session->conf->log(([ "error":200 ]), session);
     }
+    destruct(session);
   }
 
   void ftp_SITE_UMASK(array(string) args)
@@ -3573,7 +3817,7 @@ class FTPSession
     }
   }
 
-  static private void timeout()
+  private void timeout()
   {
     if (fd) {
       int t = (time() - time_touch);
@@ -3606,7 +3850,9 @@ class FTPSession
     }
   }
 
-  static private void got_command(mixed ignored, string line)
+  private ADT.Queue cmd_queue = ADT.Queue();
+
+  private void got_command(mixed ignored, string line)
   {
     DWRITE("FTP2: got_command(X, \"%s\")\n", line);
 
@@ -3634,6 +3880,28 @@ class FTPSession
       line = cmd + " CENSORED_PASSWORD";
     }
 
+    cmd_queue->put(({ line, cmd, args }));
+    if (!busy)
+      next_cmd();
+  }
+
+  private void next_cmd()
+  {
+    array(string|array(string)) cmd_entry = cmd_queue->get();
+    if (!cmd_entry) return;
+
+    string line = cmd_entry[0];
+    string cmd = cmd_entry[1];
+    array(string) args = cmd_entry[2];
+
+    busy = 1;
+
+    if (!line) {
+      // Command queue terminator.
+      terminate_connection();
+      return;
+    }
+
 #if 0
     if (!conf->extra_statistics) {
       conf->extra_statistics = ([ "ftp": (["commands":([ cmd:1 ])])]);
@@ -3655,8 +3923,14 @@ class FTPSession
 	  return;
 	}
       }
+      if (!port_obj->query_option("rfc2428_support") &&
+	  (< "EPRT", "EPSV" >)[cmd]) {
+	send(502, ({ sprintf("support for '%s' is disabled.", cmd) }));
+	return;
+      }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
+#if 1
 	mixed err;
 	if (err = catch {
 	  this_object()["ftp_"+cmd](args);
@@ -3665,6 +3939,18 @@ class FTPSession
 		       "Handling command %O\n%s\n",
 		       line, describe_backtrace(err));
 	}
+#else
+	roxen->handle(lambda(function f, string args, string line) {
+			mixed err;
+			if (err = catch {
+			  f(args);
+			}) {
+			  report_error("Internal server error in FTP2\n"
+				       "Handling command %O\n%s\n",
+				       line, describe_backtrace(err));
+			}
+		      }, this_object()["ftp_"+cmd], args, line);
+#endif
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
       }
@@ -3675,26 +3961,45 @@ class FTPSession
     touch_me();
   }
 
-  void con_closed()
+  private void terminate_connection()
   {
-    DWRITE("FTP2: con_closed()\n");
+    DWRITE("FTP2: terminate_connection()\n");
 
     logout();
+
+    if (pasv_port) {
+      destruct(pasv_port);
+      pasv_port = 0;
+    }
 
     master_session->method = "QUIT";
     master_session->not_query = user || "Anonymous";
     conf->log(([ "error":204, "request_time":(time(1)-master_session->time) ]),
 	      master_session);
-
-    if (fd) {
-      fd->close();
-    }
-    if (pasv_port) {
-      destruct(pasv_port);
-      pasv_port = 0;
-    }
     // Make sure we disappear...
     destruct();
+  }
+
+  void con_closed()
+  {
+    DWRITE("FTP2: con_closed()\n");
+
+    send(0, 0);		// EOF marker.
+
+    if (fd) {
+      // There's no reason to keep the command connection around any more.
+      fd->close();
+      destruct(fd);
+      fd = 0;
+    }
+
+    // Queue a command queue terminator.
+    // This will terminate the connection as soon as all pending commands
+    // have finished. There apparently exists ftp clients that shut down
+    // the command connection before their uploads etc have finished.
+    cmd_queue->put(({ 0, 0, 0 }));
+    if (!busy)
+      next_cmd();
   }
 
   void destroy()
@@ -3704,6 +4009,9 @@ class FTPSession
     logout();
 
     port_obj->sessions--;
+    if (master_session) {
+      destruct(master_session);
+    }
   }
 
   void create(object fd, object c)
@@ -3735,6 +4043,7 @@ class FTPSession
     array a = fd->query_address(1)/" ";
     local_addr = a[0];
     local_port = (int)a[1];
+    e_mode = has_value(local_addr, ":")?"2":"1";
 
     call_out(timeout, FTP2_TIMEOUT);
 
@@ -3743,7 +4052,7 @@ class FTPSession
     s = replace(s,
 		({ "$roxen_version", "$roxen_build", "$full_version",
 		   "$pike_version", "$ident", }),
-		({ roxen->__roxen_version__, roxen->__roxen_build__,
+		({ roxen->roxen_ver, roxen->roxen_build,
 		   roxen->real_version, version(), roxen->version() }));
 
     send(220, s/"\n", 1);
@@ -3756,6 +4065,11 @@ void create(object f, object c)
   {
     c->sessions++;
     c->ftp_users++;
+    if (f->set_keepalive) {
+      // Try to keep stupid firewalls from killing
+      // the connection during long uploads.
+      f->set_keepalive(1);
+    }
     FTPSession(f, c);
   }
 }

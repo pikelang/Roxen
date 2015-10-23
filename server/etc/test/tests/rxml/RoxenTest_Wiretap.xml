@@ -1,0 +1,30 @@
+<test>
+<rxml><body><define tag="x">A<td bgcolor="black">B</td>C</define>:<x/></body></rxml>
+<result><body>:A<td bgcolor="black">B</td>C</body></result>
+</test>
+
+<test>
+<rxml><body>&page.bgcolor;<td bgcolor="black">&page.bgcolor;</td>&page.bgcolor;</body></rxml>
+<result><body><td bgcolor="black"></td></body></result>
+</test>
+
+<add-module>wiretap</add-module>
+
+<test>
+<rxml><body><define tag="x">A<td bgcolor="black">B</td>C</define>:<x/></body></rxml>
+<result><body>:A<td bgcolor="black">B</td>C</body></result>
+</test>
+
+<test>
+<rxml><body>&page.bgcolor;<td bgcolor="black">&page.bgcolor;</td>&page.bgcolor;</body></rxml>
+<result><body>#ffffff<td bgcolor="black">black</td>#ffffff</body></result>
+</test>
+
+<test>
+<rxml><body bgcolor="blue">&page.bgcolor;<td
+ bgcolor="black">&page.bgcolor;</td>&page.bgcolor;</body></rxml>
+<result><body alink='#ff0000' bgcolor='blue' link='#0000ee'
+ text='#000000' vlink='#551a8b'>blue<td bgcolor="black">black</td>blue</body></result>
+</test>
+
+<drop-module>wiretap</drop-module>

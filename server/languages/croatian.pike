@@ -11,7 +11,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: croatian.pike,v 1.10 2000/11/27 14:09:12 per Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "hr", "croatian", "" });
 constant _aliases = ({ "hr", "cro", "croatian" });
 
@@ -129,7 +129,7 @@ number((num-(num%1000))/1000)+" tisuce "+number(num%1000);
   }
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

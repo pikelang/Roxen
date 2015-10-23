@@ -1,8 +1,10 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 #include <module.h>
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: location.pike,v 1.4 2001/04/18 20:54:25 js Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_LOCATION;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "

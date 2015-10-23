@@ -20,6 +20,9 @@ constant MODULE_FILTER            = (1<<13);
 constant MODULE_PROVIDER          = (1<<15);
 constant MODULE_USERDB            = (1<<16);
 
+// Mask for the above.
+constant MODULE_TYPE_MASK	  = ((1<<28)-1);
+
 // Module type flags. Not _really_ types, only useful for information
 // to the roxen administrations, not used by roxen.
 constant MODULE_PROTOCOL         = (1<<28);

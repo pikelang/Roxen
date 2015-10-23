@@ -1,4 +1,4 @@
-// Old RXML Compatibility Module Copyright © 2000, Roxen IS.
+// Old RXML Compatibility Module Copyright © 2000 - 2009, Roxen IS.
 //
 
 inherit "module";
@@ -7,7 +7,7 @@ inherit "roxenlib";
 
 #define _stat id->misc->defines[" _stat"]
 #define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
+//#define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
@@ -187,12 +187,13 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   id->prestate = orig_prestate;
 
   if (r->error)
-    _error = r->error;
-  if (r->extra_heads)
+    RXML_CONTEXT->set_misc (" _error", r->error);
+  if (r->extra_heads) {
     foreach(indices(r->extra_heads), string tmp)
-      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+      id->add_response_header(tmp, r->extra_heads[tmp]);
+  }
   if (m->text)
-    _rettext = m->text;
+    RXML_CONTEXT->set_misc (" _rettext", m->text);
 
   return ({""});
 }
@@ -278,6 +279,12 @@ inline string do_replace(string s, mapping m, RequestID id)
 		   LOCALE(31,"the replace tag"));
 }
 
+protected string compat_broken_http_encode_string(string f)
+{
+  return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
+		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
+}
+
 string|array tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
@@ -350,12 +357,16 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       m_delete(m, "nocache");
       m_delete(m, "file");
       n=do_replace(n, m, id);
-      return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+      // Should probably be html_encode_string below, but, well..
+      // compat is compat. :P /mast
+      return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
     n=do_replace(n, m-(["file":""]), id);
-    return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+    // Should probably be html_encode_string below, but, well.. compat
+    // is compat. :P /mast
+    return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
   }
 
   if(m->var) {
@@ -414,7 +425,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 		   LOCALE(55,"config items as atomic attributes in aconf tag"),
 		   LOCALE(38,"add and drop"));
 
-  string href,s;
+  string href;
   mapping cookies = ([]);
 
   if(!m->href)

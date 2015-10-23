@@ -1,0 +1,257 @@
+--
+-- Roxen Internet Software MIB
+-- Copyright (C) 2001 Honza Petrous, hop@unibase.cz
+--
+-- This mib file defines the common OBJECT IDENTIFIER
+-- used by all the RIS products
+--
+-- Creator: Honza Petrous (hop@roxen.com)
+--
+-- $Id$
+
+
+ROXENIS-MIB DEFINITIONS ::= 
+BEGIN
+	IMPORTS
+		MODULE-IDENTITY, OBJECT-IDENTITY, OBJECT-TYPE,
+		Integer32, Counter32, Unsigned32, enterprises
+		    FROM SNMPv2-SMI
+		TEXTUAL-CONVENTION, DisplayString
+		    FROM SNMPv2-TC
+		MODULE-COMPLIANCE, OBJECT-GROUP
+		    FROM SNMPv2-CONF
+		TRAP-TYPE
+		    FROM RFC-1215;
+
+	roxenis MODULE-IDENTITY
+	    LAST-UPDATED "200108290000Z"
+	    ORGANIZATION "Roxen Internet Software"
+	    CONTACT-INFO
+		 "E-mail: hop@roxen.com"
+	    DESCRIPTION
+	         "The MIB module for RIS private objects."
+	::= { enterprises 8614 }
+
+--
+-- All RIS specific objects must branch off of the above roxenis root.    
+-- The following objects are defined.
+--
+  
+--
+-- Roxen Applications
+--
+	app OBJECT IDENTIFIER ::= { roxenis 1 }
+
+--
+-- Roxen LDAP OIDs
+--
+	ldapSchema OBJECT IDENTIFIER ::= { roxenis 2 }
+
+	attributes OBJECT IDENTIFIER ::= { ldapSchema 1 }
+
+	objectClasses OBJECT IDENTIFIER ::= { ldapSchema 2 }
+
+--
+-- Roxen Applications
+--
+
+--    
+-- Roxen WebServer		------------------------------
+--    
+	webserver OBJECT IDENTIFIER ::= { app 1 }
+
+	global OBJECT IDENTIFIER ::= { webserver 1 }
+
+	boot     OBJECT-TYPE
+			SYNTAX  INTEGER { restart(1), shutdown(2) }
+			MAX-ACCESS  read-write
+			STATUS  current
+			DESCRIPTION
+			  "Object for rebooting server"
+			::= { global 1 }
+
+	vsCount   OBJECT-TYPE
+			SYNTAX  Counter32
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+                            "The total number of virtual servers."
+			::= { global 2 }
+
+	vsTable   OBJECT-TYPE
+			SYNTAX  SEQUENCE OF VsEntry
+			MAX-ACCESS  not-accessible
+			STATUS  current
+			DESCRIPTION
+                            "The virtual server table."
+			::= { webserver 2 }
+
+	vsEntry   OBJECT-TYPE
+			SYNTAX  VsEntry
+			MAX-ACCESS  not-accessible
+			STATUS  current
+			DESCRIPTION
+			    "An entry in the virtual server table."
+			INDEX   { vsIndex }
+			::= { vsTable 1 }
+    
+	VsEntry ::=
+		SEQUENCE {
+			vsIndex
+			    INTEGER,
+			vsName
+			    DisplayString,
+			vsDescription
+			    DisplayString,
+			vsSent
+			    Counter32,
+			vsReceived
+			    Counter32,
+			vsHeaders
+			    Counter32,
+			vsRequests
+			    Counter32
+		}
+
+
+	vsIndex   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { vsEntry 1 }
+    
+	vsName   OBJECT-TYPE
+			SYNTAX  DisplayString (SIZE (0..255))
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "The description of a virtual server"
+			::= { vsEntry 2 }
+    
+	vsDescription   OBJECT-TYPE
+			SYNTAX  DisplayString (SIZE (0..255))
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "The description of a virtual server"
+			::= { vsEntry 3 }
+    
+	vsSent     OBJECT-TYPE
+			SYNTAX  Counter32
+			MAX-ACCESS  read-write
+			STATUS  current
+			DESCRIPTION
+			    " ... "
+			::= { vsEntry 4 }
+    
+	vsReceived     OBJECT-TYPE
+			SYNTAX  Counter32
+			MAX-ACCESS  read-write
+			STATUS  current
+			DESCRIPTION
+			    " ... "
+			::= { vsEntry 5 }
+    
+	vsHeaders     OBJECT-TYPE
+			SYNTAX  Counter32
+			MAX-ACCESS  read-write
+			STATUS  current
+			DESCRIPTION
+			    " ... "
+			::= { vsEntry 6 }
+    
+	vsRequests     OBJECT-TYPE
+			SYNTAX  Counter32
+			MAX-ACCESS  read-write
+			STATUS  current
+			DESCRIPTION
+			    " ... "
+			::= { vsEntry 7 }
+
+--
+-- TRAP objects
+--
+
+--	vsStartTrap TRAP-TYPE
+--			ENTERPRISE webserver
+--			VARIABLES { vsIndex }
+--			DESCRIPTION
+--			    "This trap is sent whenever a virtual server
+--			     is started."
+--			::= 1
+
+	trapGlobal OBJECT IDENTIFIER ::= { webserver 3 }
+
+	serverDownTrap  OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapGlobal 1 }
+
+	trapVs OBJECT IDENTIFIER ::= { webserver 4 }
+
+	vsExternalTrap OBJECT IDENTIFIER ::= { trapVs 1 }
+
+	vsStartTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 2 }
+
+	vsStopTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 3 }
+
+	vsConfChangedTrap   OBJECT-TYPE
+			SYNTAX  Integer32 (1..2147483647)
+			MAX-ACCESS  read-only
+			STATUS  current
+			DESCRIPTION
+			    "An index which uniquely identifies a
+			     virtual server."
+			::= { trapVs 4 }
+
+--    
+-- Pike Interpreter		------------------------------
+--    
+	pike OBJECT IDENTIFIER ::= { app 2 }
+
+--
+-- Roxen Sitebuilder		------------------------------
+--
+	sitebuilder OBJECT IDENTIFIER ::= { app 3 }
+
+--
+-- Roxen AC			------------------------------
+--
+	ac OBJECT IDENTIFIER ::= { app 4 }
+
+--
+-- Roxen Search			------------------------------
+--
+	search OBJECT IDENTIFIER ::= { app 5 }
+
+--
+-- Roxen Logview		------------------------------
+--
+	logview OBJECT IDENTIFIER ::= { app 6 }
+
+
+
+           
+END
+ 

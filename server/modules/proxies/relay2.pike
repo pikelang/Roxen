@@ -1,6 +1,7 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.23 2001/05/16 07:51:00 per Exp $";
+constant cvs_version = "$Id$";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -29,22 +30,54 @@ class Relay
 
   Stdio.File fd;
 
-  mapping make_headers( object from, int trim )
+  mapping make_headers( RequestID from, int trim )
   {
-    mapping res = ([ "Proxy-Software":roxen->version(), ]);
+    mapping res = ([
+      "Proxy-Software":roxen->version(),
+      // These are set by Apaches mod_proxy and are more or less
+      // defacto standard.
+      "X-Forwarded-For": from->remoteaddr,
+      "X-Forwarded-Host": from->request_headers->host,
+    ]);
+
+    // Also try to model X-Forwarded-Server after Apaches mod_proxy.
+    // The following is ripped from RequestID.url_base.
+    string server_host;
+    if (Protocol port = from->port_obj) {
+      server_host = port->conf_data[from->conf]->hostname;
+      if (server_host == "*")
+	server_host = from->conf->get_host();
+    }
+    else
+      server_host = my_configuration()->get_host();
+    if (server_host)
+      res["X-Forwarded-Server"] = server_host;
+
     if( trim ) return res;
-    foreach( indices(from->request_headers), string i )
+    foreach( from->request_headers; string i; string v)
     {
-      switch( lower_case(i) )
+      switch( i )
       {
        case "connection": /* We do not support keep-alive yet. */
 	 res->Connection = "close";
          break;
        case "host":
          res->Host = host+":"+port;
-         break;
+	 break;
+       case "x-forwarded-for":
+	 res["X-Forwarded-For"] = v + "," + res["X-Forwarded-For"];
+	 break;
+       case "x-forwarded-host":
+	 res["X-Forwarded-Host"] = v + "," + res["X-Forwarded-Host"];
+	 break;
+       case "x-forwarded-server":
+	 if (server_host)
+	   res["X-Forwarded-Server"] = v + "," + server_host;
+	 else
+	   res["X-Forwarded-Server"] = v;
+	 break;
        default:
-	 res[String.capitalize( i )] = from->request_headers[i];
+	 res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
          break;
       }
     }
@@ -127,7 +160,7 @@ class Relay
 
 
     
-    if( !options->cache ) NOCACHE();
+    if( !options->cache ) NO_PROTO_CACHE();
 
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
       sscanf( buffer, "%s\n\n%s", headers, data );
@@ -154,17 +187,27 @@ class Relay
              type = b;
              break;
            default:
-             h[a] = b;
+	     if (h[a]) {
+	       if (arrayp(h[a])) h[a] += ({ b });
+	       else h[a] = ({ h[a], b });
+	     }
+	     else
+	       h[a] = b;
           }
         } else 
           status = header;
       }
       if(!type)
 	type = "text/html";
-      else if( sscanf( type, "text/%*s;charset=%s", charset ) == 2 )
+      else if( sscanf( type-" ", "text/%*s;charset=%s", charset ) == 2 )
         type = String.trim_all_whites( (type/";")[0] );
     }
 
+#ifdef RELAY_DEBUG
+    werror("RELAY: url: %O, type: %O, data: %O bytes, headers: \n%s\n\n",
+	   id->not_query, type, sizeof(data), headers);
+#endif
+    
     if( !headers || !data )
     {
       mapping q = Roxen.http_string_answer( buffer, "" );
@@ -173,7 +216,7 @@ class Relay
       destruct( );
       return;
     }
-    if( options->rxml &&
+    if( options->rxml && code >= 200 && code < 300 &&
 	(lower_case(type) == "text/html" ||
 	 lower_case(type) == "text/plain" ))
     {
@@ -190,6 +233,9 @@ class Relay
       id->misc->defines = ([]);
       id->misc->defines[" _extra_heads"] = h;
       id->misc->defines[" _error"] = code;
+#ifdef RELAY_DEBUG
+      werror("RELAY: parsing rxml\n");
+#endif
       id->send_result( Roxen.http_rxml_answer( query("pre-rxml")
                                                + data +
                                                query("post-rxml"), id ) );
@@ -231,12 +277,14 @@ class Relay
     if( !how )
     {
 #ifdef RELAY_DEBUG
-      werror("RELAY: Connection failed\n");
+      werror("RELAY: Connection failed: %s (%d)\n",
+             strerror (fd->errno()), fd->errno());
 #endif
-      id->send_result( ([
-        "type":"text/plain",
-        "data":"Connection to remote HTTP host failed."
-      ]) );
+      NOCACHE();
+      id->send_result(
+	Roxen.http_low_answer(Protocols.HTTP.HTTP_GW_TIMEOUT,
+			      "504 Gateway Timeout: "
+			      "Connection to remote HTTP host failed."));
       destruct();
       return;
     }
@@ -274,12 +322,14 @@ class Relay
     url = _url;
     options = _options;
 
-    if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
-    {
-      port=80;
-      sscanf(url,"%*[^:/]://%[^:/]/%s",host,file);
-    }
-
+    //  Support IPv6 addresses
+    Standards.URI uri = Standards.URI(url);
+    host = uri->host;
+    port = uri->port || 80;
+    file = uri->get_path_query();
+    if (has_prefix(file, "/"))
+      file = file[1..];
+    
     if( options->raw )
       request_data = _id->raw;
     else
@@ -287,7 +337,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+Roxen.http_encode_string(file)+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+file+" HTTP/1.0\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
@@ -301,14 +351,16 @@ class Relay
     werror("RELAY: Connecting to "+host+":"+port+"\n");
 #endif
 
-#if 1
+    // Kludge for bug 3127.
+    if (linux) {
+      if( fd->connect( host, port ) )
+	connected( 1 );
+      else
+	connected( 0 );
+      return;
+    }
+
     fd->async_connect( host, port, connected );
-#else
-    if( fd->connect( host, port ) )
-      connected( 1 );
-    else
-      connected( 0 );
-#endif
   }
 }
 
@@ -322,28 +374,38 @@ class Relayer
   multiset options;
   int last;
 
-  string do_replace( string f )
+  string do_replace( array(string) to )
   {
-    array to = (array(string))r->split( f );
     array from = map( indices( to ), lambda(int q ){
                                        return "\\"+(q+1);
                                      } );
     if( sizeof( to ) )
-      return predef::replace( url, from, to );
+      return predef::replace( url, from, (array(string)) to );
     return url;
   }
 
-  Relay relay( object id )
+  int(0..1) relay( object id )
   {
     string file = id->not_query;
 
     if( id->query )
       file = file+"?"+id->query;
 
-    if( r->match( file ) )
+    // Workaround widestring deficiency in the regexp module.
+    int use_utf8 = String.width (file) > 8;
+    if (use_utf8) file = string_to_utf8 (file);
+
+    if (array(string) split = r->split( file ) )
     {
+      if (use_utf8)
+	for (int i = sizeof (split); i--;)
+	  if (stringp (split[i]))
+	    // Catch errors in case the split broke apart a utf8 sequence.
+	    catch (split[i] = utf8_to_string (split[i]));
+
       stats[ pattern ]++;
-      return Relay( id, do_replace( file ), options );
+      Relay( id, do_replace( split ), options );
+      return 1;
     }
   }
 
@@ -365,39 +427,55 @@ void create( Configuration c )
   if( c )
   {
     defvar( "patterns", "", "Relay patterns", TYPE_TEXT,
-            "Syntax: \n"
+            "<p>Syntax:\n"
             "<pre>\n"
-            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "</pre> \\1 to \\9 will be replaced with submatches from the regexp.<p>"
-            "rxml, trimheaders etc. are flags. If rxml is specified, the "
-            "result of the relay will be RXML-parsed, Trimheaders and raw are "
-            " mutually exclusive, if "
-            "trimheaders is present, only the most essential headers are sent "
-            "to the remote server (actually, no headers at all right now), "
-            "if raw is specified, the request is sent to the remote server"
-            " exactly as it arrived to roxen, not even the Host: header "
-            "is changed.  If utf8 is specified the request is utf-8 encoded "
-            "before it is sent to the remote server.<p>"
-	    " Cache and stream alter the sending of data to the client. "
-	    " If cache is specified, the data can end up in the roxen "
-	    " data-cache, if stream is specified, the data is streamed "
-	    "directly from the server to the client. This disables logging "
-	    "and the headers will be exactly those sent by the remote server, "
-	    "also, this only works for http clients. "
-	    "Less memory is used, however. </p><p>" 
-            " For EXTENSION and LOCATION, the matching local filename is "
-            "appended to the url-prefix specified, no replacing is done.<p>"
-            "If last is specified, the match is only tried if roxen "
-            "fails to find a file (a 404 error). If rewrite is specified, "
-            "redirects and file contents are rewritten, if possible, so that "
-	    "links and images point to the correct place.</p>");
-    defvar("pre-rxml", "", 
+            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "</pre> \\1 to \\9 will be replaced with submatches from the "
+	    "regexp.</p><p>"
+
+	    "Rxml, trimheaders etc. are flags. If <b>rxml</b> is specified, "
+	    "the result of the relay will be RXML-parsed. Trimheaders and raw "
+	    "are mutually exclusive. If <b>trimheaders</b> is present, only "
+	    "the most essential headers are sent to the remote server "
+	    "(actually, no headers at all right now), if <b>raw</b> is "
+	    "specified, the request is sent to the remote server exactly as it "
+	    "arrived to Roxen, not even the Host: header is changed.  If "
+	    "<b>utf8</b> is specified the request is utf-8 encoded before it "
+	    "is sent to the remote server.</p><p>"
+
+	    "Cache and stream alter the sending of data to the client. If "
+	    "<b>cache</b> is specified, the data can end up in the roxen "
+	    "data cache, if <b>stream</b> is specified, the data is streamed "
+	    "directly from the server to the client. This disables logging, "
+	    "headers will be exactly those sent by the remote server, and this "
+	    "only works for http clients. Less memory is used, however.</p><p>"
+
+	    "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
+	    "components (<b>location</b> part trimmed off) is appended to the "
+	    "<b>url-prefix</b> specified; no replacing is done.</p><p>"
+
+	    "Note that /login.xml is a submatch in itself, it will match all paths containing /login.xml, "
+	    "since /login.xml will be translated to /login.xml(.*) and therefore "
+	    "will match /login.xml, /foo/login.xml, /bar/foo/login.xml and /login.xml?x=3"
+	    "Changing the pattern to ^/login.xml will make it only match /login.xml and anything "
+	    "after /login.xml - e.g. /login.xml?x=2&amp;y=34.</p><p>"
+
+            "If <b>LAST</b> is specified, the match is only tried if Roxen "
+            "fails to find a file (a 404 error). If <b>rewrite</b> is "
+	    "specified, redirects and file contents are rewritten if possible, "
+	    "so that links and images point to the correct place.</p><p>"
+
+	    "Example:\n"
+	    "<pre>\n"
+	    "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"	   
+ 	    "</pre></p>");
+    defvar("pre-rxml", "",
            "Header-RXML", TYPE_TEXT,
            "Included before the page contents for redirectpatterns with "
            "the 'rxml' attribute set if the content-type is text/*" );
-    defvar("post-rxml", "", 
+    defvar("post-rxml", "",
            "Footer-RXML", TYPE_TEXT,
            "Included after the page contents for redirectpatterns with "
            "the 'rxml' attribute set if the content-type is text/*" );
@@ -414,8 +492,12 @@ string status()
   return res + "</table>\n";
 }
 
+int linux;
+
 void start( int i, Configuration c )
 {
+  if (uname()->sysname == "Linux")
+    linux = 1;
   if( c )
   {
     relays = ({});
@@ -452,7 +534,7 @@ void start( int i, Configuration c )
          case "extension":
            tokens = tokens[1..];
            tokens[1] += "\\1."+tokens[0]+"\\2";
-           tokens[0] = "(.*)\\."+
+           tokens[0] = "^([^?]*)\\."+
                      replace(tokens[0],
                              ({"*", ".", "?" }),
                              ({ "\\*", "\\.", "\\?" }) )

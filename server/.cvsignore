@@ -1,2 +1,4 @@
 .purify
 pike
+patches
+mysql-location.txt

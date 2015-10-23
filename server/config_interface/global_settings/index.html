@@ -1,4 +1,5 @@
 <topmenu base="../" selected='globals' />
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 
 <if not variable='form.section'>
   <set variable='form.section' value='Settings' />
@@ -13,10 +14,10 @@
     <tab href='?section=event_log'><translate id="216">Events</translate></tab>
   </else>
   <if variable='form.section is ports'>
-    <tab selected='t' href='?section=ports'><translate id="215">Ports</translate></tab>
+    <tab selected='t' href='?section=ports'><translate id="508">Ports</translate></tab>
   </if>
   <else>
-    <tab href='?section=ports'><translate id="215">Ports</translate></tab>
+    <tab href='?section=ports'><translate id="508">Ports</translate></tab>
   </else>
   <emit source='global-variables-sections'>
     <tab ::='&_.selected;'

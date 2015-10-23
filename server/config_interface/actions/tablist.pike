@@ -8,11 +8,11 @@ array pages =
 ({
   ({ "status",       "Tasks",  0, LOCALE(228,"Status")            }),
   ({ "maintenance",  "Tasks",  0, LOCALE(229,"Maintenance")       }),
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant (Nettle)
   ({ ({"SSL"}),       "Tasks", 0, LOCALE(230,"SSL")               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/
-  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug information") }),
+  ({ "debug_info",    "Tasks", 0, LOCALE(231,"Debug Information") }),
 });
 
 string parse( RequestID id )

@@ -1,0 +1,234 @@
+#!/bin/sh
+#
+# /Library/StartupItems/Roxen/Roxen
+#
+# StartupItem script for Roxen. Set the variables
+# below to something fitting. This is only an example script.
+#
+
+# If the directory /etc/roxen exists, we'll loop through all
+# directories within it and apply an action to all servers, 
+# or if an instance name has been specified, we'll only do
+# that one.
+#
+# Example, starts only the instance with config dir named "default": 
+# /Library/StartupItems/Roxen/Roxen start default
+#
+# Example, starts all configured instances within /etc/roxen:
+# /Library/StartupItems/Roxen/Roxen start
+
+# Check if zero arguments
+#
+if [ -z $1 ] ; then
+    echo "Usage: $0 [start|stop|restart|status|debug] <instance name>"
+    exit 1
+fi
+
+useconfig=$2
+
+# Setup environment
+#
+test -r /etc/rc.common || exit 1
+. /etc/rc.common
+
+# The server directory where the 'start' script is located.
+#
+roxenhome=/usr/local/roxen
+
+# File creation mask
+#
+umask 022
+
+# If you want to start with another configuration directory. The path
+# is relative to the server-X.Y.Z directory.
+#
+configdir=
+#configdir=../configurations
+
+# Here you can add extra flags to the start script, like enabling or
+# disabling threads.
+# 
+flags=
+#flags="--with-threads"
+# flags="--without-threads"
+
+# The file to store the process ids in, to allow this script to stop,
+# reload and restart the server. By default it's placed in the
+# configuration directory, which ensures that it doesn't accidentally
+# overwrite the pid file for another server instance.
+#
+pidfile=
+#pidfile=$configdir/_roxen_pid
+
+roxenconfdir=/etc/roxen
+
+### You should not _have_ to change anything below here...
+
+if test x$configdir = x; then
+  configdir=../configurations
+else
+  flags="$flags --config-dir=$configdir"
+fi
+
+test x$pidfile = x && pidfile=$configdir/_roxen_pid
+flags="$flags --pid-file=$pidfile"
+
+find_server_dir()
+{
+    (
+	cd "$roxenhome" >/dev/null 2>&1 &&
+	for dir in server*; do
+	    ( cd "$dir" >/dev/null 2>&1 &&
+		test -f "$configdir/server_version" &&
+		echo "$roxenhome/`cat \"$configdir/server_version\"`"
+		) && return
+	done
+	echo "$roxenhome/server"
+	)
+}
+roxenhome=`find_server_dir`
+
+
+StartService()
+{
+    if [ "${ROXEN:=-NO-}" = "-YES-" ]; then
+	ConsoleMessage "Starting Roxen in $roxenhome..."
+	cd $roxenhome && {
+	    test -f "$pidfile" && {
+		if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
+		    ConsoleMessage "Roxen is already running (start script pid $pid)."
+		    :
+		else false; fi
+	    } < $pidfile && return
+	    if [ -x $roxenhome/start ]; then
+		./start $flags 2>/dev/null
+		ConsoleMessage "Roxen started."
+	    else
+		ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
+	    fi
+	}
+    else
+    	ConsoleMessage "Service controller ROXEN in /etc/hostconfig is disabled."
+    fi
+}
+
+StopService()
+{
+    ConsoleMessage "Stopping Roxen in $roxenhome..."
+    cd $roxenhome && {
+      test -f "$pidfile" && {
+	  if read pid && read pid; then
+	      ConsoleMessage "Sending SIGTERM to Roxen process $pid."
+	      if kill "$pid"; then
+		  while kill -0 $pid 2>/dev/null; do
+		      sleep 1
+		  done
+		  ConsoleMessage "Roxen stopped."
+		  :
+	      else false; fi
+	  else false; fi
+      } < $pidfile && return
+      ConsoleMessage "Roxen doesn't seem to be running."
+    }
+}
+
+RestartService()
+{
+    ConsoleMessage "Restarting Roxen in $roxenhome..."
+    cd $roxenhome && {
+	test -f "$pidfile" && {
+	    if read pid && read pid; then
+		ConsoleMessage "Sending SIGTERM to Roxen process $pid."
+		if kill "$pid"; then
+		    while kill -0 $pid 2>/dev/null; do
+			sleep 1
+		    done
+		    ConsoleMessage "Roxen stopped."
+		    StartService
+		else false; fi
+	    else false; fi
+	} < $pidfile && return
+	ConsoleMessage "Roxen doesn't seem to be running."
+    }
+}
+
+status()
+{
+    ConsoleMessage "Status of Roxen in $roxenhome..."
+    cd $roxenhome && {
+	test -f "$pidfile" && {
+	    if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
+		ConsoleMessage "Roxen is running (start script pid $pid)."
+		:
+	    else false; fi
+	} < $pidfile && status=0 && return 
+	ConsoleMessage "Roxen is not running."
+    }
+}
+
+debug()
+{
+    ConsoleMessage "Debugging Roxen in $roxenhome..."
+    cd $roxenhome && {
+      test -f "$pidfile" && {
+        if read pid && kill -QUIT "$pid" 2>/dev/null; then
+          ConsoleMessage "Roxen process found. Consult debug log for output."
+          :
+        else ConsoleMessage "pid $pid"; fi
+      } < $pidfile && return
+      ConsoleMessage "Roxen doesn't seem to be running."
+    }
+}
+
+dorunservice()
+{
+    if [ $1 = "status" ] ; then
+	status=1
+	status
+    elif [ $1 = "debug" ] ; then
+	debug
+    else
+	RunService "$1"
+    fi
+}
+
+getvariables()
+{
+    ConsoleMessage "Configuration dir: $1"
+    test -r $1/_startparams && source $1/_startparams
+    if [ ! -d $roxenhome ] ; then
+	# The roxen dir specified in _startparams does not exist,
+	# let's pick the latest existing dir instead.
+	oldroxenhome=$roxenhome
+	roxenhome=`ls -td \`dirname $oldroxenhome\`/roxen-* | head -1`
+	if [ -d $roxenhome ] ; then
+		ConsoleMessage "No Roxen dir found, exiting!"
+		exit 1
+	fi
+	ConsoleMessage "Warning: $oldroxenhome does not exist, trying $roxenhome instead."
+    fi
+    test -r $1/_environment && source $1/_environment
+    if [ ! -d `dirname $ROXEN_PID_FILE` ] ; then
+    	ConsoleMessage "`dirname $ROXEN_PID_FILE` does not exist, creating."
+	mkdir -p `dirname $ROXEN_PID_FILE` 
+    fi
+    test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
+}
+
+if [ -d $roxenconfdir ] ; then
+    if [ -z $useconfig ] ; then
+	for f in $roxenconfdir/* ; do
+	    getvariables $f
+	    dorunservice $1
+	done
+    else
+	getvariables $roxenconfdir/$2
+	dorunservice $1
+    fi
+else
+    dorunservice $1
+fi
+
+if [ $1 = "status" ] ; then
+	exit $status
+fi

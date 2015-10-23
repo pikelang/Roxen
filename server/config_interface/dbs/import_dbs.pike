@@ -18,12 +18,17 @@ mapping|string parse( RequestID id )
   if( id->variables["ok.x"]  )
   {
     foreach( glob( "db_*", indices(id->variables) ), string db )
+    {
       DBManager.create_db( db[3..],0,1,id->variables->group );
-    return Roxen.http_redirect( "", id );
+      foreach( roxen->configurations, Configuration c )
+	DBManager.set_permission( db[3..], c, DBManager.READ );
+      DBManager.set_permission( db[3..], id->conf, DBManager.WRITE );
+    }
+    return Roxen.http_redirect( "/dbs/", id );
   }
 
   
-  Sql.Sql sql = Sql.Sql( c->pattern+"mysql" );
+  Sql.Sql sql = Sql.Sql( c->pattern );
   array q = sql->query( "SHOW databases" )->Database;
 
   res += "<b><font size=+1>"+

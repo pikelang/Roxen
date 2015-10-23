@@ -3,6 +3,7 @@
 <project>mod_filesystem</project>
 <language>eng</language>
 <file>../modules/filesystems/filesystem.pike</file>
+<file>../modules/js-support/yui.pike</file>
 
 
 
@@ -27,7 +28,7 @@
 </str>
 
 <str id="6">
-<o>No file accesses)</o>
+<o>No file accesses</o>
 <t></t>
 </str>
 
@@ -173,7 +174,7 @@
 </str>
 
 <str id="35">
-<o>Access file as the logged in user</o>
+<o>Access files as the logged in user</o>
 <t></t>
 </str>
 
@@ -229,13 +230,13 @@
 </str>
 
 <str id="46">
-<o>Creation of %s failed. Permission denied.
+<o>Creation of %O failed. Permission denied.
 </o>
 <t></t>
 </str>
 
 <str id="47">
-<o>Creation of %s failed. Out of quota.
+<o>Creation of %O failed. Out of quota.
 </o>
 <t></t>
 </str>
@@ -272,5 +273,72 @@
 <o>Path verification of %O failed:
 %O is not a prefix of %O
 </o>
+<t></t>
+</str>
+
+<str id="53">
+<o>Authentication database to use</o>
+<t></t>
+</str>
+
+<str id="54">
+<o>The User database module to use when authenticating users for the access file as the logged in user feature.</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>Access files as the logged in user forces login</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>If true, a user will have to be logged in to access files in this filesystem</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>%s from %s...%s</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>DELETING the directory %s.
+</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>Copy to %O failed. Permission denied.
+</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>Raw files</o>
+<t></t>
+</str>
+
+<str id="66">
+<o>If set files from this filesystem will be returned without any further processing. This disables eg RXML parsing of files.</o>
+<t></t>
+</str>
+
+<str id="67">
+<o>JavaScript Support: The Yahoo! User Interface Library</o>
+<t></t>
+</str>
+
+<str id="68">
+<o>This sets The Yahoo! User Interface Library (YUI) as a virtual file system of your site.</o>
+<t></t>
+</str>
+
+<str id="69">
+<o>Limit YUI paths</o>
+<t></t>
+</str>
+
+<str id="70">
+<o>If set, access is limited to the assets and build directories.</o>
 <t></t>
 </str>

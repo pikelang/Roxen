@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc = "Generic matrix filter. Specify a 'matrix' argument with a matrix, row and space separated like this:<pre>matrix='x x x x x x\nx x x x x x\nx x x x x x'</pre>The matrix can be any size. All rows must be of the same size. You can specify a base color using the 'color' argument, and a divisor using the 'divisor' argument.";
 

@@ -1,65 +1,92 @@
-/*
- * Locale stuff.
- * <locale-token project="roxen_config"> _ </locale-token>
- */
+// Locale stuff.
+// <locale-token project="roxen_config"> _ </locale-token>
+
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 
 constant box      = "small";
-constant box_initial = 1;
+constant box_initial = 0;
 constant box_position = -1;
 
-String box_name = _(363,"Documentation links");
-String box_doc = _(364,"Links to the inline documentation");
+LocaleString box_name = _(363,"Documentation links");
+LocaleString box_doc = _(364,"Links to the inline documentation");
 
-#define path(X) X
 string parse( RequestID id )
 {
   string docs = "";
   function exists =
      id->conf->find_module( "config_filesystem#0" )->stat_file;
+  int list_style = sizeof(RXML.user_get_var("list-style-boxes", "usr"));
 
-  docs += "<a href='"+path("whatsnew.html")+"'>"+
-    _(390,"Release notes")+"</a><br />";
+//    docs += "<a href='"+path("whatsnew.html")+"'>"+
+//      _(390,"Release notes")+"</a><br />";
+
+  void add_doc_link(string doc_path, string title) {
+    if (exists(doc_path)) {
+      string s = "<a href='" + (doc_path - "index.html") + "'>"
+	"<font size='-1'>" + title + "</font>"
+	"</a>";
+      if (list_style)
+	docs +=
+	  "<li style='margin-left: -0.9em; margin-right: 0.9em;'>"+
+	  s+"</br></li>\n";
+      else
+	docs +=
+	  "<tr><td valign='top'>"+s+"</td></tr>\n";
+    }
+  };
   
-  foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
+  foreach( ({ "docs/roxen/5.2/" }), string rpath )
   {
-    if( exists(  rpath + "creator/index.html" ) )
-      docs += "<a href='"+path(rpath+"creator/")+"'>"+
-	_(391,"Web Site Creator")+"</a><br />";
+    add_doc_link(rpath + "content_editor_manual/index.xml",
+		 _(524, "Content Editor"));
 
-    if( exists( rpath + "administrator/index.html" ) )
-      docs += "<a href='"+path(rpath+ "administrator/")+"'>"+
-	_(392,"Administrator Manual")+"</a><br />";
+    add_doc_link(rpath + "web_developer_manual/index.xml",
+		 _(514, "Web Developer"));
 
-    if( exists( rpath + "user/index.html" ) )
-      docs += "<a href='"+path(rpath+ "user/")+"'>"+
-	_(393,"User Manual")+"</a><br />";
+    add_doc_link(rpath + "administrator_manual/index.xml",
+		 _(516, "Administrator"));
 
-    if( exists( rpath + "tutorial/rxml/index.html" ) )
-      docs += "<a href='"+path(rpath+ "tutorial/rxml/")+"'>"+
-	_(394,"RXML Tutorial")+"</a><br />";
-    else if( exists( rpath + "rxml_tutorial/index.html" ) )
-      docs += "<a href='"+path(rpath+ "rxml_tutorial/")+"'>"+
-	_(394,"RXML Tutorial")+"</a><br />";
+    add_doc_link(rpath + "system_developer_manual_java/index.xml",
+		 _(390, "System Developer (Java)"));
 
-    if( exists( rpath+"programmer/index.html") )
-      docs += "<a href='"+path(rpath+ "programmer/")+"'>"+
-	_(395,"Programmer Manual")+"</a><br />";
-  }
+    add_doc_link(rpath + "system_developer_manual/index.xml",
+		 _(515, "System Developer (Pike)"));
+
+    add_doc_link(rpath + "forms_and_response_module/index.xml",
+		 _(517, "Forms And Response Module"));
+
+    add_doc_link(rpath + "forum_manual/index.xml",
+		 _(523, "Forum Module"));
+    
+    add_doc_link(rpath + "tutorial/index.xml",
+		 _(519, "Tutorials"));
+
+    add_doc_link(rpath + "faq/main/index.xml",
+		 _(458, "FAQ"));  }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
-    if( exists( ppath+"tutorial/index.html") )
-      docs += "<a href='"+path(ppath+ "tutorial/")+"'>"+
-	_(396,"Pike Tutorial")+"</a><br />";
+    add_doc_link(ppath + "tutorial/index.xml",
+		 _(396, "Pike Tutorial"));
   }
 
   if( docs == "" )
-    docs="<font color='&usr.warncolor;'>"+
-      _(397,"No documentation found at all")+"</font>";
-
+  {
+    docs =
+      "<font color='&usr.warncolor;'>" +
+      _(397, "No documentation found at all") + 
+      "</font>";
+  }
+  else
+  {
+    if (list_style)
+      docs = "<ul>" + docs + "</ul>";
+    else
+      docs = "<table>" + docs + "</table>";
+  }
+  
   return "<box type='"+box+"' title='"+box_name+"'>"+docs+"</box>";
 }
 

@@ -1,0 +1,77 @@
+<if variable="roxen.product-name == Roxen CMS">
+  <theme-set what=logo                 to="cms-logo.gif" themefile />
+</if>
+<else>
+  <theme-set what=logo                 to=logo.gif themefile />
+</else>
+<theme-set what=top-bgcolor          to=none />
+<theme-set what=toptabs-bgcolor      to=none />
+
+<theme-set what=subtabs-dimtextcolor to="#425a84" />
+<theme-set what=subtabs-seltextcolor to="#ff8c00" />
+
+<theme-set what=subtabs-bgcolor      to="white" />
+<theme-set what=subtabs-selcolor      to="#eef2fb" />
+<theme-set what=subtabs-dimcolor     to="white" />
+
+<theme-set what=toptabs-dimtextcolor to="#425a84" />
+<theme-set what=toptabs-seltextcolor to="#ff8c00" />
+
+<theme-set what=toptabs-bgcolor      to="white" />
+<theme-set what=toptabs-dimcolor     to="white" />
+<theme-set what=toptabs-selcolor     to="white" />
+
+theme-set what=leftside-padwidth    to=160 />
+<theme-set what=toptabs-padwidth     to=190 />
+
+<theme-set what=fade1   to="#eef2fb"/>
+
+<theme-set what=fade2     to="#dee2eb"/>
+
+<theme-set what=next     to=next.png themefile />
+<theme-set what=selected-indicator    to=sel2.gif themefile />
+
+<theme-set what=left-buttonbg     to='white'/>
+<theme-set what=left-selbuttonbg  to='white'/>
+
+<!-- 
+  Now, this is ugly. :-) The only reason is that the browsers
+  really, really want to cache this image, so let's add something that
+  change now and then to the URL. This has the somewhat unexpected
+  side-benefit of making the image stay the same for somewhat longer
+  at a time, namely, one minute.
+-->
+
+<set variable='var.time'><date iso/></set>
+
+<theme-set what=left-image to="image.pike?&var.time;" themefile />
+
+<theme-set what=lefthtml to='<br /><br /><br /><br /><br /><br />' />
+
+<define variable="var.leftside"><br /><br /><br /></define>
+
+<theme-set what=bgcolor   to="white"/>
+<theme-set what=fgcolor   to="black"/>
+<theme-set what=warncolor   to="#aa3c00"/>
+
+<!--
+<theme-set what=content-contentbackground to=contentbg.gif themefile />
+
+<theme-set what=content-extratableargs 
+           to="background='&usr.content-contentbackground;'" />
+-->
+
+<theme-set what=linkcolor to="#425a84"/>
+
+<theme-set what=obox-titlefg to="black"/>
+
+<theme-set what=content-titlefg to="black"/>
+<theme-set what=content-titlebg to="#e1e1ff"/>
+
+<theme-set what=fade3     to=#ff9c51/>
+<theme-set what=fade4     to=#222222/>
+
+<theme-set what=tab-frame-image     to="tabframe.xcf" themefile />
+<theme-set what=gbutton-frame-image to="gbutton.xcf"  themefile />
+<theme-set what=fold to="fold.gif" themefile/>
+<theme-set what=unfold to="unfold.gif" themefile/>

@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 //
 
 //! Abstract definition of a response object
@@ -63,7 +63,7 @@ class EmitObject {
 
   //! Returns the next element and increments the
   //! element counter.
-  static mapping(string:mixed) really_get_row() { }
+  protected mapping(string:mixed) really_get_row() { }
 
   //! Remove the next value.
   void skip_row() {

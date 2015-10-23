@@ -1,5 +1,5 @@
 // This is a roxen protocol module.
-// Copyright © 2001, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 
 //<locale-token project="roxen_message"> LOC_M </locale-token>
 #include <roxen.h>
@@ -30,12 +30,12 @@ class Connection
     inherit RequestID;
     string real_auth;
     string remoteaddr = "127.0.0.1";
-    static string _sprintf()
+    protected string _sprintf()
     {
-      return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+      return sprintf("myRequestID(conf=%O; not_query=%O)", conf, not_query );
     }
 
-    static void create()
+    protected void create()
     {
       port_obj = my_port_obj;
       conf = my_conf;
@@ -48,7 +48,7 @@ class Connection
       real_variables = ([]);
       variables = FakedVariables( real_variables );
       misc = ([]);
-      cookies = ([]);
+      cookies = CookieJar();
       throttle = ([]);
       client_var = ([]);
       request_headers = ([]);
@@ -128,7 +128,7 @@ class Connection
 
     this_program set_path( string f )
     {
-      raw_url = Roxen.http_encode_string( f );
+      raw_url = Roxen.http_encode_invalids( f );
       if( strlen( f ) > 5 )
       {
 	string a;
@@ -238,6 +238,47 @@ class Connection
   }
 
 
+#if __VERSION__ > 7.2
+  class Handler {
+    inherit Tools.Hilfe.Evaluator;
+
+    void got_data( string d )
+    {
+      if( String.trim_all_whites(d) == "quit" )
+      {
+	begone( );
+	return;
+      }
+      add_input_line( d );
+      write( state->finishedp() ? "> " : ">> " );
+      user->settings->set("hilfe_history",
+			  rl->readline->get_history()->encode());
+      user->settings->save();
+    }
+
+    void create()
+    {
+      ::create();
+      write = lambda (string msg, mixed... args) {
+		if (sizeof (args)) msg = sprintf (msg, @args);
+		rl->readline->write (msg);
+	      };
+      constants["RequestID"] = myRequestID;
+      constants["conf"] = my_conf;
+      constants["port"] = my_port_obj;
+      constants["user"] = user;
+      constants["debug"] = hilfe_debug;
+      user->settings->defvar( "hilfe_history", Variable.String("", 65535,0,0 ) );
+      user->settings->restore( );
+      string hi;
+      if( (hi = user->settings->query("hilfe_history")) != "" )
+	rl->readline->get_history()->create( 512, hi/"\n" );
+      rl->readline->get_history()->finishline("");
+      print_version();
+      got_data("");
+    }
+  }
+#else
   class Handler
   {
     inherit Tools.Hilfe.Evaluator;
@@ -338,6 +379,7 @@ class Connection
       got_data("");
     }
   }
+#endif // > Pike 7.2
 
 #define USER 0
 #define PASSWORD 1
@@ -395,13 +437,19 @@ class Connection
 	rl->set_secret( 0 );
 	state++;
 	handler = Handler( );
+#ifndef THREADS
 	signal( signum("ALRM"), handle_alarm );
 	update_lu();
 	handle_alarm();
+#endif
 	break;
     }
   }
 
+#ifndef THREADS
+  // This is only a good thing when we've got no threads and have to
+  // use the backend. In a threaded server this code misbehaves
+  // severely (handle_alarm trigs an error in a random thread).
   int last_update;
   void update_lu()
   {
@@ -410,14 +458,18 @@ class Connection
   }
   void handle_alarm( )
   {
+#if constant (alarm)
+    // Pike@NT doesn't have this. This "fix" ought to be better..
     alarm( 1 );
+#endif
     if( time()-last_update > 5 )
-      throw( "Too long evaluation\n" );
+      error( "Too long evaluation\n" );
   }
+#endif
 
   void begone()
   {
-    catch(fd->write("Bye\n"));
+    catch(fd->write("\nBye\n"));
     catch(fd->close());
     catch(destruct( fd ));
     catch(destruct( handler ));
@@ -429,11 +481,11 @@ class Connection
   }
 
   int n;
-  static void init2( )
+  protected void init2( )
   {
     if( rl->readline )
     {
-      rl->readline->write("Welcome to Roxen Hilfe 1.0\n", 1);
+      rl->readline->write("Welcome to Roxen Hilfe 1.1\n", 1);
       rl->readline->write("Username: ");
       return;
     }
@@ -447,7 +499,7 @@ class Connection
     }
   }
 
-  static void create(object f, object c, object cc)
+  protected void create(object f, object c, object cc)
   {
     my_port_obj = c; 
     my_conf = cc;

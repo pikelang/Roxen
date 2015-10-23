@@ -1,4 +1,4 @@
-// The Roxen Network module. Copyright © 2000-2001, Roxen IS.
+// The Roxen Network module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.6 2001/08/05 20:14:56 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -54,10 +54,11 @@ void create(Configuration _conf) {
 			"E-mail addres to the webmaster"))
     -> may_be_empty(1);
 
-  var = defvar("location",
-	       PositionAccess(0, internal_location, 0,
-			      "Geographical location",
-			      "The physical location of the server."));
+  var = [object(Variable.MapLocation)](mixed)
+    defvar("location",
+	   PositionAccess(0, internal_location, 0,
+			  "Geographical location",
+			  "The physical location of the server."));
 
   defvar("ad",
 	 Variable.Text("", 0, "Free Text",
@@ -72,7 +73,9 @@ void create(Configuration _conf) {
 }
 
 void start() {
+#ifndef OFFLINE
   Poster(build_package);
+#endif /* OFFLINE */
 }
 
 string internal_location() {
@@ -109,7 +112,7 @@ class Poster
     query->async_request( "community.roxen.com", 80,
 			  "POST /register/roxen_network.html HTTP/1.0",
 			  ([ "Host":"community.roxen.com:80" ]),
-			  "data=" + Roxen.http_encode_string(mk_pkg()) );
+			  "data=" + Roxen.http_encode_invalids(mk_pkg()) );
   }
   
   void create( function _mk_pkg )
@@ -125,7 +128,7 @@ string build_package() {
   mapping info = ([]);
 
   info->pike_version = predef::version();
-  info->roxen_version = __roxen_version__ + "." + __roxen_build__;
+  info->roxen_version = roxen_ver + "." + roxen_build;
   info->id_string = roxen->version();
 
   foreach( ({ "owner", "webmaster", "ad" }), string var)
@@ -145,9 +148,11 @@ string build_package() {
       "</active_modules>\n";
 
   array hosts=({ gethostname() }), dns;
+#ifndef NO_DNS
   catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2];
+#endif /* !NO_DNS */
   hosts = Array.uniq(hosts);
 
   foreach(conf->registered_urls, string url) {

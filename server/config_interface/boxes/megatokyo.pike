@@ -1,15 +1,14 @@
-/*
- * Locale stuff.
- * <locale-token project="roxen_config"> _ </locale-token>
- */
+// Locale stuff.
+// <locale-token project="roxen_config"> _ </locale-token>
+
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
 constant box_initial = 0;
 
-String box_name = _(398,"Todays MegaTokyo comic");
-String box_doc  = _(399,"Todays comic from MegaTokyo");
+LocaleString box_name = _(398,"Todays MegaTokyo comic");
+LocaleString box_doc  = _(399,"Todays comic from MegaTokyo");
 
 
 /* And here we go. :-) */
@@ -24,17 +23,15 @@ string parse( RequestID id )
   else
   {
     string img;
-    string rant, status;
+    string status;
 
-    sscanf( data, "%*s\"strips/%s.gif\"", img );
+    sscanf( data, "%*sstrips/%s.gif", img );
     sscanf( data, "%*s<!--%*sstuff you%*s - start -->%s<!--", status );
 
-    sscanf( data,
-	    "%*s<!-- n e w s r a n t    c o m e n t -->"
-	    "%s"
-	    "<!-- comments area ends here for PIRO-->",
-	    rant );
-
+    if( !img )
+      return ("<box type='"+box+"' title='"+box_name+"'>"+data+"</box>");
+    if( !status )
+      status = "";
     array st = status/"<br>";
     string tmp;
     status = "<font size=-1>";

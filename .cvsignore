@@ -2,3 +2,4 @@ configurations
 logs
 var
 *.sb
+*.iw

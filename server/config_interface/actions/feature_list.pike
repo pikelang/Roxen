@@ -11,10 +11,36 @@ string doc = LOCALE(7,"Show information about which features and modules are "
 
 constant all_features = ({
   // only include modules that are sensible to use with Roxen
-  "threads", "out-of-band_data", "Crypto", "Gdbm", "Gmp", "Gz",
-  "Image.FreeType", "Image.GIF", "Image.JPEG", "Image.TIFF", "Image.TTF",
-  "Image.PNG", "Java", "Mird", "Msql", "Mysql", "Odbc", "Oracle", "PDF",
-  "Postgres", "SANE", "sybase",
+  "Bz2",
+  "COM",
+  "GSSAPI",
+  "Gdbm",
+  "Gmp",
+  "Gz",
+  "Image.FreeType",
+  "Image.GIF",
+  "Image.JPEG",
+  "Image.PNG",
+  "Image.TIFF",
+  "Java",
+  "Kerberos",
+  "Mird",
+  "Msql",
+  "Mysql",
+  "Nettle",
+  "Odbc",
+  "Oracle",
+  "PDF",
+  "Postgres",
+  "Regexp.PCRE",
+  "Regexp.PCRE.Widestring",
+  "SANE",
+  "SQLite",
+  "WhiteFish",
+  "double_precision_float",
+  "out-of-band_data",
+  "sybase",
+  "threads",
 });
 
 string nice_name( string what )
@@ -28,13 +54,18 @@ mixed parse(object id)
   array features = Tools.Install.features();
   array disabled = all_features - features;
 
-  res = "<font size='+1'>"+ LOCALE(238, "Features") +"</font><ul>\n"+
+  res =
+    "<font size='+1'><b>" + LOCALE(6, "Pike module list") + "</b></font>"
+    "<p />"
+    ""+ LOCALE(238, "Features") +"\n"
+    "<ul>\n"+
     String.implode_nicely( sort(map(features,nice_name)-({0})),
 			   LOCALE(79,"and"))
     + "</ul><br />\n";
 
   if (sizeof(disabled))
-    res += "<font size='+1'>"+LOCALE(140,"Unavailable features")+"</font><ul>\n"
+    res += ""+LOCALE(140,"Unavailable features")+"\n"
+      "<ul>\n"
       + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
 			       LOCALE(79,"and"))
       + "</ul><br />\n";

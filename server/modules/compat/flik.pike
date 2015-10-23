@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to
 // build a folder list or an outline. Example:
@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.5 2000/02/24 05:27:10 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -30,7 +30,7 @@ int flno=1;
 #define GC_LOOP_TIME QUERY(gc_time)
 void create()
 {
-   defvar("gc_time", 300, "GC time", TYPE_INT|VAR_DEVELOPER,
+   defvar("gc_time", 300, "GC time", TYPE_INT|VAR_MORE,
 	 "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
 
 }
@@ -77,8 +77,8 @@ string encode_url(object id,
     +"&flc"+flno+"="+dest;
   foreach(indices(id->variables), string var)
     if(var != "fl" && var[..2] != "flc" && stringp(id->variables[var]))
-      url += sprintf("&%s=%s", http_encode_string(var),
-		     http_encode_string(id->variables[var]));
+      url += sprintf("&%s=%s", http_encode_url(var),
+		     http_encode_url(id->variables[var]));
   return url+"#fl_"+flno;
 }
 

@@ -1,14 +1,20 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
-// .htaccess compability by David Hedbor, neotron@roxen.com
-//   Changed into module by Per Hedbor, per@roxen.com
+// .htaccess compability by David Hedbor <neotron@roxen.com>
+//   Changed into module by Per Hedbor <per@roxen.com>
+//   Support for many extensions added by Henrik Grubbström <grubba@roxen.com>
+//
+// The canonical documentation for the .htaccess format seems to be
+//   http://httpd.apache.org/docs/1.3/mod/mod_access.html
 
-constant cvs_version="$Id: htaccess.pike,v 1.78 2001/08/20 15:15:19 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>
 #include <roxen.h>
 inherit "module";
+
+//#define HTACCESS_DEBUG
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
@@ -103,13 +109,13 @@ mapping|string|int htaccess(mapping access, RequestID id)
       string from, to;
 
       if(sscanf(r, "%s %s", from, to) < 2)
-	return Roxen.http_redirect(access->redirect,id);
+	return Roxen.http_redirect(r, id);
 
       if( has_value(id->not_query, from) )
 	return Roxen.http_redirect(to,id);
     }
   
-  HT_WERR("Verifying access.");
+  HT_WERR(sprintf("Verifying access. method: %O", id->method));
   string method;
   if(!access[method = lower_case(id->method)])
   {
@@ -149,6 +155,9 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	return 1;
     }
   }
+#ifdef HTACCESS_DEBUG
+  report_debug(sprintf("HTACCESS: access[%O]: %O\n", method, access[method]));
+#endif /* HTACCESS_DEBUG */
   return access[ method ]( id );
 }
 
@@ -156,30 +165,54 @@ function(RequestID:mapping|int) allow_deny( function allow,
 					    function deny,
 					    int order )
 {
+#ifdef HTACCESS_DEBUG
+  report_debug("HTACCESS: allow_deny(%O, %O, %s)\n",
+	       allow, deny, 
+	       ([1:"allow, deny", -1:"mutual-failure",
+		 0:"deny, allow"])[order] || "UNKNOWN");
+#endif /* HTACCESS_DEBUG */
+  // Sanity check.
+  if (!allow && !deny) {
+    error("At least one of allow or deny must be a function!\n");
+  }
   return lambda( RequestID id ) {
 	   mixed not_allowed = allow && allow( id );
 	   mixed denied  = deny && deny( id );
-// 	   werror("not_allowed: %O\n", not_allowed );
-// 	   werror("denied: %O\n", denied );
-	   int ok;
+	   // Note: not_allowed is 1 or a mapping if none of the allow
+	   //       patterns matched.
+	   //       denied is 0 if none of the deny patterns matched.
+#ifdef HTACCESS_DEBUG
+	   report_debug("HTACCESS: not_allowed: %O\n"
+			"          denied: %O\n"
+			"          order: %s\n"
+			"          allow: %O\n"
+			"          deny: %O\n",
+			not_allowed, denied,
+			([1:"allow, deny", -1:"mutual-failure",
+			  0:"deny, allow"])[order] || "UNKNOWN",
+			allow, deny);
+#endif /* HTACCESS_DEBUG */
+	   // Note: Returns 1 or a mapping on access denied.
+	   //       Returns 0 on access permitted.
 	   switch( order )
 	   {
-	     case 1: //allow,deny
-	       if( not_allowed ) return not_allowed;
-	       if( denied )      return denied;
-	       return 0;
-
 	     case -1: // mutual-failure
-	       if( not_allowed && denied )
-		 return mappingp( not_allowed ) ? not_allowed : denied;
-	       return 0;
+	       // Deprecated, equvivalent to allow,deny.
+	     case 1: //allow,deny
+	       // * At least one allow pattern MUST match.
+	       // AND
+	       // * All deny patterns MUST NOT match.
+	       if( not_allowed ) return not_allowed;
+	       return denied;
 
 	     case 0: // deny,allow
-	       if( !denied )
-		 return 0;
-	       if( not_allowed )
-		 return not_allowed;
+	       // * All deny patterns MUST NOT match.
+	       // OR
+	       // * At least one allow pattern MUST match.
+	       if( !denied ) return 0;
+	       return not_allowed;
 	   }
+	   return 0;
 	 };
 }
 					    
@@ -192,23 +225,44 @@ mapping parse_and_find_htaccess( RequestID id )
     string line, ent;
     string|int data;
 
-    string roxen_allow = "", roxen_deny = "";
     int any_ok = 0, order = 1;
+
+    string roxen_allow = "", roxen_deny = "";
+
+    // The following two are used for grouping.
+    mapping(string:array(string)) allow = ([]);
+    mapping(string:array(string)) deny = ([]);
+
+    // Flush the grouped patterns. 
+    void flush_patterns()
+    {
+      foreach(indices(allow), string cat) {
+	roxen_allow += "allow "+cat+"="+(allow[cat]*",") + "\n";
+      }
+      allow = ([]);
+      foreach(indices(deny), string cat) {
+	roxen_deny += "deny "+cat+"="+(deny[cat]*",") + "\n";
+      }
+      deny = ([]);
+    };
 
     if( access->authname )
     {
+      flush_patterns();
       roxen_allow += "realm "+access->authname+"\n";
       roxen_deny += "realm "+access->authname+"\n";
     }
     if( access->userdb )
     {
+      flush_patterns();
       roxen_allow += "userdb "+access->userdb+"\n";
       roxen_deny += "userdb "+access->userdb+"\n";
     }
     if( access->authmethod )
     {
-      roxen_allow += "authmethod "+access->userdb+"\n";
-      roxen_deny += "authmethod "+access->userdb+"\n";
+      flush_patterns();
+      roxen_allow += "authmethod "+access->authmethod+"\n";
+      roxen_deny += "authmethod "+access->authmethod+"\n";
     }
     
     if(!sizeof(m))
@@ -216,10 +270,10 @@ mapping parse_and_find_htaccess( RequestID id )
 
     foreach( replace(s, "\r", "\n") / "\n"-({""}), line )
     {
-      if(!strlen(line))
-	continue;
-
       line = (replace(line, "\t", " ") / " " - ({""})) * " ";
+
+      if(!strlen(line) || has_prefix(line, "#"))
+	continue;
 
       if(line[0] == ' ') /* There can be only one /Connor MacLeod */
 	line = line[1..];
@@ -227,35 +281,41 @@ mapping parse_and_find_htaccess( RequestID id )
       line = lower_case(line);
 
       if( line == "deny all" )
-	roxen_deny = "deny ip=*\n";
+	roxen_deny += "deny ip=*\n";
       else if( line == "allow all" )
-	roxen_allow = "allow ip=*\n";
+	roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "realm %s", data)||
 	      sscanf(line, "authmethod %s", data)||
-	     sscanf(line, "userdb %s", data))
+	      sscanf(line, "userdb %s", data))
       {
+	flush_patterns();
 	roxen_allow += line+"\n";
 	roxen_deny += line+"\n";
       }
       else if(sscanf(line, "deny from %s", data))
-	if( (int)data )
-	  roxen_deny += "deny ip="+data+"*\n";
-	else
-	  roxen_deny += "deny dns=*"+data+"\n";
-      else if(sscanf(line, "allow from %s", data))
-	if( data != "all" )
+	if (data != "all") {
 	  if( (int)data )
-	    roxen_allow += "allow ip="+data+"*\n";
+	    deny->ip += ({data+"*"});
 	  else
-	    roxen_allow += "allow dns=*"+data+"\n";
+	    deny->dns += ({"*"+data});
+	}
+	else
+	  roxen_deny += "deny ip=*\n";
+      else if(sscanf(line, "allow from %s", data))
+	if( data != "all" ) {
+	  if( (int)data )
+	    allow->ip += ({data+"*"});
+	  else
+	    allow->dns += ({"*"+data});
+	}
 	else
 	  roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "require %s %s", ent, data) == 2)
-	roxen_allow += "allow "+ent+"="+data+"\n";
+	allow[ent] += (replace(data, ([" ":",","\t":","]))/",") - ({""});
       else if(sscanf(line, "deny %s %s", ent, data) == 2)
-	roxen_deny += "deny "+ent+"="+data+"\n";
+	deny[ent] += ({data});
       else if(sscanf(line, "satisfy %s", data))
-	if(data == "all")
+	if(data == "any")
 	  any_ok = 1;
 	else
 	  any_ok = 0;
@@ -275,17 +335,36 @@ mapping parse_and_find_htaccess( RequestID id )
 	else
 	  order = 0;
 	continue;
+#ifdef HTACCESS_DEBUG
+      } else {
+	report_debug("HTACCESS: Unknown directive %O\n", line);
+#endif /* HTACCESS_DEBUG */
       }
     }
 
+    flush_patterns();
+
+    // Make the deny handler default to allowing all.
+    // This means that the result will only return 1
+    // if there was a rule that matched.
     roxen_deny += "allow ip=*\n";
 
-    if( any_ok )
-      roxen_allow = replace( roxen_allow, "\n", " return\n" );
+    if( any_ok ) {
+      array(string) rows = roxen_allow/"\n";
+      int i;
+      for (i=0; i < sizeof(rows); i++) {
+	if (has_prefix(rows[i], "allow ")) {
+	  rows[i] += " return";
+	}
+      }
+      roxen_allow = rows*"\n";
+    }
 
-
-//     werror("Allow:\n"+roxen_allow+"\n");
-//     werror("Deny:\n"+roxen_deny+"\n");
+#ifdef HTACCESS_DEBUG
+    report_debug("limit:%{ %s%}\n", indices(m));
+    report_debug("  Allow:\n"+roxen_allow+"\n");
+    report_debug("  Deny:\n"+roxen_deny+"\n");
+#endif /* HTACCESS_DEBUG */
     
     function fun =
       allow_deny( roxen.compile_security_pattern( roxen_allow, this_object() ),
@@ -293,16 +372,23 @@ mapping parse_and_find_htaccess( RequestID id )
 		  order );
     
     foreach( indices( m ), string s )
-      access[lower_case(s)] = fun;
+      foreach( Unicode.split_words_and_normalize( s ), string q )
+	access[lower_case(Unicode.normalize( s, "C" ))] = fun;
     return "";
   };
 
   string cache_key;
 
   array cv = VFS.find_above_read( id->not_query, htfile, id, "htaccess", 1 );
+
   if( !cv ) return 0;
 
   [string file,string htaccess,int mtime] = cv;
+
+#ifdef HTACCESS_DEBUG
+  report_debug(sprintf("HTACCESS: File:%O, mtime: %d\n"
+		       "%{    %s\n%}\n", file, mtime, (htaccess||"-")/"\n"));
+#endif /* HTACCESS_DEBUG */
     
   cache_key = "htaccess:parsed:" + id->conf->name + ":" + (id->misc->host||"*");
 
@@ -310,15 +396,26 @@ mapping parse_and_find_htaccess( RequestID id )
   if((in_cache = cache_lookup(cache_key, file)) && (mtime <= in_cache[0]))
     return in_cache[1];
 
+  if (!htaccess) {
+    // Failed to read htaccess file -- Use paranoia fallback.
+    htaccess =
+      "<limit get post head put>\n"
+      "  deny all\n"
+      "</limit>";
+    report_debug(sprintf("HTACCESS: Failed to read htaccess file: %O\n"
+			 "HTACCESS: Using paranoia fallback:\n"
+			 "%{    %s\n%}\n", file, htaccess/"\n"));
+  }
+
   if( !strlen(htaccess) )
     return 0;
 
-  htaccess = replace(htaccess, ([ "\\\n":" ", "\r":"" ]));
+  htaccess = replace(htaccess, ([ "\\\r\n":" ", "\\\n":" ", "\r":"" ]));
   foreach(htaccess / "\n"-({""}), string line)
   {
     string cmd, rest;
 
-    if(line[0] == '#')
+    if(!strlen(line) || line[0] == '#')
       continue;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
@@ -344,7 +441,7 @@ mapping parse_and_find_htaccess( RequestID id )
       case "redirect":
       case "redirectperm":
       case "redirectpermanent":
-	access->redirect = rest;
+	access->redirect += ({ rest });
 	break;
 
       case "authuserfile":
@@ -369,7 +466,7 @@ mapping parse_and_find_htaccess( RequestID id )
   if ((!access->head) && access->get)
     access->head = access->get;
 
-  if( sizeof( access ) )
+  if(!sizeof( access ) )
     parse_limit( 0, ([ "all":"all" ]), htaccess );
 
   cache_set(cache_key, file, ({mtime, access}));
@@ -382,9 +479,13 @@ mapping try_htaccess(RequestID id)
   string file;
 
   TRACE_ENTER("htaccess->try_htaccess()", try_htaccess);
-  if( !( access = parse_and_find_htaccess( id )) )
+  if( !( access = parse_and_find_htaccess( id )) ) {
+    TRACE_LEAVE("No htaccess-file.");
     return 0;
-  NOCACHE(); // Since there is a htaccess file we cannot cache at all.
+  }
+  NO_PROTO_CACHE();
+
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
 
   switch(mixed ret = htaccess(access, id))
   {
@@ -403,7 +504,7 @@ mapping try_htaccess(RequestID id)
 				   "or domain-name. "
 				   "The server couldn't resolve your hostname."
 				   " <b>Your computer might lack a correct "
-				   "PTR DNS entry. In that "
+				   "DNS PTR entry. In that "
 				   "case, ask your system administrator to "
 				   "add one.</b>");
     default:
@@ -430,9 +531,9 @@ mapping last_resort(RequestID id)
 	return Roxen.http_rxml_answer( file, id );
       }
     }
-    return 0;
   }
   TRACE_LEAVE("OK");
+  return 0;
 }
 
 mapping remap_url(RequestID id)
@@ -444,6 +545,8 @@ mapping remap_url(RequestID id)
 
   TRACE_ENTER("htaccess->remap_url()", remap_url);
 
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
+
   if(strlen(id->not_query)&&id->not_query[0]=='/')
   {
     access_violation = try_htaccess( id );
@@ -452,7 +555,7 @@ mapping remap_url(RequestID id)
       return access_violation;
     } else {
       string s = (id->not_query/"/")[-1];
-      if( denylist[ s ] )
+      if (denylist[lower_case(s)])
       {
 	report_debug("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
@@ -463,13 +566,16 @@ mapping remap_url(RequestID id)
     }
   }
   TRACE_LEAVE("OK");
+
+  // HT_WERR(sprintf("id->misc: %O", id->misc));
 }
 
 multiset denylist;
 string   htfile;
-void start()
+void start(int num, Configuration conf)
 {
-  denylist = mkmultiset( query( "denyhtlist" ) );
+  module_dependencies(conf, ({ "auth_httpbasic" }));
+  denylist = mkmultiset(map(query("denyhtlist"), lower_case));
   htfile = query("file");
 }
 
@@ -481,7 +587,19 @@ constant name = "htaccess";
 class HtUser
 {
   inherit User;
-  static array pwent;
+  constant is_transient = 1;
+  protected array pwent;
+
+#ifdef HTACCESS_DEBUG
+  int password_authenticate(string password)
+  {
+    int res = ::password_authenticate(password);
+    report_debug(sprintf("HTACCESS: password_authenticate(%O)\n"
+			 "  user:%O, crypt:%O ==> %O\n",
+			 password, name(), crypted_password(), res));
+    return res;
+  }
+#endif /* HTACCESS_DEBUG */
 
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
@@ -495,10 +613,10 @@ class HtUser
 
   array(string) groups()
   {
-    return pwent[7]+(({pwent[8]})-({0}));
+    return ((array)(pwent[7]||(<>)))+(({pwent[8]})-({0}));
   }
   
-  static void create( UserDB p, array _pwent )
+  protected void create( UserDB p, array _pwent )
   {
     ::create( p );
     pwent = _pwent;
@@ -508,12 +626,14 @@ class HtUser
 class HtGroup
 {
   inherit Group;
+  constant is_transient = 1;
+
   array grent;
   int gid()                { return grent[2]; }
   string name()            { return grent[0]; }
   array(string) members()  { return (array)grent[3]; }
 
-  static void create( UserDB p, array _grent )
+  protected void create( UserDB p, array _grent )
   {
     ::create( p );
     grent = _grent;
@@ -528,32 +648,36 @@ array(mapping) parse_groupfile( string f )
   int gid = 10000;
   foreach( f / "\n", string r )
   {
-    array q = r/":";
+    array(string) q = r/":";
+    string members;
+    string passwd = "";
+    int this_gid;
     switch( sizeof( q ) ) 
     {
-      case 2: // group:members
-	foreach( q[1]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], "", gid++, (multiset)(q[1]/",") });
-	groups[gid-1] = groups[q[0]];
-	break;
-      case 4: // group:passwd:gid:
-	foreach( q[3]/",", string u )
-	{
-	  if( u2g[u] )
-	    u2g[u]+=(<q[0]>);
-	  else
-	    u2g[u]=(<q[0]>);
-	}
-	groups[q[0]]=({ q[0], q[1], (int)q[2], (multiset)(q[3]/",") });
-	groups[(int)q[2]] = groups[q[0]];
-	break;
+    default:
+      continue;
+    case 2: // group:members
+      this_gid = gid++;
+      members = q[1];
+      break;
+    case 4: // group:passwd:gid:members
+      passwd = q[1];
+      this_gid = (int)q[2];
+      members = q[3];
+      break;
     }
+    // NB: members can be separated by either space or comma.
+    multiset(string) user_set =
+      (multiset(string))(replace(members, ",", " ")/" " - ({""}));
+    foreach(indices(user_set), string u)
+    {
+      if( u2g[u] )
+	u2g[u]+=(<q[0]>);
+      else
+	u2g[u]=(<q[0]>);
+    }
+    groups[q[0]] = ({ q[0], passwd, this_gid, user_set });
+    groups[this_gid] = groups[q[0]];
   }
   return ({ groups, u2g });
 }
@@ -568,7 +692,7 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
     array q = r/":";
     switch( sizeof( q ) )
     {
-      case 2: // user:passwd
+      case 2..6: // user:passwd
 	users[q[0]] = ({q[0],q[1],uid++,10000,q[0],"/tmp/","/nosuchshell",
 			u2g[q[0]], 0});
 	users[uid-1] = users[q[0]];
@@ -587,16 +711,16 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
 User find_user( string s, RequestID id )
 {
   if( !id ) return 0;
-  mapping uu =   id->misc->ht_authinfo||([]);
+  mapping uu = id->misc->ht_authinfo||([]);
   mapping groups, u2g, users;
 
   [groups,u2g] = parse_groupfile(uu->groupfile);
-  users  = parse_userfile( uu->userfile, u2g, groups );
+  users = parse_userfile( uu->userfile, u2g, groups );
   if( users[ s ] )
-    return HtUser( this_object(), users[s], );
+    return HtUser(this_object(),users[s]);
 }
 
-User find_user_from_uid( int uid, RequestID id )
+User find_user_from_uid( int uid, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -609,14 +733,14 @@ User find_user_from_uid( int uid, RequestID id )
     return HtUser( this_object(), users[uid] );
 }
 
-array(string) list_users( RequestID id )
+array(string) list_users( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
   return filter(indices(parse_userfile( uu->userfile, 0, 0 )),stringp);
 }
 
-Group find_group( string group, RequestID id )
+Group find_group( string group, RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -626,7 +750,7 @@ Group find_group( string group, RequestID id )
     return HtGroup( this_object(), groups[group] );
 }
 
-Group find_group_from_gid( int gid, RequestID id  )
+Group find_group_from_gid( int gid, RequestID|void id  )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);
@@ -636,7 +760,7 @@ Group find_group_from_gid( int gid, RequestID id  )
     return HtGroup( this_object(), groups[gid] );
 }
 
-array(string) list_groups( RequestID id )
+array(string) list_groups( RequestID|void id )
 {
   if( !id ) return 0;
   mapping uu =   id->misc->ht_authinfo||([]);

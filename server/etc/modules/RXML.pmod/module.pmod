@@ -2,11 +2,12 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.238 2001/08/24 01:00:33 mast Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
-static object Roxen;
+protected object Roxen;
+protected object roxen;
 
 //! API stability notes:
 //!
@@ -48,14 +49,11 @@ static object Roxen;
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-#include <config.h>
-
-#include <request_trace.h>
-
 #define MAGIC_HELP_ARG
 // #define OBJ_COUNT_DEBUG
 // #define RXML_OBJ_DEBUG
 // #define RXML_VERBOSE
+// #define RXML_REQUEST_VERBOSE
 // #define RXML_COMPILE_DEBUG
 // #define RXML_ENCODE_DEBUG
 // #define TYPE_OBJ_DEBUG
@@ -63,16 +61,24 @@ static object Roxen;
 // #define FRAME_DEPTH_DEBUG
 // #define RXML_PCODE_DEBUG
 // #define RXML_PCODE_UPDATE_DEBUG
+// #define RXML_PCODE_COMPACT_DEBUG
+// #define TAGSET_GENERATION_DEBUG
+
+#include <config.h>
+#include <module.h>
+#include <request_trace.h>
 
 
 #ifdef RXML_OBJ_DEBUG
 #  define MARK_OBJECT \
-     mapping|object __object_marker = Debug.ObjectMarker (this_object())
+     mapping|object __object_marker = RoxenDebug.ObjectMarker (this_object())
 #  define MARK_OBJECT_ONLY \
-     mapping|object __object_marker = Debug.ObjectMarker (0)
+     mapping|object __object_marker = RoxenDebug.ObjectMarker (0)
+#  define DO_IF_RXML_OBJ_DEBUG(X...) X
 #else
 #  define MARK_OBJECT ;
 #  define MARK_OBJECT_ONLY ;
+#  define DO_IF_RXML_OBJ_DEBUG(X...)
 #endif
 
 #ifdef OBJ_COUNT_DEBUG
@@ -91,26 +97,12 @@ static object Roxen;
 #  define OBJ_COUNT ""
 #endif
 
-#ifdef RXML_VERBOSE
-#  define TAG_DEBUG_TEST(test) 1
-#else
-#  define TAG_DEBUG_TEST(test) (test)
-#endif
-
 #ifdef DEBUG
 #  define TAG_DEBUG(frame, msg, args...)				\
   (TAG_DEBUG_TEST (frame && frame->flags & FLAG_DEBUG) &&		\
    report_debug ("%O: " + (msg), (frame), args), 0)
-#  define DO_IF_DEBUG(code...) code
 #else
 #  define TAG_DEBUG(frame, msg, args...) 0
-#  define DO_IF_DEBUG(code...)
-#endif
-
-#ifdef MODULE_DEBUG
-#  define DO_IF_MODULE_DEBUG(code...) code
-#else
-#  define DO_IF_MODULE_DEBUG(code...)
 #endif
 
 #ifdef FRAME_DEPTH_DEBUG
@@ -139,33 +131,18 @@ static object Roxen;
 #define UNWIND_STATE mapping(string|object:mixed|array)
 #define EVAL_ARGS_FUNC function(Context,Parser|PCode:mapping(string:mixed))|string
 
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
+
 
 // Internal caches and object tracking
 //
 // This must be first so that it happens early in __INIT.
 
-static int tag_set_count = 0;
+protected int tag_set_count = 0;
 
-static mapping(int|string:TagSet) garb_composite_tag_set_cache()
-{
-  call_out (garb_composite_tag_set_cache, 30*60);
-  return composite_tag_set_cache = ([]);
-}
-
-static mapping(int|string:TagSet) composite_tag_set_cache =
-  garb_composite_tag_set_cache();
-
-#define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
-  int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
-  if (!(res = composite_tag_set_cache[hash])) {				\
-    res = TagSet (0, 0);						\
-    res->imported = ({a, b});						\
-    /* Race, but it doesn't matter. */					\
-    composite_tag_set_cache[hash] = res;				\
-  }									\
-} while (0)
-
-static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_sets = ([]);
+protected mapping(RoxenModule|Configuration:
+		  mapping(string:TagSet|int)) all_tag_sets = ([]);
 // Maps all tag sets to their TagSet objects. The top mapping is
 // indexed with the owner of the tag set, or 0 for global tag sets.
 // The inner mappings (which always are weak) are indexed by the tag
@@ -176,7 +153,7 @@ static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_set
 // generation sequence. We use the fact that a weak mapping won't
 // remove items that aren't refcounted (and strings).
 
-static Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
+protected Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
 
 #define LOOKUP_TAG_SET(owner, name) ((all_tag_sets[owner] || ([]))[name])
 
@@ -188,13 +165,13 @@ static Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
   map[name] = (value);							\
 } while (0)
 
-static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
+protected mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 // Maps each parser name to the parser program.
 
-static mapping(string:Type) reg_types = ([]);
+protected mapping(string:Type) reg_types = ([]);
 // Maps each type name to a type object with the PNone parser.
 
-static mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+protected mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
 
 
 // Interface classes
@@ -216,7 +193,8 @@ class Tag
   TagSet tagset;
   //! The tag set that this tag belongs to, if any.
 
-  /*extern*/ int flags;
+  //! @decl int flags;
+  //!
   //! Various bit flags that affect parsing; see the FLAG_* constants.
   //! @[RXML.Frame.flags] is initialized from this.
 
@@ -225,6 +203,20 @@ class Tag
   //! The names and types of the required and optional arguments. If a
   //! type specifies a parser, it'll be used on the argument value.
   //! Note that the order in which arguments are parsed is arbitrary.
+  //!
+  //! If an argument got a nonsequential type, it takes exactly one
+  //! value. More than one value trigs a parse error. If no value is
+  //! given (e.g. the attribute value is just an empty string) then a
+  //! parse error is trigged if the argument is required, otherwise
+  //! the argument is considered missing altogether.
+  //!
+  //! For instance, if you have @expr{@[opt_arg_types] = (["foo":
+  //! RXML.t_int(RXML.PEnt)])@} then @expr{<my-tag foo=""/>@} is the
+  //! same as @expr{<my-tag/>@} since the attribute value @expr{""@}
+  //! contains no integer.
+  //!
+  //! The above does not apply to sequential types, since they always
+  //! can be assigned an empty value.
 
   Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
@@ -260,7 +252,7 @@ class Tag
   //! that's asked for, not that it has the liberty to produce results
   //! of any type it chooses.
   //!
-  //! The types in this list is first searched in order for a type
+  //! The types in this list are first searched in order for a type
   //! that is a subtype of the actual type. If none is found, the list
   //! is searched through a second time for a type that is a supertype
   //! of the actual type.
@@ -307,7 +299,7 @@ class Tag
   //!   in the mapping that the @[Frame.get_plugins] returns.
   //!  @item
   //!   The plugin tag is registered in the tag set with the
-  //!   identifier @code{@[name] + "#" + @[plugin_name]@}.
+  //!   identifier @expr{@[name] + "#" + @[plugin_name]@}.
   //!
   //!   It overrides other plugin tags with that name according to
   //!   the normal tag set rules, but, as said above, is never
@@ -330,9 +322,12 @@ class Tag
     object/*(Frame)HMM*/ frame =
       ([function(:object/*(Frame)HMM*/)] this_object()->Frame)();
     frame->tag = this_object();
-    frame->flags = flags;
+    frame->flags = this_object()->flags;
     frame->args = args;
     frame->content = zero_type (content) ? nil : content;
+#ifdef RXML_OBJ_DEBUG
+    frame->__object_marker->create (frame);
+#endif
     return frame;
   }
 
@@ -361,12 +356,28 @@ class Tag
 		      "argument " + missing[0] + " is") + " missing.\n");
       }
     atypes += args & opt_arg_types;
+    if (!ctx) ctx = RXML_CONTEXT;
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
-      foreach (indices (args) - ( ignore_args||({}) ), string arg)
-	args[arg] = (atypes[arg] || def_arg_type)->eval (
-	  args[arg], ctx);	// Should not unwind.
+	if (ignore_args)
+	  foreach (indices (args) - ignore_args, string arg) {
+	    Type t = atypes[arg] || def_arg_type;
+	    mixed v = t->eval_opt (args[arg], ctx); // Should not unwind.
+	    if (v == nil)
+	      set_nil_arg (args, arg, t, req_arg_types, ctx->id);
+	    else
+	      args[arg] = v;
+	  }
+	else
+	  foreach (args; string arg; mixed val) {
+	    Type t = atypes[arg] || def_arg_type;
+	    mixed v = t->eval_opt (val, ctx); // Should not unwind.
+	    if (v == nil)
+	      set_nil_arg (args, arg, t, req_arg_types, ctx->id);
+	    else
+	      args[arg] = v;
+	  }
 #ifdef MODULE_DEBUG
     }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -378,6 +389,9 @@ class Tag
   }
 
   // Internals:
+
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
 
 #define MAKE_FRAME(_frame, _ctx, _parser, _args, _content)		\
   make_new_frame: do {							\
@@ -391,9 +405,10 @@ class Tag
     _frame =								\
       ([function(:object/*(Frame)HMM*/)] this_object()->Frame)();	\
     _frame->tag = this_object();					\
-    _frame->flags = flags|FLAG_UNPARSED;				\
+    _frame->flags = this_object()->flags|FLAG_UNPARSED;			\
     _frame->args = _args;						\
     _frame->content = _content || "";					\
+    DO_IF_RXML_OBJ_DEBUG (_frame->__object_marker->create (_frame));	\
     DO_IF_DEBUG(							\
       if (_args && ([mapping] (mixed) _args)["_debug_"]) {		\
 	_frame->flags |= FLAG_DEBUG;					\
@@ -409,16 +424,16 @@ class Tag
     if (mixed err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type);			\
       if (PCode p_code = _parser->p_code)				\
-	p_code->add_frame (_ctx, _frame, _res);				\
+	p_code->add_frame (_ctx, _frame, _res, 1);			\
     })									\
       if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
 	UNWIND_STATE ustate = _ctx->unwind_state;			\
 	if (!ustate) ustate = _ctx->unwind_state = ([]);		\
 	DO_IF_DEBUG (							\
 	  if (err != _frame)						\
-	  fatal_error ("Unexpected unwind object catched.\n");		\
+	    fatal_error ("Unexpected unwind object catched.\n");	\
 	  if (ustate[_parser])						\
-	  fatal_error ("Clobbering unwind state for parser.\n");	\
+	    fatal_error ("Clobbering unwind state for parser.\n");	\
 	);								\
 	ustate[_parser] = ({_frame});					\
 	throw (_parser);						\
@@ -426,12 +441,12 @@ class Tag
       else {								\
 	if (PCode p_code = _parser->p_code) {				\
 	  PCODE_UPDATE_MSG (						\
-	    "%O: Restoring p-code update count from %d to %d "		\
-	    "since the frame is stored unevaluated "			\
+	    "%O (frame %O): Restoring p-code update count "		\
+	    "from %d to %d since the frame is stored unevaluated "	\
 	    "due to exception.\n",					\
-	    _frame, _ctx->state_updated, orig_state_updated);		\
+	    _ctx, _frame, _ctx->state_updated, orig_state_updated);	\
 	  _ctx->state_updated = orig_state_updated;			\
-	  p_code->add_frame (_ctx, _frame, PCode);			\
+	  p_code->add_frame (_ctx, _frame, PCode, 1);			\
 	}								\
 	ctx->handle_exception (						\
 	  err, _parser); /* Will rethrow unknown errors. */		\
@@ -467,7 +482,7 @@ class Tag
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
-    if (result != nil) parser->add_value (result);
+    if (result != nil && result != empty) parser->add_value (result);
     return ({});
   }
 
@@ -492,7 +507,7 @@ class Tag
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
-    if (result != nil) parser->add_value (result);
+    if (result != nil && result != empty) parser->add_value (result);
     return ({});
   }
 
@@ -518,20 +533,26 @@ class Tag
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
-      foreach (indices (raw_args), string arg) {
+      foreach (raw_args; string arg; string val) {
 	Type t = atypes[arg] || def_arg_type;
 	if (t->parser_prog != PNone) {
 	  Parser parser = t->get_parser (ctx, ctx->tag_set, 0);
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Evaluating argument value %s with %O\n",
-		     format_short (raw_args[arg]), parser);
-	  parser->finish (raw_args[arg]); // Should not unwind.
-	  raw_args[arg] = parser->eval(); // Should not unwind.
+		     format_short (val), parser);
+
+	  parser->finish (val); // Should not unwind.
+	  mixed v = parser->eval(); // Should not unwind.
+	  t->give_back (parser, ctx->tag_set);
+
+	  if (v == nil)
+	    set_nil_arg (raw_args, arg, t, req_arg_types, ctx->id);
+	  else
+	    raw_args[arg] = v;
+
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Setting dynamic argument %s to %s\n",
-		     format_short (arg),
-		     format_short (raw_args[arg]));
-	  t->give_back (parser, ctx->tag_set);
+		     format_short (arg), format_short (val));
 	}
       }
 #ifdef MODULE_DEBUG
@@ -549,12 +570,14 @@ class Tag
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf (void|int flag)
   {
-    return "RXML.Tag(" + [string] this_object()->name +
-      (this_object()->plugin_name ? "#" + [string] this_object()->plugin_name : "") +
-      ([int] this_object()->flags & FLAG_PROC_INSTR ? " [PI]" : "") + ")" +
-      OBJ_COUNT;
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Tag") +
+       "(" + [string] this->name +
+       (this->plugin_name ? "#" + [string] this->plugin_name : "") +
+       ([int] this->flags & FLAG_PROC_INSTR ? " [PI]" : "") + ")" +
+       OBJ_COUNT);
   }
 }
 
@@ -597,7 +620,8 @@ class TagSet
   //! you should not use that if you create more tag sets in such a
   //! module.
 
-  string prefix;
+  //! @decl string prefix;
+  //!
   //! A namespace prefix that may precede the tags. If it's zero, it's
   //! up to the importing tag set(s). A @tt{:@} is always inserted
   //! between the prefix and the tag name.
@@ -608,7 +632,8 @@ class TagSet
   //! some point, this way of specifying tag prefixes will probably
   //! change.
 
-  int prefix_req;
+  //! @decl int prefix_req;
+  //!
   //! The prefix must precede the tags.
 
   array(TagSet) imported = ({});
@@ -630,7 +655,7 @@ class TagSet
   //! imported tag sets will be called in order of precedence; highest
   //! last.
 
-  function(Context:void) eval_finish;
+  //! @decl function(Context:void) eval_finish;
   //! If set, this will be called just before an evaluation of the
   //! given @[RXML.Context] finishes. The callbacks in imported tag
   //! sets will be called in order of precedence; highest last.
@@ -642,21 +667,63 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-  static void create (RoxenModule|Configuration _owner, string _name,
-		      void|array(Tag) _tags)
-  //! @[_owner] and @[_name] initializes @[owner] and @[name],
-  //! respectively; see those two for further details about tag set
-  //! identification issues.
+  protected void create (RoxenModule|Configuration owner_, string name_,
+			 void|array(Tag) _tags)
+  //! @[owner_] and @[name_] initializes @[owner] and @[name],
+  //! respectively. They are used to identify the tag set and its tags
+  //! when p-code is created and stored on disk.
+  //!
+  //! @[owner_] is the object that "owns" this tag set and is
+  //! typically the @[RoxenModule] object that created it. It can also
+  //! be a @[Configuration] object or zero; see @[owner] for more
+  //! details.
+  //!
+  //! @[name_] identifies the tag set uniquely among those owned by
+  //! @[owner_]. Note that the empty string is already used for the
+  //! main tag set in Roxen tag modules. See @[name]
+  //!
+  //! @example
+  //! A tag set for local or additional tags within an RXML tag in a
+  //! Roxen tag module is typically created like this:
+  //!
+  //! @code
+  //!   RXML.TagSet internal =
+  //!     RXML.TagSet(this_module(), "my-tag",
+  //!   	      ({MySubTag1(), MySubTag2(), ...}));
+  //! @endcode
+  //!
+  //! "my-tag" is the name of the tag that contains the subtags. It's
+  //! typically a good idea to use the name of that tag, since it
+  //! always is stable enough and unique within the tag set.
+  //!
+  //! Note that creating a tag set at runtime when a @[Frame] is
+  //! created doesn't work with p-code generation. If you think you
+  //! need to do that then you should probably take a look at
+  //! @[Frame.parent_frame] instead.
   {
+    if (RXML_CONTEXT &&
+	(!RXML_CONTEXT->id ||
+	 !RXML_CONTEXT->id->misc->disable_tag_set_creation_warning)) {
+      report_debug (
+	"Warning: Tag set %O in %O created during RXML evaluation.\n"
+	"This doesn't work with p-code generation and should be avoided.\n",
+	name_, owner_);
+#ifdef MODULE_DEBUG
+      array bt = backtrace();
+      report_debug (describe_backtrace (bt/*[sizeof (bt) - 6..]*/));
+#endif
+    }
+
+    // Note: Some code duplication wrt CompositeTagSet.create.
     id_number = ++tag_set_count;
-    if (_name) {
+    if (name_) {
       Thread.MutexKey key = all_tag_sets_mutex->lock (2);
       // Allow recursive locking since we don't touch any other
       // locks in here.
-      set_name (_owner, _name);
+      set_name (owner_, name_);
       key = 0;
     }
-    else owner = _owner;
+    else owner = owner_;
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
@@ -683,6 +750,12 @@ class TagSet
     else
       if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
       else tags[tag->name] = tag;
+    tag->tagset = this_object();
+#ifdef RXML_OBJ_DEBUG
+    // The object marker might not have gotten the proper name from
+    // Tag._sprintf so try to give it a better string now.
+    tag->__object_marker->create (tag);
+#endif
     changed();
   }
 
@@ -708,6 +781,11 @@ class TagSet
 	if (tag->plugin_name) tags[tag->name + "#" + tag->plugin_name] = tag;
 	else tags[tag->name] = tag;
       tag->tagset = this_object();
+#ifdef RXML_OBJ_DEBUG
+      // The object marker might not have gotten the proper name from
+      // Tag._sprintf so try to give it a better string now.
+      tag->__object_marker->create (tag);
+#endif
     }
     changed();
   }
@@ -881,11 +959,11 @@ class TagSet
   //! definitions.
   //!
   //! @note
-  //! In the non-persistent case it's much more efficient to use
+  //! In the nonpersistent case it's much more efficient to use
   //! @[generation] to track changes in the tag set.
   {
     if (!hash)
-      hash = Crypto.md5()->update (encode_value_canonic (get_hash_data()))->digest();
+      hash = Crypto.MD5.hash (encode_value_canonic (get_hash_data()));
     return hash;
   }
 
@@ -969,7 +1047,10 @@ class TagSet
   //! context. The parser will collect an @[RXML.PCode] object if
   //! @[make_p_code] is nonzero.
   {
-    return new_context (id)->new_parser (top_level_type, make_p_code);
+    // Soft cast due to circular forward reference.
+    // Will hopefully be resolved with the next generation compiler.
+    return [object(Parser)](mixed)
+      new_context (id)->new_parser (top_level_type, make_p_code);
   }
 
   final Parser `() (Type top_level_type, void|RequestID id, void|int make_p_code)
@@ -982,6 +1063,10 @@ class TagSet
   //! Should be called whenever something is changed. Done
   //! automatically most of the time, however.
   {
+#ifdef TAGSET_GENERATION_DEBUG
+    werror ("%O update, generation %d -> %d\n", this_object(),
+	    generation, generation + 1);
+#endif
     generation++;
     prepare_funs = 0;
     overridden_tag_lookup = 0;
@@ -990,6 +1075,10 @@ class TagSet
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
     got_local_tags = sizeof (tags) || (proc_instrs && sizeof (proc_instrs));
+#ifdef TAGSET_GENERATION_DEBUG
+    werror ("%O update done, generation %d -> %d\n", this_object(),
+	    generation - 1, generation);
+#endif
   }
 
   function(Backtrace,Type:string) handle_run_error =
@@ -1022,6 +1111,9 @@ class TagSet
 
   // Internals:
 
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
+
   void do_notify (function(:void) func)
   {
     notify_funcs |= ({func});
@@ -1043,13 +1135,13 @@ class TagSet
       sizeof (imported) == 2 && imported;
   }
 
-  static void destroy()
+  protected void destroy()
   {
     catch (changed());
-    if (name) SET_TAG_SET (owner, name, generation);
+    if (name && global::this) SET_TAG_SET (owner, name, generation);
   }
 
-  static void set_name (Configuration new_owner, string new_name)
+  protected void set_name (Configuration new_owner, string new_name)
   // Note: Assumes all_tag_sets_mutex is locked already.
   {
     if (new_name) {
@@ -1073,27 +1165,27 @@ class TagSet
     }
   }
 
-  static mapping(string:Tag) tags = ([]), proc_instrs;
+  protected mapping(string:Tag) tags = ([]), proc_instrs;
   // Static since we want to track changes in these.
 
-  static mapping(string:string) string_entities;
+  protected mapping(string:string) string_entities;
   // Used by e.g. PXml to hold normal entities that should be replaced
   // during parsing.
 
-  static TagSet top_tag_set;
+  protected TagSet top_tag_set;
   // The imported tag set with the highest priority.
 
-  static int got_local_tags;
+  protected int got_local_tags;
   // Nonzero if there are local element tags or PI tags.
 
-  static array(function(:void)) notify_funcs = ({});
+  protected array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
 
-  static array(function(Context:void)) prepare_funs;
+  protected array(function(Context:void)) prepare_funs;
 
-  static multiset(TagSet) dep_tag_sets = set_weak_flag ((<>), 1);
+  protected multiset(TagSet) dep_tag_sets = set_weak_flag ((<>), 1);
 
-  /*static*/ array(function(Context:void)) get_prepare_funs()
+  /*protected*/ array(function(Context:void)) get_prepare_funs()
   {
     if (prepare_funs) return prepare_funs;
     array(function(Context:void)) funs = ({});
@@ -1110,15 +1202,15 @@ class TagSet
     (prepare_funs -= ({0})) (ctx);
   }
 
-  static array(function(Context:void)) eval_finish_funs;
+  protected array(function(Context:void)) eval_finish_funs;
 
-  /*static*/ array(function(Context:void)) get_eval_finish_funs()
+  /*protected*/ array(function(Context:void)) get_eval_finish_funs()
   {
     if (eval_finish_funs) return eval_finish_funs;
     array(function(Context:void)) funs = ({});
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       funs += imported[i]->get_eval_finish_funs();
-    if (eval_finish) funs += ({eval_finish});
+    if (this->eval_finish) funs += ({this->eval_finish});
     // We don't cache in eval_finish_funs; do that only at the top level.
     return funs;
   }
@@ -1129,9 +1221,9 @@ class TagSet
     (eval_finish_funs -= ({0})) (ctx);
   }
 
-  static mapping(Tag:Tag) overridden_tag_lookup;
+  protected mapping(Tag:Tag) overridden_tag_lookup;
 
-  /*static*/ Tag find_overridden_tag (Tag overrider, string overrider_name)
+  /*protected*/ Tag find_overridden_tag (Tag overrider, string overrider_name)
   {
     if (tags[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
@@ -1152,7 +1244,8 @@ class TagSet
     return 0;
   }
 
-  /*static*/ Tag find_overridden_proc_instr (Tag overrider, string overrider_name)
+  /*protected*/ Tag find_overridden_proc_instr (Tag overrider,
+						string overrider_name)
   {
     if (proc_instrs && proc_instrs[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
@@ -1173,59 +1266,58 @@ class TagSet
     return 0;
   }
 
-  static mapping(string:mapping(string:Tag)) plugins, pi_plugins;
+  protected mapping(string:mapping(string:Tag)) plugins, pi_plugins;
 
-  /*static*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
+  /*protected*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
   {
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_plugins (prefix, res);
-    foreach (indices (tags), string name)
-      if (name[..sizeof (prefix) - 1] == prefix) {
-	Tag tag = tags[name];
+    foreach (tags; string name; Tag tag)
+      if (has_prefix (name, prefix))
 	if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
-      }
     // We don't cache in plugins; do that only at the top level.
   }
 
-  /*static*/ void low_get_pi_plugins (string prefix, mapping(string:Tag) res)
+  /*protected*/ void low_get_pi_plugins (string prefix, mapping(string:Tag) res)
   {
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_pi_plugins (prefix, res);
     if (proc_instrs)
-      foreach (indices (proc_instrs), string name)
-	if (name[..sizeof (prefix) - 1] == prefix) {
-	  Tag tag = proc_instrs[name];
+      foreach (proc_instrs; string name; Tag tag)
+	if (name[..sizeof (prefix) - 1] == prefix)
 	  if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
-	}
     // We don't cache in pi_plugins; do that only at the top level.
   }
 
-  static string hash;
+  protected string hash;
 
-  /*static*/ array get_hash_data()
+  /*protected*/ array get_hash_data()
   {
     return ({
-      prefix,
-      prefix_req,
-      sort (indices (tags)),
-      proc_instrs && sort (indices (proc_instrs)),
+      this_object()->prefix,
+      this_object()->prefix_req,
+      mkmultiset (indices (tags)),
+      proc_instrs && mkmultiset (indices (proc_instrs)),
       string_entities,
     }) + imported->get_hash_data() +
-      ({0}) + indices (dep_tag_sets)->get_hash_data();
+      ({0}) + (indices (dep_tag_sets) - ({0}))->get_hash_data();
   }
 
-  /*static*/ string tag_set_component_names()
+  /*protected*/ string tag_set_component_names()
   {
     return name || sizeof (imported) && imported->tag_set_component_names() * "+";
   }
 
-  string _sprintf()
+  string _sprintf (void|int flag)
   {
-    return "RXML.TagSet(" +
+    if (flag != 'O') return 0;
+    return (function_name (object_program (this)) || "RXML.TagSet") +
+      "(" +
       // No, the owner isn't written unambiguously; we try to be brief here.
-      (owner && (owner->is_module ?
-		 owner->module_local_id() :
-		 owner->name)) + "," + tag_set_component_names() + ")" + OBJ_COUNT;
+      (string) (owner && (owner->is_module ?
+			  owner->module_local_id() :
+			  owner->name)) +
+      "," + tag_set_component_names() + ")" + OBJ_COUNT;
     //return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
   }
 
@@ -1239,7 +1331,7 @@ TagSet empty_tag_set;
 
 TagSet shared_tag_set (RoxenModule|Configuration owner, string name, void|array(Tag) tags)
 //! If a tag set with the given owner and name exists, it's returned.
-//! Otherwise a new tag set is created with them. @[tags] is passed
+//! Otherwise a new tag set is created with them. @[tags] is passed
 //! along to its @[RXML.TagSet.create] function in that case. Note
 //! that @[owner] may be zero to get a tag set that is global.
 {
@@ -1249,6 +1341,46 @@ TagSet shared_tag_set (RoxenModule|Configuration owner, string name, void|array(
       return tag_set;
   return TagSet (owner, name, tags);
 }
+
+protected class CompositeTagSet
+{
+  inherit TagSet;
+
+  protected void create (TagSet... tag_sets)
+  {
+    // Note: Some code duplication wrt TagSet.create.
+    id_number = ++tag_set_count;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
+    // Make sure TagSet::`-> gets called.
+    this->imported = tag_sets;
+  }
+
+  string _sprintf (void|int flag)
+  {
+    if (flag != 'O') return 0;
+    return "RXML.CompositeTagSet(" + tag_set_component_names() + ")" +
+      OBJ_COUNT;
+    //return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
+  }
+}
+
+protected mapping(int|string:CompositeTagSet) garb_composite_tag_set_cache()
+{
+  call_out (garb_composite_tag_set_cache, 30*60);
+  return composite_tag_set_cache = ([]);
+}
+
+protected mapping(int|string:CompositeTagSet) composite_tag_set_cache =
+  garb_composite_tag_set_cache();
+
+#define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
+  int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
+  if (!(res = composite_tag_set_cache[hash]))				\
+    /* Race, but it doesn't matter. */					\
+    res = composite_tag_set_cache[hash] = CompositeTagSet (a, b);	\
+} while (0)
 
 
 class Value
@@ -1263,11 +1395,16 @@ class Value
   //! through subindexing. Either @[RXML.nil] or the undefined value
   //! may be returned if the variable doesn't have a value.
   //!
+  //! If an object with an @[rmxl_var_eval] function is returned, then
+  //! that function is called in turn to produce the real value. As a
+  //! special case, if @[rxml_var_eval] returns this object, the
+  //! object itself is used as value.
+  //!
   //! If the @[type] argument is given, it's the type the returned
   //! value should have. If the value can't be converted to that type,
   //! an RXML error should be thrown. If you don't want to do any
   //! special handling of this, it's enough to call
-  //! @code{@[type]->encode(value)@}, since the encode functions does
+  //! @expr{@[type]->encode(value)@}, since the encode functions does
   //! just that.
   //!
   //! Some design discussion follows to justify the last paragraph;
@@ -1286,10 +1423,10 @@ class Value
   //! is when the value is known to be an arbitrary literal string
   //! (not zero), which is preferably optimized like this:
   //!
-  //! @code{
+  //! @code
   //!   return type && type != RXML.t_text ?
   //!          type->encode (my_string, RXML.t_text) : my_string;
-  //! @}
+  //! @endcode
   //!
   //! Also, by letting the producer know the type context of the value
   //! and handle the type conversion, it's possible for the producer
@@ -1304,16 +1441,49 @@ class Value
   //! is free to leave out that argument, not that the function
   //! implementor is free to ignore it.
   {
-    mixed val = rxml_const_eval (ctx, var, scope_name, type);
+    mixed val = rxml_const_eval (ctx, var, scope_name);
+    // We replace the variable object with the evaluated value when
+    // rxml_const_eval is used. However, we hide
+    // ctx->misc->recorded_changes so that the setting isn't cached.
+    // That since rxml_const_eval should work for values that only are
+    // constant in the current request. Note that we can still
+    // overcache the returned result; it's up to the user to avoid
+    // that with suitable cache tags.
+    array rec_chgs = ctx->misc->recorded_changes;
+    ctx->misc->recorded_changes = 0;
     ctx->set_var(var, val, scope_name);
-    return val;
+    ctx->misc->recorded_changes = rec_chgs;
+    return type ? type->encode (val) : val;
   }
 
-  mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
+  mixed rxml_const_eval (Context ctx, string var, string scope_name);
   //! If the variable value is the same throughout the life of the
-  //! context, this method should be used instead of @[rxml_var_eval].
+  //! context, this method can be used instead of @[rxml_var_eval] to
+  //! only get a call the first time the value is evaluated.
+  //!
+  //! Note that this doesn't provide any control over the type
+  //! conversion; this function should return a raw unquoted value,
+  //! which will always be encoded with the current type when it's
+  //! used.
 
-  string _sprintf() {return "RXML.Value";}
+  optional string format_rxml_backtrace_frame (
+    Context ctx, string var, string scope_name);
+  //! Define this to control how the variable reference is formatted
+  //! in RXML backtraces. The returned string should be one line,
+  //! without a trailing newline. It should not contain the " | "
+  //! prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used variables, but it should be used only if there are very
+  //! good reasons; the backtrace easily just becomes confusing
+  //! instead.
+
+  string _sprintf (void|int flag)
+  {
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Value") + "()");
+  }
 }
 
 class Scope
@@ -1367,12 +1537,14 @@ class Scope
   //! indexed.
     {parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
-  void _m_delete (string var, void|Context ctx, void|string scope_name)
+  void _m_delete (string var, void|Context ctx,
+		  void|string scope_name, void|int from_m_delete)
   //! Called to delete a variable in the scope. @[var] is the name of
   //! it, @[ctx] and @[scope_name] are set to where this @[Scope]
-  //! object was found.
+  //! object was found. @[from_m_delete] is an internal kludge for 2.1
+  //! compatibility; it should never be given a value.
   {
-    if (m_delete != local::m_delete)
+    if (!from_m_delete)
       m_delete (var, ctx, scope_name); // For compatibility with 2.1.
     else
       parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");
@@ -1380,7 +1552,27 @@ class Scope
 
   void m_delete (string var, void|Context ctx, void|string scope_name)
   // For compatibility with 2.1.
-    {_m_delete (var, ctx, scope_name);}
+    {_m_delete (var, ctx, scope_name, 1);}
+
+  optional Scope clone();
+  //! Define this to allow cloning of the scope object. A scope object
+  //! with the same state as this one should be returned. Any future
+  //! variable changes in either object shouldn't affect the variables
+  //! in the other one. If a scope implements read-only access it's ok
+  //! to return the same object.
+
+  optional string format_rxml_backtrace_frame (
+    Context ctx, string var, string scope_name);
+  //! Define this to control how the variable reference is formatted
+  //! in RXML backtraces. The returned string should be one line,
+  //! without a trailing newline. It should not contain the " | "
+  //! prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used variables, but it should be used only if there are very
+  //! good reasons; the backtrace easily just becomes confusing
+  //! instead.
 
   private string _in_the_scope (string scope_name)
   {
@@ -1390,7 +1582,34 @@ class Scope
     else return "";
   }
 
-  string _sprintf() {return "RXML.Scope";}
+  string _sprintf (void|int flag)
+  {
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Scope") + "()");
+  }
+}
+
+mapping(string:mixed) scope_to_mapping (SCOPE_TYPE scope,
+					void|Context ctx,
+					void|string scope_name)
+//! Converts an RXML scope (in the form of a mapping or an object) to
+//! a mapping. If @[scope] is a mapping, a shallow copy is returned.
+//! If @[scope] is an object, every variable in it is queried to
+//! produce the mapping. An error is thrown if the scope can't be
+//! listed.
+//!
+//! The optional @[ctx] and @[scope_name] are passed on to the
+//! @[RXML.Scope] object functions.
+{
+  if (mappingp (scope))
+    return scope + ([]);
+
+  mapping(string:mixed) res = ([]);
+  foreach (scope->_indices (ctx, scope_name), string var) {
+    mixed val = scope->`[] (var, ctx, scope_name);
+    if (!zero_type (val) && val != nil) res[var] = val;
+  }
+  return res;
 }
 
 class Context
@@ -1458,12 +1677,9 @@ class Context
   //! implementors that means whenever the value that
   //! @[RXML.Frame.save] would return changes.
   {
-#ifdef RXML_PCODE_UPDATE_DEBUG
-    array a = backtrace();
-    PCODE_UPDATE_MSG ("%O: P-code update by request from %s",
-		      this_object(),
-		      describe_backtrace (a[sizeof (a) - 2..sizeof (a) - 2]));
-#endif
+    PCODE_UPDATE_MSG ("%O: P-code update to %d by request from %s",
+		      this_object(), state_updated + 1,
+		      describe_backtrace (backtrace()[<1..<1]));
     state_updated++;
   }
 
@@ -1482,7 +1698,7 @@ class Context
   //! @tt{"yow...cons..yet"@} is separated into @tt{"yow."@} and
   //! @tt{"cons.yet"@}. Any subindex that can be parsed as a signed
   //! integer is converted to it. Note that it doesn't happen for the
-  //! first index, since a variable in a scope always is a string.
+  //! first index, since a variable name in a scope always is a string.
   {
 #ifdef OLD_RXML_COMPAT
     if (compatible_scope && !intp(scope_name))
@@ -1557,11 +1773,18 @@ class Context
 
   local mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
-  //! current scope if none is given. Returns @[val].
+  //! current scope if none is given. If @[val] is @[RXML.nil] then
+  //! the variable is removed instead (see @[delete_var]). Returns
+  //! @[val].
   //!
   //! If @[var] is an array, it's used to successively index the value
   //! to get subvalues (see @[rxml_index] for details).
   {
+    if (val == nil) {
+      delete_var (var, scope_name);
+      return nil;
+    }
+
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
       fatal_error ("Invalid variable specifier.\n");
@@ -1570,24 +1793,42 @@ class Context
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       string|int index;
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  index = var[-1];
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = val;
-	}
-	else {
-	  index = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
-	}
-      else {
-	index = var;
-	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, index}))] = val;
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// delete_var and VariableChange.add.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): val])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = val;
+
+	    array(string|int) path = var[..sizeof (var) - 2];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    index = var[-1];
+	    break record_change;
+	  }
+	  else
+	    index = var[0];
+	else
+	  index = var;
+
+	if (array rec_chgs = misc->recorded_changes)
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it
+	    // with the new variable setting. This is done not only as
+	    // an optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed. C.f. delete_var and VariableChange.add.
+	    scope[index] = val;
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
       }
 
       if (objectp (vars) && vars->`[]=)
@@ -1645,23 +1886,40 @@ class Context
 
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name}) + var)] = nil;
-	  var = var[-1];
-	}
-	else {
-	  var = var[0];
-	  if (mapping var_chg = misc->variable_changes)
-	    var_chg[encode_value_canonic (({scope_name, var}))] = nil;
-	}
-      else {
-	if (mapping var_chg = misc->variable_changes)
-	  var_chg[encode_value_canonic (({scope_name, var}))] = nil;
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// set_var and VariableChange.add.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): nil])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = nil;
+
+	    array(string|int) path = var[..sizeof (var) - 2];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    var = var[-1];
+	    break record_change;
+	  }
+	  else
+	    var = var[0];
+
+	if (array rec_chgs = misc->recorded_changes)
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it to
+	    // delete the variable. This is done not only as an
+	    // optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed. C.f. set_var and VariableChange.add.
+	    m_delete (scope, var);
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
       }
 
       if (objectp (vars) && vars->_m_delete)
@@ -1695,23 +1953,44 @@ class Context
     delete_var(splitted[1..], splitted[0]);
   }
 
-  array(string) list_var (void|string scope_name)
+  array(string) list_var (void|string scope_name, void|int check_nil)
   //! Returns the names of all variables in the specified scope, or
   //! the current scope if none is given.
+  //!
+  //! Variables with the value @[RXML.nil] or @[UNDEFINED] should not
+  //! occur (since those values by definition indicates that the
+  //! variable doesn't exist). This function doesn't check for this by
+  //! default, but that can be enabled with the @[check_nil] flag.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
+      array(string) res;
       if (objectp (vars))
-	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
+	res = ([object(Scope)] vars)->_indices (this_object(),
+						scope_name || "_");
       else
-	return indices ([mapping(string:mixed)] vars);
+	res = indices ([mapping(string:mixed)] vars);
+      if (check_nil)
+	res = filter (res, lambda (string var) {
+			     mixed val = vars[var];
+			     if (objectp (val) && ([object] val)->rxml_var_eval)
+			       val = ([object(Value)] val)->rxml_var_eval (
+				 this, var, scope_name, 0);
+			     return val != nil && !zero_type (val);
+			   });
+      return res;
+    }
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
     else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
-  array(string) list_scopes()
-  //! Returns the names of all defined scopes.
+  array(string) list_scopes (void|int list_hidden)
+  //! Returns the names of all defined scopes. If @[list_hidden] is
+  //! nonzero then internal scopes are also returned.
   {
-    return indices (scopes) - ({"_"});
+    if (list_hidden)
+      return indices (scopes) - ({"_"});
+    else
+      return indices (scopes) - ({"_", "_internal_"});
   }
 
   int exist_scope (void|string scope_name)
@@ -1721,7 +2000,7 @@ class Context
   }
 
 #define CLEANUP_VAR_CHG_SCOPE(var_chg, scope_name) do {			\
-    foreach (indices (var_chg), mixed encoded_var)			\
+    foreach (var_chg; mixed encoded_var;)				\
       if (stringp (encoded_var)) {					\
 	mixed var = decode_value (encoded_var);				\
 	if (arrayp (var) && var[0] == scope_name)			\
@@ -1751,15 +2030,18 @@ class Context
       }
     else scopes[scope_name] = vars;
 
-    if (mapping var_chg = misc->variable_changes) {
-      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-      var_chg[encode_value_canonic (({scope_name}))] =
+    if (array rec_chgs = misc->recorded_changes) {
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+      rec_chgs[-1][encode_value_canonic (({scope_name}))] =
 	mappingp (vars) ? vars + ([]) : vars;
     }
   }
 
   void extend_scope (string scope_name, SCOPE_TYPE vars)
-  //! Adds or extends the specified scope at the global level.
+  //! If there is a scope with the name @[scope_name] at the global
+  //! level then it is extended with @[vars]. If there is no such
+  //! scope then @[vars] becomes a global scope with the name
+  //! @[scope_name] (without copying it).
   //!
   //! @note
   //! The contents of @[vars] is currently transferred over to the
@@ -1787,16 +2069,22 @@ class Context
 #ifdef DEBUG
       if (!oldvars) fatal_error ("I before e except after c.\n");
 #endif
-      foreach (indices(vars), string var)
-	set_var(var, vars[var], scope_name);
+      if (objectp (vars))
+	foreach (([object(Scope)] vars)->_indices (this_object(),
+						   scope_name || "_"),
+		 string var)
+	  set_var(var, vars[var], scope_name);
+      else
+	foreach (vars; string var; mixed val)
+	  set_var(var, val, scope_name);
     }
 
     else {
       scopes[scope_name] = vars;
 
-      if (mapping var_chg = misc->variable_changes) {
-	CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-	var_chg[encode_value_canonic (({scope_name}))] =
+      if (array rec_chgs = misc->recorded_changes) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
 	  mappingp (vars) ? vars + ([]) : vars;
       }
     }
@@ -1814,9 +2102,9 @@ class Context
     if (outermost) m_delete (hidden, outermost);
     else m_delete (scopes, scope_name);
 
-    if (mapping var_chg = misc->variable_changes) {
-      CLEANUP_VAR_CHG_SCOPE (var_chg, scope_name);
-      var_chg[encode_value_canonic (({scope_name}))] = 0;
+    if (array rec_chgs = misc->recorded_changes) {
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+      rec_chgs[-1][encode_value_canonic (({scope_name}))] = 0;
     }
   }
 
@@ -1848,21 +2136,113 @@ class Context
   //! should therefore be used whenever a tag that doesn't use
   //! @[RXML.FLAG_DONT_CACHE_RESULT] sets a value in @[misc] to be
   //! used by some other tag or variable later in the evaluation. In
-  //! other situations it's perfectly alright to access @[misc]
+  //! other situations it's perfectly all right to access @[misc]
   //! directly.
   //!
   //! @note
   //! Neither @[index] nor @[value] is copied when stored in the
   //! cache. That means that you probably don't want to change them
   //! destructively, or else those changes can have propagated
-  //! "backwards" when the cached p-code is used.
+  //! "backwards" when the cached p-code is used. Sometimes that
+  //! propagation can be a useful feature, though.
+  //!
+  //! @note
+  //! Use @[set_id_misc] or @[set_root_id_misc] instead of this if you
+  //! want to access the stored value after the RXML evaluation has
+  //! finished. There is compatibility code that tries to keep
+  //! @tt{id->misc->defines@} around for a while afterwards, but it's
+  //! not recommended to depend on it since there are circumstances
+  //! when the mapping will get overridden.
+  //!
+  //! @note
+  //! For compatibility reasons, changes of the _ok flag
+  //! (@tt{@[misc][" _ok"]@}) are detected and saved automatically.
+  //! Thus it is not necessary to call @[set_misc] to change it. This
+  //! is a special case and does not apply to any other entry in
+  //! @[misc].
   {
-    if (mapping var_chg = misc->variable_changes) {
-      if (stringp (index)) index = encode_value_canonic (index);
-      var_chg[index] = value;
-    }
     if (value == nil) m_delete (misc, index);
     else misc[index] = value;
+    if (array rec_chgs = misc->recorded_changes) {
+      if (stringp (index)) index = encode_value_canonic (index);
+      rec_chgs[-1][index] = value;
+    }
+  }
+
+  void set_id_misc (mixed index, mixed value)
+  //! Like @[set_misc], but sets a value in @[id->misc], which is
+  //! useful if the value should be used by other code after the rxml
+  //! evaluation.
+  {
+    if (value == nil) m_delete (id->misc, index);
+    else id->misc[index] = value;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({1, index}))] = value;
+  }
+
+  void set_root_id_misc (mixed index, mixed value)
+  //! Like @[set_id_misc], but sets a value in @[id->root_id->misc]
+  //! instead. The difference is that the setting then is visible
+  //! throughout the outermost request when the setting is made in an
+  //! internal subrequest, e.g. through @[Configuration.try_get_file].
+  {
+    if (value == nil) m_delete (id->root_id->misc, index);
+    else id->root_id->misc[index] = value;
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({2, index}))] = value;
+  }
+
+  void add_p_code_callback (function|string callback, mixed... args)
+  //! If result p-code is collected then a call to @[callback] with
+  //! the given arguments is added to it, so that it will be called
+  //! when the result p-code is reevaluated.
+  //!
+  //! If @[callback] is a string then it's taken to be the name of a
+  //! function to call in the current @[id] object. The string can
+  //! also contain "->" to build index chains. E.g. the string
+  //! "misc->foo->bar" will cause a call to @[id]->misc->foo->bar()
+  //! when the result p-code is evaluated.
+  {
+    if (misc->recorded_changes)
+      // See PCode.process_recorded_changes for details.
+      misc->recorded_changes += ({callback, args, ([])});
+  }
+
+  protected int last_internal_var_id = 0;
+
+  string alloc_internal_var()
+  //! Allocates and returns a unique variable name in the special
+  //! scope "_internal_", creating that scope if necessary. After this
+  //! it's safe to use that variable for internal purposes in tags
+  //! with the normal variable functions. No other variables in the
+  //! "_internal_" scope should be accessed.
+  //!
+  //! @note
+  //! The "_internal_" scope is currently hidden by default by
+  //! @[list_scope] but otherwise there are no access restrictions on
+  //! it. Therefore an end user can get at the variables in that scope
+  //! directly. On the other hand there's no guarantee that that will
+  //! remain possible in the future, so no end user RXML code should
+  //! use the "_internal_" scope.
+  {
+    if (!scopes->_internal_) add_scope ("_internal_", ([]));
+    return (string) ++last_internal_var_id;
+  }
+
+  void signal_var_change (string var, void|string scope_name, void|mixed val)
+  //! Call this when the variable @[var] in the specified scope has
+  //! changed in some other way than by calling a function in this
+  //! class. If necessary, this will register the variable and its
+  //! current value in generated p-code (see @[set_misc] for further
+  //! details). The current scope is used if @[scope_name] is left
+  //! out. The caller can provide a overriding value which is needed when
+  //! modifying e.g. the outgoing headers via extra_heads.
+  {
+    if (array rec_chgs = misc->recorded_changes) {
+      if (!scope_name) scope_name = "_";
+      rec_chgs[-1][encode_value_canonic (({scope_name, var}))] =
+	zero_type (val) ? scopes[scope_name][var] : val;
+    }
   }
 
   void add_runtime_tag (Tag tag)
@@ -1874,6 +2254,9 @@ class Context
       fatal_error ("Cannot handle plugin tags added at runtime.\n");
 #endif
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, tag->flags & FLAG_PROC_INSTR ?
+					  "?" + tag->name : tag->name}))] = tag;
     new_runtime_tags->add_tag (tag);
   }
 
@@ -1885,8 +2268,13 @@ class Context
   //! runtime tags.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
-    if (objectp (tag)) tag = tag->name;
-    new_runtime_tags->remove_tag (tag);
+    if (objectp (tag)) {
+      proc_instr = tag->flags & FLAG_PROC_INSTR;
+      tag = tag->name;
+    }
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, proc_instr ? "?" + tag : tag}))] = 0;
+    new_runtime_tags->remove_tag (tag, proc_instr);
   }
 
   multiset(Tag) get_runtime_tags()
@@ -1905,15 +2293,20 @@ class Context
     return unwind_state && unwind_state->reason == "streaming";
   }
 
-  void handle_exception (mixed err, PCode|Parser evaluator, void|int compile_error)
+  void handle_exception (mixed err, PCode|Parser evaluator, void|PCode p_code_error)
   //! This function gets any exception that is catched during
-  //! evaluation. evaluator is the object that catched the error.
+  //! evaluation. evaluator is the object that catched the error. If
+  //! p_code_error is set, a CompiledError object will be added to it
+  //! if the error was reported.
   {
     error_count++;
 
     if (objectp (err)) {
       if (err->is_RXML_break_eval) {
-	if (err->action == "continue") return;
+	if (err->action == "continue") {
+	  TAG_DEBUG (RXML_CONTEXT->frame, "Continuing after RXML break exception\n");
+	  return;
+	}
 	Context ctx = RXML_CONTEXT;
 	if (ctx->frame) {
 	  if (stringp (err->target) ? err->target == ctx->frame->scope_name :
@@ -1928,8 +2321,9 @@ class Context
 				      sprintf ("with scope %O", err->target) :
 				      sprintf ("%O", err->target)));
 	    ctx->frame = 0;
-	    handle_exception (err, evaluator, compile_error);
+	    handle_exception (err, evaluator, p_code_error);
 	  }
+	TAG_DEBUG (RXML_CONTEXT->frame, "Rethrowing RXML break exception\n");
 	throw (err);
       }
 
@@ -1951,13 +2345,21 @@ class Context
 	  else
 	    msg = err->msg;
 	  if (evaluator->report_error (msg)) {
-	    if (PCode p_code = compile_error && evaluator->p_code) {
+	    if (p_code_error) {
 	      CompiledError comp_err = CompiledError (err);
-	      p_code->add (RXML_CONTEXT, comp_err, comp_err);
+	      p_code_error->add (RXML_CONTEXT, comp_err, comp_err);
 	    }
+
+	    if (!id || !id->conf || id->conf->compat_level() >= 5.0)
+	      misc[" _ok"] = 0;
+
+	    TAG_DEBUG (RXML_CONTEXT->frame,
+		       "RXML exception %O reported - continuing\n", err);
 	    return;
 	  }
 	}
+	TAG_DEBUG (RXML_CONTEXT->frame,
+		   "Rethrowing RXML exception %O\n", err);
 	throw (err);
       }
     }
@@ -1966,22 +2368,28 @@ class Context
   }
 
   final array(mixed|PCode) eval_and_compile (Type type, string to_parse,
-					     void|int stale_safe)
+					     void|int stale_safe,
+					     void|TagSet tag_set_override)
   //! Parses and evaluates @[to_parse] with @[type] in this context.
-  //! At the same time, p-code is collected to reevaluate it later. An
+  //! At the same time, p-code is collected for later reevaluation. An
   //! array is returned which contains the result in the first element
   //! and the generated @[RXML.PCode] object in the second. If
   //! @[stale_safe] is nonzero, the p-code object will be an instance
   //! of @[RXML.RenewablePCode] instead, which never fails due to
-  //! being stale.
+  //! being stale. The tag set defaults to @[tag_set], but it may be
+  //! overridden with @[tag_set_override].
   {
     int orig_make_p_code = make_p_code, orig_state_updated = state_updated;
     int orig_top_frame_flags = frame && frame->flags;
     PCODE_UPDATE_MSG ("%O: Saved p-code update count %d before eval_and_compile\n",
 		      this_object(), orig_state_updated);
+    if (!tag_set_override) tag_set_override = tag_set;
     make_p_code = 1;
     Parser parser = type->get_parser (
-      this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
+      this_object(), tag_set_override, 0,
+      stale_safe ?
+      RenewablePCode (type, this_object(), tag_set) :
+      PCode (type, this_object(), tag_set));
 
     mixed res;
     PCode p_code;
@@ -1989,17 +2397,21 @@ class Context
       parser->write_end (to_parse);
       res = parser->eval();
       p_code = parser->p_code;
+      p_code->finish();
     };
 
-    type->give_back (parser, tag_set);
+    type->give_back (parser, tag_set_override);
     PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
 		      "after eval_and_compile\n",
 		      this_object(), state_updated, orig_state_updated);
     make_p_code = orig_make_p_code, state_updated = orig_state_updated;
-    if (frame && !(orig_top_frame_flags & FLAG_DONT_CACHE_RESULT))
-      // Don't let the subevaluation propagate the cache disabling
-      // flag since it's not the same cache.
-      frame->flags &= ~FLAG_DONT_CACHE_RESULT;
+    if (frame)
+      // The subevaluation might change the cache result control
+      // flags, but they should be ignored since it's not the same
+      // cache. These flags are set but never cleared, so we only need
+      // to clear those that are cleared in orig_top_frame_flags.
+      frame->flags &= orig_top_frame_flags |
+	~(FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT);
 
     if (err) throw (err);
     return ({res, p_code});
@@ -2022,17 +2434,17 @@ class Context
   private int eval_finished = 0;
 #endif
 
-  final void eval_finish()
+  final void eval_finish (void|int dont_set_eval_status)
   // Called at the end of the evaluation in this context.
   {
     FRAME_DEPTH_MSG ("%*s%O eval_finish\n", frame_depth, "", this_object());
+    if (!dont_set_eval_status) id->eval_status["rxmlsrc"] = 1;
     if (!frame_depth) {
 #ifdef DEBUG
       if (eval_finished) fatal_error ("Context already finished.\n");
       eval_finished = 1;
 #endif
       if (tag_set) tag_set->call_eval_finish_funs (this_object());
-      if (p_code_comp) p_code_comp->compile(); // Fix all delayed resolves.
     }
   }
 
@@ -2045,26 +2457,51 @@ class Context
   // introduce scopes. The values are tuples of the current scope and
   // the named scope they hide.
 
-  void enter_scope (Frame frame)
+  void enter_scope (Frame|CacheStaticFrame frame, SCOPE_TYPE vars)
   {
+    // Note that vars is zero when called from
+    // CacheStaticFrame.EnterScope.get.
 #ifdef DEBUG
-    if (!frame->vars) fatal_error ("Frame has no variables.\n");
+    if (!vars && !frame->is_RXML_CacheStaticFrame)
+      fatal_error ("Got no scope mapping.\n");
 #endif
+
+    array rec_chgs = misc->recorded_changes;
+    if (rec_chgs)
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], "_");
+
     if (string scope_name = [string] frame->scope_name) {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
-      scopes["_"] = scopes[scope_name] = [SCOPE_TYPE] frame->vars;
+      scopes["_"] = scopes[scope_name] = vars;
+
+      if (rec_chgs) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
+	  rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
+      }
     }
+
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
-      scopes["_"] = [SCOPE_TYPE] frame->vars;
+      scopes["_"] = vars;
+
+      if (rec_chgs)
+	rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
   }
 
-  void leave_scope (Frame frame)
+  void leave_scope (Frame|CacheStaticFrame frame)
   {
     if (array(SCOPE_TYPE) back = hidden[frame]) {
+      if (array rec_chgs = misc->recorded_changes) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], "_");
+	if (string scope_name = frame->scope_name)
+	  CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
+      }
       if (SCOPE_TYPE cur = back[0]) scopes["_"] = cur;
       else m_delete (scopes, "_");
       if (SCOPE_TYPE named = back[1]) {
@@ -2079,14 +2516,30 @@ class Context
     }
   }
 
-#define ENTER_SCOPE(ctx, frame) \
-  (frame->vars && frame->vars != ctx->scopes["_"] && ctx->enter_scope (frame))
+#define ENTER_SCOPE(ctx, frame)						\
+  (frame->vars &&							\
+   (!ctx->hidden[frame] || frame->vars != ctx->scopes["_"]) &&		\
+   ctx->enter_scope (frame, frame->vars))
 #define LEAVE_SCOPE(ctx, frame) \
   (frame->vars && ctx->leave_scope (frame))
 
   mapping(string:Tag) runtime_tags = ([]);
   // The active runtime tags. PI tags are stored in the same mapping
   // with their names prefixed by '?'.
+
+  void direct_add_runtime_tag (string name, Tag tag)
+  {
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, name}))] = tag;
+    runtime_tags[name] = tag;
+  }
+
+  void direct_remove_runtime_tag (string name)
+  {
+    if (array rec_chgs = misc->recorded_changes)
+      rec_chgs[-1][encode_value_canonic (({0, name}))] = 0;
+    m_delete (runtime_tags, name);
+  }
 
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
@@ -2099,11 +2552,11 @@ class Context
   // Nonzero if the persistent state of the evaluated rxml has
   // changed. Never negative.
 
-  PikeCompile p_code_comp;
-  // The PikeCompile object for collecting any produce Pike byte code
-  // during p-code compilation.
+  PCode evaled_p_code;
+  // The p-code object of the innermost frame that collects evaled
+  // content (i.e. got FLAG_GET_EVALED_CONTENT set).
 
-  static void create (void|TagSet _tag_set, void|RequestID _id)
+  protected void create (void|TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
   {
     tag_set = _tag_set || empty_tag_set;
@@ -2128,11 +2581,21 @@ class Context
   // "reason": string (The reason why the state is unwound. Can
   //    currently be "streaming".)
 
+  mapping id_defines;
+  // Ugly kludge: The old id->misc->defines is stored here if it's
+  // overridden by the misc mapping above. See
+  // rxml_tag_set->prepare_context.
+
   //! @ignore
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf() {return "RXML.Context" + OBJ_COUNT;}
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Context") +
+       "()" + OBJ_COUNT);
+  }
 
 #ifdef MODULE_DEBUG
 #if constant (thread_create)
@@ -2143,11 +2606,71 @@ class Context
 #endif
 }
 
-static class NewRuntimeTags
+/*protected*/ class CacheStaticFrame (string scope_name)
+// This class is used when tracking local scopes in frames that have
+// been optimized away by FLAG_IS_CACHE_STATIC. It contains the scope
+// name and is used as the key for Context.enter_scope and
+// Context.leave_scope.
+//
+// Can't be protected since encode_value must be able to index it.
+{
+  constant is_RXML_CacheStaticFrame = 1;
+  constant is_RXML_encodable = 1;
+
+  string _encode() {return scope_name;}
+  void _decode (string data) {scope_name = data;}
+
+  class EnterScope()
+  {
+    constant is_RXML_encodable = 1;
+    constant is_RXML_p_code_entry = 1;
+    constant is_csf_enter_scope = 1;
+    constant p_code_no_result = 1;
+    mixed get (Context ctx)
+      {RXML_CONTEXT->enter_scope (CacheStaticFrame::this, 0); return nil;}
+    CacheStaticFrame frame()
+      {return CacheStaticFrame::this;}
+    mixed _encode() {}
+    void _decode (mixed v) {}
+    protected string _sprintf (int flag)
+    {
+      return flag == 'O' &&
+	sprintf ("CSF.EnterScope(%O)",
+		 CacheStaticFrame::this && CacheStaticFrame::scope_name);
+    }
+  }
+
+  class LeaveScope()
+  {
+    constant is_RXML_encodable = 1;
+    constant is_RXML_p_code_entry = 1;
+    constant is_csf_leave_scope = 1;
+    constant p_code_no_result = 1;
+    mixed get (Context ctx)
+      {RXML_CONTEXT->leave_scope (CacheStaticFrame::this); return nil;}
+    CacheStaticFrame frame()
+      {return CacheStaticFrame::this;}
+    mixed _encode() {}
+    void _decode (mixed v) {}
+    protected string _sprintf (int flag)
+    {
+      return flag == 'O' &&
+	sprintf ("CSF.LeaveScope(%O)",
+		 CacheStaticFrame::this && CacheStaticFrame::scope_name);
+    }
+  }
+
+  protected string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("RXML.CacheStaticFrame(%O)", scope_name);
+  }
+}
+
+protected class NewRuntimeTags
 // Tool class used to track runtime tags in Context.
 {
-  static mapping(string:Tag) add_tags;
-  static mapping(string:int|string) remove_tags;
+  protected mapping(string:Tag) add_tags;
+  protected mapping(string:int|string) remove_tags;
 
   void add_tag (Tag tag)
   {
@@ -2195,7 +2718,7 @@ static class NewRuntimeTags
   }
 }
 
-static class BreakEval (Frame|string target)
+protected class BreakEval (Frame|string target)
 // Used in frame break exceptions.
 {
   constant is_RXML_BreakEval = 1;
@@ -2217,8 +2740,8 @@ class Backtrace
   string current_var;
   array backtrace;
 
-  static void create (void|string _type, void|string _msg, void|Context _context,
-		      void|array _backtrace)
+  protected void create (void|string _type, void|string _msg,
+			 void|Context _context, void|array _backtrace)
   {
     type = _type;
     msg = _msg;
@@ -2253,27 +2776,33 @@ class Backtrace
     if (!no_msg) add ("RXML", type ? " " + type : "", " error");
     if (context) {
       if (!no_msg) add (": ", msg || "(no error message)\n");
-      if (current_var) add (" | &", current_var, ";\n");
+      if (current_var && current_var != "") add (" | ", current_var, "\n");
       for (int i = 0; i < sizeof (frames); i++) {
 	Frame f = frames[i];
 	string name;
-	if (f->tag) name = f->tag->name;
-	//else if (!f->up) break;
-	else name = "(unknown)";
-	if (f->flags & FLAG_PROC_INSTR)
-	  add (" | <?", name, "?>\n");
+	if (f->format_rxml_backtrace_frame) {
+	  string res = f->format_rxml_backtrace_frame();
+	  if (res != "") add (" | ", res, "\n");
+	}
 	else {
-	  add (" | <", name);
-	  mapping(string:mixed) argmap = args[i];
-	  if (mappingp (argmap))
-	    foreach (sort (indices (argmap)), string arg) {
-	      mixed val = argmap[arg];
-	      add (" ", arg, "=");
-	      if (arrayp (val)) add (map (val, error_print_val) * ",");
-	      else add (error_print_val (val));
-	    }
-	  else add (" (no argmap)");
-	  add (">\n");
+	  if (f->tag) name = f->tag->name;
+	  //else if (!f->up) break;
+	  else name = "(unknown)";
+	  if (f->flags & FLAG_PROC_INSTR)
+	    add (" | <?", name, "?>\n");
+	  else {
+	    add (" | <", name);
+	    mapping(string:mixed) argmap = args[i];
+	    if (mappingp (argmap))
+	      foreach (sort (indices (argmap)), string arg) {
+		mixed val = argmap[arg];
+		add (" ", arg, "=");
+		if (arrayp (val)) add (map (val, error_print_val) * ",");
+		else add (error_print_val (val));
+	      }
+	    else add (" (no argmap)");
+	    add (">\n");
+	  }
 	}
       }
     }
@@ -2315,7 +2844,41 @@ class Backtrace
     error ("Cannot set index %O to %O.\n", i, val);
   }
 
-  string _sprintf() {return "RXML.Backtrace(" + (type || "") + ")";}
+  string _sprintf (void|int flag)
+  {
+    return flag == 'O' && sprintf ("RXML.Backtrace(%s: %O)", type || "", msg);
+  }
+}
+
+protected void nil_for_nonseq_error (RequestID id, Type type,
+				     void|string msg, mixed... args)
+{
+  if (!id || !id->conf || id->conf->compat_level() >= 5.0) {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    parse_error ("No value given for nonsequential type %s%s.\n",
+		 type->name, msg || "");
+  }
+}
+
+protected void set_nil_arg (mapping(string:mixed) args, string arg,
+			    Type type, mapping(string:Type) req_args,
+			    RequestID id)
+// Helper to do the work to assign nil to an attribute value.
+{
+  if (type->sequential)
+    args[arg] = type->empty_value;
+  else if (req_args[arg]) {
+    nil_for_nonseq_error (id, type, " in attribute %s", format_short (arg));
+    args[arg] = nil;		// < 5.0 compat.
+  }
+  else
+    // If an optional attribute has a nonsequential type and the value
+    // is missing after parsing then let's treat it as if the
+    // attribute was never given, since that's more useful than
+    // complaining. It's not strictly 4.5-compatible (which would be
+    // to assign nil just like above), but that incompatibility is not
+    // expected to cause problems.
+    m_delete (args, arg);
 }
 
 
@@ -2334,7 +2897,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 
 #if defined (MODULE_DEBUG) && constant (thread_create)
 
-// Got races in this debug check, but looks like we have to live with that. :\
+// Got races in this debug check, but looks like we have to live with that. :/
 
 #define ENTER_CONTEXT(ctx)						\
   Context __old_ctx = RXML_CONTEXT;					\
@@ -2415,6 +2978,59 @@ constant FLAG_POSTPARSE		= 0x00000080;
 //! Postparse the result with the @[RXML.PXml] parser. This is only
 //! used in the simple tag wrapper. Defined here as placeholder.
 
+constant FLAG_IS_CACHE_STATIC	= 0x00000200;
+//! If this flag is set, the tag may be cached even when its content
+//! contains uncachable parts. It's done by merging the result p-code
+//! for the content of the tag and any variable assignments directly
+//! into the result p-code for the surrounding content.
+//!
+//! This optimization flag may only be set for tags that meet these
+//! conditions:
+//!
+//! @ul
+//! @item
+//!   The content is propagated to the result without any
+//!   transformations, except that it's repeated zero or more times.
+//!   This implies that the content and result types must be the same
+//!   except for the parser.
+//! @item
+//!   The @tt{do_*@} callbacks have no other side effects than
+//!   deciding the number of content iterations, setting variables, or
+//!   introducing a tag scope, and this work does not depend in any
+//!   way on the actual content.
+//! @item
+//!   Neither @[FLAG_GET_EVALED_CONTENT] nor @[FLAG_DONT_CACHE_RESULT]
+//!   may be set. (Note however that the parser might internally set
+//!   @[FLAG_DONT_CACHE_RESULT] for @[RXML.Frame] objects.
+//!   @[FLAG_IS_CACHE_STATIC] overrides it in that case.)
+//! @endul
+//!
+//! @note
+//! Setting this flag on tags already in use might have insidious
+//! compatiblity effects. Consider this case:
+//!
+//! @example
+//! <cache>
+//!   <registered-user>
+//!   	<nocache>Your name is &registered-user.name;</nocache>
+//!   </registered-user>
+//! </cache>
+//!
+//! The tag @tt{<registered-user>@} is a custom tag that ignores its
+//! content whenever the user isn't registered. When it doesn't have
+//! this flag set, the nested @tt{<nocache>@} tag causes it to stay
+//! unevaluated in the surrounding cache, and the test of the user is
+//! therefore kept dynamic. If it on the other hand has set
+//! @[FLAG_IS_CACHE_STATIC], that test is cached and the cache entry
+//! will either contain the @tt{<nocache>@} block and a cached
+//! assignment to @tt{&registered-user.name;@}, or none of the content
+//! inside @tt{<registered-user>@}.
+//!
+//! If the parameters of the surrounding cache doesn't take that into
+//! account then the same cache entry might be used both for
+//! registered and unregistered users, something that didn't happen
+//! before the @[FLAG_IS_CACHE_STATIC] flag was set.
+
 // Flags tested in the Frame object:
 
 constant FLAG_STREAM_RESULT	= 0x00000400;
@@ -2438,6 +3054,27 @@ constant FLAG_UNPARSED		= 0x00001000;
 //! unparsed strings. The frame will be parsed before it's evaluated.
 //! This flag should never be set in @[RXML.Tag.flags], but it's
 //! useful when creating frames directly (see @[make_unparsed_tag]).
+
+constant FLAG_CONTENT_VAL_REQ	= 0x00200000;
+//! Set this if the content must produce a value.
+//!
+//! This is only relevant if the content type is nonsequential:
+//! Normally the parser checks that at most one tag or variable entity
+//! in the content produces a value (i.e. not @[RXML.nil]), since
+//! values for nonsequential types cannot be concatenated. It does
+//! however not by default check that exactly one value is produced,
+//! so the content might be @[RXML.nil]. This flag adds that check, so
+//! the tag can assume that the content never gets set to @[RXML.nil].
+//!
+//! The above is not applicable for sequential types since they always
+//! have a value (the empty value, at least) even if there is no
+//! content.
+//!
+//! @note
+//! The reason no value is allowed for nonsequential types by default
+//! is because the content often is simply propagated to the result,
+//! and we want to allow another sibling tag to produce a value for
+//! the surrounding tag.
 
 constant FLAG_DONT_RECOVER	= 0x00002000;
 //! If set, RXML errors are never recovered when parsing the content
@@ -2496,10 +3133,28 @@ constant FLAG_GET_EVALED_CONTENT = 0x00040000;
 constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
 //! Keep this frame unevaluated in the p-code produced for a
 //! surrounding frame with @[FLAG_GET_EVALED_CONTENT]. That implies
-//! that all other surrounding frames also remain unevaluated, and
-//! this flag is therefore automatically propagated by the parser into
-//! surrounding frames. The flag is tested after the first evaluation
-//! of the frame has finished.
+//! that all other surrounding frames (that aren't cache static; see
+//! @[FLAG_IS_CACHE_STATIC]) also remain unevaluated, and this flag is
+//! therefore automatically propagated by the parser into surrounding
+//! frames. The flag is tested after the first evaluation of the frame
+//! has finished.
+//!
+//! Since the flag is propagated, it might be set for frames which
+//! have @[FLAG_IS_CACHE_STATIC] set. That's necessary for correct
+//! propagation, but @[FLAG_IS_CACHE_STATIC] always overrides it for
+//! the frame itself.
+
+constant FLAG_MAY_CACHE_RESULT	= 0x00100000;
+//! Mostly for internal use to flag that the result may be cached.
+//! It's not enough to check the absence of @[FLAG_DONT_CACHE_RESULT]
+//! for this: If the content of a frame isn't evaluated at all, we
+//! don't know whether it might contain @[FLAG_DONT_CACHE_RESULT]
+//! frames or not. Thus it's required that @[FLAG_DONT_CACHE_RESULT]
+//! is cleared and this flag is set for the result of a frame to be
+//! cached instead of the frame itself.
+//!
+//! This flag may be set explicitly to improve caching of tags that
+//! unconditionally ignore their content.
 
 constant FLAG_CUSTOM_TRACE	= 0x00000100;
 //! Normally the parser runs TRACE_ENTER and TRACE_LEAVE for every tag
@@ -2587,6 +3242,11 @@ class Frame
   //! are called. Initialized to @[RXML.nil] every time the frame
   //! executed (unless the frame was made with the finished content
   //! directly, e.g. by @[RXML.make_tag]).
+  //!
+  //! Even if @[content_type] is nonsequential, this value might be
+  //! @[RXML.nil], indicating the lack of any value at all. The parser
+  //! can be forced to check that a value is produced by setting
+  //! @[FLAG_CONTENT_VAL_REQ].
 
   Type result_type;
   //! The required result type. If it has a parser, it will affect how
@@ -2615,7 +3275,7 @@ class Frame
   //! contains the value after any parsing and will not be parsed
   //! again.
 
-  //! @decl optional mapping(string:mixed) vars;
+  //! @decl optional mapping(string:mixed)|object(Scope) vars;
   //!
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values.
@@ -2662,16 +3322,36 @@ class Frame
   //! closest surrounding tag that defined this tag in its
   //! @[additional_tags] or @[local_tags]. Useful to access the
   //! "mother tag" from the subtags it defines.
+  //!
+  //! @note
+  //! If the parent tag is cache static, this will not be set when the
+  //! parent frame is optimized away. If that is a problem then either
+  //! make this tag cache static too, or don't make the parent tag
+  //! cache static.
 
   //! @decl optional string raw_tag_text;
   //!
   //! If this variable exists, it gets the raw text representation of
-  //! the tag, if there is any. Note that it's after parsing of any
-  //! splice argument.
+  //! the tag, if there is any. Note that it's after the parsing of
+  //! any splice argument.
   //!
   //! @note
   //! This variable is assumed to be static, i.e. its value doesn't
   //! depend on any information that's known only at runtime.
+
+  //! @decl optional object check_security_object;
+  //!
+  //! If this is defined, it specifies an object to use for the module
+  //! level security check. The default is to use @[tag] if it's set,
+  //! else this object.
+  //!
+  //! Setting this is useful for short lived tags and tagless frames
+  //! since the security system caches references to these objects,
+  //! which otherwise would cause them to be lying around until the
+  //! next gc round.
+  //!
+  //! @note
+  //! This is used only if the define MODULE_LEVEL_SECURITY exists.
 
   //! @decl optional array do_enter (RequestID id);
   //! @decl optional array do_process (RequestID id, void|mixed piece);
@@ -2694,49 +3374,51 @@ class Frame
   //! content has a value already. If the result is @[RXML.nil], it
   //! does not affect the surrounding content at all.
   //!
+  //! @returns
   //! Return values:
-  //! @dl
-  //!  @item array
+  //! @mixed
+  //!  @type array
   //!   A so-called exec array to be handled by the parser. The
   //!	elements are processed in order, and have the following usage:
-  //!   @dl
-  //!    @item string
+  //!   @mixed
+  //!    @type string
   //!	  Added or put into the result. If the result type has a
   //!	  parser, the string will be parsed with it before it's
   //!	  assigned to the result variable and passed on.
-  //!    @item @[RXML.Frame]
-  //!	  Already initialized frame to process. Neither arguments nor
-  //!	  content will be parsed. It's result is added or put into the
-  //!	  result of this tag. The functions @[RXML.make_tag],
-  //!	  @[RXML.make_unparsed_tag] are useful to create frames.
-  //!	 @item @[RXML.PCode]
+  //!    @type RXML.Frame
+  //!	  Already initialized frame to process. Its result is added
+  //!	  or put into the result of this tag. The functions
+  //!	  @[RXML.make_tag], @[RXML.make_unparsed_tag] are useful to
+  //!	  create frames.
+  //!	 @type RXML.PCode
   //!	  A p-code object to evaluate. It's not necessary that the
   //!	  type it evaluates to is the same as @[result_type]; it will
   //!	  be converted if it isn't.
-  //!	 @item function(RequestID:mixed)
+  //!	 @type function(RequestID:mixed)
   //!	  Run the function and add its return value to the result.
   //!	  It's assumed to be a valid value of @[result_type].
-  //!    @item object
+  //!    @type object
   //!	  Treated as a file object to read in blocking or nonblocking
   //!	  mode. FIXME: Not yet implemented, details not decided.
-  //!    @item multiset(mixed)
+  //!    @type multiset(mixed)
   //!	  Should only contain one element that'll be added or put into
   //!	  the result. Normally not necessary; assign it directly to
   //!	  the result variable instead.
-  //!    @item propagate_tag()
+  //!    @type propagate_tag
   //!	  Use a call to this function to propagate the tag to be
   //!	  handled by an overridden tag definition, if any exists. If
   //!	  this is used, it's probably necessary to define the
   //!	  @[raw_tag_text] variable. For further details see the doc
   //!	  for @[propagate_tag] in this class.
-  //!	 @item @[RXML.nil]
+  //!	 @type RXML.nil
   //!	  Ignored.
-  //!   @enddl
-  //!  @item 0
+  //!   @endmixed
+  //!  @type int(0..0)
   //!   Do nothing special. Exits the tag when used from
   //!   @[do_process] and @[FLAG_STREAM_RESULT] is set.
-  //! @enddl
+  //! @endmixed
   //!
+  //! @note
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
   //! literal strings and @[RXML.Frame] objects where parsing (or,
@@ -2838,6 +3520,30 @@ class Frame
   //! each iteration). This variable is not automatically saved and
   //! restored (see @[save] and @[restore]).
 
+  optional void exec_array_state_update();
+  //! If this is defined, it is called whenever p-code or frames are
+  //! evaluated in an exec array (as returned by any of the
+  //! @tt{do_*@} functions), and that evaluation causes their
+  //! persistent state to change.
+  //!
+  //! Its typical use is to contain a call to
+  //! @expr{RXML_CONTEXT->state_update@} to propagate the state update
+  //! event if the exec array is part of the persistent state of this
+  //! frame.
+  //!
+  //! @seealso
+  //! @[do_enter], @[do_process], @[do_return], @[Context.state_update]
+
+  optional string format_rxml_backtrace_frame();
+  //! Define this to control how the frame is formatted in RXML
+  //! backtraces. The returned string should be one line, without a
+  //! trailing newline. It should not contain the " | " prefix.
+  //!
+  //! The empty string may be returned to suppress the backtrace frame
+  //! altogether. That might be useful for some types of internally
+  //! used frames, but it should be used only if there are very good
+  //! reasons; the backtrace easily just becomes confusing instead.
+
   // Services:
 
   final mixed get_var (string|array(string|int) var, void|string scope_name,
@@ -2875,7 +3581,7 @@ class Frame
   //! Writes the message to the debug log if this tag has
   //! @[FLAG_DEBUG] set.
   {
-    if (flags & FLAG_DEBUG) report_debug (msg, @args);
+    if (TAG_DEBUG_TEST (flags & FLAG_DEBUG)) report_debug (msg, @args);
   }
 
   void break_frame (void|Frame|string frame_or_scope)
@@ -3072,16 +3778,20 @@ class Frame
     to = to + (to = 0, from);						\
   } while (0)
 
+#define SET_NONNIL_NONSEQUENTIAL(from, to, to_type, desc)		\
+  do {									\
+    if (to != nil)							\
+      parse_error (							\
+	"Cannot append another value %s to nonsequential " desc		\
+	" of type %s.\n", format_short (from), to_type->name);		\
+    THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
+    to = from;								\
+  } while (0)
+
 #define SET_NONSEQUENTIAL(from, to, to_type, desc)			\
   do {									\
-    if (from != nil) {							\
-      if (to != nil)							\
-	parse_error (							\
-	  "Cannot append another value %s to non-sequential " desc	\
-	  " of type %s.\n", format_short (from), to_type->name);	\
-      THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
-      to = from;							\
-    }									\
+    if (from != nil)							\
+      SET_NONNIL_NONSEQUENTIAL (from, to, to_type, desc);		\
   } while (0)
 
 #define CONVERT_VALUE(from, from_type, to, to_type, desc)		\
@@ -3101,7 +3811,8 @@ class Frame
 				  string msg, mixed... args)
   {
     if (sizeof (args)) msg = sprintf (msg, args);
-    fatal_error ("Position %d in exec array from %s is %s: %s", pos, where, elem, msg);
+    fatal_error ("Position %d in exec array from %s is %s: %s",
+		 pos, where, format_short (elem), msg);
   };
 
   mixed _exec_array (Context ctx, TagSetParser|PCode evaler, array exec, string where)
@@ -3110,6 +3821,9 @@ class Frame
     mixed res = nil;
     Parser subparser = 0;
     int orig_make_p_code = ctx->make_p_code;
+    int orig_state_updated = ctx->state_updated;
+    PCode orig_evaled_p_code = ctx->evaled_p_code;
+    ctx->evaled_p_code = 0;
 
     mixed err = catch {
       for (; i < sizeof (exec); i++) {
@@ -3124,18 +3838,33 @@ class Frame
 	    else {
 	      {
 		PCode p_code = 0;
-		if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
-		  p_code = RenewablePCode (0);
-		  p_code->source = [string] elem;
+		if (TagSet local_tags = this_object()->local_tags) {
+		  if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
+		    p_code = RenewablePCode (result_type, ctx, local_tags);
+		    p_code->source = [string] elem;
+		  }
+		  subparser = result_type->get_parser (ctx, local_tags, evaler, p_code);
+		  subparser->_local_tag_set = 1;
+		  THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O "
+				  "from local_tags\n", i,
+				  p_code ? " and compiling" : "",
+				  format_short (elem), subparser);
 		}
-		subparser = result_type->get_parser (ctx, ctx->tag_set, evaler, p_code);
+		else {
+		  if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
+		    p_code = RenewablePCode (result_type, ctx, ctx->tag_set);
+		    p_code->source = [string] elem;
+		  }
+		  subparser = result_type->get_parser (
+		    ctx, ctx->tag_set, evaler, p_code);
+		  THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
+				  p_code ? " and compiling" : "",
+				  format_short (elem), subparser);
+		}
 		if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 		  subparser->recover_errors = 1;
 		  if (p_code) p_code->recover_errors = 1;
 		}
-		THIS_TAG_DEBUG ("Exec[%d]: Parsing%s string %s with %O\n", i,
-				p_code ? " and compiling" : "",
-				format_short (elem), subparser);
 	      }
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
@@ -3183,7 +3912,7 @@ class Frame
 	      }
 	      else if (([object] elem)->is_RXML_PCode) {
 		THIS_TAG_DEBUG ("Exec[%d]: Evaluating p-code %O\n", i, elem);
-		piece = ([object(PCode)] elem)->_eval (ctx);
+		piece = ([object(PCode)] elem)->_eval (ctx, 0);
 		CONVERT_VALUE (piece, ([object(PCode)] elem)->type,
 			       piece, result_type,
 			       "Converting p-code result from %s "
@@ -3216,12 +3945,38 @@ class Frame
       else res = result;
 
       ctx->make_p_code = orig_make_p_code;
+      ctx->evaled_p_code = orig_evaled_p_code;
+
+      if (ctx->state_updated != orig_state_updated) {
+	PCODE_UPDATE_MSG ("%O (frame %O): Restoring p-code update count "
+			  "from %d to %d after evaluating exec array.\n",
+			  ctx, this, ctx->state_updated, orig_state_updated);
+	ctx->state_updated = orig_state_updated;
+	if (exec_array_state_update) {
+	  PCODE_UPDATE_MSG ("Calling %O->exec_array_state_update.\n", this);
+	  exec_array_state_update();
+	}
+      }
+
       return res;
     };
 
     if (result_type->sequential) result = result + (result = 0, res);
 
     ctx->make_p_code = orig_make_p_code;
+    ctx->evaled_p_code = orig_evaled_p_code;
+
+    if (ctx->state_updated != orig_state_updated) {
+      PCODE_UPDATE_MSG ("%O (frame %O): Restoring p-code update count "
+			"from %d to %d after evaluating exec array.\n",
+			ctx, this, ctx->state_updated, orig_state_updated);
+      ctx->state_updated = orig_state_updated;
+      if (exec_array_state_update) {
+	PCODE_UPDATE_MSG ("Calling %O->exec_array_state_update.\n", this);
+	exec_array_state_update();
+      }
+    }
+
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       THIS_TAG_DEBUG ("Exec: Interrupted at position %d\n", i);
       UNWIND_STATE ustate;
@@ -3282,7 +4037,29 @@ class Frame
     COND_PROF_LEAVE(tag,tag->name,"tag");				\
   } while (0)
 
-#define EXEC_CALLBACK(ctx, evaler, exec, cb, args...)			\
+#define TAG_ENTER_SCOPE(ctx, csf)					\
+  do {									\
+    if (SCOPE_TYPE vars = this_object()->vars) {			\
+      if (!csf && flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {	\
+	csf = CacheStaticFrame (this_object()->scope_name);		\
+	ctx->misc->recorded_changes += ({csf->EnterScope(), ([])});	\
+      }									\
+      ENTER_SCOPE (ctx, this_object());					\
+    }									\
+  } while (0)
+
+#define TAG_LEAVE_SCOPE(ctx, csf)					\
+  do {									\
+    if (SCOPE_TYPE vars = this_object()->vars) {			\
+      LEAVE_SCOPE (ctx, this_object());					\
+      /* csf is usually set, but might not be in the cleanup after	\
+       * exceptions. */							\
+      if (flags & FLAG_IS_CACHE_STATIC && csf && ctx->evaled_p_code)	\
+	ctx->misc->recorded_changes += ({csf->LeaveScope(), ([])});	\
+    }									\
+  } while (0)
+
+#define EXEC_CALLBACK(ctx, csf, evaler, exec, cb, args...)		\
   do {									\
     if (!exec)								\
       if (arrayp (cb)) {						\
@@ -3295,7 +4072,7 @@ class Frame
 			 sizeof (exec) : "Zero") +			\
 			" returned from " #cb "\n");			\
 	THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());		\
-	ENTER_SCOPE (ctx, this_object());				\
+	TAG_ENTER_SCOPE (ctx, csf);					\
 	if (ctx->new_runtime_tags)					\
 	  _handle_runtime_tags (ctx, evaler);				\
       }									\
@@ -3327,16 +4104,17 @@ class Frame
 
   EVAL_ARGS_FUNC|string _prepare (Context ctx, Type type,
 				  mapping(string:string) raw_args,
-				  PCode p_code)
+				  PikeCompile comp)
   // Evaluates raw_args simultaneously as generating the
   // EVAL_ARGS_FUNC function. The result of the evaluations is stored
-  // in args. Might be destructive on raw_args.
+  // in args. Might be destructive on raw_args. No evaluation of
+  // raw_args is done if tag isn't set.
   {
-    mixed err = catch {
       if (ctx->frame_depth >= Context.max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
 		    Context.max_frame_depth);
 
+      mapping(string:mixed) cooked_args;
       EVAL_ARGS_FUNC|string func;
 
       if (raw_args) {
@@ -3348,11 +4126,11 @@ class Frame
 #ifdef MAGIC_HELP_ARG
 	if (raw_args->help) {
 	  func = utils->return_help_arg;
-	  args = raw_args;
+	  cooked_args = raw_args;
 	}
 	else
 #endif
-	  if (sizeof (raw_args)) {
+	  if (sizeof (raw_args) || tag && sizeof (tag->req_arg_types)) {
 	    // Note: Approximate code duplication in Tag.eval_args and
 	    // Tag._eval_splice_args.
 
@@ -3361,32 +4139,39 @@ class Frame
 	    else splice_arg = 0;
 	    mapping(string:Type) splice_req_types;
 
-	    mapping(string:Type) atypes = raw_args & tag->req_arg_types;
-	    if (sizeof (atypes) < sizeof (tag->req_arg_types))
-	      if (splice_arg)
-		splice_req_types = tag->req_arg_types - atypes;
-	      else {
-		array(string) missing = sort (indices (tag->req_arg_types - atypes));
-		parse_error ("Required " +
-			     (sizeof (missing) > 1 ?
-			      "arguments " + String.implode_nicely (missing) + " are" :
-			      "argument " + missing[0] + " is") + " missing.\n");
-	      }
-	    atypes += raw_args & tag->opt_arg_types;
+	    mapping(string:Type) atypes;
+	    if (tag) {
+	      atypes = raw_args & tag->req_arg_types;
+	      if (sizeof (atypes) < sizeof (tag->req_arg_types))
+		if (splice_arg)
+		  splice_req_types = tag->req_arg_types - atypes;
+		else {
+		  array(string) missing = sort (indices (tag->req_arg_types - atypes));
+		  parse_error ("Required " +
+			       (sizeof (missing) > 1 ?
+				"arguments " + String.implode_nicely (missing) + " are" :
+				"argument " + missing[0] + " is") + " missing.\n");
+		}
+	      atypes += raw_args & tag->opt_arg_types;
+	    }
+	    else
+	      atypes = ([]);
 
 	    String.Buffer fn_text;
 	    function(string...:void) fn_text_add;
 	    PCode sub_p_code = 0;
-	    PikeCompile comp;
-	    if (p_code) {
+	    if (comp) {
 	      fn_text_add = (fn_text = String.Buffer())->add;
-	      fn_text_add ("mixed tmp;\n");
-	      sub_p_code = PCode (0);
-	      comp = ctx->p_code_comp;
+	      // The zero assignment is to avoid unused variable
+	      // warnings in pike > 7.6.
+	      fn_text_add ("mixed tmp = 0;\n");
+	      sub_p_code = PCode (0, 0);
 	    }
 
 	    if (splice_arg) {
 	      // Note: This assumes an XML-like parser.
+	      if (comp)
+		sub_p_code->create (splice_arg_type, ctx, ctx->tag_set, 0, comp);
 	      Parser parser = splice_arg_type->get_parser (ctx, ctx->tag_set, 0,
 							   sub_p_code);
 	      THIS_TAG_DEBUG ("Evaluating splice argument %s\n",
@@ -3404,72 +4189,111 @@ class Frame
 		throw_fatal (err);
 	      }
 #endif
-	      if (p_code)
-		fn_text_add (
-		  "return ", comp->bind (tag->_eval_splice_args), "(ctx,",
-		  comp->bind (xml_tag_parser->parse_tag_args), "((",
-		  sub_p_code->compile_text (comp), ")||\"\"),",
-		  comp->bind (splice_req_types), ")+([\n");
+	      if (comp) {
+		if (tag)
+		  fn_text_add (
+		    "mapping(string:mixed) args = ",
+		    comp->bind (tag->_eval_splice_args), "(ctx,",
+		    comp->bind (xml_tag_parser->parse_tag_args), "((",
+		    sub_p_code->compile_text (comp), ")||\"\"),",
+		    comp->bind (splice_req_types), ");\n");
+		else
+		  fn_text_add (
+		    "mapping(string:mixed) args = ",
+		    comp->bind (xml_tag_parser->parse_tag_args), "((",
+		    sub_p_code->compile_text (comp), ")||\"\");\n");
+	      }
+
 	      splice_arg_type->give_back (parser, ctx->tag_set);
-	      args = tag->_eval_splice_args (
-		ctx, xml_tag_parser->parse_tag_args (splice_arg || ""), splice_req_types);
+	      if (tag)
+		cooked_args = tag->_eval_splice_args (
+		  ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
+		  splice_req_types);
+	      else
+		cooked_args = xml_tag_parser->parse_tag_args (splice_arg || "");
 	    }
+
 	    else {
-	      args = raw_args;
-	      if (p_code) fn_text_add ("return ([\n");
+	      cooked_args = ([]);
+	      if (comp) fn_text_add ("mapping(string:mixed) args = ([]);\n");
 	    }
 
 #ifdef MODULE_DEBUG
 	    if (mixed err = catch {
 #endif
+
 	      TagSet ctx_tag_set = ctx->tag_set;
-	      if (p_code)
-		foreach (indices (raw_args), string arg) {
-		  Type t = atypes[arg] || tag->def_arg_type;
+	      Type default_type = tag ? tag->def_arg_type : t_any_text (PNone);
+	      if (comp) {
+		string req_args_var = comp->bind (tag->req_arg_types);
+		foreach (raw_args; string arg; string val) {
+		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
+		    sub_p_code->create (t, ctx, ctx_tag_set, 0, comp);
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
 				    "argument value %s with %O\n",
-				    format_short (raw_args[arg]), parser);
-		    parser->finish (raw_args[arg]); // Should not unwind.
-		    args[arg] = parser->eval(); // Should not unwind.
-		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    format_short (arg), format_short (args[arg]));
-		    fn_text_add (sprintf ("%O: %s,\n", arg,
-					  sub_p_code->compile_text (comp)));
+				    format_short (val), parser);
+		    parser->finish (val); // Should not unwind.
+		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
+
+		    if (t->sequential)
+		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
+					    sub_p_code->compile_text (comp)));
+		    else
+		      fn_text_add (
+			"tmp=", sub_p_code->compile_text (comp), ";\n",
+			sprintf ("if (tmp == RXML.nil)"
+				 " set_nil_arg(args,%O,%s,%s,ctx->id);\n"
+				 "else args[%O] = tmp;\n",
+				 arg, comp->bind (t), req_args_var, arg));
+
+		    if (v == nil)
+		      set_nil_arg (cooked_args, arg, t,
+				   tag->req_arg_types, ctx->id);
+		    else
+		      cooked_args[arg] = v;
+
+		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
+				    format_short (arg),
+				    format_short (cooked_args[arg]));
 		  }
+
 		  else {
-		    args[arg] = raw_args[arg];
-		    fn_text_add (sprintf ("%O: %s,\n", arg, comp->bind (raw_args[arg])));
+		    cooked_args[arg] = val;
+		    fn_text_add (sprintf ("args[%O] = %s;\n",
+					  arg, comp->bind (val)));
 		  }
 		}
+	      }
+
 	      else
-		foreach (indices (raw_args), string arg) {
-		  Type t = atypes[arg] || tag->def_arg_type;
-
-		  // Temporary debug check.
-		  if (!stringp (raw_args[arg]))
-		    error ("%O: raw_args[%O] not a string:\n"
-			   "raw_args: %O\n"
-			   "atypes: %O\n"
-			   "raw_args == atypes: %O\n",
-			   this_object(), arg, raw_args, atypes,
-			   [mapping] raw_args == [mapping] atypes);
-
+		foreach (raw_args; string arg; string val) {
+		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
-				    format_short (raw_args[arg]), parser);
-		    parser->finish (raw_args[arg]); // Should not unwind.
-		    args[arg] = parser->eval(); // Should not unwind.
-		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    format_short (arg), format_short (args[arg]));
+				    format_short (val), parser);
+		    parser->finish (val); // Should not unwind.
+		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
+
+		    if (v == nil)
+		      set_nil_arg (cooked_args, arg, t,
+				   tag->req_arg_types, ctx->id);
+		    else
+		      cooked_args[arg] = v;
+
+		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
+				    format_short (arg),
+				    format_short (cooked_args[arg]));
 		  }
+
 		  else
-		    args[arg] = raw_args[arg];
+		    cooked_args[arg] = val;
 		}
+
 #ifdef MODULE_DEBUG
 	    }) {
 	      if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -3478,15 +4302,15 @@ class Frame
 	    }
 #endif
 
-	    if (p_code) {
-	      fn_text_add ("]);\n");
-	      func = ctx->p_code_comp->add_func (
+	    if (comp) {
+	      fn_text_add ("return args;\n");
+	      func = comp->add_func (
 		"mapping(string:mixed)", "object ctx, object evaler", fn_text->get());
 	    }
 	  }
 	  else {
 	    func = utils->return_empty_mapping;
-	    args = raw_args;
+	    cooked_args = raw_args;
 	  }
       }
       else
@@ -3543,16 +4367,32 @@ class Frame
       }
       else THIS_TAG_DEBUG ("Keeping content_type %s\n", content_type->name);
 
+      if (raw_args)
+	args = cooked_args;
+
       return func;
-    };
-    throw (err);
   }
+
+#ifdef DEBUG
+  Thread.Thread using_thread;
+#endif
+
+  //! Frame cleanup callback.
+  //!
+  //! Overload this function with code to cleanup
+  //! any state that shouldn't be kept for the next
+  //! use of the frame.
+  //!
+  //! This function is called after @[do_return()],
+  //! and also during exception processing.
+  static void cleanup() {}
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
   // Note: It might be somewhat tricky to override this function,
   // since it handles unwinding and rewinding.
   {
     RequestID id = ctx->id;
+    PikeCompile comp;
 
     // Unwind state data:
 #define EVSTAT_NONE 0
@@ -3561,7 +4401,7 @@ class Frame
 #define EVSTAT_LAST_ITER 3
 #define EVSTAT_ITER_DONE 4
     int eval_state = EVSTAT_NONE;
-    EVAL_ARGS_FUNC in_args = 0;
+    mapping(string:mixed)|EVAL_ARGS_FUNC in_args = 0;
     string|PCode in_content = 0;
     int iter;
 #ifdef DEBUG
@@ -3573,40 +4413,56 @@ class Frame
     TagSet orig_tag_set; // Flags that additional_tags has been added to ctx->tag_set.
     //ctx->new_runtime_tags
     int orig_make_p_code;
+    CacheStaticFrame csf;
+    //ctx->evaled_p_code;
 
 #define PRE_INIT_ERROR(X...) (ctx->frame = this_object(), fatal_error (X))
 #ifdef DEBUG
     // Internal sanity checks.
+    if (using_thread)
+      PRE_INIT_ERROR ("Frame already in use by thread %O, this is thread %O.\n",
+		      using_thread, this_thread());
+    using_thread = this_thread();
     if (ctx != RXML_CONTEXT)
       PRE_INIT_ERROR ("Context not current.\n");
+    if (id && ctx->misc != ctx->id->misc->defines)
+      PRE_INIT_ERROR ("ctx->misc != ctx->id->misc->defines\n"
+		      "%O != %O\n",
+		      ctx->misc, ctx->id->misc->defines);
     if (!evaler->tag_set_eval)
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
     if (up)
       PRE_INIT_ERROR ("Up frame already set. Frame reused in different context?\n");
-    if (id && ctx->misc != ctx->id->misc->defines)
-      PRE_INIT_ERROR ("ctx->misc != ctx->id->misc->defines\n");
 #endif
 #ifdef MODULE_DEBUG
     if (ctx->new_runtime_tags)
       PRE_INIT_ERROR ("Looks like Context.add_runtime_tag() or "
 		      "Context.remove_runtime_tag() was used outside any parser.\n");
 #endif
-#undef PRE_INIT_ERROR
 
     up = ctx->frame;
+#ifdef DEBUG
+    if (up && up->using_thread != this_thread())
+      PRE_INIT_ERROR ("Parent frame in use by thread %O, this is thread %O.\n",
+		      up->using_thread, this_thread());
+#endif
     ctx->frame = this_object();
     ctx->frame_depth++;
     FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 		     ctx->frame_depth, "", this_object(), __LINE__);
 
+#undef PRE_INIT_ERROR
+
   process_tag:
     while (1) {			// Looping only when continuing in streaming mode.
       if (mixed err = catch {
+	mixed orig_args = args;
+
 	if (array state = ctx->unwind_state && ctx->unwind_state[this_object()]) {
 	  object ignored;
 	  [ignored, eval_state, in_args, in_content, iter,
 	   subevaler, piece, exec, orig_tag_set,
-	   ctx->new_runtime_tags, orig_make_p_code
+	   ctx->new_runtime_tags, orig_make_p_code, csf, ctx->evaled_p_code
 #ifdef DEBUG
 	   , debug_iter
 #endif
@@ -3619,19 +4475,21 @@ class Frame
 	}
 
 	else {			// Initialize a new evaluation.
-	  if (tag) {
-	    if (!(flags & FLAG_CUSTOM_TRACE))
-	      TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+	  if (!(flags & FLAG_CUSTOM_TRACE))
+	    TRACE_ENTER(tag ? "tag <" + tag->name + ">" : "tagless frame",
+			tag || this_object());
 #ifdef MODULE_LEVEL_SECURITY
-	    if (id->conf->check_security (tag, id, id->misc->seclevel)) {
+	  if (object sec_obj =
+	      this_object()->check_security_object || tag || this_object())
+	    if (id->conf->check_security (sec_obj, id, id->misc->seclevel)) {
 	      if (flags & FLAG_CUSTOM_TRACE)
-		TRACE_ENTER("tag &lt;" + tag->name + "&gt;", tag);
+		TRACE_ENTER(tag ? "tag <" + tag->name + ">" : "tagless frame",
+			    tag || this_object());
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	      TRACE_LEAVE("access denied");
 	      return result = nil;
 	    }
 #endif
-	  }
 
 	  orig_make_p_code = ctx->make_p_code;
 
@@ -3639,8 +4497,10 @@ class Frame
 	    THIS_TAG_TOP_DEBUG ("Evaluating with compiled arguments\n");
 	    args = (in_args = [EVAL_ARGS_FUNC] args) (ctx, evaler);
 	    in_content = content;
+	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	    content = nil;
 	  }
+
 	  else if (flags & FLAG_UNPARSED) {
 #ifdef DEBUG
 	    if (!(flags & FLAG_PROC_INSTR) && !mappingp (args))
@@ -3648,22 +4508,68 @@ class Frame
 	    if (content && !stringp (content))
 	      fatal_error ("content is not a string in unparsed frame: %O.\n", content);
 #endif
-	    THIS_TAG_TOP_DEBUG ("Evaluating%s unparsed\n",
-			       ctx->make_p_code ? " and compiling" : "");
-	    if (PCode p_code = ctx->make_p_code &&
-		(evaler->is_RXML_PCode ? evaler : evaler->p_code)) {
-	      // FIXME: Perhaps make a new PCode object if the evaler
-	      // doesn't provide one?
-	      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
-	      in_args = _prepare (ctx, type, args && args + ([]), p_code);
-	      PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
-				this_object());
-	      ctx->state_updated++;
-	    }
-	    else
+
+	  eval_only: {
+	    eval_and_compile:
+	      if (ctx->make_p_code) {
+		if (evaler->is_RXML_PCode) {
+		  if (!(comp = evaler->p_code_comp)) {
+		    comp = evaler->p_code_comp = PikeCompile();
+		    THIS_TAG_TOP_DEBUG (
+		      "%s", "Evaluating and compiling unparsed"
+		      DO_IF_DEBUG (+ sprintf (" (with new %O in %O)\n",
+					      comp, evaler)));
+		  }
+		  else
+		    THIS_TAG_TOP_DEBUG (
+		      "%s", "Evaluating and compiling unparsed"
+		      DO_IF_DEBUG (+ sprintf (" (with old %O in %O)\n",
+					      comp, evaler)));
+		}
+
+		else {
+		  if (!evaler->p_code) {
+		    // This can happen if a context with make_p_code
+		    // set is used in a nested parse without
+		    // compilation. Just clear it and continue
+		    // (orig_make_p_code will restore it afterwards.
+		    ctx->make_p_code = 0;
+		    break eval_and_compile;
+		  }
+
+		  else
+		    if (!(comp = evaler->p_code->p_code_comp)) {
+		      comp = evaler->p_code->p_code_comp = PikeCompile();
+		      THIS_TAG_TOP_DEBUG (
+			"%s", "Evaluating and compiling unparsed"
+			DO_IF_DEBUG (+ sprintf (" (with new %O in %O in %O)\n",
+						comp, evaler->p_code, evaler)));
+		    }
+		    else
+		      THIS_TAG_TOP_DEBUG (
+			"%s", "Evaluating and compiling unparsed"
+			DO_IF_DEBUG (+ sprintf (" (with old %O in %O in %O)\n",
+						comp, evaler->p_code, evaler)));
+		}
+
+		in_args = _prepare (ctx, type, args && args + ([]), comp);
+		ctx->state_updated++;
+		PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
+				  "since args have been compiled.\n",
+				  ctx, this_object(), ctx->state_updated);
+		break eval_only;
+	      }
+
+	      THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
+	      in_args = args;
 	      _prepare (ctx, type, args && args + ([]), 0);
+	      if (args == in_args) in_args = 0;
+	    }
+
 	    in_content = content;
+	    if (!in_content || in_content == "") flags |= FLAG_MAY_CACHE_RESULT;
 	  }
+
 	  else {
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content\n");
 	    _prepare (ctx, type, 0, 0);
@@ -3673,19 +4579,10 @@ class Frame
 	  eval_state = EVSTAT_BEGIN;
 	}
 
-	if (TagSet add_tags = [object(TagSet)] this_object()->additional_tags) {
-	  TagSet tset = ctx->tag_set;
-	  if (!tset->has_effective_tags (add_tags)) {
-	    THIS_TAG_DEBUG ("Installing additional_tags %O\n", add_tags);
-	    orig_tag_set = tset;
-	    TagSet comp_ts;
-	    GET_COMPOSITE_TAG_SET (add_tags, tset, comp_ts);
-	    ctx->tag_set = comp_ts;
-	  }
-	  else
-	    THIS_TAG_DEBUG ("Not installing additional_tags %O "
-			    "since they're already in the tag set\n", add_tags);
-	}
+	if (!mappingp (args) && !(flags & FLAG_PROC_INSTR))
+	  error ("args is not a mapping: %O (orig: %O, flags: %x)\n",
+		 args, orig_args, flags);
+	orig_args = 0;
 
 	if (!zero_type (this_object()->parent_frame))
 	  // Note: This could be done in _prepare, but then we'd have
@@ -3708,8 +4605,9 @@ class Frame
 	  }
 
 #ifdef MAGIC_HELP_ARG
-	if (tag && (args || ([]))->help) {
-	  TRACE_ENTER ("tag &lt;" + tag->name + " help&gt;", tag);
+	if ((args || ([]))->help) {
+	  TRACE_ENTER(tag ? "tag <" + tag->name + " help>" : "tagless frame",
+		      tag || this_object());
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
 	  THIS_TAG_TOP_DEBUG ("Reporting help - frame done\n");
@@ -3721,15 +4619,29 @@ class Frame
 	  case EVSTAT_BEGIN:
 	    if (array|function(RequestID:array) do_enter =
 		[array|function(RequestID:array)] this_object()->do_enter) {
-	      EXEC_CALLBACK (ctx, evaler, exec, do_enter, id);
+	      EXEC_CALLBACK (ctx, csf, evaler, exec, do_enter, id);
 	      EXEC_ARRAY (ctx, evaler, exec, do_enter);
 	    }
 	    else {
 	      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-	      ENTER_SCOPE (ctx, this_object());
+	      TAG_ENTER_SCOPE (ctx, csf);
 	    }
 	    if (flags & FLAG_UNPARSED) content = nil;
 	    eval_state = EVSTAT_ENTERED;
+
+	    if (TagSet add_tags = [object(TagSet)] this_object()->additional_tags) {
+	      TagSet tset = ctx->tag_set;
+	      if (!tset->has_effective_tags (add_tags)) {
+		THIS_TAG_DEBUG ("Installing additional_tags %O\n", add_tags);
+		orig_tag_set = tset;
+		TagSet comp_ts;
+		GET_COMPOSITE_TAG_SET (add_tags, tset, comp_ts);
+		ctx->tag_set = comp_ts;
+	      }
+	      else
+		THIS_TAG_DEBUG ("Not installing additional_tags %O "
+				"since they're already in the tag set\n", add_tags);
+	    }
 	    // Fall through.
 
 	  case EVSTAT_ENTERED:
@@ -3756,88 +4668,179 @@ class Frame
 		  LOW_CALL_CALLBACK (iter, do_iterate, id);
 		  THIS_TAG_DEBUG ("%O returned from do_iterate\n", iter);
 		  THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
-		  ENTER_SCOPE (ctx, this_object());
+		  TAG_ENTER_SCOPE (ctx, csf);
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, evaler);
 		  if (iter <= 0) eval_state = EVSTAT_LAST_ITER;
 		}
 	      }
 
+#ifdef MODULE_DEBUG
+	      if (flags & FLAG_IS_CACHE_STATIC && flags & FLAG_GET_EVALED_CONTENT)
+		fatal_error ("FLAG_IS_CACHE_STATIC cannot be set when "
+			     "FLAG_GET_EVALED_CONTENT is.\n");
+#endif
+
+	      if (ctx->evaled_p_code)
+		// Record any variable changes from do_enter or do_iterate.
+		ctx->evaled_p_code->add (ctx, nil, nil);
+
 	      for (; iter > 0; iter-- DO_IF_DEBUG (, debug_iter++)) {
-	      eval_content:
-		{
+	      eval_content: {
+		  PCode orig_evaled_p_code = ctx->evaled_p_code;
+		  PCode unevaled_content = 0;
 		  finished++;
+
 		  if (subevaler)
 		    finished = 0; // Continuing an unwound subevaler.
+
 		  else if (!in_content || in_content == "") {
 		    if (flags & FLAG_GET_EVALED_CONTENT) {
-		      this_object()->evaled_content = PCode (content_type);
+		      this_object()->evaled_content =
+			PCode (content_type, ctx, 0, 0,
+			       evaler->p_code_comp ||
+			       evaler->p_code && evaler->p_code->p_code_comp);
 		      this_object()->evaled_content->finish();
 		    }
-		    break eval_content; // No content to handle.
+
+		    // No content to handle.
+		    if (flags & FLAG_UNPARSED) {
+		      if (content_type->sequential) {
+			THIS_TAG_DEBUG ("Setting content to empty value: %s\n",
+					format_short (
+					  content_type->empty_value));
+			content = content_type->empty_value;
+		      }
+		      else if (flags & FLAG_CONTENT_VAL_REQ)
+			parse_error ("Missing value for nonsequential "
+				     "content of type %s.\n",
+				     content_type->name);
+		    }
+		    break eval_content;
 		  }
-		  else if (stringp (in_content)) {
-		    if (flags & FLAG_EMPTY_ELEMENT)
-		      parse_error ("This tag doesn't handle content.\n");
-		    else {	// The nested content is not yet parsed.
-		      if (finished > 1)
-			// Looped once. Always compile since it's
-			// likely we'll loop again.
-			ctx->make_p_code = 1;
-		      {
-			PCode p_code = ctx->make_p_code && PCode (0);
-			if (flags & FLAG_GET_EVALED_CONTENT) {
-			  PCode evaled_content =
-			    this_object()->evaled_content = PCode (0, 0, ctx);
-			  if (p_code) p_code->p_code = evaled_content;
-			  else p_code = evaled_content;
-			}
-			if (this_object()->local_tags) {
+
+		  else {
+		    if (!(flags & FLAG_IS_CACHE_STATIC)) {
+		      if (orig_evaled_p_code)
+			// Make sure that any variable changes that were
+			// added during collection of the previous p-code
+			// are added to it instead of the new one (if any).
+			orig_evaled_p_code->add (ctx, nil, nil);
+		      ctx->evaled_p_code = 0;
+		    }
+
+		    if (stringp (in_content)) {
+		      if (flags & FLAG_EMPTY_ELEMENT)
+			parse_error ("This tag doesn't handle content.\n");
+
+		      else {	// The nested content is not yet parsed.
+			if (finished > 1)
+			  // Looped once. Always compile since it's
+			  // likely we'll loop again.
+			  ctx->make_p_code = 1;
+			if (TagSet local_tags =
+			    [object(TagSet)] this_object()->local_tags) {
+			  if (flags & FLAG_GET_EVALED_CONTENT)
+			    // Do not pass on a PikeCompile object here since
+			    // the result p-code will typically have a
+			    // different lifespan than the content p-code.
+			    this_object()->evaled_content = ctx->evaled_p_code =
+			      PCode (content_type, ctx, local_tags, 1);
+
+			  PCode p_code = unevaled_content =
+			    ctx->make_p_code &&
+			    PCode (content_type, ctx, local_tags, 0,
+				   ctx->evaled_p_code ? ctx->evaled_p_code->p_code_comp :
+				   evaler->p_code_comp ||
+				   evaler->p_code && evaler->p_code->p_code_comp);
+			  // Must use the same PikeCompile object for both
+			  // content and result collection since
+			  // FLAG_DONT_CACHE_RESULT frames in the result p-code
+			  // will resolve to the same compiled args function.
+
+			  if (PCode evaled_p_code = ctx->evaled_p_code)
+			    if (p_code) p_code->p_code = evaled_p_code;
+			    else p_code = evaled_p_code;
+
 			  subevaler = content_type->get_parser (
-			    ctx, [object(TagSet)] this_object()->local_tags,
-			    evaler, p_code);
+			    ctx, local_tags, evaler, p_code);
 			  subevaler->_local_tag_set = 1;
+
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
 					  "with %O from local_tags\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
-					  flags & FLAG_GET_EVALED_CONTENT ?
+					  ctx->evaled_p_code ?
 					  " and result compiling" : "",
 					  format_short (in_content), subevaler);
 			}
+
 			else {
+			  if (flags & FLAG_GET_EVALED_CONTENT)
+			    // Do not pass on a PikeCompile object here since
+			    // the result p-code will typically have a
+			    // different lifespan than the content p-code.
+			    this_object()->evaled_content = ctx->evaled_p_code =
+			      PCode (content_type, ctx, ctx->tag_set, 1);
+
+			  PCode p_code = unevaled_content =
+			    ctx->make_p_code &&
+			    PCode (content_type, ctx, ctx->tag_set, 0,
+				   ctx->evaled_p_code ? ctx->evaled_p_code->p_code_comp :
+				   evaler->p_code_comp ||
+				   evaler->p_code && evaler->p_code->p_code_comp);
+			  // Must use the same PikeCompile object for both
+			  // content and result collection since
+			  // FLAG_DONT_CACHE_RESULT frames in the result p-code
+			  // will resolve to the same compiled args function.
+
+			  if (PCode evaled_p_code = ctx->evaled_p_code)
+			    if (p_code) p_code->p_code = evaled_p_code;
+			    else p_code = evaled_p_code;
+
 			  subevaler = content_type->get_parser (
 			    ctx, ctx->tag_set, evaler, p_code);
+
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s%s content %s "
 					  "with %O%s\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
-					  flags & FLAG_GET_EVALED_CONTENT ?
+					  ctx->evaled_p_code ?
 					  " and result compiling" : "",
 					  format_short (in_content), subevaler,
 					  this_object()->additional_tags ?
 					  " from additional_tags" : "");
 			}
+
 			if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
 			  subevaler->recover_errors = 1;
-			  if (p_code) {
-			    p_code->recover_errors = 1;
-			    if ((p_code = p_code->p_code))
-			      p_code->recover_errors = 1;
-			  }
+			  if (unevaled_content)
+			    unevaled_content->recover_errors = 1;
+			  if (flags & FLAG_GET_EVALED_CONTENT)
+			    this_object()->evaled_content->recover_errors = 1;
 			}
+
+			subevaler->finish (in_content); // Might unwind.
+			finished = 1;
 		      }
-		      subevaler->finish (in_content); // Might unwind.
-		      finished = 1;
 		    }
-		  }
-		  else {
-		    subevaler = in_content;
-		    if (flags & FLAG_GET_EVALED_CONTENT)
-		      subevaler->p_code = this_object()->evaled_content =
-			PCode (content_type, subevaler->tag_set, ctx);
-		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
-				    debug_iter,
-				    flags & FLAG_GET_EVALED_CONTENT ?
-				    " and result compiling" : "");
+
+		    else {
+		      subevaler = in_content;
+
+		      if (flags & FLAG_GET_EVALED_CONTENT) {
+			// Do not pass on a PikeCompile object here since
+			// the result p-code will typically have a
+			// different lifespan than the content p-code.
+			PCode p_code =
+			  this_object()->evaled_content = ctx->evaled_p_code =
+			  PCode (content_type, ctx, subevaler->tag_set, 1);
+			if (subevaler->recover_errors)
+			  p_code->recover_errors = 1;
+		      }
+
+		      THIS_TAG_DEBUG ("Iter[%d]: Evaluating%s with compiled content\n",
+				      debug_iter,
+				      ctx->evaled_p_code ? " and result compiling" : "");
+		    }
 		  }
 
 		eval_sub:
@@ -3847,8 +4850,10 @@ class Frame
 		      THIS_TAG_DEBUG ("Iter[%d]: Got %s stream piece %s\n",
 				      debug_iter, finished ? "ending" : "a",
 				      format_short (piece));
+
 		      if (!arrayp (do_process)) {
-			EXEC_CALLBACK (ctx, evaler, exec, do_process, id, piece);
+			EXEC_CALLBACK (ctx, csf, evaler, exec, do_process, id, piece);
+
 			if (exec) {
 			  mixed res = _exec_array (
 			    ctx, evaler, exec, "do_process"); // Might unwind.
@@ -3866,6 +4871,7 @@ class Frame
 			  }
 			  exec = 0;
 			}
+
 			else if (flags & FLAG_STREAM_RESULT) {
 			  THIS_TAG_DEBUG ("Iter[%d]: do_process finished the stream; "
 					  "ignoring remaining content\n", debug_iter);
@@ -3874,6 +4880,7 @@ class Frame
 			  break eval_sub;
 			}
 		      }
+
 		      piece = nil;
 		      if (finished) break eval_sub;
 		    }
@@ -3881,11 +4888,31 @@ class Frame
 		    else {	// No streaming.
 		      piece = nil;
 		      if (finished) {
-			mixed res = subevaler->_eval (ctx); // Might unwind.
-			if (content_type->sequential)
-			  SET_SEQUENTIAL (res, content, "content");
-			else if (res != nil)
-			  SET_NONSEQUENTIAL (res, content, content_type, "content");
+			mixed res = subevaler->_eval (
+			  ctx,
+			  flags & (FLAG_GET_EVALED_CONTENT|FLAG_IS_CACHE_STATIC) &&
+			  ctx->evaled_p_code); // Might unwind.
+
+			if (res == nil) {
+			  if (content_type->sequential) {
+			    THIS_TAG_DEBUG (
+			      "Setting content to empty value: %s\n",
+			      format_short (content_type->empty_value));
+			    content = content_type->empty_value;
+			  }
+			  else if (flags & FLAG_CONTENT_VAL_REQ)
+			    parse_error ("Missing value for nonsequential "
+					 "content of type %s.\n",
+					 content_type->name);
+			}
+			else {
+			  if (content_type->sequential)
+			    SET_SEQUENTIAL (res, content, "content");
+			  else
+			    SET_NONNIL_NONSEQUENTIAL (res, content,
+						      content_type, "content");
+			}
+
 			break eval_sub;
 		      }
 		    }
@@ -3894,23 +4921,25 @@ class Frame
 		    finished = 1;
 		  } while (1); // Only loops when an unwound subevaler has been recovered.
 
-		  if (PCode p_code = subevaler->p_code) {
-		    p_code->finish();
-		    if (stringp (in_content) && ctx->make_p_code) {
-		      in_content = p_code;
-		      PCODE_UPDATE_MSG ("%O: P-code update since content "
-					"has been compiled.\n", this_object());
-		      ctx->state_updated++;
-		    }
-		    subevaler->p_code = 0;
+		  if (flags & FLAG_GET_EVALED_CONTENT)
+		    this_object()->evaled_content->finish();
+		  if (unevaled_content) {
+		    unevaled_content->finish();
+		    in_content = unevaled_content;
+		    ctx->state_updated++;
+		    PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
+				      "since content has been compiled.\n",
+				      ctx, this_object(), ctx->state_updated);
 		    ctx->make_p_code = orig_make_p_code; // Reset before do_return.
 		  }
+		  flags |= FLAG_MAY_CACHE_RESULT;
 
+		  ctx->evaled_p_code = orig_evaled_p_code;
 		  subevaler = 0;
 		}
 
 		if (do_process) {
-		  EXEC_CALLBACK (ctx, evaler, exec, do_process, id);
+		  EXEC_CALLBACK (ctx, csf, evaler, exec, do_process, id);
 		  EXEC_ARRAY (ctx, evaler, exec, do_process);
 		}
 	      }
@@ -3921,7 +4950,7 @@ class Frame
 	  case EVSTAT_ITER_DONE:
 	    if (array|function(RequestID,void|PCode:array) do_return =
 		[array|function(RequestID,void|PCode:array)] this_object()->do_return) {
-	      EXEC_CALLBACK (ctx, evaler, exec, do_return, id,
+	      EXEC_CALLBACK (ctx, csf, evaler, exec, do_return, id,
 			     objectp (in_content) && in_content);
 	      if (exec) {
 		// We don't use EXEC_ARRAY here since there's no idea
@@ -3963,39 +4992,63 @@ class Frame
 #ifdef DEBUG
 	else THIS_TAG_DEBUG ("Skipping nil result\n");
 #endif
+#ifdef MODULE_DEBUG
+	if (flags & FLAG_IS_CACHE_STATIC &&
+	    content_type->name != result_type->name)
+	  fatal_error ("Frame got FLAG_IS_CACHE_STATIC set, "
+		       "but the content (%s) and result (%s) types differ.\n",
+		       content_type->name, result_type->name);
+#endif
 
 	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this_object());
-	LEAVE_SCOPE (ctx, this_object());
+	TAG_LEAVE_SCOPE (ctx, csf);
 
 	if (ctx->new_runtime_tags)
 	  _handle_runtime_tags (ctx, evaler);
 
 #define CLEANUP do {							\
-	  if (in_args) args = in_args;					\
+	  DO_IF_DEBUG (							\
+	    if (id && ctx->misc != id->misc->defines)			\
+	      fatal_error ("ctx->misc != ctx->id->misc->defines\n"	\
+			   "%O != %O\n",				\
+			   ctx->misc, ctx->id->misc->defines);		\
+	  );								\
+	  if (mixed err = catch { cleanup(); }) {			\
+	    master()->handle_error(err);				\
+	  }								\
+	  if (in_args) {						\
+	    args = in_args;						\
+	    if (stringp (in_args))					\
+	      comp->delayed_resolve (this_object(), "args");		\
+	  }								\
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
-	  if (flags & FLAG_DONT_CACHE_RESULT && up)			\
-	    up->flags |= FLAG_DONT_CACHE_RESULT;			\
+	  if (up)							\
+	    if (int f = flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) \
+	      up->flags |= f;						\
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
 			   ctx->frame_depth, "", this_object(),		\
 			   __LINE__);					\
 	  ctx->frame_depth--;						\
+	  DO_IF_DEBUG (using_thread = 0);				\
 	} while (0)
-
+	
 	CLEANUP;
-
+	
 	THIS_TAG_TOP_DEBUG ("Done%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
-			    " (don't cache result)" : "");
+			    " (don't cache result)" :
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    " (don't cache result for now)" : "");
 	if (!(flags & FLAG_CUSTOM_TRACE))
 	  TRACE_LEAVE ("");
 	return conv_result;
 
       }) {			// Exception handling.
 	THIS_TAG_DEBUG_LEAVE_SCOPE (ctx, this_object());
-	LEAVE_SCOPE (ctx, this_object());
+	TAG_LEAVE_SCOPE (ctx, csf);
 
       unwind:
 	if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -4060,6 +5113,7 @@ class Frame
 	    ustate[this_object()] = ({err, eval_state, in_args, in_content, iter,
 				      subevaler, piece, exec, orig_tag_set,
 				      ctx->new_runtime_tags, orig_make_p_code,
+				      csf, ctx->evaled_p_code,
 #ifdef DEBUG
 				      debug_iter,
 #endif
@@ -4082,8 +5136,11 @@ class Frame
 
 	THIS_TAG_TOP_DEBUG ("Exception%s\n",
 			    flags & FLAG_DONT_CACHE_RESULT ?
-			    " (don't cache result)" : "");
+			    " (don't cache result)" :
+			    !(flags & FLAG_MAY_CACHE_RESULT) ?
+			    " (don't cache result for now)" : "");
 	TRACE_LEAVE ("exception");
+	err = catch (throw_fatal (err));
 	CLEANUP;
 	result = nil;
 	throw (err);
@@ -4096,7 +5153,10 @@ class Frame
   array _save()
   {
     THIS_TAG_TOP_DEBUG ("Saving persistent state\n");
-    return ({args, content, flags, content_type, result_type,
+    // Note: Caller assumes element zero is the args value in case
+    // it's a delay resolved function, i.e. a string.
+    return ({copy_value (args), copy_value (content), flags,
+	     content_type, result_type,
 	     this_object()->raw_tag_text,
 	     this_object()->save && this_object()->save()});
   }
@@ -4121,9 +5181,11 @@ class Frame
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf (void|int flag)
   {
-    return "RXML.Frame(" + (tag && [string] tag->name) + ")" + OBJ_COUNT;
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Frame") +
+       "(" + (tag && [string] tag->name) + ")" + OBJ_COUNT);
   }
 }
 
@@ -4154,6 +5216,7 @@ final void run_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT && RXML_CONTEXT->frame, "Throwing run error: %s", msg);
   throw (Backtrace ("run", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -4165,6 +5228,7 @@ final void parse_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  TAG_DEBUG (RXML_CONTEXT && RXML_CONTEXT->frame, "Throwing parse error: %s", msg);
   throw (Backtrace ("parse", msg, RXML_CONTEXT, bt[..sizeof (bt) - 2]));
 }
 
@@ -4178,16 +5242,21 @@ final void fatal_error (string msg, mixed... args)
   throw_fatal (({msg, bt[..sizeof (bt) - 2]}));
 }
 
-final void throw_fatal (mixed err)
+final void throw_fatal (mixed err, void|string current_var)
 //! Mainly used internally to throw an error that includes the RXML
 //! frame backtrace.
 {
-  if (arrayp (err) && sizeof (err) == 2 ||
-      objectp (err) && !err->is_RXML_Backtrace && err->is_generic_error) {
+  if (objectp (err) && err->is_RXML_Backtrace) {
+    if (!err->current_var) err->current_var = current_var;
+  }
+  else if (arrayp (err) && sizeof (err) == 2 ||
+	   objectp (err) && err->is_generic_error) {
     string msg;
     if (catch (msg = err[0])) throw (err);
     if (stringp (msg) && !has_value (msg, "\nRXML frame backtrace:\n")) {
-      string descr = Backtrace (0, 0)->describe_rxml_backtrace (1);
+      Backtrace rxml_bt = Backtrace();
+      rxml_bt->current_var = current_var;
+      string descr = rxml_bt->describe_rxml_backtrace (1);
       if (sizeof (descr)) {
 	if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
 	msg += "RXML frame backtrace:\n" + descr;
@@ -4212,7 +5281,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!  @item
 //!   Arrays are indexed with 1 for the first element, or
 //!   alternatively -1 for the last. Indexing an array of size n with
-//!   0, n+1 or greater, -n-1 or less, or with a non-integer is an
+//!   0, n+1 or greater, -n-1 or less, or with a noninteger is an
 //!   error.
 //!  @item
 //!   Strings, along with integers and floats, are treated as simple
@@ -4220,6 +5289,10 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!   indexed with 1 or -1, it produces itself instead of generating
 //!   an error. (This is a convenience to avoid many special cases
 //!   when treating both arrays and scalar types.)
+//!  @item
+//!   @[RXML.nil] and the undefined value is also treated as a scalar
+//!   type wrt indexing, i.e. it produces itself if indexed with 1 or
+//!   -1.
 //!  @item
 //!   If a value is an object which has an @tt{rxml_var_eval@}
 //!   identifier, it's treated as an @[RXML.Value] object and the
@@ -4253,116 +5326,136 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
   if (arrayp (index)) idxpath = index, index = index[0];
   else idxpath = ({0});
 
-  for (int i = 1;; i++) {
-    // stringp was not really a good idea.
-    if( arrayp( val ) /*|| stringp( val )*/ )
-      if (intp (index) && index)
-	if( (index > sizeof( val ))
-	    || ((index < 0) && (-index > sizeof( val ) )) )
-	  parse_error( "Index %d out of range for array of size %d in %s.\n",
-		       index, sizeof (val), scope_name );
-	else if( index < 0 )
-	  val = val[index];
+  object val_obj;
+  if (mixed err = catch {
+    for (int i = 1;; i++) {
+      // stringp was not really a good idea.
+      if( arrayp( val ) /*|| stringp( val )*/ )
+	if (intp (index) && index)
+	  if( (index > sizeof( val ))
+	      || ((index < 0) && (-index > sizeof( val ) )) )
+	    parse_error( "Index %d out of range for array of size %d in %s.\n",
+			 index, sizeof (val), scope_name );
+	  else if( index < 0 )
+	    val = val[index];
+	  else
+	    val = val[index-1];
 	else
-	  val = val[index-1];
-      else
-	parse_error( "Cannot index the array in %s with %s.\n",
-		     scope_name, format_short (index) );
-    else if (val == nil)
-      parse_error ("%s produced no value to index with %s.\n",
-		   scope_name, format_short (index));
-    else if( objectp( val ) && val->`[] ) {
+	  parse_error( "Cannot index the array in %s with %s.\n",
+		       scope_name, format_short (index) );
+      else if (val == nil) {
+	if (!(<1, -1>)[index])
+	  parse_error ("%s produced no value to index with %s.\n",
+		       scope_name, format_short (index));
+      }
+      else if( objectp( val ) && val->`[] ) {
+	val_obj = val;
+	if (zero_type (
+	      val = ([object(Scope)] val)->`[](
+		index, ctx, scope_name,
+		i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
+	  val = nil;
 #ifdef MODULE_DEBUG
-      Scope scope = [object(Scope)] val;
+	else if (mixed err = scope_got_type && want_type && val != nil &&
+		 !(objectp (val) && ([object] val)->rxml_var_eval) &&
+		 catch (want_type->type_check (val)))
+	  if (objectp (err) && ([object] err)->is_RXML_Backtrace)
+	    fatal_error ("%O->`[] didn't return a value of the correct type:\n%s",
+			 val_obj, err->msg);
+	  else throw (err);
 #endif
-      if (zero_type (
-	    val = ([object(Scope)] val)->`[](
-	      index, ctx, scope_name,
-	      i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
-	val = nil;
-#ifdef MODULE_DEBUG
-      else if (mixed err = scope_got_type && want_type && val != nil &&
-	       !(objectp (val) && ([object] val)->rxml_var_eval) &&
-	       catch (want_type->type_check (val)))
-	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
-	  fatal_error ("%O->`[] didn't return a value of the correct type:\n%s",
-		       scope, err->msg);
-	else throw (err);
-#endif
-    }
-    else if( mappingp( val ) || objectp (val) ) {
-      if (zero_type (val = val[ index ])) val = nil;
-    }
-    else if (multisetp (val)) {
-      if (!val[index]) val = nil;
-    }
-    else if (!(<1, -1>)[index])
-      parse_error ("%s is %s which cannot be indexed with %s.\n",
-		   scope_name, format_short (val), format_short (index));
+	val_obj = 0;
+      }
+      else if( mappingp( val ) || objectp (val) ) {
+	if (zero_type (val = val[ index ])) val = nil;
+      }
+      else if (multisetp (val)) {
+	if (!val[index]) val = nil;
+      }
+      else if (!(<1, -1>)[index])
+	parse_error ("%s is %s which cannot be indexed with %s.\n",
+		     scope_name, format_short (val), format_short (index));
 
-    if (i == sizeof (idxpath)) break;
-    scope_name += "." + index;
-    index = idxpath[i];
+      if (i == sizeof (idxpath)) break;
+      scope_name += "." + index;
+      index = idxpath[i];
+
+#ifdef MODULE_DEBUG
+      mapping(object:int) called = ([]);
+#endif
+      while (objectp (val) && ([object] val)->rxml_var_eval && !([object] val)->`[]) {
+#ifdef MODULE_DEBUG
+	// Detect infinite loops. This check is slightly too strong;
+	// it's theoretically possible that a couple of Value objects
+	// return each other a few rounds and then something different,
+	// but we'll live with that. Besides, that situation ought to be
+	// solved internally in them anyway.
+	if (called[val])
+	  fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
+		       "All called objects:%{ %O%}\n",
+		       format_short (val), indices (called));
+	called[val] = 1;
+#endif
+	val_obj = val;
+	if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
+			 ctx, index, scope_name, 0))) {
+	  val = nil;
+	  val_obj = 0;
+	  break;
+	}
+	else if (val == val_obj)
+	  break;
+	val_obj = 0;
+      }
+    }
+
+    if (val == nil)
+      return ([])[0];
+    else if (!objectp (val) || !([object] val)->rxml_var_eval)
+      if (want_type && !scope_got_type)
+	return
+	  // FIXME: Some system to find out the source type?
+	  zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
+      else
+	return val;
 
 #ifdef MODULE_DEBUG
     mapping(object:int) called = ([]);
 #endif
-    while (objectp (val) && ([object] val)->rxml_var_eval && !([object] val)->`[]) {
+    do {
 #ifdef MODULE_DEBUG
-      // Detect infinite loops. This check is slightly too strong;
-      // it's theoretically possible that a couple of Value objects
-      // return each other a few rounds and then something different,
-      // but we'll live with that. Besides, that situation ought to be
-      // solved internally in them anyway.
       if (called[val])
 	fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
 		     "All called objects:%{ %O%}\n",
 		     format_short (val), indices (called));
       called[val] = 1;
 #endif
+      val_obj = val;
       if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		       ctx, index, scope_name, 0))) {
-	val = nil;
-	break;
-      }
-    }
+		       ctx, index, scope_name, want_type)) ||
+	  val == nil)
+	return ([])[0];
+      else if (val == val_obj)
+	return val;
+#ifdef MODULE_DEBUG
+      else if (mixed err = want_type && catch (want_type->type_check (val)))
+	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
+	  fatal_error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
+		       val_obj, err->msg);
+	else throw (err);
+#endif
+    } while (objectp (val) && ([object] val)->rxml_var_eval);
+    return val;
+
+  }) {
+    string current_var;
+    if (val_obj && val_obj->format_rxml_backtrace_frame)
+      if (mixed err2 = catch {
+	  current_var = val_obj->format_rxml_backtrace_frame (ctx, index, scope_name);
+	})
+	master()->handle_error (err2);
+    throw_fatal (err, current_var);
   }
-
-  if (val == nil)
-    return ([])[0];
-  else if (!objectp (val) || !([object] val)->rxml_var_eval)
-    if (want_type && !scope_got_type)
-      return
-	// FIXME: Some system to find out the source type?
-	zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
-    else
-      return val;
-
-#ifdef MODULE_DEBUG
-  mapping(object:int) called = ([]);
-#endif
-  do {
-#ifdef MODULE_DEBUG
-    if (called[val])
-      fatal_error ("Cyclic rxml_var_eval chain detected in %s.\n"
-		   "All called objects:%{ %O%}\n",
-		   format_short (val), indices (called));
-    called[val] = 1;
-    Value val_obj = [object(Value)] val;
-#endif
-    if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		     ctx, index, scope_name, want_type)) ||
-	val == nil)
-      return ([])[0];
-#ifdef MODULE_DEBUG
-    else if (mixed err = want_type && catch (want_type->type_check (val)))
-      if (objectp (err) && ([object] err)->is_RXML_Backtrace)
-	fatal_error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
-		     val_obj, err->msg);
-      else throw (err);
-#endif
-  } while (objectp (val) && ([object] val)->rxml_var_eval);
-  return val;
 }
 
 final void tag_debug (string msg, mixed... args)
@@ -4419,11 +5512,9 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
 final class parse_frame
 {
   inherit Frame;
-  constant name = "(parse_frame)"; // Only for debug output, like rxml backtraces.
-  int flags = FLAG_UNPARSED;
-  mapping(string:mixed) args = ([]);
+  int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
-  static void create (Type type, string to_parse)
+  protected void create (Type type, string to_parse)
   {
     if (type) {			// Might be created from decode or _clone_empty.
       content_type = type, result_type = type (PNone);
@@ -4442,7 +5533,10 @@ final class parse_frame
     result_type = content_type (PNone);
   }
 
-  string _sprintf() {return sprintf ("RXML.parse_frame(%O)", content_type);}
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("RXML.parse_frame(%O)", content_type);
+  }
 }
 
 
@@ -4502,9 +5596,9 @@ class Parser
 	context->unwind_state->top = err;
 	break eval;
       }
-      if (context->p_code_comp)
+      if (p_code && p_code->p_code_comp)
 	// Fix all delayed resolves in any ongoing p-code compilation.
-	context->p_code_comp->compile();
+	p_code->p_code_comp->compile();
       LEAVE_CONTEXT();
       throw_fatal (err);
     }
@@ -4517,7 +5611,6 @@ class Parser
   //! data.
   {
     //werror ("%O write_end %s\n", this_object(), format_short (in));
-    int res;
     ENTER_CONTEXT (context);
   eval:
     if (mixed err = catch {
@@ -4543,20 +5636,21 @@ class Parser
 	context->unwind_state->top = err;
 	break eval;
       }
-      if (context->p_code_comp)
+      if (p_code && p_code->p_code_comp)
 	// Fix all delayed resolves in any ongoing p-code compilation.
-	context->p_code_comp->compile();
+	p_code->p_code_comp->compile();
       LEAVE_CONTEXT();
       throw_fatal (err);
     }
     LEAVE_CONTEXT();
   }
 
-  mixed handle_var (TagSetParser|PCode evaler, string varref, Type want_type)
+  mixed handle_var (string varref, Type want_type)
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
-    // Note: VarRef.get more or less duplicates this.
+    // Note: VarRef.get more or less duplicates this; this is never
+    // called from p-code.
 
     string encoding;
     array(string|int) splitted;
@@ -4576,8 +5670,8 @@ class Parser
 	catch (parse_error ("No scope in variable reference.\n"
 			    "(Use ':' in front to quote a "
 			    "character reference containing dots.)\n"));
-      err->current_var = varref;
-      context->handle_exception (err, this_object(), 1);
+      err->current_var = "&" + varref + ";";
+      context->handle_exception (err, this_object(), p_code);
       val = nil;
     }
 
@@ -4604,6 +5698,8 @@ class Parser
 	    TAG_DEBUG (context->frame, "    Got value %s after conversion "
 		       "with encoding %s\n", format_short (val), encoding);
 #endif
+	  if (want_type->empty_value != "")
+	    val = want_type->encode (val, t_any_text);
 	}
 #ifdef DEBUG
 	else
@@ -4612,22 +5708,25 @@ class Parser
 #endif
 
       }) {
-	if (objectp (err) && err->is_RXML_Backtrace) err->current_var = varref;
+	string current_var;
+	if (objectp (err) && err->is_RXML_Backtrace)
+	  if (err->current_var) current_var = err->current_var;
+	  else current_var = err->current_var = "&" + varref + ";";
+	else current_var = "&" + varref + ";";
 	if ((err = catch {
 	  context->handle_exception (err, this_object()); // May throw.
 	})) {
 	  VarRef varref = VarRef (splitted[0], splitted[1..], encoding, want_type);
-	  if (PCode p_code = evaler->p_code)
-	    p_code->add (context, varref, varref);
+	  if (p_code) p_code->add (context, varref, varref);
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 			   context->frame_depth, "", varref, __LINE__);
 	  context->frame_depth--;
-	  throw (err);
+	  throw_fatal (err, current_var);
 	}
 	val = nil;
       }
 
-      if (PCode p_code = evaler->p_code)
+      if (p_code)
 	p_code->add (context,
 		     VarRef (splitted[0], splitted[1..], encoding, want_type), val);
     }
@@ -4656,9 +5755,8 @@ class Parser
 
   PCode p_code;
   //! Must be set to a new @[PCode] object before a stream is fed
-  //! which should be compiled to p-code. The object will receive the
-  //! compiled code during evaluation and can be used to repeat the
-  //! evaluation after the stream is finished.
+  //! which should be compiled to p-code. The object can be used to
+  //! repeat the evaluation after the stream is finished.
 
   //! @decl int unwind_safe;
   //!
@@ -4693,7 +5791,7 @@ class Parser
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
   //! result so far, but does not do any more evaluation. Returns
-  //! RXML.nil if there's no data.
+  //! @[RXML.nil] if there's no data.
 
   mixed eval (void|int eval_piece);
   //! Evaluates the data fed so far and returns the result. The result
@@ -4723,7 +5821,7 @@ class Parser
   //! with the same static configuration, i.e. the type (and tag set
   //! when used in TagSetParser).
 
-  static void create (Context ctx, Type type, PCode p_code, mixed... args)
+  protected void create (Context ctx, Type type, PCode p_code, mixed... args)
   //! Should (at least) call @[initialize] with the given context and
   //! type.
   {
@@ -4733,7 +5831,7 @@ class Parser
 #endif
   }
 
-  static void initialize (Context ctx, Type _type, PCode _p_code)
+  protected void initialize (Context ctx, Type _type, PCode _p_code)
   //! Does the required initialization for this base class. Use from
   //! @[create] and @[reset] (when it's defined) to initialize or
   //! reset the parser object properly.
@@ -4750,8 +5848,29 @@ class Parser
 
   // Internals:
 
-  mixed _eval (Context ignored) {return eval();}
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
+
+  mixed _eval (Context ignored, PCode more_p_code)
   // To be call compatible with PCode.
+  {
+#ifdef DEBUG
+    if (more_p_code)
+      // Since parsers can do evaluation already in feed() and
+      // finish(), we can't add an extra p-code object here to compile
+      // to. But allow it if it's already in the p-code chain.
+      check_p_code: {
+	for (PCode p = p_code; p; p = p->p_code)
+	  if (more_p_code == p) break check_p_code;
+	error ("New PCode object registered too late in parser.\n");
+      }
+#endif
+    return eval();
+  }
+
+  constant p_code_comp = 0;
+  // To ensure that this identifier is free; other code might do
+  // evaler->p_code_comp, where evaler is either a Parser or a PCode.
 
   Parser _next_free;
   // Used to link together unused parser objects for reuse.
@@ -4760,13 +5879,21 @@ class Parser
   // The parent parser if this one is nested. This is only used to
   // register runtime tags.
 
+  int _local_tag_set;
+  // The local tag set, if any. It's actually used only in
+  // TagSetParser, but defined here so that no special cases are
+  // needed when assigning the value.
+
   //! @ignore
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf (void|int flag)
   {
-    return sprintf ("RXML.Parser(%O)%s", type, OBJ_COUNT);
+    return flag == 'O' &&
+      sprintf ("%s(%O)%s",
+	       function_name (object_program (this)) || "RXML.Parser",
+	       type, OBJ_COUNT);
   }
 }
 
@@ -4817,16 +5944,14 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
-  PCode p_code;
-
   //! In addition to the type, the tag set is part of the static
   //! configuration.
   optional void reset (Context ctx, Type type, PCode p_code,
 		       TagSet tag_set, mixed... args);
   optional Parser clone (Context ctx, Type type, PCode p_code,
 			 TagSet tag_set, mixed... args);
-  static void create (Context ctx, Type type, PCode p_code,
-		      TagSet tag_set, mixed... args)
+  protected void create (Context ctx, Type type, PCode p_code,
+			 TagSet tag_set, mixed... args)
   {
     initialize (ctx, type, p_code, tag_set);
 #ifdef RXML_OBJ_DEBUG
@@ -4834,7 +5959,8 @@ class TagSetParser
 #endif
   }
 
-  static void initialize (Context ctx, Type type, PCode p_code, TagSet _tag_set)
+  protected void initialize (Context ctx, Type type, PCode p_code,
+			     TagSet _tag_set)
   {
     ::initialize (ctx, type, p_code);
     tag_set = _tag_set;
@@ -4869,11 +5995,10 @@ class TagSetParser
 
   // Internals:
 
-  int _local_tag_set;
-
-  string _sprintf()
+  string _sprintf (int flag)
   {
-    return sprintf ("RXML.TagSetParser(%O,%O)%s", type, tag_set, OBJ_COUNT);
+    return flag == 'O' &&
+      sprintf ("RXML.TagSetParser(%O,%O)%s", type, tag_set, OBJ_COUNT);
   }
 }
 
@@ -4881,12 +6006,10 @@ class TagSetParser
 class PNone
 //! The identity parser. It only returns its input.
 {
-  static inherit String.Buffer;
+  protected inherit String.Buffer;
   inherit Parser;
 
   constant name = "none";
-
-  PCode p_code;
 
   int feed (string in)
   {
@@ -4915,7 +6038,7 @@ class PNone
     get();
   }
 
-  static void create (Context ctx, Type type, PCode p_code)
+  protected void create (Context ctx, Type type, PCode p_code)
   {
     initialize (ctx, type, p_code);
 #ifdef RXML_OBJ_DEBUG
@@ -4923,7 +6046,10 @@ class PNone
 #endif
   }
 
-  string _sprintf() {return "RXML.PNone" + OBJ_COUNT;}
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RXML.PNone()" + OBJ_COUNT);
+  }
 }
 
 
@@ -5069,11 +6195,8 @@ class Type
   //! directly, otherwise a new object is created.
   {
     PCode p_code = 0;
-    if (make_p_code) {
-      if (objectp (make_p_code)) (p_code = make_p_code)->reset (this_object(), tag_set);
-      else p_code = PCode (this_object(), tag_set);
-      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
-    }
+    if (make_p_code)
+      p_code = objectp (make_p_code) ? make_p_code : PCode (this_object(), ctx, tag_set);
 
     Parser p;
     if (_p_cache) {		// It's a tag set parser.
@@ -5150,7 +6273,7 @@ class Type
 
       if (ctx->tag_set == tag_set && p->add_runtime_tag && sizeof (ctx->runtime_tags)) {
 	PDEBUG_MSG ("Adding %d runtime tags to %O\n", sizeof (ctx->runtime_tags), p);
-	foreach (values (ctx->runtime_tags), Tag tag)
+	foreach (ctx->runtime_tags;; Tag tag)
 	  p->add_runtime_tag (tag);
       }
     }
@@ -5226,7 +6349,25 @@ class Type
 	      void|Parser|PCode parent, void|int dont_switch_ctx)
   //! Parses and evaluates the value in the given string. If a context
   //! isn't given, the current one is used. The current context and
-  //! ctx are assumed to be the same if dont_switch_ctx is nonzero.
+  //! @[ctx] are assumed to be the same if @[dont_switch_ctx] is
+  //! nonzero.
+  {
+    mixed res = eval_opt (in, ctx, tag_set, parent, dont_switch_ctx);
+    // FOO
+    if (res == nil) {
+      if (sequential)
+	res = this->empty_value;
+      else
+	nil_for_nonseq_error (ctx->id, this);
+    }
+    return res;
+  }
+
+  mixed eval_opt (string in, void|Context ctx, void|TagSet tag_set,
+		  void|Parser|PCode parent, void|int dont_switch_ctx)
+  //! Like @[eval], but doesn't check for missing value for
+  //! nonsequential types. @[RXML.nil] is returned instead in such
+  //! cases.
   {
     mixed res;
     if (!ctx) ctx = RXML_CONTEXT;
@@ -5250,8 +6391,8 @@ class Type
     lambda () {
       // Kludge to execute some code at object creation without
       // bothering with create(), which can be overridden.
-      if (!reg_types[this_object()->name])
-	reg_types[this_object()->name] = this_object();
+      if (!reg_types[this->name])
+	reg_types[this->name] = this;
       return PNone;
     }();
 
@@ -5264,7 +6405,9 @@ class Type
 
   //! @decl constant string name;
   //!
-  //! Unique type identifier. Required and considered constant.
+  //! Unique type identifier. Required and considered constant. This
+  //! is the name used to select the type from the RXML level and as
+  //! display name in error messages etc.
   //!
   //! If it contains a "/", it's treated as a MIME type and should
   //! then follow the rules for a MIME type with subtype (RFC 2045,
@@ -5274,8 +6417,15 @@ class Type
   //! "]", "?" and "=".
   //!
   //! If it doesn't contain a "/", it's treated as a type outside the
-  //! MIME system, e.g. "int" for an integer. Any type that can be
-  //! mapped to a MIME type should be so.
+  //! MIME system, e.g. "int" for an integer. In this case the name
+  //! should follow the Pike type syntax.
+  //!
+  //! Any type that can be mapped to a MIME type should be so.
+
+  //! @decl constant string type_name;
+  //!
+  //! Used as the type name for debug printouts in the default
+  //! @[_sprintf].
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
@@ -5284,14 +6434,15 @@ class Type
   //!   One or more data items can be concatenated with `+.
   //!  @item
   //!   (Sane) parsers are homomorphic on the type, i.e.
-  //!   @code{eval("da") + eval("ta") == eval("da" + "ta")@} and
-  //!   @code{eval("data") + eval("") == eval("data")@} provided the
+  //!   @expr{eval("da") + eval("ta") == eval("da" + "ta")@} and
+  //!   @expr{eval("data") + eval("") == eval("data")@} provided the
   //!   data is only split between (sensibly defined) atomic elements.
   //! @endul
 
-  //! @decl constant mixed empty_value;
+  //! @decl optional constant mixed empty_value;
   //!
-  //! The empty value, i.e. what eval ("") would produce.
+  //! The empty value, i.e. what eval ("") would produce. Must be
+  //! defined for every sequential type.
 
   Type supertype;
   //! The supertype for this type.
@@ -5306,9 +6457,9 @@ class Type
   //! There are however exceptions to the rule above about information
   //! preservation, since it's impossible to satisfy it for
   //! sufficiently generic types. E.g. the type @[RXML.t_any] cannot
-  //! express hardly any value (except @[RXML.nil]) without loss of
-  //! information, but still it should be used as the supertype as the
-  //! last resort if no better alternative exists.
+  //! express any value without loss of information, but still it
+  //! should be used as the supertype as the last resort if no better
+  //! alternative exists.
 
   Type conversion_type;
   //! The type to use as middlestep in indirect conversions. Required
@@ -5316,11 +6467,11 @@ class Type
   //! if there is no sensible conversion type. The @[conversion_type]
   //! references must never produce a cycle between types.
   //!
-  //! It's values of the conversion type that @[decode] tries to
-  //! return, and also that @[encode] must handle without resorting to
-  //! indirect conversions. It's used as a fallback between types
-  //! which doesn't have explicit conversion functions for each other;
-  //! see @[indirect_convert].
+  //! @[decode] tries to return values of the conversion type, and
+  //! @[encode] must handle such values without resorting to indirect
+  //! conversions. The conversion type is used as a fallback between
+  //! types which doesn't have explicit conversion functions for each
+  //! other; see @[indirect_convert].
   //!
   //! @note
   //! The trees described by the conversion types aren't proper type
@@ -5335,12 +6486,16 @@ class Type
 
   //! @decl optional constant int free_text;
   //!
+  //! FIXME: This is how parsers use the type.
+  //!
   //! Nonzero constant if the type keeps the free text between parsed
   //! tokens, e.g. the plain text between tags in XML. The type must
   //! be sequential and use strings. Must be zero when
   //! @[handle_literals] is nonzero.
 
   //! @decl optional constant int handle_literals;
+  //!
+  //! FIXME: This is how parsers use the type.
   //!
   //! Nonzero constant if the type can parse string literals into
   //! values. This will have the effect that any free text will be
@@ -5352,6 +6507,8 @@ class Type
   //! the literal before passing it to @[encode].
 
   //! @decl optional constant int entity_syntax;
+  //!
+  //! FIXME: This is how parsers use the type.
   //!
   //! Nonzero constant for all types with string values that use
   //! entity syntax, like XML or HTML.
@@ -5441,16 +6598,16 @@ class Type
     parse_error ("Cannot format entities with type %s.\n", this_object()->name);
   }
 
-  static final void type_check_error (string msg1, array args1,
-				      string msg2, mixed... args2)
+  protected final void type_check_error (string msg1, array args1,
+					 string msg2, mixed... args2)
   //! Helper intended to format and throw an RXML parse error in
   //! @[type_check]. Assuming the same argument names as in the
   //! @[type_check] declaration, use like this:
   //!
-  //! @code{
+  //! @code
   //!   if (value is bogus)
   //!     type_check_error (msg, args, "My error message with %O %O.\n", foo, bar);
-  //! @}
+  //! @endcode
   {
     if (sizeof (args2)) msg2 = sprintf (msg2, @args2);
     if (msg1) {
@@ -5460,58 +6617,61 @@ class Type
     else parse_error (msg2);
   }
 
-  /*static*/ final mixed indirect_convert (mixed val, Type from)
+  /*protected*/ final mixed indirect_convert (mixed val, Type from)
   //! Converts @[val], which is a value of the type @[from], to this
   //! type. Uses indirect conversion via @[conversion_type] as
   //! necessary. Only intended as a helper function for @[encode], so
   //! it won't do a direct conversion from @[conversion_type] to this
   //! type. Throws RXML parse error on any conversion error.
   {
-    if (conversion_type) {
-      if (from->conversion_type) {
-	string fromconvname = from->conversion_type->name;
-	if (conversion_type->name == fromconvname)
-	  return encode (from->decode ? from->decode (val) : val, conversion_type);
-	if (this_object()->name == fromconvname)
-	  return from->decode ? from->decode (val) : val;
-      }
-      string name = this_object()->name;
-      if (name == from->name)
-	return val;
-      // The following is not terribly efficient, but most situations
-      // should be handled by the special cases above.
-      int levels = 1;
-      for (Type conv = from->conversion_type;
-	   conv;
-	   conv = conv->conversion_type, levels++)
-	if (conv->name == name) {
-	  while (levels--) {
-	    val = from->decode ? from->decode (val) : val;
-	    from = from->conversion_type;
-	  }
-	  return val;
+    Type convtype = conversion_type || this_object();
+
+    if (from->conversion_type &&
+	convtype->name == from->conversion_type->name) {
+      if (from->decode) val = from->decode (val);
+      return convtype == this_object() ? val : encode (val, conversion_type);
+    }
+
+    string name = this_object()->name;
+    if (name == from->name)
+      return val;
+
+    // The following is not terribly efficient, but most situations
+    // should be handled by the special cases above.
+    int levels = 1;
+    for (Type conv = from->conversion_type;
+	 conv;
+	 conv = conv->conversion_type, levels++)
+      if (conv->name == name) {
+	while (levels--) {
+	  val = from->decode ? from->decode (val) : val;
+	  from = from->conversion_type;
 	}
-      if (conversion_type->conversion_type &&
-	  conversion_type->conversion_type->name == from->name)
+	return val;
+      }
+
+    if (conversion_type)
+      if (convtype->conversion_type &&
+	  convtype->conversion_type->name == from->name)
 	// indirect_convert should never do the job of encode.
-	return encode (conversion_type->encode (val, from), conversion_type);
+	return encode (convtype->encode (val, from), convtype);
       else {
 #ifdef MODULE_DEBUG
-	if (conversion_type->name == from->name)
+	if (convtype->name == from->name)
 	  fatal_error ("This function shouldn't be used to convert "
 		       "from the conversion type %s to %s; use encode() for that.\n",
-		       conversion_type->name, this_object()->name);
+		       convtype->name, this_object()->name);
 #endif
-	return encode (conversion_type->indirect_convert (val, from), conversion_type);
+	return encode (convtype->indirect_convert (val, from), convtype);
       }
-    }
-    else
-      if (from->conversion_type && from->conversion_type->name == this_object()->name)
-	return from->decode ? from->decode (val) : val;
+
     parse_error ("Cannot convert type %s to %s.\n", from->name, this_object()->name);
   }
 
   // Internals:
+
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
 
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
@@ -5527,13 +6687,21 @@ class Type
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf()
+  protected string _sprintf (int flag)
   {
-    return "RXML.Type(" + this_object()->name + ", " +
-      parser_prog->name + ")" + OBJ_COUNT;}
+    switch (flag) {
+      case 'O':
+	return ((this->type_name || "RXML.Type") +
+		"(" + this->name + ", " +
+		(parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
+      case 's':
+	// Convenient to get nice type names in error messages etc.
+	return this->name;
+    }
+  }
 }
 
-static class PCacheObj
+protected class PCacheObj
 {
   int tag_set_gen;
   Parser clone_parser;
@@ -5547,9 +6715,10 @@ TAny t_any = TAny();
 //! subtype of this one.
 //!
 //! This type is also special in that any value can be converted to
-//! and from this type without the value getting changed in any way,
-//! which means that the meaning of a value might change when this
-//! type is used as a middle step.
+//! and from this type without the value getting changed in any way
+//! (provided it's representable in the target type), which means that
+//! the meaning of a value might change when this type is used as a
+//! middle step.
 //!
 //! E.g if @tt{"<foo>"@} of type @[RXML.t_text] is converted directly
 //! to @[RXML.t_xml], it's quoted to @tt{"&lt;foo&gt;"@}, since
@@ -5558,86 +6727,279 @@ TAny t_any = TAny();
 //! remains @tt{"<foo>"@}, which then carries a totally different
 //! meaning.
 
-static class TAny
+class TAny
 {
   inherit Type;
   constant name = "any";
-  constant supertype = 0;
-  constant conversion_type = 0;
+  constant type_name = "RXML.t_any";
+  Type supertype = 0;
+  Type conversion_type = 0;
   constant handle_literals = 1;
-
-  void type_check (mixed val, void|string msg, mixed... args) {}
-
-  mixed encode (mixed val, void|Type from)
-  {
-    return val;
-  }
-
-  string _sprintf() {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
-}
-
-TNil t_nil = TNil();
-//! A sequential type accepting only the value nil. This type is by
-//! definition a subtype of every other type.
-//!
-//! Supertype: @[RXML.t_any]
-
-static class TNil
-{
-  inherit Type;
-  constant name = "nil";
-  constant sequential = 1;
-  Nil empty_value = nil;
-  Type supertype = t_any;
-  constant conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (val != nil)
-      type_check_error (msg, args, "Expected nil, got %t.\n", val);
+    if (val == nil)
+      type_check_error (msg, args, "Expected value, got RXML.nil.\n");
+  }
+
+  mixed encode (mixed val, void|Type from)
+  {
+    if (val == nil) parse_error ("Expected value, got RXML.nil.\n");
+    return val;
+  }
+}
+
+TBottom t_bottom = TBottom();
+//! A sequential type accepting no values. This type is by definition
+//! a subtype of every other type except @[RXML.t_nil].
+//!
+//! Supertype: @[RXML.t_any]
+
+protected class TBottom
+{
+  inherit Type;
+  constant name = "bottom";
+  constant type_name = "RXML.t_bottom";
+  Type supertype = t_any;
+  Type conversion_type = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    type_check_error (msg, args, "This type does not accept any value.\n");
   }
 
   Nil encode (mixed val, void|Type from)
   {
-    if (from && from != local::name)
-      val = indirect_convert (val, from);
-#ifdef MODULE_DEBUG
     type_check (val);
-#endif
-    return nil;
+  }
+
+  int subtype_of (Type other)
+  {
+    return other->name != "nil";
+  }
+}
+
+TIgnore t_ignore = TIgnore();
+//! A special variant of @[RXML.t_any] that accepts any value but
+//! ignores it. That way it can accept any value or combination of
+//! values, even free text. Since it ignores all values, it is at the
+//! same time a subtype of all types.
+//!
+//! The result of parsing with this type is officially always
+//! @[RXML.nil], but it can currently produce other values due to
+//! implementation details. It is basically useless except for the
+//! @tt{<nooutput>@} tag.
+//!
+//! Supertype: @[RXML.t_any]
+
+protected class TIgnore
+{
+  inherit TAny;
+  constant name = "ignore";
+  constant type_name = "RXML.t_ignore";
+  constant sequential = 1;
+  mixed empty_value = nil;
+  Type supertype = t_any;
+  Type conversion_type = 0;
+  constant free_text = 1;
+  constant handle_literals = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args) {}
+
+  TNil encode (mixed val, void|Type from) {return nil;}
+
+  int subtype_of (Type other) {return 1;}
+}
+
+TNil t_nil = TNil();
+//! Type version of @[RXML.nil], i.e. the type that signifies no value
+//! at all (not even the empty value of some type). This type is a
+//! subtype of every other type since all the RXML evaluation
+//! functions can return no value (i.e. @[RXML.nil]) regardless of the
+//! expected type.
+//!
+//! Supertype: @[RXML.t_any]
+
+protected class TNil
+{
+  inherit Type;
+  constant name = "nil";
+  constant type_name = "RXML.t_nil";
+  Type supertype = t_any;
+  Type conversion_type = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    type_check_error (msg, args, "This type can not be used for storage.\n");
+  }
+
+  Nil encode (mixed val, void|Type from)
+  {
+    type_check (val);
   }
 
   int subtype_of (Type other) {return 1;}
-
-  string _sprintf() {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TSame t_same = TSame();
 //! A magic type used only in @[Tag.content_type].
 
-static class TSame
+protected class TSame
 {
   inherit Type;
   constant name = "same";
+  constant type_name = "RXML.t_same";
+  Type supertype = t_any_seq;
+  Type conversion_type = 0;
+}
+
+TArray t_array = TArray();
+//! An array (with any content). This is like @[RXML.t_any] except
+//! that it's sequential and values are always arrays. This is useful
+//! to collect several results to an array (whereas using
+//! @[RXML.t_any] would raise a "Cannot append another value ..."
+//! error if more than one result is given).
+//!
+//! The @[RXML.t_array] type is special in that it is the only type
+//! where values both can be concatenated together and become array
+//! elements. E.g. if we have @expr{a = ({1,2})@} and @expr{b =
+//! ({"a"})@} then @expr{a + b@} could become either
+//! @expr{({1,2,"a"})@} or @expr{({({1,2}),({"a"})})@}. Other
+//! sequential types, e.g. @[RXML.t_string] and @[RXML.t_mapping], can
+//! only be concatenated (to form a new string or mapping), and
+//! nonsequential types like @[RXML.t_int] can never be concatenated.
+//!
+//! In accordance with the behavior mandated for sequential types,
+//! this type opts to concatenate if there is an ambiguity, which is
+//! when @expr{@[RXML.t_array]->encode@} is given an array value and
+//! no type. If an array should be handled as a single element then
+//! specify @[RXML.t_any] as the @expr{from@} type.
+//!
+//! Supertype: @[RXML.t_any]
+
+class TArray
+{
+  inherit TAny;
+  constant name = "array";
+  constant type_name = "RXML.t_array";
+  constant sequential = 1;
+  constant empty_value = ({});
   Type supertype = t_any;
-  constant conversion_type = 0;
-  string _sprintf() {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
+
+  constant container_type = 1;
+  //! Recognition constant for types for generic data containers, i.e.
+  //! arrays and mappings.
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!arrayp (val) && val != empty)
+      type_check_error (msg, args, "Expected array, got %t.\n", val);
+  }
+
+  array encode (mixed val, void|Type from)
+  {
+    if (from) {
+      if (from->name == local::name) {
+	type_check (val);
+	return val == empty ? empty_value : val;
+      }
+
+      // If we have a different @[from] type then we always create a
+      // single element array. This is what enables this type to be a
+      // sequential variant of RXML.t_any.
+
+      if (val == empty)
+	// Ugly special case to avoid getting RXML.empty in arrays.
+	// From a type theoretical perspective it's arguably more
+	// correct to keep RXML.empty, but it just gets overly
+	// complicated in practice to handle a quirky object instead
+	// of a zero (which afterall has essentially the same meaning
+	// on the pike level).
+	return ({0});
+      else {
+	if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
+	return ({val});
+      }
+    }
+
+    if (arrayp (val))
+      return val;
+    else if (val == empty || val == nil)
+      return empty_value;
+    else {
+      if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
+      return ({val});
+    }
+  }
+}
+
+TArray t_any_seq = t_array;
+//! A completely unspecified sequential type, i.e. a sequential
+//! variant of @[RXML.t_any]. This is currently an alias for
+//! @[RXML.t_array].
+//!
+//! All "ordinary" types with a nonempty set of values are subtypes of
+//! this (except @[RXML.t_array] itself).
+
+TMapping t_mapping = TMapping();
+//! A mapping.
+//!
+//! This type is sequential, so more pairs can be added to a single
+//! mapping. If there are duplicate indices then later values override
+//! earlier.
+//!
+//! Supertype: @[RXML.t_any_seq]
+
+class TMapping
+{
+  inherit TAny;
+  constant name = "mapping";
+  constant type_name = "RXML.t_mapping";
+  constant sequential = 1;
+  constant empty_value = ([]);
+  Type supertype = t_any_seq;
+
+  constant container_type = 1;
+  //! Recognition constant for types for generic data containers, i.e.
+  //! arrays and mappings.
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (mappingp (val) || (objectp (val) && val->`[])) {
+      // Ok.
+    }
+    else if (val != empty)
+      type_check_error (msg, args, "Expected a mapping, got %t.\n", val);
+  }
+
+  mapping encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); break;
+	case local::name: return [mapping] val;
+	default: return [mapping] indirect_convert (val, from); // FIXME: ?
+      }
+    mixed err = catch {return (mapping) val;};
+    parse_error ("Cannot convert %s to mapping: %s",
+		 format_short (val), describe_error (err));
+  }
 }
 
 TType t_type = TType();
 //! A type with the set of all RXML types as values.
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
 //!
-static class TType
+protected class TType
 {
   inherit Type;
   constant name = "type";
+  constant type_name = "RXML.t_type";
   constant sequential = 0;
-  Nil empty_value = nil;
-  Type supertype = t_any;
-  constant conversion_type = 0;
+  Type supertype = t_any_seq;
+  Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
@@ -5665,23 +7027,21 @@ static class TType
     parse_error ("Cannot convert %s to type: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf() {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TParser t_parser = TParser();
 //! A type with the set of all RXML parser programs as values.
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
-static class TParser
+protected class TParser
 {
   inherit Type;
   constant name = "parser";
+  constant type_name = "RXML.t_parser";
   constant sequential = 0;
-  Nil empty_value = nil;
-  Type supertype = t_any;
-  constant conversion_type = 0;
+  Type supertype = t_any_seq;
+  Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
@@ -5707,8 +7067,6 @@ static class TParser
     parse_error ("Cannot convert %s to parser: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf() {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -5720,21 +7078,21 @@ TScalar t_scalar = TScalar();
 //! Any type of scalar, i.e. text or number. It's not sequential, as
 //! opposed to the subtype @[RXML.t_any_text].
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
-static class TScalar
+class TScalar
 {
   inherit Type;
   constant name = "scalar";
+  constant type_name = "RXML.t_scalar";
   constant sequential = 0;
-  Nil empty_value = nil;
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
   Type conversion_type = 0;
   constant handle_literals = 1;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!stringp (val) && !intp (val) && !floatp (val))
+    if (!stringp (val) && !intp (val) && !floatp (val) && val != empty)
       type_check_error (msg, args, "Expected scalar value, got %t.\n", val);
   }
 
@@ -5751,8 +7109,6 @@ static class TScalar
       parse_error ("Cannot convert %s to scalar.\n", format_short (val));
     return [string|int|float] val;
   }
-
-  string _sprintf() {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TNum t_num = TNum();
@@ -5760,10 +7116,11 @@ TNum t_num = TNum();
 //!
 //! Supertype: @[RXML.t_scalar]
 
-static class TNum
+class TNum
 {
   inherit Type;
   constant name = "number";
+  constant type_name = "RXML.t_num";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_scalar;
@@ -5772,7 +7129,7 @@ static class TNum
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!intp (val) && !floatp (val))
+    if (!intp (val) && !floatp (val) && val != empty)
       type_check_error (msg, args, "Expected numeric value, got %t.\n", val);
   }
 
@@ -5795,8 +7152,6 @@ static class TNum
       parse_error ("Cannot convert %s to number.\n", format_short (val));
     return [int|float] val;
   }
-
-  string _sprintf() {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TInt t_int = TInt();
@@ -5804,10 +7159,11 @@ TInt t_int = TInt();
 //!
 //! Supertype: @[RXML.t_num]
 
-static class TInt
+class TInt
 {
   inherit Type;
   constant name = "int";
+  constant type_name = "RXML.t_int";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_num;
@@ -5816,7 +7172,7 @@ static class TInt
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!intp (val))
+    if (!intp (val) && val != empty)
       type_check_error (msg, args, "Expected integer value, got %t.\n", val);
   }
 
@@ -5836,8 +7192,6 @@ static class TInt
     parse_error ("Cannot convert %s to integer: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf() {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TFloat t_float = TFloat();
@@ -5845,10 +7199,11 @@ TFloat t_float = TFloat();
 //!
 //! Supertype: @[RXML.t_num]
 
-static class TFloat
+class TFloat
 {
   inherit Type;
   constant name = "float";
+  constant type_name = "RXML.t_float";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_num;
@@ -5857,7 +7212,7 @@ static class TFloat
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!floatp (val))
+    if (!floatp (val) && val != empty)
       type_check_error (msg, args, "Expected float value, got %t.\n", val);
   }
 
@@ -5877,8 +7232,6 @@ static class TFloat
     parse_error ("Cannot convert %s to float: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf() {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TString t_string = TString();
@@ -5893,22 +7246,37 @@ TString t_string = TString();
 //! Conversion to and from this type works just like
 //! @[RXML.t_any_text]; see the note for that type for further
 //! details.
+//!
+//! @note
+//! The whitespace handling implemented by this type is a bit
+//! inadequate and doesn't conform to e.g. the XML whitespace
+//! normalization rules.
 
 //!
-static class TString
+class TString
 {
   inherit Type;
   constant name = "string";
+  constant type_name = "RXML.t_string";
   constant sequential = 1;
   constant empty_value = "";
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
 
+  constant string_type = 1;
+  //! Recognition constant for all string based types, i.e.
+  //! @[RXML.t_string], @[RXML.t_any_text], and all their subtypes.
+
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!stringp (val))
-      type_check_error (msg, args, "Expected string for %s, got %t.\n", name, val);
+    if (!stringp (val) && val != empty) {
+      if (name == "string")
+	type_check_error (msg, args, "Expected string, got %t.\n", val);
+      else
+	type_check_error (msg, args,
+			  "Expected string for %s, got %t.\n", name, val);
+    }
   }
 
   string encode (mixed val, void|Type from)
@@ -5932,16 +7300,41 @@ static class TString
 		 format_short (val), name, describe_error (err));
   }
 
-  string lower_case (string val) {return predef::lower_case (val);}
+  string lower_case (string val) {return val?predef::lower_case (val):val;}
   //! Converts all literal uppercase characters in @[val] to lowercase.
 
-  string upper_case (string val) {return predef::upper_case (val);}
+  string upper_case (string val) {return val?predef::upper_case (val):val;}
   //! Converts all literal lowercase characters in @[val] to uppercase.
 
-  string capitalize (string val) {return String.capitalize (val);}
+  string capitalize (string val) {return val?String.capitalize (val):val;}
   //! Converts the first literal character in @[val] to uppercase.
+}
 
-  string _sprintf() {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
+// FIXME: Add an "xml" type that strips whitespace and comments and
+// allows unknown xml tags.
+
+RXML.Type type_for_value (mixed val)
+//! Returns the type that fits the given value, or zero if none is
+//! found.
+//!
+//! The most basic type that fits the value is returned. In particular
+//! that means @[RXML.t_string] is returned for strings, not
+//! @[RXML.t_any_text] or some other text type.
+{
+  switch (sprintf ("%t", val)) {
+    case "int": return t_int;
+    case "float": return t_float;
+    case "string": return t_string;
+    case "array": return t_array;
+    case "mapping": return t_mapping;
+    case "object":
+      if (val == nil) return t_nil;
+      if (val == empty) return t_any;
+      if (val->`[]) return t_mapping;
+      // Fall through.
+    default:
+      return 0;
+  }
 }
 
 // Text types:
@@ -5960,19 +7353,26 @@ TAnyText t_any_text = TAnyText();
 //! (which are typically literal) should be given the type
 //! @[RXML.t_text] and not this type, so that they get correctly
 //! encoded when inserted into e.g. XML markup.
+//!
+//! Otoh, tags that treat their content as text should usually use
+//! this type rather than @[RXML.t_text]. The effect is that if a
+//! (typed) xml value is inserted in the content then it will be
+//! interpreted directly as text without trying to decode charrefs etc
+//! in it (which is usually what is expected when the value isn't
+//! literal). If @[RXML.t_text] was used instead, it might throw
+//! errors at that point if the xml value contains tags.
 
-static class TAnyText
+class TAnyText
 {
   inherit TString;
   constant name = "text/*";
+  constant type_name = "RXML.t_any_text";
   constant sequential = 1;
   constant empty_value = "";
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant free_text = 1;
   constant handle_literals = 0;
-
-  string _sprintf() {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TText t_text = TText();
@@ -5980,10 +7380,11 @@ TText t_text = TText();
 //! type of text; @[RXML.t_any_text] represents that. Is sequential
 //! and allows free text.
 
-static class TText
+class TText
 {
   inherit TAnyText;
   constant name = "text/plain";
+  constant type_name = "RXML.t_text";
   Type supertype = t_any_text;
 
   string encode (mixed val, void|Type from)
@@ -5999,21 +7400,38 @@ static class TText
     parse_error ("Cannot convert %s to %s: %s",
 		 format_short (val), name, describe_error (err));
   }
-
-  string _sprintf() {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
 //!
-static class TXml
+class TXml
 {
   inherit TText;
   constant name = "text/xml";
+  constant type_name = "RXML.t_xml";
   Type conversion_type = t_text;
-  constant entity_syntax = 1;
   constant encoding_type = "xml"; // For compatibility.
+
+  constant entity_syntax = 1;
+  //! Recognition constant for string types that may contain xml style
+  //! entities, e.g. @tt{&foo;@}, and that can be assumed to
+  //! understand the standard set of html character entity references
+  //! (c.f. @url{http://www.w3.org/TR/html401/sgml/entities.html@}).
+  //!
+  //! In practice, this constant is nonzero for @[RXML.t_xml],
+  //! @[RXML.t_html], and possibly any subtypes.
+
+  constant element_syntax = 1;
+  //! Recognition constant for string types that may contain xml style
+  //! elements, e.g. @tt{<foo a="b">c</foo>@}. It can generally be
+  //! assumed to understand basic html markup as well. It is not safe
+  //! to assume that xml style empty elements are understood, so it's
+  //! generally necessary to use tweaks like @tt{<br />@}.
+  //!
+  //! In practice, this constant is nonzero for @[RXML.t_xml],
+  //! @[RXML.t_html], and possibly any subtypes.
 
   // Note: type_check is not strict.
 
@@ -6041,14 +7459,27 @@ static class TXml
     return charref_decode_parser->clone()->finish ([string] val)->read();
   }
 
+  string decode_charrefs (string val)
+  //! Decodes all character reference entities in @[val].
+    {return tolerant_charref_decode_parser->clone()->finish (val)->read();}
+
+  string decode_xml_safe_charrefs (string val)
+  //! Decodes all character reference entities in @[val] except those
+  //! that produce the characters "<", ">" or "&". It's therefore safe
+  //! to use on xml content.
+  {
+    return tolerant_xml_safe_charref_decode_parser->
+      clone()->finish (val)->read();
+  }
+
   string lower_case (string val)
-    {return lowercaser->clone()->finish (val)->read();}
+    {return val ? lowercaser->clone()->finish (val)->read() : val;}
 
   string upper_case (string val)
-    {return uppercaser->clone()->finish (val)->read();}
+    {return val ? uppercaser->clone()->finish (val)->read() : val;}
 
   string capitalize (string val)
-    {return capitalizer->clone()->finish (val)->read();}
+    {return val ? capitalizer->clone()->finish (val)->read() : val;}
 
   array(string|mapping(string:string)) parse_tag (string tag_text)
   //! Parses the first tag in @[tag_text] and returns an array where
@@ -6124,13 +7555,17 @@ static class TXml
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
-	foreach (indices (args), string arg)
+	foreach (sort(indices(args)), string arg)
 	  add (" ", arg, "=\"", replace (args[arg], "\"", "\"'\"'\""), "\"");
       else
-	foreach (indices (args), string arg)
-	  add (" ", arg, "=\"",
-	       replace (args[arg], ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})),
-	       "\"");
+	foreach (sort(indices(args)), string arg) {
+	  string val = args[arg];
+	  // Three serial replaces are currently faster than one parallell.
+	  val = replace (val, "&", "&amp;");
+	  val = replace (val, "\"", "&quot;");
+	  val = replace (val, "<", "&lt;");
+	  add (" ", arg, "=\"", val, "\"");
+	}
 
     if (content)
       add (">", content, "</", tagname, ">");
@@ -6150,17 +7585,16 @@ static class TXml
   {
     return "&" + entity + ";";
   }
-
-  string _sprintf() {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 THtml t_html = THtml();
 //! (Currently) identical to t_xml, but tags it as "text/html".
 
-static class THtml
+class THtml
 {
   inherit TXml;
   constant name = "text/html";
+  constant type_name = "RXML.t_html";
   Type conversion_type = t_xml;
 
   string encode (mixed val, void|Type from)
@@ -6172,8 +7606,154 @@ static class THtml
   }
 
   constant decode = 0;		// Cover it; not needed here.
+}
 
-  string _sprintf() {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
+// Composite types:
+//
+// A few ad-hoc combinations since we lack a generic system for
+// building composite types.
+
+TStrOrInt t_str_or_int = TStrOrInt();
+//! Either a string or an integer. Not sequential.
+//!
+//! Supertype: @[RXML.t_scalar]
+
+class TStrOrInt
+{
+  inherit TScalar;
+  constant name = "string|int";
+  constant type_name = "RXML.t_str_or_int";
+  Type supertype = t_scalar;
+  Type conversion_type = t_scalar;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!intp (val) && !stringp (val) && val != empty)
+      type_check_error (msg, args,
+			"Expected string or integer value, got %t.\n", val);
+  }
+
+  string|int encode (mixed val, void|Type from)
+  {
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); // Fall through.
+	case local::name: return [string|int] val;
+	default: return [string|int] indirect_convert (val, from);
+      }
+    if (!stringp (val) && !intp (val))
+      // Cannot unambigiously use a cast for this type.
+      parse_error ("Cannot convert %s to string or integer.\n",
+		   format_short (val));
+    return [string|int] val;
+  }
+}
+
+class TTypedArray
+{
+  inherit TArray;
+  Type supertype = t_array;
+
+  /* constant element_type_name; */
+  protected int element_type_p (mixed val);
+  protected mixed element_encode (mixed val);
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (val == empty) return;
+    if (!arrayp (val))
+      type_check_error (msg, args, "Expected array, got %t.\n", val);
+    foreach (val; int i; mixed ent)
+      if (!element_type_p (ent))
+	type_check_error (msg, args,
+			  "Expected %s at position %d, got %t.\n",
+			  this->element_type_name, i + 1, ent);
+  }
+
+  array encode (mixed val, void|Type from)
+  {
+    array res = ::encode (val, from);
+    foreach (res; int i; mixed ent)
+      res[i] = element_encode (ent);
+    return res;
+  }
+}
+
+TNumArray t_num_array = TNumArray();
+//! An array of numbers (i.e. floats or integers).
+//!
+//! Supertype: @[RXML.t_array]
+
+class TNumArray
+{
+  inherit TTypedArray;
+  constant name = "array(number)";
+  constant type_name = "RXML.t_num_array";
+  constant element_type_name = "number";
+
+  protected int element_type_p (mixed val)
+    {return intp (val) || floatp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_num->encode (val);}
+}
+
+TIntArray t_int_array = TIntArray();
+//! An array of integers.
+//!
+//! Supertype: @[RXML.t_num_array]
+
+class TIntArray
+{
+  inherit TTypedArray;
+  constant name = "array(int)";
+  constant type_name = "RXML.t_int_array";
+  Type supertype = t_num_array;
+  constant element_type_name = "int";
+
+  protected int element_type_p (mixed val)
+    {return intp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_int->encode (val);}
+}
+
+TStrArray t_str_array = TStrArray();
+//! An array of strings.
+//!
+//! Supertype: @[RXML.t_array]
+
+class TStrArray
+{
+  inherit TTypedArray;
+  constant name = "array(string)";
+  constant type_name = "RXML.t_str_array";
+  constant element_type_name = "string";
+
+  protected int element_type_p (mixed val)
+    {return stringp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_string->encode (val);}
+}
+
+TMapArray t_map_array = TMapArray();
+//! An array of mappings.
+//!
+//! Supertype: @[RXML.t_array]
+
+class TMapArray
+{
+  inherit TTypedArray;
+  constant name = "array(mapping)";
+  constant type_name = "RXML.t_map_array";
+  constant element_type_name = "mapping";
+
+  protected int element_type_p (mixed val)
+    {return mappingp (val);}
+
+  protected mixed element_encode (mixed val)
+    {return t_mapping->encode (val);}
 }
 
 
@@ -6206,7 +7786,9 @@ class VarRef (string scope, string|array(string|int) var,
 		   (encoding ? t_any_text : want_type)->name);
 #endif
       mixed val;
+#ifdef AVERAGE_PROFILING
       string varref;
+#endif
 
       COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
       if (zero_type (val = ctx->get_var (
@@ -6222,6 +7804,8 @@ class VarRef (string scope, string|array(string|int) var,
 	  TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
 		     "with encoding %s\n", format_short (val), encoding);
 #endif
+	if (want_type->empty_value != "")
+	  val = want_type->encode (val, t_any_text);
       }
 
       else
@@ -6236,11 +7820,10 @@ class VarRef (string scope, string|array(string|int) var,
       return val;
     };
 
-    if (objectp (err) && err->is_RXML_Backtrace) err->current_var = VAR_STRING;
     FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
 		     ctx->frame_depth, "", this_object(), __LINE__);
     ctx->frame_depth--;
-    throw (err);
+    throw_fatal (err, "&" + VAR_STRING + ";");
   }
 
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
@@ -6267,10 +7850,14 @@ class VarRef (string scope, string|array(string|int) var,
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RXML.VarRef(" + name() + ")" + OBJ_COUNT);
+  }
 }
 
-class VariableChange (static mapping settings)
+class VariableChange (/*protected*/ mapping settings)
 // A compiled-in change of some scope variables. Used when caching
 // results.
 {
@@ -6278,49 +7865,204 @@ class VariableChange (static mapping settings)
   constant is_RXML_encodable = 1;
   constant is_RXML_p_code_entry = 1;
 
+  constant p_code_no_result = 1;
+
   mixed get (Context ctx)
   {
   handle_var_loop:
-    foreach (indices (settings), mixed encoded_var) {
+    foreach (settings; mixed encoded_var; mixed val) {
+      mixed var;
       if (stringp (encoded_var)) {
-	mixed var = decode_value (encoded_var);
+	var = decode_value (encoded_var);
+
 	if (arrayp (var)) {
-	  if (sizeof (var) == 1) {
+	  if (stringp (var[0])) { // A scope or variable change.
+	    if (sizeof (var) == 1) {
 #ifdef DEBUG
-	    if (TAG_DEBUG_TEST (ctx->frame))
-	      TAG_DEBUG (ctx->frame, "    Installing cached scope %s with %d variables\n",
-			 replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached scope %O with %d variables\n",
+			   replace (var[0], ".", ".."), sizeof (val));
 #endif
-	    if (SCOPE_TYPE vars = settings[encoded_var])
-	      ctx->add_scope (var[0], settings[encoded_var]);
-	    else
-	      ctx->remove_scope (var[0]);
-	  }
-	  else {
+	      if (val)
+		ctx->add_scope (var[0],
+				objectp (val) && val->clone ? val->clone() :
+				val);
+	      else
+		ctx->remove_scope (var[0]);
+	    }
+
+	    else {
 #ifdef DEBUG
-	    if (TAG_DEBUG_TEST (ctx->frame))
-	      TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
-			 map ((array(string)) var, replace, ".", "..") * ".",
-			 format_short (settings[encoded_var]));
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame, "    Installing cached value for %O: %s\n",
+			   map ((array(string)) var, replace, ".", "..") * ".",
+			   format_short (val));
 #endif
-	    mixed val = settings[encoded_var];
-	    if (val != nil)
-	      ctx->set_var (var[1..], val, var[0]);
-	    else
-	      ctx->delete_var (var[1..], var[0]);
+	      if (val != nil)
+		ctx->set_var (var[1..], val, var[0]);
+	      else
+		ctx->delete_var (var[1..], var[0]);
+	    }
 	  }
+
+	  else switch (var[0]) {
+	    case 0:
+	      // A runtime tag change.
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached runtime tag definition for %O: %O\n",
+			   var[1], val);
+#endif
+	      if (val)
+		ctx->direct_add_runtime_tag (var[1], [object(Tag)] val);
+	      else
+		ctx->direct_remove_runtime_tag (var[1]);
+	      break;
+
+	    case 1:
+	      // Set in id->misc.
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached id->misc entry %O: %s\n",
+			   format_short (var), format_short (val));
+#endif
+	      ctx->set_id_misc (var[1], val);
+	      break;
+
+	    case 2:
+	      // Set in root_id->misc.
+#ifdef DEBUG
+	      if (TAG_DEBUG_TEST (ctx->frame))
+		TAG_DEBUG (ctx->frame,
+			   "    Installing cached id->root_id->misc entry %O: %s\n",
+			   format_short (var), format_short (val));
+#endif
+	      ctx->set_root_id_misc (var[1], val);
+	      break;
+	  }
+
 	  continue handle_var_loop;
 	}
-	encoded_var = var;
       }
+
+      else
+	var = encoded_var;
+
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
-	TAG_DEBUG (ctx->frame, "    Installing cached misc entry: %s: %s\n",
-		   encoded_var, format_short (settings[encoded_var]));
+	TAG_DEBUG (ctx->frame, "    Installing cached misc entry %O: %s\n",
+		   format_short (var), format_short (val));
 #endif
-      ctx->set_misc (encoded_var, settings[encoded_var]);
+      ctx->set_misc (var, val);
     }
+
     return nil;
+  }
+
+  int merge (VariableChange later_chg)
+  {
+    // Fix any sequence dependencies between the current settings and
+    // later_chg. Return zero if we can't resolve them so that the
+    // entries must remain separate.
+    mapping later_sets = later_chg->settings;
+    foreach (later_sets; mixed encoded_var; mixed val) {
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+	string scope_name;
+	if (arrayp (var) &&
+	    stringp (scope_name = var[0]) && sizeof (var) > 1) {
+	  string encoded_scope = encode_value_canonic (({scope_name}));
+#ifdef DEBUG
+	  if (later_sets[encoded_scope])
+	    error ("Got both scope and variable entry "
+		   "for the same scope %O in %O\n", scope_name, later_sets);
+#endif
+
+	  if (SCOPE_TYPE scope = settings[encoded_scope]) {
+	    // There's a variable change in later_chg in a scope
+	    // that's added in this entry.
+	    if (sizeof (var) > 2)
+	      // Subindexed variable. Since we can't do subindexing
+	      // reliably in it we have to keep the sequence. C.f.
+	      // Context.set_var and Context.delete_var.
+	      return 0;
+	    else {
+	      // Since the scope is added in this object we simply
+	      // modify it for the variable change. C.f.
+	      // Context.set_var and Context.delete_var.
+	      if (val == nil)
+		m_delete (scope, var[1]);
+	      else
+		scope[var[1]] = val;
+	      continue;
+	    }
+	  }
+	}
+      }
+
+      settings[encoded_var] = val;
+    }
+
+    return 1;
+  }
+
+  void eval_rxml_consts (Context ctx)
+  // This is used to evaluate constant RXML.Value objects before the
+  // p-code is saved so that we don't try to encode the objects
+  // themselves. We also convert RXML.Scope objects to mappings, but
+  // we don't touch any objects that can be encoded as-is (i.e. have
+  // is_RXML_encodable set).
+  {
+#define CONVERT_VAL(SCOPE_NAME, VAR_NAME, VAL, ASSIGN_TO, TRANSFER) do { \
+      if (objectp (VAL) && VAL->rxml_const_eval && !VAL->is_RXML_encodable) { \
+	DO_IF_DEBUG (							\
+	  if (TAG_DEBUG_TEST (ctx->frame))				\
+	    TAG_DEBUG (ctx->frame,					\
+		       "    Evaluating constant rxml value: %s: %s\n",	\
+		       ({SCOPE_NAME, VAR_NAME}) * ".",			\
+		       format_short (VAL));				\
+	);								\
+	ASSIGN_TO = VAL->rxml_const_eval (ctx, VAR_NAME, SCOPE_NAME);	\
+      }									\
+      else {TRANSFER;}							\
+    } while (0)
+
+    foreach (settings; mixed encoded_var; mixed val)
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+
+	if (arrayp (var) && stringp (var[0]))
+	  if (sizeof (var) == 1) {
+	    if (val) {
+	      if (objectp (val)) {
+		if (!val->is_RXML_encodable) {
+		  mapping(string:mixed) new_vars = ([]);
+		  foreach (val->_indices (ctx, var[0]), string name) {
+		    mixed v = val[name];
+		    if (!zero_type (v) && v != nil)
+		      CONVERT_VAL (var[0], name, v, new_vars[name],
+				   new_vars[name] = v);
+		  }
+		  settings[encoded_var] = new_vars;
+		}
+	      }
+
+	      else
+		foreach (val; string name; mixed v) {
+		  if (v != nil)
+		    CONVERT_VAL (var[0], name, v, val[name], {});
+		}
+	    }
+	  }
+
+	  else {
+	    CONVERT_VAL (var[..sizeof (var) - 2] * ".", var[-1],
+			 val, settings[encoded_var], {});
+	  }
+      }
   }
 
   mapping(string:mixed) _encode() {return settings;}
@@ -6329,7 +8071,76 @@ class VariableChange (static mapping settings)
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.VariableChange" + OBJ_COUNT;}
+
+  string _sprintf (int flag)
+  {
+    if (flag != 'O') return 0;
+    string ind = "";
+    if (!mappingp (settings)) return "RXML.VariableChange()";
+    foreach (settings; mixed encoded_var; mixed val) {
+      mixed var;
+      if (stringp (encoded_var)) {
+	var = decode_value (encoded_var);
+	if (arrayp (var)) {
+	  var = map ((array(string)) var, replace, ".", "..") * ".";
+	  if (sizeof (var) == 1)
+	    if (val) ind += sprintf (", set: %O", var);
+	    else ind += sprintf (", del: %O", var);
+	  else
+	    if (val != nil) ind += sprintf (", set: %O", var);
+	    else ind += sprintf (", del: %O", var);
+	  continue;
+	}
+      }
+      else var = encoded_var;
+      ind += sprintf (", set misc: %O", var);
+    }
+    return "RXML.VariableChange(" + ind[2..] + ")" + OBJ_COUNT;
+  }
+}
+
+class CompiledCallback (protected function|string callback,
+			protected array args)
+// A generic compiled-in callback.
+{
+  constant is_RXML_CompiledCallback = 1;
+  constant is_RXML_encodable = 1;
+  constant is_RXML_p_code_entry = 1;
+
+  mixed get (Context ctx)
+  {
+#ifdef DEBUG
+    if (TAG_DEBUG_TEST (ctx->frame))
+      TAG_DEBUG (ctx->frame,
+		 "    Calling cached callback: %O (%s)\n",
+		 callback, map (args, format_short) * ", ");
+#endif
+    if (stringp (callback)) {
+      mixed obj = ctx->id;
+      foreach (callback / "->", string name) obj = obj[name];
+      ([function] obj) (@args);
+    }
+    else
+      callback (@args);
+    return nil;
+  }
+
+  array _encode() {return ({callback, args});}
+  void _decode (array saved) {[callback, args] = saved;}
+
+  //! @ignore
+  MARK_OBJECT;
+  //! @endignore
+
+  string _sprintf (int flag)
+  {
+    if (flag != 'O') return 0;
+    if (args)
+      return sprintf ("RXML.CompiledCallback(%O(%s))",
+		      callback, map (args, format_short) * ", ");
+    else
+      return sprintf ("RXML.CompiledCallback(%O, no args)", callback);
+  }
 }
 
 class CompiledError
@@ -6344,7 +8155,7 @@ class CompiledError
   string msg;
   string current_var;
 
-  static void create (Backtrace rxml_bt)
+  protected void create (Backtrace rxml_bt)
   {
     if (rxml_bt) {		// Might be zero if we're created by decode().
       type = rxml_bt->type;
@@ -6373,7 +8184,11 @@ class CompiledError
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.CompiledError" + OBJ_COUNT;}
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RXML.CompiledError()" + OBJ_COUNT);
+  }
 }
 
 #ifdef RXML_COMPILE_DEBUG
@@ -6382,18 +8197,40 @@ class CompiledError
 #  define COMP_MSG(X...) do {} while (0)
 #endif
 
-static class PikeCompile
-//! Helper class to paste together a Pike program from strings.
+// Count the identifiers globally to avoid the slightly bogus cyclic
+// check in the compiler.
+protected int p_comp_idnr = 0;
+
+#ifdef DEBUG
+protected int p_comp_count = 0;
+#endif
+
+protected class PikeCompile
+//! Helper class to paste together a Pike program from strings. This
+//! is thread safe.
 {
-  static int idnr = 0;
-  static inherit String.Buffer: code;
-  static mapping(string:mixed) bindings = ([]);
-  static mapping(string:int) cur_ids = ([]);
-  static mapping(mixed:mixed) delayed_resolve_places = ([]);
+#ifdef DEBUG
+  protected string pcid = "pc" + ++p_comp_count;
+#endif
+  protected inherit Thread.Mutex: mutex;
+
+  // These are covered by the mutex.
+  protected inherit String.Buffer: code;
+  protected mapping(string:int) cur_ids = ([]);
+  protected mapping(mixed:mixed) delayed_resolve_places = ([]);
+
+  protected mapping(string:mixed) bindings = ([
+    // Prepopulate with standard things we need access to.
+    "set_nil_arg": set_nil_arg,
+  ]);
 
   string bind (mixed val)
   {
-    string id = "b" + idnr++;
+    string id =
+#ifdef DEBUG
+      pcid +
+#endif
+      "b" + p_comp_idnr++;
     COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
     return id;
@@ -6401,32 +8238,54 @@ static class PikeCompile
 
   string add_var (string type, void|string init)
   {
-    string id = "v" + idnr++;
+    string id =
+#ifdef DEBUG
+      pcid +
+#endif
+      "v" + p_comp_idnr++;
+    string txt;
+
     if (init) {
       COMP_MSG ("%O add var: %s %s = %O\n", this_object(), type, id, init);
-      code::add (sprintf ("%s %s = %s;\n", type, id, init));
+      txt = sprintf ("%s %s = %s;\n", type, id, init);
     }
     else {
       COMP_MSG ("%O add var: %s %s\n", this_object(), type, id);
-      code::add (sprintf ("%s %s;\n", type, id));
+      txt = sprintf ("%s %s;\n", type, id);
     }
+
+    Thread.MutexKey lock = mutex::lock();
+    code::add (txt);
     cur_ids[id] = 1;
+
     return id;
   }
 
   string add_func (string rettype, string arglist, string def)
   {
-    string id = "f" + idnr++;
+    string id =
+#ifdef DEBUG
+      pcid +
+#endif
+      "f" + p_comp_idnr++;
     COMP_MSG ("%O add func: %s %s (%s)\n{%s}\n",
 	      this_object(), rettype, id, arglist, def);
-    code::add (sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def));
+    string txt = sprintf ("%s %s (%s)\n{%s}\n", rettype, id, arglist, def);
+
+    Thread.MutexKey lock = mutex::lock();
+    code::add (txt);
     cur_ids[id] = 1;
+
     return id;
   }
 
   mixed resolve (string id)
   {
     COMP_MSG ("%O resolve %O\n", this_object(), id);
+#ifdef DEBUG
+    if (!has_prefix (id, pcid))
+      error ("Resolve id %O does not belong to this object.\n", id);
+#endif
     if (zero_type (bindings[id])) {
       compile();
 #ifdef DEBUG
@@ -6438,26 +8297,27 @@ static class PikeCompile
 
   void delayed_resolve (mixed what, mixed index)
   {
+    Thread.MutexKey lock = mutex::lock();
 #ifdef DEBUG
     if (!zero_type (delayed_resolve_places[what]))
       error ("Multiple indices per thing to delay resolve not handled.\n");
+    if (!stringp (what[index]) || !has_prefix (what[index], pcid))
+      error ("Resolve id %O does not belong to this object.\n", what[index]);
 #endif
     mixed resolved;
     if (zero_type (resolved = bindings[what[index]])) {
-#ifdef DEBUG
-      if (!cur_ids[what[index]])
-	error ("Unknown binding %O.\n", what[index]);
-#endif
-      COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
       delayed_resolve_places[what] = index;
+      COMP_MSG ("%O delayed_resolve %O in %s[%O]\n",
+		this_object(), what[index], format_short (what), index);
     }
     else {
-      COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
       what[index] = resolved;
+      COMP_MSG ("%O delayed_resolve immediately %O in %s[%O]\n",
+		this_object(), what[index], format_short (what), index);
     }
   }
 
-  static class Resolver (object master)
+  protected class Resolver (object master)
   // Can't keep the instantiated Resolver object around since that'd
   // introduce a cyclic reference.
   {
@@ -6477,38 +8337,42 @@ static class PikeCompile
 
   object compile()
   {
+    Thread.MutexKey lock = mutex::lock();
     object compiled = 0;
 
-    if (code::_sizeof()) {
+    string txt = code::get();
+
+    if (txt != "") {
       COMP_MSG ("%O compile\n", this_object());
-      code::add("mixed _encode() { } void _decode(mixed v) { }\n"
-		"constant is_RXML_pike_code = 1;\n"
-		"constant is_RXML_encodable = 1;\n"
+
+      txt +=
+	"mixed _encode() { } void _decode(mixed v) { }\n"
+	"constant is_RXML_pike_code = 1;\n"
+	"constant is_RXML_encodable = 1;\n"
 #ifdef RXML_OBJ_DEBUG
-		// Don't want to encode the cloning of
-		// Debug.ObjectMarker in the __INIT that is dumped,
-		// since that debug might not be wanted when the dump is
-		// decoded.
-		"mapping|object __object_marker = ",
-		bind (Debug.ObjectMarker ("object(compiled RXML code)")), ";\n"
+	// Don't want to encode the cloning of RoxenDebug.ObjectMarker
+	// in the __INIT that is dumped, since that debug might not be
+	// wanted when the dump is decoded.
+	"mapping|object __object_marker = " +
+	bind (RoxenDebug.ObjectMarker ("object(compiled RXML code)")) + ";\n"
 #else
-		LITERAL (MARK_OBJECT) ";\n"
+	LITERAL (MARK_OBJECT) ";\n"
 #endif
 #ifdef DEBUG
-		"string _sprintf() {return \"object(compiled RXML code)\" + "
-		LITERAL (OBJ_COUNT)
-		";}\n"
+	"string _sprintf (int flag)"
+	"  {return flag == 'O' && \"object(compiled RXML code)\" + "
+	LITERAL (OBJ_COUNT)
+	";}\n"
 #endif
-	       );
+	;
 
       program res;
-      string txt = code::get();
 #ifdef DEBUG
       if (mixed err = catch {
 #endif
-	res = predef::compile (txt, Resolver (master()));
+	  res = predef::compile (txt, Resolver (master()));
 #ifdef DEBUG
-      }) {
+	}) {
 	report_debug ("Failed program: %s\n", txt);
 	throw (err);
       }
@@ -6516,34 +8380,60 @@ static class PikeCompile
 
       compiled = res();
 
-      foreach (indices (cur_ids), string i)
+      foreach (cur_ids; string i;) {
+#ifdef DEBUG
+	if (zero_type (compiled[i]))
+	  error ("Identifier %O doesn't exist in compiled code.\n", i);
+#endif
 	bindings[i] = compiled[i];
+      }
+
       cur_ids = ([]);
     }
 
-    foreach (indices (delayed_resolve_places), mixed what) {
-      mixed index = m_delete (delayed_resolve_places, what);
 #ifdef DEBUG
-      if (zero_type (bindings[what[index]]))
-	error ("Unknown delayed id %O.\n", what[index]);
+    else
+      if (sizeof (cur_ids))
+	error ("Empty code got bound identifiers: %O\n", indices (cur_ids));
 #endif
-      COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
-      what[index] = bindings[what[index]];
+
+    foreach (delayed_resolve_places; mixed what;) {
+      mixed index = m_delete (delayed_resolve_places, what);
+      if (zero_type (bindings[what[index]]))
+	delayed_resolve_places[what] = index;
+      else {
+	what[index] = bindings[what[index]];
+	COMP_MSG ("%O resolved delayed %O\n", this_object(), what[index]);
+      }
     }
 
     return compiled;
   }
 
-  static void destroy()
+  protected void destroy()
   {
     compile();			// To clean up delayed_resolve_places.
+#ifdef DEBUG
+    if (sizeof (delayed_resolve_places)) {
+      string errmsg = "Still got unresolved delayed resolve places:\n";
+      foreach (delayed_resolve_places; mixed what;) {
+	mixed index = m_delete (delayed_resolve_places, what);
+	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+			   "\n", "\n  ") + "\n";
+      }
+      error (errmsg);
+    }
+#endif
   }
 
   //! @ignore
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RXML.PikeCompile()" + OBJ_COUNT);
+  }
 }
 
 #ifdef RXML_PCODE_DEBUG
@@ -6552,12 +8442,58 @@ static class PikeCompile
   Frame _frame_ = _ctx_ && _ctx_->frame;				\
   if (TAG_DEBUG_TEST (!_frame_ || _frame_->flags & FLAG_DEBUG)) {	\
     if (_frame_) report_debug ("%O:   ", _frame_);			\
-    report_debug ("PCode" + OBJ_COUNT + ": " + X);			\
+    report_debug ("PCode(" + (flags & COLLECT_RESULTS ?			\
+			      "res" : "cont") + ")" + OBJ_COUNT + ": " + X); \
   }									\
 } while (0)
 #else
 #  define PCODE_MSG(X...) do {} while (0)
 #endif
+
+// Typed error thrown when stale p-code is decoded.
+class PCodeStaleError
+{
+  constant is_generic_error = 1;
+  constant is_p_code_stale_error = 1;
+
+  string error_message;
+  array error_backtrace;
+
+  protected void create (string msg, array bt)
+  {
+    error_message = msg;
+    error_backtrace = bt;
+  }
+
+  string|array `[] (int i)
+  {
+    switch (i) {
+      case 0: return error_message;
+      case 1: return error_backtrace;
+    }
+  }
+
+  mixed `[]= (int i, mixed val)
+  {
+    switch (i) {
+      case 0: return error_message = val;
+      case 1: return error_backtrace = val;
+    }
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && sprintf ("RXML.PCodeStaleError(%O)", error_message);
+  }
+}
+
+final void p_code_stale_error (string msg, mixed... args)
+{
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  array bt = backtrace();
+  PCODE_UPDATE_MSG ("Throwing PCodeStaleError: %s\n", describe_backtrace (bt));
+  throw (PCodeStaleError (msg, bt[..sizeof (bt) - 2]));
+}
 
 class PCode
 //! Holds p-code and evaluates it. P-code is the intermediate form
@@ -6580,12 +8516,11 @@ class PCode
   //! Nonzero if error recovery is allowed. Should be the same as the
   //! setting in the parser used to create this object.
 
-  PCode p_code = 0;
+  PCode p_code;
   //! Another chained PCode object to update while this one is
-  //! compiled or evaluated. Typically only useful if one p-code
-  //! object collects the unevaluated data and the other the results.
-  //! It's assumed that at most one PCode object in a chain collects
-  //! results.
+  //! compiled. Typically only useful if one p-code object collects
+  //! the unevaluated data and the other the results. It's assumed
+  //! that at most one PCode object in a chain collects results.
 
   Context new_context (void|RequestID id)
   //! Creates a new context for evaluating the p-code in this object.
@@ -6600,6 +8535,12 @@ class PCode
   //! Returns whether the p-code is stale or not. Should be called
   //! before @[eval] to ensure it won't fail for that reason.
   {
+#if defined (TAGSET_GENERATION_DEBUG) || defined (RXML_PCODE_UPDATE_DEBUG)
+    if (tag_set && tag_set->generation != generation)
+      werror ("%O is_stale test: generation=%d, %O->generation=%d\n",
+	      this_object(), generation,
+	      tag_set, tag_set && tag_set->generation);
+#endif
     return tag_set && tag_set->generation != generation;
   }
 
@@ -6610,6 +8551,10 @@ class PCode
   {
     int updated = flags & UPDATED;
     flags &= ~UPDATED;
+    PCODE_UPDATE_MSG ("%O: is_updated returns %s and resets flag "
+		      "by request from %s", this,
+		      updated ? "true" : "false",
+		      describe_backtrace (backtrace()[<1..<1]));
     return updated;
   }
 
@@ -6641,7 +8586,7 @@ class PCode
 	  m_delete (context->unwind_state, "reason");
 	  if (!sizeof (context->unwind_state)) context->unwind_state = 0;
 	}
-	piece = _eval (context); // Might unwind.
+	piece = _eval (context, 0); // Might unwind.
       }) {
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	  if (!eval_piece && context->incomplete_eval()) {
@@ -6653,9 +8598,9 @@ class PCode
 	  context->unwind_state->top = this_object();
 	  break eval;
 	}
-	if (context->p_code_comp)
+	if (p_code_comp)
 	  // Fix all delayed resolves in any ongoing p-code compilation.
-	  context->p_code_comp->compile();
+	  p_code_comp->compile();
 	LEAVE_CONTEXT();
 	throw_fatal (err);
       }
@@ -6667,26 +8612,44 @@ class PCode
     return piece;
   }
 
-  static void create (Type _type, void|TagSet _tag_set, void|Context collect_results)
+  void create (Type _type, Context ctx, void|TagSet _tag_set, void|int collect_results,
+	       void|PikeCompile _p_code_comp)
+  // Not protected since this is also used to reset p-code objects.
   {
     if (collect_results) {
       // Yes, the internal interaction between create, reset, the
       // context and CTX_ALREADY_GOT_VC is ugly.
-      flags |= COLLECT_RESULTS;
-      if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
-      collect_results->misc->variable_changes = ([]);
+      flags = COLLECT_RESULTS;
+      if (ctx->misc->recorded_changes) flags |= CTX_ALREADY_GOT_VC;
+      ctx->misc->recorded_changes = ({([])});
     }
+    else flags = 0;
     if (_type) {
       // _type is 0 if we're being decoded or created without full
       // init (collect_results still needs to be handled, though).
       type = _type;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
+      p_code = 0;
       exec = allocate (16);
+      length = 0;
       flags |= UPDATED;
-      if (flags & COLLECT_RESULTS)
-	PCODE_MSG ("create for result collection\n");
-      else
-	PCODE_MSG ("create for content collection\n");
+      PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated by create or reset.\n",
+			this, ctx);
+
+      protocol_cache_time = Int.NATIVE_MAX;
+      if (RequestID id = ctx->id) {
+	mapping(mixed:int) lc =
+	  id->misc->local_cacheable || (id->misc->local_cacheable = ([]));
+	lc[this] = Int.NATIVE_MAX;
+#ifdef DEBUG_CACHEABLE
+	report_debug ("%O: Starting tracking of local cache time changes.\n",
+		      this);
+#endif
+      }
+
+      p_code_comp = _p_code_comp || PikeCompile();
+      PCODE_MSG ("create or reset (with %s %O)\n",
+		 _p_code_comp ? "old" : "new", p_code_comp);
     }
   }
 
@@ -6695,52 +8658,117 @@ class PCode
 
   // Note: The frame state at exec[pos + 2] for frames might be shared
   // between PCode instances.
-  static array exec = 0;
-  static int length = 0;
+  /*protected*/ array exec;
+  /*protected*/ int length;
 
-  static int flags = 0;
-  static constant FULLY_RESOLVED = 0x1;
-  static constant COLLECT_RESULTS = 0x2;
-  static constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
-  static constant UPDATED = 0x8;
+#define EXPAND_EXEC(ELEMS) do {						\
+    if (length + (ELEMS) > sizeof (exec))				\
+      exec += allocate (max ((ELEMS), sizeof (exec)));			\
+  } while (0)
 
-  static int generation;
+  /*protected*/ int flags;
+  protected constant COLLECT_RESULTS = 0x2;
+  protected constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
+  protected constant UPDATED = 0x8;
+  protected constant FINISHED = 0x10;
+
+  /*protected*/ int generation;
   // The generation of tag_set when the p-code object was generated.
   // Known punt: We should track and check the generations of any
   // nested tag sets so that is_stale always is reliable. But due to
   // the extensive dependencies in the global rxml_tag_set that won't
   // be a problem in practice, so we avoid the overhead.
 
-  void reset (Type _type, void|TagSet _tag_set)
+  /*protected*/ int protocol_cache_time;
+  // The ctx->id->misc->cacheable setting when result collected p-code
+  // is finished. It's reinstated on entry whenever the p-code is used
+  // to ensure that the protocol cache doesn't overcache.
+
+  PikeCompile p_code_comp;
+  // This is inherited by nested PCode instances to make the
+  // compilation units larger.
+
+  protected void process_recorded_changes (array rec_chgs, Context ctx)
+  // This processes ctx->misc->recorded_changes, which is used to
+  // record things besides the frames that need to added to result
+  // collecting p-code. The format of ctx->misc->recorded_changes
+  // might change at any time. Currently it's like this:
+  //
+  // ctx->misc->recorded_changes is an array concatenated by any of
+  // the following sequences:
+  //
+  // ({mapping vars})
+  //   The mapping contains various variable and scope changes. Its
+  //   format is dictated by VariableChange.get.
+  //
+  // ({object with is_RXML_p_code_entry})
+  //   An object that will be directly inserted into the p-code.
+  //
+  // ({string|function callback, array args})
+  //   A generic function call to be issued when the p-code is
+  //   executed. If the callback is a string, it's the name of a
+  //   function to call in ctx->id. The string can also contain an
+  //   index chain separated with "->" to call something that is
+  //   indirectly referenced from ctx->id.
+  //
+  // Whenever ctx->misc->recorded_changes exists, it has a (possibly
+  // empty) variable mapping as the last entry.
   {
-    type = _type;
-    if ((tag_set = _tag_set)) generation = _tag_set->generation;
-    exec = allocate (16);
-    length = 0;
-    flags &= ~FULLY_RESOLVED;
-    if (flags & COLLECT_RESULTS)
-      PCODE_MSG ("reset for result collection\n");
-    else
-      PCODE_MSG ("reset for content collection\n");
-    if (p_code) p_code->reset (_type, _tag_set);
+    // Note: This function assumes that there are at least
+    // sizeof(rec_chgs) elements available in exec.
+    for (int pos = 0; pos < sizeof (rec_chgs);) {
+      mixed entry = rec_chgs[pos];
+      if (mappingp (entry)) {
+	// A variable changes mapping.
+	if (sizeof (entry)) {
+	  PCODE_MSG ("adding variable changes %s\n", format_short (entry));
+	  VariableChange var_chg = VariableChange (entry);
+	  var_chg->eval_rxml_consts (ctx);
+	  exec[length++] = var_chg;
+	}
+	pos++;
+      }
+
+      else if (objectp (entry) && entry->is_RXML_p_code_entry) {
+	PCODE_MSG ("adding p-code entry %O\n", entry);
+	exec[length++] = entry;
+	pos++;
+      }
+
+      else {
+	// A callback.
+	PCODE_MSG ("adding callback %O (%s)\n",
+		   entry, map (rec_chgs[pos + 1], format_short) * ", ");
+	exec[length++] = CompiledCallback (entry, rec_chgs[pos + 1]);
+	pos += 2;
+      }
+    }
   }
 
   void add (Context ctx, mixed entry, mixed evaled_value)
   {
-    if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
+#ifdef DEBUG
+    if (flags & FINISHED)
+      error ("Adding an entry %s to finished p-code.\n", format_short (entry));
+#endif
 
     if (flags & COLLECT_RESULTS) {
       PCODE_MSG ("adding result value %s\n", format_short (evaled_value));
+      if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
+	// Special case: Poll for changes of the _ok flag, to avoid
+	// widespread compatibility issues with the existing tags.
+	ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
+      array rec_chgs = ctx->misc->recorded_changes;
+      EXPAND_EXEC (1 + sizeof (rec_chgs));
       exec[length++] = evaled_value;
-      mapping var_chg = ctx->misc->variable_changes;
-      if (sizeof (var_chg)) {
-	PCODE_MSG ("adding variable changes %s\n", format_short (var_chg));
-	exec[length++] = VariableChange (var_chg);
-	ctx->misc->variable_changes = ([]);
+      if (!equal (rec_chgs, ({([])}))) {
+	process_recorded_changes (rec_chgs, ctx);
+	ctx->misc->recorded_changes = ({([])});
       }
     }
     else {
       PCODE_MSG ("adding entry %s\n", format_short (entry));
+      EXPAND_EXEC (1);
       exec[length++] = entry;
     }
 
@@ -6754,105 +8782,326 @@ class PCode
   } while (0)
 
   void add_frame (Context ctx, Frame frame, mixed evaled_value,
-		  void|array frame_state)
+		  void|int cache_frame, void|array frame_state)
   {
-  add_frame:
-    {
+#ifdef DEBUG
+    if (flags & FINISHED)
+      error ("Adding a frame %O to finished p-code.\n", frame);
+#endif
+
+  add_frame: {
+      int frame_flags = frame->flags;
+
     add_evaled_value:
       if (flags & COLLECT_RESULTS) {
-	mapping var_chg = ctx->misc->variable_changes;
-	ctx->misc->variable_changes = ([]);
-	if (frame->flags & FLAG_DONT_CACHE_RESULT)
-	  PCODE_MSG ("frame %O not result cached\n", frame);
-	else {
-	  if (evaled_value == PCode) {
-	    // The PCode value is only used as an ugly magic cookie to
-	    // signify that the frame produced no result to add (i.e. it
-	    // threw an exception instead). In that case we must keep
-	    // the frame unevaluated.
-	    frame->flags |= FLAG_DONT_CACHE_RESULT;
-	    PCODE_MSG ("frame %O not result cached due to exception\n", frame);
-	    break add_evaled_value;
-	  }
-	  PCODE_MSG ("adding result of frame %O: %s\n",
-		     frame, format_short (evaled_value));
-	  if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
-	  exec[length++] = evaled_value;
-	  if (sizeof (var_chg))
-	    exec[length++] = VariableChange (var_chg);
+	if (frame_flags & FLAG_IS_CACHE_STATIC) {
+	  PCODE_MSG ("frame %O has already been result collected recursively\n", frame);
 	  break add_frame;
+	}
+	else {
+	  if (ctx->misc[" _ok"] != ctx->misc[" _prev_ok"])
+	    // Special case: Poll for changes of the _ok flag, to avoid
+	    // widespread compatibility issues with the existing tags.
+	    ctx->set_misc (" _ok", ctx->misc[" _prev_ok"] = ctx->misc[" _ok"]);
+	  array rec_chgs = ctx->misc->recorded_changes;
+	  ctx->misc->recorded_changes = ({([])});
+	  if ((frame_flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) !=
+	      FLAG_MAY_CACHE_RESULT)
+	    PCODE_MSG ("frame %O not result cached\n", frame);
+	  else {
+	    if (evaled_value == PCode) {
+	      // The PCode value is only used as an ugly magic cookie to
+	      // signify that the frame produced no result to add (i.e. it
+	      // threw an exception instead). In that case we must keep
+	      // the frame unevaluated.
+	      frame_flags |= FLAG_DONT_CACHE_RESULT;
+	      PCODE_MSG ("frame %O not result cached due to exception\n", frame);
+	      break add_evaled_value;
+	    }
+	    PCODE_MSG ("adding result of frame %O: %s\n",
+		       frame, format_short (evaled_value));
+	    EXPAND_EXEC (1 + sizeof (rec_chgs));
+	    exec[length++] = evaled_value;
+	    if (!equal (rec_chgs, ({([])})))
+	      process_recorded_changes (rec_chgs, ctx);
+	    break add_frame;
+	  }
 	}
       }
 
-      PCODE_MSG ("adding frame %O\n", frame);
-      if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
+      EXPAND_EXEC (3);
       exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
       if (!stringp (frame->args) && !functionp (frame->args) &&
-	  (frame->flags & FLAG_PROC_INSTR ? frame->args != 0 : !mappingp (frame->args)))
+	  (frame_flags & FLAG_PROC_INSTR ? frame->args != 0 : !mappingp (frame->args)))
 	error ("Invalid args %s in frame about to be added to p-code.\n",
 	       format_short (frame->args));
 #endif
-      exec[length + 1] = frame;	// Cached for reuse.
+
+      if (cache_frame) {
+	exec[length + 1] = frame;
+	cache_frame = 0;
+      }
+
       if (frame_state)
 	exec[length + 2] = frame_state;
       else {
 	frame_state = exec[length + 2] = frame->_save();
-	if (stringp (frame_state[0]))
-	  ctx->p_code_comp->delayed_resolve (frame_state, 0);
+	if (stringp (frame->args))
+	  p_code_comp->delayed_resolve (frame_state, 0);
 	RESET_FRAME (frame);
       }
+
+      if (frame_flags != frame->flags) {
+	// Must copy the stored frame if we change the flags.
+	if (exec[length]->is_RXML_Tag) {
+	  frame = exec[length]->Frame();
+	  frame->tag = exec[length];
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
+	else
+	  exec[length] = frame = exec[length]->_clone_empty();
+	frame->_restore (exec[length + 2]);
+	frame->flags = frame_flags;
+	if (stringp (frame->args))
+	  p_code_comp->delayed_resolve (frame, "args");
+	exec[length + 1] = frame;
+      }
+
       length += 3;
+      PCODE_MSG ("added frame %O\n", frame);
     }
 
-    if (p_code) p_code->add_frame (ctx, frame, evaled_value, frame_state);
+    if (p_code) p_code->add_frame (ctx, frame, evaled_value, cache_frame, frame_state);
   }
+
+#ifdef RXML_PCODE_COMPACT_DEBUG
+#ifdef RXML_PCODE_DEBUG
+#  define PCODE_COMPACT_MSG(X...) PCODE_MSG (X)
+#else
+#  define PCODE_COMPACT_MSG(X...) do {					\
+    report_debug ("PCode()" + OBJ_COUNT + ": " + X);			\
+  } while (0)
+#endif
+#else
+#  define PCODE_COMPACT_MSG(X...) do {} while (0)
+#endif
 
   void finish()
   {
+#ifdef DEBUG
+    if (flags & FINISHED)
+      error ("Attempt to finish already finished p-code.\n");
+#endif
+
     if (flags & COLLECT_RESULTS) {
+      Context ctx = RXML_CONTEXT;
+
+      if (RequestID id = ctx->id) {
+	protocol_cache_time = m_delete (id->misc->local_cacheable, this);
+#ifdef DEBUG_CACHEABLE
+	if (protocol_cache_time != Int.NATIVE_MAX)
+	  report_debug ("%O: Recording max cache time %d.\n",
+			this, protocol_cache_time);
+	else
+	  report_debug ("%O: Max cache time not changed.\n", this);
+#endif
+      }
+
+      // Install any trailing variable changes. This is useful to
+      // catch the last scope leave from a FLAG_IS_CACHE_STATIC
+      // optimized frame. With the compaction below it'll therefore
+      // often erase an earlier stored scope.
+      array rec_chgs = ctx->misc->recorded_changes;
+      ctx->misc->recorded_changes = ({([])});
+      if (sizeof (rec_chgs)) {
+	EXPAND_EXEC (sizeof (rec_chgs));
+	process_recorded_changes (rec_chgs, ctx);
+      }
+
       if (!(flags & CTX_ALREADY_GOT_VC))
-	m_delete (RXML_CONTEXT->misc, "variable_changes");
+	m_delete (RXML_CONTEXT->misc, "recorded_changes");
       PCODE_MSG ("end result collection\n");
 
-      // Collapse sequences of constants. Could be done when not
-      // collecting results too, but it's probably not worth the
-      // bother then.
-      int max = length;
-      length = 0;
-      for (int pos = 0; pos < max; pos++) {
-	mixed item = exec[pos];
-      process_entry: {
-	  if (objectp (item))
-	    if (item->is_RXML_p_code_frame) {
-	      exec[length++] = exec[pos++];
-	      exec[length++] = exec[pos++];
-	      break process_entry;
+#ifndef DISABLE_RXML_COMPACT
+      if (length > 0) {
+	// Collapse sequences of constants and VariableChange's, etc.
+	// This is actually a simple peephole optimizer. Could be done
+	// when not collecting results too, but it's probably not
+	// worth the bother then.
+
+	SIMPLE_ID_TRACE_ENTER (ctx->id, ctx->frame || this,
+			       "Compacting p-code of size %d", length);
+	PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
+
+	// Collects plain values into a single value. This uses the
+	// fact that the order between plain values and all other
+	// types of p-code entries except frames are insignificant.
+	mixed value = empty;
+	String.Buffer strbuf = type->empty_value == "" && String.Buffer();
+
+	// beg is used to limit how far back the peep rules can look. Necessary
+	// to not walk backwards into a frame sequence.
+	int last = 0, beg = 0;
+
+      compact_loop:
+	for (int pos = 0; pos < length;) {
+	  // First collect sequences of plain values.
+
+	  if (strbuf) {
+	    // Optimize the common string case with a String.Buffer.
+	    while (1) {
+	      mixed elem = exec[pos];
+	      if (!objectp (elem))
+		strbuf->add (elem);
+	      else if (!elem->is_RXML_p_code_entry) {
+		if (!elem->is_rxml_empty_value)
+		  strbuf->add (strbuf->get() + elem);
+	      }
+	      else
+		break;
+	      if (++pos == length)
+		break compact_loop;
 	    }
-	    else if (item->is_RXML_p_code_entry)
-	      break process_entry;
-	    else if (item == nil)
-	      continue;
-	  int end = pos + 1;
-	  while (end < max &&
-		 (!objectp (exec[end]) || !exec[end]->is_RXML_p_code_entry))
-	    end++;
-	  if (pos < --end) {
-	    exec[length++] = `+ (@exec[pos..pos = end]);
-	    continue;
 	  }
+
+	  else {
+	    mixed elem;
+	    while (!objectp (elem = exec[pos]) || !elem->is_RXML_p_code_entry) {
+	      value += elem;
+	      if (++pos == length)
+		break compact_loop;
+	    }
+	  }
+
+	  if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame) {
+	    // Frames are currently not accessible to the peep rules
+	    // below. Just copy it and continue.
+
+	    if (strbuf && sizeof (strbuf)) {
+	      PCODE_COMPACT_MSG ("  Compact: Adding string at %d\n", last);
+	      exec[last++] = strbuf->get();
+	    }
+	    else if (value != empty) {
+	      PCODE_COMPACT_MSG ("  Compact: Adding collected plain value "
+				 "at %d\n", last);
+	      exec[last++] = value;
+	      value = empty;
+	    }
+
+	    PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d "
+			       "to %d..%d\n", pos, pos + 2, last, last + 2);
+	    exec[last++] = exec[pos++];
+	    exec[last++] = exec[pos++];
+	    exec[last++] = exec[pos++];
+	    beg = last;
+	    continue compact_loop;
+	  }
+
+	  else {
+	    PCODE_COMPACT_MSG ("  Compact: Shifting %d to %d\n", pos, last);
+	    exec[last] = exec[pos++];
+	  }
+
+	  // Now reduce the tail as long as any rule applies.
+	  while (last > beg) {
+	    int reduced = 0;
+	    mixed item = exec[last], prev = exec[last - 1];
+	    PCODE_COMPACT_MSG ("  Compact: -- Before: [%d..%d] =%{ %O%}\n",
+			       max (last - 5, beg), last,
+			       exec[max (last - 5, beg)..last]);
+
+	    // The peep rules below can assume there are at least two
+	    // p-code elements ({prev, item}) to operate on.
+
+	  try_reduce: {
+	      if (prev->is_RXML_VariableChange) {
+		if (item->is_csf_leave_scope) {
+		  // Got a VariableChange before LeaveScope. Check for
+		  // shadowed contents.
+
+		  CLEANUP_VAR_CHG_SCOPE (prev->settings, "_");
+		  if (string scope_name = item->frame()->scope_name)
+		    CLEANUP_VAR_CHG_SCOPE (prev->settings, scope_name);
+
+		  if (!sizeof (prev->settings)) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 1: Removing shadowed "
+				       "VariableChange before LeaveScope\n");
+		    exec[--last] = item;
+		    break try_reduce;
+		  }
+		}
+
+		else if (item->is_RXML_VariableChange &&
+			 prev->merge (item)) {
+		  PCODE_COMPACT_MSG ("  Compact: RULE 2: Merged two "
+				     "VariableChange's\n");
+		  last--;
+		  break try_reduce;
+		}
+	      }
+
+	      else if (prev->is_csf_enter_scope) {
+		if (item->is_csf_enter_scope) {
+		  if (item->frame() == prev->frame()) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 3: Removing repeated "
+				       "EnterScope\n");
+		    last--;
+		    break try_reduce;
+		  }
+		}
+
+		else if (item->is_csf_leave_scope &&
+			 prev->frame() == item->frame()) {
+		  PCODE_COMPACT_MSG ("  Compact: RULE 4: Removing empty "
+				     "EnterScope/LeaveScope pair\n");
+		  last -= 2;
+		  break try_reduce;
+		}
+	      }
+
+	      // No reduction done.
+	      break;
+	    }
+
+	    PCODE_COMPACT_MSG ("  Compact: -- After: [%d..%d] =%{ %O%}\n",
+			       max (last - 9, 0), last, exec[last - 9..last]);
+	  }
+
+	  last++;
 	}
-	exec[length++] = exec[pos];
+
+	if (strbuf && sizeof (strbuf)) {
+	  PCODE_COMPACT_MSG ("  Compact: Adding last string at %d\n", last);
+	  exec[last++] = strbuf->get();
+	}
+	else if (value != empty) {
+	  PCODE_COMPACT_MSG ("  Compact: Adding last collected plain value "
+			     "at %d\n", last);
+	  exec[last++] = value;
+	}
+	length = last;
+
+	PCODE_COMPACT_MSG ("  Compact: Done, got %O\n", exec[..length - 1]);
+	SIMPLE_ID_TRACE_LEAVE (ctx->id, "Size reduced to %d", length);
       }
+#endif
     }
-    else
+
+    else {
+      // No need to record ctx->id->misc->cacheable when only
+      // unevaluated things are stored in the p-code entry.
       PCODE_MSG ("end content collection\n");
+    }
 
     if (length != sizeof (exec)) exec = exec[..length - 1];
-    if (p_code) p_code->finish(), p_code = 0;
+    p_code = 0;
+    flags |= FINISHED;
   }
 
-  mixed _eval (Context ctx)
+  mixed _eval (Context ctx, PCode new_p_code)
   //! Like @[eval], but assumes the given context is current. Mostly
   //! for internal use.
   {
@@ -6860,86 +9109,145 @@ class PCode
     array parts;
     int ppos = 0;
     int update_count = ctx->state_updated;
+#ifdef DEBUG
+    if (!(flags & FINISHED)) report_warning ("Evaluating unfinished p-code.\n");
+    if (p_code)
+      error ("Chained p-code may only be set while a PCode object is being compiled.\n");
+#endif
 
+#if 0
+    // This check doesn't work in some "chicken-and-egg" cases when
+    // the executed p-code causes tag set updates. Can occur in the
+    // admin interface, for instance. (To be _really_ correct in those
+    // cases we should switch over to source code on the fly, but it's
+    // unlikely to be a practical problem to finish the evaluation
+    // with stale code in the current request and then create new
+    // first in the next one.)
 #ifdef MODULE_DEBUG
     if (tag_set && tag_set->generation != generation)
       error ("P-code is stale - tag set %O has generation %d and not %d.\n",
-	     tag_set->name, tag_set->generation, generation);
+	     tag_set, tag_set->generation, generation);
+#endif
 #endif
 
     if (ctx->unwind_state)
       [object ignored, pos, parts, ppos] =
 	m_delete (ctx->unwind_state, this_object());
-    else parts = allocate (length);
+    else {
+      parts = allocate (length);
+      if (protocol_cache_time < Int.NATIVE_MAX && ctx->id)
+	ctx->id->lower_max_cache (protocol_cache_time);
+    }
+
+    PCODE_MSG ((p_code_comp ?
+		sprintf ("evaluating partially resolved p-code %O, using "
+			 "resolver %O\n", this_object(), p_code_comp) :
+		sprintf ("evaluating completely resolved p-code %O\n",
+			 this_object())));
 
     while (1) {			// Loops only if errors are catched.
       mixed item;
       Frame frame;
       if (mixed err = catch {
 
-#define EVAL_LOOP(RESOLVE_ARGFUNC_1, RESOLVE_ARGFUNC_2)			\
-	do for (; pos < length; pos++) {				\
-	  item = exec[pos];						\
-	chained_p_code_add: {						\
-	    if (objectp (item))						\
-	      if (item->is_RXML_p_code_frame) {				\
-		if ((frame = exec[pos + 1])) {				\
-		  /* Relying on the interpreter lock here. */		\
-		  exec[pos + 1] = 0;					\
-		  RESOLVE_ARGFUNC_1;					\
-		}							\
-		else {							\
-		  if (item->is_RXML_Tag)				\
-		    frame = item->Frame(), frame->tag = item;		\
-		  else frame = item->_clone_empty();			\
-		  RESOLVE_ARGFUNC_2;					\
-		  frame->_restore (exec[pos + 2]);			\
-		}							\
-		item = frame->_eval (					\
-		  ctx, this_object(), type); /* Might unwind. */	\
-		if (ctx->state_updated > update_count) {		\
-		  exec[pos + 2] = frame->_save();			\
-		  flags |= UPDATED;					\
-		  update_count = ctx->state_updated;			\
-		}							\
-		if (!exec[pos + 1]) {					\
-		  RESET_FRAME (frame);					\
-		  /* Race here, but it doesn't matter much. */		\
-		  exec[pos + 1] = frame;				\
-		}							\
-		pos += 2;						\
-		if (p_code) p_code->add_frame (ctx, frame, item);	\
-		break chained_p_code_add;				\
-	      }								\
-	      else if (item->is_RXML_p_code_entry)			\
-		item = item->get (ctx); /* Might unwind. */		\
-	    if (p_code) p_code->add (ctx, item, item);			\
-	  }								\
-	  if (item != nil)						\
-	    parts[ppos++] = item;					\
-	  if (string errmsgs = m_delete (ctx->misc, this_object()))	\
-	    parts[ppos++] = errmsgs;					\
-	} while (0)
+	if (p_code_comp) {
+	  p_code_comp->compile();
+	  if (flags & FINISHED) p_code_comp = 0;
+	}
 
-	if (flags & FULLY_RESOLVED)
-	  EVAL_LOOP (;, ;);
-	else
-	  EVAL_LOOP ({
-	    array frame_state = exec[pos + 2];
-	    if (stringp (frame->args))
-	      if (stringp (frame_state[0]))
-		frame->args = frame_state[0] =
-		  ctx->p_code_comp->resolve (frame_state[0]);
-	      else
-		frame->args = frame_state[0];
-	  }, {
-	    array frame_state = exec[pos + 2];
-	    if (stringp (frame_state[0]))
-	      frame_state[0] = ctx->p_code_comp->resolve (frame_state[0]);
-	  });
+	for (; pos < length; pos++) {
+	  item = exec[pos];
 
-	ctx->eval_finish();
-	if (ctx->state_updated > update_count) flags |= UPDATED;
+	chained_p_code_add: {
+	    if (objectp (item))
+	      if (item->is_RXML_p_code_frame) {
+
+		if ((frame = exec[pos + 1])) {
+		  /* Relying on the interpreter lock here. */
+		  exec[pos + 1] = 0;
+		}
+		else {
+		  if (item->is_RXML_Tag) {
+		    frame = item->Frame();
+		    frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+		    frame->__object_marker->create (frame);
+#endif
+		  }
+		  else frame = item->_clone_empty();
+		  frame->_restore (exec[pos + 2]);
+		}
+
+		item = frame->_eval (
+		  ctx, this_object(), type); /* Might unwind. */
+
+		if (flags & COLLECT_RESULTS &&
+		    ((frame->flags & (FLAG_DONT_CACHE_RESULT|FLAG_MAY_CACHE_RESULT)) ==
+		     FLAG_MAY_CACHE_RESULT)) {
+		  exec[pos] = item;
+		  /* Relying on the interpreter lock here. */
+		  exec[pos + 1] = exec[pos + 2] = nil;
+		  flags |= UPDATED;
+		  update_count = ++ctx->state_updated;
+		  PCODE_UPDATE_MSG ("%O (ctx %O, frame %O): P-code update to "
+				    "%d due to result collection.\n",
+				    this, ctx, frame, update_count);
+		  if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1);
+		}
+
+		else {
+		  if (ctx->state_updated > update_count) {
+		    array frame_state = frame->_save();
+		    if (stringp (frame_state[0]))
+		      // Must resolve before updating the exec array
+		      // since it might be evaluated concurrently in
+		      // other threads, and the check on p_code_comp
+		      // is only done at the start.
+		      frame_state[0] = frame->args =
+			p_code_comp->resolve (frame_state[0]);
+		    exec[pos + 2] = frame_state;
+		    flags |= UPDATED;
+		    PCODE_UPDATE_MSG ("%O (ctx %O, frame %O): Marked as "
+				      "updated due to ctx->state_updated "
+				      "%d > %d.\n", this, ctx, frame,
+				      ctx->state_updated, update_count);
+		    update_count = ctx->state_updated;
+		  }
+		  if (!exec[pos + 1]) {
+		    RESET_FRAME (frame);
+		    /* Race here, but it doesn't matter much. */
+		    exec[pos + 1] = frame;
+		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 0);
+		  }
+		  else
+		    if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1);
+		}
+
+		pos += 2;
+		break chained_p_code_add;
+	      }
+
+	      else if (item->is_RXML_p_code_entry)
+		item = item->get (ctx); /* Might unwind. */
+
+	    if (new_p_code) new_p_code->add (ctx, item, item);
+	  }
+
+	  if (item != nil)
+	    parts[ppos++] = item;
+	  if (string errmsgs = m_delete (ctx->misc, this_object()))
+	    parts[ppos++] = errmsgs;
+	}
+
+	ctx->eval_finish (1);
+	ctx->id->eval_status["rxmlpcode"] = 1;
+
+	if (ctx->state_updated > update_count) {
+	  PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated due to "
+			    "ctx->state_updated %d > %d.\n", this, ctx,
+			    ctx->state_updated, update_count);
+	  flags |= UPDATED;
+	}
 
 	if (!ppos)
 	  return type->sequential ? type->empty_value : nil;
@@ -6950,7 +9258,7 @@ class PCode
 	    if (ppos != 1) return utils->get_non_nil (type, @parts[..ppos - 1]);
 	    else return parts[0];
 
-      })
+      }) {
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
@@ -6958,17 +9266,17 @@ class PCode
 
 	else {
 	  PCODE_UPDATE_MSG (
-	    "%O: Restoring p-code update count from %d to %d "
-	    "since the frame is stored unevaluated "
+	    "%O (item %O): Restoring p-code update count "
+	    "from %d to %d since the frame is stored unevaluated "
 	    "due to exception.\n",
-	    item, ctx->state_updated, update_count);
+	    ctx, item, ctx->state_updated, update_count);
 	  ctx->state_updated = update_count;
 
-	  if (p_code)
+	  if (new_p_code)
 	    if (objectp (item) && item->is_RXML_p_code_frame)
-	      p_code->add_frame (ctx, frame, PCode);
+	      new_p_code->add_frame (ctx, frame, PCode, 1);
 	    else
-	      p_code->add (ctx, item, item);
+	      new_p_code->add (ctx, item, item);
 
 	  err = catch {
 	    ctx->handle_exception (err, this_object()); // May throw.
@@ -6986,9 +9294,14 @@ class PCode
 	  };
 
 	  if (tag_set && tag_set->generation != generation)
-	    catch (err[0] += "Note: Error happened in stale p-code.\n");
+	    catch {
+	      if (!has_suffix (err[0],
+			       "Note: Error happened in stale p-code.\n"))
+		err[0] += "Note: Error happened in stale p-code.\n";
+	    };
 	  throw (err);
 	}
+      }
 
       error ("Should not get here.\n");
     }
@@ -7054,49 +9367,106 @@ class PCode
     return 1;
   }
 
+  protected void _take (PCode other)
+  {
+    // Relying on the interpreter lock in this function.
+    type = other->type;
+    tag_set = other->tag_set;
+    recover_errors = other->recover_errors;
+    exec = other->exec, other->exec = 0;
+    length = other->length;
+    flags = other->flags;
+    generation = other->generation;
+    protocol_cache_time = other->protocol_cache_time;
+    p_code_comp = other->p_code_comp;
+  }
+
   //! @ignore
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf (int flag, mapping args)
   {
-    return tag_set ?
-      sprintf ("RXML.PCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
-      sprintf ("RXML.PCode(%O)%s", type, OBJ_COUNT);
+    if (flag != 'O') return 0;
+    string intro = tag_set ?
+      sprintf ("%s(%O,%O", args->this_name || "RXML.PCode", type, tag_set) :
+      sprintf ("%s(%O", args->this_name || "RXML.PCode", type);
+    if (args->verbose)
+      if (!exec || !sizeof (exec))
+	return intro + ": no code)" + OBJ_COUNT;
+      else {
+	array compacted = allocate (sizeof (exec));
+	int ci = 0;
+	for (int i = 0; i < sizeof (exec); i++) {
+	  compacted[ci++] = exec[i];
+	  if (objectp (exec[i]) && exec[i]->is_RXML_p_code_frame) i += 2;
+	}
+	compacted = compacted[..ci - 1];
+	if (sizeof (compacted) == 1)
+	  return sprintf ("%s: %s)%s", intro, format_short (compacted[0]), OBJ_COUNT);
+	else
+	  return sprintf ("%s:\n  %s)%s",
+			  intro, map (compacted, format_short) * ",\n  ", OBJ_COUNT);
+      }
+    else
+      return intro + ")" + OBJ_COUNT;
   }
+
+  constant P_CODE_VERSION = "7.2";
+  // Version spec encoded with the p-code, so we can detect and reject
+  // incompatible p-code dumps even when the encoded format hasn't
+  // changed in an obvious way.
+  //
+  // The integer part is increased for every roxen version, and the
+  // fraction part is increased for every incompatible p-code change.
 
   mixed _encode()
   {
+#ifdef DEBUG
+    if (!(flags & FINISHED)) report_warning ("Encoding unfinished p-code.\n");
+#endif
+
+    if (p_code_comp) {
+      p_code_comp->compile();
+      p_code_comp = 0;
+    }
+
     if (length != sizeof (exec)) exec = exec[..length - 1];
     array encode_p_code = exec + ({});
     for (int pos = 0; pos < length; pos++) {
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	encode_p_code[pos + 1] = 0; // Don't encode the cached frame.
-#ifdef DEBUG
+	// The following are debug checks, but let's always do them
+	// since this case would be very hard to track down otherwise.
 	if (stringp (encode_p_code[pos + 2][0]))
-	  error ("Unresolved argument function in frame at position %d.\n"
-		 "Encoding p-code in unfinished evaluation?\n", pos);
-#endif
-	if (exec[pos + 1]) exec[pos + 1]->args = encode_p_code[pos + 2][0];
+	  error ("Unresolved argument function in frame state %O at position %d.\n",
+		 encode_p_code[pos + 2], pos + 2);
+	if (exec[pos + 1] && stringp (exec[pos + 1]->args))
+	  error ("Unresolved argument function %O in frame %O at position %d.\n",
+		 exec[pos + 1]->args, exec[pos + 1], pos + 1);
       }
     }
-    flags |= FULLY_RESOLVED;
 
-    return ({tag_set, tag_set && tag_set->get_hash(),
-	     type, recover_errors, encode_p_code});
+    return ({P_CODE_VERSION, flags & (COLLECT_RESULTS|FINISHED),
+	     tag_set, tag_set && tag_set->get_hash(),
+	     type, recover_errors, encode_p_code, protocol_cache_time});
   }
 
-  void _decode(array v)
+  void _decode(array v, int check_hash)
   {
-    [tag_set, string tag_set_hash, type, recover_errors, exec] = v;
+    [string|int version, flags, tag_set, string tag_set_hash,
+     type, recover_errors, exec, protocol_cache_time] = v;
+    if (version != P_CODE_VERSION)
+      p_code_stale_error (
+	"P-code is stale - it was made with an incompatible version.\n");
     length = sizeof (exec);
     if (tag_set) {
-      if (tag_set->get_hash() != tag_set_hash)
-	error ("P-code is stale; the tag set has changed since it was encoded.\n");
+      if (check_hash && tag_set->get_hash() != tag_set_hash)
+	p_code_stale_error (
+	  "P-code is stale - the tag set has changed since it was encoded.\n");
       generation = tag_set->generation;
     }
-    flags |= FULLY_RESOLVED;
 
     // Instantiate the cached frames, mainly so that any errors in
     // their restore functions due to old data are triggered here and
@@ -7105,8 +9475,13 @@ class PCode
       mixed item = exec[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	Frame frame;
-	if (item->is_RXML_Tag)
-	  exec[pos + 1] = frame = item->Frame(), frame->tag = item;
+	if (item->is_RXML_Tag) {
+	  exec[pos + 1] = frame = item->Frame();
+	  frame->tag = item;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	}
 	else
 	  exec[pos + 1] = frame = item->_clone_empty();
 	frame->_restore (exec[pos + 2]);
@@ -7123,41 +9498,58 @@ class RenewablePCode
   inherit PCode;
 
   string source;
-  //! The source code or frame used to generate the p-code.
+  //! The source code used to generate the p-code.
 
   int is_stale() {return 0;}
 
 
   // Internals:
 
-  mixed _eval (Context ctx)
+  mixed _eval (Context ctx, PCode new_p_code)
   {
     if (::is_stale()) {
       Parser parser = 0;
       if (ctx->unwind_state)
 	[parser] = m_delete (ctx->unwind_state, this_object());
 
+      int orig_make_p_code = ctx->make_p_code;
+      PCode renewed_p_code;
       mixed res;
       if (mixed err = catch {
+	ctx->make_p_code = 1;
 	if (!parser) {
-	  parser = type->get_parser (ctx, tag_set, 0, this_object());
+	  renewed_p_code = PCode (type, ctx, tag_set, 0, p_code_comp);
+	  renewed_p_code->recover_errors = recover_errors;
+	  renewed_p_code->p_code = new_p_code;
+	  parser = type->get_parser (ctx, tag_set, 0, renewed_p_code);
 	  parser->finish (source); // Might unwind.
 	}
 	else parser->finish();	// Might unwind.
 	res = parser->eval();	// Might undwind.
 	flags |= UPDATED;
-      })
+	PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated after "
+			  "reevaluation.\n", this, ctx);
+      }) {
+	ctx->make_p_code = orig_make_p_code;
 	if (objectp (err) && err->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({parser});
 	  throw (this_object());
 	}
 	else throw (err);
+      }
+
+      renewed_p_code->finish();
+      if (new_p_code) new_p_code->finish();
+      renewed_p_code->flags |= UPDATED;
+      PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated after "
+			"reevaluation.\n", renewed_p_code, ctx);
+      _take (renewed_p_code);	// Assumed to be atomic.
 
       type->give_back (parser, tag_set);
       return res;
     }
     else
-      return ::_eval (ctx);
+      return ::_eval (ctx, new_p_code);
   }
 
   array _encode()
@@ -7165,17 +9557,15 @@ class RenewablePCode
     return ({::_encode(), source});
   }
 
-  void _decode (array encoded)
+  void _decode (array encoded, int check_hash)
   {
-    ::_decode (encoded[0]);
+    ::_decode (encoded[0], check_hash);
     source = encoded[1];
   }
 
-  string _sprintf()
+  string _sprintf (int flag, mapping args)
   {
-    return tag_set ?
-      sprintf ("RXML.RenewablePCode(%O,%O)%s", type, tag_set, OBJ_COUNT) :
-      sprintf ("RXML.RenewablePCode(%O)%s", type, OBJ_COUNT);
+    return ::_sprintf (flag, args + (["this_name": "RXML.RenewablePCode"]));
   }
 }
 
@@ -7184,161 +9574,44 @@ class RenewablePCode
 #  define ENCODE_DEBUG_RETURN(val) do {					\
   mixed _v__ = (val);							\
   report_debug ("  returned %s\n",					\
-		zero_type (_v__) ? "([])[0]" :				\
+		zero_type (_v__) ? "UNDEFINED" :			\
 		format_short (_v__, 160));				\
   return _v__;								\
 } while (0)
-string _sprintf() {return "RXML.pmod";}
 #else
 #  define ENCODE_MSG(X...) do {} while (0)
 #  define ENCODE_DEBUG_RETURN(val) do return (val); while (0)
 #endif
 
 constant is_RXML_encodable = 1;
-static object rxml_module = this_object();
+protected object rxml_module = this_object();
 
-class PCodec (Configuration default_config)
+class PCodeEncoder
 {
-  object objectof(string|array what)
+  inherit Master.Encoder;
+
+  Configuration default_config;
+
+  protected void create (Configuration default_config)
   {
-    if (arrayp (what)) {
-      ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
-      switch (what[0]) {
-	case "frame": {
-	  [string ignored, Tag tag, mixed saved] = what;
-	  Frame frame = tag->Frame();
-	  frame->tag = tag;
-	  frame->_restore (saved);
-	  ENCODE_DEBUG_RETURN (frame);
-	}
-
-	case "tag": {
-	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
-	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
-	    ENCODE_DEBUG_RETURN (tag);
-	  error ("Cannot find %s %O in tag set %O.\n",
-		 proc_instr ? "processing instruction" : "tag",
-		 name, tag_set);
-	}
-
-	case "ts": {
-	  [string ignored, object(RoxenModule)|object(Configuration) owner,
-	   string name] = what;
-	  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
-	    if (objectp (tag_set))
-	      ENCODE_DEBUG_RETURN (tag_set);
-	  error ("Cannot find tag set %O in %O.\n", name, owner);
-	}
-
-	case "cts": {
-	  TagSet tag_set;
-	  GET_COMPOSITE_TAG_SET (what[1], what[2], tag_set);
-	  ENCODE_DEBUG_RETURN (tag_set);
-	}
-
-	case "type": {
-	  string parser_name;
-	  sscanf (what[2], "p:%s", parser_name);
-	  program/*(Parser)*/ parser_prog = reg_parsers[parser_name];
-	  if (!parser_prog)
-	    error ("Cannot find parser %O.\n", parser_name);
-	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
-	}
-
-	case "mod": {
-	  [string ignored, Configuration config, string name] = what;
-	  if (RoxenModule mod = config->find_module (name))
-	    ENCODE_DEBUG_RETURN (mod);
-	  error ("Cannot find module %O in configuration %O.\n", what, config);
-	}
-
-	case "conf":
-	  if (!what[1]) {
-#ifdef DEBUG
-	    if (!default_config)
-	      error ("No default configuration given to string_to_p_code.\n");
-#endif
-	    ENCODE_DEBUG_RETURN (default_config);
-	  }
-	  else {
-	    if (Configuration config = roxen->get_configuration (what[1]))
-	      ENCODE_DEBUG_RETURN (config);
-	    error ("Cannot find configuration %O.\n", what[1]);
-	  }
-
-#ifdef RXML_OBJ_DEBUG
-	case "ObjectMarker":
-	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (what[1]));
-#endif
-      }
-    }
-
-    else {
-      ENCODE_MSG ("objectof (%O)\n", what);
-      switch (what) {
-	case "nil": ENCODE_DEBUG_RETURN (nil);
-	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
-	case "utils": ENCODE_DEBUG_RETURN (utils);
-	case "xtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
-      }
-
-      if (sscanf (what, "c:%s", what)) {
-	mixed efun;
-	if (objectp (efun = all_constants()[what]))
-	  ENCODE_DEBUG_RETURN (efun);
-	error ("Cannot find global constant object %O.\n", what);
-      }
-    }
-
-    error ("Cannot decode object %O.\n", what);
+    ::create();
+    this_program::default_config = default_config;
   }
 
-  function functionof(string what)
-  {
-    ENCODE_MSG ("functionof (%O)\n", what);
-
-    if (sscanf (what, "p:%s", what)) {
-      if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	ENCODE_DEBUG_RETURN (parser_prog);
-      error ("Cannot find parser %O.\n", what);
-    }
-    else if (sscanf (what, "c:%s", what)) {
-      mixed efun;
-      if (functionp (efun = all_constants()[what]))
-	ENCODE_DEBUG_RETURN (efun);
-      error ("Cannot find global constant function %O.\n", what);
-    }
-
-    error ("Cannot decode function %O.\n", what);
-  }
-
-  program programof (string what)
-  {
-    ENCODE_MSG ("programof (%O)\n", what);
-
-    if (sscanf (what, "p:%s", what)) {
-      if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	ENCODE_DEBUG_RETURN (parser_prog);
-      error ("Cannot find parser %O.\n", what);
-    }
-    else if (sscanf (what, "c:%s", what)) {
-      mixed efun;
-      if (programp (efun = all_constants()[what]))
-	ENCODE_DEBUG_RETURN (efun);
-      error ("Cannot find global constant program %O.\n", what);
-    }
-
-    error ("Cannot decode program %O.\n", what);
-  }
+  protected string server_dir = combine_path (getcwd()) + "/";
 
   string|array nameof(mixed what)
   {
-    if(objectp(what)) {
+    // All our special things are prefixed with "R" to ensure there's
+    // no conflict with the pike standard codec (it never uses any
+    // uppercase letters).
+
+    if (objectp (what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
 
-      if(what->is_RXML_Frame) {
+      if (what->is_RXML_Frame) {
 	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
-	  ENCODE_DEBUG_RETURN (({"frame", tag, what->_save()}));
+	  ENCODE_DEBUG_RETURN (({"Rfr", tag, what->_save()}));
 	ENCODE_MSG ("  encoding frame recursively since " +
 		    (what->RXML_dump_frame_reference ?
 		     "it got no tag object\n" :
@@ -7349,7 +9622,7 @@ class PCodec (Configuration default_config)
       else if (what->is_RXML_Tag) {
 	if (what->name && what->tagset)
 	  ENCODE_DEBUG_RETURN (({
-	    "tag",
+	    "Rtag",
 	    what->tagset,
 	    what->flags & FLAG_PROC_INSTR,
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
@@ -7360,9 +9633,9 @@ class PCodec (Configuration default_config)
 
       else if (what->is_RXML_TagSet) {
 	if (what->name)
-	  ENCODE_DEBUG_RETURN (({"ts", what->owner, what->name}));
+	  ENCODE_DEBUG_RETURN (({"Rts", what->owner, what->name}));
 	if (array components = what->tag_set_components())
-	  ENCODE_DEBUG_RETURN (({"cts"}) + components);
+	  ENCODE_DEBUG_RETURN (({"Rcts"}) + components);
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
 
@@ -7370,33 +9643,37 @@ class PCodec (Configuration default_config)
 	string parser_name = what->parser_prog->name;
 #ifdef DEBUG
 	if (!reg_parsers[parser_name])
-	  error ("Cannot encode unregistered parser %O in type %O.\n",
-		 parser_name, what);
+	  error ("Cannot encode unregistered parser at %s in type %O.\n",
+		 Program.defined (what->parser_prog), what);
 #endif
-	ENCODE_DEBUG_RETURN (({"type", what->name, "p:" + parser_name}) +
+	ENCODE_DEBUG_RETURN (({"Rtype", what->name, parser_name}) +
 			     what->parser_args);
       }
 
       else if (what->is_module)
-	ENCODE_DEBUG_RETURN (({"mod",
+	ENCODE_DEBUG_RETURN (({"Rmod",
 			       what->my_configuration(),
 			       what->module_local_id()}));
 
       else if (what->is_configuration)
-	ENCODE_DEBUG_RETURN (({"conf", what != default_config && what->name}));
+	ENCODE_DEBUG_RETURN (({"Rconf",
+			       what != default_config && what->name,
+			       what->compat_level()}));
 
-      else if(what == nil)
-	ENCODE_DEBUG_RETURN ("nil");
+      else if (what == nil)
+	ENCODE_DEBUG_RETURN ("Rnil");
+      else if (what == empty)
+	ENCODE_DEBUG_RETURN ("Rempty");
       else if (what == rxml_module)
-	ENCODE_DEBUG_RETURN ("RXML");
-      else if(what == utils)
-	ENCODE_DEBUG_RETURN ("utils");
+	ENCODE_DEBUG_RETURN ("RRXML");
+      else if (what == utils)
+	ENCODE_DEBUG_RETURN ("Rutils");
       else if (what == xml_tag_parser)
-	ENCODE_DEBUG_RETURN ("xtp");
+	ENCODE_DEBUG_RETURN ("Rxtp");
 #ifdef RXML_OBJ_DEBUG
-      else if (object_program (what) == Debug.ObjectMarker)
+      else if (object_program (what) == RoxenDebug.ObjectMarker)
 	ENCODE_DEBUG_RETURN (({
-	  "ObjectMarker",
+	  "RObjectMarker",
 	  reverse (array_sscanf (reverse (what->id), "]%*d[%s")[0])}));
 #endif
       else if (what->is_RXML_encodable) {
@@ -7416,17 +9693,18 @@ class PCodec (Configuration default_config)
 	else if (what->is_RXML_Parser) {
 #ifdef DEBUG
 	  if (!reg_parsers[what->name])
-	    error ("Cannot encode unregistered parser %O.\n", what->name);
+	    error ("Cannot encode unregistered parser at %s.\n",
+		   Program.defined (what));
 #endif
-	  ENCODE_DEBUG_RETURN ("p:" + what->name);
+	  ENCODE_DEBUG_RETURN (({"Rp", what->name}));
 	}
 
 	else if (functionp (what) && what->is_RXML_encodable) {
 	  // If the program also is a function the encoder won't dump
 	  // the byte code, but instead the parent object and the
 	  // identifier within it.
-	  ENCODE_MSG ("  encoding reference to program %O->%O\n",
-		      function_object (what), what);
+	  ENCODE_MSG ("  encoding reference to program %O in object %O\n",
+		      what, function_object (what));
 	  return ([])[0];
 	}
       }
@@ -7435,46 +9713,212 @@ class PCodec (Configuration default_config)
 
       if (object o = functionp (what) && function_object (what))
 	if (o->is_RXML_encodable) {
-	  ENCODE_MSG ("  encoding reference to function %O->%O\n", o, what);
+	  ENCODE_MSG ("  encoding reference to function %O in object %O\n", what, o);
 	  return ([])[0];
 	}
     }
 
-    if (string efun = reverse_constants[what])
-      if (all_constants()[efun] == what)
-	ENCODE_DEBUG_RETURN ("c:" + efun);
-    if (string efun = search (all_constants(), what)) {
-      reverse_constants[efun] = what;
-      ENCODE_DEBUG_RETURN ("c:" + efun);
+    // Fall back to the pike encoder. This is mainly useful to look up
+    // pike modules.
+    string|array pike_name = ::nameof (what);
+
+    // Make any file paths relative to the server tree.
+    if (stringp (pike_name)) {
+      sscanf (pike_name, "%1s%s", string cls, string path);
+      if ((<"p", "o", "f">)[cls]) {
+	if (has_prefix (path, server_dir))
+	  pike_name = "Rf:" + cls + path[sizeof (server_dir)..];
+	else
+	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
+			  "This can probably lead to problems if replication "
+			  "is in use.\n", path);
+      }
+    }
+    else {
+      sscanf (pike_name[0], "%1s%s", string cls, string path);
+      if ((<"p", "o", "f">)[cls]) {
+	if (has_prefix (path, server_dir))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (server_dir)..];
+	else
+	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
+			  "This can probably lead to problems if replication "
+			  "is in use.\n", path);
+      }
     }
 
-    if (programp (what))
-      error("Cannot encode program %s.\n", Program.defined (what));
-    else if (object o = functionp (what) && function_object (what)) {
-      string s = sprintf ("%O", o);
-      if (s == "object") s = "object(" + Program.defined (object_program (o)) + ")";
-      error ("Cannot encode function %s->%O.\n", s, what);
-    }
-    else
-      error ("Cannot encode %O.\n", what);
+    ENCODE_DEBUG_RETURN (pike_name);
   }
 
   mixed encode_object (object x)
   {
     ENCODE_MSG ("encode_object (%O)\n", x);
     if (x->_encode && x->_decode) ENCODE_DEBUG_RETURN (x->_encode());
-    error ("Cannot encode object %O without _encode() and _decode().\n", x);
+    error ("Cannot encode object %O at %s without _encode() and _decode().\n",
+	   x, Program.defined (object_program (x)));
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("RXML.PCodeEncoder(%O)", default_config);
+  }
+}
+
+class PCodeDecoder
+{
+  inherit Master.Decoder;
+
+  Configuration default_config;
+  int check_tag_set_hash;
+
+  protected void create (Configuration default_config, int check_tag_set_hash)
+  {
+    ::create();
+    this_program::default_config = default_config;
+    this_program::check_tag_set_hash = check_tag_set_hash;
+  }
+
+  protected string server_dir = combine_path (getcwd()) + "/";
+
+  mixed thingof(string|array what)
+  {
+    if (arrayp (what)) {
+      ENCODE_MSG ("thingof (({%{%O, %}}))\n", what);
+
+      switch (what[0]) {
+	case "Rfr": {
+	  [string ignored, Tag tag, mixed saved] = what;
+	  Frame frame = tag->Frame();
+	  frame->tag = tag;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	  frame->_restore (saved);
+	  ENCODE_DEBUG_RETURN (frame);
+	}
+
+	case "Rtag": {
+	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
+	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
+	    ENCODE_DEBUG_RETURN (tag);
+	  error ("Cannot find %s %O in tag set %O.\n",
+		 proc_instr ? "processing instruction" : "tag",
+		 name, tag_set);
+	}
+
+	case "Rts": {
+	  [string ignored, object(RoxenModule)|object(Configuration) owner,
+	   string name] = what;
+	  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
+	    if (objectp (tag_set))
+	      ENCODE_DEBUG_RETURN (tag_set);
+	  error ("Cannot find tag set %O in %O.\n", name, owner);
+	}
+
+	case "Rcts": {
+	  TagSet tag_set;
+	  GET_COMPOSITE_TAG_SET (what[1], what[2], tag_set);
+	  ENCODE_DEBUG_RETURN (tag_set);
+	}
+
+	case "Rtype": {
+	  program/*(Parser)*/ parser_prog = reg_parsers[what[2]];
+	  if (!parser_prog)
+	    error ("Cannot find parser %O.\n", what[2]);
+	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
+	}
+
+	case "Rmod": {
+	  [string ignored, Configuration config, string name] = what;
+	  if (RoxenModule mod = config->find_module (name))
+	    ENCODE_DEBUG_RETURN (mod);
+	  error ("Cannot find module %O in configuration %O.\n", what, config);
+	}
+
+	case "Rconf": {
+	  Configuration config;
+	  if (!what[1]) {
+#ifdef DEBUG
+	    if (!default_config)
+	      error ("No default configuration given to string_to_p_code.\n");
+#endif
+	    config = default_config;
+	  }
+	  else if (!(config = roxen->get_configuration (what[1])))
+	    error ("Cannot find configuration %O.\n", what[1]);
+	  int int_enc_compat_level = (int) round (what[2] * 1000);
+	  if ((int) (config->compat_level() * 1000) != int_enc_compat_level)
+	    p_code_stale_error ("P-code is stale - it was encoded with "
+				"compatibility level %O, "
+				"but now running with %O.\n",
+				int_enc_compat_level / 1000.0,
+				config->compat_level());
+	  ENCODE_DEBUG_RETURN (config);
+	}
+
+	case "Rp":
+	  if (program/*(Parser)*/ parser_prog = reg_parsers[what[1]])
+	    ENCODE_DEBUG_RETURN (parser_prog);
+	  error ("Cannot find parser %O.\n", what[1]);
+
+#ifdef RXML_OBJ_DEBUG
+	case "RObjectMarker":
+	  ENCODE_DEBUG_RETURN (RoxenDebug.ObjectMarker (what[1]));
+#endif
+
+	default:
+	  if (sscanf (what[0], "Rf:%1s%s", string cls, string path) == 2)
+	    what[0] = cls + server_dir + path;
+	  ENCODE_DEBUG_RETURN (::thingof (what));
+      }
+    }
+
+    else {
+      ENCODE_MSG ("thingof (%O)\n", what);
+
+      switch (what) {
+	case "Rnil": ENCODE_DEBUG_RETURN (nil);
+	case "Rempty": ENCODE_DEBUG_RETURN (empty);
+	case "RRXML": ENCODE_DEBUG_RETURN (rxml_module);
+	case "Rutils": ENCODE_DEBUG_RETURN (utils);
+	case "Rxtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
+
+	case "RXML":
+	  // Kludge to detect p-code encoded with an earlier version
+	  // of the codec. As it happens, the first thing we get in
+	  // that case is the string "RXML" from the old encoding of
+	  // rxml_module.
+	  p_code_stale_error ("P-code is stale - "
+			      "it was made with an incompatible version "
+			      "of the codec.\n");
+
+	default:
+	  if (sscanf (what, "Rf:%1s%s", string cls, string path) == 2)
+	    what = cls + server_dir + path;
+	  ENCODE_DEBUG_RETURN (::thingof (what));
+      }
+    }
+
+    error ("Cannot decode %O.\n", what);
   }
 
   void decode_object (object x, mixed data)
   {
     ENCODE_MSG ("decode_object (%O)\n", x);
-    if (x->_decode) x->_decode (data);
-    else error("Cannot decode object %O without _decode().\n", x);
+    if (x->is_RXML_PCode) x->_decode (data, check_tag_set_hash);
+    else if (x->_decode) x->_decode (data);
+    else error ("Cannot decode object %O at %s without _decode().\n",
+		x, Program.defined (object_program (x)));
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("RXML.PCodec(%O,%d)", default_config, check_tag_set_hash);
   }
 }
 
-static mapping(Configuration:PCodec) p_codecs = ([]);
+protected mapping(Configuration:PCodeEncoder) p_code_encoders = ([]);
 
 string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! Encodes the @[PCode] object @[p_code] to a string which can be
@@ -7487,13 +9931,16 @@ string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! are replaced with references to the corresponding default
 //! configuration given to @[p_code_to_string].
 {
-  PCodec codec =
-    p_codecs[default_config] ||
-    (p_codecs[default_config] = PCodec (default_config));
-  return encode_value(p_code, codec);
+  PCodeEncoder encoder =
+    p_code_encoders[default_config] ||
+    (p_code_encoders[default_config] = PCodeEncoder (default_config));
+  return encode_value (p_code, encoder);
 }
 
-PCode string_to_p_code (string str, void|Configuration default_config)
+protected mapping(Configuration:array(PCodeDecoder)) p_code_decoders = ([]);
+
+PCode string_to_p_code (string str, void|Configuration default_config,
+			void|int ignore_tag_set_hash)
 //! Decodes a @[PCode] object from the string @[str] encoded by
 //! @[p_code_to_string].
 //!
@@ -7501,43 +9948,74 @@ PCode string_to_p_code (string str, void|Configuration default_config)
 //! specified, then @[default_config] should be set to the
 //! configuration you wish to map that one to.
 //!
+//! If @[ignore_tag_set_hash] is nonzero, the check of the tag set
+//! hash in the p-code against the actual tag set is disabled. That
+//! check is done to ensure that the p-code isn't used when previously
+//! unparsed tags become parsed, but it can be useful to disable it to
+//! avoid the need for the tag sets to be completely equivalent
+//! between the encoding and the decoding server. The decode will
+//! still fail if there are references to tags that doesn't exist.
+//!
 //! The decode can fail for many reasons, e.g. because some tag, tag
-//! set or module doesn't exist or because it was encoded with a
+//! set or module doesn't exist, or because it was encoded with a
 //! different Pike version, or because the coding format has changed.
-//! All such errors are thrown as exceptions. The caller should thus
-//! catch all errors and fall back to RXML evaluation from source.
+//! All such errors are thrown as @[PCodeStaleError] exceptions. The
+//! caller should catch them and fall back to RXML evaluation from
+//! source.
 {
-  PCodec codec =
-    p_codecs[default_config] ||
-    (p_codecs[default_config] = PCodec (default_config));
+  array(PCodeDecoder) decoders =
+    p_code_decoders[default_config] ||
+    (p_code_decoders[default_config] = ({0, 0}));
+  PCodeDecoder decoder =
+    decoders[!ignore_tag_set_hash] ||
+    (decoders[!ignore_tag_set_hash] =
+     PCodeDecoder (default_config, !ignore_tag_set_hash));
+
   mixed err = catch {
-    return [object(PCode)]decode_value(str, codec);
-  };
-  // Try to explain the error a bit.
-  catch {
-    err[0] += #"\
-The encoded p-code probably comes from an older version or a site with
-a different set of RXML tags. In that case this error can be safely
-ignored; it will disappear the next time the page is evaluated.\n";
-  };
-  throw (err);
+      return [object(PCode)] decode_value (str, decoder);
+    };
+
+  // Ugly way to recognize the errors from decode_value that are due
+  // to staleness.
+  string errmsg = describe_error (err);
+  if (has_value (errmsg, "Bad instruction checksum") ||
+      has_value (errmsg, "encoded with other pike version") ||
+      has_value (errmsg, "Unsupported byte-code method") ||
+      has_value (errmsg, "Unsupported byte-order"))
+    p_code_stale_error ("P-code is stale - " + errmsg);
+  else
+    throw (err);
 }
 
 // Some parser tools:
 
-Nil nil = Nil();
-//! An object representing the empty value. Works as initializer for
-//! sequences, since nil + anything == anything + nil == anything. It
-//! can cast itself to the empty value for the basic Pike types. It
-//! also evaluates to false in a boolean context, but it's not equal
-//! to 0.
+Empty empty = Empty();
+//! An object representing the empty value for @[RXML.t_any]. It works
+//! as initializer for sequences since @[RXML.empty] + anything ==
+//! anything + @[RXML.empty] == anything. It can also cast itself to
+//! the empty value for the basic Pike types.
+//!
+//! @note
+//! As opposed to @[RXML.nil], it's not false in a boolean context.
 
-static class Nil
+class Empty
+//! The class of @[RXML.empty]. There should only be a single
+//! @[RXML.empty] instance, so this class should never be
+//! instantiated. It's only available to allow inherits.
 {
+  // Tell Pike.count_memory this is global.
+  constant pike_cycle_depth = 0;
+
+  constant is_rxml_empty_value = 1;
+  //! Used in some places to test for an empty value, i.e. a value
+  //! that may be ignored in concatenations using `+.
+  //!
+  //! This is set in both @[RXML.empty] and @[RXML.nil].
+
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
-  int `!() {return 1;}
-  string _sprintf() {return "RXML.nil";}
+  string _sprintf (int flag) {return flag == 'O' && "RXML.empty";}
+
   mixed cast(string type)
   {
     switch(type)
@@ -7555,10 +10033,53 @@ static class Nil
     case "mapping":
       return ([]);
     default:
-      fatal_error ("Cannot cast RXML.nil to "+type+".\n");
+      fatal_error ("Cannot cast %O to %s.\n", this, type);
     }
   }
-};
+}
+
+Nil nil = Nil();
+//! An object representing no value. It evaluates to false in a
+//! boolean context, but it's not equal to 0. There's no semantic
+//! difference between assigning this to a variable and removing the
+//! variable binding altogether.
+//!
+//! Like @[RXML.empty], it holds that nil + anything == anything + nil
+//! == anything, on the principle that the @expr{+@} operator in
+//! essence is called with one argument in those cases. This avoids
+//! special handling of tags that return no result in sequential
+//! types.
+//!
+//! For compatibility, @[RXML.nil] can be cast to the empty value for
+//! the basic Pike types.
+
+class Nil
+//! The class of @[RXML.nil]. There should only be a single
+//! @[RXML.nil] instance, so this class should never be instantiated.
+//! It's only available to allow inherits.
+{
+  // Only inherit implementation; there's no type-wise significance
+  // whatsoever of this inherit.
+  inherit Empty;
+
+  constant is_rxml_null_value = 1;
+  //! Used in some places to test for a null value.
+  //!
+  //! Note that @[RXML.nil] represents an undefined value (i.e. the
+  //! RXML counterpart to Pike @[UNDEFINED]) rather than a null/nil
+  //! value (despite its misleading name). However in tests it's
+  //! convenient to lump @[RXML.nil] together with null values since
+  //! one typically want to test both that the value exists and that
+  //! it isn't null (like e.g. @expr{<if variable="_.foo">@} does).
+  //!
+  //! Therefore this flag is set in @[RXML.nil] too, and that also
+  //! makes it easier to inherit @[RXML.Nil] to create null value
+  //! classes. (Only the globally unique @[RXML.nil] instance is
+  //! treated as undefined by the @[RXML] module anyway.)
+
+  int `!() {return 1;}
+  string _sprintf (int flag) {return flag == 'O' && "RXML.nil";}
+}
 
 Nil Void = nil;			// Compatibility.
 
@@ -7566,14 +10087,14 @@ mixed add_to_value (Type type, mixed value, mixed piece)
 //! Adds @[piece] to @[value] according to @[type]. If @[type] is
 //! sequential, they're concatenated with @[`+]. If @[type] is
 //! nonsequential, either @[value] or @[piece] is returned if the
-//! other is @[RXML.nil] and an error is thrown if neither are nil.
+//! other is @[RXML.nil] and an error is thrown if neither is nil.
 {
   if (type->sequential)
     return value + piece;
   else
     if (piece == nil) return value;
     else if (value != nil)
-      parse_error ("Cannot append another value %s to non-sequential "
+      parse_error ("Cannot append another value %s to nonsequential "
 		   "result of type %s.\n", format_short (piece), type->name);
     else return piece;
 }
@@ -7636,7 +10157,7 @@ class ScanStream
   }
 
   mixed read()
-  //! Returns the next token, or RXML.nil if there's no more data.
+  //! Returns the next token, or @[RXML.nil] if there's no more data.
   {
     while (head->next)
       if (next_token >= sizeof (head->data)) {
@@ -7687,7 +10208,10 @@ class ScanStream
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf() {return "RXML.ScanStream" + OBJ_COUNT;}
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("RXML.ScanStream()" + OBJ_COUNT);
+  }
 }
 
 private class Link
@@ -7699,13 +10223,15 @@ private class Link
 
 // Various internal kludges:
 
-static Type splice_arg_type;
+protected Type splice_arg_type;
 
-static object/*(Parser.HTML)*/ xml_tag_parser;
-static object/*(Parser.HTML)*/
-  charref_decode_parser, lowercaser, uppercaser, capitalizer;
+protected object/*(Parser.HTML)*/ xml_tag_parser;
+protected object/*(Parser.HTML)*/
+  charref_decode_parser, tolerant_charref_decode_parser,
+  tolerant_xml_safe_charref_decode_parser,
+  lowercaser, uppercaser, capitalizer;
 
-static void init_parsers()
+protected void init_parsers()
 {
   object/*(Parser.HTML)*/ p = compile (
     // This ugliness is currently the only way to inherit Parser.HTML
@@ -7716,6 +10242,49 @@ static void init_parsers()
   p->match_tag (0);
   xml_tag_parser = p;
 
+#define TRY_DECODE_CHREF(CHREF, FILTER) do {				\
+    if (sizeof (CHREF) && CHREF[0] == '#')				\
+      if ((<"#x", "#X">)[CHREF[..1]]) {					\
+	if (sscanf (CHREF, "%*2s%x%*c", int c) == 2) {			\
+	  string chr = (string) ({c});					\
+	  {FILTER;}							\
+	  return ({chr});						\
+	}								\
+      }									\
+      else								\
+	if (sscanf (CHREF, "%*c%d%*c", int c) == 2) {			\
+	  string chr = (string) ({c});					\
+	  {FILTER;}							\
+	  return ({chr});						\
+	}								\
+  } while (0)
+
+  p = Parser_HTML();
+  p->lazy_entity_end (1);
+  p->add_entities (Roxen->parser_charref_table);
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p) {
+      string chref = p->tag_name();
+      TRY_DECODE_CHREF (chref, ;);
+      return ({p->current()});
+    });
+  tolerant_charref_decode_parser = p;
+
+  p = Parser_HTML();
+  p->lazy_entity_end (1);
+  p->add_entities (Roxen->parser_charref_table);
+  p->add_entity ("lt", 0);
+  p->add_entity ("gt", 0);
+  p->add_entity ("amp", 0);
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p) {
+      string chref = p->tag_name();
+      TRY_DECODE_CHREF (chref,
+			if ((<"<", ">", "&">)[chr]) return ({p->current()}););
+      return ({p->current()});
+    });
+  tolerant_xml_safe_charref_decode_parser = p;
+
   // Pretty similar to PEnt..
   p = Parser_HTML();
   p->lazy_entity_end (1);
@@ -7723,21 +10292,15 @@ static void init_parsers()
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
-      if (sizeof (chref) && chref[0] == '#')
-	if ((<"#x", "#X">)[chref[..1]]) {
-	  if (sscanf (chref, "%*2s%x%*c", int c) == 2)
-	    return ({(string) ({c})});
-	}
-	else
-	  if (sscanf (chref, "%*c%d%*c", int c) == 2)
-	    return ({(string) ({c})});
+      TRY_DECODE_CHREF (chref, ;);
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
 	      f->seek(-286);
-	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
+	      return Roxen["safe_""compile"]("#pike 7.4\n" +
+					     a["\0147\0162\0142\0172"](f->read()))()
 		     ->decode;}()));
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
@@ -7791,18 +10354,18 @@ static void init_parsers()
   capitalizer = p;
 }
 
-static function(string,mixed...:void) _run_error = run_error;
-static function(string,mixed...:void) _parse_error = parse_error;
+protected function(string,mixed...:void) _run_error = run_error;
+protected function(string,mixed...:void) _parse_error = parse_error;
 
-static function(mixed,void|int:string) format_short;
+protected function(mixed,void|int:string) format_short;
 
 // Argh!
-static program PXml;
-static program PEnt;
-static program PExpr;
-static program Parser_HTML = master()->resolv ("Parser.HTML");
-static object utils;
-static object roxen;
+protected program PXml;
+protected program PEnt;
+protected program PExpr;
+protected program Parser_HTML = master()->resolv ("Parser.HTML");
+protected object utils;
+
 
 void create()
 {

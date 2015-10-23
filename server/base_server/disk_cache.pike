@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.61 2001/06/17 20:07:09 nilsson Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 #include <config.h>
 #include <module_constants.h>
@@ -123,9 +123,8 @@ class CacheStream ( Stdio.File file, string fname, int new )
 
   int load_headers()
   {
-    string head, roxenhead;
+    string head;
     mixed err;
-    int size;
 
      // no initial seek needed if load_headers is called first after open
 
@@ -626,7 +625,6 @@ void rmold(string fname)
 void default_check_cache_file(CacheStream stream)
 {
   if (QUERY(cache)) {
-    int s;
     Stat stat = stream->file->stat();
 
     rmold(stream->rfiledone);
@@ -659,7 +657,6 @@ void http_check_cache_file(CacheStream cachef)
 {
   if(!cachef->file) RETURN();
   Stat stat = cachef->file->stat();
-  int i;
   /*  soo..  Lets check if this is a file we want to keep. */
   /*  Initial screening is done in the proxy module. */
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();

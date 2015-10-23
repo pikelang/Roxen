@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.39 2001/03/05 23:34:40 nilsson Exp $";
+string cvs_version = "$Id$";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.39 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.43 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -305,7 +305,7 @@ class Request {
 
     foreach (dir-({""}),f)
     {
-      string filename,date,link,type;
+      string filename,date,type;
       int size, offset;
       for (offset=0; (f[date_position+offset]!=' ')&&
 	     (strlen(f) > date_position+offset+14); offset++) ;
@@ -390,7 +390,7 @@ class Request {
 
     foreach (dir-({""}),f)
     {
-      string filename,date,link,type;
+      string filename,date,type;
       int size;
 
       for (i=strlen(f)-12; i>2; i--)
@@ -517,7 +517,6 @@ class Request {
       res=links[0];
       while (res[0..2]=="../"||res=="..")
       {
-	string s;
 	res=res[3..];
 	if (file!="/") file=((file/"/")[0..sizeof(file/"/")-3])*"/"+"/";
       }
@@ -565,7 +564,6 @@ class Request {
   {
     object pipe;
     array(string) type;
-    string stype;
     array tmp;
 
     if (getting_list)
@@ -1236,7 +1234,6 @@ string status()
 {
   string res="";
   object foo;
-  int total;
 
   res += "<h2>Current connections: "+sizeof(requests-(<0>))+"</h2>";
   foreach( indices(requests), foo )
@@ -1255,7 +1252,6 @@ string status()
 
 string process_request(object id, int is_remote)
 {
-  string url;
   if(!id) return 0;
 }
 

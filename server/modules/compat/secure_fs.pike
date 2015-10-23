@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.27 2001/05/16 07:31:57 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -40,7 +40,7 @@ array seclevels = ({ });
 
 void start()
 {
-  string sl, sec;
+  string sl;
   array new_seclevels = ({});
 
   foreach(replace(query("sec"),({" ","\t","\\\n"}),({"","",""}))/"\n", sl)
@@ -184,7 +184,7 @@ mixed not_allowed(string f, object id)
 					      id->conf->query("MyWorldLocation")})));
 
 	   } else {
-	     return Roxen.http_auth_required("user");
+	     return Roxen.http_auth_required("user", 0, id);
 	   }
 	 }
 	 foreach(level[2]/",", uname) {
@@ -203,7 +203,7 @@ mixed not_allowed(string f, object id)
 				     ({id->not_query,
 				       id->conf->query("MyWorldLocation")})));
     } else {
-      return Roxen.http_auth_required("user");
+      return Roxen.http_auth_required("user", 0 , id);
     }
   }
   return  1;
@@ -243,7 +243,7 @@ mixed find_file(string f, object id)
   if (!id->misc->moreheads) id->misc->moreheads = ([]);
   id->misc->moreheads["Set-Cookie"] =
     "httpauth="+
-    Roxen.http_encode_string(sprintf("%s:%s:%d", user||"", pass||"", time(1)))+
+    Roxen.http_encode_cookie(sprintf("%s:%s:%d", user||"", pass||"", time(1)))+
     "; path=/";
   return tmp2;
 }

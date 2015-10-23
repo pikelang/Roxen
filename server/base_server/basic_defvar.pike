@@ -1,6 +1,8 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.29 2001/08/23 18:04:01 nilsson Exp $
+// Copyright © 2000 - 2009, Roxen IS.
+// $Id$
+
+//! @appears BasicDefvar
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -36,6 +38,15 @@ void set(string var, mixed value)
     report_error( "Setting undefined variable: "+var+".\n" );
   else
     variables[var]->set( value );
+}
+
+void low_set(string var, mixed value)
+//! Set the variable 'var' to the specified value without any checking.
+{
+  if(!variables[var]) 
+    report_error( "Setting undefined variable: "+var+".\n" );
+  else
+    variables[var]->low_set( value );
 }
 
 int killvar(string var)
@@ -240,11 +251,12 @@ mixed query(string|void var, int|void ok)
   return variables;
 }
 
-void definvisvar(string name, mixed value, int type, array|void misc)
+Variable.Variable definvisvar(string name, mixed value, int type,
+			      array|void misc)
 //! Convenience function, define an invisible variable, this variable
 //! will be saved, but it won't be visible in the administration interface.
 {
-  defvar(name, value, "", type, "", misc, lambda(){return 1;} );
+  return defvar(name, value, "", type, "", misc, lambda(){return 1;} );
 }
 
 void save();

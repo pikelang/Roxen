@@ -1,9 +1,9 @@
-// Associates a name with an SQL-database. Copyright © 1997 - 2001, Roxen IS.
+// Associates a name with an SQL-database. Copyright © 1997 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.4 2001/07/01 17:01:03 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_ZERO;
 constant module_name = "DEPRECATED: SQL databases";
 constant module_doc  =

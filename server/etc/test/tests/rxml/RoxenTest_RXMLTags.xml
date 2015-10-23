@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
 <!-- ............................................................ -->
 <comment>Config image</comment>
 <test>
@@ -41,15 +43,40 @@
 <result>h</result>
 </test>
 
-<!test>
+<no-test>
 <rxml><set variable='var.a' value="x"/>&var.a;<insert file="test1.html"/>&var.a;</rxml>
 <result>xayx</result>
-</!test>
+</no-test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="1">
+      <insert source="variables" scope="_"/>
+    </emit>
+  </rxml>
+  <equal>({
+    ([ "a":"kex",  "b":"foo",    "c":1, "d":"12foo",   "e":"-8",  "f": "0",    "counter": 1]),
+    ([ "a":"kex",  "b":"boo",    "c":2, "d":"foo",     "e":"8",   "f": "-6.4", "counter": 2]),
+    ([ "a":"krut", "b":"gazonk", "c":3, "d":"5foo33a", "e":"11",  "f": "1e6",  "counter": 3]),
+    ([ "a":"kox",                "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23", "counter": 4])
+  })</equal>
+</test>
+
+<test>
+  <rxml type="mapping">
+    <emit source="TESTER" test="1">
+      <insert source="variables" scope="_"/>
+    </emit>
+  </rxml>
+  <equal>
+    ([ "a":"kox",  "b":"gazonk", "c":4, "d":"5foo4a",  "e":"-11", "f": "0.23", "counter": 4])
+  </equal>
+</test>
 
 
 <!-- ............................................................ -->
 <comment>Autoformat</comment>
-<test>
+<test no-strip-ws="">
 <rxml><autoformat>abc
 abc
 
@@ -62,7 +89,7 @@ abc<br />
 c</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><autoformat p>abc
 abc
 
@@ -75,7 +102,7 @@ abc
 c</p></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><autoformat p nobr>abc
 abc
 
@@ -88,7 +115,7 @@ abc
 c</p></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><autoformat p class=x>abc
 abc
 
@@ -101,7 +128,7 @@ abc
 c</p></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><autoformat p nobr class=x>abc
 abc
 
@@ -114,6 +141,55 @@ abc
 c</p></result>
 </test>
 
+<test no-strip-ws="">
+  <rxml><autoformat p="">1234</autoformat></rxml>
+  <result><p>1234</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p="">123</autoformat></rxml>
+  <result><p>123</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p>123</autoformat></rxml>
+  <result><p>123</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p/>123</autoformat></rxml>
+  <result><p /><p>123</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p></p>123</autoformat></rxml>
+  <result><p /><p>123</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p="">12<p>34</autoformat></rxml>
+  <result><p>12</p><p>34</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p="">12<p/>34</autoformat></rxml>
+  <result><p>12</p><p/><p>34</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p>12</p><p>34</p></autoformat></rxml>
+  <result><p>12</p><p>34</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p>12</p> <!-- foo --> <p>34</p></autoformat></rxml>
+  <result><p>12</p> <!-- foo --> <p>34</p></result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><autoformat p=""><p>12</p>34</autoformat></rxml>
+  <result><p>12</p><p>34</p></result>
+</test>
 
 <!-- ............................................................ -->
 <comment>Catch/throw</comment>
@@ -134,6 +210,26 @@ e</result>
 <test>
 <rxml><set variable='var.foo'>bar</set>x&var.foo;</rxml>
 <result>xbar</result>
+</test>
+
+<test>
+<rxml><set>hej</set></rxml>
+<result>[Error (parse): Required argument variable is missing.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="int"/>
+  </rxml>
+  <glob>[Error (parse): The value is missing for non-sequential type*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="string"/>
+    &var.x;
+  </rxml>
+  <result></result>
 </test>
 
 <test>
@@ -173,6 +269,29 @@ e</result>
 <result>123</result>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.y" value=""/>
+    <set variable="var.x">q &var.y;</set>
+    &var.x;
+  </rxml>
+  <glob>[Error (parse): Cannot append another value * to non-sequential type *]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo">blah <p>bleh</p></set>
+  </rxml>
+  <glob>[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo" type="any">blah <p>bleh</p></set>
+  </rxml>
+  <glob not="">[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Smallcaps text</comment>
@@ -191,7 +310,7 @@ e</result>
 <result><big class="a">A</big><small class="a">A</small></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><smallcaps space>a a A A</smallcaps></rxml>
 <result><small>A&nbsp; A&nbsp; </small><big>A&nbsp;</big><small> </small><big>A&nbsp;</big></result>
 </test>
@@ -226,9 +345,14 @@ e</result>
 <result><big class="b">A</big><small class="c">A</small></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><smallcaps>aAa Aa</smallcaps></rxml>
 <result><small>A</small><big>A</big><small>A </small><big>A</big><small>A</small></result>
+</test>
+
+<test>
+  <rxml><set variable="var.foo"/>&var.foo;</rxml>
+  <result></result>
 </test>
 
 
@@ -290,7 +414,7 @@ e</result>
 <result>&lt;b&gt;</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><doc pre quote class=n><b></doc></rxml>
 <result>
 <pre class="n">&lt;b&gt;</pre>
@@ -307,21 +431,21 @@ e</result>
 <result>&lt;b&gt;</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><doc pre>{b}</doc></rxml>
 <result>
 <pre>&lt;b&gt;</pre>
 </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><doc pre class=m>{b}</doc></rxml>
 <result>
 <pre class="m">&lt;b&gt;</pre>
 </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><doc pre quote><b></doc></rxml>
 <result>
 <pre>&lt;b&gt;</pre>
@@ -394,6 +518,11 @@ e</result>
 <test>
 <rxml><maketag type="cdata"> hej </maketag></rxml>
 <result><![CDATA[ hej ]]></result>
+</test>
+
+<test>
+  <rxml><maketag name="x" type="tag"><attrib name="y"/></maketag></rxml>
+  <result><x y=""/></result>
 </test>
 
 
@@ -507,29 +636,537 @@ e</result>
 
 <!-- ............................................................ -->
 <comment>Append</comment>
+
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.bar' value='y'/>&var.bar;</rxml>
-<result>y</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.bar' value='y'/>
+    &var.bar;
+  </rxml>
+  <result>y</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><set variable='var.bar' value='baz'/><append variable='var.foo' from='var.bar'/>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <set variable='var.bar' value='baz'/>
+    <append variable='var.foo' from='var.bar'/>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'/>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.foo' value='baz'/>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'></append>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.foo' value='baz'></append>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable="var.foo">disk</append>&var.foo;</rxml>
-<result>bardisk</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable="var.foo">disk</append>
+    &var.foo;
+  </rxml>
+  <result>bardisk</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"17", 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 35 prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 35 prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="string">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="string"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="string"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" type="int">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" type="int">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to text/plain: *]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="array">18</set>
+    <?comment Compat difference: The following produced ({"17", "18"})
+      before 5.0 since the content type always was RXML.t_any instead of
+      adapted from the variable. ?>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to string: *]
+    17</glob>
+</test>
+
+<test>
+  <rxml>
+    <?comment Compat difference: Produced ({"17", "18"}) prior to 5.0. ?>
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to string: *]
+    17</glob>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo" type="array">disk</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", "disk"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo">disk</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", "disk"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced ({"a","b","c","a","b","c"}) prior
+	 to 5.0. -->
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo" type="any">&var.foo;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", ({"a", "b", "c"})})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <append variable="var.foo" value="x" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
+    <append variable="var.foo" value="1" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({1})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
+    <append variable="var.foo" value="x" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="array"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
 </test>
 
 
@@ -565,6 +1202,1027 @@ e</result>
 <result>abc</result>
 </test>
 
+<test>
+  <rxml>
+    <set variable="form.foo" split=",">a,b,c</set>
+    <replace from="&#x0;" to=":">&form.foo;</replace><br/>
+    <replace from="&#0;" to=":">a&#0;b&#x0;c</replace><br/>
+    <replace from=":" to="&#x0;">a:b:c</replace>
+  </rxml>
+  <result>
+    a:b:c<br/>
+    a:b:c<br/>
+    a&#0;b&#0;c
+  </result>
+</test>
+
+<test no-strip-ws="">
+  <rxml><replace from="a,å,ä" to="å,ä,a" type="words">
+    <foo arg="abcåäö">
+      abcåäö
+      <bar arg="abc&aring;&auml;&ouml;"/>
+      abc&aring;&auml;&ouml;
+    </foo>
+  </replace></rxml>
+  <result>
+    <foo årg="åbcäaö">
+      åbcäaö
+      <bår årg="åbcäaö"/>
+      åbcäaö
+    </foo>
+  </result>
+</test>
+
+<test>
+  <rxml><replace from="x" to="&lt;x>">xx</replace></rxml>
+  <result><x><x></result>
+</test>
+
+<test>
+  <rxml><replace from="x" to="y"><br/>&lt;br/&gt;&amp;
+&#33;&#34;&#35;&#36;&#37;&#38;&#39;&#59;&#60;&#61;&#62;</replace></rxml>
+  <result><br/>&lt;br/&gt;&amp;
+!"#$%&#38;';&#60;=&#62;</result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>substring</comment>
+
+<test>
+  <rxml>
+    [<substring from="2" to="4">a b c </substring>]
+    [<substring from="4" to="2">a b c </substring>]
+    [<substring from="-4" to="-2">a b c </substring>]
+    [<substring from="-2" to="-4">a b c </substring>]
+    [<substring from="2" to="-4">a b c </substring>]
+    [<substring from="-4" to="2">a b c </substring>]
+    [<substring from="-4" to="5">a b c </substring>]
+    [<substring from="5" to="-4">a b c </substring>]
+  </rxml>
+  <result>
+    [ b ]
+    []
+    [b c]
+    []
+    [ b]
+    []
+    [b c]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="2">a b c </substring>]
+    [<substring from="-2">a b c </substring>]
+    [<substring to="4">a b c </substring>]
+    [<substring to="-4">a b c </substring>]
+    [<substring>a b c </substring>]
+  </rxml>
+  <result>
+    [ b c ]
+    [c ]
+    [a b ]
+    [a b]
+    [a b c ]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring index="-17">a b c </substring>]
+    [<substring index="-2">a b c </substring>]
+    [<substring index="2">a b c </substring>]
+    [<substring index="17">a b c </substring>]
+  </rxml>
+  <result>
+    []
+    [c]
+    [ ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="17">a b c </substring>]
+    [<substring from="-17">a b c </substring>]
+    [<substring to="17">a b c </substring>]
+    [<substring to="-17">a b c </substring>]
+    [<substring from="17" to="4711">a b c </substring>]
+    [<substring from="-17" to="4711">a b c </substring>]
+    [<substring from="17" to="-4711">a b c </substring>]
+    [<substring from="-17" to="-4711">a b c </substring>]
+    [<substring from="4711" to="17">a b c </substring>]
+    [<substring from="-4711" to="17">a b c </substring>]
+    [<substring from="4711" to="-17">a b c </substring>]
+    [<substring from="-4711" to="-17">a b c </substring>]
+  </rxml>
+  <result>
+    []
+    [a b c ]
+    [a b c ]
+    []
+    []
+    [a b c ]
+    []
+    []
+    []
+    [a b c ]
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2" to="4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4" to="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="-2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-2" to="-4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="2" to="-4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="5">a, b, c, d, e, </substring>]
+    [<substring separator="," from="5" to="-4">a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    [ b, c, d]
+    []
+    [ c, d, e]
+    []
+    [ b, c]
+    []
+    [ c, d, e]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-2">a, b, c, d, e, </substring>]
+    [<substring separator="," to="4">a, b, c, d, e, </substring>]
+    [<substring separator="," to="-4">a, b, c, d, e, </substring>]
+    [<substring>a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    [ b, c, d, e, ]
+    [ e, ]
+    [a, b, c, d]
+    [a, b, c]
+    [a, b, c, d, e, ]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," to="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="17" to="4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17" to="4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="17" to="-4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17" to="-4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4711" to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4711" to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4711" to="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4711" to="-17">a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, b, c, d, e, ]
+    [a, b, c, d, e, ]
+    []
+    []
+    [a, b, c, d, e, ]
+    []
+    []
+    []
+    [a, b, c, d, e, ]
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="go">To go or not to goto.</substring>]
+    [<substring after="go" from="1">To go or not to goto.</substring>]
+    [<substring after="go" from="2">To go or not to goto.</substring>]
+    [<substring after="go" from="3">To go or not to goto.</substring>]
+    [<substring after="go" from="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-2">To go or not to goto.</substring>]
+    [<substring after="go" from="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ or not to goto.]
+    [ or not to goto.]
+    [to.]
+    []
+    [to.]
+    [ or not to goto.]
+    [To go or not to goto.]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring before="go">To go or not to goto.</substring>]
+    [<substring before="go" to="1">To go or not to goto.</substring>]
+    [<substring before="go" to="2">To go or not to goto.</substring>]
+    [<substring before="go" to="3">To go or not to goto.</substring>]
+    [<substring before="go" to="-1">To go or not to goto.</substring>]
+    [<substring before="go" to="-2">To go or not to goto.</substring>]
+    [<substring before="go" to="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [To ]
+    [To ]
+    [To go or not to ]
+    [To go or not to goto.]
+    [To go or not to ]
+    [To ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="go" before="to">To go or not to goto.</substring>]
+    [<substring after="to" before="go">To go or not to goto.</substring>]
+    x
+    [<substring after="go" before="go">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="2" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="-1" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="-2" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="-2">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ or not ]
+    []
+    x
+    []
+    [ or not to ]
+    [ or not to ]
+    []
+    x
+    []
+    []
+    []
+    []
+    x
+    []
+    []
+    []
+    []
+    x
+    []
+    [ or not to ]
+    [ or not to ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="to" to="3">To go or not to goto.</substring>]
+    [<substring after="to" to="-3">To go or not to goto.</substring>]
+    [<substring after="to" from="2" to="3">To go or not to goto.</substring>]
+    [<substring after="to" from="2" to="-3">To go or not to goto.</substring>]
+    [<substring after="to" from="-1" to="3">To go or not to goto.</substring>]
+    [<substring after="to" from="-1" to="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [ got]
+    []
+    []
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="15" before="to">To go or not to goto.</substring>]
+    [<substring from="-15" before="to">To go or not to goto.</substring>]
+    [<substring from="15" before="to" to="2">To go or not to goto.</substring>]
+    [<substring from="-15" before="to" to="2">To go or not to goto.</substring>]
+    [<substring from="15" before="to" to="-1">To go or not to goto.</substring>]
+    [<substring from="-15" before="to" to="-1">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [or not ]
+    [o go]
+    [or not to go]
+    [o go]
+    [or not to go]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to">To go or not to goto.</substring>]
+    [<substring separator="to" from="-4">To go or not to goto.</substring>]
+    [<substring separator="to" from="-3">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2">To go or not to goto.</substring>]
+    [<substring separator="to" from="3">To go or not to goto.</substring>]
+    [<substring separator="to" from="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [To go or not to goto.]
+    [To go or not to goto.]
+    [To go or not to goto.]
+    [ goto.]
+    [.]
+    [To go or not to goto.]
+    [ goto.]
+    [.]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" to="-4">To go or not to goto.</substring>]
+    [<substring separator="to" to="-3">To go or not to goto.</substring>]
+    [<substring separator="to" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" to="2">To go or not to goto.</substring>]
+    [<substring separator="to" to="3">To go or not to goto.</substring>]
+    [<substring separator="to" to="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [To go or not ]
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not ]
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not to goto.]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" from="-2" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="-1" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="1" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="2" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="2">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ go]
+    [ goto.]
+    []
+    [ go]
+    x
+    []
+    [.]
+    []
+    []
+    x
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not ]
+    [To go or not to go]
+    x
+    [ go]
+    [ goto.]
+    []
+    [ go]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" index="-4">To go or not to goto.</substring>]
+    [<substring separator="to" index="-2">To go or not to goto.</substring>]
+    [<substring separator="to" index="-1">To go or not to goto.</substring>]
+    [<substring separator="to" index="1">To go or not to goto.</substring>]
+    [<substring separator="to" index="2">To go or not to goto.</substring>]
+    [<substring separator="to" index="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [ go]
+    [.]
+    [To go or not ]
+    [ go]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," trimwhites="" index="2">1, 2
+	, 3</substring>]
+    [<substring separator=" " from="2" to="-2" trim-chars="go ">To go or not to goto.</substring>]
+    [<substring separator=" " from="2" to="-2" ignore-empty="" trim-chars="go ">To go or not to goto.</substring>]
+    [<substring trim-chars="^nt">To go or not to goto.</substring>]
+    [<substring trim-chars=" to." case-insensitive="">To Go Or Not To GotO.</substring>]
+  </rxml>
+  <result>
+    [2]
+    [ r not t]
+    [r not t]
+    [not to got]
+    [Go Or Not To G]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" from="2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [ , b:c,  d::e: f]
+    [ , b:c,  d::e: f]
+    [  d::e: f]
+    [  d::e: f]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" from="17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" to="17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" to="-17">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, , b:c,  d::e: f, ]
+    [a, , b:c,  d::e: f, ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="1">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [b:c,d::e: f]
+    [b:c]
+    [b:c,d::e: f]
+    [b:c]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" trimwhites="" from="2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" to="2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-4" to="2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [b:c,d::e: f]
+    [b:c,d::e: f]
+    [a,b:c]
+    [a,b:c]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2" before="::">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," from="2" ignore-empty="" trimwhites="" before="f">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," from="-1" ignore-empty="" trimwhites="" before="f">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after=", ," separator="," ignore-empty="" trimwhites="" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after=", ," separator="," ignore-empty="" trimwhites="" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [a,, , b:c,  d]
+    [b:c,d::e:]
+    [d::e:]
+    [b:c,d::e: f]
+    [b:c]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo" type="array">
+      <substring separator="" from="3">abcdef</substring>
+    </set>
+    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  </rxml>
+  <result>
+    [c,d,e,f,]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" from="6" to="9">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="6" to="-5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-8" to="9">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-8" to="-5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [ c,  d,,e ]
+    [ c,  d,]
+    [ b, c,  d,,e ]
+    [ b, c,  d,]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" from="5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="5" to="-3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-5" to="-3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [  d,e ]
+    [  d,e ]
+    [ c,  d,e ]
+    [ c,  d,e ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" from="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" to="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" to="-17">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, , b, c,  d,e , f, ]
+    [a, , b, c,  d,e , f, ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="-2">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-5" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-5" to="-2">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-2" to="3">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [c,d,e]
+    [c,d,e]
+    [b,c,d,e]
+    [b,c,d,e]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="-17">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a,b,c,d,e,f]
+    [a,b,c,d,e,f]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [c,d,e,f]
+    [c,d,e]
+    [a,b,c,d,e]
+    [d,e]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=":," from="6" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="8" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-6" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="4" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="6" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-3" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="3" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="5" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-3" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-2" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="4" ignore-empty="" trimwhites="" before=":" to="2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="4" ignore-empty="" trimwhites="" before=":" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" trimwhites="" before=":" to="2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" trimwhites="" before=":" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+  </rxml>
+  <result>
+    [ c:  d ]
+    []
+    [  d ]
+    []
+    x
+    [ c:  d ]
+    []
+    [ c:  d ]
+    []
+    x
+    [c:d]
+    []
+    [d]
+    []
+    x
+    [d]
+    [d]
+    [b:c:d]
+    [b:c:d]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="::" separator-chars=":," to="10">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="8">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="-5">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after="::" separator-chars=":," ignore-empty="" to="7">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="5">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="-4">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="4">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="-1">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after=":" from="2" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="-3" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="2" separator-chars=":," ignore-empty="" trimwhites="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="-3" separator-chars=":," ignore-empty="" trimwhites="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+  </rxml>
+  <result>
+    [e : f]
+    []
+    [e : f]
+    []
+    x
+    [e : f]
+    []
+    [e : f]
+    []
+    x
+    [e:f]
+    []
+    [e:f]
+    []
+    x
+    [e:f]
+    [e:f]
+    [e]
+    [e]
+  </result>
+</test>
+
+<test>
+  <rxml type="array">
+    <substring after=":" separator-chars=":," ignore-empty="" trimwhites="" to="6" result-array="">,a,, , b: c,  d ::e : f,, </substring>
+  </rxml>
+  <equal>({"c", "d", "e", "f"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <substring after=",," before="::"
+	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
+  </rxml>
+  <equal>({"b", "c", "d"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <substring after=",," before=",," to="-1"
+	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
+  </rxml>
+  <equal>({"b", "c", "d", "e", "f"})</equal>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" index="6">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" separator-whites="" to="4" join=":">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=" NT" case-insensitive="" join="--">To Go Or Not To GotO.</substring>]
+    [<substring separator-chars=" N" case-insensitive="" trim-chars="t" join="-">To Go Or Not To GotO.</substring>]
+    [<substring separator="" trim-chars=" NT" ignore-empty="" join="-">To Go Or Not To GotO.</substring>]
+    [<substring after="::" from="-2" before="::" to="2" separator-chars=":," ignore-empty="" trimwhites="">,a:: , b: c,  d ::e : f,, g</substring>]
+    [<substring after="::" from="-2" before="::" to="2" separator-chars=":," trimwhites="">,a:: , b: c,  d ::e : f,, g</substring>]
+  </rxml>
+  <result>
+    [c]
+    [a:b:c:d]
+    [--o--Go--Or----o------o--Go--O.]
+    [o-Go-Or--o-o-GotO.]
+    [o-G-o-O-r-o-t-o-G-o-t-O-.]
+    [b:c:d]
+    [:b:c:d]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" index="3">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" index="3">a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="3" before="::">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="3" before="::">a,, , b:c,  d::e: f,, </substring>]
+    [<substring after="::" separator-chars=",:" ignore-empty="" to="7">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after="::" separator-chars=",:" ignore-empty="" to="7">a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [ b]
+    [ b]
+    [ b,c,  d]
+    [ b,c,  d]
+    [e, f]
+    [e, f]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars="|,:;">a,b:c|f</substring>]
+    [<substring separator-whites="" join="">
+    Remove   all whitespace,
+	please. </substring>]
+    [<substring separator-whites="">
+    Normalize   all whitespace,
+	please. </substring>]
+    [<substring separator-chars="^0-9&lt;&gt;" join="">:bv&amp;a2de &lt;44&gt;:3</substring>]
+    [<substring separator="&auml;" case-insensitive="" join="-">Åäö åÄö å&auml;Ö</substring>]
+    [<substring separator="ä" case-insensitive="">Åäö åÄö å&auml;Ö</substring>]
+  </rxml>
+  <result>
+    [a|b|c|f]
+    [Removeallwhitespace,please.]
+    [Normalize all whitespace, please.]
+    [2<44>3]
+    [Å-ö å-ö å-Ö]
+    [Åäö åäö åäÖ]
+  </result>
+</test>
+
+<test>
+  <rxml type="any">
+    <substring separator-chars="/" index="-1"></substring>
+  </rxml>
+  <equal>""</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <substring separator-chars="/" index="-1" ignore-empty=""></substring>
+  </rxml>
+  <equal>""</equal>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>range</comment>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <range from="2" to="4" variable="var.x"/>
+  </rxml>
+  <equal>({"A", "b", "B"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <range to="2" variable="var.x"/>
+    <range from="-2" variable="var.x"/>
+  </rxml>
+  <equal>({"a", "A", "c", "C"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="4" to="2" variable="var.x"/></value>
+    <value><range from="-4" to="-2" variable="var.x"/></value>
+    <value><range from="-2" to="-4" variable="var.x"/></value>
+    <value><range from="2" to="-4" variable="var.x"/></value>
+    <value><range from="-4" to="2" variable="var.x"/></value>
+    <value><range from="-4" to="5" variable="var.x"/></value>
+    <value><range from="5" to="-4" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({"b", "B", "c"}),
+    ({}),
+    ({"A", "b"}),
+    ({}),
+    ({"b", "B", "c"}),
+    ({}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="2" variable="var.x"/></value>
+    <value><range from="-2" variable="var.x"/></value>
+    <value><range to="4" variable="var.x"/></value>
+    <value><range to="-4" variable="var.x"/></value>
+    <value><range variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"A", "b", "B", "c", "C"}),
+    ({"c", "C"}),
+    ({"a", "A", "b", "B"}),
+    ({"a", "A", "b"}),
+    ({"a", "A", "b", "B", "c", "C"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="17" variable="var.x"/></value>
+    <value><range from="-17" variable="var.x"/></value>
+    <value><range to="17" variable="var.x"/></value>
+    <value><range to="-17" variable="var.x"/></value>
+    <value><range from="17" to="4711" variable="var.x"/></value>
+    <value><range from="-17" to="4711" variable="var.x"/></value>
+    <value><range from="17" to="-4711" variable="var.x"/></value>
+    <value><range from="-17" to="-4711" variable="var.x"/></value>
+    <value><range from="4711" to="17" variable="var.x"/></value>
+    <value><range from="-4711" to="17" variable="var.x"/></value>
+    <value><range from="4711" to="-17" variable="var.x"/></value>
+    <value><range from="-4711" to="-17" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range after="bah" variable="var.x"/></value>
+    <value><range after="bah" from="1" variable="var.x"/></value>
+    <value><range after="bah" from="2" variable="var.x"/></value>
+    <value><range after="bah" from="3" variable="var.x"/></value>
+    <value><range after="bah" from="-1" variable="var.x"/></value>
+    <value><range after="bah" from="-2" variable="var.x"/></value>
+    <value><range after="bah" from="-3" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+    ({"bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "urp"}),
+    ({"feh", "urp"}),
+    ({"bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range before="feh" variable="var.x"/></value>
+    <value><range before="feh" to="1" variable="var.x"/></value>
+    <value><range before="feh" to="2" variable="var.x"/></value>
+    <value><range before="feh" to="3" variable="var.x"/></value>
+    <value><range before="feh" to="-1" variable="var.x"/></value>
+    <value><range before="feh" to="-2" variable="var.x"/></value>
+    <value><range before="feh" to="-3" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"bah"}),
+    ({"bah"}),
+    ({"bah", "feh"}),
+    ({"bah", "feh", "feh", "bah", "bahah", "urp", "bah"}),
+    ({"bah", "feh", "feh", "bah", "bahah", "urp", "bah"}),
+    ({"bah", "feh"}),
+    ({"bah"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range after="bah" to="3" variable="var.x"/></value>
+    <value><range after="bah" to="-2" variable="var.x"/></value>
+    <value><range after="bah" from="2" to="3" variable="var.x"/></value>
+    <value><range after="bah" from="2" to="-2" variable="var.x"/></value>
+    <value><range after="bah" from="-1" to="3" variable="var.x"/></value>
+    <value><range after="bah" from="-1" to="-2" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"feh", "feh"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh"}),
+    ({}),
+    ({"bahah", "urp", "bah", "feh"}),
+    ({}),
+    ({"feh"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range from="8" before="feh" variable="var.x"/></value>
+    <value><range from="-8" before="feh" variable="var.x"/></value>
+    <value><range from="8" before="feh" to="2" variable="var.x"/></value>
+    <value><range from="-8" before="feh" to="2" variable="var.x"/></value>
+    <value><range from="8" before="feh" to="-1" variable="var.x"/></value>
+    <value><range from="-8" before="feh" to="-1" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({}),
+    ({}),
+    ({"feh"}),
+    ({}),
+    ({"feh", "feh", "bah", "bahah", "urp",  "bah"}),
+  })</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Trimlines</comment>
@@ -595,123 +2253,140 @@ c</result>
 <!-- ............................................................ -->
 <comment>Date and time test</comment>
 <test>
-<rxml><date unix-time='87654321' part='day'/></rxml>
-<result>4</result>
+<rxml><date unix-time='1022834838' part='day'/></rxml>
+<result>6</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' time/></rxml>
-<result>13:25</result>
+<rxml><date unix-time='1022834838' time/></rxml>
+<result>10:47</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='capitalize'/></rxml>
-<result>Eleven</result>
+<rxml><date unix-time='1022834838' part='date' type='string' case='capitalize'/></rxml>
+<result>Thirtyone</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='day' type='string' lang='sv'/></rxml>
-<result>onsdag</result>
+<rxml><date unix-time='1022834838' part='day' type='string' lang='sv'/></rxml>
+<result>fredag</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' date lang='sv'/></rxml>
-<result>den 11:e oktober 1972</result>
+<rxml><date unix-time='1022834838' date lang='sv'/></rxml>
+<result>den 31 maj 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='yday'/></rxml>
-<result>284</result>
+<rxml><date unix-time='1022834838' part='yday'/></rxml>
+<result>150</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='ordered'/></rxml>
-<result>11th</result>
+<rxml><date unix-time='1022834838' part='date' type='ordered'/></rxml>
+<result>31st</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='lower'/></rxml>
-<result>eleven</result>
+<rxml><date unix-time='1022834838' part='date' type='string' case='lower'/></rxml>
+<result>thirtyone</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='month'/></rxml>
-<result>10</result>
+<rxml><date unix-time='1022834838' part='month'/></rxml>
+<result>5</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='year'/></rxml>
-<result>1972</result>
+<rxml><date unix-time='1022834838' part='year'/></rxml>
+<result>2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='seconds' seconds='10' adjust='-1'/></rxml>
-<result>87654330</result>
+<rxml><date unix-time='1022834838' part='seconds' seconds='10' adjust='-1'/></rxml>
+<result>1022834847</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='wday'/></rxml>
-<result>4</result>
+<rxml><date unix-time='1022834847' part='wday'/></rxml>
+<result>6</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='day' type='string'/></rxml>
-<result>Wednesday</result>
+<rxml><date unix-time='1022834847' part='day' type='string'/></rxml>
+<result>Friday</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='second'/></rxml>
-<result>21</result>
+<rxml><date unix-time='1022834847' part='second'/></rxml>
+<result>27</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='date'/></rxml>
-<result>11</result>
+<rxml><date unix-time='1022834847' part='date'/></rxml>
+<result>31</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='month' type='string'/></rxml>
-<result>October</result>
+<rxml><date unix-time='1022834847' part='month' type='string'/></rxml>
+<result>May</result>
+</test>
+
+<!-- Discordian date support disabled in Pike.
+<test>
+<rxml><date unix-time='1022834847' type='discordian'/></rxml>
+<result>Sweetmorn, the 4th day of Confusion</result>
+</test>
+-->
+
+<test>
+<rxml><date unix-time='1022834847' type='iso' time/></rxml>
+<result>10:47:27</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='discordian'/></rxml>
-<result>Prickle-Prickle, the 64th day of Bureaucracy</result>
+<rxml><date unix-time='1022834847' type='iso' date years='5' months='4' days='2'/></rxml>
+<result>2007-10-02</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' time/></rxml>
-<result>13:25:21</result>
+<rxml><date unix-time='1022834847' type='iso' date years='-1' months='-4' days='-2'/></rxml>
+<result>2001-01-29</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='unix'/></rxml>
-<result>87654321</result>
+<rxml><date unix-time='1022834847' type='iso' date weeks='2'/></rxml>
+<result>2002-06-14</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' lang='sv'/></rxml>
-<result>13:25, den 11:e oktober 1972</result>
+<rxml><date unix-time='1022834847' type='unix'/></rxml>
+<result>1022834847</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='minute'/></rxml>
-<result>25</result>
+<rxml><date unix-time='1022834847' lang='sv'/></rxml>
+<result>10:47, den 31 maj 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' date/></rxml>
-<result>October the 11th in the year of 1972</result>
+<rxml><date unix-time='1022834847' part='minute'/></rxml>
+<result>47</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' hours='3' minutes='-4'/></rxml>
-<result>16:21, October the 11th, 1972</result>
+<rxml><date unix-time='1022834847' date/></rxml>
+<result>May the 31st in the year of 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso' date/></rxml>
-<result>1972-10-11</result>
+<rxml><date unix-time='1022834847' hours='3' minutes='-4'/></rxml>
+<result>13:43, May the 31st, 2002</result>
+</test>
+
+<test>
+<rxml><date unix-time='1022834847' type='iso' date/></rxml>
+<result>2002-05-31</result>
 </test>
 
 <test>
@@ -720,43 +2395,47 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321'/></rxml>
-<result>13:25, October the 11th, 1972</result>
+<rxml><date unix-time='1022834847'/></rxml>
+<result>10:47, May the 31st, 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='hour'/></rxml>
-<result>13</result>
+<rxml><date unix-time='1022834847' part='hour'/></rxml>
+<result>10</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='seconds'/></rxml>
-<result>87654321</result>
+<rxml><date unix-time='1022834847' part='seconds'/></rxml>
+<result>1022834847</result>
+</test>
+
+<!-- Stardate support disabled in Pike.
+<test>
+<rxml><date unix-time='1022834847' type='stardate'/></rxml>
+<result>37405.1</result>
+</test>
+-->
+
+<test>
+<rxml><date unix-time='1022834847' part='mday'/></rxml>
+<result>31</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='stardate'/></rxml>
-<result>26581.6</result>
+<rxml><date unix-time='1022834847' part='date' type='string' case='upper'/></rxml>
+<result>THIRTYONE</result>
 </test>
 
+<!-- Stardate support disabled in Pike.
 <test>
-<rxml><date unix-time='87654321' part='mday'/></rxml>
-<result>11</result>
+<rxml><date unix-time='1022834847' type='stardate' prec='2'/></rxml>
+<result>37405.06</result>
 </test>
+-->
 
 <test>
-<rxml><date unix-time='87654321' part='date' type='string' case='upper'/></rxml>
-<result>ELEVEN</result>
-</test>
-
-<test>
-<rxml><date unix-time='87654321' type='stardate' prec='2'/></rxml>
-<result>26581.57</result>
-</test>
-
-<test>
-<rxml><date unix-time='87654321' part='week'/></rxml>
-<result>41</result>
+<rxml><date unix-time='1022834847' part='week'/></rxml>
+<result>22</result>
 </test>
 
 <test>
@@ -765,8 +2444,8 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' type='iso'/></rxml>
-<result>1972-10-11T13:25:21</result>
+<rxml><date unix-time='1022834847' type='iso'/></rxml>
+<result>2002-05-31T10:47:27</result>
 </test>
 
 
@@ -855,43 +2534,37 @@ These only tests that the tags does not produce a backtrace, for now.
 <test>
 <rxml><cache><append variable="var.foo" value="x"/></cache>
 <cache><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
-<result>
-xx</result>
+<result>xx</result>
 </test>
 
 <test>
 <rxml><cache shared><append variable="var.foo" value="x"/></cache>
 <cache shared><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
-<result>
-x</result>
+<result>x</result>
 </test>
 
 <test>
 <rxml><cache key="a"><append variable="var.foo" value="x"/></cache>
 <cache key="a"><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
-<result>
-xx</result>
+<result>xx</result>
 </test>
 
 <test>
 <rxml><cache shared key="a"><append variable="var.foo" value="x"/></cache>
 <cache shared key="a"><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
-<result>
-x</result>
+<result>x</result>
 </test>
 
 <test>
 <rxml><cache key="a"><append variable="var.foo" value="y"/></cache>
 <cache key="b"><append variable="var.foo" value="y"/></cache>&var.foo;</rxml>
-<result>
-yy</result>
+<result>yy</result>
 </test>
 
 <test>
 <rxml><cache shared key="a"><append variable="var.foo" value="y"/></cache>
 <cache shared key="b"><append variable="var.foo" value="y"/></cache>&var.foo;</rxml>
-<result>
-yy</result>
+<result>yy</result>
 </test>
 
 <test>
@@ -969,7 +2642,10 @@ hej</result>
     <set variable="var.items" value="3,1,2"/>
     <cache shared nohash key="yo2"/>
   </rxml>
+  <!-- In versions < 3.3 we get this result since <emit> isn't cache static:
   <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]3(1),1(1),2(1),</result>
+  -->
+  <result>[1,2,3]1(1),2(1),3(1),;[1,2,3]1(1),2(1),3(1),</result>
 </test>
 
 <test>
@@ -987,7 +2663,20 @@ hej</result>
     <set variable="var.foo" value="y"/>
     <cache shared nohash key="yo3"/>
   </rxml>
+  <!-- In versions < 3.3 we get this result since <emit> isn't cache static:
   <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]3(x),1(x),4(y),2(x),</result>
+  -->
+  <result>[1,2,3]1(x),2(x),3(x),;[1,2,3]1(x),2(x),3(x),</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <charset in="ascii">foo</charset> <!-- Any tag that isn't cache static and doesn't loop. -->
+      <emit source="values" values="1,2" split=",">[&_.value;]</emit>
+    </cache>
+  </rxml>
+  <result>foo[1][2]</result>
 </test>
 
 <test>
@@ -1031,6 +2720,26 @@ hej</result>
   <rxml type="string">
     <cache>
       &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared>
+      &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
       <cache nocache>&test.pass;</cache>
     </cache>
   </rxml>
@@ -1056,6 +2765,784 @@ hej</result>
     </cache>
   </rxml>
   <result>abc</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <test-misc set="foo">bar</test-misc>
+      <test-misc get="foo"/>
+    </cache>
+    <test-misc get="foo"/>
+  </rxml>
+  <result>barbar</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <test-misc set-prog>bar</test-misc>
+      <test-misc get-prog/>
+    </cache>
+    <test-misc get-prog/>
+  </rxml>
+  <result>barbar</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if false>
+      </if>
+      <else>
+	foo
+	<nocache>bar</nocache>
+      </else>
+    </cache>
+  </rxml>
+  <result>foobar</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <false/>
+      <if true>
+      </if>
+      <else>
+	foo
+	<nocache>bar</nocache>
+      </else>
+    </cache>
+  </rxml>
+  <result>foobar</result>
+</test>
+
+<test>
+  <rxml ignore-errors="run"
+    ><cache shared variable="test.pass">a<run-error/>b</cache
+    ><cache shared variable="test.pass">a<run-error/>b</cache
+  ></rxml>
+  <result>abab</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <define tag="mytag" scope="rx">
+	<set variable="rx.count" value="0"/>
+      </define>
+      a<mytag />b
+    </cache>
+  </rxml>
+  <result>ab</result>
+</test>
+
+<test>
+  <rxml
+    ><cache
+      ><define container="foo">[&_.contents;]</define
+      ><nocache
+	><foo>a</foo
+	><foo>b</foo
+      ></nocache
+    ></cache
+  ></rxml>
+  <result>[a][b]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <define if="foo"><true/></define>
+      <nocache><if foo="">ok</if></nocache>
+    </cache>
+  </rxml>
+  <result>ok</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<!test>
+  <!-- The inverted condition in the <if> should ideally be
+       evaluated dynamically in the <else>. Now it's the cached
+       result from the <if> that causes <else> to always fail. -->
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated statically -->
+	<set variable="var.x" value="1"/>
+      </if>
+      <else> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="2"/></nocache>
+      </else>
+      <nocache>
+	<if variable="test.pass = &var.x;">ok</if>
+	<else>var.x=&var.x;</else>
+      </nocache>
+    </cache>
+  </rxml>
+  <result>ok</result>
+</!test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <if variable="test.pass = 1"> <!-- Evaluated statically -->
+	<set variable="var.x" value="1"/>
+      </if>
+      <else> <!-- Currently never removed in cache since the content
+		  is never evaluated. -->
+	<set variable="var.x" value="2"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared nohash key="yo4">
+      <if variable="test.pass = 1"> <!-- Evaluated dynamically -->
+	<nocache><set variable="var.x" value="1"/></nocache>
+      </if>
+      <else>
+	<set variable="var.x" value="1"/>
+      </else>
+      <nocache>[&var.x;]</nocache>
+    </cache>
+    <cache shared nohash key="yo4"/>
+  </rxml>
+  <result>[1][1]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <define tag="foo" scope="bar">
+	<set variable="bar.x">17</set>
+	<set variable="_.y">18</set>
+	<charset out="iso-8859-2"/>
+	&_.x;&bar.y;
+      </define>
+      <foo/>
+    </cache>
+  </rxml>
+  <result>1718</result>
+</test>
+
+<!-- Note: This one failed due to the phase of the moon since the
+     mapping order when the variable changes are installed is relevant. -->
+<test>
+  <rxml type="string">
+    <cache>
+      <scope scope="tag">
+	<set variable="tag.foo" value="1"/>
+	<charset out="iso-8859-2"/>
+	&_.foo;
+      </scope>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <trimlines>
+	<if not variable="var.foo">
+	  <nocache>&test.pass;</nocache>
+	</if>
+      </trimlines>
+    </cache>
+  </rxml>
+  <result parser="xml">&test.pass;</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo"/>
+    <cache variable="var.foo" shared="yes">&test.pass;</cache>
+  </rxml>
+  <result>1</result>
+</test>
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="1">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  &var.theta;
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[&var.x;]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[&var.x;]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [&var.x;]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <!-- Use <eval><![CDATA[..]]> to get result compilation without
+	 source compilation. -->
+    <eval>
+      <![CDATA[
+	<cache shared="yes">
+	  <set variable="var.foo" type="text/plain">
+	    <nocache>tjo</nocache>
+	  </set>
+	</cache>
+      ]]>
+    </eval>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared="yes">
+      <set variable="var.foo" type="text/plain">
+	<nocache>tjo</nocache>
+      </set>
+    </cache>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.data" split="|">a|b|c|d</set>
+    <define container="x">
+      <nocache/><c>&values.counter;:<contents/></c>
+    </define>
+    <cache shared="">
+      <emit source="values" variable="var.data"><x>&_.value;</x></emit>
+    </cache>
+  </rxml>
+  <result><c>1:a</c><c>2:b</c><c>3:c</c><c>4:d</c></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.data" split="|">a|b|c|d</set>
+    <define container="x">
+      <nocache/>&values.counter;:<contents/>,
+    </define>
+    <cache shared="">
+      <emit source="values" variable="var.data">
+	<x>&_.value;</x>
+      </emit>
+    </cache>
+  </rxml>
+  <result>1:a,2:b,3:c,4:d,</result>
 </test>
 
 
@@ -1171,6 +3658,16 @@ e</random></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.x" expr="0==0.0"/>&var.x;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="0==INT(0.0)"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
 <rxml><set variable="var.x" expr="1==1"/>&var.x;</rxml>
 <result>1</result>
 </test>
@@ -1188,4 +3685,158 @@ e</random></rxml>
 <test>
 <rxml><set variable="var.x" expr="INT()*2+INT(5)"/>&var.x;</rxml>
 <result>5</result>
+</test>
+
+<test>
+<rxml><set variable="var.x" expr="3.14 == 314/1e2"/>&var.x;</rxml>
+<result>1</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='(program) "nasty"'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Syntax error in expr attribute.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='"(program)"'/>
+    &var.x;
+  </rxml>
+  <result>(program)</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='sizeof("(program) \\\"nasty")'/>
+    &var.x;
+  </rxml>
+  <result>17</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='"si\"zeof(\\\\"(program)'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Syntax error in expr attribute.]</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr="uniq (var.x)"/>
+    &var.x;
+  </rxml>
+  <equal>({"2", "3", "4"})</equal>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.x" expr="test.pass - 1"/>
+    &var.x;
+  </rxml>
+  <result pass="1">0</result>
+  <result pass="2">1</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x..y" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='"&lt;" + var.x..y.1 + "&gt;"'/>
+    &var.x;
+  </rxml>
+  <equal>"<2>"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='-INT(var.x.-1)'/>
+    &var.x;
+  </rxml>
+  <equal>-3</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr='"\"var.x.-1\""+"\"\\\"\\"+var.x.-1+"x.y"'/>
+    &var.x;
+  </rxml>
+  <equal>"\"var.x.-1\"\"\\\"\\3x.y"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x..y" type="int">17</set>
+    <set variable="var.x" expr='-var.x..y'/>
+    &var.x;
+  </rxml>
+  <equal>-17</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x-(var..y)" type="float">17</set>
+    <set variable="var.x" expr='-var("var.x-(var..y)")'/>
+    &var.x;
+  </rxml>
+  <equal>-17.0</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x-(var..y)" type="float">17</set>
+    <set variable="var.x" expr='-index("var","x-(var.y)")'/>
+    &var.x;
+  </rxml>
+  <equal>-17.0</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='blubb'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Error in expr attribute: Error resolving 'blubb'.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='foo'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Error in expr attribute: Error resolving 'foo'.]</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <scope>
+      <set variable="_.x" value="13"/>
+      <set variable="var.x" expr='_.x'/>
+    </scope>
+    &var.x;
+  </rxml>
+  <equal>"13"</equal>
+</test>
+
+<!-- ............................................................ -->
+<comment>Test elements</comment>
+<test>
+  <rxml type="string">
+    <set variable="var.foo">xyz</set>
+    <elements variable="var.foo"/>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" split=",">xy,z</set>
+    <elements variable="var.foo"/>
+  </rxml>
+  <result>2</result>
 </test>

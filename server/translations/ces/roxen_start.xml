@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-2"?>
+<locale version="1.0"/>
+<project>roxen_start</project>
+<language>ces</language>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/roxen.pike</file>
+<file>../modules/configuration/update.pike</file>
+
+
+<str id="1">
+<o>Starting one thread to handle requests.</o>
+<t>Startuji jedno vlákno pro zpracování dotazů.</t>
+</str>
+
+<str id="2">
+<o>Starting %d threads to handle requests.</o>
+<t>Startuji %d vláken pro zpracování dotazů.</t>
+</str>
+
+<str id="3">
+<changed from="Registered %s for %s"/>
+<o>Registered URL %s for %O.</o>
+<t>Registrováno %s pro %s</t>
+</str>
+
+<str id="4">
+<o>All modules for %s enabled in %3.1f seconds</o>
+<t>Všechny moduly pro %s byly aktivivány za %3.1f sekund</t>
+</str>
+
+<str id="5">
+<o>Update: Found new packages: %s</o>
+<t>Update: Nalezen nový balík: %s</t>
+</str>
+
+<str id="6">
+<o>Update: No new packages found.</o>
+<t>Update: Žádný nový balík nenalezen.</t>
+</str>

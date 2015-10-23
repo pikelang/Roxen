@@ -4,7 +4,7 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.23 2001/06/29 15:11:29 mast Exp $
+//! $Id$
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -20,7 +20,7 @@ constant add_tags = 0;
 constant add_container = 0;
 constant add_containers = 0;
 
-static void init_entities()
+protected void init_entities()
 {
   if (!type->entity_syntax) {
     // Don't decode normal entities if we're outputting xml-like stuff.
@@ -71,8 +71,8 @@ this_program clone (RXML.Context ctx, RXML.Type type,
   return [object(this_program)] _low_clone (ctx, type, p_code, tag_set, 1);
 }
 
-static void create (RXML.Context ctx, RXML.Type type,
-		    RXML.PCode p_code, RXML.TagSet tag_set, void|int cloned)
+protected void create (RXML.Context ctx, RXML.Type type,
+		       RXML.PCode p_code, RXML.TagSet tag_set, void|int cloned)
 {
 #ifdef OLD_RXML_COMPAT
   not_compat = !(ctx && ctx->id && ctx->id->conf->old_rxml_compat);

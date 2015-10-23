@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: highlight_pike.pike,v 1.5 2001/06/17 20:07:09 nilsson Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 string quote(string s)
 {
@@ -61,7 +61,7 @@ constant types=({"mapping","function","multiset","array","object","program","flo
 
 array (string) find_decl(string in)
 {
-  string pre,decl,p2;
+  string pre,decl;
   sscanf(in, "%[ \t\r\n]%s", pre, in);
   if(!strlen(in)) return ({"",pre+in});
   if(in[0]==')') // Cast
@@ -107,7 +107,7 @@ string find_complex_type(string post)
 
 array (string) find_type(string in)
 {
-  string s,pre,post,decl;
+  string s,pre,post;
   int min=10000000000,i;
   string mt;
   foreach(types, s)

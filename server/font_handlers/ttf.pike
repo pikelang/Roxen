@@ -1,10 +1,10 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2000, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.9 2001/08/21 14:26:51 per Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -12,37 +12,40 @@ constant scalable = 1;
 
 inherit FontHandler;
 
-static mapping ttf_font_names_cache;
+protected mapping ttf_font_names_cache;
 
-static string trimttfname( string n )
+protected string trimttfname( string n )
 {
   n = lower_case(replace( n, "\t", " " ));
   return ((n/" ")*"")-"'";
 }
 
-static string translate_ttf_style( string style )
+protected string translate_ttf_style( string style )
 {
-  switch( lower_case( (style-"-")-" " ) )
-  {
-   case "normal": case "regular":        return "nn";
-   case "italic":                        return "ni";
-   case "oblique":                       return "ni";
-   case "bold":                          return "bn";
-   case "bolditalic":case "italicbold":  return "bi";
-   case "black":                         return "Bn";
-   case "blackitalic":case "italicblack":return "Bi";
-   case "light":                         return "ln";
-   case "lightitalic":case "italiclight":return "li";
-  }
-  if(search(lower_case(style), "oblique"))
-    return "ni"; // for now.
-  return "nn";
+  //  Check for weight. Default is "n" for normal/regular/roman.
+  style = lower_case((style - "-") - " ");
+  string weight = "n"; 
+  if (has_value(style, "bold"))
+    weight = "b";
+  else if (has_value(style, "black"))
+    weight = "B";
+  else if (has_value(style, "light"))
+    weight = "l";
+  
+  //  Check for slant. Default is "n" for regular.
+  string slant = "n";
+  if (has_value(style, "italic") ||
+      has_value(style, "oblique"))
+    slant = "i";
+
+  //  Combine to full style
+  return weight + slant;
 }
 
-static void build_font_names_cache( )
+protected void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
-  ttf_font_names_cache=([]);
+  mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
     foreach(r_get_dir( dir )||({}), string fname)
@@ -66,15 +69,17 @@ static void build_font_names_cache( )
         {
           mapping n = ttf->names();
           string f = lower_case(trimttfname(n->family));
-          if(!ttf_font_names_cache[f])
-            ttf_font_names_cache[f] = ([]);
-          ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
-                                   = combine_path(dir+"/",fname);
+          if(!new_ttf_font_names_cache[f])
+            new_ttf_font_names_cache[f] = ([]);
+          new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ] =
+	    combine_path(dir+"/",fname);
         }
       }
     }
   };
   map( roxen->query("font_dirs"), traverse_font_dir );
+
+  ttf_font_names_cache = new_ttf_font_names_cache;
 }
 
 
@@ -82,23 +87,23 @@ static void build_font_names_cache( )
 class TTFWrapper
 {
   inherit Font;
-  static int size, rsize;
-  static object real;
-  static object encoder;
-  static function(string ...:Image.image) real_write;
-  static int fake_bold, fake_italic;
+  protected int size, rsize;
+  protected object real;
+  protected object encoder;
+  protected function(string ...:Image.image) real_write;
+  protected int fake_bold, fake_italic;
 
   int height( )
   {
     return rsize ? rsize : (rsize = text_extents("W")[1] );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf( "TTF(%O,%d)", real, size );
   }
 
-  static Image.image write_encoded(string ... what)
+  protected Image.image write_encoded(string ... what)
   {
     return real->write(@(encoder?
                          Array.map(what, lambda(string s) {
@@ -113,6 +118,8 @@ class TTFWrapper
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
+    int oversample = roxen->query("font_oversampling");
+
     // nbsp -> ""
     what = map( (array(string))what, replace, " ", "" );
 
@@ -121,13 +128,26 @@ class TTFWrapper
 
     array(Image.Image) res = map( what, real_write );
 
-    Image.Image rr = Image.Image( max(0,@res->xsize()),
-                                  (int)abs(`+(0,0,@res[..sizeof(res)-2]->ysize())*y_spacing)+res[-1]->ysize() );
-
+    int image_width = max(0, @res->xsize());
+    int image_height =
+      (int)abs(`+(0, 0, @res[..sizeof(res) - 2]->ysize()) * y_spacing) +
+      res[-1]->ysize();
+    int y_add = 0;
+    if (oversample) {
+      //  Make sure image dimensions are a multiple of 2. If height is odd
+      //  we'll offset the text baseline one pixel to get the extra line at
+      //  the top of the image.
+      image_width = (image_width + 1) & 0xFFFFFFFE;
+      y_add = (image_height & 1);
+      image_height = (image_height + 1) & 0xFFFFFFFE;
+    }
+    Image.Image rr = Image.Image(image_width, image_height);
+    
     float start;
     if( y_spacing < 0 )
       start = (float)rr->ysize()-res[0]->ysize();
-
+    start += (float) y_add;
+    
     foreach( res, object r )
     {
       if( j_right )
@@ -147,10 +167,13 @@ class TTFWrapper
 	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
       rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
     }
+    rr->setcolor( 0,0,0 );
     if( fake_italic )
-      rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
-    return rr;
-
+      rr = rr->skewx( -(rr->ysize()/3) );
+    if (oversample)
+      return rr->scale(0.5);
+    else
+      return rr;
   }
 
   array text_extents( string what )
@@ -166,7 +189,10 @@ class TTFWrapper
     fake_italic = fi;
     real = r;
     size = s;
-    real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
+    if( roxen->query("font_oversampling") )
+      real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
+    else
+      real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
 
     if(r_file_stat(fn+".properties"))
       parse_html(lopen(fn+".properties","r")->read(), ([]),
@@ -185,12 +211,12 @@ class TTFWrapper
 Thread.Mutex lock = Thread.Mutex();
 #endif
 
-array available_fonts()
+array available_fonts(int(0..1)|void force_reload)
 {
 #ifdef THREADS
   object key = lock->lock();
 #endif
-  if( !ttf_font_names_cache  ) build_font_names_cache( );
+  if( !ttf_font_names_cache || force_reload ) build_font_names_cache( );
   return indices( ttf_font_names_cache );
 }
 
@@ -214,7 +240,7 @@ array(mapping) font_information( string font )
   return ({ res });
 }
 
-array(string) has_font( string name, int size )
+array(string) has_font( string name, int size, int(0..1)|void force )
 {
 #ifdef THREADS
   object key = lock->lock();
@@ -223,6 +249,11 @@ array(string) has_font( string name, int size )
     build_font_names_cache( );
   if( ttf_font_names_cache[ name ] )
     return indices(ttf_font_names_cache[ name ]);
+  if (force) {
+    build_font_names_cache();
+    if( ttf_font_names_cache[ name ] )
+      return indices(ttf_font_names_cache[ name ]);
+  }
 }
 
 Font open(string f, int size, int bold, int italic )
@@ -236,6 +267,10 @@ Font open(string f, int size, int bold, int italic )
     if( fo = Image.TTF( name ) )
       return TTFWrapper( fo, size, f,0,0 );
     return 0;
+  }
+
+  if (!ttf_font_names_cache) {
+    build_font_names_cache();
   }
 
   if(ttf_font_names_cache[ lower_case(f) ])

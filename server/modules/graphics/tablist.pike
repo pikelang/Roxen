@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.56 2001/08/23 23:34:46 mast Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ It requires the <i>GButton</i> module.";
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=(["tablist":({ #"
-<desc cont='cont'><p><short>
+<desc type='cont'><p><short>
 <tag>tablist</tag> produces graphical navigationtabs.</short> For
 example, the Administration interface for <webserver /> uses tablists
 for easier administration.</p>
@@ -46,7 +46,7 @@ name=\"fgcolor\"&gt;</xref>, declared prior to the <tag>tablist</tag>
 tag, will be sent as an extra argument to <tag>gbutton</tag>.
 </p>
 
-<ex type='vert'><tablist>
+<ex><tablist>
 <tab selected='selected'>Information</tab>
 <tab>Settings</tab>
 </tablist></ex>
@@ -98,7 +98,7 @@ is set that color will be the default value instead of <tt>white</tt>
 .</p>
 </attr>",
 
-(["tab":#"<desc cont='cont'><p><short>
+(["tab":#"<desc type='cont'><p><short>
 
 <tag>tab</tag> defines the layout and function for each and one of the
 tabs in the tablisting.</short> <tag>tab</tag> inherits all attributes

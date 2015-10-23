@@ -8,8 +8,8 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.9 2000/12/18 17:10:05 jhs Exp $";
-constant _id = ({ "ru", "russian", "-LРусский" });
+constant cvs_version = "$Id$";
+constant _id = ({ "ru", "russian", "Русский" });
 constant _aliases = ({ "ru", "rus", "russian", "веггЫЩЪ" });
 
 #define error(x) throw( ({ x, backtrace() }) )
@@ -201,7 +201,7 @@ string number(int num, string|void gender)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

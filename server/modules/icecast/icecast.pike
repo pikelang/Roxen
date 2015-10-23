@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.8 2001/05/16 01:50:10 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -66,7 +68,7 @@ class MPEGStream( Playlist playlist )
       }
   }
   
-  static int last_hrtime, base_time;
+  protected int last_hrtime, base_time;
 
   int realtime()
   {
@@ -124,10 +126,10 @@ class MPEGStream( Playlist playlist )
   }
   
   // Low level code.
-  static string buffer;
-  static int    bpos;
+  protected string buffer;
+  protected int    bpos;
 
-  static string|int getbytes( int n, int|void s )
+  protected string|int getbytes( int n, int|void s )
   {
     if( !fd )
       fd = playlist->next_file();
@@ -177,7 +179,7 @@ class MPEGStream( Playlist playlist )
     return res;
   }
 
-  static int rate_of(int r)
+  protected int rate_of(int r)
   {
     switch(r)
     {
@@ -188,14 +190,14 @@ class MPEGStream( Playlist playlist )
     }
   }
 
-  static array(array(int)) bitrates =
+  protected array(array(int)) bitrates =
   ({
     ({0,32,64,96,128,160,192,224,256,288,320,352,384,416,448}),
     ({0,32,48,56,64,80,96,112,128,160,192,224,256,320,384}),
     ({0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}),
   });
 
-  static string get_frame()
+  protected string get_frame()
   {
     string data;
     /* Find header */
@@ -209,7 +211,7 @@ class MPEGStream( Playlist playlist )
       p++;
       if( (patt & 0xfff0) == 0xfff0 )
       {
-	int srate, channels, layer, ID, pad, blen;
+	int srate, layer, ID, pad, blen;
 	int header = ((patt&0xffff)<<16);
 	if( (by = getbytes( 2 )) < 0 )
 	  break;
@@ -461,7 +463,7 @@ class Connection
     return s;
   }
   
-  static void callback( string frame )
+  protected void callback( string frame )
   {
     buffer += ({ frame });
     if( sizeof( buffer ) > 100 )
@@ -478,7 +480,7 @@ class Connection
 
   int headers_done;
   
-  static void send_more()
+  protected void send_more()
   {
     if( !strlen(current_block) )
     {
@@ -513,12 +515,12 @@ class Connection
       closed();
   }
 
-  static void md_callback( mapping metadata )
+  protected void md_callback( mapping metadata )
   {
     current_md = metadata;
   }
   
-  static void closed( )
+  protected void closed( )
   {
     fd->set_blocking( );
     fd = 0;
@@ -529,9 +531,9 @@ class Connection
 //     destruct( this_object() );
   }
   
-  static void create( Stdio.File _fd, string buffer, 
-		      string prot, int _meta,  MPEGStream _stream,
-		      Location _loc,   function _closed )
+  protected void create( Stdio.File _fd, string buffer, 
+			 string prot, int _meta,  MPEGStream _stream,
+			 Location _loc,   function _closed )
   {
     location = _loc;
     protocol = prot;

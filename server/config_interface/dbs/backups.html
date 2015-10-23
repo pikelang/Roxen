@@ -8,8 +8,24 @@
          <insert file="subtabs.pike"/> 
       </st-tabs>
 
-      <st-page><br />
-        <b><translate id="78">All database backups currently available</translate>:</b><br />
+      <st-page>
+        <p>To restore a backup file <em>not</em> listed here, follow
+        these steps:</p>
+        <ol>
+          <li>Create the database by clicking "Create new database" in
+              the Databases tab and create an <em>internal</em>
+              database with the desired name.</li>
+	  <li>Run the <tt>mysql</tt> shell command as the root user:<br/>
+	      <tt># bzcat var/backup/somedb/dump.sql.bz2 |
+	            mysql -urw -S mysql/socket somedb</tt></li>
+        </ol>
+	<p><tt>mysql</tt> may be located in e.g.
+        roxen/server-x.y.z/mysql/bin/mysql or
+        /usr/local/lib/roxen-current/mysql/bin/mysql.
+        <tt>mysql/socket</tt> may be located in e.g.
+        roxen/configurations/_mysql/socket or
+        /var/roxen/default/mysql/socket.</p>
+        <h3><translate id="78">All database backups currently available</translate>:</h3>
         <eval><insert file='restore_db.pike' /></eval>
       </st-page>
     </subtablist>

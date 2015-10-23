@@ -100,6 +100,51 @@ SOURCE=.\roxen.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\roxenmsg.mc
+
+!IF  "$(CFG)" == "startdll - Win32 Debug"
+
+# Begin Custom Build - Compiling Message File $(InputPath)
+InputPath=.\roxenmsg.mc
+InputName=roxenmsg
+
+BuildCmds= \
+	mc $(InputPath)
+
+"$(InputName).rc" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "startdll - Win32 Release"
+
+# Begin Custom Build - Compiling Message File $(InputPath)
+InputPath=.\roxenmsg.mc
+InputName=roxenmsg
+
+BuildCmds= \
+	mc $(InputPath)
+
+"$(InputName).rc" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"$(InputName).h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"msg00001.bin" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\startdll.cpp
 # End Source File
 # Begin Source File
@@ -152,5 +197,9 @@ SOURCE=..\version.h
 SOURCE=.\startdll.rgs
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\VERSION
+# End Source File
 # End Target
 # End Project

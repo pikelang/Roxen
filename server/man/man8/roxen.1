@@ -1,0 +1,47 @@
+.TH ROXEN 8 "2009-05-07" "Roxen WebServer" "Roxen commands"
+
+.SH NAME
+roxen \- Roxen WebServer
+
+.SH SYNOPSIS
+
+.PP
+\fBroxen\fR [options]...
+
+.SH SUMMARY
+
+.PP
+This command starts and stops the Roxen WebServer.
+
+.SH OPTIONS
+
+.TP
+\fB--help\fR, \fB-?\fR
+Display help information.
+
+.TP
+\fB--version\fR
+Output version information.
+
+.TP
+\fB--config-dir\fR=\fIdir\fR
+Sets configuration directory.
+
+.TP
+\fB--remove-dumped\fR
+Remove all dumped code, thus forcing a recompile.
+
+.TP
+\fB--stop\fR
+Stop the server.
+
+.TP
+\fB--offline\fR
+Indicate that there is no network connection available. Disables DNS
+and some other similar things.
+
+.SH COPYRIGHT
+Copyright \(co 2005 - 2009 Roxen Internet Software
+
+.SH "SEE ALSO"
+roxen-create-server

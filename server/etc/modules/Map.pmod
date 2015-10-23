@@ -14,162 +14,259 @@ mapping(string:string) aliases =
   ]);
 
 mapping(string:string) domain_to_country =
-  ([ /* 132 elements */
+  ([
+    "ac":"ascension island",
+    "ad":"andorra",
+    "ae":"united arab emirates",
     "af":"afghanistan",
+    "ag":"antigua and barbuda",
+    "ai":"anguilla",
     "al":"albania",
-    "dz":"algeria",
-    "ao":"angola",
-    "ar":"argentina",
     "am":"armenia",
-    "aw":"aruba",
-    "au":"australia",
+    "an":"netherlands antilles",
+    "ao":"angola",
+    "aq":"antarctica",
+    "ar":"argentina",
+    "as":"american samoa",
     "at":"austria",
+    "au":"australia",
+    "aw":"aruba",
+    "ax":"åland islands",
     "az":"azerbaijan",
-    "bs":"bahamas",
+    "ba":"bosnia and herzegovina",
+    "bb":"barbados",
     "bd":"bangladesh",
     "be":"belgium",
+    "bf":"burkina faso",
+    "bg":"bulgaria",
+    "bh":"bahrain",
+    "bi":"burundi",
     "bj":"benin",
     "bm":"bermuda",
-    "bt":"bhutan",
+    "bn":"brunei darussalam",
     "bo":"bolivia",
-    "ba":"bosnia and herzegovina",
-    "burma":"burma",
-    "bw":"botswana",
     "br":"brazil",
-    "bg":"bulgaria",
-    "bf":"burkina faso",
-    "bi":"burundi",
-    "cm":"cameroon",
+    "bs":"bahamas",
+    "bt":"bhutan",
+    "bu":"burma",
+    "bv":"bouvet island",
+    "bw":"botswana",
+    "by":"belarus",
+    "bz":"belize",
     "ca":"canada",
+    "cc":"cocos (keeling) islands",
+    "cd":"congo, the democratic republic of the",
     "cf":"central african republic",
-    "td":"chad",
-    "cl":"chile",
-    "cn":"china",
-    "hk":"china",
-    "co":"colombia",
     "cg":"congo",
-    "cr":"costa rica",
+    "ch":"switzerland",
     "ci":"côte d'ivoire",
-    "hr":"croatia",
+    "ck":"cook islands",
+    "cl":"chile",
+    "cm":"cameroon",
+    "cn":"china",
+    "co":"colombia",
+    "cr":"costa rica",
+    "cs":"serbia and montenegro",
     "cu":"cuba",
+    "cv":"cape verde",
+    "cx":"christmas island",
     "cy":"cyprus",
-    "cz":"czechoslovakia",
+    "cz":"czech republic",
+    "de":"germany",
+    "dj":"djibouti",
     "dk":"denmark",
-    "djibouti":"djibouti",
+    "dm":"dominica",
     "do":"dominican republic",
-    "eg":"egypt",
-    "sv":"el salvador",
-    "vg":"england",
-    "gb":"england",
-    "uk":"england",
-    "gq":"equatorial guinea",
+    "dz":"algeria",
+    "ec":"ecuador",
     "ee":"estonia",
+    "eg":"egypt",
+    "eh":"western sahara",
+    "er":"eritrea",
+    "es":"spain",
     "et":"ethiopia",
     "fi":"finland",
+    "fj":"fiji",
+    "fk":"falkland islands (malvinas)",
+    "fm":"micronesia, federal state of",
+    "fo":"faroe islands",
     "fr":"france",
     "fx":"france",
-    "nc":"france",
-    "gf":"french guiana",
     "ga":"gabon",
-    "gm":"gambia",
+    "gb":"england",
+    "gd":"grenada",
     "ge":"georgia",
-    "de":"germany",
+    "gf":"french guiana",
+    "gg":"guernsey",
     "gh":"ghana",
-    "gr":"greece",
+    "gi":"gibraltar",
     "gl":"greenland",
-    "gt":"guatemala",
+    "gm":"gambia",
     "gn":"guinea",
+    "gp":"guadeloupe",
+    "gq":"equatorial guinea",
+    "gr":"greece",
+    "gs":"south georgia and the south sandwich islands",
+    "gt":"guatemala",
+    "gu":"guam",
     "gw":"guinea-bissau",
     "gy":"guyana",
+    "hk":"hong kong",
+    "hm":"heard and mcdonald islands",
+    "hn":"honduras",
+    "hr":"croatia",
+    "ht":"haiti",
     "hu":"hungary",
-    "is":"iceland",
-    "in":"india",
-    "ir":"iran",
-    "iq":"iraq",
+    "id":"indonesia",
     "ie":"ireland",
     "il":"israel",
-    "va":"italy",
+    "im":"isle of man",
+    "in":"india",
+    "io":"british indian ocean territory",
+    "iq":"iraq",
+    "ir":"iran",
+    "is":"iceland",
     "it":"italy",
+    "je":"jersey",
     "jm":"jamaica",
-    "jp":"japan",
     "jo":"jordan",
-    "kh":"cambodia",
-    "ec":"ecuador",
-    "ht":"haiti",
-    "kh":"kampuchea",
-    "kg":"kyrgyzstan",
-    "hn":"honduras",
-    "by":"belarus",
-    "kz":"kazakhstan",
+    "jp":"japan",
     "ke":"kenya",
+    "kg":"kyrgyzstan",
+    "kh":"cambodia",
+    "ki":"kiribati",
+    "km":"comoros",
+    "kn":"saint kitts and nevis",
+    "kp":"north korea",
+    "kr":"south korea",
     "kw":"kuwait",
+    "ky":"cayman islands",
+    "kz":"kazakhstan",
     "la":"laos",
-    "lv":"latvia",
     "lb":"lebanon",
-    "ls":"lesotho",
+    "lc":"saint lucia",
+    "li":"liechtenstein",
+    "lk":"sri lanka",
     "lr":"liberia",
-    "ly":"libya",
+    "ls":"lesotho",
     "lt":"lithuania",
-    "mg":"madagascar",
-    "my":"malaysia",
-    "ml":"mali",
-    "mr":"mauritania",
-    "mx":"mexico",
-    "md":"moldavia",
-    "mn":"mongolia",
+    "lu":"luxembourg",
+    "lv":"latvia",
+    "ly":"libya",
     "ma":"morocco",
+    "mc":"monaco",
+    "md":"moldova",
+    "mg":"madagascar",
+    "mh":"marshall islands",
+    "mk":"macedonia, the former yugoslav republic of",
+    "ml":"mali",
+    "mm":"myanmar",
+    "mn":"mongolia",
+    "mo":"macao",
+    "mp":"northern mariana islands",
+    "mq":"martinique",
+    "mr":"mauritania",
+    "ms":"montserrat",
+    "mt":"malta",
+    "mu":"mauritius",
+    "mv":"maldives",
+    "mw":"malawi",
+    "mx":"mexico",
+    "my":"malaysia",
     "mz":"mozambique",
     "na":"namibia",
-    "np":"nepal",
-    "nl":"netherlands",
-    "nz":"new zealand",
-    "ni":"nicaragua",
+    "nc":"new caledonia",
     "ne":"niger",
+    "nf":"norfolk island",
     "ng":"nigeria",
-    "kp":"north korea",
+    "ni":"nicaragua",
+    "nl":"netherlands",
     "no":"norway",
+    "np":"nepal",
+    "nr":"nauru",
+    "nu":"niue",
+    "nz":"new zealand",
     "om":"oman",
-    "pk":"pakistan",
     "pa":"panama",
-    "pg":"papua new guinea",
-    "py":"paraguay",
     "pe":"peru",
+    "pf":"french polynesia",
+    "pg":"papua new guinea",
     "ph":"philippines",
+    "pk":"pakistan",
     "pl":"poland",
+    "pm":"saint pierre and miquelon",
+    "pn":"pitcairn island",
+    "pr":"puerto rico",
+    "ps":"palestinian territory, occupied",
     "pt":"portugal",
+    "pw":"palau",
+    "py":"paraguay",
     "qa":"qatar",
+    "re":"reunion island",
     "ro":"romania",
+    "ru":"russian federation",
     "rw":"rwanda",
     "sa":"saudi arabia",
-    "sn":"senegal",
-    "sl":"sierra leone",
-    "so":"somalia",
-    "za":"south africa",
-    "kr":"south korea",
-    "es":"spain",
-    "lk":"sri lanka",
+    "sb":"solomon islands",
+    "sc":"seychelles",
     "sd":"sudan",
-    "sr":"suriname",
-    "sz":"swaziland",
     "se":"sweden",
-    "ch":"switzerland",
+    "sg":"singapore",
+    "sh":"saint helena",
+    "si":"slovenia",
+    "sj":"svalbard and jan mayen islands",
+    "sk":"slovakia",
+    "sl":"sierra leone",
+    "sm":"san marino",
+    "sn":"senegal",
+    "so":"somalia",
+    "sr":"suriname",
+    "st":"sao tome and principe",
+    "su":"russian federation",
+    "sv":"el salvador",
     "sy":"syria",
-    "tw":"taiwan",
-    "tj":"tajikistan",
-    "tz":"tanzania",
-    "th":"thailand",
+    "sz":"swaziland",
+    "tc":"turks and caicos islands",
+    "td":"chad",
+    "tf":"french southern territories",
     "tg":"togo",
-    "tt":"trinidad and tobago",
-    "tn":"tunisia",
-    "tr":"turkey",
+    "th":"thailand",
+    "tj":"tajikistan",
+    "tk":"tokelau",
+    "tl":"timor-leste",
     "tm":"turkmenistan",
-    "ug":"uganda",
+    "tn":"tunisia",
+    "to":"tonga",
+    "tp":"east timor",
+    "tr":"turkey",
+    "tt":"trinidad and tobago",
+    "tv":"tuvalu",
+    "tw":"taiwan",
+    "tz":"tanzania",
     "ua":"ukraine",
-    "ae":"united arab emirates",
-    "uy":"uruguay",
-    "vi":"united states of america",
+    "ug":"uganda",
+    "uk":"england",
+    "um":"united states minor outlying islands",
     "us":"united states of america",
-    "gu":"united states of america",
+    "uy":"uruguay",
+    "uz":"uzbekistan",
+    "va":"italy",
+    "vc":"saint vincent and the grenadines",
+    "ve":"venezuela",
+    "vg":"virgin islands, british",
+    "vi":"virgin islands, u.s.",
+    "vn":"viet nam",
+    "vu":"vanuatu",
+    "wf":"wallis and futuna islands",
+    "ws":"western samoa",
+    "ye":"yemen",
+    "yt":"mayotte",
+    "yu":"yugoslavia",
+    "za":"south africa",
+    "zm":"zambia",
+    "zr":"zaire",
+    "zw":"zimbabwe",
+
     "com":"united states of america",
     "net":"united states of america",
     "org":"united states of america",
@@ -177,40 +274,29 @@ mapping(string:string) domain_to_country =
     "gov":"united states of america",
     "mil":"united states of america",
     "nato":"united states of america",
-    "su":"russian federation",
-    "ru":"russian federation",
-    "uz":"uzbekistan",
-    "ve":"venezuela",
-    "vn":"viet nam",
-    "eh":"western sahara",
-    "ye":"yemen",
-    "yu":"yugoslavia",
-    "zr":"zaire",
-    "zm":"zambia",
-    "zw":"zimbabwe",
   ]);
 
 class Legend {
-  static private string state_color_scheme = "white-to-red";
+  private string state_color_scheme = "white-to-red";
   
-  static private mapping color_schemes = ([ "white-to-red":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xc0,0x80 }),
-					       2:({ 0xe0,0x80,0x40 }),
-					       3:({ 0xd0,0x40,0x00 }),
-					       4:({ 0x80,0x00,0x00 }) ]),
-					    "white-to-green":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xe0,0x80 }),
-					       2:({ 0x80,0xe0,0x40 }),
-					       3:({ 0x40,0xd0,0x00 }),
-					       4:({ 0x00,0x80,0x00 }) ]),
-					    "white-to-purpur":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xc0,0xe0 }),
-					       2:({ 0xe0,0x80,0xe0 }),
-					       3:({ 0xd0,0x40,0xd0 }),
-					       4:({ 0x80,0x00,0x80 }) ]) ]);
+  private mapping color_schemes = ([ "white-to-red":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xc0,0x80 }),
+					2:({ 0xe0,0x80,0x40 }),
+					3:({ 0xd0,0x40,0x00 }),
+					4:({ 0x80,0x00,0x00 }) ]),
+				     "white-to-green":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xe0,0x80 }),
+					2:({ 0x80,0xe0,0x40 }),
+					3:({ 0x40,0xd0,0x00 }),
+					4:({ 0x00,0x80,0x00 }) ]),
+				     "white-to-purpur":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xc0,0xe0 }),
+					2:({ 0xe0,0x80,0xe0 }),
+					3:({ 0xd0,0x40,0xd0 }),
+					4:({ 0x80,0x00,0x80 }) ]) ]);
 
   object scheme(string color_scheme)
   {
@@ -279,7 +365,7 @@ class Legend {
 		    font->text_extents(@opt->titles)[0] + nom+nom/2);
     int height = title_h + bar_h + 2*nom + nom;
     
-    object img = Image.image(width, height+100, @opt->background_color);
+    Image.Image img = Image.Image(width, height+100, @opt->background_color);
 
     img->paste_alpha_color(font->write(@(opt->title/"\n")),
 			   @opt->title_color, 0, 0);
@@ -307,12 +393,12 @@ class Legend {
   }
 }
 
-static private mapping map_of_the_earth =
+private mapping map_of_the_earth =
             decode_value(Stdio.read_bytes("etc/maps/worldmap"));
 
 class Earth {
-  static string state_region;
-  static string state_country;
+  protected string state_region;
+  protected string state_country;
     
   // Aliases.
   mapping(string:array(string)) country_name_aliases =
@@ -349,7 +435,7 @@ class Earth {
     return object_program(this_object())(state_region, new_country);
   }
 
-  static private string capitalize_country(string s)
+  private string capitalize_country(string s)
   {
     return Array.map(s/" ",
 		     lambda(string w)
@@ -375,7 +461,7 @@ class Earth {
       return map_of_the_earth[state_country];
   }
 
-  static private array(float) transform(float x, float y, mapping opt)
+  private array(float) transform(float x, float y, mapping opt)
   {
     y = 1.0-y;
 
@@ -400,7 +486,7 @@ class Earth {
       x = (x-0.00)*1.5;
       y = (y-0.40)*1.5;
       break;
-    case "south east asia":
+    case "asia":
       x = (x-0.57)*2.0;
       y = (y-0.17)*2.0;
       break;
@@ -414,13 +500,13 @@ class Earth {
     return ({ x, y });
   }
   
-  object image(int width, int height, mapping|void opt)
+  Image.Image image(int width, int height, mapping|void opt)
   {
     opt = opt || ([]);
     opt->color_sea = opt->color_sea || ({ 0x10,0x10,0x40 });
     opt->color_fu = opt->color_fu || lambda() { return ({ 0xff,0xff,0xff }); };
 
-    Image.image map = Image.image(width, height, @opt->color_sea);
+    Image.Image map = Image.Image(width, height, @opt->color_sea);
     foreach(indices(map_of_the_earth), string cntry) {
       map->setcolor(@opt->color_fu(cntry, @(opt->fu_args||({}))));
       foreach(map_of_the_earth[cntry], array(float) original_vertices) {
@@ -459,7 +545,7 @@ class Earth {
     
     // Apply borders.
     if(opt->border)
-      map = Image.image(map->xsize()+2*opt->border,
+      map = Image.Image(map->xsize()+2*opt->border,
 			map->ysize()+2*opt->border,
 			@opt->color_sea)->paste(map, opt->border, opt->border);
     

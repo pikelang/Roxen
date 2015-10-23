@@ -1,9 +1,11 @@
 //! Generic extensible lazy-evaluation image processing.
 
+#include <module.h>
+
 typedef array(Image.Layer) Layers;
 //! The 'Layers' type.
 
-typedef mapping(string:string|int|float|object) Arguments;
+typedef mapping(string:string|int|float|array|mapping) Arguments;
 //! The 'Arguments' mapping type.
 
 
@@ -21,7 +23,7 @@ mapping(string:int) layers_extents( Layers layers )
   foreach( layers, Image.Layer l )
   {
     if( l->xoffset() < x0 )  x0 = l->xoffset();
-    if( l->yoffset() < y0 )  y0 = l->xoffset();
+    if( l->yoffset() < y0 )  y0 = l->yoffset();
     if( l->xsize()+l->xoffset() > x )  x = l->xsize()+l->xoffset();
     if( l->ysize()+l->yoffset() > y )  y = l->ysize()+l->yoffset();
   }
@@ -146,7 +148,7 @@ enum JoinStyle    { JOIN_MITER,  JOIN_ROUND,     JOIN_BEVEL };
 #define JOINSTEPS 5
 constant PI = Math.pi;
 
-static array(float) init_cap_sin_table()
+protected array(float) init_cap_sin_table()
 {
   array(float) s_t = allocate(CAPSTEPS);
 
@@ -156,9 +158,9 @@ static array(float) init_cap_sin_table()
   return(s_t);
 }
 
-static array(float) cap_sin_table = init_cap_sin_table();
+protected array(float) cap_sin_table = init_cap_sin_table();
 
-static array(float) init_cap_cos_table()
+protected array(float) init_cap_cos_table()
 {
   array(float) c_t = allocate(CAPSTEPS);
 
@@ -168,10 +170,10 @@ static array(float) init_cap_cos_table()
   return(c_t);
 }
 
-static array(float) cap_cos_table = init_cap_cos_table();
+protected array(float) cap_cos_table = init_cap_cos_table();
 
 
-static private array(float) xyreverse(array(float) a)
+private array(float) xyreverse(array(float) a)
 {
   array(float) r = reverse(a);
   int n = sizeof(r)/2;
@@ -184,12 +186,25 @@ static private array(float) xyreverse(array(float) a)
 }
 
 
-static object compile_handler = class {
+protected object compile_handler = class {
     mapping(string:mixed) get_default_module() {
-      return ([ "this_program":0,"`+":`+,"`-":`-,
-		"`*":`*,"`/":`/, "`%":`%,"`&":`&,
-		"`|":`|,"`^":`^,"`<":`<,"`>":`>,
-		"`==":`==,"`<=":`<=,"`>=":`>=, ]);
+      return ([ "this_program":0,
+		// Kludge: These casts are to avoid that the type
+		// checker in pike 7.8 freaks out..
+		"`+": (function) `+,
+		"`-": (function) `-,
+		"`*": (function) `*,
+		"`/": (function) `/,
+		"`%": (function) `%,
+		"`&": (function) `&,
+		"`|": (function) `|,
+		"`^": (function) `^,
+		"`<": (function) `<,
+		"`>": (function) `>,
+		"`==": (function) `==,
+		"`<=": (function) `<=,
+		"`>=": (function) `>=,
+	     ]);
     }
 
     mixed resolv(string id, void|string fn, void|string ch) {
@@ -351,6 +366,22 @@ array(array(float)) make_polygon_from_line(float h,
 }
 
 
+protected mapping(program:string) programs;
+protected object dirnode = master()->handle_import(".", __FILE__);
+
+protected string get_program_name (program p)
+{
+  if (!programs) {
+    array inds = indices (dirnode);
+    array vals = rows (dirnode, inds);
+    programs = mkmapping (vals, inds);
+  }
+  return programs[p];
+}
+
+int image_object_count;
+
+protected Thread.Local request_id = Thread.Local();
 
 class LazyImage( LazyImage parent )
 //! One or more layers, with lazy evaluation.
@@ -372,6 +403,9 @@ class LazyImage( LazyImage parent )
   
   int refs;
 
+  int object_id = ++image_object_count;
+  //! A unique object identifier used for debug
+  
   this_program ref( )
   //! Add a reference to this image. Not normally called directly
   {
@@ -389,20 +423,29 @@ class LazyImage( LazyImage parent )
     return this_object();
   }
   
-  static Layers result;
-  static Image.Layer render_result;
+  protected Layers result;
+  protected Image.Layer render_result;
 
-  static Arguments args;
+  protected Arguments args;
   //! The args given to @[new] or @[set_args].
   //! Please note that this mapping can be shared between several
   //! different images, do not modify it destructively in your code.
   
-  static string _sprintf( int f, mapping a )
+  protected string _sprintf( int f, mapping a )
   {
     switch( f )
     {
       case 'O':
-	return sprintf( "%s(%O)", operation_name, parent );
+#ifdef GXML_DEBUG
+	string s1 = sprintf("%O", args) - "\n";
+	string s2 = parent?sprintf("(\n%O)", parent):"";
+	return replace(sprintf( "%s[%d:%d]: %s %s",
+				operation_name, object_id, refs, s1, s2 ),
+		       "\n", "\n  ");
+#else
+	string s = parent?sprintf("(%O)", parent):"";
+	return sprintf( "%s%s", operation_name, s );
+#endif /* GXML_DEBUG */
       default:
 	error("Cannot sprintf image to '%c'\n", f );
     }
@@ -471,20 +514,20 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static Image.Layer copy_layer( Image.Layer l )
+  protected Image.Layer copy_layer( Image.Layer l )
   {
     return l->clone();
   }
 
 
-  static Image.Color translate_color( string col )
+  protected Image.Color translate_color( string col )
   //! Parse the color specified in 'col', and return the best-guess color
   //! If no intepretation can be done, return Image.Color.black  
   {
     return Image.Color.guess( col || "000" ) || Image.Color.black;
   }
 
-  static float virtual_to_screen( float v, float v0, float v1, int rs )
+  protected float virtual_to_screen( float v, float v0, float v1, int rs )
   //! Convert a the virtual coordinate @[v], with ranges between @[v0]
   //! and @[v1] to a screen coordinate where 0 corresponds to @[v0], and
   //! @[rs] corresponds to @[v1]
@@ -495,7 +538,7 @@ class LazyImage( LazyImage parent )
     return ((v/vs) * rs);
   }
 
-  static int find_guide( int index, int vertical, Layers in )
+  protected int find_guide( int index, int vertical, Layers in )
   {
     array guides = ({}), rguides;
     int limit_index( int i )
@@ -519,7 +562,8 @@ class LazyImage( LazyImage parent )
     return guides[ limit_index( index ) ];
   }
 
-  static string handle_variable( string variable, Image.Image|Image.Layer cl )
+  protected string handle_variable( string variable, Image.Image|Image.Layer cl,
+				    Layers l)
   {
     array(string) v = (variable/".");
     string exts_ind( mapping exts, int i)
@@ -557,27 +601,47 @@ class LazyImage( LazyImage parent )
 	else
 	  exts = ([ "w":cl->xsize(), "h":cl->ysize(), ]);
 	return exts_ind( exts, v[1][0] );
+      case "layers":
+	if (!sizeof(l))
+	  RXML.parse_error( "No layers (while parsing "+variable+" in "+
+			    operation_name+")\n");
+	exts = ([]);
+	Layers layers = find_layers(v[1], l);
+	if (!sizeof(layers))
+	  RXML.parse_error( "No such layer (while parsing "+variable+" in "+
+			    operation_name+")\n");
+	Image.Layer tl = layers[0];
+	if( tl->xoffset )
+	  exts = ([
+	    "x0":tl->xoffset(), "y0":tl->yoffset(),
+	    "w":tl->xsize(),    "h":tl->ysize(),
+	  ]);
+	else
+	  exts = ([ "w":tl->xsize(), "h":tl->ysize(), ]);
+	return exts_ind( exts, v[2][0] );
     }
   }
   
 
-  static string parse_variables( string from, Image.Layer|Image.Image cl )
+  protected string parse_variables( string from, Image.Layer|Image.Image cl,
+				    Layers l)
   {
     if( !from )
       return 0;
     string a, b, v;
     while( sscanf( from, "%s$[%s]%s", a, v, b ) == 3 )
-      from = a+handle_variable( v,cl )+b;
+      from = a+handle_variable( v,cl,l )+b;
     return from;
   }
   
-  static int translate_coordinate( string from, Image.Layer|Image.Image cl )
+  protected int translate_coordinate( string from, Image.Layer|Image.Image cl,
+				      Layers l)
   {
     if( !from ) return 0;
-    return (int)parse_sexpr( parse_variables( from, cl ) );
+    return (int)parse_sexpr( parse_variables( from, cl, l ) );
   }
 
-  static int translate_cap_style( string style )
+  protected int translate_cap_style( string style )
   {
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
@@ -590,7 +654,7 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static int translate_join_style( string style )
+  protected int translate_join_style( string style )
   {
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
@@ -603,14 +667,15 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static float translate_coordinate_f( string from,
-				       Image.Layer|Image.Image cl )
+  protected float translate_coordinate_f( string from,
+					  Image.Layer|Image.Image cl,
+					  Layers l)
   {
     if( !from ) return 0;
-    return (float)parse_sexpr( parse_variables( from, cl ) );
+    return (float)parse_sexpr( parse_variables( from, cl, l ) );
   }
   
-  static Image.Layer copy_layer_data( Image.Layer l )
+  protected Image.Layer copy_layer_data( Image.Layer l )
   {
     Image.Image i = l->image();
     Image.Image a = l->alpha();
@@ -622,7 +687,7 @@ class LazyImage( LazyImage parent )
     return l;
   }
 
-  static Arguments check_args( Arguments a )
+  protected Arguments check_args( Arguments a )
   //! Verify that the argument mapping is valid. This function can
   //! call the error functions in the RXML module. The default
   //! implementation does nothing but return it's argument.
@@ -630,7 +695,7 @@ class LazyImage( LazyImage parent )
     return a;
   }
   
-  static Layers process( Layers layers )
+  protected Layers|mapping process( Layers layers )
   //! Do the actual work needed to process the image.
   //! The default implementation does nothing but return the image
   //! layers.
@@ -638,19 +703,26 @@ class LazyImage( LazyImage parent )
     return layers;
   }
   
-  Layers run(int|void i)
+  Layers|mapping run(int|void i, RequestID|void id)
   //! Apply all operations needed to actually generate the image. 
   //! After the first time this function is called, the result is
   //! cached.
   {
+    if(id)
+      request_id->set(id);
+    
     if( result )
       return result;
 
     if( parent )
     {
-      if( !ignore_parent )
-	result = parent->run(i+1);
-	
+      if( !ignore_parent ) {
+	/*Layers*/array(Image.Layer)|mapping res = parent->run(i+1);
+	if (mappingp(res))
+	  return res;
+	result = res;
+      }
+      
       if( parent->refs > 1 ) 
       {
 	// only copy if the parent data is used in more places than this.
@@ -667,21 +739,34 @@ class LazyImage( LazyImage parent )
     parent = 0;
     if( result )
       add_layers( result );
+    
+#ifdef GXML_DEBUG
     int t2 = gethrtime();
     werror("%20s:", operation_name);
-    float t = gauge{ result = process( result ); };
+    float t = gauge{
+#endif /* GXML_DEBUG */
+	/*Layers*/array(Image.Layer)|mapping process_res = process( result );
+	if (mappingp(process_res))
+	  return process_res;
+	result = process_res;
+#ifdef GXML_DEBUG
+      };
     werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
+#endif /* GXML_DEBUG */
     return result;
   }
 
-  Image.Layer render()
+  Image.Layer|mapping render()
   //! Apply all operations needed to actually generate the image, and
   //! render the array of layers to a single layer. After the first
   //! time this function is called, the result is cached.
   {
     if( render_result )
       return render_result;
-    return render_result = Image.lay( run(0) );
+    /*Layers*/array(Image.Layer)|mapping run_res = run(0);
+    if (mappingp(run_res))
+      return run_res;
+    return render_result = Image.lay(run_res);
   }
 
   string _hash;
@@ -707,11 +792,25 @@ class LazyImage( LazyImage parent )
     return render()->ysize();
   }
 
-  void set_args( Arguments a )
+  void set_args( Arguments a, void|int no_arg_check )
   //! Set the args mapping.
   //! Not normally called directly.
   {
-    args = check_args( a ) || a;
+    if(no_arg_check)
+      args = a;
+    else
+      args = check_args( a ) || a;
+  }
+
+  mapping encode()
+  {
+    mapping res = ([ "n": get_program_name(object_program(this_object())),
+		     "a": args,
+		     "r": refs ]);
+    if(parent)
+      res["p"] = parent->encode();
+    
+    return res;
   }
 }
 
@@ -721,29 +820,76 @@ class LoadImage
   inherit LazyImage;
   constant operation_name = "load-image";
 
-  static
+  protected
   {
-    Layers process( Layers layers )
+    Layers|mapping process( Layers layers)
     {
-      array res = roxen.load_layers( args->src, RXML.get_context()->id );
-      // handles relative and absolute virtual files.
-      // Can also handle URLs
-      if( !res )
-	RXML.parse_error("Failed to load %O\n", args->src );
+      RequestID id = request_id->get();
+      if(!id)
+	error("Oops, no request id object.");
+      
+      //  Reject empty source paths for sufficiently high compat_level
+      if ((args->src || "") == "") {
+	float compat_level = (float) id->conf->query("compat_level");
+	if (compat_level >= 5.2) {
+	  if (RXML_CONTEXT)
+	    RXML.parse_error("Empty src attribute not allowed.");
+	  else
+	    error("Empty src attribute not allowed.");
+	}
+      }
+      
+      array|mapping res;
+#if constant(Sitebuilder)
+      //  Let SiteBuilder get a chance to decode its argument data
+      if (Sitebuilder.sb_start_use_imagecache) {
+	Sitebuilder.sb_start_use_imagecache(args, id);
+	res = roxen.load_layers(args->src, id);
+	Sitebuilder.sb_end_use_imagecache(args, id);
+      } else
+#endif
+      {
+	res = roxen.load_layers(args->src, id);
+      }
+      if( !res || mappingp(res) ) {
+	if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
+	  return res;
+	if (RXML_CONTEXT)
+	  // This can be called from within the gxml tag if
+	  // id->misc->generate_images is set.
+	  RXML.parse_error("Failed to load specified image [%O]\n", args->src );
+	else
+	  error("Failed to load specified image [%O]\n", args->src );
+      }
       if( args->tiled )
 	foreach( res, Image.Layer l )
 	  l->set_tiled( 1 );
       return (layers||({}))+res;
     }
 
-    Arguments check_args( Arguments args )
+    Arguments check_args( Arguments args)
     {
       if( !args->src )
 	RXML.parse_error("Missing src attribute to load\n");
       RequestID id = RXML.get_context()->id;
-      Stat s = id->conf->stat_file( args->src, id );
-      if( s )
+      args->src = Roxen.fix_relative( args->src, id );
+      Stat s = id->conf->try_stat_file( args->src, id );
+      
+      // try_stat_file() may fail although it is a valid image,
+      // e.g. /internal-roxen-*.
+      if (s)
+      {
+	string fn = id->conf->real_file( args->src, id );
+	if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
 	args->stat = s[ ST_MTIME ];
+#if constant(Sitebuilder)
+	//  The file we called try_stat_file() on above may be a SiteBuilder
+	//  file. If so we need to extend the argument data with e.g.
+	//  current language fork.
+	if (Sitebuilder.sb_prepare_imagecache)
+	  args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
+#endif
+      }
       return args;
     }
   };
@@ -757,7 +903,7 @@ class SelectLayers
   inherit LazyImage;
   constant operation_name = "select-layers";
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers res = l;
@@ -793,8 +939,8 @@ class Text
   constant operation_name = "text";
   constant destructive    = (<"image","alpha">);
 
-  static {
-    Layers process( Layers l )
+  protected {
+    Layers process( array(Image.Layer|array(Image.Layer)) l )
     {
       Image.Layer ti;
       Font f;
@@ -808,17 +954,24 @@ class Text
 
       string font =
 	(args->font||"default")+" "+
-	(translate_coordinate(args->fontsize,0)||32);
+	(translate_coordinate(args->fontsize,0,l)||32);
       f = resolve_font( font );
 
       if( !f )
 	RXML.parse_error("Cannot find the font ("+font+")\n");
 
-      Image.Image text = f->write( @(parse_variables(args->text,0)/"\n") );
-      
+      mapping text_info;
+      if(f->write_with_info)
+	text_info = f->write_with_info(parse_variables(args->text,0,l)/"\n");
+      else
+	text_info = ([ "img" : f->write(@(parse_variables(args->text,0,l)/"\n")) ]);
+      Image.Image text = text_info->img;
+      int overshoot = (int)text_info->overshoot;
 
-      int x = translate_coordinate( args->x,text );
-      int y = translate_coordinate( args->y,text );
+      int x = translate_coordinate( args->x,text,l );
+      int y = translate_coordinate( args->y,text,l );
+      y -= overshoot;
+
       if( args["modulate-alpha"] )
 	foreach( on, int i )
 	{
@@ -841,18 +994,18 @@ class Text
 			  , text, translate_mode( args->mode ) );
 	ti->set_offset( x,y );
 	ti->set_misc_value( "name", parse_variables(args->name || args->text,
-						    ti));
+						    ti,l));
 
 	if( !on )  return (l||({})) + ({ ti });
 	foreach( on, int i )
 	{
 	  ti = copy_layer( ti );
 	  if( string n = l[i]->get_misc_value( "name" ) )
-	    ti->set_misc_value( "name", parse_variables(n,ti) );
+	    ti->set_misc_value( "name", parse_variables(n,ti,l) );
 	  else
 	    ti->set_misc_value( "name",
 				parse_variables(args->name || args->text,
-						ti) );
+						ti,l) );
 	  l[ i ] = ({ l[i], ti });
 	}
 	return Array.flatten( l );
@@ -882,7 +1035,7 @@ class ReplaceAlpha
   constant operation_name = "replace-alpha";
   constant destructive    = (<"alpha">);
   
-  static {
+  protected {
     Layers process( Layers layers )
     {
       Layers victims = layers;
@@ -924,8 +1077,13 @@ class ReplaceAlpha
       if( args->color )
       {
 	Image.Color c = translate_color( args->color );
-	foreach( victims, Image.Layer l )
-	  l->set_image( l->image(), l->image()->copy()->clear( c ) );
+	foreach( victims, Image.Layer l ) {
+	  if (l->image()) {
+	    l->set_image( l->image(), l->image()->copy()->clear( c ) );
+	  } else {
+	    l->set_image(0, 0);
+	  }
+	}
       }
 
       return layers;
@@ -946,35 +1104,40 @@ class Shadow
   inherit LazyImage;
   constant operation_name = "shadow";
   
-  static {
+  protected {
 
     Layers process( Layers layers )
     {
       Layers q = layers;
       if( args->layers )       q = find_layers( args->layers, layers );
       if( args["layers-id"] )  q = find_layers_id( args["layers-id"], layers );
+      int grow = (int)args->soft; // How much can the image really grow?
+      int xoffset = args->xoffset ? (int)args->xoffset : 2;
+      int yoffset = args->yoffset ? (int)args->yoffset : 2;
 
       // Now, generate the shadow image.
       mapping e = layers_extents( q );
-      Image.Image shadow = Image.Image( e->w+10, e->h+10 );
+      Image.Image shadow = Image.Image( e->w+grow*2, e->h+grow*2 );
 
       if( !sizeof( q ) )
 	return layers;
       
       foreach( q, Image.Layer l )
-	shadow->paste_alpha_color( l->alpha(), 255,255,255,
-				   l->xoffset()-e->x0+5,
-				   l->yoffset()-e->y0+5 );
+	shadow->paste_alpha_color( (l->alpha() ||
+				    l->image()->copy()->clear(255,255,255)),
+				   255,255,255,
+				   l->xoffset()-e->x0+grow,
+				   l->yoffset()-e->y0+grow );
       // Blur, if wanted.
 
       if( args->soft )
-	shadow = shadow->grey_blur( 1+(int)args->soft );
+	shadow = shadow->grey_blur( (int)args->soft );
 
       Image.Layer sl = Image.Layer( shadow->copy()
 				    ->clear( translate_color( args->color ) ),
 				    shadow );
-      sl->set_offset( e->x0 + ((int)args->xoffset||2) - 5,
-		      e->y0 + ((int)args->yoffset||2) - 5 );
+      sl->set_offset( e->x0 + xoffset - grow,
+		      e->y0 + yoffset - grow );
       sl->set_misc_value( "name", (args->name ||
 				   q[0]->get_misc_value("name")+".shadow"));
       return (layers-q) + ({sl}) + q;
@@ -1007,23 +1170,47 @@ class Join
     args = _args;
   }
     
-  static {
+  protected {
     string _sprintf( int f, mapping a )
     {
       switch( f )
       {
 	case 'O':
-	  return sprintf( "%s(%{%O %} %O)", operation_name,
-			  args->contents, hash() );
+#ifdef GXML_DEBUG
+	  return replace(sprintf( "%s[%d:%d]: %O (%{\n%O %})",
+				  operation_name, object_id, refs,
+				  args - ([ "contents":1 ]),
+				  args->contents),
+			 "\n", "\n  ");
+#else
+	  return sprintf( "%s(%{%O, %})", operation_name, args->contents);
+	  
+#endif
 	default:
 	  error("Cannot sprintf image to '%c'\n", f );
       }
     }
   };
-  Layers run( int|void i )
+  Layers|mapping run( int|void i, RequestID|void id )
   {
-    return `+( ({}), @args->contents->run(i+1) );
+    if(id)
+      request_id->set(id);
+    
+    array(Layers|mapping) res_array = args->contents->run(i + 1);
+    foreach(res_array, /*Layers*/array(Image.Layer)|mapping res)
+      if (mappingp(res))
+	return res;
+    return `+( ({}), @res_array );
   }
+
+  mapping encode()
+  {
+    return ([ "n": get_program_name(object_program(this_object())),
+	      "a": args - ([ "contents": 1 ]),
+	      "p": args->contents->encode(),
+	      "r": refs ]);
+  }
+  
 }
 
 class SetLayerMode
@@ -1034,7 +1221,7 @@ class SetLayerMode
   constant operation_name = "set-layer-mode";
   constant destructive    = (<"meta">);
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers q = l;
@@ -1053,7 +1240,7 @@ class SetLayerMode
       if( !args->mode )
 	RXML.parse_error( "Expected mode as an argument\n" );
       if( !parent )
-	RXML.parse_error( "move-layer cannot be the toplevel node\n" );
+	RXML.parse_error( "set-layer-mode cannot be the toplevel node\n" );
       return args;
     }
   };
@@ -1067,15 +1254,15 @@ class MoveLayer
   constant operation_name = "move-layer";
   constant destructive    = (<"meta">);
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers q = l;
       if( args->layers )      q=find_layers( args->layers, l );
       if( args["layers-id"] ) q=find_layers_id(args["layers-id"], l);
 
-      int x = translate_coordinate( args->x,0 );
-      int y = translate_coordinate( args->y,0 );
+      int x = translate_coordinate( args->x,0,l );
+      int y = translate_coordinate( args->y,0,l );
       
       if( !args["absolute"] )
 	foreach( q, Image.Layer l )
@@ -1108,12 +1295,12 @@ class NewLayer
   inherit LazyImage;
   constant operation_name = "new-layer";
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Image.Layer new_layer = Image.Layer();
-      int xs = translate_coordinate( args->xsize,0 ),
-	  ys = translate_coordinate( args->ysize,0 );
+      int xs = translate_coordinate( args->xsize,0,l ),
+	  ys = translate_coordinate( args->ysize,0,l );
 
       Image.Image i = Image.Image( xs,ys,
 				   translate_color(args->color||"000" ));
@@ -1125,8 +1312,8 @@ class NewLayer
 
       new_layer->set_image( i, a );
       new_layer->set_mode( translate_mode( args->mode ) );
-      int xo = translate_coordinate( args->xoffset, new_layer),
-	  yo = translate_coordinate( args->yoffset, new_layer);
+      int xo = translate_coordinate( args->xoffset, new_layer, l),
+	  yo = translate_coordinate( args->yoffset, new_layer, l);
       new_layer->set_offset( xo, yo );
       if( args->tiled )
 	new_layer->set_tiled( 1 );
@@ -1135,6 +1322,7 @@ class NewLayer
   };
 }
 
+
 class Crop
 //! Crop the layers to the specified size.
 //! Uses the 'x', 'y', 'width' and 'height' arguments.
@@ -1142,13 +1330,13 @@ class Crop
   inherit LazyImage;
   constant operation_name = "crop";
   constant destructive    = (<"meta","image","alpha">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
-      int x0 = translate_coordinate( args->x, 0 );
-      int y0 = translate_coordinate( args->y, 0 );
-      int width = translate_coordinate(args->width, 0 );
-      int height = translate_coordinate( args->height, 0 );
+      int x0 = translate_coordinate( args->x, 0, layers );
+      int y0 = translate_coordinate( args->y, 0, layers );
+      int width = translate_coordinate(args->width, 0, layers );
+      int height = translate_coordinate( args->height, 0, layers );
 
       foreach( layers, Image.Layer l )
       {
@@ -1174,6 +1362,7 @@ class Crop
 	  l->set_offset( 0, 0 );
 	}
       }
+      return layers;
     }
 
     Arguments check_args( Arguments args )
@@ -1187,13 +1376,128 @@ class Crop
   };
 }
 
+
+class Scale
+//! Scale the layers to the specified size. Uses the 'width' and
+//! 'height' arguments (in pixels). If either width or height are not
+//! specified, the aspect of the image will be maintained.
+//!
+//! If 'mode=relative' is specified, the width and height will be
+//! given as percentages of the original width and height.
+{
+  inherit LazyImage;
+  constant operation_name = "scale";
+  constant destructive    = (<"meta","image","alpha">);
+  protected {
+    Layers process( Layers layers )
+    {
+      Layers victims = layers;
+      if( args->layers )
+	victims = find_layers( args->layers, layers );
+      else if( args["layers-id"] )
+	victims = find_layers( args["layers-id"], layers );
+
+      int|float width, height, max_width, max_height;
+      if( args->mode == "relative" )
+      {
+	width = translate_coordinate_f( args->width, 0, layers ) / 100.0;
+	height = translate_coordinate_f( args->height, 0, layers ) / 100.0;
+      }
+      else
+      {
+	width = translate_coordinate( args->width, 0, layers );
+	height = translate_coordinate( args->height, 0, layers );
+      }
+      if (args["max-width"])
+	max_width = translate_coordinate( args["max-width"], 0, layers );
+      if (args["max-height"])
+	max_height = translate_coordinate( args["max-height"], 0, layers );
+      
+      foreach( victims, Image.Layer l )
+      {
+	if( max_width || max_height )
+	{
+	  if (max_width && max_height)
+	  {
+	    if ( max_width / (float)l->xsize() < max_height / (float)l->ysize() )
+	      max_height = 0;
+	    else
+	      max_width = 0;
+	  }
+	  max_width = min( max_width, l->xsize() );
+	  max_height = min( max_height, l->ysize() );
+	}
+
+	Image.Image i = l->image(), a = l->alpha();
+	if( i )
+	  i = i->scale( max_width||width, max_height||height );
+	if( a )
+	  a = a->scale( max_width||width, max_height||height );
+	l->set_image( i, a );
+      }
+      return layers;
+    }
+
+    Arguments check_args( Arguments args )
+    {
+      if( !args->width && !args->height &&
+	  !args["max-width"] && !args["max-height"] )
+	RXML.parse_error("Either 'width' or 'height' arguments "
+			 "must be specified\n" );
+      if( !parent )
+	RXML.parse_error( "scale cannot be the toplevel node\n" );
+      return args;
+    }
+  };
+}
+
+class Rotate
+//! Rotate cpecified number of degrees
+{
+  inherit LazyImage;
+  constant operation_name = "rotate";
+  constant destructive    = (<"image","alpha","meta">);
+  protected {
+    Layers process( Layers layers )
+    {
+      Layers victims = layers;
+      if( args->layers )
+	victims = find_layers( args->layers, layers );
+      else if( args["layers-id"] )
+	victims = find_layers( args["layers-id"], layers );
+
+      float r = (float)args->degrees;
+      foreach( victims, Image.Layer l )
+      {
+	Image.Image i = l->image(), a = l->alpha();
+	if( i )
+	  i = i->rotate( r );
+	if( a )
+	  a = a->rotate( r );
+	l->set_image( i, a );
+      }
+      return layers;
+    }
+
+    Arguments check_args( Arguments args )
+    {
+      if( !args->degrees )
+	RXML.parse_error( "Required argument 'degrees' missing.\n" );
+      if( !parent )
+	RXML.parse_error( "rotate cannot be the toplevel node\n" );
+      return args;
+    }
+  };
+}
+
 class GreyBlur
-//! Much faster version of blur, but only blurs greyscale images.
+//! About three times faster version of blur, but only blurs greyscale
+//! images.
 {
   inherit LazyImage;
   constant operation_name = "grey-blur";
   constant destructive    = (<"image","alpha">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
       int t = max((int)args->times, 1);
@@ -1247,7 +1551,7 @@ class Blur
   inherit LazyImage;
   constant operation_name = "blur";
   constant destructive    = (<"image","alpha">);
-  static {
+  protected {
     array(array(int)) blur_matrix( int r )
     {
       return ({({1})*r })*r;
@@ -1306,7 +1610,7 @@ class X									\
   inherit LazyImage;							\
   constant operation_name =  Y;						\
   constant destructive    = (<"image","alpha">);			\
-  static {								\
+  protected {								\
     Layers process( Layers layers )					\
     {									\
       Layers victims = layers;						\
@@ -1354,10 +1658,12 @@ class X									\
 
 //! @ignore
 BASIC_I_OR_A_OPERATION( Gamma, "gamma", gamma,
-			translate_coordinate_f(args->gamma,0) );
+			translate_coordinate_f(args->gamma,0,layers) );
 BASIC_I_OR_A_OPERATION( Invert, "invert", invert, );
 BASIC_I_OR_A_OPERATION( Grey,   "grey", grey, );
 BASIC_I_OR_A_OPERATION( Color,  "color", color,
+			@translate_color(args->color)->rgb());
+BASIC_I_OR_A_OPERATION( Clear,  "clear", clear,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( MirrorX, "mirror-x", mirrorx, );
 BASIC_I_OR_A_OPERATION( MirrorY, "mirror-y", mirrory, );
@@ -1366,8 +1672,9 @@ BASIC_I_OR_A_OPERATION( RGB2HSV, "rgb-to-hsv", rgb_to_hsv, );
 BASIC_I_OR_A_OPERATION( Distance,"color-distance",distancesq,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( SelectFrom,"select-from",select_from,
-			@({translate_coordinate( args->x,0 ),
-			   translate_coordinate( args->y,0 )}));
+			@({translate_coordinate( args->x,0,layers ),
+			   translate_coordinate( args->y,0,layers ),
+			   (int)args["edge-value"] % 256 }));
 //! @endignore
 
 class Expand
@@ -1377,11 +1684,9 @@ class Expand
   constant operation_name = "expand";
   constant destructive    = (<"image","alpha">);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
-      int x, y;
-      int x0=10000000, y0=100000000;
       Layers victims = layers;
       if( !layers )
 	RXML.parse_error( "Expand cannot be the toplevel node\n");
@@ -1430,7 +1735,7 @@ class Line
   constant operation_name = "line";
   constant destructive    = (< "alpha", >);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
       array(float) coordinates = ({});
@@ -1440,8 +1745,8 @@ class Line
       if( args->layers )      on = find_layers( args->layers, layers );
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
-      int x = translate_coordinate( args->xsize, 0 ),
-	  y = translate_coordinate( args->ysize, 0 );
+      int x = translate_coordinate( args->xsize, 0, layers ),
+	  y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
@@ -1456,13 +1761,13 @@ class Line
 
       foreach(args->coordinates/",", string c)
 	coordinates += ({
-	  translate_coordinate_f( c, pi )
+	  translate_coordinate_f( c, pi, layers )
 	});
 
       if( args["coordinate-system"] )
       {
 	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi),
+	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
 		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
 	  RXML.parse_error("Illegal syntax for coordinate-system. "
 			   "Expected x0,y0-x1,y1\n");
@@ -1487,7 +1792,8 @@ class Line
       pi->setcolor( 255,255,255 );
 
       array(array(float)) coords =
-	make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi ),
+	make_polygon_from_line( translate_coordinate_f( args->width||"1.0",pi,
+							layers ),
 				coordinates,
 				translate_cap_style( args->cap ),
 				translate_join_style( args->join ) );
@@ -1503,9 +1809,9 @@ class Line
       {
 	Image.Layer l = Image.Layer( );
 	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi) );
-	l->set_offset( translate_coordinate( args->xoffset, pi ),
-		       translate_coordinate( args->yoffset, pi ) );
+			   parse_variables(args->name || "poly", pi, layers) );
+	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+		       translate_coordinate( args->yoffset, pi, layers ) );
 
 	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
 		      pi );
@@ -1542,7 +1848,7 @@ class Polygone
   constant operation_name = "poly";
   constant destructive    = (< "alpha", >);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
       array(float) coordinates = ({});
@@ -1552,8 +1858,8 @@ class Polygone
       if( args->layers )      on = find_layers( args->layers, layers );
       if( args["layers-id"] ) on = find_layers_id( args["layers-id"], layers );
       
-      int x = translate_coordinate( args->xsize, 0 ),
-	  y = translate_coordinate( args->ysize, 0 );
+      int x = translate_coordinate( args->xsize, 0, layers ),
+	  y = translate_coordinate( args->ysize, 0, layers );
       mapping ext;
 
       if( on )
@@ -1568,13 +1874,13 @@ class Polygone
 
       foreach(args->coordinates/",", string c)
 	coordinates += ({
-	  translate_coordinate_f( c, pi )
+	  translate_coordinate_f( c, pi, layers )
 	});
 
       if( args["coordinate-system"] )
       {
 	float a, b, c, d;
-	if( sscanf( parse_variables(args["coordinate-system"], pi),
+	if( sscanf( parse_variables(args["coordinate-system"], pi, layers),
 		    "%f,%f-%f,%f", a, b, c, d ) != 4 )
 	  RXML.parse_error("Illegal syntax for coordinate-system. "
 			   "Expected x0,y0-x1,y1\n");
@@ -1606,9 +1912,9 @@ class Polygone
       {
 	Image.Layer l = Image.Layer( );
 	l->set_misc_value( "name",
-			   parse_variables(args->name || "poly", pi) );
-	l->set_offset( translate_coordinate( args->xoffset, pi ),
-		       translate_coordinate( args->yoffset, pi ) );
+			   parse_variables(args->name || "poly", pi, layers) );
+	l->set_offset( translate_coordinate( args->xoffset, pi, layers ),
+		       translate_coordinate( args->yoffset, pi, layers ) );
 
 	l->set_image( Image.Image( x,y, translate_color( args->color ) ),
 		      pi );
@@ -1640,9 +1946,9 @@ class Polygone
 
 
 
-static string low_hash( program|object p, mapping a )
+protected string low_hash( program|object p, mapping a )
 {
-  object o = Crypto.md5();
+  Crypto.MD5 o = Crypto.MD5();
   if(!a)
     error("low_hash called before set_args\n");
   o->update( p->operation_name );
@@ -1650,8 +1956,8 @@ static string low_hash( program|object p, mapping a )
   return o->digest();
 }
 
-static Thread.Local current_layers = Thread.Local();
-static Thread.Local known_images = Thread.Local();
+protected Thread.Local current_layers = Thread.Local();
+protected Thread.Local known_images = Thread.Local();
 
 void add_layers( Layers l )
 {
@@ -1673,12 +1979,22 @@ LazyImage join_images( LazyImage ... i )
 //! Create a new @[LazyImage] that contains all layers in the
 //! specified images.
 {
-  Join j =  Join( 0 );
-  j->set_args( ([ "contents":i ]) );
+  Join j = Join( 0 );
+
+  // Merge any join nodes in the arguments here to avoid deep recursion.
+  array(LazyImage) contents =
+    map(i, lambda(LazyImage i) {
+	     if (i && (i->operation_name == "join") && i->args) {
+	       return [array(LazyImage)]i->args->contents;
+	     }
+	     return ({ i });
+	   }) * ({});
+  
+  j->set_args( ([ "contents":contents ]) );
   return j;
 }
 
-LazyImage new( program p, LazyImage parent, mapping args )
+LazyImage new( program p, LazyImage parent, mapping args, void|int hard )
 //! Create a new (shared) LazyImage.
 //!
 //! The @[args] mapping is intended to be the args received in
@@ -1690,14 +2006,40 @@ LazyImage new( program p, LazyImage parent, mapping args )
 //!
 //! @[p] should be a child of the @[LazyImage] class.
 //! @[parent] can be 0.
+//!
+//! The @[hard] flag indicates if references counting and check_arg
+//! should be skipped. Usefull when decoding an already verified
+//! object tree.
+  
 {
   string hash = (parent?parent->hash():"") + low_hash( p, args );
   mapping ki = known_images->get();
   if( ki[ hash ] )
-    return ki[ hash ]->ref();
+    return hard? ki[ hash ]: ki[ hash ]->ref();
 
-  LazyImage res = p( parent ? parent->ref() : 0 );
-  res->set_args( args );
+  LazyImage res = p( parent ? (hard? parent: parent->ref()) : 0 );
+  res->set_args( args, hard );
   ki[ res->_hash = hash ] = res;
-  return res->ref(); // no ->ref() here.
+  return hard? res: res->ref(); // no ->ref() here.
+}
+
+LazyImage decode(mapping node_tree)
+{
+  if(!node_tree)
+    return 0;
+  
+  if(arrayp(node_tree->p)) {
+    LazyImage image = join_images(@map(node_tree->p, decode));
+    image->refs = node_tree->r;
+    return image;
+  }
+  
+  program prog = dirnode[node_tree->n];
+
+  if(!prog || !prog->operation_name)
+    error("Unknown program: %O.\n", node_tree->n);
+
+  LazyImage image = new(prog, decode(node_tree->p), node_tree->a, 1);
+  image->refs = node_tree->r;
+  return image;
 }

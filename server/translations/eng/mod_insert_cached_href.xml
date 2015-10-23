@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_insert_cached_href</project>
+<language>eng</language>
+<file>../modules/tags/insert_cached_href.pike</file>
+
+<str id="1">
+<o>Tags: Insert cached href</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This module contains the RXML tag "insert cached-href". Useful when implementing e.g. RSS syndication.</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Fetch interval</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>States how often the data of an URL should be updated. In seconds, minutes, hours or days.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Fresh time</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>States how long data in the database can be considered fresh enough to display. In seconds, minutes, hours or days. As default this is 0, which means that this attribute is not used and that there are no restrictions on data freshness.</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Time to live</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>States how long unrequested data can exist in the database before being removed. In seconds, minutes, hours or days.</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Timeout</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>The timeout when fetching data from a server. In seconds, minutes, hours or days.</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>Update interval</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>States how often the module will check if the database needs to be updated. In seconds, minutes, hours or days.</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Maximum recursion depth</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Maximum number of nested &lt;tt&gt;&amp;lt;insert cached-href&amp;gt;&lt;/tt&gt;'s allowed. May be set to zero to disable the limit.</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Clear database</o>
+<t></t>
+</str>

@@ -1,4 +1,4 @@
-// The Atlas module. Copyright © 1999 - 2000, Roxen IS.
+// The Atlas module. Copyright © 1999 - 2009, Roxen IS.
 //
 // Please note: The map is incomplete and incorrect in details.  Countries
 // and territories are missing.
@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.7 2001/08/23 23:34:46 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -15,9 +15,27 @@ constant module_doc  =
 possible to highlight countries on the generated world map.";
 
 roxen.ImageCache the_cache;
+int do_ext;
 
 void start() {
   the_cache = roxen.ImageCache( "atlas", generate_image );
+  do_ext = query("ext");
+}
+
+void stop()
+{
+  destruct(the_cache);
+}
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
 }
 
 string status() {
@@ -27,7 +45,7 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {
@@ -35,7 +53,9 @@ void flush_cache() {
 }
 
 mapping find_internal( string f, RequestID id ) {
-  return the_cache->http_file_answer( f, id );
+  //  Strip file extensions from filename. Since "." isn't a valid character
+  //  in the ID we can split at the first occurrence.
+  return the_cache->http_file_answer((f / ".")[0], id);
 }
 
 
@@ -164,8 +184,13 @@ class TagAtlas {
     array do_return(RequestID id) {
       mapping state = id->misc->atlas_state;
 
+      int timeout = Roxen.timeout_dequantifier(args);
+
       args->src = query_absolute_internal_location(id) +
-	the_cache->store(state, id);
+	the_cache->store(state, id, timeout);
+      if(do_ext)
+	args->src += ".gif";
+
       if(!args->alt)
 	args->alt = state->region || "The World";
 
@@ -175,7 +200,7 @@ class TagAtlas {
   }
 }
 
-Image generate_image(mapping state, RequestID id)
+Image.Image generate_image(mapping state, RequestID id)
 {
   if(!state)
     return 0;
@@ -196,7 +221,7 @@ Image generate_image(mapping state, RequestID id)
 
   Map.Earth m = Map.Earth( state->region );
 
-  Image img = m->image(state->width, state->height, opt);
+  Image.Image img = m->image(state->width, state->height, opt);
 
   return img;
 }
@@ -204,40 +229,49 @@ Image generate_image(mapping state, RequestID id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"emit#atlas": ({ #"<desc plugin='plugin'><p><short>
- Lists altas stuff.</short></p>
+"emit#atlas": ({ #"<desc type='plugin'><p><short>
+ Lists regions and countries defined in the atlas tag map.</short></p>
 </desc>
 
 <attr name='list' value='regions|countries'><p>
- Select what to list.</p>
+ Select what type of objects to list.</p>
 
-<ex type='vert'>
+<ex>
+<b>Available regions</b><br />
 <emit source='atlas' list='regions'>
-<ent>_.name</ent><br />
+&_.name;<br />
 </emit>
 </ex>
-<p>Available regions</p>
 </attr>",
 
 ([
-  "&_.name;":#"<desc ent='ent'><p>
+  "&_.name;":#"<desc type='entity'><p>
    The name of the region/country</p>
   </desc>"
 ])
 
   }),
-"atlas":({ #"<desc cont='cont'><p><short>
+"atlas":({ #"<desc type='cont'><p><short>
 
  Draws a map.</short> The map shows either the world, regions (Africa, Europe,
- etc) or countries. </p>
+ etc) or countries. It's a known bug that the map is not entierly up to date.</p>
 
+<ex><atlas/></ex>
+
+<ex><atlas fgcolor='#425A84' bgcolor='#dee2eb'>
+<country domain='se' color='orange'/>
+<country domain='jp' color='orange'/>
+<marker x='100' y='90'/>
+</atlas>
+</ex>
 </desc>
 
 <attr name='region' value='name' default='The World'><p>
  Which map to show. The value may be any of the listed region values
- that <xref href='../output/emit.tag'><tag>emit source='atlas'
- list='regions'</tag><ent>_.name</ent><tag>/emit</tag></xref>
+ that emit plugin <xref href='../output/emit_atlas.tag'>atlas</xref>
  returns.</p>
+
+<ex><atlas region='europe' width='200'/></ex>
 </attr>
 
 <attr name='width' value='number'><p>
@@ -248,17 +282,62 @@ constant tagdoc=([
  The height of the image.</p>
 </attr>
 
-<attr name='fgcolor' value='color'><p>
+<attr name='fgcolor' value='color' default='white'><p>
  The color of the unselected land areas.</p>
 </attr>
 
-<attr name='bgcolor' value='color'><p>
- The color of the sea.</p>
+<attr name='bgcolor' value='color' default='#101040'><p>
+ The color of the sea areas.</p>
+</attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
 </attr>",
 
 ([
 "country" : #"<desc tag='tag'><p><short>
- A region that should be highlighted.</short></p>
+ A region that should be highlighted with a different color on the map.</short></p>
 </desc>
 
 <attr name='domain' value='name'><p>
@@ -266,9 +345,11 @@ constant tagdoc=([
 </attr>
 
 <attr name='name' value='name'><p>
- The name of the country that should be highlighted.</p></attr>
+ The name of the country that should be highlighted. A list of available
+ names can be aquired from the <xref href='../output/emit_atlas.tag'>atlas</xref>
+ emit plugin.</p></attr>
 
-<attr name='color' value='color'><p>
+<attr name='color' value='color' default='#e0c080'><p>
  The color that should be used for highlighting.</p>
 </attr>",
 
@@ -288,11 +369,17 @@ constant tagdoc=([
   The color of the marker</p>
 </attr>
 
-<attr name='style' value='box|diamond' default='diamond'>
+<attr name='style' value='box|diamond' default='diamond'><p>
   The type of marker.</p>
+
+<ex><atlas region='europe' width='150'>
+<marker x='100' y='30' style='diamond' />
+<marker x='125' y='30' style='box' />
+</atlas>
+</ex>
 </attr>
 
-<attr name='size' value='number' default='4'>
+<attr name='size' value='number' default='4'><p>
   The size of the marker.</p>
 </attr>"
 	       ])

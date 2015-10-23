@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 //#pragma strict_types
@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.12 2001/08/23 20:20:12 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -19,21 +19,16 @@ constant module_doc  = "Handles documents in different languages. "
 void create() {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
 	  "The default language for this server. Is used when trying to "
-	  "decide which language to send when the user hasn't selected any. "
-	  "Also the language for the files with no language-extension." );
+	  "decide which language to send when the user hasn't selected any." );
 
   defvar( "languages", ({"en","de","sv"}), "Languages", TYPE_STRING_LIST,
 	  "The languages supported by this site." );
-
-  defvar( "rxml", ({"html","rxml"}), "RXML extensions", TYPE_STRING_LIST,
-	  "RXML parse files with the following extensions, "
-	  "e.g. html make it so index.html.en gets parsed." );
 }
 
 string default_language;
 array(string) languages;
-array(string) rxml;
 string cache_id;
+array(string) roxen_languages;
 
 void start(int n, Configuration c) {
   if(c->enabled_modules["content_editor#0"]) {
@@ -42,25 +37,22 @@ void start(int n, Configuration c) {
     return;
   }
 
-  default_language=[string]query("default_language");
-  languages=[array(string)]query("languages");
-  rxml=[array(string)]query("rxml");
-  cache_id="lang_mod"+c->get_config_id();
+  default_language = lower_case([string]query("default_language"));
+  languages = map([array(string)]query("languages"), lower_case);
+  cache_id = "lang_mod"+c->get_config_id();
+
+  mapping conv = Standards.ISO639_2.list_639_1();
+  conv = mkmapping( values(conv), indices(conv) );
+  roxen_languages = roxen->list_languages() +
+    map(roxen->list_languages(), lambda(string in) { return conv[in]; });
+  roxen_languages -= ({ 0 });
 }
 
 
 // ------------- Find the best language file -------------
 
-array(string) find_language(RequestID id) {
-  if (id->misc->pref_languages) {
-    return (id->misc->pref_languages->get_languages() +
-	    ({ default_language })) & languages;
-  } else {
-    return ({ default_language }) & languages;
-  }
-}
-
 object remap_url(RequestID id, string url) {
+  if (!languages) return 0;   //  module not initialized
   if(!id->misc->language_remap) id->misc->language_remap=([]);
   if(id->misc->language_remap[url]==1) return 0;
   id->misc->language_remap[url]++;
@@ -102,10 +94,18 @@ object remap_url(RequestID id, string url) {
   else
     [found,files]=split;
 
-
-  // Remap
-
-  foreach(find_language(id), string lang) {
+  //  Register known languages with the protocol cache
+  PrefLanguages pl = id->misc->pref_languages;
+  if (pl)
+    pl->register_known_language_forks(found, id);
+  
+  //  Get language search order
+  array(string) find_lang =
+    (pl ? pl->get_languages() : ({ }) ) + ({ default_language });
+  find_lang &= languages;
+  
+  //  Remap
+  foreach(find_lang, string lang) {
     if(found[lang]) {
       url=Roxen.fix_relative(url, id);
       string type=id->conf->type_from_filename(url);
@@ -125,12 +125,13 @@ object remap_url(RequestID id, string url) {
 // ---------------- Tag definitions --------------
 
 function(string:string) translator(array(string) client, RequestID id) {
-  client=({ id->misc->defines->language })+client+({ default_language });
-  array(string) _lang=roxen->list_languages();
+  client= ({ id->misc->defines->language }) + client + ({ default_language });
+
   foreach(client, string lang)
-    if(has_value(_lang,lang)) {
+    if(has_value(roxen_languages,lang)) {
       return roxen->language_low(lang)->language;
     }
+  return roxen->language_low("en")->language;
 }
 
 class TagLanguage {
@@ -177,7 +178,8 @@ class TagUnavailableLanguage {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "language":"<desc tag>Show the pages language.</desc>",
-  "unavailable-language":"<desc cont>Show what language the user wanted, if this isn't it.</desc>"
+  "language":"<desc type='tag'><p><short>Show the pages language.</short></p></desc>",
+  "unavailable-language":"<desc type='cont'><p><short>Show what language the user "
+                         "wanted, if this isn't it.</short></p></desc>"
 ]);
 #endif

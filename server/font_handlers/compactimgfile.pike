@@ -1,3 +1,6 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2009, Roxen IS.
+
 #include <config.h>
 inherit "imagetar";
 constant name = "Compact image file font";
@@ -111,7 +114,6 @@ class CIF
     int wc;
     sscanf( fname, "%s.", fname );
     if( strlen(fname) > 2 ) sscanf( fname, "0x%x", wc ); else wc=fname[0];
-    int c;
 
     if( fname == "fontinfo" )
       wc = 0xffffffff;
@@ -166,7 +168,7 @@ void update_font_list()
   {
     foreach( get_dir( dir )||({}), string pd )
     {
-      if( file_stat( dir+pd )[ ST_SIZE ] == -2 ) // isdir
+      if( Stdio.is_dir( dir+pd ) )
         rec_find_in_dir( dir+pd+"/" );
       else if( glob( "*.cif", pd ) )
       {

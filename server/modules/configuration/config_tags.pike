@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 //
 inherit "module";
 inherit "html";
@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.158 2001/08/24 14:45:51 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -26,6 +26,14 @@ void create()
 {
   query_tag_set()->prepare_context=set_entities;
 }
+
+protected mapping(int:string) css_font_size = ([
+  -2: "x-small",
+  -1: "small",
+  //0: "medium",
+  1: "large",
+  2: "x-large",
+]);
 
 class Scope_cf
 {
@@ -53,6 +61,49 @@ class Scope_usr
 
 #define ALIAS( X ) `[](X,c,scope)
 #define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope),"html")+"\"":0)
+
+  mixed `[]=( string var, mixed value, void|RXML.Context c,
+	      void|string scope, void|RXML.Type type)
+  {
+    object s = c->id->misc->config_settings;
+    Variable.Variable v;
+    if( v = s->getvar( var ) )
+      v->set( value );
+    else
+      s->definvisvar( var, value, TYPE_STRING );
+    s->save();
+  }
+
+  protected string fade_color( int color_type, object c1,
+			       RXML.Context c, string scope, RXML.Type type)
+  {
+    int add;
+    switch( color_type )
+    {
+      case 1:  add = 0x21;color_type=1; break;
+      case 2:  add = 0x61;color_type=1; break;
+      case 11: add = 0x05;color_type=2; break;
+      case 12: add = 0x15;color_type=2; break;
+      case 21: add = 0x25;color_type=2; break;
+      case 22: add = 0x35;color_type=2; break;
+    }
+    switch( color_type )
+    {
+      case 1: /* RGB */
+	if( `+(0,@(array)c1) < 200 )
+	  return (string)Image.Color( @map(map((array)c1,`+,add),min,255));
+	return (string)Image.Color(@map(map((array)c1, `-,(add-0x10)),max,0));
+      case 2: /* HSV */
+	c1=Image.Color.guess(ALIAS("content-bg"));
+	array hsv = c1->hsv();
+	if( !hsv[2]  )
+	  hsv[2] = add;
+	else
+	  hsv[2] = max( hsv[2]-add, 0);
+	return ENCODE_RXML_TEXT( (string)Image.Color.hsv(@hsv), type);
+    }
+  }
+
   mixed `[]  (string var, void|RXML.Context c, void|string scope, void|RXML.Type type)
   {
     RequestID id = c->id;
@@ -67,6 +118,7 @@ class Scope_usr
     {
       string q, res;
      case "left-buttonwidth": return "150";
+     case "gbutton-width": return ENCODE_RXML_INT(0, type);
 
       /* composite */
      case "count-0": return ENCODE_RXML_TEXT("/internal-roxen-count_0", type);
@@ -77,8 +129,9 @@ class Scope_usr
 
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
+     case "leftside-padheight": return ENCODE_RXML_INT(1, type);
      case "logo-html":
-       return ENCODE_RXML_XML("<img border=\"0\" src="+QALIAS("logo")+" />", type);
+       return ENCODE_RXML_XML("<imgs border=\"0\" src="+QALIAS("logo")+" />", type);
 
      case "toptabs-args":
        res = "frame-image="+QALIAS("toptabs-frame");
@@ -92,6 +145,7 @@ class Scope_usr
        res += " textcolor="+QALIAS("toptabs-dimtextcolor" );
        res += " seltextcolor="+QALIAS("toptabs-seltextcolor" );
        res += " selcolor="+QALIAS("toptabs-selcolor" );
+       res += " quant=128";
        if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
          res += " "+q;
        return ENCODE_RXML_XML(res, type);
@@ -165,6 +219,9 @@ class Scope_usr
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
      case "content-toptableargs": return ENCODE_RXML_TEXT("", type);
+     case "split-tableargs":      return ENCODE_RXML_TEXT("", type);
+     case "split2-tableargs":     return ENCODE_RXML_TEXT("", type);
+     case "split2-width":         return ENCODE_RXML_TEXT("", type);
      case "left-image":           return ENCODE_RXML_TEXT("/internal-roxen-unit", type);
      case "selected-indicator":   return ENCODE_RXML_TEXT("/internal-roxen-next", type);
      case "database-small":       return ENCODE_RXML_TEXT("/internal-roxen-database_small", type);
@@ -176,7 +233,12 @@ class Scope_usr
      case "err-2":                return ENCODE_RXML_TEXT("/internal-roxen-err_2", type);
      case "err-3":                return ENCODE_RXML_TEXT("/internal-roxen-err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
+     case "padlock":              return ENCODE_RXML_TEXT("/internal-roxen-padlock", type);
+     case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
+     case "content-frame":        return ENCODE_RXML_TEXT("", type);
+     case "module-list-frame":    return ENCODE_RXML_TEXT("", type);
+     case "list-style-boxes":     return ENCODE_RXML_TEXT("", type);
 
 
       /* 1-st level */
@@ -190,6 +252,7 @@ class Scope_usr
      case "content-titlefg":      return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "gbutton-font":         return ENCODE_RXML_TEXT( ALIAS( "font" ), type);
      case "left-buttonframe":     return ENCODE_RXML_TEXT( ALIAS( "gbutton-frame-image" ), type);
+     case "gbutton-disabled-frame-image":  return ENCODE_RXML_TEXT( ALIAS("gbutton-frame-image"), type);
      case "obox-bodybg":          return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
      case "obox-bodyfg":          return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "obox-titlefg":         return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
@@ -230,46 +293,17 @@ class Scope_usr
     }
 
 
-    string fade_color( int color_type )
-    {
-      int add;
-      switch( color_type )
-      {
-	case 1:  add = 0x21;color_type=1; break;
-	case 2:  add = 0x61;color_type=1; break;
-	case 11: add = 0x05;color_type=2; break;
-	case 12: add = 0x15;color_type=2; break;
-	case 21: add = 0x25;color_type=2; break;
-	case 22: add = 0x35;color_type=2; break;
-      }
-      switch( color_type )
-      {
-       case 1: /* RGB */
-         if( `+(0,@(array)c1) < 200 )
-           return (string)Image.Color( @map(map((array)c1,`+,add),min,255));
-         return (string)Image.Color(@map(map((array)c1, `-,(add-0x10)),max,0));
-       case 2: /* HSV */
-	 c1=Image.Color.guess(ALIAS("content-bg"));
-         array hsv = c1->hsv();
-         if( !hsv[2]  )
-           hsv[2] = add;
-         else
-           hsv[2] = max( hsv[2]-add, 0);
-         return ENCODE_RXML_TEXT( (string)Image.Color.hsv(@hsv), type);
-      }
-    };
-
 #undef ALIAS
 #undef QALIAS
 
     switch( var )
     {
-     case "matrix11": return fade_color( 11 );
-     case "matrix12": return fade_color( 12 );
-     case "matrix21": return fade_color( 21 );
-     case "matrix22": return fade_color( 22 );
-     case "fade1":    return fade_color( 1 );
-     case "fade2":    return fade_color( 2 );
+     case "matrix11": return fade_color( 11, c1, c, scope, type );
+     case "matrix12": return fade_color( 12, c1, c, scope, type );
+     case "matrix21": return fade_color( 21, c1, c, scope, type );
+     case "matrix22": return fade_color( 22, c1, c, scope, type );
+     case "fade1":    return fade_color( 1,  c1, c, scope, type );
+     case "fade2":    return fade_color( 2,  c1, c, scope, type );
 
      case "fade3": {
        array sub = ({ 0x26, 0x21, 0x18 });
@@ -305,10 +339,10 @@ class Scope_usr
        return ENCODE_RXML_TEXT( (string)Image.Color( @map(map(a,max,0),min,255) ), type);
      }
     }
-    return config_setting( var );
+    return config_setting(var) || id->prestate[var];
   }
 
-  string _sprintf() { return "RXML.Scope(usr)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(usr)"; }
 }
 
 RXML.Scope usr_scope=Scope_usr();
@@ -355,9 +389,9 @@ string get_var_form( string s, object var, object mod, RequestID id,
   string pre = var->get_warnings();
 
   if( pre )
-    pre = "<font size='+1' color='&usr.warncolor;'><pre>"+
+    pre = "<div style='color: &usr.warncolor;'><pre>"+
         html_encode_string( pre )+
-        "</pre></font>";
+	"</pre></div>";
   else
     pre = "";
   
@@ -381,11 +415,11 @@ string get_var_form( string s, object var, object mod, RequestID id,
   if( mod->check_variable &&
       (tmp = mod->check_variable( s, var->query() ) ))
     pre += 
-        "<font size='+1' color='&usr.warncolor;'><pre>"
+	"<div style='color: &usr.warncolor;'><pre>"
         + html_encode_string( tmp )
-        + "</pre></font>";
-  
-  if( !view_mode )
+	+ "</pre></div>";
+
+  if( !view_mode && var->render_form )
     return pre + var->render_form( id );
   return pre + var->render_view( id );
 }
@@ -394,10 +428,14 @@ string diff_url( RequestID id, object mod, Variable.Variable var )
 {
   RoxenModule cfs = id->conf->find_module( "config_filesystem#0" );
 
-  string base =
-    combine_path((id->port_obj->path||"/"),cfs->query_location()[1..])+
-    "diff.pike";
-  return base+"?variable="+Roxen.http_encode_string(var->path());
+  // There is one occasion when there is no id->port_obj: When the
+  // port for the configuration interface is changed.
+  string base =(id->port_obj ? 
+		combine_path((id->port_obj->path||"/"),
+			     cfs->query_location()[1..])+
+		"diff.pike":
+		cfs->query_location()+"diff.pike");
+  return base+"?variable="+Roxen.http_encode_url(var->path());
 }
 
 mapping get_variable_map( string s, object mod, RequestID id, int noset )
@@ -419,7 +457,14 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     //
     // Perhaps add caching as well (section -> visible variables)
     // That would invite problems, though.
-    res->rname = (string)var->name();
+    string old_locale;
+    if ((old_locale = roxen.get_locale()) != "eng") {
+      roxen.set_locale("eng");
+      res->rname = (string)var->name();
+      roxen.set_locale(old_locale);
+    } else {
+      res->rname = (string)var->name();
+    }
     res["no-default"] = var->get_flags() & VAR_NO_DEFAULT;
     res->path = var->path();
     res["diff-txt"] = var->diff( 0 );
@@ -427,14 +472,15 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     if( !res["diff-txt"] && var->diff( 1 ) )
       res->diff = 
 	"<a target=rxdiff_"+var->path()+
-	" href='"+diff_url( id, mod, var )+"'><gbutton>"+
-	LOCALE(502,"Diff")+"</gbutton></a>";
+	" href='"+diff_url( id, mod, var )+"'><link-gbutton>"+
+	LOCALE(502,"Diff")+"</link-gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
     res->changed = !var->is_defaulted();
     res->cid = res->changed*-10000000+res->id;
-    res->name = (res->rname/":")[-1];
+    string n = (string) var->name();
+    res->name = has_value(n, ":") ? ((n / ":")[1..] * ":") : n;
     res->cname = (!res->changed)+res->name;
     res->doc = config_setting2("docs")?(string)var->doc():"";
     res->value = var->query();
@@ -454,15 +500,24 @@ mapping get_variable_section( string s, object mod, RequestID id )
 {
   Variable.Variable var = mod->getvar( s );
   string section = RXML.get_var( "section", "form" );
-
-  s = (string)var->name();
-  if( !s ) return 0;
-  if( sscanf( s, "%s:%*s", s ) ) 
+  LocaleString localized_name = var->name();
+  s = (string)localized_name;
+  if( sscanf( s, "%s:%*s", s ) ) {
+    string s2 = s;
+    string old_loc;
+    if (objectp(localized_name) &&
+	(old_loc = roxen.get_locale()) != "eng") {
+      roxen.set_locale("eng");	// Standard.
+      s2 = (string)localized_name;
+      roxen.set_locale(old_loc);
+      sscanf(s2, "%s:", s2);
+    }
     return ([
-      "section":s,
-      "sectionname":s,
-      "selected":(section==s?"selected":"")
+      "section":s2,	// Must not be localized.
+      "sectionname":s,	// Localized.
+      "selected":(section==s2?"selected":"")
     ]);
+  }
   else
     return ([
       "section":"Settings",
@@ -478,9 +533,10 @@ array get_variable_maps( object mod,
                          RequestID id, 
                          int fnset )
 {
+  if( !mod )
+    return ({});
   while( id->misc->orig )
     id = id->misc->orig;
-
   array variables = map( indices(mod->query()),
                          get_variable_map,
                          mod,
@@ -503,14 +559,12 @@ array get_variable_maps( object mod,
     variables = filter( variables,
                         lambda( mapping q ) { return q->sname[0] != '_'; } );
 
-  int f = config_setting("form-font-size");
-  string fs;
-  if( f >= 0 )  fs = "+"+f; else  fs = ""+f;
-
-  map( variables, lambda( mapping q ) {
-                    if( search( q->form, "<" ) != -1 )
-                      q->form=("<font size='"+fs+"'>"+q->form+"</font>");
-                  } );
+  if (string fs = css_font_size[config_setting("form-font-size")])
+    map( variables, lambda( mapping q ) {
+		      if( search( q->form, "<" ) != -1 )
+			q->form=("<div style='font-size: "+fs+"'>"+
+				 q->form+"</div>");
+		    } );
 
   if( m->section && (m->section != "_all"))
   {
@@ -580,7 +634,7 @@ array get_variable_sections( object mod, mapping m, RequestID id )
 object(Configuration) find_config_or_error(string config)
 {
   if(!config)
-    error("No configuration specified!\n", config);
+    error("No configuration specified!\n");
     
   object(Configuration) conf = roxen->find_configuration(config);
   if (!conf)
@@ -594,18 +648,36 @@ string not_bound_warning()
 }
 mapping get_port_map( object p )
 {
-  return ([
-    "port":p->get_key(),
-    "warning":(p->bound?"":not_bound_warning()),
-    "name":p->name+"://"+(p->ip||"*")+":"+p->port+"/",
-  ]);
+  if (!p->ip||!has_value(p->ip, ":")) {
+    // IPv4
+    return ([
+      "port":p->get_key(),
+      "warning":(p->bound?"":not_bound_warning()),
+      "name":p->name+"://"+(p->ip||"*")+":"+p->port+"/",
+    ]);
+  } else {
+    // IPv6
+    return ([
+      "port":p->get_key(),
+      "warning":(p->bound?"":not_bound_warning()),
+      /* RFC 3986 3.2.2. Host
+       *
+       * host       = IP-literal / IPv4address / reg-name
+       * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+       * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+       *
+       * IPv6address is as in RFC 3513.
+       */
+      "name":p->name+"://["+p->ip+"]:"+p->port+"/",
+    ]);
+  }
 }
 
 mapping get_url_map( string u, mapping ub )
 {
   if( ub[u] && ub[u]->conf )
     return ([
-      "url":u,
+      "url": roxen.normalize_url (u),
       "conf":replace(ub[u]->conf->name, " ", "-" ),
       "confname":ub[u]->conf->query_name(),
     ]);
@@ -619,9 +691,9 @@ class TagCFBoxes
   class Frame
   {
     inherit RXML.Frame;
-    static mapping(string:object) boxes = ([]);
+    protected mapping(string:object) boxes = ([]);
 
-    static object compile_box( string box )
+    protected object compile_box( string box )
     {
       if( boxes[box] )
       {
@@ -638,7 +710,7 @@ class TagCFBoxes
       return boxes[box];
     }
 
-    static object get_box( string box, RequestID id )
+    protected object get_box( string box, RequestID id )
     {
       object bx = boxes[ box ];
       if( !bx  || (!id->pragma["no-cache"] &&
@@ -671,7 +743,7 @@ class TagCFBoxes
         left+=get_box( f,id )->parse( id )+"<br />";
       foreach( sort_boxes(config_setting( "right_boxes" ),id), string f )
         right+=get_box( f,id )->parse( id )+"<br />";
-      result="<table><tr valign=top><td>"+left+"</td><td>"+
+      result="<table width='100%'><tr valign=top><td width='100%'>"+left+"</td><td>"+
                          right+"</td></tr></table>";
     }
   }
@@ -743,6 +815,11 @@ class TagConfigPortsplugin
 
   array get_dataset(mapping m, RequestID id)
   {
+    if (m->port) {
+      Protocol p = roxen->find_port(m->port);
+      if (p) return ({ get_port_map(p) });
+      return ({});
+    }
     array pos = roxen->all_ports();
     sort( pos->get_key(), pos );
     pos = map( pos, get_port_map );
@@ -775,7 +852,21 @@ class TagPortURLsplugin
   array get_dataset(mapping m, RequestID id)
   {
     mapping u = roxen->find_port( m->port )->urls;
-    return map(sort(indices(u)),get_url_map,u)-({0});
+    array(mapping(string:string)) res =
+      map(sort(indices(u)),get_url_map,u)-({0});
+    if (m->distinct) {
+      mapping(string:int) found = ([]);
+      res = filter (res, lambda (mapping(string:string) ent) {
+			   int first = !found[ent[m->distinct]];
+			   found[ent[m->distinct]] = 1;
+			   return first;
+			 });
+    }
+    if (string excl_conf = m["exclude-conf"])
+      res = filter (res, lambda (mapping(string:string) ent) {
+			   return ent->conf != excl_conf;
+			 });
+    return res;
   }
 }
 
@@ -791,17 +882,20 @@ class TagConfigVariablesSectionsplugin
                                      m, id );
 
     string section = RXML.get_var( "section", "form" );
+    if( m["add-module-priorities"] )
+      v = ({ 
+        ([
+          "section":"ModulePriorities",
+          "sectionname":LOCALE(551,"Module Priorities"),
+          "selected":(section=="ModulePriorities")?"selected":"",
+        ]),
+      }) + v;
     if( m["add-status"] )
       v = ({ 
         ([
           "section":"Status",
           "sectionname":LOCALE(228,"Status"),
           "selected":(!section||(section=="Status")?"selected":""),
-        ]),
-        ([
-          "section":"Ports",
-          "sectionname":LOCALE(324,"Ports"),
-          "selected":((section=="Ports")?"selected":""),
         ]),
       }) + v;
 
@@ -848,26 +942,26 @@ class TagModuleVariablesSectionsplugin
       RXML.run_error("Unknown module: "+m->module+"\n");
 
     variables = get_variable_sections( mod, m, id ) +  ({ ([
-       "section":"Information",
-       "sectionname":LOCALE(299,"Information"),
-       "selected":((section=="Information" )?"selected":""),
+       "section":"Status",
+       "sectionname":LOCALE(228,"Status"),
+       "selected":((section=="Status" )?"selected":""),
      ]) });
 
     if( !section )
       id->variables->info_section_is_it = "1";
-      foreach( variables, mapping m )
-	if(m->section == "Settings" )
-	  m_delete( id->variables, "info_section_is_it" );
-
+    foreach( variables, mapping m )
+      if(m->section == "Settings" )
+	m_delete( id->variables, "info_section_is_it" );
+    
     if( id->variables->info_section_is_it )
       variables[-1]->selected = "selected";
 
     if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
-      variables +=({ ([
+      variables = ({ ([
        "section":"Docs",
        "sectionname":LOCALE(383,"Documentation"),
        "selected":((section=="Docs")?"selected":""),
-     ])});
+     ]) }) + variables;
     
      int hassel;
 
@@ -879,15 +973,34 @@ class TagModuleVariablesSectionsplugin
        else
          hassel = strlen(q->selected);
      }
-//      variables[0]->selected="selected";
      variables = reverse(variables);
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";
+     if( !hassel )
+     {
+       // No selected tab.
+       variables[0]->selected="selected";
+       RXML.set_var( "section", variables[0]->section, "form" );
+     }
      return variables;
   }
 }
 
+// usage: <cf-headline/>
+class TagCFHeadline
+{
+  inherit RXML.Tag;
+  constant name = "cf-headline";
 
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      return ({ roxen->query("config_header_string") });
+    }
+  }
+}
 
 class TagGlobalVariablesSectionsplugin
 {
@@ -922,7 +1035,12 @@ class TagConfigurationsplugin
   constant plugin_name = "configurations";
   array get_dataset(mapping m, RequestID id)
   {
-    array variables = map( roxen->configurations,
+    array confs = roxen->configurations;
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+    if(m->self && lower_case(m->self) == "no")
+      confs -= ({ id->conf });
+#endif
+    array variables = map( confs,
                       lambda(object o ) {
                         if( !o->error_log[0] )
                           return ([
@@ -1015,14 +1133,16 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
          width='"+m->width+"' align='center' bgcolor='"+
     config_setting2("obox-border")+#"'>
  <tr><td>
-  <table cellpadding='2' cellspacing='0' border='0'
-          width='"+m->iwidth+#"' align='center'>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
   <tr bgcolor='"+config_setting2("obox-titlebg")+#"'>
-    <td valign='top'>
+    <th valign='top'>
       <font color='"+config_setting2( "obox-titlefg" )+#"' 
-            face='"+config_setting2("obox-titlefont")+
+            face='"+config_setting2("obox-titlefont")+#"'
+            style='"+config_setting2("obox-titlestyle")+
     "'><b>"+m->title+#"</b></font>
-    </td>
+    </th>
   </tr>
 
   <tr><td bgcolor='"+config_setting2("obox-bodybg")+"'><font color='"+
@@ -1030,48 +1150,70 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
   </table>
   </td></tr></table>";
 }
+string simpletag_box_frame( string t, mapping m, string c, RequestID id )
+{
+  if (!m["box-frame"]) return c;
+  string bodybg = m->bodybg || config_setting2("obox-bodybg");
+  return
+#"<table cellpadding='1' cellspacing='0' border='0'
+         width='"+m->width+"' align='left' bgcolor='"+
+    config_setting2("obox-border")+#"'>
+ <tr><td>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
+
+  <tr><td bgcolor='"+bodybg+"'><font color='"+
+    config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
+  </table>
+  </td></tr></table>";
+}
+
 
 string simpletag_cf_render_variable( string t, mapping m,
 				     string c, RequestID id )
 {
   string extra = "";
+
+
 #define   _(X) RXML.get_var( X, 0 )
 #define usr(X) RXML.get_var( X, "usr" )
 #define var(X) RXML.get_var( X, "var" )
 
   int chng;
   string dfs, dfe, def="";
-  string df = config_setting( "docs-font-size" );
-  
-  if( !df )
-    dfs = dfe = "";
-  else
-  {
-    dfe = "</font>";
-    dfs = "<font size='"+(df>0?"+":"")+df+"'>";
+  if (string fs = css_font_size[config_setting ("docs-font-size")]) {
+    dfs = "<div style='font-size: "+fs+"'>";
+    dfe = "</div>";
   }
+  else
+    dfs = dfe = "";
+
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
-      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
+      def = "<br /><submit-gbutton2 name='"+_("path")+"do_default' "
+	"onclick=\"return confirm('" +
+	LOCALE(1041, "Are you sure you want to restore the default value?") +
+	"');\" > "+
 	LOCALE(475,"Restore default value")+" "+_("diff-txt")+
-	" </submit-gbutton2> "+_("diff")+"<br />\n";
+	" </submit-gbutton2> "+_("diff")+"\n";
   
   switch( usr( "changemark" ) )
   {
     case "not":
       return
-	"<tr><td valign='top' width='20%'><b>"+
+	"<tr><td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>\n"
+	"<td valign='top'>"+_("form")+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
-    case "color":
+    default:
       if( chng )
 	extra = "bgcolor='"+usr("fade2")+"'";
       return "<tr>\n"
-	"<td valign='top' width='20%'><b>"+
+	"<td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top' "+extra+">"+_("form")+"<br />"+def+"</td>\n"
+	"<td valign='top' "+extra+">"+_("form")+def+"</td>\n"
 	"</tr>\n"
 	"<tr>\n"
 	"<td colspan='2'>"+dfs+_("doc")+dfe+"</td>\n"
@@ -1086,23 +1228,23 @@ string simpletag_cf_render_variable( string t, mapping m,
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(358,"Changed")+"</font>\n"
+	    "<div style='color: "+usr("content-titlefg")+"'>"+
+	    LOCALE(358,"Changed")+"</div>\n"
 	    "</td>\n"
             "</tr>\n";
 	else
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(359,"Unchanged")+"</font>\n"
+	    "<div style='color: "+usr("content-titlefg")+"'>"+
+	    LOCALE(359,"Unchanged")+"</div>\n"
 	    "</td>\n"
             "</tr>\n";
 
       }
       return
 	extra+
-	"<tr><td valign='top' width='20%'><b>"+
+	"<tr><td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>"
 	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
@@ -1142,3 +1284,203 @@ class TagCfUserWants
     }
   }
 }
+
+
+// License tags.
+string license_dir = getenv("ROXEN_LICENSEDIR") || "../license";
+
+class TagGetPostFilename
+{
+  inherit RXML.Tag;
+  constant name = "get-post-filename";
+  mapping(string:RXML.Type) req_arg_types =
+    ([ "filename":RXML.t_text(RXML.PXml),
+       "js-filename":RXML.t_text(RXML.PXml) ]);
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return(RequestID id)
+    {
+      return
+	({ (replace(((args["js-filename"] && sizeof(args["js-filename"])) ?
+		     args["js-filename"] : args["filename"]),
+		    "\\", "/") / "/")[-1] });
+    }
+  }
+}
+
+class TagUploadLicense
+{
+  inherit RXML.Tag;
+  constant name = "upload-license";
+  mapping(string:RXML.Type) req_arg_types =
+    ([ "filename":RXML.t_text(RXML.PXml),
+       "from":RXML.t_text(RXML.PXml) ]);
+  class Frame
+  {
+    inherit RXML.Frame;
+    License.Key key;
+    
+    array do_return(RequestID id)
+    {
+      string filename = Stdio.append_path(license_dir, args["filename"]);
+      string tmpname = filename+"~";
+      string s = RXML.user_get_var(args["from"]);
+      if(!s || sizeof(s) < 10)
+	RXML.run_error("Specified licens file is not valid %O.\n", filename);
+      Privs privs =
+	Privs(sprintf("Creating temporary licence file %O.", tmpname));
+      if (mixed err = catch {
+	  int bytes = Stdio.write_file(tmpname, s);
+	  privs = UNDEFINED;
+	  if(bytes != sizeof(s))
+	    RXML.run_error("Could not write file %O.\n", tmpname);
+	}) {
+	privs = UNDEFINED;
+	throw(err);
+      }
+      privs = UNDEFINED;
+
+      License.Key(license_dir, args["filename"]+"~");
+      
+      privs = Privs(sprintf("Renaming to permanent licence file %O.",
+			    filename));
+      mv(tmpname, filename);
+      privs = UNDEFINED;
+    }
+  }
+}
+
+class TagIfLicense {
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "license";
+  int eval(string u, RequestID id, mapping args)
+  {
+    return Stdio.is_file(Stdio.append_path(license_dir, u));
+  }
+}
+
+mapping get_license_vars(License.Key key)
+{
+  return ([ "company_name":    key->company_name(),
+	    "expires":         key->expires(),
+	    "hostname":        key->hostname(),
+	    "type":            key->type(),
+	    "sites":           key->sites(),
+	    "number":          key->number(),
+	    "license-version": key->license_version(),
+	    "comment":         key->comment()||"",
+	    "modules":         key->get_modules(),
+	    "name":            key->name(),
+	    "configurations":
+	    String.implode_nicely(License.
+				  get_configurations_for_license(key)->name),
+	    
+	    "filename":     key->filename(),
+	    "creator":      key->creator(),
+	    "created":      key->created(),
+	    "key":          key ]);
+}
+
+class TagLicense
+{
+  inherit RXML.Tag;
+  constant name = "license";
+  
+  class Frame
+  {
+    inherit RXML.Frame;
+    string scope_name;
+    mapping vars;
+    License.Key key;
+    
+    array do_enter(RequestID id)
+    {
+      if(!args->name || args->name == "")
+	RXML.parse_error("No license name specified.\n");
+      
+      scope_name = args->scope||"license";
+      key = License.get_license(license_dir, args->name);
+      if(!key)
+      {
+	RXML.run_error("Can not find license %O.\n", args->name);
+	return ({});
+      }
+      vars = get_license_vars(key);
+    }
+  }
+}
+
+class TagEmitLicenseModules {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "license-modules";
+  array get_dataset(mapping args, RequestID id)
+  {
+    RXML.Context c = RXML.get_context();
+    mapping modules = c->get_var("modules");
+    if(!modules)
+    {
+      RXML.parse_error("No key defined. emit#license-modules can only be used "
+		       "within <license>.\n");
+      return ({});
+    }
+    array res = ({});
+    foreach(sort(indices(modules)), string name)
+    {
+      res += ({ ([ "name":name,
+		   "enabled":(modules[name]?"yes":"no"),
+		   "features":modules[name] ]) });
+    }
+    return res;
+  }
+}
+
+class TagEmitLicenseModuleFeature {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "license-module-features";
+  array get_dataset(mapping args, RequestID id)
+  {
+    RXML.Context c = RXML.get_context();
+    if(!c->get_var("enabled"))
+    {
+      RXML.parse_error("No key defined. emit#license-module-features can only be used "
+		       "within emit#license-modules.\n");
+      return ({});
+    }
+    mapping features = c->get_var("features");
+    if(!features)
+      return ({});
+
+    array res = ({});
+    foreach(sort(indices(features)), string name)
+    {
+      res += ({ ([ "name":name,
+		   "value":features[name] ]) });
+    }
+    return res;
+  }
+}
+
+class TagEmitLicenses {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "licenses";
+  array get_dataset(mapping args, RequestID id)
+  {
+    array(License.Key|mapping) licenses = License.get_licenses(license_dir);
+    array(mapping) vars = ({});
+    foreach(licenses, License.Key key)
+    {
+      if(mappingp(key))
+	vars += ({ key + ([ "malformed":"yes" ]) });
+      if(objectp(key))
+	vars += ({ get_license_vars(key) });
+    }
+    return vars;
+  }
+}
+
+// TagEmitLicenseWarnings is moved to server/modules/tags/rxmltags.pike

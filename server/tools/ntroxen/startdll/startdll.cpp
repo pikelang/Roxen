@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.7 2001/08/09 16:23:47 tomas Exp $
+// $Id$
 //
 
 
@@ -23,6 +23,7 @@
 
 #include "cmdline.h"
 #include "enumproc.h"
+#include "roxenmsg.h"
 
 #define BUILD_DLL
 
@@ -68,9 +69,10 @@ inline HRESULT CServiceModule::RegisterServer(BOOL bRegTypeLib, BOOL bService)
     if (FAILED(hr))
         return hr;
 
-    // Remove any previous service since it may point to
-    // the incorrect file
-    Uninstall();
+    if (!bService) {
+      // Uninstall any previous service, since we won't run in service mode.
+      Uninstall();
+    }
 
     // Add service entries
     UpdateRegistryFromResource(IDR_Startdll, TRUE);
@@ -120,9 +122,6 @@ inline HRESULT CServiceModule::UnregisterServer()
 
 inline void CServiceModule::Init(_ATL_OBJMAP_ENTRY* p, HINSTANCE h, UINT nServiceNameID, UINT nServiceDescID, const GUID* plibid)
 {
-    //HINSTANCE hInstApp = GetModuleHandle(NULL);
-
-    //CComModule::Init(p, hInstApp, plibid);
     CComModule::Init(p, hInstance, plibid);
 
     m_bService = TRUE;
@@ -170,9 +169,6 @@ BOOL CServiceModule::IsInstalled()
 
 inline BOOL CServiceModule::Install()
 {
-    if (IsInstalled())
-        return TRUE;
-
     SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCM == NULL)
     {
@@ -184,17 +180,56 @@ inline BOOL CServiceModule::Install()
     TCHAR szFilePath[_MAX_PATH];
     ::GetModuleFileName(NULL, szFilePath, _MAX_PATH);
 
-    SC_HANDLE hService = ::CreateService(
-        hSCM, m_szServiceName, m_szServiceName,
-        SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
-        szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
-
-    if (hService == NULL)
-    {
+    SC_HANDLE hService = ::OpenService(hSCM, m_szServiceName, SERVICE_QUERY_CONFIG|SERVICE_CHANGE_CONFIG);
+    if (hService) {
+      // Update a previously installed entry.
+      if (!::ChangeServiceConfig(hService, SERVICE_WIN32_OWN_PROCESS,
+          SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+          szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL,
+          m_szServiceName)) {
+	long err = GetLastError();
+	::CloseServiceHandle(hService);
+	::CloseServiceHandle(hSCM);
+	switch(err) {
+	case ERROR_ACCESS_DENIED:
+	  MessageBox(NULL, _T("Couldn't change service (Access Denied)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_CIRCULAR_DEPENDENCY:
+	  MessageBox(NULL, _T("Couldn't change service (Circular Dependency)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_DUPLICATE_SERVICE_NAME:
+	  MessageBox(NULL, _T("Couldn't change service (Duplicate Service Name)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_HANDLE:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Handle)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_PARAMETER:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Parameter)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_INVALID_SERVICE_ACCOUNT:
+	  MessageBox(NULL, _T("Couldn't change service (Invalid Service Account)"), m_szServiceName, MB_OK);
+	  break;
+	case ERROR_SERVICE_MARKED_FOR_DELETE:
+	  MessageBox(NULL, _T("Couldn't change service (Service Marked For Delete)"), m_szServiceName, MB_OK);
+	  break;
+	default:
+	  MessageBox(NULL, _T("Couldn't change service"), m_szServiceName, MB_OK);
+	  break;
+	}
+        return FALSE;
+      }
+    } else {
+      hService = ::CreateService(
+          hSCM, m_szServiceName, m_szServiceName,
+          SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+          SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
+          szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
+      if (hService == NULL)
+      {
         ::CloseServiceHandle(hSCM);
         MessageBox(NULL, _T("Couldn't create service"), m_szServiceName, MB_OK);
         return FALSE;
+      }
     }
 
     SERVICE_DESCRIPTION desc;
@@ -211,6 +246,24 @@ inline BOOL CServiceModule::Install()
 
     ::CloseServiceHandle(hService);
     ::CloseServiceHandle(hSCM);
+
+    // Register an event source
+    LONG lRes;
+    CRegKey keyEventApp;
+    lRes = keyEventApp.Open(HKEY_LOCAL_MACHINE,
+      "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application", KEY_READ);
+    if (lRes != ERROR_SUCCESS)
+        return FALSE;
+
+    CRegKey keyEventRoxen;
+    lRes = keyEventRoxen.Create(keyEventApp, m_szServiceName);
+    if (lRes != ERROR_SUCCESS)
+        return FALSE;
+
+    ::GetModuleFileName(hInstance, szFilePath, _MAX_PATH);
+    keyEventRoxen.SetValue(szFilePath, "EventMessageFile");
+    keyEventRoxen.SetValue(EVENTLOG_INFORMATION_TYPE, "TypesSupported");
+
     return TRUE;
 }
 
@@ -218,6 +271,15 @@ inline BOOL CServiceModule::Uninstall()
 {
     if (!IsInstalled())
         return TRUE;
+
+    LONG lRes;
+    CRegKey keyEventApp;
+    lRes = keyEventApp.Open(HKEY_LOCAL_MACHINE,
+      "SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application", KEY_READ);
+    if (lRes == ERROR_SUCCESS)
+    {
+      keyEventApp.DeleteSubKey(m_szServiceName);
+    }
 
     SC_HANDLE hSCM = ::OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 
@@ -273,7 +335,7 @@ void CServiceModule::LogEvent(LPCTSTR pFormat, ...)
         if (hEventSource != NULL)
         {
             /* Write to event log. */
-            ReportEvent(hEventSource, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (LPCTSTR*) &lpszStrings[0], NULL);
+            ReportEvent(hEventSource, EVENTLOG_INFORMATION_TYPE, 0, MSG_GENERIC, NULL, 1, 0, (LPCTSTR*) &lpszStrings[0], NULL);
             DeregisterEventSource(hEventSource);
         }
     }
@@ -300,41 +362,6 @@ inline void CServiceModule::Start()
     }
     if (m_bService == FALSE)
     {
-/*
-        int i;
-        int hCrt;
-        FILE *hf;
-        
-        AllocConsole();
-
-        // stdin
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_INPUT_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "r" );
-        *stdin = *hf;
-        i = setvbuf( stdin, NULL, _IONBF, 0 ); 
-        
-        // stdout
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_OUTPUT_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "w" );
-        *stdout = *hf;
-        i = setvbuf( stdout, NULL, _IONBF, 0 ); 
-        
-        // stderr
-        hCrt = _open_osfhandle(
-            (long) GetStdHandle(STD_ERROR_HANDLE),
-            _O_TEXT
-            );
-        hf = _fdopen( hCrt, "w" );
-        *stderr = *hf;
-        i = setvbuf( stderr, NULL, _IONBF, 0 ); 
-*/
-        
         // Add our ctrl-c and ctrl-break handling routine
         SetConsoleCtrlHandler( _ControlHandler, TRUE );
 
@@ -348,13 +375,6 @@ inline void CServiceModule::Start()
 
 inline void CServiceModule::ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
 {
-/*
-    for (int i=0; i<dwArgc; i++)
-    {
-        LogEvent("ServiceMain::argv[%d] = '%s'", i, lpszArgv[i]);
-    }
-*/
-
     m_Cmdline.Parse(dwArgc, lpszArgv);
 
     // Register the control request handler
@@ -374,8 +394,7 @@ inline void CServiceModule::ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
     // When the Run function returns, the service has stopped.
     Run();
 
-    //if (!m_pendingLaunch)
-      SetServiceStatus(SERVICE_STOPPED);
+    SetServiceStatus(SERVICE_STOPPED);
 
     LogEvent(_T("Service stopped"));
 }
@@ -404,15 +423,31 @@ inline void CServiceModule::Handler(DWORD dwOpcode)
 //  Handled console control events
 BOOL CServiceModule::ControlHandler( DWORD dwCtrlType )
 {
+
+  char *ctrlEvent[7] = {
+      "CTRL_C_EVENT",       // 0
+      "CTRL_BREAK_EVENT",   // 1
+      "CTRL_CLOSE_EVENT",   // 2
+      "CTRL_3",             // 3 is reserved!
+      "CTRL_4",             // 4 is reserved!
+      "CTRL_LOGOFF_EVENT",  // 5
+      "CTRL_SHUTDOWN_EVENT" // 6
+  };
+
     switch( dwCtrlType )
     {
-	case CTRL_BREAK_EVENT:  // use Ctrl+C or Ctrl+Break to simulate
-	case CTRL_C_EVENT:      // SERVICE_CONTROL_STOP in debug mode
-	    //ThreadServiceStop(0);
+	case CTRL_BREAK_EVENT:  // Ignore Ctrl+Break (may be used by pike)
+        //printf("%s received\n", ctrlEvent[dwCtrlType]);
+        return TRUE;
+
+    case CTRL_C_EVENT:      // use Ctrl+C or 'Close Window' button to simulate
+    case CTRL_CLOSE_EVENT:  // SERVICE_CONTROL_STOP in debug mode
+    case CTRL_LOGOFF_EVENT:
+        //printf("%s received\n", ctrlEvent[dwCtrlType]);
         Stop(TRUE);
 	    return TRUE;
-	    break;
-
+    default:
+        printf("Unknown CTRL event %d received\n", dwCtrlType);
     }
     return FALSE;
 }
@@ -504,32 +539,37 @@ void CServiceModule::MsgLoopCallback(int index)
 
   DWORD exitcode = 0;
   GetExitCodeProcess(m_roxen->GetProcess(), &exitcode);
-//  if (m_once)
-  if (m_Cmdline.IsOnce())
-    Stop(FALSE);
-  else if (exitcode == STILL_ACTIVE)
+
+  if (exitcode == STILL_ACTIVE)
   {
     // do nothing
   }
   else if (exitcode == 0)
   {
     //clean shutdown
-    LogEvent("Roxen WebServer shutdown.");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Roxen CMS shutdown.");
+
+    Stop(FALSE);
+  }
+  else if (exitcode == 50)
+  {
+    //clean shutdown
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Failed to open any port. Shutdown.");
+
+    m_Cmdline.SetKeepMysql();
     Stop(FALSE);
   }
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
-    LogEvent("Changing Roxen WebServer version. Restarting...");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Changing Roxen CMS version. Restarting...");
     
-    // restart the new version of the server!!
-/*
-    if (m_bService)
-      LaunchBootStrap(launchLaunch);
-    else
-*/
-    //LaunchBootStrap(launchMark);
-    SetRestartFlag(TRUE);
+    if (!m_Cmdline.IsOnce())
+      // restart the new version of the server!!
+      SetRestartFlag(TRUE);
 
     Stop(FALSE);
   }
@@ -537,68 +577,22 @@ void CServiceModule::MsgLoopCallback(int index)
   {
     if (exitcode < 0)
     {
-      LogEvent("Roxen WebServer died of signal %d. Restarting...", exitcode);
+      if (m_Cmdline.GetVerbose() > 0)
+        LogEvent("Roxen CMS died of signal %d. Restarting...", exitcode);
     }
     else // exitcode < 0
     {
-      LogEvent("Roxen WebServer down. Restarting...");
+      if (m_Cmdline.GetVerbose() > 0)
+        LogEvent("Roxen CMS down. Restarting...");
     }
     Sleep(100);
     if (IsStopping())
       return;
-    if (!m_roxen->Start(0))
+    if (m_Cmdline.IsOnce() || !m_roxen->Start(0))
       Stop(FALSE);
   }
 }
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Start the bootstrap program that will optionally unregister us and register and
-// start the new server version
-/*
-void CServiceModule::LaunchBootStrap(ELaunchType type)
-{
-  char * args[] = {
-    "..\\start1st.exe",
-      NULL,
-  };
-
-
-  switch (type)
-  {
-  case launchMark:
-    LogEvent("LaunchBootStrap: launchMark");
-    m_pendingLaunch = TRUE;
-    break;
-
-  case launchIfPending:
-    LogEvent("LaunchBootStrap: launchIfPending");
-    if (m_pendingLaunch)
-      if (_execv(args[0], args) < 0)
-      {
-        LogEvent("%s (%d)", errno < _sys_nerr ? _sys_errlist[errno] : "", errno);
-      }
-      break;
-
-  case launchLaunch:
-    LogEvent("LaunchBootStrap: launchLaunch");
-
-//    if (_spawnv(_P_NOWAIT, args[0], args) < 0)
-//    {
-//      LogEvent("%s (%d)", errno < _sys_nerr ? _sys_errlist[errno] : "", errno);
-//    }
-
-    // force a restart of the service
-    MessageBox(0, "aborting service!", "startdll.dll", MB_SERVICE_NOTIFICATION);
-    ExitProcess(1);
-    break;
-  default:
-    LogEvent("LaunchBootStrap: default");
-    break;
-  }
-
-}
-*/
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Do the actual work. The service will exit when this function returns
@@ -643,8 +637,8 @@ void CServiceModule::Run()
 
     if (m_roxen != NULL)
     {
-      // Wait 5 sec for the pike process to terminate before killing it
-      if (WaitForSingleObject(m_roxen->GetProcess(), 5000) == WAIT_TIMEOUT)
+      // Wait 15 sec for the pike process to terminate before killing it
+      if (WaitForSingleObject(m_roxen->GetProcess(), 15000) == WAIT_TIMEOUT)
         TerminateProcess(m_roxen->GetProcess(), 1000);
 
       delete m_roxen;
@@ -677,14 +671,6 @@ extern "C"
 __declspec( dllexport )
 int __cdecl roxenMain(int argc, _TCHAR **argv, int * restart, char * szServiceName)
 {
-/*
-    for (int i=0; i<argc; i++)
-    {
-        _Module.LogEvent("_tmain::argv[%d] = '%s'", i, argv[i]);
-    }
-*/
-
-
     LPTSTR lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
 
 #else
@@ -694,73 +680,61 @@ extern "C" int WINAPI _tWinMain(HINSTANCE hInstance,
     HINSTANCE /*hPrevInstance*/, LPTSTR lpCmdLine, int /*nShowCmd*/)
 {
     lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
-    
-    //_Module.LogEvent("_tWinMain::lpCmdLine = '%s'", lpCmdLine);
 
 #else /* _CONSOLE */
 
 extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 {
-/*
-    for (int i=0; i<argc; i++)
-    {
-        _Module.LogEvent("_tmain::argv[%d] = '%s'", i, argv[i]);
-    }
-*/
-
     HINSTANCE hInstance = GetModuleHandle(0);
 
     LPTSTR lpCmdLine = GetCommandLine(); //this line necessary for _ATL_MIN_CRT
 #endif // _WINDOWS
 #endif // BUILD_DLL
+
     _Module.Init(ObjectMap, hInstance, IDS_SERVICENAME, IDS_SERVICEDESC, &LIBID_STARTDLLLib);
     _Module.m_bService = TRUE;
 
-//// debug
-//    SetEnvironmentVariable("ROXEN_ARGS", "--without-threads -DYYY");
-//// end debug
+    CCmdLine & cmdline = _Module.GetCmdLine(FALSE);
+    
+    char inifile1[2048];
+    char inifile2[2048];
+    char iniArgs[2048];
+    int iLen;
+    iniArgs[0] = 'x'; // Fake som dummy program name
+    iniArgs[1] = ' ';
 
-    CCmdLine & cmdline = _Module.GetCmdLine();
+    GetCurrentDirectory(sizeof(inifile1), inifile1);
+    strcat(inifile1, "/../local/environment.ini");
+    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile1);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2)
+      cmdline.Parse(iniArgs);
+    GetCurrentDirectory(sizeof(inifile2), inifile2);
+    strcat(inifile2, "/../local/environment2.ini");
+    iLen = GetPrivateProfileString("Parameters", "default", "", iniArgs+2, sizeof(iniArgs)-2, inifile2);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2)
+      cmdline.Parse(iniArgs);
+
+
     char envArgs[2048];
-    // Fake som dummy program name
-    envArgs[0] = 'x';
-    envArgs[1] = ' ';
     int len;
+    envArgs[0] = 'x'; // Fake som dummy program name
+    envArgs[1] = ' ';
     if ((len=GetEnvironmentVariable("ROXEN_ARGS", envArgs+2, sizeof(envArgs)-2)) > 0 && len < sizeof(envArgs)-2)
-    {
       cmdline.Parse(envArgs);
-    }
+
 
     cmdline.Parse(argc, argv);
     
 
     // The work has already been done above, but the debug printout is better
     // to have _after_ parse_args (consider --help and --version)
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (iLen > 0 && iLen < sizeof(iniArgs)-2 && cmdline.GetVerbose() > 0)
+      cmdline.OutputLineFmt(hOut, "Used .B%sB. from .Blocal/environment.iniB..", iniArgs+2);
+
     if (len > 0 && len < sizeof(envArgs)-2 && cmdline.GetVerbose() > 0)
-    {
-      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
       cmdline.OutputLineFmt(hOut, "Used .B%sB. from .BROXEN_ARGSB..", envArgs+2);
-    }
-/*
-    TCHAR szTokens[] = _T("-/");
 
-    LPCTSTR lpszToken = FindOneOf(lpCmdLine, szTokens);
-    while (lpszToken != NULL)
-    {
-        if (lstrcmpi(lpszToken, _T("UnregServer"))==0)
-            return _Module.UnregisterServer();
-
-        // Register as Local Server
-        if (lstrcmpi(lpszToken, _T("RegServer"))==0)
-            return _Module.RegisterServer(TRUE, FALSE);
-        
-        // Register as Service
-        if (lstrcmpi(lpszToken, _T("Service"))==0)
-            return _Module.RegisterServer(TRUE, TRUE);
-        
-        lpszToken = FindOneOf(lpszToken, szTokens);
-    }
-*/
     if (cmdline.IsHelp())
     {
       cmdline.PrintHelp();
@@ -777,13 +751,11 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     if (cmdline.IsInstall())
       return _Module.RegisterServer(TRUE, TRUE);
-	else if (cmdline.IsRegister())
+    else if (cmdline.IsRegister())
       return _Module.RegisterServer(TRUE, FALSE);
 
     if (cmdline.IsRemove())
       return _Module.UnregisterServer();
-
-//    m_once = cmdline.IsOnce();
 
     // Are we Service or Local Server
     CRegKey keyAppID;
@@ -794,7 +766,10 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
     CRegKey key;
     lRes = key.Open(keyAppID, _T("{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}"), KEY_READ);
     if (lRes != ERROR_SUCCESS)
-        return lRes;
+    {
+      printf("Required registry information missing. Run 'ntstart --register' and retry.\n");
+      return lRes;
+    }
 
     TCHAR szValue[_MAX_PATH];
     DWORD dwLen = _MAX_PATH;
@@ -806,10 +781,6 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
 
     _Module.Start();
 
-/*
-    // exec the start1st.exe program if a delayed start was requested
-    restart = _Module.LaunchBootStrap(CServiceModule::launchIfPending);
-*/
     // Signal to the dll loader to perform a restart if requested in the _Module
     *restart = _Module.GetRestartFlag();
     if (_Module.m_bService)
@@ -818,12 +789,19 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
       strcpy(szServiceName, "");
 
     // Kill the internal roxen MySql server
-    if (!cmdline.IsKeepMysql())
-      KillMySql();
+    if (!cmdline.IsKeepMysql()) {
+	  _Module.LogEvent(_T("Shutting down MySQL."));
+      KillMySql(cmdline.GetConfigDir().c_str());
+	}
 
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;
 }
+
+#if 0 // Balancing...
+}
+}
+#endif /* 0 */
 
 #ifdef BUILD_DLL
 ///////////////

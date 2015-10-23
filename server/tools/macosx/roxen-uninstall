@@ -1,0 +1,51 @@
+#!/bin/sh
+
+usage()
+{
+    echo "roxen-uninstall: <option>
+Options:
+    --remove-all   Remove all data and binaries related to Roxen.
+    -h, --help     Show usage information.
+"
+    exit 1
+}
+
+remove_all()
+{
+    /Library/StartupItems/Roxen/Roxen stop
+
+    rm -rf /etc/roxen
+    rm -rf /usr/local/lib/roxen
+    rm -rf /usr/local/lib/roxen-*
+    rm -rf /usr/local/bin/roxen*
+    rm -rf /usr/local/bin/pike-roxen
+    rm -rf /usr/local/bin/pike74-roxen
+    rm -rf /var/roxen
+    rm -rf /var/log/roxen
+    rm -rf /var/run/roxen
+    rm -rf /Applications/Roxen
+    rm -rf /Library/StartupItems/Roxen
+    rm -rf /Library/Receipts/Roxen.pkg
+    rm -rf /Library/Receipts/Roxen' 'Print.pkg
+    grep -v ROXEN= /etc/hostconfig >/tmp/hostconfig."$$" && mv /tmp/hostconfig."$$" /etc/hostconfig
+}
+
+case "$1" in
+    -h)
+	usage
+	exit
+	;;
+    --help)
+	usage
+	exit
+	;;
+
+    --remove-all)
+	remove_all
+	exit
+	;;
+
+    *)
+	usage >&2
+	exit 1
+esac

@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1999-2001, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.30 2001/08/23 23:34:48 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -17,19 +17,26 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-"foldlist":({#"<desc cont='cont'><p><short hide>
+"foldlist":({#"<desc type='cont'><p><short hide='hide'>
  This tag is used to build folding lists, that are like &lt;dl&gt; lists,
  but where each element can be unfolded.</short>This tag is used to
  build folding lists, that are like <tag>dl</tag> lists, but where
  each element can be unfolded. The tags used to build the lists
- elements are <tag>ft</tag> and <tag>fd</tag>. </p></desc>
+ elements are <tag>ft</tag> and <tag>fd</tag>.</p></desc>
 
 <attr name='unfolded'><p>
  Will make all the elements in the list unfolded by default.</p>
 </attr>
-",
 
-(["ft":({#"<desc cont='cont'><p>
+<attr name='foldedsrc'><p>
+ The image to use for folded items. The default is '/internal-roxen-unfold'.</p>
+</attr>
+
+<attr name='unfoldedsrc'><p>
+ The image to use for unfolded items. The default is '/internal-roxen-fold'.</p>
+</attr>",
+
+([ "ft":({#"<desc type='cont'><p>
 This tag is used within the foldlist tag. The contents of this
 container, that is not within an fd, tag will be visible both when the
 element is folded and unfolded.</p></desc>
@@ -42,9 +49,18 @@ element is folded and unfolded.</p></desc>
 <attr name='unfolded'><p>
  Will make this element unfolded by default.</p>
 </attr>
-",
 
-(["fd":#"<desc cont='cont'><p>
+<attr name='foldedsrc'><p>
+ The image to use for folded items. Overrides the 'foldedsrc'
+ attribute in <tag>tablist</tag> for this item.</p>
+</attr>
+
+<attr name='unfoldedsrc'><p>
+ The image to use for unfolded items. Overrides the 'foldedsrc'
+ attribute in <tag>tablist</tag> for this item.</p>
+</attr>",
+
+([ "fd":#"<desc type='cont'><p>
  The contents of this container will only be visible when the element
  it is written in is unfolded.</p>
 </desc>
@@ -60,8 +76,7 @@ element is folded and unfolded.</p></desc>
      <fd>Contents 2</fd>
    </ft>
  </foldlist>
-</ex>
-"])
+</ex>" ])
   })])
 })]);
 #endif
@@ -77,15 +92,7 @@ string encode_url(array states, RequestID id){
   }
   value=(value<<1)+1;
 
-  //  if(id->query)
-  //    return id->not_query+"?"+id->query+"&__state="+
-  //      state->uri_encode(value);
-
-  string global_not_query=id->raw_url;
-  sscanf(global_not_query, "%s?", global_not_query);
-
-  return global_not_query+"?__state="+
-    state->uri_encode(value);
+  return state->encode_revisit_url (id, value);
 }
 
 class TagFoldlist {
@@ -113,9 +120,9 @@ class TagFoldlist {
 
       array do_return(RequestID id) {
 	if(show)
-	  result="<dt><dd>"+content+"</dd>";
+	  result="<dt><dd>"+content+"</dd></dt>";
 	else
-	  result="</dt>\n";
+	  result="";
 	return 0;
       }
     }
@@ -167,7 +174,7 @@ class TagFoldlist {
 	  "\"><img src=\""+
 	  (args[(show?"un":"")+"foldedsrc"]||id->misc->foldlist[(show?"u":"")+"fsrc"])+
 	  "\" border=\"0\" alt=\""+({ "+", "-" })[show]+"\" /></a>"+
-	  content;
+	  content+"</dt>";
 	return 0;
       }
 

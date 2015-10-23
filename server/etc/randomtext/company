@@ -1,7 +1,7 @@
 /// Random Text Generator module rule file for generating a nonsense
 /// "About us" text for a company in the computer business.
 ///
-/// $Id: company,v 1.1 2000/02/01 18:21:51 leif Exp $
+/// $Id$
 
 ***syll1***trim-spaces
 $SELECT:|b|c|d|f|g|h|j|k|l|m|n|p|qu|r|s|t|v|w|x|z|y|t|n|m|d|ph|th|ch|sh$
@@ -185,27 +185,27 @@ $SELECT:empowers$ and $SELECT:enriches$
 $SELECT:people|our customers|every person|mankind$.
 
 ***section***avoid-repeat
-<H3>$RULE:heading$</H3>
+<h3>$RULE:heading$</h3>
 $RULE:paragraphs$ $RULE:paragraph$
 ---
-<H3>$RULE:heading$</H3>
+<h3>$RULE:heading$</h3>
 $RULE:paragraphs$ $RULE:paragraph$
 ---
-<H3>$SELECT:Mission Statement|Our Mission$</H3>
+<h3>$SELECT:Mission Statement|Our Mission$</h3>
 $RULE:the_mission$
 
 ***sections
-$RULE:section$<BR>$RULE:section$
+$RULE:section$<br />$RULE:section$
 ---
-<BR>$RULE:section$<BR>$RULE:section$<BR>$RULE:section$
+<br />$RULE:section$<br />$RULE:section$<br />$RULE:section$
 
 ***main
-<H2>$RULE:fullcompanyname$</H2>
+<h2>$RULE:fullcompanyname$</h2>
 $RULE:paragraphs$
-<BR>
+<br />
 $RULE:sections$
-<BR>
-<H3>$SELECT:Summary|The Future$</H3>
+<br />
+<h3>$SELECT:Summary|The Future$</h3>
 $RULE:paragraphs$
 
 

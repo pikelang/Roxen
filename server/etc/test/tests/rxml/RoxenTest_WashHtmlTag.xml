@@ -1,0 +1,130 @@
+<use-module>html_wash</use-module>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml><wash-html><b>text</b><br />[&]</wash-html></rxml>
+  <result>&lt;b&gt;text&lt;/b&gt;&lt;br /&gt;[&amp;]</result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml><wash-html keep-all="t"><b>text</b><br />[&]</wash-html></rxml>
+  <result><b>text</b><br />[&]</result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml><wash-html keep-containers="b"
+    ><B>BOLD</B><b>bold</b><i>italic</i><br /></wash-html></rxml>
+  <result><b>BOLD</b><b>bold</b>&lt;i&gt;italic&lt;/i&gt;&lt;br /&gt;</result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml><wash-html keep-containers="b,i"
+    ><B>BOLD</B><b>bold</b><i>italic</i><br /></wash-html></rxml>
+  <result><b>BOLD</b><b>bold</b><i>italic</i>&lt;br /&gt;</result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml><wash-html keep-containers="b,i" keep-tags="br"
+    ><B>BOLD</B><b>bold</b><i>italic</i><br /><br></wash-html></rxml>
+  <result><b>BOLD</b><b>bold</b><i>italic</i><br><br></result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml no-canon=""><wash-html keep-containers="b,i" keep-tags="br" close-tags="t"
+    ><B>BOLD</B><b>bold</b><i>italic</i><br /><br></wash-html></rxml>
+  <result><b>BOLD</b><b>bold</b><i>italic</i><br /><br /></result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+  <rxml no-canon=""><wash-html linkify="t">
+    www.roxen.com
+    www.roxen.com/projects
+    http://www.roxen.com
+    https://www.roxen.com
+    ftp.roxen.com
+    ftp://ftp.roxen.com</wash-html></rxml>
+  <result>
+    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    <a href='http://www.roxen.com/projects'>http://www.roxen.com/projects</a>
+    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    <a href='https://www.roxen.com'>https://www.roxen.com</a>
+    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a>
+    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a></result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml no-canon=""><wash-html linkify="t" keep-containers="a">
+    www.roxen.com
+    cvs.roxen.com
+    The new server for www. It is fast.
+    <a href="http://www.roxen.com">Roxen</a></wash-html></rxml>
+  <result>
+    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    cvs.roxen.com
+    The new server for www. It is fast.
+    <a href="http://www.roxen.com">Roxen</a></result>
+</test>
+
+<test no-strip-ws="" no-canon="t">
+  <rxml no-canon=""><wash-html unlinkify="t">
+    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    <a href='http://www.roxen.com/projects'>http://www.roxen.com/projects</a>
+    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    <a href='https://www.roxen.com'>https://www.roxen.com</a>
+    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a>
+    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a></wash-html></rxml>
+  <result>
+    http://www.roxen.com
+    http://www.roxen.com/projects
+    http://www.roxen.com
+    https://www.roxen.com
+    ftp://ftp.roxen.com
+    ftp://ftp.roxen.com</result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+<rxml><wash-html paragraphify="t">Paragraph 1
+
+Paragraph 2</wash-html></rxml>
+<result><p>Paragraph 1</p>
+<p>Paragraph 2</p></result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+<rxml><wash-html unparagraphify="t"><p>Paragraph 1</p>
+<p>Paragraph 2</p></wash-html></rxml>
+<result>Paragraph 1
+
+Paragraph 2</result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+<rxml><wash-html unparagraphify="t"><p>Paragraph 1</p>
+<p>Paragraph 2</p></wash-html></rxml>
+<result>Paragraph 1
+
+Paragraph 2</result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+<rxml><wash-html unparagraphify="t"><P>Paragraph 1</P>
+<p>Paragraph 2</p></wash-html></rxml>
+<result>Paragraph 1
+
+Paragraph 2</result>
+</test>
+
+
+<test no-strip-ws="" no-canon="t">
+<rxml><wash-html paragraphify="t" keep-containers="b"><b>Paragraph 1</b>
+
+<i>Paragraph 2</i></wash-html></rxml>
+<result><p><b>Paragraph 1</b></p>
+<p>&lt;i&gt;Paragraph 2&lt;/i&gt;</p></result>
+</test>
+
+

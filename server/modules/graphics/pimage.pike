@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.25 2001/03/08 14:35:44 per Exp $";
+string cvs_version="$Id$";
 
 #include <module.h>
 inherit "module";
@@ -75,7 +75,6 @@ class Constructors
 
   class myimage
   {
-    inherit "http";
     float anim_delay;
     function animator;
     object image;
@@ -93,6 +92,8 @@ class Constructors
     int last_drawn;
     string last_add;
 
+    inherit "html";
+    
     string do_gif_add()
     {
       if(time()-last_drawn < (int)anim_delay) return last_add;
@@ -199,7 +200,7 @@ class Constructors
     }
   }
 
-  private static array (int) to_color(mixed in)
+  private array (int) to_color(mixed in)
   {
     if(stringp(in)) return parse_color(in);
     return ({ in, in, in });
@@ -346,7 +347,7 @@ class Constructors
   {
     string q = Stdio.read_bytes(fname);
     if(!q) q = id->conf->try_get_file(dirname(id->not_query)+fname,id);
-    if(!q) throw("Unknown PPM image '"+fname+"'");
+    if(!q) error ("Unknown PPM image '"+fname+"'");
 #if constant(Gz)
     mixed g = Gz;
     if (g->inflate) {

@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 //
 // The Roxen WebServer main program.
 //
@@ -7,6 +7,10 @@
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
 constant cvs_version="$Id$";
+
+//! @appears roxen
+//!
+//! The Roxen WebServer main program.
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -16,7 +20,6 @@ ArgCache argcache;
 #include <roxen.h>
 #include <config.h>
 #include <module.h>
-#include <variables.h>
 #include <stat.h>
 #include <timers.h>
 
@@ -25,6 +28,9 @@ inherit "global_variables";
 #ifdef SNMP_AGENT
 inherit "snmpagent";
 #endif
+#ifdef SMTP_RELAY
+inherit "smtprelay";
+#endif
 inherit "hosts";
 inherit "disk_cache";
 // inherit "language";
@@ -32,10 +38,8 @@ inherit "supports";
 inherit "module_support";
 inherit "config_userdb";
 
-#ifdef THREADS
-// Used when running threaded to find out which thread is the backend thread.
+// Used to find out which thread is the backend thread.
 Thread.Thread backend_thread;
-#endif /* THREADS */
 
 // --- Locale defines ---
 
@@ -48,7 +52,7 @@ Thread.Thread backend_thread;
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) report_debug("SSL3: "+X+"\n")
+# define SSL3_WERR(X) report_debug("TLS port %s: %s\n", get_url(), X)
 #else
 # define SSL3_WERR(X)
 #endif
@@ -59,30 +63,77 @@ Thread.Thread backend_thread;
 # define THREAD_WERR(X)
 #endif
 
+// Needed to get core dumps of seteuid()'ed processes on Linux.
+#if constant(System.dumpable)
+#define enable_coredumps(X)	System.dumpable(X)
+#else
+#define enable_coredumps(X)
+#endif
+
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
-static function sol = master()->set_on_load;
+protected function sol = master()->set_on_load;
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 #ifdef TEST_EUID_CHANGE
 int test_euid_change;
 #endif
 
+string md5( string what )
+{
+  return Gmp.mpz(Crypto.MD5.hash( what ),256)->digits(32);
+}
+  
 string query_configuration_dir()
 {
   return configuration_dir;
 }
 
-string filename( program|object o )
+array(string|int) filename_2 (program|object o)
 {
   if( objectp( o ) )
     o = object_program( o );
 
-  string fname = master()->program_name( o );
-  if( !fname )
-    fname = "Unknown Program";
-  return fname-(getcwd()+"/");
+  string fname = Program.defined (o);
+  int line;
+  if (fname) {
+    array(string) p = fname / ":";
+    if (sizeof (p) > 1 && p[-1] != "" && sscanf (p[-1], "%d%*c", int l) == 1) {
+      fname = p[..<1] * ":";
+      line = l;
+    }
+  }
+
+  else if( !fname ) {
+    fname = master()->program_name( o );
+    if (!fname)
+      return ({0, 0});
+  }
+
+  string cwd = getcwd() + "/";
+  if (has_prefix (fname, cwd))
+    fname = fname[sizeof (cwd)..];
+
+  return ({fname, line});
 }
 
-array(string) compat_levels = ({"2.1", "2.2"});
+string filename( program|object o )
+{
+  [string fname, int line] = filename_2 (o);
+  return fname || "(unknown program)";
+}
+
+protected int once_mode;
+
+// Note that 2.5 is a nonexisting version. It's only used for the
+// cache static optimization for tags such as <if> and <emit> inside
+// <cache> since that optimization can give tricky incompatibilities
+// with 2.4.
+array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
+				"3.3", "3.4",
+				"4.0", "4.5",
+				"5.0", "5.1", "5.2" });
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -96,7 +147,6 @@ string thread_name( object thread )
 
 void name_thread( object thread, string name )
 {
-  catch(thread->set_name( name ));
   thread_names[ sprintf( "%O", thread ) ] = name;
 }
 
@@ -112,7 +162,7 @@ Thread.Mutex euid_egid_lock = Thread.Mutex();
  */
 int privs_level;
 
-static class Privs
+protected class Privs
 {
 #if efun(seteuid)
 
@@ -128,28 +178,31 @@ static class Privs
 #define HAVE_EFFECTIVE_USER
 #endif
 
-  static private string _getcwd()
+  private string _getcwd()
   {
     if (catch{return(getcwd());}) {
       return("Unknown directory (no x-bit on current directory?)");
     }
   }
 
-  static private string dbt(array t)
+  private string dbt(array t)
   {
     if(!arrayp(t) || (sizeof(t)<2)) return "";
     return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
   }
 
 #ifdef THREADS
-  static mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
-  static object threads_disabled;
+  protected mixed mutex_key; // Only one thread may modify the euid/egid at a time.
+  protected object threads_disabled;
 #endif /* THREADS */
 
   int p_level;
 
   void create(string reason, int|string|void uid, int|string|void gid)
   {
+    // No need for Privs if the uid has been changed permanently.
+    if(getuid()) return;
+
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs(%O, %O, %O)\n"
 			 "privs_level: %O\n",
@@ -161,14 +214,13 @@ static class Privs
 
 #ifdef THREADS
     if (euid_egid_lock) {
-      catch { mutex_key = euid_egid_lock->lock(); };
+      if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
+	werror (describe_backtrace (err));
     }
     threads_disabled = _disable_threads();
 #endif /* THREADS */
 
     p_level = privs_level++;
-
-    if(getuid()) return;
 
     /* Needs to be here since root-priviliges may be needed to
      * use getpw{uid,nam}.
@@ -221,12 +273,16 @@ static class Privs
 		    (string)reason,
 		    (string)dbt(backtrace()[-2]));
 
+    if (u[2]) {
 #if efun(cleargroups)
-    catch { cleargroups(); };
+      if (mixed err = catch { cleargroups(); })
+	werror (describe_backtrace (err));
 #endif /* cleargroups */
 #if efun(initgroups)
-    catch { initgroups(u[0], u[3]); };
+      if (mixed err = catch { initgroups(u[0], u[3]); })
+	werror (describe_backtrace (err));
 #endif
+    }
     gid = gid || getgid();
     int err = (int)setegid(new_gid = gid);
     if (err < 0) {
@@ -262,7 +318,7 @@ static class Privs
 #endif /* HPUX_KLUDGE */
       if (err < 0) {
 	report_debug("Privs: Failed\n");
-	throw(({ sprintf("Failed to set EGID to %d\n", gid), backtrace() }));
+	error ("Failed to set EGID to %d\n", gid);
       }
       report_debug("Privs: WARNING: Set egid to %d instead of %d.\n",
 	     gid2, gid);
@@ -270,11 +326,15 @@ static class Privs
     }
     if(getgid()!=gid) setgid(gid||getgid());
     seteuid(new_uid = uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 
   void destroy()
   {
+    // No need for Privs if the uid has been changed permanently.
+    if(getuid()) return;
+
 #ifdef PRIVS_DEBUG
     report_debug(sprintf("Privs->destroy()\n"
 			 "privs_level: %O\n",
@@ -303,7 +363,7 @@ static class Privs
     privs_level = p_level;
 
     if(LOGP) {
-      catch {
+      if (mixed err = catch {
 	array bt = backtrace();
 	if (sizeof(bt) >= 2) {
 	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
@@ -312,10 +372,9 @@ static class Privs
 	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
 			      "from backend")+"\n", saved_uid, saved_gid);
 	}
-      };
+	})
+	werror (describe_backtrace (err));
     }
-
-    if(getuid()) return;
 
 #ifdef PRIVS_DEBUG
     int uid = geteuid();
@@ -335,13 +394,16 @@ static class Privs
     seteuid(0);
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
-    catch { cleargroups(); };
+    if (mixed err = catch { cleargroups(); })
+      werror (describe_backtrace (err));
 #endif /* cleargroups */
     if(u && (sizeof(u) > 3)) {
-      catch { initgroups(u[0], u[3]); };
+      if (mixed err = catch { initgroups(u[0], u[3]); })
+	werror (describe_backtrace (err));
     }
     setegid(saved_gid);
     seteuid(saved_uid);
+    enable_coredumps(1);
 #endif /* HAVE_EFFECTIVE_USER */
   }
 #else /* efun(seteuid) */
@@ -352,10 +414,13 @@ static class Privs
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
  */
-static Privs PRIVS(string r, int|string|void u, int|string|void g)
+protected Privs PRIVS(string r, int|string|void u, int|string|void g)
 {
   return Privs(r, u, g);
 }
+
+// Current Configuration.
+Thread.Local current_configuration = Thread.Local();
 
 // font cache and loading.
 // 
@@ -375,7 +440,7 @@ class Fonts
 		string justification, float|int xspace, float|int yspace);
 
   Font resolve_font(string f, string|void justification);
-  array(string) available_fonts( );
+  array(string) available_fonts(int(0..1)|void force_reload);
 }
 Fonts fonts;
 
@@ -401,46 +466,80 @@ private void really_low_shutdown(int exit_code)
 {
   // Die nicely. Catch for paranoia reasons
 #ifdef THREADS
-  catch (stop_handler_threads());
+  if (mixed err = catch (stop_handler_threads()))
+    werror (describe_backtrace (err));
 #endif /* THREADS */
+  if (!exit_code || once_mode) {
+    // We're shutting down; Attempt to take mysqld with us.
+    if (mixed err =
+	catch { report_notice("Shutting down MySQL.\n"); } ||
+	catch {
+	  Sql.Sql db = connect_to_my_mysql(0, "mysql");
+	  db->shutdown();
+	})
+      werror (describe_backtrace (err));
+  }
+  // Zap some of the remaining caches.
+  destruct (argcache);
   destruct (cache);
-  catch {
-    if (exit_code)
-      report_notice("Restarting Roxen.\n");
-    else
-      report_notice("Shutting down Roxen.\n");
-  };
-  exit( exit_code );		// Now we die...
+#if 0
+  // Disabled since it's lying when the server is shut down with a
+  // SIGTERM or SIGINT to the start script (which include the stop
+  // action of the init.d script).
+  if (mixed err = catch {
+      if (exit_code && !once_mode)
+	report_notice("Restarting Roxen.\n");
+      else
+	report_notice("Shutting down Roxen.\n");
+    })
+    werror (describe_backtrace (err));
+#endif
+  roxenloader.real_exit( exit_code ); // Now we die...
 }
 
-private int _recurse;
+private int shutdown_recurse;
 
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
 private void low_shutdown(int exit_code)
 {
-  if(_recurse >= 4)
+  if(shutdown_recurse >= 4)
   {
-    catch (report_notice("Exiting roxen (spurious signals received).\n"));
-    catch (stop_all_configurations());
+    if (mixed err =
+	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
+	catch (stop_all_configurations()))
+      werror (describe_backtrace (err));
+    // Zap some of the remaining caches.
+    destruct(argcache);
     destruct(cache);
 #ifdef THREADS
-    catch (stop_handler_threads());
+    if (mixed err = catch (stop_handler_threads()))
+      werror (describe_backtrace (err));
 #endif /* THREADS */
-    exit(exit_code);
+    roxenloader.real_exit(exit_code);
   }
-  if (_recurse++) return;
+  if (shutdown_recurse++) return;
 
-#ifdef SNMP_AGENT
-  if(objectp(snmpagent))
-    snmpagent->disable();
+#ifndef NO_SLOW_REQ_BT
+  // Turn off the backend thread monitor while we're shutting down.
+  slow_be_timeout_changed();
 #endif
 
-  catch(stop_all_configurations());
+  if (mixed err = catch(stop_all_configurations()))
+    werror (describe_backtrace (err));
+
+#ifdef SNMP_AGENT
+  if(objectp(snmpagent)) {
+    snmpagent->stop_trap();
+    snmpagent->disable();
+  }
+#endif
 
   call_out(really_low_shutdown, 0.1, exit_code);
 }
+
+private int shutdown_started;
 
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
@@ -448,19 +547,28 @@ private void low_shutdown(int exit_code)
 void restart(float|void i, void|int exit_code)
 //! Restart roxen, if the start script is running
 {
+  shutdown_started = 1;
   call_out(low_shutdown, i, exit_code || -1);
 }
 
 void shutdown(float|void i)
 //! Shut down roxen
 {
+  shutdown_started = 1;
   call_out(low_shutdown, i, 0);
 }
 
 void exit_when_done()
 {
+  shutdown_started = 1;
   report_notice("Interrupt request received.\n");
   low_shutdown(-1);
+}
+
+int is_shutting_down()
+//! Returns true if Roxen is shutting down.
+{
+  return shutdown_started;
 }
 
 
@@ -478,12 +586,26 @@ Thread do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
+#if 1
+constant Queue = Thread.Queue;
+#else
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
 class Queue 
 //! Thread.Queue lookalike, which uses some archaic and less
 //! known features of the preempting algorithm in pike to optimize the
 //! read function.
+//
+// If those archaic and less known features are to depend on the
+// interpreter lock in the while loop that waits on the condition
+// variable then it doesn't work since Pike always might yield before
+// a function call (specifically, the wait() call in the condition
+// variable). Thus a handler thread might wait even though there is a
+// request to process. However, the only effect is that that specific
+// request isn't serviced timely; when the next request comes in the
+// thread will be woken up and both requests will be handled.
+// Furthermore it's extremely rare in the first place since there
+// normally are several handler threads.
 {
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
@@ -496,7 +618,14 @@ class Queue
   
   mixed read()
   {
-    while(!(w_ptr - r_ptr)) r_cond::wait();
+    while(!(w_ptr - r_ptr)) {
+      // Make a MutexKey for wait() to please 7.3. This will of course
+      // not fix the race, but we ignore that. See the discussion
+      // above. (Must have an extra ref to the mutex since the
+      // MutexKey doesn't keep one.)
+      Thread.Mutex m = Thread.Mutex();
+      r_cond::wait (m->lock());
+    }
     mixed tmp = buffer[r_ptr];
     buffer[r_ptr++] = 0;	// Throw away any references.
     return tmp;
@@ -510,6 +639,7 @@ class Queue
     return tmp;
   }
 
+  // Warning: This function isn't thread safe.
   void write(mixed v)
   {
     if(w_ptr >= sizeof(buffer))
@@ -522,6 +652,139 @@ class Queue
     r_cond::signal();
   }
 }
+#endif
+
+#ifndef NO_SLOW_REQ_BT
+// This is a system to dump all threads whenever a request takes
+// longer than a configurable timeout.
+
+protected Pike.Backend slow_req_monitor; // Set iff slow req bt is enabled.
+protected float slow_req_timeout, slow_be_timeout;
+
+protected void slow_req_monitor_thread (Pike.Backend my_monitor)
+{
+  // my_monitor is just a safeguard to ensure we don't get multiple
+  // monitor threads.
+  while (slow_req_monitor == my_monitor)
+    slow_req_monitor (3600);
+}
+
+protected mixed slow_be_call_out;
+
+protected void slow_be_before_cb()
+{
+#ifdef DEBUG
+  if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
+#endif
+  if (Pike.Backend monitor = slow_be_call_out && slow_req_monitor) {
+    monitor->remove_call_out (slow_be_call_out);
+    slow_be_call_out = 0;
+  }
+}
+
+protected void slow_be_after_cb()
+{
+  // FIXME: This should try to compensate for delays due to the pike
+  // gc, because it just causes noise here.
+#ifdef DEBUG
+  if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
+#endif
+  if (slow_be_timeout > 0.0)
+    if (Pike.Backend monitor = slow_req_monitor)
+      slow_be_call_out = monitor->call_out (dump_slow_req, slow_be_timeout,
+					    this_thread(), slow_be_timeout);
+}
+
+void slow_req_count_changed()
+{
+  Pike.Backend monitor = slow_req_monitor;
+  int count = query ("slow_req_bt_count");
+
+  if (count && monitor) {
+    // Just a change of the count - nothing to do.
+  }
+
+  else if (count) {		// Start.
+    monitor = slow_req_monitor = Pike.SmallBackend();
+    Thread.thread_create (slow_req_monitor_thread, monitor);
+    monitor->call_out (lambda () {}, 0); // Safeguard if there's a race.
+    slow_be_timeout_changed();
+  }
+
+  else if (monitor) {		// Stop.
+    slow_req_monitor = 0;
+    monitor->call_out (lambda () {}, 0); // To wake up the thread.
+    slow_be_timeout_changed();
+  }
+}
+
+void slow_req_timeout_changed()
+{
+#ifdef DEBUG
+  if (query ("slow_req_bt_timeout") < 0) error ("Invalid timeout.\n");
+#endif
+  slow_req_timeout = query ("slow_req_bt_timeout");
+}
+
+void slow_be_timeout_changed()
+{
+#ifdef DEBUG
+  if (query ("slow_be_bt_timeout") < 0) error ("Invalid timeout.\n");
+#endif
+  slow_be_timeout = query ("slow_be_bt_timeout");
+
+#ifdef DEBUG
+  if ((Pike.DefaultBackend->before_callback &&
+       Pike.DefaultBackend->before_callback != slow_be_before_cb) ||
+      (Pike.DefaultBackend->after_callback &&
+       Pike.DefaultBackend->after_callback != slow_be_after_cb))
+    werror ("Pike.DefaultBackend already hooked up with "
+	    "other before/after callbacks - they get overwritten: %O/%O\n",
+	    Pike.DefaultBackend->before_callback,
+	    Pike.DefaultBackend->after_callback);
+#endif
+
+  if (query ("slow_req_bt_count") && slow_be_timeout > 0.0 &&
+      // Don't trig if we're shutting down.
+      !shutdown_started) {
+    Pike.DefaultBackend->before_callback = slow_be_before_cb;
+    Pike.DefaultBackend->after_callback = slow_be_after_cb;
+  }
+  else {
+    Pike.DefaultBackend->before_callback = 0;
+    Pike.DefaultBackend->after_callback = 0;
+    if (Pike.Backend monitor = slow_be_call_out && slow_req_monitor) {
+      monitor->remove_call_out (slow_be_call_out);
+      slow_be_call_out = 0;
+    }
+  }
+}
+
+protected void dump_slow_req (Thread.Thread thread, float timeout)
+{
+  object threads_disabled = _disable_threads();
+
+  int count = query ("slow_req_bt_count");
+  if (count > 0) set ("slow_req_bt_count", count - 1);
+
+  if (thread == backend_thread && !slow_be_call_out) {
+    // Avoid false alarms for the backend thread if we got here due to
+    // a race. Should perhaps have something like this for the handler
+    // threads too, but otoh races are more rare there due to the
+    // longer timeouts.
+  }
+
+  else {
+    report_debug ("###### %s 0x%x has been busy for more than %g seconds.\n",
+		  thread == backend_thread ? "Backend thread" : "Thread",
+		  thread->id_number(), timeout);
+    describe_all_threads (0, threads_disabled);
+  }
+
+  threads_disabled = 0; 	// Paranoia.
+}
+
+#endif	// !NO_SLOW_REQ_BT
 
 // // This is easier than when there are no threads.
 // // See the discussion below. :-)
@@ -534,17 +797,45 @@ class Queue
 // 	   thread_create( f, @args );
 //  };
 // }
-local static Queue handle_queue = Queue();
+local protected Queue handle_queue = Queue();
 //! Queue of things to handle.
 //! An entry consists of an array(function fp, array args)
 
-local static int thread_reap_cnt;
+local protected int thread_reap_cnt;
 //! Number of handler threads in the process of being stopped.
 
-static int threads_on_hold;
+protected int threads_on_hold;
 //! Number of handler threads on hold.
 
-local static void handler_thread(int id)
+// Global variables for statistics
+int handler_num_runs = 0;
+int handler_num_runs_001s = 0;
+int handler_num_runs_005s = 0;
+int handler_num_runs_015s = 0;
+int handler_num_runs_05s = 0;
+int handler_num_runs_1s = 0;
+int handler_num_runs_5s = 0;
+int handler_num_runs_15s = 0;
+int handler_acc_time = 0;
+int handler_acc_cpu_time = 0;
+
+protected string debug_format_queue_task (array(function|array) task)
+// Debug formatter of an entry in the handler or background_run queues.
+{
+  return ((functionp (task[0]) ?
+	   sprintf ("%s: %s", Function.defined (task[0]),
+		    master()->describe_function (task[0])) :
+	   programp (task[0]) ?
+	   sprintf ("%s: %s", Program.defined (task[0]),
+		    master()->describe_program (task[0])) :
+	   sprintf ("%O", task[0])) +
+	  "(" +
+	  map (task[1], lambda (mixed arg)
+			  {return sprintf ("%O", arg);}) * ", " +
+	  ")");
+}
+
+local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
 //! is a lot of error handling to ensure that nothing serious happens if
@@ -564,17 +855,56 @@ local static void handler_thread(int id)
 #endif
   while(1)
   {
+    int thread_flagged_as_busy;
+#ifndef NO_SLOW_REQ_BT
+    Pike.Backend monitor;
+    mixed call_out;
+#endif
     if(q=catch {
       do {
+//  	if (!busy_threads) werror ("GC: %d\n", gc());
+	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
 	if(arrayp(h=handle_queue->read()) && h[0]) {
-	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
-				id, h[0], h[1] / 1));
+	  THREAD_WERR(sprintf("Handle thread [%O] calling %s",
+			      id, debug_format_queue_task (h)));
 	  set_locale();
 	  busy_threads++;
-	  h[0](@h[1]);
+	  thread_flagged_as_busy = 1;
+	  handler_num_runs++;
+
+	  int start_hrtime = gethrtime();
+	  float handler_vtime = gauge {
+#ifndef NO_SLOW_REQ_BT
+	      if (h[0] != bg_process_queue &&
+		  // Leave out bg_process_queue. It makes a timeout on
+		  // every individual job instead.
+		  (monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
+		call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
+					      this_thread(), slow_req_timeout);
+		h[0](@h[1]);
+		monitor->remove_call_out (call_out);
+	      }
+	      else
+#endif
+		{
+		  h[0](@h[1]);
+		}
+	    };
+	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
+
 	  h=0;
 	  busy_threads--;
+	  thread_flagged_as_busy = 0;
+	  if (handler_rtime >  0.01) handler_num_runs_001s++;
+	  if (handler_rtime >  0.05) handler_num_runs_005s++;
+	  if (handler_rtime >  0.15) handler_num_runs_015s++;
+	  if (handler_rtime >  0.50) handler_num_runs_05s++;
+	  if (handler_rtime >  1.00) handler_num_runs_1s++;
+	  if (handler_rtime >  5.00) handler_num_runs_5s++;
+	  if (handler_rtime > 15.00) handler_num_runs_15s++;
+	  handler_acc_cpu_time += (int)(1E6*handler_vtime);
+	  handler_acc_time += (int)(1E6*handler_rtime);
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -592,12 +922,25 @@ local static void handler_thread(int id)
 	  num_hold_messages--;
 	  THREAD_WERR("Handle thread [" + id + "] put on hold");
 	  threads_on_hold++;
-	  if (Thread.Condition cond = hold_wakeup_cond) cond->wait();
+	  if (Thread.Condition cond = hold_wakeup_cond) {
+	    // Make a MutexKey for wait() to please 7.3. This will of
+	    // course not fix the race, but we ignore that. See the
+	    // comment at the declaration of hold_wakeup_cond. (Must
+	    // have an extra ref to the mutex since the MutexKey
+	    // doesn't keep one.)
+	    Thread.Mutex m = Thread.Mutex();
+	    cond->wait (m->lock());
+	  }
 	  threads_on_hold--;
 	  THREAD_WERR("Handle thread [" + id + "] released");
 	}
       } while(1);
     }) {
+      if (thread_flagged_as_busy)
+	busy_threads--;
+#ifndef NO_SLOW_REQ_BT
+      if (call_out) monitor->remove_call_out (call_out);
+#endif
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
 		       "Client will not get any response from Roxen.\n"),*/
@@ -621,9 +964,14 @@ local static void handler_thread(int id)
   }
 }
 
- void handle(function f, mixed ... args)
+void handle(function f, mixed ... args)
 {
   handle_queue->write(({f, args }));
+}
+
+int handle_queue_length()
+{
+  return handle_queue->size();
 }
 
 int number_of_threads;
@@ -632,7 +980,7 @@ int number_of_threads;
 int busy_threads;
 //! The number of currently busy threads.
 
-static array(object) handler_threads = ({});
+protected array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
 
 void start_handler_threads()
@@ -652,8 +1000,14 @@ void start_handler_threads()
   handler_threads += new_threads;
 }
 
-static int num_hold_messages;
-static Thread.Condition hold_wakeup_cond = Thread.Condition();
+protected int num_hold_messages;
+protected Thread.Condition hold_wakeup_cond = Thread.Condition();
+// Note: There are races in the use of this condition variable, but
+// the only effect of that is that some handler thread might be
+// considered hung when it's actually waiting on hold_wakeup_cond, and
+// the hold/release handler threads function deal with hung threads
+// anyway. The outcome would only be that release_handler_threads
+// starts some extra handler thread unnecessarily.
 
 void hold_handler_threads()
 //! Tries to put all handler threads on hold, but gives up if it takes
@@ -727,7 +1081,7 @@ void release_handler_threads (int numthreads)
   }
 }
 
-static Thread.MutexKey backend_block_lock;
+protected Thread.MutexKey backend_block_lock;
 
 void stop_handler_threads()
 //! Stop all the handler threads and the backend, but give up if it
@@ -794,7 +1148,7 @@ function async_sig_start( function f, int really )
 {
   class SignalAsyncVerifier( function f )
   {
-    static int async_called;
+    protected int async_called;
 
     void really_call( array args )
     {
@@ -804,9 +1158,9 @@ function async_sig_start( function f, int really )
 
     void call( mixed ... args )
     {
-      werror("Received signal %O\n", signame( args[0] ) );
       if( async_called && async_called-time() )
       {
+	report_debug("Received signal %s\n", (string) signame( args[0] ) );
         report_debug("\n\n"
                      "Async calling failed for %O, calling synchronous\n", f);
         report_debug("Backtrace at time of hangup:\n%s\n",
@@ -816,6 +1170,7 @@ function async_sig_start( function f, int really )
       }
       if( !async_called ) // Do not queue more than one call at a time.
       {
+	report_debug("Received signal %s\n", (string) signame( args[0] ) );
         async_called=time();
         call_out( really_call, 0, args );
       }
@@ -862,8 +1217,8 @@ function async_sig_start( function f, int really )
 }
 
 #ifdef THREADS
-static Queue bg_queue = Queue();
-static int bg_process_running;
+protected Thread.Queue bg_queue = Thread.Queue();
+protected Thread.Thread bg_process_thread;
 
 // Use a time buffer to strike a balance if the server is busy and
 // always have at least one busy thread: The maximum waiting time in
@@ -871,83 +1226,236 @@ static int bg_process_running;
 // bg_time_buffer_max. If there are only short periods of time between
 // the queue runs, the max waiting time will shrink towards the
 // minimum.
-static constant bg_time_buffer_max = 30;
-static constant bg_time_buffer_min = 0.5;
-static int bg_last_busy = 0;
+protected constant bg_time_buffer_max = 30;
+protected constant bg_time_buffer_min = 0;
+protected int bg_last_busy = 0;
+int bg_num_runs = 0;
+int bg_num_runs_001s = 0;
+int bg_num_runs_005s = 0;
+int bg_num_runs_015s = 0;
+int bg_num_runs_05s = 0;
+int bg_num_runs_1s = 0;
+int bg_num_runs_5s = 0;
+int bg_num_runs_15s = 0;
+int bg_acc_time = 0;
+int bg_acc_cpu_time = 0;
 
-static void bg_process_queue()
+int bg_queue_length()
 {
-  if (bg_process_running) return;
+  return bg_queue->size();
+}
+
+protected void bg_process_queue()
+{
+  if (bg_process_thread) return;
   // Relying on the interpreter lock here.
-  bg_process_running = 1;
+  bg_process_thread = this_thread();
 
   int maxbeats =
-    min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
+    min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.01);
+
+#ifndef NO_SLOW_REQ_BT
+  Pike.Backend monitor;
+  mixed call_out;
+#endif
 
   if (mixed err = catch {
-    while (array task = bg_queue->tryread()) {
+    // Make sure we don't run forever if background jobs are queued
+    // over and over again, to avoid starving other threads. (If they
+    // are starved enough, busy_threads will never be incremented.)
+    // If jobs are enqueued while running another background job,
+    // bg_process_queue is put on the handler queue again at the very
+    // end of this function.
+    int jobs_to_process = bg_queue->size();
+    while (jobs_to_process-- && !shutdown_started) {
+      // Not a race here since only one thread is reading the queue.
+      array task = bg_queue->read();
+
       // Wait a while if another thread is busy already.
       if (busy_threads > 1) {
-	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.04));
+	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.01));
 	     busy_threads > 1 && maxbeats > 0;
 	     maxbeats--)
-	  // Pike implementation note: If 0.02 or smaller, we'll busy wait here.
-	  sleep (0.04);
+	  sleep (0.01);
 	bg_last_busy = time();
       }
 
-#if 0
-      report_debug ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
+#ifdef DEBUG_BACKGROUND_RUN
+      report_debug ("background_run run %s [%d jobs left in queue]\n",
+		    debug_format_queue_task (task),
+		    bg_queue->size());
 #endif
-      if (task[0])		// Ignore things that have become destructed.
-	task[0] (@task[1]);
+
+      float task_vtime, task_rtime;
+      bg_num_runs++;
+
+#ifndef NO_SLOW_REQ_BT
+      if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
+	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
+				      this_thread(), slow_req_timeout);
+	int start_hrtime = gethrtime (1);
+	task_vtime = gauge {
+	    if (task[0]) // Ignore things that have become destructed.
+	      // Note: BackgroundProcess.repeat assumes that there are
+	      // exactly two refs to task[0] during the call below.
+	      task[0] (@task[1]);
+	  };
+	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	monitor->remove_call_out (call_out);
+      }
+      else
+#endif
+      {
+	int start_hrtime = gethrtime (1);
+	task_vtime = gauge {
+	    if (task[0])
+	      task[0] (@task[1]);
+	  };
+	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+      }
+
+      if (task_rtime >  0.01) bg_num_runs_001s++;
+      if (task_rtime >  0.05) bg_num_runs_005s++;
+      if (task_rtime >  0.15) bg_num_runs_015s++;
+      if (task_rtime >  0.50) bg_num_runs_05s++;
+      if (task_rtime >  1.00) bg_num_runs_1s++;
+      if (task_rtime >  5.00) bg_num_runs_5s++;
+      if (task_rtime > 15.00) bg_num_runs_15s++;
+      bg_acc_cpu_time += (int)(1E6*task_vtime);
+      bg_acc_time += (int)(1E6*task_rtime);
+
+      if (task_rtime > 60.0)
+	report_warning ("Warning: Background job took more than one minute "
+			"(%g s real time and %g s cpu time):\n"
+			"  %s (%s)\n%s",
+			task_rtime, task_vtime,
+			functionp (task[0]) ?
+			sprintf ("%s: %s", Function.defined (task[0]),
+				 master()->describe_function (task[0])) :
+			programp (task[0]) ?
+			sprintf ("%s: %s", Program.defined (task[0]),
+				 master()->describe_program (task[0])) :
+			sprintf ("%O", task[0]),
+			map (task[1], lambda (mixed arg)
+					{return sprintf ("%O", arg);}) * ", ",
+			bg_queue->size() ?
+			(bg_queue->size() > 1 ?
+			 "  " + bg_queue->size() + " more jobs in the "
+			 "background queue were delayed.\n" :
+			 "  1 more job in the background queue was delayed.\n"):
+			"");
+#ifdef DEBUG_BACKGROUND_RUN
+      else
+	report_debug ("background_run done, "
+		      "took %g ms cpu time and %g ms real time\n",
+		      task_vtime * 1000, task_rtime * 1000);
+#endif
 
       if (busy_threads > 1) bg_last_busy = time();
     }
   }) {
-    bg_process_running = 0;
+#ifndef NO_SLOW_REQ_BT
+    if (call_out) monitor->remove_call_out (call_out);
+#endif
+    bg_process_thread = 0;
     handle (bg_process_queue);
     throw (err);
   }
-  bg_process_running = 0;
+  bg_process_thread = 0;
+  if (bg_queue->size()) {
+    handle (bg_process_queue);
+    // Sleep a short while to encourage a thread switch. This is a
+    // kludge to avoid starving non-handler threads, since pike
+    // currently (7.8.503) doesn't switch threads reliably on yields.
+    sleep (0.001);
+  }
 }
 #endif
 
-void background_run (int|float delay, function func, mixed... args)
+Thread.Thread background_run_thread()
+//! Returns the thread currently executing the background_run queue,
+//! or 0 if it isn't being processed.
+{
+#ifdef THREADS
+  return bg_process_thread;
+#else
+  // FIXME: This is not correct. Should return something nonzero when
+  // called from the call out. But noone is running without threads
+  // nowadays anyway.
+  return 0;
+#endif
+}
+
+mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
 //! many tasks are queued to run in the background, only one is run at
-//! a time. The tasks won't be starved, though.
+//! a time. The tasks won't be starved regardless of server load,
+//! though.
 //!
 //! The function @[func] will be enqueued after approximately @[delay]
 //! seconds, to be called with the rest of the arguments as its
 //! arguments.
 //!
-//! The function might be run in the backend thread, so it should
-//! never run for a considerable time. Instead do another call to
-//! @[background_run] to queue it up again after some work has been
-//! done, or use @[BackgroundProcess].
+//! In a multithreaded server the function will be executed in one of
+//! the handler threads. The function is executed in the backend
+//! thread if no thread support is available, although that
+//! practically never occurs anymore.
+//!
+//! To avoid starving other background jobs, the function should never
+//! run for a long time. Instead do another call to @[background_run]
+//! to queue it up again after some work has been done, or use
+//! @[BackgroundProcess].
+//!
+//! @returns
+//! If the function is queued for execution right away then zero is
+//! returned. Otherwise its call out identifier is returned, which can
+//! be used with @[find_call_out] or @[remove_call_out].
 {
+  // FIXME: Make it possible to associate the background job with a
+  // RoxenModule or Configuration, so that report_error etc can log in
+  // a good place.
+#ifdef DEBUG_BACKGROUND_RUN
+  report_debug ("background_run enqueue %s (%s) [%d jobs in queue]\n",
+		functionp (func) ?
+		sprintf ("%s: %s", Function.defined (func),
+			 master()->describe_function (func)) :
+		programp (func) ?
+		sprintf ("%s: %s", Program.defined (func),
+			 master()->describe_program (func)) :
+		sprintf ("%O", func),
+		map (args, lambda (mixed arg)
+			   {return sprintf ("%O", arg);}) * ", ",
+		bg_queue->size());
+#endif
+
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
-    return;
+    return 0;
 
-  void enqueue()
+  class enqueue(function func, mixed ... args)
   {
-    bg_queue->write (({func, args}));
-    if (bg_queue->size() == 1)
-      handle (bg_process_queue);
+    int __hash() { return hash_value(func); }
+    int `==(mixed gunc) { return func == gunc; }
+    string _sprintf() { return sprintf("background_run(%O)", func); }
+    mixed `()()
+    {
+      bg_queue->write (({func, args}));
+      if (!bg_process_thread)
+	handle (bg_process_queue);
+    }
   };
 
   if (delay)
-    call_out (enqueue, delay);
-  else
-    enqueue();
-
+    return call_out (enqueue(func, @args), delay);
+  else {
+    enqueue(func, @args)();
+    return 0;
+  }
 #else
   // Can't do much better when we haven't got threads..
-  call_out (func, delay, @args);
+  return call_out (func, delay, @args);
 #endif
 }
 
@@ -955,26 +1463,56 @@ class BackgroundProcess
 //! A class to do a task repeatedly in the background, in a way that
 //! makes as little impact as possible on the incoming requests (using
 //! @[background_run]).
+//!
+//! The user must keep a reference to this object, otherwise it will remove
+//! itself and the callback won't be called anymore.
 {
   int|float period;
+  function func;
+  array args;
   int stopping = 0;
 
-  static void repeat (function func, mixed args)
+  protected void repeat (function func, array args)
   {
-    if (stopping) return;
-    func (@args);
+    // Got a minimum of four refs to this:
+    // o  One in the task array in bg_process_queue.
+    // o  One on the stack in the call in bg_process_queue.
+    // o  One as current_object in the stack frame.
+    // o  One on the stack as argument to _refs.
+    int self_refs = _refs (this);
+#ifdef DEBUG
+    if (self_refs < 4)
+      error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
+#endif
+    if (stopping || (self_refs <= 4) || !func) {
+      stopping = 2;	// Stopped.
+      return;
+    }
+    mixed err = catch {
+	func (@args);
+      };
+    if (err) {
+      catch {
+	report_error(LOC_M(66, "Uncaught error in background process:") +
+		     "%s\n", describe_backtrace(err));
+      };
+    }
     background_run (period, repeat, func, args);
   }
 
   //! @decl void set_period (int|float period);
   //!
   //! Changes the period to @[period] seconds between calls.
+  //!
+  //! @note
+  //! This does not change the currently ongoing period, if any. That
+  //! might be remedied.
   void set_period (int|float period_)
   {
     period = period_;
   }
 
-  //! @decl static void create (int|float period, function func, mixed... args);
+  //! @decl protected void create (int|float period, function func, mixed... args);
   //!
   //! The function @[func] will be called with the following arguments
   //! after approximately @[period] seconds, and then kept being
@@ -982,16 +1520,33 @@ class BackgroundProcess
   //!
   //! The repetition will stop if @[stop] is called, or if @[func]
   //! throws an error.
-  static void create (int|float period_, function func, mixed... args)
+  protected void create (int|float period_, function func_, mixed... args_)
   {
     period = period_;
+    func = func_;
+    args = args_;
     background_run (period, repeat, func, args);
   }
 
   void stop()
   //! Sets a flag to stop the succession of calls.
   {
-    stopping = 1;
+    stopping |= 1;
+  }
+
+  void start()
+  //! Restart a stopped process.
+  {
+    int state = stopping;
+    stopping = 0;
+    if (state & 2) {
+      background_run (period, repeat, func, args);
+    }
+  }
+
+  string _sprintf()
+  {
+    return sprintf("BackgroundProcess(%O, %O)", period, func);
   }
 }
 
@@ -1013,6 +1568,101 @@ void set_port_options( string key, mapping value )
   save( );
 }
 
+#ifdef DEBUG_URL2CONF
+#define URL2CONF_MSG(X...) report_debug (X)
+#else
+#define URL2CONF_MSG(X...)
+#endif
+
+protected mapping(string:int(0..1)) host_is_local_cache = ([]);
+
+//! Check if @[hostname] is local to this machine.
+int(0..1) host_is_local(string hostname)
+{
+  int(0..1) res;
+  if (!zero_type(res = host_is_local_cache[hostname])) return res;
+  
+  // Look up the IP.
+  string ip = blocking_host_to_ip(hostname);
+
+  // Can we bind to it?
+  Stdio.Port port = Stdio.Port();
+  // bind() can trow error if ip is an invalid hostname.
+  catch {
+    res = port->bind(0, 0, ip);
+  };
+
+  destruct(port);
+  return host_is_local_cache[hostname] = res;
+}
+
+array(Protocol|mapping(string:mixed)) find_port_for_url (
+  Standards.URI url, void|Configuration only_this_conf)
+// Returns ({port_obj, url_data}) for a url that matches the given
+// one. url_data is the mapping for the url in port_obj->urls. If
+// only_this_conf is given then only ports for that configuration are
+// searched.
+{
+  // Cannot use the uri formatter in Standards.URI here since we
+  // always want the port number to be present.
+  string host = url->host;
+  if (has_value (host, ":"))
+    host = "[" + (Protocols.IPv6.normalize_addr_basic (host) || host) + "]";
+  string url_with_port = sprintf ("%s://%s:%d%s", url->scheme, host, url->port,
+				  sizeof (url->path) ? url->path : "/");
+
+  URL2CONF_MSG("URL with port: %s\n", url_with_port);
+
+  foreach (urls; string u; mapping(string:mixed) q)
+  {
+    URL2CONF_MSG("Trying %O:%O\n", u, q);
+    if( glob( u+"*", url_with_port ) )
+    {
+      URL2CONF_MSG("glob match\n");
+      if (Protocol p = q->port)
+	if (mapping(string:mixed) url_data =
+	    p->find_url_data_for_url (url_with_port, 0, 0))
+	{
+	  Configuration c = url_data->conf;
+	  URL2CONF_MSG("Found config: %O\n", url_data->conf);
+
+	  if ((only_this_conf && (c != only_this_conf)) ||
+	      (sscanf (u, "%*s://%*[^*?]%*c") == 3 && // u contains * or ?.
+	       // u is something like "http://*:80/"
+	       (!host_is_local(url->host)))) {
+	    // Bad match.
+	    URL2CONF_MSG("Bad match: only_this_conf:%O, host_is_local:%O\n",
+			 (only_this_conf && (c == only_this_conf)),
+			 (!host_is_local(url->host)));
+	    c = 0;
+	    continue;
+	  }
+
+	  URL2CONF_MSG("Result: %O\n", c);
+	  return ({p, url_data});
+	}
+    }
+  }
+
+  return ({0, 0});
+}
+
+Configuration find_configuration_for_url(Standards.URI url,
+					 void|Configuration only_this_conf,
+					 void|array(Protocol) return_port)
+//! Tries to to determine if a request for the given url would end up
+//! in this server, and if so returns the corresponding configuration.
+//!
+//! If @[only_this_conf] has been specified only matches against it
+//! will be returned.
+{
+  [Protocol port_obj, mapping(string:mixed) url_data] =
+    find_port_for_url (url, only_this_conf);
+  if (return_port)
+    return_port[0] = port_obj;
+  return url_data && url_data->conf;
+}
+
 class InternalRequestID
 //! ID for internal requests that are not linked to any real request.
 {
@@ -1020,7 +1670,8 @@ class InternalRequestID
 
   this_program set_path( string f )
   {
-    raw_url = Roxen.http_encode_string( f );
+    raw_url = Roxen.http_encode_invalids( f );
+
     if( strlen( f ) > 5 )
     {
       string a;
@@ -1042,66 +1693,37 @@ class InternalRequestID
       }
     }
     not_query = Roxen.simplify_path( scan_for_query( f ) );
-    return this_object();
+    return this;
   }
 
   this_program set_url( string url )
   {
-    Configuration c;
-    foreach( indices(urls), string u )
-    {
-      mixed q = urls[u];
-      if( glob( u+"*", url ) )
-	if( (c = q->port->find_configuration_for_url(url, this_object(), 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-    }
-
-    if(!c)
-    {
-      // pass 2: Find a configuration with the 'default' flag set.
-      foreach( configurations, c )
-	if( c->query( "default_server" ) )
-	{
-	  conf = c;
-	  break;
-	}
-	else
-	  c = 0;
-    }
-
-    if(!c)
-    {
-      // pass 3: No such luck. Let's allow default fallbacks.
-      foreach( indices(urls), string u )
-      {
-	mixed q = urls[u];
-	if( (c = q->port->find_configuration_for_url( url,this_object(), 1 )) )
-	{
-	  conf = c;
-	  port_obj = q->port;
-	  break;
-	}
-      }
-    }
-
-    string host;
-    sscanf( url, "%s://%s/%s", prot, host, url );
-    prot = upper_case( prot );
+    object uri = Standards.URI(url);
+    prot = upper_case(uri->scheme);
+    misc->host = uri->host;
+    if ((prot == "HTTP" && uri->port != 80) ||
+	(prot == "HTTPS" && uri->port != 443))
+      misc->host += ":" + uri->port;
+    string path = uri->path;
+    raw_url = path;
     method = "GET";
-    misc->host = host;
-    return set_path( "/"+url );
+    raw = "GET " + raw_url + " HTTP/1.1\r\n\r\n";
+    [port_obj, mapping(string:mixed) url_data] = find_port_for_url (uri, 0);
+    if (url_data) {
+      conf = url_data->conf;
+      if (!conf->inited) conf->enable_all_modules();
+      if (string config_path = url_data->path)
+	adjust_for_config_path (config_path);
+    }
+    return set_path( raw_url );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
-    return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+    return sprintf("InternalRequestID(conf=%O; not_query=%O)", conf, not_query );
   }
 
-  static void create()
+  protected void create()
   {
     client = ({ "Roxen" });
     prot = "INTERNAL";
@@ -1110,8 +1732,11 @@ class InternalRequestID
     variables = FakedVariables( real_variables );
     root_id = this_object();
 
-    misc = ([]);
-    cookies = ([]);
+    misc = ([ "pref_languages": PrefLanguages(),
+	      "cacheable": INITIAL_CACHEABLE,
+    ]);
+    connection_misc = ([]);
+    cookies = CookieJar();
     throttle = ([]);
     client_var = ([]);
     request_headers = ([]);
@@ -1130,12 +1755,21 @@ class Protocol
 //! Implements reference handling, finding Configuration objects
 //! for URLs, and the bind/accept handling.
 {
-  inherit Stdio.Port: port;
+  protected Stdio.Port port_obj;
+
   inherit "basic_defvar";
+
   int bound;
+  //! 0 if the port isn't bound, 1 if it is, and -1 if it binding it
+  //! failed with EADDRINUSE when told to ignore that error.
+  //!
+  //! @note
+  //! The -1 state should be uncommon since @[register_url] should
+  //! remove such objects after the failed bind attempt.
 
   string path;
   constant name = "unknown";
+
   constant supports_ipless = 0;
   //! If true, the protocol handles ip-less virtual hosting
 
@@ -1147,14 +1781,20 @@ class Protocol
   constant default_port = 4711;
   //! If no port is specified in the URL, use this one
 
+  string url_prefix = name + "://";
+
   int port;
   //! The currently bound portnumber
 
   string ip;
-  //! The IP-number (0 for ANY) this port is bound to
+  //! The canonical IP-number (0 for ANY) this port is bound to.
+  //!
+  //! IPv6 numbers are in colon separated four-digit lower-case hexadecimal
+  //! notation with the first longest sequence of zeros compressed.
 
   int refs;
-  //! The number of references to this port
+  //! The number of references to this port. This is the same as the
+  //! size of @[urls] and @[sorted_urls].
 
   program requesthandler;
   //! The per-connection request handling class
@@ -1162,14 +1802,32 @@ class Protocol
   array(string) sorted_urls = ({});
   //! Sorted by length, longest first
 
-  mapping(string:mapping) urls = ([]);
+  mapping(string:mapping(string:mixed)) urls = ([]);
   //! .. url -> ([ "conf":.., ... ])
+  //!
+  //! Indexed by URL. The following data is stored:
+  //! @mapping
+  //!   @member Configuration "conf"
+  //!     The Configuration object for this URL.
+  //!   @member string "hostname"
+  //!     The hostname from the URL.
+  //!   @member string|void "path"
+  //!     The path (if any) from the URL.
+  //!   @member Protocol "port"
+  //!     The protocol handler for this URL.
+  //!   @member int "mib_version"
+  //!     (Only SNMP). The version number for the configuration MIB
+  //!     tree when it was last merged.
+  //! @endmapping
 
-  mapping(Configuration:mapping) conf_data = ([]);
+  mapping(Configuration:mapping(string:mixed)) conf_data = ([]);
   //! Maps the configuration objects to the data mappings in @[urls].
 
-  void ref(string name, mapping data)
-  //! Add a ref for the URL 'name' with the data 'data'
+  void ref(string name, mapping(string:mixed) data)
+  //! Add a ref for the URL @[name] with the data @[data].
+  //!
+  //! See @[urls] for documentation about the supported
+  //! fields in @[data].
   {
     if(urls[name])
     {
@@ -1179,6 +1837,7 @@ class Protocol
     if (!refs) path = data->path;
     else if (path != (data->path || "")) path = 0;
     refs++;
+    mu = 0;
     conf_data[data->conf] = urls[name] = data;
     sorted_urls = Array.sort_array(indices(urls),
                                  lambda(string a, string b) {
@@ -1186,29 +1845,76 @@ class Protocol
                                  });
   }
 
-  void unref(string name)
-  //! Remove a ref for the URL 'name'
+  void unref(string _name)
+  //! Remove a ref for the URL '_name'
   {
 //     if(!urls[name]) // only unref once
 //       return;
 
-    m_delete(conf_data, urls[name]->conf);
-    m_delete(urls, name);
-    if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
-      path = values (urls)[0]->path;
-    sorted_urls -= ({name});
-    if( !--refs )
-      destruct( ); // Close the port.
+    m_delete(conf_data, urls[_name]->conf);
+    m_delete(urls, _name);
+    if (!path) {
+      array(string) paths = Array.uniq (values (urls)->path);
+      if (sizeof (paths) == 1) path = paths[0];
+    }
+    sorted_urls -= ({_name});
+#ifdef PORT_DEBUG
+    report_debug("Protocol(%s)->unref(%O): refs:%d\n",
+		 get_url(), _name, refs);
+#endif /* PORT_DEBUG */
+    if( !--refs ) {
+      if (retries) {
+	remove_call_out(bind);
+      }
+      if (port_obj) {
+	destruct(port_obj);
+      }
+      port_obj = 0;
+      if (open_ports[name]) {
+	if (open_ports[name][ip]) {
+	  m_delete(open_ports[name][ip], port);
+	  if(!sizeof(open_ports[name][ip])) {
+	    // Make sure the entries for IPv4 and IPv6 ANY are left alone.
+	    if (ip && ip != "::")
+	      m_delete(open_ports[name], ip);
+	  }
+	}
+	if (sizeof(open_ports[name]) <= 2) {
+	  // Only ANY left.
+	  int empty = 1;
+	  foreach(open_ports[name]; string ip; mapping m) {
+	    if (sizeof(m)) {
+	      empty = 0;
+	      break;
+	    }
+	  }
+	  if (empty)
+	    m_delete(open_ports, name);
+	}
+      }
+      any_port = 0;		// Avoid possibly cyclic ref.
+      //destruct( ); // Close the port.
+    }
   }
 
-  mapping mu;
-  string rrhf;
-  static void got_connection()
+  Stdio.File accept()
   {
-    Stdio.File q = accept( );
-    if( q )
+    return port_obj->accept();
+  }
+
+  string query_address()
+  {
+    return port_obj && port_obj->query_address();
+  }
+
+  mapping(string:mixed) mu;
+  string rrhf;
+  protected void got_connection()
+  {
+    Stdio.File q;
+    while( q = accept() )
     {
-      if( !requesthandler )
+      if( !requesthandler && rrhf )
       {
 	requesthandler = (program)(rrhf);
       }
@@ -1217,9 +1923,23 @@ class Protocol
       {
         if(!mu) 
         {
-          mu = urls[sorted_urls[0]];
-          if(!(c=mu->conf)->inited )
-            c->enable_all_modules();
+	  mu = get_iterator(urls)->value();
+	  if(!(c=mu->conf)->inited ) {
+	    handle (lambda () {
+		      c->enable_all_modules();
+		      call_out (lambda ()
+				{
+				  // The connection might have been
+				  // closed already, e.g. by
+				  // http_fallback.ssl_alert_callback()
+				  // (prot_https.pike). Avoid a
+				  // backtrace in that case.
+				  if (q->is_open())
+				    requesthandler (q, this, c);
+				}, 0);
+		    });
+	    return;
+	  }
         } else
           c = mu->conf;
       }
@@ -1227,35 +1947,26 @@ class Protocol
     }
   }
 
-  local function sp_fcfu;
+  private Protocol any_port;
 
-
-
-#define INIT(X) do{mapping _=(X);string __=_->path;c=_->conf;if(__&&id->adjust_for_config_path) id->adjust_for_config_path(__);if(!c->inited)c->enable_all_modules(); } while(0)
-
-#ifdef DEBUG_URL2CONF
-#define URL2CONF_MSG(X...) report_debug (X)
-#else
-#define URL2CONF_MSG(X...)
-#endif
-
-  Configuration find_configuration_for_url( string url, RequestID id, 
-                                            int|void no_default )
-  //! Given a url and requestid, try to locate a suitable configuration
-  //! (virtual site) for the request. 
-  //! This interface is not at all set in stone, and might change at 
-  //! any time.
+  mapping(string:mixed) find_url_data_for_url (string url, int no_default,
+					       RequestID id)
   {
-    Configuration c;
-    if( sizeof( urls ) == 1 )
+    if( refs == 1 )
     {
-      if(!mu) mu=urls[sorted_urls[0]];
-      INIT( mu );
-      URL2CONF_MSG ("%O %O cached: %O\n", this_object(), url, c);
-      return c;
+      if (!no_default) {
+	if(!mu) mu=get_iterator(urls)->value();
+	URL2CONF_MSG ("%O %O Only one configuration: %O\n",
+		      this, url, mu->conf);
+	return mu;
+      }
+    } else if (!refs) {
+      URL2CONF_MSG("%O %O No active URLS!\n", this, url);
+      return 0;
     }
 
-    url = lower_case( url );
+    URL2CONF_MSG("sorted_urls: %O\n"
+		 "url: %O\n", sorted_urls, url);
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
     // ones (such as http://*.roxen.com/)
@@ -1263,63 +1974,103 @@ class Protocol
     {
       if( glob( in+"*", url ) )
       {
-        INIT( urls[in] );
-	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this_object(), url, c);
-	return c;
+	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this, url, urls[in]->conf);
+	return urls[in];
       }
     }
     
     if( no_default ) {
-      URL2CONF_MSG ("%O %O no default\n", this_object(), url);
+      URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
     }
-    
+
+    // Note: The docs for RequestID.misc->default_conf has a
+    // description of this fallback procedure.
+
     // No host matched, or no host header was included in the request.
     // Is the URL in the '*' ports?
-    mixed i;
-    if( !functionp(sp_fcfu) && ( i=open_ports[ name ][ 0 ][ port ] ) )
-      sp_fcfu = i->find_configuration_for_url;
-    
-    if( sp_fcfu && (sp_fcfu != find_configuration_for_url)
-	&& (i = sp_fcfu( url, id, 1 ))) {
-      URL2CONF_MSG ("%O %O sp_fcfu: %O\n", this_object(), url, i);
-      return i;
-    }
+    if (!any_port)
+      any_port = open_ports[ name ][ 0 ][ port ];
+    if (any_port && any_port != this)
+      if (mapping(string:mixed) u =
+	  any_port->find_url_data_for_url (url, 1, id)) {
+	URL2CONF_MSG ("%O %O found on ANY port: %O\n", this, url, u->conf);
+	if (id) {
+	  id->misc->defaulted_conf = 1;
+	  id->port_obj = any_port;
+	}
+	return u;
+      }
     
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
-    multiset choices = (< >);
+    mapping(Configuration:int(1..1)) choices = ([]);
     foreach( configurations, Configuration c )
       if( c->query( "default_server" ) )
-	choices |= (< c >);
+	choices[c] = 1;
     
     if( sizeof( choices ) )
     {
-      // First pick default servers bound to this port
-      foreach( values(urls), mapping cc )
+      // Pick a default server bound to this port
+      foreach (urls;; mapping cc)
 	if( choices[ cc->conf ] )
 	{
-          INIT( cc );
-	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this_object(), url, c);
+	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this, url, cc->conf);
+	  if (id) id->misc->defaulted_conf = 2;
+	  return cc;
+	}
+    }
+
+    return 0;
+  }
+
+  Configuration find_configuration_for_url( string url, RequestID id )
+  //! Given a url and requestid, try to locate a suitable configuration
+  //! (virtual site) for the request. 
+  //! This interface is not at all set in stone, and might change at 
+  //! any time.
+  {
+    mapping(string:mixed) url_data = find_url_data_for_url (url, 0, id);
+
+    if (!url_data) {
+      // Pick the first default server available. FIXME: This makes
+      // it impossible to handle the server path correctly.
+      foreach (configurations, Configuration c)
+	if (c->query ("default_server")) {
+	  URL2CONF_MSG ("%O %O any default server: %O\n", this, url, c);
+	  if (id) id->misc->defaulted_conf = 3;
+	  if(!c->inited)
+	    // FIXME: We can be called from the backend thread, so
+	    // this should be queued for a handler thread.
+	    c->enable_all_modules();
 	  return c;
 	}
 
-      // if there is no such servers, pick the first default server
-      // available. FIXME: This makes it impossible to handle the
-      // server path correctly.
-
-      c = ((array)choices)[0];
-      if(!c->inited) c->enable_all_modules();
-      URL2CONF_MSG ("%O %O any in choices: %O\n", this_object(), url, c);
-      return c;
+      // if we end up here, there is no default port at all available
+      // so grab the first configuration that is available at all.
+      // We choose the last entry in sorted_urls since that's the most
+      // generic one and therefore probably the best option for a
+      // fallback.
+      url_data = urls[sorted_urls[-1]];
+      if (id) {
+	id->misc->defaulted_conf = 4;
+	id->misc->defaulted=1;	// Compat.
+      }
+      URL2CONF_MSG ("%O %O last in sorted_urls: %O\n", this, url,
+		    url_data->conf);
     }
 
+    // It's assumed nothing below uses data in this object, since
+    // find_url_data_for_url might have switched Protocol object.
 
-    // if we end up here, there is no default port at all available
-    // so grab the first configuration that is available at all.
-    INIT( urls[sorted_urls[0]] );
-    id->misc->defaulted=1;
-    URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this_object(), url, c);
+    string config_path = url_data->path;
+    if (config_path && id && id->adjust_for_config_path)
+      id->adjust_for_config_path (config_path);
+    Configuration c = url_data->conf;
+    if(!c->inited)
+      // FIXME: We can be called from the backend thread, so this
+      // should be queued for a handler thread.
+      c->enable_all_modules();
     return c;
   }
 
@@ -1330,9 +2081,22 @@ class Protocol
   }
 
   string get_key()
-  //! Return he key used for this port (protocol:ip:portno)
+  //! Return the key used for this port (protocol:ip:portno)
   {
-    return name+":"+ip+":"+port;
+#if 0
+    if (ip == "::")
+      return name + ":0:" + port;
+    else
+#endif
+      return name+":"+ip+":"+port;
+  }
+
+  string get_url()
+  //! Return the port on URL form.
+  {
+    return (string) name + "://" +
+      (!ip ? "*" : has_value (ip, ":") ? "[" + ip + "]" : ip) +
+      ":" + port + "/";
   }
 
   void save()
@@ -1350,35 +2114,130 @@ class Protocol
       set( kv[0], kv[1] );
   }
 
-  static void create( int pn, string i )
-  //! Constructor. Bind to the port 'pn' ip 'i'
+  protected int retries;
+  protected void bind (void|int ignore_eaddrinuse)
   {
-    port = pn;
-    ip = i;
-
-    restore();
-    if( file_stat( "../local/"+requesthandlerfile ) )
-      rrhf = "../local/"+requesthandlerfile;
-    else
-      rrhf = requesthandlerfile;
-    DDUMP( rrhf );
-#ifdef DEBUG
-    if( !requesthandler )
-      requesthandler = (program)(rrhf);
-#endif
-    ::create();
-    if(!bind( port, got_connection, ip ))
+    if (bound) return;
+    if (!port_obj) port_obj = Stdio.Port();
+    Privs privs = Privs (sprintf ("Binding %s", get_url()));
+    if (port_obj->bind(port, got_connection, ip))
     {
-      report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
-		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
-      bound = 0;
-    } else
+      privs = 0;
       bound = 1;
+      return;
+    }
+    privs = 0;
+#if constant(System.EAFNOSUPPORT)
+    if (port_obj->errno() == System.EAFNOSUPPORT) {
+      // Fail permanently.
+      error("Invalid address " + ip);
+    }
+#endif /* System.EAFNOSUPPORT */
+#if constant(System.EADDRINUSE)
+    if (port_obj->errno() == System.EADDRINUSE) {
+      if (ignore_eaddrinuse) {
+	// Told to ignore the bind problem.
+	bound = -1;
+	return;
+      }
+      if (retries++ < 10) {
+	// We may get spurious failures on rebinding ports on some OS'es
+	// (eg Linux, WIN32). See [bug 3031].
+	report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
+		     get_url(), strerror(port_obj->errno()));
+	report_notice(LOC_M(62, "Attempt %d. Retrying in 1 minute.")+"\n",
+		      retries);
+	call_out(bind, 60);
+      }
+    }
+    else
+#endif /* constant(System.EADDRINUSE) */
+    {
+      report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
+		   get_url(), strerror(port_obj->errno()));
+#if 0
+      werror (describe_backtrace (backtrace()));
+#endif
+    }
   }
 
-  static string _sprintf( )
+  string canonical_ip(string i)
   {
-   return "Protocol("+name+"://"+ip+":"+port+")";
+    if (!i) return 0;
+    if (has_value(i, ":"))
+      return Protocols.IPv6.normalize_addr_short (i);
+    else {
+      // IPv4
+      array(int) segments = array_sscanf(i, "%d.%d.%d.%d");
+      string bytes;
+      switch(sizeof(segments)) {
+      default:
+      case 4:
+	bytes = sprintf("%1c%1c%1c%1c", @segments);
+	break;
+      case 0: return 0;	// ANY.
+      case 1:
+	/* When only one part is given, the value is stored directly in
+	 * the network address without any byte rearrangement.
+	 */
+	bytes = sprintf("%4c", @segments);
+	break;
+      case 2:
+	/* When a two part address is supplied, the last part is inter-
+	 * preted  as  a  24-bit  quantity and placed in the right most
+	 * three bytes of the network address. This makes the two  part
+	 * address  format  convenient  for  specifying Class A network
+	 * addresses as  net.host.
+	 */
+	bytes = sprintf("%1c%3c", @segments);
+	break;
+      case 3:
+	/* When a three part address is specified,  the  last  part  is
+	 * interpreted  as  a  16-bit  quantity and placed in the right
+	 * most two bytes of the network address. This makes the  three
+	 * part  address  format convenient for specifying Class B net-
+	 * work addresses as  128.net.host.
+	 */
+	bytes = sprintf("%1c%1c%2c", @segments);
+	break;
+      }
+      if (bytes == "\0\0\0\0") return 0;	// ANY.
+      return sprintf("%d.%d.%d.%d", @((array(int))bytes));
+    }
+  }
+
+  protected void setup (int pn, string i)
+  {
+    port = pn;
+    ip = canonical_ip(i);
+
+    restore();
+    if (sizeof(requesthandlerfile)) {
+      if( file_stat( "../local/"+requesthandlerfile ) )
+	rrhf = "../local/"+requesthandlerfile;
+      else
+	rrhf = requesthandlerfile;
+      DDUMP( rrhf );
+#ifdef DEBUG
+      if( !requesthandler )
+	requesthandler = (program)(rrhf);
+#endif
+    }
+    bound = 0;
+    port_obj = 0;
+    retries = 0;
+  }
+
+  protected void create( int pn, string i, void|int ignore_eaddrinuse )
+  //! Constructor. Bind to the port 'pn' ip 'i'
+  {
+    setup (pn, i);
+    bind (ignore_eaddrinuse);
+  }
+
+  protected string _sprintf( )
+  {
+    return "Protocol(" + get_url() + ")";
   }
 }
 
@@ -1389,206 +2248,300 @@ class SSLProtocol
   inherit Protocol;
 
   // SSL context
-  SSL.context ctx;
+  SSL.context ctx = SSL.context();
 
-  class destruct_protected_sslfile
+  int cert_failure;
+
+  protected void cert_err_unbind()
   {
-    SSL.sslfile sslfile;
-
-    mixed `[](string s)
-    {
-      return sslfile[s];
-    }
-
-    mixed `[]=(string s, mixed val)
-    {
-      return sslfile[s] = val;
-    }
-
-    mixed `->(string s)
-    {
-      return sslfile[s];
-    }
-
-    mixed `->=(string s, mixed val)
-    {
-      return sslfile[s] = val;
-    }
-
-    void destroy()
-    {
-      if (sslfile)
-	sslfile->close();
-    }
-
-    void create(object q)
-    {
-      sslfile = SSL.sslfile(q, ctx);
+    if (bound > 0) {
+      port_obj->close();
+      report_warning ("TLS port %s closed.\n", get_url());
+      bound = 0;
     }
   }
 
-  Stdio.File accept()
-  {
-    Stdio.File q = ::accept();
-    if (q)
-      return [object(Stdio.File)](object)destruct_protected_sslfile(q);
-    return 0;
+#define CERT_WARNING(VAR, MSG, ARGS...) do {				\
+    string msg = (MSG);							\
+    array args = ({ARGS});						\
+    if (sizeof (args)) msg = sprintf (msg, @args);			\
+    report_warning ("TLS port %s: %s", get_url(), msg);			\
+    (VAR)->add_warning (msg);						\
+  } while (0)
+
+#define CERT_ERROR(VAR, MSG, ARGS...) do {				\
+    string msg = (MSG);							\
+    array args = ({ARGS});						\
+    if (sizeof (args)) msg = sprintf (msg, @args);			\
+    report_error ("TLS port %s: %s", get_url(), msg);			\
+    (VAR)->add_warning (msg);						\
+    cert_err_unbind();							\
+    cert_failure = 1;							\
+    return;								\
+  } while (0)
+
+  protected void filter_preferred_suites() {
+#ifndef ALLOW_WEAK_SSL
+    // Filter weak and really weak cipher suites.
+    ctx->preferred_suites -= ({
+      SSL.Constants.SSL_rsa_export_with_rc4_40_md5,
+      SSL.Constants.SSL_rsa_with_null_sha,
+      SSL.Constants.SSL_rsa_with_null_md5,
+      SSL.Constants.SSL_dhe_dss_export_with_des40_cbc_sha,
+      SSL.Constants.SSL_null_with_null_null,
+    });
+#endif
   }
 
-  void create(int pn, string i)
+  void certificates_changed(Variable.Variable|void ignored,
+			    void|int ignore_eaddrinuse)
   {
-    ctx = SSL.context();
-    set_up_ssl_variables( this_object() );
-    port = pn;
-    ip = i;
+    int old_cert_failure = cert_failure;
 
-    restore();
-    
+    string raw_keydata;
+    array(string) certificates = ({});
+    array(object) decoded_certs = ({});
+    Variable.Variable Certificates = getvar("ssl_cert_file");
+
     object privs = Privs("Reading cert file");
-    int key_matches;
-    string f, f2;
-    ctx->certificates = ({});
 
-    foreach( query_option("ssl_cert_file")/",", string cert_file )
-    {
-      if( catch{ f = lopen(cert_file, "r")->read(); } )
+    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
+      string raw_cert;
+      SSL3_WERR (sprintf ("Reading cert file %O", cert_file));
+      if( catch{ raw_cert = lopen(cert_file, "r")->read(); } )
       {
-	report_error(LOC_M(8,"SSL3: Reading cert-file failed!")+"\n");
-	destruct();
-	return;
+	CERT_WARNING (Certificates,
+		      LOC_M(8, "Reading certificate file %O failed: %s\n"),
+		      cert_file, strerror (errno()));
+	continue;
       }
 
-      if( strlen(query_option("ssl_key_file")) &&
-	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
-      {
-	report_error(LOC_M(9, "SSL3: Reading key-file failed!")+"\n");
-	destruct();
-	return;
-      }
-
-      object msg = Tools.PEM.pem_msg()->init( f );
-      object part = msg->parts["CERTIFICATE"] || msg->parts["X509 CERTIFICATE"];
+      object msg = Tools.PEM.pem_msg()->init( raw_cert );
+      object part = msg->parts["CERTIFICATE"] ||
+	msg->parts["X509 CERTIFICATE"];
       string cert;
+
+      if (msg->parts["RSA PRIVATE KEY"] ||
+	  msg->parts["DSA PRIVATE KEY"]) {
+	raw_keydata = raw_cert;
+      }
 
       if (!part || !(cert = part->decoded_body())) 
       {
-	report_error(LOC_M(10, "SSL3: No certificate found.")+"\n");
-	destruct();
-	return;
+	CERT_WARNING (Certificates,
+		      LOC_M(10, "No certificate found in %O.\n"),
+		      cert_file);
+	continue;
       }
+      certificates += ({ cert });
 
-      if( f2 )
-	msg = Tools.PEM.pem_msg()->init( f2 );
-
-      function r = Crypto.randomness.reasonably_random()->read;
-
-      SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
-
-      if (part = msg->parts["RSA PRIVATE KEY"])
-      {
-	string key;
-
-	if (!(key = part->decoded_body())) 
-	{
-	  report_error(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
-	  destruct();
-	  return;
-	}
-
-	object rsa = Standards.PKCS.RSA.parse_private_key(key);
-	if (!rsa) 
-	{
-	  report_error(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
-	  destruct();
-	  return;
-	}
-
-	ctx->rsa = rsa;
-
-	SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
-
-	if (rsa->rsa_size() > 512)
-	{
-	  /* Too large for export */
-	  ctx->short_rsa = Crypto.rsa()->generate_key(512, r);
-
-	  // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), r);
-	}
-	ctx->rsa_mode();
-
-	object tbs = Tools.X509.decode_certificate (cert);
-	if (!tbs) 
-	{
-	  report_error(LOC_M(13,"SSL3: Certificate not valid (DER).")+"\n");
-	  destruct();
-	  return;
-	}
-	if (tbs->public_key->rsa->public_key_equal (rsa))
-	  key_matches++;
-	else
-	  continue;
+      // FIXME: Support PKCS7
+      object tbs = Tools.X509.decode_certificate (cert);
+      if (!tbs) {
+	CERT_WARNING (Certificates,
+		      LOC_M(13, "Certificate not valid (DER).\n"));
+	continue;
       }
-      else if (part = msg->parts["DSA PRIVATE KEY"])
-      {
-	string key;
-
-	if (!(key = part->decoded_body())) 
-	{
-	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
-	  destruct();
-	  return;
-	}
-
-	object dsa = Standards.PKCS.DSA.parse_private_key(key);
-	if (!dsa) 
-	{
-	  report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
-	  destruct();
-	  return;
-	}
-
-	SSL3_WERR(sprintf("Using DSA key."));
-
-	dsa->use_random(r);
-	ctx->dsa = dsa;
-	/* Use default DH parameters */
-	ctx->dh_params = SSL.cipher.dh_parameters();
-
-	ctx->dhe_dss_mode();
-
-	// FIXME: Add cert <-> private key check.
-      }
-      else 
-      {
-	report_error(LOC_M(17,"SSL3: No private key found.")+"\n");
-	destruct();
-	return;
-      }
-
-      ctx->certificates = ({ cert }) + ctx->certificates;
-      ctx->random = r;
+      decoded_certs += ({tbs});
     }
-    if( !key_matches )
-    {
-      report_error(LOC_M(14, "SSL3: Certificate and private key do not "
-			 "match.")+"\n");
-      destruct();
+
+    if (!sizeof(decoded_certs)) {
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(63,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
       return;
     }
+
+    Variable.Variable KeyFile = getvar("ssl_key_file");
+
+    if( strlen(KeyFile->query())) {
+      SSL3_WERR (sprintf ("Reading key file %O", KeyFile->query()));
+      if (catch{ raw_keydata = lopen(KeyFile->query(), "r")->read(); } )
+	CERT_ERROR (KeyFile,
+		    LOC_M(9, "Reading key file %O failed: %s\n"),
+		    KeyFile->query(), strerror (errno()));
+    }
+    else
+      KeyFile = Certificates;
+
+    privs = 0;
+
+    if (!raw_keydata)
+      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
+
+    object msg = Tools.PEM.pem_msg()->init( raw_keydata );
+
+    SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
+
+    object part;
+    if (part = msg->parts["RSA PRIVATE KEY"])
+    {
+      string key;
+
+      if (!(key = part->decoded_body()))
+	CERT_ERROR (KeyFile,
+		    LOC_M(11,"Private rsa key not valid")+" (PEM).\n");
+
+      object rsa = Standards.PKCS.RSA.parse_private_key(key);
+      if (!rsa)
+	CERT_ERROR (KeyFile,
+		    LOC_M(11,"Private rsa key not valid")+" (DER).\n");
+
+      ctx->rsa = rsa;
+
+      SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
+
+      if (rsa->rsa_size() > 512)
+      {
+	/* Too large for export */
+	ctx->short_rsa = Crypto.RSA()->generate_key(512, ctx->random);
+
+	// ctx->long_rsa = Crypto.RSA()->generate_key(rsa->rsa_size(), ctx->random);
+      }
+      ctx->rsa_mode();
+      filter_preferred_suites();
+
+      array(int) key_matches =
+	map(decoded_certs,
+	    lambda (object tbs) {
+	      return tbs->public_key->rsa->public_key_equal (rsa);
+	    });
+      
+      int num_key_matches;
+      // DWIM: Make sure the main cert comes first.
+      array(string) new_certificates = allocate(sizeof(certificates));
+      int i,j;
+      for (i=0; i < sizeof(certificates); i++) {
+	if (key_matches[i]) {
+	  new_certificates[j++] = certificates[i];
+	  num_key_matches++;
+	}
+      }
+      for (i=0; i < sizeof(certificates); i++) {
+	if (!key_matches[i]) {
+	  new_certificates[j++] = certificates[i];
+	}
+      }
+      if( !num_key_matches )
+	CERT_ERROR (KeyFile,
+		    LOC_M(14, "Certificate and private key do not match.\n"));
+      ctx->certificates = new_certificates;
+    }
+    else if (part = msg->parts["DSA PRIVATE KEY"])
+    {
+      string key;
+
+      if (!(key = part->decoded_body()))
+	CERT_ERROR (KeyFile,
+		    LOC_M(15,"Private dsa key not valid")+" (PEM).\n");
+
+      object dsa = Standards.PKCS.DSA.parse_private_key(key);
+      if (!dsa)
+	CERT_ERROR (KeyFile,
+		    LOC_M(15,"Private dsa key not valid")+" (DER).\n");
+
+      SSL3_WERR(sprintf("Using DSA key."));
+
+      //dsa->use_random(ctx->random);
+      ctx->dsa = dsa;
+      /* Use default DH parameters */
+#if constant(SSL.Cipher)
+      ctx->dh_params = SSL.Cipher.DHParameters();
+#else
+      ctx->dh_params = SSL.cipher()->dh_parameters();
+#endif
+
+      ctx->dhe_dss_mode();
+      filter_preferred_suites();
+
+      // FIXME: Add cert <-> private key check.
+
+      ctx->certificates = certificates;
+    }
+    else
+      CERT_ERROR (KeyFile, LOC_M(17,"No private key found.\n"));
+
 #if EXPORT
     ctx->export_mode();
 #endif
-    ::create(pn, i);
+
+    if (!bound) {
+      bind (ignore_eaddrinuse);
+      if (old_cert_failure && bound)
+	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
+    }
+  }
+
+  class CertificateListVariable
+  {
+    inherit Variable.FileList;
+
+    string doc()
+    {
+      return sprintf(::doc() + "\n",
+		     combine_path(getcwd(), "../local"),
+		     getcwd());
+    }
+  }
+
+  class KeyFileVariable
+  {
+    inherit Variable.String;
+
+    string doc()
+    {
+      return sprintf(::doc() + "\n",
+		     combine_path(getcwd(), "../local"),
+		     getcwd());
+    }
+  }
+
+  SSL.sslfile accept()
+  {
+    Stdio.File q = ::accept();
+    if (q)
+      return SSL.sslfile (q, ctx);
+    return 0;
+  }
+
+  protected void bind (void|int ignore_eaddrinuse)
+  {
+    // Don't bind if we don't have correct certs.
+    if (!ctx->certificates) return;
+    ::bind (ignore_eaddrinuse);
+  }
+
+  void create(int pn, string i, void|int ignore_eaddrinuse)
+  {
+    ctx->random = Crypto.Random.random_string;
+
+    filter_preferred_suites();
+
+    set_up_ssl_variables( this_object() );
+
+    ::setup(pn, i);
+
+    certificates_changed (0, ignore_eaddrinuse);
+
+    // Install the change callbacks here to avoid duplicate calls
+    // above.
+    // FIXME: Both variables ought to be updated on save before the
+    //        changed callback is called. Currently you can get warnings
+    //        that the files don't match if you update both variables
+    //        at the same time.
+    getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
+    getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
   }
 
   string _sprintf( )
   {
-    return "SSLProtocol("+name+"://"+ip+":"+port+")";
+    return "SSLProtocol(" + get_url() + ")";
   }
 }
 #endif
 
-mapping(string:Protocol) build_protocols_mapping()
+mapping(string:program/*(Protocol)*/) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
@@ -1597,7 +2550,7 @@ mapping(string:Protocol) build_protocols_mapping()
   class lazy_load( string prog, string name )
   {
     program real;
-    static void realize()
+    protected void realize()
     {
       if( catch {
 	DDUMP( prog );
@@ -1666,65 +2619,216 @@ mapping(string:Protocol) build_protocols_mapping()
 }
 
 
-mapping protocols;
+mapping(string:program/*(Protocol)*/) protocols;
 
-mapping(string:mapping) open_ports = ([ ]);
-mapping(string:object) urls = ([]);
+//! Lookup from protocol, IP number and port to
+//! the corresponding open @[Protocol] port.
+//!
+//! @mapping
+//!   @member mapping(string:mapping(int:Protocol)) protocol_name
+//!     @mapping
+//!       @member mapping(int:Protocol) ip_number
+//!         @mapping
+//!           @member Protocol port_number
+//!             @[Protocol] object that holds this ip_number and port open.
+//!         @endmapping
+//!     @endmapping
+//! @endmapping
+mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
+
+//! Lookup from URL string to the corresponding open @[Protocol] ports.
+//!
+//! Note that there are two classes of URL strings used as indices in
+//! this mapping:
+//! @dl
+//!   @item "prot://host_glob:port/path/"
+//!     A normalized URL string as returned by @[normalize_url()].
+//!
+//!     @[Protocol()->ref()] in the contained ports as been called
+//!     with the url.
+//!
+//!   @item "port://host_glob:port/path/#opt1=val1;opt2=val2"
+//!     An URL string containing options as stored in the @tt{"URLs"@}
+//!     configuration variable, and expected as argument by
+//!     @[register_url()] and @[unregister_url()]. Also known
+//!     as an ourl.
+//! @enddl
+//!
+//! In both cases the same set of data is stored:
+//! @mapping
+//!   @member mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)) url
+//!     @mapping
+//!       @member Protocol "port"
+//!         Representative open port for this URL.
+//!       @member array(Protocol) "ports"
+//!         Array of all open ports for this URL.
+//!       @member Configuration "conf"
+//!         Configuration that has registered the URL.
+//!       @member string "path"
+//!         Path segment of the URL.
+//!       @member string "host"
+//!         Hostname segment of the URL.
+//!       @member array(string) "skipped"
+//!         List of IP numbers not bound due to a corresponding
+//!         ANY port already being open.
+//!     @endmapping
+//! @endmapping
+mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)))
+  urls = ([]);
+
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
-    return 0;
+    return ({
+#if constant(__ROXEN_SUPPORTS_IPV6__)
+	      "::",
+#endif /* __ROXEN_SUPPORTS_IPV6__ */
+	      0,
+    });	// ANY
 
   if( is_ip( what ) )
     return ({ what });
-
+  else if (has_prefix (what, "[") && what[-1] == ']') {
+    /* RFC 3986 3.2.2. Host
+     *
+     * host       = IP-literal / IPv4address / reg-name
+     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+     *
+     * IPv6address is as in RFC3513.
+     */
+    return ({ what[1..sizeof(what)-2] });
+  } else if (has_suffix(lower_case(what), ".ipv6")) {
+    // draft-masinter-url-ipv6-00 3
+    //
+    //   a) replace every colon ":" with a "-"
+    //   b) append ".ipv6" to the end.
+    return ({ replace(what[..sizeof(what)-6], "-", ":") });
+  } 
   array res = gethostbyname( what );
-  if( !res || !sizeof( res[1] ) )
-    report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
-		       "unknown. Substituting with ANY")+"\n", what);
-  else
+  if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
+
+  report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
+		     "unknown. Substituting with ANY")+"\n", what);
+  return 0;		// FAIL
 }
 
-void unregister_url( string url )
+string normalize_url(string url, void|int port_match_form)
+//! Normalizes the given url to a short form.
+//!
+//! If @[port_match_form] is set, it normalizes to the form that is
+//! used for port matching, i.e. what
+//! @[roxen.Protocol.find_configuration_for_url] expects.
 {
-  string ourl = url;
-  url = lower_case( url );
-  string host, path, protocol;
-  int port;
-  if (!sizeof (url - " " - "\t")) return;
+  if (!sizeof (url - " " - "\t")) return "";
 
-  url = replace( url, "/ANY", "/*" );
-  url = replace( url, "/any", "/*" );
+  Standards.URI ui = Standards.URI(url);
+  string host = ui->host;
 
-  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-  if (!host || !stringp(host))   return;
-  if( !protocols[ protocol ] )    return;
-
-  sscanf(host, "%[^:]:%d", host, port);
-
-  if( !port )
-  {
-    port = protocols[ protocol ]->default_port;
-    url = protocol+"://"+host+":"+port+path;
+  if (lower_case (host) == "any" || host == "::")
+    host = "*";
+  else {
+    // Note: zone_to_ascii() can throw errors on invalid hostnames.
+    if (catch {
+	// FIXME: Maybe Standards.URI should do this internally?
+	host = lower_case(Standards.IDNA.zone_to_ascii (host));
+      }) {
+      host = lower_case(host);
+    }
   }
 
-  report_debug("Unregister "+url+"\n");
+  if (has_value (host, ":"))
+    if (string h = port_match_form ?
+	Protocols.IPv6.normalize_addr_basic (host) :
+	Protocols.IPv6.normalize_addr_short (host)) {
+      ui->host = h;
+      host = "[" + h + "]";
+    }
 
-  if( urls[ url ] && urls[ url ]->port )
-  {
-    urls[ url ]->port->unref(url);
-    m_delete( urls, url );
-    m_delete( urls, ourl );
-    sort_urls();
+  string protocol = ui->scheme;
+  if (host == "" || !protocols[protocol])
+    return "";
+
+  if (port_match_form) {
+    int port = ui->port || protocols[protocol]->default_port;
+
+    string path = ui->path;
+    if (path) {
+      if (has_suffix(path, "/"))
+	path = path[..<1];
+    }
+    else
+      path = "";
+
+    return sprintf ("%s://%s:%d%s/", protocol, host, port,
+		    // If the path is set it's assumed to begin with a
+		    // "/", but not end with one.
+		    path);
+  }
+
+  else {
+    ui->fragment = 0;
+    return (string) ui;
+  }
+}
+
+//! Unregister an URL from a configuration.
+//!
+//! @seealso
+//!   @[register_url()]
+void unregister_url(string url, Configuration conf)
+{
+  string ourl = url;
+  mapping(string:mixed) data = m_delete(urls, ourl);
+  if (!data) return;	// URL not registered.
+  if (!sizeof(url = normalize_url(url, 1))) return;
+
+  report_debug ("Unregister %s%s.\n", normalize_url (ourl),
+		conf ? sprintf (" for %O", conf->query_name()) : "");
+
+  mapping(string:mixed) shared_data = urls[url];
+  if (!shared_data) return;	// Strange case, but URL not registered.
+
+  int was_any_ip;
+  if (!data->skipped && data->port) {
+    if (!data->port->ip || (data->port->ip == "::")) {
+      was_any_ip = data->port->port;
+      report_debug("Unregistering ANY port: %O:%d\n",
+		   data->port->ip, data->port->port);
+    }
+  }
+
+  foreach(data->ports, Protocol port) {
+    shared_data->ports -= ({ port });
+    port->unref(url);
+    m_delete(shared_data, "port");
+  }
+  if (!sizeof(shared_data->ports)) {
+    m_delete(urls, url);
+  } else if (!shared_data->port) {
+    shared_data->port = shared_data->ports[0];
+  }
+  sort_urls();
+
+  if (was_any_ip) {
+    foreach(urls; string url; mapping(string:mixed) url_info) {
+      if (!url_info->skipped || !url_info->conf ||
+	  (url_info->port && (url_info->port->port != was_any_ip))) {
+	continue;
+      }
+      // Re-register the ports that may have bound to the removed ANY port.
+      register_url(url, url_info->conf);
+    }
   }
 }
 
 array all_ports( )
 {
-  return Array.uniq( values( urls )->port )-({0});
+  // FIXME: Consider using open_ports instead.
+  return Array.uniq( values( urls )->ports * ({}) )-({0});
 }
 
 Protocol find_port( string name )
@@ -1740,45 +2844,49 @@ void sort_urls()
   sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
 }
 
+//! Register an URL for a configuration.
+//!
+//! @seealso
+//!   @[unregister_url()]
 int register_url( string url, Configuration conf )
 {
   string ourl = url;
-  url = lower_case( url );
   if (!sizeof (url - " " - "\t")) return 1;
-  string protocol;
-  string host;
-  int port;
-  string path;
 
-  url = replace( url, "/ANY", "/*" );
-  url = replace( url, "/any", "/*" );
-
-  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-  if (!host || !stringp(host))
+  Standards.URI ui = Standards.URI(url);
+  mapping opts = ([]);
+  string a, b;
+  foreach( (ui->fragment||"")/";", string x )
   {
-    report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
-		 url, conf->query_name());
+    sscanf( x, "%s=%s", a, b );
+    opts[a]=b;
+  }
+
+  if( (int)opts->nobind )
+  {
+    report_warning(
+      LOC_M(61,"Not binding the port %O - disabled in configuration.")+"\n",
+      (string) ui );
     return 0;
   }
 
-  if( !protocols[ protocol ] )
-  {
-    report_error(LOC_M(7,"The protocol '%s' is not available")+"\n", protocol);
-    return 0;
+  string display_url = normalize_url (url, 0);
+  url = normalize_url (url, 1);
+  ui = Standards.URI (url);
+
+  string protocol = ui->scheme;
+  string host = ui->host;
+  if (host == "" || !protocols[protocol]) {
+    report_error(LOC_M(19,"Bad URL %O for server %O.")+"\n",
+		 ourl, conf->query_name());
   }
 
-  sscanf(host, "%[^:]:%d", host, port);
+  int port = ui->port || protocols[protocol]->default_port;
 
-  if( !port )
-  {
-    port = protocols[ protocol ]->default_port;
-    url = protocol+"://"+host+":"+port+path;
-  }
-
-  if( strlen( path ) && ( path[-1] == '/' ) )
-    path = path[..strlen(path)-2];
-  if( !strlen( path ) )
-    path = 0;
+  string path = ui->path;
+  if (has_suffix(path, "/"))
+    path = path[..<1];
+  if (path == "") path = 0;
 
   if( urls[ url ]  )
   {
@@ -1789,121 +2897,192 @@ int register_url( string url, Configuration conf )
       if( urls[ url ]->conf != conf )
       {
 	report_error(LOC_M(20,
-			   "Cannot register URL %s, "
-			   "already registered by %s!")+"\n",
-		     url, urls[ url ]->conf->name);
+			   "Cannot register URL %s - "
+			   "already registered by %s.")+"\n",
+		     display_url, urls[ url ]->conf->name);
 	return 0;
       }
+      // FIXME: Is this correct?
       urls[ url ]->port->ref(url, urls[url]);
-      return 1;
     }
     else
       urls[ url ]->port->unref( url );
   }
 
-  Protocol prot;
+  program prot;
 
   if( !( prot = protocols[ protocol ] ) )
   {
-    report_error(LOC_M(21, "Cannot register URL %s, "
-			  "cannot find the protocol %s!")+"\n",
-		 url, protocol);
+    report_error(LOC_M(21, "Cannot register URL %s - "
+			  "cannot find the protocol %s.")+"\n",
+		 display_url, protocol);
     return 0;
   }
 
-  if( !port )
-    port = prot->default_port;
+  // FIXME: Do we need to unref the old ports first in case of a reregister?
+  urls[ ourl ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  if (!urls[url]) {
+    urls[ url ] = urls[ourl] + ([]);
+    sorted_urls += ({ url });	// FIXME: Not exactly sorted...
+  }
 
-  array(string) required_hosts;
+  array(string)|int(-1..0) required_hosts;
 
   if (is_ip(host))
     required_hosts = ({ host });
-  else
+  else if(!sizeof(required_hosts =
+		  filter(replace(opts->ip||"", " ","")/",", is_ip)) ) {
     required_hosts = find_ips_for( host );
+    if (!required_hosts) {
+      // FIXME: Used to fallback to ANY.
+      //        Will this work with glob URLs?
+      return 0;
+    }
+  }
 
-  if (!required_hosts)
-    required_hosts = ({ 0 });	// ANY
-
-  mapping m;
+  mapping(string:mapping(int:Protocol)) m;
   if( !( m = open_ports[ protocol ] ) )
-    // always add 'ANY' (0) here, as an empty mapping, for speed reasons.
+    // always add 'ANY' (0) and 'IPv6_ANY' (::) here, as empty mappings,
+    // for speed reasons.
     // There is now no need to check for both open_ports[prot][0] and
     // open_ports[prot][0][port], we can go directly to the latter
     // test.
-    m = open_ports[ protocol ] = ([ 0:([]) ]); 
+    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]); 
 
-  if( sizeof( required_hosts - ({ 0 }) ) // not ANY
-      && m[ 0 ][ port ]
-      && prot->supports_ipless )
-    // The ANY port is already open for this port, and since this
+  if (prot->supports_ipless ) {
+    // Check if the ANY port is already open for this port, since this
     // protocol supports IP-less virtual hosting, there is no need to
-    // open yet another port, that would mosts probably only conflict
-    // with the ANY port anyway. (this is true on most OSes, it works
-    // on Solaris, but fails on linux)
-    required_hosts = ({ 0 });
-
-
-  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
-  urls[ ourl ] = urls[url] + ([]);
-  sorted_urls += ({ url });
+    // open yet another port if it is, since that would most probably
+    // only conflict with the ANY port anyway. (this is true on most
+    // OSes, it works on Solaris, but fails on linux)
+    array(string) ipv6 = filter(required_hosts - ({ 0 }), has_value, ":");
+    array(string) ipv4 = required_hosts - ipv6;
+    if (m[0][port] && sizeof(ipv4 - ({ 0 }))) {
+      // We have a non-ANY IPv4 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped = ipv4;
+      ipv4 = ({ 0 });
+    }
+#if constant(__ROXEN_SUPPORTS_IPV6__)
+    if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
+      // We have a non-ANY IPv6 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped += ipv6;
+      ipv6 = ({ "::" });
+    }
+    required_hosts = ipv6 + ipv4;
+#else
+    if (sizeof(ipv6)) {
+      foreach(ipv6, string p) {
+	report_warning(LOC_M(65, "Cannot open port %s for URL %s - "
+			     "IPv6 support disabled.\n"),
+		       p, display_url);
+      }
+    }
+    required_hosts = ipv4;
+#endif /* __ROXEN_SUPPORTS_IPV6__ */
+  }
 
   int failures;
+  int opened_ipv6_any_port;
 
   foreach(required_hosts, string required_host)
   {
     if( m[ required_host ] && m[ required_host ][ port ] )
     {
+      if (required_host == "::") opened_ipv6_any_port = 1;
+
       m[required_host][port]->ref(url, urls[url]);
 
       urls[url]->port = m[required_host][port];
+      if (urls[url]->ports) {
+	urls[url]->ports += ({ m[required_host][port] });
+      } else {
+	urls[url]->ports = ({ m[required_host][port] });
+      }
       urls[ourl]->port = m[required_host][port];
+      if (urls[ourl]->ports) {
+	urls[ourl]->ports += ({ m[required_host][port] });
+      } else {
+	urls[ourl]->ports = ({ m[required_host][port] });
+      }
       continue;    /* No need to open a new port */
     }
 
     if( !m[ required_host ] )
       m[ required_host ] = ([ ]);
 
-    mixed err;
-    if (err = catch {
-      m[ required_host ][ port ] = prot( port, required_host );
-    }) {
+
+    Protocol prot_obj;
+    if (mixed err = catch {
+	prot_obj = m[ required_host ][ port ] =
+	  prot( port, required_host,
+		// Don't complain if binding IPv4 ANY fails with
+		// EADDRINUSE after we've bound IPv6 ANY. 
+		// Most systems seems to bind both IPv4 ANY and
+		// IPv6 ANY for "::"
+		!required_host && opened_ipv6_any_port);
+      }) {
       failures++;
-      report_error(sprintf("Initializing the port handler for URL " +
-			   url + " failed!\n"
-			   "%s\n",
-			   describe_backtrace(err)));
+#if 0
+      if (has_prefix(describe_error(err), "Invalid address") &&
+	  required_host && has_value(required_host, ":")) {
+	report_error(sprintf("Failed to initialize IPv6 port for URL %s"
+			     " (ip %s).\n",
+			     display_url, required_host));
+      } else
+#endif
+	report_error(sprintf("Initializing the port handler for "
+			     "URL %s (ip %s) failed: %s\n",
+			     display_url,
+			     required_host||"ANY",
+#ifdef DEBUG
+			     describe_backtrace(err)
+#else
+			     describe_error (err)
+#endif
+			    ));
       continue;
     }
 
-    if( !( m[ required_host ][ port ] ) )
-    {
-      m_delete( m[ required_host ], port );
-      failures++;
-      if (required_host) {
-	report_warning(LOC_M(22, "Binding the port on IP %s "
-			      "failed\n   for URL %s!\n"),
-		       url, required_host);
-      }
+    if (required_host == "::") opened_ipv6_any_port = 1;
+
+    if (prot_obj->bound == -1) {
+      // Got EADDRINUSE for the IPv6 case - see above. Just forget
+      // about this one.
+      m_delete (m[required_host], port);
       continue;
     }
 
-
-    urls[ url ]->port = m[ required_host ][ port ];
-    urls[ ourl ]->port = m[ required_host ][ port ];
-    m[ required_host ][ port ]->ref(url, urls[url]);
+    urls[ url ]->port = prot_obj;
+    if (urls[url]->ports) {
+      urls[url]->ports += ({ prot_obj });
+    } else {
+      urls[url]->ports = ({ prot_obj });
+    }
+    urls[ ourl ]->port = prot_obj;
+    if (urls[ourl]->ports) {
+      urls[ourl]->ports += ({ prot_obj });
+    } else {
+      urls[ourl]->ports = ({ prot_obj });
+    }
+    prot_obj->ref(url, urls[url]);
  
-    if( !m[ required_host ][ port ]->bound )
+    if( !prot_obj->bound )
       failures++;
   }
   if (failures == sizeof(required_hosts)) 
   {
-    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
+    report_error(LOC_M(23, "Failed to register URL %s for %O.")+"\n",
+		 display_url, conf->query_name());
     return 0;
   }
   sort_urls();
-  report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
-		url, conf->query_name() );
 
+  // The following will show the punycoded version for IDN hostnames.
+  // That is intentional, to make it clear what actually happens.
+  report_notice(" "+LOC_S(3, "Registered URL %s for %O.")+"\n",
+		display_url, conf->query_name() );
   return 1;
 }
 
@@ -1926,6 +3105,42 @@ Configuration find_configuration( string name )
       return o;
   }
   return 0;
+}
+
+protected int last_hrtime = gethrtime(1)/100;
+protected int clock_sequence = random(0x4000);
+protected string hex_mac_address =
+  String.string2hex(Crypto.Random.random_string (6)|
+		    "\1\0\0\0\0\0");	// Multicast bit.
+// Generate an uuid string.
+string new_uuid_string()
+{
+  int now = gethrtime(1)/100;
+  if (now != last_hrtime) {
+    clock_sequence = random(0x4000);
+    last_hrtime = now;
+  }
+  int seq = clock_sequence++;
+  // FIXME: Check if clock_sequence has wrapped during this @[now].
+
+  // Adjust @[now] with the number of 100ns intervals between
+  // 1582-10-15 00:00:00.00 GMT and 1970-01-01 00:00:00.00 GMT.
+#if 0
+  now -= Calendar.parse("%Y-%M-%D %h:%m:%s.%f %z",
+			"1582-10-15 00:00:00.00 GMT")->unix_time() * 10000000;
+#else /* !0 */
+  now += 0x01b21dd213814000;	// Same as above.
+#endif /* 0 */
+  now &= 0x0fffffffffffffff;
+  now |= 0x1000000000000000;	// DCE version 1.
+  clock_sequence &= 0x3fff;
+  clock_sequence |= 0x8000;	// DCE variant of UUIDs.
+  return sprintf("%08x-%04x-%04x-%04x-%s",
+		 now & 0xffffffff,
+		 (now >> 32) & 0xffff,
+		 (now >> 48) & 0xffff,
+		 clock_sequence,
+		 hex_mac_address);
 }
 
 mapping(string:array(int)) error_log=([]);
@@ -2048,15 +3263,63 @@ int increase_id()
 private int unique_id_counter;
 string create_unique_id()
 {
-  object md5 = Crypto.md5();
-  md5->update(query("server_salt") + (unique_id_counter++) + time(1));
-  return Crypto.string_to_hex(md5->digest());
+  return String.string2hex(Crypto.MD5.hash(query("server_salt") + start_time
+    + "|" + (unique_id_counter++) + "|" + time(1)));
 }
 
 #ifndef __NT__
-static int abs_started;
+protected int abs_started;
+protected int handlers_alive;
+
+protected void low_engage_abs()
+{
+  report_debug("**** %s: ABS exiting roxen!\n\n",
+	       ctime(time()) - "\n");
+  _exit(1);	// It might not quit correctly otherwise, if it's
+		// locked up
+}
+
+protected void engage_abs(int n)
+{
+  if (!query("abs_engage")) {
+    abs_started = 0;
+    report_debug("Anti-Block System Disabled.\n");
+    return;
+  }
+  report_debug("**** %s: ABS engaged!\n"
+	       "Waited more than %d minute(s).\n",
+	       ctime(time()) - "\n",
+	       query("abs_timeout"));
+  // Paranoia exit in case describe_all_threads below hangs.
+  signal(signum("SIGALRM"), low_engage_abs);
+  int t = alarm(20);
+#ifdef THREADS
+  report_debug("Handler queue:\n");
+  if (mixed err = catch {
+    array(mixed) queue = handle_queue->buffer[handle_queue->r_ptr..];
+    foreach(queue, mixed v) {
+      if (!v) continue;
+      if (!arrayp(v)) {
+	report_debug("  *** Strange entry: %O ***\n", v);
+      } else {
+	report_debug("  %{%O, %}\n", v/({}));
+      }
+    }
+    })
+    werror (describe_backtrace (err));
+#endif
+  report_debug("Trying to dump backlog: \n");
+  if (mixed err = catch {
+      // Catch for paranoia reasons.
+      describe_all_threads();
+    })
+    werror (describe_backtrace (err));
+  low_engage_abs();
+}
 
 void restart_if_stuck (int force)
+//! @note
+//! Must be called from the backend thread due to Linux peculiarities.
 {
   remove_call_out(restart_if_stuck);
   if (!(query("abs_engage") || force))
@@ -2064,27 +3327,35 @@ void restart_if_stuck (int force)
   if(!abs_started)
   {
     abs_started = 1;
+    handlers_alive = time();
     report_debug("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
-  signal(signum("SIGALRM"),
-	 lambda( int n ) {
-	   report_debug("**** %s: ABS engaged!\n"
-			"Trying to dump backlog: \n",
-			ctime(time()) - "\n");
-	   catch {
-	     // Catch for paranoia reasons.
-	     describe_all_threads();
-	   };
-	   report_debug("**** %s: ABS exiting roxen!\n\n",
-			ctime(time()));
-	   _exit(1); 	// It might now quit correctly otherwise, if it's
-	   //  locked up
-	 });
-  alarm (60*query("abs_timeout")+10);
+//    werror("call_out_info %O\n", filter(call_out_info(), lambda(array a) {
+//  							 return a[2] == restart_if_stuck; }));
+  signal(signum("SIGALRM"), engage_abs);
+  int t = alarm (60*query("abs_timeout")+20);
+  // werror("alarm: %d seconds left, set to %d\n", t, 60*query("abs_timeout")+20);
+  if ((time(1) - handlers_alive) > 60*query("abs_timeout")) {
+    // The handler installed below hasn't run.
+    report_debug("**** %s: ABS: Handlers are dead!\n",
+		 ctime(time()) - "\n");
+    engage_abs(0);
+  }
+  handle(lambda() { handlers_alive = time(); });
 }
 #endif
 
+#if constant(ROXEN_MYSQL_SUPPORTS_UNICODE)
+// NOTE: We need to mark binary data as binary in case
+//       the Mysql character_set_connection has been
+//       set to anything other than "latin1".
+#define MYSQL__BINARY	"_binary"
+#else
+#define MYSQL__BINARY	""
+#endif
+
+function(string:Sql.Sql) dbm_cached_get;
 
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
@@ -2093,14 +3364,13 @@ class ImageCache
 //! interesting image conversion/manipulation functions as well.
 {
 #define QUERY(X,Y...) get_db()->query(X,Y)
-
-  function(void:Sql.Sql) get_db;
   string name;
   string dir;
   function draw_function;
-  mapping meta_cache = ([]);
+  mapping(string:array(mapping|int)) meta_cache = ([]);
 
-  string documentation(void|string tag_n_args) {
+  string documentation(void|string tag_n_args)
+  {
     string doc = Stdio.read_file("base_server/image_cache.xml");
     if(!doc) return "";
     if(!tag_n_args)
@@ -2109,17 +3379,23 @@ class ImageCache
     return replace(doc, "###", tag_n_args);
   }
 
-  static mapping meta_cache_insert( string i, mapping what )
+  protected mapping meta_cache_insert( string i, mapping what )
   {
-    call_out( meta_cache_insert, 400, i, 0 );
-    if( what )
-      return meta_cache[i] = what;
+#ifdef ARG_CACHE_DEBUG
+    werror("MD insert for %O: %O\n", i, what );
+#endif
+    if( sizeof( meta_cache ) > 1000 )
+      sync_meta();
+    if( what ) {
+      meta_cache[i] = ({ what, 0 });
+      return what;
+    }
     else
       m_delete( meta_cache, i );
     return 0;
   }
 
-  static mixed frommapp( mapping what )
+  protected mixed frommapp( mapping what )
   {
     if( !what )
       error( "Got invalid argcache-entry\n" );
@@ -2127,18 +3403,31 @@ class ImageCache
     return what;
   }
 
-  static void draw( string name, RequestID id )
+  protected void|mapping draw( string name, RequestID id )
   {
+#ifdef ARG_CACHE_DEBUG
+    werror("draw: %O id: %O\n", name, id );
+#endif
     mixed args = Array.map( Array.map( name/"$", argcache->lookup,
 				       id->client ), frommapp);
+
+    id->cache_status["icachedraw"] = 1;
 
     mapping meta;
     string data;
     array guides;
+#ifdef ARG_CACHE_DEBUG
+    werror("draw args: %O\n", args );
+#endif
     mixed reply = draw_function( @copy_value(args), id );
 
-    if( !reply )
+    if( !reply ) {
+#ifdef ARG_CACHE_DEBUG
+      werror("%O(%{%O, %}%O) ==> 0\n",
+	     draw_function, args, id);
+#endif
       return;
+    }
     
     if( arrayp( args ) )
       args = args[0];
@@ -2233,7 +3522,7 @@ class ImageCache
 	y1 = (int)(args["y-size"]||args["height"]);
 
       array xguides, yguides;
-      void sort_guides()
+      function sort_guides = lambda()
       {
 	xguides = ({}); yguides = ({});
 	if( guides )
@@ -2293,22 +3582,24 @@ class ImageCache
 	      x1 -= x0;
 	      y1 -= y0;
 	    }
+	    break;
 	  case "auto":
 	    [ x0, y0, x1, y1 ] = reply->find_autocrop();
-	    x1 -= x0;
-	    y1 -= y0;
+	    x1 = x1 - x0 + 1;
+	    y1 = y1 - y0 + 1;
 	}
       }
+      sort_guides = 0;		// To avoid garbage.
 
 #define SCALEI 1
 #define SCALEF 2
 #define SCALEA 4
 #define CROP   8
 
-      void do_scale_and_crop( int x0, int y0,
-			      int x1, int y1,
-			      int|float w,  int|float h,
-			      int type )
+      function do_scale_and_crop = lambda ( int x0, int y0,
+					    int x1, int y1,
+					    int|float w,  int|float h,
+					    int type )
       {
 	if( (type & CROP) && x1 && y1 
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
@@ -2379,7 +3670,7 @@ class ImageCache
 	{
 	  if( w && h )
 	  {
-	    if( w / (float)reply->xsize() < h / (float)reply->ysize() )
+	    if( (w * (float)reply->ysize()) < (h * (float)reply->xsize()) )
 	      h = 0;
 	    else
 	      w = 0;
@@ -2392,7 +3683,7 @@ class ImageCache
 	}
       };
       
-      if( args->scale )
+      if( sizeof((string) (args->scale || "")) )
       {
         int x, y;
         if( sscanf( args->scale, "%d,%d", x, y ) == 2)
@@ -2403,8 +3694,8 @@ class ImageCache
 			     SCALEF|CROP );
       }
       else
-	if( args->maxwidth || args->maxheight ||
-	    args["max-width"] || args["max-height"] )
+	if( sizeof( (string) (args->maxwidth || args->maxheight ||
+			      args["max-width"] || args["max-height"] || "")) )
       {
         int x = (int)args->maxwidth|| (int)args["max-width"];
         int y = (int)args->maxheight||(int)args["max-height"];
@@ -2412,6 +3703,7 @@ class ImageCache
       }
       else
 	do_scale_and_crop( x0, y0, x1, y1, 0, 0, CROP );
+      do_scale_and_crop = 0;	// To avoid garbage.
 
       if( args["span-width"] || args["span-height"] )
       {
@@ -2610,6 +3902,9 @@ class ImageCache
     }
     else if( mappingp(reply) )
     {
+      // This could be an error from get_file()
+      if(reply->error)
+	return reply;
       meta = reply->meta;
       data = reply->data;
       if( !meta || !data )
@@ -2617,32 +3912,72 @@ class ImageCache
               "Expected ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n"
 	      "Got %O\n", reply);
     }
+#ifdef ARG_CACHE_DEBUG
+    werror("draw %O done\n", name );
+#endif
     // Avoid throwing and error if the same image is rendered twice.
-    catch(store_data( name, data, meta ));
+    mixed err = catch(store_data( name, data, meta ));
+#ifdef ARG_CACHE_DEBUG
+    if (err) {
+      werror("store_data failed with:\n"
+	     "%s\n", describe_backtrace(err));
+    }
+#endif
   }
 
-  static void store_data( string id, string data, mapping meta )
+  protected void store_data( string id, string data, mapping meta )
   {
     if(!stringp(data)) return;
+#ifdef ARG_CACHE_DEBUG
+    werror("store %O (%d bytes)\n", id, strlen(data) );
+#endif
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
-    QUERY( "UPDATE "+name+" SET size=%d, atime=%d, meta=%s, data=%s WHERE id=%s",
-	   strlen(data), time(1), meta_data, data, id );
+#ifdef ARG_CACHE_DEBUG
+    werror("Replacing entry for %O\n", id );
+#endif
+    QUERY("REPLACE INTO "+name+
+	  " (id,size,atime,meta,data) VALUES"
+	  " (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
+	  id, strlen(data)+strlen(meta_data), meta_data, data );
+#ifdef ARG_CACHE_DEBUG
+    array(mapping(string:string)) q =
+      QUERY("SELECT meta, data FROM " + name +
+	    " WHERE id = %s", id);
+    if (!q || sizeof(q) != 1) {
+      werror("Unexpected result size: %d\n",
+	     q && sizeof(q));
+    } else {
+      if (q[0]->meta != meta_data) {
+	werror("Meta data differs: %O != %O\n",
+	       meta_data, q[0]->meta);
+      }
+      if (q[0]->data != data) {
+	werror("Data differs: %O != %O\n",
+	       data, q[0]->data);
+      }
+    }
+#endif
   }
 
-  static mapping restore_meta( string id, RequestID rid )
+  protected mapping restore_meta( string id, RequestID rid )
   {
-    if( meta_cache[ id ] )
-      return meta_cache[ id ];
+    if( array item = meta_cache[ id ] )
+    {
+      item[ 1 ] = time(1); // Update cached atime.
+      return item[ 0 ];
+    }
 
-    array(mapping(string:string)) q = QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
+#ifdef ARG_CACHE_DEBUG
+    werror("restore meta %O\n", id );
+#endif
+    array(mapping(string:string)) q =
+      QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
 
-    if(!sizeof(q))
+    string s;
+    if(!sizeof(q) || !strlen(s = q[0]->meta))
       return 0;
 
-    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
-
-    string s = q[0]->meta;
     mapping m;
     if (catch (m = decode_value (s)))
     {
@@ -2650,12 +3985,25 @@ class ImageCache
       QUERY( "DELETE FROM "+name+" WHERE id=%s", id);
       return 0;
     }
+
+    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
     return meta_cache_insert( id, m );
+  }
+
+  protected void sync_meta()
+  {
+    // Sync cached atimes.
+    foreach(meta_cache; string id; array value) {
+      if (value[1])
+	QUERY("UPDATE "+name+" SET atime=%d WHERE id=%s",
+	      value[1], id);
+    }
+    meta_cache = ([]);
   }
 
   void flush(int|void age)
   //! Flush the cache. If an age (an integer as returned by
-  //! <pi>time()</pi>) is provided, only images with their latest access before
+  //! @[time()]) is provided, only images with their latest access before
   //! that time are flushed.
   {
     int num;
@@ -2663,11 +4011,14 @@ class ImageCache
     int t = gethrtime();
     report_debug("Cleaning "+name+" image cache ... ");
 #endif
-    meta_cache = ([]);
+    sync_meta();
     uid_cache  = ([]);
     rst_cache  = ([]);
     if( !age )
     {
+#ifdef DEBUG
+      report_debug("cleared\n");
+#endif
       QUERY( "DELETE FROM "+name );
       num = -1;
       return;
@@ -2680,23 +4031,32 @@ class ImageCache
 
     int q;
     while(q<sizeof(ids)) {
-      string list = ids[q..q+99] * "','";
+      string list = map(ids[q..q+99], get_db()->quote) * "','";
       q+=100;
       QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
+#if 0
+    // Disabled. This can take a significant amount of time to run,
+    // and we really can't afford an unresponsive image cache - it can
+    // easily hang all handler threads. Besides, it's doubtful if this
+    // is of any use since the space for the deleted records probably
+    // will get reused soon enough anyway. /mast
     if( num )
       catch
       {
 	// Old versions of Mysql lacks OPTIMIZE. Not that we support
 	// them, really, but it might be nice not to throw an error, at
 	// least.
+#ifdef DEBUG
+	report_debug("Optimizing database ... ", name);
+#endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
+#endif
 
-    meta_cache = ([]);
 #ifdef DEBUG
-    report_debug("%s removed, %dms\n",
+    report_debug("%s removed (%dms)\n",
 		 (num==-1?"all":num?(string)num:"none"),
 		 (gethrtime()-t)/1000);
 #endif
@@ -2726,10 +4086,10 @@ class ImageCache
     return ({ imgs, size, aged });
   }
 
-  static mapping(string:mapping) rst_cache = ([ ]);
-  static mapping(string:string) uid_cache = ([ ]);
+  protected mapping(string:mapping) rst_cache = ([ ]);
+  protected mapping(string:string) uid_cache = ([ ]);
 
-  static mapping restore( string id, RequestID rid )
+  protected mapping restore( string id, RequestID rid )
   {
     array q;
     string uid;
@@ -2750,40 +4110,48 @@ class ImageCache
 	return rid->conf->authenticate_throw(rid, "User");
     }
 
-
-    if( rst_cache[ id ] )
+    if( rst_cache[ id ] ) {
+      rid->cache_status["icacheram"] = 1;
       return rst_cache[ id ] + ([]);
+    }
 
-    q = QUERY( "SELECT data FROM "+name+" WHERE id=%s",id);
+#ifdef ARG_CACHE_DEBUG
+      werror("restore %O\n", id );
+#endif
+    q = QUERY( "SELECT meta,atime,data FROM "+name+" WHERE id=%s",id);
     if( sizeof(q) )
     {
       if( sizeof(q[0]->data) )
       {
+	// Case 1: We have cache entry and image.
 	string f = q[0]->data;
-
-	// restore_meta caches. Thus, it's faster calling it than doing
-	// decode_value each time here (the metadata can be extracted in
-	// the query above).
-
-	mapping m = restore_meta( id, rid );
+	mapping m;
+	if (mixed err = catch( m = decode_value( q[0]->meta ) ))
+	  report_debug ("Failed to decode meta mapping for id %O in %s: %s",
+			id, name, describe_error (err));
 	if( !m ) return 0;
 
+	rid->cache_status["icachedisk"] = 1;
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
-      
+
 	if( strlen( f ) > 6000 )
 	  return m;
 	rst_cache[ id ] = m;
 	if( sizeof( rst_cache ) > 100 )
-	  rst_cache = ([ "id":m ]);
+	  rst_cache = ([ id : m ]);
 	return rst_cache[ id ] + ([]);
       }
+      // Case 2: We have cache entry, but no data.
+      return 0;
     }
     else
     {
+      // Case 3: No cache entry. Create one
       User u = rid->conf->authenticate(rid);
       string uid = "";
       if( u ) uid = u->name();
-      QUERY("INSERT INTO "+name+
+      // Might have been insterted from elsewhere.
+      QUERY("REPLACE INTO "+name+
 	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
 	    id, uid );
     }
@@ -2792,72 +4160,116 @@ class ImageCache
   }
 
 
-  string data( array|string|mapping args, RequestID id, int|void nodraw )
+  string data( array|string|mapping args, RequestID id, int|void nodraw,
+			   int|void timeout )
   //! Returns the actual raw image data of the image rendered from the
-  //! `data' instructions.
+  //! @[args] instructions.
   //!
-  //! A non-zero `nodraw' parameter means an image not already in the
+  //! A non-zero @[nodraw] parameter means an image not already in the
   //! cache will not be rendered on the fly, but instead return zero.
   {
-    string na = store( args, id );
-    mixed res;
-
-    if(!( res = restore( na,id )) )
-    {
-      if(nodraw) return 0;
-      draw( na, id );
-      res = restore( na,id );
-    }
-
-    if( !res || (res->error && res->error/100 != 2) )
-      return 0;
-
-    if( res->data )
-      return res->data;
-    return res->file->read();
+    mapping res = http_file_answer( args, id, nodraw, timeout );
+    return res && res->data;
   }
 
   mapping http_file_answer( array|string|mapping data,
                             RequestID id,
-                            int|void nodraw )
-  //! Returns a <ref>result mapping</ref> like one generated by
-  //! <ref>Roxen.http_file_answer()</ref> but for the image file
+                            int|void nodraw, int|void timeout )
+  //! Returns a @[result mapping] like one generated by
+  //! @[Roxen.http_file_answer()] but for the image file
   //! rendered from the `data' instructions.
   //!
-  //! Like <ref>metadata</ref>, a non-zero `nodraw' parameter means an
+  //! Like @[metadata], a non-zero @[nodraw]parameter means an
   //! image not already in the cache will not be rendered on the fly,
   //! but instead zero will be returned (this will be seen as a 'File
   //! not found' error)
   {
-    string na = store( data,id );
+    current_configuration->set(id->conf);
+    string na = store( data, id, timeout );
     mixed res;
+#ifdef ARG_CACHE_DEBUG
+    werror("data: %O id: %O\n", na, id );
+#endif
     if(! (res=restore( na,id )) )
     {
-      if(nodraw) return 0;
-      draw( na, id );
-      res = restore( na,id );
+      mixed err;
+      if (nodraw || (err = catch {
+  	if (mapping res = draw( na, id ))
+  	  return res;
+      })) {
+	// File not found.
+	
+	if(arrayp(err) && sizeof(err) && stringp(err[0]))
+	{
+	  if (sscanf(err[0], "Requesting unknown key %s\n",
+		     string message) == 1)
+	  {
+	    report_debug("Requesting unknown key %s %O from %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
+	  if (sscanf(err[0], "Failed to load specified image [\"%s\"]\n",
+		     string message) == 1)
+	  {
+	    report_debug("Failed to load specified image %O from %O - referrer %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
+	}
+	report_debug("Error in draw: %s\n", describe_backtrace(err));
+	return 0;
+      }
+      if( !(res = restore( na,id )) ) {
+	error("Draw callback %O did not generate any data.\n"
+	      "na: %O\n"
+	      "id: %O\n",
+	      draw_function, na, id);
+      }
     }
-    id->misc->cacheable = INITIAL_CACHEABLE;
+    res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
+
+    //  Setting the cacheable flag is done in order to get headers sent which
+    //  cause the image to be cached in the client even when using https
+    //  sessions.
+    RAISE_CACHE(INITIAL_CACHEABLE);
+
+    //  With the new (5.0 and newer) arg-cache enabled by default we can
+    //  allow authenticated images in the protocol cache. At this point
+    //  http.pike will have cleared it so re-enable explicitly.
+    PROTO_CACHE();
+    
     return res;
   }
 
   mapping metadata( array|string|mapping data,
 		    RequestID id,
-		    int|void nodraw )
+		    int|void nodraw,
+		    int|void timeout )
   //! Returns a mapping of image metadata for an image generated from
-  //! the data given (as sent to <ref>store()</ref>). If a non-zero
-  //! `nodraw' parameter is given and the image was not in the cache,
+  //! the data given (as sent to @[store()]). If a non-zero
+  //! @[nodraw] parameter is given and the image was not in the cache,
   //! it will not be rendered on the fly to get the correct data.
+  //!
+  //! @param timeout
+  //!   The @[timeout] is sent unmodified to @[store()].
   {
-    string na = store( data,id );
-    if(!restore_meta( na,id ))
+    string na = store( data, id, timeout );
+    mapping res;
+#ifdef ARG_CACHE_DEBUG
+      werror("meta %O\n", na );
+#endif
+    if(! (res = restore_meta( na,id )) )
     {
       if(nodraw)
         return 0;
       draw( na, id );
       return restore_meta( na,id );
     }
-    return restore_meta( na,id );
+    return res;
   }
 
   mapping tomapp( mixed what )
@@ -2867,13 +4279,18 @@ class ImageCache
     return ([ "":what ]);
   }
 
-  string store( array|string|mapping data, RequestID id )
+  string store( array|string|mapping data, RequestID id, int|void timeout )
   //! Store the data your draw callback expects to receive as its
   //! first argument(s). If the data is an array, the draw callback
   //! will be called like <pi>callback( @@data, id )</pi>.
+  //!
+  //! @param timeout
+  //!    Timeout for the entry in seconds from now. If @expr{UNDEFINED@},
+  //!    the entry will not expire. Currently just passed along to
+  //!    the @[ArgCache].
   {
     string ci, user;
-    void update_args( mapping a )
+    function update_args = lambda ( mapping a )
     {
       if (!a->format)
 	//  Make implicit format choice explicit
@@ -2882,7 +4299,9 @@ class ImageCache
 #else
 	a->format = "png";
 #endif
-      if( id->misc->authenticated_user )
+	if( get_admin_configuration() != id->conf &&
+	    id->misc->authenticated_user &&
+	    !id->misc->authenticated_user->is_transient )
 	// This entry is not actually used, it's only there to
 	// generate a unique key.
 	a["\0u"] = user = id->misc->authenticated_user->name();
@@ -2891,24 +4310,39 @@ class ImageCache
     if( mappingp( data ) )
     {
       update_args( data );
-      ci = argcache->store( data );
+      ci = argcache->store( data, timeout );
     }
     else if( arrayp( data ) )
     {
       if( !mappingp( data[0] ) )
 	error("Expected mapping as the first element of the argument array\n");
       update_args( data[0] );
-      ci = map( map( data, tomapp ), argcache->store )*"$";
+      ci = map( map( data, tomapp ), argcache->store, timeout )*"$";
     } else
       ci = data;
+    update_args = 0;		// To avoid garbage.
 
-    if( user && !uid_cache[ ci ] )
+    if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s", user, ci )) )
-	QUERY("INSERT INTO "+name+" (id,uid,atime) VALUES (%s,%s,%d)",
-	      ci, user, time(1) );
+      if( catch(QUERY("INSERT INTO "+name+" "
+		      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+		      ci, user||"")) )
+	QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
+	       user||"", ci );
     }
+
+#ifndef NO_ARG_CACHE_SB_REPLICATE
+    if(id->misc->persistent_cache_crawler || id->misc->do_replicate_argcache) {
+      // Force an update of rep_time for the requested arg cache id.
+      foreach(ci/"$", string key) {
+#if ARGCACHE_DEBUG
+	werror("Request for id %O from prefetch crawler.\n", key);
+#endif /* ARGCACHE_DEBUG */
+	argcache->refresh_arg(key);
+      }
+    }
+#endif /* NO_ARG_CACHE_SB_REPLICATE */
     return ci;
   }
 
@@ -2918,9 +4352,9 @@ class ImageCache
     draw_function = to;
   }
 
-  static void setup_tables()
+  protected void setup_tables()
   {
-    if(catch(QUERY("SELECT DATA FROM "+name+" WHERE id=''")))
+    if(catch(QUERY("SELECT data FROM "+name+" WHERE id=''")))
     {
       werror("Creating image-cache tables for '"+name+"'\n");
       catch(QUERY("DROP TABLE "+name));
@@ -2945,19 +4379,31 @@ class ImageCache
     }
   }
 
-
-  static void init_db( )
+  Sql.Sql get_db()
   {
-    meta_cache = ([]);
-    function f = master()->resolv( "DBManager.cached_get" );
-    get_db = lambda() { return f("local"); };
+    return dbm_cached_get("local");
+  }
+
+  protected void init_db( )
+  {
+    catch(sync_meta());
     setup_tables();
   }
 
   void do_cleanup( )
   {
-    call_out( do_cleanup, 3600*10+random(4711) );
-    flush(time()-7*3600*24);
+    //  Flushes may be costly in large sites (at least the OPTIMIZE TABLE
+    //  command) so schedule next run sometime after 04:30 the day after
+    //  tomorrow.
+    //
+    // Note: The OPTIMIZE TABLE step has been disabled. /mast
+    int now = time();
+    mapping info = localtime(now);
+    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    background_run(wait, do_cleanup);
+
+    //  Remove items older than one week
+    flush(now - 7 * 3600 * 24);
   }
   
   void create( string id, function draw_func )
@@ -2973,11 +4419,23 @@ class ImageCache
     name = id;
     draw_function = draw_func;
     init_db();
-    // Support that the 'shared' database moves.
+    // Support that the 'local' database moves.
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
 
     // Always remove entries that are older than one week.
-    call_out( do_cleanup, 10 );
+    background_run( 10, do_cleanup );
+  }
+
+  void destroy()
+  {
+    if (mixed err = catch(sync_meta())) {
+      report_warning("Failed to sync cached atimes for "+name+"\n");
+#if 0
+#ifdef DEBUG
+      report_debug (describe_backtrace (err));
+#endif
+#endif
+    }
   }
 }
 
@@ -2987,160 +4445,206 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
-  function(void:Sql.Sql) get_db;
+#undef QUERY
+#define QUERY(X,Y...) db->query(X,Y)
+  Sql.Sql db;
   string name;
 
-#define CACHE_VALUE 0
-#define CACHE_SKEY  1
 #define CACHE_SIZE  900
-#define CLEAN_SIZE  100
 
-  static string lq, ulq;
-#ifdef THREADS
   Thread.Mutex mutex = Thread.Mutex();
-#endif
-  
-#ifdef DB_SHARING
-  class DBLock
-  {
-#ifdef THREADS
-    object key;
-#endif
-    static void create()
-    {
-#ifdef THREADS
-      key = mutex->lock();
-#endif
-      if(!lq)
-      {
-	lq = "select GET_LOCK('"+name+"', 4)";
-	ulq = "select RELEASE_LOCK('"+name+"')";
-      }
-      get_db()->query( lq );
-    }
-    static void destroy()
-    {
-      get_db()->query( ulq );
-#ifdef THREADS
-      key = 0;
-#endif
-    }
-  }
-# define LOCK() DBLock __ = DBLock()
-#else
-#ifdef THREADS
-  Thread.Mutex _mt = Thread.Mutex();
-# define LOCK() mixed __ = _mt->lock()
-#else
-# define LOCK()
-#endif
-#endif
-  
-  static mapping (string:mixed) cache = ([ ]);
+  // Allow recursive locks, since it's normal here.
+# define LOCK() mixed __ = mutex->lock (2)
 
-  static void setup_table()
+#ifdef ARGCACHE_DEBUG
+#define dwerror(ARGS...) werror(ARGS)
+#else
+#define dwerror(ARGS...) 0
+#endif    
+
+  //! Cache of the latest entries requested or stored.
+  //! Limited to @[CACHE_SIZE] (currently @expr{900@}) entries.
+  protected mapping(string|int:mixed) cache = ([ ]);
+
+  //! Cache of cache-ids that have no expiration time.
+  //! This cache is maintained in sync with @[cache].
+  //! Note that entries not in this cache may still have
+  //! unlimited expiration time.
+  protected mapping(string|int:int) no_expiry = ([ ]);
+
+  protected void setup_table()
   {
-    if(catch(QUERY("SELECT md5 FROM "+name+" WHERE id=0")))
+    // New style argument2 table.
+    if(catch(QUERY("SELECT id FROM "+name+"2 LIMIT 0")))
     {
       master()->resolv("DBManager.is_module_table")
-	( 0, "local", name,
+	( 0, "local", name+"2",
 	  "The argument cache, used to map between "
-	  "a short unique string and an argument "
-	  "mapping" );
-      catch(QUERY("DROP TABLE "+name ));
-      QUERY("CREATE TABLE "+name+" ("
-	    "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, "
-	    "md5 CHAR(32) NOT NULL DEFAULT '', "
-	    "atime INT UNSIGNED NOT NULL DEFAULT 0, "
-	    "contents BLOB NOT NULL DEFAULT '', "
-	    "INDEX hind (md5))");
+	  "a unique string and an argument mapping" );
+      catch(QUERY("DROP TABLE "+name+"2" ));
+      QUERY("CREATE TABLE "+name+"2 ("
+	    "id        CHAR(32) PRIMARY KEY, "
+	    "ctime     DATETIME NOT NULL, "
+	    "atime     DATETIME NOT NULL, "
+	    "rep_time  DATETIME NOT NULL, "
+	    "sync_time INT NULL, "
+	    "timeout   INT NULL, "
+	    "contents  MEDIUMBLOB NOT NULL, "
+	    "          INDEX(timeout),"
+	    "          INDEX(sync_time)"
+	    ")");
     }
+
+    if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without rep_time.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD rep_time DATETIME NOT NULL"
+	     " AFTER atime");
+    }
+
+    if (catch (QUERY ("SELECT timeout FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without timeout.
+      QUERY ("ALTER TABLE " + name + "2 "
+	     "  ADD timeout INT NULL "
+	     "AFTER rep_time");
+      QUERY ("ALTER TABLE " + name + "2 "
+	     "  ADD INDEX(timeout)");
+    }
+
+    if (catch (QUERY ("SELECT sync_time FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without sync_time.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD sync_time INT NULL"
+	     " AFTER rep_time");
+      QUERY ("ALTER TABLE " + name + "2 "
+	     "  ADD INDEX(sync_time)");
+    }
+
+    catch {
+      array(mapping(string:mixed)) res = 
+	QUERY("DESCRIBE "+name+"2 contents");
+      
+      if(res[0]->Type == "blob") {
+	QUERY("ALTER TABLE "+name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", name);
+      }
+    };
   }
 
-  static void init_db()
+  protected void do_cleanup()
+  {
+    QUERY("DELETE LOW_PRIORITY FROM " + name + "2 "
+	  " WHERE timeout IS NOT NULL "
+	  "   AND timeout < %d", time());
+  }
+
+  protected void cleanup_process( )
+  {
+    //  Flushes may be costly in large sites (since there's no index
+    //  on the timeout field) so schedule next run sometime after
+    //  04:30 the day after tomorrow.
+    int now = time();
+    mapping info = localtime(now);
+    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    background_run(wait, cleanup_process);
+
+    do_cleanup();
+  }
+  
+  protected void init_db()
   {
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
     cache = ([]);
-    function f = master()->resolv( "DBManager.cached_get" );
-    get_db = lambda() { return f("local"); };
+    no_expiry = ([]);
+    db = dbm_cached_get("local");
     setup_table( );
+
+    // Cleanup exprired entries on start.
+    background_run( 10, cleanup_process );
   }
 
-  static void create( string _name )
+  protected void create( string _name )
   {
     name = _name;
     init_db();
     // Support that the 'local' database moves (not really nessesary,
     // but it won't hurt either)
     master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
-    call_out(get_plugins,0);
+    get_plugins();
   }
 
-  string read_args( int id )
+  protected string read_encoded_args( string id, int dont_update_atime )
   {
-    array res = QUERY("SELECT contents FROM "+name+" WHERE id="+id);
-    if( sizeof(res) )
-    {
-      QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
-      return res[0]->contents;
+    LOCK();
+    array res = QUERY("SELECT contents FROM "+name+"2 "
+		      " WHERE id = %s", id);
+    if(!sizeof(res))
+      return 0;
+    if (!dont_update_atime)
+      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	    "   SET atime = NOW() "
+	    " WHERE id = %s", id);
+    return res[0]->contents;
+  }
+
+  //  Callback used in replicate.pike
+  void create_key( string id, string encoded_args, int|void timeout )
+  {
+    if (!zero_type(timeout) && (timeout < time(1))) return; // Expired.
+    LOCK();
+    array(mapping) rows =
+      QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
+    foreach( rows, mapping row )
+      if( row->contents != encoded_args ) {
+      	report_error("ArgCache.create_key(): "
+		     "Duplicate key found! Please report this to support@roxen.com: "
+		     "id: %O, old data: %O, new data: %O\n",
+		     id, row->contents, encoded_args);
+	error("ArgCache.create_key() Duplicate key found!\n");
+      }
+
+    if(sizeof(rows)) {
+      if (zero_type(timeout)) {
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET atime = NOW(), timeout = NULL "
+              " WHERE id = %s", id);
+      } else {
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET atime = NOW() "
+              " WHERE id = %s", id);
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET timeout = %d "
+              " WHERE id = %s "
+              "   AND timeout IS NOT NULL "
+              "   AND timeout < %d",
+              timeout, id, timeout);
+      }
+      return;
     }
-    return 0;
-  }
 
-  string md5( string what )
-  {
-    return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
-      ->digits(32);
-  }
-  
-  int create_key( string long_key, string|void md )
-  {
-    if( !md )  md = md5(long_key);
-    array data =
-      QUERY("SELECT id,contents FROM "+name+" WHERE md5=%s", md );
-    
-    foreach( data, mapping m )
-      if( m->contents == long_key )
-	return (int)m->id;
-    
-    QUERY( "INSERT INTO "+name+" (contents,md5,atime) VALUES "
-	   "(%s,%s,UNIX_TIMESTAMP())", long_key, md );
+    QUERY( "INSERT INTO "+name+"2 "
+	   "(id, contents, ctime, atime) VALUES "
+	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW())", id, encoded_args );
 
-    int id = (int)get_db()->master_sql->insert_id();
+    if (!zero_type(timeout)) {
+      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	    "   SET timeout = %d "
+	    " WHERE id = %s",
+	    timeout, id);
+    }
 
-    (plugins->create_key-({0}))( id, long_key, md );
+    dwerror("ArgCache: Create new key %O\n", id);
 
-    return id;
+    (plugins->create_key-({0}))( id, encoded_args );
   }
   
-  static int low_key_exists( string key )
+  protected array plugins;
+  protected void get_plugins()
   {
-    return sizeof( QUERY( "SELECT id FROM "+name+" WHERE id="+(int)key));
-  }
-
-  string secret;
-
-  static void ensure_secret()
-  {
-    if( !secret )
-      secret = query( "argcache_secret" );
-  }
-
-  static string encode_id( int a, int b )
-  {
-    ensure_secret();
-    object crypto = Crypto.arcfour();
-    crypto->set_encrypt_key( secret );
-    string res = crypto->crypt( a+"\327"+b );
-    res = Gmp.mpz( res, 256 )->digits( 36 );
-    return res;
-  }
-
-  static array plugins;
-  static void get_plugins()
-  {
-    ensure_secret();
     plugins = ({});
     foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
       if( file_stat( d  ) )
@@ -3152,118 +4656,243 @@ class ArgCache
 	}
   }
 
-  static array plugin_decode_id( string id )
+  protected mapping plugins_read_encoded_args( string id )
   {
-    mixed r;
-    foreach( (plugins->decode_id-({0})), function(string:array(int)) f )
-      if( r = f( id ) )
-	return r;
+    mapping args;
+    foreach( (plugins->read_encoded_args - ({0})), function(string:mapping) f )
+      if( args = f( id ) )
+	return args;
     return 0;
   }
 
-  static array decode_id( string a )
-  {
-    string oa = a;
-    ensure_secret();
-    object crypto = Crypto.arcfour();
-    crypto->set_encrypt_key( secret );
-    if( catch(  a = Gmp.mpz( a, 36 )->digits( 256 ) ) )
-      return 0; // Not very likely to work...
-    a = crypto->crypt( a );
-    int i, j;
-    if( sscanf( a, "%d\327%d", i, j ) != 2 )
-      return plugin_decode_id( oa );
-    return ({ i, j });
-  }
-  
-  int key_exists( string key )
-  //! Does the key 'key' exist in the cache? Returns 1 if it does, 0
-  //! if it was not present.
-  {
-    if( cache[key] ) return 1;
-    array i = decode_id( key );
-    if(!i) return 0;
-    return low_key_exists( i[0] ) && low_key_exists( i[1] );
-  }
-
-  string store( mapping args )
+  string store( mapping args, int|void timeout )
   //! Store a mapping (of purely encode_value:able data) in the
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
+  //!
+  //! @param timeout
+  //!    Timeout for the entry in seconds from now. If @expr{UNDEFINED@},
+  //!    the entry will not expire.
   {
-    array b = values(args), a = sort(indices(args),b);
-    string id = encode_id( low_store( a ), low_store( b ) );
-    if( !cache[ id ] )
-      cache[ id ] = args+([]);
-    return id;
-  }
-
-  int low_store( array a )
-  {
-    string data = encode_value_canonic( a );
-    string hv = md5( data );
-    if( mixed q = cache[ hv ] )
-      return q;
-
-    LOCK();
-#ifdef THREADS
-    if( mixed q = cache[ hv ] )
-      return q;
-#endif
-    if( sizeof( cache ) >= CACHE_SIZE )
+    if (!zero_type(timeout)) timeout += time(1);
+    string encoded_args = encode_value_canonic( args );
+    string id = Gmp.mpz(Crypto.SHA1.hash(encoded_args), 256)->digits(36);
+    if( cache[ id ] ) {
+      if (!no_expiry[id]) {
+	// The cache id may have a timeout.
+	if (zero_type(timeout)) {
+	  // No timeout now, but there may have been one earlier.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = NULL "
+		" WHERE id = %s "
+		"   AND timeout IS NOT NULL", id);
+	  no_expiry[id] = 1;
+	} else {
+	  // Attempt to bump the timeout.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = %d "
+		" WHERE id = %s "
+		"   AND timeout IS NOT NULL "
+		"   AND timeout < %d",
+		timeout, id, timeout);
+	}
+      }
+      return id;
+    }
+    create_key(id, encoded_args, timeout);
+    if( sizeof( cache ) >= CACHE_SIZE ) {
       cache = ([]);
-
-    int id = create_key( data, hv );
-    cache[ hv ] = id;
-    cache[ id ] = a;
+      no_expiry = ([]);
+    }
+    if( !cache[ id ] ) {
+      cache[ id ] = args + ([]);
+    }
+    if (zero_type(timeout)) {
+      no_expiry[ id ] = 1;
+    }
     return id;
   }
+
 
   mapping lookup( string id )
   //! Recall a mapping stored in the cache. 
   {
     if( cache[id] )
-      return cache[id]+([]);
-    array i = decode_id( id );
-    if( !i )
-      error("Requesting unknown key\n");
-    array a = low_lookup( i[0] );
-    array b = low_lookup( i[1] );
-    if( a && b )
-      return (cache[id] = mkmapping( a, b ))+([]);
-  }
-
-  array low_lookup( int id )
-  {
-    mixed v;
-    if( v = cache[id] )
-      return v;
-    string q = read_args( id );
-    if( !q )
-      error("Requesting unknown key\n");
-    mixed data = decode_value(q);
-    string hl = Crypto.md5()->update( q )->digest();
-    cache[ hl ] = id;
-    cache[ id ] = data;
-    return data;
+      return cache[id] + ([]);
+    string encoded_args = (read_encoded_args(id, 0) ||
+			   plugins_read_encoded_args(id));
+    if(!encoded_args) {
+      error("Requesting unknown key (not found in db)\n");
+    }
+    mapping args = decode_value(encoded_args);
+    if( sizeof( cache ) >= CACHE_SIZE ) {
+      // Yowza! Garbing bulldoze style. /mast
+      cache = ([]);
+      no_expiry = ([]);
+    }
+    cache[id] = args + ([]);
+    return args;
   }
 
   void delete( string id )
-  //! Remove the data element stored under the key 'id'.
+  //! Remove the data element stored under the key @[id].
   {
+    LOCK();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
-    foreach( decode_id( id ), int id )
+    QUERY( "DELETE FROM "+name+"2 WHERE id = %s", id );
+  }
+
+  int key_exists( string id )
+  //! Does the key @[id] exist in the cache? Returns 1 if it does, 0
+  //! if it was not present.
+  {
+    if( cache[id] ) return 1;
+    if (read_encoded_args(id, 0) || plugins_read_encoded_args(id)) return 1;
+    return 0;
+  }
+
+#define SECRET_TAG "££"
+  
+  int write_dump(Stdio.File file, int from_time)
+  //! Dumps all entries that have been @[refresh_arg]'ed at or after
+  //! @[from_time] to @[file]. All existing entries are dumped if
+  //! @[from_time] is zero.
+  //!
+  //! @returns
+  //! Returns 0 if writing failed, -1 if there was no new entries, 1
+  //! otherwise.
+  //!
+  //! @note
+  //! Entries added during the execution of this function might or
+  //! might not be included in the dump.
+  {
+    constant FETCH_ROWS = 10000;
+    int entry_count = 0;
+    
+    // The server does only need to use file based argcache
+    // replication if the server don't participate in a replicate
+    // setup with a shared database.
+    if( !has_value((plugins->is_functional-({0}))(), 1) )
     {
-      (plugins->low_delete-({0}))( id );
-      if(cache[id])
-      {
-	m_delete( cache, cache[id] );
-	m_delete( cache, id );
-      }
-      QUERY( "DELETE FROM "+name+" WHERE id="+id );
+      int cursor;
+      array(string) ids;
+      do {
+	// Note: No lock is held, so rows might be added between the
+	// SELECTs here. That can however only cause a slight overlap
+	// between the LIMIT windows since rows are only added and
+	// never removed, and read_dump doesn't mind the occasional
+	// duplicate entry.
+	//
+	// A lock will be necessary here if a garb is added, though.
+
+	array(mapping(string:string)) entries;
+	if(from_time)
+	  // Only replicate entries accessed during the prefetch crawling.
+	  entries = 
+	    QUERY( "SELECT id, timeout from "+name+"2 "
+		   " WHERE rep_time >= FROM_UNIXTIME(%d) "
+		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS);
+	else
+	  // Make sure _every_ entry is replicated when a dump is created.
+	  entries = 
+	    QUERY( "SELECT id, timeout from "+name+"2 "
+		   " LIMIT %d, %d", cursor, FETCH_ROWS);
+
+	ids = entries->id;
+	array(string) timeouts = entries->timeout;
+	cursor += FETCH_ROWS;
+	
+	foreach(ids; int i; string id) {
+	  dwerror("ArgCache.write_dump(): %O\n", id);
+
+	  string encoded_args;
+	  if (mapping args = cache[id])
+	    encoded_args = encode_value_canonic (args);
+	  else {
+	    encoded_args = read_encoded_args (id, 1);
+	    if (!encoded_args) error ("ArgCache entry %O disappeared.\n", id);
+	  }
+
+	  string s;
+	  if (timeouts[i]) {
+	    int timeout = (int)timeouts[i];
+	    if (timeout < time(1)) {
+	      // Expired entry. Don't replicate.
+	      continue;
+	    }
+	    s = 
+	      MIME.encode_base64(encode_value(({ id, encoded_args, timeout })),
+				 1)+"\n";
+	  } else {
+	    // No timeout. Backward-compatible format.
+	    s = 
+	      MIME.encode_base64(encode_value(({ id, encoded_args })),
+				 1)+"\n";
+	  }
+	  if(sizeof(s) != file->write(s))
+	    return 0;
+	  entry_count++;
+	}
+      } while(sizeof(ids) == FETCH_ROWS);
     }
+    if (file->write("EOF\n") != 4)
+      return 0;
+    return entry_count ? 1 : -1;
+  }
+
+  string read_dump (Stdio.FILE file)
+  // Returns an error message if there was a parse error, 0 otherwise.
+  {
+    string secret = file->gets();
+    // Check if no secret is present -> newstyle package.
+    if(!secret || !has_prefix(secret, SECRET_TAG))
+      // New pakage found, restore input stream.
+      file->ungets(secret);
+
+    string s;
+    while(s = file->gets())
+    {
+      if(s == "EOF")
+	return 0;
+      array a;
+      if(mixed err = catch {
+	a = decode_value(MIME.decode_base64(s));
+      }) return "Decode failed for argcache record: " + describe_error (err);
+
+      if(sizeof(a) == 4) {
+	// Old style argcache dump.
+	dwerror("ArgCache.read_dump(): value_id: %O, index_id: %O.\n", a[0], a[2]);
+	if (a[2] == -1)
+	  // The old write_dump didn't filter out entries with NULL
+	  // index_id when from_time was zero, so we ignore them here
+	  // instead.
+	  dwerror ("ArgCache.read_dump(): entry ignored.\n");
+	else {
+	  array v = decode_value(a[1]), i = decode_value(a[3]);
+#if 0
+	  dwerror ("ArgCache.read_dump(): values: %O, indices: %O\n", v, i);
+#endif
+	  store(mkmapping(i, v));
+	}
+      } else if ((sizeof(a) == 2) || (sizeof(a) == 3)) {
+	// New style argcache dump, possibly with timeout.
+	dwerror("ArgCache.read_dump(): %O\n", a[0]);
+	create_key(@a);
+      } else
+	return "Decode failed for argcache record (wrong size on key array)\n";
+    }
+    if(s != "EOF")
+      return "Missing data in argcache file\n";
+    return 0;
+  }
+
+  void refresh_arg(string id)
+  //! Indicate that the entry @[id] needs to be included in the next
+  //! @[write_dump]. @[id] must be an existing entry.
+  {
+    QUERY("UPDATE "+name+"2 SET rep_time=NOW() WHERE id = %s", id);
   }
 }
 
@@ -3279,14 +4908,36 @@ string decode_charset( string charset, string data )
   return data;
 }
 
+//! Check if a cache key has been marked invalid (aka stale).
+int(0..1) invalidp(CacheKey key)
+{
+  catch {
+    return !key || (key->invalidp && key->invalidp());
+  };
+  return !key;
+}
+
+//! Invalidate (mark as stale) a cache key.
+void invalidate(CacheKey key)
+{
+  if (invalidp(key)) return;
+  catch {
+    if (key->invalidate) {
+      key->invalidate();
+      return;
+    }
+  };
+  if (key) destruct(key);
+}
+
 void create()
 {
   // Register localization projects
 #define __REG_PROJ Locale.register_project
-  __REG_PROJ("roxen_start",   "translations/%L/roxen_start.xml");
-  __REG_PROJ("roxen_config",  "translations/%L/roxen_config.xml");
-  __REG_PROJ("roxen_message", "translations/%L/roxen_message.xml");
-  __REG_PROJ("admin_tasks",   "translations/%L/admin_tasks.xml");
+  __REG_PROJ("roxen_""start",   "translations/%L/roxen_start.xml");
+  __REG_PROJ("roxen_""config",  "translations/%L/roxen_config.xml");
+  __REG_PROJ("roxen_""message", "translations/%L/roxen_message.xml");
+  __REG_PROJ("admin_""tasks",   "translations/%L/admin_tasks.xml");
   Locale.set_default_project_path("translations/%L/%P.xml");
 #undef __REG_PROJ
 
@@ -3294,11 +4945,20 @@ void create()
 
   // for module encoding stuff
 
+  // Pike 7.7 or later - we use the native LDAP module and link the
+  // migration alias NewLDAP to it.
+  add_constant ("NewLDAP", Protocols.LDAP);
+
   add_constant( "CFUserDBModule",config_userdb_module );
   
-  add_constant( "ArgCache", ArgCache );
+  //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
+  if (all_constants()["roxen"]) {
+    error("Duplicate Roxen object!\n");
+  }
+
+  // simplify dumped strings.  
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
@@ -3313,6 +4973,8 @@ void create()
 	     "refs.pmod","utils.pmod" }), string q )
     dump( "etc/modules/RXML.pmod/"+ q );
   dump( "etc/modules/RXML.pmod/module.pmod" );
+  master()->add_dump_constant ("RXML.empty_tag_set",
+			       master()->resolv ("RXML.empty_tag_set"));
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Roxen.pmod" );
@@ -3340,15 +5002,16 @@ void create()
     });
 
 
-  DDUMP( "etc/modules/DBManager.pmod");
   DDUMP( "base_server/roxenlib.pike");
-  DDUMP( "base_server/html.pike");
   DDUMP( "etc/modules/Dims.pmod");
   DDUMP( "config_interface/boxes/Box.pmod" );
+  dump( "base_server/html.pike");
+
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
 
   add_constant( "load",    load);
+
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "Roxen.get_locale", get_locale );
 
@@ -3393,12 +5056,22 @@ int set_u_and_gid (void|int from_handler_thread)
 
   u=query("User");
   sscanf(u, "%s:%s", u, g);
+#if 0
+  // FIXME: Support caching the uid/gid in the setting
+  //        in case of lookup failure further below.
+  sscanf(u, "%d", uid);
+  sscanf(u, "%s(%d)", u, uid);
+  if (g) {
+    sscanf(g, "%d", gid);
+    sscanf(g, "%s(%d)", g, gid);
+  }
+#endif /* 0 */
   if(strlen(u))
   {
     if(getuid())
     {
       if (!from_handler_thread)
-	report_error(LOC_M(24, "It is only possible to change uid and gid "
+	report_error(LOC_M(24, "It is possible to change uid and gid only "
 			   "if the server is running as root.")+"\n");
     } else {
 #ifdef TEST_EUID_CHANGE
@@ -3440,7 +5113,8 @@ int set_u_and_gid (void|int from_handler_thread)
       if (!from_handler_thread) {
 	// If this is necessary from every handler thread, these
 	// things are thread local and thus are no locks necessary.
-	catch { mutex_key = euid_egid_lock->lock(); };
+	if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
+	  werror (describe_backtrace (err));
 	threads_disabled = _disable_threads();
       }
 #endif
@@ -3450,10 +5124,11 @@ int set_u_and_gid (void|int from_handler_thread)
 #endif
 
 #if constant(initgroups)
-      catch {
-	initgroups(pw[0], gid);
-	// Doesn't always work - David.
-      };
+      if (mixed err = catch {
+	  initgroups(pw[0], gid);
+	  // Doesn't always work - David.
+	})
+	werror (describe_backtrace (err));
 #endif
 
       if (query("permanent_uid")) {
@@ -3518,6 +5193,14 @@ int set_u_and_gid (void|int from_handler_thread)
 #endif
       }
 
+      enable_coredumps(1);
+
+#ifdef THREADS
+      // Paranoia.
+      mutex_key = 0;
+      threads_disabled = 0;
+#endif
+
       return !!u;
     }
   }
@@ -3533,7 +5216,7 @@ void reload_all_configurations()
   int modified;
 
   setvars(retrieve("Variables", 0));
-
+  
   foreach(list_all_configurations(), string config)
   {
     mixed err;
@@ -3565,7 +5248,6 @@ void reload_all_configurations()
       }
       function sp = master()->resolv("DBManager.set_permission");
       catch(sp( "docs",   conf,  1 )); // the docs db can be non-existant
-      sp( "shared", conf,  2 );
       sp( "local",  conf,  2 );
     }
     if(err = catch
@@ -3623,6 +5305,15 @@ Configuration get_configuration (string name)
   return config_lookup[name];
 }
 
+private Configuration admin_config;
+
+Configuration get_admin_configuration()
+//! Returns the admin UI configuration, which is the one containing a
+//! config_filesystem module instance.
+{
+  return admin_config;
+}
+
 Configuration enable_configuration(string name)
 {
 #ifdef DEBUG
@@ -3660,10 +5351,16 @@ void enable_configurations()
   foreach(list_all_configurations(), string config)
   {
     int t = gethrtime();
+    Configuration conf_obj;
+    int is_admin_config;
     report_debug("\nEnabling the configuration %s ...\n", config);
-    if(err=catch( enable_configuration(config)->start(0) ))
+    if(err=catch {
+	conf_obj = enable_configuration(config);
+	is_admin_config = conf_obj->start(0);
+      })
       report_error("\n"+LOC_M(35, "Error while loading configuration %s%s"),
-                   config+":\n", describe_backtrace(err)+"\n");
+		   config+":\n", describe_backtrace(err)+"\n");
+    if (is_admin_config) admin_config = conf_obj;
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
   foreach( configurations, Configuration c )
@@ -3672,7 +5369,7 @@ void enable_configurations()
       return;
   }
   report_fatal("No configurations could open any ports. Will shutdown.\n");
-  shutdown();
+  restart(0.0, 50);	/* Actually a shutdown, but... */
 }
 
 int all_modules_loaded;
@@ -3686,41 +5383,36 @@ void enable_configurations_modules()
                    config->name+":\n", describe_backtrace(err)+"\n");
 }
 
-mapping low_decode_image(string data, void|mixed tocolor)
+mapping low_decode_image(string data)
 {
-  mapping w = Image._decode( data, tocolor );
+  mapping w = Image._decode( data );
   if( w->image ) return w;
   return 0;
 }
 
 constant decode_layers = Image.decode_layers;
 
-mapping low_load_image(string f, RequestID id)
+mapping low_load_image(string f, RequestID id, void|mapping err)
 {
   string data;
-  Stdio.File file;
   if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id)))
+    if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, err)))
     {
-      file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read()))
 #ifdef THREADS
-        catch
-        {
-          string host = "";
-          sscanf( f, "http://%[^/]", host );
-          if( sscanf( host, "%*s:%*d" ) != 2)
-            host += ":80";
-          mapping hd = 
-                  ([
-                    "User-Agent":version(),
-                    "Host":host,
-                  ]);
-          data = Protocols.HTTP.get_url_data( f, 0, hd );
-        };
+      if (sscanf( f, "http://%[^/]", string host ) ||
+	  sscanf (f, "https://%[^/]", host)) {
+	mapping hd = ([
+	  "User-Agent":version(),
+	  "Host":host,
+	]);
+	if (mixed err = catch {
+	    data = Protocols.HTTP.get_url_data( f, 0, hd );
+	  })
+	  werror (describe_backtrace (err));
+      }
 #endif
       if( !data )
 	return 0;
@@ -3731,36 +5423,41 @@ mapping low_load_image(string f, RequestID id)
   return low_decode_image( data );
 }
 
-array(Image.Layer) load_layers(string f, RequestID id, mapping|void opt)
+array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 {
   string data;
-  Stdio.File file;
+  mapping res = ([]);
   if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
     id->misc->_load_image_called++;
-    if(!(data=id->conf->try_get_file(f, id)))
+    if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, res)))
     {
-      file=Stdio.File();
-      if(!file->open(f,"r") || !(data=file->read()))
-// #ifdef THREADS
-        catch
-        {
-          data = Protocols.HTTP.get_url_nice( f )[1];
-        };
-// #endif
+#ifdef THREADS
+      if (sscanf( f, "http://%[^/]", string host ) ||
+	  sscanf (f, "https://%[^/]", host)) {
+	mapping hd = ([
+	  "User-Agent":version(),
+	  "Host":host,
+	]);
+	if (mixed err = catch {
+	    data = Protocols.HTTP.get_url_data( f, 0, hd );
+	  })
+	  werror (describe_backtrace (err));
+      }
+#endif
       if( !data )
-	return 0;
+	return res;
     }
   }
   id->misc->_load_image_called = 0;
-  if(!data) return 0;
+  if(!data) return res;
   return decode_layers( data, opt );
 }
 
-Image.Image load_image(string f, RequestID id)
+Image.Image load_image(string f, RequestID id, mapping|void err)
 {
-  mapping q = low_load_image( f, id );
+  mapping q = low_load_image( f, id, err );
   if( q ) return q->img;
   return 0;
 }
@@ -3797,9 +5494,14 @@ void create_pid_file(string where)
 //   where = replace(where, ({ "$pid", "$uid" }),
 // 		  ({ (string)getpid(), (string)getuid() }));
 
+  object privs = Privs("Deleting old pid file.");
   r_rm(where);
-  if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
-    report_debug("I cannot create the pid file ("+where+").\n");
+  privs = 0;
+  if(mixed err = catch {
+      Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()));
+    })
+    report_debug("Cannot create the pid file %O: %s",
+		 where, describe_error (err));
 #endif
 }
 
@@ -3830,46 +5532,127 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 }
 
 // Dump all threads to the debug log.
-void describe_all_threads()
+void describe_all_threads (void|int ignored, // Might be the signal number.
+			   void|object threads_disabled)
 {
-#if constant (thread_create)
-  // Disable all threads to avoid potential locking problems while we
-  // have the backtraces. It also gives an atomic view of the state.
-  object threads_disabled = _disable_threads();
-
-  report_debug("### Describing all pike threads:\n\n");
+  if (!threads_disabled)
+    // Disable all threads to avoid potential locking problems while we
+    // have the backtraces. It also gives an atomic view of the state.
+    threads_disabled = _disable_threads();
 
   array(Thread.Thread) threads = all_threads();
-  array(string|int) thread_ids =
-    map (threads,
-	 lambda (Thread.Thread t) {
-	   string desc = sprintf ("%O", t);
-	   if (sscanf (desc, "Thread.Thread(%d)", int i)) return i;
-	   else return desc;
-	 });
-  sort (thread_ids, threads);
+
+  report_debug("###### Describing all %d pike threads:\n>>\n",
+	       sizeof (threads));
+
+  threads = Array.sort_array (
+    threads,
+    lambda (Thread.Thread a, Thread.Thread b) {
+      // Backend thread first, otherwise in id order.
+      if (a == backend_thread)
+	return 0;
+      else if (b == backend_thread)
+	return 1;
+      else
+	return a->id_number() > b->id_number();
+    });
 
   int i;
   for(i=0; i < sizeof(threads); i++) {
-    report_debug("### Thread %s%s:\n",
-		 (string) thread_ids[i],
-#ifdef THREADS
+    report_debug(">> ### Thread 0x%x%s:\n",
+		 threads[i]->id_number(),
 		 threads[i] == backend_thread ? " (backend thread)" : ""
-#else
-		 ""
-#endif
 		);
-    report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
+    report_debug(">> " +
+		 replace (describe_backtrace (threads[i]->backtrace()),
+			  "\n", "\n>> ") +
+		 "\n");
   }
 
-  report_debug ("### Total %d pike threads\n", sizeof (threads));
+  array(array) queue = handle_queue->peek_array();
 
+  if (!sizeof (queue))
+    report_debug ("###### No entries in the handler queue\n");
+  else {
+    report_debug ("###### %d entries in the handler queue:\n>>\n",
+		  sizeof (queue));
+    foreach (queue; int i; array task)
+      report_debug (">> %d: %s\n", i,
+		    replace (debug_format_queue_task (task), "\n", "\n>> "));
+    report_debug (">> \n");
+  }
+
+  queue = bg_queue->peek_array();
+
+  if (!sizeof (queue))
+    report_debug ("###### No entries in the background_run queue\n");
+  else {
+    report_debug ("###### %d entries in the background_run queue:\n>>\n",
+		  sizeof (queue));
+    foreach (queue; int i; array task)
+      report_debug (">> %d: %s\n", i,
+		    replace (debug_format_queue_task (task), "\n", "\n>> "));
+    report_debug (">> \n");
+  }
+
+  report_debug ("###### Thread and queue dumps done at %s\n", ctime (time()));
+
+  queue = 0;
   threads = 0;
   threads_disabled = 0;
-#else
-  report_debug("Describing single thread:\n%s\n", backtrace());
+
+#ifdef DEBUG
+  report_debug (RoxenDebug.report_leaks());
 #endif
 }
+
+
+// Dump threads by file polling.
+
+constant cdt_poll_interval = 5;	// Seconds.
+constant cdt_dump_seq_interval = 60;
+
+string cdt_directory, cdt_filename;
+
+Thread.Thread cdt_thread;
+int cdt_next_seq_dump;
+
+void cdt_poll_file()
+{
+  while (this && query ("dump_threads_by_file")) {
+    if (array(string) dir = r_get_dir (cdt_directory)) {
+      if (has_value (dir, cdt_filename)) {
+	r_rm (cdt_directory + "/" + cdt_filename);
+	describe_all_threads();
+      }
+      else if (time() >= cdt_next_seq_dump) {
+	dir = glob (cdt_filename + ".*", dir);
+	if (sizeof (dir)) {
+	  string file = dir[0];
+	  r_rm (cdt_directory + "/" + file);
+	  describe_all_threads();
+	  sscanf (file, cdt_filename + ".%d", int count);
+	  if (--count > 0) {
+	    open (cdt_directory + "/" + cdt_filename + "." + count,
+		  "cwt");
+	    cdt_next_seq_dump = time (1) + cdt_dump_seq_interval;
+	  }
+	}
+      }
+    }
+    sleep (cdt_poll_interval);
+  }
+  cdt_thread = 0;
+}
+
+void cdt_changed (Variable.Variable v)
+{
+  if (cdt_directory && v->query() && !cdt_thread)
+    cdt_thread = Thread.thread_create (cdt_poll_file);
+}
+
+// ----------------------------------------
+
 
 constant dump = roxenloader.dump;
 
@@ -3881,9 +5664,14 @@ void initiate_argcache()
   report_debug( "Initiating argument cache ... \b");
   if( mixed e = catch( argcache = ArgCache("arguments") ) )
   {
-    report_fatal( "Failed to initialize the global argument cache:\n"
-                  + (describe_backtrace( e )/"\n")[0]+"\n");
-    exit(1);
+    report_fatal( "Failed to initialize the global argument cache:\n" +
+#ifdef DEBUG
+		  describe_backtrace(e) +
+#else /* !DEBUG */
+		  describe_error(e) +
+#endif /* DEBUG */
+		  "\n");
+    roxenloader.real_exit(1);
   }
   add_constant( "roxen.argcache", argcache );
   report_debug("\bDone [%.2fms]\n", (gethrtime()-t)/1000.0);
@@ -3905,31 +5693,65 @@ void show_timers()
 }
 #endif
 
-// void show_avg_prof()
-// {
-//   foreach(configurations, Configuration c )
-//     c->debug_write_prof( );
-//   call_out(show_avg_prof, 10 );
-// }
+
+protected class GCTimestamp
+{
+  array self_ref;
+  protected void create() {self_ref = ({this_object()});}
+  protected void destroy() {
+    werror ("GC runs at %s", ctime(time()));
+    GCTimestamp();
+  }
+}
+
 
 array argv;
 int main(int argc, array tmp)
 {
+  // __builtin.gc_parameters((["enabled": 0]));
   argv = tmp;
   tmp = 0;
-// #ifdef AVERAGE_PROFILING
-//   call_out(show_avg_prof, 10 );
-// #endif
 
+#if 0
+  Thread.thread_create (lambda () {
+			  while (1) {
+			    sleep (10);
+			    describe_all_threads();
+			  }
+			});
+#endif
+
+#ifdef LOG_GC_TIMESTAMPS
+  GCTimestamp();
+#endif
+
+  // For RBF
+  catch(mkdir(getenv("VARDIR") || "../var"));
+  
+  dbm_cached_get = master()->resolv( "DBManager.cached_get" );
+
+  dbm_cached_get( "local" )->
+    query( "CREATE TABLE IF NOT EXISTS "
+	   "compiled_formats ("
+	   "  md5 CHAR(32) not null primary key,"
+	   "  full BLOB not null,"
+	   "  enc BLOB not null"
+	   ")" );
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "local", "compiled_formats",
+      "Compiled and cached log and security pattern code. ");
+  
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
+  dump( "etc/modules/DBManager.pmod" );
+  dump( "etc/modules/VFS.pmod" );
   dump( "base_server/slowpipe.pike" );
   dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
 
-  if (!has_value (compat_levels, __roxen_version__))
+  if (!has_value (compat_levels, roxen_ver))
     report_debug ("Warning: The current version %s does not exist in "
-		  "roxen.compat_levels.\n", __roxen_version__);
+		  "roxen.compat_levels.\n", roxen_ver);
 
   add_constant( "Protocol", Protocol );
 #ifdef TIMERS
@@ -3942,7 +5764,12 @@ int main(int argc, array tmp)
 
   dump( "etc/modules/Variable.pmod/module.pmod" );
   dump( "etc/modules/Variable.pmod/Language.pike" );
+  dump( "etc/modules/Variable.pmod/Schedule.pike" );
 
+  foreach( glob("*.pike", get_dir( "etc/modules/Variable.pmod/"))
+	   -({"Language.pike", "Schedule.pike"}), string f )
+    DDUMP( "etc/modules/Variable.pmod/"+f );
+  
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
   DDUMP(  "base_server/wizard.pike" );
@@ -3954,6 +5781,8 @@ int main(int argc, array tmp)
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
 
+  once_mode = (int)Getopt.find_option(argv, "o", "once");
+
   configuration_dir =
     Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
@@ -3963,6 +5792,19 @@ int main(int argc, array tmp)
 
   restore_global_variables(); // restore settings...
 
+  cache.set_total_size_limit (query ("mem_cache_size") * 1024 * 1024);
+
+  if( query("replicate" ) )
+  {
+    report_notice( "Enabling replication support\n");
+    add_constant( "WS_REPLICATE", 1 );
+    // Dumping of arg_cache_plugins generates problem when trying to
+    // enable/disable argcache replication.
+    // call_out( lambda() {
+    // 		   dump("arg_cache_plugins/replicate.pike");
+    // 		 }, 2 );
+  }
+
   // Dangerous...
   mixed tmp_root;
   if(tmp_root = Getopt.find_option(argv, "r", "root")) fix_root(tmp_root);
@@ -3970,13 +5812,12 @@ int main(int argc, array tmp)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
-  add_constant( "roxen.fonts",
-                (fonts = ((program)"base_server/fonts.pike")()) );
-
+  fonts = ((program)"base_server/fonts.pike")();
 
   DDUMP( "languages/abstract.pike" );
   initiate_languages(query("locale"));
 
+  cache_clear_deltas();
   set_locale();
 
 #if efun(syslog)
@@ -3997,6 +5838,10 @@ int main(int argc, array tmp)
     master()->add_module_path( d );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
+#ifdef SMTP_RELAY
+  smtp_relay_start();
+#endif /* SMTP_RELAY */
+
 #ifdef SNMP_AGENT
   //SNMPagent start
   report_debug("SNMPagent configuration checking ... \b");
@@ -4005,16 +5850,50 @@ int main(int argc, array tmp)
     snmpagent = SNMPagent();
     snmpagent->enable();
     report_debug("\benabled.\n");
+    snmpagent->start_trap();
 
   } else
     report_debug("\bdisabled.\n");
 #endif // SNMP_AGENT
 
+  backend_thread = this_thread();
+#ifdef THREADS
+  name_thread( backend_thread, "Backend" );
+#else
+  report_debug("\n"
+	       "WARNING: Threads not enabled!\n"
+	       "\n");
+#endif /* THREADS */
+
+  foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
+    if (sizeof(roxenloader.package_directories) &&
+	(lfile_path(file_name) == file_name)) {
+      file_name = roxenloader.package_directories[-1] + "/" + file_name;
+      report_notice("Generating a new certificate: %O...\n", file_name);
+      string cert = Roxen.generate_self_signed_certificate("*");
+
+      // Note: set_u_and_gid() hasn't been called yet,
+      //       so there's no need for Privs.
+      Stdio.File file = Stdio.File();
+      if (!file->open(file_name, "wxc", 0600)) {
+	report_error("Couldn't create certificate file %O.\n", file_name);
+      } else if (file->write(cert) != sizeof(cert)) {
+	rm(cert);
+	report_error("Couldn't write certificate file %O.\n", file_name);
+      }
+    }
+  }
+
   enable_configurations();
+
+  string pid_file = Getopt.find_option(argv, "p", "pid-file");
+  if (pid_file && query("permanent_uid")) rm(pid_file);
 
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
-  create_pid_file(Getopt.find_option(argv, "p", "pid-file"));
+  create_pid_file(pid_file);
+
+  // Done before the modules are dumped.
 
 #ifdef RUN_SELF_TEST
   enable_configurations_modules();
@@ -4024,13 +5903,11 @@ int main(int argc, array tmp)
   else
     foreach( configurations, Configuration c )
       if( c->query( "no_delayed_load" ) )
-        c->enable_all_modules();
+	c->enable_all_modules();
 #endif // RUN_SELF_TEST
 
 #ifdef THREADS
   start_handler_threads();
-  backend_thread = this_thread();
-  name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
 
 #ifdef TEST_EUID_CHANGE
@@ -4054,14 +5931,37 @@ int main(int argc, array tmp)
   catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
   // Signals which cause Roxen to dump the thread state
-  foreach( ({ "SIGQUIT", "SIGUSR1", "SIGUSR2",  }), string sig)
+  foreach( ({ "SIGBREAK", "SIGQUIT",
+#ifdef ENABLE_SIGWINCH
+	      "SIGWINCH",
+#endif
+  }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
   start_time=time();		// Used by the "uptime" info later on.
 
+  restart_suicide_checker();
 
-//   if (query("suicide_engage"))
-//     call_out (restart,60*60*24*max(1,query("suicide_timeout")));
+  {
+    array(string) splitdir = roxen_path ("$LOGFILE") / "/";
+    cdt_filename = splitdir[-1];
+    cdt_directory = splitdir[..sizeof (splitdir) - 2] * "/";
+    if (has_suffix (cdt_filename, ".1"))
+      cdt_filename = cdt_filename[..sizeof (cdt_filename) - 3];
+    cdt_filename += ".dump_threads";
+    cdt_changed (getvar ("dump_threads_by_file"));
+  }
+
+#ifndef NO_SLOW_REQ_BT
+  slow_req_count_changed();
+  slow_req_timeout_changed();
+  slow_be_timeout_changed();
+#endif
+
+#ifdef ROXEN_DEBUG_MEMORY_TRACE
+  restart_roxen_debug_memory_trace();
+#endif
+
 #ifndef __NT__
   restart_if_stuck( 0 );
 #endif
@@ -4071,16 +5971,82 @@ int main(int argc, array tmp)
   return -1;
 }
 
-void check_suicide( )
+void check_commit_suicide()
 {
-  int next = getvar("suicide_schedule")
-    ->get_next( query("last_suicide") );
-  if( next < time() )
-  {
-    set( "last_suicide", time() );
-    return 0;
+#ifdef SUICIDE_DEBUG
+  werror("check_commit_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                        Schedule: %s",
+	 query("suicide_engage"),
+	 getvar("suicide_schedule")->get_next( query("last_suicide")),
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
+#endif /* SUICIDE_DEBUG */
+  if (query("suicide_engage")) {
+    int next = getvar("suicide_schedule")
+      ->get_next( query("last_suicide") );
+    if (next >= 0)
+      if (next <= time(1)) {
+	report_notice("Auto Restart triggered.\n");
+	set( "last_suicide", time(1) );
+	save( );
+	restart();
+      } else {
+	call_out(check_commit_suicide, next - time(1));
+      }
   }
 }
+
+void check_suicide( )
+{
+#ifdef SUICIDE_DEBUG
+  werror("check_suicide(): Engage:%d, schedule: %d, time: %d\n"
+	 "                 Schedule: %s",
+	 query("suicide_engage"),
+	 getvar("suicide_schedule")->get_next( query("last_suicide")),
+	 time(),
+	 ctime(getvar("suicide_schedule")->get_next( query("last_suicide"))));
+#endif /* SUICIDE_DEBUG */
+  if (query("suicide_engage")) {
+    int next = getvar("suicide_schedule")
+      ->get_next( query("last_suicide") );
+    if( !query("last_suicide") || (next >= 0 && next <= time()) )
+    {
+#ifdef SUICIDE_DEBUG
+      werror("Next suicide is in the past or last time not set. Reseting.\n");
+#endif
+      set( "last_suicide", time() );
+      save( );
+    }
+  }
+}
+
+void restart_suicide_checker()
+{
+  remove_call_out(check_commit_suicide);
+  remove_call_out(check_suicide);
+  call_out(check_suicide, 60);
+  call_out(check_commit_suicide, 180);	// Minimum uptime: 3 minutes.
+}
+
+#ifdef ROXEN_DEBUG_MEMORY_TRACE
+protected object roxen_debug_info_obj;
+void restart_roxen_debug_memory_trace()
+{
+  remove_call_out(restart_roxen_debug_memory_trace);
+
+  if (!roxen_debug_info_obj) {
+    roxen_debug_info_obj = ((program)"config_interface/actions/debug_info.pike"
+)();
+  }
+  int t = time();
+  string html = roxen_debug_info_obj->parse((["real_variables":([])]));
+  if (!Stdio.is_dir("../var/debug")) {
+    mkdir("../var/debug");
+  }
+  Stdio.write_file(sprintf("../var/debug/memory_info_%d.rxml", t), html);
+  call_out(restart_roxen_debug_memory_trace, 5);
+}
+#endif
 
 // Called from the administration interface.
 string check_variable(string name, mixed value)
@@ -4090,20 +6056,21 @@ string check_variable(string name, mixed value)
 #ifndef __NT__
    case "abs_engage":
     if (value)
-      restart_if_stuck(1);
+      // Make sure restart_if_stuck is called from the backend thread.
+      call_out(restart_if_stuck, 0, 1);
     else
       remove_call_out(restart_if_stuck);
     break;
+  case "abs_timeout":
+    if (value < 0) {
+      return "The timeout must be >= 0 minutes.";
+    }
+    break;
 #endif
 
-   case "suicide_engage":
-    if (value)
-    {
-      remove_call_out( check_suicide );
-      call_out( check_suicide, 60 );
-    }
-    else
-      remove_call_out( check_suicide );
+  case "suicide_schedule":
+  case "suicide_engage":
+    restart_suicide_checker();
     break;
 
 #ifdef SNMP_AGENT
@@ -4112,9 +6079,11 @@ string check_variable(string name, mixed value)
           report_notice("SNMPagent enabling ...\n");
           snmpagent = SNMPagent();
           snmpagent->enable();
+          snmpagent->start_trap();
       }
       if (!value && objectp(snmpagent)) {
           report_notice("SNMPagent disabling ...\n");
+          snmpagent->stop_trap();
           snmpagent->disable();
           snmpagent = 0;
       }
@@ -4126,27 +6095,142 @@ string check_variable(string name, mixed value)
 
 int is_ip(string s)
 {
-  return (sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>47 && s[-1]<58);
+  return s &&
+    (sscanf(s,"%*d.%*d.%*d.%*d%*c")==4 || // IPv4
+     has_value (s, ":"));	// IPv6
 }
 
-static string _sprintf( )
+//! @ignore
+DECLARE_OBJ_COUNT;
+//! @endignore
+
+protected string _sprintf( )
 {
-  return "roxen";
+  return "roxen()" + OBJ_COUNT;
 }
 
 
-// Support for logging in configurations and modules.
+// Logging
 
-class LogFormat
+class LogFormat			// Note: Dumping won't work if protected.
 {
-  static string host_ip_to_int(string s)
+  protected string url_encode (string str)
+  {
+    // Somewhat like Roxen.http_encode_url, but only encode enough
+    // chars to avoid ambiguity in typical log formats. Notably, UTF-8
+    // encoded chars aren't URL encoded too, to make the log easier to
+    // view in any UTF-8 aware editor or viewer.
+    return replace (
+      string_to_utf8 (str), ({
+	// Control chars.
+	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+	"\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+	"\177",
+	// The escape char.
+	"%",
+	// Basic log format separators.
+	" ", "\"", "'",
+      }),
+      ({
+	"%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+	"%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
+	"%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+	"%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
+	"%7f",
+	"%25",
+	"%20", "%22", "%27",
+      }));
+  }
+
+  protected int rusage_time;
+  protected mapping(string:int) rusage_data;
+  protected void update_rusage()
+  {
+    if(!rusage_data || time(1) != rusage_time)
+    {
+      rusage_data = (["utime": 1, "stime": 1]) & System.getrusage();
+      rusage_time = time(1);
+    }
+  }
+
+  protected int server_cputime()
+  {
+    update_rusage();
+    if(rusage_data)
+      return rusage_data->utime + rusage_data->stime;
+    return 0;
+  }
+
+  protected int server_usertime()
+  {
+    update_rusage();
+    if(rusage_data)
+      return rusage_data->utime;
+    return 0;
+  }
+
+  protected int server_systime()
+  {
+    update_rusage();
+    if(rusage_data)
+      return rusage_data->stime;
+    return 0;
+  }
+
+  protected string std_date(mapping(string:int) ct) {
+    return(sprintf("%04d-%02d-%02d",
+		   1900+ct->year,ct->mon+1, ct->mday));
+  }
+ 
+  protected string std_time(mapping(string:int) ct) {
+    return(sprintf("%02d:%02d:%02d",
+		   ct->hour, ct->min, ct->sec));
+  }
+
+  // CERN date formatter. Note similar code in Roxen.pmod.
+
+  protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+				 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+  protected int chd_lt;
+  protected string chd_lf;
+
+  protected string cern_http_date(int t, mapping(string:int) ct)
+  {
+    if( t == chd_lt )
+      // Interpreter lock assumed here.
+      return chd_lf;
+
+    string c;
+    int tzh = ct->timezone/3600;
+    if(tzh > 0)
+      c="-";
+    else {
+      tzh = -tzh;
+      c="+";
+    }
+
+    c = sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+		ct->mday, months[ct->mon], 1900+ct->year,
+		ct->hour, ct->min, ct->sec, c, tzh);
+
+    chd_lt = t;
+    // Interpreter lock assumed here.
+    chd_lf = c;
+
+    return c;
+  }
+  
+  protected string host_ip_to_int(string s)
   {
     int a, b, c, d;
     sscanf(s, "%d.%d.%d.%d", a, b, c, d);
     return sprintf("%c%c%c%c",a, b, c, d);
   }
 
-  static string extract_user(string from)
+  protected string extract_user(string from)
   {
     array tmp;
     if (!from || sizeof(tmp = from/":")<2)
@@ -4154,208 +6238,551 @@ class LogFormat
     return tmp[0];      // username only, no password
   }
 
-  void log( function do_write, RequestID id, mapping file );
-  static void do_async_write( string host, string data, string ip, function c )
+  void log_access( function do_write, RequestID id, mapping file );
+
+  void log_event (function do_write, string facility, string action,
+		  string resource, mapping(string:mixed) info);
+
+  protected void do_async_write( string host, string data,
+				 string ip, function c )
   {
     if( c ) 
       c( replace( data, "\4711", (host||ip) ) );
   }
 }
 
-static mapping(string:function) compiled_formats = ([ ]);
+protected mapping(string:function) compiled_log_access = ([ ]);
+protected mapping(string:function) compiled_log_event = ([ ]);
 
-constant formats = 
-({
-  ({ "ip_number",   "%s",   "(string)request_id->remoteaddr",0 }),
-  ({ "bin-ip_number","%s",  "host_ip_to_int(request_id->remoteaddr)",0 }),
-  ({ "cern_date",   "%s",   "Roxen.cern_http_date( time( 1 ) )",0 }),
-  ({ "bin-date",    "%4c",  "time(1)",0 }),
-  ({ "method",      "%s",   "(string)request_id->method",0 }),
-  ({ "resource",    "%s",   "(string)(request_id->raw_url||request_id->not_query)", 0 }),
-  ({ "full_resource","%s",  "(string)(request_id->raw_url||request_id->not_query)",0 }),
-  ({ "protocol",    "%s",   "(string)request_id->prot",0 }),
-  ({ "response",    "%d",   "(int)(file->error || 200)",0 }),
-  ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),
-  ({ "length",      "%d",   "(int)file->len",0 }),
-  ({ "bin-length",  "%4c",  "(int)file->len",0 }),
-  ({ "vhost",       "%s",   "(request_id->misc->host||\"-\")", 0 }),
-  ({ "referer",     "%s",    
-     "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
-  ({ "user_agent",  "%s",    
-     "request_id->client?request_id->client*\"%20\":\"-\"", 0 }),
-  ({ "user_id",     "%s",    "(request_id->cookies&&request_id->cookies->RoxenUserID)||\"0\"",0 }),
-  ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
-  ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
-  ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
-  ({ "cache-status","%s",   ("sizeof(request_id->cache_status||({}))?"
-			     "indices(request_id->cache_status)*\",\":"
-			     "\"nocache\""), 0 }),
-});
+#define LOG_ASYNC_HOST		1
+#define LOG_NEED_COOKIES	2
+#define LOG_NEED_TIMESTAMP	4
+#define LOG_NEED_LTIME		(8 | LOG_NEED_TIMESTAMP)
+#define LOG_NEED_GTIME		(16 | LOG_NEED_TIMESTAMP)
+
+// Elements of a format array arr:
+// arr[0]: sprintf format for access logging (run_log_format).
+// arr[1]: Code for the corresponding sprintf argument of arr[0].
+// arr[2]: sprintf format for event logging (run_log_event_format).
+//   May be 0 to reuse arr[0] and arr[1].
+//   May be 1 to indicate that an attempt is made to look up the
+//   variable in the info mapping. If it isn't found then arr[3] is
+//   used as fallback. The sprintf format string is always "%s" in
+//   this case.
+// arr[3]: Code for the corresponding sprintf argument of arr[2].
+// arr[4]: Flags.
+
+protected constant formats = ([
+
+  // Used for both access and event logging
+  "date":		({"%s", "std_date (ltime)", 0, 0, LOG_NEED_LTIME}),
+  "time":		({"%s", "std_time (ltime)", 0, 0, LOG_NEED_LTIME}),
+  "cern-date":		({"%s", "cern_http_date (timestamp, ltime)",
+			  0, 0, LOG_NEED_LTIME}),
+  "utc-date":		({"%s", "std_date (gtime)", 0, 0, LOG_NEED_GTIME}),
+  "utc-time":		({"%s", "std_time (gtime)", 0, 0, LOG_NEED_GTIME}),
+  "bin-date":		({"%4c", "timestamp", 0, 0, LOG_NEED_TIMESTAMP}),
+  // FIXME: There is no difference between $resource and $full-resource.
+  "resource":		({"%s", ("(string)"
+				 "(request_id->raw_url||"
+				 " (request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "server-uptime":	({"%d", "max(1, timestamp - roxen->start_time)",
+			  0, 0, 0}),
+  "server-cputime":	({"%d", "server_cputime()", 0, 0, 0}),
+  "server-usertime":	({"%d", "server_usertime()", 0, 0, 0}),
+  "server-systime":	({"%d", "server_systime()", 0, 0, 0}),
+
+  // Used for access logging
+  "host":		({"\4711" /* unlikely to occur normally */, 0,
+			  1, "\"-\"", LOG_ASYNC_HOST}),
+  "vhost":		({"%s", "(request_id->misc->host||\"-\")",
+			  1, "\"-\"", 0}),
+  "ip-number":		({"%s", "(string)request_id->remoteaddr",
+			  1, "\"0.0.0.0\"", 0}),
+  "bin-ip-number":	({"%s", "host_ip_to_int(request_id->remoteaddr)",
+			  1, "\"\\0\\0\\0\\0\"", 0}),
+  "method":		({"%s", "(string)request_id->method",
+			  1, "\"-\"", 0}),
+  "full-resource":	({"%s", ("(string)"
+				 "(request_id->raw_url||"
+				 " (request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "cs-uri-stem":	({"%s", ("(string)"
+				 "((request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query||"
+				 " (request_id->raw_url && "
+				 "  (request_id->raw_url/\"?\")[0])||"
+				 " \"-\")"),
+			  "%s" , "url_encode (resource)", 0}),
+  "cs-uri-query":	({"%s", "(string)(request_id->query||\"-\")",
+			  1, "\"-\"", 0}),
+  // FIXME: There is no difference between $real-resource and
+  // $real-full-resource.
+  "real-resource":	({"%s", ("(string)(request_id->raw_url||"
+				 "         request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "real-full-resource":	({"%s", ("(string)(request_id->raw_url||"
+				 "         request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "real-cs-uri-stem":	({"%s", ("(string)(request_id->not_query||"
+				 "         (request_id->raw_url && "
+				 "          (request_id->raw_url/\"?\")[0])||"
+				 "         \"-\")"),
+			  "%s" , "url_encode (resource)", 0}),
+  "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
+  "response":		({"%d", "(int)(file->error || 200)", 1, "\"-\"", 0}),
+  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
+  "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
+  "bin-length":		({"%4c", "(int)file->len", 1, "\"\\0\\0\\0\\0\"", 0}),
+  "queue-length":	({"%d", "(int) request_id->queue_length",
+			  1, "\"-\"", 0}),
+  "request-time":	({"%1.4f", ("(float)(gethrtime() - "
+				    "        request_id->hrtime) /"
+				    "1000000.0"),
+			  1, "\"-\"", 0}),
+  "queue-time":		({"%1.4f",
+			  "(float) request_id->queue_time / 1000000.0",
+			  1, "\"-\"", 0}),
+  "handle-time":	({"%1.4f",
+			  "(float) request_id->handle_time / 1000000.0",
+			  1, "\"-\"", 0}),
+  "handle-cputime":	({
+#if constant(System.CPU_TIME_IS_THREAD_LOCAL)
+    "%1.4f", "(float) request_id->handle_vtime / 1000000.0",
+#else
+    "%s", "\"-\"",
+#endif
+    1, "\"-\"", 0}),
+  "etag":		({"%s", "request_id->misc->etag || \"-\"",
+			  1, "\"-\"", 0}),
+  "referrer":		({"%s", ("sizeof(request_id->referer||({}))?"
+				 "request_id->referer[0]:\"-\""),
+			  1, "\"-\"", 0}),
+  "referer":		({"%s", ("sizeof(request_id->referer||({}))?"
+				 "request_id->referer[0]:\"-\""),
+			  1, "\"-\"", 0}),
+  "user-agent":		({"%s", ("request_id->client?"
+				 "request_id->client*\"%20\":\"-\""),
+			  1, "\"-\"", 0}),
+  "user-agent-raw":	({"%s", ("request_id->client?"
+				 "request_id->client*\" \":\"-\""),
+			  1, "\"-\"", 0}),
+  "user":		({"%s", "extract_user( request_id->realauth )",
+			  1, "\"-\"", 0}),
+  "user-id":		({"%s", ("(request_id->cookies&&"
+				 " request_id->cookies->RoxenUserID)||"
+				 "(request_id->misc->moreheads&&"
+				 " request_id->misc->"
+				 "   moreheads[\"Set-Cookie\"]&&"
+				 " request_id->parse_cookies&&"
+				 " request_id->parse_cookies("
+				 "   request_id->misc->"
+				 "     moreheads[\"Set-Cookie\"])->"
+				 "   RoxenUserID)||"
+				 "\"0\""),
+			  1, "\"-\"", 0}),
+  "content-type":	({"%s", ("(((arrayp(file->type) ? "
+				 "file->type[0] : file->type) "
+				 "|| \"-\") / \";\")[0]"),
+			  1, "\"-\"", 0}),
+  "cookies":		({"%s", ("arrayp(request_id->request_headers->cookie)?"
+				 "request_id->request_headers->cookie*\";\":"
+				 "request_id->request_headers->cookie||\"\""),
+			  1, "\"-\"", 0}),
+  "cache-status":	({"%s", ("sizeof(request_id->cache_status||({}))?"
+				 "indices(request_id->cache_status)*\",\":"
+				 "\"nocache\""),
+			  1, "\"-\"", 0}),
+  "eval-status":	({"%s", ("sizeof(request_id->eval_status||({}))?"
+				 "indices(request_id->eval_status)*\",\":"
+				 "\"-\""),
+			  1, "\"-\"", 0}),
+  "protcache-cost":	({"%d", "request_id->misc->protcache_cost",
+			  1, "\"-\"", 0}),
+  "xff":		({"%s", ("arrayp(request_id->request_headers["
+				 "\"x-forwarded-for\"]) ? "
+				 "(request_id->request_headers["
+				 "\"x-forwarded-for\"][-1] / \",\")[0] :"
+				 "((request_id->request_headers["
+				 "\"x-forwarded-for\"] || \"-\") / \",\")[0]"),
+			  1, "\"-\"", 0 }),
+
+  // Used for event logging
+  "facility":		({"-", 0, "%s", "facility", 0}),
+  "action":		({"-", 0, "%s", "action", 0}),
+]);
 
 void run_log_format( string fmt, function c, RequestID id, mapping file )
 {
-  (compiled_formats[ fmt ] || compile_log_format( fmt ))(c,id,file);
+  (compiled_log_access[ fmt ] ||
+   compile_log_format( fmt )->log_access) (c,id,file);
 }
 
-function compile_log_format( string fmt )
+void run_log_event_format (string fmt, function cb,
+			   string facility, string action, string resource,
+			   mapping(string:mixed) info)
 {
-  if( compiled_formats[ fmt ] )
-    return compiled_formats[ fmt ];
+  (compiled_log_event[ fmt ] ||
+   compile_log_format( fmt )->log_event) (cb, facility, action,
+					  resource, info);
+}
+
+protected LogFormat compile_log_format( string fmt )
+{
+  add_constant( "___LogFormat", LogFormat );
+
+  string kmd5 = md5( fmt );
+
+  object con = dbm_cached_get("local");
+
+  {
+    array tmp =
+      con->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+
+    if( sizeof(tmp) && (tmp[0]->full == fmt) )
+    {
+      LogFormat lf;
+      if (mixed err = catch {
+	  lf = decode_value( tmp[0]->enc, master()->Decoder() )();
+	}) {
+// #ifdef DEBUG
+	report_error("Decoding of dumped log format failed:\n%s",
+		     describe_backtrace(err));
+// #endif
+      }
+
+      if (lf && lf->log_access) {
+	// Check that it's a new style log program (old ones have log()
+	// instead of log_access()).
+	compiled_log_access[fmt] = lf->log_access;
+	compiled_log_event[fmt] = lf->log_event;
+	return lf;
+      }
+    }
+  }
 
   array parts = fmt/"$";
-  string format = parts[0];
-  array args = ({});
-  int do_it_async = 0;
+  string a_format = parts[0], e_format = parts[0];
+  array a_args = ({}), e_args = ({});
+  int log_flags = 0;
   int add_nl = 1;
 
-  string sr( string s ) { return s[1..strlen(s)-2]; };
-  // sr(replace(sprintf("%O", X), "%", "%%"))
-
-#define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", }), ({ "\n", "\r", "\t" }) )
+#define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", "%"}),		\
+			 ({ "\n", "\r", "\t", "%%" }) )
 
   foreach( parts[1..], string part )
   {
-    int c, processed;
-    foreach( formats, array q )
-      if( part[..strlen(q[0])-1] == q[0])
-      {
-        format += q[1] + DO_ES(part[ strlen(q[0]) .. ]);
-        if( q[2] ) args += ({ q[2] });
-        if( q[3] ) do_it_async = 1;
-        processed=1;
-        break;
-      }
-    if( processed )
-      continue;
-    if( sscanf( part, "char(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"c", abs( c ) )+DO_ES(part);
-    else if( sscanf( part, "wchar(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"2c", abs( c ) )+DO_ES(part);
-    else if( sscanf( part, "int(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"4c", abs( c ) )+DO_ES(part);
-    else if( part[0] == '^' )
-    {
-      format += DO_ES(part[1..]);
-      add_nl = 0;
-    } else
-      format += "$"+part;
-  }
-  if( add_nl ) format += "\n";
+    sscanf (part, "%[-_a-zA-Z0-9]%s", string kwd, part);
+    kwd = replace (kwd, "_", "-");
 
-  add_constant( "___LogFormat", LogFormat );
-  string code = sprintf(
-#"
-  inherit ___LogFormat;
-  void log( function callback, RequestID request_id, mapping file )
-  {
-     if(!callback) return;
-     string data = sprintf( %O %{, %s%} );
-", format, args );
- 
-  if( do_it_async )
-  {
-    code += 
-#"
-     roxen.ip_to_host(request_id->remoteaddr,do_async_write,
-                      data, request_id->remoteaddr, callback );
-   }
-";
-  } else
-    code += 
-#"  
-   callback( data );
+    if (array(string|int) spec = formats[kwd]) {
+      [string a_fmt, string a_code,
+       string|int e_fmt, string e_code, int flags] = spec;
+      string escaped = DO_ES (part);
+      a_format += a_fmt + escaped;
+      if( a_code ) a_args += ({ a_code });
+      if (!e_fmt) e_fmt = a_fmt, e_code = a_code;
+      else if (e_fmt == 1) {
+	e_fmt = "%s";
+	e_code = sprintf ("info && !zero_type (info[%O]) ? "
+			  "url_encode ((string) info[%O]) : (%s)",
+			  kwd, kwd, e_code);
+      }
+      e_format += e_fmt + escaped;
+      if (e_code) e_args += ({e_code});
+      log_flags |= flags;
+      continue;
+    }
+
+    switch (kwd) {
+      case "char":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "wchar":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"2c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "int":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"4c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "":
+	if( part[0] == '^' )
+	{
+	  string escaped = DO_ES(part[1..]);
+	  a_format += escaped, e_format += escaped;
+	  add_nl = 0;
+	  continue;
+	}
+	break;
+    }
+
+    a_format += "-" + DO_ES (part);
+
+    // Any unknown variable is indexed from the info mapping for events.
+    e_format += "%s" + DO_ES (part);
+    e_args += ({sprintf ("info && !zero_type (info[%O]) ? "
+			 "url_encode ((string) info[%O]) : \"-\"",
+			 kwd, kwd)});
   }
+  if( add_nl ) a_format += "\n", e_format += "\n";
+
+  string a_func = #"
+    void log_access( function callback, RequestID request_id, mapping file )
+    {
+      if(!callback) return;";
+  string e_func = #"
+    void log_event (function callback, string facility, string action,
+		    string resource, mapping(string:mixed) info)
+    {
+      if(!callback) return;";
+
+  if (log_flags & LOG_NEED_TIMESTAMP) {
+    string c = #"
+      int timestamp = time (1);";
+    a_func += c, e_func += c;
+  }
+  if (log_flags & LOG_NEED_LTIME) {
+    string c = #"
+      mapping(string:int) ltime = localtime (timestamp);";
+    a_func += c, e_func += c;
+  }
+  if (log_flags & LOG_NEED_GTIME) {
+    string c = #"
+      mapping(string:int) gtime = gmtime (timestamp);";
+    a_func += c, e_func += c;
+  }
+
+  if (log_flags & LOG_NEED_COOKIES) {
+    a_func += #"
+      request_id->init_cookies();";
+  }
+
+  a_func += sprintf(#"
+      string data = sprintf( %O%{,
+	%s%} );", a_format, a_args );
+  e_func += sprintf(#"
+      string data = sprintf( %O%{,
+	%s%} );", e_format, e_args );
+ 
+  if (log_flags & LOG_ASYNC_HOST)
+  {
+    a_func += #"
+      roxen.ip_to_host(request_id->remoteaddr,do_async_write,
+                       data, request_id->remoteaddr, callback );";
+  } else {
+    a_func += #"
+      callback( data );";
+  }
+  a_func += #"
+    }
 ";
-  return compiled_formats[ fmt ] = compile_string( code )()->log;
+
+  e_func += #"
+      callback (data);
+    }
+";
+
+  string src = #"
+    inherit ___LogFormat;" + a_func + e_func;
+  program res;
+  if (mixed err = catch (res = compile_string (src))) {
+    werror ("Failed to compile program: %s\n", src);
+    throw (err);
+  }
+  mixed err = catch {
+    string enc = encode_value(res, master()->Encoder (res));
+
+    con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+	     kmd5, fmt, enc);
+    };
+  if (err) {
+    master()->handle_error(err);
+  }
+
+  LogFormat lf = res();
+  compiled_log_access[fmt] = lf->log_access;
+  compiled_log_event[fmt] = lf->log_event;
+  return lf;
 }
 
-// This array contains the compilation information for the different
-// security checks for e.g. htaccess. The layout of the top array is
-// triplet of sscanf string that the security command should match,
-// the number of arugments that it takes and an array with the actual
-// compilation information.
-//
-// ({ command_sscanf_string, number_of_arguments, actual_tests })*n
-//
-// In the tests array the following types has the following meaning:
-// function
-//   The function will be run during compilation. It gets the values
-//   aquired though sscanf-ing the command as input and should return
-//   an array with corresponding data.
-// string
-//   The string will be compiled into the actual test code. It is
-//   first modified as
-//   str = sprintf(str, @args)
-//   where args are the arguments from the command after it has been
-//   processed by the provided function, if any.
-// multiset
-//   Strings in a multiset will be added before the string above.
-//   should typically be used for variable declarations.
-// int
-//   Signals that a authentication request should be sent to the user
-//   upon failure.
-array security_checks = ({
-  "ip=%s:%s",2,({
-    lambda( string a, string b ){
-      int net  = Roxen.ip_to_int( a );
-      int mask = Roxen.ip_to_int( b );
-      net &= mask;
-      return ({ net, sprintf("%c",mask)[0] });
+
+// Security patterns
+
+//! This array contains the compilation information for the different
+//! security checks for e.g. @tt{htaccess@}. The layout of the top array is
+//! a quadruple of sscanf string that the security command should match,
+//! the number of arguments that it takes, an array with the actual
+//! compilation information, and a symbol identifying the class of tests
+//! the test belongs to.
+//!
+//! @array
+//!   @elem string command_sscanf_string
+//!     String to be passed as second argument to @[array_sscanf()]
+//!     to perform the match for the pattern.
+//!   @elem int(0..) number_of_arguments
+//!     Number of elements expected in the array returned by
+//!     @[array_sscanf()] for a proper match.
+//!   @elem array(function|string|int|multiset) actual_tests
+//!     In the tests array the following types has the following meaning:
+//!     @mixed
+//!       @type function
+//!         The function will be run during compilation. It gets the values
+//!         acquired through sscanf-ing the command as input and should return
+//!         an array with corresponding data.
+//!       @type string
+//!         The string will be compiled into the actual test code. It is
+//!         first modified as
+//!         @expr{str = sprintf(str, @@args)@}
+//!         where args are the arguments from the command after it has been
+//!         processed by the provided function, if any.
+//!       @type multiset
+//!         Strings in a multiset will be added before the string above.
+//!         should typically be used for variable declarations.
+//!       @type int
+//!         Signals that an authentication request should be sent to the user
+//!         upon failure.
+//!     @endmixed
+//!   @elem string state_symbol_string
+//!     Used to group the results from a class of tests.
+//!     Currently the following values are used:
+//!     @string
+//!       @value "ip"
+//!       @value "user"
+//!       @value "group"
+//!       @value "time"
+//!       @value "referer"
+//!       @value "day"
+//!       @value "language"
+//!       @value "luck"
+//!     @endstring
+//! @endarray
+//! 
+//! @note
+//!   It's up to the security checks in this file to ensure that
+//!   nothing is overcached. All patterns that perform checks using
+//!   information from the client (such as remote address, referer etc)
+//!   @b{have@} to use @[RequestID()->register_vary_callback()] (preferred),
+//!   or @[NOCACHE()] or @[NO_PROTO_CACHE()]. It's not necessary, however,
+//!   to do this for checks that use the authentication module API, since
+//!   then it's up to the user database and authentication modules to ensure
+//!   that nothing is overcached.
+//!
+//! @seealso
+//!   @[RequestID()->register_vary_callback()], @[NOCACHE()],
+//!   @[NO_PROTO_CACHE()], @[array_sscanf()]
+array(array(string|int|array)) security_checks = ({
+  ({ "ip=%s", 1, ({
+    lambda(string x) {
+      mapping(int:array(int)) ip_masks = ([]);
+      array(string) globs = ({});
+      string ret;
+      foreach(x/",", string ip_mask) {
+	if (sscanf(ip_mask, "%s:%s", string ip, string mask) == 2) {
+	  int m = Roxen.ip_to_int(mask);
+	  if (m & 0x80000000) m -= 0x100000000;
+	  ip_masks[m] += ({ Roxen.ip_to_int(ip)  });
+	} else if (sscanf(ip_mask, "%s/%d", string ip, int mask) == 2) {
+	  mask = -1 - (0xffffffff >> mask);
+	  ip_masks[mask] += ({ Roxen.ip_to_int(ip) });
+	} else {
+	  globs += ({ ip_mask });
+	}
+      }
+      if (sizeof(ip_masks)) {
+	foreach(ip_masks; int mask; array(int) ip) {
+	  if (!mask) continue;
+	  if (ret) ret += " ||\n        ";
+	  else ret = "";
+	  if (sizeof(ip) == 1) {
+	    ret +=
+	      sprintf("((remote_ip & ~0x%08x) == 0x%08x)",
+		      ~mask, ip[0] & mask);
+	  } else {
+	    ret +=
+	      sprintf("(<%{0x%08x,%}>)[remote_ip & ~0x%08x]",
+		      map(ip, `&, mask), ~mask);
+	  }
+	}
+      }
+      foreach(globs, string glob) {
+	if (ret) ret += " ||\n        ";
+	else ret = "";
+	ret += sprintf("glob(%O, id->remoteaddr)", glob);
+      }
+      return ({
+	ret,
+      });
     },
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s/%d",2,({
-    lambda( string a, int b ){
-      int net  = Roxen.ip_to_int( a );
-      int mask = ((~0<<(32-b))&0xffffffff);
-      net &= mask;
-      return ({ net, sprintf("%c",mask)[0] });
-    },
-    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
-  }),
-  "ip=%s",1,({
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,id->remoteaddr);\n"
-    "           })) )"
-  }),
-  "user=%s",1,({ 1,
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+    "    report_debug(sprintf(\"Verifying against IP %%O (0x%%08x).\\n\",\n"
+    "                         id->remoteaddr, remote_ip));\n"
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+    "    if (%s)",
+    (< "  int remote_ip = Roxen.ip_to_int(id->remoteaddr)" >),
+  }), "ip", }),
+  ({ "user=%s",1,({ 1,
     lambda( string x ) {
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
-    (<  "  User user" >),
-  }),
-  "group=%s",1,({ 1,
-    lambda( string x ) {
-      return ({sprintf("(< %{%O, %}>)", x/"," )});
-    },
-    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
-    "      && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
+
+    "    if (((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "          && ((%[0]s->any) || (%[0]s[user->name()]))) || %[0]s->ANY) ",
     (<"  User user" >),
-  }),
-  "dns=%s",1,({
-    "  if(!dns && \n"
-    "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
-    "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
-    "      return http_try_again_later( 0.1 );\n"
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){return glob(q,dns);})) )",
+   // No need to NOCACHE () here, since it's up to the
+   // auth-modules to do that.
+  }), "user", }),
+  ({ "group=%s",1,({ 1,
+    lambda( string x ) {
+      return ({sprintf("(< %{%O, %}>)", x/"," )});
+    },
+    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "        && ((%[0]s->any && sizeof(user->groups())) ||\n"
+    "            sizeof(mkmultiset(user->groups())&%[0]s)))",
+    (<"  User user" >),
+   // No need to NOCACHE () here, since it's up to the
+   // auth-modules to do that.
+  }), "group", }),
+  ({ "dns=%s",1,({
+    "    if(!dns && \n"
+    "       ((dns=roxen.quick_ip_to_host(id->remoteaddr))==id->remoteaddr))\n"
+    "      if( (id->misc->delayed+=0.1) < 1.0 )\n"
+    "        return Roxen.http_try_again( 0.1 );\n"
+    "    if (sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(lower_case(q),lower_case(dns));})))",
     (< "  string dns" >),
-  }),
-  "time=%d:%d-%d:%d",4,({
+  }), "ip", }),
+  ({ "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
     (< "  int th = l->hour, tm = l->min" >),
-    " if( ((th >= %[0]d) && (tm >= %[1]d)) &&\n"
-    "     ((th <= %[2]d) && (tm <= %[3]d)) )",
-  }),
-  "referer=%s", 1, ({
-    (< "  string referer = sizeof(id->referer||({}))?"
-       "id->referer[0]:\"\"; " >),
-    "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
-    "            return glob(q,referer);\n"
-    "           })) )"
-  }),
-  "day=%s",1,({
+    // No need to NOCACHE() here, does not depend on client.
+    "    if (((th >= %[0]d) && (tm >= %[1]d)) &&\n"
+    "        ((th <= %[2]d) && (tm <= %[3]d)))",
+  }), "time", }),
+  ({ "referer=%s", 1, ({
+    (<
+      "  string referer = sizeof(id->referer||({}))?id->referer[0]:\"\"; "
+    >),
+    "    if( sizeof(filter(%[0]O/\",\",\n"
+    "                      lambda(string q){return glob(q,referer);})))",
+  }), "referer", }),
+  ({ "day=%s",1,({
     lambda( string q ) {
       multiset res = (<>);
       foreach( q/",", string w ) if( (int)w )
@@ -4367,15 +6794,20 @@ array security_checks = ({
       return ({sprintf("(< %{%O, %}>)", (array)res)});
     },
     (< "  mapping l = localtime(time(1))" >),
-    " if( %[0]s[l->wday] )"
-  }),
-  "accept_language=%s",1,({
-    "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
-  }),
-  "luck=%d%%",1,({
+    // No need to NOCACHE() here, does not depend on client.
+    "    if (%[0]s[l->wday])"
+  }), "day", }),
+  ({ "accept_language=%s",1,({
+    "    if (has_value(id->misc->pref_languages->get_languages(), %O))",
+    (<"  NO_PROTO_CACHE()" >),
+  }), "language", }),
+  ({ "luck=%d%%",1,({
     lambda(int luck) { return ({ 100-luck }); },
-    " if( random(100)<%d )",
-  }),
+    // Not really any need to NOCACHE() here, since it does not depend
+    // on client. However, it's supposed to be totally random.
+    "    if( random(100)<%d )",
+    (<"  NOCACHE()" >),
+  }), "luck", }),
 });
 
 #define DENY  0
@@ -4411,7 +6843,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //!  CMD referer=pattern       [return]
 //!       Check the referer header.
 //!
-//!  CMD accept_langauge=language  [return]
+//!  CMD accept_language=language  [return]
 //!
 //!  CMD luck=entry_chance%    [return]
 //!       Defines the minimum level of luck required. All attempts
@@ -4425,12 +6857,44 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //! 'deny' always implies a return, no futher testing is done if a
 //! 'deny' match.
 {
+  // Now, this cache is not really all that performance critical, I
+  // mostly coded it as a proof-of-concept, and because it was more
+  // fun that trying to find the bug in the image-cache at the moment.
+
+  string kmd5 = md5( pattern );
+
+#if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
+  array tmp =
+    dbm_cached_get( "local" )
+    ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+
+  if( sizeof(tmp) && (tmp[0]->full == pattern) )
+  {
+    mixed err = catch {
+      return decode_value( tmp[0]->enc, master()->Decoder() )()->f;
+    };
+// #ifdef DEBUG
+    report_error("Decoding of dumped log format failed:\n%s",
+		 describe_backtrace(err));
+// #endif
+  }
+#endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
+
+
   string code = "";
   array variables = ({ "  object userdb_module",
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
-		       "  int|mapping fail" });
-  int shorted, patterns, cmd;
+		       "  mapping(string:int|mapping) state = ([])",
+		       "  id->register_vary_callback(0, vary_cb)",
+  });
+
+  // Some state variables for optimizing.
+  int all_shorted = 1;			// All allow patterns have return.
+  int need_auth = 0;			// We need auth for some checks.
+  int max_short_code = 0;		// Max fail code for return checks.
+  int patterns;				// Number of patterns.
+  multiset(string) checks = (<>);	// Checks in state.
 
   foreach( pattern / "\n", string line )
   {
@@ -4438,6 +6902,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     if( !strlen(line) || line[0] == '#' )
       continue;
     sscanf( line, "%[^#]#", line );
+
+    int cmd;
 
     if( sscanf( line, "allow %s", line ) )
       cmd = ALLOW;
@@ -4447,16 +6913,16 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "config_userdb" )
-	code += "  userdb_module = roxen.config_userdb_module;\n";
+	code += "    userdb_module = roxen.config_userdb_module;\n";
       else if( line == "all" )
-	code += "  userdb_module = 0;\n";
+	code += "    userdb_module = 0;\n";
       else if( !m->my_configuration()->find_user_database( line ) )
 	m->report_notice( LOC_M( 58,"Syntax error in security patterns: "
 				 "Cannot find the user database '%s'")+"'\n",
 			line);
       else
 	code +=
-	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
+	  sprintf("    userdb_module = id->conf->find_user_database( %O );\n",
 		  line);
       continue;
     } 
@@ -4464,39 +6930,78 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     {
       line = String.trim_all_whites( line );
       if( line == "all" )
-	code += "  authmethod = id->conf;\n";
+	code += "    authmethod = id->conf;\n";
       else if( !m->my_configuration()->find_auth_module( line ) )
 	m->report_notice( LOC_M( 59,"Syntax error in security patterns: "
 				 "Cannot find the auth method '%s'")+"\n",
 			  line);
       else
 	code +=
-	  sprintf("  authmethod = id->conf->find_auth_module( %O );\n",
+	  sprintf("    authmethod = id->conf->find_auth_module( %O );\n",
 		  line);
       continue;
     }
     else if( sscanf( line, "realm %s", line ) )
     {
       line = String.trim_all_whites( line );
-      code += sprintf( "  realm = %O;\n", line );
+      code += sprintf( "    realm = %O;\n", line );
+      continue;
     }
-    else
+    else {
       m->report_notice( LOC_M( 60,"Syntax error in security patterns: "
 			       "Expected 'allow' or 'deny'\n" ));
-    shorted = sscanf( line, "%s return", line );
+      continue;
+    }
+    int shorted = sscanf( line, "%s return", line );
 
 
-    for( int i = 0; i<sizeof(  security_checks ); i+=3 )
+    // Notes on the variables @[state] and @[short_fail]:
+    //
+    // The variable @[state] has several potential entries
+    // (currently "ip", "user", "group", "time", "date",
+    //  "referer", "language" and "luck").
+    // An entry exists in the mapping if a corresponding accept directive
+    // has been executed.
+    //
+    // The variable @[short_fail] contains a non-zero entry if
+    // a potentially acceptable accept with return has been
+    // encountered.
+    //
+    // Valid values in @[state] and @[short_fail] are:
+    // @int
+    //   @value 0
+    //     Successful match.
+    //   @value 1
+    //     Plain failure.
+    //   @value 2
+    //     Fail with authenticate.
+    // @endint
+    //
+    // Shorted directives will only be regarded if all unshorted directives
+    // encountered at that point have succeeded.
+    // If the checking ends with an ok return unshorted directives of
+    // the same class will be disregarded as well as any potential
+    // short directives.
+    // If there are unshorted directives of type 2 and none of type 1,
+    // an auth request will be sent.
+    // If there are unshorted directives, and all of them have been
+    // satisfied an OK will be sent.
+    // If there is a potential short directive of type 2, an auth
+    // request will be sent.
+    // If there are no unshorted directives and no potential short
+    // directives an OK will be sent.
+    // Otherwise a FAIL will be sent.
+
+    foreach(security_checks, array(string|int|array) check)
     {
-      string check = security_checks[i];
       array args;      
-      if( sizeof( args = array_sscanf( line, check ) )
-	  == security_checks[i+1] )
+      if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
+	// Got a match for this security check.
 	patterns++;
-	int thr;
+	int thr_code = 1;
 	// run instructions.
-	foreach( security_checks[ i+2 ], mixed instr )
+	foreach(check[2], mixed instr )
 	{
 	  if( functionp( instr ) )
 	    args = instr( @args );
@@ -4506,37 +7011,110 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	      if( !has_value( variables, v ) )
 		variables += ({ v });
 	  }
-	  else if( intp( instr ) )
-	    thr = instr;
+	  else if( intp( instr ) ) {
+	    thr_code = 2;
+	    need_auth = 1;
+	  }
 	  else if( stringp( instr ) )
 	  {
 	    code += sprintf( instr, @args )+"\n";
 	    if( cmd == DENY )
 	    {
-	      if( thr )
-		code += "    return authmethod->authenticate_throw( id, realm );\n";
-	      else
-		code += "    return 1;\n";
+	      // Make sure we fail regardless of the setting
+	      // of all_shorted when we're done.
+	      if (thr_code < max_short_code) {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      if (short_fail < %d)\n"
+				"        short_fail = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code,
+				thr_code,
+				thr_code);
+	      } else {
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"      short_fail = %d;\n"
+				"      break;\n"
+				"    }\n",
+				check[3], thr_code,
+				thr_code);
+		max_short_code = thr_code;
+	      }
 	    }
 	    else
 	    {
-	      if( shorted )
-	      {
-		code += "    return fail;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    return authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    return fail || 1;\n";
-	      }
-	      else
-	      {
-		code += "    ;\n";
-		code += "  else\n";
-		if( thr )
-		  code += "    fail=authmethod->authenticate_throw( id, realm );\n";
-		else
-		  code += "    if( !fail ) fail=1;\n";
+	      if (shorted) {
+		// OK with return. Ignore FAIL/return.
+		if (all_shorted) {
+		  code +=
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+		    "    {\n"
+		    "      report_debug(\"  Result: 0 (fast return)\\n\");\n"
+		    "      return 0;\n"
+		    "    }\n";
+#else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
+		    "      return 0;\n";
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+		} else {
+		  code += "    {\n";
+		  if (checks[check[3]]) {
+		    code +=
+		      sprintf("      m_delete(state, %O);\n",
+			      check[3]);
+		  }
+		  if (max_short_code) {
+		    code += "      short_fail = 0;\n";
+		  }
+		  code +=
+		    "      break;\n"
+		    "    }\n";
+		}
+		// Handle the fail case.
+		if (sizeof(checks)) {
+		  // Check that we can satify all preceeding tests.
+		  code +=
+		    "    else if (!sizeof(filter(values(state),\n"
+		    "                            values(state))))\n";
+		} else {
+		  code += "    else\n";
+		}
+		// OK so far for non return tests.
+		if (thr_code < max_short_code) {
+		  code +=
+		    sprintf("      if (short_fail < %d)\n"
+			    "        short_fail = %d;\n",
+			    thr_code,
+			    thr_code);
+		} else {
+		  code +=
+		    sprintf("      short_fail = %d;\n", thr_code);
+		  max_short_code = thr_code;
+		}
+	      } else {
+		// OK without return. Mark as OK.
+		code +=
+		  sprintf("    {\n"
+			  "      state->%s = 0;\n"
+			  "    }\n",
+			  check[3]);
+		all_shorted = 0;
+		// Handle the fail case.
+		if (checks[check[3]]) {
+		  // If not marked
+		  // set the failure level.
+		  code +=
+		    sprintf("    else if (zero_type(state->%s))\n",
+			    check[3]);
+		} else {
+		  code += "    else\n";
+		}
+		code += sprintf("    {\n"
+				"      state->%s = %d;\n"
+				"    }\n",
+				check[3], thr_code);
+		checks[check[3]] = 1;
 	      }
 	    }
 	  }
@@ -4546,28 +7124,135 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
     }
   }
   if( !patterns )  return 0;
-  return compile_string( "int|mapping f( RequestID id )\n"
-			 "{\n" +variables *";\n" + ";\n"
-			 "" +  code + "  return fail;\n}\n" )()->f;
+  code = ("  do {\n" +
+	  code +
+	  "  } while(0);\n");
+  code = ("#include <module.h>\n"
+	  "int|mapping f( RequestID id )\n"
+	  "{\n" +
+	  (variables * ";\n") +
+	  ";\n" +
+	  (max_short_code?"  int short_fail;\n":"") +
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+	  sprintf("  report_debug(\"Verifying against pattern:\\n\"\n"
+		  "%{               \"  \" %O \"\\n\"\n%}"
+		  "               \"...\\n\");\n"
+		  "%s"+
+		  (max_short_code?
+		   "  report_debug(sprintf(\"  Short code: %%O\\n\",\n"
+		   "                       short_fail));\n":"")+
+		  "  report_debug(sprintf(\"  Result: %%O\\n\",\n"
+		  "                       state));\n",
+		  pattern/"\n", code) +
+#else /* !SECURITY_PATTERN_DEBUG && !HTACCESS_DEBUG */
+	  code +
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+
+	  (!all_shorted?
+	   "  int fail = 0;\n"
+	   "  foreach(values(state), int value) {\n"
+	   "    fail |= value;\n"
+	   "  }\n"
+	   "  if (!fail)\n"
+	   "    return 0;\n":
+	   "") +
+	  (max_short_code > 1?
+	   "  if (short_fail > 1)\n"
+	   "    return authmethod->authenticate_throw(id, realm);\n":
+	   "") +
+	  (!all_shorted && need_auth?
+	   "  if (fail == 2)\n"
+	   "    return authmethod->authenticate_throw(id, realm);\n":
+	   "") +
+	  "  return 1;\n"
+	  "}\n"
+	  "string vary_cb(string ignored, RequestID id)\n"
+	  "{\n"
+	  "  int|mapping res = f(id);\n"
+	  "  if (intp(res)) return (string) res;\n"
+	  "  return 0; // FIXME: Analyze the mapping.\n"
+	  "}\n");
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+  report_debug(sprintf("Compiling security pattern:\n"
+		       "%{    %s\n%}\n"
+		       "Code:\n"
+		       "%{    %s\n%}\n",
+		       pattern/"\n",
+		       code/"\n"));
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+  mixed res = compile_string( code );
+   
+#if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
+  dbm_cached_get( "local" )
+    ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+	    kmd5,pattern,encode_value( res, master()->Encoder (res) ) );
+#endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
+
+  return compile_string(code)()->f;
 }
 
 
-static string cached_hostname = gethostname();
+protected string cached_hostname = gethostname();
 
-class LogFile(string fname)
+class LogFile(string fname, string|void compressor_program)
 {
-  Stdio.File fd;
-  int opened;
+  private Thread.Mutex lock = Thread.Mutex();
+  private Stdio.File fd;
+  private int opened;
 
-  void do_open()
+  // FIXME: compress_logs is limited to scanning files with filename
+  // substitutions within a fixed directory (e.g.
+  // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
+  private Process.Process compressor_process;
+  private int last_compressor_scan_time;
+  private void compress_logs(string fname, string active_log)
   {
+    if(!compressor_program || !sizeof(compressor_program))
+      return; // No compressor program specified...
+    if(compressor_process && !compressor_process->status())
+      return; // The compressor is already running...
+    if(time(1) - last_compressor_scan_time < 300)
+      return; // Scan for compressable files at most once every 5 minutes...
+    last_compressor_scan_time = time(1);
+    fname = roxen_path(fname);
+    active_log = roxen_path(active_log);
+    string dir = dirname(fname);
+    foreach(sort(get_dir(dir) || ({})), string filename_candidate)
+    {
+      if(filename_candidate == basename(active_log))
+       continue; // Don't try to compress the active log just yet...
+      if(Regexp("^"+replace(basename(fname),
+                           ({ "%y", "%m", "%d", "%h", "%H" }),
+                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
+                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }))+"$")->
+        match(filename_candidate))
+      {
+       string compress_file = combine_path(dir, filename_candidate);
+       Stdio.Stat stat = file_stat(compress_file);
+       if(!stat || time(1) < stat->mtime + 1200)
+         continue; // Wait at least 20 minutes before compressing log file...
+       werror("Compressing log file %O\n", compress_file);
+       compressor_process = Process.create_process(({ compressor_program,
+                                                      compress_file }));
+       return;
+      }
+    }
+  }
+
+  private void do_open_co() { handle(do_open); }
+  private void do_open(void|object mutex_key)
+  {
+    if (!this_object()) return; // We've been destructed, return
+    if (!mutex_key) mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
     mixed parent;
     if (catch { parent = function_object(object_program(this_object())); } ||
 	!parent) {
       // Our parent (aka the configuration) has been destructed.
       // Time to die.
-      remove_call_out(do_open);
-      remove_call_out(do_close);
+      remove_call_out(do_open_co);
+      remove_call_out(do_close_co);
       destruct();
       return;
     }
@@ -4583,12 +7268,13 @@ class LogFile(string fname)
 			 (string)(m->year),(string)m->hour,
 			 cached_hostname,
 		      }));
+    compress_logs(fname, ff);
     mkdirhier( ff );
     fd = open( ff, "wac" );
     if(!fd) 
     {
-      remove_call_out( do_open );
-      call_out( do_open, 120 ); 
+      remove_call_out(do_open_co);
+      call_out(do_open_co, 120); 
       report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
@@ -4597,33 +7283,56 @@ class LogFile(string fname)
       return;
     }
     opened = 1;
-    remove_call_out( do_open );
-    call_out( do_open, 900 ); 
+    remove_call_out(do_open_co);
+    call_out(do_open_co, 900); 
+    remove_call_out(do_close_co);
+    call_out(do_close_co, 10.0);
   }
-  
-  void do_close()
+
+  private void do_close_co() { handle(do_close); }
+  private void do_close()
   {
+    if (!this_object()) return; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
     destruct( fd );
     opened = 0;
   }
 
-  array(string) write_buf = ({});
-  static void do_the_write( )
+  private array(string) write_buf = ({});
+  private void do_the_write_co() { handle(do_the_write); }
+  private void do_the_write()
   {
-    if( !opened ) do_open();
-    if( !opened ) return 0;
-    fd->write( write_buf );
+    if (!this_object()) return; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
+    if (!opened) do_open(mutex_key);
+    if (!opened) return;
+    mixed err = catch (fd->write(write_buf));
+    if (err)
+      catch {
+	foreach (write_buf, string str)
+	  if (String.width (str) > 8)
+	    werror ("Got wide string in log output: %O\n", str);
+      };
     write_buf = ({});
-    remove_call_out( do_close );
-    call_out( do_close, 10.0 );
+    remove_call_out(do_close_co);
+    call_out(do_close_co, 10.0);
+    if (err)
+      throw (err);
   }
 
   int write( string what )
   {
-    if( !sizeof( write_buf ) )
-      call_out( do_the_write, 1 );
-    write_buf += ({what});
+    if (!this_object()) return 0; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return 0; // We've been destructed, return
+
+    if (!sizeof(write_buf))
+      call_out(do_the_write_co, 1);
+    write_buf += ({ what });
     return strlen(what); 
   }
 }
-

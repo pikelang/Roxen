@@ -1,1 +1,4 @@
 /environment
+/site_templates
+/patches
+/*.pem

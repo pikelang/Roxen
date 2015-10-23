@@ -2,7 +2,7 @@
 //      or project specific include files that are used frequently,
 //      but are changed infrequently
 //
-// $Id: StdAfx.h,v 1.1 2001/05/29 14:35:39 tomas Exp $
+// $Id$
 //
 
 #if !defined(AFX_STDAFX_H__E0590E86_A99B_4C9D_85F9_0FB1752360D0__INCLUDED_)
@@ -55,10 +55,9 @@ public:
   void SetServiceStatus(DWORD dwState);
   BOOL IsStopping();
   void SetupAsLocalServer();
-  //void LaunchBootStrap(ELaunchType type);
   BOOL GetRestartFlag() { return m_pendingLaunch; }
   void SetRestartFlag(BOOL value) { m_pendingLaunch = value; }
-  CCmdLine & GetCmdLine() { return m_Cmdline; }
+  CCmdLine & GetCmdLine(BOOL finish=TRUE) { if (finish) m_Cmdline.ParseFinish(); return m_Cmdline; }
   
   //Implementation
 private:
@@ -81,7 +80,6 @@ public:
 
 private:
   CRoxen *m_roxen;
-//  BOOL m_once;
   BOOL m_pendingLaunch;
   CCmdLine m_Cmdline;
 };

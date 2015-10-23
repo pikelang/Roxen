@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc="Colorize an image. The red, green and blue values of the pixels are multiplied with the given color. This works best on a grey image.";
 

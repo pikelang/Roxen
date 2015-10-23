@@ -1,6 +1,8 @@
 #!NO MODULE
-static array md_callbacks = ({});
-static mapping md; // ID3 etc.
+
+// This file is part of Roxen WebServer. Copyright © 2001 - 2009, Roxen IS.
+protected array md_callbacks = ({});
+protected mapping md; // ID3 etc.
 
 string codec   = "null";
 string decoder = "null";

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // HTTP Proxy module. Should be cleaned and optimized. Currently the
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.52 2001/02/02 12:10:17 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -78,7 +78,7 @@ void start(int level, Configuration conf)
   }
   if (!strlen(query("logfile")))
     return;
-  log_function = conf->LogFile( query("logfile") )->write;
+  log_function = roxen.LogFile( query("logfile") )->write;
 }
 
 mixed log(object id, mapping file)
@@ -511,8 +511,7 @@ string status()
 
 mapping find_file( string f, object id )
 {
-  string host, file, key;
-  string filter;
+  string host, file;
   int port;
   mixed tmp;
 
@@ -572,7 +571,7 @@ class Server
   array remote, cacher;
   mapping headers;
 
-  static private void parse_headers(int p)
+  private void parse_headers(int p)
   {
     headers = ([]);
     string h = _data[..p-1], _name, value;
@@ -590,7 +589,7 @@ class Server
     }
   }
 
-  static private int received_content_length()
+  private int received_content_length()
   {
     if(!proxy || !proxy->http_codes_to_cache[_http_code])
     {
@@ -663,13 +662,13 @@ class Server
     call_out(check_timed_out, 60, server_idle_timeout, server_timeout);
   }
 
-  private static void send(string|object data, int|void more_soon)
+  private void send(string|object data, int|void more_soon)
   {
     if(!client || catch(client->send(data, more_soon)))
       finish();
   }
     
-  private static void write(string|object data)
+  private void write(string|object data)
   {
     //SERVER_DEBUG("write(" + (stringp(data)?strlen(data):"-") + ")")
 
@@ -681,7 +680,7 @@ class Server
     }
   }
 
-  static private void server_got(mixed foo, string d)
+  private void server_got(mixed foo, string d)
   {
     //SERVER_DEBUG("server_got(" + strlen(d) + ")");
 
@@ -840,7 +839,7 @@ class Server
     }
   }
 
-  private static private void server_done()
+  private void server_done()
   {
     //SERVER_DEBUG("server_done");
 
@@ -852,7 +851,7 @@ class Server
     finish();
   }
 
-  static private void finish(int|string|void http_or_last_message, string|void s)
+  private void finish(int|string|void http_or_last_message, string|void s)
   {
     //SERVER_DEBUG("finish(" + http_or_last_message + "," + s + ")")
 
@@ -986,7 +985,7 @@ class Server
     return received;
   }
 
-  static private string process_request(object id)
+  private string process_request(object id)
   {
     string url;
 
@@ -1013,7 +1012,7 @@ class Server
     return sprintf("%s /%s HTTP/1.0\r\n%s", id->method || "GET", url, new_raw);
   }
 
-  static private array is_remote_proxy(array proxies, string host, int port,
+  private array is_remote_proxy(array proxies, string host, int port,
     int timeout)
   {
     foreach(proxies, array tmp)
@@ -1028,7 +1027,7 @@ class Server
           return 0;
   }
 
-  static private string is_filter(string hmm)
+  private string is_filter(string hmm)
   {
     foreach(filters, array tmp)
       if(tmp[0](hmm))
@@ -1107,7 +1106,7 @@ class Server
     from_server->async_connect(host, port, connected_to_server, from_server);
   }
 
-  static private void connected_to_server(int connected, object|void _from_server)
+  private void connected_to_server(int connected, object|void _from_server)
   {
     //SERVER_DEBUG("connected_to_server("+connected+")")
 
@@ -1220,7 +1219,6 @@ class Server
       return;
     }
 
-    string cmd;
     if(filter)
     {
       object f, q;
@@ -1411,7 +1409,7 @@ class Request
     return 1;
   }
 
-  static private int cache_wanted()
+  private int cache_wanted()
   {
     if(id->method != "GET" ||
        (id->query && strlen(id->query)) ||
@@ -1440,7 +1438,7 @@ class Request
   constant MONTHS= (["jan":0, "feb":1, "mar":2, "apr":3, "may":4, "jun":5,
 		     "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
 
-  static private int convert_time(string a)
+  private int convert_time(string a)
   {
     int day, year, month, hour, minute, second, i;
     string m, tz;
@@ -1560,9 +1558,9 @@ class Request
 
       // FIX_ME: does not work for now /wk
       // try incoming requests
-      object request;
       // FIX_ME: should loop over all matching requests
       /*
+      object request;
       if(query("server_additional_output") && sizeof(requests) &&
 	 (request=search(requests, name)) && request->server &&
 	 request->server->_data && request->server->headers &&

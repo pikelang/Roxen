@@ -3,9 +3,8 @@ inherit "socket";
 #include <module.h>
 
 /*
- * This software is (C) 1998 Francesco Chemolli,
- * and is freely availible under the terms of the
- * GNU General Public License, version 2.
+ * This software is (C) 1998 Francesco Chemolli.
+ * See COPYING in the server directory for license information.
  * This software comes with NO WARRANTY of ANY KIND, EITHER IMPLICIT
  * OR EXPLICIT. Use at your own risk.
  *
@@ -25,16 +24,17 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.9 2000/11/02 12:07:23 per Exp $";
+constant cvs_version="$Id$";
 
 
 
 constant module_type = MODULE_ZERO;
-constant module_name = "TCP Port Forwarder";
+constant module_name = "TCP Port Forwarder: ";
 constant module_doc  = "A basic port-forwarder"
   "&copy; 1998 Francesco Chemolli "
-  "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\nfreely distributed "
-  "under the terms of the GNU General Public License, version 2";
+  "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\n"
+  "See COPYING in the server directory for license information.";
+constant module_unique  = 0;
 
 multiset(Connection) connections=(<>);
 int total_connections_number=0, total_transferred_kb=0;
@@ -45,7 +45,7 @@ int total_connections_number=0, total_transferred_kb=0;
 #endif
 
 #ifdef TCPFORWARDER_DEBUG
-#define debug_perror perror
+#define debug_perror report_debug
 #else
 #define debug_perror
 #endif
@@ -129,7 +129,6 @@ class Connection
 
   void destroy()
   {
-    mapping result;
     debug_perror("Destroying connection\n");
     fdescs[0]->close();
     fdescs[1]->close();
@@ -142,13 +141,16 @@ class Connection
 string status() {
   object req;
   string retval;
-  if (!sizeof(connections)) {
+  if (!accept_port) {
+    retval="<B>No port open</B><br>";
+  }
+  else if (!sizeof(connections)) {
     retval="<B>No connections</B><br>";
   } else {
     retval="<B>"+sizeof(connections)+" connections</B><BR>\n";
-    retval += "<TABLE border=1><TR><TH align=center>From<TH>To<TH>Traffic";
+    retval += "<TABLE border=1 cellpadding=\"10\"><TR><TH align=center>From</TH><TH>To</TH><TH>Traffic</TH></TR>";
     foreach(indices(connections),req) {
-      retval+=sprintf("<TR><TD>%s<TD>%s<TD>%d",
+      retval+=sprintf("<TR><TD>%s</TD><TD>%s</TD><TD>%d</TD></TR>",
 		      req->fdescs[0]->query_address(),
 		      req->fdescs[1]->query_address(),
 		      req->traffic
@@ -185,14 +187,20 @@ void start()
   if (port<1024)
     privs=Privs("Opening forwarded port");
   if (!(accept_port->bind(port,got_connection)))
-    THROW("Can't bind (errno="+accept_port->errno()+": \""+strerror(accept_port->errno())+"\")\n");;
+  {
+    int err_no = accept_port->errno();
+    string err = strerror(accept_port->errno());
+    destruct(accept_port);
+    accept_port = 0;
+    report_error("Can't bind (errno="+err_no+": \""+err+"\")\n");;
+  }
   privs=0;
 }
 
 void stop()
 {
   debug_perror("Stopping module\n");
-  destruct(accept_port);
+  if (accept_port) destruct(accept_port);
   accept_port=0; //double-check there's no more references
   foreach(indices(connections),object foo) destruct(foo);
 }
@@ -212,4 +220,9 @@ void connected (object out, object in)
     connections[ Connection(in,out,this_object()) ] = 1;
   else
     report_debug("Cannot connect to "+query("host")+":"+query("r_port") );
+}
+
+string query_name()
+{
+  return sprintf("%d to %s/%d", query("port"), query("host"), query("r_port"));
 }

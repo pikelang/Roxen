@@ -1,17 +1,22 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 #include <module.h>
 #include <stat.h>
 inherit "module";
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Dir emit source";
 constant module_doc = "This module provies the 'dir' emit source. It "
-  "or anoter compatible module is required by the Directory Listings module";
+  "or another compatible module is required by the Directory Listings module";
 
 class Imagesize(mapping m, RequestID id) {
   inherit RXML.Value;
   int x,y;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    if( !x && !y && (m->type / "/")[0] == "image" ) {
-      switch( (m->type / "/")[-1] ) {
+    string|array(string) ct = m->type;
+    if (arrayp(ct))
+      ct = ct[0];
+    if( !x && !y && (ct / "/")[0] == "image" ) {
+      switch( (ct / "/")[-1] ) {
       case "gif":
       case "jpeg":
       case "jpg":
@@ -74,7 +79,10 @@ class Thumbnail(mapping m, mapping args, RequestID id) {
   inherit RXML.Value;
 
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    if( (m->type / "/")[0] == "image" ) {
+    string|array(string) ct = m->type;
+    if (arrayp(ct))
+      ct = ct[0];
+    if( (ct / "/")[0] == "image" ) {
       string ms = (args["thumbnail-size"]?args["thumbnail-size"]:"60");
       mapping cia = ([
 	"max-width":ms,
@@ -92,27 +100,24 @@ class Thumbnail(mapping m, mapping args, RequestID id) {
   }
 }
 
-class TagDirectoryplugin
+class TagWSDirectoryplugin
 {
   inherit RXML.Tag;
   constant name = "emit";
-  constant plugin_name = "dir";
-  constant ws_dir = 1;
+  constant plugin_name = "ws-dir";
 
   array get_dataset(mapping args, RequestID id)
   {
-    if(!args->nosb) {
-      RXML.Tag t=tagset->get_overridden_tag(this_object());
-      if(t && t->sb_dir)
-	return t->get_dataset(args, id);
-    }
-
-    // Now..
     string d;
     if( args->directory )
       d = Roxen.fix_relative( args->directory, id );
     else
       d = dirname(id->not_query);
+
+    // FIXME: We could be smarter here and add a stat callback on the
+    // directory, but it's a bit of work to find out where it comes
+    // from.
+    NOCACHE();
 
     mapping a = id->conf->find_dir_stat( d, id );
 
@@ -155,6 +160,8 @@ class TagDirectoryplugin
         m["type-img"] = "internal-gopher-menu";
       } else {
         m->type = id->conf->type_from_filename( file );
+	if (arrayp(m->type))
+	  m->type = m->type[0];
         m->size = Roxen.sizetostring( st[ ST_SIZE ] );
         m["type-img"] = Roxen.image_from_type( m->type );
       }
@@ -218,6 +225,7 @@ class TagDirectoryplugin
             break;
           }
       }
+    res = tmp;
     }
     res = Array.sort_array( res, sortfun );
     if( args["sort-reverse"] )
@@ -226,18 +234,33 @@ class TagDirectoryplugin
   }
 }
 
+class TagDirectoryplugin
+{
+  inherit TagWSDirectoryplugin;
+  constant plugin_name = "dir";
+
+  array get_dataset(mapping args, RequestID id)
+  {
+    foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t)
+      if(t && t->sb_dir)
+	return t->get_dataset(args, id) || ({});
+    return ::get_dataset (args, id);
+  }
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-"emit#dir":({ #"<desc plugin='plugin'><p><short>
+"emit#dir":({ #"<desc type='plugin'><p><short>
  This plugin is used to generate directory listings.</short> The
  directory module must be added to use these entities. This plugin
  is only available in the directory template.
 </p></desc>
 
 <attr name='directory' value='path'><p>
- Apply the listing to this directory.</p>
+ List this directory. The default is to list the directory containing
+ the currently requested page.</p>
 </attr>
 
 <attr name='thumbnail-size' value='number'><p>
@@ -245,15 +268,13 @@ constant tagdoc=([
  set in proportion to the image's longest side, e.g. if the height of
  the image is longer than it's width, then the thumbnail will be 60
  pixels high. The shortest side will be shown in proportion to the
- longest side. This attribute can only be used together with the
- <att>option=\"thumbnail\"</att> attribute.</p>
+ longest side.</p>
 </attr>
 
 <attr name='thumbnail-format' value='imageformat'><p>
  Set the output format for the thumbnail. Default is <ext>png</ext>.
  All imageformats that <xref href='../graphics/cimg.tag' /> handles can
- be used to produce thumbnails. This attribute can only be used
- together with the <att>option=\"thumbnail\"</att> attribute.</p>
+ be used to produce thumbnails.</p>
 </attr>
 
 <attr name='strftime' value='strftime string' default='%Y-%m-%d'><p>
@@ -283,112 +304,115 @@ constant tagdoc=([
 </xtable>
 </attr>
 
-<attr name='sort-reversed'><p>
+<attr name='sort-reverse'><p>
  Reverse the sort order.</p>
 </attr>",
 
 ([
-"&_.atime;":#"<desc ent='ent'><p>
+"&_.atime;":#"<desc type='entity'><p>
   Returns the date when the file was last accessed.
 </p></desc>",
 
-"&_.atime-iso;":#"<desc ent='ent'><p>
+"&_.atime-iso;":#"<desc type='entity'><p>
  Returns the date when the file was last accessed. Uses isotime
  (%Y-%m-%d).
 </p></desc>",
 
-"&_.atime-unix;":#"<desc ent='ent'><p>
+"&_.atime-unix;":#"<desc type='entity'><p>
  Returns the date when the file was last accessed. Uses unixtime.
 </p></desc>",
 
-"&_.dirname;":#"<desc ent='ent'><p>
+"&_.dirname;":#"<desc type='entity'><p>
  Returns the directoryname.
 </p></desc>",
 
-"&_.filename;":#"<desc ent='ent'><p>
+"&_.filename;":#"<desc type='entity'><p>
  Returns the filename.
 </p></desc>",
 
-"&_.type-img;":#"<desc ent='ent'><p>
+"&_.type-img;":#"<desc type='entity'><p>
  Returns the internal Roxen name of the icon representating the
  directory or the file's content-type, e.g. internal-gopher-menu for a
  directory-folder or internal-gopher-text for a HTML-file.
 </p></desc>",
 
-"&_.mode;":#"<desc ent='ent'><p>
+"&_.mode;":#"<desc type='entity'><p>
  Returns file permission rights represented binary, e.g. \"r-xr-xr-x\".
 </p></desc>",
 
-"&_.mode-int;":#"<desc ent='ent'><p>
+"&_.mode-int;":#"<desc type='entity'><p>
  Returns file permission rights represented by integers. When encoded to
  binary this represents what is shown when using the Unix command \"ls
  -l\" or as shown using <ent>_.mode</ent>, e.g. \"16749\".
 </p></desc>",
 
-"&_.mtime;":#"<desc ent='ent'><p>
+"&_.mtime;":#"<desc type='entity'><p>
  Returns the date when the file was last modified.
 </p></desc>",
 
-"&_.mtime-iso;":#"<desc ent='ent'><p>
+"&_.mtime-iso;":#"<desc type='entity'><p>
  Returns the date when the file was last modified. Uses isotime (%Y-%m-%d).
 </p></desc>",
 
-"&_.mtime-unix;":#"<desc ent='ent'><p>
+"&_.mtime-unix;":#"<desc type='entity'><p>
  Returns the date when the file was last modified. Uses unixtime.
 </p></desc>",
 
-"&_.name;":#"<desc ent='ent'><p>
+"&_.name;":#"<desc type='entity'><p>
  Returns the name of the file or directory.
 </p></desc>",
 
-"&_.path;":#"<desc ent='ent'><p>
+"&_.path;":#"<desc type='entity'><p>
  Returns the path to the file or directory.
 </p></desc>",
 
-"&_.real-dirname;":#"<desc ent='ent'><p>
+"&_.real-dirname;":#"<desc type='entity'><p>
  Returns the directory of the real file in the filesystem.
 </p></desc>",
 
-"&_.real-filename;":#"<desc ent='ent'><p>
+"&_.real-filename;":#"<desc type='entity'><p>
  Returns the path to the real file in the filesystem.
 </p></desc>",
 
-"&_.size;":#"<desc ent='ent'><p>
+"&_.size;":#"<desc type='entity'><p>
  Returns a file's size in kb(kilobytes).
 </p></desc>",
 
-"&_.filesize;":#"<desc ent='ent'><p>
+"&_.filesize;":#"<desc type='entity'><p>
  Returns a file's size in bytes. Directories get the size \"-2\".
 </p></desc>",
 
-"&_.type;":#"<desc ent='ent'><p>
+"&_.type;":#"<desc type='entity'><p>
  Returns the file's content-type.
 </p></desc>",
 
-"&_.thumbnail;":#"<desc ent='ent'><p>
+"&_.thumbnail;":#"<desc type='entity'><p>
  Returns the image associated with the file's content-type or
- directory. Only available when <att>option=\"thumbnail\"</att> is
- used.
+ directory.
 </p></desc>",
 
-"&_.vfs;":#"<desc ent='ent'><p>
+"&_.vfs;":#"<desc type='entity'><p>
  Returns the name of the virtual filesystem that keeps the file.
 </p></desc>",
 
-"&_.vfs-root;":#"<desc ent='ent'><p>
+"&_.vfs-root;":#"<desc type='entity'><p>
  Returns the root directory of the virtual filesystem that keeps the file.
 </p></desc>",
 
-"&_.x-size;":#"<desc ent='ent'><p>
- Returns the width of the image. Only available when
- <att>option=\"imagesize\"</att> is used.
+"&_.x-size;":#"<desc type='entity'><p>
+ Returns the width of the image.
 </p></desc>",
 
-"&_.y-size;":#"<desc ent='ent'><p>
- Returns the height of the image. Only available when
- <att>option=\"imagesize\"</att> is used.
+"&_.y-size;":#"<desc type='entity'><p>
+ Returns the height of the image.
 </p></desc>",
 ])
-		 })
+	   }),
+
+"emit#ws-dir": #"<desc type='plugin'><p><short>
+ Alias for the \"dir\" emit source that lists directories.</short>
+ This can be used in case the WebServer \"dir\" plugin has been
+ overridden. See <xref href='emit_dir.tag'/> for full documentation.
+</p></desc>",
 ]);
 #endif

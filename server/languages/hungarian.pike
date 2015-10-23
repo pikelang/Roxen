@@ -6,14 +6,15 @@
 
 /*  Hungarian Language module for Roxen Web Server, v1.0
  *  This module copyrighted by Zsolt Varga (redax@agria.hu), but it is 
- *  free to use in the Roxen Web Server, under the terms of GNU GPL.
+ *  free to use in the Roxen Web Server. See COPYING in the server
+ *  directory for license information.
  *  You can modify this code, as long as my name not removed from the
  *  source.
  */
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: hungarian.pike,v 1.6 2000/11/27 14:09:14 per Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "hu", "hungarian", "" });
 constant _aliases = ({ "hu", "hun", "magyar", "hungarian" });
 
@@ -119,7 +120,7 @@ string number(int num)
   }
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

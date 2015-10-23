@@ -8,7 +8,7 @@
 
 array selections =
 ({
-  ({ LOCALE(360, "Home"),    "hype",      "",                0 }),
+  ({ LOCALE(360, "Home"),    "hype",      ".",                0 }),
   ({ LOCALE(212, "Admin"),   "home",      "settings.html",   0 }),
   ({ LOCALE(213, "Sites"),   "sites",     "sites/",          "View Settings"}),
   ({ LOCALE(214, "Globals"), "globals",   "global_settings/","View Settings"}),
@@ -25,8 +25,15 @@ array selections =
 // that's not too much of a problem.
 int no_reload() { return 1; }
 
-
 mapping last_seen_on = ([]);
+
+//  Some page visits have undesired side-effects so we list some
+//  exceptions here.
+mapping(Regexp:string) suppress_last_seen = ([
+  Regexp("/actions/(index\.html|)?action=(.*)&") : "/actions/?",
+  Regexp("/dbs/create_(.*)")                     : "/dbs/",
+  Regexp("/dbs/browser.pike(.*)action=(.*)")     : "/dbs/"
+]);
 
 string parse( RequestID id )
 {
@@ -50,8 +57,16 @@ string parse( RequestID id )
         while( id->misc->orig )
           id = id->misc->orig;
         a->selected = "selected";
-	if( id->method == "GET" )
-	  last_seen_on[t[1]] = id->raw_url;
+	if( id->method == "GET" ) {
+	  string url = id->raw_url;
+	  foreach(suppress_last_seen; Regexp pattern; string replacement) {
+	    if (pattern->match(url)) {
+	      url = pattern->replace(url, replacement);
+	      break;
+	    }
+	  }
+	  last_seen_on[t[1]] = url;
+	}
         default_href();
       }
       if( !a->href )

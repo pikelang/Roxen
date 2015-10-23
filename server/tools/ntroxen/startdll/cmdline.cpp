@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.8 2001/08/23 13:31:33 tomas Exp $
+// $Id$
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,7 @@ static char *defPikeArgs[] = {
 static char *defPikeDefines[] = {
   "-DRAM_CACHE",
   "-DENABLE_THREADS",
+  "-DHTTP_COMPRESSION",
 
   // List terminator
   NULL
@@ -209,9 +210,11 @@ BOOL CArgList::Remove(const char *item)
 //////////////////////////////////////////////////////////////////////
 
 CCmdLine::CCmdLine()
-: m_SelfTestDir("etc\\test")
+: m_SelfTestDir("etc\\test"), m_LogDir("..\\logs"),
+  m_ConfigDir("..\\configurations")
 {
-  m_bPreloaded  = FALSE;
+  m_bPreloaded      = FALSE;
+  m_bParseFinished  = FALSE;
 
   m_bInstall    = FALSE;
   m_bRemove     = FALSE;
@@ -221,8 +224,10 @@ CCmdLine::CCmdLine()
   m_bPassHelp   = FALSE;
   m_bKeepMysql  = FALSE;
   m_bMsdev      = FALSE;
+  m_bCheckVersion = TRUE;
 
   m_iVerbose    = 1;
+
   m_iDebug      = -1;
 
 }
@@ -350,7 +355,7 @@ void CCmdLine::PrintHelp()
   {
     "",
     "",
-    ".BThis command will start the Roxen WebServerB..",
+    ".BThis command will start Roxen CMSB..",
     "",
     "The environment variable .BROXEN_ARGSB. can be used to specify",
     "the default arguments.",
@@ -368,6 +373,10 @@ void CCmdLine::PrintHelp()
     "",
     "      .B--removeB.:                   Remove all registry setting and uninstall",
     "                                  the NT service.",
+    "",
+    "      .B--offlineB.:                  Indicate that there is no network",
+    "                                  connection available. Disables DNS and some",
+    "                                  other similar things.",
     "",
     "      .B--remove-dumpedB.:            Remove all dumped code, thus forcing",
     "                                  a recompile.",
@@ -395,12 +404,17 @@ void CCmdLine::PrintHelp()
     "      .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed",
     "                                  things up. Saves RAM at the cost of speed.",
     "",
+    "      .B--without-new-ram-cacheB.:    Do not use a the new RAM cache",
+    "				  introduced in Roxen 5.0-release4.",
+    "",
     "      .B--without-ram-cache-statB.:   Disable the stat that is usually done",
     "                                  for files in the ram cache to ensure that",
     "                                  they are not changed before they are sent.",
     "                                  Improves performance at the cost of constant",
     "                                  aggravation if the site is edited. Useful for",
     "                                  truly static sites.",
+    "",
+    "      .B--without-http-compressionB.: Disable gzip compression for HTTP requests.",
     "",
     "      .B--with-threadsB.:             If threads are available, use them.",
     "",
@@ -467,6 +481,8 @@ void CCmdLine::PrintHelp()
     "                                  but debug. Slows the server down.",
     "",
 */
+    "      .B--with-snmp-agentB.:          Enable internal SNMP agent code.",
+    "",
     "  .BArguments passed to pike:B.",
     "",
     "       .B-DDEFINEB.:                  Define the symbol .BDEFINEB..",
@@ -791,7 +807,7 @@ void CCmdLine::SplitCmdline(
 // Parse current argument (always argv[0]) and
 // return the number of parameters used
 //
-int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
+int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
 {
   char *value;
   
@@ -813,6 +829,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--install", NULL, NULL) )
   {
     m_bInstall = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -823,6 +840,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--register", NULL, NULL) )
   {
     m_bRegister = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -833,6 +851,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
       Match(*argv, "--remove", NULL, NULL) )
   {
     m_bRemove = TRUE;
+    m_bCheckVersion = FALSE;
     type = eArgStart;
     return 1;
   }
@@ -897,6 +916,15 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     return 1;
   }
 
+  //'--with-snmp-agent'|'--enable-snmp-agent')
+  //  DEFINES="$DEFINES -DSNMP_AGENT"
+  if (Match(*argv, "--with-snmp-agent", NULL, NULL) ||
+      Match(*argv, "--enable-snmp-agent", NULL, NULL) )
+  {
+    m_saPikeDefines.Add("-DSNMP_AGENT");
+    type = eArgPike;
+    return 1;
+  }
 
   //'--debug'|'--with-debug'|'--enable-debug')
   //  debug=1
@@ -940,12 +968,33 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     return 1;
   }
 
+  //'--offline')
+  //  DEFINES="-DNO_DNS -DOFFLINE $DEFINES"
+  if (Match(*argv, "--offline", NULL, NULL) )
+  {
+    m_saPikeDefines.Add("-DNO_DNS");
+    m_saPikeDefines.Add("-DOFFLINE");
+    type = eArgPike;
+    return 1;
+  }
+
   //'--without-ram-cache'|'--disable-ram-cache')
   //  DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
   if (Match(*argv, "--without-ram-cache", NULL, NULL) ||
     Match(*argv, "--disable-ram-cache", NULL, NULL) )
   {
     m_saPikeDefines.Remove("-DRAM_CACHE");
+    type = eArgPike;
+    return 1;
+  }
+
+  //'--without-http-compression'|'--disable-http-compression')
+  //  DEFINES="`echo $DEFINES | sed -e 's/-DHTTP_COMPRESSION//g'`"
+  //;;
+  if (Match(*argv, "--without-http-compression", NULL, NULL) ||
+    Match(*argv, "--disable-http-compression", NULL, NULL) )
+  {
+    m_saPikeDefines.Remove("-DHTTP_COMPRESSION");
     type = eArgPike;
     return 1;
   }
@@ -1097,13 +1146,23 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   //  passhelp=1
   if (Match(*argv, "--program", NULL, NULL) )
   {
-    m_saRoxenArgs.Add(*argv);
-    m_saRoxenArgs.Add(argv[1]);
-    m_bOnce = TRUE;
-    m_bPassHelp = TRUE;
-    m_bKeepMysql = TRUE;
-    type = eArgNtLoader;
-    return 2;
+    if (argc > 1)
+    {
+      int count;
+      for (count=0; count<argc; count++)
+        m_saRoxenArgs.Add(argv[count]);
+      m_bOnce = TRUE;
+      m_bPassHelp = TRUE;
+      m_bKeepMysql = TRUE;
+      m_bCheckVersion = FALSE;
+      type = eArgNtLoader;
+      return count;
+    }
+    else
+    {
+      type = eArgMoreData;
+      return 1;
+    }
   }
 
   //'--cd')
@@ -1114,11 +1173,19 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   //  shift
   if (Match(*argv, "--cd", NULL, NULL) )
   {
-    m_saRoxenArgs.Add(*argv);
-    m_saRoxenArgs.Add(argv[1]);
-    m_bOnce = TRUE;
-    type = eArgNtLoader;
-    return 2;
+    if (argc > 1)
+    {
+      m_saRoxenArgs.Add(*argv);
+      m_saRoxenArgs.Add(argv[1]);
+      m_bOnce = TRUE;
+      type = eArgNtLoader;
+      return 2;
+    }
+    else
+    {
+      type = eArgMoreData;
+      return 1;
+    }
   }
 
   //--debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
@@ -1173,6 +1240,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     }
     else
     {
+      m_bCheckVersion = FALSE;
       m_bVersion = TRUE;
       type = eArgVersion;
     }
@@ -1237,6 +1305,7 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
     }
     else
     {
+      m_bCheckVersion = FALSE;
       m_bHelp = TRUE;
       type = eArgHelp;
     }
@@ -1248,6 +1317,60 @@ int CCmdLine::ParseArg(char *argv[], CCmdLine::tArgType & type)
   m_saRoxenArgs.Add(*argv);
   type = eArgRoxen;
   return 1;
+}
+
+
+
+void CCmdLine::ParseFinish()
+{
+  // Take care of some special argument handling
+
+  //case "x$debug" in
+  //  "x")
+  //    DEBUG="-DMODULE_DEBUG "
+  //    ARGS="$ARGS -w"
+  //    ;;
+  //  "x-1")
+  //    DEBUG=""
+  //    ;;
+  //  "x1")
+  //    DEBUG="-DDEBUG -DMODULE_DEBUG"
+  //    ARGS="$ARGS -w"
+  //    ;;
+  //esac
+
+  if (m_bParseFinished)
+    return;
+
+  // This must be before CheckVersionChange
+  m_bParseFinished = TRUE;
+
+  if (m_iDebug == 0)
+  {
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
+  }
+  else if (m_iDebug == -1)
+  {
+  }
+  else if (m_iDebug == 1)
+  {
+    m_saPikeDefines.AddIfNew("-DDEBUG");
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
+  }
+
+  // This must be after anything that changes the PikeDefines
+  if (m_bCheckVersion)
+  {
+    if (CRoxen::CheckVersionChange())
+    {
+      m_saRoxenArgs.AddIfNew("--remove-dumped");
+      HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+      if (m_iVerbose >= 1)
+        OutputLine(hOut, "          : Removing old precompiled files (defines or pike version changed)");
+    }
+  }
 }
 
 
@@ -1305,9 +1428,9 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 
   // Walk through the argument list
   i = 1; // skip argv[0]
-  while (i < argc)
+  while (i < argc && ret)
   {
-    int numParsed = ParseArg(&argv[i], type);
+    int numParsed = ParseArg(argc-i, &argv[i], type);
 
     switch (type)
     {
@@ -1348,8 +1471,8 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 
     case eArgSelfTest:
       {
-        // Make sure that mysql is not running
-        KillMySql();
+        // Make sure the var directory exists
+        CreateDirectory("..\\var", NULL);
 
         std::string selfTestDirUnx;
         selfTestDirUnx.resize(m_SelfTestDir.length());
@@ -1372,15 +1495,16 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
 
         m_bOnce = TRUE;
-        m_saRoxenArgs.Add("--config-dir=../var/test_config");
+        m_iDebug = max(m_iDebug, 1);
+        m_ConfigDir = "../var/test_config";
+        m_saRoxenArgs.Add(("--config-dir=" + m_ConfigDir).c_str());
         m_saRoxenArgs.Add("--remove-dumped");
         
+        // Make sure that mysql is not running
+        KillMySql(m_ConfigDir.c_str());
+
         SetEnvironmentVariable("COPYCMD", "/Y");
         system("rmdir /Q /S ..\\var\\test_config >NUL:");
-        //system("xcopy etc\\test\\config ..\\var\\test_config\\ /E /Q >NUL:");
-        //system("copy etc\\test\\filesystem\\test_rxml_package rxml_packages\\test_rxml_package >NUL:");
-        system(("xcopy " + m_SelfTestDir + "\\config ..\\var\\test_config\\ /E /Q >NUL:").c_str());
-        
 
         std::string setupCmd = m_SelfTestDir + "\\scripts\\setup.pike";
         DWORD attr = GetFileAttributes(setupCmd.c_str());
@@ -1400,6 +1524,12 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
       break;
 
 
+    case eArgMoreData:
+      ret = FALSE;
+      OutputLineFmt(hOut, ".BArgument requires more data: %sB.", argv[i]);
+      break;
+      
+
     case eArgUnsupported:
       OutputLineFmt(hOut, ".BArgument not supported: %sB.", argv[i]);
       break;
@@ -1414,36 +1544,6 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
     i += numParsed;
   }
 
-
-  // Take care of some special argument handling
-
-  //case "x$debug" in
-  //  "x")
-  //    DEBUG="-DMODULE_DEBUG "
-  //    ARGS="$ARGS -w"
-  //    ;;
-  //  "x-1")
-  //    DEBUG=""
-  //    ;;
-  //  "x1")
-  //    DEBUG="-DDEBUG -DMODULE_DEBUG"
-  //    ARGS="$ARGS -w"
-  //    ;;
-  //esac
-  if (m_iDebug == 0)
-  {
-    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
-    m_saPikeArgs.AddIfNew("-w");
-  }
-  else if (m_iDebug == -1)
-  {
-  }
-  else if (m_iDebug == 1)
-  {
-    m_saPikeDefines.AddIfNew("-DDEBUG");
-    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
-    m_saPikeArgs.AddIfNew("-w");
-  }
 
   return ret;
 }

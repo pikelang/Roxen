@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.59 2001/08/21 17:00:52 per Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 #include <module.h>
 
@@ -16,7 +16,7 @@ import spider;
 
 #define COPY( X ) ((X||([])) + ([]))
 
-mapping (string:array(int)) config_stat_cache = ([]);
+mapping (string:Stdio.Stat) config_stat_cache = ([]);
 string configuration_dir; // Set by Roxen.
 
 array(string) list_all_configurations()
@@ -31,7 +31,7 @@ array(string) list_all_configurations()
     {
       report_fatal("I cannot read from the configurations directory ("+
 		   combine_path(getcwd(), configuration_dir)+")\n");
-      exit(-1);	// Restart.
+      roxenloader.real_exit(-1); // Restart.
     }
     return ({});
   }
@@ -41,30 +41,45 @@ array(string) list_all_configurations()
        || s[0] == '_')
       return 0;
     return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
-  }), lambda(string s) { return replace(s, "_", " "); });
+  }), lambda(string s) { return replace(utf8_to_string(s), "_", " "); });
 }
 
 
-mapping call_outs = ([]);
+private	mapping call_outs = ([]);
+private	Thread.Mutex call_outs_mutex = Thread.Mutex();
+private	int counter = 0;
 void save_it(string cl, mapping data)
 {
-  if( call_outs[ cl ] )
-    remove_call_out( call_outs[ cl ][ 0 ] );
+  Thread.MutexKey lock = call_outs_mutex->lock();
+  if( call_outs[ cl ] ) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: save_it removing call out for %O, count %O\n",
+		  cl, call_outs[cl]->counter);
+#endif
+    remove_call_out( call_outs[ cl ]->callout );
+  }
   data = COPY(data);
-  call_outs[ cl ] = ({call_out( really_save_it, 0.1, cl, data ), data});
+  counter++;
+  call_outs[ cl ] = ([ "callout" : call_out( really_save_it, 0.1,
+                                             cl, data, counter ),
+                       "data" : data,
+		       "counter" : counter ]);
+#ifdef DEBUG_CONFIG
+  report_debug ("CONFIG: save_it added call out for %O, count %O\n", cl, counter);
+#endif
 }
 
-void really_save_it( string cl, mapping data )
+private void really_save_it( string cl, mapping data, int counter )
 {
   Stdio.File fd;
   string f, new;
-  m_delete( call_outs, cl );
 
 #ifdef DEBUG_CONFIG
-  report_debug("CONFIG: Writing configuration file for cl "+cl+"\n");
+  report_debug("CONFIG: Writing configuration file for cl %O, count %O\n",
+	       cl, counter);
 #endif
 
-  f = configuration_dir + replace(cl, " ", "_");
+  f = configuration_dir + replace(string_to_utf8(cl), " ", "_");
   new = f + ".new~";
   fd = open(new, "wct");
 
@@ -96,11 +111,11 @@ void really_save_it( string cl, mapping data )
     fd->close();
 
     fd = open( new, "r" );
-    config_stat_cache[cl] = fd->stat();
     
     if(!fd)
       error("Failed to open new config file (" + new + ") for reading"
 	    " (" + strerror (errno()) + ")\n" );
+    config_stat_cache[cl] = fd->stat();
 
     string read_data = fd->read();
     if (!read_data)
@@ -128,6 +143,23 @@ void really_save_it( string cl, mapping data )
 	      " (" + strerror (errno()) + ")!\n");
       error(msg);
     }
+
+    Thread.MutexKey lock = call_outs_mutex->lock();
+    if( call_outs[ cl ] )
+    {
+      // Check if it's my entry in call_outs
+      if (call_outs[ cl ]->counter == counter)
+        m_delete( call_outs, cl );
+
+#ifdef DEBUG_CONFIG
+      report_debug("CONFIG: call_outs=%O\n",
+                   mkmapping(indices(call_outs), values(call_outs)->counter));
+#endif
+    }
+
+#ifdef DEBUG_CONFIG
+    report_debug("CONFIG: Writing configuration file for cl "+cl+" DONE.\n");
+#endif
     return;
   };
   if( !file_stat( f ) ) // Oups. Gone.
@@ -156,43 +188,50 @@ Stat config_is_modified(string cl)
 
 mapping read_it(string cl)
 {
-  if (call_outs[cl])
-    return call_outs[cl][1];
+  Thread.MutexKey lock = call_outs_mutex->lock();
+  if (call_outs[cl]) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: Reading data for %O count %O from call out list.\n",
+		  cl, call_outs[cl]->counter);
+#endif
+    return call_outs[cl]->data;
+  }
+  lock = 0;
 
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Read configuration file for cl "+cl+"\n");
 #endif
-  mixed err;
-  string try_read( string f )
-  {
-    Stdio.File fd;
-    err = catch
-    {
-      fd = open(f, "r");
-      if( fd )
-      {
-        string data =  fd->read();
-        if( strlen( data ) )
-        {
-          config_stat_cache[cl] = fd->stat();
-	  fd->close();
-          return data;
-        }
-	fd->close();
-      }
-    };
-  };
 
   string base = configuration_dir + replace(cl, " ", "_");
-  foreach( ({ base, base+"~", base+"~1~" }), string attempt )
-    if( string data = try_read( attempt ) )
-      return decode_config_file( data );
+  Stdio.File fd;
+  mixed err = catch {
+    fd = open(base, "r");
+    if( fd )
+    {
+      string data = fd->read();
+      if( data && strlen( data ) )
+      {
+	config_stat_cache[cl] = fd->stat();
+	fd->close();
+	return decode_config_file( data );
+      }
+    }
+  };
 
-  if (err) 
-    report_error("Failed to read configuration file for %O\n"
-                 "%s\n", cl, describe_backtrace(err));
-//else
-//  report_error( "Failed to read configuration file for %O\n", cl );
+  catch (fd->close());
+
+  if (err) {
+    string backup_file;
+    if (file_stat (base + "~2~")) backup_file = base + "~2~";
+    if (file_stat (base + "~")) backup_file = base + "~";
+    report_error("Failed to read configuration file (%s) for %O.%s\n"
+		 "%s\n",
+		 base, cl,
+		 backup_file ? " There is a backup file " + backup_file + ". "
+		 "You can try it instead by moving it to the original name. " : "",
+		 describe_backtrace(err));
+  }
+
   return ([]);
 }
 
@@ -225,16 +264,24 @@ void remove_configuration( string name )
 #ifdef DEBUG_CONFIG
   report_debug("CONFIG: Remove "+f+"\n");
 #endif
-  catch(rm( f+"~2~" ));   catch(mv( f+"~", f+"~2~" ));
-  catch(rm( f+"~" ));     catch(mv( f, f+"~" ));
-  catch(rm( f ));
-  last_read = 0; last_data = 0;
 
-  if( file_stat( f ) )
-    error("Failed to remove configuration file ("+f+")!\n");
+  rm (f + "~2~");
+  if( file_stat(f+"~") && !mv(f+"~", f+"~2~") )
+    rm( f+"~" ); // no error needed here, really...
+
+  if( file_stat(f) && !mv(f, f+"~") ) {
+    report_warning("Failed to move current config file (" + f + ") "
+		   "to backup file (" + f + "~)"
+		   " (" + strerror (errno()) + ")\n");
+    if (file_stat (f) && !rm (f))
+      error ("Failed to remove config file (" + f + ") "
+	     "(" + strerror (errno()) + ")\n");
+  }
+
+  last_read = 0; last_data = 0;
 }
 
-void store( string reg, mapping vars, int q,
+void store( string reg, mapping(string:mixed) vars, int q,
 	    Configuration current_configuration )
 {
   string cl;
@@ -259,20 +306,36 @@ void store( string reg, mapping vars, int q,
 
   mapping old_reg = data[ reg ];
 
+  mapping(function(:void):int(1..1)) savers = ([]);
+
   if(q)
     data[ reg ] = m = vars;
   else
   {
-    mixed var;
     m = ([ ]);
-    foreach(indices(vars), var)
-      m[ var ] = vars[ var ]->query();
+    foreach ([mapping(string:Variable.Variable)] vars;
+	     string name; Variable.Variable var) {
+      if (var->save) {
+	// Support for special save callbacks.
+	savers[var->save] = 1;
+      } else {
+	m[ name ] = var->query();
+      }
+    }
     data[ reg ] = m;
     if(!sizeof( m ))
       m_delete( data, reg );
   }
-  if( equal( old_reg, m ) )
+
+  // Call any potential special save callbacks.
+  indices(savers)();
+
+  if( equal( old_reg, m ) ) {
+#ifdef DEBUG_CONFIG
+    report_debug ("CONFIG: Not storing %O in %O since data is equal.\n", reg, cl);
+#endif
     return;
+  }
   last_read = 0; last_data = 0;
   save_it(cl, data);
 }

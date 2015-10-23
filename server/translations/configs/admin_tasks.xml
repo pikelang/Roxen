@@ -7,22 +7,30 @@
 
   <file>../config_interface/actions/cachestatus.pike</file>
   <file>../config_interface/actions/change_version.pike</file>
+  <file>../config_interface/actions/connections.pike</file>
   <file>../config_interface/actions/debug_info.pike</file>
+  <file>../config_interface/actions/debug_summary.pike</file>
   <file>../config_interface/actions/feature_list.pike</file>
   <file>../config_interface/actions/flush.pike</file>
   <file>../config_interface/actions/ftpstatus.pike</file>
   <file>../config_interface/actions/generate_rsa.pike</file>
+  <file>../config_interface/actions/licensestatus.pike</file>
   <file>../config_interface/actions/listfonts.pike</file>
   <file>../config_interface/actions/locks.pike</file>
   <file>../config_interface/actions/make_rsa_csr.pike</file>
   <file>../config_interface/actions/make_selfsigned_dsa.pike</file>
   <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
+  <file>../config_interface/actions/make_site_template.pike</file>
   <file>../config_interface/actions/openfiles.pike</file>
+  <file>../config_interface/actions/patcher.pike</file>
+  <file>../config_interface/actions/pike_profiling.pike</file>
   <file>../config_interface/actions/proc.pike</file>
   <file>../config_interface/actions/reloadconfigurations.pike</file>
+  <file>../config_interface/actions/request_profiling.pike</file>
   <file>../config_interface/actions/resolv.pike</file>
   <file>../config_interface/actions/restart.pike</file>
   <file>../config_interface/actions/ssl_common.pike</file>
   <file>../config_interface/actions/tablist.pike</file>
   <file>../config_interface/actions/threads.pike</file>
+  <file>../config_interface/actions/upload_license.pike</file>
 </project>

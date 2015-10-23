@@ -5,7 +5,7 @@
 
 
 
-static Stat stat( string file, RequestID id )
+protected Stat stat( string file, RequestID id )
 {
   int oi = id->misc->internal_get;
   id->misc->internal_get = 1;
@@ -23,13 +23,13 @@ string normalize_path( string path )
   if( strlen( path ) )
   {
     int ss = (<'/','\\'>)[ path[0] ];
-    path = combine_path( "/",
+    path = combine_path_unix( "/",
 #if defined(__NT__) || defined(STRIP_BSLASH)
-			 replace(path,"\\","/")
+			      replace(path,"\\","/")
 #else
-			 path
+			      path
 #endif
-		       );
+			    );
     if( !ss )
       return path[1..];
   }
@@ -69,7 +69,7 @@ string|array(int|string) read( string file,
     res = c->try_get_file( file, id );
   if( cache )
     cache_set( ck, file, res );
-  if( last_mtime )
+  if( last_mtime && res )
   {
     if( !mtime )
     {
@@ -99,6 +99,10 @@ array(string) find_above_read( string above,
 //! The return value is ({ filename, file-contents, mtime||0 })
 //! If no file is found, 0 is returned.
 {
+#ifdef HTACCESS_DEBUG
+  werror("find_above_read(%O, %O, %O, %O, %O)...\n",
+         above, name, id, cache, do_mtime);
+#endif /* HTACCESS_DEBUG */
   while( strlen( above ) )
   {
     int last_mtime;

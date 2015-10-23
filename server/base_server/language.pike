@@ -1,6 +1,6 @@
 // Roxen Locale Support
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.39 2001/06/30 13:43:04 mast Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 #pragma strict_types
 
@@ -52,7 +52,7 @@ int(0..1) set_locale(void|string lang)
 }
 
 // Compatibility mapping
-static mapping(string:string) compat_languages = ([
+protected mapping(string:string) compat_languages = ([
   "english":"eng",
   "standard":"eng",
   "svenska":"swe",
@@ -93,9 +93,8 @@ void set_default_locale(string def_loc)
     // Default locale from Globals
     tmp = def_loc;
   }
-  else if(getenv("LANG")) {
+  else if ((tmp = [string] (getenv("LC_MESSAGES") || getenv("LANG")))) {
     // Try default locale from environment
-    tmp = [string]getenv("LANG");
     sscanf(tmp, "%s_%*s", tmp);   //Handle e.g. en_US
   }
 
@@ -140,7 +139,7 @@ void initiate_languages(string def_loc)
 
 // ------------- The language functions ------------
 
-static string nil()
+protected string nil()
 {
 #ifdef LANGUAGE_DEBUG
   report_debug("Cannot find that one in %O.\n", list_languages());
@@ -149,7 +148,7 @@ static string nil()
 }
 
 /* Return a pointer to an language-specific conversion function. */
-public function language(string lang, string func, object|void id)
+function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
   report_debug("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
@@ -163,6 +162,6 @@ array(string) list_languages() {
 }
 
 object language_low(string lang) {
-  return [object]Locale.get_object( PROJECT, 
-				    verify_locale(lang) )->functions;
+  object locale_obj = Locale.get_object(PROJECT, verify_locale(lang));
+  return locale_obj && [object] locale_obj->functions;
 }

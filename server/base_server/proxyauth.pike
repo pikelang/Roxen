@@ -1,16 +1,16 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2001, Roxen IS.
-// $Id: proxyauth.pike,v 1.7 2001/06/17 20:07:10 nilsson Exp $
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
-inherit "http";
-
+// Mostly compatibility file
+inherit "roxenlib";
 mapping proxy_auth_needed(RequestID id)
 {
   mixed res = id->conf->check_security(proxy_auth_needed, id);
   if(res)
   {
     if(res==1) // Nope...
-      return http_low_answer(403, "You are not allowed to access this proxy");
+      return Roxen.http_low_answer(403, "You are not allowed to access this proxy");
     if(!mappingp(res))
       return 0; // Error, really.
     res->error = 407;

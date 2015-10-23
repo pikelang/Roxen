@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.66 2001/06/09 20:20:45 grubba Exp $";
+constant cvs_version="$Id$";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -135,12 +135,13 @@ void start()
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
+  normalized_path="";
   banish_list = mkmultiset(query("banish_list"));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
 
-static array(string) find_user(string f, RequestID id)
+protected array(string) find_user(string f, RequestID id)
 {
   string of = f;
   string u;
@@ -260,7 +261,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
     if(!stat || (stat[5] != (int)(us[2])))
     {
-      USERFS_WERR(sprintf("File not owned by user.", u));
+      USERFS_WERR(sprintf("File not owned by user %O.", u));
       return 0;
     }
   }
@@ -268,7 +269,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   if(query("useuserid"))
     id->misc->is_user = f;
 
-  USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
+  USERFS_WERR(sprintf("Forwarding request to inherited filesystem."));
   return filesystem::find_file( f, id );
 }
 
@@ -320,7 +321,7 @@ mapping|array find_dir(string f, RequestID id)
 
   array a = find_user(f, id);
 
-  if (!a) {
+  if (!a[0]) {
     if (query("user_listing")) {
       array l;
       l = id->conf->userlist(id);
