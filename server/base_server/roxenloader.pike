@@ -2188,6 +2188,10 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })),
 		   ([ "reconnect":0 ]));
+    catch {
+      // Restore the SIGPIPE signal handler.
+      signal(signum("SIGPIPE", 0));
+    };
 #ifdef ENABLE_MYSQL_UNICODE_MODE
     if (res && res->master_sql && res->master_sql->set_unicode_decode_mode) {
       // NOTE: The following code only works on Mysql servers 4.1 and later.
