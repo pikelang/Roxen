@@ -829,7 +829,14 @@ Sql.Sql get_sql_handler(string db_url)
   if(has_prefix(db_url, "oracle:"))
     return ExtSQL.sql(db_url);
 #endif
-  return Sql.Sql(db_url, ([ "reconnect":0 ]));
+  Sql.Sql res = Sql.Sql(db_url, ([ "reconnect":0 ]));
+  if (res && has_prefix(db_url, "mysql://")) {
+    catch {
+      // Restore the SIGPIPE signal handler.
+      signal(signum("SIGPIPE", 0));
+    };
+  }
+  return res;
 }
 
 Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
@@ -2227,6 +2234,10 @@ string get_group_path( string db, string group )
     catch
     {
       Sql.Sql sq = Sql.Sql( m->pattern+"mysql" );
+      catch {
+	// Restore the SIGPIPE signal handler.
+	signal(signum("SIGPIPE", 0));
+      };
       sq->query( "CREATE DATABASE "+db );
     };
     return m->pattern+db;
