@@ -1,4 +1,4 @@
-subject: Roxen 5.4:   * DBs: Restore SIGPIPE signal handler after creating Mysql connections.
+subject: Roxen 5.4: DBs: Restore SIGPIPE signal handler after creating Mysql connections.
 from: 9fd08baba253de1a25cd37a75cdb6f34b516815e
 to: 530bdbfeaa842fc623c66af6f2d2dd919bf6e2a2
 originator: wellhardh@roxen.com
@@ -13,5 +13,3 @@ restart: true
     Work-around for [bug 7582].
     
     Proper potential fix requires new Pike binary.
-
-  * DBs: Fixed typo in restoration of SIGPIPE signal handler.
