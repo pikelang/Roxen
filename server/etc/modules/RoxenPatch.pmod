@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.24 2010/07/08 11:58:31 grubba Exp $";
+  private constant lib_version = "$Id$";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -2204,7 +2204,7 @@ class Patcher
   int(0..1) extract_tar_archive(string file_name, string path, int|void gzip) 
   //! Extract a tar archive to @[path].
   {
-    Stdio.File file = Stdio.File(file_name, "rb");
+    object(Stdio.File)|Gz.File file = Stdio.File(file_name, "rb");
 
     if (gzip) {
       file = Gz.File(file, "rb");
