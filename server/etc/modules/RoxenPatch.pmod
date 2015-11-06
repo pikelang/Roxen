@@ -2962,7 +2962,7 @@ class Patcher
   int(0..1) extract_tar_archive(string file_name, string path, int|void gzip) 
   //! Extract a tar archive to @[path].
   {
-    Stdio.File file = Stdio.File(file_name, "rb");
+    object(Stdio.File)|Gz.File file = Stdio.File(file_name, "rb");
 
     if (gzip) {
       file = Gz.File(file, "rb");
