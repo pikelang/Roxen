@@ -2777,6 +2777,18 @@ hej</result>
   <rxml type="string">
     <cache>
       &test.pass;
+      <cache generation-variable="var.foo">&test.pass;</cache>
+      <cache generation-variable="test.pass">&test.pass;</cache>
+    </cache>
+  </rxml>
+  <result pass="1">111</result>
+  <result pass="2">112</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
       <cache propagate variable="test.pass">&test.pass;</cache>
     </cache>
   </rxml>

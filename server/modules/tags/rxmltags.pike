@@ -2314,7 +2314,7 @@ class TagCache {
     void set_alternative (string key, RXML.PCode|array(int|RXML.PCode) entry,
 			  void|int timeout, void|int no_lookup)
     {
-      if (!timeout && arrayp (entry))
+      if (!timeout && arrayp (entry) && entry[0])
 	timeout = entry[0] - time();
       else if (timeout) {
 	if (arrayp (entry))
