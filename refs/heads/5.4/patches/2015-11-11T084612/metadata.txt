@@ -1,0 +1,16 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 530bdbfeaa842fc623c66af6f2d2dd919bf6e2a2
+to: b3f317b2f6cd5df1fd596406b206466e7af60ccb
+originator: wellhardh@roxen.com
+depends: 2015-10-23T164521
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 5.4.89 by buildsystem.
+
+  * Version bumped to 5.4.90 by buildsystem.
+
+  * Version bumped to 5.4.91 by buildsystem.
+
+  * <cache>: Fix bug where caching was effectively disabled with generation-variable.
