@@ -63,6 +63,8 @@ class TagTranslate {
     
     array do_return( RequestID id ) {
       string proj = args->project || id->misc->translation_proj;
+      if (!proj) RXML.parse_error("Missing translation project.\n");
+      if (!args->id) RXML.parse_error("Missing translation identifier.\n");
       string trans = Locale.translate(proj, roxen.locale->get(),
 				      (int)args->id || args->id,
 				      content);
