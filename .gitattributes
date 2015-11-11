@@ -253,7 +253,6 @@ rbf binary
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/ssi.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
-/server/modules/tags/translation_mod.pike foreign_ident
 /server/modules/tags/vform.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
 /server/modules/tags/wml.pike foreign_ident
