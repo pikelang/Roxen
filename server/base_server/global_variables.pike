@@ -307,21 +307,19 @@ void set_up_ssl_variables( Protocol o )
 				   "used.</p>")));
 #endif /* SSL.ServerConnection */
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
-  defvar("ssl_min_version",
-	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0,
-			    ([
-			      SSL.Constants.PROTOCOL_SSL_3_0:
-			      "SSL 3.0",
-			      SSL.Constants.PROTOCOL_TLS_1_0:
-			      "TLS 1.0 (aka SSL 3.1)",
-#if constant(SSL.Constants.PROTOCOL_TLS_1_2)
-			      SSL.Constants.PROTOCOL_TLS_1_1:
-			      "TLS 1.1",
-			      SSL.Constants.PROTOCOL_TLS_1_2:
-			      "TLS 1.2",
+  mapping(SSL.Constants.ProtocolVersion: string) ssl_versions = ([
+    SSL.Constants.PROTOCOL_SSL_3_0: "SSL 3.0",
+    SSL.Constants.PROTOCOL_TLS_1_0: "TLS 1.0 (aka SSL 3.1)",
+  ]);
+#if constant(SSL.Constants.PROTOCOL_TLS_1_1)
+  // NB: The symbol may be available, but the Pike binary might be to old...
+  for (SSL.Constants.ProtocolVersion v = SSL.Constants.PROTOCOL_TLS_1_1;
+       v <= SSL.Constants.PROTOCOL_TLS_MAX; v++) {
+    ssl_versions[v] = sprintf("TLS 1.%d", v - SSL.Constants.PROTOCOL_TLS_1_0);
+  }
 #endif
-			    ]),
-			    0,
+  defvar("ssl_min_version",
+	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0, ssl_versions, 0,
 			    LOCALE(0, "Minimum supported version of SSL/TLS"),
 			    LOCALE(0, "<p>Reject clients that want to use a "
 				   "version of SSL/TLS lower than the selected "
