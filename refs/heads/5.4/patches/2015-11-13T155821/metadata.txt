@@ -1,0 +1,23 @@
+subject: Roxen 5.4: Multiple fixes:
+from: b3f317b2f6cd5df1fd596406b206466e7af60ccb
+to: 0426dc270ba2abcc6ce470da942daeb5ed8e1da4
+originator: wellhardh@roxen.com
+depends: 2015-11-11T084612
+restart: true
+
+Multiple fixes:
+
+  * <translate/>: Complain about missing required attributes.
+    
+    Fixes some of [bug 7592].
+
+  * Version bumped to 5.4.92 by buildsystem.
+
+  * SSL: Avoid setting the minimum version higher than supported.
+    
+    A patched Roxen 5.x may have a more recent SSL modules than pike binary.
+    This makes TLS 1.1 and 1.2 symbols available even though not supported
+    with the old pike binary. Instead look at PROTOCOL_TLS_MAX which is
+    the actual maximum supported version.
+
+  * Version bumped to 5.4.93 by buildsystem.
