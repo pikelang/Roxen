@@ -1,4 +1,4 @@
-subject: Roxen 5.5: Multiple fixes:
+subject: Roxen 5.5: cimg, static resource, dbmanager backup, MySQL SIGPIPE, cache, translate, SSL
 from: eb9c18e2f696cfe31df9ceabb87f521ccbce6794
 to: 92e8512c9e2ee1625b2d8456535363f7e2627122
 originator: wellhardh@roxen.com
