@@ -1,0 +1,13 @@
+Modified files:
+  base_server/global_variables.pike
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  config_interface/dbs/browser.pike
+  config_interface/dbs/db_list.pike
+  config_interface/dbs/schedules.pike
+  etc/modules/DBManager.pmod
+  etc/test/tests/rxml/RoxenTest_RXMLTags.xml
+  modules/graphics/cimg.pike
+  modules/tags/rxmltags.pike
+  modules/tags/static_resource.pike
+  modules/tags/translation_mod.pike
