@@ -1,0 +1,4 @@
+Modified files:
+  base_server/global_variables.pike
+  etc/include/version.h
+  modules/tags/translation_mod.pike
