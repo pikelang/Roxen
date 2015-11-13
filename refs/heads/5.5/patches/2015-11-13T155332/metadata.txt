@@ -1,0 +1,81 @@
+subject: Roxen 5.5: Multiple fixes:
+from: eb9c18e2f696cfe31df9ceabb87f521ccbce6794
+to: 92e8512c9e2ee1625b2d8456535363f7e2627122
+originator: wellhardh@roxen.com
+depends: 2015-09-25T110606
+restart: true
+
+Multiple fixes:
+
+  * cimg: Add defvar for default arguments.
+
+  * Static Resource: Don't attempt to stat paths with a leading double slash.
+    
+    In URL contexts, a leading double slash means protocol-relative link.
+
+  * DBManager: Default to not backing up external databases.
+    
+    Fixes some of [bug 7581].
+
+  * DBManager: Added db_schedule().
+    
+    Adds an API to get the name of the backup schedule for a database.
+
+  * DBs: List the backup schedules for the databases.
+
+  * DBs: Added interface to change the backup schedule for a db.
+    
+    Fixes some more of [bug 7581].
+
+  * DBs: Added interface to add new backup schedules.
+    
+    Also adds back the cancel button to the backup schedule browser.
+
+  * DBs: Added button to delete backup schedules.
+
+  * DBs: Implemented renaming of backup schedules.
+
+  * DBs: Fixed backup schedule buttons.
+    
+    "New" and "Delete" were broken due to the difference between
+    <submit-gbutton/> and <submit-gbutton2/>.
+    
+    "Cancel" was broken due to some browsers ignoring href="" since
+    the attribute was empty...
+
+  * DBs: Unlink any databases from the schedule before deleting it.
+
+  * DBs: Fixed unlinking of deleted backup schedules.
+
+  * I/O: Make sure to ignore SIGPIPE.
+    
+    Under some circumstances Stdio.sendfile() will use blocking I/O.
+    If the other end then closes the connection before all data is
+    sent sendfile() will fail with EPIPE and kill us with SIGPIPE.
+    We don't want to die...
+    
+    Fixes some of [bug 7582].
+
+  * DBs: Restore SIGPIPE signal handler after creating Mysql connections.
+    
+    The low-level mysql client code zaps the SIGPIPE handler,
+    so we need to restore it.
+    
+    Work-around for [bug 7582].
+    
+    Proper potential fix requires new Pike binary.
+
+  * DBs: Fixed typo in restoration of SIGPIPE signal handler.
+
+  * <cache>: Fix bug where caching was effectively disabled with generation-variable.
+
+  * <translate/>: Complain about missing required attributes.
+    
+    Fixes some of [bug 7592].
+
+  * SSL: Avoid setting the minimum version higher than supported.
+    
+    A patched Roxen 5.x may have a more recent SSL modules than pike binary.
+    This makes TLS 1.1 and 1.2 symbols available even though not supported
+    with the old pike binary. Instead look at PROTOCOL_TLS_MAX which is
+    the actual maximum supported version.
