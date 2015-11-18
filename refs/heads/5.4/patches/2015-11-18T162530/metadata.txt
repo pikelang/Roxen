@@ -1,0 +1,8 @@
+subject: Roxen 5.4: Version bumped to 5.4.94 by buildsystem.
+from: 0426dc270ba2abcc6ce470da942daeb5ed8e1da4
+to: 689d3d2362734e79b36184f9c23497ead96ef2fd
+originator: wellhardh@roxen.com
+depends: roxen/5.4.93|2015-11-13T155821
+restart: true
+
+Version bumped to 5.4.94 by buildsystem.
