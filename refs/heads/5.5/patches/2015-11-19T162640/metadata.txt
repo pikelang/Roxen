@@ -1,0 +1,10 @@
+subject: Roxen 5.5: ABS: Added handler_ping().
+from: 92e8512c9e2ee1625b2d8456535363f7e2627122
+to: 6ab773d4e82e0b3dd5ede5a6bd1ccdaec0b214b9
+originator: wellhardh@roxen.com
+depends: 2015-11-13T155332
+restart: true
+
+ABS: Added handler_ping().
+
+Fixes some of [bug 7598].
