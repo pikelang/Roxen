@@ -3851,6 +3851,18 @@ protected void engage_abs(int n)
   low_engage_abs();
 }
 
+//! Called to indicate that the handler threads are alive.
+//!
+//! Usually called automatically via @[handle()] by @[restart_if_stuck()],
+//! but may need to be called by hand when handler threads are intentionally
+//! blocked for a longer time (eg via long-lived global mutex locks).
+//!
+//! Do not call unless you know what you are doing.
+void handler_ping()
+{
+  handlers_alive = time();
+}
+
 void restart_if_stuck (int force)
 //! @note
 //! Must be called from the backend thread due to Linux peculiarities.
@@ -3876,7 +3888,7 @@ void restart_if_stuck (int force)
 		 ctime(time()) - "\n");
     engage_abs(0);
   }
-  handle(lambda() { handlers_alive = time(); });
+  handle(handler_ping);
 }
 #endif
 
