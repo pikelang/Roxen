@@ -350,10 +350,27 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
 
     a = map( a, string_to_utf8 );
 
+#ifdef DEBUG_LOG_SHOW_USER
+    string usr;
+    catch {
+      mixed rxml_ctx = all_constants()["_cur_rxml_context"]->get();
+      if(rxml_ctx)
+	usr = rxml_ctx->user_get_var("user.username");
+    };
+#endif
+
     for(i=0; i < sizeof(a)-1; i++) {
+#ifdef DEBUG_LOG_SHOW_USER
+      if(usr)
+	a[i] = usr + " : " + a[i];
+#endif
       stderr->write(short_time() + a[i] + "\n");
     }
     if (!last_was_nl) {
+#ifdef DEBUG_LOG_SHOW_USER
+      if(usr)
+	a[-1] = usr + " : " + a[-1];
+#endif
       stderr->write(short_time() + a[-1]);
     }
 #endif
