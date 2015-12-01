@@ -204,11 +204,11 @@ class Patcher
   private string patch_bin = "patch";
   //! Command for the external executable.
 
-  function write_mess;
+  function(string, mixed...:void) write_mess;
   //! Callback function for status messages. Should take a string as argument
   //! and return void.
 
-  function write_err;
+  function(string, mixed...:void) write_err;
   //! Callback function for error messages. Should take a string as argument
   //! and return void.
 
@@ -479,7 +479,7 @@ class Patcher
     return patch_ids;
   }
 
-  array(int|string) import_file_http(void|int(0..1) dry_run)
+  array(int|string) import_file_http()
   //! Fetch the latest rxp cluster from www.roxen.com and import the patches.
   {
     mapping file;
@@ -501,7 +501,7 @@ class Patcher
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, file->name);   
     write_file_to_disk(temp_file, file->data);
-    array(int|string) patch_ids = import_file(temp_file, dry_run);
+    array(int|string) patch_ids = import_file(temp_file);
     clean_up(temp_dir);
 
     return patch_ids;
