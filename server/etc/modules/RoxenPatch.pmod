@@ -3053,11 +3053,7 @@ class Patcher
     };
 
     string get_url(Standards.URI uri) {
-#if constant(roxen) // We probably have threads
       Protocols.HTTP.Query query = try_get_url(uri);
-#else // No threads
-      Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
-#endif
       if (query->status != 200) {
 	throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
 		      (string)uri || "", query->status, query->status_desc || ""));
@@ -3085,31 +3081,42 @@ class Patcher
   }
 
   Protocols.HTTP.Query try_get_url(Standards.URI uri) {
-    Thread.Queue queue = Thread.Queue();
-    object con = Protocols.HTTP.Query();
-    con->timeout = 20;
+#if constant(roxenp)
+    // NB: Use roxenp to access the roxen object since roxen hasn't
+    //     been loaded when we are compiled.
+    object roxen = roxenp();
+    if (roxen && (this_thread() != roxen.backend_thread)) {
+      // The backend thread is probably running and we are not it.
+      Thread.Queue queue = Thread.Queue();
+      object con = Protocols.HTTP.Query();
+      con->timeout = 20;
 
-    // Hack to force do_async_method to not reset the timeout value
-    con->headers = ([ "connection" : "keep-alive" ]);
+      // Hack to force do_async_method to not reset the timeout value
+      con->headers = ([ "connection" : "keep-alive" ]);
 
-    function cb = lambda() { queue->write("@"); };
-    con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
+      function cb = lambda() { queue->write("@"); };
+      con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
   
 #ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
-      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     roxen.query("proxy_username"), 
-					     roxen.query("proxy_password"),
-					     "GET", uri, 0, 0, con);
-    } else {
-      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
-    }
+      if (roxen.query("use_proxy")) {
+	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					       roxen.query("proxy_username"),
+					       roxen.query("proxy_password"),
+					       "GET", uri, 0, 0, con);
+      } else {
+	Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      }
 #else
-    Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
 #endif
   
-    queue->read();    
+      queue->read();
   
-    return con;
+      return con;
+    }
+
+    // FALLBACK to synchronous fetch.
+#endif /* roxen */
+    return Protocols.HTTP.get_url(uri);
   }
 }
