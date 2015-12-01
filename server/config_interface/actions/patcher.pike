@@ -1,5 +1,6 @@
 // $Id$
 
+#include <config_interface.h>
 #include <roxen.h>
 
 import RoxenPatch;
@@ -340,9 +341,11 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       res += sprintf("      <tr style='background-color: %s' >\n"
 		     "        <td style='width:20px;text-align:right'>\n"
+		     "          <cf-perm perm='Update'>\n"
 		     "          <input type='checkbox' id='%s'"
 		     " name='%s' value='%[1]s' dependencies='%s'" +
 		     " onclick='toggle_%[2]s(%s)' />\n"
+		     "          </cf-perm>\n"
 		     "        </td>\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
@@ -568,8 +571,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
       res +=
 	sprintf("      <tr style='display:none'>\n"
 		"        <td style='width:20px;text-align:right'>\n"
+		"          <cf-perm perm='Update'>\n"
 		"          <input type='checkbox' id='%s' name='uninstall'"
 		" value='on' dependencies=''/>\n"
+		"          </cf-perm>\n"
 		"        </td>\n"
 		"        <td colspan='4'>&nbsp;</td>\n"
 		"      </tr>\n",
@@ -590,8 +595,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
   res += sprintf("      <tr>\n"
 		 "        <td bgcolor='&usr.fade2;' colspan='%d'"
 		 " align='left'>\n"
+		 "          <cf-perm perm='Update'>\n"
 		 "          <submit-gbutton2"
 		 " name='%s-button'>%s</submit-gbutton2>\n"
+		 "          </cf-perm>\n"
 		 "        </td>\n"
 		 "      </tr>\n",
 		 colspan,
@@ -699,12 +706,13 @@ mixed parse(RequestID id)
   }
 
   
-  if (id->real_variables["auto-import-button.x"] ||
+  if(config_perm("Update") &&
+     (id->real_variables["auto-import-button.x"] ||
       (id->real_variables["OK.x"] &&
        id->real_variables["fixedfilename"] &&
        sizeof(id->real_variables["fixedfilename"][0]) &&
        id->real_variables["file"] &&
-       sizeof(id->real_variables["file"][0]))) 
+       sizeof(id->real_variables["file"][0]))))
   {    
     array(int|string) patch_ids;
 
@@ -803,7 +811,8 @@ mixed parse(RequestID id)
     return res;
   }
   
-  if (id->real_variables["uninstall-button.x"] &&
+  if (config_perm("Update") &&
+      id->real_variables["uninstall-button.x"] &&
       id->real_variables->uninstall &&
       sizeof(id->real_variables->uninstall))
   {
@@ -881,7 +890,8 @@ mixed parse(RequestID id)
     return Roxen.http_string_answer(res);
   }
  
-  if (id->real_variables["install-button.x"] &&
+  if (config_perm("Update") &&
+      id->real_variables["install-button.x"] &&
       id->real_variables->install &&
       sizeof(id->real_variables->install))
   {
@@ -961,7 +971,8 @@ mixed parse(RequestID id)
   }
   
  removepatch:
-  if (id->real_variables["remove-patch-id"] &&
+  if (config_perm("Update") &&
+      id->real_variables["remove-patch-id"] &&
       sizeof(id->real_variables["remove-patch-id"])) { 
 
     wb->clear_all();
@@ -994,6 +1005,7 @@ mixed parse(RequestID id)
   mapping patch_stats = get_patch_stats(plib);
 
   res += #"
+    <cf-perm perm='Update'>
     <font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>
 
     <p style='margin-bottom: 5px'>" + 
@@ -1016,6 +1028,7 @@ mixed parse(RequestID id)
 	     "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
     <br />
+    </cf-perm>
     <font size='+1'><b>" + LOCALE(375, "Imported Patches") + " (" + patch_stats->imported_count + ")" + #"</b></font>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
@@ -1030,10 +1043,12 @@ mixed parse(RequestID id)
              width='100%' style='table-layout: fixed'>
 	<tr bgcolor='&usr.obox-titlebg;' >
 	  <th style='width:20px;text-align:left'>
+            <cf-perm perm='Update'>
             <input type='checkbox' 
                    name='install'
                    id='install_all'
                    onclick='check_all(\"install\")'/>
+            </cf-perm>
           </th>
           <th style='width:20px'>&nbsp;</th>
 	  <th style='width:11em; text-align:left;'>Id</th>
@@ -1060,10 +1075,12 @@ mixed parse(RequestID id)
              width='100%' style='table-layout: fixed'>\n
 	<tr bgcolor='&usr.obox-titlebg;' >
 	  <th style='width:20px; text-align:left'>
+            <cf-perm perm='Update'>
             <input type='checkbox'
                    name='uninstall'
                    id='uninstall_all'
                    onclick='check_all(\"uninstall\")'/>
+            </cf-perm>
           </th>
           <th style='width:20px'>&nbsp;</th>
 	  <th style='width:11em; text-align:left;'>Id</th>

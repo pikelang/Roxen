@@ -538,7 +538,7 @@ void create()
 	  ]) );
 
   roxen.add_permission( "View Settings", LOCALE(192, "View Settings"));
-  roxen.add_permission( "Update",    LOCALE(349, "Update Client"));
+  roxen.add_permission( "Update",    LOCALE(349, "Apply Patches"));
   roxen.add_permission( "Edit Global Variables",
 			LOCALE(194, "Edit Global Variables"));
   roxen.add_permission( "Tasks", LOCALE(196, "Tasks"));

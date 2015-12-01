@@ -209,11 +209,11 @@ class Patcher
   private string patch_bin = "patch";
   //! Command for the external executable.
 
-  function write_mess;
+  function(string, mixed...:void) write_mess;
   //! Callback function for status messages. Should take a string as argument
   //! and return void.
 
-  function write_err;
+  function(string, mixed...:void) write_err;
   //! Callback function for error messages. Should take a string as argument
   //! and return void.
 
@@ -487,7 +487,7 @@ class Patcher
     return patch_ids;
   }
 
-  array(int|string) import_file_http(void|int(0..1) dry_run)
+  array(int|string) import_file_http()
   //! Fetch the latest rxp cluster from www.roxen.com and import the patches.
   {
     mapping file;
@@ -509,7 +509,7 @@ class Patcher
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, file->name);   
     write_file_to_disk(temp_file, file->data);
-    array(int|string) patch_ids = import_file(temp_file, dry_run);
+    array(int|string) patch_ids = import_file(temp_file);
     clean_up(temp_dir);
 
     return patch_ids;
@@ -3060,11 +3060,7 @@ class Patcher
     };
 
     string get_url(Standards.URI uri) {
-#if constant(roxen) // We probably have threads
-      Protocols.HTTP.Query query = get_url_async(uri);
-#else // No threads
-      Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
-#endif
+      Protocols.HTTP.Query query = try_get_url(uri);
       if (query->status != 200) {
 	error(sprintf("HTTP request for URL %s failed with status %d: %s.",
 		      (string)uri || "", query->status, query->status_desc || ""));
@@ -3095,32 +3091,48 @@ class Patcher
 	      "name" : basename(uri2->path) ]);
   }
 
-  Protocols.HTTP.Query get_url_async(Standards.URI uri) {
-    Thread.Queue queue = Thread.Queue();
-    object con = Protocols.HTTP.Query();
-    con->timeout = 20;
+  Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
+				   string|void etag)
+  {
+#if constant(roxenp)
+    // NB: Use roxenp to access the roxen object since roxen hasn't
+    //     been loaded when we are compiled.
+    object roxen = roxenp();
+    if (roxen && (this_thread() != roxen.backend_thread)) {
+      // The backend thread is probably running and we are not it.
+      Thread.Queue queue = Thread.Queue();
+      object con = Protocols.HTTP.Query();
+      con->timeout = timeout;
 
-    // Hack to force do_async_method to not reset the timeout value
-    con->headers = ([ "connection" : "keep-alive" ]);
+      // Hack to force do_async_method to not reset the timeout value
+      con->headers = ([ "connection" : "keep-alive" ]);
 
-    function cb = lambda() { queue->write("@"); };
-    con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
+      if (etag) {
+	con->headers["If-None-Match"] = etag;
+      }
+      function cb = lambda() { queue->write("@"); };
+      con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
   
 #ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
-      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     roxen.query("proxy_username"), 
-					     roxen.query("proxy_password"),
-					     "GET", uri, 0, 0, con);
-    } else {
-      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
-    }
+      if (roxen.query("use_proxy")) {
+	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					       roxen.query("proxy_username"),
+					       roxen.query("proxy_password"),
+					       "GET", uri, 0, 0, con);
+      } else {
+	Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      }
 #else
-    Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
 #endif
   
-    queue->read();    
+      queue->read();
   
-    return con;
+      return con;
+    }
+
+    // FALLBACK to synchronous fetch.
+#endif /* roxen */
+    return Protocols.HTTP.get_url(uri);
   }
 }
