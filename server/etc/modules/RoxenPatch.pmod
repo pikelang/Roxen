@@ -488,7 +488,7 @@ class Patcher
 	file = fetch_latest_rxp_cluster_file();
       };
     if (err) {
-      write_err((string)err + "\n");
+      write_err("HTTP import failed: %s\n", describe_backtrace(err));
       write_mess("No patches were imported.\n");
       return 0;
     }
