@@ -3080,7 +3080,9 @@ class Patcher
 	      "name" : basename(uri2->path) ]);
   }
 
-  Protocols.HTTP.Query try_get_url(Standards.URI uri) {
+  Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
+				   string|void etag)
+  {
 #if constant(roxenp)
     // NB: Use roxenp to access the roxen object since roxen hasn't
     //     been loaded when we are compiled.
@@ -3089,11 +3091,14 @@ class Patcher
       // The backend thread is probably running and we are not it.
       Thread.Queue queue = Thread.Queue();
       object con = Protocols.HTTP.Query();
-      con->timeout = 20;
+      con->timeout = timeout;
 
       // Hack to force do_async_method to not reset the timeout value
       con->headers = ([ "connection" : "keep-alive" ]);
 
+      if (etag) {
+	con->headers["If-None-Match"] = etag;
+      }
       function cb = lambda() { queue->write("@"); };
       con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
   
