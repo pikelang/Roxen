@@ -33,6 +33,7 @@ inherit "smtprelay";
 #endif
 inherit "hosts";
 inherit "disk_cache";
+inherit "fsgc";
 // inherit "language";
 inherit "supports";
 inherit "module_support";
@@ -519,7 +520,11 @@ private void low_shutdown(int exit_code)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
+    stop_error_log_cleaner();
 #ifdef THREADS
+#if constant(Filesystem.Monitor.basic)
+    stop_fsgarb();
+#endif
     if (mixed err = catch (stop_handler_threads()))
       master()->handle_error (err);
 #endif /* THREADS */
@@ -3219,6 +3224,64 @@ void nwrite(string s, int|void perr, int|void errtype,
 
   if(errtype >= 1)
     report_debug( s );
+}
+
+protected BackgroundProcess error_log_cleaner_process;
+
+protected void clean_error_log(mapping(string:array(int)) log,
+		     mapping(string:int) cutoffs)
+{
+  if (!log || !sizeof(log)) return;
+  foreach(cutoffs; string prefix; int cutoff) {
+    foreach(log; string key; array(int) times) {
+      if (!has_prefix(key, prefix)) continue;
+      int sz = sizeof(times);
+      times = filter(times, `>=, cutoff);
+      if (sizeof(times) == sz) continue;
+      // NB: There's a race here, where newly triggered errors may be lost.
+      //     It's very unlikely to be a problem in practice though.
+      if (!sizeof(times)) {
+	m_delete(log, key);
+      } else {
+	log[key] = times;
+      }
+    }
+  }
+}
+
+protected void error_log_cleaner()
+{
+  mapping(string:int) cutoffs = ([
+    "1,": time(1) - 3600*24*7,		// Keep notices for 7 days.
+  ]);
+
+  // First the global error_log.
+  clean_error_log(error_log, cutoffs);
+
+  // Then all configurations and modules.
+  foreach(configurations, Configuration conf) {
+    clean_error_log(conf->error_log, cutoffs);
+
+    foreach(indices(conf->otomod), RoxenModule mod) {
+      clean_error_log(mod->error_log, cutoffs);
+    }
+  }
+}
+
+protected void start_error_log_cleaner()
+{
+  if (error_log_cleaner_process) return;
+
+  // Clean the error log once every hour.
+  error_log_cleaner_process = BackgroundProcess(3600, error_log_cleaner);
+}
+
+protected void stop_error_log_cleaner()
+{
+  if (error_log_cleaner_process) {
+    error_log_cleaner_process->stop();
+    error_log_cleaner_process = UNDEFINED;
+  }
 }
 
 // When was Roxen started?
@@ -6066,7 +6129,12 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
+#if constant(Filesystem.Monitor.basic)
+  start_fsgarb();
+#endif
 #endif /* THREADS */
+
+  start_error_log_cleaner();
 
 #ifdef TEST_EUID_CHANGE
   if (test_euid_change) {
