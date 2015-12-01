@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.39 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 inherit "module";

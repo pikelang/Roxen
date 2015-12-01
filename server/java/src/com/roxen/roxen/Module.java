@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.10 2000/11/13 19:33:23 marcus Exp $
+ * $Id$
  *
  */
 

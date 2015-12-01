@@ -1,4 +1,4 @@
-// $Id: user_form.pike,v 1.6 2001/01/28 05:45:48 per Exp $
+// $Id$
 
 #include <config_interface.h>
 #include <roxen.h>

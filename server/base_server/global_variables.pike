@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.127 2012/05/10 15:53:42 grubba Exp $
+// $Id$
 
 // #pragma strict_types
 #define DEFVAR mixed...:object

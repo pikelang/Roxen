@@ -1,6 +1,6 @@
 //! A text class with multiple customized verifications.
 //!
-//! $Id: VerifiedText.pike,v 1.3 2002/10/28 15:57:16 mast Exp $
+//! $Id$
 
 #include <module.h>
 

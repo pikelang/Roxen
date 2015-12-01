@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.31 2012/04/17 12:11:32 erikd Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -244,7 +244,45 @@ variables. An alternative which often is more convenient is to use the
 variable client.session (provided by this module) together with the
 <tag>force-session-id</tag> tag and the feature to set unique browser
 id cookies in the http protocol module (located under the server ports
-tab).</p></desc>
+tab).</p>
+<p>The following fragment sets up a new session with a variable in it</p>
+<ex-box>
+    <!-- Force a session ID if one doesn't exist -->
+    <force-session-id />
+    <session id='client.session' scope='mysession'>
+      <!--
+      Our current scope is now the 'mysession' scope. Any variables
+      created in this scope will be accessible wherever the same
+      session is set up at a later stage.
+      -->
+
+      <!-- Create a variable in the scope -->
+      <set variable='_.message'>Hello World!</set>
+
+      Variable 'message' in the scope 'mysession' is now created in session id &client.session;:<br/>
+      &_.message;
+
+    </session>
+</ex-box>
+<p>And the following fragment uses the same variable in another page</p>
+<ex-box>
+  <!-- Make sure things are not over cached -->
+  <nocache>
+    <!-- Force a session ID if one doesn't exist -->
+    <force-session-id />
+
+    <session id='client.session' scope='mysession'>
+      <!--
+	  Inside this container, we now have access to all the
+	  variables from the mysession scope again
+      -->
+
+      Variable 'message' in the scope 'mysession' in session id &client.session;:<br/>
+      &mysession.message;
+    </session>
+  </nocache>
+</ex-box>
+</desc>
 
 <attr name='id' value='string' required='1'><p>The key that identifies
 the session. Could e.g. be a name, an IP adress, a cookie or the value

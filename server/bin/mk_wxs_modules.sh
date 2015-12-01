@@ -1,6 +1,6 @@
 #/bin/sh
 #
-# $Id: mk_wxs_modules.sh,v 1.5 2004/11/14 13:19:00 grubba Exp $
+# $Id$
 #
 # Make a set of Windows Installer XML source module files
 # from a typical roxen module layout.

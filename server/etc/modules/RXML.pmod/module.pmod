@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.433 2012/08/21 12:13:28 grubba Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4238,6 +4238,9 @@ class Frame
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
 
+		    if (t->type_check) t->type_check(v);
+		    // FIXME: Add type-checking to the compiled code as well.
+
 		    if (t->sequential)
 		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
 					    sub_p_code->compile_text (comp)));
@@ -7443,6 +7446,30 @@ class TText
   }
 }
 
+TNarrowText t_narrowtext = TNarrowText();
+//! The type for plain text that needs to be narrow (eg HTTP headers
+//! and similar).
+
+//!
+//! @seealso
+//!    @[t_narrowtext]
+class TNarrowText
+{
+  inherit TText;
+  constant name = "text/x-8bit";
+  constant type_name = "RXML.t_narrowtext";
+  Type supertype = t_text;
+  Type conversion_type = t_text;
+
+  void type_check(mixed val, void|string msg, mixed ... args)
+  {
+    ::type_check(val);
+    if (stringp(val) && (String.width(val) > 8)) {
+      type_check_error(msg, args, "Got wide string where 8-bit string required.\n");
+    }
+  }
+}
+
 TXml t_xml = TXml();
 //! The type for XML and similar markup.
 
@@ -8463,7 +8490,8 @@ protected class PikeCompile
       string errmsg = "Still got unresolved delayed resolve places:\n";
       foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
-	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
+	errmsg += replace (predef::sprintf ("  %O[%O]: %O",
+					    what, index, what[index]),
 			   "\n", "\n  ") + "\n";
       }
       error (errmsg);

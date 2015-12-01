@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.8 2009/05/08 13:02:16 anders Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";

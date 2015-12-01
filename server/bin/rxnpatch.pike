@@ -34,6 +34,7 @@ int main(int argc, array(string) argv)
                                                 "--nocolor", "--nocolour" }) }),
     ({ "recursive",       Getopt.NO_ARG,       ({ "-r", "--recursive"     }) }),
     ({ "silent",	  Getopt.NO_ARG,       ({ "-s", "--silent"        }) }),
+    ({ "http",	          Getopt.NO_ARG,       ({ "-e", "--http"          }) }),
     ({ "help",	    	  Getopt.NO_ARG,       ({ "-h", "--help"	  }) }),
   });
 
@@ -156,7 +157,7 @@ int main(int argc, array(string) argv)
     write_err = lambda(string s) { werror(wash_output(s)); };
   }
 
-  // Again treat "help" differently. We don't want to insantiate the Patcher
+  // Again treat "help" differently. We don't want to instantiate the Patcher
   // class if we're only going to show help
   if (sizeof(cmd_n_files) < 2)
   {
@@ -462,7 +463,14 @@ int main(int argc, array(string) argv)
   }
   
   if (cmd_n_files[1] == "import")
-  {
+  {  
+    foreach(switches, array argument) {
+      if (argument[0] == "http") {
+	plib->import_file_http();
+	return 0;
+      }
+    }
+
     if(sizeof(cmd_n_files) < 3)
     // Assume we're going to read from stdin.
     // This is not implemented so we'll write out a help message instead.
@@ -470,7 +478,7 @@ int main(int argc, array(string) argv)
       display_help(write_mess, "import");
       return 0;
     }
-    
+
     array list = ({ });
 
     // Check if the argument contains globs and sort out unwanted arguments.
@@ -485,14 +493,10 @@ int main(int argc, array(string) argv)
 
     // Sort the list with the oldest first.
     list = Array.sort_array(list);
-    foreach(list, string file)
-    {
-      array(int|string) patch_ids = plib->import_file(file);
-      foreach(patch_ids, int|string patch_id) {	
-	if (patch_id) 
-	  plib->write_mess("%s is successfully imported!\n", patch_id);
-      }
+    foreach(list, string file) {
+      plib->import_file(file);
     }
+
     return 0;
   }
 
@@ -546,7 +550,7 @@ int main(int argc, array(string) argv)
     {
       array(int|string) patch_ids = plib->import_file(file);
       foreach(patch_ids, int|string patch_id) {	
-	if (patch_id) 
+	if (patch_id && patch_id != -1) 
 	  ins_list += ({ patch_id });
       }
     }
@@ -1320,6 +1324,13 @@ constant help_flags = ([
 			" messages will be", 
 			"displayed if this flag is set." }),
 	  "scope"  : ({ "global" }) ]),
+  "e": ([ "syntax" : ({ "<b>-e</b>",
+			"<b>--http</b>" }),
+	  "hlptxt" : ({ "Import over HTTP. The latest patch cluster will be ",
+			"fetched from www.roxen.com and imported. The correct ",
+			"cluster file will be returned based on dist version, ",
+			"platform and product type." }),
+	  "scope"  : ({ "import" }) ])
 ]);
 
 constant flag_map = ([
@@ -1350,6 +1361,7 @@ constant flag_map = ([
   "nocolour"		: "nc",
   "no-color"		: "nc",
   "no-colour"		: "nc",
+  "http"                : "e"
 ]);
 
 void help_write_flag(function write_out, mapping flag_desc)

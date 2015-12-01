@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.10 2012/04/16 17:21:34 mast Exp $
+ * $Id$
  *
  * Make a site-template from a virtual server configuration.
  *

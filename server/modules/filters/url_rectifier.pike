@@ -5,7 +5,7 @@
 inherit "module";
 #include <request_trace.h>
 
-constant cvs_version = "$Id: url_rectifier.pike,v 1.18 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_LAST;
 constant module_name = "URL Rectifier";

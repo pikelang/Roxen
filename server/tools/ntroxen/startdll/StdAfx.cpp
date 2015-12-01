@@ -2,7 +2,7 @@
 //  stdafx.pch will be the pre-compiled header
 //  stdafx.obj will contain the pre-compiled type information
 //
-// $Id: StdAfx.cpp,v 1.2 2008/07/29 22:47:21 mast Exp $
+// $Id$
 //
 
 #include "stdafx.h"

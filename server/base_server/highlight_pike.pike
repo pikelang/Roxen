@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: highlight_pike.pike,v 1.8 2009/05/07 14:15:52 mast Exp $
+// $Id$
 
 string quote(string s)
 {

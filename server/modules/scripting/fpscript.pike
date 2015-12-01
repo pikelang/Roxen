@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.15 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";

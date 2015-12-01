@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.9 2010/02/19 13:44:21 mast Exp $
+ * $Id$
  */
 
 #if constant (Nettle)

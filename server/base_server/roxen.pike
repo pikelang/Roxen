@@ -5922,6 +5922,9 @@ protected class GCTimestamp
   }
 }
 
+protected int gc_start;
+
+protected mapping(string:int) gc_histogram = ([]);
 
 array argv;
 int main(int argc, array tmp)
@@ -5940,7 +5943,37 @@ int main(int argc, array tmp)
 #endif
 
 #ifdef LOG_GC_TIMESTAMPS
-  GCTimestamp();
+  Pike.gc_parameters(([ "pre_cb": lambda() {
+				    gc_start = gethrtime();
+				    werror("GC runs at %s", ctime(time()));
+				  },
+			"post_cb":lambda() {
+				    werror("GC done after %dus\n",
+					   gethrtime() - gc_start);
+				  },
+			"destruct_cb":lambda(object o) {
+					gc_histogram[sprintf("%O", object_program(o))]++;
+					werror("GC cyclic reference in %O.\n",
+					       o);
+				      },
+			"done_cb":lambda(int n) {
+				    if (!n) return;
+				    werror("GC zapped %d things.\n", n);
+				    mapping h = gc_histogram + ([]);
+				    if (!sizeof(h)) return;
+				    array i = indices(h);
+				    array v = values(h);
+				    sort(v, i);
+				    werror("GC histogram (accumulative):\n");
+				    foreach(reverse(i)[..9], string p) {
+				      werror("GC:  %s: %d\n", p, h[p]);
+				    }
+				  },
+		     ]));
+  if (!Pike.gc_parameters()->pre_cb) {
+    // GC callbacks not available.
+    GCTimestamp();
+  }
 #endif
 
   // For RBF
@@ -7089,7 +7122,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // fun that trying to find the bug in the image-cache at the moment.
 
   // Note similar code in compile_log_format.
-
+  if (pattern == "")
+    return 0;
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)

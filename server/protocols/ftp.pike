@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.143 2012/10/19 09:05:18 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@roxen.com>
  */

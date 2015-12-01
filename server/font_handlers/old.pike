@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2009, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.15 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 

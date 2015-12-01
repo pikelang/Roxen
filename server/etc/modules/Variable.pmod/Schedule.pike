@@ -1,4 +1,4 @@
-// $Id: Schedule.pike,v 1.10 2003/07/31 12:06:14 anders Exp $
+// $Id$
 
 inherit Variable.Variable;
 

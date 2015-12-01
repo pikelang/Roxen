@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.20 2011/12/28 18:29:37 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";

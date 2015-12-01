@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000 - 2009, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.9 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 
 #include <module.h>

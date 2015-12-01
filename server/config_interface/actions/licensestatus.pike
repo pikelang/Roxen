@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.16 2008/07/09 09:16:42 mathias Exp $
+ * $Id$
  */
 
 #include <roxen.h>

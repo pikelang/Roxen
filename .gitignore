@@ -6,7 +6,9 @@
 *.[oas]
 *.sb
 *.iw
+/backup
 configurations
+/feeds
 license
 local
 logs

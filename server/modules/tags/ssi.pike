@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.49 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 
 
 constant module_type = MODULE_TAG;

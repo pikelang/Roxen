@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.175 2011/06/17 11:28:23 mast Exp $
+// $Id$
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -373,6 +373,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "              cursor:   pointer;"
        "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
+       "         class='roxen-color-selector'"
        "         style='border-top:    1px solid #888888;"
        "                border-left:   1px solid #888888;"
        "                border-bottom: 2px solid #888888;"
@@ -391,9 +392,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    </tr><tr>"
        "      <td colspan='2' style='border-top: 1px solid #888888'"
        "        ><img src='/internal-roxen-pixel-000000'"
+       "              class='black'"
        "              width='76' height='10' style='cursor: pointer'"
        "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
        "        /><img src='/internal-roxen-pixel-ffffff'"
+       "               class='white'"
        "               width='76' height='10' style='cursor: pointer'"
        "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
        "        /></td>"

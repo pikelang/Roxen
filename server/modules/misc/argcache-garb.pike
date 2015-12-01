@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: argcache-garb.pike,v 1.2 2011/09/23 06:49:14 wellhard Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant module_type = MODULE_ZERO;

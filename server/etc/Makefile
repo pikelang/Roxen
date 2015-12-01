@@ -1,7 +1,7 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.7 2006/04/22 15:20:13 grubba Exp $
+# $Id$
 #
 
 PIKE=pike

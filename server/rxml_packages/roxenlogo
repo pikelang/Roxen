@@ -1,6 +1,6 @@
 -*- html -*-
 <info>
-version="$Id: roxenlogo,v 1.2 2001/06/11 20:55:16 nilsson Exp $";
+version="$Id$";
 name="roxenlogo";
 doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 10.";
 help=1;

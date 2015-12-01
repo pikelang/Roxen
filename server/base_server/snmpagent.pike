@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.28 2012/02/14 22:55:00 jonasw Exp $
+ * $Id$
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz

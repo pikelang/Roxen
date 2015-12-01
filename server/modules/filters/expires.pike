@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: expires.pike,v 1.4 2008/04/29 11:15:50 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>

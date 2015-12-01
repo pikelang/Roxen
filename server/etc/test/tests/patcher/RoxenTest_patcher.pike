@@ -67,7 +67,7 @@ void run_tests(Configuration c)
 		 "description"	: "This is test 2.",
 		 "originator"	: "self_test@localhost",
 		 "rxp_version"  : RoxenPatch.rxp_version,
-		 "version"      : po->parse_version(roxen_dist_version),
+		 "version"      : po->parse_version(po->get_server_version()),
 		 "depends"	: ({ "2009-02-25T1124" }),
 		 "replace"      : ({ 
 		                    ([ "source" : combine_path(test_path,

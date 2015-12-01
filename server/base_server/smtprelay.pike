@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 3.2 2008/08/15 12:33:54 mast Exp $
+ * $Id$
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *

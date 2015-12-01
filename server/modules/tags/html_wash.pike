@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.36 2009/11/20 00:17:20 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -84,7 +84,7 @@ class TagWashHtml
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
-		     string close_tags, string keep_attributes)
+		     string close_tags, string keep_attributes, string remove_unwanted_tags)
   {
     // Replace < and > with \1 and \2 in stead of quoting with &lt; and &gt; to
     // be able regexp match on single characters.
@@ -114,6 +114,11 @@ class TagWashHtml
     foreach(keep_containers, string container)
       parser->add_container(container, safe_container);
     
+    if(remove_unwanted_tags)
+      parser->_set_tag_callback( lambda(Parser.HTML p, string str, mixed... extra) { 
+            return "";
+          });
+
     return replace(parser->finish(s)->read(),
 		   ({ "<",  ">",  "&",     "\0[", "\0]" }),
 		   ({ "\1", "\2", "&amp;", "<",   ">" }));
@@ -199,7 +204,8 @@ class TagWashHtml
 			     parse_arg_array(args["keep-tags"]),
 			     parse_arg_array(args["keep-containers"]),
 			     args["close-tags"],
-			     args["keep-attributes"]);
+			     args["keep-attributes"],
+           args["remove-unwanted-tags"]);
 
       if(args->paragraphify)
 	result = paragraphify(result);
@@ -229,7 +235,8 @@ class TagWashHtml
                        "linkify":RXML.t_text(RXML.PXml),
                        "link-target":RXML.t_text(RXML.PXml),
                        "unlinkify":RXML.t_text(RXML.PXml),
-		       "close-tags":RXML.t_text(RXML.PXml) ]);
+           "close-tags":RXML.t_text(RXML.PXml),
+           "remove-unwanted-tags":RXML.t_text(RXML.PXml) ]);
 
 #define VALID_CHARS "[^ \t\n\r<>\"'`(){}|\1\2]"
     link_regexp =
@@ -315,6 +322,19 @@ constant tagdoc=([
 
 <p>Only the href attribute for the a tag is kept.</p>
 
+</attr>
+
+<attr name='remove-unwanted-tags'><p>
+  Removes tags not listed in keep-tags or keep-containers instead of html escaping them.
+  Container content is preserved.
+</p>
+
+<ex><wash-html keep-containers=\"div\">
+  <span style=\"color: blue;\">span content</span><div style=\"color: red;\">div content</div>
+</wash-html></ex>
+<ex><wash-html remove-unwanted-tags=\"yes\" keep-containers=\"div\">
+  <span style=\"color: blue;\">span content</span><div style=\"color: red;\">div content</div>
+</wash-html></ex>
 </attr>
 
 <attr name='linkify'><p>

@@ -1,4 +1,4 @@
-// $Id: cachestatus.pike,v 1.27 2011/01/20 17:23:46 mast Exp $
+// $Id$
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>

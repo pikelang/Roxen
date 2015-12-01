@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: memory_logger.pike,v 1.6 2012/06/08 14:21:48 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOGGER;

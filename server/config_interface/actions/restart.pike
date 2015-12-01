@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.17 2012/03/14 16:22:20 jonasw Exp $
+ * $Id$
  */
 
 #include <config_interface.h>

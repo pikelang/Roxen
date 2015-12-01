@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.81 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>

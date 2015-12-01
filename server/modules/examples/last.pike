@@ -3,7 +3,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: last.pike,v 1.5 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_LAST;
 constant module_name = "RefDoc for MODULE_LAST";
 constant module_doc = "This module does nothing, but its inlined "

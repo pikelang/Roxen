@@ -5,6 +5,11 @@
   <theme-set what=logo-html
 	   to="<imgs border='0' src='&usr.logo;' style='padding: 9px 10px 8px 10px'>"/>
 </if>
+<elseif variable="roxen.product-name == Roxen EP">
+  <theme-set what=logo                 to="cms-logo.gif" themefile />
+  <theme-set what=logo-html
+	   to="<imgs border='0' src='&usr.logo;' style='padding: 9px 10px 8px 10px'>"/>
+</elseif>
 <else>
   <theme-set what=logo                 to="logo.gif" themefile />
   <theme-set what=logo-html
