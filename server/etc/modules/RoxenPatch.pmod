@@ -3054,7 +3054,7 @@ class Patcher
 
     string get_url(Standards.URI uri) {
 #if constant(roxen) // We probably have threads
-      Protocols.HTTP.Query query = get_url_async(uri);
+      Protocols.HTTP.Query query = try_get_url(uri);
 #else // No threads
       Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
 #endif
@@ -3084,7 +3084,7 @@ class Patcher
 	      "name" : basename(uri2->path) ]);
   }
 
-  Protocols.HTTP.Query get_url_async(Standards.URI uri) {
+  Protocols.HTTP.Query try_get_url(Standards.URI uri) {
     Thread.Queue queue = Thread.Queue();
     object con = Protocols.HTTP.Query();
     con->timeout = 20;
