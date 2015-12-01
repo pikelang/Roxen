@@ -21,14 +21,16 @@ Write_back wb = class Write_back
 		  private array(mapping(string:string)) all_messages = ({ });
 
 		  void write_mess(string s) 
-		  { 
-		    s = replace(s, ([ "<green>"  : "<b style='color: green'>",
-				      "</green>" : "</b>" ]) );
+		  {
+		    s = Roxen.html_encode_string(s);
+		    s = replace(s, ([ "&lt;green&gt;"  : "<b style='color: green'>",
+				      "&lt;/green&gt;" : "</b>" ]) );
 		    all_messages += ({ (["message":s ]) }); 
 		  }
 		  
 		  void write_error(string s) 
-		  { 
+		  {
+		    s = Roxen.html_encode_string(s);
 		    all_messages += ({ 
 		      ([ "error":"<b style='color: red'>" + s + "</b>" ]) 
 		    }); 
