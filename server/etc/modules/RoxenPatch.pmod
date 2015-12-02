@@ -222,6 +222,8 @@ class Patcher
   //!   Old patchids were on the format @expr{YYYY-MM-DDThhmm@}.
   //!   Matching and extraction of these MUST still be supported.
 
+  //! ETag for the latest fetched cluster.
+  private string http_cluster_etag;
 
   void create(function      message_callback,
 	      function      error_callback,
@@ -491,6 +493,10 @@ class Patcher
       write_err("HTTP import failed: %s\n", describe_backtrace(err));
       write_mess("No patches were imported.\n");
       return 0;
+    }
+    if (!file) {
+      // Already fetched and imported.
+      return ({});
     }
 
     write_mess("Fetched rxp cluster file %s over HTTP.\n", file->name);
@@ -3052,11 +3058,18 @@ class Patcher
       return uri;
     };
 
-    string get_url(Standards.URI uri) {
-      Protocols.HTTP.Query query = try_get_url(uri);
+    string get_url(Standards.URI uri, int|void use_etag) {
+      string etag = use_etag && http_cluster_etag;
+      Protocols.HTTP.Query query = try_get_url(uri, 20, etag);
+      if ((query->status == 304) || (query->status == 412)) {
+	return 0;
+      }
       if (query->status != 200) {
 	throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
 		      (string)uri || "", query->status, query->status_desc || ""));
+      }
+      if (use_etag) {
+	http_cluster_etag = query->headers->etag;
       }
       return query->data();
     };
@@ -3074,7 +3087,12 @@ class Patcher
       throw("No rxp cluster URL was found.");
 
     Standards.URI uri2 = new_uri(res);
-    string res2 = get_url(uri2); 
+    string res2 = get_url(uri2, 1);
+
+    if (!res2) {
+      // Already fetched.
+      return 0;
+    }
 
     return ([ "data" : res2,
 	      "name" : basename(uri2->path) ]);
