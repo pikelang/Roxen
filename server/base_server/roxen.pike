@@ -3268,9 +3268,16 @@ protected void error_log_cleaner()
   }
 }
 
+RoxenPatch.Patcher plib =
+  RoxenPatch.Patcher(report_notice, report_error, getcwd(), getenv("LOCALDIR"));
+
 protected void hourly_maintenance()
 {
   error_log_cleaner();
+
+  if (query("auto_fetch_rxps")) {
+    plib->import_file_http();
+  }
 }
 
 protected void start_hourly_maintenance()

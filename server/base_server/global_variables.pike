@@ -979,6 +979,12 @@ the Roxen instance of the MySQL server).</p>"));
          LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
          LOCALE(1059, "Password for proxy authorization."));
 #endif
+
+  defvar("auto_fetch_rxps", 0,
+	 LOCALE(0, "Auto Patching: Automatically import patches"),
+	 TYPE_FLAG,
+	 LOCALE(0, "Automatically fetch and import patches to the server "
+		"from www.roxen.com."));
 }
 
 
