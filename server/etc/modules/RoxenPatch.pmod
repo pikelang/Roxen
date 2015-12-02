@@ -227,6 +227,11 @@ class Patcher
   //!   Old patchids were on the format @expr{YYYY-MM-DDThhmm@}.
   //!   Matching and extraction of these MUST still be supported.
 
+  //! ETag for the latest fetched cluster.
+  private string http_cluster_etag;
+
+  //! Last modified header for the latest fetched cluster.
+  private string http_cluster_last_modified;
 
   void create(function      message_callback,
 	      function      error_callback,
@@ -496,9 +501,13 @@ class Patcher
 	file = fetch_latest_rxp_cluster_file();
       };
     if (err) {
-      write_err((string)err + "\n");
+      write_err("HTTP import failed: %s\n", describe_backtrace(err));
       write_mess("No patches were imported.\n");
       return 0;
+    }
+    if (!file) {
+      // Already fetched and imported.
+      return ({});
     }
 
     write_mess("Fetched rxp cluster file %s over HTTP.\n", file->name);
@@ -3059,11 +3068,24 @@ class Patcher
       return uri;
     };
 
-    string get_url(Standards.URI uri) {
-      Protocols.HTTP.Query query = try_get_url(uri);
+    string get_url(Standards.URI uri, int|void use_etag) {
+      string etag = use_etag && http_cluster_etag;
+      string last_modified = use_etag && http_cluster_last_modified;
+      Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
+      if ((query->status == 304) || (query->status == 412)) {
+	return 0;
+      }
       if (query->status != 200) {
 	error(sprintf("HTTP request for URL %s failed with status %d: %s.",
 		      (string)uri || "", query->status, query->status_desc || ""));
+      }
+      if (use_etag) {
+	http_cluster_etag = query->headers->etag;
+	if ((http_cluster_last_modified = query->headers["last-modified"]) &&
+	    query->headers["content-length"]) {
+	  http_cluster_last_modified +=
+	    "; length=" + query->headers["content-length"];
+	}
       }
       return query->data();
     };
@@ -3085,15 +3107,28 @@ class Patcher
       error("No rxp cluster URL was found.");
 
     Standards.URI uri2 = new_uri(res);
-    string res2 = get_url(uri2); 
+    string res2 = get_url(uri2, 1);
+
+    if (!res2) {
+      // Already fetched.
+      return 0;
+    }
 
     return ([ "data" : res2,
 	      "name" : basename(uri2->path) ]);
   }
 
   Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
-				   string|void etag)
+				   string|void etag, string|void last_modified)
   {
+    mapping(string:string) request_headers = ([]);
+
+    if (etag) {
+      request_headers["If-None-Match"] = etag;
+    }
+    if (last_modified) {
+      request_headers["If-Modified-Since"] = last_modified;
+    }
 #if constant(roxenp)
     // NB: Use roxenp to access the roxen object since roxen hasn't
     //     been loaded when we are compiled.
@@ -3107,9 +3142,6 @@ class Patcher
       // Hack to force do_async_method to not reset the timeout value
       con->headers = ([ "connection" : "keep-alive" ]);
 
-      if (etag) {
-	con->headers["If-None-Match"] = etag;
-      }
       function cb = lambda() { queue->write("@"); };
       con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
   
@@ -3118,12 +3150,13 @@ class Patcher
 	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
 					       roxen.query("proxy_username"),
 					       roxen.query("proxy_password"),
-					       "GET", uri, 0, 0, con);
+					       "GET", uri, 0,
+					       request_headers, con);
       } else {
-	Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+	Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
       }
 #else
-      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
 #endif
   
       queue->read();
@@ -3133,6 +3166,6 @@ class Patcher
 
     // FALLBACK to synchronous fetch.
 #endif /* roxen */
-    return Protocols.HTTP.get_url(uri);
+    return Protocols.HTTP.get_url(uri, UNDEFINED, request_headers);
   }
 }

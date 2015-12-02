@@ -21,14 +21,16 @@ Write_back wb = class Write_back
 		  private array(mapping(string:string)) all_messages = ({ });
 
 		  void write_mess(string s) 
-		  { 
-		    s = replace(s, ([ "<green>"  : "<b style='color: green'>",
-				      "</green>" : "</b>" ]) );
+		  {
+		    s = Roxen.html_encode_string(s);
+		    s = replace(s, ([ "&lt;green&gt;"  : "<b style='color: green'>",
+				      "&lt;/green&gt;" : "</b>" ]) );
 		    all_messages += ({ (["message":s ]) }); 
 		  }
 		  
 		  void write_error(string s) 
-		  { 
+		  {
+		    s = Roxen.html_encode_string(s);
 		    all_messages += ({ 
 		      ([ "error":"<b style='color: red'>" + s + "</b>" ]) 
 		    }); 
@@ -1010,12 +1012,20 @@ mixed parse(RequestID id)
 
     <p style='margin-bottom: 5px'>" + 
       LOCALE(416, "Fetch and import the latest patches from www.roxen.com") + 
-    #":</p>
-
-    <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
-      LOCALE(417, "Import from Roxen") + 
-    #"</submit-gbutton2>
-
+    ":</p>\n";
+  if (Stdio.exist("VERSION.DIST")) {
+    res += #"
+      <submit-gbutton2 name='auto-import-button' width='75' align='center'>" +
+      LOCALE(417, "Import from Roxen") +
+      #"</submit-gbutton2>\n";
+  } else {
+    // Unknown distribution version.
+    res += #"
+      <gbutton dim='' name='auto-import-button' width='75' align='center'>" +
+      LOCALE(417, "Import from Roxen") +
+      #"</gbutton>\n";
+  }
+  res += #"
     <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />

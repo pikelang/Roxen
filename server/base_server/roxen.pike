@@ -532,7 +532,7 @@ private void low_shutdown(int exit_code)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
-    stop_error_log_cleaner();
+    stop_hourly_maintenance();
 #ifdef THREADS
 #if constant(Filesystem.Monitor.basic)
     stop_fsgarb();
@@ -3638,7 +3638,7 @@ void nwrite(string s, int|void perr, int|void errtype,
     report_debug( s );
 }
 
-protected BackgroundProcess error_log_cleaner_process;
+protected BackgroundProcess hourly_maintenance_process;
 
 protected void clean_error_log(mapping(string:array(int)) log,
 		     mapping(string:int) cutoffs)
@@ -3680,19 +3680,32 @@ protected void error_log_cleaner()
   }
 }
 
-protected void start_error_log_cleaner()
-{
-  if (error_log_cleaner_process) return;
+RoxenPatch.Patcher plib =
+  RoxenPatch.Patcher(report_notice, report_error, getcwd(), getenv("LOCALDIR"));
 
-  // Clean the error log once every hour.
-  error_log_cleaner_process = BackgroundProcess(3600, error_log_cleaner);
+protected void hourly_maintenance()
+{
+  error_log_cleaner();
+
+  if (query("auto_fetch_rxps")) {
+    plib->import_file_http();
+  }
 }
 
-protected void stop_error_log_cleaner()
+protected void start_hourly_maintenance()
 {
-  if (error_log_cleaner_process) {
-    error_log_cleaner_process->stop();
-    error_log_cleaner_process = UNDEFINED;
+  if (hourly_maintenance_process) return;
+
+  // Start a background process that performs maintenance tasks every hour
+  // (eg cleaning the error log).
+  hourly_maintenance_process = BackgroundProcess(3600, hourly_maintenance);
+}
+
+protected void stop_hourly_maintenance()
+{
+  if (hourly_maintenance_process) {
+    hourly_maintenance_process->stop();
+    hourly_maintenance_process = UNDEFINED;
   }
 }
 
@@ -6757,7 +6770,7 @@ int main(int argc, array tmp)
 #endif
 #endif /* THREADS */
 
-  start_error_log_cleaner();
+  start_hourly_maintenance();
 
 #ifdef TEST_EUID_CHANGE
   if (test_euid_change) {
