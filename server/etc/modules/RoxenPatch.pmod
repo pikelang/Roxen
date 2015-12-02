@@ -3101,6 +3101,11 @@ class Patcher
   Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
 				   string|void etag)
   {
+    mapping(string:string) request_headers = ([]);
+
+    if (etag) {
+      request_headers["If-None-Match"] = etag;
+    }
 #if constant(roxenp)
     // NB: Use roxenp to access the roxen object since roxen hasn't
     //     been loaded when we are compiled.
@@ -3114,9 +3119,6 @@ class Patcher
       // Hack to force do_async_method to not reset the timeout value
       con->headers = ([ "connection" : "keep-alive" ]);
 
-      if (etag) {
-	con->headers["If-None-Match"] = etag;
-      }
       function cb = lambda() { queue->write("@"); };
       con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
   
@@ -3125,12 +3127,13 @@ class Patcher
 	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
 					       roxen.query("proxy_username"),
 					       roxen.query("proxy_password"),
-					       "GET", uri, 0, 0, con);
+					       "GET", uri, 0,
+					       request_headers, con);
       } else {
-	Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+	Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
       }
 #else
-      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
 #endif
   
       queue->read();
@@ -3140,6 +3143,6 @@ class Patcher
 
     // FALLBACK to synchronous fetch.
 #endif /* roxen */
-    return Protocols.HTTP.get_url(uri);
+    return Protocols.HTTP.get_url(uri, UNDEFINED, request_headers);
   }
 }
