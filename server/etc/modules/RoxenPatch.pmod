@@ -225,6 +225,9 @@ class Patcher
   //! ETag for the latest fetched cluster.
   private string http_cluster_etag;
 
+  //! Last modified header for the latest fetched cluster.
+  private string http_cluster_last_modified;
+
   void create(function      message_callback,
 	      function      error_callback,
               string        server_dir,
@@ -3060,7 +3063,8 @@ class Patcher
 
     string get_url(Standards.URI uri, int|void use_etag) {
       string etag = use_etag && http_cluster_etag;
-      Protocols.HTTP.Query query = try_get_url(uri, 20, etag);
+      string last_modified = use_etag && http_cluster_last_modified;
+      Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
       if ((query->status == 304) || (query->status == 412)) {
 	return 0;
       }
@@ -3070,6 +3074,11 @@ class Patcher
       }
       if (use_etag) {
 	http_cluster_etag = query->headers->etag;
+	if ((http_cluster_last_modified = query->headers["last-modified"]) &&
+	    query->headers["content-length"]) {
+	  http_cluster_last_modified +=
+	    "; length=" + query->headers["content-length"];
+	}
       }
       return query->data();
     };
@@ -3099,12 +3108,15 @@ class Patcher
   }
 
   Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
-				   string|void etag)
+				   string|void etag, string|void last_modified)
   {
     mapping(string:string) request_headers = ([]);
 
     if (etag) {
       request_headers["If-None-Match"] = etag;
+    }
+    if (last_modified) {
+      request_headers["If-Modified-Since"] = last_modified;
     }
 #if constant(roxenp)
     // NB: Use roxenp to access the roxen object since roxen hasn't
