@@ -1012,12 +1012,20 @@ mixed parse(RequestID id)
 
     <p style='margin-bottom: 5px'>" + 
       LOCALE(416, "Fetch and import the latest patches from www.roxen.com") + 
-    #":</p>
-
-    <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
-      LOCALE(417, "Import from Roxen") + 
-    #"</submit-gbutton2>
-
+    ":</p>\n";
+  if (Stdio.exist("VERSION.DIST")) {
+    res += #"
+      <submit-gbutton2 name='auto-import-button' width='75' align='center'>" +
+      LOCALE(417, "Import from Roxen") +
+      #"</submit-gbutton2>\n";
+  } else {
+    // Unknown distribution version.
+    res += #"
+      <gbutton dim='' name='auto-import-button' width='75' align='center'>" +
+      LOCALE(417, "Import from Roxen") +
+      #"</gbutton>\n";
+  }
+  res += #"
     <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
