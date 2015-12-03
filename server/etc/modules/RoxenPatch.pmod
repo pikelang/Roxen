@@ -33,7 +33,7 @@ constant features = (<
 				// files with eg the exec bit set.
 >);
 
-constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
+constant RXP_ACTION_URL = "https://extranet.roxen.com/rxp/action.html";
 //! URL for fetching rxp clusters.
 
 //! Contains the patchdata
@@ -3087,6 +3087,8 @@ class Patcher
       error("No rxp cluster URL was found.\n");
 
     Standards.URI uri2 = Standards.URI(res);
+    if (uri->scheme != "https")
+      error("Fetch: Not HTTPS: %s\n", (string)uri2);
     string res2 = get_url(uri2, 1);
 
     if (!res2) {
@@ -3124,7 +3126,16 @@ class Patcher
 
       function cb = lambda() { queue->write("@"); };
       con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
-  
+
+      if (uri->scheme == "https") {
+	// Enable verification of the certificate chain.
+	SSL.Context ctx = con->context = SSL.Context();
+	ctx->trusted_issuers_cache = Standards.X509.load_authorities();
+	ctx->verify_certificates = 1;
+	ctx->require_trust = 1;
+	ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
+      }
+
 #ifdef ENABLE_OUTGOING_PROXY
       if (roxen.query("use_proxy")) {
 	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
