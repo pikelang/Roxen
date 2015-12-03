@@ -3074,6 +3074,10 @@ class Patcher
       return query->data();
     };
 
+    // If not running in a dist we can't fetch patches
+    if (dist_version == "")
+      error("Not running a proper distribution.\n");
+
     // Get rxp action url
     Standards.URI uri = Standards.URI(RXP_ACTION_URL);
     uri->add_query_variables(([ "product"  : product_code,
