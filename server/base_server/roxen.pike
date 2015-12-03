@@ -3703,13 +3703,13 @@ protected void error_log_cleaner()
 protected void patcher_report_notice(string msg, mixed ... args)
 {
   if (sizeof(args)) msg = sprintf(msg, @args);
-  report_notice(plib->wash_output(msg));
+  report_notice(RoxenPatch.wash_output(msg));
 }
 
 protected void patcher_report_error(string msg, mixed ... args)
 {
   if (sizeof(args)) msg = sprintf(msg, @args);
-  report_error(plib->wash_output(msg));
+  report_error(RoxenPatch.wash_output(msg));
 }
 
 RoxenPatch.Patcher plib =
