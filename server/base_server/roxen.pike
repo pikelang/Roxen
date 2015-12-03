@@ -509,7 +509,7 @@ private int shutdown_recurse;
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
-private void low_shutdown(int exit_code)
+private void low_shutdown(int exit_code, int|void apply_patches)
 {
   if(shutdown_recurse >= 4)
   {
@@ -537,7 +537,7 @@ private void low_shutdown(int exit_code)
   slow_be_timeout_changed();
 #endif
 
-  if (query("patch_on_restart")) {
+  if ((apply_patches || query("patch_on_restart")) > 0) {
     mixed err = catch {
 	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
 	  report_notice("Applying patch %s...\n", item->metadata->id);
@@ -575,18 +575,18 @@ private int shutdown_started;
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart(float|void i, void|int exit_code)
+void restart(float|void i, void|int exit_code, void|int apply_patches)
 //! Restart roxen, if the start script is running
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, exit_code || -1);
+  call_out(low_shutdown, i, exit_code || -1, apply_patches);
 }
 
-void shutdown(float|void i)
+void shutdown(float|void i, void|int apply_patches)
 //! Shut down roxen
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, 0);
+  call_out(low_shutdown, i, 0, apply_patches);
 }
 
 void exit_when_done()
