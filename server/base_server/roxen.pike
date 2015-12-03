@@ -521,7 +521,7 @@ private int shutdown_recurse;
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
-private void low_shutdown(int exit_code)
+private void low_shutdown(int exit_code, int|void apply_patches)
 {
   if(shutdown_recurse >= 4)
   {
@@ -549,6 +549,26 @@ private void low_shutdown(int exit_code)
   slow_be_timeout_changed();
 #endif
 
+  if ((apply_patches || query("patch_on_restart")) > 0) {
+    mixed err = catch {
+	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
+	  report_notice("Applying patch %s...\n", item->metadata->id);
+	  mixed err = catch {
+	      plib->install_patch(item->metadata->id,
+				  "Internal Administrator");
+	    };
+	  if (err) {
+	    report_error("Failed to install patch %s: %s\n",
+			 item->metadata->id,
+			 describe_backtrace(err));
+	  }
+	}
+      };
+    if (err) {
+      master()->handle_error(err);
+    }
+  }
+
   if (mixed err = catch(stop_all_configurations()))
     master()->handle_error (err);
 
@@ -567,18 +587,18 @@ private int shutdown_started;
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart(float|void i, void|int exit_code)
+void restart(float|void i, void|int exit_code, void|int apply_patches)
 //! Restart roxen, if the start script is running
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, exit_code || -1);
+  call_out(low_shutdown, i, exit_code || -1, apply_patches);
 }
 
-void shutdown(float|void i)
+void shutdown(float|void i, void|int apply_patches)
 //! Shut down roxen
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, 0);
+  call_out(low_shutdown, i, 0, apply_patches);
 }
 
 void exit_when_done()
@@ -3680,8 +3700,21 @@ protected void error_log_cleaner()
   }
 }
 
+protected void patcher_report_notice(string msg, mixed ... args)
+{
+  if (sizeof(args)) msg = sprintf(msg, @args);
+  report_notice(plib->wash_output(msg));
+}
+
+protected void patcher_report_error(string msg, mixed ... args)
+{
+  if (sizeof(args)) msg = sprintf(msg, @args);
+  report_error(plib->wash_output(msg));
+}
+
 RoxenPatch.Patcher plib =
-  RoxenPatch.Patcher(report_notice, report_error, getcwd(), getenv("LOCALDIR"));
+  RoxenPatch.Patcher(patcher_report_notice, patcher_report_error,
+		     getcwd(), getenv("LOCALDIR"));
 
 protected void hourly_maintenance()
 {
@@ -3813,7 +3846,9 @@ protected void low_engage_abs()
   report_debug("**** %s: ABS exiting roxen!\n\n",
 	       ctime(time()) - "\n");
   _exit(1);	// It might not quit correctly otherwise, if it's
-		// locked up
+		// locked up. Note that this also inhibits the delay
+		// caused by the possible automatic installation of
+		// any pending patches.
 }
 
 protected void engage_abs(int n)
