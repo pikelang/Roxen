@@ -537,6 +537,26 @@ private void low_shutdown(int exit_code)
   slow_be_timeout_changed();
 #endif
 
+  if (query("patch_on_restart")) {
+    mixed err = catch {
+	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
+	  report_notice("Applying patch %s...\n", item->metadata->id);
+	  mixed err = catch {
+	      plib->install_patch(item->metadata->id,
+				  "Internal Administrator");
+	    };
+	  if (err) {
+	    report_error("Failed to install patch %s: %s\n",
+			 item->metadata->id,
+			 describe_backtrace(err));
+	  }
+	}
+      };
+    if (err) {
+      master()->handle_error(err);
+    }
+  }
+
   if (mixed err = catch(stop_all_configurations()))
     master()->handle_error (err);
 
@@ -3414,7 +3434,9 @@ protected void low_engage_abs()
   report_debug("**** %s: ABS exiting roxen!\n\n",
 	       ctime(time()) - "\n");
   _exit(1);	// It might not quit correctly otherwise, if it's
-		// locked up
+		// locked up. Note that this also inhibits the delay
+		// caused by the possible automatic installation of
+		// any pending patches.
 }
 
 protected void engage_abs(int n)

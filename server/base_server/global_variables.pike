@@ -985,6 +985,11 @@ the Roxen instance of the MySQL server).</p>"));
 	 TYPE_FLAG,
 	 LOCALE(0, "Automatically fetch and import patches to the server "
 		"from www.roxen.com."));
+  defvar("patch_on_restart", 0,
+	 LOCALE(0, "Auto Patching: Automatically apply patches"),
+	 TYPE_FLAG,
+	 LOCALE(0, "Automatically apply any imported patches when the "
+		"server is restarted."));
 }
 
 
