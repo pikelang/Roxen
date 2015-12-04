@@ -36,20 +36,11 @@ mixed parse( RequestID id )
       what = 0;
     }
 
-  int(-1..1) apply_patches = UNDEFINED;
-  if (config_perm("Update")) {
-    if (id->variables->apply_patches == "yes") {
-      apply_patches = 1;
-    } else {
-      apply_patches = -1;
-    }
-  }
-
   switch (what) {
   case "restart":
      if( config_perm( "Restart" ) )
      {
-       roxen->restart(0.5, UNDEFINED, apply_patches);
+       roxen->restart(0.5, UNDEFINED, -1);
        return res +
 "<input type=hidden name=action value=restart.pike>"
 "<font color='&usr.warncolor;'><h1>"+LOCALE(197,"Restart")+"</h1></font>"+
@@ -65,7 +56,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
-       roxen->shutdown(0.5, apply_patches);
+       roxen->shutdown(0.5, -1);
        return res +
 "<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+
@@ -78,17 +69,6 @@ LOCALE(234, "You might see the old process for a while in the process table "
      return res + LOCALE(226,"Permission denied");
 
   default:
-    array(mapping(string:mixed)) imported = roxen.plib->file_list_imported();
-    if (sizeof(imported)) {
-      res +=
-	sprintf(
-"<p><input type='checkbox' name='apply_patches' value='yes'%s%s/> ",
-roxen.query("patch_on_restart")?" checked='checked'":"",
-config_perm("Update")?"":" disabled='disabled'") +
-	sprintf((string)LOCALE(0, "Apply %d pending imported patches."),
-		sizeof(imported)) +
-	"</p>\n";
-    }
     return Roxen.http_string_answer(res +
 #"<blockquote><br />
 
