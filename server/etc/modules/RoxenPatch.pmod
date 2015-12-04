@@ -33,7 +33,7 @@ constant features = (<
 				// files with eg the exec bit set.
 >);
 
-constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
+constant RXP_ACTION_URL = "https://extranet.roxen.com/rxp/action.html";
 //! URL for fetching rxp clusters.
 
 //! Contains the patchdata
@@ -209,11 +209,11 @@ class Patcher
   private string patch_bin = "patch";
   //! Command for the external executable.
 
-  function write_mess;
+  function(string, mixed...:void) write_mess;
   //! Callback function for status messages. Should take a string as argument
   //! and return void.
 
-  function write_err;
+  function(string, mixed...:void) write_err;
   //! Callback function for error messages. Should take a string as argument
   //! and return void.
 
@@ -227,6 +227,11 @@ class Patcher
   //!   Old patchids were on the format @expr{YYYY-MM-DDThhmm@}.
   //!   Matching and extraction of these MUST still be supported.
 
+  //! ETag for the latest fetched cluster.
+  private string http_cluster_etag;
+
+  //! Last modified header for the latest fetched cluster.
+  private string http_cluster_last_modified;
 
   void create(function      message_callback,
 	      function      error_callback,
@@ -263,7 +268,7 @@ class Patcher
     // Verify server dir
     server_path = combine_and_check_path(server_dir);
     if (!server_path)
-      error("Cannot access server dir!");
+      error("Cannot access server dir!\n");
     
 //     write_mess("Server path set to %s\n", server_path);
  
@@ -276,7 +281,7 @@ class Patcher
       if(!mkdirhier(import_path))
       {
 	// If the dir does not exist and we failed to create it.
-	error("Can't access import dir!");
+	error("Can't access import dir!\n");
       }
     }
 //     write_mess("Import dir set to %s\n", import_path);
@@ -288,7 +293,7 @@ class Patcher
       if(!mkdirhier(installed_path))
       {
 	// If the dir does not exist and we failed to create it.
-	error("Can't access installed dir!");
+	error("Can't access installed dir!\n");
       }
     }
 //     write_mess("Installed dir set to %s\n", installed_path);
@@ -308,7 +313,7 @@ class Patcher
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
     if (!is_file(version_h))
-      error("Cannot access " + version_h);
+      error("Cannot access " + version_h + "\n");
 
     object err = catch
     {
@@ -317,7 +322,7 @@ class Patcher
     };
     
     if (err)
-      error("Can't fetch server version");
+      error("Can't fetch server version.\n");
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
 
@@ -487,7 +492,7 @@ class Patcher
     return patch_ids;
   }
 
-  array(int|string) import_file_http(void|int(0..1) dry_run)
+  array(int|string) import_file_http()
   //! Fetch the latest rxp cluster from www.roxen.com and import the patches.
   {
     mapping file;
@@ -496,12 +501,16 @@ class Patcher
 	file = fetch_latest_rxp_cluster_file();
       };
     if (err) {
-      write_err((string)err + "\n");
+      write_err("HTTPS import failed: %s\n", describe_backtrace(err));
       write_mess("No patches were imported.\n");
       return 0;
     }
+    if (!file) {
+      // Already fetched and imported.
+      return ({});
+    }
 
-    write_mess("Fetched rxp cluster file %s over HTTP.\n", file->name);
+    write_mess("Fetched rxp cluster file %s over HTTPS.\n", file->name);
 
     string temp_dir = Stdio.append_path(get_temp_dir(), file->name);
     // Extra directory level to get rid of the sticky bit normally
@@ -509,7 +518,7 @@ class Patcher
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, file->name);   
     write_file_to_disk(temp_file, file->data);
-    array(int|string) patch_ids = import_file(temp_file, dry_run);
+    array(int|string) patch_ids = import_file(temp_file);
     clean_up(temp_dir);
 
     return patch_ids;
@@ -1861,8 +1870,7 @@ class Patcher
   {
     installed_path = combine_path(server_path, path);
     if (!is_dir(installed_path))
-      error(sprintf("Couldn't set %s as path for installed patches",
-		    installed_path));
+      error("Couldn't set %s as path for installed patches.\n", installed_path);
   }  
   
   void set_imported_path(string path) 
@@ -1874,9 +1882,8 @@ class Patcher
   //! permissions.
   {
     import_path = combine_path(getcwd(), path);
-    if (!is_dir(installed_path))
-      error(sprintf("Couldn't set %s as path for installed patches",
-		    import_path));
+    if (!is_dir(import_path))
+      error("Couldn't set %s as path for imported patches.\n", import_path);
   }
   
   void set_temp_dir(void | string path)
@@ -1901,7 +1908,7 @@ class Patcher
     else if (is_dir("/tmp/"))
       temp_path = "/tmp/";
     else
-      error("Couldn't set a standard temp dir.");
+      error("Couldn't set a standard temp dir.\n");
   }
 
   string get_temp_dir() { return temp_path; }
@@ -2981,7 +2988,7 @@ class Patcher
 			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
 	privs = 0;
       }) {
-      werror("%s\n", describe_backtrace(err));
+      write_err("Extraction failed: %s\n", describe_backtrace(err));
       file->close();
       return 0;
     }
@@ -3052,32 +3059,34 @@ class Patcher
   }
 
   mapping(string:string) fetch_latest_rxp_cluster_file() {
-    Standards.URI new_uri(string url) {
-      Standards.URI uri;
-      mixed err = catch { uri = Standards.URI(url); };
-      if (err) { error(sprintf("Malformed URL: %s", url || "")); }
-      return uri;
-    };
-
-    string get_url(Standards.URI uri) {
-#if constant(roxen) // We probably have threads
-      Protocols.HTTP.Query query = get_url_async(uri);
-#else // No threads
-      Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
-#endif
+    string get_url(Standards.URI uri, int|void use_etag) {
+      string etag = use_etag && http_cluster_etag;
+      string last_modified = use_etag && http_cluster_last_modified;
+      Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
+      if ((query->status == 304) || (query->status == 412)) {
+	return 0;
+      }
       if (query->status != 200) {
-	error(sprintf("HTTP request for URL %s failed with status %d: %s.",
-		      (string)uri || "", query->status, query->status_desc || ""));
+	error("HTTPS request for URL %s failed with status %d: %s.\n",
+	      (string)uri || "", query->status, query->status_desc || "");
+      }
+      if (use_etag) {
+	http_cluster_etag = query->headers->etag;
+	if ((http_cluster_last_modified = query->headers["last-modified"]) &&
+	    query->headers["content-length"]) {
+	  http_cluster_last_modified +=
+	    "; length=" + query->headers["content-length"];
+	}
       }
       return query->data();
     };
 
     // If not running in a dist we can't fetch patches
     if (dist_version == "")
-      error("Not running a proper distribution.");
-    
+      error("Not running a proper distribution.\n");
+
     // Get rxp action url
-    Standards.URI uri = new_uri(RXP_ACTION_URL);
+    Standards.URI uri = Standards.URI(RXP_ACTION_URL);
     uri->add_query_variables(([ "product"  : product_code,
 				"version"  : dist_version,
 				"platform" : server_platform,
@@ -3086,41 +3095,79 @@ class Patcher
 
     // Get rxp cluster url
     if (!res || !sizeof(res))
-      error("No rxp cluster URL was found.");
+      error("No rxp cluster URL was found.\n");
 
-    Standards.URI uri2 = new_uri(res);
-    string res2 = get_url(uri2); 
+    Standards.URI uri2 = Standards.URI(String.trim_all_whites(res), uri);
+    if (uri->scheme != "https")
+      error("Fetch: Not HTTPS: %s\n", (string)uri2);
+    string res2 = get_url(uri2, 1);
+
+    if (!res2) {
+      // Already fetched.
+      return 0;
+    }
 
     return ([ "data" : res2,
 	      "name" : basename(uri2->path) ]);
   }
 
-  Protocols.HTTP.Query get_url_async(Standards.URI uri) {
-    Thread.Queue queue = Thread.Queue();
-    object con = Protocols.HTTP.Query();
-    con->timeout = 20;
+  Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
+				   string|void etag, string|void last_modified)
+  {
+    mapping(string:string) request_headers = ([]);
 
-    // Hack to force do_async_method to not reset the timeout value
-    con->headers = ([ "connection" : "keep-alive" ]);
-
-    function cb = lambda() { queue->write("@"); };
-    con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
-  
-#ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
-      Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     roxen.query("proxy_username"), 
-					     roxen.query("proxy_password"),
-					     "GET", uri, 0, 0, con);
-    } else {
-      Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+    if (etag) {
+      request_headers["If-None-Match"] = etag;
     }
+    if (last_modified) {
+      request_headers["If-Modified-Since"] = last_modified;
+    }
+#if constant(roxenp)
+    // NB: Use roxenp to access the roxen object since roxen hasn't
+    //     been loaded when we are compiled.
+    object roxen = roxenp();
+    if (roxen && (this_thread() != roxen.backend_thread)) {
+      // The backend thread is probably running and we are not it.
+      Thread.Queue queue = Thread.Queue();
+      object con = Protocols.HTTP.Query();
+      con->timeout = timeout;
+
+      // Hack to force do_async_method to not reset the timeout value
+      con->headers = ([ "connection" : "keep-alive" ]);
+
+      function cb = lambda() { queue->write("@"); };
+      con->set_callbacks(lambda() { con->async_fetch(cb, cb); }, cb);
+
+      if (uri->scheme == "https") {
+	// Enable verification of the certificate chain.
+	SSL.Context ctx = con->context = SSL.Context();
+	ctx->trusted_issuers_cache = Standards.X509.load_authorities();
+	ctx->verify_certificates = 1;
+	ctx->require_trust = 1;
+	ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
+      }
+
+#ifdef ENABLE_OUTGOING_PROXY
+      if (roxen.query("use_proxy")) {
+	Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
+					       roxen.query("proxy_username"),
+					       roxen.query("proxy_password"),
+					       "GET", uri, 0,
+					       request_headers, con);
+      } else {
+	Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
+      }
 #else
-    Protocols.HTTP.do_async_method("GET", uri, 0, 0, con);
+      Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
 #endif
   
-    queue->read();    
+      queue->read();
   
-    return con;
+      return con;
+    }
+
+    // FALLBACK to synchronous fetch.
+#endif /* roxen */
+    return Protocols.HTTP.get_url(uri, UNDEFINED, request_headers);
   }
 }
