@@ -746,6 +746,12 @@ be of real use.</p>"));
 	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
+  defvar("auto_fetch_rxps", 0,
+	 LOCALE(0, "Auto Maintenance: Enable Automatic Patch import"),
+	 TYPE_FLAG,
+	 LOCALE(0, "Automatically fetch and import patches to the server "
+		"from www.roxen.com."));
+
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
 			   Locale.list_languages("roxen_config"),
@@ -800,6 +806,15 @@ be of real use.</p>"));
       lambda(RequestID id, Variable.Variable f)
 	{return !query("suicide_engage");}
     );
+
+  defvar("patch_on_restart", 0,
+	 LOCALE(0, "Auto Maintenance: Restart and apply patches"),
+	 TYPE_FLAG,
+	 LOCALE(0, "Apply any pending imported patches when the server is "
+		"automatically restarted."))
+    ->set_invisibility_check_callback (
+      lambda(RequestID id, Variable.Variable f)
+      {return !query("suicide_engage");});
 
   defvar ("mem_cache_gc_2", 5 * 60,
 	  LOCALE(1045, "Cache: Memory cache GC interval"),
@@ -979,20 +994,6 @@ the Roxen instance of the MySQL server).</p>"));
          LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
          LOCALE(1059, "Password for proxy authorization."));
 #endif
-
-  defvar("auto_fetch_rxps", 0,
-	 LOCALE(0, "Auto Maintenance: Enable Automatic Patch import"),
-	 TYPE_FLAG,
-	 LOCALE(0, "Automatically fetch and import patches to the server "
-		"from www.roxen.com."));
-  defvar("patch_on_restart", 0,
-	 LOCALE(0, "Auto Maintenance: Restart and apply patches"),
-	 TYPE_FLAG,
-	 LOCALE(0, "Apply any pending imported patches when the server is "
-		"automatically restarted."))
-    ->set_invisibility_check_callback (
-      lambda(RequestID id, Variable.Variable f)
-      {return !query("suicide_engage");});
 }
 
 
