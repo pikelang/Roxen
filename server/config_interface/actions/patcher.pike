@@ -360,8 +360,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     "%s"
 		     + (which_list == "imported" ? 
 			"<td style='text-align:right'>"
+			"<cf-perm perm='Update'>"
 			"<link-gbutton href='?action=patcher.pike&class=maintenance&remove-patch-id=%[1]s'>remove"
 			"</link-gbutton>"
+			"</cf-perm>"
 			"</td>"
 			: "") + 
 		     "      </tr>\n",
