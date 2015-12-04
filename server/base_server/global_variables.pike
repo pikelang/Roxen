@@ -724,7 +724,7 @@ be of real use.</p>"));
 #endif // THREADS
 
 #ifndef __NT__
-  defvar("abs_engage", 0, LOCALE(154, "Auto Restart: Enable Anti-Block-System"), 
+  defvar("abs_engage", 0, LOCALE(154, "Auto Maintenance: Enable Anti-Block-System"),
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(155, "If set, the anti-block-system will be enabled. "
 		"This will restart the server after a configurable number of minutes if it "
@@ -735,7 +735,7 @@ be of real use.</p>"));
 
 
 
-  defvar("abs_timeout", 5, LOCALE(156, "Auto Restart: ABS Timeout"),
+  defvar("abs_timeout", 5, LOCALE(156, "Auto Maintenance: ABS Timeout"),
 	 TYPE_INT_LIST|VAR_MORE,
 	 LOCALE(157, "If the server is unable to accept connection for this many "
 		"minutes, it will be restarted. You need to find a balance: "
@@ -780,7 +780,7 @@ be of real use.</p>"));
 
   
   defvar("suicide_engage", 0,
-	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),
+	 LOCALE(160, "Auto Maintenance: Enable Automatic Restart"),
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(161, "If set, Roxen will automatically restart after a "
 		"configurable number of days. Since Roxen uses a monolith, "
@@ -793,7 +793,7 @@ be of real use.</p>"));
   
   defvar("suicide_schedule",
 	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
-			    LOCALE(387,"Auto Restart: Schedule"),
+			    LOCALE(387,"Auto Maintenance: Restart Schedule"),
 			    LOCALE(388, "Automatically restart the "
 				   "server according to this schedule.") ) )
     ->set_invisibility_check_callback (
@@ -981,15 +981,18 @@ the Roxen instance of the MySQL server).</p>"));
 #endif
 
   defvar("auto_fetch_rxps", 0,
-	 LOCALE(0, "Auto Patching: Automatically import patches"),
+	 LOCALE(0, "Auto Maintenance: Enable Automatic Patch import"),
 	 TYPE_FLAG,
 	 LOCALE(0, "Automatically fetch and import patches to the server "
 		"from www.roxen.com."));
   defvar("patch_on_restart", 0,
-	 LOCALE(0, "Auto Patching: Automatically apply patches"),
+	 LOCALE(0, "Auto Maintenance: Restart and apply patches"),
 	 TYPE_FLAG,
-	 LOCALE(0, "Automatically apply any imported patches when the "
-		"server is restarted."));
+	 LOCALE(0, "Apply any pending imported patches when the server is "
+		"automatically restarted."))
+    ->set_invisibility_check_callback (
+      lambda(RequestID id, Variable.Variable f)
+      {return !query("suicide_engage");});
 }
 
 
