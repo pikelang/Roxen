@@ -593,7 +593,7 @@ void exit_when_done()
 {
   shutdown_started = 1;
   report_notice("Interrupt request received.\n");
-  low_shutdown(-1);
+  low_shutdown(-1, -1);
 }
 
 int is_shutting_down()
