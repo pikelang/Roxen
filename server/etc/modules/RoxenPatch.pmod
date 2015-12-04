@@ -493,7 +493,7 @@ class Patcher
 	file = fetch_latest_rxp_cluster_file();
       };
     if (err) {
-      write_err("HTTP import failed: %s\n", describe_backtrace(err));
+      write_err("HTTPS import failed: %s\n", describe_backtrace(err));
       write_mess("No patches were imported.\n");
       return 0;
     }
@@ -502,7 +502,7 @@ class Patcher
       return ({});
     }
 
-    write_mess("Fetched rxp cluster file %s over HTTP.\n", file->name);
+    write_mess("Fetched rxp cluster file %s over HTTPS.\n", file->name);
 
     string temp_dir = Stdio.append_path(get_temp_dir(), file->name);
     // Extra directory level to get rid of the sticky bit normally
@@ -3060,7 +3060,7 @@ class Patcher
 	return 0;
       }
       if (query->status != 200) {
-	error("HTTP request for URL %s failed with status %d: %s.\n",
+	error("HTTPS request for URL %s failed with status %d: %s.\n",
 	      (string)uri || "", query->status, query->status_desc || "");
       }
       if (use_etag) {
