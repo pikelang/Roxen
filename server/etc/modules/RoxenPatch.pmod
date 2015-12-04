@@ -3090,7 +3090,7 @@ class Patcher
     if (!res || !sizeof(res))
       error("No rxp cluster URL was found.\n");
 
-    Standards.URI uri2 = Standards.URI(res);
+    Standards.URI uri2 = Standards.URI(String.trim_all_whites(res), uri);
     if (uri->scheme != "https")
       error("Fetch: Not HTTPS: %s\n", (string)uri2);
     string res2 = get_url(uri2, 1);
