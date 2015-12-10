@@ -559,11 +559,6 @@ float compat_level()
  * performance reasons later on.
  */
 
-array (Priority) allocate_pris()
-{
-  return allocate(10, Priority)();
-}
-
 array(int) query_oid()
 {
   return SNMP.RIS_OID_WEBSERVER + ({ 2 });
@@ -624,8 +619,11 @@ int handler_queue_timeout;
 // mentioned module in the future.
 private mapping (int|string:string) log_format = ([]);
 
-// A list of priority objects
-array (Priority) pri = allocate_pris();
+//! The modules sorted with regards to priority and type.
+private array(RoxenModule) sorted_modules = ({});
+
+//! NB: May contain junk in the high-order bits.
+private array(int) sorted_module_types = ({});
 
 mapping modules = ([]);
 //! All enabled modules in this site.
@@ -651,6 +649,20 @@ private mapping (string:array (function)) file_extension_module_cache=([]);
 private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
+private int module_sort_key(RoxenModule me)
+{
+  int pri = me->query("_priority");
+  array(int|string) info = me->register_module();
+  return (pri << 32) | (info[0] & MODULE_TYPE_MASK);
+}
+
+private void sort_modules()
+{
+  sorted_module_types = map(sorted_modules, module_sort_key);
+  sort(sorted_module_types, sorted_modules);
+  sorted_module_types = map(sorted_module_types, `&, MODULE_TYPE_MASK);
+  invalidate_cache();
+}
 
 void unregister_urls()
 {
@@ -670,39 +682,11 @@ private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
 
 private void do_stop_all_modules (Thread.MutexKey stop_lock)
 {
-  mapping(RoxenModule:string) allmods = otomod + ([]);
-
-  if (types_module) {
-    safe_stop_module (types_module, "type module");
-    m_delete (allmods, types_module);
+  foreach(sorted_modules, RoxenModule m) {
+    safe_stop_module(m, "module");
   }
-
-  if (dir_module) {
-    safe_stop_module (dir_module, "directory module");
-    m_delete (allmods, dir_module);
-  }
-
-  for(int i=0; i<10; i++)
-    if (Priority p = pri[i]) {
-#define STOP_MODULES(MODS, DESC)					\
-      foreach(MODS, RoxenModule m)					\
-        if (allmods[m]) {						\
-	  safe_stop_module (m, DESC);					\
-	  m_delete (allmods, m);					\
-	}
-      STOP_MODULES (p->url_modules, "url module");
-      STOP_MODULES (p->logger_modules, "logging module");
-      STOP_MODULES (p->filter_modules, "filter module");
-      STOP_MODULES (p->location_modules, "location module");
-      STOP_MODULES (p->last_modules, "last module");
-      STOP_MODULES (p->first_modules, "first module");
-      STOP_MODULES (indices (p->provider_modules), "provider module");
-    }
 
   end_logger();
-
-  STOP_MODULES(indices (allmods), "unclassified module");
-#undef STOP_MODULES
 
   destruct (stop_lock);
 }
@@ -769,21 +753,48 @@ array (RoxenModule) get_providers(string provides)
 //! Returns an array with all provider modules that provides "provides".
 {
   // This cache is cleared in the invalidate_cache() call.
-  if(!provider_module_cache[provides])
+  if(!sizeof(provider_module_cache))
   {
-    int i;
-    provider_module_cache[provides]  = ({ });
-    for(i = 9; i >= 0; i--)
-    {
-      array(RoxenModule) modules = indices(pri[i]->provider_modules);
-      array(string) module_identifiers = modules->module_identifier();
-      sort(module_identifiers, modules);
-      foreach(modules, RoxenModule d)
-	if(pri[i]->provider_modules[ d ][ provides ])
-	  provider_module_cache[provides] += ({ d });
+    provider_module_cache[0] = 0;	// Initialization sentinel.
+    int prev_pri = -1;
+    array(RoxenModule) modules = ({});
+    foreach(reverse(filter(sorted_modules,
+			   map(sorted_module_types, `&, MODULE_PROVIDER))),
+	    RoxenModule me) {
+      if (!me->query_provides) continue;
+      int pri = me->query("_priority");
+      if (pri != prev_pri) {
+	sort(modules->module_identifier(), modules);
+	foreach(modules, RoxenModule p) {
+	  mixed provs = p->query_provides();
+	  if (stringp(provs)) {
+	    provs = (< provs >);
+	  } else if (arrayp(provs)) {
+	    provs = mkmultiset(provs);
+	  }
+	  foreach(provs; string provides;) {
+	    provider_module_cache[provides] += ({ p });
+	  }
+	}
+	modules = ({});
+      }
+      prev_pri = pri;
+      modules += ({ me });
+    }
+    sort(modules->module_identifier(), modules);
+    foreach(modules, RoxenModule p) {
+      mixed provs = p->query_provides();
+      if (stringp(provs)) {
+	provs = (< provs >);
+      } else if (arrayp(provs)) {
+	provs = mkmultiset(provs);
+      }
+      foreach(provs; string provides;) {
+	provider_module_cache[provides] += ({ p });
+      }
     }
   }
-  return provider_module_cache[provides];
+  return provider_module_cache[provides] || ({});
 }
 
 RoxenModule get_provider(string provides)
@@ -834,37 +845,33 @@ mixed call_provider(string provides, string fun, mixed ... args)
   }
 }
 
-array (function) file_extension_modules(string ext)
+array(function) file_extension_modules(string ext)
 {
-  if(!file_extension_module_cache[ext = lower_case(ext)])
-  {
-    int i;
-    file_extension_module_cache[ext]  = ({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d = pri[i]->file_extension_modules[ext])
-	foreach(d, p)
-	  file_extension_module_cache[ext] += ({ p->handle_file_extension });
+  if (!sizeof(file_extension_module_cache)) {
+    file_extension_module_cache[0] = 0;	// Initialization sentinel.
+    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
+					       MODULE_FILE_EXTENSION))),
+	    RoxenModule me) {
+      if (!me->handle_file_extension) continue;
+      array(string) arr = me->query_file_extensions();
+      foreach(arr, string e) {
+	file_extension_module_cache[e] += ({ me->handle_file_extension });
+      }
     }
   }
   return file_extension_module_cache[ext];
 }
 
-array (function) url_modules()
+array(function) url_modules()
 {
   if(!url_module_cache)
   {
-    int i;
     url_module_cache=({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d=pri[i]->url_modules)
-	foreach(d, p)
-	  url_module_cache += ({ p->remap_url });
+    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
+					       MODULE_URL))),
+	    RoxenModule me) {
+      if (me->remap_url)
+	url_module_cache += ({ me->remap_url });
     }
   }
   return url_module_cache;
@@ -880,16 +887,12 @@ array (function) logger_modules()
 {
   if(!logger_module_cache)
   {
-    int i;
     logger_module_cache=({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d=pri[i]->logger_modules)
-	foreach(d, p)
-	  if(p->log)
-	    logger_module_cache += ({ p->log });
+    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
+					       MODULE_LOGGER))),
+	    RoxenModule me) {
+      if(me->log)
+	logger_module_cache += ({ me->log });
     }
   }
   return logger_module_cache;
@@ -901,14 +904,11 @@ array (function) last_modules()
   {
     int i;
     last_module_cache=({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d=pri[i]->last_modules)
-	foreach(d, p)
-	  if(p->last_resort)
-	    last_module_cache += ({ p->last_resort });
+    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
+					       MODULE_LAST))),
+	    RoxenModule me) {
+      if(me->last_resort)
+	last_module_cache += ({ me->last_resort });
     }
   }
   return last_module_cache;
@@ -959,16 +959,11 @@ array (function) first_modules()
       });
     }
     
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d; RoxenModule p;
-      if(d=pri[i]->first_modules) {
-	foreach(d, p) {
-	  if(p->first_try) {
-	    first_module_cache += ({ p->first_try });
-	  }
-	}
-      }
+    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
+					       MODULE_FIRST))),
+	    RoxenModule me) {
+      if(me->first_try)
+	first_module_cache += ({ me->first_try });
     }
   }
 
@@ -986,28 +981,18 @@ array(UserDB) user_databases()
 {
   if( userdb_module_cache )
     return userdb_module_cache;
-  array tmp = ({});
-  foreach( values( modules ), mapping m )
-    foreach( values(m->copies), RoxenModule mo )
-      if( mo->module_type & MODULE_USERDB )
-	tmp += ({ ({ mo->query( "_priority" ), mo }) });
-
-  sort( tmp );
-//   tmp += ({ ({ 0, roxen->config_userdb_module }) });
-  return userdb_module_cache = reverse(column(tmp,1));
+  return userdb_module_cache =
+    reverse(filter(sorted_modules,
+		   map(sorted_module_types, `&, MODULE_USERDB)));
 }
 
 array(AuthModule) auth_modules()
 {
   if( auth_module_cache )
     return auth_module_cache;
-  array tmp = ({});
-  foreach( values( modules ), mapping m )
-    foreach( values(m->copies), RoxenModule mo )
-      if( mo->module_type & MODULE_AUTH )
-	tmp += ({ ({ mo->query( "_priority" ), mo }) });
-  sort( tmp );
-  return auth_module_cache = reverse(column(tmp,1));
+  return auth_module_cache =
+    reverse(filter(sorted_modules,
+		   map(sorted_module_types, `&, MODULE_AUTH)));
 }
 
 array location_modules()
@@ -1016,31 +1001,32 @@ array location_modules()
 {
   if(!location_module_cache)
   {
-    int i;
     array new_location_module_cache=({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d=pri[i]->location_modules) {
-	array level_find_files = ({});
-	array level_locations = ({});
-	foreach(d, p) {
-	  string location;
-	  // FIXME: Should there be a catch() here?
-	  if(p->find_file && (location = p->query_location())) {
-	    level_find_files += ({ p->find_file });
-	    level_locations += ({ location });
-	  }
+    int prev_pri = -1;
+    array level_find_files = ({});
+    array(string) level_locations = ({});
+    foreach(reverse(filter(sorted_modules,
+			   map(sorted_module_types, `&, MODULE_LOCATION))),
+	    RoxenModule me) {
+      int pri = me->query("_priority");
+      if (pri != prev_pri) {
+	sort(level_locations, level_find_files);
+	foreach(level_locations; int i; string path) {
+	  new_location_module_cache += ({ ({ path, level_find_files[i] }) });
 	}
-	sort(map(level_locations, sizeof), level_locations, level_find_files);
-	int j;
-	for (j = sizeof(level_locations); j--;) {
-	  // Order after longest path first.
-	  new_location_module_cache += ({ ({ level_locations[j],
-					     level_find_files[j] }) });
-	}
+	level_locations = ({});
+	level_find_files = ({});
       }
+      prev_pri = pri;
+      // FIXME: Should there be a catch() here?
+      string location = me->find_file && me->query_location();
+      if (!location) continue;
+      level_find_files += ({ me->find_file });
+      level_locations += ({ location });
+    }
+    sort(level_locations, level_find_files);
+    foreach(level_locations; int i; string path) {
+      new_location_module_cache += ({ ({ path, level_find_files[i] }) });
     }
     location_module_cache = new_location_module_cache;
   }
@@ -1051,16 +1037,12 @@ array(function) filter_modules()
 {
   if(!filter_module_cache)
   {
-    int i;
-    filter_module_cache=({ });
-    for(i=9; i>=0; i--)
-    {
-      array(RoxenModule) d;
-      RoxenModule p;
-      if(d=pri[i]->filter_modules)
-	foreach(d, p)
-	  if(p->filter)
-	    filter_module_cache+=({ p->filter });
+    foreach(reverse(filter(sorted_modules,
+			   map(sorted_module_types, `&, MODULE_FILTER))),
+	    RoxenModule me) {
+      if (me->filter) {
+	filter_module_cache += ({ me->filter });
+      }
     }
   }
   return filter_module_cache;
@@ -4165,6 +4147,9 @@ void call_low_start_callbacks( RoxenModule me,
     pr = 3;
   }
 
+  sorted_modules += ({ me });
+  sorted_module_types += ({ module_type });
+
   api_module_cache |= me->api_functions();
 
   if(module_type & MODULE_EXTENSION)
@@ -4174,49 +4159,6 @@ void call_low_start_callbacks( RoxenModule me,
 		 "Suitable replacement types include MODULE_FIRST and "
 		 " MODULE_LAST.\n", moduleinfo->get_name());
   }
-
-  if(module_type & MODULE_FILE_EXTENSION)
-    if (err = catch {
-      array arr = me->query_file_extensions();
-      if (arrayp(arr))
-      {
-	string foo;
-	foreach( me->query_file_extensions(), foo )
-	  if(pri[pr]->file_extension_modules[foo = lower_case(foo)] )
-	    pri[pr]->file_extension_modules[foo] += ({me});
-	  else
-	    pri[pr]->file_extension_modules[foo] = ({me});
-      }
-    }) {
-#ifdef MODULE_DEBUG
-      if (enable_module_batch_msgs) report_debug("\bERROR\n");
-#endif
-      string bt=describe_backtrace(err);
-      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-      got_no_delayed_load = -1;
-    }
-
-  if(module_type & MODULE_PROVIDER)
-    if (err = catch
-    {
-      mixed provs = me->query_provides ? me->query_provides() : ({});
-      if(stringp(provs))
-	provs = (< provs >);
-      if(arrayp(provs))
-	provs = mkmultiset(provs);
-      if (multisetp(provs)) {
-	pri[pr]->provider_modules [ me ] = provs;
-      }
-    }) {
-#ifdef MODULE_DEBUG
-      if (enable_module_batch_msgs) report_debug("\bERROR\n");
-#endif
-      string bt=describe_backtrace(err);
-      report_error(LOC_M(41, "Error while initiating module copy of %s%s"),
-		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
-      got_no_delayed_load = -1;
-    }
 
   if(module_type & MODULE_TYPES)
   {
@@ -4231,23 +4173,7 @@ void call_low_start_callbacks( RoxenModule me,
     if (me->parse_directory)
       dir_module = me;
 
-  if(module_type & MODULE_LOCATION)
-    pri[pr]->location_modules += ({ me });
-
-  if(module_type & MODULE_LOGGER)
-    pri[pr]->logger_modules += ({ me });
-
-  if(module_type & MODULE_URL)
-    pri[pr]->url_modules += ({ me });
-
-  if(module_type & MODULE_LAST)
-    pri[pr]->last_modules += ({ me });
-
-  if(module_type & MODULE_FILTER)
-    pri[pr]->filter_modules += ({ me });
-
-  if(module_type & MODULE_FIRST)
-    pri[pr]->first_modules += ({ me });
+  sort_modules();
 
   foreach(registered_urls, string url) {
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
@@ -4283,8 +4209,6 @@ void call_low_start_callbacks( RoxenModule me,
       }
     }
   }
-
-  invalidate_cache();
 }
 
 void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
@@ -4366,18 +4290,13 @@ void module_changed( ModuleInfo moduleinfo,
 void clean_up_for_module( ModuleInfo moduleinfo,
 			  RoxenModule me )
 {
-  int pr;
-  if(moduleinfo->type & MODULE_FILE_EXTENSION)
-  {
-    string foo;
-    for(pr=0; pr<10; pr++)
-      foreach( indices (pri[pr]->file_extension_modules), foo )
-	pri[pr]->file_extension_modules[foo]-=({me});
-  }
-
-  if(moduleinfo->type & MODULE_PROVIDER) {
-    for(pr=0; pr<10; pr++)
-      m_delete(pri[pr]->provider_modules, me);
+  int i = 0;
+  // Loop for paranoia reasons.
+  while((i < sizeof(sorted_modules)) &&
+	(i = search(sorted_modules, me, i)) >= 0) {
+    sorted_modules = sorted_modules[..i-1] + sorted_modules[i+1..];
+    sorted_module_types = sorted_module_types[..i-1] +
+      sorted_module_types[i+1..];
   }
 
   if(moduleinfo->type & MODULE_TYPES)
@@ -4392,31 +4311,6 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_DIRECTORIES )
     dir_module = 0;
 
-  if( moduleinfo->type & MODULE_LOCATION )
-    for(pr=0; pr<10; pr++)
-     pri[pr]->location_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_URL )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->url_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_LAST )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->last_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_FILTER )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->filter_modules -= ({ me });
-
-  if( moduleinfo->type & MODULE_FIRST ) {
-    for(pr=0; pr<10; pr++)
-      pri[pr]->first_modules -= ({ me });
-  }
-
-  if( moduleinfo->type & MODULE_LOGGER )
-    for(pr=0; pr<10; pr++)
-      pri[pr]->logger_modules -= ({ me });
-
   foreach(registered_urls, string url) {
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
@@ -4427,6 +4321,8 @@ void clean_up_for_module( ModuleInfo moduleinfo,
       SNMP.remove_owned(prot->mib, this_object(), me);
     }
   }
+
+  invalidate_cache();
 }
 
 int disable_module( string modname, void|RoxenModule new_instance )
