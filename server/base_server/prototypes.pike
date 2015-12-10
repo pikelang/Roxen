@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.290 2012/05/15 16:00:39 grubba Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -330,23 +330,6 @@ class Configuration
   mapping(string:array(int)) profile_map = ([]);
 #endif
 
-  class Priority
-  {
-    string _sprintf (int flag)
-    {
-      return flag == 'O' && "Priority()";
-    }
-
-    array (RoxenModule) url_modules = ({ });
-    array (RoxenModule) logger_modules = ({ });
-    array (RoxenModule) location_modules = ({ });
-    array (RoxenModule) filter_modules = ({ });
-    array (RoxenModule) last_modules = ({ });
-    array (RoxenModule) first_modules = ({ });
-    mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
-    mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
-  }
-
   class DataCache
   {
     int current_size, max_size, max_file_size;
@@ -357,8 +340,6 @@ class Configuration
     array(string|mapping(string:mixed)) get(string url, RequestID id);
     void init_from_variables( );
   };
-
-  array(Priority) allocate_pris();
 
   object      throttler;
   RoxenModule types_module;
