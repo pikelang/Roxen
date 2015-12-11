@@ -200,23 +200,6 @@ class Connection
     }
   }
 
-  class InsinuateFirst
-  {
-    mixed query( string what ) { return 0; }
-    void first_try( RequestID id )
-    {
-      if(catch 
-      {
-	rl->readline->write( sprintf("Request for %s in %O from %s\n",
-				     id->not_query, id->conf, id->remoteaddr),1);
-      })
-      {
-	id->conf->pri[4]->first_modules -= ({ this_object() });
-	id->conf->invalidate_cache();
-      }
-    }
-  }
-
   mixed hilfe_debug( string what )
   {
     if( !stringp( what ) )
@@ -224,13 +207,7 @@ class Connection
     switch( what )
     {
       case "accesses":
-	foreach( roxen->configurations, Configuration c )
-	  if( c->inited )
-	  {
-	    c->pri[4]->first_modules += ({ InsinuateFirst() });
-	    c->invalidate_cache();
-	  }
-	break;
+	error("Not supported anymore.\n");
 
       default:
 	error("Don't know how to debug "+what+"\n");
