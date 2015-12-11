@@ -4246,6 +4246,8 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_DIRECTORIES )
     dir_module = 0;
 
+  api_module_cache -= me->api_functions();
+
   foreach(registered_urls, string url) {
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
