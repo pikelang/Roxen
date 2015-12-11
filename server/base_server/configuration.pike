@@ -654,6 +654,17 @@ private void sort_modules()
   invalidate_cache();
 }
 
+// Generic lookup function for the various module caches.
+private array(function|RoxenModule) low_module_lookup(int module_type_mask,
+						      string|void symbol)
+{
+  array(RoxenModule) modules =
+    reverse(filter(sorted_modules,
+		   map(sorted_module_types, `&, module_type_mask)));
+  if (!symbol) return modules;
+  return modules[symbol] - ({ 0 });
+}
+
 void unregister_urls()
 {
   foreach( registered_urls + failed_urls, string url )
@@ -747,9 +758,7 @@ array (RoxenModule) get_providers(string provides)
     provider_module_cache[0] = 0;	// Initialization sentinel.
     int prev_pri = -1;
     array(RoxenModule) modules = ({});
-    foreach(reverse(filter(sorted_modules,
-			   map(sorted_module_types, `&, MODULE_PROVIDER))),
-	    RoxenModule me) {
+    foreach(low_module_lookup(MODULE_PROVIDER), RoxenModule me) {
       if (!me->query_provides) continue;
       int pri = me->query("_priority");
       if (pri != prev_pri) {
@@ -838,9 +847,7 @@ array(function) file_extension_modules(string ext)
 {
   if (!sizeof(file_extension_module_cache)) {
     file_extension_module_cache[0] = 0;	// Initialization sentinel.
-    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
-					       MODULE_FILE_EXTENSION))),
-	    RoxenModule me) {
+    foreach(low_module_lookup(MODULE_FILE_EXTENSION), RoxenModule me) {
       if (!me->handle_file_extension) continue;
       array(string) arr = me->query_file_extensions();
       foreach(arr, string e) {
@@ -855,13 +862,7 @@ array(function) url_modules()
 {
   if(!url_module_cache)
   {
-    url_module_cache=({ });
-    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
-					       MODULE_URL))),
-	    RoxenModule me) {
-      if (me->remap_url)
-	url_module_cache += ({ me->remap_url });
-    }
+    url_module_cache = low_module_lookup(MODULE_URL, "remap_url");
   }
   return url_module_cache;
 }
@@ -876,13 +877,7 @@ array (function) logger_modules()
 {
   if(!logger_module_cache)
   {
-    logger_module_cache=({ });
-    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
-					       MODULE_LOGGER))),
-	    RoxenModule me) {
-      if(me->log)
-	logger_module_cache += ({ me->log });
-    }
+    logger_module_cache = low_module_lookup(MODULE_LOGGER, "log");
   }
   return logger_module_cache;
 }
@@ -891,14 +886,7 @@ array (function) last_modules()
 {
   if(!last_module_cache)
   {
-    int i;
-    last_module_cache=({ });
-    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
-					       MODULE_LAST))),
-	    RoxenModule me) {
-      if(me->last_resort)
-	last_module_cache += ({ me->last_resort });
-    }
+    last_module_cache = low_module_lookup(MODULE_LAST, "last_resort");
   }
   return last_module_cache;
 }
@@ -947,13 +935,8 @@ array (function) first_modules()
 	strip_fork_information,	// Always first!
       });
     }
-    
-    foreach(reverse(filter(sorted_modules, map(sorted_module_types, `&,
-					       MODULE_FIRST))),
-	    RoxenModule me) {
-      if(me->first_try)
-	first_module_cache += ({ me->first_try });
-    }
+
+    first_module_cache += low_module_lookup(MODULE_FIRST, "first_try");
   }
 
   return first_module_cache;
@@ -970,18 +953,14 @@ array(UserDB) user_databases()
 {
   if( userdb_module_cache )
     return userdb_module_cache;
-  return userdb_module_cache =
-    reverse(filter(sorted_modules,
-		   map(sorted_module_types, `&, MODULE_USERDB)));
+  return userdb_module_cache = low_module_lookup(MODULE_USERDB);
 }
 
 array(AuthModule) auth_modules()
 {
   if( auth_module_cache )
     return auth_module_cache;
-  return auth_module_cache =
-    reverse(filter(sorted_modules,
-		   map(sorted_module_types, `&, MODULE_AUTH)));
+  return auth_module_cache = low_module_lookup(MODULE_AUTH);
 }
 
 array location_modules()
@@ -994,9 +973,7 @@ array location_modules()
     int prev_pri = -1;
     array level_find_files = ({});
     array(string) level_locations = ({});
-    foreach(reverse(filter(sorted_modules,
-			   map(sorted_module_types, `&, MODULE_LOCATION))),
-	    RoxenModule me) {
+    foreach(low_module_lookup(MODULE_LOCATION), RoxenModule me) {
       int pri = me->query("_priority");
       if (pri != prev_pri) {
 	sort(level_locations, level_find_files);
@@ -1026,13 +1003,7 @@ array(function) filter_modules()
 {
   if(!filter_module_cache)
   {
-    foreach(reverse(filter(sorted_modules,
-			   map(sorted_module_types, `&, MODULE_FILTER))),
-	    RoxenModule me) {
-      if (me->filter) {
-	filter_module_cache += ({ me->filter });
-      }
-    }
+    filter_module_cache = low_module_lookup(MODULE_FILTER, "filter");
   }
   return filter_module_cache;
 }
