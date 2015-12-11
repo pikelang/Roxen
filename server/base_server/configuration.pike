@@ -931,7 +931,7 @@ array (function) first_modules()
 	1 ||
 #endif
 	uname()->sysname == "Darwin") {
-      first_module_cache= ({
+      first_module_cache += ({
 	strip_fork_information,	// Always first!
       });
     }
