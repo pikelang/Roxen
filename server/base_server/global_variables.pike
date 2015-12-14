@@ -227,7 +227,10 @@ void set_up_ssl_variables( Protocol o )
 		   "file, leave this field empty to use the "
 		   "certificate file only.")));
 
-#if !constant(SSL.Constants.preferred_rsa_suites)
+#if constant(SSL.Constants.CIPHER_aead)
+  // NB: This constant was added a few days after get_suites() in Pike 8.0,
+  //     and a single day after get_suites() in the backport to Pike 7.8.
+
   // Pike 8.0 or recent Pike 7.8.
   // They have SSL.[Cc]ontext()->get_suites().
 
