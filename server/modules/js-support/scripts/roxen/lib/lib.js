@@ -228,14 +228,12 @@
      * @return {string}     The result.
      */
     dirname: function(path) {
-      //  Strip the trailing file name from a path and return the directory
-      if (!path ||
-	  path === "" ||
-	  path === "/" ||
-	  path.charAt(path.length - 1) === "/") {
+      if (!path || path === "")
+	return "/";
+      if (path.charAt(path.length - 1) === "/")
 	return path;
-      }
       
+      //  Strip the trailing file name from a path and return the directory
       var segments = path.split("/");
       segments.pop();
       return segments.join("/") + "/";
