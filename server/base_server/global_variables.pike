@@ -227,8 +227,9 @@ void set_up_ssl_variables( Protocol o )
 		   "file, leave this field empty to use the "
 		   "certificate file only.")));
 
-#if constant(SSL.ServerConnection)
-  // Pike 8.0 and later has much more advanced support for SSL/TLS.
+#if !constant(SSL.Constants.preferred_rsa_suites)
+  // Pike 8.0 or recent Pike 7.8.
+  // They have SSL.[Cc]ontext()->get_suites().
 
   // 112 bits is the maximum strength to still retain the
   // DES-3 suites, which are required in the TLS standards.
@@ -258,7 +259,15 @@ void set_up_ssl_variables( Protocol o )
 			     "<dd>AES-256</dd>\n"
 			     "<dd>Camellia-256</dd>\n"
 			     "</dl>\n"
-			     "</p>\n")))->set_range(0, Variable.no_limit);
+			     "</p>\n"
+			     "<p>Cipher strengths lower than 112 bits are "
+			     "<b>NOT</b> recommended, and there are RFCs that "
+			     "prohibit the use of all those suites.</p>\n")))->
+    set_range(0, Variable.no_limit);
+#endif
+
+#if constant(SSL.ServerConnection)
+  // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar("ssl_suite_filter",
 	 Variable.IntChoice(0,
