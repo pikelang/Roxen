@@ -220,6 +220,28 @@
     },
 
     /**
+     * Returns the parent path for a full path by stripping off the trailing
+     * segment. The result will always end in "/".
+     *
+     * @method dirname
+     * @param {String} path The input path.
+     * @return {string}     The result.
+     */
+    dirname: function(path) {
+      //  Strip the trailing file name from a path and return the directory
+      if (!path ||
+	  path === "" ||
+	  path === "/" ||
+	  path.charAt(path.length - 1) === "/") {
+	return path;
+      }
+      
+      var segments = path.split("/");
+      segments.pop();
+      return segments.join("/") + "/";
+    },
+
+    /**
      * Decode string from UTF8.
      * @method fromUTF8
      * @param  {String} s String to decode.
