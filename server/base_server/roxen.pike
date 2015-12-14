@@ -2429,9 +2429,11 @@ class SSLProtocol
 		      });
     }
     ctx->preferred_suites = suites;
-#elif !constant(SSL.Constants.preferred_rsa_suites)
+#elif constant(SSL.Constants.CIPHER_aead)
     int bits = query("ssl_key_bits");
-    ctx->preferred_suites = ctx->get_suites(bits);
+    // NB: The arguments to get_suites() in Pike 7.8 currently differs
+    //     from the ones in Pike 8.0.
+    ctx->preferred_suites = ctx->get_suites(SSL.Constants.SIGNATURE_rsa, bits);
 #else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
