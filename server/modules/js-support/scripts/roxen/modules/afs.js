@@ -298,6 +298,57 @@ ROXEN.AFS = function () {
     }
     return call_or_post(action, "POST", args, postdata.join("&"), fn, scope);
   }
+
+  function post_files(action, args, files, fn, scope, group)
+  {
+    //  File should come from the browser's FileList API. We will use FormData
+    //  together with XHR to post directly to the server without involving YUI.
+
+    //  Prepare AFS call
+    if (!ROXEN.isObject(args))
+      args = { };
+    if (scope)
+      fn = ROXEN.bind(scope, fn);
+    if (fn) {
+      var tag = ++tag_count + "";
+      if (debug_log)
+	ROXEN.log ("AFS call: " + action + " " +
+		   YAHOO.lang.JSON.stringify (args) +
+		   ", callback " + fn.name + ", tag " + tag);
+      args.tag = tag;
+      tagged_callbacks[tag] = [ fn, group ];
+    } else if (debug_log) {
+      ROXEN.log ("AFS call: " + action + " " +
+		 YAHOO.lang.JSON.stringify (args));
+    }
+    if (fn && group) {
+      if (!groups[group]) groups[group] = [ ];
+      groups[group].push(args.tag);
+    }
+    
+    args[session_var] = session;
+    open_connections++;
+
+    //  Initiate transfer
+    var url = actions_prefix + action + "?" + encode_afs_args(args);
+    var fd = new FormData();
+    for (var i = 0; i < files.length; i++)
+      fd.append("upload-file-" + i, files[i]);
+    var xhr = new XMLHttpRequest();
+    xhr.open("POST", url, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+	if (xhr.status === 200) {
+	  //  Invoke success callback
+	  request_success(xhr);
+	} else if (xhr.status === 0 || xhr.status >= 400) {
+	  //  Invoke failure callback
+	  request_failure(xhr);
+	}
+      }
+    };
+    xhr.send(fd);
+  }
   
   function call_or_post(action, method, args, postdata, fn, scope, group) {
     if (!ROXEN.isObject(args)) {
@@ -412,8 +463,8 @@ ROXEN.AFS = function () {
    *
    * @param {Function} fn
    *   Callback function. It will be called with a single argument
-   *   which is either a YAHOO.util.Connect.asyncRequest failure
-   *   handler response, or an exception object thrown by
+   *   which is either a YAHOO.util.Connect.asyncRequest or XMLHttpRequest
+   *   failure handler response, or an exception object thrown by
    *   YAHOO.lang.JSON.parse.
    * @param {Object} scope
    *   Optional scope correction.
@@ -547,6 +598,7 @@ ROXEN.AFS = function () {
   return {
     call: call,
     post: post,
+    post_files: post_files,
     abort: abort,
     has_connection: has_connection,
     add_global_callback: add_global_callback,
