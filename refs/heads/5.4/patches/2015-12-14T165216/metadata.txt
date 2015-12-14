@@ -1,0 +1,12 @@
+subject: Roxen 5.4:   * Experimental code to prefix debug messages with user name
+from: 689d3d2362734e79b36184f9c23497ead96ef2fd
+to: d881b8fcb60f4c798d4913da0676ac93bf399583
+originator: wellhardh@roxen.com
+depends: roxen/5.4.94|2015-11-18T162530
+restart: true
+
+  * Experimental code to prefix debug messages with user name
+
+  * SSL: Enable the cipher strength selector in recent Pike 7.8.
+    
+    Fixes issue with RC4 suites being available by default.
