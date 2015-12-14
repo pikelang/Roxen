@@ -206,7 +206,7 @@
      * @param {Function} f Applied function to each element.
      *                     f's argument list is (element, index, array).
      * @param {Object}   o Scope correction.
-     * @retrun {Array}     The result.
+     * @return {Array}     The result.
      */
     filter: function (a, f, o) {
       var result = [];
