@@ -2310,6 +2310,9 @@ class SSLProtocol
 		      });
     }
     ctx->preferred_suites = suites;
+#elif !constant(SSL.Constants.preferred_rsa_suites)
+    int bits = query("ssl_key_bits");
+    ctx->preferred_suites = ctx->get_suites(bits);
 #else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
