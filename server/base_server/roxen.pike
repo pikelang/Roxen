@@ -2212,6 +2212,39 @@ class Protocol
 }
 
 #if constant(SSL.sslfile)
+
+// Some convenience functions.
+#if constant(SSL.Constants.fmt_cipher_suites)
+constant fmt_cipher_suite = SSL.Constants.fmt_cipher_suite;
+constant fmt_cipher_suites = SSL.Constants.fmt_cipher_suites;
+#else
+protected mapping(int:string) suite_to_symbol = ([]);
+
+string fmt_cipher_suite(int suite)
+{
+  if (!sizeof(suite_to_symbol)) {
+    foreach(indices(SSL.Constants), string id) {
+      if (has_prefix(id, "SSL_") || has_prefix(id, "TLS_") ||
+	  has_prefix(id, "SSL2_")) {
+	suite_to_symbol[SSL.Constants[id]] = id;
+      }
+    }
+  }
+  string res = suite_to_symbol[suite];
+  if (res) return res;
+  return suite_to_symbol[suite] = sprintf("unknown(%d)", suite);
+}
+
+string fmt_cipher_suites(array(int) s)
+{
+  String.Buffer b = String.Buffer();
+  foreach(s, int c) {
+    b->add(sprintf("  %-6d: %s\n", c, fmt_cipher_suite(c)));
+  }
+  return (string)b;
+}
+#endif
+
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
@@ -2327,6 +2360,12 @@ class SSLProtocol
     });
 #endif
 #endif /* SSL.ServerConnection */
+#ifdef ROXEN_SSL_DEBUG
+    report_debug("SSL: Cipher suites enabled for %O:\n"
+		 "%s\n",
+		 this_object(),
+		 fmt_cipher_suites(ctx->preferred_suites));
+#endif
   }
 
   // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
