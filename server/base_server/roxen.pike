@@ -2397,6 +2397,38 @@ class InternalProtocol
 
 #if constant(SSL.File)
 
+// Some convenience functions.
+#if constant(SSL.Constants.fmt_cipher_suites)
+constant fmt_cipher_suite = SSL.Constants.fmt_cipher_suite;
+constant fmt_cipher_suites = SSL.Constants.fmt_cipher_suites;
+#else
+protected mapping(int:string) suite_to_symbol = ([]);
+
+string fmt_cipher_suite(int suite)
+{
+  if (!sizeof(suite_to_symbol)) {
+    foreach(indices(SSL.Constants), string id) {
+      if (has_prefix(id, "SSL_") || has_prefix(id, "TLS_") ||
+	  has_prefix(id, "SSL2_")) {
+	suite_to_symbol[SSL.Constants[id]] = id;
+      }
+    }
+  }
+  string res = suite_to_symbol[suite];
+  if (res) return res;
+  return suite_to_symbol[suite] = sprintf("unknown(%d)", suite);
+}
+
+string fmt_cipher_suites(array(int) s)
+{
+  String.Buffer b = String.Buffer();
+  foreach(s, int c) {
+    b->add(sprintf("  %-6d: %s\n", c, fmt_cipher_suite(c)));
+  }
+  return (string)b;
+}
+#endif
+
 class SSLContext {
 #if constant(SSL.Context)
   inherit SSL.Context;
@@ -2529,6 +2561,11 @@ class StartTLSProtocol
 		      });
     }
     ctx->preferred_suites = suites;
+#elif constant(SSL.Constants.CIPHER_aead)
+    int bits = query("ssl_key_bits");
+    // NB: The arguments to get_suites() in Pike 7.8 currently differs
+    //     from the ones in Pike 8.0.
+    ctx->preferred_suites = ctx->get_suites(SSL.Constants.SIGNATURE_rsa, bits);
 #else
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
@@ -2544,6 +2581,12 @@ class StartTLSProtocol
     });
 #endif
 #endif /* SSL.ServerConnection */
+#ifdef ROXEN_SSL_DEBUG
+    report_debug("SSL: Cipher suites enabled for %O:\n"
+		 "%s\n",
+		 this_object(),
+		 fmt_cipher_suites(ctx->preferred_suites));
+#endif
   }
 
 #if constant(Standards.X509)
