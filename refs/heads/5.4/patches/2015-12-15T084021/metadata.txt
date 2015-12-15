@@ -1,0 +1,21 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 689d3d2362734e79b36184f9c23497ead96ef2fd
+to: 13394267893119ff73bff7ffcfd5d47ad59d4b3a
+originator: wellhardh@roxen.com
+depends: roxen/5.4.94|2015-11-18T162530
+restart: true
+
+Multiple fixes:
+
+  * Experimental code to prefix debug messages with user name
+
+  * SSL: Enable the cipher strength selector in recent Pike 7.8.
+    
+    Fixes issue with RC4 suites being available by default.
+
+  * SSL: More cipher strength fixes.
+    
+    The get_suites() API differs between Pike 7.8 and 8.0.
+    
+    The removed symbol preferred_rsa_suites was replaced by a getter, so it
+    isn't a suitable symbol to use to detect the presence of get_suites().
