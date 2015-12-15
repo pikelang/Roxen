@@ -1,0 +1,12 @@
+subject: Roxen 5.4:   * SSL: Updated cipher strength documentation.
+from: 13394267893119ff73bff7ffcfd5d47ad59d4b3a
+to: f9ccc2d78a9a0ac0f993bb3aed056c0eecdfc58e
+originator: wellhardh@roxen.com
+depends: 2015-12-15T084021
+restart: true
+
+  * SSL: Updated cipher strength documentation.
+
+  * SSL: Added some ROXEN_SSL_DEBUG.
+    
+    This #define can be used to enable some high-level SSL debug.
