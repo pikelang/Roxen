@@ -238,8 +238,12 @@ void set_up_ssl_variables( Protocol o )
 		   "file, leave this field empty to use the "
 		   "certificate file only.")));
 
-#if constant(SSL.ServerConnection)
-  // Pike 8.0 and later has much more advanced support for SSL/TLS.
+#if constant(SSL.Constants.CIPHER_aead)
+  // NB: This constant was added a few days after get_suites() in Pike 8.0,
+  //     and a single day after get_suites() in the backport to Pike 7.8.
+
+  // Pike 8.0 or recent Pike 7.8.
+  // They have SSL.[Cc]ontext()->get_suites().
 
   defvar( "ssl_password",
 	  Variable.String("", 0, LOCALE(0, "SSL decryption password"),
@@ -252,15 +256,18 @@ void set_up_ssl_variables( Protocol o )
 	 Variable.Int(112, 0,
 		      LOCALE(0, "Cipher suite minimum key strength"),
 		      LOCALE(0,
-			     "<p>The minimum number of bits to secure "
-			     "connections.</p>\n"
+			     "<p>The minimum number of effective bits to "
+			     "secure connections.</p>\n"
 			     "<p>Common ciphers (subject to availability) "
-			     "in order of bits:\n"
+			     "in order of effective bits as of December 2015:\n"
 			     "<dl>\n"
-			     "<dt>40</dt>\n"
-			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>24</dt>\n"
 			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
-			     "<dt>56</dt>\n"
+			     "<dt>32</dt>\n"
+			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>38</dt>\n"
+			     "<dd>RC4</dd>\n"
+			     "<dt>40</dt>\n"
 			     "<dd>DES</dd>\n"
 			     "<dt>112</dt>\n"
 			     "<dd>3-DES (Note that this cipher is the "
@@ -269,12 +276,19 @@ void set_up_ssl_variables( Protocol o )
 			     "<dt>128</dt>\n"
 			     "<dd>AES-128</dd>\n"
 			     "<dd>Camellia-128</dd>\n"
-			     "<dd>RC4</dd>\n"
 			     "<dt>256</dt>\n"
 			     "<dd>AES-256</dd>\n"
 			     "<dd>Camellia-256</dd>\n"
 			     "</dl>\n"
-			     "</p>\n")))->set_range(0, Variable.no_limit);
+			     "</p>\n"
+			     "<p>Cipher strengths lower than 112 bits are "
+			     "<b>NOT</b> recommended, and there are RFCs that "
+			     "prohibit the use of all those suites.</p>\n")))->
+    set_range(0, Variable.no_limit);
+#endif
+
+#if constant(SSL.ServerConnection)
+  // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar("ssl_suite_filter",
 	 Variable.IntChoice(0,
