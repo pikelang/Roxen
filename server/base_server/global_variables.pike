@@ -249,15 +249,14 @@ void set_up_ssl_variables( Protocol o )
 		   "can be done in <b>SSL certificate file(s)</b>.")))->
     set_invisibility_check_callback(hide_if_empty);
 
-#if constant(SSL.ServerConnection)
-  // Pike 8.0 and later has much more advanced support for SSL/TLS.
+#if constant(SSL.Constants.CIPHER_aead)
+  // NB: This constant was added a few days after get_suites() in Pike 8.0,
+  //     and a single day after get_suites() in the backport to Pike 7.8.
 
-  defvar( "ssl_password",
-	  Variable.String("", 0, LOCALE(0, "SSL decryption password"),
-			  LOCALE(0, "Optional password to decrypt the "
-				 "SSL key file(s).")));
+  // Pike 8.0 or recent Pike 7.8.
+  // They have SSL.[Cc]ontext()->get_suites().
 
-  // 112 bits is the maximum strength to still retain the
+  // 112 bits is the minimum strength to still retain the
   // DES-3 suites, which are required in the TLS standards.
   //
   // FIXME: The cipher strength list ought to be generated dynamically
@@ -266,10 +265,11 @@ void set_up_ssl_variables( Protocol o )
 	 Variable.Int(112, 0,
 		      LOCALE(0, "Cipher suite minimum effective key strength"),
 		      LOCALE(0,
-			     "<p>The minimum number of bits to secure "
-			     "connections.</p>\n"
+			     "<p>The minimum number of effective bits to "
+			     "secure connections.</p>\n"
 			     "<p>Common ciphers (subject to availability) "
-			     "in order of effective key bits:\n"
+			     "in order of effective key bits as of "
+			     "December 2015:\n"
 			     "<dl>\n"
 			     "<dt>24</dt>\n"
 			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
@@ -296,6 +296,15 @@ void set_up_ssl_variables( Protocol o )
 			     "<b>NOT</b> recommended, and there are RFCs that "
 			     "prohibit the use of all those suites.</p>\n")))->
     set_range(0, Variable.no_limit);
+#endif
+
+#if constant(SSL.ServerConnection)
+  // Pike 8.0 and later has much more advanced support for SSL/TLS.
+
+  defvar( "ssl_password",
+	  Variable.String("", 0, LOCALE(0, "SSL decryption password"),
+			  LOCALE(0, "Optional password to decrypt the "
+				 "SSL key file(s).")));
 
   defvar("ssl_suite_filter",
 	 Variable.IntChoice(0,
