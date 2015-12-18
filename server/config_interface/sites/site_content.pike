@@ -857,10 +857,10 @@ string module_priorities_page( RequestID id, Configuration c)
 		      lambda(mixed q){ return c->otomod[q]; });
 
   array mod_types = ({ 
-    ([ "title" : "First Try Modules", "type" : MODULE_FIRST  ]), 
-    ([ "title" : "Filter Modules",    "type" : MODULE_FILTER ]), 
-    ([ "title" : "Last Try Modules",  "type" : MODULE_LAST   ]), 
-    
+    ([ "title" : "First Try Modules", "type" : MODULE_FIRST    ]),
+    ([ "title" : "Filter Modules",    "type" : MODULE_FILTER   ]),
+    ([ "title" : "Location Modules",  "type" : MODULE_LOCATION ]),
+    ([ "title" : "Last Try Modules",  "type" : MODULE_LAST     ]),
   });
   
   array mods = map( modids,
@@ -938,7 +938,7 @@ string module_priorities_page( RequestID id, Configuration c)
   mapping modules_seen = ([ ]);
 
   foreach(mod_types, mapping mt) {
-    res += "<tr><td colspan='3'><h2>"+mt->title+"</h2></td></tr>\n";
+    res += "<tr><td colspan='4'><h2>"+mt->title+"</h2></td></tr>\n";
 
     array _mods = Array.filter(mods, lambda(mapping m) { return m->type & mt->type; });
 
@@ -950,19 +950,26 @@ string module_priorities_page( RequestID id, Configuration c)
 			     );
 
     mapping seen_pri = ([ ]);
-    int pri_warn = 0;
+    string pri_warn;
 
     foreach( _mods, mapping m ) {
       
       res += "<tr><td>" + m->name2 + "</td>";
+      string location = "";
+      if ((mt->type & MODULE_LOCATION) && m->modi->query_location) {
+	location = m->modi->query_location();
+      }
+      res += "<td><i>" + Roxen.roxen_encode(location, "html") + "</i></td>";
       res+= "<td><img src='/internal-roxen-unit' width='20' height='1'/></td>";
 
       res += "<td> Priority: ";
 
-      if(seen_pri[m->pri])
-	pri_warn = 1;
+      if (!seen_pri[location])
+	seen_pri[location] = ([ m->pri : 1 ]);
+      else if(seen_pri[location][m->pri])
+	pri_warn = location;
       else
-	seen_pri[m->pri] = 1;
+	seen_pri[location][m->pri] = 1;
 
       if(!modules_seen[m->name2]) {
 	if (max_priority == 9) {
@@ -988,7 +995,7 @@ string module_priorities_page( RequestID id, Configuration c)
 
       res+="</td></tr>\n";
       
-      res += "<tr><td colspan='3'>";
+      res += "<tr><td colspan='4'>";
 
       if(m->oldpri)
 	res += "<imgs src='&usr.err-1;'/> Priority changed from " + m->oldpri + " to " + m->pri +".";
@@ -997,12 +1004,12 @@ string module_priorities_page( RequestID id, Configuration c)
     }
     
     if(pri_warn) {
-      res += "<tr><td colspan='3'>";
+      res += "<tr><td colspan='4'>";
       res += "<br /><imgs src='&usr.err-2;'/> Some modules have the same priority and will be called in random order.";
       res += "</td></tr>";
     }
 
-    res += "<tr><td colspan='3'>";
+    res += "<tr><td colspan='4'>";
     res+= "<img src='/internal-roxen-unit' width='1' height='20'/>";
     res += "</td></tr>";
 
