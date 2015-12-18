@@ -123,7 +123,6 @@ worldmap binary
 /server/config_interface/actions/ssl_common.pike foreign_ident
 /server/config_interface/actions/upload_license.pike foreign_ident
 /server/config_interface/sites/add_module.pike foreign_ident
-/server/config_interface/sites/site_content.pike foreign_ident
 /server/config_interface/template foreign_ident
 /server/config_interface/template-insert foreign_ident
 /server/config_interface/user_form.pike foreign_ident
