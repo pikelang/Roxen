@@ -925,6 +925,84 @@ class TmpInt
   void save() {}
 }
 
+class Priority
+//! @[Int] that gets adjusted to the configured range.
+{
+  inherit Int;
+  constant type = "Priority";
+  protected int|NoLimit _max = 9, _min = 0;
+
+  void set_range(int|NoLimit minimum, int|NoLimit maximum )
+    //! Set the range of the variable.
+    //!
+    //! @note
+    //!   Also scales the value of the variable accordingly.
+  {
+    if (_max != maximum) {
+      if (!maximum || !_max) {
+	set_default_value(0);
+	low_set(0);
+      } else {
+	// Scale the old value.
+	int new_val = (query() * maximum)/_max;
+	if (new_val < minimum) new_val = minimum;
+	int new_default = (default_value() * maximum)/_max;
+	set_default_value(new_default);
+	low_set(new_val);
+      }
+    }
+    _max = maximum;
+    _min = minimum;
+  }
+
+  string|int encode()
+  {
+    if (!_max) return 0;
+    int ones = _max/9;
+    int val = query();
+    if (val % ones) {
+      // New-style.
+      int digits = sizeof(sprintf("%d", ones));
+      // NB: We pad with zeroes to the field size to encode the
+      //     field size that was used at encode time.
+      return sprintf("%*0d", digits, val);
+    }
+    // Compat.
+    return val / ones;
+  }
+
+  int decode(string|int encoded)
+  {
+    if (!_max) {
+      return set(0);
+    }
+    int ones = _max/9;
+    if (intp(encoded)) {
+      return set(encoded * ones);
+    }
+    if (encoded == "") {
+      // Paranoia check in case someone has modified the config file.
+      return set(5 * ones);	// Default value.
+    }
+    // Expand the encoded value to the current field size.
+    int digits = sizeof(sprintf("%d", ones));
+    while (sizeof(encoded) < digits) {
+      encoded += encoded;
+    }
+    if (sizeof(encoded) > digits) {
+      encoded = encoded[..digits-1];
+    }
+    return set(array_sscanf(encoded, "%d")[0]);
+  }
+
+  LocaleString|string doc()
+  {
+    return ::doc() +
+      sprintf((string)LOCALE(0, "<p>%d is the highest priority and "
+			     "0 the lowest.</p>"),
+	      _max);
+  }
+}
 
 // =====================================================================
 // String
