@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: read_config.pike,v 1.72 2009/11/16 14:18:20 grubba Exp $
+// $Id$
 
 #include <module.h>
 
@@ -319,7 +319,7 @@ void store( string reg, mapping(string:mixed) vars, int q,
 	// Support for special save callbacks.
 	savers[var->save] = 1;
       } else {
-	m[ name ] = var->query();
+	m[ name ] = var->encode();
       }
     }
     data[ reg ] = m;

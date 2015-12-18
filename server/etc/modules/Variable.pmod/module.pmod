@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.120 2011/12/06 10:51:46 grubba Exp $
+// $Id$
 
 #include <module.h>
 #include <roxen.h>
@@ -498,7 +498,30 @@ class Variable
       return v;
     return default_value();
   }
-  
+
+  mixed encode()
+  //! Returns the current value for this variable encoded for storage.
+  //!
+  //! The default implementation just returns the value from @[query()].
+  //!
+  //! @seealso
+  //!   @[query()], @[decode()]
+  {
+    return query();
+  }
+
+  int decode(mixed encoded)
+  //! Set the variable from the encoded representation
+  //! returned by @[encode()].
+  //!
+  //! The default implementation just calls @[set()] with the argument.
+  //!
+  //! @seealso
+  //!   @[set()], @[decode()]
+  {
+    return set(encoded);
+  }
+
   int is_defaulted()
     //! Return true if this variable is set to it's default value.
   {

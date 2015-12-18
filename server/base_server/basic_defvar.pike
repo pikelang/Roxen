@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2009, Roxen IS.
-// $Id: basic_defvar.pike,v 1.34 2009/10/31 17:12:34 mast Exp $
+// $Id$
 
 //! @appears BasicDefvar
 
@@ -68,7 +68,7 @@ void setvars( mapping (string:mixed) vars )
   Variable.Variable q;
   foreach( indices( vars ), v )
     if(q = variables[v])
-      q->set( vars[v] );
+      q->decode( vars[v] );
 }
 
 //! @decl Variable.Variable defvar( string sname, Variable.Variable variable )
