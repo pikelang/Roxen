@@ -3884,12 +3884,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
-	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
-		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
-		   " Modules with the same priority can be assumed to be "
-		   "called in random order."),
-		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-      }) {
+	  me->defvar("_priority", Variable.
+		     Priority(5, 0, DLOCALE(12, "Priority"),
+			      DLOCALE(13, "<p>The priority of the module.</p>\n"
+				      "<p>Modules with the same priority "
+				      "can be assumed to be "
+				      "called in random order.</p>\n")));
+	}) {
 	throw(err);
       }
     }
