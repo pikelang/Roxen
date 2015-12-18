@@ -3920,12 +3920,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
-	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
-		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
-		   " Modules with the same priority can be assumed to be "
-		   "called in random order."),
-		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-      }) {
+	  me->defvar("_priority", Variable.
+		     Priority(5, 0, DLOCALE(12, "Priority"),
+			      DLOCALE(13, "<p>The priority of the module.</p>\n"
+				      "<p>Modules with the same priority "
+				      "can be assumed to be "
+				      "called in random order.</p>\n")))->
+	    set_range(0, query("max_priority"));
+	}) {
 	throw(err);
       }
     }
@@ -4603,6 +4605,16 @@ void json_log_endpoint_cb(object v) {
   }
 }
 
+protected void set_module_max_priority(Variable.Variable var)
+{
+  int new_max_priority = var->query();
+  foreach(sorted_modules, RoxenModule me) {
+    Variable.Variable pri = me->getvar("_priority");
+    if (!pri) continue;
+    pri->set_range(0, new_max_priority);
+  }
+}
+
 protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
@@ -4682,6 +4694,21 @@ modules.</p>
   // module start function, since the documentation explicitly states
   // that a reload of all modules is necessary to propagate a change
   // of the setting.
+
+  defvar("max_priority",
+	 Variable.IntChoice(9, ({ 9, 99, 999, 9999 }), 0,
+			    DLOCALE(0, "Maximum priority"),
+			    DLOCALE(0, "<p>The maximum priority value "
+				    "for modules.</p>\n"
+				    "<p>In most cases the default (9) "
+				    "is fine, but in some configurations "
+				    "there may be more than 10 modules "
+				    "of the same type that would otherwise "
+				    "conflict with each other.</p>\n"
+				    "<p>Note that existing module priorities "
+				    "will be scaled accordingly when this "
+				    "value is changed.</p>")))->
+    set_changed_callback(set_module_max_priority);
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));
