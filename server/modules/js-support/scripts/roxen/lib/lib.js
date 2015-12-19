@@ -19,6 +19,20 @@
     },
 
     /**
+     * Returns array with unique entries.
+     * @method arrayUnique
+     * @param  {array} a The array.
+     * @return {array}   A new array with duplicates removed.
+     */
+    arrayUnique: function(a) {
+      //  Requires the JavaScript 1.6/ECMAScript 5 filter function.
+      //  Credit to <http://stackoverflow.com/a/14438954>.
+      return a.filter(function(value, index) {
+	  return a.indexOf(value) === index;
+	});
+    },
+
+    /**
      * Returns the object keys as an array.
      * @method indices
      * @param  {Object}  o  The array.
