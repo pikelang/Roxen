@@ -693,6 +693,30 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   int pageno = (int)page;
   mapping foo = ([]);
 
+  string wizard_id = id->cookies["RoxenWizardId"];
+  if (!sizeof(wizard_id || "")) {
+    wizard_id = (string)random(0x7fffffff);
+    id->add_response_header("Set-Cookie",
+			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+    DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
+  }
+  if (wizard_id != id->variables["_roxen_wizard_id"]) {
+    // Invalid or unset roxen_wizard_id.
+    if (page) {
+      report_warning("Wizard: Invalid wizard_id: %O != %O.\n"
+		     "Resetting page from %O to 0.\n",
+		     id->variables["_roxen_wizard_id"], wizard_id,
+		     page);
+    }
+    // Correct it, and return to page #0.
+    id->real_variables["_roxen_wizard_id"] = ({ wizard_id });
+    pageno = 0;
+    page = "0";
+    // Also reset some typical action buttons as a preventive measure.
+    reset_buttons(id->variables);
+    // FIXME: Do we need to reset any other variables?
+  }
+
   // FIXME: Add support for preparse on the page-level.
   // form = parse_rxml(form, id);
 
@@ -730,11 +754,15 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 #endif
   
   res = ("\n<!--Wizard-->\n"
-         "<form " + method + ">\n" +
+         "<form " + method + ">\n"
+	 "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
+	 html_encode_string(wizard_id) + "\" />\n" +
 	 (stringp (id->variables->action) ?
-	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
+	  "<input type=\"hidden\" name=\"action\" value=\"" +
+	  html_encode_string(id->variables->action) + "\" />\n" :
 	  "") +
-	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
+	 "<input type=\"hidden\" name=\"_page\" value=\"" +
+	 html_encode_string(page) + "\" />\n"
 	 +state_form+
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
 	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
@@ -860,6 +888,19 @@ mapping(string:array) wizard_get_state (RequestID id)
   return id->misc->wizard_state = s;
 }
 
+static void reset_buttons(FakedVariables v)
+{
+  m_delete (v, "next_page");
+  m_delete (v, "next_page.x");
+  m_delete (v, "next_page.y");
+  m_delete (v, "prev_page");
+  m_delete (v, "prev_page.x");
+  m_delete (v, "prev_page.y");
+  m_delete (v, "ok");
+  m_delete (v, "ok.x");
+  m_delete (v, "ok.y");
+}
+
 mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
   string data;
@@ -919,15 +960,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if (stringp (redirect) && redirect != v->_page) {
 	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
 	// Redirect takes precedence over the user choice.
-	m_delete (v, "next_page");
-	m_delete (v, "next_page.x");
-	m_delete (v, "next_page.y");
-	m_delete (v, "prev_page");
-	m_delete (v, "prev_page.x");
-	m_delete (v, "prev_page.y");
-	m_delete (v, "ok");
-	m_delete (v, "ok.x");
-	m_delete (v, "ok.y");
+	reset_buttons(v);
 	v->_page = redirect;
       }
     }
