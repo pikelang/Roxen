@@ -4622,7 +4622,7 @@ class ImageCache
     werror("restore meta %O\n", id );
 #endif
     array(mapping(string:string)) q =
-      QUERY("SELECT meta, UNIX_TIMESTAMP() - atime as atime_diff "
+      QUERY("SELECT meta, CAST(UNIX_TIMESTAMP()-atime AS SIGNED) AS atime_diff "
 	    "FROM "+name+" WHERE id=%s", id );
 
     string s;
