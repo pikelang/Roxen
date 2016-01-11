@@ -89,7 +89,6 @@ worldmap binary
 /server/base_server/socket.pike foreign_ident
 /server/base_server/supports.pike foreign_ident
 /server/base_server/throttler.pike foreign_ident
-/server/base_server/wizard.pike foreign_ident
 /server/bin/buildenv.pike foreign_ident
 /server/bin/create_configif.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
