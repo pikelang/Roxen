@@ -693,30 +693,6 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   int pageno = (int)page;
   mapping foo = ([]);
 
-  string wizard_id = id->cookies["RoxenWizardId"];
-  if (!sizeof(wizard_id || "")) {
-    wizard_id = (string)random(0x7fffffff);
-    id->add_response_header("Set-Cookie",
-			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
-    DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
-  }
-  if (wizard_id != id->variables["_roxen_wizard_id"]) {
-    // Invalid or unset roxen_wizard_id.
-    if (page) {
-      report_warning("Wizard: Invalid wizard_id: %O != %O.\n"
-		     "Resetting page from %O to 0.\n",
-		     id->variables["_roxen_wizard_id"], wizard_id,
-		     page);
-    }
-    // Correct it, and return to page #0.
-    id->real_variables["_roxen_wizard_id"] = ({ wizard_id });
-    pageno = 0;
-    page = "0";
-    // Also reset some typical action buttons as a preventive measure.
-    reset_buttons(id->variables);
-    // FIXME: Do we need to reset any other variables?
-  }
-
   // FIXME: Add support for preparse on the page-level.
   // form = parse_rxml(form, id);
 
@@ -752,7 +728,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
 		      compress_state(id->real_variables)+"\" />\n";
 #endif
-  
+
+  string wizard_id = id->cookies["RoxenWizardId"];
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n"
 	 "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
@@ -937,6 +914,31 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   FakedVariables v=id->variables;
 
   int current_page = (int) v->_page;
+
+  string wizard_id = id->cookies["RoxenWizardId"];
+  if (!sizeof(wizard_id || "")) {
+    wizard_id = (string)random(0x7fffffff);
+    id->add_response_header("Set-Cookie",
+			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+    DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
+  }
+  if (wizard_id != id->variables["_roxen_wizard_id"]) {
+    // Invalid or unset roxen_wizard_id.
+    if (current_page) {
+      report_warning("Wizard: Invalid wizard_id: %O != %O.\n"
+		     "Resetting page from %O to 0.\n",
+		     v["_roxen_wizard_id"], wizard_id,
+		     current_page);
+    }
+    // Correct it, and return to page #0.
+    id->real_variables["_roxen_wizard_id"] = ({ wizard_id });
+    current_page = 0;
+    m_delete(id->real_variables, "_page");
+    m_delete(v, "_page");
+    // Also reset some typical action buttons as a preventive measure.
+    reset_buttons(v);
+    // FIXME: Do we need to reset any other variables?
+  }
 
   mapping(string:array) automaton = this_object()->wizard_automaton;
   function dispatcher;
