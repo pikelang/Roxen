@@ -71,6 +71,54 @@
       return new F();
     },
 
+    /*
+     * Performs a recursive value comparison of JS values.
+     * @method deepCompare
+     * @param  {any}     x  The first value.
+     * @param  {any}     y  The second value.
+     * @return {Boolean}    Equality result.
+     */
+    deepCompare: function(x, y) {
+      //  Adopted from Jean Vincent's answer at
+      //  stackoverflow.com/questions/1068834/object-comparison-in-javascript
+      //
+      //  NOTE: Does not handle NaN, cyclical structures or +/-0.
+      
+      // If both x and y are null or undefined and exactly the same
+      if (x === y) return true;
+
+      // If they are not strictly equal, they both need to be Objects
+      if (!(x instanceof Object) || !(y instanceof Object)) return false;
+
+      // They must have the exact same prototype chain, the closest we can do
+      // is test there constructor.
+      if (x.constructor !== y.constructor) return false;
+      
+      for (var p in x) {
+	// Other properties were tested using x.constructor === y.constructor
+	if (!x.hasOwnProperty(p)) continue;
+
+	// Allows to compare x[p] and y[p] when set to undefined
+	if (!y.hasOwnProperty(p)) return false;
+	
+	// If they have the same strict value or identity then they are equal
+	if (x[p] === y[p]) continue;
+
+	// Numbers, Strings, Functions, Booleans must be strictly equal
+	if (typeof(x[p]) !== "object") return false;
+	
+	// Objects and Arrays must be tested recursively
+	if (!deepCompare(x[p], y[p])) return false;
+      }
+
+      for (p in y) {
+	// Allows x[p] to be set to undefined
+	if (y.hasOwnProperty(p) && !x.hasOwnProperty(p)) return false;
+      }
+      
+      return true;
+    },
+    
     /**
      * Performs a deep copy of an object or array.
      * @method deepCopy
