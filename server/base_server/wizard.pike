@@ -909,6 +909,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     wizard_id = (string)random(0x7fffffff);
     id->add_response_header("Set-Cookie",
 			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+    id->cookies["RoxenWizardId"] = wizard_id;
     DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
   }
   if (wizard_id != id->variables["_roxen_wizard_id"]) {
