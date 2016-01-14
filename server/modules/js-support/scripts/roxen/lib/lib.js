@@ -302,6 +302,23 @@
     },
 
     /**
+     * Returns the name excluding parent levels in full path by stripping off
+     * preceding segments separated by "/".
+     *
+     * @method basename
+     * @param {String} path The input path.
+     * @return {string}     The result.
+     */
+    basename: function(path) {
+      if (!path || path === "")
+	return "";
+      var slash_pos = path.lastIndexOf("/");
+      if (slash_pos >= 0)
+	return path.substr(slash_pos + 1);
+      return path;
+    },
+
+    /**
      * Decode string from UTF8.
      * @method fromUTF8
      * @param  {String} s String to decode.
