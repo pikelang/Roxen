@@ -64,7 +64,7 @@ string|mapping parse( RequestID id )
 					}
 					
 					res += "<tr>" +
-					"<td><a href='browser.pike?db=" + q_dbs->Database + "'>" + q_dbs->Database + "</a>.<a href='browser.pike?db=" + q_dbs->Database + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+					"<td><a href='browser.pike?db=" + q_dbs->Database + "&amp;&usr.set-wiz-id;'>" + q_dbs->Database + "</a>.<a href='browser.pike?db=" + q_dbs->Database + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
 					"<td><b>" + result + "</b></td>" +
 					"<td>" + t2 + " sec</td>" +
 					"</tr>";

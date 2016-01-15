@@ -98,6 +98,7 @@ string page_base( RequestID id, string content, int|void noform,
     "<tr><td>Find:&nbsp;</td>"
     "<td>"
     "<form style='margin: 0' onsubmit='return false'>"
+    "<roxen-wizard-id-variable />"
     "<input type='search' size='30' name='mod_query' id='mod_query' "
     "       onkeydown='return query_update_results(event);'"
     "       onkeypress='return query_update_results(event);'>"
@@ -122,6 +123,7 @@ string page_base( RequestID id, string content, int|void noform,
 		  "<tr><td nowrap='nowrap'>%s:</td><td>"
 		  "<form action='' style='margin: 0'>"
 		  "<input type='hidden' name='config' value='&form.config;'>"
+		  "<roxen-wizard-id-variable />"
 		  "<default variable='form.method' value='%s'>"
 		  "<select name='method' onchange='submit()'>"
 		  "<option value='normal'>%s</option>"
@@ -138,7 +140,7 @@ string page_base( RequestID id, string content, int|void noform,
 		  "<td>&nbsp;&nbsp;</td>"
 		  "<td align='right'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
-                  "&reload_module_list=yes&method=%s' "
+                  "&amp;reload_module_list=yes&amp;method=%s&amp;&usr.set-wiz-id;' "
 		  "> %s </gbutton>"
 		  "</td><td>"
                   "<gbutton href='site.html/&form.config;/' "
@@ -249,8 +251,10 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
 #define RELOAD(X) sprintf("<gbutton "                                         \
 			  "img-align='middle' "                               \
                           "href='add_module.pike?config=&form.config:http;"   \
-                          "&method=&form.method;"                             \
-                          "&random=%d&only=%s&reload_module_list=yes"	      \
+                          "&amp;method=&form.method;"			      \
+                          "&amp;random=%d&amp;only=%s"			      \
+			  "&amp;reload_module_list=yes"			      \
+			  "&amp;&usr.set-wiz-id;"			      \
 			  "#errors_and_warnings'> %s </gbutton>",   	      \
                           random(4711111),                                    \
                           (X),                                                \
@@ -436,6 +440,7 @@ function describe_module_normal( int image )
        <form method='post' action='add_module.pike' 
 	     style='margin: 0 10px 0 0'>
          <roxen-automatic-charset-variable/>
+         <roxen-wizard-id-variable />
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
          <submit-gbutton preparse='1'>%s</submit-gbutton>
@@ -479,16 +484,17 @@ array(int|string) class_visible_normal( string c, string d, int size,
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
-	     "&method=" + method + "#"+Roxen.http_encode_url(c)+"' > "+
+	     "&amp;method=" + method + "&amp;&usr.set-wiz-id;#"+
+	     Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   } else {
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
-	     "&method=" + method +
-	     "&unfolded="+Roxen.http_encode_url(c)+
-	     "#"+Roxen.http_encode_url(c)+"' > "+
+	     "&amp;method=" + method +
+	     "&amp;unfolded="+Roxen.http_encode_url(c)+
+	     "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
   }
 
@@ -597,9 +603,9 @@ array(int|string) class_visible_faster( string c, string d, int size,
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
-	     "&method=" + method +
-	     "&unfolded="+Roxen.http_encode_url(c)+
-	     "#"+Roxen.http_encode_url(c)+"' > "+
+	     "&amp;method=" + method +
+	     "&amp;unfolded="+Roxen.http_encode_url(c)+
+	     "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
 
   header+=("</td><td width='100%'>"
@@ -617,6 +623,7 @@ string page_faster_low(RequestID id)
   return
     "<form method='post' action='add_module.pike'>"
     "<input type='hidden' name='config' value='&form.config;'>"
+    "<roxen-wizard-id-variable />"
     "<table cellspacing='3' cellpadding='0' border='0' width='100%'>" +
     desc +
     "</table>"
@@ -681,6 +688,7 @@ string page_compact( RequestID id )
                                 class_visible_compact, id );
   return page_base(id,
                    "<form action='add_module.pike' method='POST'>"
+		   "<roxen-wizard-id-variable />"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton vspace='3'> "
                    +LOCALE(200, "Add Modules")+" </submit-gbutton><p>"
@@ -750,6 +758,7 @@ string page_really_compact( RequestID id )
 
   return page_base(id,
                    "<form action=\"add_module.pike\" method=\"post\">"
+		   "<roxen-wizard-id-variable />"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    res+"</select><br /><submit-gbutton> "
                    +LOCALE(200, "Add Modules")+" </submit-gbutton><br />"

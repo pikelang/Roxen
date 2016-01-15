@@ -14,7 +14,7 @@
 <input type="hidden" name="page" value="install" />
 
 <if variable="form.no">
-  <redirect to="update.html?foo" />
+  <redirect to="update.html?foo&amp;&usr.set-wiz-id;" />
 </if>
 <if variable="form.yes">
   <update-install-package package="&form.install;" /><br />

@@ -249,7 +249,7 @@ string parse( RequestID id )
     "Example:"
     "<pre>UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj</pre></td>"
     "</tr></table>\n"
-    "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
+    "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></td></tr></table>\n";
 
   res +=
     #"<script language='javascript'>

@@ -42,7 +42,7 @@ name="new">&var.create_txt;</submit-gbutton2>
    <if not="1" variable='var.error is error'>
      <if variable='form.new_with_template..x'>
         <define variable="form.name" preparse="1"><insert file='encode_form_name.pike' /></define>
-        <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
+        <redirect to='create_site_with_template.pike?name=&form.name:http;&amp;&usr.set-wiz-id;'/>
      </if>
      <if variable='form.new..x'>
         <insert file='create_site.pike'/>

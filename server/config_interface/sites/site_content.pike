@@ -226,7 +226,7 @@ string buttons( Configuration c, string mn, RequestID id )
   if( c != id->conf )
 #endif
     buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
-            path[0]+"&drop="+mn+"'>"+
+            path[0]+"&amp;drop="+mn+"&amp;&usr.set-wiz-id;'>"+
             LOCALE(252, "Drop Module")+"</link-gbutton></a>";
 
   //  Add action buttons produced by the module itself
@@ -501,7 +501,8 @@ string find_module_doc( string cn, string mn, RequestID id )
 		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../actions/?action"
-		    "=locks.pike&class=status'>more info</a>)</small></td></tr>\n"
+		    "=locks.pike&amp;class=status&amp;&usr.set-wiz-id;'>"
+		    "more info</a>)</small></td></tr>\n"
 		    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
 		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
 		    "<td>" + my_accesses +

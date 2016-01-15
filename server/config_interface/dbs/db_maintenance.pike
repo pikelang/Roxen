@@ -59,10 +59,10 @@ string|mapping parse( RequestID id )
 			}
 			
 			res += "<tr>" +
-			"<td class='table_row'><a href='browser.pike?db=" + m->Database + "'>" + m->Database + "</a></td>" +
+			"<td class='table_row'><a href='browser.pike?db=" + m->Database + "&amp;&usr.set-wiz-id;'>" + m->Database + "</a></td>" +
 			"<td class='table_row'>" + table_count + "</td>" +
 			"<td class='table_row'>" + table_rows + "</td>" +
-			"<td class='table_row'><a href='&page.path;?repair=" + m->Database + "'>[Repair]</a> <a href='&page.path;?optimize=" + m->Database + "'>[Optimize]</a> <a href='&page.path;?repair=" + m->Database + "&optimize=" + m->Database + "'>[Both]</a></td>" +
+			"<td class='table_row'><a href='&page.path;?repair=" + m->Database + "&amp;&usr.set-wiz-id;'>[Repair]</a> <a href='&page.path;?optimize=" + m->Database + "&amp;&usr.set-wiz-id;'>[Optimize]</a> <a href='&page.path;?repair=" + m->Database + "&optimize=" + m->Database + "&amp;&usr.set-wiz-id;'>[Both]</a></td>" +
 			"</tr>\n";
 		}
 	}
@@ -100,7 +100,7 @@ string|mapping parse( RequestID id )
 					result = "<font color='red'>Error</font>";
 					
 				res += "<tr>" +
-				"<td class='table_row'><a href='browser.pike?db=" + id->variables->repair + "'>" + id->variables->repair + "</a>.<a href='browser.pike?db=" + id->variables->repair + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+				"<td class='table_row'><a href='browser.pike?db=" + id->variables->repair + "&amp;&usr.set-wiz-id;'>" + id->variables->repair + "</a>.<a href='browser.pike?db=" + id->variables->repair + "&table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
 				"<td class='table_row'>Repair</td><td class='table_row'><b>" + result + "</b></td>" +
 				"<td class='table_row'>" + t2 + " sec</td>" +
 				"</tr>";
@@ -124,7 +124,7 @@ string|mapping parse( RequestID id )
 					result = "<font color='red'>Error</font>";
 					
 				res += "<tr>" +
-				"<td class='table_row'><a href='browser.pike?db=" + id->variables->optimize + "'>" + id->variables->optimize + "</a>.<a href='browser.pike?db=" + id->variables->optimize + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+				"<td class='table_row'><a href='browser.pike?db=" + id->variables->optimize + "&amp;&usr.set-wiz-id;'>" + id->variables->optimize + "</a>.<a href='browser.pike?db=" + id->variables->optimize + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
 				"<td class='table_row'>Optimize</td><td class='table_row'><b>" + result + "</b></td>" +
 				"<td class='table_row'>" + t2 + " sec</td>" +
 				"</tr>";

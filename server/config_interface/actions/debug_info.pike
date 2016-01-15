@@ -362,7 +362,7 @@ mixed page_0( object id )
     "<p><font size='-1'>" + LOCALE(401, #"\
 Note that the garbage collector referred to here is not the same as
 the one for the <a
-href='/actions/?action=cachestatus.pike&class=status'>Roxen memory
+href='/actions/?action=cachestatus.pike&amp;class=status&amp;&usr.set-wiz-id;'>Roxen memory
 cache</a>. This is the low-level garbage collector used internally by
 the Pike interpreter.") + "</font></p>\n";
     ;
@@ -384,6 +384,6 @@ mixed parse( RequestID id )
     "<submit-gbutton2 name='gc' img-align='middle'> "
     "<translate id='0'>Run garbage collector</translate> "
     "</submit-gbutton2>\n"
-    "<cf-cancel href='?class=&form.class;'/>\n" +
+    "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>\n" +
     page_0( id );
 }

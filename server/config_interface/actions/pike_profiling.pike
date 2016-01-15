@@ -135,7 +135,7 @@ mixed parse( RequestID id )
     "<p /><submit-gbutton2 name='refresh' width='75' img-align='middle' align='center'>" +
     LOCALE(186,"Refresh") +
     "</submit-gbutton2>\n"
-    "<cf-cancel href='?class=&form.class;'/><p />\n" +
+    "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/><p />\n" +
     page_0( id )
 #else
     "<font color='&usr.warncolor;'>" +
@@ -143,7 +143,7 @@ mixed parse( RequestID id )
 	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
     "</font>"
     "<p />\n"
-    "<cf-ok-button href='?class=&form.class;'/>";
+    "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";
 #endif
     ;
 }

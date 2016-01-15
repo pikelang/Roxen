@@ -40,7 +40,7 @@ mixed parse( RequestID id )
       	Warning: The license file <b>&var.filename;</b> does already exists.
       	Do you want to overwrite the file?<br /><br />
       	<submit-gbutton>Overwrite</submit-gbutton>
-      	<cf-cancel href='./?class="+action+#"'/>
+	<cf-cancel href='./?class="+action+#"&amp;&usr.set-wiz-id;'/>
       </elseif>
       <else>
       	<set variable='var.ok' value='ok'/>
@@ -66,7 +66,7 @@ mixed parse( RequestID id )
       onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
     <br /><br />
 
-    <cf-cancel href='./?class="+action+#"'/>
+    <cf-cancel href='./?class="+action+#"&amp;&usr.set-wiz-id;'/>
   </if>
 ";
   

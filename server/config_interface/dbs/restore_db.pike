@@ -48,10 +48,12 @@ mapping|string parse( RequestID id )
 	    b->whn, b->directory,
 	    ({ b->tbl }),
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
-	    +"&dir="+Roxen.html_encode_string( b->directory )+"'>"+
+	    +"&amp;dir="+Roxen.html_encode_string( b->directory )+
+	    "&amp;&usr.set-wiz-id;'>"+
 	    "<gbutton>"+_(460,"Restore")+"</gbutton></a> "
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)+
-	    "&dir="+Roxen.html_encode_string( b->directory )+"&drop=1'>"+
+	    "&amp;dir="+Roxen.html_encode_string( b->directory )+
+	    "&amp;drop=1&amp;&usr.set-wiz-id;'>"+
 	    "<gbutton>"+_(227,"Delete")+"</gbutton></a>"
 	  });
 	}

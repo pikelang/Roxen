@@ -2,7 +2,7 @@
 <define tag="package-box" scope="pkg">
   <rul>
   <update-package type="&_.name;">
-    <rli>&_.title; <a href="update.html?page=details&details=&_.id;">
+    <rli>&_.title; <a href="update.html?page=details&amp;details=&_.id;&amp;&usr.set-wiz-id;">
       <translate id="3">[Details...]</translate></a></rli>
     <cset variable="var._&pkg.name;">foo</cset>
   </update-package>

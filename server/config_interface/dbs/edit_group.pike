@@ -12,9 +12,9 @@
        sprintf((string)(X), group)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
        "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
-       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
+       "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+\
       "?group="+\
-       Roxen.html_encode_string(id->variables->group)+"><gbutton> "+\
+       Roxen.html_encode_string(id->variables->group)+"&amp;&usr.set-wiz-id;'><gbutton> "+\
        _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
   }									\
 } while(0)
@@ -103,7 +103,7 @@ string parse( RequestID id )
     foreach( groups, string d )
     {
       res += "<dt><b>"+
-	(view_mode ? "" : "<a href=browser.pike?db="+d+">")+d+
+	(view_mode ? "" : "<a href='browser.pike?db="+d+"&amp;&usr.set-wiz-id;'>")+d+
 	(view_mode ? "" : "</a>")+
 	"</b>";
       if( string cm = DBManager.module_table_info( d, "" )->comment )
@@ -121,7 +121,7 @@ string parse( RequestID id )
       button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
 		       _(352, "Delete group"));
     else
-      button = sprintf("<a href='%s?group=%s&action=%s'><gbutton>%s</gbutton></a>",
+      button = sprintf("<a href='%s?group=%s&amp;action=%s&amp;&usr.set-wiz-id;'><gbutton>%s</gbutton></a>",
 		       id->not_query, id->variables->group, "delete",
 		       _(352, "Delete group"));
     res += "<br />"+button;
