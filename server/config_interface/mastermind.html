@@ -53,7 +53,7 @@ function send() {
   turn++;
   for(var i = 1; i < 7; i++)
     ret+=arrej[i];
-  top.location="mastermind.html?turn="+turn+"&or"+turn+"="+ret+old+"&q="+quest;
+  top.location="mastermind.html?turn="+turn+"&amp;or"+turn+"="+ret+old+"&amp;q="+quest+"&amp;&usr.set-wiz-id;";
 }
 
 </script>

@@ -252,7 +252,7 @@ protected string format_description(string desc)
 
 string list_patches(RequestID id, Patcher po, string which_list)
 {
-  string self_url = "?class=maintenance&action=patcher.pike";
+  string self_url = "?class=maintenance&amp;action=patcher.pike&amp;&usr.set-wiz-id;";
   string res = "";
 
   array(mapping) list;
@@ -737,8 +737,8 @@ mixed parse(RequestID id)
 			 " onclick='expand(\"log\")'>log</span>"
 			 "<div  id='idlog'>%s</div></p>\n"
 			 "<br clear='all' /><br />\n"
-			 "<cf-ok-button href='?action=patcher.pike&"
-			 "class=maintenance' />",
+			 "<cf-ok-button href='?action=patcher.pike&amp;"
+			 "class=maintenance&amp;&usr.set-wiz-id;' />",
 			 wb->get_all_messages());
 	return res;
       }
@@ -806,8 +806,8 @@ mixed parse(RequestID id)
 		   " onclick='expand(\"log\")'>log</span>"
 		   "<div style='%s' id='idlog'>%s</div></p>\n"
 		   "<br clear='all' /><br />\n"
-		   "<cf-ok-button href='?action=patcher.pike&"
-		   "class=maintenance' />",
+		   "<cf-ok-button href='?action=patcher.pike&amp;"
+		   "class=maintenance&amp;&usr.set-wiz-id;' />",
 		   failed_patches ? "unfolded" : "folded",
 		   failed_patches ? "" : "display: none",
 		   wb->get_all_messages());
@@ -869,8 +869,8 @@ mixed parse(RequestID id)
 	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" +
-	pid + #"' width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") +
+    <gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
+	pid + #"&amp;&usr.set-wiz-id;' width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") +
 #" </gbutton>
   </cf-perm>
 
@@ -884,8 +884,8 @@ mixed parse(RequestID id)
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
 		   "<div style='%s' id='idlog'>%s</div></p>\n"
-		   "<cf-ok-button href='?action=patcher.pike&"
-		   "class=maintenance' />",
+		   "<cf-ok-button href='?action=patcher.pike&amp;"
+		   "class=maintenance&amp;&usr.set-wiz-id;' />",
 		   successful_uninstalls < no_of_patches ? "unfolded" : 
 		   "folded",
 		   successful_uninstalls < no_of_patches ? "" : "display: none",
@@ -949,8 +949,8 @@ mixed parse(RequestID id)
 	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" +
-	pid + #"' width=250 icon_src=&usr.err-2;> " +
+    <gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
+	pid + #"&amp;&usr.set-wiz-id;' width=250 icon_src=&usr.err-2;> " +
       LOCALE(197,"Restart") + #" </gbutton>
   </cf-perm>
 
@@ -965,8 +965,8 @@ mixed parse(RequestID id)
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
 		   "<div style='%s' id='idlog'>%s</div></p>\n"
-		   "<cf-ok-button href='?action=patcher.pike&"
-		   "class=maintenance' />",
+		   "<cf-ok-button href='?action=patcher.pike&amp;"
+		   "class=maintenance&amp;&usr.set-wiz-id;' />",
 		   successful_installs < no_of_patches ? "unfolded" : "folded",
 		   successful_installs < no_of_patches ? "" : "display: none",
 		   wb->get_all_messages());
@@ -1000,7 +1000,7 @@ mixed parse(RequestID id)
 		   "        onclick='expand(\"log\")'>log</span>"
 		   "  <div id='idlog'>%s</div>"
 		   "</p>\n"
-		   "<cf-ok-button href='?action=patcher.pike&class=maintenance' />",
+		   "<cf-ok-button href='?action=patcher.pike&amp;class=maintenance&amp;&usr.set-wiz-id;' />",
 		   wb->get_all_messages());
 
     return Roxen.http_string_answer(res);
@@ -1107,7 +1107,7 @@ mixed parse(RequestID id)
 
     <br clear='all' />
     <br />
-    <cf-ok-button href='?class=maintenance' />
+    <cf-ok-button href='?class=maintenance&amp;&usr.set-wiz-id;' />
 ";
   res += #"
     <script type='text/javascript'>

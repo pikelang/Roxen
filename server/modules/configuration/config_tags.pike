@@ -215,6 +215,10 @@ class Scope_usr
          res += " background="+q;
        return ENCODE_RXML_XML(res, type);
 
+    case "set-wiz-id":
+      // Used in links with form variables.
+      return sprintf("_roxen_wizard_id=%s",
+		     Roxen.html_encode_string(id->cookies["RoxenWizardId"]||""));
 
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
@@ -1110,6 +1114,30 @@ string simpletag_rul( string t, mapping m, string c, RequestID id )
 {
   id->misc->_rul_cnt = -1;
   return "<table>"+c+"</table>";
+}
+
+string simpletag_roxen_wizard_id_variable(string t, mapping m, string c,
+					  RequestID id)
+{
+  string wizard_id = id->cookies["RoxenWizardId"];
+  if (!sizeof(wizard_id || "")) {
+    wizard_id = (string)random(0x7fffffff);
+    id->add_response_header("Set-Cookie",
+			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+    id->cookies["RoxenWizardId"] = wizard_id;
+  }
+  if (wizard_id != id->variables["_roxen_wizard_id"]) {
+    foreach(id->real_variables; string var;) {
+      m_delete(id->real_variables, var);
+    }
+    foreach(id->variables; string var;) {
+      m_delete(id->real_variables, var);
+    }
+    id->variables["_roxen_wizard_id"] = wizard_id;
+  }
+  return sprintf("<input type='hidden' name='_roxen_wizard_id' "
+		 "value='%s' />",
+		 Roxen.html_encode_string(wizard_id));
 }
 
 class TagCfPerm

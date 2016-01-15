@@ -393,7 +393,7 @@ string selected_item( string q, Configuration c, RequestID id,
   {
     pre+=sprintf("<gbutton frame-image='&usr.left-buttonframe;' "
 		 "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
-		 "href='%sadd_module.pike?config=%s'> %s </gbutton>",
+		 "href='%sadd_module.pike?config=%s&amp;&usr.set-wiz-id;'> %s </gbutton>",
 		 pre_site_url,
 		 Roxen.http_encode_url( c->name ),
 		 LOCALE(251, "Add Module"))+
@@ -402,7 +402,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "<gbutton frame-image='&usr.left-buttonframe;' "
 	      "width='&usr.left-buttonwidth;' "
 	      "bgcolor='&usr.left-buttonbg;' "
-	      "href='%sdrop_module.pike?config=%s'> %s </gbutton><br />\n",
+	      "href='%sdrop_module.pike?config=%s&amp;&usr.set-wiz-id;'> %s </gbutton><br />\n",
 	      pre_site_url,
 	      Roxen.http_encode_url( c->name ),
 	      LOCALE(252, "Drop Module"));

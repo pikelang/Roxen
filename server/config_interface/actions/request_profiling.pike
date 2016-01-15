@@ -82,7 +82,7 @@ mixed parse( RequestID id )
       "<submit-gbutton2 name='reset' width='75' align='center'>" +
       LOCALE(187,"Reset") +
       "</submit-gbutton2>\n"
-      "<cf-cancel href='?class=&form.class;'/>\n"
+      "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>\n"
       "<p />\n" +
       page_0( id );
   } else {
@@ -93,7 +93,7 @@ mixed parse( RequestID id )
 	     "server has been stared with <tt>-DPROFILE</tt>.") +
       "</font>"
       "<p />\n"
-      "<cf-ok-button href='?class=&form.class;'/>";
+      "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";
   }
   return ret;
 }

@@ -199,10 +199,10 @@ mixed parse( RequestID id )
   }
   
   res = "<font size='+1'><b>"+LOCALE(163,"Debug summary")+"</b></font>\n<p />";
-  res += "<link-gbutton href='debug_summary.pike?download=summary'>"+LOCALE(41,"Download")+
+  res += "<link-gbutton href='debug_summary.pike?download=summary&amp;&usr.set-wiz-id;'>"+LOCALE(41,"Download")+
     "</link-gbutton>";
   if (file_stat(debuglog))
-    res += "<link-gbutton href='debug_summary.pike?download=debuglog'>"+
+    res += "<link-gbutton href='debug_summary.pike?download=debuglog&amp;&usr.set-wiz-id;'>"+
       LOCALE(153,"Download Debug Log")+
     "</link-gbutton>";
 

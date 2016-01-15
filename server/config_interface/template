@@ -196,7 +196,7 @@
       <td width='0%'><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
       <td width='50%' align="center"><h2><cf-headline/></h2></td>
       <td width='50%' align="right">
-              <gbutton href="/change_user.pike?uid=&usr.user-uid;"
+              <gbutton href="/change_user.pike?uid=&usr.user-uid;&amp;&usr.set-wiz-id;"
 		       align="right"
 		       icon-src="/themes/&usr.theme;/user.gif"
 		       vspace="2"
@@ -222,6 +222,7 @@
      </if>
      <form method="POST" action="&cf.current-url;&var.form-anchor;" ::="&var.form_extra;">
        <roxen-automatic-charset-variable/>
+       <roxen-wizard-id-variable/>
        &var.content:none;
      </form>
    </if><else>

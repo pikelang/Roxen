@@ -85,7 +85,7 @@ string|mapping parse( RequestID id )
 
     string res =
       "<tr><td class='db'>" +
-      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
+      (view_mode ? "" : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'>") +
       "<cimg style='vertical-align: -2px' border='0' format='gif'"
       " src='&usr.database-small;' alt='' max-height='12'/> " +
       db +
@@ -98,7 +98,8 @@ string|mapping parse( RequestID id )
 #define PERM(P,T,L)							\
 	((view_mode ? "" :						\
 	  "<a href='?set_"+L+"="+					\
-	  Roxen.http_encode_url(conf)+"&db="+Roxen.http_encode_url(db)+"'>") \
+	  Roxen.http_encode_url(conf)+"&amp;db="+Roxen.http_encode_url(db)+\
+	  "&amp;&usr.set-wiz-id;'>")					\
 	 + (p[conf] == DBManager.P ? T : "&#x2013;")			\
 	 + (view_mode?"":"</a>"))
       res += "<td>" +
@@ -121,7 +122,7 @@ string|mapping parse( RequestID id )
     res += "<thead>\n"
       "<tr class='group-hdr'><th><br/>"
       "<a style='font-size: larger'"
-      " href='edit_group.pike?group=" + cats[0][1] + "'>" +
+      " href='edit_group.pike?group=" + cats[0][1] + "&amp;&usr.set-wiz-id;'>" +
       cats[0][0] + "</a></th>";
     foreach( conf_cols, string conf )
     {
@@ -139,7 +140,8 @@ string|mapping parse( RequestID id )
       res += "<tbody>\n"
 	"<tr class='group-hdr'><th><br/>"
 	"<a style='font-size: larger'"
-	" href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a></th>" +
+	" href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" +
+	q[0] + "</a></th>" +
 	("<td></td>" *
 	 sizeof( roxen->configurations )) +
 	"</tr>\n" +

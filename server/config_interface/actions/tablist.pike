@@ -50,7 +50,7 @@ string parse( RequestID id )
 
     string sel = (s(page[0])==q?" selected":"");
 
-    res += "<tab "+ea+"href='?class="+s(page[0])+"'"+sel+">";
+    res += "<tab "+ea+"href='?class="+s(page[0])+"&amp;&usr.set-wiz-id;'"+sel+">";
     res += page[3];
     res += "</tab>";
     res += tpost;

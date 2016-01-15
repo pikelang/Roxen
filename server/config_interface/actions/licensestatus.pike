@@ -55,7 +55,7 @@ mixed parse( RequestID id )
               <b>&_.filename;</b>
             </if>
             <else>
-              <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'>&_.filename;</a>
+              <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;&amp;&usr.set-wiz-id;'>&_.filename;</a>
             </else>
           </if>
           <else>&_.filename;</else>

@@ -42,11 +42,11 @@ string parse( RequestID id )
 {
   string res =
     "<input type='hidden' name='action' value='cachestatus.pike' />"
-    "<p><cf-refresh/> <cf-cancel href='?class=&form.class;'/></p>\n"
+    "<p><cf-refresh/> <cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>\n"
     "<h3>"+
     LOCALE(61, "WebServer Memory Cache")+
     "</h3>\n"
-    "<p><a href='/global_settings/?section=Cache'>" +
+    "<p><a href='/global_settings/?section=Cache&amp;&usr.set-wiz-id;'>" +
     LOCALE(380, "Configure cache settings") + "</a></p>\n";
 
   mapping(cache.CacheManager:mapping(string:cache.CacheStats)) stats =
