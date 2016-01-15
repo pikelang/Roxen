@@ -178,7 +178,7 @@ mapping wizard_done( object id )
   if (!file || file->write(id->variables->csr) != sizeof(id->variables->csr)) {
     return http_string_answer(sprintf("<p>" +
 				      LOCALE(155, "Failed to write CSR to %s.")+
-				      "</p>\n<p><cf-cancel href='?class=&form.class;'/></p>\n",
+				      "</p>\n<p><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>\n",
 				      fname));
   }
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+

@@ -91,7 +91,7 @@ YMMV. This action is deprecated.") + "</font></p>\n";
 		     Roxen.http_encode_url(lower_case(replace(conf_name,
 							      " ", "_"))));
 
-      res += "<cf-ok/> <cf-cancel href='./?class="+action+"'/>";
+      res += "<cf-ok/> <cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/>";
     } else {
       // Page 3
       //
@@ -236,7 +236,7 @@ YMMV. This action is deprecated.") + "</font></p>\n";
   if (!conf) {
     // Only on first page.
     res += "<br clear='all'>"
-      "<cf-cancel href='./?class="+action+"'/>";
+      "<cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/>";
   }
 
   return res;

@@ -123,7 +123,7 @@ array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
   string url_modname = replace(conf->otomod[module], "#", "!"),
 	url_confname = conf->name;
 
-  return ({ sprintf("/sites/site.html/%s/-!-/%s/?section=Information",
+  return ({ sprintf("/sites/site.html/%s/-!-/%s/?section=Information&amp;&usr.set-wiz-id;",
 		   Roxen.http_encode_url(url_confname),
 		   Roxen.http_encode_url(url_modname)),
 	    Roxen.html_encode_string(Roxen.get_modfullname(module)) });

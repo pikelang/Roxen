@@ -91,7 +91,7 @@ string format_proc_line(string in, int ipid)
   if(strlen(pre))pre=" "+pre[1..];
   if(search(in,"/proc/")==-1)
     return (pre+
-	    "<a href=?class=&form.class;&action=proc.pike&pid="+pid+"&unique="+time()+">"+
+	    "<a href='?class=&amp;form.class;&amp;action=proc.pike&amp;pid="+pid+"&amp;unique="+time()+"&amp;&usr.set-wiz-id;'>"+
 	    (ipid==pid?"<b>":"")+
 	    html_encode_string(in)+
 	    (ipid==pid?"</b>":"")+

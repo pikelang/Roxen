@@ -193,7 +193,7 @@ string parse( RequestID id )
     "<br />";
   
   res += "<submit-gbutton align='middle'>"+_(138,"Change version")+"</submit-gbutton> "
-    "<cf-cancel href='./?class="+action+"'/>";
+    "<cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/>";
 	      
   return res;
 }

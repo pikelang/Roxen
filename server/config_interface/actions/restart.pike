@@ -73,7 +73,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
-   <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" + pid + #"' 
+   <gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" + pid + #"&amp;&usr.set-wiz-id;'
             width=250 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
  </cf-perm>
@@ -86,7 +86,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 <br/><br/>
 
 <cf-perm perm='Shutdown'>
-  <gbutton href='?what=shutdown&action=restart.pike&class=maintenance&pid=" + pid + #"' 
+  <gbutton href='?what=shutdown&amp;action=restart.pike&amp;class=maintenance&amp;pid=" + pid + #"&amp;&usr.set-wiz-id;'
            width=250  icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
@@ -100,6 +100,6 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
 <br/>
 
-<p><cf-cancel href='?class=&form.class;'/></p>" );
+<p><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>" );
      }
 }

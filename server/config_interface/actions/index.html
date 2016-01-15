@@ -20,7 +20,7 @@
     </if>
     <if not variable="var.doing-action">
       <define container="action">
-	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
+	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;&amp;&usr.set-wiz-id;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
       </define>
       <eval><insert file="list_actions.pike" nocache="" /></eval>

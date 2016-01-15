@@ -6,7 +6,7 @@
   </table>
   <rul>
   <update-package type="&_.name;" limit="5">
-    <eval><rli>&_.title; <a href="update.html?page=details&details=&_.id;">
+    <eval><rli>&_.title; <a href="update.html?page=details&amp;details=&_.id;&amp;&usr.set-wiz-id;">
       <translate id="3">[Details...]</translate></a></rli></eval>
     <set variable="var._&cat.name;" value='foo'/>
   </update-package>
@@ -15,7 +15,7 @@
      &nbsp; <translate id="4">Currently no packages in this category.</translate><br />
   </if>
   <else>
-    <a href="update.html?page=category&category=&_.name;">
+    <a href="update.html?page=category&amp;category=&_.name;&amp;&usr.set-wiz-id;">
       <translate id="5">[More..]</translate></a><br />
   </else>
   &nbsp;
@@ -23,13 +23,13 @@
 
 
 <if variable="form.install">
-  <redirect to="update.html?page=install&install=&form.install;" />
+  <redirect to="update.html?page=install&amp;install=&form.install;&amp;&usr.set-wiz-id;" />
 </if>
 
 
 <if variable="form.download">
   <update-start-download package="&form.details;" />
-  <redirect to="update.html?bar" />
+  <redirect to="update.html?bar&amp;&usr.set-wiz-id;" />
 </if>
 
 <if variable="form.uninstall_package">
@@ -64,7 +64,7 @@
   <update-download-progress>
   <tr>
     <td nowrap="nowrap">&_.title;
-      <a href="update.html?details=&_.id;">[Details...]</a></td>
+      <a href="update.html?details=&_.id;&amp;&usr.set-wiz-id;">[Details...]</a></td>
     <td nowrap="nowrap">&_.size;</td>
     <td nowrap="nowrap">&_.progress;%</td>
   </tr>
@@ -75,10 +75,10 @@
   <update-downloaded-packages>
   <tr>
     <td nowrap="nowrap">&_.title;
-      <a href="update.html?page=details&details=&_.id;">[Details...]</a></td>
+      <a href="update.html?page=details&amp;details=&_.id;&amp;&usr.set-wiz-id;">[Details...]</a></td>
     <td nowrap="nowrap">&_.size;</td>
     <td nowrap="nowrap">
-      <a href="update.html?install=&_.id;">[Install...]</a>
+      <a href="update.html?install=&_.id;&amp;&usr.set-wiz-id;">[Install...]</a>
     </td>
   </tr>
   </update-downloaded-packages>

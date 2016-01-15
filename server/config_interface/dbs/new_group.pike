@@ -111,7 +111,7 @@ the username <i>foo</i> and password <i>bar</i>, set this URL to
 	really_do_create( id );
 	if( find_dbs )
 	  RXML.user_set_var( "var.go-on",
-			     sprintf("<redirect to='import_dbs.pike?group=%s'/>",
+			     sprintf("<redirect to='import_dbs.pike?group=%s&amp;&usr.set-wiz-id;'/>",
 				     Roxen.http_encode_url(c_name(id->variables->name,id))));
 	else
 	  RXML.user_set_var( "var.go-on", "<redirect to='/dbs/'/>" );

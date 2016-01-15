@@ -8,20 +8,20 @@
 <content><cv-split><subtablist width='100%'>
  <st-tabs>
   <if variable='form.section is event_log'>
-    <tab selected='t' href='?section=event_log'><translate id="216">Events</translate></tab>
+    <tab selected='t' href='?section=event_log&amp;&usr.set-wiz-id;'><translate id="216">Events</translate></tab>
   </if>
   <else>
-    <tab href='?section=event_log'><translate id="216">Events</translate></tab>
+    <tab href='?section=event_log&amp;&usr.set-wiz-id;'><translate id="216">Events</translate></tab>
   </else>
   <if variable='form.section is ports'>
-    <tab selected='t' href='?section=ports'><translate id="508">Ports</translate></tab>
+    <tab selected='t' href='?section=ports&amp;&usr.set-wiz-id;'><translate id="508">Ports</translate></tab>
   </if>
   <else>
-    <tab href='?section=ports'><translate id="508">Ports</translate></tab>
+    <tab href='?section=ports&amp;&usr.set-wiz-id;'><translate id="508">Ports</translate></tab>
   </else>
   <emit source='global-variables-sections'>
     <tab ::='&_.selected;'
-         href="?section=&_.section:url;">&_.sectionname;</tab>
+         href="?section=&_.section:url;&amp;&usr.set-wiz-id;">&_.sectionname;</tab>
   </emit>
  </st-tabs>
  <st-page>
@@ -38,7 +38,7 @@
              cellpadding="0" cellspacing="0">
         <tr width="100%">
          <td width="100%">
-      <font color="&usr.content-titlefg;"><if variable="form.port is &_.port;"><img src="&usr.selected-indicator;" /></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port:http;&section=&form.section:http;'><b><font size="+2">&_.name;</font></a></font>
+      <font color="&usr.content-titlefg;"><if variable="form.port is &_.port;"><img src="&usr.selected-indicator;" /></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port:http;&amp;section=&form.section:http;&amp;&usr.set-wiz-id;'><b><font size="+2">&_.name;</font></a></font>
        </td>
         <td align="right">
           <if variable="form.port is &_.port;">

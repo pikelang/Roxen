@@ -29,8 +29,9 @@ mapping actions = ([
        "<submit-gbutton2 name='yes' align='center' "		\
        " width='&usr.gbutton-width;'>"+_(0,"Yes")+		\
        "</submit-gbutton2></td>\n"				\
-       "<td align=right><cf-no href="+Roxen.html_encode_string(id->not_query)+\
-      "?db="+Roxen.html_encode_string(id->variables->db)+"/>"+	\
+       "<td align=right><cf-no href='"+Roxen.html_encode_string(id->not_query)+\
+       "?db="+Roxen.html_encode_string(id->variables->db)+	\
+       "&amp;&usr.set-wiz-id;' />"+				\
        "</td>\n</table>\n");					\
   }								\
 } while(0)
@@ -101,7 +102,7 @@ mixed repair_db( string db, RequestID id )
     "}\n"
     "</style>"
 
-    "<a href='browser.pike?db=" + db + "'><gbutton>Back</gbutton></a><br/><br/>"
+    "<a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'><gbutton>Back</gbutton></a><br/><br/>"
 
     "<table id='tbl' cellspacing='0' cellpadding='1'>"
     "<thead>"
@@ -137,7 +138,7 @@ mixed repair_db( string db, RequestID id )
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
 	"<td><b>" + result + "</b></td>" +
 	"<td>" + t2 + " sec</td>" +
 	"</tr>";
@@ -170,7 +171,7 @@ mixed optimize_db( string db, RequestID id )
     "}\n"
     "</style>"
 
-    "<a href='browser.pike?db=" + db + "'><gbutton>Back</gbutton></a><br/><br/>"
+    "<a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'><gbutton>Back</gbutton></a><br/><br/>"
 
     "<table id='tbl' cellspacing='0' cellpadding='1'>"
     "<thead>"
@@ -206,7 +207,7 @@ mixed optimize_db( string db, RequestID id )
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
 	"<td><b>" + result + "</b></td>" +
 	"<td>" + t2 + " sec</td>" +
 	"</tr>";
@@ -246,7 +247,7 @@ today's date in <tt>$VARDIR/backup</tt> (%s)."),
     "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
     "<td valign=top align=right><cf-cancel href='"+
       Roxen.html_encode_string(id->not_query)+
-      "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
+    "?db="+Roxen.html_encode_string(id->variables->db)+"&amp;&usr.set-wiz-id;'/>"
     "</td>\n</table>\n";
 }
 
@@ -398,9 +399,8 @@ mixed move_db( string db, RequestID id )
     "<input type=hidden name=action value='&form.action;' />"
     "<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
     "<td align=right>"
-    "<cf-cancel href='"+Roxen.html_encode_string(id->not_query)+
-      "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'/>"
+    "<cf-cancel href='" + Roxen.html_encode_string(id->not_query) +
+    "?db=" + Roxen.html_encode_string(id->variables->db) + "&amp;&usr.set-wiz-id;'/>"
     "</td>\n</table>\n";
 }
 
@@ -531,7 +531,7 @@ string db_switcher( RequestID id )
     }
     var selValue = objSel.options[objSel.selectedIndex].value;
     if(selValue != '&form.db:js;') {
-      window.location.href = window.location.pathname + '?db=' + escape( selValue );
+      window.location.href = window.location.pathname + '?db=' + escape( selValue + '&amp;&usr.set-wiz-id:js;');
     }
   }
   </script>
@@ -873,7 +873,7 @@ mapping|string parse( RequestID id )
 	    qres += (string) (float) q[i];
 	  else if( is_image( q[i] ) )
 	    qres +=
-	      "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
+	      "<img src='browser.pike?image="+store_image( q[i] )+ "&amp;&usr.set-wiz-id;' />";
 	  else {
 	    mixed tmp = q[i];
 	    int got_result;
@@ -981,7 +981,7 @@ mapping|string parse( RequestID id )
 	     _(506,"Member of the %s database group."),
 	     "<a href='edit_group.pike?group="+
 	     Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
-	     "'>" +
+	     "&amp;&usr.set-wiz-id;'>" +
 	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
 	     ->lname +
 	     "</a>")
@@ -1069,7 +1069,7 @@ mapping|string parse( RequestID id )
       string res = "<tr>"
 	"<td style='white-space: nowrap'>"
 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
-	"db=&form.db:http;" +
+	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
 	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
 	"<cimg style='vertical-align: -2px' border='0' format='gif'"
 	" src='&usr.table-small;' alt='' max-height='12'/> " +
@@ -1166,13 +1166,13 @@ mapping|string parse( RequestID id )
 	res += "<col span='3'/><col style='visiblity: collapse'/>\n";
       res +=
 	"<thead><tr>"
-	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name'>"+
+	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name&amp;&usr.set-wiz-id;'>"+
 	SEL("name", 1) + _(376,"Name")+
 	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=rows'>"+
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=rows&amp;&usr.set-wiz-id;'>"+
 	SEL("rows",0)+String.capitalize(_(374,"rows"))+
 	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=size'>"+
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=size&amp;&usr.set-wiz-id;'>"+
 	SEL("size",0)+_(377,"Size")+
 	"</a></th>\n"
 	"<th>Owner</th>\n"
@@ -1208,7 +1208,7 @@ mapping|string parse( RequestID id )
 
 #define ADD_ACTION(X) if(!actions[X][2] || \
 			 DBManager.is_internal(id->variables->db) ) \
-   res += sprintf("<a href='%s?db=%s&amp;action=%s'><gbutton>%s</gbutton></a>\n",\
+   res += sprintf("<a href='%s?db=%s&amp;action=%s&amp;&usr.set-wiz-id;'><gbutton>%s</gbutton></a>\n",\
 		  id->not_query, id->variables->db, X, actions[X][0] )
   
   switch( id->variables->db )

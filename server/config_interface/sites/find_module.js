@@ -1,12 +1,28 @@
 //  Written by Jonas Walldén, jonasw@roxen.com
 
+    function get_cookie(cookie_name)
+    {
+      cookie_name += "=";
+      var cookies = document.cookie.split(';');
+      var i;
+      for (i = 0; i < cookies.length; i++) {
+	var c = cookies[i];
+	// Zap white space.
+	while (c.charAt(0) == ' ')
+	  c = c.substring(1);
+	if (!c.indexOf(cookie_name))
+	  return c.substring(cookie_name.length);
+      }
+      return "";
+    }
 
     //  Query
     var query_old_txt = "";
     var query_callout = 0;
     var query_xml_req = 0;
     var query_query;
-    var query_search_base = "add_module.pike?&mod_query=";
+    var query_search_base = "add_module.pike?_roxen_wizard_id=" + \
+                            get_cookie("RoxenWizardId") + "&mod_query=";
     var query_config = "";
     var query_method = "";
 

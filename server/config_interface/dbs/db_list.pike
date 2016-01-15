@@ -142,7 +142,7 @@ string|mapping parse( RequestID id )
 
     string res =
       "<tr><td class='db'>" +
-      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
+      (view_mode ? "" : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'>") +
       "<cimg style='vertical-align: -2px' border='0' format='gif'"
       " src='&usr.database-small;' alt='' max-height='12'/> " +
       db +
@@ -223,7 +223,7 @@ string|mapping parse( RequestID id )
     res += "<tbody>\n"
       "<tr class='group-hdr'><th colspan='5'>" + (i ? "<br/>" : "") +
       "<a style='font-size: larger'"
-      " href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a>"
+      " href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" + q[0] + "</a>"
       "</th></tr>\n"
       "<tr class='column-hdr'>"
       "<th>Name</th>"

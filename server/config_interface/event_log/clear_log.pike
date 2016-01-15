@@ -12,5 +12,5 @@ mapping parse( RequestID id )
 			(gethostbyaddr(id->remoteaddr)    ? 
 			 gethostbyaddr(id->remoteaddr)[0] : id->remoteaddr))
 		);
-  return Roxen.http_redirect( "../global_settings/?section=event_log", id );
+  return Roxen.http_redirect( "../global_settings/?section=event_log&amp;&usr.set-wiz-id;", id );
 }

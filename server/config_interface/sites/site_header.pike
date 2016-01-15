@@ -25,7 +25,7 @@ string module_page( RequestID id, string conf, string module )
   configuration='"+conf+#"'
   module='"+module+#"'>
    <tab ::='&_.first; &_.last; &_.selected;'
-        href='?section=&_.section:http;'>&_.sectionname;</tab>
+        href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</tab>
 </emit>";
 }
 
@@ -52,7 +52,7 @@ mixed parse( RequestID id )
 	 "<emit source='config-variables-sections' add-module-priorities='1' add-status='1' "
 	 "      configuration='"+path[0]+"'>\n"
 	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
-	 "       href='?section=&_.section:http;'>&_.sectionname;</tab>"
+	 "       href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</tab>"
 	 "</emit>");
      break;
 

@@ -79,7 +79,7 @@ string page_0(RequestID id)
 	  "<font size=-1><input name=text size=46 value='" +
 	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
 	  "'></p><p><table width='70%'><tr><td align='left'>"
-          "<cf-cancel href='?class=status'/></td><td align='right'>"
+          "<cf-cancel href='?class=status&amp;&usr.set-wiz-id;'/></td><td align='right'>"
 	  "<cf-next/></td></tr></table></p>");
   return res;
 }
