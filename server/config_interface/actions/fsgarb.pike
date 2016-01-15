@@ -228,8 +228,8 @@ string parse(RequestID id)
 	  Roxen.http_encode_invalids(mgroup) + "!0/" +
 	  replace(mod->sname(), "#", "!") + "/?section=Status";
 
-	name = sprintf("<a href='/sites/site.html/%s'>%s</a>/"
-		       "<a href='/sites/site.html/%s'>%s</a>",
+	name = sprintf("<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>/"
+		       "<a href='/sites/site.html/%s&amp;&usr.set-wiz-id;'>%s</a>",
 		       Roxen.html_encode_string(curl),
 		       replace(Roxen.html_encode_string(conf->query_name()),
 			       " ", "&nbsp;"),
