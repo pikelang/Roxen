@@ -16,9 +16,10 @@ LocaleString module_name = LOCALE(165,"Configuration Filesystem");
 LocaleString module_doc =
   LOCALE(166,"This filesystem serves the administration interface");
 
+constant thread_safe = 1;
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.73 2001/01/29 05:43:53 per Exp $";
+  "$Id$";
 
 constant path = "config_interface/";
 
