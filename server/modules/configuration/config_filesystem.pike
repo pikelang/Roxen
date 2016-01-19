@@ -16,6 +16,7 @@ LocaleString module_name = LOCALE(165,"Configuration Filesystem");
 LocaleString module_doc =
   LOCALE(166,"This filesystem serves the administration interface");
 
+constant thread_safe = 1;
 constant module_unique = 1;
 constant cvs_version =
   "$Id$";
