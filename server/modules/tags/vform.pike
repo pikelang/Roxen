@@ -317,7 +317,7 @@ class TagVForm {
   inherit RXML.Tag;
   constant name = "vform";
 
-  // Should disable caching since this module make heavy use of
+  // Should disable caching since this module makes heavy use of
   // id->misc, which isn't intercepted by the cache system. But then
   // again, disabling the cache can be just as bad, so we let it be a
   // known misfeature that some combinations of vform and the <cache>
@@ -584,7 +584,7 @@ constant tagdoc=([
  Creates a self-verifying form.</short> You can use all standard
  HTML input widgets in this container as well.</p>
 
-<p>Other tags that is related and useful are <tag>default</tag>
+<p>Other tags that are related and useful are <tag>default</tag>
 and <tag>roxen-automatic-charset-variable</tag>.</p>
 
 <ex-box>
