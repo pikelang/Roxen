@@ -1,0 +1,15 @@
+subject: Roxen 5.4: DBManager: Don't let mysqld get confused by stuff in /etc/my.cfg.
+from: f9ccc2d78a9a0ac0f993bb3aed056c0eecdfc58e
+to: 46b429a858dc83f56b5708b412653f033581651b
+originator: wellhardh@roxen.com
+depends: 2015-12-15T112916
+restart: true
+
+DBManager: Don't let mysqld get confused by stuff in /etc/my.cfg.
+
+mysqld defaults to reading the /etc/my.cfg file even with --version.
+
+Don't let unknown options in /etc/my.cfg confuse the bundled mysqld
+during version probing.
+
+Fixes [bug 7276].
