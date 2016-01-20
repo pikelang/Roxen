@@ -515,6 +515,19 @@ class TagVForm {
       id->misc->vform_failed=(<>);
       id->misc->vform_xml = !args->noxml;
 
+      string wizard_id = id->cookies["RoxenWizardId"];
+      if (!sizeof(wizard_id || "")) {
+	wizard_id = (string)random(0x7fffffff);
+	id->add_response_header("Set-Cookie",
+				sprintf("RoxenWizardId=%s; path=/", wizard_id));
+	id->cookies["RoxenWizardId"] = wizard_id;
+      }
+      if (wizard_id != id->variables["_roxen_wizard_id"]) {
+	m_delete(id->real_variables, "__state");
+	id->misc->vform_ok = 0;
+	id->variables["_roxen_wizard_id"] = wizard_id;
+      }
+
       state = StateHandler.Page_state(id);
       state->register_consumer("vform");
       if(id->real_variables->__state) {
@@ -544,7 +557,10 @@ class TagVForm {
 
       state->alter(id->misc->vform_objects);
       content = "<input name=\"__state\" type=\"hidden\" value=\"" + 
-	state->encode() + "\" />\n" + content;
+	state->encode() + "\" />\n"
+	"<input name=\"_roxen_wizard_id\" type=\"hidden\" value=\"" +
+	Roxen.html_encode_string(id->variables["_roxen_wizard_id"]) +
+	"\" />\n" + content;
 
       m_delete(id->misc, "vform_objects");
       m_delete(id->misc, "vform_verified");
