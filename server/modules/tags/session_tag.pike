@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.30 2012/04/17 09:13:04 erikd Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -165,6 +165,11 @@ class TagForceSessionID {
   constant name = "force-session-id";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "secure":RXML.t_text(RXML.PEnt),
+    "httponly":RXML.t_text(RXML.PEnt),
+  ]);
+
   class Frame {
     inherit RXML.Frame;
 
@@ -194,13 +199,15 @@ class TagForceSessionID {
 	  // Don't trust that the user cookie setting is turned on. The effect
 	  // might be that the RoxenUserID cookie is set twice, but that is
 	  // not a problem for us.
-	  id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie(session_id) );
+	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
+	  Roxen.set_cookie(id, "RoxenUserId", session_id, 3600*24*365*2,
+			   UNDEFINED, "/", args->secure, args->httponly);
 	  id->prestate = orig_prestate;
 	  return 0;
 	}
 
 	// If there is both an ID cookie and a session prestate, then the
-	// user do accept cookies, and there is no need for the session
+	// user does accept cookies, and there is no need for the session
 	// prestate. Redirect back to the page, but without the session
 	// prestate. 
 	if(id->cookies->RoxenUserID && prestate) {
@@ -221,7 +228,9 @@ class TagForceSessionID {
       } else {
 	if ( !id->cookies->RoxenUserID ) {
 	  string session_id = roxen->create_unique_id();
-	  id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie( session_id ) );
+	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
+	  Roxen.set_cookie(id, "RoxenUserId", session_id, 3600*24*365*2,
+			   UNDEFINED, "/", args->secure, args->httponly);
 	  id->cookies->RoxenUserID = session_id;
 	  return 0;
 	}
@@ -336,7 +345,23 @@ at the option to enable unique browser id cookies under the server ports tab.</p
   </else>
 </nocache>
 </ex-box>
-</desc>",
+</desc>
+
+<attr name='secure'>
+  <p>If this attribute is present the session cookie will be set with the Secure
+  attribute. The Secure flag instructs the user agent to use only (unspecified)
+  secure means to contact the origin server whenever it sends back the session
+  cookie. If the browser supports the secure flag, it will not send the session
+  cookie when the request is going to an HTTP page.</p>
+</attr>
+
+<attr name='httponly'>
+  <p>If this attribute is present the session cookie will be set with
+  the HttpOnly attribute. If the browser supports the HttpOnly flag,
+  the session cookie will be secured from being accessed by a client
+  side script.</p>
+</attr>
+",
 
 ]);
 #endif
