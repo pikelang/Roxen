@@ -865,7 +865,7 @@ mapping(string:array) wizard_get_state (RequestID id)
   return id->misc->wizard_state = s;
 }
 
-static void reset_buttons(FakedVariables v)
+protected void reset_buttons(FakedVariables v)
 {
   m_delete (v, "next_page");
   m_delete (v, "next_page.x");
