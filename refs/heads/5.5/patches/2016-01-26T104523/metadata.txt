@@ -1,0 +1,25 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 6ab773d4e82e0b3dd5ede5a6bd1ccdaec0b214b9
+to: 78885d0de551554ea1ae1addbe0bd6e4e07b7fb3
+originator: wellhardh@roxen.com
+depends: 2015-11-19T162640
+restart: true
+
+Multiple fixes:
+
+  * SSL: Enable the cipher strength selector in recent Pike 7.8.
+    
+    Fixes issue with RC4 suites being available by default.
+
+  * SSL: More cipher strength fixes.
+    
+    The get_suites() API differs between Pike 7.8 and 8.0.
+    
+    The removed symbol preferred_rsa_suites was replaced by a getter, so it
+    isn't a suitable symbol to use to detect the presence of get_suites().
+
+  * SSL: Updated cipher strength documentation.
+
+  * SSL: Added some ROXEN_SSL_DEBUG.
+    
+    This #define can be used to enable some high-level SSL debug.
