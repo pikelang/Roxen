@@ -1,4 +1,4 @@
-subject: Roxen 5.5: Multiple fixes:
+subject: Roxen 5.5: SSL fixes
 from: 6ab773d4e82e0b3dd5ede5a6bd1ccdaec0b214b9
 to: 78885d0de551554ea1ae1addbe0bd6e4e07b7fb3
 originator: wellhardh@roxen.com
