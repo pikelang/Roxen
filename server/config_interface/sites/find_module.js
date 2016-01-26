@@ -21,7 +21,7 @@
     var query_callout = 0;
     var query_xml_req = 0;
     var query_query;
-    var query_search_base = "add_module.pike?_roxen_wizard_id=" + \
+    var query_search_base = "add_module.pike?_roxen_wizard_id=" +
                             get_cookie("RoxenWizardId") + "&mod_query=";
     var query_config = "";
     var query_method = "";
