@@ -225,6 +225,11 @@ mixed find_file( string f, RequestID id )
 			      sprintf("RoxenWizardId=%s; path=/", wizard_id));
       id->cookies["RoxenWizardId"] = wizard_id;
     }
+    if (sizeof(id->real_variables["_roxen_wizard_id"] || ({})) > 1) {
+      // Multi submit.
+      id->real_variables["_roxen_wizard_id"] =
+	({ id->real_variables["_roxen_wizard_id"][0] });
+    }
     if (wizard_id != id->variables["_roxen_wizard_id"]) {
       foreach(id->real_variables; string var;) {
 	m_delete(id->real_variables, var);
