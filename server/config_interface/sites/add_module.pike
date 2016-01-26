@@ -123,7 +123,6 @@ string page_base( RequestID id, string content, int|void noform,
 		  "<tr><td nowrap='nowrap'>%s:</td><td>"
 		  "<form action='' style='margin: 0'>"
 		  "<input type='hidden' name='config' value='&form.config;'>"
-		  "<roxen-wizard-id-variable />"
 		  "<default variable='form.method' value='%s'>"
 		  "<select name='method' onchange='submit()'>"
 		  "<option value='normal'>%s</option>"
