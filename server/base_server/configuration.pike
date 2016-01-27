@@ -987,7 +987,10 @@ array location_modules()
     foreach(low_module_lookup(MODULE_LOCATION), RoxenModule me) {
       int pri = me->query("_priority");
       if (pri != prev_pri) {
-	sort(level_locations, level_find_files);
+	//  Order after longest prefix length
+	sort(map(level_locations,
+		 lambda(string loc) { return -sizeof(loc); }),
+	     level_locations, level_find_files);
 	foreach(level_locations; int i; string path) {
 	  new_location_module_cache += ({ ({ path, level_find_files[i] }) });
 	}
@@ -1001,7 +1004,10 @@ array location_modules()
       level_find_files += ({ me->find_file });
       level_locations += ({ location });
     }
-    sort(level_locations, level_find_files);
+    
+    sort(map(level_locations,
+	     lambda(string loc) { return -sizeof(loc); }),
+	 level_locations, level_find_files);
     foreach(level_locations; int i; string path) {
       new_location_module_cache += ({ ({ path, level_find_files[i] }) });
     }
