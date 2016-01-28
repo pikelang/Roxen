@@ -1,0 +1,10 @@
+subject: Roxen 5.4: Logging: Added log format $set-cookies.
+from: 46b429a858dc83f56b5708b412653f033581651b
+to: 451f5e3dba2b710844f061c04fed15a821545b3c
+originator: wellhardh@roxen.com
+depends: 2016-01-20T084442
+restart: true
+
+Logging: Added log format $set-cookies.
+
+Fixes [bug 7633].
