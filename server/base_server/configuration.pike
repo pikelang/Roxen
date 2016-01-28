@@ -4985,6 +4985,8 @@ hyphens ('-') occur in the specifier names.</p>
     <td>Resource MIME type.</td></tr>
 <tr><td>$cookies</td>
     <td>All cookies sent by the browser, separated by ';'.</td></tr>
+<tr><td>$set-cookies</td>
+    <td>All cookies set by the response, separated by ';'.</td></tr>
 
 <tr><td>$cache-status</td>
     <td>A comma separated list of words (containing no whitespace)
