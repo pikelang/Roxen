@@ -7340,6 +7340,11 @@ protected constant formats = ([
 				 "request_id->request_headers->cookie*\";\":"
 				 "request_id->request_headers->cookie||\"\""),
 			  1, "\"-\"", 0}),
+  "set-cookies":	({"%s", ("Array.uniq("
+				 "request_id->get_response_headers(\"Set-Cookie\")+"
+				 "request_id->get_response_headers(\"set-cookie\"))"
+				 "*\";\""),
+			  1, "\"-\"", 0}),
   "cache-status":	({"%s", ("sizeof(request_id->cache_status||({}))?"
 				 "indices(request_id->cache_status)*\",\":"
 				 "\"nocache\""),
