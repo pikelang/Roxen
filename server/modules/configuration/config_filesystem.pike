@@ -426,6 +426,9 @@ mixed find_file( string f, RequestID id )
       url+="?rv="+random(471187)->digits(32);
       if( id->real_variables->section )
 	url += "&section="+id->real_variables->section[0];
+      if (id->cookies["RoxenWizardId"]) {
+	url += "&_roxen_wizard_id=" + id->cookies["RoxenWizardId"];
+      }
       retval = Roxen.http_redirect( url, id );
     }
   } else {
