@@ -845,7 +845,10 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
       describe_thread (thread);
     } else {
       last_dump_hrtime = hrnow;
-      describe_all_threads (0, threads_disabled);
+      mixed err = catch {
+	  describe_all_threads(0, 1);
+	};
+      if (err) master()->handle_error(err);
     }
   }
 
@@ -6348,9 +6351,10 @@ void describe_thread (Thread.Thread thread)
 
 // Dump all threads to the debug log.
 void describe_all_threads (void|int ignored, // Might be the signal number.
-			   void|object threads_disabled)
+			   void|int(0..1) inhibit_threads_disabled)
 {
-  if (!threads_disabled)
+  object threads_disabled;
+  if (!inhibit_threads_disabled)
     // Disable all threads to avoid potential locking problems while we
     // have the backtraces. It also gives an atomic view of the state.
     threads_disabled = _disable_threads();
@@ -6376,39 +6380,49 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
     describe_thread (thread);
   }
 
-  array(array) queue = handle_queue->peek_array();
+  threads = 0;
 
-  // Ignore the handle thread shutdown marker, if any.
-  queue -= ({0});
+  if (catch {
+      array(array) queue = handle_queue->peek_array();
 
-  if (!sizeof (queue))
-    report_debug ("###### No entries in the handler queue\n");
-  else {
-    report_debug ("###### %d entries in the handler queue:\n>>\n",
-		  sizeof (queue));
-    foreach (queue; int i; array task)
-      report_debug (">> %d: %s\n", i,
-		    replace (debug_format_queue_task (task), "\n", "\n>> "));
-    report_debug (">> \n");
+      // Ignore the handle thread shutdown marker, if any.
+      queue -= ({0});
+
+      if (!sizeof (queue))
+	report_debug("###### No entries in the handler queue.\n");
+      else {
+	report_debug("###### %d entries in the handler queue:\n>>\n",
+		     sizeof (queue));
+	foreach(queue; int i; array task)
+	  report_debug(">> %d: %s\n", i,
+		       replace (debug_format_queue_task (task), "\n", "\n>> "));
+	report_debug(">> \n");
+      }
+      queue = 0;
+    }) {
+    report_debug("###### Handler queue busy.\n");
   }
 
-  queue = bg_queue->peek_array();
+  if (catch {
+      array queue = bg_queue->peek_array();
 
-  if (!sizeof (queue))
-    report_debug ("###### No entries in the background_run queue\n");
-  else {
-    report_debug ("###### %d entries in the background_run queue:\n>>\n",
-		  sizeof (queue));
-    foreach (queue; int i; array task)
-      report_debug (">> %d: %s\n", i,
-		    replace (debug_format_queue_task (task), "\n", "\n>> "));
-    report_debug (">> \n");
+      if (!sizeof (queue))
+	report_debug ("###### No entries in the background_run queue\n");
+      else {
+	report_debug ("###### %d entries in the background_run queue:\n>>\n",
+		      sizeof (queue));
+	foreach (queue; int i; array task)
+	  report_debug (">> %d: %s\n", i,
+			replace (debug_format_queue_task (task), "\n", "\n>> "));
+	report_debug (">> \n");
+      }
+      queue = 0;
+    }) {
+    report_debug("###### background_run queue busy.\n");
   }
 
   report_debug ("###### Thread and queue dumps done at %s\n", ctime (time()));
 
-  queue = 0;
-  threads = 0;
   threads_disabled = 0;
 
 #ifdef DEBUG
