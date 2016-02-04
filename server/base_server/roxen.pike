@@ -815,7 +815,7 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
       describe_thread (thread);
     } else {
       last_dump_hrtime = hrnow;
-      describe_all_threads (0, threads_disabled);
+      describe_all_threads (0, 1);
     }
   }
 
@@ -5812,9 +5812,10 @@ void describe_thread (Thread.Thread thread)
 
 // Dump all threads to the debug log.
 void describe_all_threads (void|int ignored, // Might be the signal number.
-			   void|object threads_disabled)
+			   void|int(0..1) inhibit_threads_disabled)
 {
-  if (!threads_disabled)
+  object threads_disabled;
+  if (!inhibit_threads_disabled)
     // Disable all threads to avoid potential locking problems while we
     // have the backtraces. It also gives an atomic view of the state.
     threads_disabled = _disable_threads();
