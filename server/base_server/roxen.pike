@@ -5844,39 +5844,49 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
     describe_thread (thread);
   }
 
-  array(array) queue = handle_queue->peek_array();
+  threads = 0;
 
-  // Ignore the handle thread shutdown marker, if any.
-  queue -= ({0});
+  if (catch {
+      array(array) queue = handle_queue->peek_array();
 
-  if (!sizeof (queue))
-    report_debug ("###### No entries in the handler queue\n");
-  else {
-    report_debug ("###### %d entries in the handler queue:\n>>\n",
-		  sizeof (queue));
-    foreach (queue; int i; array task)
-      report_debug (">> %d: %s\n", i,
-		    replace (debug_format_queue_task (task), "\n", "\n>> "));
-    report_debug (">> \n");
+      // Ignore the handle thread shutdown marker, if any.
+      queue -= ({0});
+
+      if (!sizeof (queue))
+	report_debug("###### No entries in the handler queue.\n");
+      else {
+	report_debug("###### %d entries in the handler queue:\n>>\n",
+		     sizeof (queue));
+	foreach(queue; int i; array task)
+	  report_debug(">> %d: %s\n", i,
+		       replace (debug_format_queue_task (task), "\n", "\n>> "));
+	report_debug(">> \n");
+      }
+      queue = 0;
+    }) {
+    report_debug("###### Handler queue busy.\n");
   }
 
-  queue = bg_queue->peek_array();
+  if (catch {
+      array queue = bg_queue->peek_array();
 
-  if (!sizeof (queue))
-    report_debug ("###### No entries in the background_run queue\n");
-  else {
-    report_debug ("###### %d entries in the background_run queue:\n>>\n",
-		  sizeof (queue));
-    foreach (queue; int i; array task)
-      report_debug (">> %d: %s\n", i,
-		    replace (debug_format_queue_task (task), "\n", "\n>> "));
-    report_debug (">> \n");
+      if (!sizeof (queue))
+	report_debug ("###### No entries in the background_run queue\n");
+      else {
+	report_debug ("###### %d entries in the background_run queue:\n>>\n",
+		      sizeof (queue));
+	foreach (queue; int i; array task)
+	  report_debug (">> %d: %s\n", i,
+			replace (debug_format_queue_task (task), "\n", "\n>> "));
+	report_debug (">> \n");
+      }
+      queue = 0;
+    }) {
+    report_debug("###### background_run queue busy.\n");
   }
 
   report_debug ("###### Thread and queue dumps done at %s\n", ctime (time()));
 
-  queue = 0;
-  threads = 0;
   threads_disabled = 0;
 
 #ifdef DEBUG
