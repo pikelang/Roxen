@@ -815,7 +815,10 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
       describe_thread (thread);
     } else {
       last_dump_hrtime = hrnow;
-      describe_all_threads (0, 1);
+      mixed err = catch {
+	  describe_all_threads(0, 1);
+	};
+      if (err) master()->handle_error(err);
     }
   }
 
