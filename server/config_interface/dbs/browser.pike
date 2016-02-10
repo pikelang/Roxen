@@ -531,7 +531,7 @@ string db_switcher( RequestID id )
     }
     var selValue = objSel.options[objSel.selectedIndex].value;
     if(selValue != '&form.db:js;') {
-      window.location.href = window.location.pathname + '?db=' + escape( selValue + '&amp;&usr.set-wiz-id:js;');
+      window.location.href = window.location.pathname + '?db=' + escape( selValue ) + '\x26&usr.set-wiz-id:js;';
     }
   }
   </script>
