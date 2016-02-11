@@ -3791,6 +3791,8 @@ object clone_me()
   c->realauth = realauth;
   c->rawauth = rawauth;
   c->since = since;
+
+  c->json_logger = json_logger->child();
   return c;
 }
 
