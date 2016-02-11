@@ -1170,6 +1170,38 @@ protected function _charset_decoder_func;
 // types so we know wide strings aren't a problem.
 protected Regexp ct_charset_search = Regexp (";[ \t\n\r]*charset=");
 
+// Logger class for requests. Intended to have a parent logger in
+// the parent request or its configuration.
+class RequestJSONLogger {
+  inherit Logger.BaseJSONLogger;
+  string request_uuid;
+
+  mapping merge_defaults(mapping msg) {
+    // We always want the hrtime from the request as well as the thread id.
+    msg = msg + ([
+      // We want the current hrtime, not the start of the request...
+      "hrtime"    : gethrtime(),
+    ]);
+
+    msg->rid = request_uuid;
+
+    return ::merge_defaults(msg);
+  }
+
+  //! Default parameter mapping and a parent logger object.
+  //!
+  //! The @[parent_logger] object is used to pass any log messages
+  //! injected into this logger up the chain. By default, this logger
+  //! does not log at it's own level if a parent logger is given. Instead,
+  //! it will simply add its defaults and pass the complete log entry up
+  //! to the parent which is then responsible for handling the actual logging.
+  void create(void|string logger_name, void|mapping|function defaults,
+              void|object parent_logger, void|string request_uuid) {
+    ::create (logger_name, defaults, parent_logger);
+    this_program::request_uuid = request_uuid;
+  }
+}
+
 class RequestID
 //! @appears RequestID
 //! The request information object contains all request-local information and
@@ -1196,44 +1228,19 @@ class RequestID
     _request_uuid = (string)v;
   };
 
-  // Logger class for requests. Intended to have a parent logger in
-  // the parent request or its configuration.
-  class RequestJSONLogger {
-    inherit Logger.BaseJSONLogger;
-
-    void log(mapping|string data) {
-      // We find our parent logger by checking misc mapping, root
-      // request and finally configuration object.
-      //
-      // NOTE: We do not fall back to the global main_logger here as a
-      // design choice.
-      parent_logger = parent_logger ||
-	(misc->orig && misc->orig->json_logger) ||
-	(objectp(root_id) && root_id->json_logger != this && root_id->json_logger) ||
-	(conf && conf->json_logger);
-
-      if (!parent_logger) {
-	return; // Nowhere to log...
-      }
-
-      ::log(data);
-    }
-
-    mapping merge_defaults(mapping msg) {
-      // We always want the hrtime from the request as well as the thread id.
-      msg = msg + ([
-      // We want the current hrtime, not the start of the request...
-	"hrtime"    : gethrtime(),
-      ]);
-
-      msg->rid = request_uuid;
-
-      return ::merge_defaults(msg);
-    }
+  protected Configuration _conf;
+  Configuration `conf() {
+    return _conf;
   }
 
-  Configuration conf;
-  object json_logger = RequestJSONLogger("server/handler", UNDEFINED);
+  void `conf=(Configuration c) {
+    if (!json_logger->parent_logger && c)
+      json_logger->parent_logger = c->json_logger;
+    _conf = c;
+  }
+
+  RequestJSONLogger json_logger = RequestJSONLogger("server/handler", UNDEFINED,
+                                                    UNDEFINED, request_uuid);
 
   Protocol port_obj;
   //! The port object this request came from.
@@ -3315,6 +3322,8 @@ class RequestID
     c->realauth = realauth;
     c->rawauth = rawauth;
     c->since = since;
+
+    c->json_logger = json_logger->child();
     return c;
   }
 

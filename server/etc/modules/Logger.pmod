@@ -130,8 +130,11 @@ class BaseJSONLogger {
     set_name(logger_name);
   }
 
-  this_program child(string logger_name, void|mapping|function defaults) {
-    logger_name = combine_path_unix(this_program::logger_name, logger_name);
+  this_program child(void|string logger_name, void|mapping|function defaults) {
+    if (logger_name)
+      logger_name = combine_path_unix(this_program::logger_name, logger_name);
+    else
+      logger_name = this_program::logger_name;
     this_program new_logger = object_program(this)(logger_name, defaults, this);
     return new_logger;
   }
