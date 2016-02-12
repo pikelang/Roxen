@@ -6,7 +6,6 @@ constant cvs_version = "$Id$";
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
 
-
 constant module_name =
 "Proxies: HTTP Relay module";
 
@@ -15,7 +14,6 @@ constant module_doc =
 "regular expressions.";
 
 array(Relayer) relays = ({});
-
 
 class Relay
 {
@@ -58,6 +56,11 @@ class Relay
     {
       switch( i )
       {
+      case "accept-encoding":
+	// We need to support the stuff we pass on in the proxy
+	// otherwise we might end up with things like double
+	// gzipped data.
+	 break;
        case "connection": /* We do not support keep-alive yet. */
 	 res->Connection = "close";
          break;
@@ -114,11 +117,15 @@ class Relay
     int code;
     mapping h = ([]);
 
+    if (additional_headers) {
+      h = copy_value(additional_headers);
+    }
+
     if(!id) {
       destruct();
       return;
     }
-    
+
     string rewrite( string what )
     {
       // in what: URL.
@@ -159,7 +166,7 @@ class Relay
     };
 
 
-    
+
     if( !options->cache ) NO_PROTO_CACHE();
 
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
@@ -194,7 +201,7 @@ class Relay
 	     else
 	       h[a] = b;
           }
-        } else 
+        } else
           status = header;
       }
       if(!type)
@@ -207,7 +214,7 @@ class Relay
     werror("RELAY: url: %O, type: %O, data: %O bytes, headers: \n%s\n\n",
 	   id->not_query, type, sizeof(data), headers);
 #endif
-    
+
     if( !headers || !data )
     {
       mapping q = Roxen.http_string_answer( buffer, "" );
@@ -226,7 +233,7 @@ class Relay
         catch
         {
           data = Locale.Charset.decoder(charset)->feed(data)->drain();
-        };    
+        };
       }
       if( options->rewrite )
 	do_rewrite( data );
@@ -270,7 +277,7 @@ class Relay
       werror("RELAY: Request sent OK\n");
 #endif
   }
-    
+
 
   void connected( int how )
   {
@@ -293,7 +300,7 @@ class Relay
       werror("RELAY: Connection OK\n");
 #endif
     // Send headers to remote server. (non-blocking)
-    
+
     if( options->stream )
     {
       Stdio.sendfile( ({ request_data }), 0, 0, 0, 0, fd,
@@ -329,7 +336,7 @@ class Relay
     file = uri->get_path_query();
     if (has_prefix(file, "/"))
       file = file[1..];
-    
+
     if( options->raw )
       request_data = _id->raw;
     else
@@ -469,7 +476,7 @@ void create( Configuration c )
 
 	    "Example:\n"
 	    "<pre>\n"
-	    "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"	   
+	    "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"
  	    "</pre></p>");
     defvar("pre-rxml", "",
            "Header-RXML", TYPE_TEXT,
@@ -479,6 +486,10 @@ void create( Configuration c )
            "Footer-RXML", TYPE_TEXT,
            "Included after the page contents for redirectpatterns with "
            "the 'rxml' attribute set if the content-type is text/*" );
+    defvar("additional-headers", "",
+           "Additional response headers", TYPE_TEXT,
+           "Additional headers to add to the response. Write in the format:<br/>"
+           "<tt>Header-Name: header-value</tt><br/>One header per line.");
   }
 }
 
@@ -493,6 +504,8 @@ string status()
 }
 
 int linux;
+
+mapping additional_headers = ([]);
 
 void start( int i, Configuration c )
 {
@@ -554,8 +567,27 @@ void start( int i, Configuration c )
                           tokens[0]+": %s\n", ((array)e)[0] );
       }
     }
-  }
 
+    additional_headers = ([]);
+
+    foreach ((query("additional-headers")-"\r")/"\n", string line) {
+      line = String.trim_all_whites(line);
+
+      if (!sizeof(line) || line[0] == '#') {
+        continue;
+      }
+
+      if (sscanf(line, "%s:%s", string name, string val) == 2) {
+        string n = Roxen.canonicalize_http_header(name) ||
+                   String.capitalize(name);
+        additional_headers[n] = String.trim_all_whites(val);
+      }
+    }
+
+#ifdef RELAY_DEBUG
+    werror("Additional headers: %O\n", additional_headers);
+#endif
+  }
 }
 
 mapping first_try( RequestID id )
