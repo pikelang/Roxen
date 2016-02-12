@@ -684,8 +684,8 @@ string parse( RequestID id )
     section = _sec[0];
   }
 
-  if( !sizeof( path )  )
-    return "Hm?";
+  if( !sizeof( path ) || equal(path, ({ "" }))  )
+    return Roxen.http_redirect("/sites/", id);
 
   Configuration conf = roxen->find_configuration( path[0] );
 
