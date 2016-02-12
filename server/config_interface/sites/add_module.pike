@@ -904,8 +904,11 @@ mixed parse( RequestID id )
   if( !config_perm( "Add Module" ) )
     return LOCALE(226, "Permission denied");
 
-  if( id->variables->module_to_add &&
-      id->variables->config )
+  if (!id->variables->config) {
+    return Roxen.http_redirect("/sites/", id);
+  }
+
+  if( id->variables->module_to_add )
     return do_it( id );
 
   Configuration conf;

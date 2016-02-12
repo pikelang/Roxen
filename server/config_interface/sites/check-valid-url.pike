@@ -5,7 +5,7 @@ mixed parse( RequestID id )
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
   if(!sizeof(path)) 
-    return Roxen.http_string_answer("<redirect to=''/><true/>");
+    return Roxen.http_string_answer("<redirect to='/sites/'/><true/>");
 
   Configuration conf = roxen->find_configuration( path[0] );
 
