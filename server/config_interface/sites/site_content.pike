@@ -668,7 +668,7 @@ string low_port_for(array(Protocol|array(string)) port_info, int settings)
 }
 
 
-string parse( RequestID id )
+string|mapping parse( RequestID id )
 {
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
