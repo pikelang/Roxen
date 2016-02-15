@@ -19,6 +19,7 @@ constant known_platforms = (< "macosx_ppc32",
 			      "rhel6_x86_64",
 			      "rhel7_x86_64",
 			      "sol10_x86_64",
+			      "sol11_x86_64",
 			      "win32_x86",
 			      "win32_x86_64",
 >);
