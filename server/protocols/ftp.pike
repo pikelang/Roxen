@@ -1539,6 +1539,7 @@ class FTPSession
 	// Switch to TLS.
 	if (!fd->renegotiate) {
 	  fd = SSL.File(fd, port_obj->ctx);
+	  master_session->my_fd = fd;
 	  fd->accept();
 	}
 	// Restore the callbacks in the new SSL connection.
@@ -1549,8 +1550,8 @@ class FTPSession
 
 	if (fd->renegotiate &&
 	    !has_prefix(sprintf("%O", port_obj), "SSLProtocol")) {
-	  // Active StartTLS connection.
-	  fd = fd->shutdown();
+	  // Deactive StartTLS connection.
+	  master_session->my_fd = fd = fd->shutdown();
 
 	  if (fd) {
 	    // Move the callbacks back to the raw connection.

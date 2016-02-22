@@ -1857,6 +1857,39 @@ class RequestID
 					 Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
   }
 
+  //! Get a string describing the link layer protocol for the request.
+  //!
+  //! @returns
+  //!   Currently returns one of
+  //!   @string
+  //!     @value "-"
+  //!       Unknown. Typically an internal request or the connection has
+  //!       been closed.
+  //!     @value "TCP/IP"
+  //!       Standard TCP/IP connection.
+  //!     @value "SSL/3.0"
+  //!       Secure Socket Layer version 3.0.
+  //!     @value "TLS/1.0"
+  //!       Transport Layer Security version 1.0.
+  //!     @value "TLS/1.1"
+  //!       Transport Layer Security version 1.1.
+  //!     @value "TLS/1.2"
+  //!       Transport Layer Security version 1.2.
+  //!   @endstring
+  //!
+  //! @note
+  //!   This is the value logged by the log-format @tt{$link-layer@}.
+  //!
+  //! @note
+  //!   More versions of TLS may become supported, in which case they
+  //!   will get corresponding results from this function.
+  string query_link_layer()
+  {
+    if (!my_fd) return "-";
+    if (!my_fd->query_version) return "TCP/IP";
+    return replace(SSL.Constants.fmt_version(my_fd->query_version()), " ", "/");
+  }
+
   // Parsed if-header for the request.
   protected mapping(string:array(array(array(string)))) if_data;
 
