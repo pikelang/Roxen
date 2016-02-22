@@ -1,0 +1,8 @@
+subject: Roxen 5.4: Added the possibillity to add additional response headers.
+from: 451f5e3dba2b710844f061c04fed15a821545b3c
+to: 948446ad5bf5e4deb2acbe89b56d4774b7503320
+originator: wellhardh@roxen.com
+depends: 2016-01-28T131008
+restart: true
+
+Added the possibillity to add additional response headers.
