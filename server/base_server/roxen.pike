@@ -6876,6 +6876,8 @@ protected constant formats = ([
 			  1, "\"0.0.0.0\"", 0}),
   "bin-ip-number":	({"%s", "host_ip_to_int(request_id->remoteaddr)",
 			  1, "\"\\0\\0\\0\\0\"", 0}),
+  "link-layer":		({"%s", "request_id->query_link_layer()",
+			  1, "\"-\"", 0}),
   "method":		({"%s", "(string)request_id->method",
 			  1, "\"-\"", 0}),
   "full-resource":	({"%s", ("(string)"
