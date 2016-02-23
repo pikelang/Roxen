@@ -34,6 +34,7 @@ constant specific_options = ([
     ({ "flag", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
     ({ "originator", Getopt.HAS_ARG, ({ "-O", "--originator" }) }),
     ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
+    ({ "patchid", Getopt.HAS_ARG, ({ "--patchid" }) }),
     ({ "restart", Getopt.NO_ARG, ({ "--restart" }) }),
     ({ "norestart", Getopt.NO_ARG, ({ "--no-restart" }) }),
   }),
@@ -651,7 +652,7 @@ string new_patchid()
       sprintf("%04d-%02d-%02dT%02d%02d%02d",
 	      lt->year + 1900, lt->mon + 1, lt->mday,
 	      lt->hour, lt->min, lt->sec);
-    if (git_try("git-show-ref", "refs/tags/rxnpatch/" + patchid)) {
+    if (git_try("show-ref", "refs/tags/rxnpatch/" + patchid)) {
       werror("Patchid %s already exists!\n"
 	     "Waiting a second for the next...\n",
 	     patchid);
@@ -1293,7 +1294,15 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     subject += (description/"\n")[0];
   }
 
-  string patchid = options->patchid || new_patchid();
+  string patchid = options->patchid;
+  if (patchid) {
+    if (git_try("show-ref", "refs/tags/rxnpatch/" + patchid)) {
+      werror("Patchid %s already exists!\n", patchid);
+      exit(1);
+    }
+  } else {
+    patchid = new_patchid();
+  }
   git_save_file("refs/heads/rxnpatch/rxnpatch",
 		"refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt",
 		sprintf("subject: %s\n"
