@@ -1,0 +1,12 @@
+subject: Roxen 5.5:   * Logging: Added log format $set-cookies.
+from: 78885d0de551554ea1ae1addbe0bd6e4e07b7fb3
+to: 624f359f5a74dfd2e88de54d42b79bd2c9ad9d26
+originator: wellhardh@roxen.com
+depends: 2016-01-26T104523
+restart: true
+
+  * Logging: Added log format $set-cookies.
+    
+    Fixes [bug 7633].
+
+  * Added the possibillity to add additional response headers.
