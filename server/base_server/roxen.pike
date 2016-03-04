@@ -1614,14 +1614,14 @@ class BackgroundProcess
 
 mapping get_port_options( string key )
 //! Get the options for the key 'key'.
-//! The intepretation of the options is protocol specific.
+//! The interpretation of the options is protocol specific.
 {
   return (query( "port_options" )[ key ] || ([]));
 }
 
 void set_port_options( string key, mapping value )
 //! Set the options for the key 'key'.
-//! The intepretation of the options is protocol specific.
+//! The interpretation of the options is protocol specific.
 {
   mapping q = query("port_options");
   q[ key ] = value;
@@ -2716,13 +2716,15 @@ class SSLProtocol
 
     set_up_ssl_variables( this_object() );
 
+    // NB: setup() calls restore() which initializes the variables
+    //     created above.
+    ::setup(pn, i);
+
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
     set_version();
 #endif
 
     filter_preferred_suites();
-
-    ::setup(pn, i);
 
     certificates_changed (0, ignore_eaddrinuse);
 
@@ -2735,8 +2737,10 @@ class SSLProtocol
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
 
-#if constant(SSL.ServerConnection)
+#if constant(SSL.Constants.CIPHER_aead)
     getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
+#endif
+#if constant(SSL.ServerConnection)
     getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
 #endif
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
