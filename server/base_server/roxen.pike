@@ -2615,8 +2615,10 @@ class SSLProtocol
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
 
-#if constant(SSL.ServerConnection)
+#if constant(SSL.Constants.CIPHER_aead)
     getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
+#endif
+#if constant(SSL.ServerConnection)
     getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
 #endif
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
