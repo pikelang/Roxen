@@ -1,0 +1,19 @@
+subject: Roxen 5.4:   * SSL: Restore the port options before using them.
+from: 948446ad5bf5e4deb2acbe89b56d4774b7503320
+to: 51f3e45a6f19cfbfe07349cf3751b9dc1185687b
+originator: wellhardh@roxen.com
+depends: 2016-02-22T155027
+restart: true
+
+  * SSL: Restore the port options before using them.
+    
+    Fixes some SSL options not having the intended effect at server start.
+    
+    Fixes main part of [bug 7657].
+
+  * SSL: Update the cipher suite on strength change.
+    
+    Changing the "Cipher suite minimum strength" now takes
+    effect without restart.
+    
+    Fixes remainder of [bug 7657].
