@@ -1,9 +1,11 @@
-subject: Roxen 5.5:   * SSL: Restore the port options before using them.
+subject: Roxen 5.5: SSL fixes
 from: 624f359f5a74dfd2e88de54d42b79bd2c9ad9d26
 to: 4bd8f6bf59e74fadca8ed9a201e7003f0cd50f0e
 originator: wellhardh@roxen.com
 depends: 2016-02-24T091606
 restart: true
+
+Multiple fixes:
 
   * SSL: Restore the port options before using them.
     
