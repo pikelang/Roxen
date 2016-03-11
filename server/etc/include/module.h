@@ -23,7 +23,7 @@
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
 #define ROXEN_MAJOR_VERSION 5
-#define ROXEN_MINOR_VERSION 4
+#define ROXEN_MINOR_VERSION 5
 
 
 #define TYPE_STRING            1

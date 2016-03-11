@@ -1352,6 +1352,14 @@ protected int roxen_is_cms;
 protected string roxen_product_name;
 protected string roxen_product_code;
 
+protected string mysql_product_name;
+protected string mysql_version;
+
+protected constant mysql_good_versions = ({ "5.5.*", "5.6.*" });
+protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*" });
+protected constant mysql_maybe_versions = ({ "5.*", "6.*" });
+protected constant mariadb_maybe_versions = ({ "5.*", "10.*" });
+
 string roxen_version()
 //! @appears roxen_version
 {
@@ -1971,7 +1979,6 @@ string query_mysql_socket()
 }
 
 string  my_mysql_path;
-protected string mysqld_version;
 
 string query_configuration_dir()
 {
@@ -2631,14 +2638,6 @@ void low_start_mysql( string datadir,
 		      string uid,
 		      void|int log_queries_to_stdout)
 {
-  array MYSQL_GOOD_VERSION = ({ "5.0.*",
-#ifdef YES_I_KNOW_WHAT_I_AM_DOING
-				"*"
-#endif
-  });
-  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "5.5.*", "5.6.*", "5.7.*",
-				 "6.*", "10.*", });
-  
   void rotate_log(string path)
   {
     rm(path+".5");
@@ -2664,38 +2663,50 @@ void low_start_mysql( string datadir,
   } else {
     //  Parse version string
     string orig_version = version;
+    string trailer;
     if (has_prefix (version, mysql_location->mysqld))
       // mysqld puts $0 first in the version string. Cut it off to
       // avoid possible false matches.
       version = version[sizeof (mysql_location->mysqld)..];
-    if (sscanf(lower_case(version), "%*s  ver %[0-9.]", version) != 2) {
+    if (sscanf(lower_case(version), "%*s  ver %[0-9.]%s",
+	       mysql_version, trailer) < 2) {
       version_fatal_error =
 	  sprintf("Failed to parse MySQL version string - got %q from:\n"
 		  "%O\n\n", version, orig_version);
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
     } else {
+      array(string) good_versions = mysql_good_versions;
+      array(string) maybe_versions = mysql_maybe_versions;
+      mysql_product_name = "MySQL";
+      if (has_prefix(trailer, "-mariadb")) {
+	mysql_product_name = "MariaDB";
+	good_versions = mariadb_good_versions;
+	maybe_versions = mariadb_maybe_versions;
+      }
       //  Determine if version is acceptable
-      if (has_value(glob(MYSQL_GOOD_VERSION[*], version), 1)) {
+      if (has_value(glob(good_versions[*], mysql_version), 1)) {
 	//  Everything is fine
-      } else if (has_value(glob(MYSQL_MAYBE_VERSION[*], version), 1)) {
+      } else if (has_value(glob(maybe_versions[*], mysql_version), 1)) {
 	//  Don't allow unless user gives special define
 #ifdef ALLOW_UNSUPPORTED_MYSQL
 	report_debug("\nWARNING: Forcing Roxen to run with unsupported "
-		     "MySQL version (%s).\n",
-		     version);
+		     "%s version (%s).\n",
+		     mysql_product_name, mysql_version);
 #else
 	version_fatal_error =
-	  sprintf("This version of MySQL (%s) is not officially supported "
+	  sprintf("This version of %s (%s) is not officially supported "
 		  "with Roxen.\n"
 		  "If you want to override this restriction, use this "
 		  "option:\n\n"
 		  "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
-		  version);
+		  mysql_product_name, mysql_version);
 #endif
       } else {
 	//  Version not recognized (maybe too old or too new) so bail out
 	version_fatal_error =
-	  sprintf("MySQL version %s detected:\n\n"
-		  "  %s\n", version, orig_version);
+	  sprintf("%s version %s detected:\n\n"
+		  "  %s\n", mysql_product_name, mysql_version, orig_version);
+#endif
       }
 #ifdef RUN_SELF_TEST
       if (version_fatal_error) {
@@ -2706,7 +2717,6 @@ void low_start_mysql( string datadir,
       }
 #endif
     }
-    mysqld_version = version;
   }
   if (version_fatal_error) {
     report_debug("\n%s"
@@ -2764,10 +2774,16 @@ void low_start_mysql( string datadir,
     env->MYSQL_TCP_PORT = "0";
   }
 
+  string normalized_mysql_version =
+    map(mysql_version/".",
+	lambda(string d) {
+	  return ("000" + d)[<2..];
+	}) * ".";
+
   if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
-    if (mysqld_version > "5.6.") {
+    if (normalized_mysql_version > "005.006.") {
       args += ({
 	"--slow-query-log-file="+slow_query_log+".1",
 	"--slow-query-log",
@@ -2781,7 +2797,7 @@ void low_start_mysql( string datadir,
   }
 
   if (log_queries_to_stdout) {
-    if (mysqld_version > "5.6.") {
+    if (normalized_mysql_version > "005.006.") {
       args += ({
 	"--general-log-file=/dev/stdout",
 	"--general-log",
@@ -2800,6 +2816,8 @@ void low_start_mysql( string datadir,
 		     "net_buffer_length = 8K\n"
 		     "query-cache-type = 2\n"
 		     "query-cache-size = 32M\n"
+		     "default-storage-engine = MYISAM\n"
+		     "innodb-data-file-path=ibdata1:10M:autoextend\n"
 #ifndef UNSAFE_MYSQL
 		     "local-infile = 0\n"
 #endif
@@ -2809,22 +2827,60 @@ void low_start_mysql( string datadir,
 		     "bind-address = "+env->MYSQL_HOST+"\n" +
 		     (uid ? "user = " + uid : "") + "\n");
 
+  string normalized_cfg_file = replace(cfg_file, "_", "-");
+
   // Check if we need to update the contents of the config file.
   //
   // NB: set-variable became optional after MySQL 4.0.2,
   //     and was deprecated in MySQL 5.5.
-  if (has_value(cfg_file, "set-variable=") ||
-      has_value(cfg_file, "set-variable =")) {
+  if (has_value(normalized_cfg_file, "set-variable=") ||
+      has_value(normalized_cfg_file, "set-variable =")) {
     report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
     cfg_file = replace(cfg_file,
 		       ({ "set-variable=",
-			  "set-variable = ", "set-variable =" }),
-		       ({ "", "", "" }));
+			  "set-variable = ", "set-variable =",
+			  "set_variable=",
+			  "set_variable = ", "set_variable =",
+		       }),
+		       ({ "", "", "", "", "", "",
+		       }));
     force = 1;
   }
 
-  if (!has_prefix(version, "5.1.") &&
-      !has_value(cfg_file, "character-set-server")) {
+  if ((normalized_mysql_version > "005.000.") &&
+      !has_value(normalized_cfg_file, "innodb-data-file-path")) {
+    // It seems the defaults for this variable have changed
+    // from "ibdata1:10M:autoextend" to "ibdata1:12M:autoextend".
+    // For some reason InnoDB doesn't always auto-detect correctly.
+    // cf [bug 7264].
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding innodb-data-file-path to %s/my.cfg.\n",
+		   datadir);
+      int initial = 10;	// 10 MB -- The traditional setting.
+      int bytes = Stdio.file_size(datadir + "/ibdata1");
+      if (bytes) {
+	// ibdata1 grows in increments of 8 MB.
+	// Assumes that the initial default size won't grow to 18 MB.
+	initial = ((bytes / (1024 * 1024)) % 8) + 8;
+	if (initial < 10) initial += 8;
+      }
+      report_debug("%O\n",
+		   "ibdata1:" + initial + "M:autoextend");
+      a[1] = "\n"
+	"innodb-data-file-path=ibdata1:" + initial + "M:autoextend" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "InnoDB data file path entry, "
+		     "and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
+  if ((normalized_mysql_version > "005.002.") &&
+      !has_value(normalized_cfg_file, "character-set-server")) {
     // The default character set was changed sometime
     // during the MySQL 5.x series. We need to set
     // the default to latin1 to avoid breaking old
@@ -2842,6 +2898,26 @@ void low_start_mysql( string datadir,
     } else {
       report_warning("Mysql configuration file %s/my.cfg lacks\n"
 		     "character set entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
+  if ((normalized_mysql_version > "005.005.") &&
+      !has_value(normalized_cfg_file, "default-storage-engine")) {
+    // The default storage engine was changed to InnoDB in MySQL 5.5.
+    // We need to set the default to MyISAM to avoid breaking old code
+    // due to different parameter limits (eg key lengths).
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding default storage engine entry to %s/my.cfg.\n",
+		   datadir);
+      a[1] = "\n"
+	"default-storage-engine = MYISAM" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "storage engine entry, and automatic repairer failed.\n",
 		     datadir);
     }
   }
@@ -3239,13 +3315,16 @@ void do_main( int argc, array(string) argv )
 		clear_connect_to_my_mysql_cache );  
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
-  report_debug(
-#"
+  report_debug(#"
+
+
 ------ FATAL ----------------------------------------------------
 SECURITY defined (the internal security system in roxen), but
 the pike binary has not been compiled --with-security. This makes
 it impossible for roxen to have any internal security at all.
 -----------------------------------------------------------------
+
+
 ");
   exit(-1);
 #endif
@@ -3253,8 +3332,9 @@ it impossible for roxen to have any internal security at all.
 
   if( (-1&0xffffffff) < 0 )
   {
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING -----------------------------------------------
 Roxen requires bignum support in Pike since version 2.4.
 Please recompile Pike with gmp / bignum support to run Roxen.
@@ -3263,12 +3343,14 @@ It might still be possible to start Roxen, but the
 functionality will be affected, and stange errors might occur.
 ---------------------------------------------------------------
 
+
 ");
   }
 
 #ifdef NOT_INSTALLED
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING -----------------------------------------------
 You are running with an un-installed Pike binary.
 
@@ -3278,16 +3360,16 @@ Pikes, as an example the module search paths are different, and
 some environment variables are ignored.
 ---------------------------------------------------------------
 
+
 ");
 #endif
 
 #if __VERSION__ < 7.8
-  report_debug(
-#"
+  report_debug(#"
 
 
 ******************************************************
-Roxen 5.0 requires Pike 7.8 or newer.
+Roxen " + roxen_ver + #" requires Pike 7.8 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
@@ -3465,8 +3547,9 @@ the correct system time.
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 #else
   add_constant("grbz",lambda(string d){return d;});
-  report_debug(
-#"
+  report_debug(#"
+
+
 ------- WARNING -----------------------------------------
 The Gz (zlib) module is not available.
 The default builtin font will not be available.
@@ -3474,6 +3557,7 @@ To get zlib support, install zlib from
 ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html
 and recompile pike, after removing the file 'config.cache'
 ----------------------------------------------------------
+
 
 ");
 #endif
@@ -3501,8 +3585,9 @@ and recompile pike, after removing the file 'config.cache'
     // We can load the builtin font.
     add_constant("__rbf", "font_handlers/rbf" );
 #else
-    report_debug(
-#"
+    report_debug(#"
+
+
 ------- WARNING ----------------------------------------------
 Neither the Image.TTF nor the Image.FreeType module is available.
 True Type fonts and the default font will not be available.
@@ -3516,6 +3601,7 @@ to recompile the pike binary, since the one included should
 already have the FreeType interface module, installing the 
 library should be enough.
 --------------------------------------------------------------
+
 
 " );
 #endif
