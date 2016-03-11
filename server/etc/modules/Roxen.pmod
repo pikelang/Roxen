@@ -2925,20 +2925,46 @@ protected string low_roxen_encode(string val, string encoding)
       })
       RXML.run_error("Cannot decode hex string. Bad data.\n");
 
-   case "base64":
-   case "base-64":
-   case "b64":
-     return MIME.encode_base64(val);
+  case "base64":
+  case "base-64":
+  case "b64":
+    return MIME.encode_base64(val);
 
-   case "-base64":
-   case "-base-64":
-   case "-b64":
-     if( catch {
-	 return MIME.decode_base64(val);
-       })
-       RXML.run_error("Cannot decode base64 string. Bad data.\n");
+  case "-base64":
+  case "-base-64":
+  case "-b64":
+    if( catch {
+        return MIME.decode_base64(val);
+      })
+      RXML.run_error("Cannot decode base64 string. Bad data.\n");
 
-   
+  case "base64url":
+  case "base-64-url":
+  case "b64url":
+#if constant (MIME.encode_base64url)
+    return MIME.encode_base64url(val);
+#else
+    return replace (MIME.encode_base64 (val, 1),
+                    ([ "=": "",
+                       "+": "-",
+                       "/": "_" ]));
+#endif
+  case "-base64url":
+  case "-base-64-url":
+  case "-b64url":
+    if( catch {
+#if constant (MIME.decode_base64url)
+        return MIME.decode_base64url(val);
+#else
+        string data = replace (val, ([ "-": "+",
+                                       "_": "/",
+                                       "=": "" ]));
+        data = (data + ("=" * (4-sizeof (data) % 4))); // Add padding.
+        return MIME.decode_base64 (data);
+#endif
+      })
+      RXML.run_error("Cannot decode base64 string. Bad data.\n");
+
   case "md5":
   case "sha1":
   case "sha256":
