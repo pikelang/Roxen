@@ -1,0 +1,8 @@
+subject: Roxen 5.5: Add :base64url and :-base64url RXML encoding/decoding.
+from: 4bd8f6bf59e74fadca8ed9a201e7003f0cd50f0e
+to: 9603a5f8ee2e818d162af0dc703f862fa123b47a
+originator: wellhardh@roxen.com
+depends: 2016-03-10T141813
+restart: true
+
+Add :base64url and :-base64url RXML encoding/decoding.
