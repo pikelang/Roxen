@@ -1,0 +1,10 @@
+subject: Roxen 5.4:   * Version bumped to 5.4.95 by buildsystem.
+from: 51f3e45a6f19cfbfe07349cf3751b9dc1185687b
+to: 4711990354adaf5e670b0c6ea0fdf5ba868f6c78
+originator: wellhardh@roxen.com
+depends: 2016-03-04T115252
+restart: true
+
+  * Version bumped to 5.4.95 by buildsystem.
+
+  * Add :base64url and :-base64url RXML encoding/decoding.
