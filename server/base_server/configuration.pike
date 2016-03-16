@@ -559,10 +559,12 @@ float compat_level()
  * performance reasons later on.
  */
 
+#ifndef ENABLE_NEW_PRIO
 array (Priority) allocate_pris()
 {
   return allocate(10, Priority)();
 }
+#endif
 
 array(int) query_oid()
 {
@@ -624,8 +626,18 @@ int handler_queue_timeout;
 // mentioned module in the future.
 private mapping (int|string:string) log_format = ([]);
 
+#ifdef ENABLE_NEW_PRIO
+//! The modules sorted with regards to priority and type.
+private array(RoxenModule) sorted_modules = ({});
+#else /* !ENABLE_NEW_PRIO */
 // A list of priority objects
 array (Priority) pri = allocate_pris();
+#endif
+
+#ifdef ENABLE_NEW_PRIO
+//! NB: May contain junk in the high-order bits.
+private array(int) sorted_module_types = ({});
+#endif
 
 mapping modules = ([]);
 //! All enabled modules in this site.
@@ -651,6 +663,33 @@ private mapping (string:array (function)) file_extension_module_cache=([]);
 private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
+#ifdef ENABLE_NEW_PRIO
+private int module_sort_key(RoxenModule me)
+{
+  int pri = me->query("_priority");
+  array(int|string) info = me->register_module();
+  return (pri << 32) | (info[0] & MODULE_TYPE_MASK);
+}
+
+private void sort_modules()
+{
+  sorted_module_types = map(sorted_modules, module_sort_key);
+  sort(sorted_module_types, sorted_modules);
+  sorted_module_types = map(sorted_module_types, `&, MODULE_TYPE_MASK);
+  invalidate_cache();
+}
+
+// Generic lookup function for the various module caches.
+private array(function|RoxenModule) low_module_lookup(int module_type_mask,
+						      string|void symbol)
+{
+  array(RoxenModule) modules =
+    reverse(filter(sorted_modules,
+		   map(sorted_module_types, `&, module_type_mask)));
+  if (!symbol) return modules;
+  return modules[symbol] - ({ 0 });
+}
+#endif /* ENABLE_NEW_PRIO */
 
 void unregister_urls()
 {
@@ -670,6 +709,11 @@ private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
 
 private void do_stop_all_modules (Thread.MutexKey stop_lock)
 {
+#ifdef ENABLE_NEW_PRIO
+  foreach(sorted_modules, RoxenModule m) {
+    safe_stop_module(m, "module");
+  }
+#else /* !ENABLE_NEW_PRIO */
   mapping(RoxenModule:string) allmods = otomod + ([]);
 
   if (types_module) {
@@ -698,11 +742,14 @@ private void do_stop_all_modules (Thread.MutexKey stop_lock)
       STOP_MODULES (p->first_modules, "first module");
       STOP_MODULES (indices (p->provider_modules), "provider module");
     }
+#endif /* !ENABLE_NEW_PRIO */
 
   end_logger();
 
+#ifndef ENABLE_NEW_PRIO
   STOP_MODULES(indices (allmods), "unclassified module");
 #undef STOP_MODULES
+#endif
 
   destruct (stop_lock);
 }
@@ -768,6 +815,48 @@ array (RoxenModule) get_providers(string provides)
 //! Returns an array with all provider modules that provides "provides".
 {
   // This cache is cleared in the invalidate_cache() call.
+#ifdef ENABLE_NEW_PRIO
+  if(!sizeof(provider_module_cache))
+  {
+    provider_module_cache[0] = 0;	// Initialization sentinel.
+    int prev_pri = -1;
+    array(RoxenModule) modules = ({});
+    foreach(low_module_lookup(MODULE_PROVIDER), RoxenModule me) {
+      if (!me->query_provides) continue;
+      int pri = me->query("_priority");
+      if (pri != prev_pri) {
+	sort(modules->module_identifier(), modules);
+	foreach(modules, RoxenModule p) {
+	  mixed provs = p->query_provides();
+	  if (stringp(provs)) {
+	    provs = (< provs >);
+	  } else if (arrayp(provs)) {
+	    provs = mkmultiset(provs);
+	  }
+	  foreach(provs; string provides;) {
+	    provider_module_cache[provides] += ({ p });
+	  }
+	}
+	modules = ({});
+      }
+      prev_pri = pri;
+      modules += ({ me });
+    }
+    sort(modules->module_identifier(), modules);
+    foreach(modules, RoxenModule p) {
+      mixed provs = p->query_provides();
+      if (stringp(provs)) {
+	provs = (< provs >);
+      } else if (arrayp(provs)) {
+	provs = mkmultiset(provs);
+      }
+      foreach(provs; string provides;) {
+	provider_module_cache[provides] += ({ p });
+      }
+    }
+  }
+  return provider_module_cache[provides] || ({});
+#else /* !ENABLE_NEW_PRIO */
   if(!provider_module_cache[provides])
   {
     int i;
@@ -783,6 +872,7 @@ array (RoxenModule) get_providers(string provides)
     }
   }
   return provider_module_cache[provides];
+#endif /* !ENABLE_NEW_PRIO */
 }
 
 RoxenModule get_provider(string provides)
@@ -833,8 +923,20 @@ mixed call_provider(string provides, string fun, mixed ... args)
   }
 }
 
-array (function) file_extension_modules(string ext)
+array(function) file_extension_modules(string ext)
 {
+#ifdef ENABLE_NEW_PRIO
+  if (!sizeof(file_extension_module_cache)) {
+    file_extension_module_cache[0] = 0;	// Initialization sentinel.
+    foreach(low_module_lookup(MODULE_FILE_EXTENSION), RoxenModule me) {
+      if (!me->handle_file_extension) continue;
+      array(string) arr = me->query_file_extensions();
+      foreach(arr, string e) {
+	file_extension_module_cache[e] += ({ me->handle_file_extension });
+      }
+    }
+  }
+#else /* !ENABLE_NEW_PRIO */
   if(!file_extension_module_cache[ext = lower_case(ext)])
   {
     int i;
@@ -848,13 +950,17 @@ array (function) file_extension_modules(string ext)
 	  file_extension_module_cache[ext] += ({ p->handle_file_extension });
     }
   }
+#endif /* !ENABLE_NEW_PRIO */
   return file_extension_module_cache[ext];
 }
 
-array (function) url_modules()
+array(function) url_modules()
 {
   if(!url_module_cache)
   {
+#ifdef ENABLE_NEW_PRIO
+    url_module_cache = low_module_lookup(MODULE_URL, "remap_url");
+#else
     int i;
     url_module_cache=({ });
     for(i=9; i>=0; i--)
@@ -865,6 +971,7 @@ array (function) url_modules()
 	foreach(d, p)
 	  url_module_cache += ({ p->remap_url });
     }
+#endif /* !ENABLE_NEW_PRIO */
   }
   return url_module_cache;
 }
@@ -879,6 +986,9 @@ array (function) logger_modules()
 {
   if(!logger_module_cache)
   {
+#ifdef ENABLE_NEW_PRIO
+    logger_module_cache = low_module_lookup(MODULE_LOGGER, "log");
+#else
     int i;
     logger_module_cache=({ });
     for(i=9; i>=0; i--)
@@ -890,6 +1000,7 @@ array (function) logger_modules()
 	  if(p->log)
 	    logger_module_cache += ({ p->log });
     }
+#endif /* !ENABLE_NEW_PRIO */
   }
   return logger_module_cache;
 }
@@ -898,6 +1009,9 @@ array (function) last_modules()
 {
   if(!last_module_cache)
   {
+#ifdef ENABLE_NEW_PRIO
+    last_module_cache = low_module_lookup(MODULE_LAST, "last_resort");
+#else
     int i;
     last_module_cache=({ });
     for(i=9; i>=0; i--)
@@ -909,6 +1023,7 @@ array (function) last_modules()
 	  if(p->last_resort)
 	    last_module_cache += ({ p->last_resort });
     }
+#endif /* !ENABLE_NEW_PRIO */
   }
   return last_module_cache;
 }
@@ -953,11 +1068,14 @@ array (function) first_modules()
 	1 ||
 #endif
 	uname()->sysname == "Darwin") {
-      first_module_cache= ({
+      first_module_cache += ({
 	strip_fork_information,	// Always first!
       });
     }
-    
+
+#ifdef ENABLE_NEW_PRIO
+    first_module_cache += low_module_lookup(MODULE_FIRST, "first_try");
+#else
     for(i=9; i>=0; i--)
     {
       array(RoxenModule) d; RoxenModule p;
@@ -969,6 +1087,7 @@ array (function) first_modules()
 	}
       }
     }
+#endif /* ENABLE_NEW_PRIO */
   }
 
   return first_module_cache;
@@ -985,6 +1104,9 @@ array(UserDB) user_databases()
 {
   if( userdb_module_cache )
     return userdb_module_cache;
+#ifdef ENABLE_NEW_PRIO
+  return userdb_module_cache = low_module_lookup(MODULE_USERDB);
+#else
   array tmp = ({});
   foreach( values( modules ), mapping m )
     foreach( values(m->copies), RoxenModule mo )
@@ -994,12 +1116,16 @@ array(UserDB) user_databases()
   sort( tmp );
 //   tmp += ({ ({ 0, roxen->config_userdb_module }) });
   return userdb_module_cache = reverse(column(tmp,1));
+#endif /* !ENABLE_NEW_PRIO */
 }
 
 array(AuthModule) auth_modules()
 {
   if( auth_module_cache )
     return auth_module_cache;
+#ifdef ENABLE_NEW_PRIO
+  return auth_module_cache = low_module_lookup(MODULE_AUTH);
+#else
   array tmp = ({});
   foreach( values( modules ), mapping m )
     foreach( values(m->copies), RoxenModule mo )
@@ -1007,6 +1133,7 @@ array(AuthModule) auth_modules()
 	tmp += ({ ({ mo->query( "_priority" ), mo }) });
   sort( tmp );
   return auth_module_cache = reverse(column(tmp,1));
+#endif /* !ENABLE_NEW_PRIO */
 }
 
 array location_modules()
@@ -1015,8 +1142,40 @@ array location_modules()
 {
   if(!location_module_cache)
   {
-    int i;
     array new_location_module_cache=({ });
+#ifdef ENABLE_NEW_PRIO
+    int prev_pri = -1;
+    array level_find_files = ({});
+    array(string) level_locations = ({});
+    foreach(low_module_lookup(MODULE_LOCATION), RoxenModule me) {
+      int pri = me->query("_priority");
+      if (pri != prev_pri) {
+	//  Order after longest prefix length
+	sort(map(level_locations,
+		 lambda(string loc) { return -sizeof(loc); }),
+	     level_locations, level_find_files);
+	foreach(level_locations; int i; string path) {
+	  new_location_module_cache += ({ ({ path, level_find_files[i] }) });
+	}
+	level_locations = ({});
+	level_find_files = ({});
+      }
+      prev_pri = pri;
+      // FIXME: Should there be a catch() here?
+      string location = me->find_file && me->query_location();
+      if (!location) continue;
+      level_find_files += ({ me->find_file });
+      level_locations += ({ location });
+    }
+    
+    sort(map(level_locations,
+	     lambda(string loc) { return -sizeof(loc); }),
+	 level_locations, level_find_files);
+    foreach(level_locations; int i; string path) {
+      new_location_module_cache += ({ ({ path, level_find_files[i] }) });
+    }
+#else /* !ENABLE_NEW_PRIO */
+    int i;
     for(i=9; i>=0; i--)
     {
       array(RoxenModule) d;
@@ -1041,6 +1200,7 @@ array location_modules()
 	}
       }
     }
+#endif /* !ENABLE_NEW_PRIO */
     location_module_cache = new_location_module_cache;
   }
   return location_module_cache;
@@ -1050,6 +1210,9 @@ array(function) filter_modules()
 {
   if(!filter_module_cache)
   {
+#ifdef ENABLE_NEW_PRIO
+    filter_module_cache = low_module_lookup(MODULE_FILTER, "filter");
+#else
     int i;
     filter_module_cache=({ });
     for(i=9; i>=0; i--)
@@ -1061,6 +1224,7 @@ array(function) filter_modules()
 	  if(p->filter)
 	    filter_module_cache+=({ p->filter });
     }
+#endif /* !ENABLE_NEW_PRIO */
   }
   return filter_module_cache;
 }
@@ -3951,12 +4115,26 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
-	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
-		   DLOCALE(13, "The priority of the module. 9 is highest and 0 is lowest."
-		   " Modules with the same priority can be assumed to be "
-		   "called in random order."),
-		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-      }) {
+	  me->defvar("_priority", Variable.
+		     Priority(5, 0, DLOCALE(12, "Priority"),
+#ifdef ENABLE_NEW_PRIO
+			      "<p>The priority of the module.</p>\n"
+			      "<p>Modules with the same priority "
+			      "can be assumed to be "
+			      "called in random order.</p>\n"
+#else /* !ENABLE_NEW_PRIO */
+			      DLOCALE(13, "The priority of the module. "
+				      "9 is highest and 0 is lowest. "
+				      "Modules with the same priority can "
+				      "be assumed to be "
+				      "called in random order.")
+#endif /* !ENABLE_NEW_PRIO */
+			      ))
+#ifdef ENABLE_NEW_PRIO
+	    ->set_range(0, query("max_priority"))
+#endif
+	    ;
+	}) {
 	throw(err);
       }
     }
@@ -4149,6 +4327,11 @@ void call_low_start_callbacks( RoxenModule me,
     pr = 3;
   }
 
+#ifdef ENABLE_NEW_PRIO
+  sorted_modules += ({ me });
+  sorted_module_types += ({ module_type });
+#endif
+
   api_module_cache |= me->api_functions();
 
   if(module_type & MODULE_EXTENSION)
@@ -4159,6 +4342,7 @@ void call_low_start_callbacks( RoxenModule me,
 		 " MODULE_LAST.\n", moduleinfo->get_name());
   }
 
+#ifndef ENABLE_NEW_PRIO
   if(module_type & MODULE_FILE_EXTENSION)
     if (err = catch {
       array arr = me->query_file_extensions();
@@ -4201,6 +4385,7 @@ void call_low_start_callbacks( RoxenModule me,
 		   moduleinfo->get_name(), (bt ? ":\n"+bt : "\n"));
       got_no_delayed_load = -1;
     }
+#endif /* !ENABLE_NEW_PRIO */
 
   if(module_type & MODULE_TYPES)
   {
@@ -4215,6 +4400,9 @@ void call_low_start_callbacks( RoxenModule me,
     if (me->parse_directory)
       dir_module = me;
 
+#ifdef ENABLE_NEW_PRIO
+  sort_modules();
+#else
   if(module_type & MODULE_LOCATION)
     pri[pr]->location_modules += ({ me });
 
@@ -4232,6 +4420,7 @@ void call_low_start_callbacks( RoxenModule me,
 
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
+#endif /* !ENABLE_NEW_PRIO */
 
   foreach(registered_urls, string url) {
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
@@ -4268,7 +4457,9 @@ void call_low_start_callbacks( RoxenModule me,
     }
   }
 
+#ifndef ENABLE_NEW_PRIO
   invalidate_cache();
+#endif
 }
 
 void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
@@ -4350,6 +4541,16 @@ void module_changed( ModuleInfo moduleinfo,
 void clean_up_for_module( ModuleInfo moduleinfo,
 			  RoxenModule me )
 {
+#ifdef ENABLE_NEW_PRIO
+  int i = 0;
+  // Loop for paranoia reasons.
+  while((i < sizeof(sorted_modules)) &&
+	(i = search(sorted_modules, me, i)) >= 0) {
+    sorted_modules = sorted_modules[..i-1] + sorted_modules[i+1..];
+    sorted_module_types = sorted_module_types[..i-1] +
+      sorted_module_types[i+1..];
+  }
+#else /* !ENABLE_NEW_PRIO */
   int pr;
   if(moduleinfo->type & MODULE_FILE_EXTENSION)
   {
@@ -4363,6 +4564,7 @@ void clean_up_for_module( ModuleInfo moduleinfo,
     for(pr=0; pr<10; pr++)
       m_delete(pri[pr]->provider_modules, me);
   }
+#endif /* !ENABLE_NEW_PRIO */
 
   if(moduleinfo->type & MODULE_TYPES)
   {
@@ -4376,6 +4578,9 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_DIRECTORIES )
     dir_module = 0;
 
+#ifdef ENABLE_NEW_PRIO
+  api_module_cache -= me->api_functions();
+#else
   if( moduleinfo->type & MODULE_LOCATION )
     for(pr=0; pr<10; pr++)
      pri[pr]->location_modules -= ({ me });
@@ -4400,6 +4605,7 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_LOGGER )
     for(pr=0; pr<10; pr++)
       pri[pr]->logger_modules -= ({ me });
+#endif /* !ENABLE_NEW_PRIO */
 
   foreach(registered_urls, string url) {
     mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
@@ -4411,6 +4617,10 @@ void clean_up_for_module( ModuleInfo moduleinfo,
       SNMP.remove_owned(prot->mib, this_object(), me);
     }
   }
+
+#ifdef ENABLE_NEW_PRIO
+  invalidate_cache();
+#endif
 }
 
 int disable_module( string modname, void|RoxenModule new_instance )
@@ -4687,6 +4897,18 @@ void low_init(void|int modules_already_enabled)
 
 DataCache datacache;
 
+#ifdef ENABLE_NEW_PRIO
+protected void set_module_max_priority(Variable.Variable var)
+{
+  int new_max_priority = var->query();
+  foreach(sorted_modules, RoxenModule me) {
+    Variable.Variable pri = me->getvar("_priority");
+    if (!pri) continue;
+    pri->set_range(0, new_max_priority);
+  }
+}
+#endif /* ENABLE_NEW_PRIO */
+
 protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
@@ -4763,6 +4985,23 @@ modules.</p>
   // module start function, since the documentation explicitly states
   // that a reload of all modules is necessary to propagate a change
   // of the setting.
+
+#ifdef ENABLE_NEW_PRIO
+  defvar("max_priority",
+	 Variable.IntChoice(9, ({ 9, 99, 999, 9999 }), 0,
+			    DLOCALE(0, "Maximum priority"),
+			    DLOCALE(0, "<p>The maximum priority value "
+				    "for modules.</p>\n"
+				    "<p>In most cases the default (9) "
+				    "is fine, but in some configurations "
+				    "there may be more than 10 modules "
+				    "of the same type that would otherwise "
+				    "conflict with each other.</p>\n"
+				    "<p>Note that existing module priorities "
+				    "will be scaled accordingly when this "
+				    "value is changed.</p>")))->
+    set_changed_callback(set_module_max_priority);
+#endif /* ENABLE_NEW_PRIO */
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));

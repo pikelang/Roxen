@@ -200,12 +200,13 @@ class Connection
     }
   }
 
+#ifndef ENABLE_NEW_PRIO
   class InsinuateFirst
   {
     mixed query( string what ) { return 0; }
     void first_try( RequestID id )
     {
-      if(catch 
+      if(catch
       {
 	rl->readline->write( sprintf("Request for %s in %O from %s\n",
 				     id->not_query, id->conf, id->remoteaddr),1);
@@ -216,6 +217,7 @@ class Connection
       }
     }
   }
+#endif /* !ENABLE_NEW_PRIO */
 
   mixed hilfe_debug( string what )
   {
@@ -224,6 +226,9 @@ class Connection
     switch( what )
     {
       case "accesses":
+#ifdef ENABLE_NEW_PRIO
+	error("Not supported anymore.\n");
+#else
 	foreach( roxen->configurations, Configuration c )
 	  if( c->inited )
 	  {
@@ -231,6 +236,7 @@ class Connection
 	    c->invalidate_cache();
 	  }
 	break;
+#endif /* !ENABLE_NEW_PRIO */
 
       default:
 	error("Don't know how to debug "+what+"\n");
