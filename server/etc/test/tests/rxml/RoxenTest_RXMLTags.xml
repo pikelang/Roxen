@@ -3026,6 +3026,23 @@ hej</result>
 
 <test>
   <rxml type="string">
+    <cache shared="" nohash="" key="yo5">
+      <nocache>[&var.xfoo;]</nocache>
+      <set variable="var.xfoo" value="1"/>
+    </cache>
+    <unset variable="var.xfoo"/>
+
+    <!-- When the test fails, the outer cache tag will incorrectly
+    restore var.xfoo. -->
+    <cache>
+      <cache shared="" nohash="" key="yo5"/>
+    </cache>
+  </rxml>
+  <result>[][]</result>
+</test>
+
+<test>
+  <rxml type="string">
     <cache>
       <define tag="foo" scope="bar">
 	<set variable="bar.x">17</set>
