@@ -955,6 +955,34 @@ class Priority
     _min = minimum;
   }
 
+  string render_form( RequestID id, void|mapping additional_args )
+  {
+    if ((_max != 9) || _min) return ::render_form(id, additional_args);
+
+    // Display the traditional 0-9 selector by default.
+    string res = "<select name='"+path()+"'>\n";
+    string current = (string)query();
+    int selected = 0;
+    foreach( ({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }), int elem )
+    {
+      mapping m = ([]);
+      m->value = (string)elem;
+      if( equal( m->value, current ) ) {
+        m->selected="selected";
+	selected = 1;
+      }
+      res += "  "+Roxen.make_container( "option", m, (string)elem )+"\n";
+    }
+    if (!selected)
+      // Make an entry for the current value if it's not in the list,
+      // so no other value appears to be selected, and to ensure that
+      // the value doesn't change as a side-effect by another change.
+      res += "  " + Roxen.make_container (
+	"option", (["value":current, "selected": "selected"]),
+	sprintf(LOCALE(332,"(keep stale value %s)"),current));
+    return res + "</select>";
+  }
+
   string|int encode()
   {
     if (!_max) return 0;
