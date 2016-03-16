@@ -849,9 +849,11 @@ string parse( RequestID id )
 
 string module_priorities_page( RequestID id, Configuration c)
 {
+#ifdef ENABLE_NEW_PRIO
   Variable.Variable maxpri_var = c->getvar("max_priority");
 
   int max_priority = maxpri_var->query();
+#endif
 
   array modids = map( indices( c->otomod )-({0}),
 		      lambda(mixed q){ return c->otomod[q]; });
@@ -879,6 +881,7 @@ string module_priorities_page( RequestID id, Configuration c)
 		     ]);
 		   } );
 
+#ifdef ENABLE_MAX_PRIO
   // Update any module priorities before the range change.
   // Otherwise the priority scaling won't work properly.
   foreach( mods, mapping m ) {
@@ -915,6 +918,7 @@ string module_priorities_page( RequestID id, Configuration c)
       return module_priorities_page(id, c);
     }
   }
+#endif /* ENABLE_MAX_PRIO */
  
   string res = "<input type=hidden name='section' value='ModulePriorities' />";
 
@@ -922,6 +926,7 @@ string module_priorities_page( RequestID id, Configuration c)
 
   res += "<h1>Module priorities for site "+Roxen.roxen_encode(c->name,"html")+"</h1>";
 
+#ifdef ENABLE_NEW_PRIO
   res += "<select name='maxprichange'>\n";
   foreach(c->getvar("max_priority")->get_choice_list(), int pri) {
     if (pri == max_priority) {
@@ -932,6 +937,9 @@ string module_priorities_page( RequestID id, Configuration c)
   }
   res += "</select>\n";
   res += "is highest and 0 is lowest.<br /><br />";
+#else /* !ENABLE_NEW_PRIO */
+  res += "9 is highest and 0 is lowest.<br /><br />";
+#endif /* !ENABLE_NEW_PRIO */
 
   res += "<table border='0' cellpadding='0' cellspacing='2'>";
 
@@ -941,6 +949,30 @@ string module_priorities_page( RequestID id, Configuration c)
     res += "<tr><td colspan='4'><h2>"+mt->title+"</h2></td></tr>\n";
 
     array _mods = Array.filter(mods, lambda(mapping m) { return m->type & mt->type; });
+
+#ifndef ENABLE_NEW_PRIO
+    foreach( _mods, mapping m ) {
+      int modpri = m->pri;
+      string varname = "prichange_"+replace(m->id,"#","!");
+      if(id->variables[varname]) {
+	modpri = (int)(id->variables[varname]);
+	if(modpri < 0)
+	  modpri = 0;
+	if(modpri > 9)
+	  modpri = 9;
+
+	if(m->pri != modpri) {
+	  m->oldpri = m->pri;
+	  m->pri = modpri;
+	  m->modi->getvar("_priority")->set(m->pri);
+	  if( m->modi->save_me )
+	    m->modi->save_me();
+	  else
+	    m->modi->save();
+	}
+      }
+    }
+#endif /* !ENABLE_NEW_PRIO */
 
     _mods = Array.sort_array(_mods, lambda(mapping m1, mapping m2) { 
 				      if(m2->pri==m1->pri) 
@@ -972,6 +1004,7 @@ string module_priorities_page( RequestID id, Configuration c)
 	seen_pri[location][m->pri] = 1;
 
       if(!modules_seen[m->name2]) {
+#ifdef ENABLE_NEW_PRIO
 	if (max_priority == 9) {
 	  res += "<select name='prichange_"+replace(m->id,"#","!")+"'>";
 	  foreach( ({ 0,1,2,3,4,5,6,7,8,9 }), int pri) {
@@ -987,6 +1020,16 @@ string module_priorities_page( RequestID id, Configuration c)
 			 sizeof(sprintf("%d", max_priority) + 2),
 			 m->pri);
 	}
+#else /* !ENABLE_NEW_PRIO */
+	res += "<select name='prichange_"+replace(m->id,"#","!")+"'>";
+	foreach( ({ 0,1,2,3,4,5,6,7,8,9 }), int pri) {
+	  if(m->pri == pri)
+	    res+="<option selected='selected' value='"+pri+"'>"+pri+"</option>";
+	  else
+	    res+="<option value='"+pri+"'>"+pri+"</option>";
+	}
+	res+="</select>";
+#endif /* !ENABLE_NEW_PRIO */
 	modules_seen[m->name2] = 1;
       } else {
 	res += (string)m->pri + " (change above)";
