@@ -2203,7 +2203,7 @@ class Context
   //! when the result p-code is evaluated.
   {
     if (misc->recorded_changes)
-      // See PCode.process_recorded_changes for details.
+      // See PCode.low_process_recorded_changes for details.
       misc->recorded_changes += ({callback, args, ([])});
   }
 
@@ -8773,7 +8773,13 @@ class PCode
   // This is inherited by nested PCode instances to make the
   // compilation units larger.
 
-  protected void process_recorded_changes (array rec_chgs, Context ctx)
+  void process_recorded_changes (array rec_chgs, Context ctx)
+  {
+    EXPAND_EXEC (sizeof (rec_chgs));
+    low_process_recorded_changes (rec_chgs, ctx);
+  }
+
+  protected void low_process_recorded_changes (array rec_chgs, Context ctx)
   // This processes ctx->misc->recorded_changes, which is used to
   // record things besides the frames that need to added to result
   // collecting p-code. The format of ctx->misc->recorded_changes
@@ -8847,7 +8853,7 @@ class PCode
       EXPAND_EXEC (1 + sizeof (rec_chgs));
       exec[length++] = evaled_value;
       if (!equal (rec_chgs, ({([])}))) {
-	process_recorded_changes (rec_chgs, ctx);
+	low_process_recorded_changes (rec_chgs, ctx);
 	ctx->misc->recorded_changes = ({([])});
       }
     }
@@ -8908,7 +8914,7 @@ class PCode
 	    EXPAND_EXEC (1 + sizeof (rec_chgs));
 	    exec[length++] = evaled_value;
 	    if (!equal (rec_chgs, ({([])})))
-	      process_recorded_changes (rec_chgs, ctx);
+	      low_process_recorded_changes (rec_chgs, ctx);
 	    break add_frame;
 	  }
 	}
@@ -9003,7 +9009,7 @@ class PCode
       ctx->misc->recorded_changes = ({([])});
       if (sizeof (rec_chgs)) {
 	EXPAND_EXEC (sizeof (rec_chgs));
-	process_recorded_changes (rec_chgs, ctx);
+	low_process_recorded_changes (rec_chgs, ctx);
       }
 
       if (!(flags & CTX_ALREADY_GOT_VC))
@@ -9233,6 +9239,13 @@ class PCode
     while (1) {			// Loops only if errors are catched.
       mixed item;
       Frame frame;
+
+      // Don't want to leak recorded changes to the surrounding scope,
+      // so we'll replace it with an empty one. The original is
+      // restored before return below.
+      array saved_recorded_changes = ctx->misc->recorded_changes;
+      ctx->misc->recorded_changes = ({([])});
+
       if (mixed err = catch {
 
 	if (p_code_comp) {
@@ -9334,6 +9347,14 @@ class PCode
 	  flags |= UPDATED;
 	}
 
+        if (new_p_code) {
+          array rec_chgs = ctx->misc->recorded_changes;
+          if (sizeof (rec_chgs)) {
+            new_p_code->process_recorded_changes (rec_chgs, ctx);
+          }
+        }
+        ctx->misc->recorded_changes = saved_recorded_changes;
+
 	if (!ppos)
 	  return type->sequential ? type->copy_empty_value() : nil;
 	else
@@ -9344,6 +9365,8 @@ class PCode
 	    else return parts[0];
 
       }) {
+        ctx->misc->recorded_changes = saved_recorded_changes;
+
 	if (objectp (err) && ([object] err)->thrown_at_unwind) {
 	  ctx->unwind_state[this_object()] = ({err, pos, parts, ppos});
 	  throw (this_object());
