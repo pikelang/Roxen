@@ -283,6 +283,28 @@ void remove_configuration( string name )
 
 void store( string reg, mapping(string:mixed) vars, int q,
 	    Configuration current_configuration )
+//! Store the settings for a configuration region.
+//!
+//! @param reg
+//!   Region name.
+//!
+//! @param vars
+//!   Variables. Either
+//!   @mixed
+//!     @type mapping(string:Variable)
+//!       A mapping of configuration variables. This is used
+//!       when @[q] is @expr{0@}.
+//!
+//!     @type mapping(string:mixed)
+//!       A mapping from string to raw values. This is used
+//!       when @[q] is @expr{1@}.
+//!   @endmixed
+//!
+//! @param q
+//!   @[vars] mode, see above.
+//!
+//! @param current_configuration
+//!   Configuration that the settings belong to.
 {
   string cl;
   mapping m;
@@ -319,7 +341,7 @@ void store( string reg, mapping(string:mixed) vars, int q,
 	// Support for special save callbacks.
 	savers[var->save] = 1;
       } else {
-	m[ name ] = var->query();
+	m[ name ] = var->encode();
       }
     }
     data[ reg ] = m;

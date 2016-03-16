@@ -330,6 +330,7 @@ class Configuration
   mapping(string:array(int)) profile_map = ([]);
 #endif
 
+#ifndef ENABLE_NEW_PRIO
   class Priority
   {
     string _sprintf (int flag)
@@ -346,6 +347,7 @@ class Configuration
     mapping (string:array(RoxenModule)) file_extension_modules = ([ ]);
     mapping (RoxenModule:multiset(string)) provider_modules = ([ ]);
   }
+#endif /* !ENABLE_NEW_PRIO */
 
   class DataCache
   {
@@ -358,7 +360,9 @@ class Configuration
     void init_from_variables( );
   };
 
+#ifndef ENABLE_NEW_PRIO
   array(Priority) allocate_pris();
+#endif
 
   object      throttler;
   RoxenModule types_module;

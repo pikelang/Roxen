@@ -68,7 +68,7 @@ void setvars( mapping (string:mixed) vars )
   Variable.Variable q;
   foreach( indices( vars ), v )
     if(q = variables[v])
-      q->set( vars[v] );
+      q->decode( vars[v] );
 }
 
 //! @decl Variable.Variable defvar( string sname, Variable.Variable variable )
