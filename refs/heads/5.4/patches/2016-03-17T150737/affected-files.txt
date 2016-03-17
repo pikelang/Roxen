@@ -1,0 +1,11 @@
+Modified files:
+  base_server/basic_defvar.pike
+  base_server/configuration.pike
+  base_server/prototypes.pike
+  base_server/read_config.pike
+  config_interface/sites/site_content.pike
+  etc/include/version.h
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/Variable.pmod/module.pmod
+  etc/test/tests/rxml/RoxenTest_RXMLTags.xml
+  protocols/prot_hilfe.pike
