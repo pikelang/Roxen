@@ -1059,7 +1059,6 @@ array (function) first_modules()
 {
   if(!first_module_cache)
   {
-    int i;
     first_module_cache = ({ });
     
     //  Add special fork handlers on Windows and Mac OS X
@@ -1076,7 +1075,7 @@ array (function) first_modules()
 #ifdef ENABLE_NEW_PRIO
     first_module_cache += low_module_lookup(MODULE_FIRST, "first_try");
 #else
-    for(i=9; i>=0; i--)
+    for(int i=9; i>=0; i--)
     {
       array(RoxenModule) d; RoxenModule p;
       if(d=pri[i]->first_modules) {
