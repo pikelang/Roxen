@@ -933,7 +933,6 @@ array (function) first_modules()
 {
   if(!first_module_cache)
   {
-    int i;
     first_module_cache = ({ });
     
     //  Add special fork handlers on Windows and Mac OS X
