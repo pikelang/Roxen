@@ -881,7 +881,7 @@ string module_priorities_page( RequestID id, Configuration c)
 		     ]);
 		   } );
 
-#ifdef ENABLE_MAX_PRIO
+#ifdef ENABLE_NEW_PRIO
   // Update any module priorities before the range change.
   // Otherwise the priority scaling won't work properly.
   foreach( mods, mapping m ) {
@@ -918,7 +918,7 @@ string module_priorities_page( RequestID id, Configuration c)
       return module_priorities_page(id, c);
     }
   }
-#endif /* ENABLE_MAX_PRIO */
+#endif /* ENABLE_NEW_PRIO */
  
   string res = "<input type=hidden name='section' value='ModulePriorities' />";
 
