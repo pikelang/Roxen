@@ -2302,7 +2302,14 @@ class TagCache {
     mapping(string|int:mixed) keymap, overridden_keymap;
     string key, key_level2;
     array(string) level2_keys;
+
+    // evaled_content is cleared when Frame evaluation is completed
+    // (either at cache hit in do_enter or when do_return returns.) We
+    // want to avoid keeping a ref from the frame to make the RAM
+    // cache more efficient / accurate. Each frame should only count
+    // its own data, not data (PCode) in nested cache tags (frames).
     RXML.PCode evaled_content;
+
     int timeout, persistent_cache;
 
     //  Mutex state to restrict concurrent generation of same cache entry.
@@ -2673,7 +2680,10 @@ class TagCache {
 		m_delete(cache_mutex_concurrency, mutex_id);
 	      //  ^^^
 	    }
-	    return ({evaled_content});
+
+            RXML.PCode cache_hit = evaled_content;
+            evaled_content = 0;
+	    return ({cache_hit});
 	  }
 	}
 	
@@ -2826,6 +2836,7 @@ class TagCache {
 	overridden_keymap = 0;
       }
 
+      evaled_content = 0;
       result += content;
       return 0;
     }
