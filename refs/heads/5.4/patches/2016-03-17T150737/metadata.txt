@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Module priorities, RXML: changes leak in PCode
 from: 4711990354adaf5e670b0c6ea0fdf5ba868f6c78
 to: 2e757db090609c8741a8a723fb71257772d4f4a5
 originator: wellhardh@roxen.com
