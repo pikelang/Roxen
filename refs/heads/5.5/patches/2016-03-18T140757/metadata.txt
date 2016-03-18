@@ -1,0 +1,90 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 9603a5f8ee2e818d162af0dc703f862fa123b47a
+to: 44c65bdb1e8c03e075cf0772d5f2ae004a5896db
+originator: wellhardh@roxen.com
+depends: 2016-03-14T110048
+restart: true
+
+Multiple fixes:
+
+  * Configuration: Got rid of the Priority objects.
+    
+    Instead of keeping track of the modules in a hard-coded multi-level
+    priority forrest, they are now kept in a single proprity-sorted array.
+    This will later allow for supporting more module priority levels than 10.
+    
+    Fixes some of [bug 7611].
+
+  * Configuration: Cleaned up and unified the module lookup code.
+    
+    Most of the module lookup caches are now initialized with the data
+    returned from low_module_lookup().
+
+  * Configuration: Update the api_module_cache on module removal.
+    
+    Stale data was retained in the api_module_cache when modules were removed.
+
+  * Hilfe: Removed support for debug("accesses").
+    
+    Getting this feature to work with the new module priority system is
+    non-trivial, and I haven't ever heard about anyone using the feature.
+
+  * Configuration: Minor change.
+
+  * Variable.Variable: Added support for encode/decode.
+    
+    These two functions can be used to override the default verbatim
+    encoding of configuration variable values.
+
+  * Documentation: Added some Autodoc markup for store().
+
+  * Variable: Added new variable type Priority.
+    
+    This variable type is intended to later be used to handle module priorities.
+
+  * Modules: Use Variable.Priority to handle module priorities.
+    
+    Preparation for fixing [bug 7611].
+
+  * Configuration: Added configurable maximum module priority.
+    
+    Fixes [bug 7611].
+
+  * Config IF: Support new maximum priorities in Module Priorities tab.
+
+  * Config IF: Location modules are also affected by priorities.
+
+  * Fix regression in location_modules() where entries with same priority weren't
+    returned in order of decreasing prefix length.
+
+  * ConfigIF: Use a selector for priority range 0-9.
+
+  * ConfigIF: Put the new module priority system behind ENABLE_NEW_PRIO.
+    
+    This is a preparation to enable backporting of the new module
+    priority system to Roxen 5.4 et al and still have minimal
+    impact when not enabled.
+    
+    Note that the priority variable is still changed to a Variable.Priority.
+    
+    Fixes some of [bug 7662].
+
+  * RXML: Don't leak recorded changes to surrounding scopes when evaling PCode.
+    
+    Fixes [RT #25739].
+
+  * ConfigIF: Fixed typo in #ifdef.
+    
+    The enabling #define for the new module priority system is
+    ENABLE_NEW_PRIO, NOT ENABLE_MAX_PRIO.
+    
+    Fixes altering of the maximum priority levels when
+    ENABLE_NEW_PRIO is active.
+
+  * Silence warning.
+
+  * Handle modules where query_provides() returns 0.
+
+  * Added ":-url" quoting.
+    
+    Solves [bug 7661].
