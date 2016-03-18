@@ -1,0 +1,3 @@
+Modified files:
+  base_server/configuration.pike
+  etc/modules/Roxen.pmod
