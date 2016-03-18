@@ -1209,6 +1209,7 @@ mixed find_file( string f, RequestID id )
       }
     }
     if(!putting[my_fd]) {
+      m_delete (putting, my_fd);
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
       if (size < 0) {
