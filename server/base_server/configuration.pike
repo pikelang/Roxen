@@ -781,8 +781,10 @@ array (RoxenModule) get_providers(string provides)
 	  } else if (arrayp(provs)) {
 	    provs = mkmultiset(provs);
 	  }
-	  foreach(provs; string provides;) {
-	    provider_module_cache[provides] += ({ p });
+	  if (provs) {
+	    foreach(provs; string provides;) {
+	      provider_module_cache[provides] += ({ p });
+	    }
 	  }
 	}
 	modules = ({});
@@ -798,8 +800,10 @@ array (RoxenModule) get_providers(string provides)
       } else if (arrayp(provs)) {
 	provs = mkmultiset(provs);
       }
-      foreach(provs; string provides;) {
-	provider_module_cache[provides] += ({ p });
+      if (provs) {
+	foreach(provs; string provides;) {
+	  provider_module_cache[provides] += ({ p });
+	}
       }
     }
   }
