@@ -420,6 +420,27 @@ string encode_path( string p )
   return p;
 }
 
+//! Convert from filesystem encoding.
+string decode_path(string p)
+{
+#ifdef __NT__
+  // The filesystem on NT uses wide characters.
+  return p;
+#else
+  // While filesystems on other OSes typically are 8bit.
+  switch(lower_case(path_encoding)) {
+  case "iso-8859-1":
+    return p;
+  case "utf8": case "utf-8":
+    // NB: We assume that the filesystem will normalize
+    //     the path as appropriate.
+    return Unicode.normalize(utf8_to_string(p), "NFC");
+  default:
+    return Charset.decoder(path_encoding)->feed(p)->drain();
+  }
+#endif /* !__NT__ */
+}
+
 string real_path(string f, RequestID id)
 {
   f = normalized_path + f;
