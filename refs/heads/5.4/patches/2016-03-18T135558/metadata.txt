@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Module priorities fixes, Added :-url quoting
 from: 2e757db090609c8741a8a723fb71257772d4f4a5
 to: e802c0de7d862b89eeac78aa0a3779207e59f02c
 originator: wellhardh@roxen.com
