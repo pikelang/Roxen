@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.158 2009/03/04 13:07:04 grubba Exp $";
+constant cvs_version= "$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -394,14 +394,19 @@ mixed stat_file( string f, RequestID id )
   SETUID_NT("Statting file");
 
   /* No security currently in this function */
-  fs = file_stat(decode_path(f));
+  fs = file_stat(encode_path(f));
   privs = 0;
   if(!stat_cache) return fs;
   cache_set("stat_cache", f, ({fs}));
   return fs;
 }
 
-string decode_path( string p )
+//! Convert to filesystem encoding.
+//!
+//! @note
+//!   Note that the @expr{"iso-8859-1"@} encoding will perform
+//!   conversion to utf-8 for wide strings OSes other than NT.
+string encode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
     p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
@@ -420,7 +425,7 @@ string real_path(string f, RequestID id)
   f = normalized_path + f;
   if (FILTER_INTERNAL_FILE(f, id)) return 0;
   catch {
-    f = NORMALIZE_PATH(decode_path(f));
+    f = NORMALIZE_PATH(encode_path(f));
     if (has_prefix(f, normalized_path) ||
 #ifdef __NT__
 	(f+"\\" == normalized_path)
@@ -512,7 +517,7 @@ array find_dir( string f, RequestID id )
   SETUID_NT("Read dir");
 
   if (catch {
-    f = NORMALIZE_PATH(decode_path(path + f));
+    f = NORMALIZE_PATH(encode_path(path + f));
   } || !(dir = get_dir(f))) {
     privs = 0;
     return 0;
@@ -704,7 +709,7 @@ int _file_size(string X, RequestID id)
       return cached_fs[0] ? cached_fs[0][ST_SIZE] : -1;
     }
   }
-  if(fs = file_stat(decode_path(X)))
+  if(fs = file_stat(encode_path(X)))
   {
     id->misc->stat = fs;
     if( stat_cache ) cache_set("stat_cache",(X),({fs}));
@@ -719,7 +724,7 @@ int contains_symlinks(string root, string path)
   foreach(path/"/" - ({ "" }), path) {
     root += "/" + path;
     Stat rr;
-    if (rr = file_stat(decode_path(root), 1)) {
+    if (rr = file_stat(encode_path(root), 1)) {
       if (rr[1] == -3) {
 	return(1);
       }
@@ -841,7 +846,7 @@ mixed find_file( string f, RequestID id )
 
   catch {
     /* NOTE: NORMALIZE_PATH() may throw errors. */
-    f = norm_f = NORMALIZE_PATH(f = decode_path(path + f));
+    f = norm_f = NORMALIZE_PATH(f = encode_path(path + f));
 #if constant(System.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
@@ -1412,7 +1417,7 @@ mixed find_file( string f, RequestID id )
       }
     }
 
-    code = mv(f, decode_path(moveto));
+    code = mv(f, encode_path(moveto));
     int err_code = errno();
     privs = 0;
 
@@ -1575,7 +1580,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     write_access(combine_path(dest, "../"), 0, id);
   if (mappingp(res)) return res;
   string dest_path = path + dest;
-  catch { dest_path = decode_path(dest_path); };
+  catch { dest_path = encode_path(dest_path); };
   dest_path = NORMALIZE_PATH (dest_path);
   if (query("no_symlinks") && (contains_symlinks(path, dest_path))) {
     errors++;
@@ -1688,7 +1693,7 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     }
   } else {
     string source_path = path + source;
-    catch { source_path = decode_path(source_path); };
+    catch { source_path = encode_path(source_path); };
     source_path = NORMALIZE_PATH (source_path);
     if (query("no_symlinks") && (contains_symlinks(path, source_path))) {
       errors++;
