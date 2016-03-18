@@ -1,0 +1,16 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 2e757db090609c8741a8a723fb71257772d4f4a5
+to: e802c0de7d862b89eeac78aa0a3779207e59f02c
+originator: wellhardh@roxen.com
+depends: 2016-03-17T150737
+restart: true
+
+Multiple fixes:
+
+  * Silence warning.
+
+  * Handle modules where query_provides() returns 0.
+
+  * Added ":-url" quoting.
+    
+    Solves [bug 7661].
