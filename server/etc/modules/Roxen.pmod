@@ -2986,6 +2986,9 @@ protected string low_roxen_encode(string val, string encoding)
    case "url":
      return http_encode_url (val);
 
+   case "-url":
+     return http_decode_string (val);
+
    case "wml-url":
      // Note: In 4.0 and earlier, this encoding was ambiguous since 8
      // bit strings were %-encoded according to the ISO 8859-1 charset
@@ -3176,6 +3179,9 @@ protected string low_roxen_encode(string val, string encoding)
 //!     reserved and excluded chars, that otherwise could have special
 //!     meaning; see RFC 3986. This includes @expr{:@}, @expr{/@},
 //!     @expr{%@}, and quote chars. C.f. @[Roxen.http_encode_url].
+//!
+//!   @value "-url"
+//!     Reverse @expr{"url"@} encoding.
 //!
 //!   @value "cookie"
 //!     Nonstandard HTTP-style encoding for cookie values. The Roxen
