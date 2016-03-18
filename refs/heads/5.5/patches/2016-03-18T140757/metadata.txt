@@ -1,4 +1,4 @@
-subject: Roxen 5.5: Multiple fixes:
+subject: Roxen 5.5: Module priorities, RXML: changes leak in PCode, Added ":-url" quoting.
 from: 9603a5f8ee2e818d162af0dc703f862fa123b47a
 to: 44c65bdb1e8c03e075cf0772d5f2ae004a5896db
 originator: wellhardh@roxen.com
