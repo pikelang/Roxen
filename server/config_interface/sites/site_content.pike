@@ -708,6 +708,10 @@ string|mapping parse( RequestID id )
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
     case "ModulePriorities":
+      if (conf == id->conf) {
+	// Configuration interface.
+	return 0;
+      }
       return module_priorities_page(id, conf);
        
 
