@@ -262,7 +262,7 @@ void start()
   access_as_user_db =
     my_configuration()->find_user_database( query("access_as_user_db") );
   dotfiles = query(".files");
-  path = encode_path(query("searchpath"));
+  path = roxen_path(encode_path(query("searchpath")));
   mountpoint = query("mountpoint");
   stat_cache = query("stat_cache");
   internal_files = map(query("internal_files"), encode_path);
