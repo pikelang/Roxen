@@ -892,7 +892,7 @@ class TagConfigVariablesSectionsplugin
                                      m, id );
 
     string section = RXML.get_var( "section", "form" );
-    if( m["add-module-priorities"] )
+    if( m["add-module-priorities"] && (id->conf != m->configuration) )
       v = ({ 
         ([
           "section":"ModulePriorities",
