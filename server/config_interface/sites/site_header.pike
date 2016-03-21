@@ -49,7 +49,9 @@ mixed parse( RequestID id )
    case "settings":
      return
        Roxen.http_string_answer(
-	 "<emit source='config-variables-sections' add-module-priorities='1' add-status='1' "
+	 "<emit source='config-variables-sections' " +
+	 ((conf != id->conf)?"add-module-priorities='1' ":"") +
+	 "      add-status='1' "
 	 "      configuration='"+path[0]+"'>\n"
 	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
 	 "       href='?section=&_.section:http;'>&_.sectionname;</tab>"
