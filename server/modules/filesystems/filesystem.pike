@@ -46,6 +46,7 @@ LOCALE(2,"This is the basic file system module that makes it possible "
        "your site.");
 constant module_unique = 0;
 
+// Statistics.
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
 
@@ -246,9 +247,14 @@ void create()
 		" <tt>&lt;insert&gt;</tt> and <tt>&lt;use&gt;</tt>."));
 }
 
+// Cached defvar values.
+//
+// NB: path and normalized_path have been recoded according to
+//     path_encoding.
 string path, mountpoint, charset, path_encoding, normalized_path;
 int stat_cache, dotfiles, access_as_user, no_symlinks, tilde;
 array(string) internal_files;
+
 UserDB access_as_user_db;
 int access_as_user_throw;
 void start()
@@ -375,6 +381,8 @@ ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
       privs=Privs(X, uid->uid(), uid->gid() );		\
   }
 
+// NB: The stat_cache is a lookup from real_path to stat.
+
 mixed stat_file( string f, RequestID id )
 {
   Stat fs;
@@ -414,6 +422,7 @@ string encode_path( string p )
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
 #else
+  // NB: stat() on NT doesn't like trailing slashes (cf [bug 76]).
   while( strlen(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
 #endif
@@ -567,11 +576,17 @@ array find_dir( string f, RequestID id )
      (!sizeof( internal_files ) || id->misc->internal_get))
     return dir;
 
+  FILESYSTEM_WERR(sprintf("raw dir: %O\n", dir));
+
   dir = Array.filter(dir, dir_filter_function, id);
+
+  FILESYSTEM_WERR(sprintf("filtered dir: %O\n", dir));
 
   if (path_encoding != "iso-8859-1") {
     dir = map(dir, decode_path);
   }
+
+  FILESYSTEM_WERR(sprintf("decoded dir: %O\n", dir));
 
   if (!id->misc->internal_get)
     foreach (internal_files, string globstr)
