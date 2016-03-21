@@ -569,6 +569,10 @@ array find_dir( string f, RequestID id )
 
   dir = Array.filter(dir, dir_filter_function, id);
 
+  if (path_encoding != "iso-8859-1") {
+    dir = map(dir, decode_path);
+  }
+
   if (!id->misc->internal_get)
     foreach (internal_files, string globstr)
       dir -= glob (globstr, dir);
@@ -582,7 +586,7 @@ void recursive_rm(string real_dir, string virt_dir,
   SIMPLE_TRACE_ENTER(this, "Deleting all files in directory %O...", real_dir);
   foreach(get_dir(real_dir) || ({}), string fname) {
     string real_fname = combine_path(real_dir, fname);
-    string virt_fname = virt_dir + "/" + fname;
+    string virt_fname = virt_dir + "/" + decode_path(fname);
 
     Stat stat = file_stat(real_fname);
     if (!stat) {
