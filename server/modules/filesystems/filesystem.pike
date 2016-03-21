@@ -1138,8 +1138,7 @@ mixed find_file( string f, RequestID id )
       }
     }
 
-    object to = open(f, "wct");
-    int err = errno();
+    object to = Stdio.File();
 
     TRACE_ENTER("PUT: Accepted", 0);
 
@@ -1148,8 +1147,9 @@ mixed find_file( string f, RequestID id )
       cache_set("stat_cache", f, 0);
     }
 
-    if(!to)
+    if(!to->open(f, "wct", 0666))
     {
+      int err = to->errno();
       privs = 0;
       TRACE_LEAVE("PUT: Open failed");
       return errno_to_status (err, 1, id);
@@ -1735,8 +1735,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       TRACE_LEAVE("PUT: Out of quota.");
       return Roxen.http_status(507, "Out of disk quota.");
     }
-    object source_file = open(source_path, "r");
-    if (!source_file) {
+    object source_file = Stdio.File();
+    if (!source_file->open(source_path, "r")) {
       TRACE_LEAVE("Failed to open source file.");
       return Roxen.http_status(404);
     }
@@ -1746,11 +1746,12 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     }
     object privs;
     SETUID_TRACE("COPY: Copying file.", 0);
-    object dest_file = open(dest_path, "cwt");
-    privs = 0;
-    if (!dest_file) {
+    object dest_file = Stdio.File();
+    if (!dest_file->open(dest_path, "cwt")) {
+      privs = 0;
       return errno_to_status (errno(), 1, id);
     }
+    privs = 0;
     int len = source_st->size;
     while (len > 0) {
       string buf = source_file->read((len > 4096)?4096:len);
