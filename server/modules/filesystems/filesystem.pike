@@ -479,7 +479,7 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 			       "<h1>Permission to 'LOCK' files denied</h1>",
 			       id);
   }
-  register_lock(path, lock, id);
+  register_lock(encode_path(path), lock, id);
   return 0;
 }
 
@@ -494,7 +494,7 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0)
 			       "<h1>Permission to 'UNLOCK' files denied</h1>",
 			       id);
   }
-  unregister_lock(path, lock, id);
+  unregister_lock(encode_path(path), lock, id);
   return 0;
 }
 
@@ -524,7 +524,7 @@ protected mapping(string:mixed)|int(0..1) write_access(string path,
 				       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
-  return ::write_access(path, recursive, id);
+  return ::write_access(encode_path(path), recursive, id);
 }
 
 array find_dir( string f, RequestID id )
