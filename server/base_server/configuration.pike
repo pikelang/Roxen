@@ -5156,7 +5156,7 @@ below.</p>
   defvar("JSONLogEndpoints", ({ "$JSONLOGDIR/" + Roxen.short_name(name) + ".jsonlog" }),
 	 DLOCALE(0, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
 	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration. "
-		 "$JSONLOGDIR will expand to <configuration directory>/_jsonlog where sockets should be reasonably secure."))
+		 "$JSONLOGDIR will expand to &lt;configuration directory&gt;/_jsonlog where sockets should be reasonably secure."))
     ->add_changed_callback(json_log_endpoint_cb);
 
   defvar("Domain", roxen.get_domain(), DLOCALE(34, "Domain"),
