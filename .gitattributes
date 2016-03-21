@@ -230,7 +230,6 @@ worldmap binary
 /server/modules/compat/sqldb.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
-/server/modules/configuration/config_tags.pike foreign_ident
 /server/modules/configuration/roxen_test.pike foreign_ident
 /server/modules/configuration/update.pike foreign_ident
 /server/modules/database/sqltag.pike foreign_ident
