@@ -1,0 +1,7 @@
+Modified files:
+  etc/modules/Roxen.pmod
+  etc/modules/VFS.pmod
+  modules/filesystems/filesystem.pike
+  modules/filesystems/incoming.pike
+  modules/filesystems/restrictedfs.pike
+  modules/filesystems/userfs.pike
