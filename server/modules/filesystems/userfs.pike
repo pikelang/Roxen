@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.71 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id$";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -181,25 +181,19 @@ protected array(string) find_user(string f, RequestID id)
   return ({ u, f });
 }
 
-int|mapping|Stdio.File find_file(string f, RequestID id)
+protected string low_real_path(string f, RequestID id)
 {
-  string u, of = f;
+  string norm_f;
 
-  USERFS_WERR(sprintf("find_file(%O)", f));
+  [string u, string rel_f] = find_user(f, id);
 
-  [u, f] = find_user(f, id);
+  if(!u || banish_reported[u]) {
+    return 0;
+  }
 
-  if(!u)
-    return -1;
-
-  array(string) us;
-  array(int) stat;
-
-
-  // FIXME: Use the find_user API instead.
-  if(!dude_ok[ u ] || f == "")
-  {
-    us = id->conf->userinfo( u, id );
+  string dir;
+  if (!(dir = dude_ok[u])) {
+    array(string) us = id->conf->userinfo( u, id );
 
     USERFS_WERR(sprintf("checking out %O: %O", u, us));
 
@@ -215,59 +209,68 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
       }
       return 0;
     }
-    if((f == "") && (strlen(of) && of[-1] != '/'))
-    {
-      redirects++;
-      return Roxen.http_redirect(id->not_query+"/",id);
-    }
-
-    string dir;
-
     if(query("homedir"))
-      dir = us[ 5 ] + "/" + query("pdir") + "/";
-    else
-      dir = query("searchpath") + "/" + u + "/";
-
-    dir = replace(dir, "//", "/");
-
-    // If public dir does not exist, or is not a directory
-    stat = filesystem::stat_file(dir, id);
-    if(!stat || stat[1] != -2)
     {
-      USERFS_WERR(sprintf("Directory %O not found! (stat: %O)", dir, stat));
-      return 0;	// File not found.
-    }
-    dude_ok[u] = dir;	// Always '/' terminated.
+      if(us[5][-1] != '/')
+	dir = us[ 5 ] + "/" + encode_path(query("pdir"));
+      else
+	dir = us[ 5 ] + encode_path(query("pdir"));
+    } else
+      dir = encode_path(query("searchpath") + u + "/");
+    dude_ok[u] = dir;
   }
+
   // For the benefit of the PHP4 module. Will set the DOCUMENT_ROOT
   // environment variable to this instead of the path to /.
-  id->misc->user_document_root = dude_ok[u];
-  
-  f = dude_ok[u] + f;
+  id->misc->user_document_root = dir;
+  norm_f = dir + encode_path(rel_f);
 
-  if(query("own"))
+  return norm_f;
+}
+
+int|mapping|Stdio.File find_file(string f, RequestID id)
+{
+  string u;
+
+  USERFS_WERR(sprintf("find_file(%O)", f));
+
+  [u, string rel_f] = find_user(f, id);
+
+  if(!u)
+    return -1;
+
+  string norm_f = real_path(f, id);
+
+  if (!norm_f) {
+    return Roxen.http_status(403, "Access forbidden by user");
+  }
+
+  array(string) us;
+  Stdio.Stat stat;
+
+  if(query("own") || query("useuserid"))
   {
+    us = id->conf->userinfo( u, id );
     if(!us)
     {
-      us = id->conf->userinfo( u, id );
-      if(!us)
-      {
-	USERFS_WERR(sprintf("No userinfo for %O!", u));
-	return 0;
-      }
+      USERFS_WERR(sprintf("No userinfo for %O!", u));
+      return 0;
     }
 
-    stat = filesystem::stat_file(f, id);
+    stat = file_stat(norm_f);
 
-    if(!stat || (stat[5] != (int)(us[2])))
-    {
-      USERFS_WERR(sprintf("File not owned by user.", u));
+    if (!stat) {
+      USERFS_WERR("File not found.");
+      return 0;
+    }
+    if (stat[5] == (int)us[2]) {
+      if(query("useuserid"))
+	id->misc->is_user = norm_f;
+    } else if (query("own")) {
+      USERFS_WERR("File not owned by user.");
       return 0;
     }
   }
-
-  if(query("useuserid"))
-    id->misc->is_user = f;
 
   USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
   return filesystem::find_file( f, id );
@@ -275,53 +278,16 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
 string real_file(string f, RequestID id)
 {
-  string u;
-
   USERFS_WERR(sprintf("real_file(%O, X)", f));
 
-  array a = find_user(f, id);
-
-  if (!a) {
-    return 0;
-  }
-
-  u = a[0];
-  f = a[1];
-
-  if(u)
-  {
-    array(int) fs;
-    if(query("homedir"))
-    {
-      array(string) us;
-      us = id->conf->userinfo( u, id );
-      if((!us) || BAD_PASSWORD(us) || banish_list[u])
-	return 0;
-      if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + query("pdir") + f;
-      else
-	f = us[ 5 ] + query("pdir") + f;
-    } else
-      f = query("searchpath") + u + "/" + f;
-
-    // Use the inherited stat_file
-    fs = filesystem::stat_file( f,id );
-
-    //    werror(sprintf("%O: %O\n", f, fs));
-    // FIXME: Should probably have a look at this code.
-    if (fs && ((fs[1] >= 0) || (fs[1] == -2)))
-      return f;
-  }
-  return 0;
+  return ::real_file(f, id);
 }
 
 mapping|array find_dir(string f, RequestID id)
 {
   USERFS_WERR(sprintf("find_dir(%O, X)", f));
 
-  array a = find_user(f, id);
-
-  if (!a[0]) {
+  if (f == "" || f == "/") {
     if (query("user_listing")) {
       array l;
       l = id->conf->userlist(id);
@@ -331,72 +297,28 @@ mapping|array find_dir(string f, RequestID id)
     return 0;
   }
 
-  string u = a[0];
-  f = a[1];
-
-  if(u)
-  {
-    if(query("homedir"))
-    {
-      array(string) us;
-      us = id->conf->userinfo( u, id );
-      if((!us) || BAD_PASSWORD(us))
-	return 0;
-      // FIXME: Use the banish multiset.
-      if(search(query("banish_list"), u) != -1)             return 0;
-      if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + query("pdir") + f;
-      else
-	f = us[ 5 ] + query("pdir") + f;
-    }
-    else
-      f = query("searchpath") + u + "/" + f;
-    array dir = filesystem::find_dir(f, id);
-    return dir;
-  }
-  array(string) users = id->conf->userlist(id);
-  return users && (users - query("banish_list"));
+  return filesystem::find_dir(f, id);
 }
 
-array(int) stat_file(string f, RequestID id)
+Stdio.Stat stat_file(string f, RequestID id)
 {
   USERFS_WERR(sprintf("stat_file(%O)", f));
 
-  array a = find_user(f, id);
+  string norm_f = real_path(f, id);
 
-  if (!a) {
-    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+  if (!norm_f) {
+    return Stdio.Stat(({ 0, -2, 0, 0, 0, 0, 0 }));
   }
 
-  string u = a[0];
-  f = a[1];
-
-  if(u)
-  {
-    array us, st;
-    us = id->conf->userinfo( u, id );
-    if(query("homedir"))
-    {
-      if((!us) || BAD_PASSWORD(us))
-	return 0;
-      // FIXME: Use the banish multiset.
-      if(search(query("banish_list"), u) != -1) return 0;
-      if(us[5] == "") {
-	// No home directory.
-	return 0;
-      }
-      if(us[5][-1] != '/')
-	f = us[ 5 ] + "/" + query("pdir") + f;
-      else
-	f = us[ 5 ] + query("pdir") + f;
-    } else
-      f = query("searchpath") + u + "/" + f;
-    st = filesystem::stat_file( f,id );
-    if(!st) return 0;
-    if(query("own") && (!us || ((int)us[2] != st[-2]))) return 0;
-    return st;
+  Stdio.Stat st = file_stat(norm_f);
+  if(!st) return 0;
+  if(query("own")) {
+    [string u, string rel_f] = find_user(f, id);
+    if (!u) return 0;
+    array(string) us = id->conf->userinfo(u, id);
+    if (!us || ((int)us[2] != st[-2])) return 0;
   }
-  return 0;
+  return st;
 }
 
 
