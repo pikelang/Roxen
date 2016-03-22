@@ -3171,7 +3171,9 @@ protected string low_roxen_encode(string val, string encoding)
 //!     @expr{%@}, and quote chars. C.f. @[Roxen.http_encode_url].
 //!
 //!   @value "-url"
-//!     Reverse @expr{"url"@} encoding.
+//!     Reverse @expr{"url"@} encoding but without utf-8 decoding. If
+//!     utf-8 decoding is needed you can use the combination
+//!     @expr{"-url.-utf8"@}.
 //!
 //!   @value "cookie"
 //!     Nonstandard HTTP-style encoding for cookie values. The Roxen
