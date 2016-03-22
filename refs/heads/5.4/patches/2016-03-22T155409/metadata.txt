@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Documentation, Filesystem charset fixes
 from: ffc496aef66fc71044d2b5205ccd8f546551a3b6
 to: 802b774087a7c7dfd88ce5c626bac53a6328595b
 originator: wellhardh@roxen.com
