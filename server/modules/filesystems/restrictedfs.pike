@@ -50,7 +50,7 @@ void create()
 	  "set and as <tt>/ftp/home/me/</tt> if it is not set."));
 }
 
-string fix_slashes (string s)
+protected string fix_slashes (string s)
 {
   if (sizeof (s) && s[0] == '/') {
     s = s[1..];
@@ -61,33 +61,28 @@ string fix_slashes (string s)
   return s;
 }
 
-mixed stat_file(string f, object id)
+protected string low_real_path(string f, RequestID id)
 {
-  TRACE_ENTER("stat_file(\"" + f + "\")", 0);
   string home = id->misc->home;
   if (!stringp(home)) {
     // No home-directory
-    TRACE_LEAVE("No home directory.");
-    return(0);
+    return 0;
   }
   if (query("remap_home")) {
-    mixed res = ::stat_file(f = (fix_slashes (home) + f), id);
-    TRACE_LEAVE(sprintf(" => %O => %O", f, res));
-    return res;
-  } else {
-    if (search("/" + f, home)) {
-      // Not a prefix, or short.
-      if ((home[1..sizeof(f)] != f) ||
-	  ((home[sizeof(f)] != '/') && (home[sizeof(f)+1] != '/'))) {
-	TRACE_LEAVE("Bad prefix.");
-	return(0);
-      }
-      // Short.
-    }
-    mixed res = ::stat_file(f, id);
-    TRACE_LEAVE(sprintf(" => %O => %O", f, res));
-    return res;
+    f = decode_path(fix_slashes(home)) + f;
+  } else if (!has_prefix("/" + f, decode_path(home))) {
+    // Not a prefix, or short.
+    return 0;
   }
+  return ::low_real_path(f, id);
+}
+
+mixed stat_file(string f, object id)
+{
+  TRACE_ENTER("stat_file(\"" + f + "\")", 0);
+  mixed res = ::stat_file(f, id);
+  TRACE_LEAVE(sprintf(" => %O => %O", f, res));
+  return res;
 }
 
 array find_dir(string f, object id)
@@ -95,76 +90,30 @@ array find_dir(string f, object id)
   string home = id->misc->home;
   if (!stringp(home)) {
     // No home-directory
-    return(0);
+    return 0;
   }
-  if (query("remap_home")) {
-    return(::find_dir(fix_slashes (home) + f, id));
-  } else {
-    if (search("/" + f, home)) {
-      // Not a prefix, or short
-      if (home[1..sizeof(f)] == f) {
-	// Short - return the next part of the path.
-	return(Array.filter(({ ".", "..", (home[sizeof(f)+1..]/"/")[0] }),
-		      dir_filter_function));
-      }
-    }
-    return(::find_dir(f, id));
+  string enc_f = "/" + encode_path(f);
+  if (!has_suffix(enc_f, "/")) enc_f += "/";
+  if (!query("remap_home") && !has_prefix(enc_f, home)) {
+    // Not a prefix, or short
+    if (!has_prefix(home, enc_f)) return 0;
+    // Short - return the next part of the path.
+    f = decode_path((home[sizeof(enc_f)..]/"/" - ({ "" }))[0]);
+    return Array.filter(({ ".", "..", f }), dir_filter_function);
   }
-}
-
-// Duplicate of ::real_file(), that uses ::stat_file() instead of
-// stat_file(). This fixes [bug 618].
-protected string low_real_file(string f, RequestID id)
-{
-  if (::stat_file(f, id)) {
-    catch {
-      return NORMALIZE_PATH(decode_path(path + f));
-    };
-  }
+  return ::find_dir(f, id);
 }
 
 string real_file(string f, object id)
 {
   string home = id->misc->home;
   TRACE_ENTER("real_file(\"" + f + "\")", 0);
-  if (!stringp(home)) {
-    // No home-directory
-    TRACE_LEAVE("No home directory.");
-    return(0);
-  }
-  if (query("remap_home")) {
-    string res = low_real_file(f = (fix_slashes(home) + f), id);
-    TRACE_LEAVE(sprintf("=> %O => %O", f, res));
-    return res;
-  } else {
-    if (!has_prefix("/" + f, home)) {
-      TRACE_LEAVE("Bad prefix.");
-      return(0);
-    }
-    string res = low_real_file(f, id);
-    TRACE_LEAVE(sprintf("=> %O => %O", f, res));
-    return res;
-  }
+  string res = ::real_file(f, id);
+  TRACE_LEAVE(sprintf("=> %O => %O", f, res));
+  return res;
 }
 
 mixed find_file(string f, object id)
 {
-  string home = id->misc->home;
-  if (!stringp(home)) {
-    // No home-directory
-    return(0);
-  }
-  if (query("remap_home")) {
-    mixed res = ::find_file((home = fix_slashes(home)) + f, id);
-
-    // FIXME: Should readjust not_query here if it was modified.
-
-    return res;
-  } else {
-    if (!has_prefix("/" + f, home)) {
-      // Not a prefix, or short.
-      return(0);
-    }
-    return(::find_file(f, id));
-  }
+  return(::find_file(f, id));
 }
