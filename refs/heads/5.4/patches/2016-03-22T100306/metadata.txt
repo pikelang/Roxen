@@ -1,0 +1,51 @@
+subject: Roxen 5.4: Multiple fixes:
+from: e802c0de7d862b89eeac78aa0a3779207e59f02c
+to: ffc496aef66fc71044d2b5205ccd8f546551a3b6
+originator: wellhardh@roxen.com
+depends: 2016-03-18T135558
+restart: true
+
+Multiple fixes:
+
+  * Handle modules where query_provides() returns 0.
+
+  * Filesystem: Renamed decode_path() to encode_path().
+    
+    Get rid of the misleading name as it is the opposite of what it does.
+    
+    Preparation for fixing [bug 7659].
+
+  * Filesystem: Added decode_path().
+    
+    This function actually performs decoding...
+    
+    Preparation for fixing [bug 7659].
+
+  * Filesystem: Open files in the same way for all requests.
+    
+    Use Stdio.File()->open() to open files and NOT roxenloader::open().
+    
+    Fixes some path confusion issues.
+
+  * Filesystem: Decode the file names returned by get_dir().
+    
+    Fixes some of [bug 7659].
+
+  * Filesystem: Use encoded paths for file locks.
+    
+    Fixes some of [bug 7659].
+
+  * Filesystem: Filesystem filename encoding consistency fixes.
+    
+    Avoid double encoding of filename components.
+    
+    Fixes remainder of [bug 7659].
+
+  * Filesystem: Support path expansion symbols in the search path.
+
+  * Filesystem: Some cosmetic fixes and FILESYSTEM_DEBUG.
+
+  * ConfigIF: Hide the Module Priorities page for the Admin Interface.
+    
+    The user shouldn't be able to change the priorities for modules
+    belonging to the Administration Interface.
