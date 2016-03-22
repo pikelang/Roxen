@@ -390,22 +390,20 @@ mixed stat_file( string f, RequestID id )
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
-  f = path + encode_path(f);
-
-  if (FILTER_INTERNAL_FILE (f, id))
-    return 0;
+  string norm_f = real_path(f, id);
+  if (!norm_f) return 0;
 
   if(stat_cache && !id->pragma["no-cache"] &&
-     (fs=cache_lookup("stat_cache",f)))
+     (fs = cache_lookup("stat_cache", norm_f)))
     return fs[0];
   object privs;
   SETUID_NT("Statting file");
 
   /* No security currently in this function */
-  fs = file_stat(f);
+  fs = file_stat(norm_f);
   privs = 0;
   if(!stat_cache) return fs;
-  cache_set("stat_cache", f, ({fs}));
+  cache_set("stat_cache", norm_f, ({fs}));
   return fs;
 }
 
@@ -450,23 +448,54 @@ string decode_path(string p)
 #endif /* !__NT__ */
 }
 
+protected string low_real_path(string f, RequestID id)
+{
+  string norm_f;
+
+  if (mixed err = catch {
+      /* NOTE: NORMALIZE_PATH() may throw errors. */
+      norm_f = NORMALIZE_PATH(path + encode_path(f));
+#if constant(System.normalize_path)
+      if (!has_prefix(norm_f, normalized_path) &&
+#ifdef __NT__
+	  (norm_f+"\\" != normalized_path)
+#else /* !__NT__ */
+	  (norm_f+"/" != normalized_path)
+#endif /* __NT__ */
+	  ) {
+	errors++;
+	report_error(LOCALE(52, "Path verification of %O failed:\n"
+			    "%O is not a prefix of %O\n"
+			    ), f, normalized_path, norm_f);
+	return 0;
+      }
+
+      string oldf = f;
+      // Regenerate f from norm_f.
+      f = decode_path(replace(norm_f[sizeof(normalized_path)..], "\\", "/"));
+      if (has_suffix(oldf, "/") && !has_suffix(f, "/")) {
+	// Restore the "/" stripped by encode_path() on NT.
+	f += "/";
+      }
+
+      /* Adjust not_query */
+      id->not_query = mountpoint + f;
+#endif /* constant(System.normalize_path) */
+    }) {
+    errors++;
+    report_error(LOCALE(0, "Path normalization failure for %O:\n"
+			"%s\n"),
+		 f, describe_backtrace(err));
+  }
+  return norm_f;
+}
+
 string real_path(string f, RequestID id)
 {
-  f = normalized_path + encode_path(f);
-  if (FILTER_INTERNAL_FILE(f, id)) return 0;
-  catch {
-    f = NORMALIZE_PATH(f);
-    if (has_prefix(f, normalized_path) ||
-#ifdef __NT__
-	(f+"\\" == normalized_path)
-#else /* !__NT__ */
-	(f+"/" == normalized_path)
-#endif /* __NT__ */
-	) {
-      return f;
-    }
-  };
-  return 0;
+  string norm_f = low_real_path(f, id);
+  if (!norm_f) return 0;
+  if (FILTER_INTERNAL_FILE(norm_f, id)) return 0;
+  return norm_f;
 }
 
 string real_file( string f, RequestID id )
@@ -543,12 +572,12 @@ array find_dir( string f, RequestID id )
   FILESYSTEM_WERR("find_dir for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
+  string norm_f = real_path(f, id);
+
   object privs;
   SETUID_NT("Read dir");
 
-  if (catch {
-    f = NORMALIZE_PATH(path + encode_path(f));
-  } || !(dir = get_dir(f))) {
+  if (!(dir = get_dir(norm_f))) {
     privs = 0;
     return 0;
   }
@@ -736,27 +765,28 @@ void got_put_data( array(object|string|int) id_arr, string data )
   }
 }
 
-int _file_size(string X, RequestID id)
+int _file_size(string f, RequestID id)
 {
   Stat fs;
-  X = path + encode_path(X);
+  string norm_f = real_path(f, id);
+
   if( stat_cache )
   {
     array(Stat) cached_fs;
     if(!id->pragma["no-cache"] &&
-       (cached_fs = cache_lookup("stat_cache", X)))
+       (cached_fs = cache_lookup("stat_cache", norm_f)))
     {
       id->misc->stat = cached_fs[0];
       return cached_fs[0] ? cached_fs[0][ST_SIZE] : -1;
     }
   }
-  if(fs = file_stat(X))
+  if(fs = file_stat(norm_f))
   {
     id->misc->stat = fs;
-    if( stat_cache ) cache_set("stat_cache",(X),({fs}));
+    if( stat_cache ) cache_set("stat_cache", norm_f, ({fs}));
     return fs[ST_SIZE];
   } else if( stat_cache )
-    cache_set("stat_cache",(X),({0}));
+    cache_set("stat_cache", norm_f, ({0}));
   return -1;
 }
 
@@ -875,7 +905,6 @@ mixed find_file( string f, RequestID id )
   object o;
   int size;
   string tmp;
-  string oldf = f;
   object privs;
   int code;
 
@@ -887,40 +916,12 @@ mixed find_file( string f, RequestID id )
   */
 #define URI combine_path(mountpoint, f, ".")
 
-  string norm_f;
+  string norm_f = real_path(f, id);
 
-  catch {
-    /* NOTE: NORMALIZE_PATH() may throw errors. */
-    norm_f = NORMALIZE_PATH(path + encode_path(f));
-#if constant(System.normalize_path)
-    if (!has_prefix(norm_f, normalized_path) &&
-#ifdef __NT__
-	(norm_f+"\\" != normalized_path)
-#else /* !__NT__ */
-	(norm_f+"/" != normalized_path)
-#endif /* __NT__ */
-	) {
-      errors++;
-      report_error(LOCALE(52, "Path verification of %O failed:\n"
-			  "%O is not a prefix of %O\n"
-			  ), oldf, normalized_path, norm_f);
-      TRACE_LEAVE("");
-      TRACE_LEAVE("Permission denied.");
-      return Roxen.http_status(403, "File exists, but access forbidden "
-			       "by user");
-    }
-
-    // Regenerate f from norm_f.
-    f = decode_path(replace(norm_f[sizeof(normalized_path)..], "\\", "/"))
-    if (has_suffix(oldf, "/") && !has_suffix(f, "/")) {
-      // Restore the "/" stripped by encode_path() on NT.
-      f += "/";
-    }
-
-    /* Adjust not_query */
-    id->not_query = mountpoint + f;
-#endif /* constant(System.normalize_path) */
-  };
+  if (!norm_f) {
+    TRACE_LEAVE("Permission denied.");
+    return Roxen.http_status(403, "Access forbidden by user");
+  }
 
   // NOTE: Sets id->misc->stat.
   size = _file_size( f, id );
@@ -951,7 +952,7 @@ mixed find_file( string f, RequestID id )
       return -1; /* Is dir */
 
     default:
-      if( oldf[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
+      if( f[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
 	  !norm_f) {		/* Or a file that is not normalizable. */
 	return 0;
       }
@@ -1067,7 +1068,7 @@ mixed find_file( string f, RequestID id )
       privs = 0;
       errors++;
       report_error(LOCALE(46,"Creation of %O failed. Permission denied.\n"),
-		   oldf);
+		   f);
       TRACE_LEAVE(sprintf("%s: Contains symlinks. Permission denied",
 			  id->method));
       return Roxen.http_status(403, "Permission denied.");
