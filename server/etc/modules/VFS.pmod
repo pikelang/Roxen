@@ -67,7 +67,8 @@ string|array(int|string) read( string file,
   }
   if( !res ) 
     res = c->try_get_file( file, id );
-  if( cache )
+  // FIXME: Support negative caching.
+  if( cache && res )
     cache_set( ck, file, res );
   if( last_mtime && res )
   {
