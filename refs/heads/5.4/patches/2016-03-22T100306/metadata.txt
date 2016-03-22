@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Module priorities, Filesystem charset
 from: e802c0de7d862b89eeac78aa0a3779207e59f02c
 to: ffc496aef66fc71044d2b5205ccd8f546551a3b6
 originator: wellhardh@roxen.com
