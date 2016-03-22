@@ -1,0 +1,42 @@
+subject: Roxen 5.4: Multiple fixes:
+from: ffc496aef66fc71044d2b5205ccd8f546551a3b6
+to: 802b774087a7c7dfd88ce5c626bac53a6328595b
+originator: wellhardh@roxen.com
+depends: 2016-03-22T100306
+restart: true
+
+Multiple fixes:
+
+  * Documented the lack of utf-8 decoding in "-url"-quoting.
+
+  * Filesystem: Improved compat with Pike 7.8 and earlier.
+    
+    Fixes [bug 7659] #4.
+
+  * VFS: The global cache doesn't like NULL entries.
+    
+    Fixes backtrace from the htaccess module when there are no
+    applicable .htaccess files.
+
+  * Fielsystem: Use real_path() to convert virtual paths everywhere.
+    
+    This reduces the amount of duplicted code, and makes overloading
+    the module quite a bit easier.
+    
+    Fixes some of [bug 7659].
+
+  * Incoming FS: Fix some path encoding issues.
+    
+    Fixes some of [bug 7659].
+
+  * UserFS: Fix path encoding issues.
+    
+    Also major code cleanup by using the low_real_path() api.
+    
+    Fixes some of [bug 7659].
+
+  * RestrictedFS: Fixed path encoding issues.
+    
+    Also major code cleanup by using the low_real_path() api.
+    
+    Fixes some more of [bug 7659].
