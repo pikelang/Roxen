@@ -129,19 +129,19 @@ protected mixed not_allowed( object id )
 #define FILE_SIZE(X) (stat_cache?_file_size((X),id):Stdio.file_size(X))
 
 
-protected mixed lose_file( string f, object id )
+protected mixed lose_file( string norm_f, object id )
 {
   object o;
-  int size = FILE_SIZE( f = path + f );
+  int size = FILE_SIZE( norm_f );
   if(size < 0)
     return (size==-2? -1:0);
 
-  o = open( f, "r" );
+  o = open( norm_f, "r" );
 
   if(!o)
     return 0;
 
-  id->realfile = f;
+  id->realfile = norm_f;
   accesses++;
 
   return decaying_file( o, query("bitrot_header"), 100/query("bitrot_percent") );
@@ -149,17 +149,23 @@ protected mixed lose_file( string f, object id )
 
 mixed find_file( string f, object id )
 {
+  string norm_f = real_path(f, id);
+
+  if (!norm_f) {
+    return Roxen.http_status(403, "Access forbidden by user");
+  }
+
   switch(id->method) {
   case "GET":
   case "HEAD":
   case "POST":
     if(query("bitrot") && query("bitrot_percent")>0)
-      return lose_file( f, id );
+      return lose_file( norm_f, id );
     else
       return not_allowed( id );
 
   case "PUT":
-    if(FILE_SIZE( path + f ) >= 0) {
+    if(FILE_SIZE( norm_f ) >= 0) {
       id->misc->error_code = 409;
       return 0;
     }
