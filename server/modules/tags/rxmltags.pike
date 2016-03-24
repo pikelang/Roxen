@@ -118,12 +118,12 @@ private object sexpr_funcs = class SExprFunctions
     {
       return predef::exp(intp(x) ? (float) x : x);
     }
-    
+
     float log(void|mixed x)
     {
       return predef::log(intp(x) ? (float) x : x);
     }
-    
+
     int floor(void|mixed x)
     {
       return (int) predef::floor(intp(x) ? (float) x : x);
@@ -138,7 +138,7 @@ private object sexpr_funcs = class SExprFunctions
     {
       return (int) predef::round(intp(x) ? (float) x : x);
     }
-    
+
   }();
 
 private mapping(string:mixed) sexpr_constants = ([
@@ -535,7 +535,7 @@ class TagAppend {
     array do_enter (RequestID id)
     {
       TAG_TRACE_ENTER("variable \"%s\"", args->variable);
-      
+
       if (args->value || args->from || args->expr)
 	flags |= RXML.FLAG_EMPTY_ELEMENT;
 
@@ -650,8 +650,8 @@ class TagAuthRequired {
 
     array do_return(RequestID id) {
       // omitting the 'database' arg is OK, find_user_datbase will
-      // return 0. 
-      mapping hdrs = 
+      // return 0.
+      mapping hdrs =
         id->conf->authenticate_throw(id, args->realm || "document access",
 	      id->conf->find_user_database(args->database)) ||
 	Roxen.http_auth_required(args->realm || "document access",
@@ -1008,10 +1008,10 @@ class TagCombinePath {
     "base":RXML.t_text(RXML.PEnt),
     "path":RXML.t_text(RXML.PEnt)
   ]);
-  
+
   class Frame {
     inherit RXML.Frame;
-    
+
     array do_return(RequestID id) {
       return ({ combine_path_unix(args->base, args->path) });
     }
@@ -1088,7 +1088,7 @@ class TagImgs {
 	string|object file =
 	  id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
 	  id->conf->try_get_file(args->src, id);
-	
+
 	if(file) {
 	  array(int) xysize;
 	  mixed err = catch { xysize = Dims.dims()->get(file); };
@@ -1110,7 +1110,7 @@ class TagImgs {
 
 	int xml=!m_delete(args, "noxml");
 	m_delete(args, "quiet");
-	
+
 	result = Roxen.make_tag("img", args, xml);
 	return 0;
       }
@@ -1124,7 +1124,7 @@ class TagEmitImgs {
   constant name = "emit";
   constant plugin_name = "imgs";
   mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
-  
+
   array get_dataset(mapping args, RequestID id)
   {
     if (!sizeof(args->src))
@@ -1180,7 +1180,7 @@ class TagRoxen {
 class TagDebug {
   inherit RXML.Tag;
   constant name = "debug";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_CUSTOM_TRACE;
+  constant flags = RXML.FLAG_CUSTOM_TRACE;
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -1251,16 +1251,18 @@ class TagDebug {
 	result = "---";
 	object st = file_stat(debuglog);
 	if (st && st->isreg)
-	  result = 
-	    "<pre>" + 
-	    Roxen.html_encode_string(Stdio.read_file(debuglog)) + 
+	  result =
+	    "<pre>" +
+	    Roxen.html_encode_string(Stdio.read_file(debuglog)) +
 	    "</pre>";
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
 
       if (args->werror) {
-	string msg = replace(args->werror,"\\n","\n");
+        string msg = (({ args->werror, content, result }) - ({ 0 }) - ({ "" })) * "\n";
+	msg = replace(msg,"\\n","\n");
+        result = "";
 	report_debug ("<debug>: [%s] %s:\n"
 		      "<debug>: %s\n",
 		      id->conf->query_name(), id->not_query,
@@ -1391,12 +1393,12 @@ class TagDate {
 				    "dec" : 11 ]);
 	int year, month, day, hour, minute, second;
 	string month_string, time_zone;
-	// First check if it's on the format 
+	// First check if it's on the format
 	// Sun Nov  6 08:49:37 1994  -  ANSI C's asctime() format
-	if(sscanf(args["http-time"], 
-		  "%*3s%*[ \t]%3s%*[ \t]%d%*[ \t]%2d:%2d:%2d%*[ \t]%4d", 
-		  month_string, day, 
-		  hour, minute, second, 
+	if(sscanf(args["http-time"],
+		  "%*3s%*[ \t]%3s%*[ \t]%d%*[ \t]%2d:%2d:%2d%*[ \t]%4d",
+		  month_string, day,
+		  hour, minute, second,
 		  year) == 11)
 	{
 	  month = month_mapping[lower_case(month_string)];
@@ -1414,25 +1416,25 @@ class TagDate {
 	}
 	else
 	{
-	  // Now check if it's on any of the formats 
+	  // Now check if it's on any of the formats
 	  // Sun, 06 Nov 1994 08:49:37 GMT       - RFC 822, updated by RFC 1123
 	  // Sunday, 06-Nov-94 08:49:37 GMT      - RFC 850, obsoleted by RFC 1036
 	  // [Sun, ]06 Nov 1994 08:49[:37][ GMT] - Might be found in RSS feeds.
-	  string stripped_date = 
+	  string stripped_date =
 	    String.trim_whites((args["http-time"] / ",")[-1]);
 
-	  if(sscanf(stripped_date, 
+	  if(sscanf(stripped_date,
 		    "%d%*[ \t-]%s%*[ \t-]%d%*[ \t-]%d:%d%s",
-		    day, month_string, year, 
+		    day, month_string, year,
 		    hour, minute, stripped_date) >= 8)
 	  {
 	    if(sizeof(month_string) >= 3)
-	    { 
+	    {
 	      month = month_mapping[lower_case(month_string[..2])];
 	    }
 	    else
 	      RXML.run_error("Unsupported date.\n");
-	    
+
 	    // Check if the year was written in only two digits. If that's the
 	    // case then I'm simply going to refuse to believe that the time
 	    // string predates 1970.
@@ -1474,7 +1476,7 @@ class TagDate {
 		RXML.run_error("Unknown local timezone in http-time.\n");
 	    }
 	  }
-	  else 
+	  else
 	    RXML.parse_error("Attribute http-time needs to be on the format "
 			     "[Tue,] 04 Dec [20]07 17:08[:04] [GMT]\n");
 	}
@@ -1499,7 +1501,7 @@ class TagDate {
 	  RXML.run_error("Unsupported date.\n");
 	}
       }
-      
+
       if(args->timezone=="GMT") {
 	if (catch {
 	    t += localtime(t)->timezone;
@@ -1507,7 +1509,7 @@ class TagDate {
 	  RXML.run_error("Unsupported date.\n");
 	}
       }
-      
+
       if(args["to-timezone"] && args["to-timezone"] != "local")
       {
 	if(args->timezone != "GMT")
@@ -1766,14 +1768,14 @@ class TagInsertLocate {
   string get_data(string var, mapping args, RequestID id)
   {
     array(string) result;
-    
+
     result = VFS.find_above_read( id->not_query, var, id );
 
     if( !result )
       RXML.run_error("Cannot locate any file named "+var+".\n");
 
     return result[1];
-  }  
+  }
 }
 
 class TagInsertFile {
@@ -1891,7 +1893,7 @@ class TagSetCookie {
     array do_return(RequestID id) {
       int t;
       if(args->persistent) t=-1; else t=Roxen.time_dequantifier(args);
-      Roxen.set_cookie( id,  args->name, (args->value||""), t, 
+      Roxen.set_cookie( id,  args->name, (args->value||""), t,
                         args->domain, args->path,
                         args->secure, args->httponly );
       return 0;
@@ -1927,7 +1929,7 @@ class TagRemoveCookie {
 	RXML.run_error("That cookie does not exist.\n");
 #endif
       Roxen.remove_cookie( id, args->name,
-                           (args->value||id->cookies[args->name]||""), 
+                           (args->value||id->cookies[args->name]||""),
                            args->domain, args->path );
       return 0;
     }
@@ -1939,7 +1941,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 
   if(m->by && !m->file && !m->realfile)
     m->file = id->virtfile;
-  
+
   if(m->file)
     m->realfile = id->conf->real_file(Roxen.fix_relative( m_delete(m, "file"), id), id);
 
@@ -1988,58 +1990,58 @@ string|array(string) tag_user(string tag, mapping m, RequestID id)
 {
   if (!m->name)
     return "";
-  
+
   User uid, tmp;
   foreach( id->conf->user_databases(), UserDB udb ){
     if( tmp = udb->find_user( m->name ) )
       uid = tmp;
   }
- 
+
   if(!uid)
     return "";
-  
+
   string dom = id->conf->query("Domain");
   if(sizeof(dom) && (dom[-1]=='.'))
     dom = dom[0..strlen(dom)-2];
-  
+
   if(m->realname && !m->email)
   {
     if(m->link && !m->nolink)
-      return ({ 
-	sprintf("<a href=%s>%s</a>", 
+      return ({
+	sprintf("<a href=%s>%s</a>",
 		Roxen.html_encode_tag_value( "/~"+uid->name() ),
 		Roxen.html_encode_string( uid->gecos() ))
       });
-    
+
     return ({ Roxen.html_encode_string( uid->gecos() ) });
   }
-  
+
   if(m->email && !m->realname)
   {
     if(m->link && !m->nolink)
-      return ({ 
+      return ({
 	sprintf("<a href=%s>%s</a>",
 		Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
-					      uid->name(), dom)), 
+					      uid->name(), dom)),
 		Roxen.html_encode_string(sprintf("%s@%s", uid->name(), dom)))
       });
     return ({ Roxen.html_encode_string(uid->name()+ "@" + dom) });
-  } 
+  }
 
   if(m->nolink && !m->link)
     return ({ Roxen.html_encode_string(sprintf("%s <%s@%s>",
 					 uid->gecos(), uid->name(), dom))
     });
 
-  return 
+  return
     ({ sprintf( (m->nohomepage?"":
 		 sprintf("<a href=%s>%s</a>",
 			 Roxen.html_encode_tag_value( "/~"+uid->name() ),
 			 Roxen.html_encode_string( uid->gecos() ))+
 		 sprintf(" <a href=%s>%s</a>",
-			 Roxen.html_encode_tag_value(sprintf("mailto:%s@%s", 
+			 Roxen.html_encode_tag_value(sprintf("mailto:%s@%s",
 						       uid->name(), dom)),
-			 Roxen.html_encode_string(sprintf("<%s@%s>", 
+			 Roxen.html_encode_string(sprintf("<%s@%s>",
 						    uid->name(), dom)))))
     });
 }
@@ -2143,7 +2145,7 @@ class TagRecode
 	    }
 	  }
       }
-      
+
       if (args->to) {
 	//  User may provide substitution string or numeric entities for
 	//  characters that don't fit in the requested encoding.
@@ -2164,7 +2166,7 @@ class TagRecode
 	    throw (err);
 	}
       }
-      
+
       return ({ content });
     }
   }
@@ -2518,7 +2520,7 @@ class TagCache {
 	}
 	default_key = 0;
       }
-      
+
       if (string uniq_var_list = args["generation-variable"]) {
 	if (uniq_var_list != "") {
 	  uniq_var_list =
@@ -2528,7 +2530,7 @@ class TagCache {
 	}
 	default_key = 0;
       }
-      
+
       if (args->profile) {
 	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
 	  foreach (args->profile / ",", string profile) {
@@ -2599,14 +2601,14 @@ class TagCache {
       int removed;
       object(RXML.PCode)|array(int|RXML.PCode|string) entry;
       int retry_lookup;
-      
+
       do {
 	retry_lookup = 0;
 	entry = args->shared ?
 	  cache_lookup (cache_tag_eval_loc, key) :
 	  get_alternative (key);
 	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
-	
+
       got_entry:
 	if (entry) {
 	check_entry_valid: {
@@ -2624,12 +2626,12 @@ class TagCache {
 		entry = 0;
 		break got_entry;
 	      }
-	      
+
 	      if (entry[0] && (entry[0] < time (1))) {
 		removed = 2;
 		break check_entry_valid;
 	      }
-	      
+
 	      evaled_content = entry[1];
 	    } else {
 	      if (key_level2) {
@@ -2640,7 +2642,7 @@ class TagCache {
 		entry = 0;
 		break got_entry;
 	      }
-	      
+
 	      evaled_content = entry;
 	    }
 	    if (evaled_content->is_stale())
@@ -2648,14 +2650,14 @@ class TagCache {
 	    else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
 	      removed = 3;
 	  }
-	  
+
 	  if (removed) {
 	    if (args->shared)
 	      cache_remove (cache_tag_eval_loc, key);
 	    else
 	      remove_alternative (key);
 	  }
-	  
+
 	  else {
 	    do_iterate = -1;
 	    TAG_TRACE_ENTER ("cache hit%s for key %s",
@@ -2671,7 +2673,7 @@ class TagCache {
 	    //        but shouldn't hurt.
 	    if (mutex_key) {
 	      destruct(mutex_key);
-	      
+
 	      //  vvv Relying on interpreter lock
 	      if (!--cache_mutex_concurrency[mutex_id])
 		m_delete(cache_mutexes, mutex_id);
@@ -2686,7 +2688,7 @@ class TagCache {
 	    return ({cache_hit});
 	  }
 	}
-	
+
 	//  Check for mutex synchronization during shared entry generation
 	if (!mutex_key && args->shared) {
 	  if (args->mutex) {
@@ -2695,7 +2697,7 @@ class TagCache {
 	    //  block each other. Note that cache_id is already incorporated
 	    //  into key.
 	    mutex_id = key;
-	    
+
 	    //  Signal that we're about to enter mutex handling. This will
 	    //  prevent any other thread from deallocating the same mutex
 	    //  prematurely.
@@ -2703,7 +2705,7 @@ class TagCache {
 	    //  vvv Relying on interpreter lock
 	    cache_mutex_concurrency[mutex_id]++;
 	    //  ^^^
-	    
+
 	    //  Find existing mutex or allocate a new one
 	    Thread.Mutex mtx = cache_mutexes[mutex_id];
 	  lock_mutex:
@@ -2715,7 +2717,7 @@ class TagCache {
 		//  can discard it and continue with the old one.
 		Thread.Mutex new_mtx = Thread.Mutex();
 		Thread.MutexKey new_key = new_mtx->lock();
-		
+
 		//  vvv Relying on interpreter lock here
 		if (!(mtx = cache_mutexes[mutex_id])) {
 		  //  We're first so store our new mutex
@@ -2734,7 +2736,7 @@ class TagCache {
 	    }
 
 	    id->add_threadbound_session_object (mutex_key);
-	    
+
 	    retry_lookup = 1;
 	  }
 	}
@@ -2781,7 +2783,7 @@ class TagCache {
 	    comp->compile();
 	    evaled_content->p_code_comp = 0;
 	  }
-	  
+
 	  object(RXML.PCode)|array(int|RXML.PCode|string) new_entry =
 	    level2_keys ?
 	    ({ 0, evaled_content, key_level2 }) :
@@ -2845,7 +2847,7 @@ class TagCache {
     {
       if (mutex_key) {
 	destruct(mutex_key);
-	
+
 	//  Decrease parallel count for shared mutex. If we reach zero we
 	//  know no other thread depends on the same mutex so drop it from
 	//  global table.
@@ -3096,7 +3098,7 @@ string simpletag_aconf(string tag, mapping m,
     href=m_delete(m, "href");
     if (search(href, ":") == search(href, "//")-1)
       RXML.parse_error("It is not possible to add configs to absolute URLs.\n");
-    href=Roxen.fix_relative(href, id);    
+    href=Roxen.fix_relative(href, id);
   }
   else
     href=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
@@ -3584,7 +3586,7 @@ class TagReplace
       if (content) {
 	if (result_type->decode_charrefs && compat_level == 4.0)
 	  content = result_type->decode_charrefs (content);
-      
+
 	else if (result_type->decode_xml_safe_charrefs &&
 	    compat_level > 4.0)
 	  content = result_type->decode_xml_safe_charrefs (content);
@@ -3596,7 +3598,7 @@ class TagReplace
       else {
 	if (content == RXML.nil)
 	  content = "";
-	
+
 	switch(args->type)
 	{
 	  case "word":
@@ -4865,7 +4867,7 @@ class TagUse {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
-  private array(string) list_packages() { 
+  private array(string) list_packages() {
     return filter(((get_dir("../local/rxml_packages")||({}))
 		   |(get_dir("rxml_packages")||({}))),
 		  lambda( string s ) {
@@ -6990,7 +6992,8 @@ class TagEmit {
       do_iterate = 0;
       return 0;
     }
- 
+
+
     protected void cleanup()
     {
       res = 0;
@@ -7300,17 +7303,17 @@ class TagIfTime {
     CACHE(time(1)%60); // minute resolution...
 
     int|object a, b, d;
-    
+
     if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
     {
 	    mapping c = localtime(time(1));
-	    
+
 	    b=(int)sprintf("%02d%02d", c->hour, c->min);
 	    a=(int)replace(ti,":","");
 
 	    if(m->until)
 		    d = (int)m->until;
-		    
+
     }
     else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
     {
@@ -7335,7 +7338,7 @@ class TagIfTime {
 		    else
 			    d = Calendar.ISO.dwim_day(m->until);
     }
-    
+
     if(d)
     {
       if (d > a && (b > a && b < d) )
@@ -7475,7 +7478,7 @@ class TagIfExists {
 #if !constant(Sitebuilder)
     CACHE(5);
 #endif
-    
+
     return id->conf->is_file(Roxen.fix_relative(u, id), id);
   }
 }
@@ -7490,7 +7493,7 @@ class TagIfInternalExists {
 #if !constant(Sitebuilder)
     CACHE(5);
 #endif
-    
+
     return id->conf->is_file(Roxen.fix_relative(u, id), id, 1);
   }
 }
@@ -7725,13 +7728,13 @@ class TagIfVariable {
   //  the page is POSTed (which we handle separately below). Any other
   //  variable internal to the page is considered invariant.
   constant cache = -1;
-  
+
   mixed source(RequestID id, string s, void|int check_set_only) {
     //  The protocol-level cache doesn't see posted variables, only
     //  variables in the URL.
     if (id->method != "GET")
       NO_PROTO_CACHE();
-    
+
     mixed var;
     if (compat_level == 2.2) {
       // The check below makes it impossible to tell the value 0 from
@@ -7823,7 +7826,7 @@ class TagIfTestLicense {
     License.Key key = id->conf->getvar("license")->get_key();
     if(!key)
       return 0;
-    
+
     //  Expects a string on the form:
     //  * module::mode#feature
     //  * module#feature
@@ -8912,10 +8915,10 @@ class TagIWCache {
   //  Place all cache data in a specific cache which we can clear when
   //  the layout files are updated.
   constant cache_tag_location = "iwcache";
-  
+
   class Frame {
     inherit TagCache::Frame;
-    
+
     array do_enter(RequestID id) {
       //  Compute a cache key which depends on the state of the user's
       //  Platform cookie. Get user ID from id->misc->sbobj which in
@@ -8936,7 +8939,7 @@ class TagIWCache {
       ]);
       if(id->supports->robot||id->variables->__print)
 	args += ([ "nocache" : "yes" ]);
-      
+
       return ::do_enter(id);
     }
   }
@@ -8989,23 +8992,23 @@ constant tagdoc=([
  The node name of the machine that the webserver is running on.
 </p></desc>",
 
-"&roxen.version;":#"<desc type='entity'><p>                                     
- The version of the webserver.                                                  
+"&roxen.version;":#"<desc type='entity'><p>
+ The version of the webserver.
 </p></desc>",
 
-"&roxen.build;":#"<desc type='entity'><p>                                       
+"&roxen.build;":#"<desc type='entity'><p>
 </p></desc>",
 
-"&roxen.base-version;":#"<desc type='entity'><p>                                
+"&roxen.base-version;":#"<desc type='entity'><p>
 </p></desc>",
 
-"&roxen.dist-version;":#"<desc type='entity'><p>                                
+"&roxen.dist-version;":#"<desc type='entity'><p>
 </p></desc>",
 
-"&roxen.dist-os;":#"<desc type='entity'><p>                                
+"&roxen.dist-os;":#"<desc type='entity'><p>
 </p></desc>",
 
-"&roxen.product-name;":#"<desc type='entity'><p>                                
+"&roxen.product-name;":#"<desc type='entity'><p>
 </p></desc>",
 
 "&roxen.pike-version;":#"<desc type='entity'><p>
@@ -9643,7 +9646,7 @@ using the pre tag.
  don't cache their contents too. It's thus possible to change the
  cache parameters or completely disable caching of a certain part of
  the content inside a <tag>cache</tag> tag.</p>
- 
+
  <note><p>This implies that many RXML tags that enclose the inner
  <tag>cache</tag> tag(s) won't be cached. The reason is that those
  enclosing tags use the result of the inner <tag>cache</tag> tag(s),
@@ -10031,8 +10034,8 @@ using the pre tag.
 
 "configimage":#"<desc type='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
- src attribute is required. It is possible to pass attributes, such as 
- the title attribute, to the resulting tag by including them in the 
+ src attribute is required. It is possible to pass attributes, such as
+ the title attribute, to the resulting tag by including them in the
  configimage tag.
 </p></desc>
 
@@ -10706,8 +10709,8 @@ header tag.</p></note>
  Generates an image tag with the correct dimensions in the width and height
  attributes.</short> These dimensions are read from the image itself, so the
  image must exist when the tag is generated. The image must also be in GIF,
- JPEG/JFIF, PNG, PSD or TIFF format. It is possible to pass attributes, such 
- as the alt attribute, to the resulting tag by including them in the imgs tag. 
+ JPEG/JFIF, PNG, PSD or TIFF format. It is possible to pass attributes, such
+ as the alt attribute, to the resulting tag by including them in the imgs tag.
  Note that the image content is not converted.</p>
 
  <p>See also the <tag>emit source=\"imgs\"</tag> for retrieving
@@ -13501,7 +13504,7 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='match' value='pattern' required='required'><p>
  Choose what pattern to test. The pattern could be any expression.</p>
- <p>Note! The pattern content is treated as strings. Compare how 
+ <p>Note! The pattern content is treated as strings. Compare how
  <tag>if variable</tag> tag works.</p>
 
 <ex>
@@ -13869,20 +13872,20 @@ Specify scope to test for existence.</p>
 //----------------------------------------------------------------------
 
 "use":#"<desc type='cont'><p><short>
- Reads <i>tag definitions</i>, user defined <i>if plugins</i> and 
- <i>variables</i> from a file or package and includes into the 
+ Reads <i>tag definitions</i>, user defined <i>if plugins</i> and
+ <i>variables</i> from a file or package and includes into the
  current page.</short></p>
- <note><p>The file itself is not inserted into the page. This only 
- affects the environment in which the page is parsed. The benefit is 
- that the package file needs only be parsed once, and the compiled 
- versions of the user defined tags can then be used, thus saving time. 
- It is also a fairly good way of creating templates for your website. 
- Just define your own tags for constructions that appears frequently 
- and save both space and time. Since the tag definitions are cached 
- in memory, make sure that the file is not dependent on anything dynamic, 
- such as form variables or client settings, at the compile time. Also 
- note that the use tag only lets you define variables in the form 
- and var scope in advance. Variables with the same name will be 
+ <note><p>The file itself is not inserted into the page. This only
+ affects the environment in which the page is parsed. The benefit is
+ that the package file needs only be parsed once, and the compiled
+ versions of the user defined tags can then be used, thus saving time.
+ It is also a fairly good way of creating templates for your website.
+ Just define your own tags for constructions that appears frequently
+ and save both space and time. Since the tag definitions are cached
+ in memory, make sure that the file is not dependent on anything dynamic,
+ such as form variables or client settings, at the compile time. Also
+ note that the use tag only lets you define variables in the form
+ and var scope in advance. Variables with the same name will be
  overwritten when the use tag is parsed.</p></note>
 </desc>
 
@@ -14182,7 +14185,7 @@ Specify scope to test for existence.</p>
 </attr>
 
 <attr name='filter-exclude' value='list'><p>The filter exclude attribute is
- used to filter out unwanted rows that would otherwise be emitted. 
+ used to filter out unwanted rows that would otherwise be emitted.
  Uses the same syntax as the filter attribute.</p>
 </attr>
 
