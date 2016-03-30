@@ -1,4 +1,5 @@
 #include <module.h>
+#include <config_interface.h>
 
 inherit "module";
 
@@ -19,35 +20,43 @@ LocaleString module_doc = LOCALE (0, #"
 </ul>
 </p>
 
+<p>The \"X-Roxen-API\" header must be set in all API requests. This requirement acts as a minimum counter-measure against CSRF attacks.</p>
+
 <p>The resource specifier \"_all\" can be used to map an operation over all resources (see examples below).</p>
 
 <p>Examples:
 <ul>
-<li>GET /rest/variables/ - list global variables</li>
-<li>GET /rest/configurations/ - list configurations</li>
-<li>GET /rest/configurations/CMS/ - get configuration \"CMS\" (currently not supported)</li>
-<li>GET /rest/configurations/CMS/?envelope=1 - get configuration \"CMS\" in envelope. Provides a list of available subresources, such as \"modules\".
-<li>GET /rest/configurations/CMS/modules/ - list enabled modules in the configuration \"CMS\".</li>
-<li>GET /rest/configurations/CMS/modules/ - list enabled modules in the configuration \"CMS\".</li>
-<li>GET /rest/configurations/CMS/modules/yui/variables/mountpoint - get the value of the variable \"mountpoint\" in the \"yui\" module.</li>
-<li>PUT /rest/variables/abs_timeout - change the value of the \"abs_timeout\" global variable. The data body of the PUT request should be the JSON encoded value to set.</li>
-<li>POST /rest/configurations/CMS/modules/yui/ - add an instance of the YUI module to the configuration \"CMS\".</li>
-<li>DELETE /rest/configurations/CMS/modules/yui!0/ - remove instance #0 of the YUI module in the configuration \"CMS\".</li>
-<li>PUT /rest/configurations/CMS/modules/yui!0/actions/Reload - Reload the YUI module.</li>
-<li>PUT /rest/configurations/CMS/modules/insite_editor!0/actions/Clear Persistent Cache - call action button \"Clear Persistent Cache \" in the Insite Editor module.</li>
-<li>PUT /rest/configurations/_all/modules/insite_editor!0/actions/Clear Persistent Cache - call action button \"Clear Persistent Cache \" in the Insite Editor module in all configurations.</li>
-<li>GET /rest/configurations/_all/modules/_all/variables/mountpoint - get the value of the \"mountpoint\" variable in all modules across all configurations.
+<li><pre>GET /rest/variables/</pre> - list global variables</li>
+<li><pre>GET /rest/configurations/</pre> - list configurations</li>
+<li><pre>GET /rest/configurations/CMS/</pre> - get configuration \"CMS\" (currently not supported)</li>
+<li><pre>GET /rest/configurations/CMS/?envelope=1</pre> - get configuration \"CMS\" in envelope. Provides a list of available subresources, such as \"modules\".
+<li><pre>GET /rest/configurations/CMS/modules/</pre> - list enabled modules in the configuration \"CMS\".</li>
+<li><pre>GET /rest/configurations/CMS/modules/</pre> - list enabled modules in the configuration \"CMS\".</li>
+<li><pre>GET /rest/configurations/CMS/modules/yui/variables/mountpoint</pre> - get the value of the variable \"mountpoint\" in the \"yui\" module.</li>
+<li><pre>PUT /rest/variables/abs_timeout</pre> - change the value of the \"abs_timeout\" global variable. The data body of the PUT request should be the JSON encoded value to set.</li>
+<li><pre>POST /rest/configurations/CMS/modules/yui/</pre> - add an instance of the YUI module to the configuration \"CMS\".</li>
+<li><pre>DELETE /rest/configurations/CMS/modules/yui!0/</pre> - remove instance #0 of the YUI module in the configuration \"CMS\".</li>
+<li><pre>PUT /rest/configurations/CMS/modules/yui!0/actions/Reload</pre> - Reload the YUI module.</li>
+<li><pre>PUT /rest/configurations/CMS/modules/insite_editor!0/actions/Clear Persistent Cache</pre> - call action button \"Clear Persistent Cache \" in the Insite Editor module.</li>
+<li><pre>PUT /rest/configurations/_all/modules/insite_editor!0/actions/Clear Persistent Cache</pre> - call action button \"Clear Persistent Cache \" in the Insite Editor module in all configurations.</li>
+<li><pre>GET /rest/configurations/_all/modules/_all/variables/mountpoint</pre> - get the value of the \"mountpoint\" variable in all modules across all configurations.
 </ul>
+</p>
+
+<p>cURL example:
+<pre>curl -H \"X-Roxen-API: 1\" -u admin:password https://localhost.roxen.com:22202/rest/variables/</pre>
 </p>
 ");
 
 constant module_type = MODULE_LOCATION;
 constant resource_all = 1;
+constant perm_name = "REST API";
 
 protected void create()
 {
   defvar("location", "/rest/", LOCALE(0,"Mountpoint"), TYPE_LOCATION,
           LOCALE(0, "Where the REST API is mounted."));
+  roxen.add_permission (perm_name, LOCALE(0, "REST API"));
 }
 
 typedef object RESTObj;
@@ -427,7 +436,26 @@ constant jsonflags = Standards.JSON.HUMAN_READABLE;
 
 mapping(string:mixed) find_file (string f, RequestID id)
 {
-  id->conf->authenticate (id, roxen.config_userdb_module);
+  if (!id->conf->authenticate (id, roxen.config_userdb_module)) {
+    return id->conf->authenticate_throw (id, "Roxen Administration Interface",
+                                         roxen.config_userdb_module);
+  }
+
+  if (!config_perm(perm_name)) {
+    string errstr = "REST API access not allowed.";
+    return
+      Roxen.http_low_answer (Protocols.HTTP.HTTP_FORBIDDEN,
+                             Standards.JSON.encode (([ "error": errstr ])));
+  }
+
+  if (!id->request_headers["x-roxen-api"]) {
+    string errstr = "The \"X-Roxen-API\" header must be set in API requests.";
+    return
+      Roxen.http_low_answer (Protocols.HTTP.HTTP_FORBIDDEN,
+                             Standards.JSON.encode (([ "error": errstr ])));
+
+  }
+
   array(string) segments = f / "/";
 
   mixed json_res;
