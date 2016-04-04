@@ -1,9 +1,11 @@
-subject: Roxen 5.4:   * The debug tag now takes content
+subject: Roxen 5.4: Debug tag, PUT fd leak
 from: 802b774087a7c7dfd88ce5c626bac53a6328595b
 to: b3ced320fee1328c41dae15f54545c276d58f7a3
 originator: wellhardh@roxen.com
 depends: 2016-03-22T155409
 restart: true
+
+Multiple fixes:
 
   * The debug tag now takes content
     
