@@ -334,7 +334,11 @@ void start()
     }) {
     report_error(LOCALE(1, "Path normalization of %s: %s failed.\n"),
 		 path, mountpoint);
+#ifdef __NT__
+    normalized_path = replace(path, "/", "\\");
+#else
     normalized_path = path;
+#endif
   }
 #else /* !constant(System.normalize_path) */
   normalized_path = path;
