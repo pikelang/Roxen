@@ -32,12 +32,6 @@ constant thread_safe=1;
 # define QUOTA_WERR(X)
 #endif
 
-#if constant(System.normalize_path)
-#define NORMALIZE_PATH(X)	System.normalize_path(X)
-#else /* !constant(System.normalize_path) */
-#define NORMALIZE_PATH(X)	(X)
-#endif /* constant(System.normalize_path) */
-
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = LOCALE(51,"File systems: Normal File system");
 LocaleString module_doc =
@@ -49,6 +43,52 @@ constant module_unique = 0;
 // Statistics.
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
+
+#if constant(System.normalize_path)
+// NB: System.normalize_path() throws errors on nonexisting files.
+protected string normalize_path(string path)
+{
+  path = combine_path(path);
+  if (Stdio.exist(path)) {
+    return System.normalize_path(path);
+  }
+  if (has_suffix(path, "/") && Stdio.exist(path + ".")) {
+    path = System.normalize_path(path + ".");
+#ifdef __NT__
+    path += "\\";
+#else
+    path += "/";
+#endif
+    return path;
+  }
+  array(string) a = path/"/";
+  int lo, hi = sizeof(a);
+#ifdef __NT__
+  if (has_suffix(a[0], ":")) {
+    // Avoid statting devices.
+    lo = 1;
+  }
+#endif
+  while (lo + 1 < hi) {
+    int m = (lo + hi)/2;
+    if (Stdio.exist(a[..m] * "/")) {
+      lo = m;
+    } else {
+      hi = m;
+    }
+  }
+  // NB: hi == lo + 1 here.
+  path = System.normalize_path(a[..lo] * "/") + "/" + (a[hi..] * "/");
+#ifdef __NT__
+  return replace(path, "/", "\\");
+#else
+  return path;
+#endif
+}
+#define NORMALIZE_PATH(X)	normalize_path(X)
+#else /* !constant(System.normalize_path) */
+#define NORMALIZE_PATH(X)	(X)
+#endif /* constant(System.normalize_path) */
 
 protected mapping http_low_answer(int errno, string data, string|void desc)
 {
