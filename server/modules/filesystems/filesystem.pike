@@ -273,23 +273,20 @@ void start()
   stat_cache = query("stat_cache");
   internal_files = map(query("internal_files"), encode_path);
 
-  
+  if (sizeof(path) && !has_suffix(path, "/")) path += "/";
 
 #if constant(System.normalize_path)
   if (catch {
-    if ((<'/','\\'>)[path[-1]]) {
       normalized_path = System.normalize_path(path + ".");
-    } else {
-      normalized_path = System.normalize_path(path);
-    }
-  }) {
-    report_error(LOCALE(1, "Path verification of %s failed.\n"), mountpoint);
+    }) {
+    report_error(LOCALE(1, "Path normalization of %s: %s failed.\n"),
+		 path, mountpoint);
     normalized_path = path;
   }
 #else /* !constant(System.normalize_path) */
   normalized_path = path;
 #endif /* constant(System.normalize_path) */
-  if ((normalized_path == "") || !(<'/','\\'>)[normalized_path[-1]]) {
+  if ((normalized_path != "") && !(<'/','\\'>)[normalized_path[-1]]) {
 #ifdef __NT__
     normalized_path += "\\";
 #else /* !__NT__ */
