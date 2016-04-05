@@ -48,11 +48,16 @@ int puts, deletes, mkdirs, moves, chmods;
 // NB: System.normalize_path() throws errors on nonexisting files.
 protected string normalize_path(string path)
 {
+  // Get rid of segments with ".." and ".".
   path = combine_path(path);
+
   if (Stdio.exist(path)) {
+    // The easy case.
     return System.normalize_path(path);
   }
+
   if (has_suffix(path, "/") && Stdio.exist(path + ".")) {
+    // The almost easy case.
     path = System.normalize_path(path + ".");
 #ifdef __NT__
     path += "\\";
@@ -61,6 +66,8 @@ protected string normalize_path(string path)
 #endif
     return path;
   }
+
+  // Try finding a valid prefix with binary search.
   array(string) a = path/"/";
   int lo, hi = sizeof(a);
 #ifdef __NT__
@@ -69,16 +76,22 @@ protected string normalize_path(string path)
     lo = 1;
   }
 #endif
-  while (lo + 1 < hi) {
+  while (lo < hi) {
     int m = (lo + hi)/2;
     if (Stdio.exist(a[..m] * "/")) {
+      if (lo == m) break;
       lo = m;
     } else {
       hi = m;
     }
   }
-  // NB: hi == lo + 1 here.
-  path = System.normalize_path(a[..lo] * "/") + "/" + (a[hi..] * "/");
+
+  // NB: If hi is zero then the entire path is invalid,
+  //     so no need to call System.normalize_path().
+  if (hi) {
+    path = System.normalize_path(a[..lo] * "/") + "/" + (a[lo+1..] * "/");
+  }
+
 #ifdef __NT__
   return replace(path, "/", "\\");
 #else
