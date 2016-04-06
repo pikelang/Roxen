@@ -531,9 +531,6 @@ protected string low_real_path(string f, RequestID id)
 	// Restore the "/" stripped by encode_path() on NT.
 	f += "/";
       }
-
-      /* Adjust not_query */
-      id->not_query = mountpoint + f;
 #endif /* constant(System.normalize_path) */
     }) {
     errors++;
