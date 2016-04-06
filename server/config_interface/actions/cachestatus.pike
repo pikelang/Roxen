@@ -10,27 +10,31 @@ string name= LOCALE(59, "Cache status");
 string doc = LOCALE(60, 
 		    "Show information about the main memory cache in Roxen");
 
+#define VALUE_NA "<span class='dimtext'>n/a</span>"
+
 string format_hit_rate (int|float hits, int|float misses)
 {
-  float res = 0.0;
-  catch (res = hits * 100.0 / (hits + misses));
-  return sprintf ("%.2f%%", res);
+  catch {
+    float res = hits * 100.0 / (hits + misses);
+    return sprintf ("%.1f%%", res);
+  };
+  return VALUE_NA;
 }
 
 // Should use external css instead. I'm lazy..
 #define TABLE_ATTRS							\
-  "style='border-collapse: collapse; white-space: nowrap;'"
+  "style='font-size: 85%; border-collapse: collapse; white-space: nowrap; line-height: 1.3; background: #f4f6f8; border: 8px solid #f4f6f8;'"
 #define HDR_TR_ATTRS							\
-  "style='text-align: center; border-bottom: 1px solid #666;'"
+  "style='text-align: right; border-bottom: 1px solid #678;'"
 #define BODY_TR_ATTRS(ROW)						\
   "style='text-align: right; " +					\
     (ROW ? "border-top: 2px solid transparent;" : "") + "'"
 #define FTR_TR_ATTRS							\
-  "style='text-align: right; border-top: 1px solid #666;'"
+  "style='text-align: right; border-top: 1px solid #678;'"
 #define FIRST_CELL							\
   "style='text-align: left; padding: 0;'"
 #define REST_CELLS							\
-  "style='white-space: nowrap; padding: 0 0 0 1ex;'"
+  "style='white-space: nowrap; padding: 0 0 0 3ex;'"
 
 #define DESCR_ROW(ROW, DESCR, VALUE)					\
   "<tr " BODY_TR_ATTRS (ROW) ">"					\
@@ -47,7 +51,7 @@ string parse( RequestID id )
     LOCALE(61, "WebServer Memory Cache")+
     "</h3>\n"
     "<p><a href='/global_settings/?section=Cache&amp;&usr.set-wiz-id;'>" +
-    LOCALE(380, "Configure cache settings") + "</a></p>\n";
+    LOCALE(380, "Configure Cache Settings") + "</a></p>\n";
 
   mapping(cache.CacheManager:mapping(string:cache.CacheStats)) stats =
     cache.cache_stats();
@@ -64,7 +68,8 @@ The configured maximum size %s is divided dynamically between the
 cache managers based on the usage for the last half hour. If the
 caches are not full then all free space is assigned to each one of
 them. They will shrink to the configured maximum size as they fill up."),
-	     Roxen.sizetostring (cache->total_size_limit)) + "</p>\n"
+	     "<b>" + Roxen.sizetostring (cache->total_size_limit) + "</b>") +
+    "</p>\n"
     "<table " TABLE_ATTRS ">\n"
     "<tr " HDR_TR_ATTRS ">"
     "<th " FIRST_CELL ">" + LOCALE(382, "Cache manager") + "</th>"
@@ -198,14 +203,14 @@ them. They will shrink to the configured maximum size as they fill up."),
 	  format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
 #endif
 	  "<td " REST_CELLS ">" +
-	  (mgr->has_cost ? mgr->format_cost (grp_cost) : "n/a") + "</td>"
+	  (mgr->has_cost ? mgr->format_cost (grp_cost) : VALUE_NA) + "</td>"
 	  "<td " REST_CELLS ">" +
 	  (mgr->has_cost ?
-	   mgr->format_cost (grp_count && grp_cost / grp_count) : "n/a") +
+	   mgr->format_cost (grp_count && grp_cost / grp_count) : VALUE_NA) +
 	  "</td>"
 	  "<td " REST_CELLS ">" +
 	  (mgr->has_cost ?
-	   format_hit_rate (grp_cost_hits, grp_cost_misses) : "n/a") + "</td>"
+	   format_hit_rate (grp_cost_hits, grp_cost_misses) : VALUE_NA) + "</td>"
 	  "</tr>\n";
 
 	tot_count += grp_count;
@@ -248,7 +253,7 @@ them. They will shrink to the configured maximum size as they fill up."),
 	    "<td " REST_CELLS " align='left'>" +
 	    (floatp (max_cost) ? sprintf ("%.3g", max_cost) : max_cost) +
 	    "</td>" :
-	    "<td " REST_CELLS " colspan='2' align='center'>n/a</td>") +
+	    "<td " REST_CELLS " colspan='2' align='center'>" VALUE_NA "</td>") +
 	   "<td " REST_CELLS ">" +
 	   (floatp (min_value) ? sprintf ("%.3g", min_value) : min_value) +
 	   " ..</td>" +
@@ -285,14 +290,14 @@ them. They will shrink to the configured maximum size as they fill up."),
 	    format_hit_rate (tot_byte_hits, tot_byte_misses) + "</td>"
 #endif
 	    "<td " REST_CELLS ">" +
-	    (mgr->has_cost ? mgr->format_cost (tot_cost) : "n/a") + "</td>"
+	    (mgr->has_cost ? mgr->format_cost (tot_cost) : VALUE_NA) + "</td>"
 	    "<td " REST_CELLS ">" +
 	    (mgr->has_cost ?
-	     mgr->format_cost (tot_count && tot_cost / tot_count) : "n/a") +
+	     mgr->format_cost (tot_count && tot_cost / tot_count) : VALUE_NA) +
 	    "</td>"
 	    "<td " REST_CELLS ">" +
 	    (mgr->has_cost ?
-	     format_hit_rate (tot_cost_hits, tot_cost_misses) : "n/a") + "</td>"
+	     format_hit_rate (tot_cost_hits, tot_cost_misses) : VALUE_NA) + "</td>"
 	    "</tr>\n";
 	mgr_stats += "</table>\n";
       }
@@ -389,6 +394,97 @@ cache miss is followed by the addition of a new cache entry.") +
 	"<td " REST_CELLS ">" + totale + "</td>"
 	"<td " REST_CELLS ">" + Roxen.sizetostring(totalm) + "</td></tr>\n";
     res += "</table>\n";
+  }
+
+  // ---
+
+  {
+    int tot_entries = 0;
+    int tot_hits = 0;
+    int tot_misses = 0;
+    int tot_current_size = 0;
+    int tot_max_size = 0;
+
+    string prot_cache_desc =
+      "<p>" +
+      LOCALE(0, "RAM-based cache per configuration that stores "
+	     "commonly requested files. Note that entries here don't "
+	     "count toward the aforementioned size limit for RAM caches in "
+	     "general, but instead is bound by a specific setting in each "
+	     "configuration.") +
+      "</p>";
+    
+    res +=
+      "<br/><h3>" + LOCALE(0, "Protocol Cache") + "</h3>" +
+      prot_cache_desc +
+      "<table " TABLE_ATTRS ">\n"
+      "<tr " HDR_TR_ATTRS ">"
+      "<th " FIRST_CELL ">" + LOCALE(0, "Configuration") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(295, "Entries") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(387, "Lookups") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(67, "Hit rate") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(64, "Size") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(388, "Size/entry") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(0, "Max file size") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(0, "Max size") + "</th>"
+      "</tr>";
+    
+    array(Configuration) configs = roxen->configurations;
+    string wiz_id =
+      (id->real_variables->_roxen_wizard_id || ({ "" }) )[0];
+    string wiz_quoted = Roxen.html_encode_string(wiz_id || "");
+    sort(configs->name, configs);
+    foreach (configs; int row; Configuration c) {
+      string conf_link =
+	"<a href='../sites/site.html/" +
+	Roxen.http_encode_url(c->name) +
+	"/?section=Cache&_roxen_wizard_id=" + wiz_quoted + "'>" +
+	Roxen.html_encode_string(c->query_name()) +
+	"</a>";
+      mapping stats = c->datacache && c->datacache->get_cache_stats();
+      if (!stats)
+	continue;
+      int lookups = stats->hits + stats->misses;
+      string hit_rate = format_hit_rate(stats->hits, stats->misses);
+      string entry_size =
+	stats->entries ?
+	Roxen.sizetostring(1.0 * stats->current_size / stats->entries) :
+	VALUE_NA;
+      res +=
+	"<tr " BODY_TR_ATTRS (row) ">"
+	"<td " FIRST_CELL ">" + conf_link + "</td>"
+	"<td " REST_CELLS ">" + stats->entries + "</td>"
+	"<td " REST_CELLS ">" + lookups + "</td>"
+	"<td " REST_CELLS ">" + hit_rate + "</td>"
+	"<td " REST_CELLS ">" + Roxen.sizetostring(stats->current_size) + "</td>"
+	"<td " REST_CELLS ">" + entry_size + "</td>"
+	"<td " REST_CELLS ">" + Roxen.sizetostring(stats->max_file_size) + "</td>"
+	"<td " REST_CELLS ">" + Roxen.sizetostring(stats->max_size) + "</td>"
+	"</tr>";
+
+      //  Aggregate stats
+      tot_entries += stats->entries;
+      tot_hits += stats->hits;
+      tot_misses += stats->misses;
+      tot_current_size += stats->current_size;
+      tot_max_size += stats->max_size;
+    }
+    
+    res +=
+      "<tr " FTR_TR_ATTRS ">"
+      "<td " FIRST_CELL "><b>" + LOCALE(178, "Total") + "</b></td>"
+      "<td " REST_CELLS ">" + tot_entries + "</td>"
+      "<td " REST_CELLS ">" + (tot_hits + tot_misses) + "</td>"
+      "<td " REST_CELLS ">" + format_hit_rate(tot_hits, tot_misses) + "</td>"
+      "<td " REST_CELLS ">" + Roxen.sizetostring(tot_current_size) + "</td>"
+      "<td " REST_CELLS ">" +
+      (tot_entries ?
+       Roxen.sizetostring((float) tot_current_size / tot_entries) : VALUE_NA) +
+      "</td>"
+      "<td " REST_CELLS ">" VALUE_NA "</td>"
+      "<td " REST_CELLS ">" + Roxen.sizetostring(tot_max_size) + "</td>"
+      "</tr>"
+      "</table>";
   }
 
   // ---

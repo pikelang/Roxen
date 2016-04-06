@@ -229,6 +229,16 @@ class DataCache
 
   int hits, misses;
 
+  mapping get_cache_stats()
+  {
+    return ([ "current_size"  : current_size,
+	      "max_size"      : max_size,
+	      "max_file_size" : max_file_size,
+	      "entries"       : sizeof(cache),
+	      "hits"          : hits,
+	      "misses"        : misses ]);
+  }
+    
   void flush()
   {
 #ifndef RAM_CACHE_NO_RELOAD_FLUSH
