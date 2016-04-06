@@ -32,12 +32,6 @@ constant thread_safe=1;
 # define QUOTA_WERR(X)
 #endif
 
-#if constant(System.normalize_path)
-#define NORMALIZE_PATH(X)	System.normalize_path(X)
-#else /* !constant(System.normalize_path) */
-#define NORMALIZE_PATH(X)	(X)
-#endif /* constant(System.normalize_path) */
-
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = LOCALE(51,"File systems: Normal File system");
 LocaleString module_doc =
@@ -49,6 +43,65 @@ constant module_unique = 0;
 // Statistics.
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
+
+#if constant(System.normalize_path)
+// NB: System.normalize_path() throws errors on nonexisting files.
+protected string normalize_path(string path)
+{
+  // Get rid of segments with ".." and ".".
+  path = combine_path(path);
+
+  if (Stdio.exist(path)) {
+    // The easy case.
+    return System.normalize_path(path);
+  }
+
+  if (has_suffix(path, "/") && Stdio.exist(path + ".")) {
+    // The almost easy case.
+    path = System.normalize_path(path + ".");
+#ifdef __NT__
+    path += "\\";
+#else
+    path += "/";
+#endif
+    return path;
+  }
+
+  // Try finding a valid prefix with binary search.
+  array(string) a = path/"/";
+  int lo, hi = sizeof(a);
+#ifdef __NT__
+  if (has_suffix(a[0], ":")) {
+    // Avoid statting devices.
+    lo = 1;
+  }
+#endif
+  while (lo < hi) {
+    int m = (lo + hi)/2;
+    if (Stdio.exist(a[..m] * "/")) {
+      if (lo == m) break;
+      lo = m;
+    } else {
+      hi = m;
+    }
+  }
+
+  // NB: If hi is zero then the entire path is invalid,
+  //     so no need to call System.normalize_path().
+  if (hi) {
+    path = System.normalize_path(a[..lo] * "/") + "/" + (a[lo+1..] * "/");
+  }
+
+#ifdef __NT__
+  return replace(path, "/", "\\");
+#else
+  return path;
+#endif
+}
+#define NORMALIZE_PATH(X)	normalize_path(X)
+#else /* !constant(System.normalize_path) */
+#define NORMALIZE_PATH(X)	(X)
+#endif /* constant(System.normalize_path) */
 
 protected mapping http_low_answer(int errno, string data, string|void desc)
 {
@@ -281,7 +334,11 @@ void start()
     }) {
     report_error(LOCALE(1, "Path normalization of %s: %s failed.\n"),
 		 path, mountpoint);
+#ifdef __NT__
+    normalized_path = replace(path, "/", "\\");
+#else
     normalized_path = path;
+#endif
   }
 #else /* !constant(System.normalize_path) */
   normalized_path = path;
@@ -474,9 +531,6 @@ protected string low_real_path(string f, RequestID id)
 	// Restore the "/" stripped by encode_path() on NT.
 	f += "/";
       }
-
-      /* Adjust not_query */
-      id->not_query = mountpoint + f;
 #endif /* constant(System.normalize_path) */
     }) {
     errors++;
