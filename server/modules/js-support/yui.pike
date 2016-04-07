@@ -182,6 +182,7 @@ mixed find_file( string f, RequestID id )
 			   sprintf ("public, max-age=%d", EXPIRE_TIME));
 
   RAISE_CACHE(EXPIRE_TIME);
+  PROTO_CACHE();
   return m;
 }
 

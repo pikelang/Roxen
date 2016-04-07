@@ -103,6 +103,7 @@ mapping|void filter(mapping res, RequestID id)
     }
 
     RAISE_CACHE(expire_time);
+    PROTO_CACHE();
 
     id->misc->vary = (<>);
     return res;
