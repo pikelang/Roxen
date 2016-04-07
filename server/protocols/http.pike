@@ -3371,10 +3371,12 @@ void got_data(mixed fooid, string s, void|int chained)
 	return;
       }
 
+    int allow_protocache_lookup = 0;
     if (rawauth)
     {
       /* Need to authenticate with the configuration */
       NO_PROTO_CACHE();
+      allow_protocache_lookup = 1;
       array(string) y = rawauth / " ";
       realauth = 0;
       auth = 0;
@@ -3413,7 +3415,7 @@ void got_data(mixed fooid, string s, void|int chained)
 #ifdef RAM_CACHE
     TIMER_START(cache_lookup);
     array cv;
-    if(misc->cacheable && !misc->no_proto_cache &&
+    if(misc->cacheable && (!misc->no_proto_cache || allow_protocache_lookup) &&
        (cv = conf->datacache->get(misc->prot_cache_key, this)) )
     {
       MY_TRACE_ENTER(sprintf("Checking entry %O", misc->prot_cache_key));

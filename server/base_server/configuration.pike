@@ -216,7 +216,7 @@ mapping(RequestID:mapping) connection_get( )
 string name = roxen->bootstrap_info->get();
 
 //! The hierarchal cache used for the HTTP protocol cache.
-class DataCache
+class DataCacheImpl
 {
   protected typedef array(string|mapping(string:mixed))|string|
 		    function(string, RequestID:string|int) EntryType;
@@ -506,6 +506,59 @@ class DataCache
     init_from_variables();
   }
 }
+
+
+class DataCache {
+  inherit DataCacheImpl;
+
+  constant AUTH_PUBL = "AUTH |";
+  constant PUBL_ONLY = "";
+  
+  void expire_entry(string key_prefix, RequestID|void id)
+  {
+    //  Expire both authenticated and non-authenticated entries
+    ::expire_entry(AUTH_PUBL + key_prefix, id);
+    ::expire_entry(PUBL_ONLY + key_prefix, id);
+  }
+  
+  void set(string url, string data, mapping meta, int expire, RequestID id)
+  {
+    if (id->rawauth) {
+      //  If this is an authenticated request that is flagged as cacheable
+      //  we should offer it to all future requests regardless of auth
+      //  status.
+      //
+      //  We could technically drop the PUBL_ONLY copy, but expiring it may
+      //  kill subresources that have been built earlier so let's keep it
+      //  in two places. (The data strings are shared anyway.)
+      ::set(AUTH_PUBL + url, data, meta, expire, id);
+      ::set(PUBL_ONLY + url, data, meta, expire, id);
+    } else {
+      //  If no authentication is present we only set/replace the PUBL_ONLY
+      //  entry. We don't need to expire the AUTH entry since it will either
+      //  be valid or expired manually from the outside.
+      ::set(PUBL_ONLY + url, data, meta, expire, id);
+    }
+  }
+  
+  array(string|mapping(string:mixed)) get(string url, RequestID id)
+  {
+    //  Only non-authenticated requests may search the PUBL_ONLY compartment.
+    //  If we don't get a hit we'll proceed to the second get() below, but
+    //  we then need to adjust the failed lookup statistics to not count
+    //  this twice.
+    mixed res = UNDEFINED;
+    if (!id->rawauth) {
+      res = ::get(PUBL_ONLY + url, id);
+      if (!res)
+	misses--;
+    }
+    
+    //  Anyone can search the AUTH_PUBL compartment
+    return res || ::get(AUTH_PUBL + url, id);
+  }
+}
+
 
 #include "rxml.pike";
 constant    store = roxen.store;
