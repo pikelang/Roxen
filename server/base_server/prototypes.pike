@@ -340,8 +340,6 @@ class Configuration
 
   class DataCache
   {
-    int current_size, max_size, max_file_size;
-    int hits, misses;
     void flush();
     void expire_entry(string url, RequestID id);
     void set(string url, string data, mapping meta, int expire, RequestID id);
@@ -3235,7 +3233,7 @@ class RequestID
     if (!misc->etag && file->len &&
 	(file->data || file->file) &&
 	file->error == 200 && (<"HEAD", "GET">)[method] &&
-	(file->len < conf->datacache->max_file_size)) {
+	(file->len < conf->datacache->get_cache_stats()->max_file_size)) {
       string data = "";
       if (file->file) {
 	data = file->file->read(file->len);

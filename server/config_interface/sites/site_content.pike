@@ -782,30 +782,27 @@ string|mapping parse( RequestID id )
 	 "<td valign=top>"
 	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='100%'>\n";
 
-       int total = conf->datacache->hits+conf->datacache->misses;
-
-       if( !total )
-         total = 1;
-
+       mapping stats = conf->datacache->get_cache_stats();
+       int total = stats->hits + stats->misses;
        res += 
            sprintf("<tr><td><b>" + LOCALE(293, "Hits") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d</td>"
-		   "<td align='left'>%%</td></tr>\n",
-                   conf->datacache->hits,
-                   conf->datacache->hits*100 / total );
+		   "<td align='right'>%d</td><td align='right'>(%d</td>"
+		   "<td align='left'>%%)</td></tr>\n",
+                   stats->hits,
+                   total ? (stats->hits * 100 / total) : 0);
        res += 
            sprintf("<tr><td><b>" + LOCALE(294, "Misses") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d</td>"
-		   "<td align='left'>%%</td></tr>\n",
-                   conf->datacache->misses,
-                   conf->datacache->misses*100 / total );
+		   "<td align='right'>%d</td><td align='right'>(%d</td>"
+		   "<td align='left'>%%)</td></tr>\n",
+                   stats->misses,
+                   total ? (stats->misses * 100 / total) : 0);
 
        res += 
            sprintf("<tr><td><b>" + LOCALE(295, "Entries") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d</td>"
-		   "<td align='left'>Kb</td></tr>\n",
-                   sizeof( conf->datacache->cache ),
-                   (conf->datacache->current_size / 1024 ) );
+		   "<td align='right'>%d</td><td align='right'>(%d</td>"
+		   "<td align='left'>kB)</td></tr>\n",
+                   stats->entries,
+                   stats->current_size / 1024);
        
        res += "</table>\n";
                    

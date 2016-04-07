@@ -221,13 +221,13 @@ class DataCache
   protected typedef array(string|mapping(string:mixed))|string|
 		    function(string, RequestID:string|int) EntryType;
 
-  mapping(string:EntryType) cache = ([]);
+  protected mapping(string:EntryType) cache = ([]);
 
-  int current_size;
-  int max_size;
-  int max_file_size;
+  protected int current_size;
+  protected int max_size;
+  protected int max_file_size;
 
-  int hits, misses;
+  protected int hits, misses;
 
   mapping get_cache_stats()
   {
@@ -3533,27 +3533,49 @@ int start(int num)
 			 ({
 			   UNDEFINED,
 			   SNMP.Counter(lambda()
-					{ return datacache->hits + datacache->misses; },
+					{
+					  mapping stats =
+					    datacache->get_cache_stats();
+					  return stats->hits + stats->misses;
+					},
 			     "protCacheLookups",
 			     "Number of protocol cache lookups."),
 			   SNMP.Counter(lambda()
-					{ return datacache->hits; },
+					{
+					  return
+					    datacache->get_cache_stats()->hits;
+					},
 			     "protCacheHits",
 			     "Number of protocol cache hits."),
 			   SNMP.Counter(lambda()
-					{ return datacache->misses; },
+					{
+					  return
+					    datacache->get_cache_stats()->
+					    misses;
+					},
 			     "protCacheMisses",
 			     "Number of protocol cache misses."),
 			   SNMP.Gauge(lambda()
-				      { return sizeof(datacache->cache); },
+				      {
+					return
+					  datacache->get_cache_stats()->entries;
+				      },
 			     "protCacheEntries",
 			     "Number of protocol cache entries."),
 			   SNMP.Gauge(lambda()
-				      { return datacache->max_size/1024; },
+				      {
+					return
+					  datacache->get_cache_stats()->
+					  max_size / 1024;
+				      },
 			     "protCacheMaxSize",
 			     "Maximum size of protocol cache in KiB."),
 			   SNMP.Gauge(lambda()
-				      { return datacache->current_size/1024; },
+				      {
+					return
+					  datacache->get_cache_stats()->
+					  current_size / 1024;
+				      },
 			     "protCacheCurrSize",
 			     "Current size of protocol cache in KiB."),
 			 })

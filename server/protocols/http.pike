@@ -2760,7 +2760,7 @@ void send_result(mapping|void result)
       if ((<"HEAD","GET">)[method]) {
 	if( file->len>0 && // known length.
 	    ((file->len + sizeof(head_string)) < 
-	     conf->datacache->max_file_size)
+	     conf->datacache->get_cache_stats()->max_file_size)
 	    // vvv Relying on the interpreter lock from here.
 	    && misc->cachekey )
 	{
