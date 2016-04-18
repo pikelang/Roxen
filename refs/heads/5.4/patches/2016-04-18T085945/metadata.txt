@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Path normalization fixes
 from: b3ced320fee1328c41dae15f54545c276d58f7a3
 to: 0974d5668f09f83da41d6fdcbf8ca633a2102cf8
 originator: wellhardh@roxen.com
