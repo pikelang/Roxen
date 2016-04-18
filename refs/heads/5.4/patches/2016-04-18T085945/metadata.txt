@@ -1,0 +1,33 @@
+subject: Roxen 5.4: Multiple fixes:
+from: b3ced320fee1328c41dae15f54545c276d58f7a3
+to: 0974d5668f09f83da41d6fdcbf8ca633a2102cf8
+originator: wellhardh@roxen.com
+depends: 2016-04-04T095752
+restart: true
+
+Multiple fixes:
+
+  * Filesystem: Improved path normalization.
+    
+    Make sure that the cached search path ends with a directory separator.
+    
+    Fixes errors on NT (where roxen_path() strips the separator).
+
+  * Filesystem: Added wrapper for System.normalize_path().
+    
+    Potential fix for more issues on NT.
+
+  * Filesystem: Improved wrapper for normalize_path().
+    
+    Attempt to handle the case where the entire path is invalid.
+    
+    Potential fix for more issues on NT.
+
+  * Filesystem [NT]: More path normalization fixes.
+
+  * Filesystem: Adjusting id->not_query is not a good idea.
+    
+    The path given to low_real_path() doesn't necessarily have
+    any relation to id->not_query...
+    
+    For some reason this triggered testsuite failures only on NT.
