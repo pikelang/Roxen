@@ -1260,7 +1260,9 @@ class TagDebug {
       }
 
       if (args->werror) {
-        string msg = (({ args->werror, content, result }) - ({ 0 }) - ({ "" })) * "\n";
+        string msg = (({ args->werror, content, result }) -
+                      ({ 0 }) - ({ RXML.nil }) - ({ "" })) * "\n";
+
 	msg = replace(msg,"\\n","\n");
         result = "";
 	report_debug ("<debug>: [%s] %s:\n"
