@@ -1,0 +1,8 @@
+subject: Roxen 6.0: rxmltags: Fixed a bug in <debug/> which could raise an internal server error if content or result was RXML.nil.
+from: 3e99dce761c4b7a95662f0519da8e646dc6209cc
+to: 5cb4e6ec1dde3e2a3682115615fac2ff1c2e5599
+originator: wellhardh@roxen.com
+depends: roxen/6.0.130
+restart: true
+
+rxmltags: Fixed a bug in <debug/> which could raise an internal server error if content or result was RXML.nil.
