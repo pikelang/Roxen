@@ -3107,6 +3107,8 @@ class Patcher
   Protocols.HTTP.Query try_get_url(Standards.URI uri, int timeout,
 				   string|void etag, string|void last_modified)
   {
+    write_mess("Preparing to fetch %s.\n", (string)uri);
+
     mapping(string:string) request_headers = ([]);
 
     if (etag) {
@@ -3135,9 +3137,17 @@ class Patcher
 	// Enable verification of the certificate chain.
 	SSL.Context ctx = con->context = SSL.Context();
 	ctx->trusted_issuers_cache = Standards.X509.load_authorities();
-	ctx->verify_certificates = 1;
-	ctx->require_trust = 1;
-	ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
+	if (sizeof(ctx->trusted_issuers_cache)) {
+	  ctx->verify_certificates = 1;
+	  ctx->require_trust = 1;
+	  ctx->auth_level = SSL.Constants.AUTHLEVEL_require;
+	} else {
+	  write_err("Failed to find set of root certificate authorities.\n"
+		    "Proceeding with certificate validation turned off.\n");
+	  ctx->verify_certificates = 0;
+	  ctx->require_trust = 0;
+	  ctx->auth_level = SSL.Constants.AUTHLEVEL_none;
+	}
       }
 
 #ifdef ENABLE_OUTGOING_PROXY
