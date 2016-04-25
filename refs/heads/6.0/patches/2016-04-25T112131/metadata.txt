@@ -1,0 +1,8 @@
+subject: Roxen 6.0: RoxenPatch: Complain but proceed when the CA list is empty.
+from: 5cb4e6ec1dde3e2a3682115615fac2ff1c2e5599
+to: a0adee25924454bb388a63cdc6d054482fcd5764
+originator: wellhardh@roxen.com
+depends: 2016-04-22T141702
+restart: true
+
+RoxenPatch: Complain but proceed when the CA list is empty.
