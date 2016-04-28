@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.117 2009/10/13 11:55:27 mast Exp $
+// $Id$
 
 #include <module.h>
 #include <roxen.h>
@@ -1530,7 +1530,7 @@ class ModuleChoice
 
   protected string _title(RoxenModule val)
   {
-    return val?val->module_name:"";
+    return val?Roxen.get_modfullname(val):"";
   }
 
   RoxenModule transform_from_form(string module_id, mapping|void v)
