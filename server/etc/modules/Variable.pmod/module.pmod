@@ -1144,6 +1144,10 @@ class MultipleChoice
 
   protected int(0..1) multiselect;
 
+  //! Identifier to use to detect presence of
+  //! support for multiselect mode.
+  constant multiselect_supported = 1;
+
   string diff( int render )
   {
     if(!render) {
