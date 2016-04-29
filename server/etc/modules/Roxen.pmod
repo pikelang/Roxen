@@ -5156,9 +5156,9 @@ void set_cookie( RequestID id,
                  string value, 
                  int|void expire_time_delta, 
                  string|void domain, 
-                 int(1..1)|string|void path,
-                 string|void secure,
-                 string|void httponly)
+                 int(0..1)|string|void path,
+                 int(0..1)|string|void secure,
+                 int(0..1)|string|void httponly)
 //! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
 //! header in the response that will be made from @[id].
 //!
