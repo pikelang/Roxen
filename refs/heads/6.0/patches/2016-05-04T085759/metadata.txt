@@ -1,0 +1,11 @@
+subject: Roxen 6.0: API [Roxen.set_cookie]: Fixed the function type.
+from: a0adee25924454bb388a63cdc6d054482fcd5764
+to: 81a4917126f4abf1ed2bd723dedf89908ed2f0f3
+originator: wellhardh@roxen.com
+depends: 2016-04-25T112131
+restart: true
+
+API [Roxen.set_cookie]: Fixed the function type.
+
+The last two arguments to Roxen.set_cookie() are flags, and should
+thus accept the canonical true value (ie 1).
