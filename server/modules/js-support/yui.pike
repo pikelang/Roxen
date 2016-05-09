@@ -152,7 +152,12 @@ mixed handle_combo(RequestID id)
   foreach(id->query / "&" - ({ "" }), string f) {
     mixed fid = low_find_file(f, id);
 
-    if (!fid) continue;
+    if (!fid) {
+#ifdef DEBUG
+      report_warning("YUI combo loader failed to find file %O\n", f);
+#endif
+      continue;
+    }
 
     if (fid->file) {
       data += fid->file->read();
