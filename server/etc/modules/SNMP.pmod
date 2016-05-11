@@ -29,8 +29,9 @@ class Updateable(function(:mixed) fun)
     if (fun) {
       mixed val = fun();
       if (undefinedp (val)) {
-	werror ("SNMP: Got undefined value from callback\n%s\n",
-		describe_backtrace (backtrace()));
+	werror("SNMP: Got undefined value from callback %O.\n"
+	       "%s\n",
+	       fun, describe_backtrace(backtrace()));
       }
       this_object()->init (val);
       this_object()->der = UNDEFINED;
