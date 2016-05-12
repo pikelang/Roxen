@@ -1,0 +1,10 @@
+subject: Roxen 6.0: SNMP: Improved diagnostic message.
+from: 81a4917126f4abf1ed2bd723dedf89908ed2f0f3
+to: 3cca3c67be99a23f97b5a5639299bded2f93d4bf
+originator: wellhardh@roxen.com
+depends: 2016-05-04T085759
+restart: true
+
+SNMP: Improved diagnostic message.
+
+This should make it easier to catch bugs like [bug 7686].
