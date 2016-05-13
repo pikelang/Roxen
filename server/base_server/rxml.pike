@@ -111,6 +111,9 @@ protected class RXMLTagSet
 	misc->language = defines->language;
 	misc->present_languages = defines->present_languages;
 
+        if (defines->theme_language)
+          misc->theme_language = defines->theme_language;
+
 	id->misc->defines = misc;
       }
       else
