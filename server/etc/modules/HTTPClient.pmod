@@ -110,6 +110,10 @@ public Result do_safe_method(string http_method,
                              void|Arguments args,
                              void|bool async)
 {
+  if (!args) {
+    args = Arguments();
+  }
+
   Result res;
   Session s = Session();
   object /* Session.Request */ qr;
