@@ -5,5 +5,8 @@
     "gulp-order": "^1.1.1",
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^1.5.3"
+  },
+  "scripts": {
+    "postinstall": "touch node_modules/.nomodules"
   }
 }
