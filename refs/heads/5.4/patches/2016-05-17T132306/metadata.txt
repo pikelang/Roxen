@@ -1,0 +1,19 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 0974d5668f09f83da41d6fdcbf8ca633a2102cf8
+to: d03c941efc38b9424576b6b6978090639eeda3bd
+originator: wellhardh@roxen.com
+depends: 2016-04-18T085945
+restart: true
+
+Multiple fixes:
+
+  * rxmltags: Fixed a bug in <debug/> which could raise an internal server error if content or result was RXML.nil.
+
+  * API [Roxen.set_cookie]: Fixed the function type.
+    
+    The last two arguments to Roxen.set_cookie() are flags, and should
+    thus accept the canonical true value (ie 1).
+
+  * Start script: Use a subshell for the restart.
+    
+    Fixes [bug 7689].
