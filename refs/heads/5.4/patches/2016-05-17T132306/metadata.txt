@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Fix in degug tag, type fix, start script
 from: 0974d5668f09f83da41d6fdcbf8ca633a2102cf8
 to: d03c941efc38b9424576b6b6978090639eeda3bd
 originator: wellhardh@roxen.com
