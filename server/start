@@ -1154,7 +1154,7 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   fi
   # Avoid duplicate start scripts if we got a pid file.
   if [ -f "$pidfile" ]; then
-    {
+    (
       if read roxenpid && read scriptpid; then
         if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
 	  if [ "$stop"x = x ]; then
@@ -1174,7 +1174,7 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
 	  exit 1
 	fi
       fi
-    } < "$pidfile" || {
+    ) < "$pidfile" || {
       # NB: The exits above just exit the subshell used for the
       #     redirect. Adjust the exit codes and exit for real.
       [ "$?" = "2" ];
