@@ -1,4 +1,4 @@
-subject: Roxen 6.0:   * Start script: Use a subshell for the restart.
+subject: Roxen 6.0: Start script: Use a subshell for the restart.
 from: 3cca3c67be99a23f97b5a5639299bded2f93d4bf
 to: f2e9f586967c2458a62daad3acb1d323406d3971
 originator: wellhardh@roxen.com
@@ -8,5 +8,3 @@ restart: true
   * Start script: Use a subshell for the restart.
     
     Fixes [bug 7689].
-
-  * Version bumped to 6.0.131 by buildsystem.
