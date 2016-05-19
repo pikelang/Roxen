@@ -1387,15 +1387,15 @@ class MultipleChoice
       // Make an entry for the current values if they're not in the list,
       // to ensure that the value doesn't change as a side-effect by
       // another change.
-      foreach(current, mixed elem )
+      foreach(current, string value)
       {
 	mapping m = ([
 	  "type": "checkbox",
 	  "name": path(),
-	  "value": _name(elem),
+	  "value": value,
 	  "checked": "checked",
 	]);
-	string title = sprintf(LOCALE(332,"(keep stale value %s)"), current);
+	string title = sprintf(LOCALE(332,"(stale value %s)"), value);
 	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
 		       Roxen.make_tag( "input", m),
 		       Roxen.html_encode_string(title));
@@ -1650,7 +1650,7 @@ class ModuleChoice
   protected string|array(string) default_id;
   protected int automatic_dependency;
 
-  int low_set(RoxenModule to)
+  int low_set(array(RoxenModule)|RoxenModule to)
   {
     array(RoxenModule)|RoxenModule old = changed_values[_id];
     if (!old) {
@@ -1670,10 +1670,16 @@ class ModuleChoice
 	changed_values[_id] = old;
       }
     }
-    if (to == old) return 0;
+    if (equal (to, old)) return 0;
     changed_values[_id] = to;
-    if (module_id == _name(to)) return 0;	// Reloaded module or similar.
-    module_id = _name(to);
+    if (multiselect) {
+      array(string) names = map (to, _name);
+      if (equal (module_id, names)) return 0;	// Reloaded module or similar.
+      module_id = names;
+    } else {
+      if (module_id == _name(to)) return 0;	// Reloaded module or similar.
+      module_id = _name(to);
+    }
     if( get_changed_callback() )
       get_changed_callback()( this_object() );
     return 1;
@@ -1698,7 +1704,11 @@ class ModuleChoice
 	  mods[i] = mod;
 	}
       }
-      to = mods;
+      // FIXME: Modules that have disappeared from the configuration
+      // will be silently removed here. To fix that, "to" must be able
+      // to hold a mix of RoxenModule and string, and low_set must be
+      // updated accordingly. Also, see query().
+      to = mods - ({ 0 });
     } else if (stringp(to)) {
       module_id = to;
       RoxenModule mod = transform_from_form (to);
@@ -1723,7 +1733,7 @@ class ModuleChoice
 	// The module might have been reloaded.
 	// Try locating it again.
 	if (multiselect) {
-	  res = map(module_id, transform_from_form);
+	  res = map(module_id, transform_from_form) - ({ 0 });
 	} else {
 	  res = transform_from_form(module_id);
 	}
