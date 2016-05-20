@@ -9224,6 +9224,8 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
+// NB: The page scope is implemented in Roxen.pmod.
+
 "&page;":#"<desc type='scope'><p><short>
  This scope contains information specific to this page.</short></p>
 </desc>",
@@ -9271,6 +9273,10 @@ constant tagdoc=([
 "&page.url;":#"<desc type='entity'><p>
  The absolute path for this file from the web server's root
  view including query variables.
+</p></desc>",
+
+"&page.post-data;":#"<desc type='entity'><p>
+ The raw data of the POST request (if any).
 </p></desc>",
 
 "&page.last-true;":#"<desc type='entity'><p>
