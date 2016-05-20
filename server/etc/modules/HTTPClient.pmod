@@ -37,7 +37,7 @@
 //! HTTPClient.async_get("http://domain.com", args);
 //! @endcode
 
-//#define HTTP_CLIENT_DEBUG
+#define HTTP_CLIENT_DEBUG
 
 #ifdef HTTP_CLIENT_DEBUG
 # define TRACE(X...)werror("%s:%d: %s",basename(__FILE__),__LINE__,sprintf(X))
@@ -127,37 +127,33 @@ public Result do_safe_method(string http_method,
     q = Thread.Queue();
   }
 
+  function(Result:void) cb = lambda (Result r) {
+    TRACE("Got callback: %O\n", r);
+    res = r;
+    q && q->write("@");
+    if (async) {
+      if (r->ok && args->on_success) {
+        args->on_success(res);
+      }
+      else if (!r->ok && args->on_failure) {
+        args->on_failure(r);
+      }
+      qr = 0;
+      s = 0;
+    }
+  };
+
   qr = s->async_do_method_url(http_method, uri,
                               args->variables,
                               args->data,
                               args->headers,
-                              0, /* headers received callback */
-                              lambda (Result ok) {
-                                res = ok;
-                                q && q->write("@");
-                                if (async) {
-                                  if (args->on_success) {
-                                    args->on_success(res);
-                                  }
-                                  qr = 0;
-                                  s = 0;
-                                }
-                              },
-                              lambda (Result fail) {
-                                res = fail;
-                                q && q->write("@");
-                                if (async) {
-                                  if (args->on_failure) {
-                                    args->on_failure(res);
-                                  }
-                                  qr = 0;
-                                  s = 0;
-                                }
-                              },
+                              0,  // headers received callback
+                              cb, // ok callback
+                              cb, // fail callback
                               ({}));
 
   if (!query_has_maxtime()) {
-    TRACE("External timeout\n");
+    TRACE("No maxtime in Protocols.HTTP.Query. Set external max timeout\n");
     co_maxtime = call_out(lambda () {
       TRACE("Timeout callback: %O\n", qr);
 
@@ -218,7 +214,7 @@ protected bool query_has_maxtime()
   Protocols.HTTP.Query q = Protocols.HTTP.Query();
   _query_has_maxtime = (int) has_index(q, "maxtime");
   destruct(q);
-  return _query_has_maxtime;
+  return _query_has_maxtime == 1;
 }
 
 
@@ -229,9 +225,6 @@ class Arguments
 
   //! Request timeout
   int maxtime;
-
-  //! The URL to fetch
-  Protocols.HTTP.Session.URL url;
 
   //! Additional request headers
   mapping(string:string) headers;
@@ -250,7 +243,7 @@ class Arguments
 
   //! If @[args] is given the indices that match any of this object's
   //! members will set those object members to the value of the
-  //! corresponding mapping index.
+  //! corresponding mapping member.
   protected void create(void|mapping(string:mixed) args)
   {
     if (args) {
@@ -392,6 +385,29 @@ protected class Session
                               function callback_fail,
                               array callback_arguments)
   {
+    if (stringp(url)) {
+      url = Standards.URI(url);
+    }
+
+    // Due to a bug in Protocols.HTTP.Session which is fixed in Pike 8.1
+    // but not yet in 8.0. (2016-05-20)
+    if (!extra_headers || !extra_headers->host || !extra_headers->Host) {
+      extra_headers = extra_headers || ([]);
+
+      if (url->scheme == "http" && url->port != 80) {
+        extra_headers->host = url->host + ":" + url->port;
+      }
+      else if (url->scheme == "https" && url->port != 443) {
+        extra_headers->host = url->host + ":" + url->port;
+      }
+
+      if (!sizeof(extra_headers)) {
+        extra_headers = 0;
+      }
+
+      TRACE("Host header set?: %O\n", extra_headers);
+    }
+
     return ::async_do_method_url(method, url, query_variables, data,
                                  extra_headers, callback_headers_ok,
                                  callback_data_ok, callback_fail,
@@ -403,9 +419,9 @@ protected class Session
   {
     inherit parent::Request;
 
-    protected void async_fail(object q)
+    protected void async_fail(SessionQuery q)
     {
-      TRACE("fail q: %O\n", q);
+      TRACE("fail q: %O -> %O\n", q, ::url_requested);
 
       mapping ret = ([
         "status"      : q->status,
@@ -414,6 +430,8 @@ protected class Session
         "headers"     : copy_value(q->headers),
         "url"         : ::url_requested
       ]);
+
+      TRACE("Ret: %O\n", ret);
 
       // clear callbacks for possible garbation of this Request object
       con->set_callbacks(0, 0);
@@ -428,7 +446,7 @@ protected class Session
     }
 
 
-    protected void async_ok(object q)
+    protected void async_ok(SessionQuery q)
     {
       TRACE("async_ok: %O -> %s!\n", q->host, ::url_requested);
 
@@ -438,10 +456,11 @@ protected class Session
           con->headers->location && follow_redirects)
       {
         Standards.URI loc = Standards.URI(con->headers->location,url_requested);
-        TRACE("New location: %O\n", loc);
+        TRACE("New location: %O -> %O (%O)\n", url_requested, loc, con->headers);
 
         if (loc->scheme == "http" || loc->scheme == "https") {
-          destroy(); // clear
+          con->set_callbacks(0, 0);
+          ::destroy(); // clear
           follow_redirects--;
           do_async(prepare_method("GET", loc));
           return;
@@ -484,7 +503,7 @@ protected class Session
     void destroy()
     {
       TRACE("Destructor called in Request: %O\n", ::url_requested);
-      ::set_callbacks(0, 0, 0, 0);
+      ::set_callbacks(0, 0, 0);
       ::destroy();
     }
   }
