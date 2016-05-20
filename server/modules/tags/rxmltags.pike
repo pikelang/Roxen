@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.526 2006/12/22 20:36:12 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6227,6 +6227,8 @@ constant tagdoc=([
 
 //----------------------------------------------------------------------
 
+// NB: The page scope is implemented in Roxen.pmod.
+
 "&page;":#"<desc type='scope'><p><short>
  This scope contains information specific to this page.</short></p>
 </desc>",
@@ -6270,6 +6272,10 @@ constant tagdoc=([
 "&page.url;":#"<desc type='entity'><p>
  The absolute path for this file from the web server's root
  view including query variables.
+</p></desc>",
+
+"&page.post-data;":#"<desc type='entity'><p>
+ The raw data of the POST request (if any).
 </p></desc>",
 
 "&page.last-true;":#"<desc type='entity'><p>

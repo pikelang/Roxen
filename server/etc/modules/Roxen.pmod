@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.224 2007/01/03 12:47:45 grubba Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -3697,6 +3697,14 @@ int get_ssl_strength(string ignored, RequestID id)
   return id->my_fd->query_connection()->session->cipher_spec->key_bits;
 }
 
+string hash_query_data(string ignored, RequestID id)
+{
+  // Some common cases.
+  if (!id->data) return 0;
+  if (id->data == "") return "";
+  return Crypto.SHA1.hash(id->data);
+}
+
 class ScopePage {
   inherit RXML.Scope;
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
@@ -3729,6 +3737,9 @@ class ScopePage {
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
       case "url": return ENCODE_RXML_TEXT(c->id->raw_url, type);
+      case "post-data":
+	c->id->register_vary_callback(0, hash_query_data);
+	return c->id->data ? ENCODE_RXML_TEXT(c->id->data, type) : RXML.nil;
       case "last-true": return ENCODE_RXML_INT(c->misc[" _ok"], type);
       case "language": return ENCODE_RXML_TEXT(c->misc->language, type);
       case "scope": return ENCODE_RXML_TEXT(c->current_scope(), type);
@@ -3762,7 +3773,7 @@ class ScopePage {
     if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
       ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path", "query",
-	 "url", "last-true", "language", "scope", "filesize", "self",
+	 "url", "post-data", "last-true", "language", "scope", "filesize", "self",
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
