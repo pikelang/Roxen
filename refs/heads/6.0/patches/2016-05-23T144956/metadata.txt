@@ -1,0 +1,14 @@
+subject: Roxen 6.0: Multiple fixes:
+from: f2e9f586967c2458a62daad3acb1d323406d3971
+to: 8b3c72a687c190622f4d5cff32121e9fd05c2b86
+originator: wellhardh@roxen.com
+depends: roxen/6.0.131|2016-05-19T154031
+restart: true
+
+Multiple fixes:
+
+  * Version bumped to 6.0.132 by buildsystem.
+
+  * Version bumped to 6.0.133 by buildsystem.
+
+  * RXML: Added entity &page.post-data;. Fixes [roxen.com #26989].
