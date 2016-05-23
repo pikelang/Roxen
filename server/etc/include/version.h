@@ -4,7 +4,7 @@
 // present in module.h and in the roxen.version test in
 // ../test/tests/rxml/RoxenTest_BaseRXML.xml .
 constant roxen_ver = "6.1";
-constant roxen_build = "32";
+constant roxen_build = "33";
 
 #if !constant(roxen_release)
 constant roxen_release = "-git";
