@@ -1382,6 +1382,13 @@ class RequestID
   //!     Originating @[RequestID] for recursive requests.
   //!   @member int "port"
   //!     Port number from the canonicalized host header.
+  //!   @member array(array(string|int)) forwarded
+  //!     Parsed @expr{"Forwarded"@} header (@rfc{7239@}).
+  //!     If the client sent no forwarded headers, any @expr{"x-forwarded-*"@}
+  //!     headers that it sent are used instead.
+  //!
+  //!     Each entry is on the format returned by @[MIME.tokenize()], and
+  //!     corresponds to one @b{Forwarded@} field.
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
   //!   @member mapping(string:array(string)) "post_variables"
