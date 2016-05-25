@@ -1375,7 +1375,7 @@ string make_absolute_url (string url, RequestID|void id,
   // Add protocol and host to local absolute URLs.
   if (has_prefix (url, "/")) {
     if(id) {
-      url = id->url_base() + url[1..];
+      url = (string)Standards.URI(url, id->url_base());
       if (!prestates) prestates = id->prestate;
     }
     else {
