@@ -6616,6 +6616,11 @@ protected constant formats = ([
 			  1, "\"-\"", 0}),
   "protcache-cost":	({"%d", "request_id->misc->protcache_cost",
 			  1, "\"-\"", 0}),
+  "forwarded":		({"%s", ("request_id->misc->forwarded ? "
+				 "MIME.tokenize(request_id->misc->forwarded) : "
+				 "\"-\""),
+			  1, "\"-\"", 0 }),
+  // FIXME: The following ought to use misc->forwarded.
   "xff":		({"%s", ("arrayp(request_id->request_headers["
 				 "\"x-forwarded-for\"]) ? "
 				 "(request_id->request_headers["
