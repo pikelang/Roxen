@@ -30,12 +30,66 @@ class Relay
 
   mapping make_headers( RequestID from, int trim )
   {
-    mapping res = ([
+    string remoteaddr = from->remoteaddr;
+    if (has_value(remoteaddr, ":")) {
+      // IPv6.
+      remoteaddr = "[" + remoteaddr + "]";
+    }
+
+    string myip = from->port_obj->ip;
+    if (has_value(myip, ":")) {
+      // IPv6.
+      myip = "[" + myip + "]";
+    }
+    if (from->prot_obj->port != from->prot_obj->default_port) {
+      myip += ":" + from->prot_obj->port;
+    }
+
+    array(array(string|int)) forwarded = from->misc->forwarded || ({});
+
+    if (from->request_headers->host) {
+      forwarded += ({ ({
+			"by", '=', myip, ';',
+			"for", '=', remoteaddr, ';',
+			"host", '=', from->request_headers->host, ';',
+			"proto", '=', from->port_obj->prot_name,
+		      }) });
+    } else {
+      forwarded += ({ ({
+			"by", '=', myip, ';',
+			"for", '=', remoteaddr, ';',
+			"proto", '=', from->port_obj->prot_name,
+		      }) });
+    }
+
+    mapping res = ([]);
+    if( !trim ) {
+      foreach( from->request_headers; string i; string|array(string) v)
+      {
+	switch( i )
+	{
+	case "accept-encoding":
+	  // We need to support the stuff we pass on in the proxy
+	  // otherwise we might end up with things like double
+	  // gzipped data.
+	  break;
+	case "connection": /* We do not support keep-alive yet. */
+	  res->Connection = "close";
+	  break;
+	default:
+	  res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
+	  break;
+	}
+      }
+    }
+
+    res += ([
       "Proxy-Software":roxen->version(),
-      // These are set by Apaches mod_proxy and are more or less
-      // defacto standard.
-      "X-Forwarded-For": from->remoteaddr,
-      "X-Forwarded-Host": from->request_headers->host,
+
+      // RFC 7239
+      "Forwarded": map(forwarded, MIME.quote),
+
+      "Host": host + ":" + port,
     ]);
 
     // Also try to model X-Forwarded-Server after Apaches mod_proxy.
@@ -48,42 +102,27 @@ class Relay
     }
     else
       server_host = my_configuration()->get_host();
-    if (server_host)
-      res["X-Forwarded-Server"] = server_host;
 
-    if( trim ) return res;
-    foreach( from->request_headers; string i; string v)
-    {
-      switch( i )
-      {
-      case "accept-encoding":
-	// We need to support the stuff we pass on in the proxy
-	// otherwise we might end up with things like double
-	// gzipped data.
-	 break;
-       case "connection": /* We do not support keep-alive yet. */
-	 res->Connection = "close";
-         break;
-       case "host":
-         res->Host = host+":"+port;
-	 break;
-       case "x-forwarded-for":
-	 res["X-Forwarded-For"] = v + "," + res["X-Forwarded-For"];
-	 break;
-       case "x-forwarded-host":
-	 res["X-Forwarded-Host"] = v + "," + res["X-Forwarded-Host"];
-	 break;
-       case "x-forwarded-server":
-	 if (server_host)
-	   res["X-Forwarded-Server"] = v + "," + server_host;
-	 else
-	   res["X-Forwarded-Server"] = v;
-	 break;
-       default:
-	 res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
-         break;
+    // These are set by Apaches mod_proxy and are more or less
+    // defacto standard.
+    foreach(([ "X-Forwarded-For": remoteaddr,
+	       "X-Forwarded-Host": from->request_headers->host,
+	       "X-Forwarded-Proto": from->port_obj->prot_name,
+	       "X-Forwarded-Server": server_host,
+
+	       // RFC 7230 5.7.1
+	       "Via": from->clientprot + " " + server_host,
+	    ]); string field; string|array(string) value) {
+      if (!value) continue;
+      array(string)|string old_val = res[lower_case(field)];
+      if (arrayp(old_val)) {
+	value = old_val + ({ value });
+      } else if (stringp(old_val)) {
+	value = ({ old_val, value });
       }
+      res[field] = value;
     }
+
     return res;
   }
 
