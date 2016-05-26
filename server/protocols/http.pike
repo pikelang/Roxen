@@ -972,7 +972,13 @@ private int parse_got( string new_data )
     array(int|string) new_forwarded_header = ({});
     foreach (request_headers; string linename; array|string contents)
     {
-      if( arrayp(contents) ) contents = contents[0];
+      array(string) acontents;
+      if( arrayp(contents) ) {
+	acontents = contents;
+	contents = contents[0];
+      } else {
+	acontents = ({ contents });
+      }
       switch (linename) 
       {
        case "cache-control":	// Opera sends "no-cache" here.
@@ -1097,12 +1103,7 @@ private int parse_got( string new_data )
 
        case "forwarded":
 	 // RFC 7239
-	 if (stringp(contents)) {
-	   misc->forwarded = MIME.tokenize(contents) / ({ ',' });
-	 } else {
-	   misc->forwarded = map(map(contents, MIME.tokenize), `/, ({ ',' })) *
-	     ({});
-	 }
+	 misc->forwarded = map(map(acontents, MIME.tokenize), `/, ({ ',' })) * ({});
 	 break;
 
 	 // The X-Forwarded-* headers have been obsoleted by RFC 7239.
@@ -1110,7 +1111,7 @@ private int parse_got( string new_data )
 	 // RFC 7239 7.4. But only if it hasn't already been done.
        case "x-forwarded-for":
 	 if (request_headers->forwarded) break;
-	 foreach(stringp(contents)?({ contents }):contents, string line) {
+	 foreach(acontents, string line) {
 	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
 	     string ip;
 	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
@@ -1135,7 +1136,7 @@ private int parse_got( string new_data )
        case "x-forwarded-proto":
 	 if (request_headers->forwarded) break;
 	 string field = linename[sizeof("x-forwarded-")..];
-	 foreach(stringp(contents)?({ contents }):contents, string line) {
+	 foreach(acontents, string line) {
 	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
 	     string value;
 	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
