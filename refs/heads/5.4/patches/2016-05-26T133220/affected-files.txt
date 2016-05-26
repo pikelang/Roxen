@@ -1,0 +1,12 @@
+Added files:
+  etc/test/filesystem/redirect.html
+  etc/test/tests/http/http_redirect.pike
+Modified files:
+  base_server/configuration.pike
+  base_server/prototypes.pike
+  base_server/roxen.pike
+  etc/modules/Roxen.pmod
+  etc/test/tests/http/RoxenTest_http.pike
+  etc/test/tests/http/http_common.pike
+  modules/proxies/relay2.pike
+  protocols/http.pike
