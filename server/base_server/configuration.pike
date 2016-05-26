@@ -5155,9 +5155,12 @@ hyphens ('-') occur in the specifier names.</p>
     <td>The remote ip number.</td></tr>
 <tr><td>$bin-ip-number</td>
     <td>The remote host ip as a binary integer number.</td></tr>
+<tr><td>$forwarded</td>
+    <td>The Forwarded (RFC 7239) headers or X-Forwarded-* headers
+        for the request, or '-' if none were provided.</td></tr>
 <tr><td>$xff</td>
     <td>The remote host name/ip taken from the X-Forwarded-For header, or
-        '-' if none is provided. If multiple headers or multiple values are
+        '-' if none were provided. If multiple headers or multiple values are
         given the first value is logged; this should correspond to the
         originating computer.</td></tr>
 <tr><td>$method</td>

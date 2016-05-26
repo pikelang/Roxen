@@ -1385,6 +1385,13 @@ class RequestID
   //!     Note that this may differ from the actual port number
   //!     (available in @[port_obj->port]) if eg the server is
   //!     found behind a load balancing proxy. cf [bug 7385].
+  //!   @member array(array(string|int)) forwarded
+  //!     Parsed @expr{"Forwarded"@} header (@rfc{7239@}).
+  //!     If the client sent no forwarded headers, any @expr{"x-forwarded-*"@}
+  //!     headers that it sent are used instead.
+  //!
+  //!     Each entry is on the format returned by @[MIME.tokenize()], and
+  //!     corresponds to one @b{Forwarded@} field.
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
   //!   @member mapping(string:array(string)) "post_variables"
@@ -2351,53 +2358,84 @@ class RequestID
   //! IP-less hosts.
   {
     if (!cached_url_base) {
-      string tmp;
+      string host;
+      string scheme;
 
-      // We're looking at the host header...
-      register_vary_callback("host");
+      // We're looking at the forwarded header...
+      register_vary_callback("forwarded");
 
-      // First look at the host header in the request.
-      if (tmp = misc->host) {
-	string scheme = port_obj->prot_name;
-	if (has_prefix(tmp, "[")) {
-	  //  IPv6
-	  sscanf(tmp, "[%s]:%d", string host, int port);
-	  if (!port || port == port_obj->default_port)
-	    cached_url_base = scheme + "://[" + host + "]";
-	  else
-	    cached_url_base = scheme + "://" + tmp;
-	} else {
-	  int scanres = sscanf(tmp, "%[^:]:%d", string host, int port);
-	  if ((scanres < 2) || (port == port_obj->default_port)) {
-	    // Some clients don't send the port in the host header
-	    // if they've connected to the default port.
-	    // NOTE: We want the (probable) port number that the client
-	    //       used here; NOT the actual port number, since there
-	    //       may be port remappers in the way.
-	    // Remove redundant port number.
-	    cached_url_base = scheme + "://" + host;
-	  } else {
-	    cached_url_base = scheme + "://" + tmp;
+      // First look at the forwarded header.
+      if (misc->forwarded) {
+      got_both:
+	foreach(misc->forwarded, array(int|string) entry) {
+	  foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
+	    if ((sizeof(forwarded_pair) != 3) ||
+		(forwarded_pair[1] != '=') ||
+		!stringp(forwarded_pair[0]) ||
+		!stringp(forwarded_pair[2])) continue;
+	    switch(lower_case(forwarded_pair[0])) {
+	    case "proto":
+	      if (scheme) continue;
+	      scheme = lower_case(forwarded_pair[2]);
+	      if (host) break got_both;
+	      break;
+	    case "host":
+	      if (host) continue;
+	      host = forwarded_pair[2];
+	      if (scheme) break got_both;
+	      break;
+	    }
 	  }
 	}
       }
 
-      // Then use the port object.
-      else if (mapping(string:mixed) conf_data =
-	       port_obj && port_obj->conf_data[conf]) {
-	string host = conf_data->hostname;
-	if (host == "*")
-	  // Use the hostname in the configuration url.
-	  // Fall back to the numeric ip.
-	  host = conf->get_host() || port_obj->ip;
-	cached_url_base = port_obj->prot_name + "://" + host;
-	if (port_obj->port != port_obj->default_port)
-	  cached_url_base += ":" + port_obj->port;
+      // Second look at the host header in the request.
+      if (!host) {
+	// We're looking at the host header...
+	register_vary_callback("host");
+	host = misc->host;
+      }
+
+      // Then try the port object.
+      if (!scheme) {
+	scheme = port_obj->prot_name;
+      }
+      if (!host) {
+	mapping(string:mixed) conf_data = port_obj->conf_data[conf];
+	if (conf_data) {
+	  host = conf_data->hostname;
+	  if (host == "*")
+	    // Use the hostname in the configuration url.
+	    // Fall back to the numeric ip.
+	    host = conf->get_host() || port_obj->ip;
+	  if (port_obj->port != port_obj->default_port) {
+	    host += ":" + port_obj->port;
+	  }
+	}
+      } else {
+	string host_no_port;
+	int port;
+
+	if (has_prefix(host, "[")) {
+	  //  IPv6
+	  sscanf(host, "[%s]:%d", host_no_port, port);
+	} else {
+	  sscanf(host, "%[^:]:%d", host_no_port, port);
+	}
+	if (port == ([ "http":80, "https":443 ])[scheme]) {
+	  // Default port.
+	  port = 0;
+	  host = host_no_port;
+	}
+      }
+
+      if (host) {
+	cached_url_base = scheme + "://" + host;
       }
 
       // Then try the configuration url.
-      else if (conf && sizeof (tmp = conf->get_url()))
-	cached_url_base = tmp[..sizeof (tmp) - 2]; // Remove trailing '/'.
+      else if (conf && sizeof (host = conf->get_url()))
+	cached_url_base = host[..sizeof(host) - 2]; // Remove trailing '/'.
 
       // Lastly use a pathetic fallback. With this the produced urls
       // will still be relative, which has some chance of working.
