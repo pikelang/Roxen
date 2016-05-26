@@ -4956,7 +4956,7 @@ hyphens ('-') occur in the specifier names.</p>
 <tr><td>$link-layer</td>
     <td>The link layer protocol used for the request if known.</td></tr>
 <tr><td>$forwarded</td>
-    <td>The Forwarded (RFC 7230) headers or X-Forwarded-* headers
+    <td>The Forwarded (RFC 7239) headers or X-Forwarded-* headers
         for the request, or '-' if none were provided.</td></tr>
 <tr><td>$xff</td>
     <td>The remote host name/ip taken from the X-Forwarded-For header, or
