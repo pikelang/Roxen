@@ -988,9 +988,16 @@ private int parse_got( string new_data )
 		       ]));
 
     TIMER_START(parse_got_2_parse_headers);
+    array(int|string) new_forwarded_header = ({});
     foreach (request_headers; string linename; array|string contents)
     {
-      if( arrayp(contents) ) contents = contents[0];
+      array(string) acontents;
+      if( arrayp(contents) ) {
+	acontents = contents;
+	contents = contents[0];
+      } else {
+	acontents = ({ contents });
+      }
       switch (linename) 
       {
        case "cache-control":	// Opera sends "no-cache" here.
@@ -1112,7 +1119,62 @@ private int parse_got( string new_data )
 	   return 2;
 	 }
 	 break;
+
+       case "forwarded":
+	 // RFC 7239
+	 misc->forwarded = map(map(acontents, MIME.tokenize), `/, ({ ',' })) * ({});
+	 break;
+
+	 // The X-Forwarded-* headers have been obsoleted by RFC 7239.
+	 // Convert them to the corresponding forwarded header as per
+	 // RFC 7239 7.4. But only if it hasn't already been done.
+       case "x-forwarded-for":
+	 if (request_headers->forwarded) break;
+	 foreach(acontents, string line) {
+	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
+	     string ip;
+	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
+	       ip = segment[0];
+	     } else {
+	       ip = MIME.quote(segment);
+	     }
+	     if (has_value(ip, ":") && !has_value(ip, ".") &&
+		 !has_prefix(ip, "[")) {
+	       // DWIM IPv6
+	       ip = "[" + ip + "]";
+	     }
+	     if (sizeof(new_forwarded_header)) {
+	       new_forwarded_header += ({ ',' });
+	     }
+	     new_forwarded_header += ({ "for", '=', ip });
+	   }
+	 }
+	 break;
+       case "x-forwarded-by":
+       case "x-forwarded-host":
+       case "x-forwarded-proto":
+	 if (request_headers->forwarded) break;
+	 string field = linename[sizeof("x-forwarded-")..];
+	 foreach(acontents, string line) {
+	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
+	     string value;
+	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
+	       value = segment[0];
+	     } else {
+	       value = MIME.quote(segment);
+	     }
+	     if (sizeof(new_forwarded_header)) {
+	       new_forwarded_header += ({ ',' });
+	     }
+	     new_forwarded_header += ({ field, '=', value });
+	   }
+	 }
+	 break;
       }
+    }
+    if (sizeof(new_forwarded_header)) {
+      request_headers->forwarded = MIME.quote(new_forwarded_header);
+      misc->forwarded = new_forwarded_header / ({ ',' });
     }
     TIMER_END(parse_got_2_parse_headers);
   }

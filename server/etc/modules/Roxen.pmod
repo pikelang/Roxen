@@ -1375,23 +1375,7 @@ string make_absolute_url (string url, RequestID|void id,
   // Add protocol and host to local absolute URLs.
   if (has_prefix (url, "/")) {
     if(id) {
-      Standards.URI uri = Standards.URI(id->url_base());
-
-      // Handle proxies
-      string xf_proto = id->request_headers["x-forwarded-proto"];
-      string xf_host = id->request_headers["x-forwarded-host"];
-
-      if (xf_proto && xf_host) {
-	uri = Standards.URI(xf_proto + "://" + xf_host + uri->path);
-      }
-      else if (xf_host) {
-	uri = Standards.URI(uri->scheme + "://" + xf_host + uri->path);
-      }
-      else if (xf_proto) {
-	uri = Standards.URI(xf_proto + "://" + uri->host + ":" + uri->port + uri->path);
-      }
-
-      url = (string)uri + url[1..];
+      url = (string)Standards.URI(url, id->url_base());
       if (!prestates) prestates = id->prestate;
     }
     else {
