@@ -66,9 +66,9 @@ void write_fragmented( Stdio.File to,
                                 headers,prot,expected_prot, \
 				code,expected_code,hd);exit((X));}
 
-void verify_headers( string headers, int content_length,
-		     string expected_prot, int expected_code,
-		     int want_last_modified, )
+mapping verify_headers( string headers, int content_length,
+			string expected_prot, int expected_code,
+			int want_last_modified )
 {
   array q = headers / "\r\n";
   string prot;
@@ -93,5 +93,7 @@ void verify_headers( string headers, int content_length,
     EXIT( BADLENGTH );
   if( want_last_modified && !hd["last-modified"] )
     EXIT( BADMODIFIED );
+
+  return hd;
 }
 
