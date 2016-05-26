@@ -2448,10 +2448,12 @@ class RequestID
 		!stringp(forwarded_pair[2])) continue;
 	    switch(lower_case(forwarded_pair[0])) {
 	    case "proto":
+	      if (scheme) continue;
 	      scheme = lower_case(forwarded_pair[2]);
 	      if (host) break got_both;
 	      break;
 	    case "host":
+	      if (host) continue;
 	      host = forwarded_pair[2];
 	      if (scheme) break got_both;
 	      break;
