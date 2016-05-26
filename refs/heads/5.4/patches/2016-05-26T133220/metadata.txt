@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Improved support for proxy headers
 from: d03c941efc38b9424576b6b6978090639eeda3bd
 to: 55dd48426ebbf3820adb98cbbcb4fb7888508dc7
 originator: wellhardh@roxen.com
