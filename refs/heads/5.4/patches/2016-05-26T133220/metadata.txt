@@ -1,0 +1,48 @@
+subject: Roxen 5.4: Multiple fixes:
+from: d03c941efc38b9424576b6b6978090639eeda3bd
+to: 55dd48426ebbf3820adb98cbbcb4fb7888508dc7
+originator: wellhardh@roxen.com
+depends: 2016-05-17T132306
+restart: true
+
+Multiple fixes:
+
+  * HTTP: Added id-misc-forwarded.
+    
+    This field contains any parsed RFC 7230 Forwarded headers.
+    
+    Fixes some of [bug 7694].
+
+  * HTTP: Use id->misc->forwarded in id->url_base().
+    
+    id->url_base() now attempts to generate an url that the end client
+    is able to use.
+    
+    Fixes some of [bug 7694].
+
+  * Roxen.make_absolute_url: Get rid of old forwarded kludges.
+    
+    Now that url_base() is proxy-aware, there's no need to attempt
+    do the same thing in make_absolute_url().
+
+  * Relay2: Generate proper Forwarded headers.
+    
+    Fixes some more of [bug 7694].
+
+  * Logging: Added logging pattern $forwarded.
+
+  * HTTP: Fixed handling of multiple Forwarded headers.
+    
+    Fixes [bug 7694] some more.
+
+  * HTTP: Fixed parsing of multiple forwarded headers in url_base().
+
+  * Testsuite [HTTP]: Let verify_headers() return the parsed headers.
+
+  * Testsuite [HTTP]: Test handling of forwarded headers and redirects.
+    
+    Fixes remainder of [bug 7694].
+
+  * HTTP: Fixed RFC reference.
+    
+    The Forwarded header is defined in RFC 7239 (not RFC 7230).
