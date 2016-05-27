@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: Improved support for proxy headers
 from: 8b3c72a687c190622f4d5cff32121e9fd05c2b86
 to: f5c81493583ccbec0d5d57bcde092e92d23b7e95
 originator: wellhardh@roxen.com
@@ -7,7 +7,6 @@ restart: true
 
 Multiple fixes:
 
-  * Version bumped to 6.0.134 by buildsystem.
 
   * HTTP: Added id-misc-forwarded.
     
