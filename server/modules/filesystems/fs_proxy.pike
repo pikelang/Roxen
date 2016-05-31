@@ -68,24 +68,30 @@ protected Configuration get_conf (string conf_name)
 protected RoxenModule get_mod()
 {
   array(string) segments = query ("location_module") / ":";
+  if (sizeof (segments) != 2)
+    return 0;
+
   string conf_name = String.trim_all_whites (segments[0]);
   string mod_id = String.trim_all_whites (segments[1]);
   Configuration conf = get_conf (conf_name);
-  return conf->find_module (mod_id);
+  return conf && conf->find_module (mod_id);
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id)
 {
-  return get_mod()->find_file (path, id);
+  RoxenModule mod = get_mod();
+  return mod && mod->find_file (path, id);
 }
 
 Stat stat_file(string f, RequestID id)
 {
-  return get_mod()->stat_file (f, id);
+  RoxenModule mod = get_mod();
+  return mod && mod->stat_file (f, id);
 }
 
 array(string) find_dir (string f, RequestID id)
 {
-  return get_mod()->find_dir (f, id);
+  RoxenModule mod = get_mod();
+  return mod && mod->find_dir (f, id);
 }
