@@ -1584,7 +1584,7 @@ class ModuleChoice
   RoxenModule|array(RoxenModule) query()
   {
     array(RoxenModule)|RoxenModule res = changed_values[_id];
-    if (!res) {
+    if (!res || (multiselect && has_value(res, 0))) {
       if (module_id) {
 	// The module might have been reloaded.
 	// Try locating it again.
