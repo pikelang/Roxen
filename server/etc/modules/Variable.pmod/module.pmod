@@ -1270,16 +1270,25 @@ class Directory
 // =====================================================================
 
 class MultipleChoice
-//! Base class for multiple-choice (one of many) variables.
+//! Base class for multiple-choice (one or many of many) variables.
 {
   inherit Variable;
   protected array _list = ({});
   protected mapping _table = ([]);
 
+  protected int(0..1) multiselect;
+
+  //! Identifier to use to detect presence of
+  //! support for multiselect mode.
+  constant multiselect_supported = 1;
+
   string diff( int render )
   {
-    if(!render)
+    if(!render) {
+      if (multiselect)
+	return "(" + map(default_value(), _title) * ", " + ")";
       return "("+_title( default_value() )+")";
+    }
   }
 
   void set_choice_list( array to )
@@ -1308,6 +1317,34 @@ class MultipleChoice
     return _table;
   }
 
+  int(0..1) set_from_form(RequestID id, void|int(0..1) force)
+  {
+    if (!multiselect) return ::set_from_form(id);
+    if (!id->real_variables[path()]) return 0;
+    set_warning(0);
+    mapping(string:string) m = get_form_vars(id);
+    array(mixed) values = ({});
+    foreach(id->real_variables[path()] || ({}), string form_val) {
+      mixed val = transform_from_form(form_val, m);
+      array b = ({ 0, val });
+      mixed err = catch { b = verify_set_from_form(val); };
+      if (err) {
+	add_warning(err);
+	return 0;
+      } else if (sizeof(b) != 2) {
+	add_warning("Internal error: Illegal sized array "
+		    "from verify_set_from_form\n");
+	return 0;
+      }
+      if (b[0]) {
+	add_warning(b[0]);
+      }
+      values += ({ b[1] });
+    }
+    set(values);
+    return 1;
+  }
+
   protected string _name( mixed what )
     //! Get the name used as value for an element gotten from the
     //! get_choice_list() function.
@@ -1329,27 +1366,64 @@ class MultipleChoice
     string autosubmit = "";
     if(additional_args && additional_args->autosubmit)
       autosubmit = " autosubmit='autosubmit' onChange='javascript:submit();'";
-    string res = "<select name='"+path()+"'"+autosubmit+">\n";
-    string current = _name (query());
-    int selected = 0;
-    foreach( get_choice_list(), mixed elem )
-    {
-      mapping m = ([]);
-      m->value = _name( elem );
-      if( equal( m->value, current ) ) {
-        m->selected="selected";
-	selected = 1;
+    if (multiselect) {
+      array(string) current = map(query(), _name);
+      string res = "<table>\n";
+      foreach( get_choice_list(), mixed elem )
+      {
+	mapping m = ([
+	  "type": "checkbox",
+	  "name": path(),
+	  "value": _name(elem),
+	]);
+	if(has_value(current, m->value)) {
+	  m->checked="checked";
+	  current -= ({ m->value });
+	}
+	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+		       Roxen.make_tag( "input", m),
+		       Roxen.html_encode_string(_title(elem)));
       }
-      res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
+      // Make an entry for the current values if they're not in the list,
+      // to ensure that the value doesn't change as a side-effect by
+      // another change.
+      foreach(current, mixed elem )
+      {
+	mapping m = ([
+	  "type": "checkbox",
+	  "name": path(),
+	  "value": _name(elem),
+	  "checked": "checked",
+	]);
+	string title = sprintf(LOCALE(332,"(keep stale value %s)"), current);
+	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+		       Roxen.make_tag( "input", m),
+		       Roxen.html_encode_string(title));
+      }
+      return res + "</table>";
+    } else {
+      string current = _name (query());
+      int selected = 0;
+      string res = "<select name='"+path()+"'"+autosubmit+">\n";
+      foreach( get_choice_list(), mixed elem )
+      {
+	mapping m = ([]);
+	m->value = _name( elem );
+	if( equal( m->value, current ) ) {
+	  m->selected="selected";
+	  selected = 1;
+	}
+	res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
+      }
+      if (!selected)
+	// Make an entry for the current value if it's not in the list,
+	// so no other value appears to be selected, and to ensure that
+	// the value doesn't change as a side-effect by another change.
+	res += "  " + Roxen.make_container (
+	  "option", (["value":current, "selected": "selected"]),
+	  sprintf(LOCALE(332,"(keep stale value %s)"),current));
+      return res + "</select>";
     }
-    if (!selected)
-      // Make an entry for the current value if it's not in the list,
-      // so no other value appears to be selected, and to ensure that
-      // the value doesn't change as a side-effect by another change.
-      res += "  " + Roxen.make_container (
-	"option", (["value":current, "selected": "selected"]),
-	sprintf(LOCALE(332,"(keep stale value %s)"),current));
-    return res + "</select>";
   }
 
   protected void create( mixed default_value, array|mapping choices,
@@ -1371,6 +1445,7 @@ class MultipleChoice
     //! for the default locale (always english)
   {
     ::create( default_value, _flags, std_name, std_doc );
+    multiselect = arrayp(default_value);
     if( mappingp( choices ) ) {
       set_translation_table( choices );
       set_choice_list( sort(indices(choices)) );
@@ -1571,16 +1646,20 @@ class ModuleChoice
   inherit StringChoice;
   constant type = "ModuleChoice";
   protected Configuration conf;
-  protected string module_id;
-  protected string default_id;
+  protected string|array(string) module_id;
+  protected string|array(string) default_id;
   protected int automatic_dependency;
 
   int low_set(RoxenModule to)
   {
-    RoxenModule old = changed_values[_id];
+    array(RoxenModule)|RoxenModule old = changed_values[_id];
     if (!old) {
       if (module_id) {
-	old = transform_from_form(module_id);
+	if (multiselect) {
+	  old = map(module_id, transform_from_form);
+	} else {
+	  old = transform_from_form(module_id);
+	}
       } else {
 	old = default_value();
 	if (old) {
@@ -1601,9 +1680,26 @@ class ModuleChoice
   }
 
   // NOTE: Will be called with a string at module init!
-  int set(string|RoxenModule to)
+  int set(string|array(string)|RoxenModule|array(RoxenModule) to)
   {
-    if (stringp(to)) {
+    if (multiselect && arrayp(to) && sizeof(to) && stringp(to[0])) {
+      module_id = to;
+      array(RoxenModule) mods = map(to, transform_from_form);
+      if (automatic_dependency) {
+	foreach(mods; int i; RoxenModule mod) {
+	  if (!mod && conf->enabled_modules[to[i]]) {
+	    conf->add_modules(({to[i]}), 1);
+	    mod = transform_from_form(to[i]);
+	  }
+	  if (!mod && conf->enabled_modules[to[i]])
+	    // The module exists but isn't started yet. Don't call set()
+	    // in this case since that will cause a bogus warning.
+	    return 0;
+	  mods[i] = mod;
+	}
+      }
+      to = mods;
+    } else if (stringp(to)) {
       module_id = to;
       RoxenModule mod = transform_from_form (to);
       if (!mod && automatic_dependency && conf->enabled_modules[to]) {
@@ -1619,19 +1715,22 @@ class ModuleChoice
     return ::set(to);
   }
 
-  RoxenModule query()
+  RoxenModule|array(RoxenModule) query()
   {
-    RoxenModule res = changed_values[_id];
-    if (!res) {
+    array(RoxenModule)|RoxenModule res = changed_values[_id];
+    if (!res || (multiselect && has_value(res, 0))) {
       if (module_id) {
 	// The module might have been reloaded.
 	// Try locating it again.
-	res = transform_from_form(module_id);
-	if (res) low_set(res);
+	if (multiselect) {
+	  res = map(module_id, transform_from_form);
+	} else {
+	  res = transform_from_form(module_id);
+	}
       } else {
 	res = default_value();
-	if (res) low_set(res);
       }
+      if (res) low_set(res);
     }
     return res;
   }
@@ -1664,7 +1763,7 @@ class ModuleChoice
 
   protected string _title(RoxenModule val)
   {
-    return val?val->module_name:"";
+    return val?Roxen.get_modfullname(val):"";
   }
 
   RoxenModule transform_from_form(string module_id, mapping|void v)
@@ -1672,9 +1771,10 @@ class ModuleChoice
     return conf->find_module(module_id);
   }
 
-  RoxenModule default_value()
+  RoxenModule|array(RoxenModule) default_value()
   {
     if (default_id) {
+      if (multiselect) return map(default_id, transform_from_form);
       return transform_from_form(default_id);
     }
     array(RoxenModule) modules = get_choice_list();
@@ -1701,7 +1801,7 @@ class ModuleChoice
   //!   it already exists in the configuration then it will be loaded
   //!   before @expr{start@} in this module is called. Setting this
   //!   flag disables that.
-  protected void create(string default_id, int flags,
+  protected void create(string|array(string) default_id, int flags,
 			string std_name, string std_doc,
 			Configuration conf,
 			void|int no_automatic_dependency)
@@ -1710,6 +1810,7 @@ class ModuleChoice
     this_program::conf = conf;
     automatic_dependency = !no_automatic_dependency;
     ::create(0, ({}), flags, std_name, std_doc);
+    multiselect = arrayp(default_id);
   }
 }
 
