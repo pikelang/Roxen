@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: Fixes in Variable.pmod
 from: f5c81493583ccbec0d5d57bcde092e92d23b7e95
 to: b2e239b25da129a3e1a6cf556f05621f9dd017b0
 originator: wellhardh@roxen.com
