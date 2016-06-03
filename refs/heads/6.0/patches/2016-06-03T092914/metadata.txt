@@ -1,0 +1,26 @@
+subject: Roxen 6.0: Multiple fixes:
+from: f5c81493583ccbec0d5d57bcde092e92d23b7e95
+to: b2e239b25da129a3e1a6cf556f05621f9dd017b0
+originator: wellhardh@roxen.com
+depends: 2016-05-27T120852
+restart: true
+
+Multiple fixes:
+
+  * Variable.ModuleChoice: Use the correct API to get the name of modules.
+    
+    Fixes errors from comparing LocaleStrings with UNDEFINED.
+
+  * Variable.MultipleChoice: Added multiselect mode.
+    
+    If the default value for Variable.MultipleChoice is an array
+    it switches operating mode to allow selection of multiple
+    items from the list of choices.
+    
+    Also updates ModuleChoice accordingly.
+
+  * Variable.MultipleChoice: Added recognition constant multiselect_supported.
+
+  * Variable.ModuleChoice: Detect reloaded modules in multiselect mode.
+    
+    Fixes [bug 7701].
