@@ -986,7 +986,7 @@ Click "Next" to start the installation.</Text>
         </Control>
 
         <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL base directory:</Text>
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MariaDB or MySQL base directory:</Text>
         </Control>
         <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="MYSQLBASE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
@@ -1031,10 +1031,10 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
-          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MySQL Settings</Text>
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MariaDB and MySQL Settings</Text>
         </Control>
         <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
-          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL settings</Text>
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MariaDB and MySQL settings</Text>
         </Control>
         <Control Id="Control273" Type="Line" X="0" Y="252" Width="375" Height="6">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
@@ -1338,102 +1338,250 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLDEXE">
-      <RegistrySearch Id="Mysql51Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin2" Path="bin">
-          <FileSearch LongName="mysqld.exe" />
-        </DirectorySearch>
-      </RegistrySearch>
-      <RegistrySearch Id="Mysql51Location1" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin21" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <RegistrySearch Id="Mysql50Location1" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin10" Path="bin">
           <FileSearch LongName="mysqld-nt.exe" />
         </DirectorySearch>
       </RegistrySearch>
       <RegistrySearch Id="Mysql50Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin9" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysql51Location1" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin8" Path="bin">
+          <FileSearch LongName="mysqld-nt.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin7" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <!-- FIXME: Is the following correct? -->
+      <RegistrySearch Id="Mysql55Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.5" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin6" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <!-- FIXME: Is the following correct? -->
+      <RegistrySearch Id="Mysql56Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.6" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin5" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <!-- FIXME: Is the following correct? -->
+      <RegistrySearch Id="Mysql57Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.7" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin4" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <!-- FIXME: Is the following correct? -->
+      <RegistrySearch Id="MariaDB55Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MysqldBin3" Path="bin">
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysql50Location1" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin31" Path="bin">
-          <FileSearch LongName="mysqld-nt.exe" />
+      <RegistrySearch Id="MariaDB101Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MysqldBin1" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="MariaDB100Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MysqldBin2" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLDEXE">
-      <DirectorySearch Id="MysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase51">
-          <DirectorySearch Id="MysqlBin51" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <DirectorySearch Id="FMysqlLocation51" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqlBase51">
+          <DirectorySearch Id="FMysqlBin51" Path="bin">
             <FileSearch LongName="mysqld-nt.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
-      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase5">
-          <DirectorySearch Id="MysqlBin5" Path="bin">
+      <DirectorySearch Id="FMysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqlBase5">
+          <DirectorySearch Id="FMysqlBin5" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+      <DirectorySearch Id="FMariaDBLocation" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariaDBBase">
+          <DirectorySearch Id="FMariaDBBin" Path="bin">
             <FileSearch LongName="mysqld.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHKEXE">
-      <RegistrySearch Id="Myisam51Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MyisamBin2" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <RegistrySearch Id="Myisam50Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin8" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Myisam50Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+      <RegistrySearch Id="Myisam51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin7" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Myisam55Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.5" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin6" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Myisam56Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.6" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin5" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Myisam57Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.7" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin4" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariaisam55Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MyisamBin3" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariaisam101Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MyisamBin1" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariaisam100Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MyisamBin2" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYISAMCHKEXE">
-      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MyisamBase5">
-          <DirectorySearch Id="MyisamBin5" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <DirectorySearch Id="FMyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMyisamBase5">
+          <DirectorySearch Id="FMyisamBin5" Path="bin">
+            <FileSearch LongName="myisamchk.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+      <DirectorySearch Id="FMariaisamLocation5" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariaisamBase5">
+          <DirectorySearch Id="FMariaisamBin5" Path="bin">
             <FileSearch LongName="myisamchk.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLADMINEXE">
-      <RegistrySearch Id="Mysqladmin51Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqladminBin2" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <RegistrySearch Id="Mysqladmin50Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin8" Path="bin">
           <FileSearch LongName="mysqladmin.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysqladmin50Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
+      <RegistrySearch Id="Mysqladmin51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin7" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysqladmin55Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.5" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin6" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysqladmin56Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.6" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin5" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mysqladmin57Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.7" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqladminBin4" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariadbadmin55Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 5.5" Name="INSTALLDIR" Type="raw">
         <DirectorySearch Id="MysqladminBin3" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariadbadmin101Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.1" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MysqladminBin1" Path="bin">
+          <FileSearch LongName="mysqladmin.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+      <RegistrySearch Id="Mariadbadmin100Location" Root="HKLM"
+        Key="SOFTWARE\Monty Program AB\MariaDB 10.0" Name="INSTALLDIR" Type="raw">
+        <DirectorySearch Id="MysqladminBin2" Path="bin">
           <FileSearch LongName="mysqladmin.exe" />
         </DirectorySearch>
       </RegistrySearch>
     </Property>
     <Property Id="FALLBACKMYSQLADMINEXE">
-      <DirectorySearch Id="MysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqladminBase5">
-          <DirectorySearch Id="MysqladminBin5" Path="bin">
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <DirectorySearch Id="FMysqladminLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="FMysqladminBase5">
+          <DirectorySearch Id="FMysqladminBin5" Path="bin">
+            <FileSearch LongName="mysqladmin.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+      <DirectorySearch Id="FMariadbadminLocation5" Path="[ProgramFilesFolder]\MariaDB" Depth="2">
+        <DirectorySearch Id="FMariadbadminBase5">
+          <DirectorySearch Id="FMariadbadminBin5" Path="bin">
             <FileSearch LongName="mysqladmin.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLBASE">
-      <RegistrySearchRef Id="Mysql51Location" />
-      <RegistrySearchRef Id="Mysql51Location1" />
-      <RegistrySearchRef Id="Mysql50Location" />
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
       <RegistrySearchRef Id="Mysql50Location1" />
+      <RegistrySearchRef Id="Mysql50Location" />
+      <RegistrySearchRef Id="Mysql51Location1" />
+      <RegistrySearchRef Id="Mysql51Location" />
+      <RegistrySearchRef Id="Mysql55Location" />
+      <RegistrySearchRef Id="Mysql56Location" />
+      <RegistrySearchRef Id="Mysql57Location" />
+      <RegistrySearchRef Id="MariaDB55Location" />
+      <RegistrySearchRef Id="MariaDB100Location" />
+      <RegistrySearchRef Id="MariaDB101Location" />
     </Property>
     <Property Id="FALLBACKMYSQLBASE">
-      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
-      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+      <!-- NOTE: Reverse order of priority. Last matching entry wins. -->
+      <DirectorySearchRef Id="FMysqlBase5" Parent="FMysqlLocation5"/>
+      <DirectorySearchRef Id="FMysqlBase51" Parent="FMysqlLocation51"/>
+      <DirectorySearchRef Id="FMariaDBBase" Parent="FMariaDBLocation"/>
     </Property>
     <Property Id="MYSQLDEBUG2">
       <RegistrySearchRef Id="Mysql51Location" />
@@ -1448,10 +1596,10 @@ Click "Next" to start the installation.</Text>
       <RegistrySearchRef Id="Mysql50Location1" />
     </Property>
     <Property Id="MYSQLDEBUG5">
-      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+      <DirectorySearchRef Id="FMysqlBase5" Parent="FMysqlLocation5"/>
     </Property>
     <Property Id="MYSQLDEBUG51">
-      <DirectorySearchRef Id="MysqlBase51" Parent="MysqlLocation51"/>
+      <DirectorySearchRef Id="FMysqlBase51" Parent="FMysqlLocation51"/>
     </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>

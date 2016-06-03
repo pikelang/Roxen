@@ -27,6 +27,8 @@ constant WRITE = 2;
 
 private
 {
+  string normalized_server_version;
+
   mixed query( mixed ... args )
   {
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
@@ -92,7 +94,7 @@ private
       // According to the documentation MySQL 4.1 or newer is required
       // for OLD_PASSWORD(). There does however seem to exist versions of
       // at least 4.0 that know of OLD_PASSWORD().
-      if (db->server_info() >= "mysql/4.1") {
+      if (normalized_server_version >= "004.001") {
 	db->query( "REPLACE INTO user (Host,User,Password) "
 		   "VALUES (%s, %s, OLD_PASSWORD(%s)), "
 		   "       (%s, %s, OLD_PASSWORD(%s))",
@@ -1737,21 +1739,49 @@ array(mapping) restore( string dbname, string directory, string|void todb,
   }
 
   // Old-style BACKUP format.
-  if (db->server_info() >= "mysql/5.5") {
-    error("Old-style MySQL BACKUP files are no longer supported!\n");
-  }
-
   array q =
     tables ||
     query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
 	   dbname, directory )->tbl;
 
+  string db_dir =
+    roxenp()->query_configuration_dir() + "/_mysql/" + dbname;
+
+  int(0..1) use_restore = (normalized_server_version <= "005.005");
+  if (!use_restore) {
+    report_warning("Restoring an old-style backup by hand...\n");
+
+    if (!Stdio.is_dir(db_dir + "/.")) {
+      error("Failed to find database directory for db %O.\n"
+	    "Tried: %O\n",
+	    dbname, db_dir);
+    }
+  }
+
   array res = ({});
   foreach( q, string table )
   {
     db->query( "DROP TABLE IF EXISTS "+table);
-    directory = combine_path( getcwd(), directory );
-    res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+    if (use_restore) {
+      directory = combine_path( getcwd(), directory );
+      res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+    } else {
+      // Copy the files.
+      foreach(({ ".frm", ".MYD", ".MYI" }), string ext) {
+	if (Stdio.is_file(directory + "/" + table + ext)) {
+	  if (!Stdio.cp(directory + "/" + table + ext,
+			db_dir + "/" + table + ext)) {
+	    error("Failed to copy %O to %O.\n",
+		  directory + "/" + table + ext,
+		  db_dir + "/" + table + ext);
+	  }
+	} else if (ext != ".MYI") {
+	  error("Backup file %O is missing!\n",
+		directory + "/" + table + ext);
+	}
+      }
+      res += db->query("REPAIR TABLE "+table+" USE_FRM");
+    }
   }
   return res;
 }
@@ -2023,7 +2053,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 
   if( is_internal( dbname ) )
   {
-    if (db->server_info() >= "mysql/5.5") {
+    if (normalized_server_version >= "005.005") {
       error("Old-style MySQL BACKUP files are no longer supported!\n");
     }
     mkdirhier( directory+"/" );
@@ -2095,7 +2125,7 @@ void timed_backup(int schedule_id)
 	switch(backup_info[0]->method) {
 	case "backup":
 	  // This method is not supported in MySQL 5.5 and later.
-	  if (connect_to_my_mysql(0, "roxen")->server_info() < "mysql/5.5") {
+	  if (normalized_server_version < "005.005") {
 	    backup(db, dir, "timed_backup");
 	    break;
 	  }
@@ -2577,6 +2607,13 @@ void is_module_db( RoxenModule module, string db, string|void comment )
 
 protected void create()
 {
+  Sql.Sql db = connect_to_my_mysql(0, "mysql");
+  // Typically a string like "mysql/5.5.30-log" or "mysql/5.5.39-MariaDB-log".
+  normalized_server_version = map(((db->server_info()/"/")[1]/"-")[0]/".",
+				  lambda(string d) {
+				    return ("000" + d)[<2..];
+				  }) * ".";
+
   mixed err = 
   catch {
     query("CREATE TABLE IF NOT EXISTS db_backups ("

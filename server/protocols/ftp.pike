@@ -98,6 +98,11 @@
 #define FTP_USE_HANDLER_THREADS
 #endif
 
+#ifdef RUN_SELF_TEST
+// Temporary self-test debug until the issues have been fixed.
+#define FTP2_DEBUG
+#endif
+
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
