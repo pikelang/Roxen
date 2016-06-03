@@ -41,7 +41,7 @@ class Relay
       // IPv6.
       myip = "[" + myip + "]";
     }
-    if (from->prot_obj->port != from->prot_obj->default_port) {
+    if (from->prot_obj && from->prot_obj->port != from->prot_obj->default_port) {
       myip += ":" + from->prot_obj->port;
     }
 
