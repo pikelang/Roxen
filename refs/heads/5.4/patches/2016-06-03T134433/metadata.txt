@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: Fix in relay2.pike
 from: 55dd48426ebbf3820adb98cbbcb4fb7888508dc7
 to: 84df53a84cc6fd90799709056a32fde8cf379632
 originator: wellhardh@roxen.com
@@ -6,10 +6,6 @@ depends: 2016-05-26T133220
 restart: true
 
 Multiple fixes:
-
-  * Version bumped to 5.4.97 by buildsystem.
-
-  * Version bumped to 5.4.98 by buildsystem.
 
   * relay2.pike: No check was made for the existense of from->prot_obj (which could be missing) which could lead to an indexing the NULL value error.
 
