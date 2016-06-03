@@ -41,8 +41,8 @@ class Relay
       // IPv6.
       myip = "[" + myip + "]";
     }
-    if (from->prot_obj && from->prot_obj->port != from->prot_obj->default_port) {
-      myip += ":" + from->prot_obj->port;
+    if (from->port_obj && from->port_obj->port != from->port_obj->default_port) {
+      myip += ":" + from->port_obj->port;
     }
 
     array(array(string|int)) forwarded = from->misc->forwarded || ({});
