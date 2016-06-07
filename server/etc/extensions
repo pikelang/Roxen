@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.54 2005/03/24 12:19:48 grubba Exp $
+# $Id$
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -707,14 +707,14 @@ sv4crc	application/x-sv4crc
 swa	application/x-director
 swf	application/x-shockwave-flash
 t	application/x-troff
-tar	application/unix-tar
+tar	application/x-tar
 talk	application/talker
 tbk	application/toolbook
 tcl	application/x-tcl
 tex	application/x-tex
 texi	application/x-texinfo
 texinfo	application/x-texinfo
-tgz	application/unix-tar	x-gzip
+tgz	application/x-tar+gzip
 tmv	application/x-Parable-Thing
 torrent	application/x-bittorrent
 tr	application/x-troff
@@ -810,12 +810,20 @@ u98     urdu/urdu98
 
 ice     x-conference/x-cooltalk
 
-# This is supposed to be just 'gzip' and 'compress', but Netscape
-# barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
-Z	STRIP			x-compress
-gz	STRIP			x-gzip
-bz	STRIP			x-bzip
-bz2	STRIP			x-bzip2
+# RFC 6713 et al say that these should be Content-Types and
+# not Content-Encodings.
+#
+# # This is supposed to be just 'gzip' and 'compress', but Netscape
+# # barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
+# Z	STRIP			x-compress
+# gz	STRIP			x-gzip
+# bz	STRIP			x-bzip
+# bz2	STRIP			x-bzip2
+
+Z	application/x-compress
+gz	application/gzip
+bz	application/x-bzip
+bz2	application/x-bzip2
 
 uu	STRIP			uuencode
 b64	STRIP			base64

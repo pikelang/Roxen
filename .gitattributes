@@ -118,7 +118,6 @@ worldmap binary
 /server/etc/Makefile.in foreign_ident
 /server/etc/Win32Installer.vbs foreign_ident
 /server/etc/env.d/nptl.pike foreign_ident
-/server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
 /server/etc/include/request_trace.h foreign_ident
