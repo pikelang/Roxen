@@ -1,0 +1,12 @@
+subject: Roxen 5.4: RXML [Help]: Fixed tag name quoting on non-existing tag.
+from: 84df53a84cc6fd90799709056a32fde8cf379632
+to: 5f5b70cbc3359cee1b2346ae297fdf565202ee79
+originator: wellhardh@roxen.com
+depends: 2016-06-03T134433
+restart: true
+
+RXML [Help]: Fixed tag name quoting on non-existing tag.
+
+Thanks to Henry Umansky <humansky@princeton.edu> for the report.
+
+Fixes [bug 7707].
