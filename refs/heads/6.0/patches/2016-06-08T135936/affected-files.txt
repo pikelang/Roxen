@@ -1,0 +1,5 @@
+Modified files:
+  base_server/rxmlhelp.pike
+  etc/RoxenUI.wxs
+  etc/extensions
+  modules/proxies/relay2.pike
