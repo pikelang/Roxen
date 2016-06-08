@@ -1,0 +1,33 @@
+subject: Roxen 6.0: Multiple fixes:
+from: b2e239b25da129a3e1a6cf556f05621f9dd017b0
+to: 3c72bbf049615166aba91c9e5f9a4b3f086ad09b
+originator: wellhardh@roxen.com
+depends: 2016-06-03T092914
+restart: true
+
+Multiple fixes:
+
+  * relay2.pike: No check was made for the existense of from->prot_obj (which could be missing) which could lead to an indexing the NULL value error.
+
+  * relay2: Actually port_obj was misspelled as prot_obj.
+
+  * Installer [Win32]: Prefer MariaDB 10.1 to MariaDB 10.0.
+    
+    Potential fix for [bug 7705] (and possibly [bug 7698]).
+
+  * Extensions: *.gz and *.bz2 et al are content-types.
+    
+    *.gz and *.bz2 et al are now treated as content-types and
+    not as content-encodings.
+    
+    Fixes issues with browsers inflating downloaded files.
+    
+    See also RFC 6713.
+    
+    Fixes [bug 7691].
+
+  * RXML [Help]: Fixed tag name quoting on non-existing tag.
+    
+    Thanks to Henry Umansky <humansky@princeton.edu> for the report.
+    
+    Fixes [bug 7707].
