@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: relay, content-types, rxml-help
 from: b2e239b25da129a3e1a6cf556f05621f9dd017b0
 to: 3c72bbf049615166aba91c9e5f9a4b3f086ad09b
 originator: wellhardh@roxen.com
@@ -10,10 +10,6 @@ Multiple fixes:
   * relay2.pike: No check was made for the existense of from->prot_obj (which could be missing) which could lead to an indexing the NULL value error.
 
   * relay2: Actually port_obj was misspelled as prot_obj.
-
-  * Installer [Win32]: Prefer MariaDB 10.1 to MariaDB 10.0.
-    
-    Potential fix for [bug 7705] (and possibly [bug 7698]).
 
   * Extensions: *.gz and *.bz2 et al are content-types.
     
