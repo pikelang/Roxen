@@ -494,7 +494,9 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
       new_ctx->eval_finish();
       RXML.set_context( old_ctx );
     }
-    return no_undoc ? "" : "<h4>That tag ("+name+") is not defined</h4>";
+    return no_undoc ? "" : "<h4>The tag (" +
+      Roxen.html_encode_string(name) +
+      ") is unknown</h4>";
   }
 
   foreach(tags, array|object|function tag) {
@@ -561,7 +563,9 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     RXML.set_context( old_ctx );
   }
   return (no_undoc ? "" : 
-	  "<h4>No documentation available for \""+name+"\".</h4>\n");
+	  "<h4>No documentation available for \"" +
+	  Roxen.html_encode_string(name) +
+	  "\".</h4>\n");
 }
 
 string find_module_doc( string cn, string mn, RequestID id )
