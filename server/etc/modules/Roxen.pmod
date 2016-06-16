@@ -4730,6 +4730,7 @@ string hash_query_data(string ignored, RequestID id)
 {
   // Some common cases.
   if (!id->data) return 0;
+  if (zero_type(id->misc->len)) return 0;
   if (id->data == "") return "";
   return Crypto.SHA1.hash(id->data);
 }
@@ -4768,7 +4769,8 @@ class ScopePage {
       case "url": return ENCODE_RXML_TEXT(c->id->raw_url, type);
       case "post-data":
 	c->id->register_vary_callback(0, hash_query_data);
-	return c->id->data ? ENCODE_RXML_TEXT(c->id->data, type) : RXML.nil;
+	if (!c->id->data || zero_type(c->id->misc->len)) return RXML.nil;
+	return ENCODE_RXML_TEXT(c->id->data, type);
       case "last-true": return ENCODE_RXML_INT(c->misc[" _ok"], type);
       case "language": return ENCODE_RXML_TEXT(c->misc->language, type);
       case "scope": return ENCODE_RXML_TEXT(c->current_scope(), type);
