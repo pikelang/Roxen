@@ -1,13 +1,11 @@
-subject: Roxen 6.0:   * Version bumped to 6.0.135 by buildsystem.
+subject: Roxen 6.0: RXML: page.post-data should evaluate to RXML.nil when no post-data.
 from: 3c72bbf049615166aba91c9e5f9a4b3f086ad09b
 to: 814fa3a2becab52d5ba9739491fe9b1c46b5a137
 originator: wellhardh@roxen.com
 depends: 2016-06-08T135936
 restart: true
 
-  * Version bumped to 6.0.135 by buildsystem.
-
-  * RXML: &page.post-data; should evaluate to RXML.nil when no post-data.
+  * RXML: page.post-data should evaluate to RXML.nil when no post-data.
     
     The HTTP protocol module has a tendency to set data to "" (and not to 0),
     even when no data was submitted with the request. Detect this case by
