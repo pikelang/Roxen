@@ -9,6 +9,8 @@ constant rxp_version = "1.1";
 constant known_flags = ([ "restart" : "Need to restart server" ]);
 //! All flags that are supported by the rxp fileformat.
 
+// NB: Platforms added here also need to be added to the test patch
+//     etc/test/tests/patcher/2009-02-25T1124.rxp.
 constant known_platforms = (< "macosx_ppc32", 
 			      "macosx_x86",
 			      "macosx_x86_64",
