@@ -1,0 +1,179 @@
+subject: Roxen 5.5: Multiple fixes:
+from: 44c65bdb1e8c03e075cf0772d5f2ae004a5896db
+to: 90d5de2698071083cb834b63aaae86d7d5b4a9cc
+originator: wellhardh@roxen.com
+depends: 2016-03-18T140757
+restart: true
+
+Multiple fixes:
+
+  * Fix for double zipped data
+
+  * Fix for erroneously closing tags during rewrite
+
+  * Handle modules where query_provides() returns 0.
+
+  * Filesystem: Renamed decode_path() to encode_path().
+    
+    Get rid of the misleading name as it is the opposite of what it does.
+    
+    Preparation for fixing [bug 7659].
+
+  * Filesystem: Added decode_path().
+    
+    This function actually performs decoding...
+    
+    Preparation for fixing [bug 7659].
+
+  * Filesystem: Open files in the same way for all requests.
+    
+    Use Stdio.File()->open() to open files and NOT roxenloader::open().
+    
+    Fixes some path confusion issues.
+
+  * Filesystem: Decode the file names returned by get_dir().
+    
+    Fixes some of [bug 7659].
+
+  * Filesystem: Use encoded paths for file locks.
+    
+    Fixes some of [bug 7659].
+
+  * Filesystem: Filesystem filename encoding consistency fixes.
+    
+    Avoid double encoding of filename components.
+    
+    Fixes remainder of [bug 7659].
+
+  * Filesystem: Support path expansion symbols in the search path.
+
+  * Filesystem: Some cosmetic fixes and FILESYSTEM_DEBUG.
+
+  * ConfigIF: Hide the Module Priorities page for the Admin Interface.
+    
+    The user shouldn't be able to change the priorities for modules
+    belonging to the Administration Interface.
+
+  * Documented the lack of utf-8 decoding in "-url"-quoting.
+
+  * Filesystem: Improved compat with Pike 7.8 and earlier.
+    
+    Fixes [bug 7659] #4.
+
+  * VFS: The global cache doesn't like NULL entries.
+    
+    Fixes backtrace from the htaccess module when there are no
+    applicable .htaccess files.
+
+  * Fielsystem: Use real_path() to convert virtual paths everywhere.
+    
+    This reduces the amount of duplicted code, and makes overloading
+    the module quite a bit easier.
+    
+    Fixes some of [bug 7659].
+
+  * Incoming FS: Fix some path encoding issues.
+    
+    Fixes some of [bug 7659].
+
+  * UserFS: Fix path encoding issues.
+    
+    Also major code cleanup by using the low_real_path() api.
+    
+    Fixes some of [bug 7659].
+
+  * RestrictedFS: Fixed path encoding issues.
+    
+    Also major code cleanup by using the low_real_path() api.
+    
+    Fixes some more of [bug 7659].
+
+  * The debug tag now takes content
+    
+    If used with the werror attribute content in the debug tag will be printed to the logfile.
+    
+    If the werror attribute is given the result from all eventual other attributes will be written to the log file and the result will be flushed, i.e the tag will not output anything.
+
+  * Normal Filesystem: Fix PUT fd leak.
+
+  * Filesystem: Improved path normalization.
+    
+    Make sure that the cached search path ends with a directory separator.
+    
+    Fixes errors on NT (where roxen_path() strips the separator).
+
+  * Filesystem: Added wrapper for System.normalize_path().
+    
+    Potential fix for more issues on NT.
+
+  * Filesystem: Improved wrapper for normalize_path().
+    
+    Attempt to handle the case where the entire path is invalid.
+    
+    Potential fix for more issues on NT.
+
+  * Filesystem [NT]: More path normalization fixes.
+
+  * Filesystem: Adjusting id->not_query is not a good idea.
+    
+    The path given to low_real_path() doesn't necessarily have
+    any relation to id->not_query...
+    
+    For some reason this triggered testsuite failures only on NT.
+
+  * rxmltags: Fixed a bug in <debug/> which could raise an internal server error if content or result was RXML.nil.
+
+  * API [Roxen.set_cookie]: Fixed the function type.
+    
+    The last two arguments to Roxen.set_cookie() are flags, and should
+    thus accept the canonical true value (ie 1).
+
+  * HTTP: Added id-misc-forwarded.
+    
+    This field contains any parsed RFC 7230 Forwarded headers.
+    
+    Fixes some of [bug 7694].
+
+  * HTTP: Use id->misc->forwarded in id->url_base().
+    
+    id->url_base() now attempts to generate an url that the end client
+    is able to use.
+    
+    Fixes some of [bug 7694].
+
+  * Roxen.make_absolute_url: Get rid of old forwarded kludges.
+    
+    Now that url_base() is proxy-aware, there's no need to attempt
+    do the same thing in make_absolute_url().
+
+  * Relay2: Generate proper Forwarded headers.
+    
+    Fixes some more of [bug 7694].
+
+  * Logging: Added logging pattern $forwarded.
+
+  * HTTP: Fixed handling of multiple Forwarded headers.
+    
+    Fixes [bug 7694] some more.
+
+  * HTTP: Fixed parsing of multiple forwarded headers in url_base().
+
+  * Testsuite [HTTP]: Let verify_headers() return the parsed headers.
+
+  * Testsuite [HTTP]: Test handling of forwarded headers and redirects.
+    
+    Fixes remainder of [bug 7694].
+
+  * HTTP: Fixed RFC reference.
+    
+    The Forwarded header is defined in RFC 7239 (not RFC 7230).
+
+  * relay2.pike: No check was made for the existense of from->prot_obj (which could be missing) which could lead to an indexing the NULL value error.
+
+  * relay2: Actually port_obj was misspelled as prot_obj.
+
+  * RXML [Help]: Fixed tag name quoting on non-existing tag.
+    
+    Thanks to Henry Umansky <humansky@princeton.edu> for the report.
+    
+    Fixes [bug 7707].
