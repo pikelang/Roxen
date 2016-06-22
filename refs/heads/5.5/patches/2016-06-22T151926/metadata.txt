@@ -1,4 +1,4 @@
-subject: Roxen 5.5: Multiple fixes:
+subject: Roxen 5.5: Many fixes, see description
 from: 44c65bdb1e8c03e075cf0772d5f2ae004a5896db
 to: 90d5de2698071083cb834b63aaae86d7d5b4a9cc
 originator: wellhardh@roxen.com
@@ -90,9 +90,12 @@ Multiple fixes:
 
   * The debug tag now takes content
     
-    If used with the werror attribute content in the debug tag will be printed to the logfile.
+    If used with the werror attribute content in the debug tag will be
+    printed to the logfile.
     
-    If the werror attribute is given the result from all eventual other attributes will be written to the log file and the result will be flushed, i.e the tag will not output anything.
+    If the werror attribute is given the result from all eventual
+    other attributes will be written to the log file and the result
+    will be flushed, i.e the tag will not output anything.
 
   * Normal Filesystem: Fix PUT fd leak.
 
@@ -121,7 +124,8 @@ Multiple fixes:
     
     For some reason this triggered testsuite failures only on NT.
 
-  * rxmltags: Fixed a bug in <debug/> which could raise an internal server error if content or result was RXML.nil.
+  * rxmltags: Fixed a bug in <debug/> which could raise an internal
+    server error if content or result was RXML.nil.
 
   * API [Roxen.set_cookie]: Fixed the function type.
     
@@ -168,7 +172,9 @@ Multiple fixes:
     
     The Forwarded header is defined in RFC 7239 (not RFC 7230).
 
-  * relay2.pike: No check was made for the existense of from->prot_obj (which could be missing) which could lead to an indexing the NULL value error.
+  * relay2.pike: No check was made for the existense of from->prot_obj
+    (which could be missing) which could lead to an indexing the NULL
+    value error.
 
   * relay2: Actually port_obj was misspelled as prot_obj.
 
