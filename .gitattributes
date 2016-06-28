@@ -320,7 +320,6 @@ worldmap binary
 /server/modules/security/userdb_sql.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
-/server/modules/tags/additional_rxml.pike foreign_ident
 /server/modules/tags/awizard.pike foreign_ident
 /server/modules/tags/captcha.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
