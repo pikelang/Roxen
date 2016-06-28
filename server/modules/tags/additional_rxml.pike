@@ -248,6 +248,7 @@ class TagInsertHref {
   mapping(string:RXML.Type) opt_arg_types = ([
     "method": RXML.t_text(RXML.PEnt),
     "soap-action": RXML.t_text(RXML.PEnt),
+    "accept-status": RXML.t_text(RXML.PEnt),
   ]);
 
   array do_enter(mapping args, RequestID id, RXML.Frame frame)
@@ -340,29 +341,51 @@ class TagInsertHref {
     if(args["status-variable"] && q && q->status)
       RXML.user_set_var(args["status-variable"],q->status);
 
+    // Default to accepting statuses in the range 1-399.
+    array(array(int)) accept_statuses = ({ ({ 1, 399 }) });
+
+    if (args["accept-status"]) {
+      accept_statuses = ({});
+      foreach(args["accept-status"]/",", string range) {
+	range =
+	  replace(range, ({ "...", "..", " ", "\t" }), ({ "-", "-", "", "" }));
+	array(int) pair = (array(int))(range/"-");
+	if (sizeof(pair) == 1) {
+	  pair += pair;
+	} else if ((sizeof(pair) != 2) || (pair[0] > pair[1])) {
+	  RXML.parse_error("Invalid status range: %s\n", args["accept-status"]);
+	}
+	accept_statuses += ({ pair });
+      }
+    }
+
     string errmsg;
-    if(q && q->status>0 && q->status<400) {
-      mapping headers = q->con->headers;
-      string data = q->data();
+    if(q) {
+      foreach(accept_statuses, array(int) pair) {
+	if ((q->status >= pair[0]) && (q->status <= pair[1])) {
+	  mapping headers = q->con->headers;
+	  string data = q->data();
+	  // Explicitly destruct the connection object to avoid garbage
+	  // and CLOSE_WAIT sockets. Reported in [RT 18335].
+	  destruct(q);
+
+	  if (data) {
+	    return Roxen.low_parse_http_response(headers, data, 0, 1,
+						 (int)args["ignore-unknown-ce"]);
+	  }
+	  break;
+	}
+      }
+      errmsg = q->status_desc;
       // Explicitly destruct the connection object to avoid garbage
       // and CLOSE_WAIT sockets. Reported in [RT 18335].
       destruct(q);
-
-      if (data) {
-	return Roxen.low_parse_http_response (headers, data, 0, 1,
-					      (int)args["ignore-unknown-ce"]);
-      }
-    } else {
-      errmsg = q && q->status_desc;
     }
 
     _ok = 0;
 
     if(!args->silent)
       RXML.run_error(errmsg || "No server response");
-    // Explicitly destruct the connection object to avoid garbage
-    // and CLOSE_WAIT sockets. Reported in [RT 18335].
-    destruct(q);
     return "";
   }
 }
@@ -1288,6 +1311,16 @@ constant tagdoc=([
 
 <attr name='header-delimiter' value='string'><p>
  Delimiter to use with 'request-headers', defaults to comma (\",\").</p>
+</attr>
+
+<attr name='accept-status' value='\"value|min_value-max_value[,...]\"'><p>
+ Comma-separated list of status ranges to regard as successful fetches.</p>
+
+<p>A range is represented by its minumum and maximum values (inclusive)
+separated by a <tt>'-'</tt>. A range with a single value can alternatively
+be represented by just the value by itself.</p>
+
+<p>The default value is <tt>\"1-399\"</tt>.</p>
 </attr>
 
 <attr name='ignore-unknown-ce' value='int'><p>
