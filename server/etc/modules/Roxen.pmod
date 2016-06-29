@@ -3006,12 +3006,23 @@ inherit _Roxen;
 string make_http_headers(mapping(string:string|array(string)) heads,
 			 int(0..1)|void no_terminator)
 {
-  string res = ::make_http_headers(heads);
-  if (no_terminator) {
-    // Remove the terminating CRLF.
-    return res[..sizeof(res)-3];
+  foreach(heads; string key; string|array(string) val) {
+    if (has_value(key, "\n") || has_value(key, "\r") ||
+	has_value(key, ":") || has_value(key, " ") || has_value(key, "\t")) {
+      error("Invalid headername: %O (value: %O)\n", key, val);
+    }
+    if (stringp(val) && (has_value(val, "\n") || has_value(val, "\r"))) {
+      error("Invalid value for header %O: %O\n", key, val);
+    }
+    if (arrayp(val)) {
+      foreach(val, string v) {
+	if (has_value(v, "\n") || has_value(v, "\r")) {
+	  error("Invalid value for header %O: %O\n", key, val);
+	}
+      }
+    }
   }
-  return res;
+  return ::make_http_headers(heads, no_terminator);
 }
 #endif /* constant(HAVE_OLD__Roxen_make_http_headers) */
 

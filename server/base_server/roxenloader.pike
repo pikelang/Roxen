@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.394 2008/05/09 16:23:59 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.394 2008/05/09 16:23:59 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2392,8 +2392,9 @@ and rebuild Pike from scratch.
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
 
-  if (catch(((function(mapping(string:string|array(string)),int|void:string))
-	     _Roxen->make_http_headers)(([]), 1))) {
+  string s;
+  if (!catch(s = _Roxen->make_http_headers((["a\r\n":"b\r\n"]), 1)) &&
+      (sizeof(s/"\r\n") > 2)) {
     add_constant("HAVE_OLD__Roxen_make_http_headers", 1);
     report_debug(#"
 
@@ -2401,7 +2402,7 @@ and rebuild Pike from scratch.
 ------- WARNING -----------------------------------------------
 Old or broken _Roxen.make_http_headers() detected.
 
-Roxen 4.0 prefers Pike 7.4.336 or newer.
+Roxen 5.0 prefers Pike 7.8.948 or later.
 Roxen will still work, but at lower performance.
 Please install a newer version of Pike.
 ---------------------------------------------------------------
