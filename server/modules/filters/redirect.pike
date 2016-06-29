@@ -300,9 +300,8 @@ mixed first_try(object id)
   redirs++;
   if (sscanf (to, "%*[-+.a-zA-Z0-9]://%*c") == 2)
   {
-    to = replace(to, ({ "\000", " " }), ({"%00", "%20" }));
     return Roxen.http_low_answer( ret_code, "")
-      + ([ "extra_heads":([ "Location":to ]) ]);
+      + ([ "extra_heads":([ "Location":Roxen.http_encode_invalids(to) ]) ]);
   } else {
     if (!id->misc->redirected_raw_url) {
       // Keep track of the original raw_url.
