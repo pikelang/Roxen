@@ -1,0 +1,13 @@
+subject: Roxen 6.0: RXML: Added attribute accept-status to <insert#href/>.
+from: 814fa3a2becab52d5ba9739491fe9b1c46b5a137
+to: 62d5dcb982204a9b1b29b3ae2b35672bc82dc093
+originator: wellhardh@roxen.com
+depends: 2016-06-17T095456
+restart: true
+
+RXML: Added attribute accept-status to <insert#href/>.
+
+This attribute allows for finer-grained error handling and for
+retreiving the received data also for error statuses.
+
+Fixes [bug 7554].
