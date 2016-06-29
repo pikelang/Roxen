@@ -148,7 +148,6 @@ worldmap binary
 /server/etc/modules/RXML.pmod/PXml.pike foreign_ident
 /server/etc/modules/RXML.pmod/module.pmod foreign_ident
 /server/etc/modules/RXML.pmod/utils.pmod foreign_ident
-/server/etc/modules/Roxen.pmod foreign_ident
 /server/etc/modules/RoxenDebug.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
@@ -251,8 +250,6 @@ worldmap binary
 /server/modules/filesystems/userfs.pike foreign_ident
 /server/modules/filters/auto_gzip.pike foreign_ident
 /server/modules/filters/expires.pike foreign_ident
-/server/modules/filters/hostredirect.pike foreign_ident
-/server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/supports_filter.pike foreign_ident
 /server/modules/filters/tableborder.pike foreign_ident
 /server/modules/filters/url_rectifier.pike foreign_ident

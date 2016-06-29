@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.38 2008/01/10 10:06:21 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 inherit "module";
@@ -254,7 +254,7 @@ int|mapping first_try(RequestID id)
 	return 0;
       }
     };
-    to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+    to = Roxen.http_encode_invalids(to);
     dwerror("HR: %O -> %O (http redirect)\n", id->not_query, to);
     return Roxen.http_low_answer( return_code,
 				  "See <a href='"+to+"'>"+to+"</a>")

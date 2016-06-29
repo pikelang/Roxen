@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.240 2008/05/09 18:26:27 mast Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -988,6 +988,8 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     url = "";
 
   url = make_absolute_url (url, id, prestates, variables);
+
+  url = http_encode_invalids(url);
 
   HTTP_WERR("Redirect -> "+url);
 
