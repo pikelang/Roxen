@@ -1,0 +1,25 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 5f5b70cbc3359cee1b2346ae297fdf565202ee79
+to: 2823d91245192acdebc9dd9e4349014c422d9f9d
+originator: wellhardh@roxen.com
+depends: 2016-06-08T135824
+restart: true
+
+Multiple fixes:
+
+  * RXML: Added attribute accept-status to <insert#href/>.
+    
+    This attribute allows for finer-grained error handling and for
+    retreiving the received data also for error statuses.
+    
+    Fixes [bug 7554].
+
+  * Redirects: Improved quoting of redirect headers.
+    
+    Ensure that the location header is quoted properly.
+    
+    Fixes [bug 7737].
+
+  * Roxen.make_http_headers: Validate the argument.
+    
+    Fixes the entire class of bugs that [bug 7737] represents.
