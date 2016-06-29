@@ -3457,6 +3457,25 @@ Roxen requires Regexp.PCRE support in Pike
 #endif // !constant (Regexp.PCRE)
 
 
+  string s;
+  if (!catch(s = _Roxen->make_http_headers((["a\r\n":"b\r\n"]), 1)) &&
+      (sizeof(s/"\r\n") > 2)) {
+    add_constant("HAVE_OLD__Roxen_make_http_headers", 1);
+    report_debug(#"
+
+
+------- WARNING -----------------------------------------------
+Old or broken _Roxen.make_http_headers() detected.
+
+Roxen 5.0 prefers Pike 7.8.948 or later.
+Roxen will still work, but at lower performance.
+Please install a newer version of Pike.
+---------------------------------------------------------------
+
+
+");
+  }
+
   Stdio.Stat stat = file_stat("etc/include/version.h");
   if (stat && (stat->mtime > time())) {
     report_debug(#"

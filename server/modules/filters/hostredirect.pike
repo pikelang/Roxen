@@ -285,7 +285,7 @@ int|mapping first_try(RequestID id)
 	return 0;
       }
     };
-    to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+    to = Roxen.http_encode_invalids(to);
     dwerror("HR: %O -> %O (http redirect)\n", id->not_query, to);
     return Roxen.http_low_answer( return_code,
 				  "See <a href='"+to+"'>"+to+"</a>")
