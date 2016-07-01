@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: Redirects: Improved quoting of redirect headers
 from: 62d5dcb982204a9b1b29b3ae2b35672bc82dc093
 to: c44f96b95480d2eabbfe4f0ce3defa7dc2d8c831
 originator: wellhardh@roxen.com
@@ -6,8 +6,6 @@ depends: 2016-06-29T084924
 restart: true
 
 Multiple fixes:
-
-  * Version bumped to 6.0.136 by buildsystem.
 
   * Redirects: Improved quoting of redirect headers.
     
