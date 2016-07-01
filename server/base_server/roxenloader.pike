@@ -3467,7 +3467,7 @@ Roxen requires Regexp.PCRE support in Pike
 ------- WARNING -----------------------------------------------
 Old or broken _Roxen.make_http_headers() detected.
 
-Roxen 5.0 prefers Pike 7.8.948 or later.
+Roxen 6.0 prefers Pike 8.0.270 or later.
 Roxen will still work, but at lower performance.
 Please install a newer version of Pike.
 ---------------------------------------------------------------
