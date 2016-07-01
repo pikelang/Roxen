@@ -1,0 +1,6 @@
+Modified files:
+  base_server/roxenloader.pike
+  etc/include/version.h
+  etc/modules/Roxen.pmod
+  modules/filters/hostredirect.pike
+  modules/filters/redirect.pike
