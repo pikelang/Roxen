@@ -3352,7 +3352,11 @@ protected void engage_abs(int n)
     t = alarm(20);	// Restart the timeout timer.
     array(mixed) queue = handle_queue->buffer[handle_queue->r_ptr..];
     foreach(queue, mixed v) {
-      if (!v) continue;
+      if (!v) {
+	// Either an entry past the write pointer, or an entry that
+	// has been zapped by a handler thread during our processing.
+	continue;
+      }
       if (!arrayp(v)) {
 	report_debug("  *** Strange entry: %O ***\n", v);
       } else {
@@ -3367,7 +3371,7 @@ protected void engage_abs(int n)
       t = alarm(20);	// Restart the timeout timer.
       foreach(call_out_info(), array info) {
 	report_debug("  %4d seconds: %O(%{%O, %})\n",
-		     info[0], info[2], info[3]);
+		     info[0], info[2], info[3..]);
       }
     })
     master()->handle_error(err);
