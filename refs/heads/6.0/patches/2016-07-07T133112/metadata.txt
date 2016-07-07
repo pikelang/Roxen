@@ -1,0 +1,23 @@
+subject: Roxen 6.0: Multiple fixes:
+from: d75ef1c016932d15a28145c40d842a973508efc2
+to: d7a8ac64dd9de486209415c30b1bd1f2ac294371
+originator: wellhardh@roxen.com
+depends: 2016-07-01T120520
+restart: true
+
+Multiple fixes:
+
+  * RoxenPatch: Added architecture ubuntu1604_x86_64.
+
+  * Testsuite [RoxenPatch]: Updated the test patch with ubuntu1604_x86_64.
+    
+    Fixes testsuite failures on Ubuntu 16.04/x86_64.
+
+  * ABS: Fix listing of call_outs.
+    
+    Fixes ABS listing of call_outs which have no arguments or not an array
+    as the first argument.
+    
+    Fixes [bug 7746].
+
+  * Version bumped to 6.0.137 by buildsystem.
