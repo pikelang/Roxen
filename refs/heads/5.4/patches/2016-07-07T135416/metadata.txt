@@ -1,0 +1,13 @@
+subject: Roxen 5.4: ABS: Fix listing of call_outs.
+from: 2823d91245192acdebc9dd9e4349014c422d9f9d
+to: 6c84d6f4444cbe8f586ed6ab1377fdc65df56c97
+originator: wellhardh@roxen.com
+depends: 2016-06-29T132644
+restart: true
+
+ABS: Fix listing of call_outs.
+
+Fixes ABS listing of call_outs which have no arguments or not an array
+as the first argument.
+
+Fixes [bug 7746].
