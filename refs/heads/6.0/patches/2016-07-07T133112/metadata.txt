@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: RoxenPatch, ABS backtrace
 from: d75ef1c016932d15a28145c40d842a973508efc2
 to: d7a8ac64dd9de486209415c30b1bd1f2ac294371
 originator: wellhardh@roxen.com
@@ -19,5 +19,3 @@ Multiple fixes:
     as the first argument.
     
     Fixes [bug 7746].
-
-  * Version bumped to 6.0.137 by buildsystem.
