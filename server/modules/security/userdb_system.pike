@@ -28,6 +28,9 @@ Thread.Mutex mt = Thread.Mutex();
 protected mapping cached_groups = ([]);
 protected array(SysGroup) full_group_list;
 
+/* Time to cache stuff in seconds. */
+#define MAX_CACHE_TIME	60
+
 protected array(string) get_cached_groups_for_user( int uid )
 {
   if(cached_groups[ uid ] )
@@ -76,6 +79,8 @@ class SysUser
   inherit User;
   protected array pwent;
 
+  int expiry_time = time(1) + MAX_CACHE_TIME;
+
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
   int uid()                 { return pwent[2]; }
@@ -113,22 +118,75 @@ class SysGroup
   }
 }
 
+protected mapping(string|int:SysUser|int) cached_users =
+  set_weak_flag(([]), Pike.WEAK);
+
 User find_user( string s )
 {
+  int|User res = cached_users[s];
+  if (!zero_type(res)) {
+    if (intp(res) && (res > time(1))) return 0;
+    if (objectp(res) && (res->expiry_time > time(1))) return res;
+    // NB: Can't invalidate cached_users here due to races.
+  }
   mixed key = mt->lock();
+  res = cached_users[s];
+  if (!zero_type(res)) {
+    if (intp(res) && (res > time(1))) return 0;
+    if (objectp(res)) {
+      if (res->expiry_time > time(1)) return res;
+      int id = res->uid();
+      if (id) m_delete(cached_users, id);
+    }
+  }
   object p = Privs("getpwnam");
   array a = getpwnam( s );
   p = UNDEFINED;
-  if( a )  return SysUser( this_object(), a );
+  res = 0;
+  if( a ) {
+    res = SysUser( this_object(), a );
+    int id = res->uid();
+    if (id) {
+      cached_users[id] = res;
+    }
+    cached_users[s] = res;
+  } else {
+    cached_users[s] = time(1) + MAX_CACHE_TIME;
+  }
+  return res;
 }
 
 User find_user_from_uid( int id )
 {
+  int|User res = cached_users[id];
+  if (!zero_type(res)) {
+    if (intp(res) && (res > time(1))) return 0;
+    if (objectp(res) && (res->expiry_time > time(1))) return res;
+    // NB: Can't invalidate cached_users here due to races.
+  }
   mixed key = mt->lock();
+  res = cached_users[id];
+  if (!zero_type(res)) {
+    if (intp(res) && (res > time(1))) return 0;
+    if (objectp(res) && (res->expiry_time > time(1))) return res;
+    string name = res->name();
+    if (sizeof(name||"")) m_delete(cached_users, name);
+  }
   object p = Privs("getpwuid");
   array a = getpwuid( id );
   p = UNDEFINED;
-  if( a ) return SysUser( this_object(), a );
+  res = 0;
+  if( a ) {
+    res = SysUser( this_object(), a );
+    string name = res->name();
+    if (sizeof(name||"")) {
+      cached_users[name] = res;
+    }
+    cached_users[id] = res;
+  } else {
+    cached_users[id] = time(1) + MAX_CACHE_TIME;
+  }
+  return res;
 }
 
 array(string) list_users( )
@@ -156,7 +214,7 @@ Group find_group( string group )
   array a = getgrnam( group );
   if( a )
   {
-    call_out( m_delete, 60, group_cache, group );
+    call_out( m_delete, MAX_CACHE_TIME, group_cache, group );
     return group_cache[ group ] = SysGroup( this_object(), a );
   }
 }
@@ -170,7 +228,7 @@ Group find_group_from_gid( int id  )
   array a = getgrgid( id );
   if( a )
   {
-    call_out( m_delete, 60, cached_groups, id );
+    call_out( m_delete, MAX_CACHE_TIME, cached_groups, id );
     return group_cache[ id ] = SysGroup( this_object(), a );
   }
 }
@@ -192,7 +250,8 @@ array(string) list_groups( )
   }
   System.endgrent();
   full_group_list = res;
-  call_out( lambda(){ full_group_list = 0; cached_groups=([]); }, 60 );
+  call_out( lambda(){ full_group_list = 0; cached_groups=([]); },
+	    MAX_CACHE_TIME );
   return res->name();
 }
 #else
