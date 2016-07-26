@@ -137,6 +137,7 @@ void start()
   path="";
   normalized_path="";
   banish_list = mkmultiset(query("banish_list"));
+  USERFS_WERR(sprintf("start: banish_list: %O\n", banish_list));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
