@@ -1,0 +1,3 @@
+Modified files:
+  etc/modules/VFS.pmod
+  modules/filesystems/userfs.pike
