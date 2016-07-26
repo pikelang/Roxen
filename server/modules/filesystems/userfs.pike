@@ -307,7 +307,8 @@ Stdio.Stat stat_file(string f, RequestID id)
   string norm_f = real_path(f, id);
 
   if (!norm_f) {
-    return Stdio.Stat(({ 0, -2, 0, 0, 0, 0, 0 }));
+    if ((f - "/") == "") return Stdio.Stat(({ 0, -2, 0, 0, 0, 0, 0 }));
+    return 0;
   }
 
   Stdio.Stat st = file_stat(norm_f);
