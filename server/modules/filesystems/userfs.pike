@@ -138,6 +138,7 @@ void start()
   path="";
   normalized_path="";
   banish_list = mkmultiset(query("banish_list"));
+  USERFS_WERR(sprintf("start: banish_list: %O\n", banish_list));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
@@ -316,7 +317,8 @@ Stdio.Stat stat_file(string f, RequestID id)
   string norm_f = real_path(f, id);
 
   if (!norm_f) {
-    return Stdio.Stat(({ 0, -2, 0, 0, 0, 0, 0 }));
+    if ((f - "/") == "") return Stdio.Stat(({ 0, -2, 0, 0, 0, 0, 0 }));
+    return 0;
   }
 
   Stdio.Stat st = file_stat(norm_f);
