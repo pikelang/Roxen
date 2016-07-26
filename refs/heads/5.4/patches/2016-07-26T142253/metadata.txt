@@ -1,0 +1,18 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 6c84d6f4444cbe8f586ed6ab1377fdc65df56c97
+to: 933ec0ae465ddad4dbf2ee521af9c4e92fc112b8
+originator: wellhardh@roxen.com
+depends: 2016-07-07T135416
+restart: true
+
+Multiple fixes:
+
+  * UserFS: Improved 404 handling.
+    
+    Don't invent directories where there are none...
+
+  * UserFS: Improved diagnostics.
+
+  * VFS: Fixed infinite loop in find_above_read().
+    
+    Fixes [bug 7750].
