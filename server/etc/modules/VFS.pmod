@@ -124,8 +124,15 @@ array(string) find_above_read( string above,
       }
       return ({ above, data, 0 });
     }
+    if (above == "/" + name) break;
+#ifdef HTACCESS_DEBUG
+    werror("above: %O ==> %O\n", above, combine_path(above, ".."));
+#endif /* HTACCESS_DEBUG */
     above = combine_path( above, ".." );
   }
+#ifdef HTACCESS_DEBUG
+  werror("find_above_read: Failed.\n");
+#endif /* HTACCESS_DEBUG */
   return 0;
 }
 
