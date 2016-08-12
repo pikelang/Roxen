@@ -99,6 +99,11 @@ class SysUser
   protected void create( UserDB p, array _pwent )
   {
     ::create( p );
+    foreach(({ 0, 4 }), int fieldno) {
+      catch {
+	pwent[fieldno] = utf8_to_string(pwent[fieldno]);
+      };
+    }
     pwent = _pwent;
   }
 }
@@ -114,6 +119,14 @@ class SysGroup
   protected void create( UserDB p, array _grent )
   {
     ::create( p );
+    catch {
+      grent[0] = utf8_to_string(grent[0]);
+    };
+    foreach(grent[3]; int fieldno; string user) {
+      catch {
+	grent[3][fieldno] = utf8_to_string(user);
+      };
+    }
     grent = _grent;
   }
 }
@@ -140,7 +153,7 @@ User find_user( string s )
     }
   }
   object p = Privs("getpwnam");
-  array a = getpwnam( s );
+  array a = getpwnam( string_to_utf8(s) );
   p = UNDEFINED;
   res = 0;
   if( a ) {
@@ -211,7 +224,7 @@ Group find_group( string group )
     return group_cache[ group ];
   
   mixed key = mt->lock();
-  array a = getgrnam( group );
+  array a = getgrnam( string_to_utf8(group) );
   if( a )
   {
     call_out( m_delete, MAX_CACHE_TIME, group_cache, group );
