@@ -242,7 +242,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   string norm_f = real_path(f, id);
 
   if (!norm_f) {
-    return Roxen.http_status(403, "Access forbidden by user");
+    return 0;
   }
 
   array(string) us;
