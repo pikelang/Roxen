@@ -99,12 +99,12 @@ class SysUser
   protected void create( UserDB p, array _pwent )
   {
     ::create( p );
+    pwent = _pwent;
     foreach(({ 0, 4 }), int fieldno) {
       catch {
 	pwent[fieldno] = utf8_to_string(pwent[fieldno]);
       };
     }
-    pwent = _pwent;
   }
 }
 
@@ -119,6 +119,7 @@ class SysGroup
   protected void create( UserDB p, array _grent )
   {
     ::create( p );
+    grent = _grent;
     catch {
       grent[0] = utf8_to_string(grent[0]);
     };
@@ -127,7 +128,6 @@ class SysGroup
 	grent[3][fieldno] = utf8_to_string(user);
       };
     }
-    grent = _grent;
   }
 }
 
