@@ -6446,6 +6446,16 @@ class LogFormat			// Note: Dumping won't work if protected.
     return tmp[0];      // username only, no password
   }
 
+  protected string get_forwarded_field(RequestID id, string field)
+  {
+    foreach(id->misc->forwarded || ({}), array(string|int) segment) {
+      if (!arrayp(segment) || sizeof(segment) < 3) continue;
+      if (segment[0] != field || segment[1] != '=') continue;
+      return MIME.quote(segment[2..]);
+    }
+    return "-";
+  }
+
   void log_access( function do_write, RequestID id, mapping file );
 
   void log_event (function do_write, string facility, string action,
@@ -6620,13 +6630,7 @@ protected constant formats = ([
 				 "MIME.quote(request_id->misc->forwarded *"
 				 "           ({ ',' })) : \"-\""),
 			  1, "\"-\"", 0 }),
-  // FIXME: The following ought to use misc->forwarded.
-  "xff":		({"%s", ("arrayp(request_id->request_headers["
-				 "\"x-forwarded-for\"]) ? "
-				 "(request_id->request_headers["
-				 "\"x-forwarded-for\"][-1] / \",\")[0] :"
-				 "((request_id->request_headers["
-				 "\"x-forwarded-for\"] || \"-\") / \",\")[0]"),
+  "xff":		({"%s", "get_forwarded_field(request_id, \"for\")",
 			  1, "\"-\"", 0 }),
 
   // Used for event logging
