@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2589,7 +2589,6 @@ library should be enough.
   {
     hider -= ({ "--long-error-file-names" });
     argc = sizeof(hider);
-    new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
 

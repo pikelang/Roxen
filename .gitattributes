@@ -81,7 +81,6 @@ worldmap binary
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
-/server/base_server/roxenloader.pike foreign_ident
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/slowpipe.pike foreign_ident
 /server/base_server/smtprelay.pike foreign_ident
@@ -174,7 +173,6 @@ worldmap binary
 /server/etc/randomtext/README foreign_ident
 /server/etc/randomtext/company foreign_ident
 /server/etc/randomtext/poetry foreign_ident
-/server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/etc/test/filesystem/test_rxml_package foreign_ident
 /server/etc/test/tests/ftp/RoxenTest_ftp.pike foreign_ident

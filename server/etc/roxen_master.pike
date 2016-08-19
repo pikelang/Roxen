@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.149 2008/08/08 15:06:22 mast Exp $";
+constant cvs_version = "$Id$";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -983,37 +983,12 @@ void name_program( program p, string name )
   programs[name] = p;
 }
 
-#if 0
-
-class Describer
-{
-  inherit master::Describer;
-
-  string describe_string (string m, int maxlen)
-  {
-    canclip++;
-    if(sizeof(m) < 40)
-      return  sprintf("%O", m);;
-    clipped++;
-    return sprintf("%O+[%d]+%O",m[..15],sizeof(m)-(32),m[sizeof(m)-16..]);
-  }
-
-  string describe_array (array m, int maxlen)
-  {
-    if(!sizeof(m)) return "({})";
-    return "({" + describe_comma_list(m,maxlen-2) +"})";
-  }
-}
-
 constant bt_max_string_len = 99999999;
-int long_file_names;
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
   return predef::describe_backtrace(trace, 999999);
 }
-
-#endif
 
 void create()
 {
