@@ -3679,7 +3679,6 @@ library should be enough.
   {
     hider -= ({ "--long-error-file-names" });
     argc = sizeof(hider);
-    new_master->long_file_names = 1;
     new_master->putenv("LONG_PIKE_ERRORS", "yup");
   }
 
