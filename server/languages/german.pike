@@ -31,6 +31,8 @@ constant days = ({
   "Sonntag","Montag","Dienstag","Mittwoch",
   "Donnerstag","Freitag","Samstag" });
 
+constant implode_conjunction = "und";
+
 string ordered(int i)
 {
   return i+".";

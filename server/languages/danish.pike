@@ -18,6 +18,8 @@ constant days = ({
   "søndag","mandag","tirsdag","onsdag", "torsdag","fredag",
   "lørdag" });
 
+constant implode_conjunction = "og";
+
 string ordered(int i)
 {
   if (i%100 == 2)

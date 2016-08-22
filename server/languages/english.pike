@@ -21,6 +21,8 @@ constant days = ({
   "Sunday","Monday","Tuesday","Wednesday",
   "Thursday","Friday","Saturday" });
 
+constant implode_conjunction = "and";
+
 string ordered(int i)
 {
   switch(i)

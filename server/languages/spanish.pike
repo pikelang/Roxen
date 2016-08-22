@@ -20,6 +20,8 @@ constant days = ({
   "Domingo","Lunes","Martes","Miércoles",
   "Jueves","Viernes","Sábado" });
 
+constant implode_conjunction = "y";
+
 string ordered(int i)
 {
     return i+"º";

@@ -9,6 +9,10 @@ constant months = ({ "", "", "", "", "", "", "", "", "", "", "", "" });
 // Array(string) with the days of the week, beginning with Sunday
 constant days = ({ "", "", "", "", "", "", "" });
 
+// Separator to implode list like ({ "foo", "bar", "fie", fum" }) =>
+// "foo, bar, fie SEPARATOR fum".
+constant implode_conjunction = "and";
+
 // Array(string) with all the language's identifiers
 constant _aliases = ({});
 
@@ -85,4 +89,9 @@ string date(int i, mapping|void m)
 {
   mapping lt=localtime(i);
   return sprintf("%4d-%02d-%02d", lt->year+1900, lt->mon+1, lt->mday);
+}
+
+string implode(array(string) items)
+{
+  return String.implode_nicely(items, implode_conjunction);
 }

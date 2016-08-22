@@ -21,6 +21,8 @@ constant days = ({
   "Domingo","Segunda Feira","Terça Feira","Quarta Feira",
   "Quinta Feira","Sexta Feira","Sábado" });
  
+constant implode_conjunction = "e";
+
 string ordered(int i)
 {
     return i+"º";

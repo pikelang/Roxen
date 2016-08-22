@@ -23,6 +23,8 @@ constant days = ({
   "Nedelja","Ponedeljek","Torek","Sreda",
   "Èetrtek","Petek","Sobota" });
 
+constant implode_conjunction = "in";
+
 string number(int num)
 {
   if(!num)

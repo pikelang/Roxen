@@ -32,6 +32,8 @@ constant days = ({
   "dimanche", "lundi", "mardi", "mercredi",
   "jeudi", "vendredi", "samedi" });
 
+constant implode_conjunction = "et";
+
 string ordered(int i)
 {
   switch(i)

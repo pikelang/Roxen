@@ -23,6 +23,8 @@ constant days = ({
   "Raatapu","Mane","Tuurei","Wenerei",
   "Taaite","Paraire","Haatarei" });
 
+constant implode_conjunction = "ko";
+
 string number( int i ) ;
 
 string ordered(int i)

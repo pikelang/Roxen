@@ -16,6 +16,8 @@ constant cvs_version = "$Id$";
 constant _id = ({ pol::iso_639_1, pol::iso_639_2, pol::english_name, pol::name });
 constant _aliases = pol::aliases;
 
+constant implode_conjunction = "i";
+
 array aliases()
 {
   return _aliases;

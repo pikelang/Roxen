@@ -15,6 +15,8 @@ constant _aliases =  ({ "jp", "japanese", "nihongo" /* To keep Peter Evans happy
 			"kj", "kanji", /* For backward compatibility */
 });
 
+constant implode_conjunction = "と";
+
 constant required_charset = "iso-2022";
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
 

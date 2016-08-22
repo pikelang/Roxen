@@ -22,6 +22,8 @@ constant days = ({
   "diumenge","dilluns","dimarts","dimecres",
   "dijous","divendres","dissabte" });
 
+constant implode_conjunction = "i";
+
 string ordered(int i)
 {
   switch(i)

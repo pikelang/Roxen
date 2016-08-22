@@ -21,6 +21,8 @@ constant days = ({
   "Sunnuntai","Maanantai","Tiistai","Keskiviikko",
   "Torstai","Perjantai","Lauantai" });
 
+constant implode_conjunction = "ja";
+
 string ordered(int i)
 {
   return i+".";

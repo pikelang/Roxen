@@ -22,6 +22,8 @@ constant days = ({
   "воскресенье","понедельник","вторник","среда", "четверк",
   "пятница", "суббота" });
 
+constant implode_conjunction = "и";
+
 string ordered(int i)
 {
   return (string) i + "-е";

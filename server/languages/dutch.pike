@@ -21,6 +21,8 @@ constant days = ({
   "zondag", "maandag", "dinsdag", "woensdag",
   "donderdag", "vrijdag", "zaterdag" });
 
+constant implode_conjunction = "en";
+
 string ordered(int i)
 {
   switch(i)

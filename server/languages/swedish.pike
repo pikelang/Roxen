@@ -19,6 +19,8 @@ constant days = ({
   "söndag","måndag","tisdag","onsdag", "torsdag","fredag",
   "lördag" });
 
+constant implode_conjunction = "och";
+
 constant languages=([
   "cat":"katalanska",
   "ces":"tjeckiska",
@@ -146,6 +148,7 @@ string number(int num)
     return("noll");
   }
 }
+
 
 
 protected void create()

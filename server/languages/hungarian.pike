@@ -29,6 +29,8 @@ constant days = ({
   "szerda", "csütörtök", "péntek",
   "szombat" });
 
+constant implode_conjunction = "és";
+
 string ordered(int i)
 {
     if(!i)

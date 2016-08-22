@@ -29,6 +29,8 @@ constant days = ({
   "domenica","lunedì","martedì","mercoledì",
   "giovedì","venerdì","sabato" });
 
+constant implode_conjunction = "e";
+
 string number (int num)
 {
   if (num<0)
