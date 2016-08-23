@@ -33,6 +33,7 @@ constant specific_options = ([
     ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
     ({ "flag", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
     ({ "originator", Getopt.HAS_ARG, ({ "-O", "--originator" }) }),
+    ({ "subject", Getopt.HAS_ARG, ({ "-s", "--subject" }) }),
     ({ "message", Getopt.HAS_ARG, ({ "-m", "--message" }) }),
     ({ "patchid", Getopt.HAS_ARG, ({ "--patchid" }) }),
     ({ "restart", Getopt.NO_ARG, ({ "--restart" }) }),
@@ -1270,9 +1271,10 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
     header += sprintf("%{flag: %s\n%}", Array.uniq(options->flag));
   }
 
-  string subject = options->message;
+  string subject = options->subject;
 
-  string description = format_description(patch_sha1, head_sha1);
+  string description = options->message ||
+    format_description(patch_sha1, head_sha1);
 
   if (!subject) {
     subject = "";
