@@ -1,4 +1,4 @@
-subject: Roxen 5.4: Multiple fixes:
+subject: Roxen 5.4: UserFS and log format fixes.
 from: 933ec0ae465ddad4dbf2ee521af9c4e92fc112b8
 to: 2efd6dfebbfec998623137cbfbd8d358c3af3ca3
 originator: marty@roxen.com
