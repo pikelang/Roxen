@@ -250,7 +250,7 @@ DECLARE_OBJ_COUNT;
 
 protected string _sprintf (int flag)
 {
-  return flag == 'O' && sprintf ("AFS.Action(%s)" + OBJ_COUNT, name);
+  return flag == 'O' && sprintf ("AFS.Action(%s)" + OBJ_COUNT, name||"unknown");
 }
 
 //! Not yet in use. Intended to be a result wrapper until the response
