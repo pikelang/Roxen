@@ -1,0 +1,21 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 933ec0ae465ddad4dbf2ee521af9c4e92fc112b8
+to: 2efd6dfebbfec998623137cbfbd8d358c3af3ca3
+originator: marty@roxen.com
+depends: 2016-07-26T142253
+restart: true
+
+Multiple fixes:
+
+  * UserFS: Interoperate better with other filesystem modules.
+    
+    Return 404 instead of 403 on user not found. This allows for having
+    other modules as fallback for invalid paths.
+
+  * Logging: Fixed quoting error in $forwarded.
+    
+    Fixes [bug 7759].
+
+  * Logging: Use misc->forwarded in $xff.
+    
+    Fixes FIXME.
