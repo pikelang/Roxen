@@ -1,0 +1,12 @@
+subject: Roxen 5.4: Revert "PCode: Make sure to compile everything in PCode used by subevalers."
+from: 2efd6dfebbfec998623137cbfbd8d358c3af3ca3
+to: 2e9ca513e601e2a786d88ca83464ac849d46288b
+originator: marty@roxen.com
+depends: 2016-08-25T142526
+restart: true
+
+Revert "PCode: Make sure to compile everything in PCode used by subevalers."
+
+This reverts commit b96e06a15958bc80162cfa0ed99a95ac42a4632f.
+Attempt to reduce possible overhead introduced by always compiling in
+PikeCompile instances.
