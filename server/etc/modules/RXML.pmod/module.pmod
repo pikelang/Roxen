@@ -4925,16 +4925,6 @@ class Frame
 		    this_object()->evaled_content->finish();
 		  if (unevaled_content) {
 		    unevaled_content->finish();
-
-		    if (PikeCompile _p_code_comp =
-			unevaled_content->p_code_comp)
-		      // This will clean up delayed_resolve_places in
-		      // the PikeCompile object, which may otherwise
-		      // contain references to things that have a
-		      // back-reference to this PCode object,
-		      // generating garbage due to a reference cycle.
-		      _p_code_comp->compile();
-
 		    in_content = unevaled_content;
 		    ctx->state_updated++;
 		    PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
