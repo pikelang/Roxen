@@ -1472,7 +1472,8 @@ void cache_clear_deltas()
 }
 
 mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
-//! Looks up an entry in a cache. Returns @[UNDEFINED] if not found.
+//! Looks up an entry in a cache. Returns @[UNDEFINED] if not found, or
+//! if the stored value was zero and the cache garb evicted the entry.
 //!
 //! @[cache_context] is an optional mapping used to pass info between
 //! @[cache_lookup] and @[cache_set], which some cache managers need
@@ -1555,8 +1556,9 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 //! anything that works as an index in a mapping.
 //!
 //! @param data
-//! The payload data. This cannot be a zero, since the cache garb will
-//! consider that a destructed object and evict it from the cache.
+//! The payload data. Note that if it is zero, the cache garb will
+//! consider it a destructed object and evict it from the cache so
+//! future lookups may return UNDEFINED instead.
 //!
 //! @param timeout
 //! If nonzero, sets the maximum time in seconds that the entry is
@@ -1580,8 +1582,6 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 //! means the caller should avoid repeated calls to @[cache_set] for
 //! the same entry.
 {
-  ASSERT_IF_DEBUG (data);
-
   CacheManager mgr = caches[cache_name] || cache_register (cache_name);
   CacheEntry new_entry = mgr->CacheEntry (key, data);
 
