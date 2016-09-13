@@ -2334,9 +2334,12 @@ class TagCache {
     // stored in RAM but the frame itself might get destructed and
     // reinstated later from encoded p-code.
     //
-    // It's not necessary when both the cache and the frame remains in
-    // RAM. In that case we keep the cache in the variable
-    // alternatives.
+    // FIXME: The current approach of storing persistent alternatives
+    // in the RAM cache is not good. It would perhaps be better to
+    // serialize cached alternatives as raw strings (using
+    // PCodeEncoder) and decode them on-demand (PCodeDecoder), using
+    // the Roxen RAM cache to store decoded PCode that can be purged
+    // when needed.
 
     array(string|int) subvariables;
     multiset(string) alternatives;
@@ -2799,6 +2802,10 @@ class TagCache {
 	else {
 	  if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp)
 	    comp->compile();
+          // Kludge to get a low cost in the RAM cache. Relatively
+          // small but costly "RXML <cache> alternatives" entries may
+          // otherwise "take over" the RAM cache.
+	  get_alternative (key);
 	  if (timeout) {
 	    if (args["persistent-cache"] == "yes") {
 	      persistent_cache = 1;
