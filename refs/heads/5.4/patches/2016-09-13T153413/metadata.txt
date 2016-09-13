@@ -1,0 +1,8 @@
+subject: Roxen 5.4: TagCache: Kludge to avoid excessive entry values in the RAM cache.
+from: 2e9ca513e601e2a786d88ca83464ac849d46288b
+to: 77d3958747758f63402e1442e1f0906a81900a56
+originator: marty@roxen.com
+depends: 2016-09-07T150437
+restart: true
+
+TagCache: Kludge to avoid excessive entry values in the RAM cache.
