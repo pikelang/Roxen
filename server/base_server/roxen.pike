@@ -7280,6 +7280,8 @@ protected constant formats = ([
 			  1, "\"\\0\\0\\0\\0\"", 0}),
   "link-layer":		({"%s", "request_id->query_link_layer()",
 			  1, "\"-\"", 0}),
+  "cipher-suite":	({"%s", "request_id->query_cipher_suite()",
+			  1, "\"-\"", 0}),
   "method":		({"%s", "(string)request_id->method",
 			  1, "\"-\"", 0}),
   "full-resource":	({"%s", ("(string)"
