@@ -4911,6 +4911,8 @@ hyphens ('-') occur in the specifier names.</p>
     <td>The remote host ip as a binary integer number.</td></tr>
 <tr><td>$link-layer</td>
     <td>The link layer protocol used for the request if known.</td></tr>
+<tr><td>$cipher-suite</td>
+    <td>The TLS/SSL cipher suite used for the request if applicable.</td></tr>
 <tr><td>$xff</td>
     <td>The remote host name/ip taken from the X-Forwarded-For header, or
         '-' if none is provided. If multiple headers or multiple values are

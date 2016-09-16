@@ -1847,11 +1847,42 @@ class RequestID
   //! @note
   //!   More versions of TLS may become supported, in which case they
   //!   will get corresponding results from this function.
+  //!
+  //! @seealso
+  //!   @[query_cipher_suite()]
   string query_link_layer()
   {
     if (!my_fd) return "-";
     if (!my_fd->query_version) return "TCP/IP";
     return replace(SSL.Constants.fmt_version(my_fd->query_version()), " ", "/");
+  }
+
+  //! Get a string describing the TLS cipher suite used for the request.
+  //!
+  //! @returns
+  //!   Returns either
+  //!   @string
+  //!     @value "-"
+  //!       None. Either the connection doesn't use SSL/TLS, or the
+  //!       handshaking hasn't completed yet.
+  //!     @value "TLS_*"
+  //!     @value "SSL_*"
+  //!       A symbol from the table of cipher suites in @[SSL.Constants].
+  //!       These are typically the same as the symbols in the corresponding
+  //!       RFCs, but with only the "TLS_"/"SSL_" prefix being upper case.
+  //!   @endstring
+  //!
+  //! @note
+  //!   This is the value logged by the log-format @tt{$cipher-suite@}.
+  //!
+  //! @seealso
+  //!   @[query_link_layer()]
+  string query_cipher_suite()
+  {
+    if (!my_fd || !my_fd->query_suite) return "-";
+    int suite = my_fd->query_suite();
+    if (!suite) return "-";
+    return SSL.Constants.fmt_cipher_suite(suite);
   }
 
   // Parsed if-header for the request.
