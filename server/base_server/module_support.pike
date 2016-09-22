@@ -573,7 +573,8 @@ class ModuleInfo( string sname, string filename )
   }
 
 
-  protected constant nomods = (< "pike-modules", "CVS", ".svn", ".git" >);
+  protected constant nomods = (< "pike-modules", "CVS", ".svn", ".git",
+				 "node_modules" >);
 
   protected void rec_find_module_files (string what, string dir,
 					multiset(string) files)
@@ -734,7 +735,8 @@ protected void rec_find_all_modules( string dir,
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
 	r_file_stat(combine_path(dir, ".no_modules")))
       return;
-    array(string) dirlist = (r_get_dir( dir ) || ({ }) ) - ({"CVS"});
+    array(string) dirlist =
+      (r_get_dir( dir ) || ({ }) ) - ({ "CVS", ".git", "node_modules" });
 
     foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
@@ -830,15 +832,16 @@ array(string) find_all_pike_module_directories()
 {
   if( all_pike_module_cache ) return all_pike_module_cache;
 
+  array skip_module_dirs = ({ "CVS", ".git", "node_modules" });
   array(string) recurse( string dir )
   {
     Stdio.Stat st;
     array res = ({});
-    foreach( get_dir( dir )||({}), string s )
+    foreach( (get_dir( dir ) || ({}) ) - skip_module_dirs, string s )
       if( (st = file_stat( combine_path( dir, s ) )) && st->isdir )
 	if( s == "pike-modules" )
 	  res += ({ dir+"/pike-modules" });
-	else if( s != "CVS" )
+	else
 	  res += recurse( combine_path( dir, s ) );
     return res;
   };
