@@ -87,6 +87,9 @@ ROXEN.AFS = function () {
   // low-level AFS errors (connection errors or JSON format errors).
   var error_callbacks = [];
 
+  // Set on init().
+  var is_initialized = false;
+
   function encode_afs_args (args)
   {
     var query = [];
@@ -564,6 +567,17 @@ ROXEN.AFS = function () {
 	    {timeout  : poll_timeout,
 	     interval : poll_delay},
 	    poll_callback);
+
+    is_initialized = true;
+  }
+
+  var is_initialized = false;
+
+  /**
+   * Will return true after init() has been called once.
+   */
+  function initialized() {
+    return is_initialized;
   }
 
   /**
@@ -606,6 +620,7 @@ ROXEN.AFS = function () {
     add_error_callback: add_error_callback,
     remove_error_callback: remove_error_callback,
     init: init,
+    initialized: initialized,
     request: request
   };
 }();
