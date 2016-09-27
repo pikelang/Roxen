@@ -3,9 +3,11 @@
 
 inherit "module";
 
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-LocaleString module_name = LOCALE (0, "REST API");
-LocaleString module_doc = LOCALE (0, #"
+//<locale-token project="roxen_config">LOCALE</locale-token>
+#define LOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
+
+LocaleString module_name = LOCALE(0, "REST API");
+LocaleString module_doc = LOCALE(0, #"
 <p>This module provides a REST API for parts of the Administration Interface.
 </p>
 
