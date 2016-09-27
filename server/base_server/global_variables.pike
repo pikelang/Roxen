@@ -168,8 +168,8 @@ void set_up_ftp_variables( Protocol o )
 	     0: "Optional",
 	     1: "Required",
 	   ]), 0,
-	   LOCALE(0, "AUTH TLS"),
-	   LOCALE(0, "Whether to require the AUTH TLS command (RFC4217) "
+	   LOCALE(1078, "AUTH TLS"),
+	   LOCALE(1079, "Whether to require the AUTH TLS command (RFC4217) "
 		  "before login.")));
 }
 
@@ -263,8 +263,8 @@ void set_up_ssl_variables( Protocol o )
   //        from SSL.Constants.CIPHER_effective_keylengths.
   defvar("ssl_key_bits",
 	 Variable.Int(112, 0,
-		      LOCALE(0, "Cipher suite minimum effective key strength"),
-		      LOCALE(0,
+		      LOCALE(1080, "Cipher suite minimum effective key strength"),
+		      LOCALE(1081,
 			     "<p>The minimum number of effective bits to "
 			     "secure connections.</p>\n"
 			     "<p>Common ciphers (subject to availability) "
@@ -302,8 +302,8 @@ void set_up_ssl_variables( Protocol o )
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar( "ssl_password",
-	  Variable.String("", 0, LOCALE(0, "SSL decryption password"),
-			  LOCALE(0, "Optional password to decrypt the "
+	  Variable.String("", 0, LOCALE(1082, "SSL decryption password"),
+			  LOCALE(1083, "Optional password to decrypt the "
 				 "SSL key file(s).")));
 
   defvar("ssl_suite_filter",
@@ -317,8 +317,8 @@ void set_up_ssl_variables( Protocol o )
 			      15: "Suite B (strict)",
 			    ]),
 			    0,
-			    LOCALE(0, "Additional suite filtering"),
-			    LOCALE(0, "<p>Selects an additional cipher suite "
+			    LOCALE(1084, "Additional suite filtering"),
+			    LOCALE(1085, "<p>Selects an additional cipher suite "
 				   "policy.</p>"
 				   "<p>The supported filter modes are:\n"
 				   "<dl>\n"
@@ -366,8 +366,8 @@ void set_up_ssl_variables( Protocol o )
 #endif
   defvar("ssl_min_version",
 	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0, ssl_versions, 0,
-			    LOCALE(0, "Minimum supported version of SSL/TLS"),
-			    LOCALE(0, "<p>Reject clients that want to use a "
+			    LOCALE(1086, "Minimum supported version of SSL/TLS"),
+			    LOCALE(1087, "<p>Reject clients that want to use a "
 				   "version of SSL/TLS lower than the selected "
 				   "version.</p>\n"
 				   "<p>Note: SSL 3.0 has been deprecated "
@@ -894,9 +894,9 @@ be of real use.</p>"));
 #endif // __NT__
 
   defvar("auto_fetch_rxps", 0,
-	 LOCALE(0, "Auto Maintenance: Enable Automatic Patch import"),
+	 LOCALE(1088, "Auto Maintenance: Enable Automatic Patch import"),
 	 TYPE_FLAG,
-	 LOCALE(0, "Automatically fetch and import patches to the server "
+	 LOCALE(1089, "Automatically fetch and import patches to the server "
 		"from www.roxen.com."));
 
   defvar("locale",
@@ -955,9 +955,9 @@ be of real use.</p>"));
     );
 
   defvar("patch_on_restart", 0,
-	 LOCALE(0, "Auto Maintenance: Restart and apply patches"),
+	 LOCALE(1090, "Auto Maintenance: Restart and apply patches"),
 	 TYPE_FLAG,
-	 LOCALE(0, "Apply any pending imported patches when the server is "
+	 LOCALE(1091, "Apply any pending imported patches when the server is "
 		"automatically restarted."))
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)

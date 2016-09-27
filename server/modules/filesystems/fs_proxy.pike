@@ -9,9 +9,9 @@ constant module_type = MODULE_LOCATION;
 #define LOCALE(X,Y)     _STR_LOCALE("mod_fs_proxy",X,Y)
 #define DLOCALE(X,Y)    _DEF_LOCALE("mod_fs_proxy",X,Y)
 
-LocaleString module_name = DLOCALE(0, "File systems: Proxy File System");
+LocaleString module_name = DLOCALE(1, "File systems: Proxy File System");
 LocaleString module_doc =
-  DLOCALE(0, "This module can be used to proxy requests to a path in a site to"
+  DLOCALE(2, "This module can be used to proxy requests to a path in a site to"
           " a filesystem module in another site. Can be useful if a module "
           "needs to handle the root path for a port, but that module needs to "
           "be loaded in a configuration where it cannot be mounted on the "

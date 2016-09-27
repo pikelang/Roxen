@@ -50,7 +50,7 @@ mapping|string parse( RequestID id )
     db->query("INSERT INTO db_schedules (id, period) VALUES (NULL, 0)");
     int new_id = db->master_sql->insert_id();
     db->query("UPDATE db_schedules SET schedule = %s where id = %d",
-	      sprintf((string)_(0, "Schedule #%d"), new_id-1), new_id);
+	      sprintf((string)_(1117, "Schedule #%d"), new_id-1), new_id);
   }
 
   string res =
@@ -144,9 +144,9 @@ mapping|string parse( RequestID id )
       "</td><td align='right'>";
     if (schedule->id != "1") {
       res += "<submit-gbutton2 name='delete-" + schedule->id + "'>" +
-	_(0, "Delete") + "</submit-gbutton2>";
+	_(227, "Delete") + "</submit-gbutton2>";
     } else {
-      res += "<submit-gbutton2 name='new'>" + _(0, "New") + "</submit-gbutton2>";
+      res += "<submit-gbutton2 name='new'>" + _(1118, "New") + "</submit-gbutton2>";
     }
     res += "</td></tr>\n";
     if (schedule->id == "1") {
@@ -159,7 +159,7 @@ mapping|string parse( RequestID id )
 
   res += "<tr><td colspan='6'><hr></td></tr>"
     "<tr><td align='left'><cf-cancel href='/dbs/'/></td><td colspan='4'>" +
-    sprintf((string)_(0, "Default directory: %s"),
+    sprintf((string)_(1119, "Default directory: %s"),
 	    Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
     "</td><td align='right'>"
     "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"

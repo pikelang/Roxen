@@ -11,9 +11,9 @@
 
 constant action="status";
 
-string name = LOCALE(0, "Filesystem garbage collector status");
+string name = LOCALE(1093, "Filesystem garbage collector status");
 string doc  =
-  LOCALE(0, "Show the status for the filesystem garbage collectors.");
+  LOCALE(1094, "Show the status for the filesystem garbage collectors.");
 
 string fill_color = "#a6baf3";
 string bg_color = "#e9eefc";
@@ -21,10 +21,10 @@ string bg_color = "#e9eefc";
 string format_time(int t)
 {
   string res;
-  foreach(({ ({ 604800, LOCALE(0, "1 week"), LOCALE(0, "%d weeks") }),
-	     ({ 86400, LOCALE(0, "1 day"), LOCALE(0, "%d days") }),
-	     ({ 3600, LOCALE(0, "1 hour"), LOCALE(0, "%d hours") }),
-	     ({ 60, LOCALE(0, "1 minute"), LOCALE(0, "%d minutes") }),
+  foreach(({ ({ 604800, LOCALE(1095, "1 week"), LOCALE(1096, "%d weeks") }),
+	     ({ 86400, LOCALE(1097, "1 day"), LOCALE(1098, "%d days") }),
+	     ({ 3600, LOCALE(1099, "1 hour"), LOCALE(1100, "%d hours") }),
+	     ({ 60, LOCALE(1101, "1 minute"), LOCALE(1102, "%d minutes") }),
 	  }), [ int unit, string singular, string plural ]) {
     if (t < unit) continue;
     int c = t/unit;
@@ -35,7 +35,7 @@ string format_time(int t)
     else res = frag;
     t -= c * unit;
   }
-  if (!res) return LOCALE(0, "none");
+  if (!res) return LOCALE(1103, "none");
   return res;
 }
 
@@ -86,7 +86,7 @@ string lin_histogram(string|object title, int num_buckets,
     // y_pos = vertical pos of bar, origin at upper left corner
     // fill-color: #808080 | #f2f1eb
     y_pos = max_height - height;
-    res += sprintf(LOCALE(1068, "<rect x='%d' y='%d'"
+    res += sprintf(LOCALE(1104, "<rect x='%d' y='%d'"
 			     " width='10' height='%d'"
 			     " style='fill:%s;'>\n"
 			     "  <title>%s: %s - %s\n%f&#37; (%d)</title>\n"
@@ -239,7 +239,7 @@ string parse(RequestID id)
       }
       res +=
 	"<tr><td><h3>" +
-	sprintf(LOCALE(0, "Registered by %s"), name) +
+	sprintf(LOCALE(1105, "Registered by %s"), name) +
 	"</h3></td></tr>\n"
 	"<tr>\n"
 	"  <td>\n"
@@ -276,16 +276,16 @@ string parse(RequestID id)
 	      "            " +
 	      LOCALE(1071, "%d files (max: %d)") + "<br/>\n"
 	      "            " +
-	      LOCALE(0, "%d KiB (max: %d)") + "<br/>\n"
+	      LOCALE(1106, "%d KiB (max: %d)") + "<br/>\n"
 	      "            Age limit: %s\n"
 	      "        </td>\n"
 	      "        <td valign='top'>\n%s</td>\n"
 	      "        <td valign='top'>\n%s</td>\n"
 	      "      </tr>\n",
 	      Roxen.html_encode_string(g->root), // Mount point
-	      LOCALE(0, "Status"),
-	      LOCALE(0, "File age distribution"),
-	      LOCALE(0, "File size distribution"),
+	      LOCALE(228, "Status"),
+	      LOCALE(1107, "File age distribution"),
+	      LOCALE(1108, "File size distribution"),
 	      g->num_files, g->max_files, // files
 	      (g->total_size/size_unit), (g->max_size/size_unit), // size (KiB)
 	      age, // age (seconds or minutes)

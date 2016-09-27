@@ -190,7 +190,7 @@ string|mapping parse( RequestID id )
     // Backup schedule
 
     res += "<td>" + (DBManager.db_schedule(db) ||
-		     ("<i>" + _(0, "NONE") + "</i>")) + "</td>";
+		     ("<i>" + _(1116, "NONE") + "</i>")) + "</td>";
 
     // Owner/info column
 

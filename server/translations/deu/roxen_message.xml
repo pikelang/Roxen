@@ -379,3 +379,44 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t></t>
 </str>
+
+<str id="66">
+<new/>
+<o>Reading PEM file %O failed: %s
+</o>
+<t></t>
+</str>
+
+<str id="67">
+<new/>
+<o>Invalid PEM in %O.
+</o>
+<t></t>
+</str>
+
+<str id="68">
+<new/>
+<o>Invalid decryption password for %O.
+</o>
+<t></t>
+</str>
+
+<str id="69">
+<new/>
+<o>Private key not valid</o>
+<t></t>
+</str>
+
+<str id="70">
+<new/>
+<o>Private key without matching certificate.
+</o>
+<t></t>
+</str>
+
+<str id="71">
+<new/>
+<o>No matching keys and certificates found.
+</o>
+<t></t>
+</str>

@@ -407,7 +407,7 @@ cache miss is followed by the addition of a new cache entry.") +
 
     string prot_cache_desc =
       "<p>" +
-      LOCALE(0, "RAM-based cache per configuration that stores "
+      LOCALE(422, "RAM-based cache per configuration that stores "
 	     "commonly requested files. Note that entries here don't "
 	     "count toward the aforementioned size limit for RAM caches in "
 	     "general, but instead is bound by a specific setting in each "
@@ -415,18 +415,18 @@ cache miss is followed by the addition of a new cache entry.") +
       "</p>";
     
     res +=
-      "<br/><h3>" + LOCALE(0, "Protocol Cache") + "</h3>" +
+      "<br/><h3>" + LOCALE(423, "Protocol Cache") + "</h3>" +
       prot_cache_desc +
       "<table " TABLE_ATTRS ">\n"
       "<tr " HDR_TR_ATTRS ">"
-      "<th " FIRST_CELL ">" + LOCALE(0, "Configuration") + "</th>"
+      "<th " FIRST_CELL ">" + LOCALE(424, "Configuration") + "</th>"
       "<th " REST_CELLS ">" + LOCALE(295, "Entries") + "</th>"
       "<th " REST_CELLS ">" + LOCALE(387, "Lookups") + "</th>"
       "<th " REST_CELLS ">" + LOCALE(67, "Hit rate") + "</th>"
       "<th " REST_CELLS ">" + LOCALE(64, "Size") + "</th>"
       "<th " REST_CELLS ">" + LOCALE(388, "Size/entry") + "</th>"
-      "<th " REST_CELLS ">" + LOCALE(0, "Max file size") + "</th>"
-      "<th " REST_CELLS ">" + LOCALE(0, "Max size") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(425, "Max file size") + "</th>"
+      "<th " REST_CELLS ">" + LOCALE(426, "Max size") + "</th>"
       "</tr>";
     
     array(Configuration) configs = roxen->configurations;

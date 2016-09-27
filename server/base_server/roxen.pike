@@ -2602,7 +2602,7 @@ class StartTLSProtocol
       if( catch{ raw_cert = lopen(pem_file, "r")->read(); } )
       {
 	CERT_WARNING (conf_var,
-		      LOC_M(8, "Reading PEM file %O failed: %s\n"),
+		      LOC_M(66, "Reading PEM file %O failed: %s\n"),
 		      pem_file, strerror (errno()));
 	return;
       }
@@ -2613,7 +2613,7 @@ class StartTLSProtocol
 	if (stringp(msg)) {
 	  if (String.trim_all_whites(msg) != "") {
 	    CERT_WARNING(conf_var,
-			 LOC_M(0, "Invalid PEM in %O.\n"),
+			 LOC_M(67, "Invalid PEM in %O.\n"),
 			 pem_file);
 	  }
 	  continue;
@@ -2626,7 +2626,7 @@ class StartTLSProtocol
 	    };
 	  if (err) {
 	    CERT_WARNING(conf_var,
-			 LOC_M(0, "Invalid decryption password for %O.\n"),
+			 LOC_M(68, "Invalid decryption password for %O.\n"),
 			 pem_file);
 	  }
 	}
@@ -2650,7 +2650,7 @@ class StartTLSProtocol
 	  Crypto.Sign key = Standards.X509.parse_private_key(body);
 	  if (!key) {
 	    CERT_ERROR (conf_var,
-			LOC_M(11,"Private key not valid")+" (DER).\n");
+			LOC_M(69,"Private key not valid")+" (DER).\n");
 	    return;
 	  }
 	  decoded_keys += ({ key });
@@ -2746,7 +2746,7 @@ class StartTLSProtocol
       }
       if (!found) {
 	CERT_ERROR (KeyFile,
-		    LOC_M(14, "Private key without matching certificate.\n"));
+		    LOC_M(70, "Private key without matching certificate.\n"));
 	continue;
       }
     }
@@ -2755,9 +2755,9 @@ class StartTLSProtocol
     // FIXME: How do this in current Pike 8.0?
     if (!sizeof(ctx->cert_pairs)) {
       CERT_ERROR(Certificates,
-		 LOC_M(0,"No matching keys and certificates found.\n"));
+		 LOC_M(71,"No matching keys and certificates found.\n"));
       report_error ("TLS port %s: %s", get_url(),
-		    LOC_M(0,"No matching keys and certificates found.\n"));
+		    LOC_M(71,"No matching keys and certificates found.\n"));
       cert_err_unbind();
       cert_failure = 1;
       return;

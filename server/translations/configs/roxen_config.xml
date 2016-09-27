@@ -11,6 +11,7 @@
   <file>../base_server/configuration.pike</file>
   <file>../base_server/global_variables.pike</file>
   <file>../base_server/module_support.pike</file>
+  <file>../config_interface/actions/fsgarb.pike</file>
   <file>../config_interface/actions/index.html</file>
   <file>../config_interface/boxes/Box.pmod</file>
   <file>../config_interface/boxes/articles.pike</file>
@@ -49,7 +50,6 @@
   <file>../config_interface/diff.pike</file>
   <file>../config_interface/event_log/clear_log.pike</file>
   <file>../config_interface/event_log/log.pike</file>
-  <file>../config_interface/global_settings/fsgarb.pike</file>
   <file>../config_interface/global_settings/index.html</file>
   <file>../config_interface/logutil.pike</file>
   <file>../config_interface/sites/add_module.pike</file>
@@ -80,6 +80,7 @@
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
   <file>../modules/configuration/config_filesystem.pike</file>
+  <file>../modules/configuration/config_json.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../site_templates/common.pike</file>
 </project>

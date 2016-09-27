@@ -4791,8 +4791,8 @@ modules.</p>
 
   defvar("max_priority",
 	 Variable.IntChoice(9, ({ 9, 99, 999, 9999 }), 0,
-			    DLOCALE(0, "Maximum priority"),
-			    DLOCALE(0, "<p>The maximum priority value "
+			    DLOCALE(1074, "Maximum priority"),
+			    DLOCALE(1075, "<p>The maximum priority value "
 				    "for modules.</p>\n"
 				    "<p>In most cases the default (9) "
 				    "is fine, but in some configurations "
@@ -5214,8 +5214,8 @@ below.</p>
 	 0, lambda(){ return !query("Log");});
 
   defvar("JSONLogEndpoints", ({ "$JSONLOGDIR/" + Roxen.short_name(name) + ".jsonlog" }),
-	 DLOCALE(0, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
-	 DLOCALE(0, "Socket paths and/or IP:ports to bind for log output from this configuration. "
+	 DLOCALE(1076, "Logging: JSON Logging endpoints"), TYPE_STRING_LIST,
+	 DLOCALE(1077, "Socket paths and/or IP:ports to bind for log output from this configuration. "
 		 "$JSONLOGDIR will expand to &lt;configuration directory&gt;/_jsonlog where sockets should be reasonably secure."))
     ->add_changed_callback(json_log_endpoint_cb);
 

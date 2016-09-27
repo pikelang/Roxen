@@ -14,7 +14,7 @@ mapping actions = ([
   "charset":({  _(536, "Change default character set"), change_charset, 0 }),
   "repair": ({  _(537, "Repair all tables"),     repair_db, 0 }),
   "optimize":({  _(538, "Optimize all tables"),   optimize_db, 0 }),
-  "schedule":({  _(0, "Change backup schedule"), change_schedule, 2 }),
+  "schedule":({  _(1109, "Change backup schedule"), change_schedule, 2 }),
 ]);
 
 
@@ -101,11 +101,11 @@ mixed change_schedule( string db, RequestID id )
     }
     string res ="<br /><blockquote>"
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(539,"Changing backup schedule for %s"), db )+
+      "<h2>"+sprintf(_(1110,"Changing backup schedule for %s"), db )+
       "</h2>"+
-      (old_schedule?("<b>"+_(540, "Old backup schedule")+":</b> " +
+      (old_schedule?("<b>"+_(1111, "Old backup schedule")+":</b> " +
 		     Roxen.html_encode_string(old_schedule)+"<br />"):"")+
-      "<b>"+_(541,"New backup schedule")+":</b> "
+      "<b>"+_(1112,"New backup schedule")+":</b> "
       "<default name='backup_schedule' value='" + old_schedule_id + "'>"
       "<select name='backup_schedule'>";
     foreach(sql->query("SELECT schedule, id FROM db_schedules "
@@ -115,7 +115,7 @@ mixed change_schedule( string db, RequestID id )
 		     Roxen.html_encode_string(schedule->schedule));
     }
     res += sprintf("<option value='0'>%s</option>",
-		   Roxen.html_encode_string(_(0, "None"))) +
+		   Roxen.html_encode_string(_(1113, "None"))) +
       "</select></default>";
     return res + "<submit-gbutton2 name='ok'>"+(201,"OK")+
       "</submit-gbutton2>";
@@ -1098,14 +1098,14 @@ mapping|string parse( RequestID id )
   string schedule = DBManager.db_schedule(id->variables->db);
   if (schedule) {
     res += "<li>" +
-      sprintf( (string)_(0, "Backuped via the %s backup schedule."),
+      sprintf( (string)_(1114, "Backuped via the %s backup schedule."),
 	       "<a href='schedules.html'>" +
 	       Roxen.html_encode_string(schedule) +
 	       "</a>") +
       "</li>";
   } else {
     res += "<li><b>" +
-      _(0, "Not a member of any backup schedule.") +
+      _(1115, "Not a member of any backup schedule.") +
       "</b></li>";
   }
   res += "</ul></p>\n";

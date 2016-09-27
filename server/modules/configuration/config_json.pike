@@ -6,8 +6,8 @@ inherit "module";
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 
-LocaleString module_name = LOCALE(0, "REST API");
-LocaleString module_doc = LOCALE(0, #"
+LocaleString module_name = LOCALE(1122, "REST API");
+LocaleString module_doc = LOCALE(1123, #"
 <p>This module provides a REST API for parts of the Administration Interface.
 </p>
 
@@ -56,9 +56,9 @@ constant perm_name = "REST API";
 
 protected void create()
 {
-  defvar("location", "/rest/", LOCALE(0,"Mountpoint"), TYPE_LOCATION,
-          LOCALE(0, "Where the REST API is mounted."));
-  roxen.add_permission (perm_name, LOCALE(0, "REST API"));
+  defvar("location", "/rest/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
+          LOCALE(1124, "Where the REST API is mounted."));
+  roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 }
 
 typedef object RESTObj;

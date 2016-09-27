@@ -347,7 +347,7 @@ class ModuleInfo( string sname, string filename )
 	  "</p>\n";
 	locked_desc +=
 	  sprintf("<p>" +
-		  LOCALE(0, "Required license feature: <tt>%s</tt>.") +
+		  LOCALE(1092, "Required license feature: <tt>%s</tt>.") +
 		  "</p>\n", Roxen.html_encode_string(locked*":"));
       }
       if (filename) {

@@ -1030,7 +1030,7 @@ class Priority
   LocaleString|string doc()
   {
     return ::doc() +
-      sprintf((string)LOCALE(0, "<p>%d is the highest priority and "
+      sprintf((string)LOCALE(1120, "<p>%d is the highest priority and "
 			     "0 the lowest.</p>"),
 	      _max);
   }
@@ -1395,7 +1395,7 @@ class MultipleChoice
 	  "value": value,
 	  "checked": "checked",
 	]);
-	string title = sprintf(LOCALE(332,"(stale value %s)"), value);
+	string title = sprintf(LOCALE(1121,"(stale value %s)"), value);
 	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
 		       Roxen.make_tag( "input", m),
 		       Roxen.html_encode_string(title));

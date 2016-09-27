@@ -6,6 +6,7 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
+<file>../config_interface/actions/fsgarb.pike</file>
 <file>../config_interface/actions/index.html</file>
 <file>../config_interface/boxes/Box.pmod</file>
 <file>../config_interface/boxes/articles.pike</file>
@@ -44,7 +45,6 @@
 <file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
-<file>../config_interface/global_settings/fsgarb.pike</file>
 <file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
@@ -75,6 +75,7 @@
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
+<file>../modules/configuration/config_json.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../site_templates/common.pike</file>
 
@@ -120,7 +121,9 @@
 
 <str id="13">
 <changed from="The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order"/>
-<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order.</o>
+<o>&lt;p&gt;The priority of the module.&lt;/p&gt;
+&lt;p&gt;Modules with the same priority can be assumed to be called in random order.&lt;/p&gt;
+</o>
 <t>Priorita modulu. Hodnota mezi 0 (nejni¾¹í) a 9 (nejvy¹¹í). Moduly se stejnou prioritou jsou zpracovávány v náhodném poøadí.</t>
 </str>
 
@@ -282,9 +285,16 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;The remote ip number.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$bin-ip-number&lt;/td&gt;
     &lt;td&gt;The remote host ip as a binary integer number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$link-layer&lt;/td&gt;
+    &lt;td&gt;The link layer protocol used for the request if known.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cipher-suite&lt;/td&gt;
+    &lt;td&gt;The TLS/SSL cipher suite used for the request if applicable.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$forwarded&lt;/td&gt;
+    &lt;td&gt;The Forwarded (RFC 7239) headers or X-Forwarded-* headers
+        for the request, or '-' if none were provided.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$xff&lt;/td&gt;
     &lt;td&gt;The remote host name/ip taken from the X-Forwarded-For header, or
-        '-' if none is provided. If multiple headers or multiple values are
+        '-' if none were provided. If multiple headers or multiple values are
         given the first value is logged; this should correspond to the
         originating computer.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$method&lt;/td&gt;
@@ -354,6 +364,8 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;Resource MIME type.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$cookies&lt;/td&gt;
     &lt;td&gt;All cookies sent by the browser, separated by ';'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$set-cookies&lt;/td&gt;
+    &lt;td&gt;All cookies set by the response, separated by ';'.&lt;/td&gt;&lt;/tr&gt;
 
 &lt;tr&gt;&lt;td&gt;$cache-status&lt;/td&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
@@ -404,6 +416,8 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     that describes how the page has been evaluated:
 
     &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;bad-charset&lt;/td&gt;
+        &lt;td&gt;Detected invalid charset in declared content-type.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
 	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
@@ -772,13 +786,17 @@ also set 'URLs'.</o>
 </str>
 
 <str id="86">
-<o>SSL certificate file</o>
+<changed from="SSL certificate file"/>
+<o>SSL certificate file(s)</o>
 <t>Soubor certifikátu SSL</t>
 </str>
 
 <str id="87">
 <changed from="The SSL certificate file to use. The path is relative to %s"/>
-<o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
+<o>&lt;p&gt;The SSL certificate file(s) to use.&lt;/p&gt;
+&lt;p&gt;This is a list of certificates, intermediate and root certificates, and corresponding private key files in any order.&lt;/p&gt;
+&lt;p&gt;If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s.&lt;/p&gt;
+</o>
 <t>Jméno souboru SSL certifikátu. Cesta je relativní k %s</t>
 </str>
 
@@ -789,7 +807,7 @@ also set 'URLs'.</o>
 
 <str id="89">
 <changed from="The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only"/>
-<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
+<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only. This field is obsolete, since the same setting can be done in &lt;b&gt;SSL certificate file(s)&lt;/b&gt;.</o>
 <t>Jméno souboru SSL klíèe. Cesta je relativní k %s. Tato volba je nepovinná.</t>
 </str>
 
@@ -1170,7 +1188,7 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 
 <str id="154">
 <new/>
-<o>Auto Restart: Enable Anti-Block-System</o>
+<o>Auto Maintenance: Enable Anti-Block-System</o>
 <t></t>
 </str>
 
@@ -1182,7 +1200,7 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 
 <str id="156">
 <new/>
-<o>Auto Restart: ABS Timeout</o>
+<o>Auto Maintenance: ABS Timeout</o>
 <t></t>
 </str>
 
@@ -1204,7 +1222,8 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 </str>
 
 <str id="160">
-<o>Auto Restart: Enable Automatic Restart</o>
+<changed from="Auto Restart: Enable Automatic Restart"/>
+<o>Auto Maintenance: Enable Automatic Restart</o>
 <t>Auto Restart: Povolit automatický restart</t>
 </str>
 
@@ -1994,7 +2013,7 @@ The inclusion file can access the form variables form.orig-file and form.orig-ur
 
 <str id="349">
 <new/>
-<o>Update Client</o>
+<o>Apply Patches</o>
 <t></t>
 </str>
 
@@ -2558,7 +2577,7 @@ modules.&lt;/p&gt;
 
 <str id="387">
 <new/>
-<o>Auto Restart: Schedule</o>
+<o>Auto Maintenance: Restart Schedule</o>
 <t></t>
 </str>
 
@@ -4197,11 +4216,14 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 
 <str id="1068">
 <new/>
-<o>&lt;rect x='%d' y='%d' width='10' height='%d' style='fill:#808080;'&gt;
-  &lt;title&gt;%s: %d - %d
-count: %d&lt;/title&gt;
+<o>&lt;rect x='%d' y='%d' width='10' height='%d' style='fill:%s;'&gt;
+  &lt;title&gt;%s: %d - %d KB
+%f&amp;#37; (%d)&lt;/title&gt;
 &lt;/rect&gt;
-&lt;rect x='%d' y='0' width='10' height='%d' style='fill:f2f1eb;'/&gt;
+&lt;rect x='%d' y='0' width='10' height='%d' style='fill:%s;'&gt;
+  &lt;title&gt;%s: %d - %d KB
+%f&amp;#37; (%d)&lt;/title&gt;
+&lt;/rect&gt;
 </o>
 <t></t>
 </str>
@@ -4220,31 +4242,7 @@ count: %d&lt;/title&gt;
 
 <str id="1071">
 <new/>
-<o>&lt;tr&gt;&lt;th align='left'&gt;Mount point: %s&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;th&gt;&lt;br/&gt;&lt;/th&gt;&lt;/tr&gt;
-&lt;tr&gt;
-  &lt;td&gt;
-    &lt;table&gt;
-      &lt;tr&gt;
-        &lt;th align='left'&gt;Registered by &lt;br/&gt;%s&lt;/th&gt;
-        &lt;th align='left'&gt;File size distribution&lt;/th&gt;
-        &lt;th align='left'&gt;File age distribution&lt;/th&gt;
-      &lt;/tr&gt;
-      &lt;tr id='tbl'&gt;
-        &lt;td&gt;
-            %d files (max: %d)&lt;br/&gt;
-            %d bytes (max: %d)&lt;br/&gt;
-            Age limit: %d seconds
-        &lt;/td&gt;
-        &lt;td&gt;
-%s&lt;/td&gt;
-        &lt;td&gt;
-%s&lt;/td&gt;
-      &lt;/tr&gt;
-    &lt;/table&gt;
-  &lt;/td&gt;
-&lt;/tr&gt;
-</o>
+<o>%d files (max: %d)</o>
 <t></t>
 </str>
 
@@ -4254,8 +4252,401 @@ count: %d&lt;/title&gt;
 <t></t>
 </str>
 
-<str id="1073">
+<str id="1074">
 <new/>
-<o>Filesystem GC:</o>
+<o>Maximum priority</o>
+<t></t>
+</str>
+
+<str id="1075">
+<new/>
+<o>&lt;p&gt;The maximum priority value for modules.&lt;/p&gt;
+&lt;p&gt;In most cases the default (9) is fine, but in some configurations there may be more than 10 modules of the same type that would otherwise conflict with each other.&lt;/p&gt;
+&lt;p&gt;Note that existing module priorities will be scaled accordingly when this value is changed.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1076">
+<new/>
+<o>Logging: JSON Logging endpoints</o>
+<t></t>
+</str>
+
+<str id="1077">
+<new/>
+<o>Socket paths and/or IP:ports to bind for log output from this configuration. $JSONLOGDIR will expand to &amp;lt;configuration directory&amp;gt;/_jsonlog where sockets should be reasonably secure.</o>
+<t></t>
+</str>
+
+<str id="1078">
+<new/>
+<o>AUTH TLS</o>
+<t></t>
+</str>
+
+<str id="1079">
+<new/>
+<o>Whether to require the AUTH TLS command (RFC4217) before login.</o>
+<t></t>
+</str>
+
+<str id="1080">
+<new/>
+<o>Cipher suite minimum effective key strength</o>
+<t></t>
+</str>
+
+<str id="1081">
+<new/>
+<o>&lt;p&gt;The minimum number of effective bits to secure connections.&lt;/p&gt;
+&lt;p&gt;Common ciphers (subject to availability) in order of effective key bits as of December 2015:
+&lt;dl&gt;
+&lt;dt&gt;24&lt;/dt&gt;
+&lt;dd&gt;Export RC4 (aka RC4-40)&lt;/dd&gt;
+&lt;dt&gt;32&lt;/dt&gt;
+&lt;dd&gt;Export DES (aka DES-40)&lt;/dd&gt;
+&lt;dt&gt;38&lt;/dt&gt;
+&lt;dd&gt;RC4&lt;/dd&gt;
+&lt;dt&gt;40&lt;/dt&gt;
+&lt;dd&gt;DES&lt;/dd&gt;
+&lt;dt&gt;112&lt;/dt&gt;
+&lt;dd&gt;3-DES (Note that this cipher is the minimum required cipher in many versions of TLS)&lt;/dd&gt;
+&lt;dt&gt;128&lt;/dt&gt;
+&lt;dd&gt;AES-128&lt;/dd&gt;
+&lt;dd&gt;Camellia-128&lt;/dd&gt;
+&lt;dt&gt;256&lt;/dt&gt;
+&lt;dd&gt;AES-256&lt;/dd&gt;
+&lt;dd&gt;Camellia-256&lt;/dd&gt;
+&lt;dd&gt;ChaCha20&lt;/dd&gt;
+&lt;/dl&gt;
+&lt;/p&gt;
+&lt;p&gt;Cipher strengths lower than 112 bits are &lt;b&gt;NOT&lt;/b&gt; recommended, and there are RFCs that prohibit the use of all those suites.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1082">
+<new/>
+<o>SSL decryption password</o>
+<t></t>
+</str>
+
+<str id="1083">
+<new/>
+<o>Optional password to decrypt the SSL key file(s).</o>
+<t></t>
+</str>
+
+<str id="1084">
+<new/>
+<o>Additional suite filtering</o>
+<t></t>
+</str>
+
+<str id="1085">
+<new/>
+<o>&lt;p&gt;Selects an additional cipher suite policy.&lt;/p&gt;&lt;p&gt;The supported filter modes are:
+&lt;dl&gt;
+&lt;dt&gt;Default&lt;/dt&gt;
+&lt;dd&gt;Use the default cipher suite selection policy, and allow all cipher suites that have sufficient strength.&lt;/dd&gt;
+&lt;dt&gt;Ephemeral key exchanges only&lt;/dt&gt;
+&lt;dd&gt;Only allow cipher suites that use a key exchange with ephemeral keys (aka "Perfect Forward Security"). Ie either ECDHE or DHE.&lt;/dd&gt;
+&lt;dt&gt;Suite B (relaxed)&lt;/dt&gt;
+&lt;dd&gt;Same as &lt;b&gt;Default&lt;/b&gt;, but prefer the suites specified in &lt;b&gt;Suite B&lt;/b&gt;.&lt;/dd&gt;
+&lt;dt&gt;Suite B (ephemeral only)&lt;/dt&gt;
+&lt;dd&gt;Same as &lt;b&gt;Ephemeral key exchanges only&lt;/b&gt;, but prefer the suites specified in &lt;b&gt;Suite B&lt;/b&gt;.&lt;/dd&gt;
+&lt;dt&gt;Suite B (transitional)&lt;/dt&gt;
+&lt;dd&gt;Support only the suites specified by RFCs 5430 and 6460.&lt;/dd&gt;
+&lt;dt&gt;Suite B (strict)&lt;/dt&gt;
+&lt;dd&gt;Support only the suites specified by RFC 6460.&lt;/dt&gt;
+&lt;/dl&gt;
+&lt;/p&gt;
+&lt;p&gt;Note: Full Suite B operation is not supported in all configurations.&lt;/p&gt;
+&lt;p&gt;Note: For full Suite B compliance a suitable certificate must also be used.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1086">
+<new/>
+<o>Minimum supported version of SSL/TLS</o>
+<t></t>
+</str>
+
+<str id="1087">
+<new/>
+<o>&lt;p&gt;Reject clients that want to use a version of SSL/TLS lower than the selected version.&lt;/p&gt;
+&lt;p&gt;Note: SSL 3.0 has been deprecated in RFC 7568.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1088">
+<new/>
+<o>Auto Maintenance: Enable Automatic Patch import</o>
+<t></t>
+</str>
+
+<str id="1089">
+<new/>
+<o>Automatically fetch and import patches to the server from www.roxen.com.</o>
+<t></t>
+</str>
+
+<str id="1090">
+<new/>
+<o>Auto Maintenance: Restart and apply patches</o>
+<t></t>
+</str>
+
+<str id="1091">
+<new/>
+<o>Apply any pending imported patches when the server is automatically restarted.</o>
+<t></t>
+</str>
+
+<str id="1092">
+<new/>
+<o>Required license feature: &lt;tt&gt;%s&lt;/tt&gt;.</o>
+<t></t>
+</str>
+
+<str id="1093">
+<new/>
+<o>Filesystem garbage collector status</o>
+<t></t>
+</str>
+
+<str id="1094">
+<new/>
+<o>Show the status for the filesystem garbage collectors.</o>
+<t></t>
+</str>
+
+<str id="1095">
+<new/>
+<o>1 week</o>
+<t></t>
+</str>
+
+<str id="1096">
+<new/>
+<o>%d weeks</o>
+<t></t>
+</str>
+
+<str id="1097">
+<new/>
+<o>1 day</o>
+<t></t>
+</str>
+
+<str id="1098">
+<new/>
+<o>%d days</o>
+<t></t>
+</str>
+
+<str id="1099">
+<new/>
+<o>1 hour</o>
+<t></t>
+</str>
+
+<str id="1100">
+<new/>
+<o>%d hours</o>
+<t></t>
+</str>
+
+<str id="1101">
+<new/>
+<o>1 minute</o>
+<t></t>
+</str>
+
+<str id="1102">
+<new/>
+<o>%d minutes</o>
+<t></t>
+</str>
+
+<str id="1103">
+<new/>
+<o>none</o>
+<t></t>
+</str>
+
+<str id="1104">
+<new/>
+<o>&lt;rect x='%d' y='%d' width='10' height='%d' style='fill:%s;'&gt;
+  &lt;title&gt;%s: %s - %s
+%f&amp;#37; (%d)&lt;/title&gt;
+&lt;/rect&gt;
+&lt;rect x='%d' y='0' width='10' height='%d' style='fill:%s;'&gt;
+  &lt;title&gt;%s: %s - %s
+%f&amp;#37; (%d)&lt;/title&gt;
+&lt;/rect&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1105">
+<new/>
+<o>Registered by %s</o>
+<t></t>
+</str>
+
+<str id="1106">
+<new/>
+<o>%d KiB (max: %d)</o>
+<t></t>
+</str>
+
+<str id="1107">
+<new/>
+<o>File age distribution</o>
+<t></t>
+</str>
+
+<str id="1108">
+<new/>
+<o>File size distribution</o>
+<t></t>
+</str>
+
+<str id="1109">
+<new/>
+<o>Change backup schedule</o>
+<t></t>
+</str>
+
+<str id="1110">
+<new/>
+<o>Changing backup schedule for %s</o>
+<t></t>
+</str>
+
+<str id="1111">
+<new/>
+<o>Old backup schedule</o>
+<t></t>
+</str>
+
+<str id="1112">
+<new/>
+<o>New backup schedule</o>
+<t></t>
+</str>
+
+<str id="1113">
+<new/>
+<o>None</o>
+<t></t>
+</str>
+
+<str id="1114">
+<new/>
+<o>Backuped via the %s backup schedule.</o>
+<t></t>
+</str>
+
+<str id="1115">
+<new/>
+<o>Not a member of any backup schedule.</o>
+<t></t>
+</str>
+
+<str id="1116">
+<new/>
+<o>NONE</o>
+<t></t>
+</str>
+
+<str id="1117">
+<new/>
+<o>Schedule #%d</o>
+<t></t>
+</str>
+
+<str id="1118">
+<new/>
+<o>New</o>
+<t></t>
+</str>
+
+<str id="1119">
+<new/>
+<o>Default directory: %s</o>
+<t></t>
+</str>
+
+<str id="1120">
+<new/>
+<o>&lt;p&gt;%d is the highest priority and 0 the lowest.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1121">
+<new/>
+<o>(stale value %s)</o>
+<t></t>
+</str>
+
+<str id="1122">
+<new/>
+<o>REST API</o>
+<t></t>
+</str>
+
+<str id="1123">
+<new/>
+<o>
+&lt;p&gt;This module provides a REST API for parts of the Administration Interface.
+&lt;/p&gt;
+
+&lt;p&gt;The API is JSON based - i.e. responses are JSON encoded and PUT/POST data is expected to be JSON encoded too.&lt;/p&gt;
+
+&lt;p&gt;In general, the following request methods are available:
+&lt;ul&gt;
+&lt;li&gt;GET: Query the current value of a resource.&lt;/li&gt;
+&lt;li&gt;PUT: Update the current value of a resource.&lt;/li&gt;
+&lt;li&gt;POST: Add a resource.&lt;/li&gt;
+&lt;li&gt;DELETE: Remove a resource.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/p&gt;
+
+&lt;p&gt;The "X-Roxen-API" header must be set in all API requests. This requirement acts as a minimum counter-measure against CSRF attacks.&lt;/p&gt;
+
+&lt;p&gt;The resource specifier "_all" can be used to map an operation over all resources (see examples below).&lt;/p&gt;
+
+&lt;p&gt;Examples:
+&lt;ul&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/variables/&lt;/pre&gt; - list global variables&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/&lt;/pre&gt; - list configurations&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/CMS/&lt;/pre&gt; - get configuration "CMS" (currently not supported)&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/CMS/?envelope=1&lt;/pre&gt; - get configuration "CMS" in envelope. Provides a list of available subresources, such as "modules".
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/CMS/modules/&lt;/pre&gt; - list enabled modules in the configuration "CMS".&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/CMS/modules/&lt;/pre&gt; - list enabled modules in the configuration "CMS".&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/CMS/modules/yui/variables/mountpoint&lt;/pre&gt; - get the value of the variable "mountpoint" in the "yui" module.&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;PUT /rest/variables/abs_timeout&lt;/pre&gt; - change the value of the "abs_timeout" global variable. The data body of the PUT request should be the JSON encoded value to set.&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;POST /rest/configurations/CMS/modules/yui/&lt;/pre&gt; - add an instance of the YUI module to the configuration "CMS".&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;DELETE /rest/configurations/CMS/modules/yui!0/&lt;/pre&gt; - remove instance #0 of the YUI module in the configuration "CMS".&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;PUT /rest/configurations/CMS/modules/yui!0/actions/Reload&lt;/pre&gt; - Reload the YUI module.&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;PUT /rest/configurations/CMS/modules/insite_editor!0/actions/Clear Persistent Cache&lt;/pre&gt; - call action button "Clear Persistent Cache " in the Insite Editor module.&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;PUT /rest/configurations/_all/modules/insite_editor!0/actions/Clear Persistent Cache&lt;/pre&gt; - call action button "Clear Persistent Cache " in the Insite Editor module in all configurations.&lt;/li&gt;
+&lt;li&gt;&lt;pre&gt;GET /rest/configurations/_all/modules/_all/variables/mountpoint&lt;/pre&gt; - get the value of the "mountpoint" variable in all modules across all configurations.
+&lt;/ul&gt;
+&lt;/p&gt;
+
+&lt;p&gt;cURL example:
+&lt;pre&gt;curl -H "X-Roxen-API: 1" -u admin:password https://localhost.roxen.com:22202/rest/variables/&lt;/pre&gt;
+&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1124">
+<new/>
+<o>Where the REST API is mounted.</o>
 <t></t>
 </str>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_fs_proxy</project>
+<language>eng</language>
+<file>../modules/filesystems/fs_proxy.pike</file>
+
+<str id="1">
+<o>File systems: Proxy File System</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This module can be used to proxy requests to a path in a site to a filesystem module in another site. Can be useful if a module needs to handle the root path for a port, but that module needs to be loaded in a configuration where it cannot be mounted on the root path.</o>
+<t></t>
+</str>

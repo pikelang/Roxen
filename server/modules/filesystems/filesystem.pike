@@ -534,7 +534,7 @@ protected string low_real_path(string f, RequestID id)
 #endif /* constant(System.normalize_path) */
     }) {
     errors++;
-    report_error(LOCALE(0, "Path normalization failure for %O:\n"
+    report_error(LOCALE(71, "Path normalization failure for %O:\n"
 			"%s\n"),
 		 f, describe_backtrace(err));
   }

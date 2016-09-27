@@ -1513,7 +1513,7 @@ change the currently running version.</o>
 
 <str id="380">
 <new/>
-<o>Configure cache settings</o>
+<o>Configure Cache Settings</o>
 <t></t>
 </str>
 
@@ -1647,7 +1647,7 @@ cache miss is followed by the addition of a new cache entry.</o>
 <new/>
 <o>Note that the garbage collector referred to here is not the same as
 the one for the &lt;a
-href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
+href='/actions/?action=cachestatus.pike&amp;amp;class=status&amp;amp;&amp;usr.set-wiz-id;'&gt;Roxen memory
 cache&lt;/a&gt;. This is the low-level garbage collector used internally by
 the Pike interpreter.</o>
 <t></t>
@@ -1760,5 +1760,41 @@ YMMV. This action is deprecated.</o>
 <str id="421">
 <new/>
 <o>There is also a &lt;tt&gt;bin/rxnpatch&lt;/tt&gt; command-line tool to manage patches, if you prefer a terminal over a web interface.</o>
+<t></t>
+</str>
+
+<str id="422">
+<new/>
+<o>RAM-based cache per configuration that stores commonly requested files. Note that entries here don't count toward the aforementioned size limit for RAM caches in general, but instead is bound by a specific setting in each configuration.</o>
+<t></t>
+</str>
+
+<str id="423">
+<new/>
+<o>Protocol Cache</o>
+<t></t>
+</str>
+
+<str id="424">
+<new/>
+<o>Configuration</o>
+<t></t>
+</str>
+
+<str id="425">
+<new/>
+<o>Max file size</o>
+<t></t>
+</str>
+
+<str id="426">
+<new/>
+<o>Max size</o>
+<t></t>
+</str>
+
+<str id="427">
+<new/>
+<o>Bytes</o>
 <t></t>
 </str>

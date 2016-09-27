@@ -325,7 +325,7 @@ mixed page_0( object id )
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"Bytes")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(427,"Bytes")) +
     "</tr>\n";
   string trim_path( string what )
   {

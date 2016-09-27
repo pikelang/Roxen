@@ -264,7 +264,7 @@
 </str>
 
 <str id="1">
-<o>Path verification of %s failed.
+<o>Path normalization of %s: %s failed.
 </o>
 <t></t>
 </str>
@@ -340,5 +340,12 @@
 
 <str id="70">
 <o>If set, access is limited to the assets and build directories.</o>
+<t></t>
+</str>
+
+<str id="71">
+<o>Path normalization failure for %O:
+%s
+</o>
 <t></t>
 </str>
