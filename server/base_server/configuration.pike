@@ -1646,11 +1646,11 @@ private mapping internal_roxen_image( string from, RequestID id )
   Stdio.File f;
 
   if( !id->misc->internal_get )
-    if(f = lopen("roxen-images/"+from+".gif", "r"))
-      return (["file":f, "type":"image/gif", "stat":f->stat()]);
+    if(f = lopen("roxen-images/"+from+".png", "r"))
+      return (["file":f, "type":"image/png", "stat":f->stat()]);
 
-  if(f = lopen("roxen-images/"+from+".png", "r"))
-    return (["file":f, "type":"image/png", "stat":f->stat()]);
+  if(f = lopen("roxen-images/"+from+".gif", "r"))
+    return (["file":f, "type":"image/gif", "stat":f->stat()]);
 
   if(f = lopen("roxen-images/"+from+".jpg", "r"))
     return (["file":f, "type":"image/jpeg", "stat":f->stat()]);
@@ -5538,7 +5538,7 @@ low."))->add_changed_callback(lambda(object v)
          <else>referring page.</else>
       </p>
       <div class='footer'>
-        <img src='/internal-roxen-roxen-mini.gif' width='19' height='15'/>
+        <img src='/internal-roxen-roxen-mini' width='19' height='17'/>
         <span class='info'>
           <strong>&roxen.product-name;</strong> <span class='separator'>|</span>
           version &roxen.dist-version;
@@ -5632,7 +5632,7 @@ low."))->add_changed_callback(lambda(object v)
          <else>referring page.</else>
       </p>
       <div class='footer'>
-        <img src='/internal-roxen-roxen-mini.gif' width='19' height='15'/>
+        <img src='/internal-roxen-roxen-mini' width='19' height='17'/>
         <span class='info'>
           <strong>&roxen.product-name;</strong> <span class='separator'>|</span>
           version &roxen.dist-version;

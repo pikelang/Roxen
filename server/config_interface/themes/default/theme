@@ -1,19 +1,19 @@
 <!-- -*- html -*- -->
 
 <if variable="roxen.product-name == Roxen CMS">
-  <theme-set what=logo                 to="cms-logo.gif" themefile />
+  <theme-set what=logo                 to="R.svg" themefile />
   <theme-set what=logo-html
-	   to="<imgs border='0' src='&usr.logo;' style='padding: 9px 10px 8px 10px'>"/>
+           to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product cms'>CMS</span></div></div>"/>
 </if>
 <elseif variable="roxen.product-name == Roxen EP">
-  <theme-set what=logo                 to="cms-logo.gif" themefile />
+  <theme-set what=logo                 to="R.svg" themefile />
   <theme-set what=logo-html
-	   to="<imgs border='0' src='&usr.logo;' style='padding: 9px 10px 8px 10px'>"/>
+	   to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product ep'>Editorial Portal</span></div></div>"/>
 </elseif>
 <else>
-  <theme-set what=logo                 to="logo.gif" themefile />
+  <theme-set what=logo                 to="R.svg" themefile />
   <theme-set what=logo-html
-	   to="<imgs border='0' src='&usr.logo;' style='padding: 6px 10px 5px 0'>"/>
+           to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product webserver'>Webserver</span></div></div>"/>
 </else>
 
 <set variable="var.fg" value="#000000"/>

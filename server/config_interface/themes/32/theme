@@ -1,8 +1,8 @@
 <if variable="roxen.product-name == Roxen CMS">
-  <theme-set what=logo                 to="cms-logo.gif" themefile />
+  <theme-set what=logo                 to="logo.gif" themefile />
 </if>
 <elseif variable="roxen.product-name == Roxen EP">
-  <theme-set what=logo                 to="cms-logo.gif" themefile />
+  <theme-set what=logo                 to="logo.gif" themefile />
 </elseif>
 <else>
   <theme-set what=logo                 to=logo.gif themefile />

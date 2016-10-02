@@ -1623,7 +1623,7 @@ protected string error_page(string title, void|string msg,
     <td colspan='2'>
       <table border='0' cellspacing='0' cellpadding='0'>
         <tr>
-          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td><img src='/internal-roxen-roxen-mini' /></td>
           <td class='info'>
 	    &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
 	    <font color='#ffbe00'>|</font> " + roxen_dist_version + #"

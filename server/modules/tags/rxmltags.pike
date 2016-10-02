@@ -1163,12 +1163,10 @@ class TagRoxen {
       mapping aargs = (["href": "http://www.roxen.com/"]);
 
       args->src = "/internal-roxen-power-"+size+"-"+color;
-      args->width =  (["small":"40","medium":"60","large":"100"])[size];
-      args->height = (["small":"40","medium":"60","large":"100"])[size];
+      args->width =  (["small":"40","medium":"60","large":"80"])[size];
+      args->height = (["small":"48","medium":"72","large":"96"])[size];
 
-      if( color == "white" && size == "large" ) args->height="99";
       if(!args->alt) args->alt="Powered by Roxen";
-      if(!args->border) args->border="0";
       int xml=!m_delete(args, "noxml");
       if(args->target) aargs->target = m_delete (args, "target");
       result = RXML.t_xml->format_tag ("a", aargs, Roxen.make_tag("img", args, xml));
@@ -1357,7 +1355,6 @@ class TagConfigImage {
 
       args->alt = args->alt || args->src;
       args->src = "/internal-roxen-" + args->src;
-      args->border = args->border || "0";
 
       int xml=!m_delete(args, "noxml");
       result = Roxen.make_tag("img", args, xml);

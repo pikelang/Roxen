@@ -3,6 +3,36 @@
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 }
 
+#roxen-product {  
+  relative;
+  padding: 10px;
+  min-width: 300px;
+  vertical-align: middle;
+}
+#roxen-product img {
+  height: 35px;
+  width: auto;
+}
+#roxen-product div.R {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+#roxen-product .text {
+  display: inline-block;
+  vertical-align: middle;
+  color: #4a4a49;
+  line-height: 1.2;
+  font-size: 100%;
+}
+#roxen-product .text .ep,
+#roxen-product .text .webserver {
+  display: block;
+}
+#roxen-product .roxen {
+  font-weight: bold;
+}
+
 tt, pre, textarea
 {
 	font-family: monospace;

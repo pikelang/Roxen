@@ -171,7 +171,7 @@
   <if variable="var.cf-headline = ?*">&var.cf-headline; - </if>
   &roxen.product-name;/&roxen.dist-version; <translate id="204">Administration Interface</translate> - <eval>&_.title:none;</eval>
 </title>
-<link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico" />
+<link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico?v=17" />
 <if exists="/themes/&usr.theme;/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />
 </if>
