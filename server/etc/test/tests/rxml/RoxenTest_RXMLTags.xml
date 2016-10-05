@@ -36,12 +36,12 @@
 <comment>Config image</comment>
 <test>
 <rxml><configimage src="unit"/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit" /></result>
+<result><img alt="unit" src="/internal-roxen-unit" /></result>
 </test>
 
 <test>
 <rxml><configimage src="unit" noxml=''/></rxml>
-<result><img alt="unit" border="0" src="/internal-roxen-unit"></result>
+<result><img alt="unit" src="/internal-roxen-unit"></result>
 </test>
 
 <test>
