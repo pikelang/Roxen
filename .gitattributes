@@ -144,7 +144,6 @@ worldmap binary
 /server/etc/include/variables.h foreign_ident
 /server/etc/include/version.h foreign_ident
 /server/etc/modref.xml foreign_ident
-/server/etc/modules/DBManager.pmod foreign_ident
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/ExtScript.pmod foreign_ident
 /server/etc/modules/HTML.pmod foreign_ident
