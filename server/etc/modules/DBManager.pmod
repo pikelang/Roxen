@@ -325,11 +325,17 @@ private
 
   protected class SqlFileSplitIterator
   {
-    inherit String.SplitIterator;
+    protected Stdio.Buffer inbuf;
+
+    protected function(:string(8bit)) fill_func;
+
+    protected string(8bit) current = "";
 
     protected void create(Stdio.File script_file)
     {
-      ::create("", ';', 0, script_file->read_function(8192));
+      current = "";
+      inbuf = Stdio.Buffer();
+      fill_func = script_file->read_function(8192);
       next();
     }
 
@@ -338,26 +344,114 @@ private
       return -1;
     }
 
-    protected string current = "";
+    protected int(0..1) `!()
+    {
+      return !current;
+    }
 
-    int next()
+    //! Read a single character from the input.
+    //!
+    //! @returns
+    //!   Returns the value of the character on success.
+    //!
+    //! @throws
+    //!   Throws @expr{0@} (zero) at end of input.
+    protected int(8bit) getc()
+    {
+      if (!sizeof(inbuf)) {
+	string(8bit) data = "";
+	if (fill_func) {
+	  data = fill_func();
+	}
+	if (!sizeof(data)) {
+	  fill_func = UNDEFINED;
+	  throw(0);
+	}
+	inbuf->add(data);
+      }
+      return inbuf->read_int8();
+    }
+
+    int(0..1) next()
     {
       if (!current) return 0;
       current = 0;
-      if (::value()) {
-	string buf = "";
-	while (1) {
-	  buf += ::value() + ";";
-	  if (!::next()) break;	// Skip the trailer.
+      mixed err = catch {
+	  Stdio.Buffer buf = Stdio.Buffer();
+	  while (1) {
+	    int(8bit) cc;
+	    int(8bit) c = getc();
+	    buf->add_int8(c);
+	    switch(c) {
+	    case ';':
+	      current = buf->read();
+	      return 1;
 
-	  array(string) a = split_sql_script(buf);
-	  if (sizeof(a) > 1) {
-	    current = a[0];
-	    // NB: a[1] should always be "" here.
-	    return 1;
+	      // Quote characters...
+	    case '\"': case '\'': case '\`': case '\´':
+	      while (1) {
+		cc = getc();
+		buf->add_int8(cc);
+		if (cc == c) {
+		  int(8bit) ccc = getc();
+		  if (ccc == c) {
+		    buf->add_int8(ccc);
+		    continue;
+		  }
+		  inbuf->unread(1);
+		  break;
+		}
+		if (cc == '\\') {
+		  cc = getc();
+		  buf->add_int8(cc);
+		}
+	      }
+	      break;
+
+	      // Comments...
+	    case '/':
+	      cc = getc();
+	      buf->add_int8(cc);
+	      if (cc == '*') {
+		// C-style comment.
+		int(8bit) prev = 0;
+		while (1) {
+		  cc = getc();
+		  buf->add_int8(cc);
+		  if ((cc == '/') && (prev == '*')) break;
+		  prev = cc;
+		}
+	      }
+	      break;
+	    case '-':
+	      cc = getc();
+	      if (cc != '-') {
+		inbuf->unread(1);
+		break;
+	      }
+	      buf->add_int8(cc);
+
+	      cc = getc();
+	      if ((cc != ' ') && (cc != '\t')) {
+		inbuf->unread(1);
+		break;
+	      }
+	      buf->add_int8(cc);
+
+	      // "-- "-style comment.
+
+	      // FALL_THROUGH
+	    case '#':
+	      // #-style comment.
+	      do {
+		cc = getc();
+		buf->add_int8(cc);
+	      } while ((cc != '\n') && (cc != '\r'));
+	      break;
+	    }
 	  }
-	}
-      }
+	};
+      if (err) throw(err);
       return 0;
     }
 
@@ -366,7 +460,7 @@ private
       return current?-1:UNDEFINED;
     }
 
-    string value()
+    string(8bit) value()
     {
       return current || UNDEFINED;
     }
@@ -388,6 +482,7 @@ private
   protected void execute_sql_script_file(Sql.Sql db, Stdio.File script_file,
 					 int|void quiet)
   {
+    // FIXME: What about the connection charset?
     foreach(SqlFileSplitIterator(script_file);; string q) {
       mixed err = catch {db->query(q);};
       if (err && !quiet) {
