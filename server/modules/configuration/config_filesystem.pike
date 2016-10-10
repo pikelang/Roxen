@@ -458,7 +458,7 @@ void start(int n, Configuration cfg)
 	report_warning( "The database 'docs' exists, but this server can "
 			"not read from it.\n"
 			"Documentation will be unavailable.\n" );
-      else if( file_stat( "etc/docs.frm" ) )
+      else if( file_stat( "etc/docs/dump.sql" ) )
       {
 	if( !err && ver )
 	{
@@ -474,7 +474,7 @@ void start(int n, Configuration cfg)
 	  foreach( roxen->configurations, Configuration c )
 	    DBManager.set_permission( "docs", c, DBManager.READ );
 	}
-	DBManager.restore( "docs", getcwd()+"/etc/", "docs", ({ "docs" }) );
+	DBManager.restore( "docs", getcwd()+"/etc/docs", "docs", ({ "docs" }) );
 	DBManager.set_permission( "docs", cfg, DBManager.WRITE );
 	DBManager.get( "docs", cfg )->query("REPLACE docs set name='_version', contents='"+roxen_version()+"'");
 	DBManager.set_permission( "docs", cfg, DBManager.READ );

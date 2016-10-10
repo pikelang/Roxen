@@ -2855,13 +2855,13 @@ CREATE TABLE db_permissions (
 
   synch_mysql_perms();
 
-  if( file_stat( "etc/docs.frm" ) )
+  if( file_stat( "etc/docs/dump.sql" ) )
   {
     if( !sizeof(query( "SELECT tbl FROM db_backups WHERE "
 		       "db=%s AND directory=%s",
-		       "docs", getcwd()+"/etc" ) ) )
+		       "docs", getcwd()+"/etc/docs" ) ) )
       query("INSERT INTO db_backups (db,tbl,directory,whn) "
-	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
+	    "VALUES ('docs','docs','"+getcwd()+"/etc/docs','"+time()+"')");
   }
 
   // Start the backup timers when we have finished booting.
