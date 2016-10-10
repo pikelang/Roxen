@@ -411,6 +411,7 @@ private
   protected void execute_sql_script_file(Sql.Sql db, Stdio.File script_file,
 					 int|void quiet)
   {
+    // FIXME: What about the connection charset?
     foreach(SqlFileSplitIterator(script_file);; string q) {
       mixed err = catch {db->query(q);};
       if (err && !quiet) {
