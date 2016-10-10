@@ -2746,8 +2746,8 @@ void low_start_mysql( string datadir,
 	version_fatal_error =
 	  sprintf("%s version %s detected:\n\n"
 		  "  %s\n", mysql_product_name, mysql_version, orig_version);
-#endif
       }
+#endif
 #ifdef RUN_SELF_TEST
       if (version_fatal_error) {
 	report_debug ("\n%s"
