@@ -438,23 +438,25 @@ constant jsonflags = Standards.JSON.HUMAN_READABLE;
 
 mapping(string:mixed) find_file (string f, RequestID id)
 {
-  if (!id->conf->authenticate (id, roxen.config_userdb_module)) {
+  if (User user = id->conf->authenticate (id, roxen.config_userdb_module)) {
+    if (!user->ruser->auth (perm_name)) {
+      string errstr = "REST API access not allowed.";
+      return
+        Roxen.http_low_answer (Protocols.HTTP.HTTP_FORBIDDEN,
+                               Standards.JSON.encode (([ "error": errstr ]),
+                                                      jsonflags) + "\n");
+    }
+  } else {
     return id->conf->authenticate_throw (id, "Roxen Administration Interface",
                                          roxen.config_userdb_module);
-  }
-
-  if (!config_perm(perm_name)) {
-    string errstr = "REST API access not allowed.";
-    return
-      Roxen.http_low_answer (Protocols.HTTP.HTTP_FORBIDDEN,
-                             Standards.JSON.encode (([ "error": errstr ])));
   }
 
   if (!id->request_headers["x-roxen-api"]) {
     string errstr = "The \"X-Roxen-API\" header must be set in API requests.";
     return
       Roxen.http_low_answer (Protocols.HTTP.HTTP_FORBIDDEN,
-                             Standards.JSON.encode (([ "error": errstr ])));
+                             Standards.JSON.encode (([ "error": errstr ]),
+                                                    jsonflags) + "\n");
 
   }
 
