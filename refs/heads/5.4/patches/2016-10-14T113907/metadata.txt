@@ -1,0 +1,26 @@
+subject: Roxen 5.4: Multiple fixes:
+from: 77d3958747758f63402e1442e1f0906a81900a56
+to: bab10d20c4b8e193af5109f74a221bac46a51677
+originator: marty@roxen.com
+depends: 2016-09-13T153413
+restart: true
+
+Multiple fixes:
+
+  * Add REST API module for Admin Interface.
+
+  * Rename some RESTResource methods for more direct mapping to HTTP methods.
+
+  * Add module actions to REST API.
+
+  * REST: Check action availability earlier for better error messages.
+
+  * REST API: Add support for the _all resource specifier to map over all resources.
+    
+    Also some type cleanups.
+
+  * Admin IF REST API: Add minimum CSRF protection by requiring custom header.
+    
+    Also add a separate permission for the REST API.
+
+  * config_json: Make auth check independent on previous access to config_filesystem.
