@@ -1,0 +1,4 @@
+Added files:
+  modules/configuration/config_json.pike
+Modified files:
+  modules/configuration/config_filesystem.pike
