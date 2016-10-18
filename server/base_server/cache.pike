@@ -501,6 +501,9 @@ class CM_GreedyDual
 {
   inherit CacheManager;
 
+  //! Mutex protecting @[priority_queue].
+  Thread.Mutex priority_mux = Thread.Mutex();
+
   //! A heap of all [CacheEntry]s in priority order sorted by @[CacheEntry.`<].
   ADT.Heap priority_queue = ADT.Heap();
 
@@ -539,6 +542,9 @@ class CM_GreedyDual
     {
       Element::value = val;
       if (HeapElement::pos != -1) {
+	//  NB: We may get called in a context where the mutex
+	//      already has been taken.
+	Thread.MutexKey key = priority_mux->lock(2);
 	priority_queue->adjust(HeapElement::this);
       }
     }
@@ -578,6 +584,7 @@ class CM_GreedyDual
     werror ("Checking priority_queue with %d entries.\n",
 	    sizeof(priority_queue));
     if (priority_queue->verify_heap) {
+      Thread.MutexKey key = priority_mux->lock();
       priority_queue->verify_heap();
     }
   }
@@ -641,8 +648,10 @@ class CM_GreedyDual
 
     if (!low_add_entry (cache_name, entry)) return 0;
 
+    Thread.MutexKey key = priority_mux->lock();
     entry->pval = calc_pval (entry);
     priority_queue->push(entry->element());
+    key = 0;
 
     if (size > size_limit) evict (size_limit);
     return 1;
@@ -650,18 +659,22 @@ class CM_GreedyDual
 
   int remove_entry (string cache_name, CacheEntry entry)
   {
+    Thread.MutexKey key = priority_mux->lock();
     priority_queue->remove(entry->element());
+    key = 0;
     return low_remove_entry (cache_name, entry);
   }
 
   void evict (int max_size)
   {
-    // FIXME: Use a proper mutes instead.
-    object threads_disabled = _disable_threads();
+    Thread.MutexKey key = priority_mux->lock();
     while ((size > max_size) && sizeof(priority_queue)) {
       // NB: Use low_peek() + remove() since low_pop() doesn't exist.
-      CacheEntry entry = priority_queue->low_peek()->cache_entry();
-      priority_queue->remove(entry->element());
+      HeapElement element = priority_queue->low_peek();
+      if (!element) break;
+      priority_queue->remove(element);
+
+      CacheEntry entry = element->cache_entry();
 
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
 		       size, max_size, entry->cache_name, entry);
@@ -688,6 +701,7 @@ class CM_GreedyDual
       // mapping and start adding back the entries from the old one.
       // Need _disable_threads to make the resets of the CacheStats
       // fields atomic.
+      Thread.MutexKey key = priority_mux->lock();
       object threads_disabled = _disable_threads();
       mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
       lookup = ([]);
@@ -723,6 +737,8 @@ class CM_GreedyDual
 		size += entry->size;
 	      }
 	    }
+
+      key = 0;
 
 #ifdef CACHE_DEBUG
       debug_check_priority_queue();
