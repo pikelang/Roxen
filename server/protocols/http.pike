@@ -3416,6 +3416,29 @@ void got_data(mixed fooid, string s, void|int chained)
 			 "raw_url"     : raw_url,
 		       ]));
 
+    if (!conf->inited) {
+      // Load the configuration from a handler thread, and then resume.
+      roxen.handle(lambda(Configuration conf) {
+		     REQUEST_WERR(sprintf("HTTP: Loading configuration %O...",
+					  conf));
+		     conf->enable_all_modules();
+		     call_out(got_configuration, 0, conf);
+		   }, conf);
+      return;
+    }
+    got_configuration(conf);
+    })
+  {
+    report_error("Internal server error: " + describe_backtrace(err));
+    disconnect();
+  }
+}
+
+protected void got_configuration(Configuration conf)
+{
+  if (mixed err = catch {
+      REQUEST_WERR(sprintf("HTTP: Got configuration %O", conf));
+
     // The "http_request_init" provider hook allows modules to do
     // things very early in the request path, before the request is
     // put in the handler queue and before the protocol cache is

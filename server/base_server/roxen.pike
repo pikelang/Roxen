@@ -2176,10 +2176,6 @@ class Protocol
 	if (c->query ("default_server")) {
 	  URL2CONF_MSG ("%O %O any default server: %O\n", this, url, c);
 	  if (id) id->misc->defaulted_conf = 3;
-	  if(!c->inited)
-	    // FIXME: We can be called from the backend thread, so
-	    // this should be queued for a handler thread.
-	    c->enable_all_modules();
 	  return c;
 	}
 
@@ -2204,10 +2200,6 @@ class Protocol
     if (config_path && id && id->adjust_for_config_path)
       id->adjust_for_config_path (config_path);
     Configuration c = url_data->conf;
-    if(!c->inited)
-      // FIXME: We can be called from the backend thread, so this
-      // should be queued for a handler thread.
-      c->enable_all_modules();
     return c;
   }
 

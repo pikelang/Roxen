@@ -193,6 +193,12 @@ class Connection
 	}
       }
 
+      if (!c->inited) {
+	// FIXME: We can be called from the backend thread, so this
+	// should be queued for a handler thread.
+	c->enable_all_modules();
+      }
+
       string host;
       sscanf( url, "%s://%s/%s", prot, host, url );
       misc->host = host;
