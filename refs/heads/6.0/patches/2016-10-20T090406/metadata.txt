@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: Fixes for Admin IF deadlock, CacheTag, UserFS, RoxenPatch remove button.
 from: d7a8ac64dd9de486209415c30b1bd1f2ac294371
 to: ae19ca8f232ff4caa94a6ed001f662e75555dc8c
 originator: marty@roxen.com
