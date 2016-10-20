@@ -1,0 +1,16 @@
+Modified files:
+  base_server/cache.pike
+  base_server/configuration.pike
+  base_server/prototypes.pike
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  config_interface/actions/patcher.pike
+  config_interface/sites/add_module.pike
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/VFS.pmod
+  modules/configuration/config_json.pike
+  modules/filesystems/userfs.pike
+  modules/security/userdb_system.pike
+  modules/tags/rxmltags.pike
+  protocols/http.pike
+  protocols/prot_hilfe.pike
