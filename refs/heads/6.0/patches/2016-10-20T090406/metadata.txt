@@ -1,0 +1,84 @@
+subject: Roxen 6.0: Multiple fixes:
+from: d7a8ac64dd9de486209415c30b1bd1f2ac294371
+to: ae19ca8f232ff4caa94a6ed001f662e75555dc8c
+originator: marty@roxen.com
+depends: 2016-07-07T133112
+restart: true
+
+Multiple fixes:
+
+  * RoxenPatch: Added missing roxen_wizard_id.
+    
+    Now the patch "remove" button should work again.
+
+  * RoxenPatch: Added missing roxen_wizard_id.
+    
+    Now the patch "remove" button should work again.
+
+  * UserDB: Cache user name lookups for 60 seconds.
+    
+    Workaround for the performance hit in [roxen.com #27232], where .htaccess
+    lookups in a user filesystem module mounted on "/" caused lots of user
+    lookups grinding the server to a halt.
+
+  * UserFS: Improved 404 handling.
+    
+    Don't invent directories where there are none...
+
+  * UserFS: Improved diagnostics.
+
+  * VFS: Fixed infinite loop in find_above_read().
+    
+    Fixes [bug 7750].
+
+  * UserFS: Interoperate better with other filesystem modules.
+    
+    Return 404 instead of 403 on user not found. This allows for having
+    other modules as fallback for invalid paths.
+
+  * ConfigIF: Added missing <roxen-wizard-id-variable />.
+    
+    The "List type" selector was broken in the "Add Module" wizard.
+    
+    Fixes [bug 7756].
+
+  * Logging: Fixed quoting error in $forwarded.
+    
+    Fixes [bug 7759].
+
+  * Logging: Use misc->forwarded in $xff.
+    
+    Fixes FIXME.
+
+  * Revert "PCode: Make sure to compile everything in PCode used by subevalers."
+    
+    This reverts commit b96e06a15958bc80162cfa0ed99a95ac42a4632f.
+    Attempt to reduce possible overhead introduced by always compiling in
+    PikeCompile instances.
+
+  * TagCache: Kludge to avoid excessive entry values in the RAM cache.
+
+  * Remove unwanted debug ASSERT when storing zero data in cache_set(). We now
+    document the behavior where the key might be removed altogether. This change
+    is made to support storing e.g. objects that may be destructed at any time,
+    including right before calling cache_set().
+
+  * Core: Load demand-loaded modules from handler threads.
+    
+    Avoid loading all modules for a delayed_load configuration
+    from the backend thread.
+    
+    NB: Changes API for find_configuration_for_url(); it may now return
+        a configuration that has not yet been loaded.
+    
+    Fixes most of [bug 7782].
+
+  * Logging: Added log pattern $cipher-suite.
+    
+    This log pattern is used to log the TLS/SSL cipher suite for a request.
+    
+    Fixes [bug 7785].
+
+  * Fixed error when started with -DYES_I_KNOW_WHAT_I_AM_DOING
+
+  * config_json: Make auth check independent on previous access to config_filesystem.
