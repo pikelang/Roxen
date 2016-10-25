@@ -858,6 +858,10 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
 protected void report_slow_thread_finished (Thread.Thread thread,
 					    float time_spent)
 {
+  if (query ("slow_req_bt_count") == 0) {
+    return;
+  }
+
   string th_name =
     ((thread != backend_thread) && thread_name(thread, 1)) || "";
   if (sizeof(th_name))
