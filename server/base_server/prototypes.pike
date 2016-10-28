@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.234 2009/03/21 18:26:05 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2387,11 +2387,23 @@ class RequestID
     foreach (query_vars / "&", string v) {
       if(sscanf(v, "%s=%s", string a, string b) == 2)
       {
-	a = _Roxen.http_decode_string(replace(a, "+", " "));
-	b = _Roxen.http_decode_string(replace(b, "+", " "));
+	// NB: Assume invalidly %-encoded values are unencoded.
+	//     Fixes [bug 7818].
+	catch {
+	  a = replace(a, "+", " ");
+	  a = _Roxen.http_decode_string(a);
+	};
+	catch {
+	  b = replace(b, "+", " ");
+	  b = _Roxen.http_decode_string(b);
+	};
 	vars[ a ] += ({ b });
-      } else
-	rests += ({_Roxen.http_decode_string( v )});
+      } else {
+	catch {
+	  v = _Roxen.http_decode_string( v );
+	};
+	rests += ({ v });
+      }
     }
 
     if (sizeof (rests)) {
