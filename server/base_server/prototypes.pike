@@ -3003,11 +3003,23 @@ class RequestID
     foreach (query_vars / "&", string v) {
       if(sscanf(v, "%s=%s", string a, string b) == 2)
       {
-	a = _Roxen.http_decode_string(replace(a, "+", " "));
-	b = _Roxen.http_decode_string(replace(b, "+", " "));
+	// NB: Assume invalidly %-encoded values are unencoded.
+	//     Fixes [bug 7818].
+	catch {
+	  a = replace(a, "+", " ");
+	  a = _Roxen.http_decode_string(a);
+	};
+	catch {
+	  b = replace(b, "+", " ");
+	  b = _Roxen.http_decode_string(b);
+	};
 	vars[ a ] += ({ b });
-      } else
-	rests += ({_Roxen.http_decode_string( v )});
+      } else {
+	catch {
+	  v = _Roxen.http_decode_string( v );
+	};
+	rests += ({ v });
+      }
     }
 
     if (sizeof (rests)) {
