@@ -3264,8 +3264,14 @@ void got_data(mixed fooid, string s, void|int chained)
     TIMER_END(cache_lookup);
 #endif	// RAM_CACHE
     TIMER_START(parse_request);
-    if( things_to_do_when_not_sending_from_cache( ) )
+    if (mixed err = catch {
+	if( things_to_do_when_not_sending_from_cache( ) )
+	  return;
+      }) {
+      internal_error(err);
+      roxen.handle(send_result);
       return;
+    }
     REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
     REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
     REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
