@@ -401,8 +401,14 @@ mapping(string:string) parse_cookies( array|string contents )
 	while(sizeof(c) && c[0]==' ') c=c[1..];
 	if(sscanf(c, "%s=%s", name, value) == 2)
 	  {
-	    value=http_decode_string(value);
-	    name=http_decode_string(name);
+	    // NB: Assume invalidly %-encoded values are unencoded.
+	    //     Fixes [bug 7818].
+	    catch {
+	      value=http_decode_string(value);
+	    };
+	    catch {
+	      name=http_decode_string(name);
+	    };
 	    cookies[ name ]=value;
 #ifdef OLD_RXML_CONFIG
 	    if( (name == "RoxenConfig") && strlen(value) )
@@ -488,12 +494,19 @@ int things_to_do_when_not_sending_from_cache( )
       if (query)
 	split_query_vars (query, vars);
 
+      if (mixed err = catch {
+	  f = http_decode_string(f);
+	}) {
+	report_debug("Client %O sent an invalidly %%-encoded query: %O: %s",
+		     client_var->fullname, f, describe_error(err));
+	return invalid_request();
+      }
+
       if (sizeof (vars)) {
       decode_query: {
 	  if (input_charset) {
 	    if (mixed err = catch {
-		f = decode_query_charset (_Roxen.http_decode_string (f),
-					  vars, input_charset);
+		f = decode_query_charset(f, vars, input_charset);
 	      }) {
 	      report_debug ("Client %O sent query %O which failed to decode "
 			    "with its own charset %O: %s",
@@ -504,8 +517,7 @@ int things_to_do_when_not_sending_from_cache( )
 	    else break decode_query;
 	  }
 
-	  f = decode_query_charset (_Roxen.http_decode_string (f),
-				    vars, "roxen-http-default");
+	  f = decode_query_charset(f, vars, "roxen-http-default");
 	}
 
 	if (array(string) rest = m_delete (real_variables, ""))
@@ -560,7 +572,6 @@ int things_to_do_when_not_sending_from_cache( )
 	// No variables to decode, only the path. Optimize
 	// decode_query with "roxen-http-default" since we know
 	// there's no magic_roxen_automatic_charset_variable.
-	f = http_decode_string (f);
 	if (input_charset) {
 	  if (mixed err = catch {
 	      f = Roxen.get_decoder_for_client_charset (input_charset) (f);
@@ -1869,6 +1880,13 @@ void internal_error(array _err)
 #ifdef INTERNAL_ERROR_DEBUG
   report_error(sprintf("Raw backtrace:%O\n", err));
 #endif /* INTERNAL_ERROR_DEBUG */
+}
+
+protected int(1..1) invalid_request()
+{
+  file = Roxen.http_low_answer(400, "<html><body><h1>Client error: Invalid request.</h1></body></html>\n");
+  roxen.handle(send_result);
+  return 1;
 }
 
 // This macro ensures that something gets reported even when the very
@@ -3790,8 +3808,14 @@ protected void got_configuration(Configuration conf)
     TIMER_END(cache_lookup);
 #endif	// RAM_CACHE
     TIMER_START(parse_request);
-    if( things_to_do_when_not_sending_from_cache( ) )
+    if (mixed err = catch {
+	if( things_to_do_when_not_sending_from_cache( ) )
+	  return;
+      }) {
+      internal_error(err);
+      roxen.handle(send_result);
       return;
+    }
     REQUEST_WERR(sprintf("HTTP: cooked headers %O", request_headers));
     REQUEST_WERR(sprintf("HTTP: cooked variables %O", real_variables));
     REQUEST_WERR(sprintf("HTTP: cooked cookies %O", cookies));
