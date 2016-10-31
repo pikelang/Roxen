@@ -1044,7 +1044,7 @@ class String
 {
   inherit Variable;
   constant type = "String";
-  int width = 40;
+  int width = 60;
   //! The width of the input field. Used by overriding classes.
 
   string diff( int render )
@@ -1143,7 +1143,7 @@ class Password
 //! Password variable (uses crypt_password)
 {
   inherit String;
-  int width = 20;
+  int width = 40;
   constant type = "Password";
 
   int(0..1) set_from_form( RequestID id )
@@ -1175,7 +1175,7 @@ class File
 {
   inherit String;
   constant type = "File";
-  int width = 50;
+  int width = 60;
 
   string read( )
   //! Read the file as a string.
@@ -1203,7 +1203,7 @@ class Location
 {
   inherit String;
   constant type = "Location";
-  int width = 50;
+  int width = 60;
 
   array verify_set( string value )
   {
@@ -1221,7 +1221,7 @@ class URL
 {
   inherit String;
   constant type = "URL";
-  int width = 50;
+  int width = 60;
 
   array verify_set_from_form( string new_value )
   {
@@ -1234,7 +1234,7 @@ class Directory
 {
   inherit String;
   constant type = "Directory";
-  int width = 50;
+  int width = 60;
 
   array verify_set( string value )
   {
@@ -1859,7 +1859,7 @@ class List
 {
   inherit Variable;
   constant type="List";
-  int width = 40;
+  int width = 60;
 
   array(string|array(string)) verify_set(mixed to)
   {

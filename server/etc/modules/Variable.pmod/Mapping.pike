@@ -11,7 +11,7 @@ inherit Variable.Variable;
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
 constant type = "Mapping";
-int width = 20;
+int width = 40;
 
 string transform_to_form( mixed what )
 //! Override this function to do the value->form mapping for
