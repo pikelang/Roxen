@@ -1178,7 +1178,7 @@ string format_description(string old_sha1, string head_sha1)
       description = string_to_utf8(block) + "\n" + description;
     }
   }
-  if (num_blocks > 2) {
+  if (num_blocks > 1) {
     description = "Multiple fixes:\n\n" + description;
   }
 
@@ -1326,6 +1326,31 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], head_sha1);
   git_push("origin", patch_branch);
+}
+
+void check_ident(string block, string path, string commit)
+{
+  string tree_info =
+    (git("ls-file", "--full-tree", "-z", commit, "--", path)/"\0")[0];
+  sscanf(tree_info, "%o %s %s\t%s",
+	 int mode, string type, string sha1, string path2);
+  if ((path != path2) || (type != "blob")) {
+    error("Unexpected output from git ls-tree --full-tree -z %s -- %s:\n"
+	  "  %O\n",
+	  commit, path, tree_info);
+  }
+  foreach(block/"\n", string line) {
+    if (!has_prefix(line, "+") || !has_value(line, "$Id: ")) continue;
+    string frag = (line/"$Id: ")[1];
+    if (!has_prefix(frag, sha1)) {
+      error("Unexpected $Id"
+	    "$ expansion for %s:\n"
+	    "Expected: $Id"
+	    ": %s $\n"
+	    "Got: %O\n",
+	    path, sha1, frag);
+    }
+  }
 }
 
 void make_patch(mapping(string:string|int|array(string)) options,
@@ -1543,6 +1568,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  // Not a new or deleted file, and not binary.
 	  diff += block;
 	  modified += ({ a[1] });
+	  if (has_value(block, "$Id: ")) {
+	    check_ident(block, a[1], head_sha1);
+	  }
 	  break;
 	}
 	// FALL_THROUGH
