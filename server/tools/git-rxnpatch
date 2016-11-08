@@ -1178,7 +1178,7 @@ string format_description(string old_sha1, string head_sha1)
       description = string_to_utf8(block) + "\n" + description;
     }
   }
-  if (num_blocks > 2) {
+  if (num_blocks > 1) {
     description = "Multiple fixes:\n\n" + description;
   }
 
