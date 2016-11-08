@@ -324,7 +324,7 @@ ent text/html
     <str>Automatically created by create_configuration</str>
   </var>
   <var name='compat_level'>
-    <str>6.0</str>
+    <str>6.2</str>
   </var>
 
   <var name='name'>
