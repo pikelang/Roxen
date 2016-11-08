@@ -69,13 +69,77 @@ void set_total_size_limit (int size)
 }
 
 //! Base class for cache entries.
-class CacheEntry (mixed key, mixed data)
+class CacheEntry (mixed key, mixed data, string cache_name)
 {
   // FIXME: Consider unifying this with CacheKey. But in that case we
   // need to ensure "interpreter lock" atomicity below.
 
   int size;
   //! The size of this cache entry, as measured by @[Pike.count_memory].
+
+  //! Updates the size by calling @[Pike.count_memory], and returns
+  //! the difference between the new and the old measurement.
+  int update_size()
+  {
+    int old_size = size;
+#ifdef DEBUG_COUNT_MEM
+    mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
+                     "collect_stats": 1,
+                     "collect_direct_externals": 1,
+                     "block_strings": -1 ]);
+    float t = gauge {
+#else
+        mapping opts = (["block_strings": -1]);
+#endif
+
+        if (function(int|mapping:int) cm_cb =
+            objectp (data) && data->cache_count_memory)
+          this::size = cm_cb (opts) + Pike.count_memory (-1, this, key);
+        else
+          this::size = Pike.count_memory (opts, this, key, data);
+
+#ifdef DEBUG_COUNT_MEM
+      };
+    werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
+            "rnd %d wqa %d\n",
+            new_entry, opts->lookahead, opts->size, t, opts->internal,
+            opts->cyclic, opts->external, opts->visits, opts->revisits,
+            opts->rounds, opts->work_queue_alloc);
+
+#if 0
+    if (opts->external) {
+      opts->collect_direct_externals = 1;
+      // Raise the lookahead to 1 to recurse the closest externals.
+      if (opts->lookahead < 1) opts->lookahead = 1;
+
+      if (function(int|mapping:int) cm_cb =
+          objectp (data) && data->cache_count_memory)
+        res = cm_cb (opts) + Pike.count_memory (-1, entry, key);
+      else
+        res = Pike.count_memory (opts, entry, key, data);
+
+      array exts = opts->collect_direct_externals;
+      werror ("Externals found using lookahead %d: %O\n",
+              opts->lookahead, exts);
+#if 0
+      foreach (exts, mixed ext)
+        if (objectp (ext) && ext->locate_my_ext_refs) {
+          werror ("Refs to %O:\n", ext);
+          _locate_references (ext);
+        }
+#endif
+    }
+#endif
+
+#endif	// DEBUG_COUNT_MEM
+#undef opts
+
+#ifdef DEBUG_CACHE_SIZES
+    new_entry->cmp_size = cmp_sizeof_cache_entry (cache_name, new_entry);
+#endif
+
+    return size - old_size;
+  }
 
 #ifdef DEBUG_CACHE_SIZES
   int cmp_size;
@@ -472,6 +536,7 @@ overhead is minimal.";
   int add_entry (string cache_name, CacheEntry entry,
 		 int old_entry, mapping cache_context)
   {
+    entry->cache_name = cache_name;
     int res = low_add_entry (cache_name, entry);
     if (size > size_limit) evict (size_limit);
     return res;
@@ -525,11 +590,21 @@ class CM_GreedyDual
 {
   inherit CacheManager;
 
+  //! Allow cache to grow 10% above @[size_limit] before evicting
+  //! entries synchronously in @[add_entry].
+  constant max_overshoot_factor = 1.1;
+
   //! Mutex protecting @[priority_queue].
   Thread.Mutex priority_mux = Thread.Mutex();
 
   //! A heap of all [CacheEntry]s in priority order sorted by @[CacheEntry.`<].
   ADT.Heap priority_queue = ADT.Heap();
+
+  //! Queue to hold entries that need a size update (asynchronous
+  //! count_memory).
+  Thread.Queue update_size_queue = Thread.Queue();
+
+  mapping(CacheEntry:int(1..1)) pending_pval_updates = ([]);
 
   //! Wrapper so that we can get back to @[CacheEntry] from
   //! @[ADT.Heap.Element] easily.
@@ -601,6 +676,81 @@ class CM_GreedyDual
   // max_used_pval only works as a flag, and we set it to
   // Int.NATIVE_MAX when that state is reached.
 
+  // call_out handle used by schedule_update_weights.
+  protected mixed update_weights_handle;
+
+  protected void schedule_update_weights()
+  {
+    if (!update_weights_handle) {
+      // Weird indexing: the roxen constant is not registered when
+      // this file is compiled...
+      update_weights_handle =
+        all_constants()->roxen->background_run (0.001, update_weights);
+    }
+  }
+
+  protected void update_weights()
+  {
+    update_weights_handle = 0;
+
+    // Try to limit run time to 50 ms at a time in order to avoid
+    // impacting requests too much. If we're interrupted due to
+    // timeout we'll reschedule ourselves as a background job. In a
+    // heavily loaded server this might delay size/pval updates for a
+    // while, but the main focus should be handling requests rather
+    // than fiddling with size estimations and heap rebalancing. We'll
+    // assume updates won't be deferred for so long that eviction
+    // selection will be severely impacted.
+    constant max_run_time = 50000;
+    int start = gethrtime();
+    int reschedule;
+
+    foreach (pending_pval_updates; CacheEntry entry;) {
+      // NB: The priority queue is automatically adjusted on
+      //     change of pval.
+      entry->pval = calc_pval (entry);
+
+      m_delete (pending_pval_updates, entry);
+
+      if (gethrtime() - start > max_run_time / 2) {
+        // Save some time for the loop below.
+        reschedule = 1;
+        break;
+      }
+    }
+
+    while (CacheEntry entry = update_size_queue->try_read()) {
+      string cache_name = entry->cache_name;
+      if (CacheStats cs = stats[cache_name]) {
+        int size_diff = entry->update_size();
+
+        // Check if entry has been evicted already.
+        if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
+          if (lm[entry->key] == entry) {
+            cs->size += size_diff;
+            size += size_diff;
+            recent_added_bytes += size_diff;
+          }
+        }
+
+        entry->pval = calc_pval (entry);
+
+        if (size > size_limit) {
+          evict (size_limit);
+        }
+      }
+
+      if (gethrtime() - start > max_run_time) {
+        reschedule = 1;
+        break;
+      }
+    }
+
+    if (reschedule) {
+      schedule_update_weights();
+    }
+  }
+
 #ifdef CACHE_DEBUG
   protected void debug_check_priority_queue()
   // Assumes no concurrent access - run inside _disable_threads.
@@ -656,16 +806,34 @@ class CM_GreedyDual
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     account_hit (cache_name, entry);
-    int|float pval = calc_pval (entry);
-
-    // NB: The priority queue is automatically adjusted on
-    //     change of pval.
-    entry->pval = pval;
+    // Even though heap rebalancing is relatively cheap (at least
+    // compared to the old multiset strategy), we'll defer updates to
+    // a background job (because of how frequent cache hits are). This
+    // also helps consolidation.
+    pending_pval_updates[entry] = 1;
+    schedule_update_weights();
   }
 
   int add_entry (string cache_name, CacheEntry entry,
 		 int old_entry, mapping cache_context)
   {
+    int need_size_update;
+    entry->cache_name = cache_name;
+    // count_memory may account for significant amounts of CPU time on
+    // frequent cache misses. To avoid impacting requests too much
+    // we'll assign a mean value here and defer actual memory counting
+    // to a background job. During load spikes that should help
+    // amortize the cost of count_memory over a longer period of time.
+    if (CacheStats cs = stats[cache_name]) {
+      if (cs->count) {
+        entry->size = cs->size / cs->count;
+        need_size_update = 1;
+      } else {
+        // No entry present from before -- update synchronously.
+        entry->update_size();
+      }
+    }
+
     entry->cache_name = cache_name;
     int|float v = entry->value =
       calc_value (cache_name, entry, old_entry, cache_context);
@@ -677,7 +845,18 @@ class CM_GreedyDual
     priority_queue->push(entry->element());
     key = 0;
 
-    if (size > size_limit) evict (size_limit);
+    if (need_size_update) {
+      update_size_queue->write (entry);
+      schedule_update_weights();
+    }
+
+    // Evictions will normally take place in the background job as
+    // well, but we'll make sure we don't overshoot the size limit by
+    // too much.
+    int hard_size_limit = (int)(size_limit * max_overshoot_factor);
+    if (size > hard_size_limit)
+      evict (hard_size_limit);
+
     return 1;
   }
 
@@ -877,8 +1056,7 @@ class CM_GDS_Time
 
   void got_miss (string cache_name, mixed key, mapping cache_context)
   {
-    //werror ("Miss.\n%s\n", describe_backtrace (backtrace()));
-    account_miss (cache_name);
+    ::got_miss (cache_name, key, cache_context);
     save_start_hrtime (cache_name, key, cache_context);
   }
 
@@ -1589,63 +1767,6 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   // an up-to-date cost for the entry. (It's also a bit tricky to
   // atomically check for an existing entry here before creating a new
   // one.)
-
-#ifdef DEBUG_COUNT_MEM
-  mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
-		   "collect_stats": 1,
-		   "collect_direct_externals": 1,
-		   "block_strings": -1
-		 ]);
-  float t = gauge {
-#else
-      mapping opts = (["block_strings": -1]);
-#endif
-
-      if (function(int|mapping:int) cm_cb =
-	  objectp (data) && data->cache_count_memory)
-	new_entry->size = cm_cb (opts) + Pike.count_memory (-1, new_entry, key);
-      else
-	new_entry->size = Pike.count_memory (opts, new_entry, key, data);
-
-#ifdef DEBUG_COUNT_MEM
-    };
-  werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
-	  "rnd %d wqa %d\n",
-	  new_entry, opts->lookahead, opts->size, t, opts->internal,
-	  opts->cyclic, opts->external, opts->visits, opts->revisits,
-	  opts->rounds, opts->work_queue_alloc);
-
-#if 0
-  if (opts->external) {
-    opts->collect_direct_externals = 1;
-    // Raise the lookahead to 1 to recurse the closest externals.
-    if (opts->lookahead < 1) opts->lookahead = 1;
-
-    if (function(int|mapping:int) cm_cb =
-	objectp (data) && data->cache_count_memory)
-      res = cm_cb (opts) + Pike.count_memory (-1, entry, key);
-    else
-      res = Pike.count_memory (opts, entry, key, data);
-
-    array exts = opts->collect_direct_externals;
-    werror ("Externals found using lookahead %d: %O\n",
-	    opts->lookahead, exts);
-#if 0
-    foreach (exts, mixed ext)
-      if (objectp (ext) && ext->locate_my_ext_refs) {
-	werror ("Refs to %O:\n", ext);
-	_locate_references (ext);
-      }
-#endif
-  }
-#endif
-
-#endif	// DEBUG_COUNT_MEM
-#undef opts
-
-#ifdef DEBUG_CACHE_SIZES
-  new_entry->cmp_size = cmp_sizeof_cache_entry (cache_name, new_entry);
-#endif
 
   if (timeout)
     new_entry->timeout = time (1) + timeout;
