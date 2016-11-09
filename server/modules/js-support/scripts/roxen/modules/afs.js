@@ -473,7 +473,7 @@ ROXEN.AFS = function () {
    *   Optional scope correction.
    * @return {Function}
    *   Returns the function actually added, which can be used in a later
-   *   call to remove_global_callback.
+   *   call to remove_error_callback.
    */
   function add_error_callback (fn, scope)
   {
