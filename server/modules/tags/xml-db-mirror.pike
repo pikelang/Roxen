@@ -458,8 +458,7 @@ int(0..1) import_xml(string path, string xml)
       
       //  Hash the new record and see if already a duplicate
       string md5 =
-	lower_case(String.string2hex(Crypto.MD5()->
-				     hash(string_to_utf8(hashstr))));
+	lower_case(String.string2hex(Crypto.MD5.hash(string_to_utf8(hashstr))));
       if (int existing_id = md5hashes[md5]) {
 	//  Don't change this record but flag it as valid
 	valid_ids[existing_id] = 1;
