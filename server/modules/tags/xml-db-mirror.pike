@@ -11,7 +11,7 @@ inherit "roxenlib";
 import Parser.XML.Tree;
 
 constant thread_safe = 1;
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG | MODULE_PROVIDER;
 string module_name = "Tags: XML-DB Mirror";
 string module_doc = #"
 <p>Mirrors records from an XML file to a MySQL database. The module expects
@@ -48,7 +48,10 @@ string module_doc = #"
 #"
 <p>No whitespace stripping takes place, and data will be decoded into Unicode
    based on the <tt>encoding</tt> declaration in the XML header and stored in
-   native widestring format.</p>";
+   native widestring format.</p>"
+#"
+<p>This module also acts as a backend for the feed import system.</p>"
+  ;
 
 //  <p>An extra <tt>tbl_</tt><i>name</i><tt>_hash</tt> table keeps MD5 hashes of
 //     each record in order to identify unchanged records across imports.</p>
@@ -599,6 +602,50 @@ class TagEmitXMLDB
     
     RXML.parse_error("Must provide \"id\" or \"search\" attribute.\n");
   }
+}
+
+/*
+ * Provider interface.
+ */
+
+multiset(string) query_provides()
+{
+  return (< "feed_import_backend" >);
+}
+
+array(mapping(string:mixed)|string) read_article(string path,
+						 int|void edit,
+						 int|void discard_changes)
+{
+  return 0;
+}
+
+int(0..2) update_article(string path, string data, mapping md,
+			 mapping|void extra_md, int|void no_conflicts,
+			 void|function(string, mixed...:mixed) notify_cb)
+{
+  import_xml(path, data);
+  return 1;
+}
+
+int prepare_article(string path)
+{
+  return 1;
+}
+
+int(0..1) check_imported(string source_path, int mtime, RoxenModule importer)
+{
+  return 0;
+}
+
+void delete_file(string source_path, RoxenModule loader, RoxenModule importer)
+{
+  return;
+}
+
+void reset_state(int|void force)
+{
+  return;
 }
 
 
