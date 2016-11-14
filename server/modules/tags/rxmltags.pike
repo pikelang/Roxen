@@ -2911,13 +2911,17 @@ class TagCache {
 	  // they probably weren't that hot anyways. This method makes
 	  // sure we have control over memory usage.
 
-	  // FIXME: Ugly hack to get a low cost (since it's
-	  // reinstantiated from a persistent entry). Would be better
-	  // to save the original creation cost of the entry to reuse
-	  // here, but Roxen's cache doesn't have API's to get or set
-	  // entry cost currently.
-	  get_alternative (key);
-	  set_alternative (key, entry, timeout);
+	  // FIXME: get_alternative is a hack to get a low cost (since
+	  // it's reinstantiated from a persistent entry). Would be
+	  // better to save the original creation cost of the entry to
+	  // reuse here, but Roxen's cache doesn't have API's to get
+	  // or set entry cost currently.
+          // However, we won't update existing entries in the RAM
+          // cache, since they are likely more up-to-date then what we
+          // get from the frame restore. Also, this avoids unnecessary
+          // count_memory rounds.
+	  if (!get_alternative (key))
+            set_alternative (key, entry, timeout);
 	}
       }
     }
