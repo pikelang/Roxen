@@ -1282,6 +1282,24 @@ class MultipleChoice
   //! support for multiselect mode.
   constant multiselect_supported = 1;
 
+  array(string|array(string)) verify_set(mixed to)
+  {
+    if (multiselect && stringp(to)) {
+      return ({ "Compatibility: "
+		"Converted to multi-select.\n",
+		({ to }),
+      });
+    } else if (!multiselect && arrayp(to)) {
+      return ({ "Compatibility: "
+		"Converted to single-select.\n",
+		sizeof (to) ? to[0] : default_value(),
+      });
+    }
+
+
+    return ::verify_set(to);
+  }
+
   string diff( int render )
   {
     if(!render) {
