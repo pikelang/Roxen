@@ -1,0 +1,45 @@
+subject: Roxen 6.0: Multiple fixes:
+from: ae19ca8f232ff4caa94a6ed001f662e75555dc8c
+to: 97c99f6cf237b0b46030787bc226a76f3f95c693
+originator: grubba@grubba.org
+depends: 2016-10-20T090406
+restart: true
+
+Multiple fixes:
+
+  * HTTP [Pike 8.0]: Survive invalidly %-encoded requests again.
+    
+    Roxen.http_decode_string() in Pike 8.0 throws errors for invalidly
+    %-encoded strings.
+    
+    Behavior is now as follows:
+    
+    * Invalidly %-encoded query-variables or cookies -- assume that the
+      erroneous query-variable or cookie was sent unencoded.
+    
+    * Invalidly %-encoded path -- generate a bad request (400) error.
+    
+    Fixes [bug 7818].
+
+  * HTTP: Improved robustness.
+    
+    Send an internal server error if things_to_do_when_not_sending_from_cache()
+    throws an error.
+    
+    Previously the connection was aborted.
+    
+    Fixes some more of 7818.
+
+  * XML DB Mirror: Fixed broken use of md5.
+    
+    The module should now work again.
+
+  * XML DB Mirror: Now also a feed import backend.
+    
+    Make it possible to use the feed import system (including
+    xslt transformations) as a front end to the module.
+
+  * TagCache: Don't update existing alternatives in RAM cache.
+    
+    This should reduce count_memory calls quite a bit, and the RAM entry should
+    be most recent anyways.
