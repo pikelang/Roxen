@@ -1,0 +1,5 @@
+Modified files:
+  base_server/prototypes.pike
+  modules/tags/rxmltags.pike
+  modules/tags/xml-db-mirror.pike
+  protocols/http.pike
