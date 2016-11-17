@@ -1330,26 +1330,44 @@ void create_new_patch(mapping(string:string|int|array(string)) options,
 
 void check_ident(string block, string path, string commit)
 {
+  // Convert the path to a repository path.
+  string repo_path = path;
+  if (sizeof(path_prefix || "") && has_prefix(path, path_prefix)) {
+    repo_path = repo_path[sizeof(path_prefix)..];
+  }
+  if (sizeof(subtree_prefix || "")) {
+    repo_path = subtree_prefix + repo_path;
+  }
+
   string tree_info =
-    (git("ls-file", "--full-tree", "-z", commit, "--", path)/"\0")[0];
+    (git("ls-tree", "--full-tree", "-z", commit, "--", repo_path)/"\0")[0];
+  if (!sizeof(tree_info)) {
+    // Deleted?
+    werror("File %s (%s) deleted?\n", path, repo_path);
+    return;
+  }
   sscanf(tree_info, "%o %s %s\t%s",
 	 int mode, string type, string sha1, string path2);
-  if ((path != path2) || (type != "blob")) {
+  if ((repo_path != path2) || (type != "blob")) {
     error("Unexpected output from git ls-tree --full-tree -z %s -- %s:\n"
 	  "  %O\n",
-	  commit, path, tree_info);
+	  commit, repo_path, tree_info);
   }
   foreach(block/"\n", string line) {
     if (!has_prefix(line, "+") || !has_value(line, "$Id: ")) continue;
     string frag = (line/"$Id: ")[1];
     if (!has_prefix(frag, sha1)) {
       error("Unexpected $Id"
-	    "$ expansion for %s:\n"
+	    "$ expansion for %s (%s):\n"
 	    "Expected: $Id"
 	    ": %s $\n"
 	    "Got: %O\n",
-	    path, sha1, frag);
+	    path, repo_path, sha1, frag);
     }
+    werror("%s: $Id: %s"
+	   " $\n",
+	   path, sha1);
+    break;	// We assume that all the idents get the same expansion.
   }
 }
 
