@@ -2113,10 +2113,11 @@ mixed get_value_from_file(string path, string index, void|string pre)
 //!   will be removed when this object is destructed (eg via
 //!   refcount-garb).
 roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
-				    int|void max_size, int|void max_files)
+				    int|void max_size, int|void max_files,
+				    string|void quarantine)
 {
   return roxen.register_fsgarb(module_identifier(), path, max_age,
-			       max_size, max_files);
+			       max_size, max_files, quarantine);
 }
 #endif
 
