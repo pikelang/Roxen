@@ -1,4 +1,4 @@
-subject: Roxen 6.0: Multiple fixes:
+subject: Roxen 6.0: HTTP, XML DB, TagCache
 from: ae19ca8f232ff4caa94a6ed001f662e75555dc8c
 to: 97c99f6cf237b0b46030787bc226a76f3f95c693
 originator: grubba@grubba.org
