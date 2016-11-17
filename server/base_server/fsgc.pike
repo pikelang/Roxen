@@ -53,12 +53,41 @@ class FSGarb
   mapping(string:object) handle_lookup = ([]);
   ADT.Priority_queue pending_gc = ADT.Priority_queue();
 
-#ifdef FSGC_PRETEND
+  //! If set, move files to this directory instead of deleting them.
+  //!
+  //! If set to @[root] or @expr{""@} keep the files as is.
+  string quarantine;
+
   protected int rm(string path)
   {
-    werror("FSGC: Zap %O\n", path);
+    GC_WERR("FSGC: Zap %O\n", path);
+    if (quarantine) {
+      if ((quarantine == root) || (quarantine == "")) return 0;
+      if (!has_prefix(path, root)) return 0;
+      string rel = path[sizeof(root)..];
+
+      // First try the trivial case.
+      if (mv(path, quarantine + rel)) return 1;
+
+      string dirs = dirname(rel);
+      if (sizeof(dirs)) {
+	if (Stdio.mkdirhier(quarantine + dirs)) {
+	  // Try again with the directory existing.
+	  if (mv(path, quarantine + rel)) return 1;
+	}
+      }
+
+      // Different filesystems?
+      if (Stdio.cp(path, quarantine + rel)) {
+	return predef::rm(path);
+      }
+      werror("FSGC: Failed to copy file %O to %O: %s.\n",
+	     path, quarantine + rel, strerror(errno()));
+      return 0;
+    } else {
+      return predef::rm(path);
+    }
   }
-#endif
 
   void check_threshold()
   {
@@ -302,7 +331,8 @@ class FSGarb
   }
 
   protected void create(string modid, string path, int max_age,
-			int|void max_size, int|void max_files)
+			int|void max_size, int|void max_files,
+			string|void quarantine)
   {
     GC_WERR("FSGC: Max age: %d\n", max_age);
     GC_WERR("FSGC: Max size: %d\n", max_size);
@@ -315,6 +345,13 @@ class FSGarb
     this_program::max_files = max_files;
 
     root = canonic_path(path);
+
+    if (quarantine) {
+      if (sizeof(quarantine)) {
+	quarantine = canonic_path(quarantine);
+      }
+      this::quarantine = quarantine;
+    }
 
     ::create(max_age/file_interval_factor, 0, max_age);
 
@@ -429,11 +466,13 @@ class FSGarbWrapper(string id)
 }
 
 FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
-			      int|void max_size, int|void max_files)
+			      int|void max_size, int|void max_files,
+			      string|void quarantine)
 {
   if ((path == "") || (path == "/") || (max_age <= 0)) return 0;
   string id = modid + "\0" + path + "\0" + gethrtime();
-  FSGarb g = FSGarb(modid, path, max_age, max_size, max_files);
+  FSGarb g = FSGarb(modid, path, max_age, max_size, max_files,
+		    quarantine);
   fsgarbs[id] = g;
   GC_WERR("FSGC: Register garb on %O ==> id: %O\n", path, id);
   return FSGarbWrapper(id);
