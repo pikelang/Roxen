@@ -28,8 +28,8 @@
       //  Requires the JavaScript 1.6/ECMAScript 5 filter function.
       //  Credit to <http://stackoverflow.com/a/14438954>.
       return a.filter(function(value, index) {
-	  return a.indexOf(value) === index;
-	});
+          return a.indexOf(value) === index;
+        });
     },
 
     /**
@@ -41,8 +41,8 @@
     indices: function(o) {
       var res = [ ];
       for (var key in o)
-	if (o.hasOwnProperty(key))
-	  res.push(key);
+        if (o.hasOwnProperty(key))
+          res.push(key);
       return res;
     },
 
@@ -83,7 +83,7 @@
       //  stackoverflow.com/questions/1068834/object-comparison-in-javascript
       //
       //  NOTE: Does not handle NaN, cyclical structures or +/-0.
-      
+
       // If both x and y are null or undefined and exactly the same
       if (x === y) return true;
 
@@ -93,32 +93,32 @@
       // They must have the exact same prototype chain, the closest we can do
       // is test there constructor.
       if (x.constructor !== y.constructor) return false;
-      
+
       for (var p in x) {
-	// Other properties were tested using x.constructor === y.constructor
-	if (!x.hasOwnProperty(p)) continue;
+        // Other properties were tested using x.constructor === y.constructor
+        if (!x.hasOwnProperty(p)) continue;
 
-	// Allows to compare x[p] and y[p] when set to undefined
-	if (!y.hasOwnProperty(p)) return false;
-	
-	// If they have the same strict value or identity then they are equal
-	if (x[p] === y[p]) continue;
+        // Allows to compare x[p] and y[p] when set to undefined
+        if (!y.hasOwnProperty(p)) return false;
 
-	// Numbers, Strings, Functions, Booleans must be strictly equal
-	if (typeof(x[p]) !== "object") return false;
-	
-	// Objects and Arrays must be tested recursively
-	if (!deepCompare(x[p], y[p])) return false;
+        // If they have the same strict value or identity then they are equal
+        if (x[p] === y[p]) continue;
+
+        // Numbers, Strings, Functions, Booleans must be strictly equal
+        if (typeof(x[p]) !== "object") return false;
+
+        // Objects and Arrays must be tested recursively
+        if (!deepCompare(x[p], y[p])) return false;
       }
 
       for (p in y) {
-	// Allows x[p] to be set to undefined
-	if (y.hasOwnProperty(p) && !x.hasOwnProperty(p)) return false;
+        // Allows x[p] to be set to undefined
+        if (y.hasOwnProperty(p) && !x.hasOwnProperty(p)) return false;
       }
-      
+
       return true;
     },
-    
+
     /**
      * Performs a deep copy of an object or array.
      * @method deepCopy
@@ -132,18 +132,18 @@
       //  FIXME: Replace with clone() in YUI3?
       var out, i, len;
       if (Object.prototype.toString.call(obj) === "[object Array]") {
-	out = [ ];
-	len = obj.length;
-	for (i = 0 ; i < len; i++)
-	  out[i] = arguments.callee(obj[i]);
-	return out;
+        out = [ ];
+        len = obj.length;
+        for (i = 0 ; i < len; i++)
+          out[i] = arguments.callee(obj[i]);
+        return out;
       } else if (obj === null) {
         return null;
       } else if (typeof obj === "object") {
-	out = { };
-	for (i in obj)
-	  out[i] = arguments.callee(obj[i]);
-	return out;
+        out = { };
+        for (i in obj)
+          out[i] = arguments.callee(obj[i]);
+        return out;
       }
       return obj;
     },
@@ -231,11 +231,11 @@
      */
     escapeURIComponent: function (s) {
       return encodeURIComponent (s).
-	replace(/!/g, "%21").
-	replace(/\x27/g, "%27"). // ' escaped to avoid unbalanced quotes.
-	replace(/\(/g, "%28").
-	replace(/\)/g, '%29').
-	replace(/\*/g, '%2A');
+        replace(/!/g, "%21").
+        replace(/\x27/g, "%27"). // ' escaped to avoid unbalanced quotes.
+        replace(/\(/g, "%28").
+        replace(/\)/g, '%29').
+        replace(/\*/g, '%2A');
     },
 
     /**
@@ -246,9 +246,9 @@
      */
     escapeHTML: function(s) {
       return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").
-	     replace(/\x27/g,"&apos;").replace(/\x22/g,"&quot;");
+             replace(/\x27/g,"&apos;").replace(/\x22/g,"&quot;");
     },
-    
+
     /**
      * Unescapes a string for use in HTML.
      * @method unescapeHTML
@@ -259,7 +259,7 @@
       return s.replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").
              replace(/&apos;/g, "'").replace(/&quot;/g,'"');
     },
-    
+
     /**
      * Filter an array by executing a filter function on each array element
      * and return the result.
@@ -291,10 +291,10 @@
      */
     dirname: function(path) {
       if (!path || path === "")
-	return "/";
+        return "/";
       if (path.charAt(path.length - 1) === "/")
-	return path;
-      
+        return path;
+
       //  Strip the trailing file name from a path and return the directory
       var segments = path.split("/");
       segments.pop();
@@ -311,10 +311,10 @@
      */
     basename: function(path) {
       if (!path || path === "")
-	return "";
+        return "";
       var slash_pos = path.lastIndexOf("/");
       if (slash_pos >= 0)
-	return path.substr(slash_pos + 1);
+        return path.substr(slash_pos + 1);
       return path;
     },
 
@@ -539,18 +539,18 @@
       for (var i in args) {
         if (args.hasOwnProperty(i) &&
             !ROXEN.isUndefined(args[i])) {
-	  if (a.length > 1)
-	    a.push("&");
+          if (a.length > 1)
+            a.push("&");
           a.push(i.toString());
           a.push("=");
           if (ROXEN.isArray(args[i])) {
             var b = [];
             for (var j = 0; j < args[i].length; j++)
-	      b.push(ROXEN.escapeURIComponent(args[i][j]));
+              b.push(ROXEN.escapeURIComponent(args[i][j]));
             a.push(b.join(","));
           }
           else {
-	    a.push(ROXEN.escapeURIComponent(args[i]));
+            a.push(ROXEN.escapeURIComponent(args[i]));
           }
         }
       }
@@ -677,11 +677,11 @@
      */
     toggle_logger: function () {
       if (this.logger_visible) {
-	this.logger.hide();
-	this.logger_visible = false;
+        this.logger.hide();
+        this.logger_visible = false;
       } else {
-	this.logger.show();
-	this.logger_visible = true;
+        this.logger.show();
+        this.logger_visible = true;
       }
     },
 
@@ -694,18 +694,18 @@
       //  (We don't list every single tiny country on the map below.)
       var week_starts_on_sun =
         [ "us", "cn", "jp", "ca",     //  US, China, Japan, Canada,
-	  "za", "zw", "ke",           //  South Africa, Zimbabwe, Kenya,
-	  "ph", "tw", "hk",           //  Philippines, Taiwan, Hong Kong
-	  "mx", "gt", "sv",           //  Mexico, Guatemala, El Salvador
-	  "ni", "cr", "pa",           //  Nicaragua, Costa Rica, Panama
-	  "co", "ve", "ec",           //  Colombia, Venezuela, Ecuador
-	  "pe", "br", "bo",           //  Peru, Brazil, Bolivia
-	  "cl", "ar", "il" ];         //  Chile, Argentina, Israel
+          "za", "zw", "ke",           //  South Africa, Zimbabwe, Kenya,
+          "ph", "tw", "hk",           //  Philippines, Taiwan, Hong Kong
+          "mx", "gt", "sv",           //  Mexico, Guatemala, El Salvador
+          "ni", "cr", "pa",           //  Nicaragua, Costa Rica, Panama
+          "co", "ve", "ec",           //  Colombia, Venezuela, Ecuador
+          "pe", "br", "bo",           //  Peru, Brazil, Bolivia
+          "cl", "ar", "il" ];         //  Chile, Argentina, Israel
       var lang = navigator.language.toLowerCase();
       if (lang.length >= 5) {
-	var country = lang.substr(3, 2);
-	if (week_starts_on_sun.indexOf(country) >= 0)
-	  return true;
+        var country = lang.substr(3, 2);
+        if (week_starts_on_sun.indexOf(country) >= 0)
+          return true;
       }
       return false;
     },
@@ -715,7 +715,7 @@
       var locale = "en-US";
       var date_fmt = "%b %e, %Y";
       return YAHOO.util.Date.format(tm, { format: date_fmt },
-				    locale).replace("  ", " ");
+                                    locale).replace("  ", " ");
     },
 
     /**
@@ -747,21 +747,21 @@
 
       if (tm.getYear() != today.getYear()) {
         //  Feb 23, 2010
-	fmt = date_fmt;
-	if (force_include_time)
-	  fmt += ", " + time_fmt;
+        fmt = date_fmt;
+        if (force_include_time)
+          fmt += ", " + time_fmt;
       } else if (tm_yday < today_yday - 1 ||
                  tm_yday > today_yday) {
         //  Feb 23, 14:30
         fmt = date_fmt.replace(", %Y", "");
         fmt = fmt.replace(" %Y", "");
-	fmt = fmt + ", " + time_fmt;
+        fmt = fmt + ", " + time_fmt;
       } else if (tm_yday == today_yday - 1) {
         //  Yesterday, 14:30
-	fmt = "yesterday, " + time_fmt;
+        fmt = "yesterday, " + time_fmt;
       } else {
         //  Today, 14:30
-	fmt = "today, " + time_fmt;
+        fmt = "today, " + time_fmt;
       }
       return YAHOO.util.Date.format(tm, { format: fmt }, locale);
     }
