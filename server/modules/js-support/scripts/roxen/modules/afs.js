@@ -162,10 +162,10 @@ ROXEN.AFS = function () {
 
       try {
         cb (err);
-      } catch (err) {
-        ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+      } catch (e) {
+        ROXEN.log ("AFS: error in callback " + cb.name + ": " + e);
         if (ROXEN.debug)
-          throw err;
+          throw e;
       }
     }
 
@@ -542,12 +542,12 @@ ROXEN.AFS = function () {
   function init(options)
   {
     if (options) {
-      if (options["actions_prefix"])
-        actions_prefix = options["actions_prefix"];
-      if (options["session_var"])
-        session_var = options["session_var"];
-      if (options["poll_timeout"])
-        poll_timeout = options["poll_timeout"];
+      if (options.actions_prefix)
+        actions_prefix = options.actions_prefix;
+      if (options.session_var)
+        session_var = options.session_var;
+      if (options.poll_timeout)
+        poll_timeout = options.poll_timeout;
     }
 
     if (debug_log)
@@ -570,8 +570,6 @@ ROXEN.AFS = function () {
 
     is_initialized = true;
   }
-
-  var is_initialized = false;
 
   /**
    * Will return true after init() has been called once.
