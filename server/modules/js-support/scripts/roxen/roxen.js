@@ -5,11 +5,10 @@
  */
 
 if (typeof ROXEN === "undefined" || !ROXEN) {
-    /**
-     * The ROXEN global namespace object. 
-     * @class ROXEN
-     * @static
-     */
-    var ROXEN = {};
+  /**
+   * The ROXEN global namespace object. 
+   * @class ROXEN
+   * @static
+   */
+  var ROXEN = {};
 }
-

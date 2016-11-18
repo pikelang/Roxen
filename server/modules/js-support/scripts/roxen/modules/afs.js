@@ -28,7 +28,7 @@ ROXEN.AFS = function () {
    * AFS session variable name in action URLs.
    */
   var session_var = "session_id";
-  
+
   /**
    * How long a poll for new msgs is held by the server.
    * A value of 0 disables blocking polls.
@@ -102,15 +102,15 @@ ROXEN.AFS = function () {
 
     for (var name in args)
       if (args.hasOwnProperty (name)) {
-	var val = args[name];
-	if (YAHOO.lang.isString (val))
-	  // Assume the name only contains ordinary characters. May
-	  // escape it later should it be a problem.
-	  query.push (name + "=" + ROXEN.escapeURIComponent (val));
-	else {
-	  json_args[name] = val;
-	  got_json_args = true;
-	}
+        var val = args[name];
+        if (YAHOO.lang.isString (val))
+          // Assume the name only contains ordinary characters. May
+          // escape it later should it be a problem.
+          query.push (name + "=" + ROXEN.escapeURIComponent (val));
+        else {
+          json_args[name] = val;
+          got_json_args = true;
+        }
       }
 
     if (got_json_args)
@@ -122,18 +122,18 @@ ROXEN.AFS = function () {
   function request_failure (resp)
   {
     ROXEN.log("ROXEN.AFS: connection error: " +
-	      resp.status + " " + resp.statusText);
+              resp.status + " " + resp.statusText);
 
     for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
-	ROXEN.log ("  AFS calling error callback: " + cb.name);
+        ROXEN.log ("  AFS calling error callback: " + cb.name);
       try {
-	cb (resp);
+        cb (resp);
       } catch (err) {
-	ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
-	if (ROXEN.debug)
-	  throw err;
+        ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+        if (ROXEN.debug)
+          throw err;
       }
     }
 
@@ -157,15 +157,15 @@ ROXEN.AFS = function () {
     for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
-	ROXEN.log ("  AFS calling error callback: " + cb.name);
+        ROXEN.log ("  AFS calling error callback: " + cb.name);
       // FIXME: Need a flag to tell it apart from a connection error?
 
       try {
-	cb (err);
+        cb (err);
       } catch (err) {
-	ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
-	if (ROXEN.debug)
-	  throw err;
+        ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+        if (ROXEN.debug)
+          throw err;
       }
     }
 
@@ -199,21 +199,21 @@ ROXEN.AFS = function () {
       var tag = msg.tag;
 
       if (tag) {
-	if (debug_log)
-	  ROXEN.log ("AFS response: " + msg.msg_type + ", tag " + tag);
+        if (debug_log)
+          ROXEN.log ("AFS response: " + msg.msg_type + ", tag " + tag);
 
         var ent = tagged_callbacks[tag];
-	cb = ent && ent[0];
-	if (ent === undefined)
-	  ROXEN.log ("ROXEN.AFS: Warning: Got AFS response with " +
-		     "unknown tag: " + msg.msg_type);
+        cb = ent && ent[0];
+        if (ent === undefined)
+          ROXEN.log ("ROXEN.AFS: Warning: Got AFS response with " +
+                     "unknown tag: " + msg.msg_type);
         else if (cb == -1) {
           if (debug_log > 1)
-	    ROXEN.log ("  AFS tagged callback was canceled");
-	  delete tagged_callbacks[tag];
+            ROXEN.log ("  AFS tagged callback was canceled");
+          delete tagged_callbacks[tag];
         } else {
-	  if (debug_log > 1)
-	    ROXEN.log ("  AFS calling tagged callback: " + cb.name);
+          if (debug_log > 1)
+            ROXEN.log ("  AFS calling tagged callback: " + cb.name);
           if (ROXEN.debug)
             cb(msg);
           else {
@@ -223,26 +223,26 @@ ROXEN.AFS = function () {
               ROXEN.log("AFS: error in callback " + cb.name + ": " + err);
             }
           }
-	  // Assume no more than one response with a given tag. See
-	  // also AFS.ClientSession.push_response.
-	  delete tagged_callbacks[tag];
-	  var group = ent[1];
+          // Assume no more than one response with a given tag. See
+          // also AFS.ClientSession.push_response.
+          delete tagged_callbacks[tag];
+          var group = ent[1];
           if (group) {
             var g = groups[group];
             g.splice(g.indexOf(tag), 1);
           }
-	}
+        }
       }
 
       else {
-	if (debug_log)
-	  ROXEN.log ("AFS response: " + msg.msg_type);
+        if (debug_log)
+          ROXEN.log ("AFS response: " + msg.msg_type);
       }
 
       for (var j = 0; j < global_callbacks.length; j++) {
-	cb = global_callbacks[j];
-	if (debug_log > 2)
-	  ROXEN.log ("  AFS calling global callback: " + cb.name);
+        cb = global_callbacks[j];
+        if (debug_log > 2)
+          ROXEN.log ("  AFS calling global callback: " + cb.name);
         try {
           cb (msg);
         } catch (err) {
@@ -280,7 +280,7 @@ ROXEN.AFS = function () {
   function call(action, args, fn, scope, group) {
     return call_or_post(action, "GET", args, 0, fn, scope, group);
   }
-  
+
   function post(action, args, postargs, fn, scope, group) {
     if (ROXEN.isString(postargs)) {
       //  ID or name of a <form> tag that should be encoded
@@ -289,15 +289,15 @@ ROXEN.AFS = function () {
     } else if (!ROXEN.isObject(postargs)) {
       postargs = { };
     }
-    
+
     var postdata = [ ];
     if (postargs) {
       var item = 0;
       for (var idx in postargs)
-	if (postargs.hasOwnProperty(idx)) {
-	  postdata[item++] =
-	    encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
-	}
+        if (postargs.hasOwnProperty(idx)) {
+          postdata[item++] =
+            encodeURIComponent(idx) + "=" + encodeURIComponent(postargs[idx]);
+        }
     }
     return call_or_post(action, "POST", args, postdata.join("&"), fn, scope);
   }
@@ -315,20 +315,20 @@ ROXEN.AFS = function () {
     if (fn) {
       var tag = ++tag_count + "";
       if (debug_log)
-	ROXEN.log ("AFS call: " + action + " " +
-		   YAHOO.lang.JSON.stringify (args) +
-		   ", callback " + fn.name + ", tag " + tag);
+        ROXEN.log ("AFS call: " + action + " " +
+                   YAHOO.lang.JSON.stringify (args) +
+                   ", callback " + fn.name + ", tag " + tag);
       args.tag = tag;
       tagged_callbacks[tag] = [ fn, group ];
     } else if (debug_log) {
       ROXEN.log ("AFS call: " + action + " " +
-		 YAHOO.lang.JSON.stringify (args));
+                 YAHOO.lang.JSON.stringify (args));
     }
     if (fn && group) {
       if (!groups[group]) groups[group] = [ ];
       groups[group].push(args.tag);
     }
-    
+
     args[session_var] = session;
     open_connections++;
 
@@ -341,18 +341,18 @@ ROXEN.AFS = function () {
     xhr.open("POST", url, true);
     xhr.onreadystatechange = function() {
       if (xhr.readyState === 4) {
-	if (xhr.status === 200) {
-	  //  Invoke success callback
-	  request_success(xhr);
-	} else if (xhr.status === 0 || xhr.status >= 400) {
-	  //  Invoke failure callback
-	  request_failure(xhr);
-	}
+        if (xhr.status === 200) {
+          //  Invoke success callback
+          request_success(xhr);
+        } else if (xhr.status === 0 || xhr.status >= 400) {
+          //  Invoke failure callback
+          request_failure(xhr);
+        }
       }
     };
     xhr.send(fd);
   }
-  
+
   function call_or_post(action, method, args, postdata, fn, scope, group) {
     if (!ROXEN.isObject(args)) {
       args = {};
@@ -364,16 +364,16 @@ ROXEN.AFS = function () {
     if (fn) {
       var tag = ++tag_count+"";
       if (debug_log)
-	ROXEN.log ("AFS call: " + action + " " +
-		   YAHOO.lang.JSON.stringify (args) +
-		   ", callback " + fn.name + ", tag " + tag);
+        ROXEN.log ("AFS call: " + action + " " +
+                   YAHOO.lang.JSON.stringify (args) +
+                   ", callback " + fn.name + ", tag " + tag);
       args.tag = tag;
       tagged_callbacks[tag] = [ fn, group ];
     }
     else {
       if (debug_log)
-	ROXEN.log ("AFS call: " + action + " " +
-		   YAHOO.lang.JSON.stringify (args));
+        ROXEN.log ("AFS call: " + action + " " +
+                   YAHOO.lang.JSON.stringify (args));
     }
 
     args[session_var] = session;
@@ -407,7 +407,7 @@ ROXEN.AFS = function () {
     }
     delete groups[group_name];
   }
-  
+
 
   /**
    * Returns the status of the AFS connection, without querying the
@@ -454,8 +454,8 @@ ROXEN.AFS = function () {
   {
     for (var i = 0; i < global_callbacks.length; i++)
       if (global_callbacks[i] === fn) {
-	global_callbacks.splice (i, 1);
-	break;
+        global_callbacks.splice (i, 1);
+        break;
       }
   }
 
@@ -495,8 +495,8 @@ ROXEN.AFS = function () {
   {
     for (var i = 0; i < error_callbacks.length; i++)
       if (error_callbacks[i] === fn) {
-	error_callbacks.splice (i, 1);
-	break;
+        error_callbacks.splice (i, 1);
+        break;
       }
   }
 
@@ -511,15 +511,15 @@ ROXEN.AFS = function () {
     if (poll_timeout >= -1 && !poll_delay_timeout_id) {
       var delay = (after_error ? poll_error_delay : poll_delay) * 1000;
       if (debug_log > 2)
-	ROXEN.log ("AFS poll delay " + delay + " ms");
+        ROXEN.log ("AFS poll delay " + delay + " ms");
       poll_delay_timeout_id =
-	window.setTimeout (function () {
-	  poll_delay_timeout_id = undefined;
-	  call ("poll",
-		{timeout  : poll_timeout,
-		 interval : poll_delay},
-		poll_callback);
-	}, delay);
+        window.setTimeout (function () {
+          poll_delay_timeout_id = undefined;
+          call ("poll",
+                {timeout  : poll_timeout,
+                 interval : poll_delay},
+                poll_callback);
+        }, delay);
     }
   }
 
@@ -543,13 +543,13 @@ ROXEN.AFS = function () {
   {
     if (options) {
       if (options["actions_prefix"])
-	actions_prefix = options["actions_prefix"];
+        actions_prefix = options["actions_prefix"];
       if (options["session_var"])
-	session_var = options["session_var"];
+        session_var = options["session_var"];
       if (options["poll_timeout"])
         poll_timeout = options["poll_timeout"];
     }
-    
+
     if (debug_log)
       ROXEN.log ("AFS init");
 
@@ -564,9 +564,9 @@ ROXEN.AFS = function () {
 
     if (poll_timeout >= -1 && !open_connections)
       call ("poll",
-	    {timeout  : poll_timeout,
-	     interval : poll_delay},
-	    poll_callback);
+            {timeout  : poll_timeout,
+             interval : poll_delay},
+            poll_callback);
 
     is_initialized = true;
   }
