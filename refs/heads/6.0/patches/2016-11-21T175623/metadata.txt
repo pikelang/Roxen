@@ -1,0 +1,18 @@
+subject: Roxen 6.0: Multiple fixes:
+from: 97c99f6cf237b0b46030787bc226a76f3f95c693
+to: f78c751727cd26f95ec63a2dbff47630bb71dd66
+originator: grubba@grubba.org
+depends: 2016-11-17T110442
+restart: true
+
+Multiple fixes:
+
+  * FSGC: Added support for quarantining instead of deleting.
+    
+    This moves files to a quarantine directory instead of just deleting them.
+    
+    Fixes some of [ep-31].
+
+  * FSGC: Some more support for quarantining.
+    
+    Fixes [ep 31] some more.
