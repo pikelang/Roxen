@@ -1820,6 +1820,84 @@ class FileBuf(String.Buffer buf)
   }
 }
 
+string low_create_cluster(string cluster, mapping(string:string) patches)
+{
+  // Build the tar archive, and compress it incrementally.
+  String.Buffer buf = String.Buffer();
+  Gz.File gzfile = Gz.File(FileBuf(buf), "wb");
+
+  string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
+
+  foreach(sort(indices(patches)), string patch) {
+    string blob_sha1 = patches[patch];
+
+    string blob = git("cat-file", "blob", blob_sha1);
+
+    string patch_name = (patch/"/")[-1];
+
+    if (sizeof(cluster_dir) + sizeof(patch_name) >= 100) {
+      // This is unlikely, but better safe than sorry...
+      werror("Too long filename (%d characters) to be added to cluster:\n"
+	     "\t%O.\n",
+	     sizeof(cluster_dir) + sizeof(patch_name),
+	     cluster_dir + patch_name);
+      exit(1);
+    }
+
+    write("  %s (%d bytes)\n", patch_name, sizeof(blob));
+
+    int mtime = Calendar.ISO.parse("%Y-%M-%DT%t", patch_name)->unix_time();
+
+    string name_pad =
+      "\0" * (100 - (sizeof(cluster_dir) + sizeof(patch_name)));
+
+    // NB: We use the ancient-style tar header here for
+    //     maximum compatibility.
+    //
+    // cf FreeBSD tar(5) compat notes:
+    //   Early tar implementations varied in how they terminated
+    //   these fields. The tar command in Version 7 AT&T UNIX used
+    //   the following conventions (this is also documented in early
+    //   BSD manpages): the pathname must be null-terminated; the
+    //   mode, uid, and gid fields must end in a space and a null
+    //   byte; the size and mtime fields must end in a space; the
+    //   checksum is terminated by a null and a space.
+    //
+    //   Early implementations filled the numeric fields with
+    //   leading spaces. This seems to have been common practice
+    //   until the IEEE Std 1003.1-1988 (``POSIX.1'') standard was
+    //   released. For best portability, modern implementations
+    //   should fill the numeric fields with leading zeros.
+
+    string header = sprintf("%100s%06o \0%06o \0%06o \0%011o %011o ",
+			    cluster_dir + patch_name + name_pad,
+			    0644, 0 /* uid */, 0 /* gid */,
+			    sizeof(blob), mtime);
+
+    // NB: The max checksum for an ancient-style header is
+    //     less than 148*128 + 8*32 == 19200 == 045400, and
+    //     thus fits into the 6 digit octal field below.
+    int csum = `+(@((array(int))header), ' '*8);
+    string check = sprintf("%06o\0 ", csum);
+
+    string pad = "\0" * (512 - (sizeof(header) + sizeof(check)));
+
+    gzfile->write(header);
+    gzfile->write(check);
+    gzfile->write(pad);
+
+    gzfile->write(blob);
+    if (sizeof(blob) & 511) {
+      gzfile->write("\0"*(512 - (sizeof(blob) & 511)));
+    }
+  }
+  // Add tar EOF marker.
+  gzfile->write("\0" * (512 * 2));
+  gzfile->close();
+
+  return buf->get();
+}
+
 void create_cluster(mapping(string:string|int|array(string)) options,
 		    array(string) argv)
 {
@@ -1902,85 +1980,16 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   }
 
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
-  string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
 
   write("Creating new cluster %s containing %d patch%s...\n",
 	(cluster/"/")[-1], sizeof(patches),
 	(sizeof(patches)!=1)?"es":"");
 
-  // Build the tar archive, and compress it incrementally.
-  String.Buffer buf = String.Buffer();
-  Gz.File gzfile = Gz.File(FileBuf(buf), "wb");
-  foreach(sort(indices(patches)), string patch) {
-    string blob_sha1 = patches[patch];
-
-    string blob = git("cat-file", "blob", blob_sha1);
-
-    string patch_name = (patch/"/")[-1];
-
-    if (sizeof(cluster_dir) + sizeof(patch_name) >= 100) {
-      // This is unlikely, but better safe than sorry...
-      werror("Too long filename (%d characters) to be added to cluster:\n"
-	     "\t%O.\n",
-	     sizeof(cluster_dir) + sizeof(patch_name),
-	     cluster_dir + patch_name);
-      exit(1);
-    }
-
-    write("  %s (%d bytes)\n", patch_name, sizeof(blob));
-
-    int mtime = Calendar.ISO.parse("%Y-%M-%DT%t", patch_name)->unix_time();
-
-    string name_pad =
-      "\0" * (100 - (sizeof(cluster_dir) + sizeof(patch_name)));
-
-    // NB: We use the ancient-style tar header here for
-    //     maximum compatibility.
-    //
-    // cf FreeBSD tar(5) compat notes:
-    //   Early tar implementations varied in how they terminated
-    //   these fields. The tar command in Version 7 AT&T UNIX used
-    //   the following conventions (this is also documented in early
-    //   BSD manpages): the pathname must be null-terminated; the
-    //   mode, uid, and gid fields must end in a space and a null
-    //   byte; the size and mtime fields must end in a space; the
-    //   checksum is terminated by a null and a space.
-    //
-    //   Early implementations filled the numeric fields with
-    //   leading spaces. This seems to have been common practice
-    //   until the IEEE Std 1003.1-1988 (``POSIX.1'') standard was
-    //   released. For best portability, modern implementations
-    //   should fill the numeric fields with leading zeros.
-
-    string header = sprintf("%100s%06o \0%06o \0%06o \0%011o %011o ",
-			    cluster_dir + patch_name + name_pad,
-			    0644, 0 /* uid */, 0 /* gid */,
-			    sizeof(blob), mtime);
-
-    // NB: The max checksum for an ancient-style header is
-    //     less than 148*128 + 8*32 == 19200 == 045400, and
-    //     thus fits into the 6 digit octal field below.
-    int csum = `+(@((array(int))header), ' '*8);
-    string check = sprintf("%06o\0 ", csum);
-
-    string pad = "\0" * (512 - (sizeof(header) + sizeof(check)));
-
-    gzfile->write(header);
-    gzfile->write(check);
-    gzfile->write(pad);
-
-    gzfile->write(blob);
-    if (sizeof(blob) & 511) {
-      gzfile->write("\0"*(512 - (sizeof(blob) & 511)));
-    }
-  }
-  // Add tar EOF marker.
-  gzfile->write("\0" * (512 * 2));
-  gzfile->close();
-
-  git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, buf->get(),
+  string tgz = low_create_cluster(cluster, patches);
+  git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
 		"Created patch cluster " + (cluster/"/")[-1] +
 		" on branch " + branch + ".\n");
+
   git("tag", tag, "refs/heads/rxnpatch/rxnpatch");
   git_push("origin", "refs/tags/" + tag);
 }
