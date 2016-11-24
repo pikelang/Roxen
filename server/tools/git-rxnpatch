@@ -1371,6 +1371,41 @@ void check_ident(string block, string path, string commit)
   }
 }
 
+array(mapping(string:array(string))|string) parse_metadata(string patchid,
+							   string metadata)
+{
+  array(string) a = metadata/"\n\n";
+  if (sizeof(a) < 2) {
+    werror("Missing patch description for patch %s.\n", patchid);
+    exit(1);
+  }
+
+  mapping(string:array(string)) header = ([]);
+  foreach(a[0]/"\n", string line) {
+    line = (line/"#")[0];
+    if (line == "") continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) < 2) {
+      werror("Invalid metadata syntax for patch %s:\n"
+	     "%s\n", patchid, line);
+      exit(1);
+    }
+    header[lower_case(String.trim_all_whites(pair[0]))] +=
+      ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  if (header->flags) {
+    // Common typo.
+    werror("Invalid header field %O.\n"
+	   "Did you perhaps mean %O?\n",
+	   "flags", "flag");
+  }
+
+  string description = a[1..]*"\n\n";
+
+  return ({ header, description });
+}
+
 void make_patch(mapping(string:string|int|array(string)) options,
 		array(string) argv)
 {
@@ -1401,32 +1436,8 @@ void make_patch(mapping(string:string|int|array(string)) options,
     git_cat_file("refs/heads/rxnpatch/rxnpatch",
 		 "refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt");
 
-  array(string) a = metadata/"\n\n";
-  if (sizeof(a) < 2) {
-    werror("Missing patch description for patch %s.\n", patchid);
-    exit(1);
-  }
-
-  mapping(string:array(string)) header = ([]);
-  foreach(a[0]/"\n", string line) {
-    line = (line/"#")[0];
-    if (line == "") continue;
-    array(string) pair = line/":";
-    if (sizeof(pair) < 2) {
-      werror("Invalid metadata syntax:\n"
-	     "%s\n", line);
-      exit(1);
-    }
-    header[lower_case(String.trim_all_whites(pair[0]))] +=
-      ({ String.trim_all_whites(pair[1..] * ":") });
-  }
-
-  if (header->flags) {
-    // Common typo.
-    werror("Invalid header field %O.\n"
-	   "Did you perhaps mean %O?\n",
-	   "flags", "flag");
-  }
+  [mapping(string:array(string)) header, string description] =
+    parse_metadata(patchid, metadata);
 
   string tail_sha1;
   string head_sha1;
@@ -1463,7 +1474,6 @@ void make_patch(mapping(string:string|int|array(string)) options,
   write("Preparing patch...\n");
 
   // Description.
-  string description = a[1..]*"\n\n";
   Stdio.write_file(tmpdir + "/description.txt", description);
 
   // Command.
@@ -1471,7 +1481,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
     "rxnpatch", "create",
     "--id=" + patchid,
     "--originator=" + originator,
-    "--name=" + (subject || (a[1]/"\n")[0]),
+    "--name=" + (subject || (description/"\n")[0]),
     "--description=" + tmpdir + "/description.txt",
     @map(header->depends || ({}),
 	 lambda(string dep) {
