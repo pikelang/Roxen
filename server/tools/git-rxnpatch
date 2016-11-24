@@ -687,6 +687,11 @@ string release_tag_prefix;
 //! This is generated from @[branch] and @[release_tag_prefix].
 string cluster_path_prefix;
 
+//! Prefix for release cluster files in rxnpatch/rxnpatch for @[branch].
+//!
+//! This is generated from @[branch] and @[release_tag_prefix].
+string release_cluster_path_prefix;
+
 //! Prefix where the repository is extracted at the user.
 string path_prefix;
 
@@ -774,6 +779,9 @@ int init(mapping(string:string|int|array(string)) options)
 
     cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
       repo + "-" + replace(branch, "/", "-") + "-";
+
+    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters-" + repo +
+      "-";
   }
 
   path_prefix =
@@ -1371,6 +1379,41 @@ void check_ident(string block, string path, string commit)
   }
 }
 
+array(mapping(string:array(string))|string) parse_metadata(string patchid,
+							   string metadata)
+{
+  array(string) a = metadata/"\n\n";
+  if (sizeof(a) < 2) {
+    werror("Missing patch description for patch %s.\n", patchid);
+    exit(1);
+  }
+
+  mapping(string:array(string)) header = ([]);
+  foreach(a[0]/"\n", string line) {
+    line = (line/"#")[0];
+    if (line == "") continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) < 2) {
+      werror("Invalid metadata syntax for patch %s:\n"
+	     "%s\n", patchid, line);
+      exit(1);
+    }
+    header[lower_case(String.trim_all_whites(pair[0]))] +=
+      ({ String.trim_all_whites(pair[1..] * ":") });
+  }
+
+  if (header->flags) {
+    // Common typo.
+    werror("Invalid header field %O.\n"
+	   "Did you perhaps mean %O?\n",
+	   "flags", "flag");
+  }
+
+  string description = a[1..]*"\n\n";
+
+  return ({ header, description });
+}
+
 void make_patch(mapping(string:string|int|array(string)) options,
 		array(string) argv)
 {
@@ -1401,32 +1444,8 @@ void make_patch(mapping(string:string|int|array(string)) options,
     git_cat_file("refs/heads/rxnpatch/rxnpatch",
 		 "refs/heads/" + branch + "/patches/" + patchid + "/metadata.txt");
 
-  array(string) a = metadata/"\n\n";
-  if (sizeof(a) < 2) {
-    werror("Missing patch description for patch %s.\n", patchid);
-    exit(1);
-  }
-
-  mapping(string:array(string)) header = ([]);
-  foreach(a[0]/"\n", string line) {
-    line = (line/"#")[0];
-    if (line == "") continue;
-    array(string) pair = line/":";
-    if (sizeof(pair) < 2) {
-      werror("Invalid metadata syntax:\n"
-	     "%s\n", line);
-      exit(1);
-    }
-    header[lower_case(String.trim_all_whites(pair[0]))] +=
-      ({ String.trim_all_whites(pair[1..] * ":") });
-  }
-
-  if (header->flags) {
-    // Common typo.
-    werror("Invalid header field %O.\n"
-	   "Did you perhaps mean %O?\n",
-	   "flags", "flag");
-  }
+  [mapping(string:array(string)) header, string description] =
+    parse_metadata(patchid, metadata);
 
   string tail_sha1;
   string head_sha1;
@@ -1463,7 +1482,6 @@ void make_patch(mapping(string:string|int|array(string)) options,
   write("Preparing patch...\n");
 
   // Description.
-  string description = a[1..]*"\n\n";
   Stdio.write_file(tmpdir + "/description.txt", description);
 
   // Command.
@@ -1471,7 +1489,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
     "rxnpatch", "create",
     "--id=" + patchid,
     "--originator=" + originator,
-    "--name=" + (subject || (a[1]/"\n")[0]),
+    "--name=" + (subject || (description/"\n")[0]),
     "--description=" + tmpdir + "/description.txt",
     @map(header->depends || ({}),
 	 lambda(string dep) {
@@ -1820,97 +1838,14 @@ class FileBuf(String.Buffer buf)
   }
 }
 
-void create_cluster(mapping(string:string|int|array(string)) options,
-		    array(string) argv)
+string low_create_cluster(string cluster, mapping(string:string) patches)
 {
-  if (!init(options)) {
-    werror("rxnpatch not initialized on this branch.\n");
-    exit(1);
-  }
-
-  mapping(string:string) patches = ([]);
-  string prefix = "refs/heads/" + branch + "/patches";
-  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
-	      "--", prefix)/"\0", string entry) {
-    if (!has_suffix(entry, ".rxp")) continue;
-    array(string) splitted = entry/"\t";
-    if (sizeof(splitted) < 2) continue;
-    patches[splitted[1..]*"\t"] = (splitted[0]/" ")[2];
-  }
-
-  if (!sizeof(patches)) {
-    write("No patches available to cluster.\n");
-    exit(0);
-  }
-
-  int pending_cluster = sizeof(patches);
-  // Check if there's an up-to-date patch cluster for the branch.
-  string cluster_prefix = "refs/heads/" + branch + "/clusters";
-  string cluster;
-  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
-	      "--", cluster_prefix)/"\0", string entry) {
-    if (entry == "") continue;
-    string path = (entry/"\t")[1..] * "\t";
-    if (!has_prefix(path, cluster_path_prefix)) continue;
-    if (!has_suffix(path, ".tgz")) continue;
-    // NB: The suffix ".tgz" is sorted after "-02.tgz",
-    //     so we need to compensate here.
-    string new_cluster = path[sizeof(cluster_path_prefix)..<4];
-    if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
-  }
-  if (cluster) {
-    // There's apparently a cluster.
-    string base = git_try("rev-list", "--max-count=1",
-			  "refs/tags/rxnpatch/clusters/" + branch +
-			  "/" + cluster);
-    if (base) {
-      // Check if any patches have been added or changed for the
-      // branch since then.
-      base = (base/"\n")[0];
-      pending_cluster = 0;
-      foreach(git("diff-tree", "-r", "-z", "--name-only",
-		  base, "rxnpatch/rxnpatch")/"\0", string fname) {
-	if (!has_prefix(fname, "refs/heads/" + branch + "/patches/"))
-	  continue;
-	if (!has_suffix(fname, ".rxp")) continue;
-	pending_cluster++;
-      }
-    } else {
-      werror("Warning: Tag not found for cluster %s.\n", cluster);
-      pending_cluster = sizeof(patches);
-    }
-
-    if (!pending_cluster) {
-      write("Cluster %s is up-to-date.\n", cluster);
-      exit(0);
-    }
-  }
-
-  mapping(string:int) lt = localtime(time());
-  string timestamp_base = sprintf("%04d-%02d-%02d",
-				  lt->year + 1900, lt->mon + 1, lt->mday);
-
-  // Find the next available timestamp and tag.
-  string timestamp = timestamp_base;
-  string tag;
-  int rev = 1;
-  while(1) {
-    tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
-    if (!git_try("rev-list", "--max-count=1", tag)) break;
-    rev++;
-    timestamp = sprintf("%s-%02d", timestamp_base, rev);
-  }
-
-  cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
-  string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
-
-  write("Creating new cluster %s containing %d patch%s...\n",
-	(cluster/"/")[-1], sizeof(patches),
-	(sizeof(patches)!=1)?"es":"");
-
   // Build the tar archive, and compress it incrementally.
   String.Buffer buf = String.Buffer();
   Gz.File gzfile = Gz.File(FileBuf(buf), "wb");
+
+  string cluster_dir = (cluster_path_prefix[..<1]/"/")[-1] + "/";
+
   foreach(sort(indices(patches)), string patch) {
     string blob_sha1 = patches[patch];
 
@@ -1978,9 +1913,160 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   gzfile->write("\0" * (512 * 2));
   gzfile->close();
 
-  git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, buf->get(),
+  return buf->get();
+}
+
+void create_cluster(mapping(string:string|int|array(string)) options,
+		    array(string) argv)
+{
+  if (!init(options)) {
+    werror("rxnpatch not initialized on this branch.\n");
+    exit(1);
+  }
+
+  mapping(string:string) patches = ([]);
+  string prefix = "refs/heads/" + branch + "/patches";
+  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+	      "--", prefix)/"\0", string entry) {
+    if (!has_suffix(entry, ".rxp")) continue;
+    array(string) splitted = entry/"\t";
+    if (sizeof(splitted) < 2) continue;
+    patches[splitted[1..]*"\t"] = (splitted[0]/" ")[2];
+  }
+
+  if (!sizeof(patches)) {
+    write("No patches available to cluster.\n");
+    exit(0);
+  }
+
+  int pending_cluster = sizeof(patches);
+  // Check if there's an up-to-date patch cluster for the branch.
+  string cluster_prefix = "refs/heads/" + branch + "/clusters";
+  string cluster;
+  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+	      "--", cluster_prefix)/"\0", string entry) {
+    if (entry == "") continue;
+    string path = (entry/"\t")[1..] * "\t";
+    if (!has_prefix(path, cluster_path_prefix)) continue;
+    if (!has_suffix(path, ".tgz")) continue;
+    // NB: The suffix ".tgz" is sorted after "-02.tgz",
+    //     so we need to compensate here.
+    string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+    if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
+  }
+  if (cluster) {
+    // There's apparently a cluster.
+    string base = git_try("rev-list", "--max-count=1",
+			  "refs/tags/rxnpatch/clusters/" + branch +
+			  "/" + cluster);
+    if (base) {
+      // Check if any patches have been added or changed for the
+      // branch since then.
+      base = (base/"\n")[0];
+      pending_cluster = 0;
+      foreach(git("diff-tree", "-r", "-z", "--name-only",
+		  base, "rxnpatch/rxnpatch")/"\0", string fname) {
+	if (!has_prefix(fname, "refs/heads/" + branch + "/patches/"))
+	  continue;
+	if (!has_suffix(fname, ".rxp")) continue;
+	pending_cluster++;
+      }
+    } else {
+      werror("Warning: Tag not found for cluster %s.\n", cluster);
+      pending_cluster = sizeof(patches);
+    }
+
+    if (!pending_cluster) {
+      write("Cluster %s is up-to-date.\n", cluster);
+      exit(0);
+    }
+  }
+
+  // Release dependency prefix. cf load_deps() above.
+  string rel_dep_prefix;
+  if (release_tag_prefix) {
+    rel_dep_prefix = replace(release_tag_prefix[sizeof("refs/tags/")..],
+			     ({ "-", "_" }), ({ "/", "/" }));
+    if (rel_dep_prefix == "v") rel_dep_prefix = "pike/";
+    else if (!has_suffix(rel_dep_prefix, "/")) rel_dep_prefix += "/";
+  }
+
+  // Create release-specific clusters...
+  string release;
+  mapping(string:string) release_patches = ([]);
+  foreach(sort(indices(patches)), string file) {
+    string patchid = (file/"/")[-2];
+    string metadata = git_cat_file("rxnpatch/rxnpatch",
+				   combine_path(file, "../metadata.txt"), 1);
+    if (metadata) {
+      [mapping(string:array(string)) header, string description] =
+	parse_metadata(patchid, metadata);
+
+    find_dep:
+      foreach(header->depends || ({}), string dep) {
+	foreach(dep/"|", string d) {
+	  if (has_prefix(d, rel_dep_prefix)) {
+	    // Found.
+	    string next_release = d[sizeof(rel_dep_prefix)..];
+	    if (sizeof(release_patches)) {
+	      if (!release) {
+		werror("Warning: Root patch for branch %s does not\n"
+		       "         have a versioned dependency.\n",
+		       branch);
+		// NB: Keep the patches for the next cluster.
+	      } else {
+		cluster = sprintf("%s%s-%s.tgz",
+				  release_cluster_path_prefix,
+				  release, next_release);
+		write("Creating cluster %s containing %d patch%s...\n",
+		      cluster, sizeof(release_patches),
+		      (sizeof(release_patches) != 1)?"es":"");
+		string tgz = low_create_cluster(cluster, release_patches);
+		git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
+			      "Created patch cluster " + (cluster/"/")[-1] +
+			      " on branch " + branch + ".\n");
+		release_patches = ([]);
+	      }
+	    }
+	    release = next_release;
+	    // NB: We can break here since we know that there can only
+	    //     be one release tag at the parent commit due to a
+	    //     new commit being generated every time the version
+	    //     is bumped.
+	    break find_dep;
+	  }
+	}
+      }
+    }
+    release_patches[file] = patches[file];
+  }
+
+  mapping(string:int) lt = localtime(time());
+  string timestamp_base = sprintf("%04d-%02d-%02d",
+				  lt->year + 1900, lt->mon + 1, lt->mday);
+
+  // Find the next available timestamp and tag.
+  string timestamp = timestamp_base;
+  string tag;
+  int rev = 1;
+  while(1) {
+    tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
+    if (!git_try("rev-list", "--max-count=1", tag)) break;
+    rev++;
+    timestamp = sprintf("%s-%02d", timestamp_base, rev);
+  }
+
+  cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
+
+  write("Creating new cluster %s containing %d patch%s...\n",
+	(cluster/"/")[-1], sizeof(release_patches),
+	(sizeof(release_patches)!=1)?"es":"");
+
+  string tgz = low_create_cluster(cluster, release_patches);
+  git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
 		"Created patch cluster " + (cluster/"/")[-1] +
 		" on branch " + branch + ".\n");
+
   git("tag", tag, "refs/heads/rxnpatch/rxnpatch");
   git_push("origin", "refs/tags/" + tag);
 }
