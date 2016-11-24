@@ -687,6 +687,11 @@ string release_tag_prefix;
 //! This is generated from @[branch] and @[release_tag_prefix].
 string cluster_path_prefix;
 
+//! Prefix for release cluster files in rxnpatch/rxnpatch for @[branch].
+//!
+//! This is generated from @[branch] and @[release_tag_prefix].
+string release_cluster_path_prefix;
+
 //! Prefix where the repository is extracted at the user.
 string path_prefix;
 
@@ -774,6 +779,9 @@ int init(mapping(string:string|int|array(string)) options)
 
     cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
       repo + "-" + replace(branch, "/", "-") + "-";
+
+    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters-" + repo +
+      "-";
   }
 
   path_prefix =
@@ -1974,6 +1982,65 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     }
   }
 
+  // Release dependency prefix. cf load_deps() above.
+  string rel_dep_prefix;
+  if (release_tag_prefix) {
+    rel_dep_prefix = replace(release_tag_prefix[sizeof("refs/tags/")..],
+			     ({ "-", "_" }), ({ "/", "/" }));
+    if (rel_dep_prefix == "v") rel_dep_prefix = "pike/";
+    else if (!has_suffix(rel_dep_prefix, "/")) rel_dep_prefix += "/";
+  }
+
+  // Create release-specific clusters...
+  string release;
+  mapping(string:string) release_patches = ([]);
+  foreach(sort(indices(patches)), string file) {
+    string patchid = (file/"/")[-2];
+    string metadata = git_cat_file("rxnpatch/rxnpatch",
+				   combine_path(file, "../metadata.txt"), 1);
+    if (metadata) {
+      [mapping(string:array(string)) header, string description] =
+	parse_metadata(patchid, metadata);
+
+    find_dep:
+      foreach(header->depends || ({}), string dep) {
+	foreach(dep/"|", string d) {
+	  if (has_prefix(d, rel_dep_prefix)) {
+	    // Found.
+	    string next_release = d[sizeof(rel_dep_prefix)..];
+	    if (sizeof(release_patches)) {
+	      if (!release) {
+		werror("Warning: Root patch for branch %s does not\n"
+		       "         have a versioned dependency.\n",
+		       branch);
+		// NB: Keep the patches for the next cluster.
+	      } else {
+		cluster = sprintf("%s%s-%s.tgz",
+				  release_cluster_path_prefix,
+				  release, next_release);
+		write("Creating cluster %s containing %d patch%s...\n",
+		      cluster, sizeof(release_patches),
+		      (sizeof(release_patches) != 1)?"es":"");
+		string tgz = low_create_cluster(cluster, release_patches);
+		git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
+			      "Created patch cluster " + (cluster/"/")[-1] +
+			      " on branch " + branch + ".\n");
+		release_patches = ([]);
+	      }
+	    }
+	    release = next_release;
+	    // NB: We can break here since we know that there can only
+	    //     be one release tag at the parent commit due to a
+	    //     new commit being generated every time the version
+	    //     is bumped.
+	    break find_dep;
+	  }
+	}
+      }
+    }
+    release_patches[file] = patches[file];
+  }
+
   mapping(string:int) lt = localtime(time());
   string timestamp_base = sprintf("%04d-%02d-%02d",
 				  lt->year + 1900, lt->mon + 1, lt->mday);
@@ -1992,10 +2059,10 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
 
   write("Creating new cluster %s containing %d patch%s...\n",
-	(cluster/"/")[-1], sizeof(patches),
-	(sizeof(patches)!=1)?"es":"");
+	(cluster/"/")[-1], sizeof(release_patches),
+	(sizeof(release_patches)!=1)?"es":"");
 
-  string tgz = low_create_cluster(cluster, patches);
+  string tgz = low_create_cluster(cluster, release_patches);
   git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
 		"Created patch cluster " + (cluster/"/")[-1] +
 		" on branch " + branch + ".\n");
