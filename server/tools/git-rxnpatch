@@ -780,8 +780,8 @@ int init(mapping(string:string|int|array(string)) options)
     cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
       repo + "-" + replace(branch, "/", "-") + "-";
 
-    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters-" + repo +
-      "-";
+    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
+      repo + "-";
   }
 
   path_prefix =
