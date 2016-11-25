@@ -1,0 +1,16 @@
+subject: • SQLKey: Censor SQL-URLs. Fixes [bug 7439].
+from: c9fba7dedb496ae1550e36ba501a6a0ca25f26c7
+to: 665a7eac4cad8f7f16e4ff8ab32de06c31f37712
+originator: Administrator
+depends: 2015-02-19T102326
+restart: true
+
+• SQLKey: Censor SQL-URLs. Fixes [bug 7439].
+
+---
+
+• Redirect: Normalize paths and urls to http-encoded utf-8.
+
+Improves handling of URLs containing characters outside latin-1.
+
+Fixes [bug 7432].
