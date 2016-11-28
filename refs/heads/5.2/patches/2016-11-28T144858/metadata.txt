@@ -1,0 +1,11 @@
+subject: Redirect: Normalize paths and urls to http-encoded utf-8.
+from: 665a7eac4cad8f7f16e4ff8ab32de06c31f37712
+to: d14d5d74f17ad98ea9c1ab298bd3b42c739ce54b
+originator: Everyone
+depends: 2016-11-25T172153
+
+• Redirect: Normalize paths and urls to http-encoded utf-8.
+
+Improves handling of URLs containing characters outside latin-1.
+
+Fixes [bug 7432].
