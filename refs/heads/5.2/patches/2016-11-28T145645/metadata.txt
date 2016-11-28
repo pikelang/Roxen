@@ -1,0 +1,9 @@
+subject: RXML: Fixed typo in <debug showscope=""/>.
+from: d14d5d74f17ad98ea9c1ab298bd3b42c739ce54b
+to: c4b8f016f8ce53d0b68d969dc3acd67648efe527
+originator: Everyone
+depends: 2016-11-28T144858
+
+• RXML: Fixed typo in <debug showscope=""/>.
+
+Fixes [bug 7463].
