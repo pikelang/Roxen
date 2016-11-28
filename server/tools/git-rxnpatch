@@ -780,8 +780,8 @@ int init(mapping(string:string|int|array(string)) options)
     cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
       repo + "-" + replace(branch, "/", "-") + "-";
 
-    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters-" + repo +
-      "-";
+    release_cluster_path_prefix = "refs/heads/" + branch + "/clusters/patches-" +
+      repo + "-";
   }
 
   path_prefix =
@@ -2041,19 +2041,28 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     release_patches[file] = patches[file];
   }
 
-  mapping(string:int) lt = localtime(time());
-  string timestamp_base = sprintf("%04d-%02d-%02d",
-				  lt->year + 1900, lt->mon + 1, lt->mday);
+  // Get the patchid of the most recent patch in the cluster.
+  string timestamp_base = (sort(indices(patches))[-1]/"/")[-2];
 
   // Find the next available timestamp and tag.
   string timestamp = timestamp_base;
   string tag;
-  int rev = 1;
   while(1) {
     tag = "rxnpatch/clusters/" + branch + "/" + timestamp;
     if (!git_try("rev-list", "--max-count=1", tag)) break;
-    rev++;
-    timestamp = sprintf("%s-%02d", timestamp_base, rev);
+
+    // Bump the timestamp by a second.
+    // NB: This code may generate seconds 60 or larger, but
+    //     we don't care as we just want a unique identifier.
+    array(string) a = timestamp/"T";
+    if (sizeof(a[1]) < 6) {
+      // Most recent patch is from the time before seconds in patchids.
+      // Pad the time field to 6 digits.
+      a[1] = (a[1] + "000000")[..5];
+    } else {
+      a[1] = sprintf("%06d", ((int)a[1]) + 1);
+    }
+    timestamp = a * "T";
   }
 
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
