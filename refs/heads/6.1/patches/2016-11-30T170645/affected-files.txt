@@ -1,0 +1,4 @@
+Modified files:
+  bin/create_configif.pike
+  etc/include/version.h
+  tools/git-rxnpatch
