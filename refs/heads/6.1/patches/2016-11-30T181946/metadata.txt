@@ -1,0 +1,12 @@
+subject: Roxen 6.1: git-rxnpatch
+from: 744ef803848ac829ad3f3b276347d0c67ed76c0e
+to: 969da3442cc0a02660d6c1b95db63987f8f365c7
+originator: Anders Johansson
+depends: 2016-11-30T173944
+restart: true
+
+• git-rxnpatch: Fixed multiple issues with the ident verifier.
+
+* Fixed typo in git command.
+
+* Remap the dist paths to repository paths.
