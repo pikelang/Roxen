@@ -1,0 +1,14 @@
+subject: Roxen 6.1: git-rxnpatch, compat level
+from: 504f5b705b19e71fc7e91774c3ff41506cfb356c
+to: 856dd3cbab370609e22b83e9f3cc4b1de9900154
+originator: Anders Johansson
+depends: roxen/6.1.162
+restart: true
+
+• git-rxnpatch: Fixed multiple patch message.
+
+• git-rxnpatch: Validate $Id$ expansions.
+
+Potential fix for [bug 7822].
+
+• Updated compat level for new administration interfaces.
