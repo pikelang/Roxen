@@ -1,0 +1,11 @@
+subject: Roxen 6.1: TagCache
+from: 7a0ba62717c2c713cbe83b80f9a59b9d0bb2a2e3
+to: 861d833554dabcf5c363bf9ce270b51c2f8fb48e
+originator: Anders Johansson
+depends: 2016-11-30T171615
+restart: true
+
+• TagCache: Don't update existing alternatives in RAM cache.
+
+This should reduce count_memory calls quite a bit, and the RAM entry should
+be most recent anyways.
