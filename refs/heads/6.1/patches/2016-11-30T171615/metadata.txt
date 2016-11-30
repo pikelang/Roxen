@@ -1,0 +1,15 @@
+subject: Roxen 6.1: XML DB Mirror
+from: 856dd3cbab370609e22b83e9f3cc4b1de9900154
+to: 7a0ba62717c2c713cbe83b80f9a59b9d0bb2a2e3
+originator: Anders Johansson
+depends: roxen/6.1.164|2016-11-30T170645
+restart: true
+
+• XML DB Mirror: Now also a feed import backend.
+
+Make it possible to use the feed import system (including
+xslt transformations) as a front end to the module.
+
+• XML DB Mirror: Fixed broken use of md5.
+
+The module should now work again.
