@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Variable.MultipleChoice
+from: 861d833554dabcf5c363bf9ce270b51c2f8fb48e
+to: 744ef803848ac829ad3f3b276347d0c67ed76c0e
+originator: Anders Johansson
+depends: 2016-11-30T172251
+restart: true
+
+• Variable.MultipleChoice: Support conversion to/from multiselect.
