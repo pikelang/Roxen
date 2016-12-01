@@ -300,7 +300,13 @@ string git_try(string command, string ... args)
 {
   array(string) cmd = ({ git_binary, command, @args });
   mapping(string:string|int) res = Process.run(cmd);
-  if (res->exitcode) return UNDEFINED;
+  if (res->exitcode) {
+    werror("git failure in command '%s' '%s':\n"
+           "  stderr: %s"
+           "  stdout: %s\n",
+           command, args * "', '", res->stderr, res->stdout);
+    return UNDEFINED;
+  }
   return res->stdout||"";
 }
 
@@ -335,8 +341,10 @@ void git_push(string remote, string ref, int|void force)
 void git_save_file(string branch, string path, string data, string message)
 {
   if (!committer) {
-    string user_name = getenv("GIT_AUTHOR_NAME") || git("config", "--get", "user.name") - "\n";
-    string user_email = getenv("GIT_AUTHOR_EMAIL") || git("config", "--get", "user.email") - "\n";
+    string user_name = getenv("GIT_AUTHOR_NAME") ||
+      git("config", "--get", "user.name") - "\n";
+    string user_email = getenv("GIT_AUTHOR_EMAIL") ||
+      git("config", "--get", "user.email") - "\n";
 
     committer = sprintf("%s <%s> now", user_name, user_email);
   }
@@ -380,8 +388,10 @@ void git_save_file(string branch, string path, string data, string message)
 void git_delete_files(string branch, array(string) files, string message)
 {
   if (!committer) {
-    string user_name = git("config", "--get", "user.name") - "\n";
-    string user_email = git("config", "--get", "user.email") - "\n";
+    string user_name = getenv("GIT_AUTHOR_NAME") ||
+      git("config", "--get", "user.name") - "\n";
+    string user_email = getenv("GIT_AUTHOR_EMAIL") ||
+      git("config", "--get", "user.email") - "\n";
 
     committer = sprintf("%s <%s> now", user_name, user_email);
   }
