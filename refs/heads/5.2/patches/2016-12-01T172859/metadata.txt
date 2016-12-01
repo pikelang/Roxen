@@ -1,0 +1,8 @@
+subject: Roxen 5.2: Fixed typo that broke exact redirects
+from: c4b8f016f8ce53d0b68d969dc3acd67648efe527
+to: b1f31906406e1b7a3541a3b2f889f631ff1e87b7
+originator: Anders Johansson
+depends: 2016-11-28T145645
+restart: true
+
+• Redirect: Fixed typo that broke exact redirects. Fixes [bug 7432].
