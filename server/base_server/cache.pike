@@ -212,6 +212,13 @@ class CacheStats
   }
 }
 
+class CacheManagerPrefs(int(0..1) extend_entries // Set if a
+                                                 // cache_name may get
+                                                 // existing entries
+                                                 // extended even
+                                                 // after cache hit.
+                        ) {}
+
 class CacheManager
 //! A cache manager handles one or more caches, applying the same
 //! eviction policy and the same size limit on all of them. I.e. it's
@@ -255,6 +262,10 @@ class CacheManager
   //!
   //! For functions in this class, a @[CacheStats] object does not
   //! exist only due to race, so the cache should just be ignored.
+
+  mapping(string:CacheManagerPrefs) prefs = ([]);
+  //! Preferences for the named caches managed by this object.
+  //!
 
   int cached_overhead_add_count;
   //! Snapshot of @[entry_add_count] at the point the manager overhead
@@ -1062,10 +1073,13 @@ class CM_GDS_Time
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     ::got_hit(cache_name, entry, cache_context);
-    // It shouldn't be necessary to record the start time for cache
-    // hits, but do it anyway for now since there are caches that on
-    // cache hits extend the entries with more data.
-    save_start_hrtime (cache_name, entry->key, cache_context);
+    if (CacheManagerPrefs prefs = prefs[cache_name]) {
+      if (prefs->extend_entries) {
+        // Save start time for caches that may want to extend existing
+        // entries.
+        save_start_hrtime (cache_name, entry->key, cache_context);
+      }
+    }
   }
 
   protected int entry_create_hrtime (string cache_name, mixed key,
@@ -1514,7 +1528,8 @@ mapping(string:CacheManager) cache_list()
 }
 
 CacheManager cache_register (string cache_name,
-			     void|string|CacheManager manager)
+			     void|string|CacheManager manager,
+                             void|CacheManagerPrefs prefs)
 //! Registers a new cache. Returns its @[CacheManager] instance.
 //!
 //! @[manager] can be a specific @[CacheManager] instance to use, a
@@ -1547,6 +1562,8 @@ CacheManager cache_register (string cache_name,
   caches[cache_name] = manager;
   manager->stats[cache_name] = CacheStats();
   manager->lookup[cache_name] = ([]);
+  if (prefs)
+    manager->prefs[cache_name] = prefs;
   return manager;
 }
 
