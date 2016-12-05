@@ -35,6 +35,7 @@ constant features = (<
 				// files with eg the exec bit set (broken).
   "file-modes-2",		// Support patching and restoring of
 				// files with eg the exec bit set.
+  "force-new",			// Support new for files that already exist.
 >);
 
 //! Contains the patchdata
@@ -780,9 +781,13 @@ class Patcher
 	}
 	else
 	{
-	  write_log(1, "FAILED: File exists\n");
-	  error_count++;
-	  if (force)
+	  if (file->force) {
+	    write_log(0, "FORCE: File <b>%s</b> already exists.\n", dest);
+	  } else {
+	    write_log(1, "FAILED: File exists\n");
+	    error_count++;
+	  }
+	  if (file->force || force)
 	  // Since the file exists we better make a backup!
 	  {
 	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest, 
