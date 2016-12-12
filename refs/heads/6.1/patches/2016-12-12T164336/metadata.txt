@@ -1,0 +1,48 @@
+subject: Roxen 6.1: FSGC, Patch system
+from: 969da3442cc0a02660d6c1b95db63987f8f365c7
+to: 9352ada6428bb5cb098e369f2fe9e4032a36bbbf
+originator: Anders Johansson
+depends: 2016-11-30T181946
+restart: true
+
+• RoxenPatch: New files may now force overwrites.
+
+This is needed in order to support "blind" patches.
+
+Fixes some of [is-13].
+
+• git-rxnpatch: Log failed git command
+
+• Read author info from environment
+
+• git-rxnpatch: Identify patch clusters by the most recent patch.
+
+• git-rxnpatch: Fixed name of release clusters.
+
+• git-rxnpatch: Create separate clusters for different releases.
+
+Preparation for [IS 6].
+
+• git-rxnpatch: Moved parsing of metadata.txt to a separate function.
+
+• git-rxnpatch [cluster]: Some code cleanup.
+
+Prepare for making several clusters.
+
+Preparations for [IS 6].
+
+• Rebuild minified file
+
+• AFS: Fixed linter warnings and a potential problem
+
+• Tab conversion
+
+• FSGC: Some more support for quarantining.
+
+Fixes [ep 31] some more.
+
+• FSGC: Added support for quarantining instead of deleting.
+
+This moves files to a quarantine directory instead of just deleting them.
+
+Fixes some of [ep-31].
