@@ -1,0 +1,11 @@
+Modified files:
+  base_server/fsgc.pike
+  base_server/module.pike
+  etc/include/version.h
+  etc/modules/RoxenPatch.pmod
+  modules/js-support/scripts/roxen-all.min.js
+  modules/js-support/scripts/roxen-all.min.js.map
+  modules/js-support/scripts/roxen/lib/lib.js
+  modules/js-support/scripts/roxen/modules/afs.js
+  modules/js-support/scripts/roxen/roxen.js
+  tools/git-rxnpatch
