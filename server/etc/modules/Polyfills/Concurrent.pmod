@@ -1,3 +1,5 @@
+#pike __REAL_VERSION__
+
 //! Module for handling multiple concurrent events.
 //!
 //! The @[Future] and @[Promise] API was inspired by
@@ -27,7 +29,7 @@ class Future
   protected array(array(function(mixed, mixed ...: void)|array(mixed)))
     failure_cbs = ({});
 
-  //! Wait for fullfillment and return the value.
+  //! Wait for fulfillment and return the value.
   //!
   //! @throws
   //!   Throws on rejection.
@@ -138,6 +140,26 @@ class Future
 	if (!objectp(f) || !f->on_failure || !f->on_success) {
 	  error("Expected %O to return a Future. Got: %O.\n",
 		fun, f);
+	}
+	f->on_failure(p->failure);
+	f->on_success(p->success);
+	return;
+      };
+    p->failure(err);
+  }
+
+  //! Apply @[fun] with @[val] followed by the contents of @[ctx],
+  //! and update @[p] with the eventual result.
+  protected void apply_smart(mixed val, Promise p,
+			    function(mixed, mixed ... : mixed|Future) fun,
+			    array(mixed) ctx)
+  {
+    mixed err = catch {
+	mixed|Future f = fun(val, @ctx);
+	if (!objectp(f)
+         || !functionp(f->on_failure) || !functionp(f->on_success)) {
+	  p->success(f);
+	  return;
 	}
 	f->on_failure(p->failure);
 	f->on_success(p->success);
@@ -264,7 +286,8 @@ class Future
     return p->future();
   }
 
-  //! Return a @[Future] that will be fulfilled with an
+  //! @returns
+  //! A @[Future] that will be fulfilled with an
   //! array of the fulfilled result of this object followed
   //! by the fulfilled results of @[others].
   //!
@@ -274,6 +297,75 @@ class Future
   {
     if (!sizeof(others)) return this_program::this;
     return results(({ this_program::this }) + others);
+  }
+
+  //! JavaScript Promise API close but not identical equivalent
+  //! of a combined @[transform()] and @[transform_with()].
+  //!
+  //! @param onfulfilled
+  //!   Function to be called on fulfillment. The first argument will be the
+  //!   result of @b{this@} @[Future].
+  //!   The return value will be the result of the new @[Future].
+  //!   If the return value already is a @[Future], pass it as-is.
+  //!
+  //! @param onrejected
+  //!   Function to be called on failure. The first argument will be the
+  //!   failure result of @b{this@} @[Future].
+  //!   The return value will be the failure result of the new @[Future].
+  //!   If the return value already is a @[Future], pass it as-is.
+  //!
+  //! @param extra
+  //!   Any extra context needed for @expr{onfulfilled@} and
+  //!   @expr{onrejected@}. They will be provided
+  //!   as arguments two and onwards when the callbacks are called.
+  //!
+  //! @returns
+  //! The new @[Future].
+  //!
+  //! @seealso
+  //!   @[transform()], @[transform_with()], @[thencatch()],
+  //!   @[on_success()], @[Promise.success()],
+  //!   @[on_failure()], @[Promise.failure()],
+  //!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+  this_program then(void|function(mixed, mixed ... : mixed) onfulfilled,
+   void|function(mixed, mixed ... : mixed) onrejected,
+   mixed ... extra) {
+    Promise p = Promise();
+    if (onfulfilled)
+      on_success(apply_smart, p, onfulfilled, extra);
+    else
+      on_success(p->success);
+    if (onrejected)
+      on_failure(apply_smart, p, onrejected, extra);
+    else
+      on_failure(p->failure);
+    return p->future();
+  }
+
+  //! JavaScript Promise API equivalent of a combination of @[recover()]
+  //! and @[recover_with()].
+  //!
+  //! @param onrejected
+  //!   Function to be called. The first argument will be the
+  //!   failure result of @b{this@} @[Future].
+  //!   The return value will the failure result of the new @[Future].
+  //!   If the return value already is a @[Future], pass it as-is.
+  //!
+  //! @param extra
+  //!   Any extra context needed for
+  //!   @expr{onrejected@}. They will be provided
+  //!   as arguments two and onwards when the callback is called.
+  //!
+  //! @returns
+  //! The new @[Future].
+  //!
+  //! @seealso
+  //!   @[recover()], @[recover_with()], @[then()], @[on_failure()],
+  //!   @[Promise.failure()],
+  //!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+  inline this_program thencatch(function(mixed, mixed ... : mixed) onrejected,
+   mixed ... extra) {
+    return then(0, onrejected, @extra);
   }
 
   //! Return a @[Future] that will either be fulfilled with the fulfilled
@@ -300,6 +392,18 @@ class Future
 class Promise
 {
   inherit Future;
+
+  //! Creates a new promise, optionally initialised from a traditional callback
+  //! driven method via @expr{executor(resolve, reject, extra ... )@}.
+  //!
+  //! @seealso
+  //!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+  protected void create(void|
+   function(function(mixed:void),
+            function(mixed:void), mixed ...:void) executor, mixed ... extra) {
+    if (executor)
+      executor(success, failure, @extra);
+  }
 
   //! The future value that we promise.
   Future future()
@@ -445,12 +549,34 @@ protected class FirstCompleted
   }
 }
 
-//! Return a @[Future] that represents the first
-//! of the @[futures] that completes.
-Future first_completed(array(Future) futures)
+//! @returns
+//! A @[Future] that represents the first
+//! of the @expr{futures@} that completes.
+//!
+//! @seealso
+//!   @[race()]
+variant Future first_completed(array(Future) futures)
 {
   Promise p = FirstCompleted(futures);
   return p->future();
+}
+variant inline Future first_completed(Future ... futures)
+{
+  return first_completed(futures);
+}
+
+//! JavaScript Promise API equivalent of @[first_completed()].
+//!
+//! @seealso
+//!   @[first_completed()]
+//!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+variant inline Future race(array(Future) futures)
+{
+  return first_completed(futures);
+}
+variant inline Future race(Future ... futures)
+{
+  return first_completed(futures);
 }
 
 protected class Results
@@ -467,7 +593,7 @@ protected class Results
     array(mixed) results = allocate(sizeof(futures), UNDEFINED);
     array(State) states  = allocate(sizeof(futures), STATE_PENDING);
 
-    futures->on_failure(try_failure);
+    futures->on_failure(failure);
 
     foreach(futures; int i; Future f) {
       f->on_success(got_success, i, results, states);
@@ -490,16 +616,70 @@ protected class Results
   }
 }
 
-//! Return a @[Future] that represents the array of all
-//! the completed @[futures].
-Future results(array(Future) futures)
+//! @returns
+//! A @[Future] that represents the array of all the completed @expr{futures@}.
+//!
+//! @seealso
+//!   @[all()]
+variant Future results(array(Future) futures)
 {
   Promise p = Results(futures);
   return p->future();
 }
+inline variant Future results(Future ... futures)
+{
+  return results(futures);
+}
+
+//! JavaScript Promise API equivalent of @[results()].
+//!
+//! @seealso
+//!   @[results()]
+//!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+inline variant Future all(array(Future) futures)
+{
+  return results(futures);
+}
+inline variant Future all(Future ... futures)
+{
+  return results(futures);
+}
+
+//! @returns
+//! A new @[Future] that has already failed for the specified @expr{reason@}.
+//!
+//! @seealso
+//!   @[Future.on_failure()], @[Promise.failure()]
+//!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+Future reject(mixed reason)
+{
+  object p = Promise();
+  p->failure(reason);
+  return p->future();
+}
+
+//! @returns
+//! A new @[Future] that has already been fulfilled with @expr{value@}
+//! as result.  If @expr{value@} is an object which already
+//! has @[on_failure] and @[on_success] methods, return it unchanged.
+//!
+//! @note
+//! This function can be used to ensure values are futures.
+//!
+//! @seealso
+//!   @[Future.on_success()], @[Promise.success()]
+//!   @url{https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Promise@}
+Future resolve(mixed value)
+{
+  if (objectp(value) && value->on_failure && value->on_success)
+    return value;
+  object p = Promise();
+  p->success(value);
+  return p->future();
+}
 
 //! Return a @[Future] that represents the array of mapping @[fun]
-//! over the results of the competed @[futures].
+//! over the results of the completed @[futures].
 Future traverse(array(Future) futures,
 		function(mixed, mixed ... : mixed) fun,
 		mixed ... extra)
@@ -523,7 +703,7 @@ protected class Fold
       return;
     }
     accumulated = initial;
-    futures->on_failure(try_failure);
+    futures->on_failure(failure);
     foreach(futures; int i; Future f) {
       f->on_success(got_success, i, fun, ctx,
 		    allocate(sizeof(futures), STATE_PENDING));
