@@ -1,0 +1,3 @@
+Modules from e.g. bleeding edge Pike versions that we need in various modules or subsystems.
+
+These files are included from stub files in the etc/modules/ directory if needed.
