@@ -637,6 +637,26 @@ mapping(string:mixed) http_method_not_allowed (
   return ([ "file":-1, "pipe":1, ]);
 }
 
+//! Returns a response mapping indicating that the provided
+//! @[Concurrent.Future] will be fulfilled with the request result.
+//!
+//! @param future
+//!   The @[Concurrent.Future] that will be fulfilled (by the caller).
+//!   It should be fulfilled with a response mapping, even for
+//!   non-fatal errors (such as 401, 404 etc.) On future failure, it
+//!   must fail with a Pike error (which will be handled the same
+//!   way as if a synchronous find_file call throws, i.e. "500
+//!   Internal server error" sent to the client and so on.)
+//!
+//! @param id
+//!   The @[RequestID] that will be used to send the response.
+mapping(string:mixed) http_future (Concurrent.Future future, RequestID id)
+{
+  future->on_success (id?->send_result);
+  future->on_failure (id?->send_internal_error);
+  return http_pipe_in_progress();
+}
+
 mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
 					void|Stdio.File file,
 					void|string type )

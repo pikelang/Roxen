@@ -1848,6 +1848,11 @@ array get_error(string eid, string md5)
   return 0;
 }
 
+void send_internal_error (array err)
+{
+  internal_error (err);
+  send_result();
+}
 
 void internal_error(array _err)
 {
