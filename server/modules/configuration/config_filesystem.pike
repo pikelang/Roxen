@@ -506,12 +506,14 @@ void start(int n, Configuration cfg)
     module_dependencies(cfg, ({
       "config_tags", "contenttypes",    "indexfiles", "atlas",
       "gbutton",     "graphic_text",    "pathinfo",   "javascript_support",
-      "pikescript",  "translation_mod", "rxmlparse",  "rxmltags",
+      "rxmlparse",   "rxmltags",        "translation_mod",
       "tablist",     "cimg",		"gxml",       "config_json",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
 #endif
     }));
+
+    module_dependencies(cfg, ({ "pikescript" }), 1);
 
     RoxenModule m;
     if( m = cfg->find_module( "pikescript#0" ) )
