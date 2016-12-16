@@ -973,7 +973,7 @@ private int parse_got( string new_data )
 			 "event"       : "GOT_HEADERS",
 			 "headers"     : request_headers,
 			 "prot"        : prot,
-			 "data_length" : strlen(data),
+			 "data_length" : sizeof(request_data),
 		       ]));
 
     TIMER_START(parse_got_2_parse_headers);
@@ -3647,7 +3647,7 @@ void got_data(mixed fooid, string|Stdio.Buffer s, void|int chained)
 
     json_logger->log(([
 			 "event"       : "GOT_REQUEST",
-			 "data_length" : strlen(data),
+			 "data_length" : sizeof(request_data),
 			 "path"        : path,
 			 "raw_url"     : raw_url,
 		       ]));
@@ -4113,7 +4113,7 @@ object clone_me()
   c->raw_bytes = raw_bytes;
   c->query = query;
   c->not_query = not_query;
-  c->data = data;
+  c->request_data = request_data;
   c->extra_extension = extra_extension;
 
   c->auth = auth;
