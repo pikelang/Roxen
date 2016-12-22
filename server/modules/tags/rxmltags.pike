@@ -2175,6 +2175,7 @@ mapping(string:Thread.Mutex) cache_mutexes =
   set_weak_flag( ([ ]), Pike.WEAK_VALUES);
 mapping(string:int) cache_mutex_concurrency = ([ ]);
 
+cache.CacheManagerPrefs extend_entries_cache_prefs = cache.CacheManagerPrefs(1);
 
 class TagCache {
   inherit RXML.Tag;
@@ -2874,7 +2875,7 @@ class TagCache {
 
   protected void create()
   {
-    cache.cache_register (cache_tag_eval_loc);
+    cache.cache_register (cache_tag_eval_loc, 0, extend_entries_cache_prefs);
     cache.cache_register (cache_tag_save_loc, "no_timings");
   }
 }
