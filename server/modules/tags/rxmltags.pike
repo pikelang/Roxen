@@ -2259,6 +2259,8 @@ class CacheTagEntry (mixed data)
   }
 }
 
+cache.CacheManagerPrefs extend_entries_cache_prefs = cache.CacheManagerPrefs(1);
+
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
@@ -2944,7 +2946,7 @@ class TagCache {
 
   protected void create()
   {
-    cache.cache_register (cache_tag_eval_loc);
+    cache.cache_register (cache_tag_eval_loc, 0, extend_entries_cache_prefs);
     cache.cache_register (cache_tag_alts_loc);
   }
 }
