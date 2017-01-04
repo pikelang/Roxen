@@ -1942,7 +1942,9 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     if (!has_suffix(entry, ".rxp")) continue;
     array(string) splitted = entry/"\t";
     if (sizeof(splitted) < 2) continue;
-    patches[splitted[1..]*"\t"] = (splitted[0]/" ")[2];
+    string blob = (splitted[0]/" ")[2];
+    string fname = splitted[1..]*"\t";
+    patches[fname] = blob;
   }
 
   if (!sizeof(patches)) {
