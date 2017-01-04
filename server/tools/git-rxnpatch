@@ -316,7 +316,8 @@ string git_cat_file(string treeish, string path, int|void try)
   if (blob_sha1) {
     blob_sha1 = (((blob_sha1/"\0")[0]/"\t")[0]/" ")[-1];
   }
-  string res = blob_sha1 && git_try("cat-file", "blob", blob_sha1);
+  string res = blob_sha1 && sizeof(blob_sha1) &&
+    git_try("cat-file", "blob", blob_sha1);
   if (res || try) return res;
   werror("File %O not found in tree %O.\n", path, treeish);
   exit(1);
