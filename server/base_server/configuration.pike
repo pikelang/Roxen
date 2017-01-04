@@ -593,7 +593,12 @@ string get_doc_for( string region, string variable )
 
 string query_internal_location(RoxenModule|void mod)
 {
-  return internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  string ret = internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  if (has_suffix(ret, "!0/")) {
+    // Special case for module copy #0.
+    ret = ret[..<sizeof("!0/")] + "/";
+  }
+  return ret;
 }
 
 string query_name()
