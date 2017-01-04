@@ -290,7 +290,9 @@ string git(string command, string ... args)
   mapping(string:string|int) res = Process.run(cmd);
   if (res->exitcode) {
     werror("Git command '%s' failed with code %d:\n"
-	   "%s", cmd*"' '", res->exitcode, res->stderr||"");
+	   "%s\n\n"
+	   "stdout:\n"
+	   "%s\n", cmd*"' '", res->exitcode, res->stderr||"", res->stdout||"");
     exit(1);
   }
   return res->stdout||"";
