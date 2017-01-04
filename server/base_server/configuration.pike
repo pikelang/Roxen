@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.695 2010/03/30 12:28:54 grubba Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -516,7 +516,12 @@ string get_doc_for( string region, string variable )
 
 string query_internal_location(RoxenModule|void mod)
 {
-  return internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  string ret = internal_location+(mod?replace(otomod[mod]||"", "#", "!")+"/":"");
+  if (has_suffix(ret, "!0/")) {
+    // Special case for module copy #0.
+    ret = ret[..<sizeof("!0/")] + "/";
+  }
+  return ret;
 }
 
 string query_name()
