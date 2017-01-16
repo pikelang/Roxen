@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.118 2009/11/27 01:49:02 mast Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -55,6 +55,10 @@ void set_total_size_limit (int size)
 {
   total_size_limit = size;
 }
+
+//! The SNMP lookup root for the cache.
+SNMP.SimpleMIB mib = SNMP.SimpleMIB(SNMP.RIS_OID_WEBSERVER + ({ 3 }),
+				    ({}),({ UNDEFINED }));
 
 class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
@@ -142,10 +146,9 @@ class CacheManager
 //! practically one cache, and the named caches inside only act as
 //! separate name spaces.
 {
-  //! @decl constant string name;
-  //!
   //! A unique name to identify the manager. It is also used as
   //! display name.
+  constant name = "-";
 
   //! @decl constant string doc;
   //!
@@ -399,7 +402,12 @@ class CacheManager
   {
     return flag == 'O' &&
       sprintf ("CacheManager(%s: %dk/%dk)",
-	       this->name || "-", size / 1024, size_limit / 1024);
+	       name, size / 1024, size_limit / 1024);
+  }
+
+  protected void create()
+  {
+    mib->merge(CacheManagerMIB(name));
   }
 }
 
@@ -912,6 +920,79 @@ array(CacheManager) cache_managers =
 		cm_gds_cputime,
 	      }));
 
+protected array(int) string_to_oid(string s)
+{
+  return ({ sizeof(s) }) + (array(int))s;
+}
+
+class CacheStatsMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  CacheStats stats;
+
+  int get_count() { return stats->count; }
+  int get_size() { return stats->size; }
+  int get_hits() { return stats->hits; }
+  int get_misses() { return stats->misses; }
+  int get_cost_hits() { return (int)stats->cost_hits; }
+  int get_cost_misses() { return (int)stats->cost_misses; }
+#ifdef CACHE_HYTE_HR_STATS
+  int get_byte_hits() { return stats->byte_hits; }
+  int get_byte_misses() { return stats->byte_misses; }
+#endif
+  protected void create(CacheManager manager, string name, CacheStats stats)
+  {
+    this::stats = stats;
+    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 2 }) +
+      string_to_oid(name);
+    ::create(oid, ({}),
+	     ({
+	       UNDEFINED,
+	       SNMP.String(name, "cacheName"),
+	       SNMP.Gauge(get_count, "cacheNumEntries"),
+	       SNMP.Gauge(get_size, "cacheNumBytes"),
+	       ({
+		 SNMP.Counter(get_hits, "cacheNumHits"),
+		 SNMP.Integer(get_cost_hits, "cacheCostHits"),
+#ifdef CACHE_BYTE_HR_STATS
+		 SNMP.Counter(get_byte_hits, "cacheByteHits"),
+#else
+		 UNDEFINED,	/* Reserved */
+#endif
+	       }),
+	       ({
+		 SNMP.Counter(get_misses, "cacheNumMisses"),
+		 SNMP.Integer(get_cost_misses, "cacheCostMisses"),
+#ifdef CACHE_BYTE_HR_STATS
+		 SNMP.Counter(get_byte_misses, "cacheByteMisses"),
+#else
+		 UNDEFINED,	/* Reserved */
+#endif
+	       }),
+	     }));
+  }
+}
+
+class CacheManagerMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  CacheManager manager;
+
+  protected void create(CacheManager manager)
+  {
+    this::manager = manager;
+    array(int) oid = mib->path + string_to_oid(manager->name);
+    ::create(oid, ({}),
+	     ({
+	       UNDEFINED,
+	       SNMP.String(manager->name, "cacheManagerName"),
+	       UNDEFINED,	// Reserved for CacheStatsMIB.
+	     }));
+  }
+}
+
 protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
@@ -1146,8 +1227,10 @@ CacheManager cache_register (string cache_name,
 			 cache_type);
   }
 
+  CacheStats stats = CacheStats();
+  mib->merge(CacheStatsMIB(manager, cache_name, stats));
   caches[cache_name] = manager;
-  manager->stats[cache_name] = CacheStats();
+  manager->stats[cache_name] = stats;
   manager->lookup[cache_name] = ([]);
   return manager;
 }

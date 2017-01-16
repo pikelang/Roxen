@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.12 2009/05/07 14:15:57 mast Exp $
+ * $Id$
  *
  * SNMP protocol support.
  *
@@ -317,8 +317,10 @@ protected void setup_mib()
 {
   mib->merge(SystemMIB());
   mib->merge(SNMPMIB());
-  mib->merge(RoxenGlobalMIB());
-  mib->merge(DBManagerMIB());
+  mib->merge(RoxenGlobalMIB());	// RIS_OID_WEBSERVER + ({ 1 })
+  mib->merge(DBManagerMIB());	// RIS_OID_WEBSERVER + ({ 1, 3 })
+  // Modules (cf configuration)	// RIS_OID_WEBSERVER + ({ 2 })
+  mib->merge(cache.mib);	// RIS_OID_WEBSERVER + ({ 3 })
 }
 
 #define SNMP_OP_GETREQUEST	0
