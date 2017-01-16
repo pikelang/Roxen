@@ -474,7 +474,8 @@ int send_response(array(Binding) bindings,
   return id;
 }
 
-protected void got_connection(mapping data)
+// Called in a handler thread.
+protected void low_got_connection(mapping data)
 {
   mapping pdata;
   array rdata = ({});
@@ -596,6 +597,16 @@ protected void got_connection(mapping data)
   } else {
     send_response(rdata, pdata);
   }
+}
+
+protected void got_connection(mapping data)
+{
+  // NB: SNMP is UDP, so we don't need to care about
+  //     sequencing between multiple requests.
+
+  // Make sure that we don't block the backend thread
+  // by waiting for mutexes and similar...
+  roxen.handle(low_got_connection, data);
 }
 
 // NOTE: Code duplication from Protocol!
