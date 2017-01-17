@@ -39,7 +39,9 @@ constant specific_options = ([
     ({ "restart", Getopt.NO_ARG, ({ "--restart" }) }),
     ({ "norestart", Getopt.NO_ARG, ({ "--no-restart" }) }),
   }),
-  "cluster": ({}),
+  "cluster": ({
+    ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
+  }),
   "status": ({}),
 ]);
 
@@ -1949,51 +1951,53 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     patches[fname] = blob;
   }
 
-  if (!sizeof(patches)) {
-    write("No patches available to cluster.\n");
-    exit(0);
-  }
-
-  int pending_cluster = sizeof(patches);
-  // Check if there's an up-to-date patch cluster for the branch.
-  string cluster_prefix = "refs/heads/" + branch + "/clusters";
   string cluster;
-  foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
-	      "--", cluster_prefix)/"\0", string entry) {
-    if (entry == "") continue;
-    string path = (entry/"\t")[1..] * "\t";
-    if (!has_prefix(path, cluster_path_prefix)) continue;
-    if (!has_suffix(path, ".tgz")) continue;
-    // NB: The suffix ".tgz" is sorted after "-02.tgz",
-    //     so we need to compensate here.
-    string new_cluster = path[sizeof(cluster_path_prefix)..<4];
-    if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
-  }
-  if (cluster) {
-    // There's apparently a cluster.
-    string base = git_try("rev-list", "--max-count=1",
-			  "refs/tags/rxnpatch/clusters/" + branch +
-			  "/" + cluster);
-    if (base) {
-      // Check if any patches have been added or changed for the
-      // branch since then.
-      base = (base/"\n")[0];
-      pending_cluster = 0;
-      foreach(git("diff-tree", "-r", "-z", "--name-only",
-		  base, "rxnpatch/rxnpatch")/"\0", string fname) {
-	if (!has_prefix(fname, "refs/heads/" + branch + "/patches/"))
-	  continue;
-	if (!has_suffix(fname, ".rxp")) continue;
-	pending_cluster++;
-      }
-    } else {
-      werror("Warning: Tag not found for cluster %s.\n", cluster);
-      pending_cluster = sizeof(patches);
+  if (!options->force) {
+    if (!sizeof(patches)) {
+      write("No patches available to cluster.\n");
+      exit(0);
     }
 
-    if (!pending_cluster) {
-      write("Cluster %s is up-to-date.\n", cluster);
-      exit(0);
+    int pending_cluster = sizeof(patches);
+    // Check if there's an up-to-date patch cluster for the branch.
+    string cluster_prefix = "refs/heads/" + branch + "/clusters";
+    foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
+		"--", cluster_prefix)/"\0", string entry) {
+      if (entry == "") continue;
+      string path = (entry/"\t")[1..] * "\t";
+      if (!has_prefix(path, cluster_path_prefix)) continue;
+      if (!has_suffix(path, ".tgz")) continue;
+      // NB: The suffix ".tgz" is sorted after "-02.tgz",
+      //     so we need to compensate here.
+      string new_cluster = path[sizeof(cluster_path_prefix)..<4];
+      if (!cluster || (cluster < new_cluster)) cluster = new_cluster;
+    }
+    if (cluster) {
+      // There's apparently a cluster.
+      string base = git_try("rev-list", "--max-count=1",
+			    "refs/tags/rxnpatch/clusters/" + branch +
+			    "/" + cluster);
+      if (base) {
+	// Check if any patches have been added or changed for the
+	// branch since then.
+	base = (base/"\n")[0];
+	pending_cluster = 0;
+	foreach(git("diff-tree", "-r", "-z", "--name-only",
+		    base, "rxnpatch/rxnpatch")/"\0", string fname) {
+	  if (!has_prefix(fname, "refs/heads/" + branch + "/patches/"))
+	    continue;
+	  if (!has_suffix(fname, ".rxp")) continue;
+	  pending_cluster++;
+	}
+      } else {
+	werror("Warning: Tag not found for cluster %s.\n", cluster);
+	pending_cluster = sizeof(patches);
+      }
+
+      if (!pending_cluster) {
+	write("Cluster %s is up-to-date.\n", cluster);
+	exit(0);
+      }
     }
   }
 
