@@ -522,7 +522,7 @@ class CacheManager
 
   protected void create()
   {
-    mib->merge(CacheManagerMIB(name));
+    mib->merge(CacheManagerMIB(this));
   }
 }
 
