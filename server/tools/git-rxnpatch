@@ -2013,14 +2013,23 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   // Create release-specific clusters...
   string release;
   mapping(string:string) release_patches = ([]);
-  foreach(sort(indices(patches)), string file) {
-    string patchid = (file/"/")[-2];
-    string metadata = git_cat_file("rxnpatch/rxnpatch",
-				   combine_path(file, "../metadata.txt"), 1);
-    if (metadata) {
-      [mapping(string:array(string)) header, string description] =
-	parse_metadata(patchid, metadata);
-
+  foreach(sort(indices(patches)) + ({ UNDEFINED }), string file) {
+    mapping(string:array(string)) header;
+    if (file) {
+      string patchid = (file/"/")[-2];
+      string metadata = git_cat_file("rxnpatch/rxnpatch",
+				     combine_path(file, "../metadata.txt"), 1);
+      if (metadata) {
+	[header, string description] = parse_metadata(patchid, metadata);
+      }
+    } else {
+      // End sentinel.
+      // NB: This is used to ensure that a release sync cluster
+      //     is generated even if there are no patches for the
+      //     current release. Cf [IS-26].
+      header = ([ "depends" : ({ depends * "|" }) ]);
+    }
+    if (header) {
     find_dep:
       foreach(header->depends || ({}), string dep) {
 	foreach(dep/"|", string d) {
@@ -2057,7 +2066,9 @@ void create_cluster(mapping(string:string|int|array(string)) options,
 	}
       }
     }
-    release_patches[file] = patches[file];
+    if (file) {
+      release_patches[file] = patches[file];
+    }
   }
 
   // Get the patchid of the most recent patch in the cluster.
