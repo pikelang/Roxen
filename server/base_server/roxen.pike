@@ -152,6 +152,15 @@ array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
+
+string thread_name_from_addr(string hex_addr)
+{
+  //  Lookup using a key like "Thread.Thread(0x...)" that matches what
+  //  sprint("%O") generates.
+  string th_key = "Thread.Thread(" + hex_addr + ")";
+  return thread_names[th_key];
+}
+
 string thread_name( object thread, int|void skip_auto_name )
 {
   string tn;
@@ -6347,10 +6356,30 @@ void describe_thread (Thread.Thread thread)
 	       thread_descr);
   // Use master()->describe_backtrace to sidestep the background
   // failure wrapper that's active in RUN_SELF_TEST.
-  report_debug(">> " +
-	       replace (master()->describe_backtrace (thread->backtrace()),
-			"\n", "\n>> ") +
-	       "\n");
+  string th_bt = master()->describe_backtrace (thread->backtrace());
+
+  //  Expand any occurrences of:
+  //    Thread.Mutex(/*locked by 0x....*/)
+  //  to:
+  //    Thread.Mutex(/*locked by 0x.... - <thread name>*/)
+  string bt_separator = "Thread.Mutex(/*locked by ";
+  if (has_value(th_bt, bt_separator)) {
+    array(string) bt_segs = th_bt / bt_separator;
+    if (sizeof(bt_segs) > 1) {
+      foreach (bt_segs; int idx; string bt_seg) {
+	if (sscanf(bt_seg, "0x%[0-9a-fA-F]*/", string th_hex_addr)) {
+	  if (string th_name = thread_name_from_addr("0x" + th_hex_addr)) {
+	    bt_segs[idx] =
+	      "0x" + th_hex_addr + " - " + th_name +
+	      bt_seg[sizeof(th_hex_addr) + 2..];
+	  }
+	}
+      }
+      th_bt = bt_segs * bt_separator;
+    }
+  }
+  
+  report_debug(">> " + replace (th_bt, "\n", "\n>> ") + "\n");
 }
 
 // Dump all threads to the debug log.
