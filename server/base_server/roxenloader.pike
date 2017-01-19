@@ -263,32 +263,33 @@ mixed call_out(function f, float|int delay, mixed ... args)
     }(f), delay, @args);
 }
 
-protected int(0..5) last_was_change;
-int(2..2147483647) roxen_started = [int(2..2147483647)]time();
-float roxen_started_flt = time(time());
+
+protected int(2..2147483647) roxen_started = [int(2..2147483647)]time();
+protected float roxen_started_flt = time(time());
+protected int uptime_row_counter;
+
 string short_time()
 {
-  if( last_was_change>0 )
-    switch( last_was_change-- )
-    {
-     default:
-       return "          : ";
-     case 5:
-       float up = time(roxen_started)-roxen_started_flt;
-       if( up > 3600 )
-       {
-         return sprintf( "%2dd%2dh%2dm : ",
-                       (int)up/86400,
-                       (((int)up/3600)%24),
-                       ((int)up/60)%60);
-       }
-       return sprintf( "%2dm%4.1fs  : ",((int)up/60)%60, up%60 );
+  string up_str;
+  if (uptime_row_counter) {
+    up_str = "         ";
+  } else {
+    float up = time(roxen_started) - roxen_started_flt;
+    if (up > 3600) {
+      up_str = sprintf( "%2dd%2dh%2dm",
+			(int) up / 86400,
+			(((int) up / 3600) % 24),
+			((int) up / 60) % 60);
+    } else {
+      up_str = sprintf( "%2dm%4.1fs ", ((int) up / 60) % 60, up % 60);
     }
-  mapping l = localtime( time( ) );
-  string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
-  last_was_change=5;
-  return ct;
+  }
+  uptime_row_counter = (uptime_row_counter + 1) % 5;
+
+  mapping l = localtime(time());
+  return sprintf("%2d:%02d:%02d  %s : ", l->hour, l->min, l->sec, up_str);
 }
+
 
 //! @decl void werror(string format, mixed ... args)
 //! @appears werror

@@ -61,7 +61,7 @@ dp() {
   elif [ "x$self_test" = "xy" ]; then
     echo "$@" >&2
   else
-    echo "          :" "$@" >&2
+    echo "                    :" "$@" >&2
   fi
 }
 
@@ -72,7 +72,7 @@ dp_no_nl() {
     echo "$@" | tr -d '
 ' >&2
   else
-    echo "          :" "$@" | tr -d '
+    echo "                    :" "$@" | tr -d '
 ' >&2
   fi
 }
