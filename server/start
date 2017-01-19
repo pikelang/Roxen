@@ -57,9 +57,9 @@ case "$dn" in
   # are in the correct directory, for quite obvious reasons...
   if [ ! "$dn" = "`pwd`" ]
   then
-    echo "          : Changing current directory to '$dn' (now `pwd`)" >&2
+    echo "                    : Changing current directory to '$dn' (now `pwd`)" >&2
     cd "$dn"
-    echo "          : Got new directory as `pwd`" >&2
+    echo "                    : Got new directory as `pwd`" >&2
   fi
   ;;
 esac
