@@ -200,7 +200,7 @@ class TagForceSessionID {
 	  // might be that the RoxenUserID cookie is set twice, but that is
 	  // not a problem for us.
 	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
-	  Roxen.set_cookie(id, "RoxenUserId", session_id, 3600*24*365*2,
+	  Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
 			   UNDEFINED, "/", args->secure, args->httponly);
 	  id->prestate = orig_prestate;
 	  return 0;
@@ -229,7 +229,7 @@ class TagForceSessionID {
 	if ( !id->cookies->RoxenUserID ) {
 	  string session_id = roxen->create_unique_id();
 	  // NB: Inlined call of Roxen.http_roxen_id_cookie() below.
-	  Roxen.set_cookie(id, "RoxenUserId", session_id, 3600*24*365*2,
+	  Roxen.set_cookie(id, "RoxenUserID", session_id, 3600*24*365*2,
 			   UNDEFINED, "/", args->secure, args->httponly);
 	  id->cookies->RoxenUserID = session_id;
 	  return 0;
