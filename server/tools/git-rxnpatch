@@ -2010,67 +2010,6 @@ void create_cluster(mapping(string:string|int|array(string)) options,
     else if (!has_suffix(rel_dep_prefix, "/")) rel_dep_prefix += "/";
   }
 
-  // Create release-specific clusters...
-  string release;
-  mapping(string:string) release_patches = ([]);
-  foreach(sort(indices(patches)) + ({ UNDEFINED }), string file) {
-    mapping(string:array(string)) header;
-    if (file) {
-      string patchid = (file/"/")[-2];
-      string metadata = git_cat_file("rxnpatch/rxnpatch",
-				     combine_path(file, "../metadata.txt"), 1);
-      if (metadata) {
-	[header, string description] = parse_metadata(patchid, metadata);
-      }
-    } else {
-      // End sentinel.
-      // NB: This is used to ensure that a release sync cluster
-      //     is generated even if there are no patches for the
-      //     current release. Cf [IS-26].
-      header = ([ "depends" : ({ depends * "|" }) ]);
-    }
-    if (header) {
-    find_dep:
-      foreach(header->depends || ({}), string dep) {
-	foreach(dep/"|", string d) {
-	  if (has_prefix(d, rel_dep_prefix)) {
-	    // Found.
-	    string next_release = d[sizeof(rel_dep_prefix)..];
-	    if (sizeof(release_patches)) {
-	      if (!release) {
-		werror("Warning: Root patch for branch %s does not\n"
-		       "         have a versioned dependency.\n",
-		       branch);
-		// NB: Keep the patches for the next cluster.
-	      } else {
-		cluster = sprintf("%s%s-%s.tgz",
-				  release_cluster_path_prefix,
-				  release, next_release);
-		write("Creating cluster %s containing %d patch%s...\n",
-		      cluster, sizeof(release_patches),
-		      (sizeof(release_patches) != 1)?"es":"");
-		string tgz = low_create_cluster(cluster, release_patches);
-		git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
-			      "Created patch cluster " + (cluster/"/")[-1] +
-			      " on branch " + branch + ".\n");
-		release_patches = ([]);
-	      }
-	    }
-	    release = next_release;
-	    // NB: We can break here since we know that there can only
-	    //     be one release tag at the parent commit due to a
-	    //     new commit being generated every time the version
-	    //     is bumped.
-	    break find_dep;
-	  }
-	}
-      }
-    }
-    if (file) {
-      release_patches[file] = patches[file];
-    }
-  }
-
   // Get the patchid of the most recent patch in the cluster.
   string timestamp_base = (sort(indices(patches))[-1]/"/")[-2];
 
@@ -2097,14 +2036,61 @@ void create_cluster(mapping(string:string|int|array(string)) options,
 
   cluster = sprintf("%s%s.tgz", cluster_path_prefix, timestamp);
 
-  write("Creating new cluster %s containing %d patch%s...\n",
-	(cluster/"/")[-1], sizeof(release_patches),
-	(sizeof(release_patches)!=1)?"es":"");
-
-  string tgz = low_create_cluster(cluster, release_patches);
-  git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
-		"Created patch cluster " + (cluster/"/")[-1] +
-		" on branch " + branch + ".\n");
+  // Create release-specific clusters...
+  string release;
+  mapping(string:string) release_patches = ([]);
+  foreach(({ UNDEFINED }) + reverse(sort(indices(patches))), string file) {
+    mapping(string:array(string)) header;
+    if (file) {
+      string patchid = (file/"/")[-2];
+      string metadata = git_cat_file("rxnpatch/rxnpatch",
+				     combine_path(file, "../metadata.txt"), 1);
+      if (metadata) {
+	[header, string description] = parse_metadata(patchid, metadata);
+      }
+      release_patches[file] = patches[file];
+    } else {
+      // Start sentinel.
+      // NB: This is used to ensure that a generic cluster
+      //     is generated even if there are no patches for
+      //     the current release. Cf [IS-26].
+      header = ([ "depends" : ({ depends * "|" }) ]);
+    }
+    if (header) {
+    find_dep:
+      foreach(header->depends || ({}), string dep) {
+	foreach(dep/"|", string d) {
+	  if (has_prefix(d, rel_dep_prefix)) {
+	    // Found.
+	    string next_release = d[sizeof(rel_dep_prefix)..];
+	    // NB: next_release and release may be equal when there
+	    //     are derived patches.
+	    if (next_release != release) {
+	      if (release) {
+		cluster = sprintf("%s%s-%s.tgz",
+				  release_cluster_path_prefix,
+				  next_release, release);
+	      }
+	      write("Creating cluster %s containing %d patch%s...\n",
+		    cluster, sizeof(release_patches),
+		    (sizeof(release_patches) != 1)?"es":"");
+	      string tgz = low_create_cluster(cluster, release_patches);
+	      git_save_file("refs/heads/rxnpatch/rxnpatch", cluster, tgz,
+			    "Created patch cluster " + (cluster/"/")[-1] +
+			    " on branch " + branch + ".\n");
+	      release_patches = ([]);
+	      release = next_release;
+	    }
+	    // NB: We can break here since we know that there can only
+	    //     be one release tag at the parent commit due to a
+	    //     new commit being generated every time the version
+	    //     is bumped.
+	    break find_dep;
+	  }
+	}
+      }
+    }
+  }
 
   git("tag", tag, "refs/heads/rxnpatch/rxnpatch");
   git_push("origin", "refs/tags/" + tag);
