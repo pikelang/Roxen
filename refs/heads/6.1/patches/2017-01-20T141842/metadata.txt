@@ -1,0 +1,11 @@
+subject: Roxen 6.1: More fixes for release sync clusters.
+from: 1c3b5b3d4ee0c6ca47317ea7c94105a1ba682580
+to: c2ac0adbde44c26f5219fdc9873fe8e9fadb4d80
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-01-20T120210
+
+• git-rxnpatch: More fixes for release sync clusters.
+
+Fixes issue where derived patches could generate sync clusters
+between the same version (causing an infinite loop later when
+generating meta clusters).
