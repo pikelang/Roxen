@@ -1,0 +1,8 @@
+Modified files:
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  bin/functions
+  etc/include/version.h
+  modules/tags/session_tag.pike
+  start
+  tools/git-rxnpatch
