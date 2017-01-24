@@ -352,6 +352,10 @@ string get_snmp_values(ADT.Trie mib,
   });
 
   for (array(int) oid = oid_start; oid; oid = mib->next(oid)) {
+    if (!has_prefix((string)oid, (string)oid_start)) {
+      // Reached end of the oid subtree.
+      break;
+    }
     if (oid_ignore && has_prefix((string)oid, (string)oid_ignore)) continue;
     string oid_string = ((array(string)) oid) * ".";
     string name = "";
