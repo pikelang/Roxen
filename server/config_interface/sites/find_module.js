@@ -6,12 +6,12 @@
       var cookies = document.cookie.split(';');
       var i;
       for (i = 0; i < cookies.length; i++) {
-	var c = cookies[i];
-	// Zap white space.
-	while (c.charAt(0) == ' ')
-	  c = c.substring(1);
-	if (!c.indexOf(cookie_name))
-	  return c.substring(cookie_name.length);
+        var c = cookies[i];
+        // Zap white space.
+        while (c.charAt(0) == ' ')
+          c = c.substring(1);
+        if (!c.indexOf(cookie_name))
+          return c.substring(cookie_name.length);
       }
       return "";
     }
@@ -50,12 +50,12 @@
       var def = document.getElementById("mod_default");
       var res = document.getElementById("mod_results");
       if (!xml) {
-	def.style.display = "block";
-	res.style.display = "none";
+        def.style.display = "block";
+        res.style.display = "none";
         res.innerHTML = "";
       } else {
-	def.style.display = "none";
-	res.style.display = "block";
+        def.style.display = "none";
+        res.style.display = "block";
         res.innerHTML = xml;
       }
     }
@@ -114,7 +114,7 @@
               query_xml_req = 0;
             }
           }
-        }
+        };
         query_xml_req.open("GET", src, true);
         query_xml_req.send(null);
       }
