@@ -48,7 +48,7 @@ Stdio.File stderr = Stdio.File("stderr");
 #ifdef __NT__
 mapping uname()
 {
-  return ([ 
+  return ([
 	   "machine":"NT",
 	   "release":"unknown",
 	   "sysname":"NT",
@@ -59,7 +59,7 @@ mapping uname()
 #else
 mapping uname()
 {
-  return ([ 
+  return ([
 	   "machine":"unknown",
 	   "release":"unknown",
 	   "sysname":"unknown",
@@ -503,7 +503,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
     if(!functionp([function]q[i][2]))
       continue;
     object o = function_object( [function]q[i][2] );
-    if(!o) 
+    if(!o)
       continue;
     if( o->is_module ) {
       if( !mod ) mod = o;
@@ -1112,7 +1112,7 @@ Roxen really_load_roxen()
   mixed err = catch {
     res = ((program)"base_server/roxen.pike")();
   };
-  if (err) 
+  if (err)
   {
     report_debug("\bERROR\n");
     werror (describe_backtrace (err));
@@ -1162,7 +1162,7 @@ mixed nm_resolv(string x )
   };
   return ([])[0];
 };
-  
+
 // Set up efuns and load Roxen.
 void load_roxen()
 {
@@ -1423,8 +1423,8 @@ string roxen_path( string filename )
 			getenv ("LOGFILE") || "$LOGDIR/debug/default.1",
 			server_dir }) );
   if( roxen )
-    filename = replace( filename, 
-                        "$LOGDIR", 
+    filename = replace( filename,
+                        "$LOGDIR",
                         [string]roxen->query("logdirprefix") );
   else
     if( search( filename, "$LOGDIR" ) != -1 )
@@ -1658,7 +1658,7 @@ void write_current_time()
 
 //! @appears throw
 //!   Overloads Pikes throw function.
-//! 
+//!
 //!   Exists for detection of code that throws non-errors.
 void paranoia_throw(mixed err)
 {
@@ -1744,7 +1744,7 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
   // Get build OS for dist
   dist_os =
     (replace(Stdio.read_bytes("OS") || "src dist", "\r", "\n") / "\n")[0];
-  
+
   // Get package directories.
   add_package("$LOCALDIR");
   foreach(package_directories + ({ "." }), string dir) {
@@ -1865,7 +1865,7 @@ mapping(string:string) mysql_location()
     (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump",
        "mysql_upgrade",
     >);
-  
+
   //  If the path file is missing we fall back on the traditional
   //  /mysql/ subdirectory. The file should contain lines on this
   //  format:
@@ -1875,7 +1875,7 @@ mapping(string:string) mysql_location()
   //    key2 = value
   //
   //  All non-absolute paths will be interpreted relative to server-x.y.z.
-  
+
   mapping res = ([ "basedir" : combine_path(server_dir, "mysql/") ]);
 
   string mysql_loc_file = combine_path(server_dir, "mysql-location.txt");
@@ -1892,7 +1892,7 @@ mapping(string:string) mysql_location()
 	    report_warning("mysql-location.txt: Unknown key '%s'.\n", key);
 	    continue;
 	  }
-	  
+
 	  //  Convert to absolute path and check for existence
 	  if (val[0] == '"' || val[0] == '\'')
 	    val = val[1..];
@@ -1911,7 +1911,7 @@ mapping(string:string) mysql_location()
       }
     }
   }
-  
+
   //  Find specific paths derived from the MySQL base directory
   if (res->basedir) {
     //  Locate mysqld
@@ -1926,7 +1926,7 @@ mapping(string:string) mysql_location()
 			combine_path(res->basedir, "bin", binary),
 			combine_path(res->basedir, "sbin", binary) }) );
     }
-    
+
     //  Locate myisamchk
     if (!res->myisamchk) {
 #ifdef __NT__
@@ -1966,7 +1966,7 @@ mapping(string:string) mysql_location()
 			combine_path(res->basedir, "sbin", binary) }) );
     }
   }
-  
+
   return cached_mysql_location = res;
 }
 
@@ -2296,7 +2296,7 @@ protected class SQLKey
 #endif
 #endif /* DB_DEBUG */
   }
-  
+
   protected void destroy()
   {
     // FIXME: Ought to be abstracted to an sq_cache_free().
@@ -2321,7 +2321,7 @@ protected class SQLKey
     catch {
       key = sq_cache_lock();
     };
-    
+
 #ifdef DB_DEBUG
     werror("%O added to free list\n", this );
 #ifdef OBJ_COUNT_DEBUG
@@ -2349,7 +2349,7 @@ protected class SQLKey
   {
     return `->( what );
   }
-  
+
   protected mixed `->(string what )
   {
     switch( what )
@@ -2495,7 +2495,7 @@ Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
 }
 
 /* Not to be documented. This is a low-level function that should be
- * avoided by normal users. 
+ * avoided by normal users.
 */
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
 			     void|int reuse_in_thread, void|string charset)
@@ -2540,7 +2540,7 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
 
   if( !db )
     db = "mysql";
-  
+
   mixed err = catch
   {
     if( intp( ro ) )
@@ -2652,13 +2652,13 @@ protected void low_check_mysql(string myisamchk, string datadir,
 
   if(!sizeof(files))
     return;
-  
+
   Stdio.File  devnull
 #ifndef __NT__
     = Stdio.File( "/dev/null", "w" )
 #endif
     ;
-  
+
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
       Process.Process(({ myisamchk }) +
@@ -2780,7 +2780,7 @@ void low_start_mysql( string datadir,
     slow_query_log = datadir + "/slow_query_log";
 
   slow_query_log = combine_path(getcwd(), slow_query_log);
-  
+
   // Default arguments.
   array(string) args = ({
 		  "--defaults-file="+datadir+"/my.cfg",
@@ -2821,7 +2821,7 @@ void low_start_mysql( string datadir,
 	  return ("000" + d)[<2..];
 	}) * ".";
 
-  if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
+  if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG ||
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
     if (normalized_mysql_version > "005.006.") {
@@ -3044,13 +3044,13 @@ void start_mysql (void|int log_queries_to_stdout)
     if( mixed err = catch( db->query( "SELECT id from local.precompiled_files WHERE id=''" ) ) )
     {
       db->query( "CREATE DATABASE IF NOT EXISTS local" );
-      
+
       connect_to_my_mysql(0,"local")
 	->query( "CREATE TABLE precompiled_files ("
                  "id CHAR(30) NOT NULL PRIMARY KEY, "
                  "data MEDIUMBLOB NOT NULL, "
                  "mtime INT UNSIGNED NOT NULL)" );
-      
+
       // At this moment new_master does not exist, and
       // DBManager can not possibly compile. :-)
       call_out( lambda(){
@@ -3117,7 +3117,7 @@ void start_mysql (void|int log_queries_to_stdout)
   };
 
   report_debug( "Starting MySQL ... \b");
-  
+
   if( mixed err = catch( db = connect_to_my_mysql( 0, "mysql" ) ) ) {
 #ifdef MYSQL_CONNECT_DEBUG
     werror ("Error connecting to local MySQL: %s", describe_error (err));
@@ -3192,7 +3192,7 @@ void start_mysql (void|int log_queries_to_stdout)
 		   pid, pid_file);
       exit(1);
     }
-  }  
+  }
 #endif
 
   // Steal the mysqld pid_file, and claim that we are mysqld
@@ -3284,7 +3284,7 @@ int low_dump( string file, program|void p )
     }
   }
 #endif
-    
+
   array q;
 #ifdef MUCHU_DUMP_DEBUG
 # define DUMP_DEBUG
@@ -3348,7 +3348,7 @@ void do_main( int argc, array(string) argv )
 
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
-		clear_connect_to_my_mysql_cache );  
+		clear_connect_to_my_mysql_cache );
 
 #if !constant(thread_create)
   report_debug(#"
@@ -3389,7 +3389,7 @@ it impossible for roxen to have any internal security at all.
 Roxen requires bignum support in Pike since version 2.4.
 Please recompile Pike with gmp / bignum support to run Roxen.
 
-It might still be possible to start Roxen, but the 
+It might still be possible to start Roxen, but the
 functionality will be affected, and stange errors might occur.
 ---------------------------------------------------------------
 
@@ -3532,7 +3532,7 @@ the correct system time.
 
   add_constant( "LocaleString", typeof(da_String_type) );
   add_constant( "Stat", typeof(da_Stat_type) );
-  
+
   mixed err;
 
   add_constant("open",          open);
@@ -3667,7 +3667,7 @@ http://freetype.sourceforge.net/download.html
 Install it, and then remove config.cache in pike and recompile.
 If this was a binary release of Roxen, there should be no need
 to recompile the pike binary, since the one included should
-already have the FreeType interface module, installing the 
+already have the FreeType interface module, installing the
 library should be enough.
 --------------------------------------------------------------
 
@@ -3712,20 +3712,20 @@ library should be enough.
 #if constant(Odbc.odbc)
   DC("Sql.odbc");
 #endif
-  
+
   DC( "_Roxen.HeaderParser" );
-  
+
   DC( "Protocols.HTTP" ); DC( "Protocols.HTTP.Query" );
 
   DC( "Calendar.ISO" );   DC( "Calendar.ISO.Second" );
 
   DC( "Stdio.Stat" );
-  
+
   DC( "Regexp" );
 
   DC( "Pipe.pipe" );
 
-  
+
   foreach( ({ "ANY", "XCF", "PSD", "PNG",  "BMP",  "TGA", "PCX",
 	      "XBM", "XPM", "TIFF", "ILBM", "PS", "PVR", "GIF",
 	      "JPEG", "XWD", "PNM", "RAS",  "DSI", "TIM", "HRZ",
@@ -3736,7 +3736,7 @@ library should be enough.
   DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
   DC( "Image.Color.Color" );DC("Image._PSD" ); DC("Image._XCF" );
   DC ("Image.Color.black");
-  DC( "Image._XPM" );  DC( "Image" );  
+  DC( "Image._XPM" );  DC( "Image" );
   if( DC("Image.GIF.encode") )
     DC( "Image.GIF.encode_trans" );
 
@@ -3770,7 +3770,7 @@ library should be enough.
 
   if( DC( "Image.FreeType" ) )
     DC( "Image.FreeType.Face" );
-  
+
   DC( "Process.create_process" );
   DC( "MIME.Message" );  DC( "MIME.encode_base64" );
   DC( "MIME.decode_base64" );
