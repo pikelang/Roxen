@@ -531,6 +531,56 @@ protected void syslog_report (string message, int level)
 
 #define MC @find_module_and_conf_for_log(backtrace())
 
+class LogLevel
+{
+  enum LogLevel
+  {
+    FATAL   = 3,
+    ERROR   = 3,
+    WARNING = 2,
+    NOTICE  = 1
+  }
+}
+
+void admin_if_log(LogLevel.LogLevel level,
+                  LocaleString|sprintf_format format,
+                  sprintf_args ... args)
+//! Writes a log message to the administration interface log.
+{
+  if (sizeof(format)) {
+    string message = sprintf((string)format, @args);
+    nwrite(message, 0, level, MC, true);
+  }
+}
+
+void admin_if_log_fatal(LocaleString|sprintf_format format,
+                        sprintf_args ... args)
+//! Writes a fatal (same as an error) to the administration interface log.
+{
+  admin_if_log(LogLevel.FATAL, format, @args);
+}
+
+void admin_if_log_error(LocaleString|sprintf_format format,
+                        sprintf_args ... args)
+//! Writes an error (same as a fatal) to the administration interface log.
+{
+  admin_if_log(LogLevel.ERROR, format, @args);
+}
+
+void admin_if_log_warning(LocaleString|sprintf_format format,
+                          sprintf_args ... args)
+//! Writes a warning to the administration interface log.
+{
+  admin_if_log(LogLevel.WARNING, format, @args);
+}
+
+void admin_if_log_notice(LocaleString|sprintf_format format,
+                         sprintf_args ... args)
+//! Writes a notice to the administration interface log.
+{
+  admin_if_log(LogLevel.NOTICE, format, @args);
+}
+
 void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! @appears report_warning
 //! Report a warning message, that will show up in the server's debug log and
@@ -3566,6 +3616,12 @@ the correct system time.
   add_constant("ST_CTIME",      ST_CTIME );
   add_constant("ST_SIZE",       ST_SIZE );
   add_constant("mkdirhier",     mkdirhier );
+  add_constant("admin_if_log",  admin_if_log );
+  add_constant("admin_if_log_fatal",  admin_if_log_fatal );
+  add_constant("admin_if_log_error",  admin_if_log_error );
+  add_constant("admin_if_log_warning",  admin_if_log_warning );
+  add_constant("admin_if_log_notice",  admin_if_log_notice );
+  add_constant("LogLevel", LogLevel );
 
 #if !constant(uname)
   add_constant( "uname", uname );

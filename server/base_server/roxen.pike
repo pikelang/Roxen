@@ -3688,7 +3688,7 @@ mapping(string:array(int)) error_log=([]);
 
 // Write a string to the administration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void errtype,
-            object|void mod, object|void conf)
+            object|void mod, object|void conf, bool|void skip_stderr)
 {
   int log_time = time(1);
   string reference = (mod ? Roxen.get_modname(mod) : conf && conf->name) || "";
@@ -3709,7 +3709,7 @@ void nwrite(string s, int|void perr, int|void errtype,
       conf->error_log[log_index] += ({ log_time });
   }
 
-  if(errtype >= 1)
+  if(errtype >= 1 && !skip_stderr)
     report_debug( s );
 }
 
