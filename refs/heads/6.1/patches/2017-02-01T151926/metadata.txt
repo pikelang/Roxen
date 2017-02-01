@@ -1,0 +1,15 @@
+subject: Roxen 6.1: Compat level for 6.1, Configutation Interface SNMP fixes.
+from: c2ac0adbde44c26f5219fdc9873fe8e9fadb4d80
+to: 62d2e408f181df724f2fd79e40c210fdcde0898e
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-01-20T141842
+restart: true
+
+• Compat: Add compat level for Roxen 6.1
+
+• Configuration Interface [SNMP]: Only show the selected sub-tree.
+
+Don't walk back up the tree after showing the SNMP values
+for the selected subtree.
+
+Fixes [WS-5].
