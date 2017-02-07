@@ -13286,7 +13286,8 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='module' value='name'><p>
  The \"real\" name of the module to look for, i.e. its filename
- without extension and without directory path.</p>
+ without extension and without directory path. The name parameter is
+ matched as a glob pattern.</p>
 </attr>",
 
 //----------------------------------------------------------------------
