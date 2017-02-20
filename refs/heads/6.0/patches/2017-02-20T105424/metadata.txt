@@ -1,0 +1,14 @@
+subject: Roxen 6.0: Fixed failure to set session cookie. Improve cross-referencing of thread IDs in mutex _sprintf() by resolving the thread name.
+from: f78c751727cd26f95ec63a2dbff47630bb71dd66
+to: adc5e1cee4eaa6f83cf9c53ff7f0004070229bf2
+originator: Jonas Lonnberg
+depends: 2016-11-21T175623
+restart: true
+
+• [session tag] Fixed failure to set session cookie
+
+There was a case error in the set cookie that made the session tag
+completely broken. Noted in [roxen.com#28166].
+
+• Improve cross-referencing of thread IDs in mutex _sprintf() by
+resolving the thread name.
