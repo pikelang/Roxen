@@ -4221,16 +4221,22 @@ class FTPSession
 		       line, describe_backtrace(err));
 	}
 #else
-	roxen->handle(lambda(function f, string args, string line) {
+	roxen->handle(lambda(function f, string cmd, string args, string line) {
+			//  For e.g. PASS the args string may contain
+			//  cleartext password.
+			string args_copy = args;
+			if (cmd == "PASS")
+			  args = "CENSORED";
+
 			mixed err;
 			if (err = catch {
-			  f(args);
+			  f(args_copy);
 			}) {
 			  report_error("Internal server error in FTP2\n"
 				       "Handling command %O\n%s\n",
 				       line, describe_backtrace(err));
 			}
-		      }, this_object()["ftp_"+cmd], args, line);
+		      }, this_object()["ftp_"+cmd], cmd, args, line);
 #endif
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
