@@ -1128,7 +1128,22 @@ constant tagdoc=([
  Mark) and the specified encoding in the XML header. Defaults to UTF-8
  if no BOM or encoding was found.
 </p>
-</attr>",
+</attr>
+
+<attr name='request-headers' value='\"header=value[,header2=value2,...]\"'>
+<p>
+  List of extra headers to send in the request. Headers are separated by comma
+  by default, but the delimiter can be changed using the 'header-delimiter'
+  attribute.
+</p>
+</attr>
+
+<attr name='header-delimiter' value='string'>
+<p>
+  Delimiter to use with 'request-headers', defaults to comma (\",\").
+</p>
+</attr>
+",
 ]);
 #endif
 
