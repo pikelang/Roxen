@@ -261,8 +261,8 @@ public void get_result_async(HTTPClient client, mapping args, mapping header) {
 }
 
 public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header) {
-  DWRITE(sprintf("fetch_url(): To fetch: %s, with timeout: %d", to_fetch["url"], 
-		 to_fetch["timeout"]));
+  DWRITE(sprintf("fetch_url(): To fetch: %s, with timeout: %d\nheaders: %O\n",
+                 to_fetch["url"], to_fetch["timeout"], header));
   
   mapping(string:mixed) args = (["timeout":to_fetch["timeout"], 
 				 "cached-href":to_fetch["url"],
@@ -312,6 +312,8 @@ class HrefDatabase {
 				       "next_fetch INT UNSIGNED,"
 				       "latest_request INT UNSIGNED,"
                                        "out_of_date INT UNSIGNED,"
+                                       "request_headers BLOB,"
+                                       "header_delimiter VARCHAR(255),"
 				       "PRIMARY KEY (url, fetch_interval, "
 				       "fresh_time, ttl, timeout, time_of_day)";
   
@@ -349,6 +351,12 @@ class HrefDatabase {
       if (sizeof(tbl_def) && lower_case(tbl_def[0]->Type) != "varchar(768)")
 	sql_query("ALTER TABLE " + data_table +
 		  "     MODIFY url VARCHAR(768) NOT NULL");
+    }
+
+    // Add header fields if upgrading from earlier versions
+    if(request_table && !sizeof(sql_query("DESCRIBE " + request_table + " request_headers"))) {
+      sql_query("ALTER TABLE " + request_table + " ADD COLUMN request_headers BLOB");
+      sql_query("ALTER TABLE " + request_table + " ADD COLUMN header_delimiter VARCHAR(255)");
     }
   }
 
@@ -401,7 +409,9 @@ class HrefDatabase {
     array(mapping(string:mixed)) to_fetch = urls_to_fetch();
     
     foreach(to_fetch, mapping next) {
-      fetch_url(next, (["x-roxen-recursion-depth":1]));
+      mapping headers = ([ "x-roxen-recursion-depth" : 1 ]);
+      add_headers(headers, next);
+      fetch_url(next, headers);
     }
    
 #ifdef THREADS
@@ -411,6 +421,26 @@ class HrefDatabase {
 #endif
  
     DWRITE("----------------- Leaving update_db() ------------------------");
+  }
+
+  private string get_db_url(mapping args) {
+    if (!sizeof(args["request-headers"]||"")) {
+      return args["cached-href"];
+    }
+
+    string s = args["request-headers"] + (args["header-delimiter"]||",");
+    return args["cached-href"] + "#" + String.string2hex(Crypto.MD5.hash(s));
+  }
+
+  private mapping add_headers(mapping in_headers, mapping args) {
+    if (sizeof(args["request-headers"] || "")) {
+      foreach(args["request-headers"] / (args["header-delimiter"]||","), string h) {
+        if (sscanf(h, "%[^=]=%s", string name, string val) == 2) {
+          in_headers[name] = val;
+        }
+      }
+    }
+    return in_headers;
   }
       
   public string get_data(mapping args, mapping header) {
@@ -438,7 +468,7 @@ class HrefDatabase {
     remove_old_entrys();
 #endif
     
-    string url = args["cached-href"];
+    string url = get_db_url(args);
     sql_query("UPDATE " + request_table +
 	      "   SET latest_request = " + now + ", "
 	      "       out_of_date = NULL "
@@ -449,15 +479,17 @@ class HrefDatabase {
 	      "   AND timeout = %d "
 	      "   AND time_of_day = %d",
 	      url, args["fetch-interval"], args["fresh-time"], args["ttl"],
-	      args["timeout"], args["time-of-day"]);
+	      args["timeout"], args["time-of-day"],
+              args["request-headers"], args["header-delimiter"]);
 
     
     sql_query("INSERT IGNORE INTO " + request_table +
-	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d)",
+	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d, %s, %s)",
 	      url,
 	      args["fetch-interval"], args["fresh-time"], args["ttl"],
 	      args["timeout"], args["time-of-day"], next_fetch, now, 
-	      (args["ttl"] + now));
+	      (args["ttl"] + now),
+              args["request-headers"], args["header-delimiter"]);
     
     sql_query("INSERT IGNORE INTO " + data_table +
 	      " VALUES (%s, '', 0)", 
@@ -477,6 +509,8 @@ class HrefDatabase {
     } else if (!args["pure-db"]) {
       DWRITE("get_data(): No cached data existed for " + url +
 	     " so performing a synchronous fetch");
+
+      add_headers(header, args);
       
       string data = fetch_url( ([ "url"     : url,
 				  "timeout" : args["timeout"], 
@@ -494,14 +528,18 @@ class HrefDatabase {
   }
   
   private array(mapping(string:mixed)) no_duplicate_add(array(mapping(string:mixed))
-							to_fetch, string url, 
-							int timeout) {
+							to_fetch, mapping row) {
+    string url = row->url;
     foreach(to_fetch, mapping one) {
       if (search(one, url))
 	return to_fetch;
     }
     
-    to_fetch += ({(["url":url, "timeout":timeout])});  
+    to_fetch += ({ ([ "url": url,
+                      "timeout": 0,
+                      "request-headers": row["request_headers"],
+                      "header-delimiter": row["header_delimiter"],
+                    ]) });
     
     return to_fetch;
   }
@@ -532,7 +570,10 @@ class HrefDatabase {
     int now = time();
     
     array(mapping(string:mixed)) result =
-      sql_query("     SELECT " + data_table + ".url, " + request_table + ".timeout "
+      sql_query("     SELECT " + data_table + ".url,"  +
+                                 request_table + ".request_headers, " +
+                                 request_table + ".header_delimiter, " +
+                                 request_table + ".timeout "
                 "      FROM " + data_table +
 		" LEFT JOIN " + request_table +
 		"        ON " + data_table + ".url=" + request_table + ".url "
@@ -540,12 +581,15 @@ class HrefDatabase {
                 "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
-      to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
+      to_fetch = no_duplicate_add(to_fetch, row);
     }
 
-    result = sql_query("    SELECT " + data_table + ".url, " + request_table + ".timeout, " 
-		       + data_table + ".latest_write, " + request_table + 
-		       ".fetch_interval "
+    result = sql_query("    SELECT " + data_table + ".url, " +
+                                       data_table + ".latest_write, " +
+                                       request_table + ".request_headers, " +
+                                       request_table + ".header_delimiter, " +
+                                       request_table + ".timeout, " +
+                                       request_table + ".fetch_interval "
 		       "      FROM " + data_table +
 		       " LEFT JOIN " + request_table +
 		       "        ON " + data_table + ".url=" + request_table + ".url "
@@ -555,12 +599,15 @@ class HrefDatabase {
                        "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
-      to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
+      to_fetch = no_duplicate_add(to_fetch, row);
     }
     
-    result = sql_query("    SELECT " + data_table + ".url, " + request_table + ".timeout, " 
-		       + request_table + ".time_of_day, " + request_table + 
-		       ".next_fetch "
+    result = sql_query("    SELECT " + data_table + ".url, " +
+                                       request_table + ".request_headers, " +
+                                       request_table + ".header_delimiter, " +
+                                       request_table + ".timeout, " +
+                                       request_table + ".time_of_day, " +
+                                       request_table + ".next_fetch "
 		       "      FROM " + data_table +
 		       " LEFT JOIN " + request_table +
 		       "        ON " + data_table + ".url=" + request_table + ".url "
@@ -570,7 +617,7 @@ class HrefDatabase {
                        "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
-      to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
+      to_fetch = no_duplicate_add(to_fetch, row);
     }
     
     result = sql_query("  SELECT url, max(timeout) "
@@ -620,7 +667,9 @@ class Attributes {
 		"ttl" : 0,
 		"timeout" : 0,
 		"time-of-day" : 0,
-		"pure-db" : 0]);
+		"pure-db" : 0,
+                "request-headers" : 0,
+                "header-delimiter" : 0]);
     check_args();
   }
   
@@ -687,6 +736,9 @@ class Attributes {
     
     if (orig_args["pure-db"])
       db_args["pure-db"] = 1;
+
+    db_args["request-headers"] = orig_args["request-headers"];
+    db_args["header-delimiter"] = orig_args["header-delimiter"];
   }
   
   public mapping get_orig_args() {
