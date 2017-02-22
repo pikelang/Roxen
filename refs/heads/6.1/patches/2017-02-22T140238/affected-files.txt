@@ -1,0 +1,3 @@
+Modified files:
+  modules/proxies/proxy.pike
+  protocols/ftp.pike
