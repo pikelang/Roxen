@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.57 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -486,10 +486,26 @@ void destroy()
 #endif
 }
 
-constant module_type = MODULE_PROXY|MODULE_LOCATION|MODULE_LOGGER;
+constant module_type = MODULE_PROXY|MODULE_LOCATION|MODULE_LOGGER|MODULE_PROVIDER;
 constant module_name = "HTTP-Proxy";
 constant module_doc  = "This is a caching HTTP-proxy with quite "
   " a few bells and whistles";
+
+string query_provides() { return "http_request_init"; }
+
+mapping http_request_init(RequestID id)
+{
+  werror("http_request_init(%O)...\n", id);
+  if (has_prefix(id->misc->prot_cache_key, "http://")) {
+    if ((query_location() == "http:/") &&
+	(!has_prefix(id->raw_url, "http:/"))) {
+      // Undo the RFC 2068 5.1.2 stuff
+      werror("Setting raw_url to %O\n", id->misc->prot_cache_key);
+      id->raw_url = id->misc->prot_cache_key;
+    }
+  }
+  return UNDEFINED;
+}
 
 string query_location()  { return query("mountpoint"); }
 
