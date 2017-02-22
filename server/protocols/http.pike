@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.411 2003/11/03 13:52:37 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -30,7 +30,15 @@ RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define REQUEST_WERR(X) do {bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime();} while (0)
+#define REQUEST_WERR(X) do {			\
+    if (this) {					\
+      bartime = gethrtime()-footime;		\
+      werror("%s (%d)\n", (X), bartime);	\
+      footime=gethrtime();			\
+    } else {					\
+      werror("%s\n", (X));			\
+    }						\
+  } while (0)
 #else
 #define REQUEST_WERR(X) do {} while (0)
 #endif
