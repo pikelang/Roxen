@@ -1,0 +1,12 @@
+subject: Roxen 6.1: FTP, HTTP proxy
+from: dedd494d2453030190f4b1324979aa9bc6701589
+to: 86a3504cd7526645e0e7d466fc2e8da7875c487b
+originator: Marcus Wellhardh
+depends: roxen/6.1.200|2017-02-22T140206
+restart: true
+
+• Proxies: The HTTP proxy module should now work as intended again.
+
+Fixes [WS-16].
+
+• Censor FTP password when sent to roxen.handle().
