@@ -1343,7 +1343,7 @@ class CacheStatsMIB
   protected void create(CacheManager manager, string name, CacheStats stats)
   {
     this::stats = stats;
-    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 2 }) +
+    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 3 }) +
       string_to_oid(name);
     string label = "cache-"+name+"-";
     ::create(oid, ({}),
@@ -1379,6 +1379,14 @@ class CacheManagerMIB
   inherit SNMP.SimpleMIB;
 
   CacheManager manager;
+  int get_entries() { return Array.sum(values(manager->stats)->count); }
+  int get_size() { return manager->size; }
+  int get_entry_add_count() { return manager->entry_add_count; }
+  int max_byte_add_count;
+  int get_byte_add_count() {
+    // SNMP.Counter should never decrease
+    return max_byte_add_count = max(max_byte_add_count, manager->byte_add_count);
+  }
 
   protected void create(CacheManager manager)
   {
@@ -1389,6 +1397,12 @@ class CacheManagerMIB
 	     ({
 	       UNDEFINED,
 	       SNMP.String(manager->name, label+"name"),
+	       ({
+		 SNMP.Integer(get_entries,         label+"numEntries"),
+		 SNMP.Integer(get_size,            label+"numBytes"),
+		 SNMP.Counter(get_entry_add_count, label+"addedEntries"),
+		 SNMP.Counter(get_byte_add_count,  label+"addedBytes"),
+	       }),
 	       UNDEFINED,	// Reserved for CacheStatsMIB.
 	     }));
   }
