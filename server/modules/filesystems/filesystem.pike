@@ -497,7 +497,7 @@ string decode_path(string p)
     //     the path as appropriate.
     return Unicode.normalize(utf8_to_string(p), "NFC");
   default:
-    return Locale.Charset.decoder(path_encoding)->feed(p)->drain();
+    return Charset.decoder(path_encoding)->feed(p)->drain();
   }
 #endif /* !__NT__ */
 }
