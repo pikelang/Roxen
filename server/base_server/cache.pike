@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.124 2009/12/01 16:32:12 mast Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -262,7 +262,7 @@ class CacheManager
 
 	if (old_entry) {
 	  account_remove_entry (cache_name, old_entry);
-	  recent_added_bytes -= entry->size;
+	  recent_added_bytes -= old_entry->size;
 	  remove_entry (cache_name, old_entry);
 	}
 
