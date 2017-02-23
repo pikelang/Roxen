@@ -358,7 +358,7 @@ class CacheManager
 	// ^^^ Relying on the interpreter lock to here.
 
 	if (old_entry) {
-	  recent_added_bytes -= entry->size;
+	  recent_added_bytes -= old_entry->size;
 	  remove_entry (cache_name, old_entry);
 	}
 
