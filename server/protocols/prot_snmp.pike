@@ -660,8 +660,10 @@ protected void setup_mib()
 {
   mib->merge(SystemMIB());
   mib->merge(SNMPMIB());
-  mib->merge(RoxenGlobalMIB());
-  mib->merge(DBManagerMIB());
+  mib->merge(RoxenGlobalMIB());	// RIS_OID_WEBSERVER + ({ 1 })
+  mib->merge(DBManagerMIB());	// RIS_OID_WEBSERVER + ({ 1, 3 })
+  // Modules (cf configuration)	// RIS_OID_WEBSERVER + ({ 2 })
+  mib->merge(cache.mib);	// RIS_OID_WEBSERVER + ({ 3 })
 }
 
 #define SNMP_OP_GETREQUEST	0
@@ -815,7 +817,8 @@ int send_response(array(Binding) bindings,
   return id;
 }
 
-protected void got_connection(mapping data)
+// Called in a handler thread.
+protected void low_got_connection(mapping data)
 {
   mapping pdata;
   array rdata = ({});
@@ -937,6 +940,16 @@ protected void got_connection(mapping data)
   } else {
     send_response(rdata, pdata);
   }
+}
+
+protected void got_connection(mapping data)
+{
+  // NB: SNMP is UDP, so we don't need to care about
+  //     sequencing between multiple requests.
+
+  // Make sure that we don't block the backend thread
+  // by waiting for mutexes and similar...
+  roxen.handle(low_got_connection, data);
 }
 
 // NOTE: Code duplication from Protocol!
