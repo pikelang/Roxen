@@ -254,6 +254,9 @@ class CacheManager
   int entry_add_count;
   //! Number of entries added since this cache manager was created.
 
+  int byte_add_count;
+  //! Number of bytes added since this cache manager was created.
+
   mapping(string:mapping(mixed:CacheEntry)) lookup = ([]);
   //! Lookup mapping on the form @expr{(["cache_name": ([key: data])])@}.
   //!
@@ -363,6 +366,7 @@ class CacheManager
 	cs->size += entry->size;
 	size += entry->size;
 	recent_added_bytes += entry->size;
+	byte_add_count += entry->size;
 
 	if (!(++entry_add_count & 0x3fff)) // = 16383
 	  update_size_limit();
@@ -748,6 +752,7 @@ class CM_GreedyDual
             cs->size += size_diff;
             size += size_diff;
             recent_added_bytes += size_diff;
+	    byte_add_count += size_diff;
           }
         }
 
