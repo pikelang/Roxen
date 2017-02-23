@@ -1345,26 +1345,27 @@ class CacheStatsMIB
     this::stats = stats;
     array(int) oid = mib->path + string_to_oid(manager->name) + ({ 2 }) +
       string_to_oid(name);
+    string label = "cache-"+name+"-";
     ::create(oid, ({}),
 	     ({
 	       UNDEFINED,
-	       SNMP.String(name, "cacheName"),
-	       SNMP.Gauge(get_count, "cacheNumEntries"),
-	       SNMP.Gauge(get_size, "cacheNumBytes"),
+	       SNMP.String(name,     label+"name"),
+	       SNMP.Gauge(get_count, label+"numEntries"),
+	       SNMP.Gauge(get_size,  label+"numBytes"),
 	       ({
-		 SNMP.Counter(get_hits, "cacheNumHits"),
-		 SNMP.Integer(get_cost_hits, "cacheCostHits"),
+		 SNMP.Counter(get_hits, label+"numHits"),
+		 SNMP.Integer(get_cost_hits, label+"costHits"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_hits, "cacheByteHits"),
+		 SNMP.Counter(get_byte_hits, label+"byteHits"),
 #else
 		 UNDEFINED,	/* Reserved */
 #endif
 	       }),
 	       ({
-		 SNMP.Counter(get_misses, "cacheNumMisses"),
-		 SNMP.Integer(get_cost_misses, "cacheCostMisses"),
+		 SNMP.Counter(get_misses, label+"numMisses"),
+		 SNMP.Integer(get_cost_misses, label+"costMisses"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_misses, "cacheByteMisses"),
+		 SNMP.Counter(get_byte_misses, label+"byteMisses"),
 #else
 		 UNDEFINED,	/* Reserved */
 #endif
@@ -1383,10 +1384,11 @@ class CacheManagerMIB
   {
     this::manager = manager;
     array(int) oid = mib->path + string_to_oid(manager->name);
+    string label = "cacheManager-"+manager->name+"-";
     ::create(oid, ({}),
 	     ({
 	       UNDEFINED,
-	       SNMP.String(manager->name, "cacheManagerName"),
+	       SNMP.String(manager->name, label+"name"),
 	       UNDEFINED,	// Reserved for CacheStatsMIB.
 	     }));
   }
