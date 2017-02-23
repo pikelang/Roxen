@@ -525,27 +525,60 @@ class CM_GreedyDual
 {
   inherit CacheManager;
 
+  //! Mutex protecting @[priority_queue].
+  Thread.Mutex priority_mux = Thread.Mutex();
+
+  //! A heap of all [CacheEntry]s in priority order sorted by @[CacheEntry.`<].
+  ADT.Heap priority_queue = ADT.Heap();
+
+  //! Wrapper so that we can get back to @[CacheEntry] from
+  //! @[ADT.Heap.Element] easily.
+  protected class HeapElement
+  {
+    inherit ADT.Heap.Element;
+
+    //! Return the @[CacheEntry] that contains this @[HeapElement].
+    object(CacheEntry) cache_entry() { return [object(CacheEntry)](mixed)this; }
+  }
+
   class CacheEntry
   //!
   {
+    private local inherit HeapElement;
+
     inherit global::CacheEntry;
 
     int|float value;
     //! The value of the entry, i.e. v(p) in the class description.
 
-    int|float pval;
-    //! The priority value for the entry, defining its position in
-    //! @[priority_list]. Must not change for an entry that is
-    //! currently a member of @[priority_list].
+    //! @decl int|float pval;
+    //! The priority value for the entry, effecting its position in
+    //! @[priority_queue].
+    //!
+    //! If the element is a member of @[priority_queue] it will
+    //! automatically adjust its position when this value is changed.
+
+    int|float `pval()
+    {
+      return HeapElement::value;
+    }
+    void `pval=(int|float val)
+    {
+      Element::value = val;
+      if (HeapElement::pos != -1) {
+	//  NB: We may get called in a context where the mutex
+	//      already has been taken.
+	Thread.MutexKey key = priority_mux->lock(2);
+	priority_queue->adjust(HeapElement::this);
+      }
+    }
+
+    //! Return the @[HeapElement] corresponding to this @[CacheEntry].
+    HeapElement element() { return HeapElement::this; }
 
     string cache_name;
-    //! Need the cache name to find the entry, since @[priority_list]
+    //! Need the cache name to find the entry, since @[priority_queue]
     //! is global.
-
-    protected int `< (CacheEntry other)
-    {
-      return pval < other->pval;
-    }
 
     protected string _sprintf (int flag)
     {
@@ -554,10 +587,6 @@ class CM_GreedyDual
 		 pval, format_key(), size, value);
     }
   }
-
-  multiset(CacheEntry) priority_list = (<>);
-  //! A list of all entries in priority order, by using the multiset
-  //! builtin sorting through @[CacheEntry.`<].
 
   protected int max_used_pval;
   // Used to detect when the entry pval's get too big to warrant a
@@ -573,21 +602,14 @@ class CM_GreedyDual
   // Int.NATIVE_MAX when that state is reached.
 
 #ifdef CACHE_DEBUG
-  protected void debug_check_priority_list()
+  protected void debug_check_priority_queue()
   // Assumes no concurrent access - run inside _disable_threads.
   {
-    werror ("Checking priority_list with %d entries.\n",
-	    sizeof (priority_list));
-    CacheEntry prev;
-    foreach (priority_list; CacheEntry entry;) {
-      if (!prev)
-	prev = entry;
-      else if (prev >= entry)
-	error ("Found cache entries in wrong order: %O vs %O in %O\n",
-	       prev, entry, priority_list);
-      if (intp (entry->pval) && entry->pval > max_used_pval)
-	error ("Found %O with pval higher than max %O.\n",
-	       entry, max_used_pval);
+    werror ("Checking priority_queue with %d entries.\n",
+	    sizeof(priority_queue));
+    if (priority_queue->verify_heap) {
+      Thread.MutexKey key = priority_mux->lock();
+      priority_queue->verify_heap();
     }
   }
 #endif
@@ -606,8 +628,8 @@ class CM_GreedyDual
   local protected int|float calc_pval (CacheEntry entry)
   {
     int|float pval;
-    if (CacheEntry lowest = get_iterator (priority_list)->index()) {
-      int|float l = lowest->pval, v = entry->value;
+    if (HeapElement lowest = priority_queue->low_peek()) {
+      int|float l = lowest->value, v = entry->value;
       pval = l + v;
 
       if (floatp (v)) {
@@ -636,16 +658,9 @@ class CM_GreedyDual
     account_hit (cache_name, entry);
     int|float pval = calc_pval (entry);
 
-    // Note: Won't have the interpreter lock during the operation below. The
-    // tricky situation occur if the same entry is processed by another
-    // got_hit, where we might get it inserted in more than one place and one
-    // of them will be inconsistent with the pval value. evict() has a
-    // consistency check that should detect and correct this eventually. The
-    // worst thing that happens is that the eviction order is more or less
-    // wrong until then.
-    priority_list[entry] = 0;
+    // NB: The priority queue is automatically adjusted on
+    //     change of pval.
     entry->pval = pval;
-    priority_list[entry] = 1;
   }
 
   int add_entry (string cache_name, CacheEntry entry,
@@ -657,8 +672,10 @@ class CM_GreedyDual
 
     if (!low_add_entry (cache_name, entry)) return 0;
 
+    Thread.MutexKey key = priority_mux->lock();
     entry->pval = calc_pval (entry);
-    priority_list[entry] = 1;
+    priority_queue->push(entry->element());
+    key = 0;
 
     if (size > size_limit) evict (size_limit);
     return 1;
@@ -666,63 +683,41 @@ class CM_GreedyDual
 
   int remove_entry (string cache_name, CacheEntry entry)
   {
-    priority_list[entry] = 0;
+    Thread.MutexKey key = priority_mux->lock();
+    priority_queue->remove(entry->element());
+    key = 0;
     return low_remove_entry (cache_name, entry);
   }
 
   void evict (int max_size)
   {
-    object threads_disabled;
+    Thread.MutexKey key = priority_mux->lock();
+    while ((size > max_size) && sizeof(priority_queue)) {
+      // NB: Use low_peek() + remove() since low_pop() doesn't exist.
+      HeapElement element = priority_queue->low_peek();
+      if (!element) break;
+      priority_queue->remove(element);
 
-    while (size > max_size) {
-      CacheEntry entry = get_iterator (priority_list)->index();
-      if (!entry) break;
-
-      if (!priority_list[entry]) {
-	// The order in the list has become inconsistent with the pval values.
-	// It might happen due to the race in got_hit(), or it might just be
-	// interference from a concurrent evict() call.
-	if (!threads_disabled)
-	  // Take a hefty lock and retry, to rule out the second case.
-	  threads_disabled = _disable_threads();
-	else {
-	  // Got the lock so it can't be a race, i.e. the priority_list order
-	  // is funky. Have to rebuild it without interventions.
-#ifdef CACHE_DEBUG
-	  debug_check_priority_list();
-#endif
-	  report_warning ("Warning: Recovering from race inconsistency "
-			  "in %O->priority_list (on %O).\n", this, entry);
-	  priority_list = (<>);
-	  foreach (lookup; string cache_name; mapping(mixed:CacheEntry) lm)
-	    foreach (lm;; CacheEntry entry)
-	      priority_list[entry] = 1;
-	}
-	continue;
-      }
-
-      priority_list[entry] = 0;
+      CacheEntry entry = element->cache_entry();
 
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
 		       size, max_size, entry->cache_name, entry);
 
       low_remove_entry (entry->cache_name, entry);
     }
-
-    threads_disabled = 0;
   }
 
   int manager_size_overhead()
   {
-    return Pike.count_memory (-1, priority_list) + ::manager_size_overhead();
+    return Pike.count_memory (-1, priority_queue) + ::manager_size_overhead();
   }
 
   void after_gc()
   {
     if (max_used_pval > Int.NATIVE_MAX / 2) {
       int|float pval_base;
-      if (CacheEntry lowest = get_iterator (priority_list)->index())
-	pval_base = lowest->pval;
+      if (HeapElement lowest = priority_queue->low_peek())
+	pval_base = lowest->value;
       else
 	return;
 
@@ -730,6 +725,7 @@ class CM_GreedyDual
       // mapping and start adding back the entries from the old one.
       // Need _disable_threads to make the resets of the CacheStats
       // fields atomic.
+      Thread.MutexKey key = priority_mux->lock();
       object threads_disabled = _disable_threads();
       mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
       lookup = ([]);
@@ -740,7 +736,7 @@ class CM_GreedyDual
 	  cs->size = 0;
 	}
       }
-      priority_list = (<>);
+      priority_queue = ADT.Heap();
       size = 0;
       max_used_pval = 0;
       threads_disabled = 0;
@@ -751,12 +747,13 @@ class CM_GreedyDual
 	if (CacheStats cs = stats[cache_name])
 	  if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
 	    foreach (old_lm; mixed key; CacheEntry entry) {
+	      entry->element()->pos = -1;
 	      int|float pval = entry->pval -= pval_base;
 	      if (!new_lm[key]) {
 		// Relying on the interpreter lock here.
 		new_lm[key] = entry;
 
-		priority_list[entry] = 1;
+		priority_queue->push(entry->element());
 		if (pval > max_pval) max_pval = pval;
 
 		cs->count++;
@@ -765,8 +762,10 @@ class CM_GreedyDual
 	      }
 	    }
 
+      key = 0;
+
 #ifdef CACHE_DEBUG
-      debug_check_priority_list();
+      debug_check_priority_queue();
 #endif
 
       if (intp (max_pval))
@@ -885,7 +884,7 @@ class CM_GDS_Time
 
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
-    account_hit (cache_name, entry);
+    ::got_hit(cache_name, entry, cache_context);
     // It shouldn't be necessary to record the start time for cache
     // hits, but do it anyway for now since there are caches that on
     // cache hits extend the entries with more data.
