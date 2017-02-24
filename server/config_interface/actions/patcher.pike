@@ -424,12 +424,22 @@ mixed parse(RequestID id)
 				RXML.get_var("user-name", "usr"),
 				RXML.get_var("user-uid", "usr"));
 
+  string tmp_dir = roxen_path("$VVARDIR/tmp");
+
+  if (!Stdio.is_dir(tmp_dir)) {
+    Privs privs = Privs("RoxenPatch: Creating tmp directory.\n");
+    Stdio.mkdirhier(roxen_path("$VVARDIR"));
+    mkdir(tmp_dir, 01777);	/* rwxrwxrwxt */
+    privs = 0;
+  }
+
   // Init patch-object
   Patcher plib = Patcher(wb->write_mess,
   			 wb->write_error,
   			 getcwd(),
-			 getenv("LOCALDIR"));
-			 
+			 roxen_path("$LOCALDIR"),
+			 tmp_dir);
+
   string res = #"
     <style type='text/css'>
       td.folded {
