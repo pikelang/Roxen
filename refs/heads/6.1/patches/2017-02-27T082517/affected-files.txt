@@ -1,0 +1,6 @@
+Modified files:
+  config_interface/actions/patcher.pike
+  modules/directories/indexfiles.pike
+  modules/filters/hostredirect.pike
+  modules/tags/insert_cached_href.pike
+  protocols/http.pike
