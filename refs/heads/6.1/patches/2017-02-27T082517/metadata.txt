@@ -1,0 +1,29 @@
+subject: Roxen 6.1: REQUEST_DEBUG, Insert cached href, RoxenPatch, Index files only, Host Redirect
+from: 86a3504cd7526645e0e7d466fc2e8da7875c487b
+to: 5e2abc3529d5ddfdaa8ef1f86157dd1e3d483e3e
+originator: Marcus Wellhardh
+depends: 2017-02-22T140238
+restart: true
+
+• Host Redirect: Fixed variable documentation
+
+Example rules was illegible and mixed v1 and v2 syntax capabilities.
+Cant' believe it has been like this for almost 10 years.
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. [roxen.com #28397]
+
+• RoxenPatch: Use a version-dependent tmp directory for patch clusters.
+
+Fixes some of [WS-10].
+
+• Insert cached href: Documented new attributes
+
+• Insert cached href: Added support for custom request-headers
+
+• REQUEST_DEBUG: Improved robustness against destructed RequestID.
+
+Fixes [WS-18].
