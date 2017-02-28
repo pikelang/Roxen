@@ -1638,8 +1638,12 @@ CacheManager cache_register (string cache_name,
 //! string that specifies a type of manager (see
 //! @[cache_manager_prefs]), or zero to select the default manager.
 //!
+//! If @[prefs] is given it should point to an instance of
+//! @[CacheManagerPrefs] that defines various cache behavior.
+//!
 //! If the cache already exists, its current manager is simply
-//! returned, and @[manager] has no effect.
+//! returned, and @[manager] has no effect. It is however possible to
+//! update @[prefs] for existing caches.
 //!
 //! Registering a cache is not mandatory before it is used - one will
 //! be created automatically with the default manager otherwise.
@@ -1650,8 +1654,11 @@ CacheManager cache_register (string cache_name,
   Thread.MutexKey lock =
     cache_mgmt_mutex->lock (2); // Called from cache_change_manager too.
 
-  if (CacheManager mgr = caches[cache_name])
+  if (CacheManager mgr = caches[cache_name]) {
+    if (prefs)
+      mgr->prefs[cache_name] = prefs;
     return mgr;
+  }
 
   if (!manager) manager = cache_manager_prefs->default;
   else if (stringp (manager)) {
