@@ -68,14 +68,82 @@ void set_total_size_limit (int size)
   update_cache_size_balance();
 }
 
+//! The SNMP lookup root for the cache.
+SNMP.SimpleMIB mib = SNMP.SimpleMIB(SNMP.RIS_OID_WEBSERVER + ({ 3 }),
+				    ({}),({ UNDEFINED }));
+
 //! Base class for cache entries.
-class CacheEntry (mixed key, mixed data)
+class CacheEntry (mixed key, mixed data, string cache_name)
 {
   // FIXME: Consider unifying this with CacheKey. But in that case we
   // need to ensure "interpreter lock" atomicity below.
 
   int size;
   //! The size of this cache entry, as measured by @[Pike.count_memory].
+
+  //! Updates the size by calling @[Pike.count_memory], and returns
+  //! the difference between the new and the old measurement.
+  int update_size()
+  {
+    int old_size = size;
+#ifdef DEBUG_COUNT_MEM
+    mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
+                     "collect_stats": 1,
+                     "collect_direct_externals": 1,
+                     "block_strings": -1 ]);
+    float t = gauge {
+#else
+        mapping opts = (["block_strings": -1]);
+#endif
+
+        if (function(int|mapping:int) cm_cb =
+            objectp (data) && data->cache_count_memory)
+          this::size = cm_cb (opts) + Pike.count_memory (-1, this, key);
+        else
+          this::size = Pike.count_memory (opts, this, key, data);
+
+#ifdef DEBUG_COUNT_MEM
+      };
+    werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
+            "rnd %d wqa %d\n",
+            new_entry, opts->lookahead, opts->size, t, opts->internal,
+            opts->cyclic, opts->external, opts->visits, opts->revisits,
+            opts->rounds, opts->work_queue_alloc);
+
+#if 0
+    if (opts->external) {
+      opts->collect_direct_externals = 1;
+      // Raise the lookahead to 1 to recurse the closest externals.
+      if (opts->lookahead < 1) opts->lookahead = 1;
+
+      if (function(int|mapping:int) cm_cb =
+          objectp (data) && data->cache_count_memory)
+        res = cm_cb (opts) + Pike.count_memory (-1, entry, key);
+      else
+        res = Pike.count_memory (opts, entry, key, data);
+
+      array exts = opts->collect_direct_externals;
+      werror ("Externals found using lookahead %d: %O\n",
+              opts->lookahead, exts);
+#if 0
+      foreach (exts, mixed ext)
+        if (objectp (ext) && ext->locate_my_ext_refs) {
+          werror ("Refs to %O:\n", ext);
+          _locate_references (ext);
+        }
+#endif
+    }
+#endif
+
+#endif	// DEBUG_COUNT_MEM
+#undef opts
+
+#ifdef DEBUG_CACHE_SIZES
+    new_entry->cmp_size = cmp_sizeof_cache_entry (cache_name, new_entry);
+#endif
+
+    return size - old_size;
+  }
 
 #ifdef DEBUG_CACHE_SIZES
   int cmp_size;
@@ -148,16 +216,22 @@ class CacheStats
   }
 }
 
+class CacheManagerPrefs(int(0..1) extend_entries // Set if a
+                                                 // cache_name may get
+                                                 // existing entries
+                                                 // extended even
+                                                 // after cache hit.
+                        ) {}
+
 class CacheManager
 //! A cache manager handles one or more caches, applying the same
 //! eviction policy and the same size limit on all of them. I.e. it's
 //! practically one cache, and the named caches inside only act as
 //! separate name spaces.
 {
-  //! @decl constant string name;
-  //!
   //! A unique name to identify the manager. It is also used as
   //! display name.
+  constant name = "-";
 
   //! @decl constant string doc;
   //!
@@ -180,6 +254,9 @@ class CacheManager
   int entry_add_count;
   //! Number of entries added since this cache manager was created.
 
+  int byte_add_count;
+  //! Number of bytes added since this cache manager was created.
+
   mapping(string:mapping(mixed:CacheEntry)) lookup = ([]);
   //! Lookup mapping on the form @expr{(["cache_name": ([key: data])])@}.
   //!
@@ -191,6 +268,10 @@ class CacheManager
   //!
   //! For functions in this class, a @[CacheStats] object does not
   //! exist only due to race, so the cache should just be ignored.
+
+  mapping(string:CacheManagerPrefs) prefs = ([]);
+  //! Preferences for the named caches managed by this object.
+  //!
 
   int cached_overhead_add_count;
   //! Snapshot of @[entry_add_count] at the point the manager overhead
@@ -277,8 +358,7 @@ class CacheManager
 	// ^^^ Relying on the interpreter lock to here.
 
 	if (old_entry) {
-	  account_remove_entry (cache_name, old_entry);
-	  recent_added_bytes -= entry->size;
+	  recent_added_bytes -= old_entry->size;
 	  remove_entry (cache_name, old_entry);
 	}
 
@@ -286,6 +366,7 @@ class CacheManager
 	cs->size += entry->size;
 	size += entry->size;
 	recent_added_bytes += entry->size;
+	byte_add_count += entry->size;
 
 	if (!(++entry_add_count & 0x3fff)) // = 16383
 	  update_size_limit();
@@ -440,7 +521,12 @@ class CacheManager
   {
     return flag == 'O' &&
       sprintf ("CacheManager(%s: %dk/%dk)",
-	       this->name || "-", size / 1024, size_limit / 1024);
+	       name, size / 1024, size_limit / 1024);
+  }
+
+  protected void create()
+  {
+    mib->merge(CacheManagerMIB(this));
   }
 }
 
@@ -472,6 +558,7 @@ overhead is minimal.";
   int add_entry (string cache_name, CacheEntry entry,
 		 int old_entry, mapping cache_context)
   {
+    entry->cache_name = cache_name;
     int res = low_add_entry (cache_name, entry);
     if (size > size_limit) evict (size_limit);
     return res;
@@ -525,27 +612,70 @@ class CM_GreedyDual
 {
   inherit CacheManager;
 
+  //! Allow cache to grow 10% above @[size_limit] before evicting
+  //! entries synchronously in @[add_entry].
+  constant max_overshoot_factor = 1.1;
+
+  //! Mutex protecting @[priority_queue].
+  Thread.Mutex priority_mux = Thread.Mutex();
+
+  //! A heap of all [CacheEntry]s in priority order sorted by @[CacheEntry.`<].
+  ADT.Heap priority_queue = ADT.Heap();
+
+  //! Queue to hold entries that need a size update (asynchronous
+  //! count_memory).
+  Thread.Queue update_size_queue = Thread.Queue();
+
+  mapping(CacheEntry:int(1..1)) pending_pval_updates = ([]);
+
+  //! Wrapper so that we can get back to @[CacheEntry] from
+  //! @[ADT.Heap.Element] easily.
+  protected class HeapElement
+  {
+    inherit ADT.Heap.Element;
+
+    //! Return the @[CacheEntry] that contains this @[HeapElement].
+    object(CacheEntry) cache_entry() { return [object(CacheEntry)](mixed)this; }
+  }
+
   class CacheEntry
   //!
   {
+    private local inherit HeapElement;
+
     inherit global::CacheEntry;
 
     int|float value;
     //! The value of the entry, i.e. v(p) in the class description.
 
-    int|float pval;
-    //! The priority value for the entry, defining its position in
-    //! @[priority_list]. Must not change for an entry that is
-    //! currently a member of @[priority_list].
+    //! @decl int|float pval;
+    //! The priority value for the entry, effecting its position in
+    //! @[priority_queue].
+    //!
+    //! If the element is a member of @[priority_queue] it will
+    //! automatically adjust its position when this value is changed.
+
+    int|float `pval()
+    {
+      return HeapElement::value;
+    }
+    void `pval=(int|float val)
+    {
+      Element::value = val;
+      if (HeapElement::pos != -1) {
+	//  NB: We may get called in a context where the mutex
+	//      already has been taken.
+	Thread.MutexKey key = priority_mux->lock(2);
+	priority_queue->adjust(HeapElement::this);
+      }
+    }
+
+    //! Return the @[HeapElement] corresponding to this @[CacheEntry].
+    HeapElement element() { return HeapElement::this; }
 
     string cache_name;
-    //! Need the cache name to find the entry, since @[priority_list]
+    //! Need the cache name to find the entry, since @[priority_queue]
     //! is global.
-
-    protected int `< (CacheEntry other)
-    {
-      return pval < other->pval;
-    }
 
     protected string _sprintf (int flag)
     {
@@ -554,10 +684,6 @@ class CM_GreedyDual
 		 pval, format_key(), size, value);
     }
   }
-
-  multiset(CacheEntry) priority_list = (<>);
-  //! A list of all entries in priority order, by using the multiset
-  //! builtin sorting through @[CacheEntry.`<].
 
   protected int max_used_pval;
   // Used to detect when the entry pval's get too big to warrant a
@@ -572,22 +698,91 @@ class CM_GreedyDual
   // max_used_pval only works as a flag, and we set it to
   // Int.NATIVE_MAX when that state is reached.
 
+  // call_out handle used by schedule_update_weights.
+  protected mixed update_weights_handle;
+
+  protected void schedule_update_weights()
+  {
+    if (!update_weights_handle) {
+      // Weird indexing: the roxen constant is not registered when
+      // this file is compiled...
+      update_weights_handle =
+        all_constants()->roxen->background_run (0.001, update_weights);
+    }
+  }
+
+  protected void update_weights()
+  {
+    update_weights_handle = 0;
+
+    // Try to limit run time to 50 ms at a time in order to avoid
+    // impacting requests too much. If we're interrupted due to
+    // timeout we'll reschedule ourselves as a background job. In a
+    // heavily loaded server this might delay size/pval updates for a
+    // while, but the main focus should be handling requests rather
+    // than fiddling with size estimations and heap rebalancing. We'll
+    // assume updates won't be deferred for so long that eviction
+    // selection will be severely impacted.
+    constant max_run_time = 50000;
+    int start = gethrtime();
+    int reschedule;
+
+    foreach (pending_pval_updates; CacheEntry entry;) {
+      // NB: The priority queue is automatically adjusted on
+      //     change of pval.
+      entry->pval = calc_pval (entry);
+
+      m_delete (pending_pval_updates, entry);
+
+      if (gethrtime() - start > max_run_time / 2) {
+        // Save some time for the loop below.
+        reschedule = 1;
+        break;
+      }
+    }
+
+    while (CacheEntry entry = update_size_queue->try_read()) {
+      string cache_name = entry->cache_name;
+      if (CacheStats cs = stats[cache_name]) {
+        int size_diff = entry->update_size();
+
+        // Check if entry has been evicted already.
+        if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
+          if (lm[entry->key] == entry) {
+            cs->size += size_diff;
+            size += size_diff;
+            recent_added_bytes += size_diff;
+	    byte_add_count += size_diff;
+          }
+        }
+
+        entry->pval = calc_pval (entry);
+
+        if (size > size_limit) {
+          evict (size_limit);
+        }
+      }
+
+      if (gethrtime() - start > max_run_time) {
+        reschedule = 1;
+        break;
+      }
+    }
+
+    if (reschedule) {
+      schedule_update_weights();
+    }
+  }
+
 #ifdef CACHE_DEBUG
-  protected void debug_check_priority_list()
+  protected void debug_check_priority_queue()
   // Assumes no concurrent access - run inside _disable_threads.
   {
-    werror ("Checking priority_list with %d entries.\n",
-	    sizeof (priority_list));
-    CacheEntry prev;
-    foreach (priority_list; CacheEntry entry;) {
-      if (!prev)
-	prev = entry;
-      else if (prev >= entry)
-	error ("Found cache entries in wrong order: %O vs %O in %O\n",
-	       prev, entry, priority_list);
-      if (intp (entry->pval) && entry->pval > max_used_pval)
-	error ("Found %O with pval higher than max %O.\n",
-	       entry, max_used_pval);
+    werror ("Checking priority_queue with %d entries.\n",
+	    sizeof(priority_queue));
+    if (priority_queue->verify_heap) {
+      Thread.MutexKey key = priority_mux->lock();
+      priority_queue->verify_heap();
     }
   }
 #endif
@@ -606,8 +801,8 @@ class CM_GreedyDual
   local protected int|float calc_pval (CacheEntry entry)
   {
     int|float pval;
-    if (CacheEntry lowest = get_iterator (priority_list)->index()) {
-      int|float l = lowest->pval, v = entry->value;
+    if (HeapElement lowest = priority_queue->low_peek()) {
+      int|float l = lowest->value, v = entry->value;
       pval = l + v;
 
       if (floatp (v)) {
@@ -634,95 +829,97 @@ class CM_GreedyDual
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     account_hit (cache_name, entry);
-    int|float pval = calc_pval (entry);
-
-    // Note: Won't have the interpreter lock during the operation below. The
-    // tricky situation occur if the same entry is processed by another
-    // got_hit, where we might get it inserted in more than one place and one
-    // of them will be inconsistent with the pval value. evict() has a
-    // consistency check that should detect and correct this eventually. The
-    // worst thing that happens is that the eviction order is more or less
-    // wrong until then.
-    priority_list[entry] = 0;
-    entry->pval = pval;
-    priority_list[entry] = 1;
+    // Even though heap rebalancing is relatively cheap (at least
+    // compared to the old multiset strategy), we'll defer updates to
+    // a background job (because of how frequent cache hits are). This
+    // also helps consolidation.
+    pending_pval_updates[entry] = 1;
+    schedule_update_weights();
   }
 
   int add_entry (string cache_name, CacheEntry entry,
 		 int old_entry, mapping cache_context)
   {
+    int need_size_update;
+    entry->cache_name = cache_name;
+    // count_memory may account for significant amounts of CPU time on
+    // frequent cache misses. To avoid impacting requests too much
+    // we'll assign a mean value here and defer actual memory counting
+    // to a background job. During load spikes that should help
+    // amortize the cost of count_memory over a longer period of time.
+    if (CacheStats cs = stats[cache_name]) {
+      if (cs->count) {
+        entry->size = cs->size / cs->count;
+        need_size_update = 1;
+      } else {
+        // No entry present from before -- update synchronously.
+        entry->update_size();
+      }
+    }
+
     entry->cache_name = cache_name;
     int|float v = entry->value =
       calc_value (cache_name, entry, old_entry, cache_context);
 
     if (!low_add_entry (cache_name, entry)) return 0;
 
+    Thread.MutexKey key = priority_mux->lock();
     entry->pval = calc_pval (entry);
-    priority_list[entry] = 1;
+    priority_queue->push(entry->element());
+    key = 0;
 
-    if (size > size_limit) evict (size_limit);
+    if (need_size_update) {
+      update_size_queue->write (entry);
+      schedule_update_weights();
+    }
+
+    // Evictions will normally take place in the background job as
+    // well, but we'll make sure we don't overshoot the size limit by
+    // too much.
+    int hard_size_limit = (int)(size_limit * max_overshoot_factor);
+    if (size > hard_size_limit)
+      evict (hard_size_limit);
+
     return 1;
   }
 
   int remove_entry (string cache_name, CacheEntry entry)
   {
-    priority_list[entry] = 0;
+    Thread.MutexKey key = priority_mux->lock();
+    priority_queue->remove(entry->element());
+    key = 0;
     return low_remove_entry (cache_name, entry);
   }
 
   void evict (int max_size)
   {
-    object threads_disabled;
+    Thread.MutexKey key = priority_mux->lock();
+    while ((size > max_size) && sizeof(priority_queue)) {
+      // NB: Use low_peek() + remove() since low_pop() doesn't exist.
+      HeapElement element = priority_queue->low_peek();
+      if (!element) break;
+      priority_queue->remove(element);
 
-    while (size > max_size) {
-      CacheEntry entry = get_iterator (priority_list)->index();
-      if (!entry) break;
-
-      if (!priority_list[entry]) {
-	// The order in the list has become inconsistent with the pval values.
-	// It might happen due to the race in got_hit(), or it might just be
-	// interference from a concurrent evict() call.
-	if (!threads_disabled)
-	  // Take a hefty lock and retry, to rule out the second case.
-	  threads_disabled = _disable_threads();
-	else {
-	  // Got the lock so it can't be a race, i.e. the priority_list order
-	  // is funky. Have to rebuild it without interventions.
-#ifdef CACHE_DEBUG
-	  debug_check_priority_list();
-#endif
-	  report_warning ("Warning: Recovering from race inconsistency "
-			  "in %O->priority_list (on %O).\n", this, entry);
-	  priority_list = (<>);
-	  foreach (lookup; string cache_name; mapping(mixed:CacheEntry) lm)
-	    foreach (lm;; CacheEntry entry)
-	      priority_list[entry] = 1;
-	}
-	continue;
-      }
-
-      priority_list[entry] = 0;
+      CacheEntry entry = element->cache_entry();
 
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
 		       size, max_size, entry->cache_name, entry);
 
       low_remove_entry (entry->cache_name, entry);
     }
-
-    threads_disabled = 0;
   }
 
   int manager_size_overhead()
   {
-    return Pike.count_memory (-1, priority_list) + ::manager_size_overhead();
+    return Pike.count_memory (-1, priority_queue) + ::manager_size_overhead();
   }
 
   void after_gc()
   {
     if (max_used_pval > Int.NATIVE_MAX / 2) {
       int|float pval_base;
-      if (CacheEntry lowest = get_iterator (priority_list)->index())
-	pval_base = lowest->pval;
+      if (HeapElement lowest = priority_queue->low_peek())
+	pval_base = lowest->value;
       else
 	return;
 
@@ -730,6 +927,7 @@ class CM_GreedyDual
       // mapping and start adding back the entries from the old one.
       // Need _disable_threads to make the resets of the CacheStats
       // fields atomic.
+      Thread.MutexKey key = priority_mux->lock();
       object threads_disabled = _disable_threads();
       mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
       lookup = ([]);
@@ -740,7 +938,7 @@ class CM_GreedyDual
 	  cs->size = 0;
 	}
       }
-      priority_list = (<>);
+      priority_queue = ADT.Heap();
       size = 0;
       max_used_pval = 0;
       threads_disabled = 0;
@@ -751,12 +949,13 @@ class CM_GreedyDual
 	if (CacheStats cs = stats[cache_name])
 	  if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
 	    foreach (old_lm; mixed key; CacheEntry entry) {
+	      entry->element()->pos = -1;
 	      int|float pval = entry->pval -= pval_base;
 	      if (!new_lm[key]) {
 		// Relying on the interpreter lock here.
 		new_lm[key] = entry;
 
-		priority_list[entry] = 1;
+		priority_queue->push(entry->element());
 		if (pval > max_pval) max_pval = pval;
 
 		cs->count++;
@@ -765,8 +964,10 @@ class CM_GreedyDual
 	      }
 	    }
 
+      key = 0;
+
 #ifdef CACHE_DEBUG
-      debug_check_priority_list();
+      debug_check_priority_queue();
 #endif
 
       if (intp (max_pval))
@@ -878,18 +1079,20 @@ class CM_GDS_Time
 
   void got_miss (string cache_name, mixed key, mapping cache_context)
   {
-    //werror ("Miss.\n%s\n", describe_backtrace (backtrace()));
-    account_miss (cache_name);
+    ::got_miss (cache_name, key, cache_context);
     save_start_hrtime (cache_name, key, cache_context);
   }
 
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
-    account_hit (cache_name, entry);
-    // It shouldn't be necessary to record the start time for cache
-    // hits, but do it anyway for now since there are caches that on
-    // cache hits extend the entries with more data.
-    save_start_hrtime (cache_name, entry->key, cache_context);
+    ::got_hit(cache_name, entry, cache_context);
+    if (CacheManagerPrefs prefs = prefs[cache_name]) {
+      if (prefs->extend_entries) {
+        // Save start time for caches that may want to extend existing
+        // entries.
+        save_start_hrtime (cache_name, entry->key, cache_context);
+      }
+    }
   }
 
   protected int entry_create_hrtime (string cache_name, mixed key,
@@ -1116,6 +1319,95 @@ array(CacheManager) cache_managers =
 		cache_manager_prefs->no_timings,
 	      }));
 
+protected array(int) string_to_oid(string s)
+{
+  return ({ sizeof(s) }) + (array(int))s;
+}
+
+class CacheStatsMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  CacheStats stats;
+
+  int get_count() { return stats->count; }
+  int get_size() { return stats->size; }
+  int get_hits() { return stats->hits; }
+  int get_misses() { return stats->misses; }
+  int get_cost_hits() { return (int)stats->cost_hits; }
+  int get_cost_misses() { return (int)stats->cost_misses; }
+#ifdef CACHE_HYTE_HR_STATS
+  int get_byte_hits() { return stats->byte_hits; }
+  int get_byte_misses() { return stats->byte_misses; }
+#endif
+  protected void create(CacheManager manager, string name, CacheStats stats)
+  {
+    this::stats = stats;
+    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 3 }) +
+      string_to_oid(name);
+    string label = "cache-"+name+"-";
+    ::create(oid, ({}),
+	     ({
+	       UNDEFINED,
+	       SNMP.String(name,     label+"name"),
+	       SNMP.Gauge(get_count, label+"numEntries"),
+	       SNMP.Gauge(get_size,  label+"numBytes"),
+	       ({
+		 SNMP.Counter(get_hits, label+"numHits"),
+		 SNMP.Integer(get_cost_hits, label+"costHits"),
+#ifdef CACHE_BYTE_HR_STATS
+		 SNMP.Counter(get_byte_hits, label+"byteHits"),
+#else
+		 UNDEFINED,	/* Reserved */
+#endif
+	       }),
+	       ({
+		 SNMP.Counter(get_misses, label+"numMisses"),
+		 SNMP.Integer(get_cost_misses, label+"costMisses"),
+#ifdef CACHE_BYTE_HR_STATS
+		 SNMP.Counter(get_byte_misses, label+"byteMisses"),
+#else
+		 UNDEFINED,	/* Reserved */
+#endif
+	       }),
+	     }));
+  }
+}
+
+class CacheManagerMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  CacheManager manager;
+  int get_entries() { return Array.sum(values(manager->stats)->count); }
+  int get_size() { return manager->size; }
+  int get_entry_add_count() { return manager->entry_add_count; }
+  int max_byte_add_count;
+  int get_byte_add_count() {
+    // SNMP.Counter should never decrease
+    return max_byte_add_count = max(max_byte_add_count, manager->byte_add_count);
+  }
+
+  protected void create(CacheManager manager)
+  {
+    this::manager = manager;
+    array(int) oid = mib->path + string_to_oid(manager->name);
+    string label = "cacheManager-"+manager->name+"-";
+    ::create(oid, ({}),
+	     ({
+	       UNDEFINED,
+	       SNMP.String(manager->name, label+"name"),
+	       ({
+		 SNMP.Integer(get_entries,         label+"numEntries"),
+		 SNMP.Integer(get_size,            label+"numBytes"),
+		 SNMP.Counter(get_entry_add_count, label+"addedEntries"),
+		 SNMP.Counter(get_byte_add_count,  label+"addedBytes"),
+	       }),
+	       UNDEFINED,	// Reserved for CacheStatsMIB.
+	     }));
+  }
+}
+
 protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
@@ -1338,7 +1630,8 @@ mapping(string:CacheManager) cache_list()
 }
 
 CacheManager cache_register (string cache_name,
-			     void|string|CacheManager manager)
+			     void|string|CacheManager manager,
+                             void|CacheManagerPrefs prefs)
 //! Registers a new cache. Returns its @[CacheManager] instance.
 //!
 //! @[manager] can be a specific @[CacheManager] instance to use, a
@@ -1368,9 +1661,13 @@ CacheManager cache_register (string cache_name,
 			 cache_type);
   }
 
+  CacheStats stats = CacheStats();
+  mib->merge(CacheStatsMIB(manager, cache_name, stats));
   caches[cache_name] = manager;
-  manager->stats[cache_name] = CacheStats();
+  manager->stats[cache_name] = stats;
   manager->lookup[cache_name] = ([]);
+  if (prefs)
+    manager->prefs[cache_name] = prefs;
   return manager;
 }
 
@@ -1590,63 +1887,6 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   // an up-to-date cost for the entry. (It's also a bit tricky to
   // atomically check for an existing entry here before creating a new
   // one.)
-
-#ifdef DEBUG_COUNT_MEM
-  mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
-		   "collect_stats": 1,
-		   "collect_direct_externals": 1,
-		   "block_strings": -1
-		 ]);
-  float t = gauge {
-#else
-      mapping opts = (["block_strings": -1]);
-#endif
-
-      if (function(int|mapping:int) cm_cb =
-	  objectp (data) && data->cache_count_memory)
-	new_entry->size = cm_cb (opts) + Pike.count_memory (-1, new_entry, key);
-      else
-	new_entry->size = Pike.count_memory (opts, new_entry, key, data);
-
-#ifdef DEBUG_COUNT_MEM
-    };
-  werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
-	  "rnd %d wqa %d\n",
-	  new_entry, opts->lookahead, opts->size, t, opts->internal,
-	  opts->cyclic, opts->external, opts->visits, opts->revisits,
-	  opts->rounds, opts->work_queue_alloc);
-
-#if 0
-  if (opts->external) {
-    opts->collect_direct_externals = 1;
-    // Raise the lookahead to 1 to recurse the closest externals.
-    if (opts->lookahead < 1) opts->lookahead = 1;
-
-    if (function(int|mapping:int) cm_cb =
-	objectp (data) && data->cache_count_memory)
-      res = cm_cb (opts) + Pike.count_memory (-1, entry, key);
-    else
-      res = Pike.count_memory (opts, entry, key, data);
-
-    array exts = opts->collect_direct_externals;
-    werror ("Externals found using lookahead %d: %O\n",
-	    opts->lookahead, exts);
-#if 0
-    foreach (exts, mixed ext)
-      if (objectp (ext) && ext->locate_my_ext_refs) {
-	werror ("Refs to %O:\n", ext);
-	_locate_references (ext);
-      }
-#endif
-  }
-#endif
-
-#endif	// DEBUG_COUNT_MEM
-#undef opts
-
-#ifdef DEBUG_CACHE_SIZES
-  new_entry->cmp_size = cmp_sizeof_cache_entry (cache_name, new_entry);
-#endif
 
   if (timeout)
     new_entry->timeout = time (1) + timeout;
