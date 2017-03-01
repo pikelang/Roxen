@@ -37,7 +37,7 @@
 //! HTTPClient.async_get("http://domain.com", args);
 //! @endcode
 
-#define HTTP_CLIENT_DEBUG
+// #define HTTP_CLIENT_DEBUG
 
 #ifdef HTTP_CLIENT_DEBUG
 # define TRACE(X...)werror("%s:%d: %s",basename(__FILE__),__LINE__,sprintf(X))
