@@ -150,10 +150,11 @@ public Result do_safe_method(string http_method,
                               0,  // headers received callback
                               cb, // ok callback
                               cb, // fail callback
-                              ({}));
+                              args->extra_args || ({}));
 
   if (!query_has_maxtime()) {
-    TRACE("No maxtime in Protocols.HTTP.Query. Set external max timeout\n");
+    TRACE("No maxtime in Protocols.HTTP.Query. Set external max timeout: %O\n",
+          s->maxtime || DEFAULT_MAXTIME);
     co_maxtime = call_out(lambda () {
       TRACE("Timeout callback: %O\n", qr);
 
@@ -241,15 +242,29 @@ class Arguments
   //! Callback to call on failed async request
   function(Result:void) on_failure;
 
+  //! Extra arguments that will end up in the @[Result] object
+  array(mixed) extra_args;
+
   //! If @[args] is given the indices that match any of this object's
   //! members will set those object members to the value of the
   //! corresponding mapping member.
   protected void create(void|mapping(string:mixed) args)
   {
     if (args) {
-      foreach (args; string key; mixed val) {
+      foreach (args; string key; mixed value) {
         if (has_index(this, key)) {
-          this[key] = val;
+          if ((< "variables", "headers" >)[key]) {
+            // Cast all values to string
+            value = mkmapping(indices(value), map(values(value),
+                                                  lambda (mixed s) {
+                                                    return (string) s;
+                                                  }));
+          }
+
+          this[key] = value;
+        }
+        else {
+          error("Unknown argument %O!\n", key);
         }
       }
     }
@@ -298,6 +313,12 @@ class Result
   public string `url()
   {
     return result->url;
+  }
+
+  //! Extra arguments set in the @[Arguments] object.
+  public array(mixed) `extra_args()
+  {
+    return result->extra_args;
   }
 
   //! @ignore
@@ -394,11 +415,19 @@ protected class Session
     if (!extra_headers || !extra_headers->host || !extra_headers->Host) {
       extra_headers = extra_headers || ([]);
 
-      if (url->scheme == "http" && url->port != 80) {
-        extra_headers->host = url->host + ":" + url->port;
+      TRACE("Set host in headers: %O\n", url);
+
+      if (url->scheme == "http") {
+        extra_headers->host = url->host;
+        if (url->port != 80) {
+          extra_headers->host += ":" + url->port;
+        }
       }
-      else if (url->scheme == "https" && url->port != 443) {
-        extra_headers->host = url->host + ":" + url->port;
+      else if (url->scheme == "https") {
+        extra_headers->host = url->host;
+        if (url->port != 443) {
+          extra_headers->host += ":" + url->port;
+        }
       }
 
       if (!sizeof(extra_headers)) {
@@ -407,6 +436,8 @@ protected class Session
 
       TRACE("Host header set?: %O\n", extra_headers);
     }
+
+    TRACE("Request: %O\n", url);
 
     return ::async_do_method_url(method, url, query_variables, data,
                                  extra_headers, callback_headers_ok,
@@ -418,6 +449,13 @@ protected class Session
   class Request
   {
     inherit parent::Request;
+
+    protected void set_extra_args_in_result(mapping(string:mixed) r)
+    {
+      if (extra_callback_arguments && sizeof(extra_callback_arguments) > 1) {
+        r->extra_args = extra_callback_arguments[1..];
+      }
+    }
 
     protected void async_fail(SessionQuery q)
     {
@@ -432,6 +470,8 @@ protected class Session
       ]);
 
       TRACE("Ret: %O\n", ret);
+
+      set_extra_args_in_result(ret);
 
       // clear callbacks for possible garbation of this Request object
       con->set_callbacks(0, 0);
@@ -471,7 +511,7 @@ protected class Session
       con->set_callbacks(0, 0);
 
       if (data_callback) {
-        con->timed_async_fetch(async_data, async_fail); // start data downloading
+        con->async_fetch(async_data); // start data downloading
       }
       else {
         extra_callback_arguments = 0; // to allow garb
@@ -489,6 +529,8 @@ protected class Session
         "data"        : con->data(),
         "url"         : ::url_requested
       ]);
+
+      set_extra_args_in_result(ret);
 
       // clear callbacks for possible garbation of this Request object
       con->set_callbacks(0, 0);
