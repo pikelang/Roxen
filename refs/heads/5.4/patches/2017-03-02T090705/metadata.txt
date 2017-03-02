@@ -1,0 +1,17 @@
+subject: Roxen 5.4: Host Redirect
+from: bab10d20c4b8e193af5109f74a221bac46a51677
+to: d07484469f9ddc411eeaea7aa62cb2b4d20dbeac
+originator: Jonas Lonnberg
+depends: 2016-10-14T113907
+restart: true
+
+• Host Redirect: Fixed variable documentation
+
+Example rules was illegible and mixed v1 and v2 syntax capabilities.
+
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. 
