@@ -1,0 +1,5 @@
+Modified files:
+  base_server/cache.pike
+  etc/modules/HTTPClient.pmod
+  modules/tags/rxmltags.pike
+  protocols/prot_snmp.pike
