@@ -1,0 +1,91 @@
+subject: Roxen 6.1: Cache algorithm/SNMP probe updates, HTTPClient fix.
+from: 5e2abc3529d5ddfdaa8ef1f86157dd1e3d483e3e
+to: 204e470b2ac37aa85d25783c30c777f076775425
+originator: Martin Karlgren
+depends: 2017-02-27T082517
+restart: true
+
+• HTTPClient.pmod: Changed timed_async_fetch to async_fetch.
+
+Currently timed_async_fetch in Query.pike doesn't handle chunked transfer encodings. A temporary solution is to use async_fetch instead.
+
+Fixed a bug where non-string values in arbitrary headers would raise an error.
+
+It's now possible to send along extra arguments which will then be available in the result object.
+
+• HTTPClient: Turned off default debug mode.
+
+• Update cache_register() to accept new prefs object for existing caches. Use
+the new setting to avoid warning in RXML <cache> eval.
+
+• SNMP: Added overview statistics for CacheManager.
+
+Fixes remainder of [WS-19].
+
+• SNMP: Added cache name in SNMP label for CacheManager and individual caches.
+
+Fixes some of [WS-19].
+
+• RAM-cache: Fixed size calculation bug when replacing an entry.
+
+Fixes [WS-20].
+
+• RAM-cache: Added byte_add_count to CacheManager.
+
+Fixes some of [WS-19].
+
+• Merge commit '1496e2c075d058794beb7c25d37bfe6db115465c' into patches/ws19
+
+• CM_GDS_Time.got_hit: Only save start hrtime if cache prefs say so.
+
+This saves some time on most cache hits.
+
+• Cache: Fix double call of account_remove_entry.
+
+• RAM Cache: Perform entry size calculation and evictions asynchronously.
+
+Also, entry pval bumps are performed asynchronously. This helps consolidation
+of heap rebalancing operations for entries with frequent cache hits. Deferring
+size calculation and eviction helps amortize the cost of count_memory during
+load spikes, which should improve request performance.
+
+• Merge commit '027ae210a2e8a05e3c6fda0173963b430abd9639' into patches/ws19
+
+• Remove unwanted debug ASSERT when storing zero data in cache_set(). We now
+document the behavior where the key might be removed altogether. This change
+is made to support storing e.g. objects that may be destructed at any time,
+including right before calling cache_set().
+
+• Cache: Fix division by zero that could occur at startup due to race.
+
+• Cache manager_size_overhead when entries aren't added.
+
+The overhead will be recomputed when the number of added entries since the last
+computation is above 10% of the total number of entries in the cache.
+
+• SNMP: Fixed typo.
+
+• SNMP: Perform work in a handler thread.
+
+Avoid locking the backend thread by SNMP lookups.
+
+• SNMP: Added fields for the RAM-cache.
+
+Fixes [WS-3].
+
+• RAM Cache: Use a mutex to protect the priority queue.
+
+Reduce the use of _disable_threads().
+
+Fixes some more of [bug 7727].
+
+• RAM Cache: Use an ADT.Heap instead of a multiset.
+
+This reduces the performance penalty when the priority of a
+CacheEntry is changed in a server with a huge amount of entries.
+
+Also fixes the missing cost update on hit for the CM_GDS_Time cache.
+
+Note that there may still be some thread races lurking.
+
+Fixes [bug 7727].
