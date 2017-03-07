@@ -2781,6 +2781,11 @@ void send_result(mapping|void result)
 
     mapping(string:string) heads = make_response_headers (file);
 
+    if (heads["Set-Cookie"]) {
+      // Never protocol cache setting of cookies.
+      NO_PROTO_CACHE();
+    }
+
     // Notes about the variant headers:
     //
     // Date		Changes with every request.
