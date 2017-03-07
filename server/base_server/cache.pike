@@ -184,7 +184,7 @@ class CacheEntry (mixed key, mixed data, string cache_name)
 }
 
 class CacheStats
-//! Holds statistics for each named cache.
+//! Holds statistics for each group of named caches.
 {
   int count;
   //! The number of entries in the cache.
@@ -1668,8 +1668,13 @@ CacheManager cache_register (string cache_name,
 			 cache_type);
   }
 
-  CacheStats stats = CacheStats();
-  mib->merge(CacheStatsMIB(manager, cache_name, stats));
+  string cache_name_prefix = (cache_name/":")[0];
+  CacheStats stats = manager->stats[cache_name_prefix];
+  if (!stats) {
+    stats = CacheStats();
+    mib->merge(CacheStatsMIB(manager, cache_name_prefix, stats));
+    caches[cache_name_prefix] = stats;
+  }
   caches[cache_name] = manager;
   manager->stats[cache_name] = stats;
   manager->lookup[cache_name] = ([]);
@@ -1684,16 +1689,34 @@ void cache_unregister (string cache_name)
 {
   Thread.MutexKey lock = cache_mgmt_mutex->lock();
 
-  // vvv Relying on the interpreter lock from here.
   if (CacheManager mgr = m_delete (caches, cache_name)) {
     mapping(mixed:CacheEntry) lm = m_delete (mgr->lookup, cache_name);
-    CacheStats cs = m_delete (mgr->stats, cache_name);
-    // ^^^ Relying on the interpreter lock to here.
-    mgr->size -= cs->size;
-
     destruct (lock);
+
+    // NB: The CacheStats object is still active here in order to let
+    //     the removal code update it.
     foreach (lm;; CacheEntry entry)
       mgr->remove_entry (cache_name, entry);
+
+    lock = cache_mgmt_mutex->lock();
+    if (!caches[cache_name]) {
+      // The cache is still gone, so remove its associated CacheStats.
+      string cache_name_prefix = (cache_name/":")[0];
+      if (cache_name_prefix != cache_name) {
+	m_delete(mgr->stats, cache_name);
+      }
+      if (!caches[cache_name_prefix]) {
+	string prefix = cache_name_prefix + ":";
+	foreach(caches; string name;) {
+	  if (has_prefix(name, prefix)) {
+	    // There's another cache that uses the CacheStats object.
+	    return;
+	  }
+	}
+	// None of the caches uses the CacheStats object.
+	m_delete(mgr->stats, cache_name_prefix);
+      }
+    }
   }
 }
 
@@ -1720,9 +1743,7 @@ void cache_change_manager (string cache_name, CacheManager manager)
 
   else {
     mapping(mixed:CacheEntry) old_lm = m_delete (old_mgr->lookup, cache_name);
-    CacheStats old_cs = m_delete (old_mgr->stats, cache_name);
     // ^^^ Relying on the interpreter lock to here.
-    old_mgr->size -= old_cs->size;
     cache_register (cache_name, manager);
 
     // Move over the entries.
@@ -1950,8 +1971,13 @@ mapping(CacheManager:mapping(string:CacheStats)) cache_stats()
 //! of the returned value.
 {
   mapping(CacheManager:mapping(string:CacheStats)) res = ([]);
-  foreach (cache_managers, CacheManager mgr)
-    res[mgr] = mgr->stats;
+  foreach (cache_managers, CacheManager mgr) {
+    res[mgr] = ([]);
+    foreach(mgr->stats; string cache_name; CacheStats cs) {
+      if (has_value(cache_name, ':')) continue;
+      res[mgr][cache_name] = cs;
+    }
+  }
   return res;
 }
 
