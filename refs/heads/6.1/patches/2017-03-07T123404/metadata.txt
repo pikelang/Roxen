@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Don't protocol cache the Set-Cookie header.
+from: 204e470b2ac37aa85d25783c30c777f076775425
+to: 61eac4c8fe2648cb1ab17a03b6094a8e7d422a21
+originator: Daniel Wressle
+depends: 2017-03-06T094807
+restart: true
+
+• Protocols [HTTP]: Don't protocol cache the Set-Cookie header.
+
+Fixes [WS-25].
