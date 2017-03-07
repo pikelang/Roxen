@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.586 2009/01/29 22:00:57 marty Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2193,6 +2193,11 @@ void send_result(mapping|void result)
 #endif
 
     mapping(string:string) heads = make_response_headers (file);
+
+    if (heads["Set-Cookie"]) {
+      // Never protocol cache setting of cookies.
+      NO_PROTO_CACHE();
+    }
 
     // Notes about the variant headers:
     //
