@@ -184,7 +184,16 @@ ROXEN.AFS = function () {
 
   function request_success (resp)
   {
-    var msgs, cb;
+    var msgs, cb, ct;
+
+    // YAHOO.util.Connect.asyncRequest follows redirect transparently and
+    // we want to detect the case when this is a redirect to a login page.
+    ct = resp.getResponseHeader["Content-Type"];
+    if (ct && !ct.match(/application\/json/)) {
+      json_parse_failure(new Error("ContentTypeError"));
+      return;
+    }
+
     try {
       msgs = YAHOO.lang.JSON.parse(resp.responseText);
     }
