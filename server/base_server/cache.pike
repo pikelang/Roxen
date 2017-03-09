@@ -1673,7 +1673,7 @@ CacheManager cache_register (string cache_name,
   if (!stats) {
     stats = CacheStats();
     mib->merge(CacheStatsMIB(manager, cache_name_prefix, stats));
-    caches[cache_name_prefix] = stats;
+    manager->stats[cache_name_prefix] = stats;
   }
   caches[cache_name] = manager;
   manager->stats[cache_name] = stats;
