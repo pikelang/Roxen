@@ -311,7 +311,10 @@ int|mapping first_try(RequestID id)
     dwerror("HR: %O -> %O (internal redirect)\n", id->not_query, to);
     
     id->misc->host_redirected = 1;
-    id->misc->redirected_raw_url = id->not_query;
+    if (!id->misc->redirected_raw_url) {
+      id->misc->redirected_raw_url = id->raw_url;
+      id->misc->redirected_not_query = id->not_query;
+    }
     id->not_query = id->scan_for_query( to );
     id->raw_url = Roxen.http_encode_invalids(to);
     //if we internally redirect to the proxy,
