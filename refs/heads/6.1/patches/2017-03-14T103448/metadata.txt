@@ -1,0 +1,8 @@
+subject: Roxen 6.1: AFS: Detect content type mismatch in response
+from: 61eac4c8fe2648cb1ab17a03b6094a8e7d422a21
+to: b62e8f5c6548e63e60aa04c78f9679ade4df45c7
+originator: Daniel Wressle
+depends: 2017-03-07T123404
+restart: true
+
+• AFS: Detect content type mismatch in response
