@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.454 2011/08/29 14:33:10 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2034,9 +2034,17 @@ Thread.MutexKey sq_cache_lock()
 
 protected mapping(program:string) default_db_charsets = ([]);
 
+//! Get a cached connection to an SQL database.
+//!
+//! @param db_name
+//!   SQL-URL for the connection.
+//!
+//! @param reuse_in_thread
+//!   Use a thread-dedicated cache.
 Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 {
   Sql.Sql db;
+  Thread.MutexKey key = sq_cache_lock();
 
   if (reuse_in_thread) {
     mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
@@ -2044,7 +2052,7 @@ Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
   }
 
   else {
-    while(sql_free_list[ db_name ])
+    while(sizeof(sql_free_list[db_name] || ({})))
     {
 #ifdef DB_DEBUG
       werror("%O found in free list\n", db_name );
@@ -2054,9 +2062,15 @@ Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 	sql_free_list[ db_name ] = sql_free_list[db_name][1..];
       else
 	m_delete( sql_free_list, db_name );
-      if ((db = res && res->get()) && db->is_open()) {
-	sql_active_list[db_name]++;
-	break;
+      if (res) {
+	destruct(key);
+	// NB: Release the lock during connection validation. Cf [WS-28].
+	if ((db = res->get()) && db->is_open()) {
+	  key = sq_cache_lock();
+	  sql_active_list[db_name]++;
+	  break;
+	}
+	key = sq_cache_lock();
       }
     }
   }
@@ -2128,6 +2142,7 @@ Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
   if( res )
   {
     FIX_CHARSET_FOR_NEW_SQL_CONN (res, charset);
+    Thread.MutexKey key = sq_cache_lock();
     sql_active_list[ db_name ]++;
     return [object(Sql.Sql)] (object) SQLKey( res, db_name, reuse_in_thread);
   }
@@ -2144,28 +2159,24 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
   gc();
 #endif
 #endif
-  Thread.MutexKey key;
+  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
+  Sql.Sql res;
   if (catch {
-    key = sq_cache_lock();
-  }) {
+      res = sq_cache_get(i, reuse_in_thread);
+    }) {
     // Threads disabled.
     // This can occur if we are called from the compiler.
+    // NB: This is probably dead code with Pike 8.0 and later,
+    //     as the compiler no longer disables all threads.
     Sql.Sql res = low_connect_to_my_mysql(ro, db);
     FIX_CHARSET_FOR_NEW_SQL_CONN (res, charset);
     return res;
   }
-  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  Sql.Sql res = sq_cache_get(i, reuse_in_thread);
   if (res) {
-    destruct (key);
     return fix_connection_charset (res, charset);
   }
-  destruct(key);
   if (res = low_connect_to_my_mysql( ro, db )) {
-    key = sq_cache_lock();
-    // Fool the optimizer so that key is not released prematurely
-    if( res )
-      return sq_cache_set(i, res, reuse_in_thread, charset);
+    return sq_cache_set(i, res, reuse_in_thread, charset);
   }
   return 0;
 }
