@@ -1,0 +1,3 @@
+Modified files:
+  modules/directories/indexfiles.pike
+  modules/filters/hostredirect.pike
