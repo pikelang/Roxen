@@ -951,23 +951,13 @@ Sql.Sql get_sql_handler(string db_url)
 Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
 		      void|string charset)
 {
-  Thread.MutexKey key = roxenloader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
   Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread);
   if (res) {
-    destruct(key);
     return roxenloader.fix_connection_charset (res, charset);
   }
-  // Release the lock during the call to get_sql_handler(),
-  // since it may take quite a bit of time...
-  destruct(key);
   if (res = get_sql_handler(what)) {
-    // Now we need the lock again...
-    key = roxenloader.sq_cache_lock();
-    res = roxenloader.sq_cache_set(i, res, reuse_in_thread, charset);
-    // Fool the optimizer so that key is not released prematurely
-    if( res )
-      return res; 
+    return roxenloader.sq_cache_set(i, res, reuse_in_thread, charset);
   }
 }
 
