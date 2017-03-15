@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Host Redirect
+from: 5b313f1739451520cf6a31374e0e52942da6b5eb
+to: 9b5d7252b63fb3c13207c70b8e2dafe9ea7f4c62
+originator: Daniel Wressle
+depends: 2017-03-15T092442
+restart: true
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
