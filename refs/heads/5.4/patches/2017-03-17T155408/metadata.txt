@@ -1,0 +1,30 @@
+subject: Roxen 5.4: Host Redirect, fixed internal redirects. Admin Interface, load configurations. DBManager, reduce critical zones holding sq_cache_lock.
+from: d07484469f9ddc411eeaea7aa62cb2b4d20dbeac
+to: 1249f1bc29fdc7b2995b19cee7d2788af851e756
+originator: Jonas Lonnberg
+depends: 2017-03-02T090705
+restart: true
+
+• Host Redirect: Fixed internal redirects combined with %p
+
+Don't strip trailing slash when added by %p for internal redirects.
+[roxen.com #28484]
+
+• Admin Interface [DB Browser]: Load configurations.
+
+Make sure that the configuration is loaded before complaining
+about its modules not being loaded ("deleted").
+
+• DBManager: Reduce critical zones holding sq_cache_lock().
+
+sq_cache_{get,set}() now use sq_cache_lock() themselves instead
+of having it be the callers responsibility. This makes it possible
+to reduce the critical zones and to move out some of the time-
+consuming stuff (notably the testing of the validity of cached
+SQL connections) from the critical zones.
+
+Fixes [WS-28].
+
+• Protocols [HTTP]: Don't protocol cache the Set-Cookie header.
+
+Fixes [WS-25].
