@@ -303,7 +303,7 @@ int|mapping first_try(RequestID id)
     //  and if it matches patterns["default"] add the id->not_query after all.
     if(to[0] != '/')
       to = "/"+ to;
-    if(host != "default" && strlen(to) > 1 && to[-1] == '/')
+    if((host != "default") && !path && strlen(to) > 1 && to[-1] == '/')
       to = to[0..strlen(to)-2];
     if((host != "default") && !path )
       to +=id->not_query;
