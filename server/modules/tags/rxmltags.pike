@@ -806,7 +806,15 @@ class TagRedirect {
 	  if (sscanf (type, "%d%*c", http_code) != 1) http_code = 0;
       }
 
+      // Don't expose internal path if the request has been internally
+      // redirected already and 'to' is a relative path.
+      string org_not_query = id->not_query;
+      id->not_query = id->misc->redirected_not_query || id->not_query;
+
       mapping r = Roxen.http_redirect(args->to, id, prestate, 0, http_code);
+
+      // Restore internal path
+      id->not_query = org_not_query;
 
       if (r->error)
 	RXML_CONTEXT->set_misc (" _error", r->error);
