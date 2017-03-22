@@ -1,0 +1,14 @@
+subject: Roxen 6.0: CGI
+from: 779b1eaf50d56ab467f575100fee3a396acae74f
+to: 27c64dd6cdfa9c1623421f43fa313b7066365fb4
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-03-22T124610
+restart: true
+
+• CGI [Pike 8.0]: Fix parsing of header block.
+
+If the first block of data received from a script exceeded
+MAXHEADERLEN (32769 bytes) the module would complain about
+excessive headers without ever searching for the header separator.
+
+Fixes [Bug 7829]
