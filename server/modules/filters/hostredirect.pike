@@ -77,7 +77,7 @@ void create()
   
   defvar("ignorepaths",
 	 Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
-				 "/roxen-files/", "/edit", "/__frame/"
+				 "/roxen-files/", "/edit", "/__ie/", "/yui/",
 			      }), 0, "Ignore paths",
 			      "A list of path prefixes that should not be redirected. "
 			      "Useful for making global images work in sub sites." ));
