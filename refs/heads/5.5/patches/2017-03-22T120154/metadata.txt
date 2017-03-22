@@ -1,0 +1,85 @@
+subject: Roxen 5.5: • RXML Tags: No internal path for relative redirects • RXML Tags: No internal path for relative redirects • RXML Tags: No internal path for relative redirects • Index files only: Don't redirect to internal path
+from: 90d5de2698071083cb834b63aaae86d7d5b4a9cc
+to: 4a561649758af63b8dbe3ffc26728061a48deed9
+originator: Jonas Lonnberg
+depends: 2016-06-22T151926
+restart: true
+
+• RXML Tags: No internal path for relative redirects
+
+If request was internally redirected when encountering a relative
+<redirect/> the internal path would previously be exposed to the
+browser. Fixes [WS-26].
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
+
+• RXML Tags: No internal path for relative redirects
+
+Don't strip trailing slash when added by %p for internal redirects.
+[roxen.com #28484]
+
+• RXML Tags: No internal path for relative redirects
+
+Example rules was illegible and mixed v1 and v2 syntax capabilities.
+Cant' believe it has been like this for almost 10 years.
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. [roxen.com #28397]
+
+• TagCache: Kludge to avoid excessive entry values in the RAM cache.
+
+• Revert "PCode: Make sure to compile everything in PCode used by subevalers."
+
+This reverts commit b96e06a15958bc80162cfa0ed99a95ac42a4632f.
+Attempt to reduce possible overhead introduced by always compiling in
+PikeCompile instances.
+
+• Logging: Use misc->forwarded in $xff.
+
+Fixes FIXME.
+
+• Logging: Fixed quoting error in $forwarded.
+
+Fixes [bug 7759].
+
+• UserFS: Interoperate better with other filesystem modules.
+
+Return 404 instead of 403 on user not found. This allows for having
+other modules as fallback for invalid paths.
+
+• VFS: Fixed infinite loop in find_above_read().
+
+Fixes [bug 7750].
+
+• UserFS: Improved diagnostics.
+
+• UserFS: Improved 404 handling.
+
+Don't invent directories where there are none...
+
+• ABS: Fix listing of call_outs.
+
+Fixes ABS listing of call_outs which have no arguments or not an array
+as the first argument.
+
+Fixes [bug 7746].
+
+• Roxen.make_http_headers: Validate the argument.
+
+Fixes the entire class of bugs that [bug 7737] represents.
+
+• Redirects: Improved quoting of redirect headers.
+
+Ensure that the location header is quoted properly.
+
+Fixes [bug 7737].
+
+• RXML: Added attribute accept-status to <insert#href/>.
+
+This attribute allows for finer-grained error handling and for
+retreiving the received data also for error statuses.
+
+Fixes [bug 7554].
