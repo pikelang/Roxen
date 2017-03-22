@@ -1,0 +1,8 @@
+Modified files:
+  base_server/roxenloader.pike
+  config_interface/dbs/db_list.pike
+  etc/modules/DBManager.pmod
+  modules/directories/indexfiles.pike
+  modules/filters/hostredirect.pike
+  modules/tags/rxmltags.pike
+  protocols/http.pike
