@@ -1,0 +1,18 @@
+subject: Roxen 6.1: CGI, Host Redirect
+from: acec9d32fe614369f09cd4266cfe7b6aa8721e66
+to: 8f5f70ae830966f22095f5ca8828cd0554a54339
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-03-22T113657
+restart: true
+
+Multiple fixes:
+
+• CGI [Pike 8.0]: Fix parsing of header block.
+
+If the first block of data received from a script exceeded
+MAXHEADERLEN (32769 bytes) the module would complain about
+excessive headers without ever searching for the header separator.
+
+Fixes [Bug 7829]
+
+• Host Redirect: Updated default ignore paths for new editor
