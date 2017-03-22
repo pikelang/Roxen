@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.49 2000/11/13 07:32:42 per Exp $";
+constant cvs_version = "$Id$";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -452,22 +452,23 @@ class CGIWrapper
     DWERR("CGIWrapper::parse_headers()");
 
     int pos, skip = 4, force_exit;
-    if(strlen(headers) > MAXHEADERLEN)
-    {
-      DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
-      output( LONGHEADER );
-      close_when_done = 1;
-      mode++;
-      done();
-      return 1;
-//       destroy( );
-    }
     pos = search(headers, "\r\n\r\n");
     if(pos == -1) {
       // Check if there's a \n\n instead.
       pos = search(headers, "\n\n");
       if(pos == -1) {
 	// Still haven't found the end of the headers.
+
+	if(strlen(headers) > MAXHEADERLEN)
+	{
+	  DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
+	  output( LONGHEADER );
+	  close_when_done = 1;
+	  mode++;
+	  done();
+	  return 1;
+//	  destroy( );
+	}
 	return 0;
       }
       skip = 2;
