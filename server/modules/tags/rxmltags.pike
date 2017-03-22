@@ -2955,7 +2955,7 @@ class TagCache {
   protected void create()
   {
     cache.cache_register (cache_tag_eval_loc, 0, extend_entries_cache_prefs);
-    cache.cache_register (cache_tag_alts_loc);
+    cache.cache_register (cache_tag_alts_loc, 0, extend_entries_cache_prefs);
   }
 }
 
