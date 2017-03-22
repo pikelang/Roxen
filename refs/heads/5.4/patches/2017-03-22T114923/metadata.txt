@@ -1,0 +1,14 @@
+subject: Roxen 5.4: • RXML Tags: No internal path for relative redirects • Fixed mixed use of redirected_raw_url and redirected_not_query
+from: 1249f1bc29fdc7b2995b19cee7d2788af851e756
+to: 1dcd51725191c019a4beabb491a5e2d7cc5ca3bb
+originator: Jonas Lonnberg
+depends: 2017-03-17T155408
+restart: true
+
+• RXML Tags: No internal path for relative redirects
+
+If request was internally redirected when encountering a relative
+<redirect/> the internal path would previously be exposed to the
+browser. Fixes [WS-26].
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
