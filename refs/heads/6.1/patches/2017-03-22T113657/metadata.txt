@@ -1,0 +1,19 @@
+subject: Roxen 6.1: Redirect tag, Host Redirect
+from: 9b5d7252b63fb3c13207c70b8e2dafe9ea7f4c62
+to: acec9d32fe614369f09cd4266cfe7b6aa8721e66
+originator: Daniel Wressle
+depends: 2017-03-15T114401
+restart: true
+
+• RXML Tags: No internal path for relative redirects
+
+If request was internally redirected when encountering a relative
+<redirect/> the internal path would previously be exposed to the
+browser. Fixes [WS-26].
+
+• Host Redirect: Fixed internal redirects combined with %p
+
+Don't strip trailing slash when added by %p for internal redirects.
+[roxen.com #28484]
+
+• Fixed config settings variable diff view [bug 7788]
