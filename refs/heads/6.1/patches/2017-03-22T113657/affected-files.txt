@@ -1,0 +1,4 @@
+Modified files:
+  modules/configuration/config_tags.pike
+  modules/filters/hostredirect.pike
+  modules/tags/rxmltags.pike
