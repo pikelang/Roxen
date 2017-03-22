@@ -1,0 +1,12 @@
+Modified files:
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/Roxen.pmod
+  etc/modules/VFS.pmod
+  modules/directories/indexfiles.pike
+  modules/filesystems/userfs.pike
+  modules/filters/hostredirect.pike
+  modules/filters/redirect.pike
+  modules/tags/additional_rxml.pike
+  modules/tags/rxmltags.pike
