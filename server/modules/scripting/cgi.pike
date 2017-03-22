@@ -491,22 +491,23 @@ class CGIWrapper
     DWERR("CGIWrapper::parse_headers()");
 
     int pos, skip = 4, force_exit;
-    if(strlen(headers) > MAXHEADERLEN)
-    {
-      DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
-      output( LONGHEADER );
-      close_when_done = 1;
-      mode++;
-      done();
-      return 1;
-//       destroy( );
-    }
     pos = search(headers, "\r\n\r\n");
     if(pos == -1) {
       // Check if there's a \n\n instead.
       pos = search(headers, "\n\n");
       if(pos == -1) {
 	// Still haven't found the end of the headers.
+
+	if(strlen(headers) > MAXHEADERLEN)
+	{
+	  DWERR("CGIWrapper::parse_headers()::Incorrect Headers");
+	  output( LONGHEADER );
+	  close_when_done = 1;
+	  mode++;
+	  done();
+	  return 1;
+//	  destroy( );
+	}
 	return 0;
       }
       skip = 2;
