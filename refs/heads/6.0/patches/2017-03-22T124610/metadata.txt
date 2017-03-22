@@ -1,0 +1,49 @@
+subject: Roxen 6.0: • Fixed mixed use of redirected_raw_url and redirected_not_query • Host Redirect: Fixed internal redirects combined with %p • RXML Tags: No internal path for relative redirects
+from: adc5e1cee4eaa6f83cf9c53ff7f0004070229bf2
+to: 779b1eaf50d56ab467f575100fee3a396acae74f
+originator: Jonas Lonnberg
+depends: 2017-02-20T105424
+restart: true
+
+• RXML Tags: No internal path for relative redirects
+
+If request was internally redirected when encountering a relative
+<redirect/> the internal path would previously be exposed to the
+browser. Fixes [WS-26].
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
+
+• Host Redirect: Fixed internal redirects combined with %p
+
+Don't strip trailing slash when added by %p for internal redirects.
+[roxen.com #28484]
+
+• Admin Interface [DB Browser]: Load configurations.
+
+Make sure that the configuration is loaded before complaining
+about its modules not being loaded ("deleted").
+
+• DBManager: Reduce critical zones holding sq_cache_lock().
+
+sq_cache_{get,set}() now use sq_cache_lock() themselves instead
+of having it be the callers responsibility. This makes it possible
+to reduce the critical zones and to move out some of the time-
+consuming stuff (notably the testing of the validity of cached
+SQL connections) from the critical zones.
+
+Fixes [WS-28].
+
+• Protocols [HTTP]: Don't protocol cache the Set-Cookie header.
+
+Fixes [WS-25].
+
+• Host Redirect: Fixed variable documentation
+
+Example rules was illegible and mixed v1 and v2 syntax capabilities.
+Cant' believe it has been like this for almost 10 years.
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. [roxen.com #28397]
