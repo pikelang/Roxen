@@ -6302,9 +6302,117 @@ protected class GCTimestamp
   }
 }
 
-protected int gc_start;
+int log_gc_timestamps;
+int log_gc_histogram;
+int log_gc_verbose;
+int log_gc_cycles;
 
-protected mapping(string:int) gc_histogram = ([]);
+string format_cycle (array(mixed) cycle)
+{
+  array(string) string_parts = ({});
+  foreach (cycle; int pos; mixed val) {
+    /* Idea: identify mapping/array index of the next element in the cycle.
+    mixed next_val;
+    if (pos < sizeof (cycle) - 1) {
+      next_val = cycle[pos + 1];
+    }
+    */
+
+    string formatted;
+
+    if (arrayp (val)) {
+      formatted = sprintf ("array(%d)", sizeof (val));
+    } else if (mappingp (val)) {
+      formatted = sprintf ("mapping(%d)", sizeof (val));
+    } else if (multisetp (val)) {
+      formatted = sprintf ("multiset(%d)", sizeof (val));
+    } else {
+      formatted = sprintf ("%O", val);
+    }
+    string_parts += ({ formatted });
+  }
+
+  return string_parts * " -> ";
+}
+
+void reinstall_gc_callbacks()
+{
+  mapping(string:mixed) gc_params = ([ "pre_cb": 0,
+                                       "post_cb": 0,
+                                       "destruct_cb": 0,
+                                       "done_cb": 0 ]);
+
+  int gc_start;
+
+  // mapping from program name (as reported by sprintf/%O) to number of
+  // GC-destructed objects. Only valid in the GC's done_cb below.
+  mapping(string:int) gc_histogram = ([]);
+
+  // mapping from program name (as reported by sprintf/%O) to flag
+  // indicating whether a cycle has been reported for this program in
+  // the current GC report round. Cleared on every GC restart.
+  mapping(string:int(0..1)) reported_cycles = ([]);
+
+  if (log_gc_timestamps || log_gc_histogram || log_gc_verbose ||
+      log_gc_cycles) {
+    gc_params->pre_cb =
+      lambda() {
+        gc_start = gethrtime();
+        gc_histogram = ([]);
+        reported_cycles = ([]);
+        werror("GC runs at %s", ctime(time()));
+      };
+
+    gc_params->post_cb =
+      lambda() {
+        werror("GC done after %dms\n",
+               (gethrtime() - gc_start) / 1000);
+      };
+
+    if (log_gc_histogram || log_gc_verbose || log_gc_cycles) {
+      gc_params->destruct_cb =
+        lambda(object o) {
+          // NB: These calls to sprintf(%O) can
+          //     take significant time.
+          string id =
+            sprintf("%O", object_program(o));
+          gc_histogram[id]++;
+          if (log_gc_verbose) {
+            werror("GC cyclic reference in %O.\n",
+                   o);
+          }
+
+          if (log_gc_cycles && !reported_cycles[id]) {
+            reported_cycles[id] = 1;
+            if (array(mixed) cycle = Pike.identify_cycle(o)) {
+              werror ("GC cycle:\n%s\n", format_cycle (cycle));
+            }
+          }
+        };
+    }
+
+    gc_params->done_cb =
+      lambda(int n) {
+        if (!n) return;
+        werror("GC zapped %d things.\n", n);
+
+        if (log_gc_histogram) {
+          mapping h = gc_histogram;
+          gc_histogram = ([]);
+          if (!sizeof(h)) return;
+          array i = indices(h);
+          array v = values(h);
+          sort(v, i);
+          werror("GC histogram:\n");
+          foreach(reverse(i)[..9], string p) {
+            werror("GC:  %s: %d\n", p, h[p]);
+          }
+        }
+      };
+  }
+
+  Pike.gc_parameters(gc_params);
+}
 
 array argv;
 int main(int argc, array tmp)
@@ -6322,49 +6430,22 @@ int main(int argc, array tmp)
 			});
 #endif
 
+
+
 #ifdef LOG_GC_TIMESTAMPS
-  Pike.gc_parameters(([ "pre_cb": lambda() {
-				    gc_start = gethrtime();
-				    gc_histogram = ([]);
-				    werror("GC runs at %s", ctime(time()));
-				  },
-			"post_cb":lambda() {
-				    werror("GC done after %dms\n",
-					   (gethrtime() - gc_start) / 1000);
-				  },
+  log_gc_timestamps = 1;
+#endif
 #ifdef LOG_GC_HISTOGRAM
-			"destruct_cb":lambda(object o) {
-					// NB: These calls to sprintf(%O) can
-					//     take significant time.
-					gc_histogram[sprintf("%O", object_program(o))]++;
+  log_gc_histogram = 1;
+#endif
 #ifdef LOG_GC_VERBOSE
-					werror("GC cyclic reference in %O.\n",
-					       o);
+  log_gc_verbose = 1;
 #endif
-				      },
-#endif /* LOG_GC_HISTOGRAM */
-			"done_cb":lambda(int n) {
-				    if (!n) return;
-				    werror("GC zapped %d things.\n", n);
-#ifdef LOG_GC_HISTOGRAM
-				    mapping h = gc_histogram;
-				    gc_histogram = ([]);
-				    if (!sizeof(h)) return;
-				    array i = indices(h);
-				    array v = values(h);
-				    sort(v, i);
-				    werror("GC histogram:\n");
-				    foreach(reverse(i)[..9], string p) {
-				      werror("GC:  %s: %d\n", p, h[p]);
-				    }
-#endif /* LOG_GC_HISTOGRAM */
-				  },
-		     ]));
-  if (!Pike.gc_parameters()->pre_cb) {
-    // GC callbacks not available.
-    GCTimestamp();
-  }
+#ifdef LOG_GC_CYCLES
+  log_gc_cycles = 1;
 #endif
+
+  reinstall_gc_callbacks();
 
   // For RBF
   catch(mkdir(getenv("VARDIR") || "../var"));
