@@ -35,6 +35,7 @@ constant features = (<
 				// files with eg the exec bit set (broken).
   "file-modes-2",		// Support patching and restoring of
 				// files with eg the exec bit set.
+  "force-new",			// Support new for files that already exist.
 >);
 
 constant RXP_ACTION_URL = "https://extranet.roxen.com/rxp/action.html";
@@ -827,7 +828,7 @@ class Patcher
       if (error && !force)
       {
 	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
-	write_file(log_path, log);
+	write_file(log_path, string_to_utf8(log));
 	privs = 0;
 	write_err("Writing log to <u>%s</u>\n", log_path);
 	return 0;
@@ -872,9 +873,13 @@ class Patcher
 	}
 	else
 	{
-	  write_log(1, "FAILED: File exists\n");
-	  error_count++;
-	  if (force)
+	  if (file->force) {
+	    write_log(0, "FORCE: File <b>%s</b> already exists.\n", dest);
+	  } else {
+	    write_log(1, "FAILED: File exists\n");
+	    error_count++;
+	  }
+	  if (file->force || force)
 	  // Since the file exists we better make a backup!
 	  {
 	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest, 
@@ -1268,7 +1273,7 @@ class Patcher
     else
     {
       write_mess("Writing log file to <u>%s</u>\n", log_path);
-      write_file(log_path, log);
+      write_file(log_path, string_to_utf8(log));
     }
     privs = 0;
 
@@ -1415,7 +1420,7 @@ class Patcher
 		   Calendar.ISO->now()->format_mtime(),
 		   user);
     privs = Privs("RoxenPatch: Creating installation.log file.");
-    write_file(append_path(dest_path, "installation.log"), log);
+    write_file(append_path(dest_path, "installation.log"), string_to_utf8(log));
     privs = 0;
     return 1;
   }
