@@ -828,7 +828,7 @@ class Patcher
       if (error && !force)
       {
 	privs = Privs("RoxenPatch: Write to logfile: " + log_path);
-	write_file(log_path, log);
+	write_file(log_path, string_to_utf8(log));
 	privs = 0;
 	write_err("Writing log to <u>%s</u>\n", log_path);
 	return 0;
@@ -1273,7 +1273,7 @@ class Patcher
     else
     {
       write_mess("Writing log file to <u>%s</u>\n", log_path);
-      write_file(log_path, log);
+      write_file(log_path, string_to_utf8(log));
     }
     privs = 0;
 
@@ -1420,7 +1420,7 @@ class Patcher
 		   Calendar.ISO->now()->format_mtime(),
 		   user);
     privs = Privs("RoxenPatch: Creating installation.log file.");
-    write_file(append_path(dest_path, "installation.log"), log);
+    write_file(append_path(dest_path, "installation.log"), string_to_utf8(log));
     privs = 0;
     return 1;
   }
