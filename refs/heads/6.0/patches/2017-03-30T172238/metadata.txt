@@ -1,0 +1,88 @@
+subject: Roxen 6.0:  RoxenPatch: The installation log file is now in UTF-8. git-rxnpatch: More fixes for release sync clusters, generate release sync clusters for all releases, added cluster --force, improved diagnostics,
+from: 27c64dd6cdfa9c1623421f43fa313b7066365fb4
+to: 82115e999e6360088744417acb048d676922844a
+originator: Jonas Lonnberg
+depends: 2017-03-22T175510
+restart: true
+
+• RoxenPatch: The installation log file is now in UTF-8.
+
+Fixes backtraces when attempting to write wide characters to
+the installation log.
+
+Fixes [WS-29].
+
+• git-rxnpatch: More fixes for release sync clusters.
+
+Fixes issue where derived patches could generate sync clusters
+between the same version (causing an infinite loop later when
+generating meta clusters).
+
+• git-rxnpatch: Generate release sync clusters for all releases.
+
+Previously a release sync cluster was only generated for the latest
+release if there were patches for it.
+
+Fixes issue where the meta cluster for Roxen 5.4.94-r3 contained
+sync patches intended for Roxen 5.4.88-r2. This was due to the
+sync clusters 5.4.88-5.4.94 not having been generated, and the
+sync patches having ended up in the generic cluster.
+
+Fixes [IS-26].
+
+• git-rxnpatch: Added cluster --force.
+
+Make it possible to generate a new cluster even if the current one
+seems up to date. This is needed for some old branches to generate
+the the release-specific clusters if they are missing.
+
+• git-rxnpatch: Improved diagnostics.
+
+• git-rxnpatch: Minor code clean up.
+
+• git-rxnpatch: Don't attempt to cat the empty blob.
+
+• RoxenPatch: New files may now force overwrites.
+
+This is needed in order to support "blind" patches.
+
+Fixes some of [is-13].
+
+• git-rxnpatch: Log failed git command
+
+• Read author info from environment
+
+• git-rxnpatch: Identify patch clusters by the most recent patch.
+
+• git-rxnpatch: Fixed name of release clusters.
+
+• git-rxnpatch: Create separate clusters for different releases.
+
+Preparation for [IS 6].
+
+• git-rxnpatch: Moved parsing of metadata.txt to a separate function.
+
+• git-rxnpatch [cluster]: Some code cleanup.
+
+Prepare for making several clusters.
+
+Preparations for [IS 6].
+
+• git-rxnpatch: Fixed multiple issues with the ident verifier.
+
+* Fixed typo in git command.
+
+* Remap the dist paths to repository paths.
+
+• git-rxnpatch: Fixed multiple patch message.
+
+• git-rxnpatch: Validate $Id$ expansions.
+
+Potential fix for [bug 7822].
+
+• git-rxnpatch: Added option --subject for subcommand "new".
+
+--subject now sets the subject for the new patch, while
+--message sets the description (previously the subject).
+
+This should be less confusing.
