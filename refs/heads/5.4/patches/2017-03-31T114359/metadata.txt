@@ -1,0 +1,13 @@
+subject: Roxen 5.4: Fix for wide strings in patches.
+from: 1dcd51725191c019a4beabb491a5e2d7cc5ca3bb
+to: d7501ef5b895ddc3823a0f4ad8512a47a12b5369
+originator: Erik Allemann
+depends: 2017-03-22T114923
+restart: true
+
+• RoxenPatch: The installation log file is now in UTF-8.
+
+Fixes backtraces when attempting to write wide characters to
+the installation log.
+
+Fixes [WS-29].
