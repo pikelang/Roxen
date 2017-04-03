@@ -726,6 +726,9 @@ class CM_GreedyDual
     int start = gethrtime();
     int reschedule;
 
+    // Protect against race when rebalancing on setting entry->pval.
+    Thread.MutexKey key = priority_mux->lock();
+
     foreach (pending_pval_updates; CacheEntry entry;) {
       // NB: The priority queue is automatically adjusted on
       //     change of pval.
@@ -742,30 +745,34 @@ class CM_GreedyDual
 
     while (CacheEntry entry = update_size_queue->try_read()) {
       string cache_name = entry->cache_name;
-      if (CacheStats cs = stats[cache_name]) {
-        int size_diff = entry->update_size();
+      // Check if entry has been evicted already.
+      if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
+        if (lm[entry->key] == entry) {
+          int size_diff = entry->update_size();
+          size += size_diff;
 
-        // Check if entry has been evicted already.
-        if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
-          if (lm[entry->key] == entry) {
+          if (CacheStats cs = stats[cache_name]) {
             cs->size += size_diff;
-            size += size_diff;
             recent_added_bytes += size_diff;
-	    byte_add_count += size_diff;
+            byte_add_count += size_diff;
           }
         }
 
+        // NB: The priority queue is automatically adjusted on
+        //     change of pval.
         entry->pval = calc_pval (entry);
-
-        if (size > size_limit) {
-          evict (size_limit);
-        }
       }
 
       if (gethrtime() - start > max_run_time) {
         reschedule = 1;
         break;
       }
+    }
+
+    key = 0;
+
+    if (size > size_limit) {
+      evict (size_limit);
     }
 
     if (reschedule) {
