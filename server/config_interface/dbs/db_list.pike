@@ -27,7 +27,7 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   Configuration c = roxen.find_configuration( mod_info->conf );
   // Make sure that the configuration is enabled.
   // Otherwise we get spurious "the deleted module XXX in YYY" below.
-  c->low_init();
+  c && c->low_init();
   RoxenModule m = c && !(<0, "">)[mod_info->module] &&
     c->find_module( mod_info->module );
   ModuleInfo i =
