@@ -1,0 +1,32 @@
+subject: Roxen 6.1: RAM Cache fixes
+from: 8f5f70ae830966f22095f5ca8828cd0554a54339
+to: 639a0f2a5fbbbee9f004c28ddb612ddd8247f531
+originator: Daniel Wressle
+depends: 2017-03-22T175418
+restart: true
+
+• RAM Cache: Fixed race condition on rebalancing
+
+Lock of mutex was missing when adjusting entry->pval.
+
+Also only perform eviction once.
+
+• RAM Cache: No need for low_pop workaround
+
+We now use Pike 8.
+
+• RAM Cache: Fixed race condition on rebalancing
+
+Lock of mutex was missing when adjusting entry->pval.
+
+• RAM Cache: Fixed accounting when replacing an entry
+
+Accounting was never adjusted for the removed entry when replacing an
+entry.
+
+• RoxenPatch: The installation log file is now in UTF-8.
+
+Fixes backtraces when attempting to write wide characters to
+the installation log.
+
+Fixes [WS-29].
