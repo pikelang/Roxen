@@ -634,6 +634,9 @@ class CM_GreedyDual
     account_hit (cache_name, entry);
     int|float pval = calc_pval (entry);
 
+    // Protect against race when rebalancing on setting entry->pval.
+    Thread.MutexKey key = priority_mux->lock();
+
     // NB: The priority queue is automatically adjusted on
     //     change of pval.
     entry->pval = pval;
