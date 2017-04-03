@@ -255,16 +255,15 @@ class CacheManager
 #endif
 
       if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
+        CacheEntry old_entry;
 	// vvv Relying on the interpreter lock from here.
-	CacheEntry old_entry = lm[entry->key];
-	lm[entry->key] = entry;
-	// ^^^ Relying on the interpreter lock to here.
-
-	if (old_entry) {
+        while (old_entry = lm[entry->key]) {
 	  account_remove_entry (cache_name, old_entry);
-	  recent_added_bytes -= old_entry->size;
-	  remove_entry (cache_name, old_entry);
-	}
+          recent_added_bytes -= old_entry->size;
+          remove_entry (cache_name, old_entry);
+        }
+        lm[entry->key] = entry;
+        // ^^^ Relying on the interpreter lock to here.
 
 	cs->count++;
 	cs->size += entry->size;
