@@ -672,10 +672,8 @@ class CM_GreedyDual
   {
     Thread.MutexKey key = priority_mux->lock();
     while ((size > max_size) && sizeof(priority_queue)) {
-      // NB: Use low_peek() + remove() since low_pop() doesn't exist.
-      HeapElement element = priority_queue->low_peek();
+      HeapElement element = priority_queue->low_pop();
       if (!element) break;
-      priority_queue->remove(element);
 
       CacheEntry entry = element->cache_entry();
 
