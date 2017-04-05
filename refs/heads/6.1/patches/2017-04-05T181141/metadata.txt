@@ -1,0 +1,24 @@
+subject: Roxen 6.1: Admin IF, RAM Cache, use-tag
+from: 639a0f2a5fbbbee9f004c28ddb612ddd8247f531
+to: 8b91339b9d5e26cdb3dbc0693c070acfa908d209
+originator: Marcus Wellhardh
+depends: 2017-04-03T150641
+restart: true
+
+• Silence debug warning for <use>.
+
+• <cache>: Fixed error leaving stale content in RAM cache
+
+Wrong key was used when removing entries from "RXML <cache>
+alternatives", causing alternatives from old Frame objects to never be
+removed.
+
+Also moved the removal to a call_out to avoid locking problems since we
+are inside a destroy().
+
+• RAM Cache: Adjusted debug message in cache_remove()
+
+• Admin Interface [DB Browser]: Handle removed configurations
+
+Make sure configuration exists before trying to load it so we can
+complain about deleted sites.
