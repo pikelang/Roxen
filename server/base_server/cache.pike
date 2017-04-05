@@ -1942,7 +1942,8 @@ void cache_remove (string cache_name, mixed key)
 //! If @[key] was zero, this function used to remove the whole cache.
 //! Use @[cache_expire] for that instead.
 {
-  MORE_CACHE_WERR ("cache_remove (%O, %O)\n", cache_name, key);
+  MORE_CACHE_WERR ("cache_remove (%O, %s)\n",
+                   cache_name, RXML.utils.format_short (key));
   if (CacheManager mgr = caches[cache_name])
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       if (CacheEntry entry = lm[key])
