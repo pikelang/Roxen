@@ -2897,7 +2897,8 @@ class TagCache {
       // restore() function above, when the frame is reinstantiated.
       if (persistent_cache && alternatives) {
 	foreach (alternatives; string key;) {
-	  cache_remove (cache_tag_alts_loc, key);
+          string full_key = get_full_key (key);
+          call_out(cache_remove, 0, cache_tag_alts_loc, full_key);
 	}
       }
     }
