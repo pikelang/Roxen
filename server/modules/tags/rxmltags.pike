@@ -2267,7 +2267,14 @@ class CacheTagEntry (mixed data)
   }
 }
 
+
+//  Settings object used to flag a cache where the caller may extend existing
+//  entries even after a successful cache_lookup() call. This silences a debug
+//  warning.
+//
+//  NOTE: Used not only in TagCache but also elsewhere in this file.
 cache.CacheManagerPrefs extend_entries_cache_prefs = cache.CacheManagerPrefs(1);
+
 
 class TagCache {
   inherit RXML.Tag;
@@ -4887,6 +4894,11 @@ class TagUse {
   constant name = "use";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
+  protected void create()
+  {
+    cache.cache_register("macrofiles", 0, extend_entries_cache_prefs);
+  }
 
   private array(string) list_packages() {
     return filter(((get_dir("../local/rxml_packages")||({}))
