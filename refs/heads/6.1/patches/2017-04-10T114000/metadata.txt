@@ -1,0 +1,17 @@
+subject: Roxen 6.1: Admin Interface [DB Browser]: Handle removed configurations. JS-support: Rebuild minified file. JS-support: Added info(), warn() and error().
+from: 8b91339b9d5e26cdb3dbc0693c070acfa908d209
+to: 8b0be6a6388f58800648fe09c0e09f1a4660bc68
+originator: Jonas Lonnberg
+depends: 2017-04-05T181141
+restart: true
+
+• Admin Interface [DB Browser]: Handle removed configurations
+
+Make sure configuration exists before trying to load it so we can
+complain about deleted sites.
+
+• JS-support: Rebuild minified file
+
+• JS-support: Added info(), warn() and error()
+
+Logging convenience function in parity with ROXEN.log();
