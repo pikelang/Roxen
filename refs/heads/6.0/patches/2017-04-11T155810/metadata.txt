@@ -1,0 +1,27 @@
+subject: Roxen 6.0: Admin Interface [DB Browser]: Handle removed configurations. <cache>: Fixed error leaving stale content in RAM cache. RAM Cache: Adjusted debug message in cache_remove(). Admin Interface [DB Browser]: Handle removed configurations.
+from: 82115e999e6360088744417acb048d676922844a
+to: 7fddc024b8cbcb51d1a5e885f6c8f041678f618e
+originator: Jonas Lonnberg
+depends: 2017-03-30T172238
+restart: true
+
+• Admin Interface [DB Browser]: Handle removed configurations
+
+Make sure configuration exists before trying to load it so we can
+complain about deleted sites.
+
+• <cache>: Fixed error leaving stale content in RAM cache
+
+Wrong key was used when removing entries from "RXML <cache>
+alternatives", causing alternatives from old Frame objects to never be
+removed.
+
+Also moved the removal to a call_out to avoid locking problems since we
+are inside a destroy().
+
+• RAM Cache: Adjusted debug message in cache_remove()
+
+• Admin Interface [DB Browser]: Handle removed configurations
+
+Make sure configuration exists before trying to load it so we can
+complain about deleted sites.
