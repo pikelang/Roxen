@@ -1,0 +1,4 @@
+Added files:
+  modules/tags/recaptcha.pike
+Modified files:
+  etc/modules/HTTPClient.pmod
