@@ -343,7 +343,16 @@ class Success
   public bool `ok() { return true; }
 
   //! The response body, i.e the content of the requested URL
-  public string `data() { return result->data; }
+  public string `data()
+  {
+    string data = result->data;
+
+    if (content_encoding && content_encoding == "gzip") {
+      data = Gz.uncompress(data[10..<8], true);
+    }
+
+    return data;
+  }
 
   //! Returns the value of the @tt{content-length@} header.
   public int `length()
@@ -360,9 +369,9 @@ class Success
     }
   }
 
-  //! Returns the content encoding of the requested document, if given by the
+  //! Returns the charset of the requested document, if given by the
   //! response headers.
-  public string `content_encoding()
+  public string `charset()
   {
     if (string ce = (headers && headers["content-type"])) {
       if (sscanf (ce, "%*s;%*scharset=%s", ce) == 3) {
@@ -371,6 +380,14 @@ class Success
         }
         return ce;
       }
+    }
+  }
+
+  //! Returns the content encoding of the response if set by the remote server.
+  public string `content_encoding()
+  {
+    if (string ce = (headers && headers["content-encoding"])) {
+      return ce;
     }
   }
 }
@@ -435,6 +452,60 @@ protected class Session
       }
 
       TRACE("Host header set?: %O\n", extra_headers);
+    }
+
+    if (upper_case(method) == "POST") {
+      TRACE("Got post request: %O, %O, %O, %O\n",
+            url, query_variables, data, extra_headers);
+      // In Pike < 8.1 the content-length header isn't auotmatically added so
+      // we have to take care of that explicitly
+      bool has_content_len = false;
+      bool has_content_type = false;
+
+      if (extra_headers) {
+        array(string) lc_headers = map(indices(extra_headers), lower_case);
+
+        if (has_value(lc_headers, "content-length")) {
+          has_content_len = true;
+        }
+
+        if (has_value(lc_headers, "content-type")) {
+          has_content_type = true;
+        }
+      }
+
+      if (!has_content_len) {
+        mapping(string:string) qvars = url->get_query_variables();
+        data = data||"";
+
+        if (qvars && sizeof(qvars)) {
+          if (!query_variables) {
+            query_variables = qvars;
+          }
+          else {
+            query_variables |= qvars;
+          }
+        }
+
+        if (sizeof(data) && query_variables) {
+          data += "&" + Protocols.HTTP.http_encode_query(query_variables);
+        }
+        else if (query_variables) {
+          data = Protocols.HTTP.http_encode_query(query_variables);
+        }
+
+        if (!extra_headers) {
+          extra_headers = ([]);
+        }
+
+        extra_headers["Content-Length"] = (string) sizeof(data);
+
+        if (!has_content_type) {
+          extra_headers["Content-Type"] = "application/x-www-form-urlencoded";
+        }
+
+        query_variables = 0;
+      }
     }
 
     TRACE("Request: %O\n", url);
