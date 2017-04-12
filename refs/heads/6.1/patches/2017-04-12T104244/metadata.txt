@@ -1,0 +1,14 @@
+subject: Roxen 6.1: New module reCAPTCHA and HTTPClient fix
+from: 8b0be6a6388f58800648fe09c0e09f1a4660bc68
+to: 28da7776d94b43eb04af38b9ba1798b1463b7e6a
+originator: Pontus Ostlund
+depends: 2017-04-10T114000
+restart: true
+
+• Added new tag module recaptcha.pike
+
+This module only contains an if (if#recaptcha-verify) tag that verifies a recaptcha response against Google's verification service.
+
+• HTTPClient: Added content-length header (if missing) if method is POST.
+
+The underlying Pike API doesn't seem to add the content-length automatically if it's not explicitly set. Some services requires it to be set to accept the (POST) request.
