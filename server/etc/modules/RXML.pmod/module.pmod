@@ -1452,7 +1452,8 @@ class Value
     // that with suitable cache tags.
     array rec_chgs = ctx->misc->recorded_changes;
     ctx->misc->recorded_changes = 0;
-    ctx->set_var(var, val, scope_name);
+    // NB: The scope name may contain dot-separated segments.
+    ctx->user_set_var(var, val, scope_name);
     ctx->misc->recorded_changes = rec_chgs;
     return type ? type->encode (val) : val;
   }
@@ -1720,10 +1721,15 @@ class Context
     else
       splitted = var / ".";
 
-    if (stringp (scope_name))
-      splitted = ({scope_name}) + splitted;
-    else if (sizeof (splitted) == 1)
-      splitted = ({scope_name || "_"}) + splitted;
+    if (stringp (scope_name)) {
+      if (has_value(scope_name, ".")) {
+	// We need to split the scope name.
+	splitted = parse_user_var(scope_name, "_")[1..] + splitted;
+      } else {
+	splitted = ({scope_name}) + splitted;
+      }
+    } else if (sizeof (splitted) == 1)
+      splitted = ({ "_" }) + splitted;
 
     for (int i = 2; i < sizeof (splitted); i++)
       if (sscanf (splitted[i], "%d%*c", int d) == 1) splitted[i] = d;
