@@ -55,9 +55,12 @@ void start(int when, Configuration conf)
 //!  The response from a reCAPTCHA
 //! @param remote_ip
 //!  The visitors ip address.
-public bool recaptcha_verify(string secret, string payload,
+public bool recaptcha_verify(string _secret, string payload,
                              void|string remote_ip)
 {
+  string secret = _secret;
+  _secret = "CENSORED";
+
   HTTPClient.Arguments httpargs =
     HTTPClient.Arguments(([
       "variables" : ([
@@ -108,23 +111,29 @@ class TagIfreCaptchaVerify
 
   int eval(string a, RequestID id, mapping args)
   {
+    // Censor secret attribute.
+    string secret = args->secret;
+    if (args->secret) {
+      args->secret = "CENSORED";
+    }
+
     if (!sizeof(a)) {
       RXML.run_error("Payload is empty!\n");
     }
-
-    string secret;
-
-    if (args->secret && sizeof(args->secret)) {
-      secret = args->secret;
+    if (!secret && !args["site-key"]) {
+      RXML.parse_error("Required argument \"site-key\" or \"secret\" missing.");
     }
-    else if (args["site-key"]) {
+
+    // Use site-key if no secret given.
+    if (!secret) {
       secret = key_pairs[args["site-key"]];
     }
 
-    if (!secret) {
+    if (!secret || !sizeof(secret)) {
       RXML.parse_error("Unresolved \"secret\". Either pass it via the "
                        "\"secret\" attribute, or set up site key/secret "
-                       "pairs in the module settings.\n");
+                       "pairs in the module settings and user the \"site-key\" "
+                       "attribute.\n");
     }
 
     return recaptcha_verify(secret, a, id->remoteaddr);
@@ -141,7 +150,7 @@ constant tagdoc = ([
     <p>Verifies a reCAPTCHA response against Google's verification service.</p>
 
     <ex-box>
-      <if recaptcha-verify='&form.g-recaptcha-response;' secret='...'>
+      <if recaptcha-verify='&form.g-recaptcha-response;' site-key='...'>
         <!-- Handle form -->
       </if>
       <else>
