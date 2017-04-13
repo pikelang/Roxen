@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.311 2003/04/23 12:56:29 mast Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1588,10 +1588,15 @@ class Context
     else
       splitted = var / ".";
 
-    if (stringp (scope_name))
-      splitted = ({scope_name}) + splitted;
-    else if (sizeof (splitted) == 1)
-      splitted = ({scope_name || "_"}) + splitted;
+    if (stringp (scope_name)) {
+      if (has_value(scope_name, ".")) {
+	// We need to split the scope name.
+	splitted = parse_user_var(scope_name, "_")[1..] + splitted;
+      } else {
+	splitted = ({scope_name}) + splitted;
+      }
+    } else if (sizeof (splitted) == 1)
+      splitted = ({ "_" }) + splitted;
 
     for (int i = 2; i < sizeof (splitted); i++)
       if (sscanf (splitted[i], "%d%*c", int d) == 1) splitted[i] = d;
