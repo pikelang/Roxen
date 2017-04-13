@@ -28,9 +28,13 @@ void create(Configuration conf)
                     "verification"));
 
   defvar("key_pairs",
-    Variable.Mapping(([]), 0, "Site key/Secret pairs",
-                     "The \"Name\" column should contain the Site key, "
-                     "the \"Value\" column the Secret key"));
+    KeyVariable( ([]), 0, "Keys Pairs", ""));
+
+  class KeyVariable {
+    inherit Variable.Mapping;
+    string key_title = "Site Key";
+    string val_title = "Secret Key";
+  };
 }
 
 
