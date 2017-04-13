@@ -1355,7 +1355,8 @@ class Value
     // that with suitable cache tags.
     array rec_chgs = ctx->misc->recorded_changes;
     ctx->misc->recorded_changes = 0;
-    ctx->set_var(var, val, scope_name);
+    // NB: The scope name may contain dot-separated segments.
+    ctx->user_set_var(var, val, scope_name);
     ctx->misc->recorded_changes = rec_chgs;
     return type ? type->encode (val) : val;
   }
