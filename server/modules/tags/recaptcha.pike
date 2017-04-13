@@ -78,15 +78,20 @@ public bool recaptcha_verify(string _secret, string payload,
   resp = HTTPClient.sync_post(api_endpoint, httpargs);
 
   if (resp->ok && resp->status == 200) {
+    mapping r;
     mixed err = catch {
-      mapping r = Standards.JSON.decode(resp->data);
-      return !!r->success;
+      r = Standards.JSON.decode(resp->data);
     };
+    if (err) {
+      report_error("Failed decoding JSON response: %s\n",
+                   describe_error(err));
+      return false;
+    }
 
-    report_error("Failed decoding JSON response: %s\n",
-                 describe_error(err));
-
-    return false;
+    if (!r->success && r["error-codes"]) {
+      TRACE("Error codes: %s\n", r["error-codes"] * ", ");
+    }
+    return !!r->success;
   }
 
   report_debug("Bad response from reCAPTCHA verification!\n"
