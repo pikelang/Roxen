@@ -99,10 +99,10 @@
 	       title=''
 	   "/>
 
-<theme-set what=leftside-padwidth    to=160 />
+<theme-set what=leftside-padwidth    to=180 />
 <theme-set what=leftside-padheight   to=19 />
 <theme-set what=toptabs-padwidth     to=5 />
-<theme-set what=left-buttonwidth     to=160 />
+<theme-set what=left-buttonwidth     to=180 />
 
 <theme-set what=content-bg to="&var.content-bg;" />
 <theme-set what=content-extratableargs
@@ -136,7 +136,7 @@
 
 <theme-set what=left-buttonbg     to="&var.page-bg;"/>
 <theme-set what=left-selbuttonbg  to="&var.content-bg;"/>
-<theme-set what=left-tableargs    to="valign=top width='160'"/>
+<theme-set what=left-tableargs    to="valign=top width='180'"/>
 <theme-set what=left-buttonframe  to="gbutton.xcf" themefile />
 
 <!-- 
