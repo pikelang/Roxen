@@ -28,7 +28,7 @@ void create(Configuration conf)
                     "verification"));
 
   defvar("key_pairs",
-    KeyVariable( ([]), 0, "Keys Pairs", ""));
+    KeyVariable( ([]), 0, "Key Pairs", ""));
 
   class KeyVariable {
     inherit Variable.Mapping;
@@ -137,7 +137,7 @@ class TagIfreCaptchaVerify
     if (!secret || !sizeof(secret)) {
       RXML.parse_error("Unresolved \"secret\". Either pass it via the "
                        "\"secret\" attribute, or set up site key/secret "
-                       "pairs in the module settings and user the \"site-key\" "
+                       "pairs in the module settings and use the \"site-key\" "
                        "attribute.\n");
     }
 
@@ -178,7 +178,7 @@ constant tagdoc = ([
 
   <attr name='site-key' value='string'>
     <p>In the module settings you can set up site key/secret pairs. If so you
-     don't have to have your secret in laying around in your RXML code, but
+     don't have to have your secret laying around in your RXML code, but
      instead give the site key here and the secret will be resolved within
      the module.</p>
   </attr>"
