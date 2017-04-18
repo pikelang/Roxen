@@ -30,21 +30,26 @@ void create(Configuration conf)
 
   defvar("key_pairs",
     KeyVariable(([]), 0, "Key Pairs",
-                "<p>You can set up Key Pairs in two different ways:</p>"
-                "<ol><li><p><b><tt>Site Key</tt></b> # <b><tt>Secret Key</tt></b></p>"
-                  "<p>Simply put the reCAPTCHA site key in the "
-                  "<tt>Site Key</tt> column and the secret key in the "
-                  "<tt>Secret Key</tt> column.</p></li>"
-                  "<li><p><b><tt>Name</tt></b> # <b><tt>Site Key</tt></b> :"
-                  " <b><tt>Secret Key</tt></b></p>"
-                  "<p>This lets you name your reCAPTCHAs, which is handy if you "
-                  " have many different site keys in the same site.</p>"
-                  "<p>So in the <b>Site Key</b> column you give an "
-                  " arbitrary name for the configuration (which you'll then "
-                  " reference in the tag), and in the <b>Secret Key</b> column "
-                  " you give the value of <tt>[site key] [colon] [secret key]</tt>"
-                  " (spaces between the keys and the colon is of no concern).</p>"
-                "</li></ol>"));
+                #"<p>You can set up Key Pairs in two different ways:</p>
+                <ol>
+                  <li>
+                    <p><b><tt>Site Key</tt></b> | <b><tt>Secret Key</tt></b></p>
+                    <p>Simply put the reCAPTCHA site key in the <tt>Site Key</tt>
+                     column and the secret key in the <tt>Secret Key</tt>
+                     column.</p>
+                  </li>
+                  <li>
+                    <p><b><tt>Name # Site Key</tt></b> | <b><tt>Secret Key</tt></b></p>
+                    <p>This lets you name your reCAPTCHAs, which is handy if you
+                     have many different site keys in the same site.</p>
+                    <p>So in the <b>Site Key</b> column you give an arbitrary
+                     name for the configuration (which you'll then reference in
+                     the tag) followed by a pound sign (#) followed by the Site
+                     Key, and in the <b>Secret Key</b> column you simply put the
+                     Secret Key</tt> (spaces between the name, # and Site Key is
+                     of no concern).</p>
+                  </li>
+                </ol>"));
 
   class KeyVariable {
     inherit Variable.Mapping;
@@ -64,10 +69,10 @@ void start(int when, Configuration conf)
   mapping tmp = query("key_pairs");
 
   foreach (tmp||([]); string key; string value) {
-    if (has_value(value, ":")) {
-      array(string) pairs  = map(value/":", String.trim_all_whites);
-      named_key_pairs[key] = pairs;
-      key_pairs[pairs[0]]  = pairs[1];
+    if (has_value(key, "#")) {
+      array(string) pairs  = map(key/"#", String.trim_all_whites);
+      named_key_pairs[pairs[0]] = ({ pairs[1], value });
+      key_pairs[pairs[1]]  = value;
     }
     else {
       key_pairs[key] = value;
