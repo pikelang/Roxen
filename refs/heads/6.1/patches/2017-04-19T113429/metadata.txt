@@ -1,0 +1,42 @@
+subject: Roxen 6.1: Nested scopes in RXML, reCAPTCHA, git-rxnpatch
+from: 28da7776d94b43eb04af38b9ba1798b1463b7e6a
+to: dcc43183297f86cb137eee304c151b82717fa851
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-04-12T104244
+restart: true
+
+Multiple fixes:
+
+• git-rxnpatch: More fixes to the ident verifier.
+
+• reCAPTCHA: Changed how you configure named key pairs.
+
+We now instead prefix the Site Key with "name #".
+
+• reCAPTCHA: Added support for named key pairs.
+
+If many different reCAPTCHA configurations are used it's virtually impossible to tell which is which. Thus it's now possible to name a configuration and then reference that configuration by its name in the tag attributes.
+
+• reCAPTCHA: Fixed some typos.
+
+• Recaptcha: Show API error codes with RECAPTCHA_DEBUG
+
+• Recaptcha: Censor secret attribute
+
+Also altered attribute checking logic slightly.
+
+• Recaptcha: Proper labels for key pars setting
+
+• RXML.Value: Support nested scopes in rxml_var_eval().
+
+rxml_var_eval() failed to store the evaluation result when
+evaluating in nested scopes with "Unknown scope "foo.bar".".
+
+Fixes remainder of [WS-33].
+
+• RXML.Context: Support dotted scope_name in parse_user_var().
+
+In some circumstances (like eg RXML.Value()->rxml_var_eval()) dot-separated
+scopes may show up, so make sure that we support them.
+
+Fixes some of [WS-33].
