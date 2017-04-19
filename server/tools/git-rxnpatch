@@ -1377,9 +1377,9 @@ void check_ident(string block, string path, string commit)
 	  commit, repo_path, tree_info);
   }
   foreach(block/"\n", string line) {
-    if (!has_prefix(line, "+") || !has_value(line, "$Id: ")) continue;
-    string frag = (line/"$Id: ")[1];
-    if (!has_prefix(frag, sha1)) {
+    if (!has_prefix(line, "+") || !has_value(line, "$Id"": ")) continue;
+    string frag = (line/("$Id"": "))[1];
+    if (!has_prefix(frag, sha1) && has_value(frag, "$")) {
       error("Unexpected $Id"
 	    "$ expansion for %s (%s):\n"
 	    "Expected: $Id"
@@ -1943,6 +1943,7 @@ void create_cluster(mapping(string:string|int|array(string)) options,
   string prefix = "refs/heads/" + branch + "/patches";
   foreach(git("ls-tree", "-r", "-z", "--full-tree", "rxnpatch/rxnpatch",
 	      "--", prefix)/"\0", string entry) {
+    // FIXME: Detect patches that haven't been made (ie lack *.rxp)?
     if (!has_suffix(entry, ".rxp")) continue;
     array(string) splitted = entry/"\t";
     if (sizeof(splitted) < 2) continue;
