@@ -1,0 +1,4 @@
+Modified files:
+  etc/modules/RXML.pmod/module.pmod
+  modules/tags/recaptcha.pike
+  tools/git-rxnpatch
