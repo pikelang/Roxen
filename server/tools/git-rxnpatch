@@ -1591,6 +1591,33 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	  }
 	} else if (has_prefix(header->b[0], "\"")) {
 	  sscanf(a[3..]*" ", "%O", header->b[0]);
+	} else if (sizeof(a) > 4) {
+	  // Some versions of git forget that strings containing
+	  // spaces need quoting...
+
+	  werror("Warning: Unquoted spaces in filename: %O\n", line);
+
+	  if (a[2] == "/dev/null") {
+	    header->b = ({ a[3..] * " " });
+	  } else if (a[-1] == "/dev/null") {
+	    header->a = ({ a[2..<1] * " " });
+	    header->b = ({ a[-1] });
+	  } else if (sizeof(path_prefix)) {
+	    // FIXME: Assumes path_prefix doesn't contain spaces.
+	    int i;
+	    for(i = 3; i < sizeof(a); i++) {
+	      if (has_prefix(a[i], path_prefix)) {
+		// Found!
+		header->a = ({ a[2..i-1] * " " });
+		header->b = ({ a[i..] * " " });
+		break;
+	      }
+	    }
+	  } else {
+	    // Assume same number of spaces in both filenames.
+	    header->a = ({ a[2..1 + (sizeof(a)-2)/2] * " " });
+	    header->b = ({ a[2 + (sizeof(a)-2)/2..] * " " });
+	  }
 	}
 	// Perform .distignore filtering.
 	string path = header->b[0];
