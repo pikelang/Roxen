@@ -1,0 +1,23 @@
+subject: Roxen 6.1: Privs, git-rxnpatch
+from: dcc43183297f86cb137eee304c151b82717fa851
+to: 0c50f619301504ff35529aa87bc23ab7cb4308eb
+originator: Henrik Grubbstrom <grubba@grubba.org>
+depends: 2017-04-19T113429
+restart: true
+
+Multiple fixes:
+
+• git-rxnpatch: Workaround for git-diff quoting bug.
+
+git-diff doesn't quote filenames containing spaces.
+
+Adds some heuristics to work around the problem.
+
+Fixes some of [IS-35].
+
+• Loader: Move Privs to roxenloader.
+
+This makes it available to modules loaded during compilation of Roxen
+(like eg RoxenPatch).
+
+Fixes [WS-35] and some of [WS-32] and [WS-34].
