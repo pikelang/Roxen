@@ -4,4 +4,4 @@
 
 dn="`dirname $0`"
 server=`cd "$dn"/../ && pwd`
-exec "$server"/start --program "$server"/bin/rxnpatch.pike -S"$server" "$@"
+exec "$server"/start --cd "$PWD" --program "$server"/bin/rxnpatch.pike -S"$server" "$@"
