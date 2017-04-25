@@ -98,7 +98,6 @@ worldmap binary
 /server/bin/mk_wxs_modules.sh foreign_ident
 /server/bin/mysql_client foreign_ident
 /server/bin/pdbi.pike foreign_ident
-/server/bin/rxnpatch foreign_ident
 /server/bin/setup_nsr.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
 /server/config_interface/actions/cachestatus.pike foreign_ident
