@@ -675,12 +675,14 @@ mixed parse(RequestID id)
     string temp_dir =
       Stdio.append_path(plib->get_temp_dir(), patch_name);
 
+    Privs privs = Privs("RoxenPatch: Saving uploaded patch cluster...");
     // Extra directory level to get rid of the sticky bit normally
     // present on /tmp/ that would require Privs for clean_up to work.
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, patch_name);
-
     plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
+    privs = 0;
+
     array(int|string) patch_ids = plib->import_file(temp_file);
     plib->clean_up(temp_dir);
 
