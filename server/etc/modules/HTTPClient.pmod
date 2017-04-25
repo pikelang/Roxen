@@ -116,6 +116,9 @@ public Result do_safe_method(string http_method,
 
   Result res;
   Session s = Session();
+  if (args && args->follow_redirects > -1) {
+    s->follow_redirects = args->follow_redirects;
+  }
   object /* Session.Request */ qr;
   Thread.Queue q;
   mixed co_maxtime;
@@ -225,6 +228,10 @@ class Arguments
 
   //! Request timeout
   int maxtime;
+
+  //! Number of times to follow redirects. A negative value will result in a
+  //! default value being used.
+  int follow_redirects = -1;
 
   //! Additional request headers
   mapping(string:string) headers;
