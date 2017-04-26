@@ -918,13 +918,21 @@ mixed parse(RequestID id)
     {
       if (patch != "on")
       {
-	if ( plib->install_patch(patch, current_user) )
-	{
-	  report_notice_for(0, "Patch manager: Installed %s.\n", patch);
-	  successful_installs++;
+	mixed err = catch {
+	    if ( plib->install_patch(patch, current_user) )
+	    {
+	      report_notice_for(0, "Patch manager: Installed %s.\n", patch);
+	      successful_installs++;
+	    }
+	    else
+	      report_error_for(0, "Patch manager: Failed to install %s.\n",
+			       patch);
+	  };
+	if (err) {
+	  report_error_for(0, "Patch manager: Failed to install %s:\n"
+			   "%s\n",
+			   patch, describe_backtrace(err));
 	}
-	else
-	  report_error_for(0, "Patch manager: Failed to install %s.\n", patch);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)
