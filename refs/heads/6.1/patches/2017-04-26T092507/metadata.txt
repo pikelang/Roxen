@@ -1,0 +1,16 @@
+subject: Roxen 6.1: RoxenPatch improvements
+from: 0c50f619301504ff35529aa87bc23ab7cb4308eb
+to: b4024a666b142cf2503026845490cbbe027080fa
+originator: Erik Allemann
+depends: 2017-04-24T160429
+restart: true
+
+• RoxenPatch: Use Privs for saving uploaded patches.
+
+Fixes some of [WS-34] and [WS-35].
+
+• rxnpatch: Don't change directory.
+
+start --program defaults to changing directory to the server directory
+before starting the program. When using the rxnpatch script this is
+usually not what you want.
