@@ -1,0 +1,32 @@
+subject: Roxen 6.0:  RoxenPatch fixes.
+from: 7fddc024b8cbcb51d1a5e885f6c8f041678f618e
+to: d4be441b5178e8b0f5ee71d2bd5b2ce8ae43c765
+originator: Erik Allemann
+depends: 2017-04-11T155810
+restart: true
+
+• git-rxnpatch: Workaround for git-diff quoting bug.
+
+git-diff doesn't quote filenames containing spaces.
+
+Adds some heuristics to work around the problem.
+
+Fixes some of [IS-35].
+
+• Loader: Move Privs to roxenloader.
+
+This makes it available to modules loaded during compilation of Roxen
+(like eg RoxenPatch).
+
+Fixes [WS-35] and some of [WS-32] and [WS-34].
+
+• RAM Cache: Aligned accounting code with 6.1
+
+This is a combination of commit 1201f57 and f0dcaaa, but does not change
+much in practice.
+
+• git-rxnpatch: More fixes to the ident verifier.
+
+* Don't complain about ourselves...
+
+* Fixes building of patch 2017-03-30T172238.
