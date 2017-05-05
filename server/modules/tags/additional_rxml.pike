@@ -365,11 +365,10 @@ class TagInsertHref {
 	if ((q->status >= pair[0]) && (q->status <= pair[1])) {
 	  mapping headers = q->con->headers;
 	  string data = q->data();
-	  // Explicitly destruct the connection object to avoid garbage
-	  // and CLOSE_WAIT sockets. Reported in [RT 18335].
-	  destruct(q);
-
 	  if (data) {
+            // Explicitly destruct the connection object to avoid garbage
+            // and CLOSE_WAIT sockets. Reported in [RT 18335].
+            destruct(q);
 	    return Roxen.low_parse_http_response(headers, data, 0, 1,
 						 (int)args["ignore-unknown-ce"]);
 	  }
