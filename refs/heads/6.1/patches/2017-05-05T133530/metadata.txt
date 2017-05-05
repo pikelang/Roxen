@@ -1,0 +1,19 @@
+subject: Roxen 6.1: Patch system, insert#href
+from: b4024a666b142cf2503026845490cbbe027080fa
+to: 226adb655feb139a1c238074e4f4ce6ca9d4e7f9
+originator: Marcus Wellhardh
+depends: 2017-04-26T092507
+restart: true
+
+• insert#href: Don't destruct Query object prematurely.
+
+This could lead to lookup in destructed object if the query didn't
+return any data (possibly because the other party closed the connection).
+RT#28704.
+
+• PatchPatch: Survive more failure conditions.
+
+Don't abort patch installation with an internal server error due
+to permission issues and similar.
+
+Fixes remainder of [WS-34].
