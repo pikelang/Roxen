@@ -1,0 +1,11 @@
+subject: Roxen 5.4: Fix for removed configurations in DB Browser
+from: 29de4da558cb3936bacad0bafdd37a367cc24717
+to: 94243dbd50fc5ab0a74d0f3e3b48644587198115
+originator: Erik Allemann
+depends: 2017-04-07T145112
+restart: true
+
+• Admin Interface [DB Browser]: Handle removed configurations
+
+Make sure configuration exists before trying to load it so we can
+complain about deleted sites.
