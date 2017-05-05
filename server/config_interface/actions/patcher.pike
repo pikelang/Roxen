@@ -624,13 +624,23 @@ mixed parse(RequestID id)
 				RXML.get_var("user-name", "usr"),
 				RXML.get_var("user-uid", "usr"));
 
+  string tmp_dir = roxen_path("$VVARDIR/tmp");
+
+  if (!Stdio.is_dir(tmp_dir)) {
+    Privs privs = Privs("RoxenPatch: Creating tmp directory.\n");
+    Stdio.mkdirhier(roxen_path("$VVARDIR"));
+    mkdir(tmp_dir, 01777);	/* rwxrwxrwxt */
+    privs = 0;
+  }
+
   // Init patch-object
   wb->clear_all();
   Patcher plib = Patcher(wb->write_mess,
   			 wb->write_error,
   			 getcwd(),
-			 getenv("LOCALDIR"));
-			 
+			 roxen_path("$LOCALDIR"),
+			 tmp_dir);
+
   string res = #"
     <style type='text/css'>
       td.folded {
@@ -754,13 +764,15 @@ mixed parse(RequestID id)
 
       string temp_dir =
 	Stdio.append_path(plib->get_temp_dir(), patch_name);
-      
+
+      Privs privs = Privs("RoxenPatch: Saving uploaded patch cluster...");
       // Extra directory level to get rid of the sticky bit normally
       // present on /tmp/ that would require Privs for clean_up to work.
       mkdir(temp_dir);
       string temp_file = Stdio.append_path(temp_dir, patch_name);
-      
       plib->write_file_to_disk(temp_file, file_data);
+      privs = 0;
+
       patch_ids = plib->import_file(temp_file);
       plib->clean_up(temp_dir);
     }
@@ -906,13 +918,21 @@ mixed parse(RequestID id)
     {
       if (patch != "on")
       {
-	if ( plib->install_patch(patch, current_user) )
-	{
-	  report_notice_for(0, "Patch manager: Installed %s.\n", patch);
-	  successful_installs++;
+	mixed err = catch {
+	    if ( plib->install_patch(patch, current_user) )
+	    {
+	      report_notice_for(0, "Patch manager: Installed %s.\n", patch);
+	      successful_installs++;
+	    }
+	    else
+	      report_error_for(0, "Patch manager: Failed to install %s.\n",
+			       patch);
+	  };
+	if (err) {
+	  report_error_for(0, "Patch manager: Failed to install %s:\n"
+			   "%s\n",
+			   patch, describe_backtrace(err));
 	}
-	else
-	  report_error_for(0, "Patch manager: Failed to install %s.\n", patch);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)

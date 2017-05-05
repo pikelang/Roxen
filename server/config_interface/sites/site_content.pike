@@ -267,10 +267,10 @@ string get_eventlog(RoxenModule o, RequestID id, int|void no_links )
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, no_links);
 
-  if( sizeof( report ) >= 1000 )
+  if( sizeof( report ) > 1000 )
     report[1000] =
       sprintf(LOCALE(472,"%d entries skipped. Present in log on disk."),
-	      sizeof( report )-999 );
+	      sizeof( report )-1000 );
 
   return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
 }

@@ -439,7 +439,8 @@ string diff_url( RequestID id, object mod, Variable.Variable var )
 			     cfs->query_location()[1..])+
 		"diff.pike":
 		cfs->query_location()+"diff.pike");
-  return base+"?variable="+Roxen.http_encode_url(var->path());
+  return base+"?variable="+Roxen.http_encode_url(var->path())+
+    "&amp;&usr.set-wiz-id;";
 }
 
 mapping get_variable_map( string s, object mod, RequestID id, int noset )

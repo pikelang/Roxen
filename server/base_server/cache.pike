@@ -184,7 +184,7 @@ class CacheEntry (mixed key, mixed data, string cache_name)
 }
 
 class CacheStats
-//! Holds statistics for each named cache.
+//! Holds statistics for each group of named caches.
 {
   int count;
   //! The number of entries in the cache.
@@ -253,6 +253,9 @@ class CacheManager
 
   int entry_add_count;
   //! Number of entries added since this cache manager was created.
+
+  int byte_add_count;
+  //! Number of bytes added since this cache manager was created.
 
   mapping(string:mapping(mixed:CacheEntry)) lookup = ([]);
   //! Lookup mapping on the form @expr{(["cache_name": ([key: data])])@}.
@@ -349,20 +352,20 @@ class CacheManager
 #endif
 
       if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
+        CacheEntry old_entry;
 	// vvv Relying on the interpreter lock from here.
-	CacheEntry old_entry = lm[entry->key];
-	lm[entry->key] = entry;
-	// ^^^ Relying on the interpreter lock to here.
-
-	if (old_entry) {
-	  recent_added_bytes -= entry->size;
-	  remove_entry (cache_name, old_entry);
-	}
+        while (old_entry = lm[entry->key]) {
+          recent_added_bytes -= old_entry->size;
+          remove_entry (cache_name, old_entry);
+        }
+        lm[entry->key] = entry;
+        // ^^^ Relying on the interpreter lock to here.
 
 	cs->count++;
 	cs->size += entry->size;
 	size += entry->size;
 	recent_added_bytes += entry->size;
+	byte_add_count += entry->size;
 
 	if (!(++entry_add_count & 0x3fff)) // = 16383
 	  update_size_limit();
@@ -723,6 +726,9 @@ class CM_GreedyDual
     int start = gethrtime();
     int reschedule;
 
+    // Protect against race when rebalancing on setting entry->pval.
+    Thread.MutexKey key = priority_mux->lock();
+
     foreach (pending_pval_updates; CacheEntry entry;) {
       // NB: The priority queue is automatically adjusted on
       //     change of pval.
@@ -739,29 +745,34 @@ class CM_GreedyDual
 
     while (CacheEntry entry = update_size_queue->try_read()) {
       string cache_name = entry->cache_name;
-      if (CacheStats cs = stats[cache_name]) {
-        int size_diff = entry->update_size();
+      // Check if entry has been evicted already.
+      if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
+        if (lm[entry->key] == entry) {
+          int size_diff = entry->update_size();
+          size += size_diff;
 
-        // Check if entry has been evicted already.
-        if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
-          if (lm[entry->key] == entry) {
+          if (CacheStats cs = stats[cache_name]) {
             cs->size += size_diff;
-            size += size_diff;
             recent_added_bytes += size_diff;
+            byte_add_count += size_diff;
           }
         }
 
+        // NB: The priority queue is automatically adjusted on
+        //     change of pval.
         entry->pval = calc_pval (entry);
-
-        if (size > size_limit) {
-          evict (size_limit);
-        }
       }
 
       if (gethrtime() - start > max_run_time) {
         reschedule = 1;
         break;
       }
+    }
+
+    key = 0;
+
+    if (size > size_limit) {
+      evict (size_limit);
     }
 
     if (reschedule) {
@@ -890,10 +901,8 @@ class CM_GreedyDual
   {
     Thread.MutexKey key = priority_mux->lock();
     while ((size > max_size) && sizeof(priority_queue)) {
-      // NB: Use low_peek() + remove() since low_pop() doesn't exist.
-      HeapElement element = priority_queue->low_peek();
+      HeapElement element = priority_queue->low_pop();
       if (!element) break;
-      priority_queue->remove(element);
 
       CacheEntry entry = element->cache_entry();
 
@@ -1338,28 +1347,29 @@ class CacheStatsMIB
   protected void create(CacheManager manager, string name, CacheStats stats)
   {
     this::stats = stats;
-    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 2 }) +
+    array(int) oid = mib->path + string_to_oid(manager->name) + ({ 3 }) +
       string_to_oid(name);
+    string label = "cache-"+name+"-";
     ::create(oid, ({}),
 	     ({
 	       UNDEFINED,
-	       SNMP.String(name, "cacheName"),
-	       SNMP.Gauge(get_count, "cacheNumEntries"),
-	       SNMP.Gauge(get_size, "cacheNumBytes"),
+	       SNMP.String(name,     label+"name"),
+	       SNMP.Gauge(get_count, label+"numEntries"),
+	       SNMP.Gauge(get_size,  label+"numBytes"),
 	       ({
-		 SNMP.Counter(get_hits, "cacheNumHits"),
-		 SNMP.Integer(get_cost_hits, "cacheCostHits"),
+		 SNMP.Counter(get_hits, label+"numHits"),
+		 SNMP.Integer(get_cost_hits, label+"costHits"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_hits, "cacheByteHits"),
+		 SNMP.Counter(get_byte_hits, label+"byteHits"),
 #else
 		 UNDEFINED,	/* Reserved */
 #endif
 	       }),
 	       ({
-		 SNMP.Counter(get_misses, "cacheNumMisses"),
-		 SNMP.Integer(get_cost_misses, "cacheCostMisses"),
+		 SNMP.Counter(get_misses, label+"numMisses"),
+		 SNMP.Integer(get_cost_misses, label+"costMisses"),
 #ifdef CACHE_BYTE_HR_STATS
-		 SNMP.Counter(get_byte_misses, "cacheByteMisses"),
+		 SNMP.Counter(get_byte_misses, label+"byteMisses"),
 #else
 		 UNDEFINED,	/* Reserved */
 #endif
@@ -1373,15 +1383,30 @@ class CacheManagerMIB
   inherit SNMP.SimpleMIB;
 
   CacheManager manager;
+  int get_entries() { return Array.sum(values(manager->stats)->count); }
+  int get_size() { return manager->size; }
+  int get_entry_add_count() { return manager->entry_add_count; }
+  int max_byte_add_count;
+  int get_byte_add_count() {
+    // SNMP.Counter should never decrease
+    return max_byte_add_count = max(max_byte_add_count, manager->byte_add_count);
+  }
 
   protected void create(CacheManager manager)
   {
     this::manager = manager;
     array(int) oid = mib->path + string_to_oid(manager->name);
+    string label = "cacheManager-"+manager->name+"-";
     ::create(oid, ({}),
 	     ({
 	       UNDEFINED,
-	       SNMP.String(manager->name, "cacheManagerName"),
+	       SNMP.String(manager->name, label+"name"),
+	       ({
+		 SNMP.Integer(get_entries,         label+"numEntries"),
+		 SNMP.Integer(get_size,            label+"numBytes"),
+		 SNMP.Counter(get_entry_add_count, label+"addedEntries"),
+		 SNMP.Counter(get_byte_add_count,  label+"addedBytes"),
+	       }),
 	       UNDEFINED,	// Reserved for CacheStatsMIB.
 	     }));
   }
@@ -1647,8 +1672,13 @@ CacheManager cache_register (string cache_name,
 			 cache_type);
   }
 
-  CacheStats stats = CacheStats();
-  mib->merge(CacheStatsMIB(manager, cache_name, stats));
+  string cache_name_prefix = (cache_name/":")[0];
+  CacheStats stats = manager->stats[cache_name_prefix];
+  if (!stats) {
+    stats = CacheStats();
+    mib->merge(CacheStatsMIB(manager, cache_name_prefix, stats));
+    manager->stats[cache_name_prefix] = stats;
+  }
   caches[cache_name] = manager;
   manager->stats[cache_name] = stats;
   manager->lookup[cache_name] = ([]);
@@ -1663,16 +1693,34 @@ void cache_unregister (string cache_name)
 {
   Thread.MutexKey lock = cache_mgmt_mutex->lock();
 
-  // vvv Relying on the interpreter lock from here.
   if (CacheManager mgr = m_delete (caches, cache_name)) {
     mapping(mixed:CacheEntry) lm = m_delete (mgr->lookup, cache_name);
-    CacheStats cs = m_delete (mgr->stats, cache_name);
-    // ^^^ Relying on the interpreter lock to here.
-    mgr->size -= cs->size;
-
     destruct (lock);
+
+    // NB: The CacheStats object is still active here in order to let
+    //     the removal code update it.
     foreach (lm;; CacheEntry entry)
       mgr->remove_entry (cache_name, entry);
+
+    lock = cache_mgmt_mutex->lock();
+    if (!caches[cache_name]) {
+      // The cache is still gone, so remove its associated CacheStats.
+      string cache_name_prefix = (cache_name/":")[0];
+      if (cache_name_prefix != cache_name) {
+	m_delete(mgr->stats, cache_name);
+      }
+      if (!caches[cache_name_prefix]) {
+	string prefix = cache_name_prefix + ":";
+	foreach(caches; string name;) {
+	  if (has_prefix(name, prefix)) {
+	    // There's another cache that uses the CacheStats object.
+	    return;
+	  }
+	}
+	// None of the caches uses the CacheStats object.
+	m_delete(mgr->stats, cache_name_prefix);
+      }
+    }
   }
 }
 
@@ -1699,9 +1747,7 @@ void cache_change_manager (string cache_name, CacheManager manager)
 
   else {
     mapping(mixed:CacheEntry) old_lm = m_delete (old_mgr->lookup, cache_name);
-    CacheStats old_cs = m_delete (old_mgr->stats, cache_name);
     // ^^^ Relying on the interpreter lock to here.
-    old_mgr->size -= old_cs->size;
     cache_register (cache_name, manager);
 
     // Move over the entries.
@@ -1896,7 +1942,8 @@ void cache_remove (string cache_name, mixed key)
 //! If @[key] was zero, this function used to remove the whole cache.
 //! Use @[cache_expire] for that instead.
 {
-  MORE_CACHE_WERR ("cache_remove (%O, %O)\n", cache_name, key);
+  MORE_CACHE_WERR ("cache_remove (%O, %s)\n",
+                   cache_name, RXML.utils.format_short (key));
   if (CacheManager mgr = caches[cache_name])
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       if (CacheEntry entry = lm[key])
@@ -1929,8 +1976,13 @@ mapping(CacheManager:mapping(string:CacheStats)) cache_stats()
 //! of the returned value.
 {
   mapping(CacheManager:mapping(string:CacheStats)) res = ([]);
-  foreach (cache_managers, CacheManager mgr)
-    res[mgr] = mgr->stats;
+  foreach (cache_managers, CacheManager mgr) {
+    res[mgr] = ([]);
+    foreach(mgr->stats; string cache_name; CacheStats cs) {
+      if (has_value(cache_name, ':')) continue;
+      res[mgr][cache_name] = cs;
+    }
+  }
   return res;
 }
 

@@ -127,11 +127,14 @@ them. They will shrink to the configured maximum size as they fill up."),
 #endif
 
       mapping(string:array(string)) cache_groups = ([]);
+      // FIXME: The following should be redundant given the
+      //        integrated grouping of CacheStats.
       foreach (caches; string cache_name;) {
 	sscanf (cache_name, "%[^:]", string group_name);
 	cache_groups[group_name] += ({cache_name});
       }
 
+      // FIXME: The following looks broken.
       mapping(string:string) name_trans =
 	mkmapping (indices (cache_groups), indices (cache_groups));
       foreach (trans; string name; string trans)

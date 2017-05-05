@@ -45,8 +45,12 @@ mapping parse_directory(RequestID id)
   string f = id->not_query;
   if(strlen(f) > 1)
   {
-    if(f[-1]!='/') return Roxen.http_redirect(f+"/", id);
+    if(f[-1]!='/')
+      // Don't expose internal path if the request has been internally
+      // redirected already.
+      return Roxen.http_redirect((id->misc->redirected_not_query || f) + "/", id);
     if(f[-1]=='/' && has_value(f, "//"))
+      // Dead code because the path has already been normalized?
       return Roxen.http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
   }
 

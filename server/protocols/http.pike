@@ -26,7 +26,15 @@ int req_time = HRTIME();
 
 #ifdef REQUEST_DEBUG
 int footime, bartime;
-#define REQUEST_WERR(X) do {bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime();} while (0)
+#define REQUEST_WERR(X) do {			\
+    if (this) {					\
+      bartime = gethrtime()-footime;		\
+      werror("%s (%d)\n", (X), bartime);	\
+      footime=gethrtime();			\
+    } else {					\
+      werror("%s\n", (X));			\
+    }						\
+  } while (0)
 #else
 #define REQUEST_WERR(X) do {} while (0)
 #endif
@@ -2772,6 +2780,11 @@ void send_result(mapping|void result)
 #endif
 
     mapping(string:string) heads = make_response_headers (file);
+
+    if (heads["Set-Cookie"]) {
+      // Never protocol cache setting of cookies.
+      NO_PROTO_CACHE();
+    }
 
     // Notes about the variant headers:
     //

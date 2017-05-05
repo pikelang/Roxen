@@ -395,10 +395,28 @@
      */
     log: function () {
       if (typeof console !== "undefined" && console.log) {
-        var args = [ ROXEN.getISOTimeString() + "(UTC): " ].
-          concat(Array.prototype.slice.call(arguments));
-        console.log.apply(console, args);
+        console.log.apply(console, ROXEN.formatLog(arguments));
       }
+    },
+    info: function () {
+      if (typeof console !== "undefined" && console.info) {
+        console.info.apply(console, ROXEN.formatLog(arguments));
+      }
+    },
+    warn: function () {
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn.apply(console, ROXEN.formatLog(arguments));
+      }
+    },
+    error: function () {
+      if (typeof console !== "undefined" && console.error) {
+        console.error.apply(console, ROXEN.formatLog(arguments));
+      }
+    },
+
+    formatLog: function (args) {
+      return [ ROXEN.getISOTimeString() + " test (UTC): " ].
+        concat(Array.prototype.slice.call(args));
     },
 
     /**

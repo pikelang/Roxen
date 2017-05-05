@@ -806,7 +806,15 @@ class TagRedirect {
 	  if (sscanf (type, "%d%*c", http_code) != 1) http_code = 0;
       }
 
+      // Don't expose internal path if the request has been internally
+      // redirected already and 'to' is a relative path.
+      string org_not_query = id->not_query;
+      id->not_query = id->misc->redirected_not_query || id->not_query;
+
       mapping r = Roxen.http_redirect(args->to, id, prestate, 0, http_code);
+
+      // Restore internal path
+      id->not_query = org_not_query;
 
       if (r->error)
 	RXML_CONTEXT->set_misc (" _error", r->error);
@@ -2259,7 +2267,14 @@ class CacheTagEntry (mixed data)
   }
 }
 
+
+//  Settings object used to flag a cache where the caller may extend existing
+//  entries even after a successful cache_lookup() call. This silences a debug
+//  warning.
+//
+//  NOTE: Used not only in TagCache but also elsewhere in this file.
 cache.CacheManagerPrefs extend_entries_cache_prefs = cache.CacheManagerPrefs(1);
+
 
 class TagCache {
   inherit RXML.Tag;
@@ -2938,7 +2953,8 @@ class TagCache {
       // restore() function above, when the frame is reinstantiated.
       if (persistent_cache && alternatives) {
 	foreach (alternatives; string key;) {
-	  cache_remove (cache_tag_alts_loc, key);
+          string full_key = get_full_key (key);
+          call_out(cache_remove, 0, cache_tag_alts_loc, full_key);
 	}
       }
     }
@@ -2947,7 +2963,7 @@ class TagCache {
   protected void create()
   {
     cache.cache_register (cache_tag_eval_loc, 0, extend_entries_cache_prefs);
-    cache.cache_register (cache_tag_alts_loc);
+    cache.cache_register (cache_tag_alts_loc, 0, extend_entries_cache_prefs);
   }
 }
 
@@ -4878,6 +4894,11 @@ class TagUse {
   constant name = "use";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
+  protected void create()
+  {
+    cache.cache_register("macrofiles", 0, extend_entries_cache_prefs);
+  }
 
   private array(string) list_packages() {
     return filter(((get_dir("../local/rxml_packages")||({}))
@@ -13286,7 +13307,8 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='module' value='name'><p>
  The \"real\" name of the module to look for, i.e. its filename
- without extension and without directory path.</p>
+ without extension and without directory path. The name parameter is
+ matched as a glob pattern.</p>
 </attr>",
 
 //----------------------------------------------------------------------

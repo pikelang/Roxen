@@ -23,13 +23,11 @@ void create()
 {
   defvar("hostredirect", "", "Redirect rules", TYPE_TEXT_FIELD,
          "Syntax:<pre>"
-         "[permanent] domain [other domain][path]</pre>"
+         "    <i>domain path</i></pre>"
          "<strong>Examples:</strong><pre>"
-         " permanent domain.com www.domain.com"
          "    ab.domain.com     /ab/\n"
          "    bc.domain.com     /bc/\n"
          "    main.domain.com   /\n"
-         "    ab.domian.com     www.domain.com/ab/"
          "    default           /serverlist.html</pre>"
          "<p>If someone access the server at http://ab.domain.com/text.html, "
          "it will be internally redirected to http://ab.domain.com/ab/text.html. "
@@ -40,32 +38,33 @@ void create()
          "servers, with correct URL's. If someone visits with a client "
          "that doesn't send the <tt>host</tt> header, the module won't "
          "do anything at all.</p>\n"
-         "<p>If the first string on the line is 'permanent', the http return code is "
-         "301 (moved permanently) instead of 302 (found).</p> "
          "v2 also allows the following syntax for HTTP redirects:<pre>"
-         "[permanent] domain [url][path][%p]\n</pre>"
+         "    <tt>[permanent]</tt> <i>domain</i> <i>target</i>\n</pre>"
          "<strong>Examples:</strong><pre>"
-         "    ab.domain.org             http://my.university.edu/~me/ab/%p\n"
-         "    bc.domain.com             %u/bc/%p%q\n"
-         "    default                   %u/serverlist.html</pre>"
+         "    permanent domain.com       www.domain.com\n"
+         "              ab.domain.org    http://my.university.edu/~me/ab/%p\n"
+         "              bc.domain.com    %u/bc/%p%q\n"
+         "              default          %u/serverlist.html</pre>"
 	 "<p><strong>There are several patterns that can be used "
-	 "in the 'to' field:</strong></p>\n"
+	 "in the 'target' field:</strong></p>\n"
 	 "<dl>\n"
 	 "<dh><tt>%p</tt> (Path)</dh>\n"
-         "<dd>A <tt>%p</tt> in the 'to' field will be replaced with the full "
+         "<dd>A <tt>%p</tt> in the 'target' field will be replaced with the full "
          "path of the request.</dd>\n"
 	 "<dh><tt>%q</tt> (Query)</dh>\n"
-	 "<dd>A <tt>%q</tt> in the 'to' field will be replaced with the "
+	 "<dd>A <tt>%q</tt> in the 'target' field will be replaced with the "
 	 "query string (if any). Note that the query string will be prepended "
-	 "with <tt>?</tt> if there's no <tt>?</tt> earlier in the 'to' "
+	 "with <tt>?</tt> if there's no <tt>?</tt> earlier in the 'target' "
 	 "field, and with <tt>&amp;</tt> otherwise. Note also that for "
 	 "internal redirects the query variables are passed along to "
 	 "the redirect target without any need to use <tt>%q</tt>.</dd>\n"
 	 "<dh><tt>%u</tt> (URL)</dh>\n"
-	 "<dd>A <tt>%u</tt> in the 'to' field will be replaced with this "
+	 "<dd>A <tt>%u</tt> in the 'target' field will be replaced with this "
 	 "server's URL (useful if you want to send an external redirect "
 	 "instead of doing an internal one).</dd>\n"
 	 "</dl>\n"
+         "<p>If the first string on the line is 'permanent', the http return "
+         "code is 301 (moved permanently) instead of 302 (found).</p> "
          "<p>Internal redirects will always have the path and query variables "
 	 "added, whether you use <tt>%p</tt> and/or <tt>%q</tt> or not. "
 	 "However for HTTP redirects <tt>%p</tt> and/or <tt>%q</tt> are "
@@ -78,7 +77,7 @@ void create()
   
   defvar("ignorepaths",
 	 Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
-				 "/roxen-files/", "/edit", "/__frame/"
+				 "/roxen-files/", "/edit", "/__ie/", "/yui/",
 			      }), 0, "Ignore paths",
 			      "A list of path prefixes that should not be redirected. "
 			      "Useful for making global images work in sub sites." ));
@@ -304,7 +303,7 @@ int|mapping first_try(RequestID id)
     //  and if it matches patterns["default"] add the id->not_query after all.
     if(to[0] != '/')
       to = "/"+ to;
-    if(host != "default" && strlen(to) > 1 && to[-1] == '/')
+    if((host != "default") && !path && strlen(to) > 1 && to[-1] == '/')
       to = to[0..strlen(to)-2];
     if((host != "default") && !path )
       to +=id->not_query;
@@ -312,6 +311,10 @@ int|mapping first_try(RequestID id)
     dwerror("HR: %O -> %O (internal redirect)\n", id->not_query, to);
     
     id->misc->host_redirected = 1;
+    if (!id->misc->redirected_raw_url) {
+      id->misc->redirected_raw_url = id->raw_url;
+      id->misc->redirected_not_query = id->not_query;
+    }
     id->not_query = id->scan_for_query( to );
     id->raw_url = Roxen.http_encode_invalids(to);
     //if we internally redirect to the proxy,

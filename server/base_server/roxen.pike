@@ -93,7 +93,7 @@ string md5( string what )
 {
   return Gmp.mpz(Crypto.MD5.hash( what ),256)->digits(32);
 }
-
+  
 string query_configuration_dir()
 {
   return configuration_dir;
@@ -178,266 +178,7 @@ void name_thread( object thread, string name )
     m_delete(thread_names, th_key);
 }
 
-// This mutex is used by Privs
-Thread.Mutex euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
-
-/*
- * The privilege changer. Works like a mutex lock, but changes the UID/GID
- * while held. Blocks all threads.
- *
- * Based on privs.pike,v 1.36.
- */
-int privs_level;
-
-protected class Privs
-{
-#if constant(seteuid)
-
-  int saved_uid;
-  int saved_gid;
-
-  int new_uid;
-  int new_gid;
-
-#define LOGP (variables && variables->audit && variables->audit->query())
-
-#if constant(geteuid) && constant(getegid) && constant(seteuid) && constant(setegid)
-#define HAVE_EFFECTIVE_USER
-#endif
-
-  private string _getcwd()
-  {
-    if (catch{return(getcwd());}) {
-      return("Unknown directory (no x-bit on current directory?)");
-    }
-  }
-
-  private string dbt(array t)
-  {
-    if(!arrayp(t) || (sizeof(t)<2)) return "";
-    return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
-  }
-
-#ifdef THREADS
-  protected mixed mutex_key; // Only one thread may modify the euid/egid at a time.
-  protected object threads_disabled;
-#endif /* THREADS */
-
-  int p_level;
-
-  void create(string reason, int|string|void uid, int|string|void gid)
-  {
-    // No need for Privs if the uid has been changed permanently.
-    if(getuid()) return;
-
-#ifdef PRIVS_DEBUG
-    report_debug(sprintf("Privs(%O, %O, %O)\n"
-			 "privs_level: %O\n",
-			 reason, uid, gid, privs_level));
-#endif /* PRIVS_DEBUG */
-
-#ifdef HAVE_EFFECTIVE_USER
-    array u;
-
-#ifdef THREADS
-    if (euid_egid_lock) {
-      if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	master()->handle_error (err);
-    }
-    threads_disabled = _disable_threads();
-#endif /* THREADS */
-
-    p_level = privs_level++;
-
-    /* Needs to be here since root-priviliges may be needed to
-     * use getpw{uid,nam}.
-     */
-    saved_uid = geteuid();
-    saved_gid = getegid();
-    seteuid(0);
-
-    /* A string of digits? */
-    if(stringp(uid) && (replace(uid,"0123456789"/"",({""})*10)==""))
-      uid = (int)uid;
-
-    if(stringp(gid) && (replace(gid, "0123456789"/"", ({"" })*10) == ""))
-      gid = (int)gid;
-
-    if(!stringp(uid))
-      u = getpwuid(uid);
-    else
-    {
-      u = getpwnam(uid);
-      if(u)
-	uid = u[2];
-    }
-
-    if(u && !gid)
-      gid = u[3];
-
-    if(!u)
-    {
-      if (uid && (uid != "root"))
-      {
-	if (intp(uid) && (uid >= 60000))
-        {
-	  report_warning(sprintf("Privs: User %d is not in the password database.\n"
-				 "Assuming nobody.\n", uid));
-	  // Nobody.
-	  gid = gid || uid;	// Fake a gid also.
-	  u = ({ "fake-nobody", "x", uid, gid, "A real nobody", "/", "/sbin/sh" });
-	} else {
-	  error("Unknown user: "+uid+"\n");
-	}
-      } else {
-	u = ({ "root", "x", 0, gid, "The super-user", "/", "/sbin/sh" });
-      }
-    }
-
-    if(LOGP)
-      report_notice(LOC_M(1, "Change to %s(%d):%d privs wanted (%s), from %s"),
-		    (string)u[0], (int)uid, (int)gid,
-		    (string)reason,
-		    (string)dbt(backtrace()[-2]));
-
-    if (u[2]) {
-#if constant(cleargroups)
-      if (mixed err = catch { cleargroups(); })
-	master()->handle_error (err);
-#endif /* cleargroups */
-#if constant(initgroups)
-      if (mixed err = catch { initgroups(u[0], u[3]); })
-	master()->handle_error (err);
-#endif
-    }
-    gid = gid || getgid();
-    int err = (int)setegid(new_gid = gid);
-    if (err < 0) {
-      report_warning(LOC_M(2, "Privs: WARNING: Failed to set the "
-			   "effective group id to %d!\n"
-			   "Check that your password database is correct "
-			   "for user %s(%d),\n and that your group "
-			   "database is correct.\n"),
-		     gid, (string)u[0], (int)uid);
-      int gid2 = gid;
-#ifdef HPUX_KLUDGE
-      if (gid >= 60000) {
-	/* HPUX has doesn't like groups higher than 60000,
-	 * but has assigned nobody to group 60001 (which isn't even
-	 * in /etc/group!).
-	 *
-	 * HPUX's libc also insists on filling numeric fields it doesn't like
-	 * with the value 60001!
-	 */
-	report_debug("Privs: WARNING: Assuming nobody-group.\n"
-	       "Trying some alternatives...\n");
-	// Assume we want the nobody group, and try a couple of alternatives
-	foreach(({ 60001, 65534, -2 }), gid2) {
-	  report_debug("%d... ", gid2);
-	  if (initgroups(u[0], gid2) >= 0) {
-	    if ((err = setegid(new_gid = gid2)) >= 0) {
-	      report_debug("Success!\n");
-	      break;
-	    }
-	  }
-	}
-      }
-#endif /* HPUX_KLUDGE */
-      if (err < 0) {
-	report_debug("Privs: Failed\n");
-	error ("Failed to set EGID to %d\n", gid);
-      }
-      report_debug("Privs: WARNING: Set egid to %d instead of %d.\n",
-	     gid2, gid);
-      gid = gid2;
-    }
-    if(getgid()!=gid) setgid(gid||getgid());
-    seteuid(new_uid = uid);
-    enable_coredumps(1);
-#endif /* HAVE_EFFECTIVE_USER */
-  }
-
-  void destroy()
-  {
-    // No need for Privs if the uid has been changed permanently.
-    if(getuid()) return;
-
-#ifdef PRIVS_DEBUG
-    report_debug(sprintf("Privs->destroy()\n"
-			 "privs_level: %O\n",
-			 privs_level));
-#endif /* PRIVS_DEBUG */
-
-#ifdef HAVE_EFFECTIVE_USER
-    /* Check that we don't increase the privs level */
-    if (p_level >= privs_level) {
-      report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "in wrong order! Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
-      return(0);
-    }
-    if (p_level != privs_level-1) {
-      report_error(sprintf("Change back to uid#%d gid#%d from uid#%d gid#%d\n"
-			   "Skips privs level. Saved level:%d Current level:%d\n"
-			   "Occurs in:\n%s\n",
-			   saved_uid, saved_gid, new_uid, new_gid,
-			   p_level, privs_level,
-			   describe_backtrace(backtrace())));
-    }
-    privs_level = p_level;
-
-    if(LOGP) {
-      if (mixed err = catch {
-	array bt = backtrace();
-	if (sizeof(bt) >= 2) {
-	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
-			saved_uid, saved_gid, dbt(bt[-2]));
-	} else {
-	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
-			      "from backend")+"\n", saved_uid, saved_gid);
-	}
-	})
-	master()->handle_error (err);
-    }
-
-#ifdef PRIVS_DEBUG
-    int uid = geteuid();
-    if (uid != new_uid) {
-      report_debug("Privs: UID #%d differs from expected #%d\n"
-		   "%s\n",
-		   uid, new_uid, describe_backtrace(backtrace()));
-    }
-    int gid = getegid();
-    if (gid != new_gid) {
-      report_debug("Privs: GID #%d differs from expected #%d\n"
-		   "%s\n",
-		   gid, new_gid, describe_backtrace(backtrace()));
-    }
-#endif /* PRIVS_DEBUG */
-
-    seteuid(0);
-    array u = getpwuid(saved_uid);
-#if constant(cleargroups)
-    if (mixed err = catch { cleargroups(); })
-      master()->handle_error (err);
-#endif /* cleargroups */
-    if(u && (sizeof(u) > 3)) {
-      if (mixed err = catch { initgroups(u[0], u[3]); })
-	master()->handle_error (err);
-    }
-    setegid(saved_gid);
-    seteuid(saved_uid);
-    enable_coredumps(1);
-#endif /* HAVE_EFFECTIVE_USER */
-  }
-#else /* constant(seteuid) */
-  void create(string reason, int|string|void uid, int|string|void gid){}
-#endif /* constant(seteuid) */
-}
 
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
@@ -451,7 +192,7 @@ protected Privs PRIVS(string r, int|string|void u, int|string|void g)
 Thread.Local current_configuration = Thread.Local();
 
 // font cache and loading.
-//
+// 
 // This will be changed to a list of server global modules, to make it
 // easier to implement new types of fonts (such as PPM color fonts, as
 // an example)
@@ -643,7 +384,7 @@ constant Queue = Thread.Queue;
 #else
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
-class Queue
+class Queue 
 //! Thread.Queue lookalike, which uses some archaic and less
 //! known features of the preempting algorithm in pike to optimize the
 //! read function.
@@ -662,12 +403,12 @@ class Queue
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
   int r_ptr, w_ptr;
-
-  int size()
-  {
-    return w_ptr - r_ptr;
+  
+  int size() 
+  { 
+    return w_ptr - r_ptr;  
   }
-
+  
   mixed read()
   {
     while(!(w_ptr - r_ptr)) {
@@ -1104,7 +845,7 @@ void start_handler_threads()
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
     report_warning (LOC_S(1, "Starting one thread to handle requests.")+"\n");
-  } else {
+  } else { 
     report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
 		   query("numthreads") );
   }
@@ -1331,8 +1072,8 @@ function async_sig_start( function f, int really )
   // /  noring
   //
   // Apparantly it already did that. :-)
-  //
-  // I also fixed SIGHUP to be somewhat more asynchronous.
+  // 
+  // I also fixed SIGHUP to be somewhat more asynchronous.  
   //
   // I also added a rather small amount of magic so that it is called
   // asynchronously the first time it is received, but repeated
@@ -1723,7 +1464,7 @@ int(0..1) host_is_local(string hostname)
 {
   int(0..1) res;
   if (!zero_type(res = host_is_local_cache[hostname])) return res;
-
+  
   // Look up the IP.
   string ip = blocking_host_to_ip(hostname);
 
@@ -2071,7 +1812,7 @@ class Protocol
       Configuration c;
       if( refs < 2 )
       {
-        if(!mu)
+        if(!mu) 
         {
 	  mu = get_iterator(urls)->value();
 	  if(!(c=mu->conf)->inited ) {
@@ -2128,7 +1869,7 @@ class Protocol
 	return urls[in];
       }
     }
-
+    
     if( no_default ) {
       URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
@@ -2151,14 +1892,14 @@ class Protocol
 	}
 	return u;
       }
-
+    
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
     mapping(Configuration:int(1..1)) choices = ([]);
     foreach( configurations, Configuration c )
       if( c->query( "default_server" ) )
 	choices[c] = 1;
-
+    
     if( sizeof( choices ) )
     {
       // Pick a default server bound to this port
@@ -2176,8 +1917,8 @@ class Protocol
 
   Configuration find_configuration_for_url( string url, RequestID id )
   //! Given a url and requestid, try to locate a suitable configuration
-  //! (virtual site) for the request.
-  //! This interface is not at all set in stone, and might change at
+  //! (virtual site) for the request. 
+  //! This interface is not at all set in stone, and might change at 
   //! any time.
   {
     mapping(string:mixed) url_data = find_url_data_for_url (url, 0, id);
@@ -2217,7 +1958,7 @@ class Protocol
   }
 
   mixed query_option( string x )
-  //! Query the port-option 'x' for this port.
+  //! Query the port-option 'x' for this port. 
   {
     return query( x );
   }
@@ -2822,7 +2563,7 @@ class StartTLSProtocol
 	raw_keydata = raw_cert;
       }
 
-      if (!part || !(cert = part->decoded_body()))
+      if (!part || !(cert = part->decoded_body())) 
       {
 	CERT_WARNING (Certificates,
 		      LOC_M(10, "No certificate found in %O.\n"),
@@ -2903,7 +2644,7 @@ class StartTLSProtocol
 	    lambda (object tbs) {
 	      return tbs->public_key->rsa->public_key_equal (rsa);
 	    });
-
+      
       int num_key_matches;
       // DWIM: Make sure the main cert comes first.
       array(string) new_certificates = allocate(sizeof(certificates));
@@ -3243,7 +2984,7 @@ array(string) find_ips_for( string what )
     //   a) replace every colon ":" with a "-"
     //   b) append ".ipv6" to the end.
     return ({ replace(what[..sizeof(what)-6], "-", ":") });
-  }
+  } 
   array res = gethostbyname( what );
   if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
@@ -3488,7 +3229,7 @@ int register_url( string url, Configuration conf )
     // There is now no need to check for both open_ports[prot][0] and
     // open_ports[prot][0][port], we can go directly to the latter
     // test.
-    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]);
+    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]); 
 
   if (prot->supports_ipless ) {
     // Check if the ANY port is already open for this port, since this
@@ -3559,7 +3300,7 @@ int register_url( string url, Configuration conf )
 	prot_obj = m[ required_host ][ port ] =
 	  prot( port, required_host,
 		// Don't complain if binding IPv4 ANY fails with
-		// EADDRINUSE after we've bound IPv6 ANY.
+		// EADDRINUSE after we've bound IPv6 ANY. 
 		// Most systems seems to bind both IPv4 ANY and
 		// IPv6 ANY for "::"
 		!required_host && opened_ipv6_any_port);
@@ -3608,11 +3349,11 @@ int register_url( string url, Configuration conf )
       urls[ourl]->ports = ({ prot_obj });
     }
     prot_obj->ref(url, urls[url]);
-
+ 
     if( !prot_obj->bound )
       failures++;
   }
-  if (failures == sizeof(required_hosts))
+  if (failures == sizeof(required_hosts)) 
   {
     report_error(LOC_M(23, "Failed to register URL %s for %O.")+"\n",
 		 display_url, conf->query_name());
@@ -3688,7 +3429,7 @@ mapping(string:array(int)) error_log=([]);
 
 // Write a string to the administration interface error log and to stderr.
 void nwrite(string s, int|void perr, int|void errtype,
-            object|void mod, object|void conf, bool|void skip_stderr)
+            object|void mod, object|void conf)
 {
   int log_time = time(1);
   string reference = (mod ? Roxen.get_modname(mod) : conf && conf->name) || "";
@@ -3709,7 +3450,7 @@ void nwrite(string s, int|void perr, int|void errtype,
       conf->error_log[log_index] += ({ log_time });
   }
 
-  if(errtype >= 1 && !skip_stderr)
+  if(errtype >= 1)
     report_debug( s );
 }
 
@@ -4091,7 +3832,7 @@ class ImageCache
 #endif
       return;
     }
-
+    
     if( arrayp( args ) )
       args = args[0];
 
@@ -4203,7 +3944,7 @@ class ImageCache
 	  sort( xguides ); sort( yguides );
 	}
       };
-
+	
       if( args->crop )
       {
 	int gx=1, gy=1, gx2, gy2;
@@ -4264,7 +4005,7 @@ class ImageCache
 					    int|float w,  int|float h,
 					    int type )
       {
-	if( (type & CROP) && x1 && y1
+	if( (type & CROP) && x1 && y1 
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
 		|| x0 ||  y0 ) )
 	{
@@ -4345,7 +4086,7 @@ class ImageCache
 	    alpha = alpha->scale( w,h );
 	}
       };
-
+      
       if( sizeof((string) (args->scale || "")) )
       {
         int x, y;
@@ -4403,7 +4144,7 @@ class ImageCache
 	  y1 = -((height - reply->ysize()) / 2);
 	  y2 = y1 + height - 1;
 	}
-
+	
 	if( width && height )
 	{
 	  reply = reply->copy(x1,y1,x2,y2,(bgcolor?bgcolor->rgb():0));
@@ -4480,13 +4221,13 @@ class ImageCache
         ct = Image.Colortable( reply, ncols );
         if( dither )
         {
-          if( dither == "random" )
+          if( dither == "random" ) 
             dither = "random_grey";
           if( ct[ dither ] )
             ct[ dither ]();
           else
             ct->ordered();
-
+        
         }
       }
 
@@ -4507,7 +4248,7 @@ class ImageCache
 	case "wbf":
 	  format = "wbmp";
 	case "wbmp":
-	  Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }),
+	  Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
 						   ({ 255,255,255 }) }) );
 	  bw->floyd_steinberg();
 	  data = Image.WBF.encode( bw->map( reply ), enc_args );
@@ -4516,7 +4257,7 @@ class ImageCache
 #if constant(Image.GIF) && constant(Image.GIF.encode)
          if( alpha && true_alpha )
          {
-           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }),
+           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
                                                     ({ 255,255,255 }) }) );
            bw->floyd_steinberg();
            alpha = bw->map( alpha );
@@ -4871,7 +4612,7 @@ class ImageCache
 	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
 	    id, uid );
     }
-
+    
     return 0;
   }
 
@@ -4961,7 +4702,7 @@ class ImageCache
     //  allow authenticated images in the protocol cache. At this point
     //  http.pike will have cleared it so re-enable explicitly.
     PROTO_CACHE();
-
+    
     return res;
   }
 
@@ -5026,7 +4767,7 @@ class ImageCache
 	// generate a unique key.
 	a["\0u"] = user = id->misc->authenticated_user->name();
     };
-
+    
     if( mappingp( data ) )
     {
       update_args( data );
@@ -5093,7 +4834,7 @@ class ImageCache
 
       master()->resolv("DBManager.is_module_table")
 	( 0,"local",name,"Image cache for "+name);
-
+      
       QUERY("CREATE TABLE "+name+" ("
 	    "id     CHAR(64) NOT NULL PRIMARY KEY, "
 	    "size   INT      UNSIGNED NOT NULL DEFAULT 0, "
@@ -5158,7 +4899,7 @@ class ImageCache
     //  Remove items older than one week
     flush(now - 7 * 3600 * 24);
   }
-
+  
   void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
@@ -5220,7 +4961,7 @@ class ArgCache
 #define dwerror(ARGS...) werror(ARGS)
 #else
 #define dwerror(ARGS...) 0
-#endif
+#endif    
 
   //! Cache of the latest entries requested or stored.
   //! Limited to @[CACHE_SIZE] (currently @expr{900@}) entries.
@@ -5286,9 +5027,9 @@ class ArgCache
     }
 
     catch {
-      array(mapping(string:mixed)) res =
+      array(mapping(string:mixed)) res = 
 	QUERY("DESCRIBE "+name+"2 contents");
-
+      
       if(res[0]->Type == "blob") {
 	QUERY("ALTER TABLE "+name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
 	werror("ArgCache: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", name);
@@ -5316,7 +5057,7 @@ class ArgCache
 
     do_cleanup();
   }
-
+  
   protected void init_db()
   {
     // Delay DBManager resolving to before the 'roxen' object is
@@ -5415,7 +5156,7 @@ class ArgCache
 
     (plugins->create_key-({0}))( id, encoded_args );
   }
-
+  
   protected array plugins;
   protected void get_plugins()
   {
@@ -5490,7 +5231,7 @@ class ArgCache
 
 
   mapping lookup( string id )
-  //! Recall a mapping stored in the cache.
+  //! Recall a mapping stored in the cache. 
   {
     if( cache[id] )
       return cache[id] + ([]);
@@ -5515,7 +5256,7 @@ class ArgCache
     GET_DB();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
-
+    
     QUERY( "DELETE FROM "+name+"2 WHERE id = %s", id );
   }
 
@@ -5529,7 +5270,7 @@ class ArgCache
   }
 
 #define SECRET_TAG "££"
-
+  
   int write_dump(Stdio.File file, int from_time)
   //! Dumps all entries that have been @[refresh_arg]'ed at or after
   //! @[from_time] to @[file]. All existing entries are dumped if
@@ -5545,7 +5286,7 @@ class ArgCache
   {
     constant FETCH_ROWS = 10000;
     int entry_count = 0;
-
+    
     // The server does only need to use file based argcache
     // replication if the server don't participate in a replicate
     // setup with a shared database.
@@ -5566,20 +5307,20 @@ class ArgCache
 	array(mapping(string:string)) entries;
 	if(from_time)
 	  // Only replicate entries accessed during the prefetch crawling.
-	  entries =
+	  entries = 
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " WHERE rep_time >= FROM_UNIXTIME(%d) "
 		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS);
 	else
 	  // Make sure _every_ entry is replicated when a dump is created.
-	  entries =
+	  entries = 
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " LIMIT %d, %d", cursor, FETCH_ROWS);
 
 	ids = entries->id;
 	array(string) timeouts = entries->timeout;
 	cursor += FETCH_ROWS;
-
+	
 	foreach(ids; int i; string id) {
 	  dwerror("ArgCache.write_dump(): %O\n", id);
 
@@ -5598,12 +5339,12 @@ class ArgCache
 	      // Expired entry. Don't replicate.
 	      continue;
 	    }
-	    s =
+	    s = 
 	      MIME.encode_base64(encode_value(({ id, encoded_args, timeout })),
 				 1)+"\n";
 	  } else {
 	    // No timeout. Backward-compatible format.
-	    s =
+	    s = 
 	      MIME.encode_base64(encode_value(({ id, encoded_args })),
 				 1)+"\n";
 	  }
@@ -5727,7 +5468,7 @@ void create()
   add_constant ("NewLDAP", Protocols.LDAP);
 
   add_constant( "CFUserDBModule",config_userdb_module );
-
+  
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
@@ -5735,7 +5476,7 @@ void create()
     error("Duplicate Roxen object!\n");
   }
 
-  // simplify dumped strings.
+  // simplify dumped strings.  
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
@@ -5774,16 +5515,6 @@ void create()
   dump( "base_server/supports.pike" );
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
-
-#ifndef __NT__
-  if(!getuid())
-    add_constant("Privs", Privs);
-  else
-#endif /* !__NT__ */
-    add_constant("Privs", class {
-      void create(string reason, int|string|void uid, int|string|void gid) {}
-    });
-
 
   DDUMP( "base_server/roxenlib.pike");
   DDUMP( "etc/modules/Dims.pmod");
@@ -5931,8 +5662,8 @@ int set_u_and_gid (void|int from_handler_thread)
 #  endif
 	}
 	setuid(uid);
-	if (getuid() != uid) {
-	  report_error(LOC_M(27, "Failed to set uid.")+"\n");
+	if (getuid() != uid) { 
+	  report_error(LOC_M(27, "Failed to set uid.")+"\n"); 
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
@@ -5999,7 +5730,7 @@ void reload_all_configurations()
   int modified;
 
   setvars(retrieve("Variables", 0));
-
+  
   foreach(list_all_configurations(), string config)
   {
     mixed err;
@@ -6378,7 +6109,7 @@ void describe_thread (Thread.Thread thread)
       th_bt = bt_segs * bt_separator;
     }
   }
-
+  
   report_debug(">> " + replace (th_bt, "\n", "\n>> ") + "\n");
 }
 
@@ -6563,9 +6294,117 @@ protected class GCTimestamp
   }
 }
 
-protected int gc_start;
+int log_gc_timestamps;
+int log_gc_histogram;
+int log_gc_verbose;
+int log_gc_cycles;
 
-protected mapping(string:int) gc_histogram = ([]);
+string format_cycle (array(mixed) cycle)
+{
+  array(string) string_parts = ({});
+  foreach (cycle; int pos; mixed val) {
+    /* Idea: identify mapping/array index of the next element in the cycle.
+    mixed next_val;
+    if (pos < sizeof (cycle) - 1) {
+      next_val = cycle[pos + 1];
+    }
+    */
+
+    string formatted;
+
+    if (arrayp (val)) {
+      formatted = sprintf ("array(%d)", sizeof (val));
+    } else if (mappingp (val)) {
+      formatted = sprintf ("mapping(%d)", sizeof (val));
+    } else if (multisetp (val)) {
+      formatted = sprintf ("multiset(%d)", sizeof (val));
+    } else {
+      formatted = sprintf ("%O", val);
+    }
+    string_parts += ({ formatted });
+  }
+
+  return string_parts * " -> ";
+}
+
+void reinstall_gc_callbacks()
+{
+  mapping(string:mixed) gc_params = ([ "pre_cb": 0,
+                                       "post_cb": 0,
+                                       "destruct_cb": 0,
+                                       "done_cb": 0 ]);
+
+  int gc_start;
+
+  // mapping from program name (as reported by sprintf/%O) to number of
+  // GC-destructed objects. Only valid in the GC's done_cb below.
+  mapping(string:int) gc_histogram = ([]);
+
+  // mapping from program name (as reported by sprintf/%O) to flag
+  // indicating whether a cycle has been reported for this program in
+  // the current GC report round. Cleared on every GC restart.
+  mapping(string:int(0..1)) reported_cycles = ([]);
+
+  if (log_gc_timestamps || log_gc_histogram || log_gc_verbose ||
+      log_gc_cycles) {
+    gc_params->pre_cb =
+      lambda() {
+        gc_start = gethrtime();
+        gc_histogram = ([]);
+        reported_cycles = ([]);
+        werror("GC runs at %s", ctime(time()));
+      };
+
+    gc_params->post_cb =
+      lambda() {
+        werror("GC done after %dus\n",
+               gethrtime() - gc_start);
+      };
+
+    if (log_gc_histogram || log_gc_verbose || log_gc_cycles) {
+      gc_params->destruct_cb =
+        lambda(object o) {
+          // NB: These calls to sprintf(%O) can
+          //     take significant time.
+          string id =
+            sprintf("%O", object_program(o));
+          gc_histogram[id]++;
+          if (log_gc_verbose) {
+            werror("GC cyclic reference in %O.\n",
+                   o);
+          }
+
+          if (log_gc_cycles && !reported_cycles[id]) {
+            reported_cycles[id] = 1;
+            if (array(mixed) cycle = Pike.identify_cycle(o)) {
+              werror ("GC cycle:\n%s\n", format_cycle (cycle));
+            }
+          }
+        };
+    }
+
+    gc_params->done_cb =
+      lambda(int n) {
+        if (!n) return;
+        werror("GC zapped %d things.\n", n);
+
+        if (log_gc_histogram) {
+          mapping h = gc_histogram;
+          gc_histogram = ([]);
+          if (!sizeof(h)) return;
+          array i = indices(h);
+          array v = values(h);
+          sort(v, i);
+          werror("GC histogram:\n");
+          foreach(reverse(i)[..9], string p) {
+            werror("GC:  %s: %d\n", p, h[p]);
+          }
+        }
+      };
+  }
+
+  Pike.gc_parameters(gc_params);
+}
 
 array argv;
 int main(int argc, array tmp)
@@ -6583,53 +6422,26 @@ int main(int argc, array tmp)
 			});
 #endif
 
+
+
 #ifdef LOG_GC_TIMESTAMPS
-  Pike.gc_parameters(([ "pre_cb": lambda() {
-				    gc_start = gethrtime();
-				    gc_histogram = ([]);
-				    werror("GC runs at %s", ctime(time()));
-				  },
-			"post_cb":lambda() {
-				    werror("GC done after %dus\n",
-					   gethrtime() - gc_start);
-				  },
+  log_gc_timestamps = 1;
+#endif
 #ifdef LOG_GC_HISTOGRAM
-			"destruct_cb":lambda(object o) {
-					// NB: These calls to sprintf(%O) can
-					//     take significant time.
-					gc_histogram[sprintf("%O", object_program(o))]++;
+  log_gc_histogram = 1;
+#endif
 #ifdef LOG_GC_VERBOSE
-					werror("GC cyclic reference in %O.\n",
-					       o);
+  log_gc_verbose = 1;
 #endif
-				      },
-#endif /* LOG_GC_HISTOGRAM */
-			"done_cb":lambda(int n) {
-				    if (!n) return;
-				    werror("GC zapped %d things.\n", n);
-#ifdef LOG_GC_HISTOGRAM
-				    mapping h = gc_histogram;
-				    gc_histogram = ([]);
-				    if (!sizeof(h)) return;
-				    array i = indices(h);
-				    array v = values(h);
-				    sort(v, i);
-				    werror("GC histogram:\n");
-				    foreach(reverse(i)[..9], string p) {
-				      werror("GC:  %s: %d\n", p, h[p]);
-				    }
-#endif /* LOG_GC_HISTOGRAM */
-				  },
-		     ]));
-  if (!Pike.gc_parameters()->pre_cb) {
-    // GC callbacks not available.
-    GCTimestamp();
-  }
+#ifdef LOG_GC_CYCLES
+  log_gc_cycles = 1;
 #endif
+
+  reinstall_gc_callbacks();
 
   // For RBF
   catch(mkdir(getenv("VARDIR") || "../var"));
-
+  
   dbm_cached_get = master()->resolv( "DBManager.cached_get" );
 
   dbm_cached_get( "local" )->
@@ -6642,7 +6454,7 @@ int main(int argc, array tmp)
   master()->resolv( "DBManager.is_module_table" )
     ( 0, "local", "compiled_formats",
       "Compiled and cached log and security pattern code. ");
-
+  
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "etc/modules/DBManager.pmod" );
@@ -6672,7 +6484,7 @@ int main(int argc, array tmp)
   foreach( glob("*.pike", get_dir( "etc/modules/Variable.pmod/"))
 	   -({"Language.pike", "Schedule.pike"}), string f )
     DDUMP( "etc/modules/Variable.pmod/"+f );
-
+  
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
   DDUMP(  "base_server/wizard.pike" );
@@ -6733,7 +6545,7 @@ int main(int argc, array tmp)
   init_configuserdb();
   cache.init_session_cache();
 
-  protocols = build_protocols_mapping();
+  protocols = build_protocols_mapping();  
 
   int t = gethrtime();
   report_debug("Searching for pike-modules directories ... \b");
@@ -7172,7 +6984,7 @@ class LogFormat			// Note: Dumping won't work if protected.
     return(sprintf("%04d-%02d-%02d",
 		   1900+ct->year,ct->mon+1, ct->mday));
   }
-
+ 
   protected string std_time(mapping(string:int) ct) {
     return(sprintf("%02d:%02d:%02d",
 		   ct->hour, ct->min, ct->sec));
@@ -7211,7 +7023,7 @@ class LogFormat			// Note: Dumping won't work if protected.
 
     return c;
   }
-
+  
   protected string host_ip_to_int(string s)
   {
     int a, b, c, d;
@@ -7245,7 +7057,7 @@ class LogFormat			// Note: Dumping won't work if protected.
   protected void do_async_write( string host, string data,
 				 string ip, function c )
   {
-    if( c )
+    if( c ) 
       c( replace( data, "\4711", (host||ip) ) );
   }
 }
@@ -7592,7 +7404,7 @@ protected LogFormat compile_log_format( string fmt )
   e_func += sprintf(#"
       string data = sprintf( %O%{,
 	%s%} );", e_format, e_args );
-
+ 
   if (log_flags & LOG_ASYNC_HOST)
   {
     a_func += #"
@@ -7685,7 +7497,7 @@ protected LogFormat compile_log_format( string fmt )
 //!       @value "luck"
 //!     @endstring
 //! @endarray
-//!
+//! 
 //! @note
 //!   It's up to the security checks in this file to ensure that
 //!   nothing is overcached. All patterns that perform checks using
@@ -7831,24 +7643,24 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //! will do the checks required by the format.
 //!
 //! The syntax is:
-//!
+//! 
 //!  userdb userdatabase module
 //!  authmethod authentication module
 //!  realm realm name
 //!
 //!  Below, CMD is one of 'allow' and 'deny'
-//!
+//! 
 //!  CMD ip=ip/bits[,ip/bits]  [return]
 //!  CMD ip=ip:mask[,ip:mask]  [return]
 //!  CMD ip=pattern            [return]
-//!
+//! 
 //!  CMD user=name[,name,...]  [return]
 //!  CMD group=name[,name,...] [return]
-//!
+//! 
 //!  CMD dns=pattern           [return]
 //!
 //!  CMD day=pattern           [return]
-//!
+//! 
 //!  CMD time=<start>-<stop>   [return]
 //!       times in HH:mm format
 //!
@@ -7865,7 +7677,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //!
 //!  return means that reaching this command results in immediate
 //!  return, only useful for 'allow'.
-//!
+//! 
 //! 'deny' always implies a return, no futher testing is done if a
 //! 'deny' match.
 {
@@ -7942,7 +7754,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	  sprintf("    userdb_module = id->conf->find_user_database( %O );\n",
 		  line);
       continue;
-    }
+    } 
     else if( sscanf( line, "authmethod %s", line ) )
     {
       line = String.trim_all_whites( line );
@@ -8011,7 +7823,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
     foreach(security_checks, array(string|int|array) check)
     {
-      array args;
+      array args;      
       if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
 	// Got a match for this security check.
@@ -8198,7 +8010,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       code/"\n"));
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
   mixed res = compile_string( code );
-
+   
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
   dbm_cached_get( "local" )
     ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
@@ -8286,10 +8098,10 @@ class LogFile(string fname, string|void compressor_program)
     compress_logs(fname, ff);
     mkdirhier( ff );
     fd = open( ff, "wac" );
-    if(!fd)
+    if(!fd) 
     {
       remove_call_out(do_open_co);
-      call_out(do_open_co, 120);
+      call_out(do_open_co, 120); 
       report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
@@ -8299,7 +8111,7 @@ class LogFile(string fname, string|void compressor_program)
     }
     opened = 1;
     remove_call_out(do_open_co);
-    call_out(do_open_co, 900);
+    call_out(do_open_co, 900); 
     remove_call_out(do_close_co);
     call_out(do_close_co, 10.0);
   }
@@ -8347,6 +8159,6 @@ class LogFile(string fname, string|void compressor_program)
     write_buf += ({ what });
     if (sizeof (write_buf) == 1)
       background_run (1, do_the_write);
-    return strlen(what);
+    return strlen(what); 
   }
 }
