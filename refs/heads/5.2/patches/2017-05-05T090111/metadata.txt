@@ -1,0 +1,49 @@
+subject: Roxen 5.2: Multiple fixes.
+from: b1f31906406e1b7a3541a3b2f889f631ff1e87b7
+to: 546e31fe3362b5d678ed912661f29cb58ae50ec0
+originator: Erik Allemann
+depends: 2016-12-01T172859
+restart: true
+
+• ABS: Fix listing of call_outs.
+
+Fixes ABS listing of call_outs which have no arguments or not an array
+as the first argument.
+
+Fixes [bug 7746].
+
+• RXML [Help]: Fixed tag name quoting on non-existing tag.
+
+Thanks to Henry Umansky <humansky@princeton.edu> for the report.
+
+Fixes [bug 7707].
+
+• API [Roxen.set_cookie]: Fixed the function type.
+
+The last two arguments to Roxen.set_cookie() are flags, and should
+thus accept the canonical true value (ie 1).
+
+• Static Resource: Don't attempt to stat paths with a leading double slash.
+
+In URL contexts, a leading double slash means protocol-relative link.
+
+• TagSQLQuery: Removed remaining leakage of SQLKey to backtraces.
+
+The SQLKey could leak to the backtrace if an invalid rowinfo was used.
+
+Fixes remainder of [bug 7439}.
+
+• SQLKey: Improved censoring of passwords. Fixes [bug 7439] some more.
+
+This attempts to detect and undo the mangling done
+by DBManager.sql_cache_get().
+
+• Cache manager_size_overhead when entries aren't added.
+
+The overhead will be recomputed when the number of added entries since the last
+computation is above 10% of the total number of entries in the cache.
+
+• Moved last_garb timestamp from module variable to external state file.
+
+This removes the need of calling save() and thus update the config
+file after each garb run.
