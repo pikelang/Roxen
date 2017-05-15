@@ -2860,21 +2860,30 @@ class Patcher
   int(0..1) add_file_to_tar_archive(string file_name,
 				    string base_path,
 				    string tar_archive)
-  //! Add a file to @[tar_archive]. If the archive doesn't exist it will be 
+  //! Add a file to @[tar_archive]. If the archive doesn't exist it will be
   //! created automagically by tar. @[file_name] cannot be a relative path
   //! higher than base_path.
   {
-    array args = ({ tar_bin, "rf", 
-		    unixify_path(tar_archive), 
+    array args = ({ tar_bin, "rf",
+		    unixify_path(tar_archive),
 		    simplify_path(unixify_path(file_name)) });
-  
-    Privs privs = Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
+
+    string tar_path = combine_path(base_path, tar_archive);
+    Privs privs;
+    if (!Stdio.exist(tar_path)) {
+      // Some versions of tar (eg Solaris) don't like creating new tar
+      // files with "rf"...
+      args[1] = "cf";
+      privs = Privs(sprintf("RoxenPatch: Creating tar file %O.", tar_archive));
+    } else {
+      privs = Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
+    }
     Process.Process p = Process.Process(args, ([ "cwd" : base_path ]));
     privs = 0;
     if (!p || p->wait())
       return 0;
-  
-    return 1; 
+
+    return 1;
   }
 
 
