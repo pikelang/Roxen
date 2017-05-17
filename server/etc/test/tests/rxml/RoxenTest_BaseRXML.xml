@@ -3940,13 +3940,15 @@ cd</rxml>
     c
     <value>d</value>
     e
+    <value type="any"> f</value>
   </rxml>
   <result>
      a
-    b
+     b
     c
     d
     e
+    f
   </result>
 </test>
 
@@ -3958,8 +3960,9 @@ cd</rxml>
     <value>d</value>
     <value/>
     e
+    <value type="any"> f</value>
   </rxml>
-  <result> abcde</result>
+  <result> abcdef</result>
 </test>
 
 <test>
