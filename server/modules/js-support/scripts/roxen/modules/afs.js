@@ -257,6 +257,8 @@ ROXEN.AFS = function () {
           cb (msg);
         } catch (err) {
           ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+          if (ROXEN.debug)
+            throw err;
         }
       }
     }
