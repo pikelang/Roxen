@@ -1,0 +1,4 @@
+Modified files:
+  etc/modules/RoxenPatch.pmod
+  etc/test/tests/rxml/RoxenTest_BaseRXML.xml
+  modules/tags/rxmltags.pike
