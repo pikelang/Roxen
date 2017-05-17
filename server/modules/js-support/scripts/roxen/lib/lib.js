@@ -575,6 +575,20 @@
       return a.join("");
     },
 
+    getQueryVariable: function (uri, variable) {
+      var query = uri.split("?");
+      if (query.length < 2) return false;
+      query = query[1];
+      var vars = query.split("&");
+      for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split("=");
+        if(pair[0] === variable) {
+          return pair[1];
+        }
+      }
+      return false;
+    },
+
     /**
      * Trims whitespaces from the end of a given string.
      * @method rtrim
