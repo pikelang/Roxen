@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.564 2008/11/01 18:32:09 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3533,7 +3533,6 @@ class TagValue
     "index": RXML.t_any (RXML.PEnt),
   ]);
 
-  RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_any});
   constant flags = RXML.FLAG_DONT_RECOVER;
 
@@ -3544,7 +3543,16 @@ class TagValue
     array do_enter (RequestID id)
     {
       RXML.Type type = args->type;
-      if (type) content_type = type (RXML.PXml);
+      if (type) {
+	content_type = type(RXML.PXml);
+      } else if (result_type->handle_literals) {
+	// t_any, t_array, t_mapping, etc.
+	content_type = RXML.t_any(RXML.PXml);
+      } else {
+	// Typically t_html.
+	// Encode the content with the same type as our result_type.
+	content_type = result_type(RXML.PXml);
+      }
 
       if (args->index) {
 	if (result_type != RXML.t_mapping)
