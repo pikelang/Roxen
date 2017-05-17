@@ -15,7 +15,8 @@ ROXEN.AFS = function () {
   // 2 - Also log calls to tagged callbacks, i.e. the single-response
   //     callbacks passed to call().
   // 3 - Also log calls to global and error callbacks.
-  var debug_log = 0;
+  var debug_log = parseInt(ROXEN.getQueryVariable(window.location.href,
+                                                  "__afs-debug"), 10);
 
   var session = ROXEN.config.session;
 
