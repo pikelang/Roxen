@@ -1,0 +1,31 @@
+subject: Roxen 6.1: RXML type and RoxenPatch improvements.
+from: 226adb655feb139a1c238074e4f4ce6ca9d4e7f9
+to: c279ee89f55a420fcf3849a2134eae9066664c83
+originator: Erik Allemann
+depends: 2017-05-05T133530
+restart: true
+
+• Testsuite [RXML]: Updated test of <value />.
+
+Fixes [WS-40].
+
+• RXML: Improved type DWIM of <value />.
+
+<value />'s type now defaults to text/html when used in a text/html
+context.
+
+Fixes some of [WS-37].
+
+• RoxenPatch: Improved support for non-gnu tar.
+
+On eg Solaris,
+
+  tar rf
+
+doesn't support creating tar files from scratch, so use
+
+  tar cf
+
+instead if the tar file doesn't exist yet.
+
+Fixes [WS-38].
