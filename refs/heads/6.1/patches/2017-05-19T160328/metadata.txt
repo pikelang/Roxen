@@ -1,0 +1,16 @@
+subject: Roxen 6.1: JS-support: Rebuild minified file. AFS: Added missing throw in debug mode. JS Support: Added ROXEN.getQueryVariable().
+from: c279ee89f55a420fcf3849a2134eae9066664c83
+to: c09f1b58a17be48b4260f2f1a670be81840a2273
+originator: Jonas Lonnberg
+depends: 2017-05-17T145323
+restart: true
+
+• JS-support: Rebuild minified file
+
+• AFS: Added missing throw in debug mode
+
+• AFS: Added option to enable debug via __afs-debug
+
+• JS Support: Added ROXEN.getQueryVariable()
+
+Copied from REP.
