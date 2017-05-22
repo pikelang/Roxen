@@ -6321,8 +6321,8 @@ int main(int argc, array tmp)
 				    werror("GC runs at %s", ctime(time()));
 				  },
 			"post_cb":lambda() {
-				    werror("GC done after %dus\n",
-					   gethrtime() - gc_start);
+				    werror("GC done after %dms\n",
+					   (gethrtime() - gc_start) / 1000);
 				  },
 #ifdef LOG_GC_HISTOGRAM
 			"destruct_cb":lambda(object o) {
