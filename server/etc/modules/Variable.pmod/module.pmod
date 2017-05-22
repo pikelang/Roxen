@@ -81,7 +81,7 @@ string get_diff_def_html( Variable v,
 class Diff
 {
   private array(string) diff;
-  
+
   private
   array(string) print_row(array(string) diff_old, array(string) diff_new,
                           int line, int|void start, int|void end)
@@ -89,11 +89,11 @@ class Diff
     if(!sizeof(diff_old) && sizeof(diff_new))
       // New row.
       return Array.map(diff_new, lambda(string s) {return "+ " + s;} );
-    
+
     if(sizeof(diff_old) && !sizeof(diff_new))
       // Deleted row.
       return Array.map(diff_old, lambda(string s) {return "- " + s;} );
-    
+
     if(diff_old != diff_new)
       // Modified row.
       return Array.map(diff_old, lambda(string s) {return "- " + s;} )
@@ -110,12 +110,12 @@ class Diff
                    diff_old[sizeof(diff_old) - end ..];
       }
     }
-    
+
     return Array.map(diff_old, lambda(string|int s)
                                { if(intp(s)) return "Line "+s+":";
                                return "  " + s; } );
   }
-  
+
   string html(void|int hide_header)
   {
     string r = "";
@@ -157,11 +157,11 @@ class Diff
   {
     return diff;
   }
-  
+
   void create(array(string) new, array(string) old, int context)
   {
     array(array(string)) diff_old, diff_new;
-    
+
     [diff_old, diff_new] = Array.diff(old, new);
     int line = 1;
     int diffp = 0;
@@ -171,7 +171,7 @@ class Diff
       if(diff_old[i] != diff_new[i])
       {
         diff += print_row(diff_old[i], diff_new[i], line);
-        
+
         diffp = 1;
       }
       else if(sizeof(diff_old) > 1)
@@ -246,9 +246,9 @@ class Variable
     return all_warnings[ _id ];
   }
 
-  int get_flags() 
+  int get_flags()
     //! Returns the 'flags' field for this variable.
-    //! Flags is a bitwise or of one or more of 
+    //! Flags is a bitwise or of one or more of
     //!
     //! @int
     //!   @value VAR_EXPERT
@@ -268,7 +268,7 @@ class Variable
 
   void set_flags( int flags )
     //! Set the flags for this variable.
-    //! Flags is a bitwise or of one or more of 
+    //! Flags is a bitwise or of one or more of
     //!
     //! @int
     //!   @value VAR_EXPERT
@@ -317,7 +317,7 @@ class Variable
     if( (flags & VAR_MORE) && !more_mode )           return 0;
     if( (flags & VAR_DEVELOPER) && !devel_mode )     return 0;
     if( (flags & VAR_NOT_CFIF) && variable_in_cfif ) return 0;
-    if( (cb = get_invisibility_check_callback() ) && 
+    if( (cb = get_invisibility_check_callback() ) &&
         cb( id, this_object() ) )
       return 0;
     return 1;
@@ -342,9 +342,9 @@ class Variable
   }
 
   void set_changed_callback( function(Variable:void) cb )
-    //! The function passed as an argument will be called 
+    //! The function passed as an argument will be called
     //! when the variable value is changed.
-    //! 
+    //!
     //! Pass 0 to remove the callback.
   {
     if( functionp( cb ) )
@@ -366,7 +366,7 @@ class Variable
     changed_callbacks[ _id ] = oc;
   }
 
-  function(RequestID,Variable:int) get_invisibility_check_callback() 
+  function(RequestID,Variable:int) get_invisibility_check_callback()
     //! Return the current invisibility check callback
   {
     return invisibility_callbacks[_id];
@@ -374,7 +374,7 @@ class Variable
 
   LocaleString doc(  )
     //! Return the documentation for this variable (locale dependant).
-    //! 
+    //!
     //! The default implementation queries the locale object in roxen
     //! to get the documentation.
   {
@@ -389,12 +389,12 @@ class Variable
 
   LocaleString name(  )
     //! Return the name of this variable (locale dependant).
-    //! 
+    //!
     //! The default implementation queries the locale object in roxen
     //! to get the documentation.
   {
     return __name || LOCALE(326,"unnamed")+" "+_id;
-  } 
+  }
 
   void set_name (LocaleString name)
   //! Set the (locale dependent) name for this variable.
@@ -404,7 +404,7 @@ class Variable
 
   LocaleString type_hint(  )
     //! Return the type hint for this variable.
-    //! Type hints are generic documentation for this variable type, 
+    //! Type hints are generic documentation for this variable type,
     //! and is the same for all instances of the type.
   {
   }
@@ -424,9 +424,9 @@ class Variable
 
   void set_warning( string to )
     //! Set the warning shown in the configuration interface
-  { 
+  {
     if( to && strlen(to) )
-      all_warnings[ _id ] = to; 
+      all_warnings[ _id ] = to;
     else
       m_delete( all_warnings, _id );
   }
@@ -438,8 +438,8 @@ class Variable
   }
 
   int set( mixed to )
-    //! Set the variable to a new value. 
-    //! If this function returns true, the set was successful. 
+    //! Set the variable to a new value.
+    //! If this function returns true, the set was successful.
     //! Otherwise 0 is returned. 0 is also returned if the variable was
     //! not changed by the set. 1 is returned if the variable was
     //! changed, and -1 is returned if the variable was changed back to
@@ -525,7 +525,7 @@ class Variable
   int is_defaulted()
     //! Return true if this variable is set to it's default value.
   {
-    return zero_type( changed_values[ _id ] ) || 
+    return zero_type( changed_values[ _id ] ) ||
            equal(changed_values[ _id ], default_value());
   }
 
@@ -538,9 +538,9 @@ class Variable
 
   array(string|mixed) verify_set( mixed new_value )
     //! Return ({ error, new_value }) for the variable, or throw a string.
-    //! 
+    //!
     //! If error != 0, it should contain a warning or error message.
-    //! If new_value is modified, it will be used instead of the 
+    //! If new_value is modified, it will be used instead of the
     //! supplied value.
     //!
     //! If a string is thrown, it will be used as a error message from
@@ -566,7 +566,7 @@ class Variable
   {
     return what;
   }
-  
+
   int(0..1) set_from_form( RequestID id, void|int(0..1) force )
     //! Set this variable from the form variable in id->variables,
     //! if any are available. The default implementation simply sets
@@ -575,9 +575,9 @@ class Variable
     //! has the new value, forcing possible warnings to be added.
     //! Returns 1 if the variable was changed, otherwise 0.
     //!
-    //! Other side effects: Might create warnings to be shown to the 
+    //! Other side effects: Might create warnings to be shown to the
     //! user (see get_warnings)
-    //! 
+    //!
     //! Calls verify_set_from_form and verify_set
   {
     mixed val;
@@ -598,7 +598,7 @@ class Variable
 		       "from verify_set_from_form\n" );
         return 0;
       }
-      if( b ) 
+      if( b )
       {
         add_warning( b[0] );
 	set( b[1] );
@@ -606,11 +606,11 @@ class Variable
       }
     }
   }
-  
+
   string path()
-    //! A unique identifier for this variable. 
+    //! A unique identifier for this variable.
     //! Should be used to prefix form variable names.
-    //! 
+    //!
     //! Unless this variable was created by defvar(), the path is set
     //! by the configuration interface the first time the variable is
     //! to be shown in a form. This function can thus return 0. If it
@@ -622,10 +622,10 @@ class Variable
 
   void set_path( string to )
     //! Set the path. Not normally called from user-level code.
-    //! 
+    //!
     //! This function must be called at least once before render_form
-    //! can be called (at least if more than one variable is to be 
-    //! shown on the same page). This is normally done by the 
+    //! can be called (at least if more than one variable is to be
+    //! shown on the same page). This is normally done by the
     //! configuration interface.
   {
     m_delete( all_variables, _path );
@@ -645,7 +645,7 @@ class Variable
     if( arrayp(v) ) v = map(v,lambda(mixed v){return(string)v;})*", " ;
     return Roxen.html_encode_string( (string)v );
   }
-  
+
   protected string _sprintf( int i )
   {
     if( i == 'O' )
@@ -654,14 +654,14 @@ class Variable
 
   protected void create(mixed default_value, void|int flags,
 			void|LocaleString std_name, void|LocaleString std_doc)
-    //! Constructor. 
-    //! Flags is a bitwise or of one or more of 
-    //! 
-    //! VAR_EXPERT         Only for experts 
+    //! Constructor.
+    //! Flags is a bitwise or of one or more of
+    //!
+    //! VAR_EXPERT         Only for experts
     //! VAR_MORE           Only visible when more-mode is on (default on)
     //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
     //! VAR_INITIAL        Should be configured initially.
-    //! 
+    //!
     //! The std_name and std_doc is the name and documentation string
     //! for the default locale (always english)
   {
@@ -724,7 +724,7 @@ class Float
     if(!render)
       return "("+_format(default_value())+")";
   }
-  
+
   void set_range(float|NoLimit minimum, float|NoLimit maximum )
     //! Set the range of the variable.
     //!
@@ -766,7 +766,7 @@ class Float
     }
     return ({ warn, new_value });
   }
-  
+
   float transform_from_form( mixed what )
   {
     if (!sizeof(what) && _may_be_empty) {
@@ -792,7 +792,7 @@ class Float
   {
     return Roxen.html_encode_string( _format(query()) );
   }
-  
+
   string render_form( RequestID id, void|mapping additional_args )
   {
     int size = 15;
@@ -805,7 +805,7 @@ class Float
       else
 	value = query()==""? "" : _format( (float)query() );
     };
-    
+
     additional_args = additional_args || ([]);
     if (!additional_args->type)
       additional_args->type="text";
@@ -1081,14 +1081,14 @@ class Text
 
   int rows = 10;
   //! The height of the textarea
-  
+
   string diff( int render )
   {
     switch( render )
     {
       case 0: return 0;
       case 1: return "";
-      case 2: 
+      case 2:
 	array lines_orig = default_value()/"\n";
 	array lines_new  = query()/"\n";
 
@@ -1115,14 +1115,14 @@ class Text
 
   protected void create(mixed default_value, void|int flags,
 			void|LocaleString std_name, void|LocaleString std_doc)
-    //! Constructor. 
-    //! Flags is a bitwise or of one or more of 
-    //! 
-    //! VAR_EXPERT         Only for experts 
+    //! Constructor.
+    //! Flags is a bitwise or of one or more of
+    //!
+    //! VAR_EXPERT         Only for experts
     //! VAR_MORE           Only visible when more-mode is on (default on)
     //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
     //! VAR_INITIAL        Should be configured initially.
-    //! 
+    //!
     //! The std_name and std_doc is the name and documentation string
     //! for the default locale (always english)
   {
@@ -1131,7 +1131,7 @@ class Text
       default_value = default_value[1..];
     ::create( default_value, flags, std_name, std_doc );
   }
-  
+
 }
 
 
@@ -1149,7 +1149,7 @@ class Password
   int(0..1) set_from_form( RequestID id )
   {
     mapping val;
-    if( sizeof( val = get_form_vars(id)) && 
+    if( sizeof( val = get_form_vars(id)) &&
         val[""] && strlen(val[""]) ) {
       set( crypt_password( val[""] ) );
       return 1;
@@ -1226,7 +1226,7 @@ class URL
   array verify_set_from_form( string new_value )
   {
     return verify_port( new_value );
-  } 
+  }
 }
 
 class Directory
@@ -1447,18 +1447,18 @@ class MultipleChoice
   protected void create( mixed default_value, array|mapping choices,
 			 void|int _flags, void|LocaleString std_name,
 			 void|LocaleString std_doc )
-    //! Constructor. 
+    //! Constructor.
     //!
-    //! Choices is the list of possible choices, can be set with 
+    //! Choices is the list of possible choices, can be set with
     //! set_choice_list at any time.
-    //! 
-    //! Flags is a bitwise or of one or more of 
-    //! 
-    //! VAR_EXPERT         Only for experts 
+    //!
+    //! Flags is a bitwise or of one or more of
+    //!
+    //! VAR_EXPERT         Only for experts
     //! VAR_MORE           Only visible when more-mode is on (default on)
     //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
     //! VAR_INITIAL        Should be configured initially.
-    //! 
+    //!
     //! The std_name and std_doc is the name and documentation string
     //! for the default locale (always english)
   {
@@ -1541,14 +1541,14 @@ class FontChoice
 
   protected void create(mixed default_value, void|int flags,
 			void|LocaleString std_name, void|LocaleString std_doc)
-    //! Constructor. 
-    //! Flags is a bitwise or of one or more of 
-    //! 
-    //! VAR_EXPERT         Only for experts 
+    //! Constructor.
+    //! Flags is a bitwise or of one or more of
+    //!
+    //! VAR_EXPERT         Only for experts
     //! VAR_MORE           Only visible when more-mode is on (default on)
     //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
     //! VAR_INITIAL        Should be configured initially.
-    //! 
+    //!
     //! The std_name and std_doc is the name and documentation string
     //! for the default locale (always english)
   {
@@ -1566,7 +1566,7 @@ class TableChoice
   {
     return sort(DBManager.db_tables( db->query() ));
   }
-    
+
   void create( string default_value,
 	       void|int flags,
 	       void|LocaleString std_name,
@@ -1577,7 +1577,7 @@ class TableChoice
     db = _dbchoice;
   }
 }
-  
+
 
 class DatabaseChoice
 //! Select a database from all available databases.
@@ -1622,7 +1622,7 @@ class AuthMethodChoice
   constant type = "AuthMethodChoice";
 
   protected Configuration config;
-  
+
   array get_choice_list( )
   {
     return ({ " all" }) + sort( config->auth_modules()->name );
@@ -1643,7 +1643,7 @@ class UserDBChoice
   constant type = "UserDBChoice";
 
   protected Configuration config;
-  
+
   array get_choice_list( )
   {
     return ({ " all" }) + sort( config->user_databases()->name );
@@ -1972,7 +1972,7 @@ class List
     }
 
     int ret;
-    if( b ) 
+    if( b )
     {
       add_warning( b[0] );
       set( b[1] );
@@ -2054,7 +2054,7 @@ class List
           "</tr>";
       i++;
     }
-    res += 
+    res +=
         "\n<tr><td colspan='2'>"+
         BUTTON(prefix+"new", LOCALE(297, "New row") )+
         "</td></tr></table>\n\n";
@@ -2090,7 +2090,7 @@ class DirectoryList
 #endif
     if( strlen( warn ) )
       return ({ warn, value });
-    
+
     return ::verify_set( value );
   }
 }
@@ -2130,9 +2130,9 @@ class FloatList
     _prec = prec;
   }
 
-  string transform_to_form(int what) 
+  string transform_to_form(int what)
   {
-    return sprintf("%1."+_prec+"f",  what); 
+    return sprintf("%1."+_prec+"f",  what);
   }
   float transform_from_form(string what,mapping v) { return (float)what; }
 }
@@ -2231,7 +2231,7 @@ class PortList
     string host = va[v + "host"];
     if (has_value(host, ":") && !has_prefix(host, "["))
       host = "[" + host + "]";
-    
+
     return (string)Standards.URI(va[v+"prot"]+"://"+ host +
 				 (va[v+"port"] && sizeof (va[v+"port"]) ?
 				  ":"+ va[v+"port"] : "") +"/"+va[v+"path"]+"#"
@@ -2256,7 +2256,7 @@ class PortList
     if( !strlen( warn ) )
       warn = "";
     return ({ warn, res });
-  } 
+  }
 }
 
 
@@ -2272,7 +2272,7 @@ class FileList
     // Backward compatibility junk...
     if (stringp(value))
       return ::verify_set( replace(value, "\\", "/") );
-    
+
     return ::verify_set( map( value, replace, "\\", "/" ) );
   }
 #endif
@@ -2334,7 +2334,7 @@ protected array(string) verify_port( string port )
   if(sscanf( port, "%[^:]://%[^/]%s", protocol, host, path ) != 3)
     return ({ sprintf(LOCALE(335,"%s does not conform to URL syntax")+"\n",port),
 	      port });
-  
+
 //   if( path == "" || path[-1] != '/' )
 //   {
 //     warning += sprintf(LOCALE(336,"Added / to the end of %s")+"\n",port);
@@ -2343,7 +2343,7 @@ protected array(string) verify_port( string port )
   if( protocol != lower_case( protocol ) )
   {
     warning += sprintf(LOCALE(338,"Changed %s to %s"),
-		       protocol, lower_case( protocol ))+"\n";  
+		       protocol, lower_case( protocol ))+"\n";
     protocol = lower_case( protocol );
   }
 #if constant(SSL.File)
@@ -2372,7 +2372,7 @@ protected array(string) verify_port( string port )
   if (default_pno && (pno == default_pno))
     warning += sprintf(LOCALE(341, "Removed the default port number "
 				   "(%d) from %s"), pno, port) + "\n";
-  
+
   if( !roxenp()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
 			      "by roxen"),protocol)+"\n";
@@ -2391,7 +2391,7 @@ string input(string name, string value, int size,
   if(value)
     args->value = Roxen.html_encode_string(value);
   if(!args->size && size)
-    args->size=(string)size; 
+    args->size=(string)size;
 
   string render="<input";
 
