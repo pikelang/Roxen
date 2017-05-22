@@ -6357,8 +6357,8 @@ void reinstall_gc_callbacks()
 
     gc_params->post_cb =
       lambda() {
-        werror("GC done after %dus\n",
-               gethrtime() - gc_start);
+        werror("GC done after %dms\n",
+               (gethrtime() - gc_start) / 1000);
       };
 
     if (log_gc_histogram || log_gc_verbose || log_gc_cycles) {
