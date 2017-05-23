@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Logging changes.
+from: c09f1b58a17be48b4260f2f1a670be81840a2273
+to: 2196191da83de2c987abe8fee244c9dd9a69adff
+originator: Erik Allemann
+depends: 2017-05-19T160328
+restart: true
+
+• Log GC time in msec instead of usec for easier reading.
