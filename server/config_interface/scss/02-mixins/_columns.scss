@@ -1,0 +1,69 @@
+.flex-row {
+  flex-direction: column;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  align-items: stretch;
+  width: auto;
+  display: flex;
+
+  &.boxes {
+    justify-content: space-around;
+  }
+
+  > *[class~='flex'] {
+    flex-grow: 1;
+    align-self: stretch;
+    &.flex-shrink {
+      flex-shrink: 1;
+      flex-grow: 0;
+    }
+
+    &.col-3 {
+      width: 33.3333%;
+    }
+
+    &.col-4 {
+      width: 40%;
+    }
+
+    &.col-6 {
+      width: 50%;
+    }
+
+    &.col-8 {
+      width: 60%;
+    }
+
+    &.col-9 {
+      width: 66.6666%;
+    }
+  }
+
+  *[class*='col-'] {
+    + [class*='col-'] {
+      // margin-left: $site-padding;
+      padding-left: $site-padding;
+    }
+  }
+}
+
+// @mixin columns($n: 2) {
+//   $wd: 100%/$n;
+//   width: $wd;
+//   margin-right: -100%;
+//   float: left;
+//   clear: none;
+
+//   &:nth-child(#{$n}n + 1) {
+//     margin-left: 0;
+//     clear: both;
+//   }
+
+//   @for $i from 1 to $n {
+//     &:nth-child(#{$n}n + #{$i + 1}) {
+//       margin-left: #{$i * $wd};
+//       clear: none;
+//     }
+//   }
+// }

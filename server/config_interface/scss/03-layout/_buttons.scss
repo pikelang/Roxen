@@ -1,0 +1,39 @@
+
+.__even-buttons {
+  width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+button {
+  &.perm {
+    @extend .__icon;
+    cursor: pointer;
+    width: 185px;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+
+    &.dimmed {
+      // opacity: .8;
+      color: $grey;
+    }
+
+    &.checked {
+      color: $ok-color;
+
+      &:before {
+        content: '\f00c';
+      }
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: .5;
+    }
+  }
+}

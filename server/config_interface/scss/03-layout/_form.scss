@@ -1,0 +1,219 @@
+.__icon {
+  &:before {
+    display: inline-block;
+    font-family: FontAwesome;
+    margin-right: $spacing-unit/2.5;
+  }
+
+  &:after {
+    display: none;
+  }
+}
+
+.__icon-after {
+  &:before {
+    display: none;
+  }
+
+  &:after {
+    display: inline-block;
+    margin-left: $spacing-unit/2.5;
+    font-family: FontAwesome;
+  }
+}
+
+button,
+input[type='button'],
+input[type='reset'],
+input[type='submit'],
+.rxn-admin-btn {
+  text-decoration: none;
+  -webkit-appearance: button;
+  @include text-size(sm);
+  border-radius: $border-radius;
+  background: $button-bg;
+  background-image: linear-gradient(lighten($button-bg, 2%), darken($button-bg, 2%));
+  padding: $spacing-unit/2 $spacing-unit;
+  color: $button-color;
+  border-left: 1px solid lighten($button-bg, 10%);
+  border-top:  1px solid lighten($button-bg, 10%);
+  border-right: 1px solid darken($button-bg, 10%);
+  border-bottom: 1px solid darken($button-bg, 10%);
+  vertical-align: middle;
+
+  &.fill {
+    width: 100%;
+  }
+
+  &:focus {
+    outline: 1px solid $input-focus-color;
+  }
+
+  &[name='save'] {
+    min-width: 100px;
+  }
+
+  &:disabled,
+  &[disabled] {
+    opacity: .5;
+  }
+
+  &.icon {
+    @extend .__icon;
+
+    @include make-icon(save,        '\f0c7') // fa-save
+    @include make-icon(user,        '\f007') // fa-user
+    @include make-icon(create-user, '\f235') // fa-user-plus
+    @include make-icon(delete-user, '\f235') // fa-user-times
+    @include make-icon(cancel,      '\f05e') // fa-ban
+    @include make-icon(clear,       '\f05e') // fa-ban
+    @include make-icon(ok,          '\f00c') // fa-check
+    @include make-icon(refresh,     '\f021') // fa-refresh
+    @include make-icon(reload,      '\f021') // fa-refresh
+    @include make-icon(reset,       '\f122') // fa-reply-all
+    @include make-icon(add,         '\f055') // fa-plus-circle
+    @include make-icon(remove,      '\f056') // fa-minus-circle
+    @include make-icon(delete,      '\f056') // fa-minus-circle
+    @include make-icon(next,        '\f101') // fa-angle-double-right
+    @include make-icon(warn,        '\f071') // fa-warning
+    @include make-icon(error,       '\f06a') // fa-exclamation-circle
+    @include make-icon(info,        '\f05a') // fa-info-circle
+    @include make-icon(up,          '\f077') // fa-chevron-up
+    @include make-icon(down,        '\f078') // fa-chevron-down
+
+    &.up,
+    &.down {
+      &:before {
+        margin-right: 0;
+      }
+    }
+
+    // &:after {
+    //   display: none;
+    // }
+  }
+
+  &.right.icon {
+    @extend .__icon-after;
+  }
+
+  &.fixed-width {
+    @extend .__even-buttons;
+  }
+}
+
+input,
+textarea,
+select {
+  @include text-size(sm);
+  line-height: 1;
+}
+
+.__input {
+  border: 1px solid $black;
+  background: lighten($black, 10%);
+  padding: $spacing-unit/2;
+  color: $body-color;
+  border-radius: $border-radius;
+
+  &:focus {
+    outline: 1px solid $grey;
+  }
+}
+
+input {
+  @include not("[type='checkbox']",
+               "[type='radio']",
+               "[type='submit']",
+               "[type='reset']",
+               "[type='button']",
+               "[type='image']")
+  {
+    @extend .__input;
+    // width: 100%;
+  }
+
+  &[type='number'] {
+    &.prio {
+      width: 70px;
+    }
+  }
+}
+
+textarea {
+  @extend .__input;
+  width: 100%;
+  line-height: 1.4;
+}
+
+select {
+  @extend .__input;
+  min-width: 60px;
+}
+
+.input-row {
+  // display: table-row;
+
+  input,
+  textarea,
+  select,
+  button {
+    // display: table-cell;
+    // width: initial !important;
+  }
+}
+
+.control-group {
+  margin-bottom: $spacing-unit;
+}
+
+.table {
+  display: table;
+  width: 100%;
+}
+
+.resolve-path {
+  .control-group {
+    display: table-row;
+
+    label {
+      display: table-cell;
+      width: 15%;
+      font-weight: bold;
+      padding-bottom: $spacing-unit;
+      text-align: right;
+      padding-right: $spacing-unit;
+
+      &:after {
+        content: ':';
+      }
+
+      &.empty {
+        &:after {
+          content: none;
+        }
+      }
+    }
+
+    .cell {
+      display: table-cell;
+      width: auto;
+    }
+
+    input[type='text'],
+    input[type='password'] {
+      width: 100%;
+    }
+
+    &.auth {
+      input {
+        display: table-cell;
+        width: 49%;
+
+        &:first-of-type {
+          margin-right: 2%;
+        }
+      }
+    }
+  }
+}

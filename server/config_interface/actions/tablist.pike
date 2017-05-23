@@ -17,42 +17,36 @@ array pages =
 
 string parse( RequestID id )
 {
-  if( !config_setting2("group_tasks") )
+  if (!config_setting2("group_tasks")) {
     return "";
+  }
 
   string q=id->variables["class"];
   string res="";
-  if( !q ) q = "status";
+  if (!q) q = "status";
 
-  foreach( pages, array page )
-  {
+  foreach (pages, array page) {
     string tpost = "";
-    if( page[1] )
-    {
+    if (page[1]) {
       res += "<cf-perm perm='"+page[1]+"'>";
       tpost = "</cf-perm>"+tpost;
     }
-    if( page[2] )
-    {
+
+    if (page[2]) {
       res += "<cf-userwants option='"+page[2]+"'>";
       tpost = "</cf-userwants>"+tpost;
     }
 
-    string ea="";
-    if( page == pages[0] )       ea = "first ";
-    if( page == pages[-1] )      ea = "last=30 ";
-
-    string s( mixed q )
-    {
-      if( arrayp( q ) ) return q[0];
+    string s(mixed q) {
+      if (arrayp(q)) return q[0];
       return q;
     };
 
     string sel = (s(page[0])==q?" selected":"");
 
-    res += "<tab "+ea+"href='?class="+s(page[0])+"&amp;&usr.set-wiz-id;'"+sel+">";
+    res += "<a href='?class="+s(page[0])+"&amp;&usr.set-wiz-id;'"+sel+">";
     res += page[3];
-    res += "</tab>";
+    res += "</a>";
     res += tpost;
   }
   return res;

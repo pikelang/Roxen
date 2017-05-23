@@ -34,12 +34,12 @@ string parse( RequestID id )
       tpost = "</cf-userwants>"+tpost;
     }
 
-    string ea="";
-    if( page == pages[0] )       ea = "first ";
-    if( page == pages[-1] )      ea = "last=30 ";
+    // string ea="";
+    // if( page == pages[0] )       ea = "first ";
+    // if( page == pages[-1] )      ea = "last=30 ";
 
-    res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
-      page[4]+"</tab>" + tpost;
+    res += "<a href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
+      page[4]+"</a>" + tpost;
   }
 
   return res;

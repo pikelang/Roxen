@@ -17,22 +17,20 @@ constant doc = "";
 mixed parse( RequestID id )
 {
   string pid = (string) getpid();
-  
-  string res = "<font size='+1'><b>" +
-    LOCALE(34, "Restart or shutdown") + "</b></font>"
-    "<p />";
-  
+
+  string res = "<h2 class='no-margin-top'>" +
+    LOCALE(34, "Restart or shutdown") + "</h2>";
+
   //  Verify pid for possibly repeated request (browser restart etc)
   string what = id->variables->what;
   string ignore_msg = "";
   if (string form_pid = id->variables->pid)
     if (form_pid != pid) {
       ignore_msg =
-	"<br />"
-	"<p><font color='&usr.warncolor;'>" +
+	"<div class='notify warn'>" +
 	LOCALE(406, "Repeated action request ignored &ndash; "
 	       "server process ID is different.") +
-	"</font></p>";
+	"</div>";
       what = 0;
     }
 
@@ -70,12 +68,13 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
   default:
     return Roxen.http_string_answer(res +
-#"<blockquote><br />
+#"<hr class='section'>
+<blockquote>
 
  <cf-perm perm='Restart'>
-   <gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" + pid + #"&amp;&usr.set-wiz-id;'
-            width=250 icon_src=&usr.err-2;> "+
-       LOCALE(197,"Restart")+#" </gbutton>
+   <link-gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
+        pid + #"&amp;&usr.set-wiz-id;' type='reload fixed-width'>"+
+       LOCALE(197,"Restart")+#"</link-gbutton>
  </cf-perm>
 
 <cf-perm not perm='Restart'>
@@ -83,12 +82,12 @@ LOCALE(234, "You might see the old process for a while in the process table "
        LOCALE(197,"Restart")+#" </gbutton>
 </cf-perm>
 
-<br/><br/>
+<p></p>
 
 <cf-perm perm='Shutdown'>
-  <gbutton href='?what=shutdown&amp;action=restart.pike&amp;class=maintenance&amp;pid=" + pid + #"&amp;&usr.set-wiz-id;'
-           width=250  icon_src=&usr.err-3;> "+
-       LOCALE(198,"Shutdown")+#" </gbutton>
+  <link-gbutton href='?what=shutdown&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
+        pid + #"&amp;&usr.set-wiz-id;' type='error fixed-width'>"+
+       LOCALE(198,"Shutdown")+#"</link-gbutton>
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
@@ -98,7 +97,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
 </blockquote>
 
-<br/>
+<hr class='section'>
 
 <p><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></p>" );
      }

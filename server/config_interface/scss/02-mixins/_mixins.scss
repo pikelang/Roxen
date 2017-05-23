@@ -1,0 +1,93 @@
+
+@mixin font-size(
+  $fs-map:         $body-font-size,
+  $fs-breakpoints: $breakpoints)
+{
+  @each $bp, $fs in $fs-map {
+    @if $bp == null {
+      @include make-font-size($fs);
+    }
+    @else {
+      @if map-has-key($fs-breakpoints, $bp) {
+        $bp: map-get($fs-breakpoints, $bp);
+      }
+
+      @media screen and (min-width: $bp) {
+        @include make-font-size($fs);
+      }
+    }
+  }
+}
+
+@mixin text-size($size: md) {
+  @if map-has-key($txtsize, $size) {
+    $list: map-get($txtsize, $size);
+    font-size: nth($list, 1);
+    line-height: nth($list, 2);
+  }
+  @else {
+    @error 'Unknown size `#{$size}`';
+  }
+}
+
+@mixin make-font-size($fs) {
+  @if type-of($fs) == 'list' {
+    font-size: nth($fs, 1);
+    @if length($fs) > 1 {
+      line-height: nth($fs, 2);
+    }
+  }
+  @else {
+    font-size: $fs;
+  }
+}
+
+@mixin clear {
+  &:after {
+    display: table;
+    content: ' ';
+    clear: both;
+  }
+}
+
+@mixin not($ignor-list...) {
+  //if only a single value given
+  @if (length($ignor-list) == 1){
+    //it is probably a list variable so set ignore list to the variable
+    $ignor-list: nth($ignor-list,1);
+  }
+  //set up an empty $not-output variable
+  $not-output: '';
+  //for each item in the list
+  @each $not in $ignor-list {
+    //generate a :not([ignored_item]) segment for each item in the ignore list and put them back to back
+    $not-output: $not-output + ':not(#{$not})';
+  }
+  //output the full :not() rule including all ignored items
+  &#{$not-output} {
+      @content;
+  }
+}
+
+@mixin flex-row(
+  $dir:     column,
+  $flow:    row wrap,
+  $align:   flex-start,
+  $stretch: stretch)
+{
+  display:        flex;
+  flex-direction: $dir;
+  flex-flow:      $flow;
+  align-content:  $align;
+  align-items:    $stretch;
+  width:          auto;
+}
+
+@mixin make-icon($name, $icon) {
+  &.#{$name} {
+    &:before,
+    &:after {
+      content: $icon;
+    }
+  }
+}

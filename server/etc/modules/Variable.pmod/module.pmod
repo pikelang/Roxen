@@ -2026,36 +2026,36 @@ class List
     string prefix = path()+".";
     int i;
 
-    string res = "<a name='"+path()+"'>\n</a><table>\n"
+    string res = "<a name='"+path()+"'>\n</a><table class='auto rxn-var-list'>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
     foreach( map(query(), transform_to_form), mixed val )
     {
-      res += "<tr>\n<td><font size='-1'>"+ render_row(prefix+"set."+i, val, width)
-	+ "</font></td>\n";
+      res += "<tr>\n<td><span class='small'>"+ render_row(prefix+"set."+i, val, width)
+	+ "</span></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
 #define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
       if( i )
-        res += "\n<td>"+
+        res += "\n<td class='rxn-btn-td'>"+
             REORDER(prefix+"up."+i, "/internal-roxen-up")+
             "</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/internal-roxen-up")+"</td>";
+        res += "\n<td class='rxn-btn-td'>"+DIMBUTTON("/internal-roxen-up")+"</td>";
       if( i != sizeof( query())- 1 )
-        res += "\n<td>"+
+        res += "\n<td class='rxn-btn-td'>"+
             REORDER(prefix+"down."+i, "/internal-roxen-down")
             +"</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/internal-roxen-down")+"</td>";
-      res += "\n<td>"+
+        res += "\n<td class='rxn-btn-td'>"+DIMBUTTON("/internal-roxen-down")+"</td>";
+      res += "\n<td class='rxn-btn-td'>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
           "</tr>";
       i++;
     }
     res +=
-        "\n<tr><td colspan='2'>"+
+        "\n<tr><td colspan='4' class='rxn-new-row'>"+
         BUTTON(prefix+"new", LOCALE(297, "New row") )+
         "</td></tr></table>\n\n";
 
@@ -2173,7 +2173,7 @@ class PortList
 
     Standards.URI split = Standards.URI( val );
 
-    res += "<select name='"+prefix+"prot'>";
+    res += "<div class='rxn-port'><div class='port-url'><select name='"+prefix+"prot'>";
     int default_port;
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
@@ -2192,7 +2192,7 @@ class PortList
       (split->port == default_port ? "" : split->port) +"' />";
 
     res += "/<input type=text name='"+prefix+"path' value='"+
-      Roxen.html_encode_string(split->path[1..])+"' /><br />";
+      Roxen.html_encode_string(split->path[1..])+"' /></div>";
     mapping opts = ([]);
     string a,b;
     foreach( (split->fragment||"")/";", string x )
@@ -2200,7 +2200,7 @@ class PortList
       sscanf( x, "%s=%s", a, b );
       opts[a]=b;
     }
-    res += "IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
+    res += "<div class='port-ip'>IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
     res += LOCALE(510,"Bind this port: ");
     res += "<select name='"+prefix+"nobind'>";
@@ -2216,7 +2216,7 @@ class PortList
 	("<option selected='t' value='0'>"+LOCALE("yes","Yes")+"</option>"
 	 "<option value='1'>"+LOCALE("no","No")+"</option>");
     }
-    res += "</select>";
+    res += "</select></div></div>";
     return res;
   }
 

@@ -5,14 +5,15 @@
 <cv-split>
 <subtablist><st-page>
   <h1><translate id="248">Create new site</translate></h1>
-<blockquote>
 
 <define variable='var.common'>
-  <font color='&usr.warncolor;'>&var.error;<br /></font>
-  <b><translate id="269">Site name:</translate></b> 
-   <input name="name" value="&form.name;" /><br />
-  <blockquote>
-    <translate id="270">
+  <if variable='var.error'>
+    <div class='notify error'>&var.error;</div>
+  </if>
+  <translate id="269" variable='var.sitename_txt'>Site name:</translate>
+  <input name="name" value="&form.name;" id='site-name'
+    placeholder='&var.sitename_txt;' size='60' />
+  <p><translate id="270">
 The name of the configuration must contain characters other than space
 and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
 '#', '$', '%', '&amp;', '=', ';', ':', '_', '&lt;', '&gt;', '|', '*',
@@ -21,19 +22,29 @@ nor the name of an existing configuration. This name will show up in
 the sites menu, a lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well as the name of
 its log file directory.
-</translate>
-</blockquote>
+</translate></p>
 
 <translate id="248" variable="var.create_txt">Create new site</translate>
 <translate id="271" variable="var.template_txt">with template</translate>
 
-<submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
-name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2>
-<br />
-<submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
-name="new">&var.create_txt;</submit-gbutton2>
-<br />
-<br />
+<ul class='nolist button-list'>
+  <li>
+    <button data-submit=''
+      class='icon next right'
+      name='new_with_template'>&var.create_txt; &var.template_txt;</button>
+  </li>
+<!-- name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2> -->
+  <li>
+    <button data-submit=''
+      class='icon next right'
+      name='new'>&var.create_txt;</button>
+  </li>
+</ul>
+<!-- <submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
+name="new">&var.create_txt;</submit-gbutton2> -->
+
+<hr class='divider'>
+
 <cf-cancel href="./"/>
 </define>
 

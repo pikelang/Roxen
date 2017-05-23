@@ -1,0 +1,199 @@
+
+.site-width {
+  max-width: $site-width;
+  margin: 0 auto;
+}
+
+.site-padding {
+  padding: 0 $site-padding;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.no-margin-top {
+  margin-top: 0;
+}
+
+.no-margin-bottom {
+  margin-bottom: 0;
+}
+
+.indent {
+  margin-left: $site-padding;
+
+  &.extra {
+    margin-left: $site-padding*2;
+  }
+}
+
+.small {
+  @include text-size(sm);
+}
+
+.action-btn-spacer {
+  display: inline-block;
+  width: 1px;
+  background: lighten($black, 10%);
+  height: 33px;
+  margin: 0 $spacing-unit/2;
+  vertical-align: bottom;
+}
+
+.valign-top {
+  vertical-align: top;
+}
+
+.divider {
+  margin: $spacing-unit 0;
+  height: 1px;
+  background: $body-bg;
+  border: 0;
+  display: block;
+}
+
+.cbox {
+  background: lighten($body-bg, 0%);
+
+  .content {
+    padding: $site-padding;
+  }
+
+  .title {
+    margin: 0;
+    padding: $site-padding;
+    @include text-size(lg);
+    background: $topmenu-bg;
+    color: $light-grey;
+  }
+
+  dl {
+    display: table-row;
+  }
+
+  dt,
+  dd {
+    display: table-cell;
+  }
+
+  dt {
+    font-weight: bold;
+    padding-right: $spacing-unit/2;
+    // width: 20%;
+  }
+}
+
+section {
+  &.port {
+    padding-left: $spacing-unit*2;
+
+    h2 {
+      margin-left: -($spacing-unit*2);
+      padding: $spacing-unit/2 $spacing-unit;
+      background: darken($main-column-bg, 3%);
+
+      &.open {
+        a {
+          @extend .__icon;
+          color: $light-grey;
+
+          &:before {
+            content: '\f078'; // fa-chevron-down
+          }
+        }
+      }
+    }
+  }
+}
+
+.resolve-result-header,
+.resolve-result-footer {
+  padding: $spacing-unit;
+  background: $topmenu-bg;
+}
+.resolve-result-body {
+  padding: $spacing-unit;
+  @include text-size(sm);
+  background: darken($main-column-bg, 5%);
+  color: lighten($body-color, 10%);
+
+  ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    padding-left: 16px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+
+    &.open {
+      &:hover {
+        background: url(/internal-roxen-pixel-363634) 4px repeat-y;
+      }
+    }
+  }
+
+  i.timing {
+    color: darken($body-color, 20%);
+    @include text-size(xs);
+  }
+
+  .toggle {
+    display: block;
+    float: left;
+    width: 12px;
+    height: 12px;
+    margin-right: 5px;
+    margin-left: -16px;
+    margin-top: -1px;
+    opacity: .3;
+    cursor: pointer;
+    z-index: 1;
+    @extend .__icon;
+
+    &:before {
+      @include text-size(xs);
+      // vertical-align: middle;
+      display: inline-block;
+      content: '\f146'; // fa-minus-square
+    }
+
+    &.open {
+      &:before {
+        content: '\f0fe'; // fa-plus-square
+      }
+    }
+
+    &.closed {
+      opacity: .7;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .src-path {
+    color: lighten(#8CA759, 0%);
+    opacity: .5;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}

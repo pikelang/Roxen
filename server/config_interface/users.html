@@ -7,23 +7,15 @@
   <cf-perm perm="Edit Users">
     <translate id="222" variable="var.create_txt">Create new user</translate>
     <translate id="223" variable="var.delete_txt">Delete old user</translate>
-    <table border="0" cellpadding="5" cellspacing="0"><tr><td>
 
-    <gbutton href='users.html?page=create_user&amp;&usr.set-wiz-id;'
-             icon_src="&usr.next;"
-             font="&usr.gbutton-font;" width="200"
-	     frame="&usr.gbutton-frame-image;"
-             align_icon="right">&var.create_txt;</gbutton><br />
-     <img src="/internal-roxen-unit" width="1" height="5" /><br />
-     <gbutton href='users.html?page=delete_user&amp;&usr.set-wiz-id;'
-              icon_src="&usr.next;"
-	      font="&usr.gbutton-font;" width="200"
-	      frame="&usr.gbutton-frame-image;"
-              align_icon="right">&var.delete_txt;</gbutton><br />
-     <img src="/internal-roxen-unit" width="1" height="10" />
+    <link-gbutton href="users.html?page=create_user&amp;&usr.set-wiz-id;"
+      type='create-user'>&var.create_txt;</link-gbutton>
+    <link-gbutton href="users.html?page=delete_user&amp;&usr.set-wiz-id;"
+      type='delete-user'>&var.delete_txt;</link-gbutton>
 
-     <insert file=user_form.pike nocache="1" />
-    </td></tr></table>
+    <eval>
+      <insert file=user_form.pike nocache="1" />
+    </eval>
   </cf-perm>
 </if>
 
@@ -33,10 +25,13 @@
     <input type='hidden' name='page' value='create_user' />
     <translate id="224" variable="var.create_txt">Create User</translate>
     <translate id="225" variable="var.id_txt">User ID</translate>
-    <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
-    <td><submit-gbutton2> &var.create_txt; </submit-gbutton2></td></tr></table>
+    <!-- <label for="user-input">&var.id_txt;</label> -->
+    <div class="input-row">
+      <input name="create_user_name" id="user-input" placeholder='&var.id_txt;' />
+      <submit-gbutton2 type="create-user">&var.create_txt;</submit-gbutton2>
+    </div>
     <p>
-    <cf-cancel href="users.html"/>
+      <cf-cancel href="users.html"/>
     </p>
   </if>
   <else>
@@ -47,10 +42,10 @@
 
 <if variable='form.page is delete_user'>
   <cf-perm perm="Edit Users">
-  <eval><insert file=user_delete.pike nocache="1"/></eval>
-  <p>
-  <cf-cancel href="users.html"/>
-  </p>
+    <eval><insert file=user_delete.pike nocache="1"/></eval>
+    <p>
+      <cf-cancel href="users.html"/>
+    </p>
   </cf-perm>
 </page>
 

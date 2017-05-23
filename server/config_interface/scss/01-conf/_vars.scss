@@ -1,0 +1,90 @@
+
+$breakpoints: (
+  small:  414px,
+  medium: 768px,
+  large:  980px
+);
+
+// Font stuff
+$font-family:    /* MalmoSans, */ arial, sans-serif;
+$line-height:    1.6;
+$root-font-size: 100%;
+
+$body-font-size: (
+  null:   16px,
+  small:  16px,
+  medium: 16px,
+  large:  16px
+);
+
+$h1-font-size: (
+  null:   (28px, 1.1),
+  medium: (26px, 1.1)
+);
+
+$txtsize: (
+   xs: (12px, 1.1),
+    s: (13px, 1.3),
+   sm: (14px, 1.3),
+   md: (16px, 1.3),
+   lg: (20px, 1.2),
+   xl: (38px, 1.2),
+  xxl: (44px, 1.1)
+);
+
+// Widths and paddings
+$site-width:   100%;
+$spacing-unit: 15px;
+$site-padding: $spacing-unit;
+$gutter-width: $spacing-unit * 2;
+
+// Roxen colors
+$rxn-red:        #e94c37;
+$rxn-blue:       #1e8ac4;
+$rxn-black:      #1d1d1b;
+$rxn-grey:       #7f91a4;
+$rxn-light-grey: #c5d0da;
+$rxn-dark-red:   #b42339;
+
+
+// Basic colors
+$brand-color: $rxn-red;
+$black:       darken($rxn-black, 5%);
+$dark-grey:   lighten($black, 10%);
+$grey:        $rxn-grey;
+$light-grey:  $rxn-light-grey;
+$blue:        $rxn-blue;
+$white:       #fff;
+
+// Element colors
+$body-bg: lighten($black, 10%);
+$body-color: #aaa;
+$header-bg: $black;
+$topmenu-bg: lighten($black, 5%);
+$topmenu-color: $brand-color;
+$topmenu-selected-bg: $body-bg;
+$topmenu-selected-color: $light-grey;
+$main-column-bg: lighten($body-bg, 5%);
+$footer-bg: $header-bg;
+$footer-color: $grey;
+$site-message-color: $rxn-dark-red;
+$link-color:  $blue;
+$button-bg: $topmenu-bg;
+$button-color: $brand-color;
+
+
+$input-focus-color: $grey;
+
+
+$notify-bg-color:      $rxn-blue;
+$notify-warn-bg-color: #B4A612;
+$notify-error-bg-color: $rxn-dark-red;
+$border-color:         #ddd;
+$dotted-border-color:  #ccc;
+$th-bg-color:          $brand-color;
+$th-color:             white;
+
+$ok-color: #79BC89;
+
+// Other
+$border-radius: 2px;

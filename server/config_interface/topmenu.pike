@@ -4,7 +4,7 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
-#define  tablist ("<tablist "+config_setting2("toptabs-args")+">")
+#define  tablist ("<xtablist topmenu='1'>")
 
 array selections =
 ({
@@ -92,8 +92,8 @@ string parse( RequestID id )
       }
       if( !a->href )
         default_href();
-      res += Roxen.make_container( "tab", a, t[0] );
+      res += Roxen.make_container( "a", a, t[0] );
     }
   }
-  return res+"</tablist>";
+  return res+"</xtablist>";
 }

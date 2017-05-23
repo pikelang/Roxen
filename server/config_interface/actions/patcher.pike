@@ -16,80 +16,82 @@ string name= LOCALE(326, "Patch management");
 string doc = LOCALE(327, "Show information about the available patches and "
                          "their status.");
 
-Write_back wb = class Write_back
-                {
-                  private array(mapping(string:string)) all_messages = ({ });
+Write_back wb =
+  class Write_back
+  {
+    private array(mapping(string:string)) all_messages = ({ });
 
-                  void write_mess(string s)
-                  {
-                    s = Roxen.html_encode_string(s);
-                    s = replace(s, ([ "&lt;green&gt;"  : "<b style='color: green'>",
-                                      "&lt;/green&gt;" : "</b>" ]) );
-                    all_messages += ({ (["message":s ]) });
-                  }
+    void write_mess(string s)
+    {
+      s = Roxen.html_encode_string(s);
+      s = replace(s, ([ "&lt;green&gt;"  : "<b style='color: green'>",
+                        "&lt;/green&gt;" : "</b>" ]) );
+      all_messages += ({ (["message":s ]) });
+    }
 
-                  void write_error(string s)
-                  {
-                    s = Roxen.html_encode_string(s);
-                    all_messages += ({
-                      ([ "error":"<b style='color: red'>" + s + "</b>" ])
-                    });
-                  }
+    void write_error(string s)
+    {
+      s = Roxen.html_encode_string(s);
+      all_messages += ({
+        ([ "error":"<div class='notify error inline'>" + s + "</div><br>" ])
+      });
+    }
 
-                  string get_messages()
-                  {
-                    string res = "";
+    string get_messages()
+    {
+      string res = "";
 
-                    foreach(all_messages->message, string s)
-                    {
-                      if(s)
-                        res += s;
-                    }
+      foreach(all_messages->message, string s)
+      {
+        if(s)
+          res += s;
+      }
 
-                    return res;
-                  }
+      return res;
+    }
 
-                  string get_errors()
-                  {
-                    string res = "";
-                    foreach(all_messages->error, string s)
-                    {
-                      if(s)
-                        res += s;
-                    }
-                    return res;
-                  }
+    string get_errors()
+    {
+      string res = "";
+      foreach(all_messages->error, string s)
+      {
+        if(s)
+          res += s;
+      }
+      return res;
+    }
 
-                  void clear_all()
-                  {
-                    all_messages = ({ });
-                  }
+    void clear_all()
+    {
+      all_messages = ({ });
+    }
 
-                  string get_all_messages()
-                  {
-                    string res = "";
+    string get_all_messages()
+    {
+      string res = "";
 
-                    foreach(all_messages, mapping m)
-                    {
-                      if (m->message)
-                        res += m->message;
-                      else
-                        res += m->error;
-                    }
+      foreach(all_messages, mapping m)
+      {
+        if (m->message)
+          res += m->message;
+        else
+          res += m->error;
+      }
 
-                    res = replace(res, "\n", "<br />");
-                    return res;
-                  }
-                } ();
+      res = replace(res, "\n", "<br />");
+      return res;
+    }
+  } ();
 
-mapping get_patch_stats(Patcher po) {
-        array a_imported = po->file_list_imported();
-        array a_installed = po->file_list_installed();
+mapping get_patch_stats(Patcher po)
+{
+  array a_imported = po->file_list_imported();
+  array a_installed = po->file_list_installed();
 
-        return ([
-                "imported_count": sizeof(a_imported),
-                "installed_count": sizeof(a_installed),
-        ]);
+  return ([
+    "imported_count": sizeof(a_imported),
+    "installed_count": sizeof(a_installed),
+  ]);
 }
 
 array(string) get_missing_binaries() {

@@ -11,7 +11,7 @@ LocaleString box_name = _(367,"Server status");
 LocaleString box_doc  = _(368,"Various global server statistics");
 
 string add_row( string item, string value ) {
-  return "<tr><td>" + item + ":</td><td>" + value + "</td></tr>";
+  return "<dl><dt>" + item + ":</dt><dd>" + value + "</dd></dl>";
 }
 
 string parse( RequestID id )
@@ -22,7 +22,7 @@ string parse( RequestID id )
 		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
   contents += add_row( _(370, "Server uptime"),
 		      Roxen.msectos( dt*1000 ));
-  
+
   mapping(string:int) ru;
  if(!catch(ru = System.getrusage())) {
     int tmp;
@@ -58,6 +58,6 @@ string parse( RequestID id )
 		       sprintf ("%{%.2f %}", System.getloadavg()));
 #endif
 
-  return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
-	  contents+"</table></box>");
+  return ("<cbox type='"+box+"' title='"+box_name+"'>"+
+	  contents+"</cbox>");
 }

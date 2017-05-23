@@ -1,0 +1,129 @@
+dt {
+  font-weight: bold;
+}
+
+
+.nolist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.button-list {
+  list-style: none;
+  padding: 0;
+
+  li {
+    margin-bottom: 3px;
+  }
+
+  button {
+    @extend .__even-buttons;
+  }
+}
+
+.linklist {
+  @extend .nolist;
+
+  a {
+    text-decoration: none;
+    display: block;
+    line-height: 1.2;
+  }
+
+  .date {
+    color: $grey;
+    @include text-size(xs);
+    display: block;
+  }
+
+  li {
+    margin-top: $spacing-unit;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}
+
+.logitem {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    padding-left: $spacing-unit*2;
+
+    &:before {
+      content: initial;
+      font-family: FontAwesome;
+      display: block;
+      float: left;
+      margin-right: $spacing-unit;
+      margin-left: -($spacing-unit*2);
+      width: 16px;
+      text-align: center;
+    }
+
+    &.err-1 {
+      &:before {
+        color: $blue;
+        content: '\f05a'; // fa-info-circle
+      }
+    }
+
+    &.err-2 {
+      &:before {
+        color: #B4A612;
+        content: '\f071'; // fa-warning
+      }
+    }
+
+    &.err-3 {
+      &:before {
+        color: red;
+        content: '\f06a'; // fa-exclamation-circle
+      }
+    }
+
+    .times {
+      display: inline-block;
+      color: $grey;
+    }
+  }
+}
+
+&.action-group {
+  margin: 1px 0 0;
+  background: darken($body-bg, 0%);
+
+  &:hover {
+    opacity: .8;
+  }
+
+  &:first-child {
+    margin-top: 0;
+  }
+
+  dl {
+    margin: 0;
+  }
+
+  dt {
+    @include text-size(lg);
+    font-weight: bold;
+    margin-bottom: $spacing-unit/3;
+  }
+
+  dd {
+    color: $body-color;
+    margin-left: 0;
+  }
+
+  a {
+    display: block;
+    padding: $spacing-unit;
+    text-decoration: none;
+  }
+}
+

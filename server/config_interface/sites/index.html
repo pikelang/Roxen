@@ -2,63 +2,55 @@
 <topmenu base="../" selected='sites' />
 
 <content>
+  <cv-leftside>
+    <ul class="site-nav">
+      <li>
+        <a href=''><translate id="213">Sites</translate></a>
+      </li>
+      <if variable="usr.configlistmode is 1">
+        <if variable='form.goto_site'>
+          <if not="1" variable='form.goto_site is '>
+            <redirect to='site.html/&form.goto_site;/' />
+          </if>
+        </if>
 
-<cv-leftside>
-<gbutton frame-image='&usr.left-buttonframe;' 
-         width='&usr.left-buttonwidth;'
-         bgcolor='&usr.left-selbuttonbg;' 
-         icon_src='&usr.selected-indicator;' 
-         icon_align='left' 
-         href=''><translate id="213">Sites</translate></gbutton><br />
-<img src="/internal-roxen-unit" width="1" height="5"/><br />
-<if variable="usr.configlistmode is 1">
-<if variable='form.goto_site'>
-<if not="1" variable='form.goto_site is '>
-  <redirect to='site.html/&form.goto_site;/' />
-</if>
-</if>
+        <li>
+          <select name='goto_site' onChange='form.submit();'>
+            <option value=''><translate id="509">Select site</translate></option>
+            <emit source='configurations'>
+              <cf-perm perm="Site:&_.sname;">
+                <option value='&_.sname;'>&_.name;</option>
+              </cf-perm>
+            </emit>
+          </select>
+          <br />
+          <input type="submit" value="Go" class="rxn-admin-btn" />
+        </li>
+      </if>
 
-<select name='goto_site' onChange='form.submit();'>
-   <option value=''><translate id="509">Select site</translate></option>
- <emit source='configurations'>
-  <cf-perm perm="Site:&_.sname;">
-   <option value='&_.sname;'>&_.name;</option>
-  </cf-perm>
-  </emit>
- </select>
-<br />
-<input type="submit" value=" Go " />
-</if>
+      <else>
+       <emit source='configurations'
+         ><cf-perm perm="Site:&_.name;">
+          <li>
+            <a href="site.html/&_.sname;/">&_.name;</a>
+          </li>
+        </cf-perm></emit>
+      </else>
+    </ul>
+  </cv-leftside>
 
-<else>
- <emit source='configurations'
-   ><cf-perm perm="Site:&_.name;"
-      ><gbutton frame-image='&usr.left-buttonframe;' 
-            bgcolor='&usr.left-buttonbg;' 
-            href='site.html/&_.sname;/' 
-            width='&usr.left-buttonwidth;'>&_.name;</gbutton
-      ><br /><img src="/internal-roxen-unit" width="1" height="1"/
-  ><br /></cf-perm></emit>
-</else>
-
-
-</cv-leftside>
-
-<cv-split>
-  <subtablist><st-page>
-  <cf-perm perm="Create Site">
-     <gbutton href='new_site.html'
-              icon_src='&usr.next;' 
-              align_icon='right'
-	      width='200'
-              hspace='5' vspace='5'><translate id="248">Create new site</translate></gbutton>
-     <br />
-     <gbutton href='drop_site.html' 
-              icon_src='&usr.next;' 
-              align_icon='right' 
-	      width='200'
-              hspace='5' vspace='5'><translate id="249">Drop old site</translate></gbutton>
-   </cf-perm>
-  </st-page></subtablist>
-</cv-split>
+  <cv-split>
+    <subtablist><st-page>
+      <cf-perm perm="Create Site">
+        <ul class='nolist button-list'>
+          <li>
+            <button data-href="new_site.html" class="rxn-admin-btn icon add"><translate id="248">Create new site</translate></button>
+          </li>
+          <li>
+            <button data-href="drop_site.html" class="rxn-admin-btn icon remove"><translate id="249">Drop old site</translate></button>
+          </li>
+        </ul>
+      </cf-perm>
+    </st-page></subtablist>
+  </cv-split>
 </content>

@@ -20,12 +20,12 @@ string module_page( RequestID id, string conf, string module )
   RXML.set_var( "lastmlmode", section, "usr" );
   RXML.set_var( "section", section, "form" );
 
-  return 
+  return
 #"<emit source='module-variables-sections'
   configuration='"+conf+#"'
   module='"+module+#"'>
-   <tab ::='&_.first; &_.last; &_.selected;'
-        href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</tab>
+   <a ::='&_.selected;'
+        href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</a>
 </emit>";
 }
 
@@ -53,8 +53,8 @@ mixed parse( RequestID id )
 	 ((conf != id->conf)?"add-module-priorities='1' ":"") +
 	 "      add-status='1' "
 	 "      configuration='"+path[0]+"'>\n"
-	 "  <tab ::='&_.first; &_.last; &_.selected;'\n"
-	 "       href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</tab>"
+	 "  <a ::='&_.selected;'\n"
+	 "       href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</a>"
 	 "</emit>");
      break;
 

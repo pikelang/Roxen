@@ -12,8 +12,8 @@ inherit "language";
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 //<locale-token project="roxen_config"> SLOCALE </locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-#define SLOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+#define LOCALE(X,Y)     _DEF_LOCALE("roxen_config",X,Y)
+#define SLOCALE(X,Y)    _STR_LOCALE("roxen_config",X,Y)
 string query_configuration_dir();
 
 // Settings used by the various administration interface modules etc.
@@ -27,7 +27,7 @@ class ConfigIFCache
   {
     return db("local")->query( what, @args );
   }
-  
+
   void create( string name, int|void _settings )
   {
     if( _settings )
@@ -40,23 +40,23 @@ class ConfigIFCache
       dir = name;
       db = master()->resolv("DBManager.cached_get");
       query( "create table if not exists "+name+" ("
-	     "  id varchar(80) not null primary key,"
-	     "  data blob not null default ''"
-	     ")" );
+             "  id varchar(80) not null primary key,"
+             "  data blob not null default ''"
+             ")" );
       switch( name )
       {
-	case "settings":
-	  master()->resolv("DBManager.is_module_table")
-	    (0, "local", name, "Settings for configuration user interface");
-	  break;
-	case "modules":
-	  master()->resolv("DBManager.is_module_table")
-	    (0, "local", name, "Module information cache");
-	  break;
-	default:
-	  master()->resolv("DBManager.is_module_table")
-	    (0, "local", name, "Settings");
-	  break;
+        case "settings":
+          master()->resolv("DBManager.is_module_table")
+            (0, "local", name, "Settings for configuration user interface");
+          break;
+        case "modules":
+          master()->resolv("DBManager.is_module_table")
+            (0, "local", name, "Module information cache");
+          break;
+        default:
+          master()->resolv("DBManager.is_module_table")
+            (0, "local", name, "Settings");
+          break;
       }
     }
   }
@@ -83,9 +83,9 @@ class ConfigIFCache
       }
     }
     f->write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-	     "<roxen-config>\n" +
+             "<roxen-config>\n" +
              string_to_utf8(encode_mixed( to, this_object() ) ) +
-	     "</roxen-config>\n");
+             "</roxen-config>\n");
     return to;
   }
 
@@ -145,28 +145,28 @@ class ConfigurationSettings
 
     protected array(string) all_themes( )
     {
-      return filter((get_dir( "config_interface/themes/" ) + 
-		     (get_dir( "../local/config_interface/themes/" )||({}))-
-		     ({"CVS","README",".distignore",".cvsignore"})),
-		    lambda(string theme) {
-		      catch {
-			return lopen("config_interface/themes/"+theme+"/name",
-				     "r")->read() != "";
-		      };
-		      return 0;
-		    });
+      return filter((get_dir( "config_interface/themes/" ) +
+                     (get_dir( "../local/config_interface/themes/" )||({}))-
+                     ({"CVS","README",".distignore",".cvsignore"})),
+                    lambda(string theme) {
+                      catch {
+                        return lopen("config_interface/themes/"+theme+"/name",
+                                     "r")->read() != "";
+                      };
+                      return 0;
+                    });
     }
 
     mixed set( string nv )
     {
       // Support disappearing themes.
       if( has_value( all_themes(), nv ) )
-	return ::set( nv );
+        return ::set( nv );
       report_warning((string)LOCALE(384, "Warning: The theme %s "
-			    " no longer exists, using default.\n"),nv);
+                            " no longer exists, using default.\n"),nv);
       return ::set( "default" );
     }
-    
+
     void set_choice_list()
     {
     }
@@ -182,7 +182,7 @@ class ConfigurationSettings
     }
 
     protected void create(mixed default_value,int flags,
-			  string std_name,string std_doc)
+                          string std_name,string std_doc)
     {
       ::create( default_value,0, flags,std_name, std_doc );
     }
@@ -209,7 +209,7 @@ class ConfigurationSettings
   void restore()
   {
     mapping vv = config_settings2->get( name );
-    if( vv ) 
+    if( vv )
       foreach( indices( vv ), string i )
         if( variables[ i ] )
           variables[ i ]->set( vv[i] );
@@ -227,17 +227,17 @@ class ConfigurationSettings
     {
       class Box
       {
-	constant box = "box";
-	LocaleString box_name;
-	LocaleString box_doc;
-	int box_initial;
+        constant box = "box";
+        LocaleString box_name;
+        LocaleString box_doc;
+        int box_initial;
       };
       foreach( glob("*.pike", get_dir( BDIR ) ), string f )
       {
         catch
         {
           Box box = (object)(BDIR+f);
-	  roxenloader->dump( BDIR+f, object_program(box) );
+          roxenloader->dump( BDIR+f, object_program(box) );
           if( box->box && box->box == box_type )
             bdata[ (f/".")[0] ] = ([ "name":box->box_name,
                                      "doc":box->box_doc,
@@ -246,15 +246,15 @@ class ConfigurationSettings
       }
       foreach( glob("*.xml", get_dir( BDIR ) ), string f )
       {
-	foreach( Roxen.parse_box_xml( BDIR+f ), Box box )
-	{
+        foreach( Roxen.parse_box_xml( BDIR+f ), Box box )
+        {
           if( box->box && box->box == box_type )
             bdata[ (f/".")[0]+":"+box->ident ] =
-	      ([
-		"name":box->box_name,
-		"doc":box->box_doc,
-		"initial":box->box_initial
-	      ]);
+              ([
+                "name":box->box_name,
+                "doc":box->box_doc,
+                "initial":box->box_initial
+              ]);
         }
       }
       array i = indices( bdata );
@@ -264,7 +264,7 @@ class ConfigurationSettings
     }
 
     protected void create( LocaleString name, LocaleString doc,
-			   string _type, int|void flags  )
+                           string _type, int|void flags  )
     {
       box_type = _type;
       _initial = ({});
@@ -311,7 +311,7 @@ class ConfigurationSettings
                bd->name+"</b></dt><dd>"+bd->doc+"</dd>";
       return "";
     }
-    
+
     string render_form( RequestID id, void|mapping additional_args )
     {
       multiset has = (multiset)query();
@@ -335,7 +335,8 @@ class ConfigurationSettings
     {
       if( !RXML.get_context() ) return 0;
       if( config_setting2( "can-change-colors" ) ) return 0;
-      return 1;
+      // return 1;
+      return 0;
     };
 
     defvar( "left_boxes",
@@ -353,45 +354,45 @@ class ConfigurationSettings
                                     LOCALE(343,"The theme to use") ) );
 
     defvar( "form-font-size", -1, LOCALE(167,"Form font size"),
-	    TYPE_INT_LIST,
-	    LOCALE(178,"The fontsize of the variables in the "
-		   "configuration interface"),
-	    ({ -2, -1, 0, 1, 2, }) );
+            TYPE_INT_LIST,
+            LOCALE(178,"The fontsize of the variables in the "
+                   "configuration interface"),
+            ({ -2, -1, 0, 1, 2, }) );
 
     defvar( "docs-font-size", -1, LOCALE(179,"Documentation font size"),
-	    TYPE_INT_LIST,
-	    LOCALE(193,"The fontsize of the documentation in the "
-		   "configuration interface"),
-	    ({ -2, -1, 0, 1, 2, }) );
+            TYPE_INT_LIST,
+            LOCALE(193,"The fontsize of the documentation in the "
+                   "configuration interface"),
+            ({ -2, -1, 0, 1, 2, }) );
 
     mixed listmode_var =
     defvar( "modulelistmode", "uf",
-	    LOCALE(14,"Module list mode"),
-	    TYPE_STRING_LIST,
-	    LOCALE(15,"The module list mode. One of "
-		   "<dl>"
-		   "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
-		   "<dt>Folded with JavaScript Popup</dt><dd>Like Folded, but when you "
-		   "move the mouse over a folded group, a menu with the folded "
-		   "modules will popup</dd>"
-		   "<dt>Unfolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
-		   "</dl>"),
-	    ([
-	      "js": LOCALE(17,"Folded with JavaScript popup"),
-	      "fl": LOCALE(122,"Folded"),
-	      "uf": LOCALE(123,"Unfolded (Old style)"),
-	    ]) );
+            LOCALE(14,"Module list mode"),
+            TYPE_STRING_LIST,
+            LOCALE(15,"The module list mode. One of "
+                   "<dl>"
+                   "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
+                   "<dt>Folded with JavaScript Popup</dt><dd>Like Folded, but when you "
+                   "move the mouse over a folded group, a menu with the folded "
+                   "modules will popup</dd>"
+                   "<dt>Unfolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
+                   "</dl>"),
+            ([
+              "js": LOCALE(17,"Folded with JavaScript popup"),
+              "fl": LOCALE(122,"Folded"),
+              "uf": LOCALE(123,"Unfolded (Old style)"),
+            ]) );
     listmode_var->set_choice_list( ({ "fl", "js", "uf" }) );
 
     defvar( "moduletab", "Status",
-	    LOCALE(85,"Default module tab"),
-	    TYPE_STRING_LIST,
-	    LOCALE(162,"The tab that will be selected by default when you "
-		   "select a module."),
-	    ([
-	      "Status":LOCALE(228,"Status"),
-	      "Settings":LOCALE(256,"Settings"),
-	    ]) );
+            LOCALE(85,"Default module tab"),
+            TYPE_STRING_LIST,
+            LOCALE(162,"The tab that will be selected by default when you "
+                   "select a module."),
+            ([
+              "Status":LOCALE(228,"Status"),
+              "Settings":LOCALE(256,"Settings"),
+            ]) );
 
     defvar( "configlistmode", 0,
             LOCALE(278, "Compact site list" ),
@@ -399,7 +400,7 @@ class ConfigurationSettings
             LOCALE(279, "If true, the list of sites will be presented in a "
                     "compact format suitable for servers with many sites." ));
 
-    defvar( "charset", "utf-8", 
+    defvar( "charset", "utf-8",
             LOCALE(229,"Page charset"),
             TYPE_STRING_LIST,
             LOCALE(230,"The charset to use when rendering configuration "
@@ -410,115 +411,115 @@ class ConfigurationSettings
               "iso-2022",
               "iso-8859-1",
               "iso-8859-2",
-	      "iso-8859-3",
-	      "iso-8859-4",
-	      "iso-8859-5",
-	      "iso-8859-6",
-	      "iso-8859-7",
-	      "iso-8859-8",
-// 	      "iso646-se",
+              "iso-8859-3",
+              "iso-8859-4",
+              "iso-8859-5",
+              "iso-8859-6",
+              "iso-8859-7",
+              "iso-8859-8",
+//            "iso646-se",
             }));
 
     mixed sort_var =
     defvar( "sortorder", "as defined",
-	    LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
-	    LOCALE(237, "The default order variables are sorted in" ),
-	    ([
-	      "alphabetical" : LOCALE(238,"Alphabetical"),
-	      "as defined"   : LOCALE(239,"As defined"),
-	      "changed/alphabetical" : LOCALE(240,"Alphabetical, changed first"),
-	      "changed/as defined"   : LOCALE(241,"As defined, changed first"),
-	    ]) );
+            LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
+            LOCALE(237, "The default order variables are sorted in" ),
+            ([
+              "alphabetical" : LOCALE(238,"Alphabetical"),
+              "as defined"   : LOCALE(239,"As defined"),
+              "changed/alphabetical" : LOCALE(240,"Alphabetical, changed first"),
+              "changed/as defined"   : LOCALE(241,"As defined, changed first"),
+            ]) );
     sort_var->set_choice_list( ({ "as defined",
-				  "changed/as defined",
-				  "alphabetical",
-				  "changed/alphabetical" }) );
+                                  "changed/as defined",
+                                  "alphabetical",
+                                  "changed/alphabetical" }) );
 
     defvar( "changemark", "color",
-	    LOCALE(242, "Changed variables are highlighted"),
-	    TYPE_STRING_LIST,
-	    LOCALE(243, "How to highlight variables that does not have "
-		   "their default value" ),
-	    ([
-	      "not"   :LOCALE(244, "Not at all"),
-	      "color" :LOCALE(268, "Different background color"),
-	      "header":LOCALE(302, "Add a header")
-	    ]) );
+            LOCALE(242, "Changed variables are highlighted"),
+            TYPE_STRING_LIST,
+            LOCALE(243, "How to highlight variables that does not have "
+                   "their default value" ),
+            ([
+              "not"   :LOCALE(244, "Not at all"),
+              "color" :LOCALE(268, "Different background color"),
+              "header":LOCALE(302, "Add a header")
+            ]) );
 
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
             TYPE_FLAG, LOCALE(175, "Show the variable documentation."));
 
     defvar( "more_mode", 1, LOCALE(176, "Show advanced configuration options"),
-	    TYPE_FLAG, 
-	    LOCALE(177, "Show all possible configuration options, not only "
-		   "the ones that are most often changed."));
+            TYPE_FLAG,
+            LOCALE(177, "Show all possible configuration options, not only "
+                   "the ones that are most often changed."));
 
 //     defvar( "translations", 0, LOCALE(178, "Show all translations"),
-//             TYPE_FLAG, 
-// 	    LOCALE(179, "Show the language selection flags. All translations "
-// 		   "will be listed, more or less completed."));
+//             TYPE_FLAG,
+//          LOCALE(179, "Show the language selection flags. All translations "
+//                 "will be listed, more or less completed."));
 
   defvar("locale",
-	 Variable.Language("Standard", ({ "Standard" }) +
-			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(5, "Interface language"), 
-			   LOCALE(19, "Select the Administration interface "
-				  "language.")))
+         Variable.Language("Standard", ({ "Standard" }) +
+                           Locale.list_languages("roxen_config"),
+                           0, LOCALE(5, "Interface language"),
+                           LOCALE(19, "Select the Administration interface "
+                                  "language.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
-			      roxenp()->set_locale();
-			    } );
+                              roxenp()->set_locale();
+                            } );
 
 
     defvar( "devel_mode", 0, LOCALE(180, "Show developer options and actions"),
-	    TYPE_FLAG, 
-	    LOCALE(181, "Show settings and actions that are not normaly "
-		   "useful for non-developer users. If you develop your own "
-		   "Roxen modules, this option is for you."));
+            TYPE_FLAG,
+            LOCALE(181, "Show settings and actions that are not normaly "
+                   "useful for non-developer users. If you develop your own "
+                   "Roxen modules, this option is for you."));
 
     defvar( "bgcolor", "white", LOCALE(182, "Background color"),
-	    TYPE_STRING, 
-	    LOCALE(183, "Administration interface background color."))
+            TYPE_STRING,
+            LOCALE(183, "Administration interface background color."))
             ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "fgcolor", "black", LOCALE(184, "Text color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
+            TYPE_STRING, LOCALE(185, "Administration interface text color."))
             ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "linkcolor", "darkblue", LOCALE(186, "Link color"),
-	    TYPE_STRING, LOCALE(185, "Administration interface text color."))
+            TYPE_STRING, LOCALE(185, "Administration interface text color."))
             ->set_invisibility_check_callback( theme_can_change_colors );
 
     defvar( "font", "roxen builtin", LOCALE(187, "Font"),
-	    TYPE_FONT, LOCALE(188, "Administration interface font."));
+            TYPE_FONT, LOCALE(188, "Administration interface font."));
 
     defvar( "group_tasks", 1, LOCALE(303,"Group Tasks"),
-	    TYPE_FLAG, LOCALE( 304, "If true, tasks are grouped acording to "
-			       "type, otherwise all tasks will be listed on "
-			       "one page") );
+            TYPE_FLAG, LOCALE( 304, "If true, tasks are grouped acording to "
+                               "type, otherwise all tasks will be listed on "
+                               "one page") );
 
     mixed method_var =
-    defvar( "addmodulemethod", "normal", 
-	    LOCALE(189, "Add/Delete module page type"),
-            TYPE_STRING_LIST, 
-	    LOCALE(153, "<dl>\n<dt>Normal</dt><dd>"
-		   "Show module name and documentation with images."
-		   "</dd>\n<dt>Fast</dt><dd>"
-		   "Like Normal, but no type images."
-		   "</dd>\n<dt>Faster</dt><dd>"
-		   "Like Normal, but allows selecting multiple modules "
-		    "at once."
-		   "</dd>\n<dt>Compact</dt><dd>"
-		   "Only show the names of modules, and allow "
-		   "addition/deletion of multiple modules at once."
-		   "</dd>\n<dt>Really compact</dt><dd>"
-		   "Like Compact, but no module classes.</dd>\n</dl>"),
-	    ([ "normal"         : LOCALE(280, "Normal"),
-	       "fast"           : LOCALE(282, "Fast"),
-	       "faster"         : LOCALE(284, "Faster"),
-	       "compact"        : LOCALE(286, "Compact"),
-	       "really compact" : LOCALE(288, "Really compact")  ]));
+    defvar( "addmodulemethod", "normal",
+            LOCALE(189, "Add/Delete module page type"),
+            TYPE_STRING_LIST,
+            LOCALE(153, "<dl>\n<dt>Normal</dt><dd>"
+                   "Show module name and documentation with images."
+                   "</dd>\n<dt>Fast</dt><dd>"
+                   "Like Normal, but no type images."
+                   "</dd>\n<dt>Faster</dt><dd>"
+                   "Like Normal, but allows selecting multiple modules "
+                    "at once."
+                   "</dd>\n<dt>Compact</dt><dd>"
+                   "Only show the names of modules, and allow "
+                   "addition/deletion of multiple modules at once."
+                   "</dd>\n<dt>Really compact</dt><dd>"
+                   "Like Compact, but no module classes.</dd>\n</dl>"),
+            ([ "normal"         : LOCALE(280, "Normal"),
+               "fast"           : LOCALE(282, "Fast"),
+               "faster"         : LOCALE(284, "Faster"),
+               "compact"        : LOCALE(286, "Compact"),
+               "really compact" : LOCALE(288, "Really compact")  ]));
     method_var->set_choice_list( ({ "normal", "fast", "faster",
-				    "compact", "really compact" }) );
+                                    "compact", "really compact" }) );
 
     restore( );
   }
@@ -542,132 +543,166 @@ class AdminUser
   string password;
   multiset permissions = (<>);
   ConfigurationSettings settings;
+  // Mustache stash;
+
+  string tmpl = #"
+    {{ #error }}
+      <div class='notify error'>{{ error }}</div>
+    {{ /error }}
+    <table>
+      <tr class='valign-top'><td style='width:15%'>
+        <table>
+          <tr>
+            <td class='text-right'><nobr>Real name:</nobr></td>
+            <td><input name='PPPreal_name' value='{{ user.realname }}'></td>
+          </tr>
+          <tr>
+            <td class='text-right'>Password:</td>
+            <td><input type='password' name='PPPpassword' value=''></td>
+          </tr>
+          <tr>
+            <td class='text-right'>Again:</td>
+            <td><input type='password' name='PPPpassword2' value=''></td>
+          </tr>
+          <tr>
+            <td class='text-right'>Crypted:</td>
+            <td><input name='PPPc_password' value='{{ user.password }}'></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <button data-submit='' class='save icon fill' value=' Set '>{{ save_label }}</button>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td>
+        {{ #user.perms }}
+          <button
+            {{ ^noclick }} data-submit=''{{ /noclick }}
+            {{ #disabled }} disabled=''{{ /disabled }}
+            name='{{ name }}{{ perm }}'
+            class='perm{{ #check }} checked{{ /check }}{{ #dim }} dimmed{{ /dim }}'
+          >{{ label }}</button>
+        {{ /user.perms }}
+      </td>
+      </tr>
+    </table>";
 
   string form( RequestID id )
   {
     string varpath = "config_user_"+name+"_";
-    string error = "";
+    string error;
+
+    mapping mctx = ([
+      "save_label" : SLOCALE("bA", "Save"),
+      "is_me" : false,
+      "user" : ([
+        "name"     : name,
+        "realname" : UNDEFINED,
+        "password" : UNDEFINED,
+        "perms"    : ({})
+      ]),
+      "error" : UNDEFINED
+    ]);
+
     // Sort is needed (see c_password and password interdepencencies)
-    foreach( sort(glob( varpath+"*", indices(id->variables) )),
-             string v )
-    {
+    foreach (sort(glob(varpath+"*", indices(id->variables))), string v) {
       string rp = v;
-      sscanf( v, varpath+"%s", v );
-      switch( v )
-      {
-       case "name":
-         break;
-       case "real_name":
-         real_name = id->variables[rp];
-         save();
-         break;
-       case "c_password":
-         if( id->variables[rp] != password )
-           password = id->variables[rp];
-         save();
-         break;
+      sscanf(v, varpath+"%s", v);
 
-       case "password":
-         if( strlen( id->variables[rp] ) &&
-             (id->variables[rp+"2"] == id->variables[rp]) )
-         {
-           password = crypt_password( id->variables[rp] );
-           save();
-         }
-         else if( strlen( id->variables[rp]  ) )
-           error = "Passwords do not match";
-         break;
+      switch (v) {
+        case "name":
+          break;
 
-       default:
-         if( sscanf( v, "add_%s.x", v ) )
-         {
-           report_notice( "Permission "+v+" added to "+real_name+
+        case "real_name":
+          real_name = id->variables[rp];
+          save();
+          break;
+
+        case "c_password":
+          if( id->variables[rp] != password )
+            password = id->variables[rp];
+          save();
+          break;
+
+        case "password":
+          if(strlen(id->variables[rp]) &&
+             (id->variables[rp+"2"] == id->variables[rp]))
+          {
+            password = crypt_password(id->variables[rp]);
+            save();
+          }
+          else if (strlen(id->variables[rp])) {
+            error = "Passwords do not match";
+          }
+          break;
+
+        default:
+          if (sscanf(v, "add_%s.x", v)) {
+            report_notice("Permission "+v+" added to "+real_name+
                           " ("+name+") by "+
                           id->misc->config_user->real_name+
                           " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
-           permissions[v] = 1;
-           save();
-         }
-         else if( sscanf( v, "remove_%s.x", v ) )
-         {
-           report_notice( "Permission "+v+" removed from "+real_name+
+            permissions[v] = 1;
+            save();
+          }
+          else if (sscanf(v, "remove_%s.x", v)) {
+            report_notice("Permission "+v+" removed from "+real_name+
                           " ("+name+") by "+
                           id->misc->config_user->real_name+
                           " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
-           permissions[v] = 0;
-           save();
-         }
-         break;
+            permissions[v] = 0;
+            save();
+          }
+          break;
       }
-      m_delete( id->variables, rp );
+
+      m_delete(id->variables, rp);
     }
-    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center "
-					"preparse> "+
-					SLOCALE("bA", "Save")+
-					" </gbutton-url>", id );
-    string form = error+
-#"
-<table>
-<tr valign=\"top\"><td>
-  <table>
-   <tr><td align='right'><nobr>Real name:</nobr></td><td><input name='PPPreal_name' value='"+real_name+#"'></td></tr>
-   <tr><td align='right'>Password:</td><td><input type='password' name='PPPpassword' value=''></td></tr>
-   <tr><td align='right'>Again:</td><td><input type='password' name='PPPpassword2' value=''></td></tr>
-   <tr><td align='right'>Crypted:</td><td><input name='PPPc_password' value='"+password+#"'></td></tr>
-   <tr><td></td><td><input type='image' border='0' alt=' Set ' value=' Set ' src='"+
-       set_src+#"' /></td></tr>
-  </table>
-</td>"
-      "<td><img src=\"/internal-roxen-unit\" height=\"5\" /><br />\n\n";
+
+    if (error) {
+      mctx->error = error;
+    }
+
+    mctx->user->realname = real_name;
+    mctx->user->password = password;
 
     int is_me = this_object() == id->misc->config_user;
 
-    foreach( possible_permissions, string perm )
-    {
+    mctx->is_me = is_me;
+
+    foreach (possible_permissions, string perm) {
       int dim, noclick;
-      if( perm != "Everything" && permissions->Everything )
+      if (perm != "Everything" && permissions->Everything) {
         dim = 1;
-
-      if( is_me && (perm == "Everything") )
-	dim = noclick = 1;
-
-      if( permissions[ perm ] )
-      {
-        string s = Roxen.parse_rxml(
-	  "<gbutton-url "+
-	  ( dim ? "state='disabled' "
-	    "frame-image='&usr.gbutton-disabled-frame-image;'" :
-	    "" )+
-	  "    icon_src=/img/selected.gif "
-	  "    width=180>"+
-	  permission_translations[ perm ]+
-	  "</gbutton-url>", id );
-	if( noclick )
-	  form += sprintf("<img src='%s' />\n", s);
-	else
-	  form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
-			   " src='%s'>\n", perm, s );
       }
-      else
-      {
-        string s = Roxen.parse_rxml(
-	  "<gbutton-url "+
-	  ( dim ?
-	    "state='disabled' "
-	    "frame-image='&usr.gbutton-disabled-frame-image;'" :
-	    "" )+
-	  "    icon_src=/img/unselected.gif "
-	  "    width=180>"+
-	  permission_translations[ perm ]+
-	  "</gbutton-url>", id );
-        form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
-                         " src='%s'>\n", perm, s );
+
+      if (is_me && (perm == "Everything")) {
+        dim = noclick = 1;
       }
+
+      mapping perm_map = ([
+        "dim"     : dim,
+        "noclick" : noclick,
+        "label"   : permission_translations[perm],
+        "perm"    : perm,
+        "check"   : !!permissions[perm]
+      ]);
+
+      perm_map->name = perm_map->check ? "PPPremove_" : "PPPadd_";
+      perm_map->disabled = dim && noclick;
+
+      mctx->user->perms += ({ perm_map });
     }
-    return replace(form,"PPP",varpath)+
-      "</td></tr></table>";
+
+    Mustache my_stache = Mustache();
+    string ret = my_stache->render(tmpl, mctx);
+    destruct(my_stache);
+
+    return replace(ret, "PPP", varpath);
   }
 
   void restore()
@@ -716,7 +751,7 @@ class AdminUser
 
   protected string _sprintf()
   {
-    return sprintf("AdminUser( %O, %O, %{%s %} )", 
+    return sprintf("AdminUser( %O, %O, %{%s %} )",
                    name, real_name, (array)permissions);
   }
 }
@@ -729,7 +764,7 @@ void add_permission( string perm, LocaleString text )
   if( mappingp( text ) )
   {
     report_warning("Unsupported to call add_permission with a mapping.\n"
-                   "Use a LOCALE() string instead\n%s\n", 
+                   "Use a LOCALE() string instead\n%s\n",
                    describe_backtrace( backtrace( ) ) );
     text = [string](text->standard || (values( text )[ 0 ]));
   }
@@ -788,7 +823,7 @@ string configuration_authenticate(RequestID id, string what, void|int silent)
   foreach(known, AdminUser u)
     if (u->valid_id(id) && u->auth(what))
       return u->name;
-  
+
   array a = map(list_admin_users(), find_admin_user) - ({ 0 }) - known;
   foreach( a, AdminUser u )
     if( u->valid_id( id ) && u->auth( what ) )
@@ -821,19 +856,19 @@ class UserDBModule
   inherit UserDB;
 
   string module_identifier(){ return 0; }
-  
+
   protected class CFUser
   {
     inherit User;
     AdminUser ruser;
 
-    // Wrappers 
+    // Wrappers
     string name()              { return ruser->name;      }
     string real_name()         { return ruser->real_name; }
     int uid()                  { return -1;               }
     int gid()                  { return -1;               }
     string shell()             { return "";               }
-    string homedir()   	       { return "/";              }
+    string homedir()           { return "/";              }
     string crypted_password()  {  return ruser->password; }
 
 
@@ -841,7 +876,7 @@ class UserDBModule
     {
       ::create( p );
       ruser = u;
-    }	
+    }
   }
 
 

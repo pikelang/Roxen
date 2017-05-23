@@ -89,7 +89,7 @@ conf_loop:
   }
 
   return
-    "<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'><tr>" +
+    "<cbox type='"+box+"' title='"+box_name+"'><table cellpadding='0'><tr>" +
     res * "</tr>\n<tr>" +
-    "</tr></table></box>\n";
+    "</tr></table></cbox>\n";
 }

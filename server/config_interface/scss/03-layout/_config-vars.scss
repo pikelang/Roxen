@@ -1,0 +1,83 @@
+.config-var {
+  @include flex-row;
+  @include clear;
+
+  margin-top: $spacing-unit;
+  border-bottom: 1px dashed darken($body-color, 25%);
+  padding-bottom: $spacing-unit;
+
+  &:first-of-type {
+    border-top: 1px dashed darken($body-color, 25%);
+    padding-top: $spacing-unit;
+  }
+
+  .name {
+    @include text-size(lg);
+    color: $light-grey;
+    font-weight: bold;
+    width: 25%;
+    flex-grow: 1;
+    margin-left: 0;
+    padding-left: 0;
+    padding-right: $spacing-unit;
+  }
+
+  .value {
+    width: 75%;
+    flex-grow: 1;
+    margin-left: 0;
+    padding-left: 0;
+
+    &.changed {
+      padding: $spacing-unit;
+      background: lighten($body-bg, 2%);
+    }
+  }
+
+  .doc {
+    display: block;
+    padding-left: 0;
+    margin-left: 0;
+    margin-top: $spacing-unit/2;
+    // @include text-size(sm);
+
+    & > p {
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  + .config-var {
+    // padding-top: $spacing-unit;
+  }
+}
+
+.port-cfg-vars {
+  .rxn-var-list {
+    tr {
+      border-bottom: 1px dashed darken($body-color, 25%);
+
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+
+    td {
+      padding-top: $spacing-unit;
+      padding-bottom: $spacing-unit;
+    }
+
+    tr {
+      &:first-child {
+        td {
+          padding-top: 0;
+        }
+      }
+    }
+  }
+}

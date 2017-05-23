@@ -25,7 +25,7 @@ string parse( RequestID id )
     string img;
     string status;
 
-    sscanf( data, "%*sstrips/%s.gif", img );
+    sscanf( data, "%*sstrips/%s.png", img );
     sscanf( data, "%*s<!--%*sstuff you%*s - start -->%s<!--", status );
 
     if( !img )
@@ -63,4 +63,4 @@ string parse( RequestID id )
 
   return ("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
 }
-  
+

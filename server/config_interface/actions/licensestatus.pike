@@ -10,7 +10,7 @@ constant action = "status";
 
 string name= LOCALE(165, "License status");
 string doc = LOCALE(166, "Show information about the installed licenses and "
-		    "their usage.");
+                    "their usage.");
 
 int enabled()
 {
@@ -20,35 +20,23 @@ int enabled()
 mixed parse( RequestID id )
 {
   string txt = #"
-  <font size='+1'><b>Installed Licenses</b></font>
-  <p>
-  Click on a license for more information.
-  </p>
+  <h2 class='no-margin-top'>Installed Licenses</h2>
+  <p>Click on a license for more information.</p>
   <input type='hidden' name='action' value='&form.action;'/>
   <input type='hidden' name='class' value='&form.class;'/>
-  <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
-  <table cellspacing='0' cellpadding='3' border='0' width='100%'>
-    <tr bgcolor='&usr.obox-titlebg;'>
-      <td>&nbsp;</td>
-      <th align='left'>Filename</th>
-      <th align='left'>#</th>
-      <th align='left'>Type</th>
-      <th align='left'>Status</th>
-      <th align='left'>Used in</th>
-    </tr>
-    <set variable='var.color1'>&usr.obox-bodybg;</set>
-    <set variable='var.color2'>&usr.fade1;</set>
-    <set variable='var.color'>&var.color2;</set>
+
+  <table class='nice'>
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>#</th>
+        <th>Type</th>
+        <th>Status</th>
+        <th>Used in</th>
+      </tr>
+    </thead>
     <emit source='licenses'>
-      <if variable='var.color == &var.color1;'>
-        <set variable='var.color'>&var.color2;</set>
-      </if><else>
-        <set variable='var.color'>&var.color1;</set>
-      </else>  
-      <tr bgcolor='&var.color;'>
-        <td width='10'>
-          <if variable='form.license == &_.filename;'>
-            <imgs src='&usr.selected-indicator;' border='0'/></if><else>&nbsp;</else></td>
+      <tr>
         <td>
           <if variable='_.malformed != yes'>
             <if variable='form.license == &_.filename;'>
@@ -58,104 +46,94 @@ mixed parse( RequestID id )
               <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;&amp;&usr.set-wiz-id;'>&_.filename;</a>
             </else>
           </if>
-          <else>&_.filename;</else>
+          <else><div class='notify warning inline'>&_.filename;</div></else>
         </td>
         <td>&_.number;</td>
         <td>
           <if variable='_.malformed == yes'>
-            <font color='darkred'>error</font></if>
+            <span class='error'>error</span></if>
           <else>&_.type;</else>
         </td>
         <td>
           <if variable='_.malformed != yes'>
             <emit source='license-warnings' rowinfo='var.warnings'></emit>
-            <if variable='var.warnings > 0'>Detected &var.warnings;
-              warning<if variable='var.warnings > 1'>s</if></if>
+            <if variable='var.warnings > 0'>
+              <div class='notify warning inline'>Detected &var.warnings;
+              warning<if variable='var.warnings > 1'>s</if></div>
+            </if>
           </if>
           <else>&_.reason;</else>
-          &nbsp;
         </td>
-        <td>&_.configurations;&nbsp;</td>
+        <td>&_.configurations;</td>
       </tr>
     </emit>
   </table>
-  </box-frame>
 
   <if variable='form.license'>
-    <br clear='all'/><br />
-    <font size='+1'>License &form.license;</font>
-    <br /><br />
+    <h3>License &form.license;</h3>
     <license name='&form.license;'>
-      <table>
-        <tr><td><b>Company Name:</b></td><td>&_.company_name;</td></tr>
-        <tr><td><b>Expires:</b></td><td>&_.expires;</td></tr>
-        <tr><td><b>Hostname:</b></td><td>&_.hostname;</td></tr>
-        <tr><td><b>Type:</b></td><td>&_.type;</td></tr>
-        <tr><td><b>Sites:</b></td><td>&_.sites;</td></tr>
-        <tr><td><b>Number:</b></td><td>&_.number;</td></tr>
-        <tr><td><b>Created:</b></td><td>&_.created;</td></tr>
-        <tr><td><b>Created by:</b></td><td>&_.creator;@roxen.com</td></tr>
-        <tr><td><b>Comment:</b></td><td>&_.comment;</td></tr>
-      </table><br />
-      <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
-      <table cellspacing='0' border='0' cellpadding='3' width='100%'>
-        <tr bgcolor='&usr.obox-titlebg;'>
-          <th align='left'>Module</th>
-          <th align='center'>Enabled</th>
-          <th align='left'>Features</th>
-        </tr>
-        <set variable='var.color'>&var.color2;</set>
-        <emit source='license-modules'>
-          <if variable='var.color == &var.color1;'>
-            <set variable='var.color'>&var.color2;</set>
-          </if><else>
-            <set variable='var.color'>&var.color1;</set>
-          </else>  
-          <tr bgcolor='&var.color;'>
-            <td><e>&_.name;</e></td>
-            <td align='center'>&_.enabled;</td>
-            <td nowrap=''>
-              <emit source='license-module-features'
-                >&_.name;:&nbsp;&_.value;<delimiter><br /></delimiter></emit>
-              <else>&nbsp;</else>
-            </td>
-          </tr>
-        </emit>
+      <table class='auto'>
+        <tr><th>Company Name:</th><td>&_.company_name;</td></tr>
+        <tr><th>Expires:</th><td>&_.expires;</td></tr>
+        <tr><th>Hostname:</th><td>&_.hostname;</td></tr>
+        <tr><th>Type:</th><td>&_.type;</td></tr>
+        <tr><th>Sites:</th><td>&_.sites;</td></tr>
+        <tr><th>Number:</th><td>&_.number;</td></tr>
+        <tr><th>Created:</th><td>&_.created;</td></tr>
+        <tr><th>Created by:</th><td>&_.creator;@roxen.com</td></tr>
+        <tr><th>Comment:</th><td>&_.comment;</td></tr>
       </table>
-      </box-frame>
+
+      <hr class='section'>
+
+      <table class='nice valign-top'>
+        <thead>
+          <tr>
+            <th>Module</th>
+            <th>Enabled</th>
+            <th>Features</th>
+          </tr>
+        </thead>
+        <tbody>
+          <emit source='license-modules'>
+            <tr>
+              <td><e>&_.name;</e></td>
+              <td>&_.enabled;</td>
+              <td nowrap=''>
+                <emit source='license-module-features'
+                  >&_.name;:&nbsp;&_.value;<delimiter><br /></delimiter></emit>
+                <else>&nbsp;</else>
+              </td>
+            </tr>
+          </emit>
+        </tbody>
+      </table>
       <emit source='license-warnings' rowinfo='var.warnings'></emit>
       <if variable='var.warnings > 0'>
-        <br clear='all'/><br />
-        <b>Warnings</b>
-        <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
-        <table cellspacing='0' cellpadding='3' border='0' width='100%'>
-          <tr bgcolor='&usr.obox-titlebg;'>
-            <th align='left'>Type</th>
-            <th align='left'>Warning</th>
-            <th align='left'>Time</th>
-          </tr>
-          <set variable='var.color'>&var.color2;</set>
+        <h3><div class='notify warn inline'>Warnings</div></h3>
+        <table class='nice'>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Warning</th>
+              <th>Time</th>
+            </tr>
+          </thead>
           <emit source='license-warnings'>
-            <if variable='var.color == &var.color1;'>
-              <set variable='var.color'>&var.color2;</set>
-            </if><else>
-              <set variable='var.color'>&var.color1;</set>
-            </else>  
-            <tr bgcolor='&var.color;'>
-              <td nowrap='' valign='top'>&_.type;&nbsp;&nbsp;&nbsp;</td>
-              <td valign='top'>&_.msg;&nbsp;</td>
-              <td valign='top'><date type='iso' unix-time='&_.time;'/>&nbsp;</td>
+            <tr>
+              <td nowrap=''>&_.type;</td>
+              <td>&_.msg;</td>
+              <td><date type='iso' unix-time='&_.time;'/></td>
             </tr>
           </emit>
         </table>
-        </box-frame>
       </if>
     </license>
   </if>
   <input type=hidden name=action value='licensestatus.pike' />
-  <br clear='all'/>
-  <br />
-  <cf-ok-button href='./'/>
+  <p>
+    <cf-ok-button href='./'/>
+  </p>
 ";
   return txt;
 }

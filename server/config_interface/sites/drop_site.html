@@ -6,24 +6,23 @@
 <cv-split>
   <subtablist><st-page>
   <cf-perm perm="Create Site">
-    <h1><translate id="249">Drop old site</translate></h1> 
-    <blockquote>
-      <p><translate id="400">Select site to drop.</translate>
-      </p>
+    <h1><translate id="249">Drop old site</translate></h1>
+    <p><translate id="400">Select site to drop.</translate></p>
+    <ul class='nolist button-list'>
       <emit source="configurations" self="no">
-         <gbutton width="300"
-	          href='drop_site.pike?site=&_.sname;&amp;&usr.set-wiz-id;'
-		  icon_src="&usr.next;"
-		  align_icon="right"
-		  hspace="5"
-		  vspace="5"> &_.name; </gbutton><br />
-      </emit><p>
-    <insert file='drop_site_warning.txt' nocache="1"/>
-    <br />
-    <br />
+        <li>
+          <button
+            data-href='drop_site.pike?site=&_.sname;&amp;&usr.set-wiz-id;'
+            class='icon remove'
+            onclick='return confirm("Are you sure you want to drop the site: &_.name:js;?")'
+          >&_.name;</button>
+        </li>
+      </emit>
+    </ul>
+    <p><insert file='drop_site_warning.txt' nocache="1"/></p>
+    <hr class='divider'>
     <cf-cancel href="./"/>
-    </blockquote>
-  </cf-perm><br />
+  </cf-perm>
   </st-page></subtablist>
 </cv-split>
 </content>

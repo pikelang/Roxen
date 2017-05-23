@@ -31,7 +31,7 @@
       <box-frame width="100%" iwidth="100%" bodybg="&usr.content-bg;" ::="&usr.content-frame;">
         <table cellpadding="30" width="100%"><tr><td>
           <contents scope="st-page"/>
-	</td></tr></table>
+        </td></tr></table>
       </box-frame>
     </define>
   </colorscope>
@@ -49,10 +49,10 @@
      <td ::="&usr.left-tableargs:none;">
        <cset variable="var.left-content">&var.leftside:none;</cset>
        <if variable="var.left-content is ?*">
-	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
+         <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
        </if>
        <else>
-	 <set variable="var.leftside-padwidth" value="0"/>
+         <set variable="var.leftside-padwidth" value="0"/>
        </else>
        <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
        &var.left-content:none;&var.leftimage:none;
@@ -87,14 +87,14 @@
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <if sizeof="var.__tabs > 0">
-  	<td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
-  	  <eval>&var.__tabs:none;</eval>
-  	</tablist></td>
+        <td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
+          <eval>&var.__tabs:none;</eval>
+        </tablist></td>
       </if>
       <else>
         <td ::="&usr.subtabs-tableargs:none;">
         <img src="/internal-roxen-unit" width="1" height="&usr.leftside-padheight;" />
-	</td>
+        </td>
       </else>
     </tr>
     <tr>
@@ -102,6 +102,11 @@
     </tr>
   </table>
 </define>
+
+<!-- <define container='xtablist'>
+  Dude
+  <contents/>
+</define> -->
 
 <define tag="topmenu">
  <attrib name="base"></attrib>
@@ -111,6 +116,7 @@
 
 <define container="link-gbutton" scope="link-gbutton">
 <attrib name="align">center</attrib>
+###
   <define variable="var.url" preparse="1"><gbutton-url preparse="">&link-gbutton.contents;</gbutton-url></define>
   <if variable='_.href'>
     <if variable='_.target'>

@@ -16,13 +16,12 @@ string versions(string font)
 {
   array res=({ });
   array b = available_font_versions(font,32);
-  if (!b || !sizeof(b)) 
-    return "<b>"+LOCALE("dH","Not available.")+"</b>"; 
+  if (!b || !sizeof(b))
+    return "<b>"+LOCALE("dH","Not available.")+"</b>";
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
-    res += ({ //"<input type='hidden' name='"+(font+"/"+t)+"'/>"+
-	      Roxen.html_encode_string(m[t]) });
+    res += ({ m[t] });
   return String.implode_nicely(res);
 }
 
@@ -30,36 +29,56 @@ mapping info;
 string list_font(string font)
 {
   string fn = replace(lower_case( font ), " ", "_" );
-  
-  if( mapping m = info[ fn ] )
-  {
-    string res = "<p><font><b>"+
-           (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
-                                         capitalize)*" ")+
-                  "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
-                  "<table cellspacing=0 cellpadding=0");
-    foreach( sort( indices( m ) - ({"name","versions"}) ), string i )
-      res += "<tr><td>&nbsp;&nbsp;&nbsp;<font size=-1>"+i+":&nbsp;</font></td><td><font size=-1>"+
-          Roxen.html_encode_string(m[i])+"</font></td></tr>\n";
-    res += "</table>";
-    return res;
+
+  string tmpl = #"
+    {{ #name }}
+      <h3 class='section{{^do_info}} no-margin-bottom{{/do_info}}'>{{ name }}
+        <small>&ndash; {{ versions }}</small></h3>
+    {{ /name }}
+    {{ #do_info }}
+      <table class='auto indent extra'>
+        {{ #info }}
+          <tr>
+            <th>{{ key }}:</th>
+            <td>{{ value }}
+          </tr>
+        {{ /info }}
+      </table>
+    {{ /do_info }}";
+
+  mapping data = ([
+    "name" : map(replace(font,"_"," ")/" ", capitalize)*" ",
+    "versions" : versions(font),
+    "info" : ({})
+  ]);
+
+  if (mapping m = info[fn]) {
+    data->do_info = true;
+
+    foreach( sort( indices( m ) - ({"name","versions"}) ), string i ) {
+      if (intp(m[i]) || (stringp(m[i]) && sizeof(m[i]))) {
+        data->info += ({ ([ "key" : i, "value" : (string)m[i] ]) });
+      }
+    }
   }
-  return "<p><font><b>"+
-         (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
-          "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
+
+  Mustache m = Mustache();
+  string res = m->render(tmpl, data);
+  destruct(m);
+  return res;
 }
 
 string font_loaders( )
 {
-  string res ="<dl>";
+  string res ="";
   foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
-    res += "<b><dt><font>"+fl->name+" ("+nf
-        +" font"+(nf==1?"":"s")+")</font></b></dt>"
-        "<dd>"+fl->doc+"</dd><p />";
+    res += "<dl><dt>"+fl->name+" ("+nf
+        +" font"+(nf==1?"":"s")+")</dt>"
+        "<dd>"+fl->doc+"</dd></dl>";
   }
-  return res+"</dl>";
+  return res;
 }
 
 string page_0(RequestID id)
@@ -69,18 +88,23 @@ string page_0(RequestID id)
   info = mkmapping( q->name, q );
   string res=("<input type='hidden' name='action' value='listfonts.pike'/>"
               "<input type='hidden' name='doit' value='indeed'/>\n"
-              "<font size='+1'><b>" +
-	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
-              font_loaders()+"<font size='+1'><b>" +
-	      "<br />" + LOCALE("dI","All available fonts") + "</b></font><p>");
-  foreach(sort(fonts), string font)
-    res+=list_font(font);
-  res += ("</p><p>" + LOCALE(236,"Example text") + " "
-	  "<font size=-1><input name=text size=46 value='" +
-	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
-	  "'></p><p><table width='70%'><tr><td align='left'>"
-          "<cf-cancel href='?class=status&amp;&usr.set-wiz-id;'/></td><td align='right'>"
-	  "<cf-next/></td></tr></table></p>");
+              "<h2 class='no-margin-top'>" +
+              LOCALE(58,"Available font loaders") + "</h2><p>"+
+              font_loaders()+"<h3 class='section'>" +
+                LOCALE("dI","All available fonts") + "</h3><p>");
+
+  foreach(sort(fonts), string font) {
+    res += list_font(font);
+  }
+
+  res += ("</p><hr class='section'><p>" + LOCALE(236,"Example text") + ": "
+          "<input name=text size=46 value='" +
+          LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
+          "'></p><hr class='section'>"
+          "<table><tr><td>"
+          "<cf-cancel href='?class=status&amp;&usr.set-wiz-id;'/></td>"
+          "<td class='text-right'>"
+          "<cf-next/></td></tr></table>");
   return res;
 }
 

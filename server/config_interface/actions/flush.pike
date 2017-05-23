@@ -44,18 +44,17 @@ mixed doit()
 #if constant(Locale.flush_cache)
   Locale.flush_cache();
 #endif
-  
+
   gc();
 }
 
 mixed parse( RequestID id )
 {
   string res =
-#"<font size='+1'><b>" + LOCALE(8, "Flush caches") + #"</b></font>
-<p /> 
+#"<h2 class='no-margin-top'>" + LOCALE(8, "Flush caches") + #"</h2>
 ";
   doit();
-  res += LOCALE(232,"All memory caches have been flushed.") + 
+  res += LOCALE(232,"All memory caches have been flushed.") +
     "<p><cf-ok/></p>";
   return res;
 }

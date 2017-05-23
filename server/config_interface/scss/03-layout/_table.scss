@@ -1,0 +1,150 @@
+
+table {
+  font-size: 100%;
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+  }
+
+  &.auto {
+    width: auto;
+
+    th,
+    td {
+      padding-left: $spacing-unit;
+
+      &:first-child {
+        padding-left: 0;
+      }
+    }
+  }
+
+  &.rxn-var-list {
+    margin-bottom: $spacing-unit;
+
+    th,
+    td {
+      padding: 0;
+      padding-bottom: $spacing-unit/3;
+      vertical-align: top;
+
+      &:not(.rxn-btn-td) {
+        &+ .rxn-btn-td {
+          padding-left: $spacing-unit;
+        }
+      }
+    }
+
+    .port-url {
+      margin-bottom: $spacing-unit/3;
+    }
+
+    // .rxn-new-row {
+    //   border-top: 1px solid darken($body-bg, 2%);
+    //   padding-top: $spacing-unit/2;
+    // }
+  }
+
+  &.valign-top {
+    th, td {
+      vertical-align: top;
+    }
+  }
+
+  .valign-top {
+    vertical-align: top;
+  }
+
+  td,
+  th {
+    padding-bottom: $spacing-unit/2;
+  }
+
+  td + td,
+  th + th {
+    padding-left: $spacing-unit/2;
+  }
+
+  > tr {
+    &:last-child {
+      td {
+        padding-bottom: 0;
+      }
+    }
+  }
+
+  &.devinfo {
+    table {
+      td {
+        padding-left: 0;
+        padding-bottom: 0;
+      }
+    }
+  }
+
+  &.ports-port {
+    td:first-child {
+      width: 25%;
+    }
+  }
+
+  &.nice {
+    border-left: 1px solid $topmenu-bg;
+    border-right: 1px solid $topmenu-bg;
+
+    &.no-th {
+      border-top: 1px solid $topmenu-bg;
+    }
+
+    tr {
+      &:hover {
+        color: $white;
+      }
+    }
+
+    th,
+    td {
+      padding: $spacing-unit/2 $spacing-unit;
+    }
+
+    thead {
+      background: $topmenu-bg;
+    }
+
+    tbody {
+      background: lighten($main-column-bg, 2%);
+
+      tr {
+        &:nth-child(2n+1) {
+          background: lighten($main-column-bg, 4%);
+        }
+      }
+    }
+
+
+    tbody,
+    tfoot,
+    .sum {
+      td,
+      th {
+        border-bottom: 1px solid $topmenu-bg;
+        border-left: 1px dashed $topmenu-bg;
+
+        &:first-child {
+          border-left: 0;
+        }
+      }
+    }
+
+    tfoot,
+    .sum {
+      font-weight: bold;
+      color: $light-grey;
+      background: lighten($body-bg, 2%);
+    }
+  }
+}
+
+

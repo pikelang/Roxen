@@ -10,7 +10,7 @@ inherit "../statusinfo.pike";
 #include <roxen.h>
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+#define LOCALE(X,Y)     _STR_LOCALE("roxen_config",X,Y)
 #define TRANSLATE( X ) _translate( (X), id )
 
 string _translate( mixed what, RequestID id )
@@ -32,7 +32,7 @@ string describe_location( RoxenModule m, RequestID id )
 {
   string mp = m->query_location && m->query_location();
   return mp ? sprintf("<a target='server_view' href=\"%s%s\">%s</a>",
-		      m->my_configuration()->get_url(), mp[1..], mp) : "";
+                      m->my_configuration()->get_url(), mp[1..], mp) : "";
 }
 
 string describe_tags( RoxenModule m, int q )
@@ -52,27 +52,29 @@ string describe_tags( RoxenModule m, int q )
 
   array pi=map(indices(new->get_proc_instr_names()), Roxen.html_encode_string);
 
-  return 
+  TRACE("tags: %O\n", conts);
+
+  return
       String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
-				lambda(string tag) {
-				  return "<nobr>&lt;"+tag+(tag[0]=='/'?"":"/")+"&gt;</nobr>";
-				} ) +
-			    map(sort(indices(conts)),
-				lambda(string tag) {
-				  return "<nobr>&lt;"+tag+"/&gt;&lt;/&gt;</nobr>";
-				} ) +
-			    map(sort(pi),
-				lambda(string tag) {
-				  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
-				} ),
-			    LOCALE("cw","and"));
+                                lambda(string tag) {
+                                  return "<nobr>&lt;"+tag+(tag[0]=='/'?"":"/")+"&gt;</nobr>";
+                                } ) +
+                            map(sort(indices(conts)),
+                                lambda(string tag) {
+                                  return "<nobr>&lt;"+tag+"/&gt;&lt;/&gt;</nobr>";
+                                } ) +
+                            map(sort(pi),
+                                lambda(string tag) {
+                                  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
+                                } ),
+                            LOCALE("cw","and"));
 }
 
 string describe_provides( RoxenModule m, int q )
 {
   array(string)|multiset(string)|string provides = m &&
-						   m->query_provides &&
-						   m->query_provides();
+                                                   m->query_provides &&
+                                                   m->query_provides();
   if (multisetp(provides))
     provides = sort((array(string))provides);
   if( arrayp(provides) )
@@ -90,10 +92,10 @@ do                                                                      \
    if(t&X)                                                              \
      if( Y )                                                            \
        res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
-               "<td valign='top'><nobr>" + #X + " (</nobr></td>"     \
-               "<td valign='top'>"+(Y)(m,Z)+")</td></tr></table>");	\
+               "<td valign='top'><nobr>" + #X + " (</nobr></td>"        \
+               "<td valign='top'>"+(Y)(m,Z)+")</td></tr></table>");     \
      else                                                               \
-       res += #X + "<br />";                                 \
+       res += "<div class='module-type'>" + #X + "</div>";              \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
@@ -139,12 +141,12 @@ string buttons( Configuration c, string mn, RequestID id )
 
       if( strlen( ec->get() ) )
       {
-	.State->current_compile_errors[ c->name+"!"+mn ] = ec->get();
-	report_debug( ec->get() ); // Do not add to module log.
+        .State->current_compile_errors[ c->name+"!"+mn ] = ec->get();
+        report_debug( ec->get() ); // Do not add to module log.
       }
       else if( nm != mod )
       {
-	m_delete( .State->current_compile_errors, c->name+"!"+mn );
+        m_delete( .State->current_compile_errors, c->name+"!"+mn );
       }
       mod = c->find_module( replace( mn,"!","#" ) );
     }
@@ -154,31 +156,31 @@ string buttons( Configuration c, string mn, RequestID id )
       Configuration conf = mod->my_configuration();
       int flush_time = time();
       string realname = id->misc->config_user->real_name,
-		 name = id->misc->config_user->name,
-		 host = id->misc->config_settings->host,
-	     mod_name = Roxen.get_modname(mod),
-	      log_msg = sprintf("2,%s," +
-				LOCALE(290,"Module event log for '%s' "
-				"cleared by %s (%s) from %s") + "\n",
-				mod_name||mod, Roxen.get_modfullname(mod)||"",
-				realname, name, host);
+                 name = id->misc->config_user->name,
+                 host = id->misc->config_settings->host,
+             mod_name = Roxen.get_modname(mod),
+              log_msg = sprintf("2,%s," +
+                                LOCALE(290,"Module event log for '%s' "
+                                "cleared by %s (%s) from %s") + "\n",
+                                mod_name||mod, Roxen.get_modfullname(mod)||"",
+                                realname, name, host);
       foreach(indices(mod->error_log), string error)
       {
-	times = mod->error_log[error];
+        times = mod->error_log[error];
 
-	// Flush from global log:
-	if(left = roxen->error_log[error])
-	  if(sizeof(left -= times))
-	    roxen->error_log[error] = left;
-	  else
-	    m_delete(roxen->error_log, error);
+        // Flush from global log:
+        if(left = roxen->error_log[error])
+          if(sizeof(left -= times))
+            roxen->error_log[error] = left;
+          else
+            m_delete(roxen->error_log, error);
 
-	// Flush from virtual server log:
-	if(left = conf->error_log[error])
-	  if(sizeof(left -= times))
-	    conf->error_log[error] = left;
-	  else
-	    m_delete(conf->error_log, error);
+        // Flush from virtual server log:
+        if(left = conf->error_log[error])
+          if(sizeof(left -= times))
+            conf->error_log[error] = left;
+          else
+            m_delete(conf->error_log, error);
       }
       mod->error_log=([ log_msg : ({flush_time}) ]);// Flush from module log
       conf->error_log[log_msg] +=({flush_time});  // Kilroy was in the global log
@@ -187,17 +189,17 @@ string buttons( Configuration c, string mn, RequestID id )
     else if(mod->query_action_buttons)
     {
       mapping(string:function|array(function|string)) buttons =
-	mod->query_action_buttons(id);
+        mod->query_action_buttons(id);
       foreach(indices(buttons), string title)
-	if( (string)a==(string)title )
-	{
-	  function|array(function|string) action = buttons[title];
-	  if (arrayp(action))
-	    action[0](id);
-	  else
-	    action(id);
-	  break;
-	}
+        if( (string)a==(string)title )
+        {
+          function|array(function|string) action = buttons[title];
+          if (arrayp(action))
+            action[0](id);
+          else
+            action(id);
+          break;
+        }
     }
   }
 
@@ -205,7 +207,7 @@ string buttons( Configuration c, string mn, RequestID id )
 
   string section = RXML.get_var( "section", "form" );
 
-  string buttons = 
+  string buttons =
          "<input type=hidden name=section value='" +
          (section||"Status") + "'>";
 
@@ -214,18 +216,18 @@ string buttons( Configuration c, string mn, RequestID id )
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
 #endif
-    buttons += "<submit-gbutton>"+LOCALE(253, "Reload")+"</submit-gbutton>";
+    buttons += "<submit-gbutton type='reload'>"+LOCALE(253, "Reload")+"</submit-gbutton>";
   if(!mod)
     return buttons;
   if( sizeof( mod->error_log ) )
-    buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
+    buttons+="<submit-gbutton type='clear'>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
 
   // Nor is it a good idea to drop configuration interface modules.
   // It tends to make things rather unstable.
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
   if( c != id->conf )
 #endif
-    buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
+    buttons += "<link-gbutton type='remove' href='../../../../drop_module.pike?config="+
             path[0]+"&amp;drop="+mn+"&amp;&usr.set-wiz-id;'>"+
             LOCALE(252, "Drop Module")+"</link-gbutton></a>";
 
@@ -236,14 +238,13 @@ string buttons( Configuration c, string mn, RequestID id )
     array(string) titles = indices(mod_buttons);
     if (sizeof(titles)) {
       buttons +=
-	" <img src='/internal-roxen-pixel-888888' "
-	"      width='1' height='15' hspace='5' align='center' />";
+        "<div class='action-btn-spacer'></div>";
       foreach(sort(titles), string title) {
-	function|array(function|string) action = mod_buttons[title];
-	if (arrayp(action))
-	  buttons += action[1];
-	else
-	  buttons += "<submit-gbutton>" + title + "</submit-gbutton>";
+        function|array(function|string) action = mod_buttons[title];
+        if (arrayp(action))
+          buttons += action[1];
+        else
+          buttons += "<submit-gbutton>" + title + "</submit-gbutton>";
       }
     }
   }
@@ -261,18 +262,18 @@ string get_eventlog(RoxenModule o, RequestID id, int|void no_links )
 
   last_time=0;
   sort(map(values(log),lambda(array a){
-			 return id->variables->reversed?-a[-1]:a[0];
-		       }),report);
+                         return id->variables->reversed?-a[-1]:a[0];
+                       }),report);
   for(int i=0;i<min(sizeof(report),1000);i++)
      report[i] = describe_error(report[i], log[report[i]],
-				id->misc->cf_locale, no_links);
+                                id->misc->cf_locale, no_links);
 
   if( sizeof( report ) > 1000 )
     report[1000] =
       sprintf(LOCALE(472,"%d entries skipped. Present in log on disk."),
-	      sizeof( report )-1000 );
+              sizeof( report )-1000 );
 
-  return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
+  return "<h3 class='section'>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
 }
 
 string get_module_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
@@ -304,13 +305,13 @@ string get_module_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     if (has_suffix(path, "/")) path = path[..sizeof(path)-2];
 
     array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
-			       segment[-1] });
+                               segment[-1] });
 
     ADT.Trie mib = ADT.Trie();
     mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
     mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
-					 oid_suffix[..0],
-					 o, moduleinfo, UNDEFINED));
+                                         oid_suffix[..0],
+                                         o, moduleinfo, UNDEFINED));
     return "<h3>SNMP</h3>\n" + get_snmp_values(mib, mib->first());
   }
 
@@ -335,7 +336,7 @@ string get_site_snmp(Configuration conf)
       if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
 
       return "<h3>SNMP</h3>\n" +
-	get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
+        get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
     }
   }
 
@@ -343,8 +344,8 @@ string get_site_snmp(Configuration conf)
 }
 
 string get_snmp_values(ADT.Trie mib,
-		       array(int) oid_start,
-		       void|array(int) oid_ignore)
+                       array(int) oid_start,
+                       void|array(int) oid_ignore)
 {
   array(string) res = ({
     "<th align='left'>Name</th>"
@@ -362,36 +363,36 @@ string get_snmp_values(ADT.Trie mib,
     string doc = "";
     mixed val = "";
     mixed err = catch {
-	val = mib->lookup(oid);
-	if (zero_type(val)) continue;
-	if (objectp(val)) {
-	  if (val->update_value) {
-	    val->update_value();
-	  }
-	  name = val->name || "";
-	  doc = val->doc || "";
-	  val = sprintf("%s", val);
-	}
-	val = (string)val;
+        val = mib->lookup(oid);
+        if (zero_type(val)) continue;
+        if (objectp(val)) {
+          if (val->update_value) {
+            val->update_value();
+          }
+          name = val->name || "";
+          doc = val->doc || "";
+          val = sprintf("%s", val);
+        }
+        val = (string)val;
       };
     if (err) {
       name = "Error";
       val = "";
       doc = "<tt>" +
-	replace(Roxen.html_encode_string(describe_backtrace(err)),
-		"\n", "<br />\n") +
-	"</tt>";
+        replace(Roxen.html_encode_string(describe_backtrace(err)),
+                "\n", "<br />\n") +
+        "</tt>";
     }
     res += ({
-	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
-		"<td>%s</td>",
-		oid_string,
-		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val)),
+        sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
+                "<td>%s</td>",
+                oid_string,
+                Roxen.html_encode_string(name),
+                Roxen.html_encode_string(val)),
     });
     if (sizeof(doc)) {
       res += ({
-	sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
+        sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
       });
     }
   }
@@ -433,7 +434,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string dbuttons="";
   if( config_perm( "Add Module" ) )
-    dbuttons += "<h3>"+LOCALE(196, "Tasks")+"</h3>"+buttons( c, mn, id );
+    dbuttons += "<h3 class='section'>"+LOCALE(196, "Tasks")+"</h3>"+buttons( c, mn, id );
   RoxenModule m = c->find_module( replace(mn,"!","#") );
 
   if(!m)
@@ -448,8 +449,8 @@ string find_module_doc( string cn, string mn, RequestID id )
   string homepage = m->module_url;
   if(stringp(homepage) && sscanf(homepage, "%*[A-Za-z0-9+.-]:%*s")==2)
     homepage = sprintf("<br /><b>" + LOCALE(254,"Module homepage") +
-		       ":</b> <a href=\"%s\">%s</a>",
-		       homepage, homepage);
+                       ":</b> <a href=\"%s\">%s</a>",
+                       homepage, homepage);
   else homepage = "";
 
   string|array(string) creators = m->module_creator;
@@ -458,17 +459,17 @@ string find_module_doc( string cn, string mn, RequestID id )
   if(arrayp(creators))
   {
     creators = map(creators,
-		  lambda(string mail)
-		  {
-		    if(sscanf(mail, "%s <%s>", string name, string adr)==2 &&
-		       search(adr, "@") != -1)
-		      mail = sprintf("<a href=\"mailto:%s\">%s</a>", adr, name);
-		    return mail;
-		  });
+                  lambda(string mail)
+                  {
+                    if(sscanf(mail, "%s <%s>", string name, string adr)==2 &&
+                       search(adr, "@") != -1)
+                      mail = sprintf("<a href=\"mailto:%s\">%s</a>", adr, name);
+                    return mail;
+                  });
     creators = sprintf("<br /><b>Module creator%s:</b> %s",
-		       (sizeof(creators)==1 ? "" : "s"),
-		       String.implode_nicely(creators));
-  } else 
+                       (sizeof(creators)==1 ? "" : "s"),
+                       String.implode_nicely(creators));
+  } else
     creators = "";
 
 #ifdef THREADS
@@ -476,55 +477,57 @@ string find_module_doc( string cn, string mn, RequestID id )
   int my_accesses = accesses[m];
 #endif
 
-  if( .State->current_compile_errors[ cn+"!"+mn ] )
+  if( .State->current_compile_errors[ cn+"!"+mn ] ) {
     dbuttons += "<font color='&usr.warncolor;'><pre>"+
       .State->current_compile_errors[ cn+"!"+mn ]+
       "</pre></font>";
+  }
+
   string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
   fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
   fnas = "<tr><td nowrap=''>"+
     ((fnas/":</b>")*":</b></td><td><img src='/internal-roxen-unit' width=10 height=1 /></td><td>") +
     "</td></tr>\n";
   return
-    replace( "<b><h2>" +
-	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
-	     + "</h2></b>"
+    replace( "<h2>" +
+             Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
+             + "</h2>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + dbuttons + snmp + eventlog +
                   ( config_setting( "devel_mode" ) ?
-		    "<br clear='all' />\n"
-		    "<h3>Developer information</h3>"
-		    "<table border=0 cellpadding=0 cellspacing=0>"
+                    "<br clear='all' />\n"
+                    "<h3 class='section'>Developer information</h3>"
+                    "<table class='devinfo auto'>"
                     "<tr nowrap=''><td><b>Identifier:</b></td>"
-		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
-		    "<td>" + mi->sname + "</td></tr>\n"
-		    "<td nowrap=''><b>Thread safe:</b></td>"
-		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
-		    "<td>" + (m->thread_safe ? 
-		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
+                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+                    "<td>" + mi->sname + "</td></tr>\n"
+                    "<td nowrap=''><b>Thread safe:</b></td>"
+                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+                    "<td>" + (m->thread_safe ?
+                     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
-		    " <small>(<a href='../../../../../actions/?action"
-		    "=locks.pike&amp;class=status&amp;&usr.set-wiz-id;'>"
-		    "more info</a>)</small></td></tr>\n"
-		    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
-		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
-		    "<td>" + my_accesses +
+                    " <small>(<a href='../../../../../actions/?action"
+                    "=locks.pike&amp;class=status&amp;&usr.set-wiz-id;'>"
+                    "more info</a>)</small></td></tr>\n"
+                    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
+                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+                    "<td>" + my_accesses +
 #endif
                     "</td></tr>\n"
-		    "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
-		    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
-		    "<td valign='top'>" + describe_type( m, mi->type, id ) +
+                    "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
+                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
+                    "<td valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr>\n"
                     + fnas +
-		    "</table>\n" +		    
-		    homepage + creators  
-		    + "<h3>"+LOCALE(261,"Inherit tree")+"</h3>"+
+                    "</table>\n" +
+                    homepage + creators
+                    + "<h3 class='section'>"+LOCALE(261,"Inherit tree")+"</h3>"+
                     program_info( m ) +
-                    "<dl>" + 
+                    "<dl>" +
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
-		    + 
-                    "</dl>" 
+                    +
+                    "</dl>"
                     : homepage + creators),
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
@@ -544,7 +547,7 @@ string find_module_documentation( string conf, string mn, RequestID id )
   if( !full_doc ) full_doc = m->module_doc;
   if( !full_doc ) full_doc = m->register_module()[2];
   if( !full_doc ) full_doc = m->register_module()[1];
-    
+
   if( mi->type & MODULE_TAG )
   {
     RXML.TagSet tags=m->query_tag_set();
@@ -564,7 +567,7 @@ string find_module_documentation( string conf, string mn, RequestID id )
     {
       string tag_doc = id->conf->find_tag_doc( name, id, 1, 0, documented_tags);
       if (tag_doc && sizeof(tag_doc))
-	full_doc += "<p>"+tag_doc+"</p>";
+        full_doc += "<p>"+tag_doc+"</p>";
     }
   }
 
@@ -583,7 +586,7 @@ string module_page( RequestID id, string conf, string module )
 
   if( section == "Docs" )
     return find_module_documentation( conf, module, id );
-  
+
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
 }
@@ -598,77 +601,132 @@ array(Protocol|array(string)) get_port_for(string url)
   return ({ url_data->port, ({ roxen->normalize_url (url) }) });
 }
 
-string port_for( string url, int settings )
+string port_for(string url, int settings)
 {
+  // TRACE("port for: %s\n", url);
   return low_port_for(get_port_for(url), settings);
 }
 
 string low_port_for(array(Protocol|array(string)) port_info, int settings)
 {
   [ Protocol p, array(string) urls ] = port_info;
-  if(!urls) {
+
+  if (!urls) {
     return "";
   }
-  if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
 
-  string url =			// FIXME: Report the others too.
-    roxen->normalize_url (urls[0], 1);
-  string res =
-#"
-  <set variable='var.port' value='"+
-    Roxen.html_encode_string(p->get_key())+ #"'/>
-  <set variable='var.urlconf' value='"+
-    Roxen.html_encode_string (replace (p->urls[url]->conf->name, " ", "-"))+#"'/>
-  <emit source='ports' scope='port'>
-    <if variable='var.port is &_.port;'>"+
-    (settings?
-#"
- <table border=0 cellspacing=0 cellpadding=4 width='100%'>
-   <tr bgcolor='&usr.content-titlebg;'>
-      <td colspan=2>
-        <font color='&usr.content-titlefg;' size=+1>
-          <b>&_.name;</b>
-	</font>
-      </td>
-    </tr>
-    <tr>
-      <td colspan=2>":"")+#"
+  if (!p) {
+    // TRACE("port_info: %O\n", port_info);
+    return
+      sprintf("<div class='notify warn%s'>Not open</div>",
+              settings ? "" : " inline");
+  }
+
+  string tmpl = #"
+    <set variable='var.port' value='{{ port }}'/>
+    <set variable='var.urlconf' value='{{ urlconf }}'/>
+    <emit source='ports' scope='port'>
+      <if variable='var.port is &_.port;'>
+        {{ #settings }}
+          <section class='port'>
+            <h2>&_.name;</h2>
+        {{ /settings }}
+
         <if variable='_.warning = ?*'>
-           <font color='&usr.warncolor;'><b>&_.warning;</b></font>
-           <br clear='all' />
+          <div class='notify warn'><b>&_.warning;</b></div>
         </if>
+
         <unset variable='var.end'/>
-	<emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'
-	      distinct='conf'>"
-    // No whitespace in this emit
-	  "<if not variable='_.conf is &var.urlconf;'>"
-            "<if not='' variable='var.end'>"
-              "<set variable='var.end' value='.'/>"
-              +LOCALE(323,"Shared with ")+
-            "</if>"
-            "<elseif variable='var.rowinfo = &_.counter;'>"
-              " "+LOCALE("cw","and")+" "
-            "</elseif>"
-            "<else>"
-              ", "
-            "</else>"
-            "<a href='../&_.conf;/'>&_.confname;</a>"
-          "</if>"
-        "</emit>"
-        "&var.end;"+#"
-      </td>
-    </tr>
-    <tr>
-      <td><img src='/internal-roxen-unit' width=20 height=1/></td>
-      <td>
-"
-      +(settings?
-#"<cfg-variables nosave='' source='port-variables' port='&port.port;'/>
-  </td></tr>
-  ":"")+#"
-    </if>
-  </emit>";
-  return res+(settings?"</table>":"");
+        <set variable='var.port_cont' value='' type='text/*' />
+
+        <emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'
+              distinct='conf'>
+          <if not variable='_.conf is &var.urlconf;'>
+            <if not='' variable='var.end'>
+              <set variable='var.end' value='.'/>
+              <append variable='var.port_cont' value='{{ shared_with }}' />
+            </if>
+            <elseif variable='var.rowinfo = &_.counter;'>
+              <append variable='var.port_cont' value=' {{ cw_and }} ' />
+            </elseif>
+            <else>
+              <append variable='var.port_cont' value=', ' />
+            </else>
+            <append variable='var.port_cont' type='text/*'
+              ><a href='../&_.conf;/'>&_.confname;</a></append>
+          </if>
+        </emit>
+
+        <if variable='var.port_cont != '>
+          <div class='ports'>&var.port_cont;&var.end;</div>
+        </if>
+
+        {{ #settings }}
+            <cfg-variables nosave='' source='port-variables' port='&port.port;'/>
+          </section>
+        {{ /settings }}
+      </if>
+    </emit>";
+
+  // FIXME: Report the others too.
+  string url = roxen->normalize_url(urls[0], 1);
+
+  mapping mctx = ([
+    "port"        : p->get_key(),
+    "urlconf"     : replace(p->urls[url]->conf->name, " ", "-"),
+    "settings"    : settings,
+    "shared_with" : LOCALE(323,"Shared with "),
+    "cw_and"      : LOCALE("cw","and")
+  ]);
+
+  Mustache stache = Mustache();
+  string x = stache->render(tmpl, mctx);
+  destruct(stache);
+
+  // TRACE("My res: %s\n", x);
+
+  return x;
+}
+
+private typedef array(Protocol|array(string)) port_t;
+
+private string render_ports(Configuration conf, string path, RequestID id)
+{
+  array(string) urls = conf->query("URLs");
+  array(port_t) ports = map(conf->query("URLs"), get_port_for);
+  mapping(Protocol:port_t) prot_info = ([]);
+
+  foreach (ports, port_t port) {
+    port_t prev;
+
+    if (prev = prot_info[port[0]]) {
+     if (prev[1]) {
+       prev[1] += port[1];
+     }
+     else {
+       prev[1] = port[1];
+     }
+
+     port[0] = 0;
+     port[1] = 0;
+    }
+    else {
+     prot_info[port[0]] = port;
+    }
+  }
+
+  string ret = #"
+    <input type=hidden name='section' value='Ports' />
+    <div class='port-cfg-vars'>
+      <cfg-variables source='config-variables'
+      configuration='" + path + #"' section='Ports'/>
+    </div>";
+
+  ret += (map(ports, low_port_for, 1)*"");
+
+  // TRACE("ports: %s\n", ret);
+
+  return ret + "<cf-save/>";
 }
 
 
@@ -679,169 +737,155 @@ string|mapping parse( RequestID id )
   // roxen_perror(sprintf("site_content:parse(): path: %{%O,%}\n", path));
 
   string section;
+  string res = "";
   array(string) _sec = id->real_variables->section;
 
-  if( _sec )
-  {
-    if( sizeof( _sec ) > 0 )
-      RXML.set_var( "section",  _sec[0], "form" );
+  if (_sec) {
+    if (sizeof(_sec) > 0) {
+      RXML.set_var("section",  _sec[0], "form");
+    }
+
     section = _sec[0];
   }
 
-  if( !sizeof( path ) || equal(path, ({ "" }))  )
+  if (!sizeof(path) || equal(path, ({ "" }))) {
     return Roxen.http_redirect("/sites/", id);
+  }
 
-  Configuration conf = roxen->find_configuration( path[0] );
+  Configuration conf = roxen->find_configuration(path[0]);
 
-  if( !conf->inited )
+  if (!conf->inited) {
     conf->enable_all_modules();
-  
-  if( !config_perm( "Site:"+conf->name ) )
+  }
+
+  if (!config_perm("Site:"+conf->name)) {
     return "Permission denied";
+  }
 
   id->misc->current_configuration = conf;
 
-  if( sizeof( path ) < 3 )
-  {
+  if (sizeof(path) < 3) {
     /* Global information for the configuration */
-    switch( section )
-    {
-     default: /* Not status info */
-       do  id->misc->do_not_goto = 1; while( id = id->misc->orig );
-       return "<cfg-variables source='config-variables' "
-	      "configuration='"+path[0]+"' section='&form.section;'/>";
+    switch (section){
+    default: /* Not status info */
+      do {
+        id->misc->do_not_goto = 1;
+      } while (id = id->misc->orig);
+
+      return "<cfg-variables source='config-variables' "
+             "configuration='"+path[0]+"' section='&form.section;'/>";
 
     case "ModulePriorities":
       if (conf == id->conf) {
-	// Configuration interface.
-	return 0;
+        // Configuration interface.
+        return 0;
       }
       return module_priorities_page(id, conf);
-       
+
 
      case "Ports":
-       string res = 
-	 "<input type=hidden name='section' value='Ports' />"
-	 "<cfg-variables source='config-variables' "
-	 " configuration='"+path[0]+"' section='Ports'/><br clear='all'/>";
-
-       array(string) urls = conf->query("URLs");
-       array(array(Protocol|array(string))) ports =
-	 map(conf->query("URLs"), get_port_for);
-       mapping(Protocol:array(Protocol|array(string))) prot_info = ([]);
-       foreach(ports, array(Protocol|array(string)) port) {
-	 array(Protocol|array(string)) prev;
-	 if (prev = prot_info[port[0]]) {
-	   if (prev[1]) {
-	     prev[1] += port[1];
-	   } else {
-	     prev[1] = port[1];
-	   }
-	   port[0] = 0;
-	   port[1] = 0;
-	 } else {
-	   prot_info[port[0]] = port;
-	 }
-       }
-       res += map(ports, low_port_for, 1)*"";
-       return res+"<br /><cf-save/>\n";
-       break;
+      return render_ports(conf, path[0], id);
 
      case 0:
      case "":
      case "Status":
-       res = "\n<h1>" +
- 	 LOCALE(299,"URLs") + "</h1>";
-       res += "<table>";
-       foreach( conf->query( "URLs" ), string url )
-       {
-	 url = (url/"#")[0];
-	 string match_url = roxen.normalize_url (url, 1);
-	 
-         int open = (roxen->urls[ match_url ] 
-                     && roxen->urls[ match_url ]->port 
+       res = "<h1>" + LOCALE(299,"URLs") + "</h1>";
+       res += "<table class='auto'>";
+       foreach( conf->query( "URLs" ), string url ) {
+         url = (url/"#")[0];
+         string match_url = roxen.normalize_url (url, 1);
+
+         int open = (roxen->urls[ match_url ]
+                     && roxen->urls[ match_url ]->port
                      && roxen->urls[ match_url ]->port->bound);
-	 
+
          if( !open )
            res += "<tr><td valign='top'>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
          else if(search(url, "*")==-1)
            res += ("<tr><td valign='top'>" + "<a target='server_view' href='"+url+"'>"+
                    url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
-	 else if( sizeof( url/"*" ) == 2 )
-	   res += ("<tr><td valign='top'><a target='server_view' href='"+
+         else if( sizeof( url/"*" ) == 2 )
+           res += ("<tr><td valign='top'><a target='server_view' href='"+
                    replace(url, "*", gethostname() )+"'>"+
                    url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
          else
-	   res += "<tr><td valign='top'>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
+           res += "<tr><td valign='top'>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
        }
        res += "</table>\n";
 
-       res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
+      string vcomment = conf->variables->comment->query();
 
-       res += "<br /><table><tr><td valign=\"top\">"
-	 "<h2>"+LOCALE(260, "Request status")+"</h2>";
-       res += status(conf);
-       res += "</td>"
-	 "<td><img src='/internal-roxen-unit' width='10' height='1' /></td>"
-	 "<td valign=top>"
-	 "<h2>"+LOCALE(292, "Cache status")+"</h2><table cellpading='0' cellspacing='0' width='100%'>\n";
+      if (sizeof(vcomment)) {
+        res += "<p>"+Roxen.html_encode_string(vcomment)+"</p>";
+      }
+
+      res += "<hr class='section'>"
+        "<div class='flex-row'>"
+        "<div class='flex col-6'>"
+          "<h2 class='no-margin-top'>"+LOCALE(260, "Request status")+"</h2>" +
+          status(conf) +
+        "</div>"
+        "<div class='flex col-6'>"
+          "<h2 class='no-margin-top'>"+LOCALE(292, "Cache status")+"</h2>"
+          "<table class='auto'>\n";
 
        mapping stats = conf->datacache->get_cache_stats();
        int total = stats->hits + stats->misses;
-       res += 
+       res +=
            sprintf("<tr><td><b>" + LOCALE(293, "Hits") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>(%d</td>"
-		   "<td align='left'>%%)</td></tr>\n",
+                   "<td align='right'>%d</td><td align='right'>(%d</td>"
+                   "<td align='left'>%%)</td></tr>\n",
                    stats->hits,
                    total ? (stats->hits * 100 / total) : 0);
-       res += 
+       res +=
            sprintf("<tr><td><b>" + LOCALE(294, "Misses") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>(%d</td>"
-		   "<td align='left'>%%)</td></tr>\n",
+                   "<td align='right'>%d</td><td align='right'>(%d</td>"
+                   "<td align='left'>%%)</td></tr>\n",
                    stats->misses,
                    total ? (stats->misses * 100 / total) : 0);
 
-       res += 
+       res +=
            sprintf("<tr><td><b>" + LOCALE(295, "Entries") + ": </b></td>"
-		   "<td align='right'>%d</td><td align='right'>(%d</td>"
-		   "<td align='left'>kB)</td></tr>\n",
+                   "<td align='right'>%d</td><td align='right'>(%d</td>"
+                   "<td align='left'>kB)</td></tr>\n",
                    stats->entries,
                    stats->current_size / 1024);
-       
+
        res += "</table>\n";
-                   
-       res += "</td></tr></table><br />";
+       res += "</div></div>";
+
+       // res += "</td></tr></table>";
 
 
        if( id->variables[ LOCALE(247, "Clear Log")+".x" ] )
        {
-	 foreach( values(conf->modules), ModuleCopies m )
-	   foreach( values( m ), RoxenModule md )
-	     md->error_log = ([]);
-	 foreach( indices( conf->error_log ), string error )
-	 {
-	   array times = conf->error_log[error];
+         foreach( values(conf->modules), ModuleCopies m )
+           foreach( values( m ), RoxenModule md )
+             md->error_log = ([]);
+         foreach( indices( conf->error_log ), string error )
+         {
+           array times = conf->error_log[error];
 
-	   // Flush from global log:
-	   if(array left = roxen->error_log[error])
-	     if(sizeof(left -= times))
-	       roxen->error_log[error] = left;
-	     else
-	       m_delete(roxen->error_log, error);
-	 }
-	 conf->error_log = ([]);
-	 roxen->nwrite( 
-	   sprintf(LOCALE(311,"Site event log for '%s' "
-			  "cleared by %s (%s) from %s") + "\n",
-		   conf->query_name(),
-		   id->misc->config_user->real_name,
-		   id->misc->config_user->name,
-		   id->misc->config_settings->host),
-	   0, 2, 0, conf);
+           // Flush from global log:
+           if(array left = roxen->error_log[error])
+             if(sizeof(left -= times))
+               roxen->error_log[error] = left;
+             else
+               m_delete(roxen->error_log, error);
+         }
+         conf->error_log = ([]);
+         roxen->nwrite(
+           sprintf(LOCALE(311,"Site event log for '%s' "
+                          "cleared by %s (%s) from %s") + "\n",
+                   conf->query_name(),
+                   id->misc->config_user->real_name,
+                   id->misc->config_user->name,
+                   id->misc->config_settings->host),
+           0, 2, 0, conf);
        }
-       res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
+       res+="<hr class='section'><h1 class='no-margin-top'>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
        if( sizeof( conf->error_log ) )
-	 res+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
+         res+="<hr class='divider'><submit-gbutton type='clear'>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
        res += "<br />\n";
        res += get_site_snmp(conf);
        return res;
@@ -860,30 +904,30 @@ string module_priorities_page( RequestID id, Configuration c)
   int max_priority = maxpri_var->query();
 
   array modids = map( indices( c->otomod )-({0}),
-		      lambda(mixed q){ return c->otomod[q]; });
+                      lambda(mixed q){ return c->otomod[q]; });
 
-  array mod_types = ({ 
+  array mod_types = ({
     ([ "title" : "First Try Modules", "type" : MODULE_FIRST    ]),
     ([ "title" : "Filter Modules",    "type" : MODULE_FILTER   ]),
     ([ "title" : "Location Modules",  "type" : MODULE_LOCATION ]),
     ([ "title" : "Last Try Modules",  "type" : MODULE_LAST     ]),
   });
-  
+
   array mods = map( modids,
-		   lambda(string q) {
-		     object mod = roxen.find_module( (q/"#")[0] );
-		     object modi = c->find_module(q);
-		     int c = (int)((q/"#")[-1]);
-		     return ([
-		       "id":q,
-		       "name":mod->get_name(),
-		       "name2":mod->get_name()+(c?" #"+(c+1):""),
-		       "modi":modi,
-		       "instance":c,
-		       "pri":modi->query("_priority"),
-		       "type":modi->module_type,
-		     ]);
-		   } );
+                   lambda(string q) {
+                     object mod = roxen.find_module( (q/"#")[0] );
+                     object modi = c->find_module(q);
+                     int c = (int)((q/"#")[-1]);
+                     return ([
+                       "id":q,
+                       "name":mod->get_name(),
+                       "name2":mod->get_name()+(c?" #"+(c+1):""),
+                       "modi":modi,
+                       "instance":c,
+                       "pri":modi->query("_priority"),
+                       "type":modi->module_type,
+                     ]);
+                   } );
 
   // Update any module priorities before the range change.
   // Otherwise the priority scaling won't work properly.
@@ -896,18 +940,18 @@ string module_priorities_page( RequestID id, Configuration c)
     if(id->variables[varname]) {
       modpri = (int)m_delete(id->variables, varname);
       if(modpri < 0)
-	modpri = 0;
+        modpri = 0;
       if(modpri > max_priority)
-	modpri = max_priority;
+        modpri = max_priority;
 
       if(m->pri != modpri) {
-	m->oldpri = m->pri;
-	m->pri = modpri;
-	m->modi->getvar("_priority")->set(m->pri);
-	if( m->modi->save_me )
-	  m->modi->save_me();
-	else
-	  m->modi->save();
+        m->oldpri = m->pri;
+        m->pri = modpri;
+        m->modi->getvar("_priority")->set(m->pri);
+        if( m->modi->save_me )
+          m->modi->save_me();
+        else
+          m->modi->save();
       }
     }
   }
@@ -921,111 +965,144 @@ string module_priorities_page( RequestID id, Configuration c)
       return module_priorities_page(id, c);
     }
   }
- 
-  string res = "<input type=hidden name='section' value='ModulePriorities' />";
 
-  res += "<cf-save/>";
+  string tmpl = #"
+    <input type=hidden name='section' value='ModulePriorities' />
+    <cf-save />
+    <h1 class='section'>Module priorities for site {{ sitename }}</h1>
+    <select name='maxprichange'>
+      {{ #prios }}
+      <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>{{ value }}</option>
+      {{ /prios }}
+    </select> is highest and 0 is lowest.
 
-  res += "<h1>Module priorities for site "+Roxen.roxen_encode(c->name,"html")+"</h1>";
+    {{ #sections }}
+      <h2 class='section no-margin-bottom'>{{ title }}</h2>
+      <table>
+      {{ #mods }}
+        <tr>
+          <td>{{ name }}
+            {{ #changed }}
+              <br><div class='notify info inline'>Priority changed from {{ old }} to {{ new }}</div>
+            {{ /changed }}
+          </td>
+          <td><em>{{ location }}</em></td>
+          <td class='text-right'>Priority:
+            {{ ^numeric }}
+              <select name='prichange_{{ id }}'>
+              {{ #prios }}
+              <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>
+                {{ value }}
+              </option>
+              {{ /prios }}
+              </select>
+            {{ /numeric }}
+            {{ #numeric }}
+              <input type='number' class='prio' name='prichange_{{ id }}'
+                     value='{{ pri }}' max='{{ max }}' />
+            {{ /numeric }}
+            {{ #seen }}
+              {{ pri }} (change above)
+            {{ /seen }}
+          </td>
+        </tr>
+      {{ /mods }}
+      </table>
+    {{ /sections }}";
 
-  res += "<select name='maxprichange'>\n";
+  mapping mctx = ([
+    "sitename" : c->name,
+    "prios"    : ({}),
+    "sections" : ({})
+  ]);
+
   foreach(c->getvar("max_priority")->get_choice_list(), int pri) {
-    if (pri == max_priority) {
-      res += sprintf("<option selected='selected' value='%d'>%d</option>\n", pri, pri);
-    } else {
-      res += sprintf("<option value='%d'>%d</option>\n", pri, pri);
-    }
+    mctx->prios += ({
+      ([ "value" : pri,
+         "checked" : pri == max_priority ]) });
   }
-  res += "</select>\n";
-  res += "is highest and 0 is lowest.<br /><br />";
-
-  res += "<table border='0' cellpadding='0' cellspacing='2'>";
 
   mapping modules_seen = ([ ]);
 
   foreach(mod_types, mapping mt) {
-    res += "<tr><td colspan='4'><h2>"+mt->title+"</h2></td></tr>\n";
+    mapping xmod = ([
+      "title" : mt->title,
+      "mods"  : ({})
+    ]);
 
     array _mods = Array.filter(mods, lambda(mapping m) { return m->type & mt->type; });
-
-    _mods = Array.sort_array(_mods, lambda(mapping m1, mapping m2) { 
-				      if(m2->pri==m1->pri) 
-					return m2->name2 > m1->name2;
-				      return m2->pri > m1->pri;
-				    }
-			     );
+    _mods = Array.sort_array(_mods, lambda(mapping m1, mapping m2) {
+                                      if(m2->pri==m1->pri)
+                                        return m2->name2 > m1->name2;
+                                      return m2->pri > m1->pri;
+                                    }
+                             );
 
     mapping seen_pri = ([ ]);
     string pri_warn;
 
     foreach( _mods, mapping m ) {
-      
-      res += "<tr><td>" + m->name2 + "</td>";
+      mapping modmap = ([
+        "name" : m->name2,
+        "pri"  : (string) m->pri,
+        "max"  : max_priority,
+        "id"   : replace(m->id, "#", "!")
+      ]);
+
       string location = "";
       if ((mt->type & MODULE_LOCATION) && m->modi->query_location) {
-	location = m->modi->query_location();
+        location = m->modi->query_location();
+        modmap->location = location || "(none)";
       }
-      res += "<td><i>" + Roxen.roxen_encode(location, "html") + "</i></td>";
-      res+= "<td><img src='/internal-roxen-unit' width='20' height='1'/></td>";
-
-      res += "<td> Priority: ";
 
       if (!seen_pri[location])
-	seen_pri[location] = ([ m->pri : 1 ]);
+        seen_pri[location] = ([ m->pri : 1 ]);
       else if(seen_pri[location][m->pri])
-	pri_warn = location;
+        pri_warn = location;
       else
-	seen_pri[location][m->pri] = 1;
+        seen_pri[location][m->pri] = 1;
 
       if(!modules_seen[m->name2]) {
-	if (max_priority == 9) {
-	  res += "<select name='prichange_"+replace(m->id,"#","!")+"'>";
-	  foreach( ({ 0,1,2,3,4,5,6,7,8,9 }), int pri) {
-	    if(m->pri == pri)
-	      res+="<option selected='selected' value='"+pri+"'>"+pri+"</option>";
-	    else
-	      res+="<option value='"+pri+"'>"+pri+"</option>";
-	  }
-	  res+="</select>";
-	} else {
-	  res += sprintf("<input type='text' name='prichange_%s' size='%d' value='%d' />",
-			 replace(m->id, "#", "!"),
-			 sizeof(sprintf("%d", max_priority) + 2),
-			 m->pri);
-	}
-	modules_seen[m->name2] = 1;
+        if (max_priority == 9) {
+          modmap->prios = map(({ 0,1,2,3,4,5,6,7,8,9 }),
+              lambda (int pri) {
+                return ([ "value" : (string) pri,
+                          "checked" : pri == m->pri ]);
+              });
+        } else {
+          modmap->numeric = true;
+        }
+
+        modules_seen[m->name2] = 1;
       } else {
-	res += (string)m->pri + " (change above)";
+        modmap->seen = true;
+      }
+
+      if(m->oldpri) {
+        modmap->changed = ([
+          "old" : m->oldpri,
+          "new" : m->pri
+        ]);
       }
 
 
-      res+="</td></tr>\n";
-      
-      res += "<tr><td colspan='4'>";
-
-      if(m->oldpri)
-	res += "<imgs src='&usr.err-1;'/> Priority changed from " + m->oldpri + " to " + m->pri +".";
-
-      res += "</td></tr>";
+      xmod->mods += ({ modmap });
     }
-    
+
     if(pri_warn) {
-      res += "<tr><td colspan='4'>";
-      res += "<br /><imgs src='&usr.err-2;'/> Some modules have the same priority and will be called in random order.";
-      res += "</td></tr>";
+      mctx->pri_warn = "Some modules have the same priority and will be "
+                       "called in random order.";
     }
 
-    res += "<tr><td colspan='4'>";
-    res+= "<img src='/internal-roxen-unit' width='1' height='20'/>";
-    res += "</td></tr>";
-
+    mctx->sections += ({ xmod });
   }
-  
-  res += "</table>";
 
-  res += "<cf-save/>";
+  // TRACE("mctx: %O\n", mctx);
 
-  return res;
+
+  Mustache stache = Mustache();
+  string ret = stache->render(tmpl, mctx);
+  destruct(stache);
+
+  return ret + "<hr class='section'><cf-save/>";
 }
-
-

@@ -1,0 +1,55 @@
+@mixin set-notify-color($clr) {
+  background: $clr;
+  border: 1px solid darken($clr, 20%);
+  color: darken($clr, 30%);
+}
+
+.notify {
+  margin-bottom: $spacing-unit;
+  padding: $spacing-unit;
+  @include set-notify-color($notify-bg-color);
+
+  &.warn,
+  &.warning {
+    @include set-notify-color($notify-warn-bg-color);
+  }
+
+  &.error {
+    @include set-notify-color($notify-error-bg-color);
+  }
+
+  > &:first-child {
+    margin-top: 0;
+  }
+
+  > &:last-child {
+    margin-bottom: 0;
+  }
+
+  &.inline {
+    background: transparent;
+    padding: 0;
+    border: 0;
+    color: $body-color;
+    margin-bottom: 0;
+    display: inline-block;
+
+    @extend .__icon;
+
+    &.info {
+      color: $notify-bg-color;
+      @include make-icon(info,  '\f05a') // fa-info-circle
+    }
+
+    &.warn,
+    &.warning {
+      color: $notify-warn-bg-color;
+      @include make-icon(warn,  '\f071') // fa-warning
+    }
+
+    &.error {
+      color: $notify-error-bg-color;
+      @include make-icon(error, '\f06a') // fa-exclamation-circle
+    }
+  }
+}

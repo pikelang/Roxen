@@ -6,6 +6,13 @@ mapping cache =  ([]);
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
+private bool _dont_cache = false;
+
+void dont_cache(bool val)
+{
+  _dont_cache = val;
+}
+
 class RDF
 {
   constant url = "";
@@ -24,7 +31,7 @@ class RDF
     host = uri->host;
     port = uri->port;
     file = uri->path+(uri->query?"?"+uri->query:"");
-    
+
     if( !(data = get_http_data( host, port, "GET "+file+" HTTP/1.0" ) ) )
       contents = sprintf((string)_(389,"Fetching data from %s..."), host);
     else
@@ -85,7 +92,7 @@ class Fetcher
       cb( qu->data() );
     destruct(qu);
   }
-  
+
   void connected( Protocols.HTTP.Query qu )
   {
     qu->timed_async_fetch(done, fail);
@@ -114,7 +121,7 @@ class Fetcher
 					    roxen.version()),
 			  ]) );
   }
-  
+
   void create( function _cb, string _h, int _p, string _q,
 	       RequestID id )
   {
@@ -149,15 +156,13 @@ string get_http_data( string host, int port, string query,
   return "The server is offline.";
 #else
   mixed data;
-  if( data = cache[host+port+query] )
-  {
+  if (data = cache[host+port+query]) {
     return data[0];
   }
-  else
-  {
+  else {
     cache[host+port+query] = ({0});
     RXML.get_context()->id->variables->_box_fetching = 1;
-    Fetcher( cb, host, port, query, RXML.get_context()->id );
+    Fetcher(cb, host, port, query, RXML.get_context()->id);
   }
 #endif
 }

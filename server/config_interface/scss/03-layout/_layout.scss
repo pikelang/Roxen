@@ -1,0 +1,279 @@
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: $root-font-size;
+  height: 100%;
+  position: relative;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: $font-family;
+  @include font-size;
+  line-height: $line-height;
+  background: $body-bg;
+  overflow-y: scroll;
+  position: relative;
+  min-height: 100%;
+  color: $body-color;
+}
+
+header {
+  background: $header-bg;
+  border-bottom: 1px solid #000;
+
+  a {
+    text-decoration: none;
+  }
+
+  .site-padding {
+    // padding-top: $site-padding;
+    // padding-bottom: 0;
+    padding: 0;
+    padding-right: $site-padding;
+  }
+
+  #roxen-product {
+    @include clear;
+    display: flex;
+    white-space: nowrap;
+
+    .R {
+      float: left;
+      display: block;
+      padding: $spacing-unit;
+      background: #000;
+      // margin-top: -($spacing-unit);
+      // margin-left: -($spacing-unit);
+      margin-right: $spacing-unit;
+      width: 64px;
+
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+    }
+
+    .text {
+      margin-left: $spacing-unit;
+      @include text-size(lg);
+      align-self: center;
+    }
+
+    .roxen {
+      font-weight: bold;
+      color: $brand-color;
+    }
+
+    .product {
+      color: $light-grey;
+    }
+  }
+
+  .msg-string {
+    h2 {
+      margin: 0;
+      @include text-size(lg);
+      color: $site-message-color;
+    }
+  }
+
+  .rxn-admin-btn {
+    background: lighten($header-bg, 15%);
+    color: lighten($header-bg, 50%);
+  }
+
+  .flex-row {
+    // justify-content: center;
+    // align-items: center;
+
+    > *[class~='flex'] {
+      align-self: center;
+
+      &:first-child {
+        width: 20%;
+      }
+    }
+  }
+}
+
+main {
+  margin: 0;
+  padding: $spacing-unit;
+}
+
+.main-column {
+  background: $main-column-bg;
+  height: 100%;
+
+  .contents {
+    padding: $site-padding;
+  }
+}
+
+.page-contents {
+  padding-bottom: $spacing-unit*4;
+
+  .left-content {
+    width: 25%;
+    padding-right: $site-padding;
+
+    & + .right-content {
+      width: 75%;
+    }
+  }
+}
+
+footer {
+  background: $footer-bg;
+  color: darken($footer-color, 20%);
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  @include text-size(sm);
+
+  .site-padding {
+    padding: $site-padding;
+  }
+
+  .product {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      display: inline-block;
+
+      &:before {
+        content: '|';
+        padding-right: 5px;
+        color: darken($footer-color, 30%);
+      }
+
+      &:first-child {
+        &:before {
+          content: none;
+        }
+      }
+    }
+  }
+
+  // Roxen icon
+  .R {
+    height: 16px;
+    width: auto;
+    vertical-align: middle;
+    margin-right: $spacing-unit/2;
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: $light-grey;
+
+  &.section {
+    & + p {
+      margin-top: -($site-padding);
+    }
+  }
+
+  small {
+    font-weight: normal;
+  }
+}
+
+h1 {
+  @include font-size($h1-font-size);
+
+  &.welcome {
+    // color: $brand-color;
+    @include text-size(xxl);
+    margin: 0 0 $spacing-unit;
+  }
+}
+
+h2 {
+  @include font-size(xl);
+}
+
+h3 {
+  @include font-size(lg);
+}
+
+a {
+  color: $link-color;
+
+  &:hover {
+    color: lighten($link-color, 15%);
+  }
+}
+
+.section {
+  padding: $site-padding/2 0;
+  margin: $site-padding 0;
+  // background: $topmenu-bg;
+  border-top: 1px dashed lighten($body-bg, 25%);
+}
+
+hr {
+  height: 1px;
+  border: 0;
+  background: $body-bg;
+  padding: 0;
+
+  &.section {
+    padding: 0;
+    background: transparent;
+  }
+}
+
+.tablist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: $topmenu-bg;
+
+  li {
+    display: inline-block;
+    border-right: 1px solid #000;
+  }
+
+  a {
+    display: block;
+    text-decoration: none;
+    padding: $site-padding/2 $site-padding;
+    padding-bottom: ($site-padding/2) + 2;
+    color: $topmenu-color;
+    border-top: 2px solid transparent;
+
+    &:hover {
+      color: lighten($topmenu-color, 25%);
+    }
+
+    &[selected] {
+      background: $main-column-bg;
+      color: $topmenu-selected-color;
+      border-top-color: $brand-color;
+    }
+  }
+
+  &.topmenu {
+    a[selected] {
+      background: $topmenu-selected-bg;
+    }
+  }
+}

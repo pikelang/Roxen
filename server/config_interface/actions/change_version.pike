@@ -1,18 +1,18 @@
 #include <roxen.h>
 
 //<locale-token project="admin_tasks">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
+#define _(X,Y)  _DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "maintenance";
 
 LocaleString name = _(46,"Change Roxen version")+"...";
 LocaleString doc =  _(42,"If you have more than one Roxen version installed\n"
-		     "in the same location, you can use this action to\n"
-		     "change the currently running version.");
+                     "in the same location, you can use this action to\n"
+                     "change the currently running version.");
 
 class Server(string dir,
-	     string version,
-	     string version_h )
+             string version,
+             string version_h )
 {
   int cannot_change_back;
   string file( string fn )
@@ -38,18 +38,18 @@ class Server(string dir,
       d=get_date_from_cvsid( file( "base_server/roxen.pike" )||"" );
 
       foreach( ({"base_server/roxen.pike",
-		 "base_server/configuration.pike",
-		 "base_server/roxenloader.pike",
-		 "start",
-		 "base_server/module.pike" }),
-	       string f )
+                 "base_server/configuration.pike",
+                 "base_server/roxenloader.pike",
+                 "start",
+                 "base_server/module.pike" }),
+               string f )
       {
-	string q = file( f )||"";
-	if( f == "start" )
-	  if( search( q, "100)" )==-1 )
-	    cannot_change_back = 1;
-	if( (d2 = get_date_from_cvsid(q )) && d2 > d )
-	  d = d2;
+        string q = file( f )||"";
+        if( f == "start" )
+          if( search( q, "100)" )==-1 )
+            cannot_change_back = 1;
+        if( (d2 = get_date_from_cvsid(q )) && d2 > d )
+          d = d2;
       }
     }
     return d;
@@ -69,12 +69,12 @@ array available_versions()
     if( file_stat( "../"+f+"/etc/include/version.h" ) )
     {
       catch {
-	string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
-	string a, b;
-	sscanf( s, "%*sroxen_ver%*s\"%s\"", a );
-	sscanf( s, "%*sroxen_build%*s\"%s\"", b );
-	if( a && b )
-	  res += ({ Server( f, a+"."+b,s ) });
+        string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
+        string a, b;
+        sscanf( s, "%*sroxen_ver%*s\"%s\"", a );
+        sscanf( s, "%*sroxen_build%*s\"%s\"", b );
+        if( a && b )
+          res += ({ Server( f, a+"."+b,s ) });
       };
     }
   }
@@ -90,19 +90,18 @@ string nice_relative_date( object t )
       return sprintf( (string)_(43,"1 month") );
     else
       return sprintf( (string)_(44,"%d months"),
-		      t->how_many( Calendar.Month() ) );
+                      t->how_many( Calendar.Month() ) );
   if( t->how_many( Calendar.Day() ) == 1 )    return (string)_(139,"one day");
 
   if( t->how_many( Calendar.Day() ) == 0 )    return "-";
   return sprintf( (string)_(45,"%d days"),
-		  t->how_many( Calendar.Day() ) );
+                  t->how_many( Calendar.Day() ) );
 }
 
 string parse( RequestID id )
 {
   string res =
-    "<font size='+1'><b>"+_(46,"Change Roxen version")+"</b></font>\n"
-    "<br />\n"
+    "<h2 class='no-margin-top'>"+_(46,"Change Roxen version")+"</h2>\n"
     "<p>";
   int warn;
 
@@ -111,29 +110,26 @@ string parse( RequestID id )
     werror("Change to "+id->variables->server+"\n" );
     mv("../local/environment", "../local/environment~");
     Stdio.write_file( combine_path(roxen.configuration_dir,
-				   "server_version"),
-		      id->variables->server );
+                                   "server_version"),
+                      id->variables->server );
        roxen->shutdown(0.5);
     return (string)_(47,"Shutting down and changing Roxen version");
   }
 
   res += "<input type=hidden name='action' value='change_version.pike' />";
-  
+
   res +=
-    "<box-frame iwidth='100%' bodybg='&usr.content-bg;' "
-    "           box-frame='yes' padding='0'>"
-    "<table cellpadding=2 cellspacing=0 border=0>"
-    "<tr bgcolor='&usr.obox-titlebg;'>"
+    "<table class='nice'>"
+    "<thead>"
+    "<tr>"
     "<th></th>"
-    "<th align='left'>"+_(48,"Version")+"</th>"
+    "<th>"+_(48,"Version")+"</th>"
     "<th></th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
-    "<th align='left'>"+_(85,"Release date")+"</th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
-    "<th align='left'>"+_(86,"Age")+"</th>"
-    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
-    "<th align='left'>"+_(136,"Directory")+"</th>"
-    "</tr>\n";
+    "<th>"+_(85,"Release date")+"</th>"
+    "<th>"+_(86,"Age")+"</th>"
+    "<th>"+_(136,"Directory")+"</th>"
+    "</tr>"
+    "</thead>";
   foreach( available_versions(), Server f )
   {
     res += "<tr><td>";
@@ -149,51 +145,38 @@ string parse( RequestID id )
     warn += f->cannot_change_back;
     res +=
       "<td>"+f->version+"</td>"
-      "<td>"+(f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
+      "<td>"+(f->cannot_change_back?"<div class='notify warn inline'>&nbsp;</div>":"")+
       "</td>"
-      "<td></td>"
       "<td>"+(d ? d->set_language( roxen.get_locale()+"_UNICODE" )
-	      ->format_ext_ymd() : "n/a")+
+              ->format_ext_ymd() : "n/a")+
       "</td>"
-      "<td></td>"
       "<td>"+nice_relative_date( diff )+"</td>"
-      "<td></td>"
       "<td>"+f->dir+"</td></tr>\n";
   }
   res +=
-    "</table>\n"
-    "</box-frame>\n"
-    "<br clear='all'/>\n"
-    "<br />\n";
-  
+    "</table>\n";
 
   if( warn )
-    res += "<table><tr><td valign='top'>"
-      "<img src='&usr.err-2;' alt='#' /></td>\n"
-      "<td>"+
+    res += "<p class='notify warn inline'>" +
       sprintf((string)
       _(137,"If you change to one these Roxen versions, you will not be "
-	"able to change back from the administration interface, you will "
-	"instead have to edit the file %O manually, shutdown the server, "
-	"and execute %O again"),
-	      combine_path(getcwd(),
-			   roxen.configuration_dir,
-			   "server_version"),
-	      combine_path(getcwd(),"../start") )
-      +"</td></tr></table>";
-	      
-  res += "<table><tr><td valign='top'>"
-    "<img src='&usr.err-2;' alt='#' /></td>\n"
-    "<td>"+
+        "able to change back from the administration interface, you will "
+        "instead have to edit the file %O manually, shutdown the server, "
+        "and execute %O again"),
+              combine_path(getcwd(),
+                           roxen.configuration_dir,
+                           "server_version"),
+              combine_path(getcwd(),"../start") )
+      +"</p>";
+
+  res +=
+    "<p class='notify warn inline'>" +
     _(154,"Note that you will have to start the new server manually because "
-      "you may have to answer a few questions for the new environment file.")+
-    "</td>\n"
-    "</tr></table>\n"
-    "<br clear='all'/>\n"
-    "<br />";
-  
-  res += "<submit-gbutton align='middle'>"+_(138,"Change version")+"</submit-gbutton> "
-    "<cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/>";
-	      
+    "you may have to answer a few questions for the new environment file.")+
+    "</p>";
+
+  res += "<p><submit-gbutton>"+_(138,"Change version")+"</submit-gbutton> "
+    "<cf-cancel href='./?class="+action+"&amp;&usr.set-wiz-id;'/></p>";
+
   return res;
 }

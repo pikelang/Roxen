@@ -1,6 +1,1 @@
-<gtext scale='0.7' font="franklin gothic demi">Welcome to &roxen.product-name;</gtext>
-<!--
-<p>
-<gtext href="whatsnew.html" scale="0.6" fgcolor="&usr.linkcolor;" font="franklin gothic demi">What's new?</gtext>
-</p>
--->
+<h1 class="welcome">Welcome to &roxen.product-name;</h1>

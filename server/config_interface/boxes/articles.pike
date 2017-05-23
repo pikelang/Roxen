@@ -23,5 +23,5 @@ string parse( RequestID id )
 				 "cellpadding=\"0\"",
 			      }),
 			({"http://community.roxen.com/articles/","",""}));
-  return ("<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>");
+  return ("<cbox type='"+box+"' title='"+box_name+"'>"+contents+"</cbox>");
 }

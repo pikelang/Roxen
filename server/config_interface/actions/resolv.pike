@@ -6,14 +6,14 @@ inherit "../logutil";
 #include <roxen.h>
 #include <request_trace.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
+#define LOCALE(X,Y)     _STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
 
 string name= LOCALE(27, "Resolve path...");
-string doc = LOCALE(28, 
-		    "Check which modules handles the path you enter in "
-		    "the form");
+string doc = LOCALE(28,
+                    "Check which modules handles the path you enter in "
+                    "the form");
 
 string link(string to, string name)
 {
@@ -21,8 +21,8 @@ string link(string to, string name)
 }
 
 string link_configuration(Configuration c, void|string cf_locale)
-{ 
-  return link(@get_conf_url_to_virtual_server(c, cf_locale)); 
+{
+  return link(@get_conf_url_to_virtual_server(c, cf_locale));
 }
 
 string module_name(function|RoxenModule|RXML.Tag m)
@@ -32,7 +32,7 @@ string module_name(function|RoxenModule|RXML.Tag m)
 
   string name;
   catch (name = Roxen.html_encode_string(Roxen.get_modfullname (m)));
-  if (!name) return "<font color='red'>Unavailable</font>";
+  if (!name) return "<div class='notify error'>Unavailable</div>";
 
   Configuration c;
   if(functionp(m->my_configuration) && (c = m->my_configuration()))
@@ -43,21 +43,21 @@ string module_name(function|RoxenModule|RXML.Tag m)
       mapping mod = c->modules[mn];
       if(mod->enabled == m)
       {
-	name = sprintf("<a href=\"%s\">%s</a> (%s)",
-		       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
-	break;
+        name = sprintf("<a href=\"%s\">%s</a> (%s)",
+                       @get_conf_url_to_module(c->name+"/"+mn), roxen->filename(m));
+        break;
       }
       else if(mod->copies && !zero_type(search(mod->copies, m)))
       {
-	name = sprintf("<a href=\"%s\">%s</a> (%s)",
-		       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
-		       roxen->filename(m));
-	break;
+        name = sprintf("<a href=\"%s\">%s</a> (%s)",
+                       @get_conf_url_to_module(c->name+"/"+mn+"#"+search(mod->copies, m)),
+                       roxen->filename(m));
+        break;
       }
     }
   }
 
-  return "<font color='darkgreen'>"+name+"</font>";
+  return "<span class='src-path'>"+name+"</span>";
 }
 
 string resolv;
@@ -90,7 +90,7 @@ void trace_enter_ol(string type, function|object module, void|int timestamp)
     (/*((prev_level >= level ? "<br />\n" : "")*/ "" +
      anchor("") +
      "<li class='timing open'>" +
-     "<span class='toggle' onmousedown='return toggle_vis(event, this.parentNode);'></span>" +
+     "<span class='toggle'></span>" +
      Roxen.html_encode_string(type) + " " + module_name(module) +
      "<div class='inner'>"
      "<ol class='timing'>");
@@ -168,7 +168,7 @@ mapping|int resolv_get_file(object c, object nid)
     trace_enter_ol("", this_object());
   }
   trace_leave_ol(sprintf("Uncaught exception thrown:\n\n%s\n",
-			 resolv_describe_backtrace(err)));
+                         resolv_describe_backtrace(err)));
 
   while(level) {
     trace_leave_ol("");
@@ -189,15 +189,15 @@ void resolv_handle_request(object c, object nid)
       nid->misc->trace_enter("First module", funp);
       if(file = funp( nid ))
       {
-	nid->misc->trace_leave("Returns data");
-	break;
+        nid->misc->trace_leave("Returns data");
+        break;
       }
       if(nid->conf != c)
       {
-	c = nid->conf;
-	nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
-	again=1;
-	break;
+        c = nid->conf;
+        nid->misc->trace_leave("Request transfered to the virtual server "+c->query_name());
+        again=1;
+        break;
       }
       nid->misc->trace_leave("");
     }
@@ -209,77 +209,80 @@ void resolv_handle_request(object c, object nid)
     {
       nid->misc->trace_enter("Last try module", funp);
       if(file = funp(nid)) {
-	if (file == 1) {
-	  nid->misc->trace_enter("Returned recurse", 0);
-	  resolv_handle_request(c, nid);
-	  nid->misc->trace_leave("Recurse done");
-	  nid->misc->trace_leave("Last try done");
-	  return;
-	}
-	nid->misc->trace_leave("Returns data");
-	break;
+        if (file == 1) {
+          nid->misc->trace_enter("Returned recurse", 0);
+          resolv_handle_request(c, nid);
+          nid->misc->trace_leave("Recurse done");
+          nid->misc->trace_leave("Last try done");
+          return;
+        }
+        nid->misc->trace_leave("Returns data");
+        break;
       } else
-	nid->misc->trace_leave("");
+        nid->misc->trace_leave("");
     }
   }
 }
 
 string parse( RequestID id )
 {
+  string tmpl = #"
+    <div class='resolve-path'>
+      <input type='hidden' name='action' value='resolv.pike' />
+      <h2 class='no-margin-top no-margin-bottom'>{{ name }}</h2>
+      <hr class='section'>
+      <div class='table'>
+        <div class='control-group'>
+          <label for='path'>{{ url_label }}</label>
+          <div class='cell'>
+            <input type='text' name='path' value='&form.path;' id='path'>
+          </div>
+        </div>
+        <div class='control-group auth'>
+          <label>{{ auth_label }}</label>
+          <div class='cell'>
+            <input type='text' name='user' value='&form.user;' placeholder='{{ user_label }}'
+            ><input type='password' name='password' value='&form.password;'
+              placeholder='{{ password_label }}'>
+          </div>
+        </div>
+        <div class='control-group'>
+          <label for='formvars'>{{ formvars_label }}</label>
+          <div class='cell'>
+            <input type='text' name='form_vars' value='&form.form_vars;' id='formvars'
+              placeholder='Example: id=234&amp;page=3&amp;hidden=1'>
+          </div>
+        </div>
+        <div class='control-group'>
+          <label for='cookies' class='valign-top'>{{ cookies_label }}</label>
+          <div class='cell small'>
+            <textarea name='cookies' id='cookies' rows='6'
+              placeholder='UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj'>&form.cookies;</textarea>
+          </div>
+        </div>
+        <div class='control-group'>
+          <label class='empty'></label>
+          <div class='cell'>
+            <cf-ok/>
+            <cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>
+          </div>
+        </div>
+      </div>
+    </div>
+  ";
 
-  string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res +=
-    "<input type='hidden' name='action' value='resolv.pike' />\n"
-    "<font size='+1'><b>"+ name + "</b></font><p />\n"
-    "<table cellpadding='0' cellspacing='10' border='0'>\n"
-    "<tr><th align='left'>" +LOCALE(29, "URL")+ ": </th><td>"
-    "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
-    "<tr><th align='left'>" + LOCALE(296, "HTTP auth") + ": </th>"
-    "<td>" +LOCALE(206, "User")+ ": "
-    "<input name='user'  value='&form.user;' size='12' />"
-    "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
-    "<input name='password' value='&form.password;' type='password' "
-    "size='12' /></td></tr>\n"
-    "<tr><td align='left' valign='top'>" + LOCALE(297, "Form variables") + ":</td><td align='left'>"
-    "<input type='text' size='60' name='form_vars' value='&form.form_vars;' />"
-    "<br/>Example: <tt>id=234&amp;page=3&amp;hidden=1</tt></td>\n"
-    "</tr><tr><td align='left' valign='top'>" + LOCALE(325, "HTTP Cookies") + ": </td><td align='left'>"
-    "<textarea cols='58' row='4' name='cookies'>&form.cookies;</textarea><br />"
-    "Cookies are separated by a new line for each cookie you want to set. "
-    "Example:"
-    "<pre>UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj</pre></td>"
-    "</tr></table>\n"
-    "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/></td></tr></table>\n";
+  mapping mctx = ([
+    "name"           : name,
+    "url_label"      : LOCALE(29,  "URL"),
+    "auth_label"     : LOCALE(296, "HTTP auth"),
+    "user_label"     : LOCALE(206, "User"),
+    "password_label" : LOCALE(30,  "Password"),
+    "formvars_label" : LOCALE(297, "Form variables"),
+    "cookies_label"  : LOCALE(325, "HTTP Cookies")
+  ]);
 
-  res +=
-    #"<script language='javascript'>
-        function toggle_vis(evt, li_elem) {
-          var items = [ li_elem ];
-          if (evt.shiftKey) {
-            //  Include all sibling <li> elements
-            items = [ ];
-            var candidates = li_elem.parentNode.children;
-            for (var i = 0; i < candidates.length; i++)
-              if (candidates[i].nodeType == 1 &&
-                  candidates[i].tagName.toLowerCase() == 'li')
-                items.push(candidates[i]);
-          }
-          var is_open = li_elem.className.match('open');
-          var from_cls = is_open ? 'open' : 'closed';
-          var to_cls = is_open ? 'closed' : 'open';
-          for (var j = 0; j < items.length; j++) {
-            items[j].className = items[j].className.replace(from_cls, to_cls);
-          }
-          if (evt.preventDefault) {
-            evt.preventDefault();
-            evt.stopPropagation();
-          } else {
-            evt.cancelBubble = true;
-            evt.returnValue = false;
-          }
-          return false;
-        }
-      </script>";
+  Mustache stache = Mustache();
+  string res = stache->render(tmpl, mctx);
 
   nid = roxen.InternalRequestID();
   nid->client = id->client;
@@ -292,14 +295,14 @@ string parse( RequestID id )
     foreach( raw_vars /"&", string val_pair ) {
       string idx, val;
       if( sscanf(val_pair, "%s=%s", idx, val) == 2 ) {
-	if(nid->variables[idx]) {
-	  if(arrayp(nid->variables[idx]))
-	    nid->variables[idx] += ({ val });
-	  else
-	    nid->variables[idx] = ({ nid->variables[idx], val });
-	} else {
-	  nid->variables[idx] = val;
-	}
+        if(nid->variables[idx]) {
+          if(arrayp(nid->variables[idx]))
+            nid->variables[idx] += ({ val });
+          else
+            nid->variables[idx] = ({ nid->variables[idx], val });
+        } else {
+          nid->variables[idx] = val;
+        }
       }
     }
   }
@@ -309,16 +312,16 @@ string parse( RequestID id )
     foreach(raw_cookies / "\n", string raw_cookie) {
       string c_idx, c_val;
       if( sscanf( raw_cookie, "%s=%s", c_idx, c_val) == 2) {
-	faked_cookies += ([ c_idx : c_val ]);
-      }      
+        faked_cookies += ([ c_idx : c_val ]);
+      }
     }
     if( sizeof(faked_cookies) ) {
       if( nid->cookies && sizeof(indices(nid->cookies)) ) {
-	foreach(nid->cookies; string c_idx; string c_val )
-	  faked_cookies[c_idx] = c_val;
-	nid->cookies = faked_cookies;
+        foreach(nid->cookies; string c_idx; string c_val )
+          faked_cookies[c_idx] = c_val;
+        nid->cookies = faked_cookies;
       } else
-	nid->cookies = faked_cookies;
+        nid->cookies = faked_cookies;
     }
   }
 
@@ -331,10 +334,11 @@ string parse( RequestID id )
     }
     else if(!nid->conf) {
       err_msg = LOCALE(31, "There is no configuration available that matches "
-		       "this URL.");
+                       "this URL.");
     }
-    if (err_msg)
-      return "<p><font color='red'>" + err_msg + "</font></p>" + res; 
+    if (err_msg) {
+      return "<div class='notify error'>" + err_msg + "</div>" + res;
+    }
 
     string canonic_url = nid->url_base() + nid->raw_url[1..];
 
@@ -343,15 +347,29 @@ string parse( RequestID id )
     else
       nid->pragma = (<>);
 
-    resolv =
-      "<hr />\n" +
-      LOCALE(179, "Canonic URL: ") +
-      Roxen.html_encode_string(canonic_url) + "<br />\n" +
-      LOCALE(32, "Resolving")+" " +
-      link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
-      " "+LOCALE(33, "in")+" " +
-      link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
-      "<ol class='timing'>";
+    string tmpl2 = #"
+      <hr class='section'>
+      <div class='resolve-result-header'>
+        <ul class='nolist'>
+          <li>{{ canonic_url_label }}
+            <a href='{{ canonic_url }}' target='resolve'>{{ canonic_url }}</a>
+          </li>
+          <li>{{ resolving_label }} {{ &link }} {{ in }} {{ &conf }}</li>
+        </ul>
+      </div>";
+
+    mapping mctx2 = ([
+      "canonic_url_label" : LOCALE(179, "Canonic URL: "),
+      "canonic_url" : canonic_url,
+      "resolving_label" : LOCALE(32, "Resolving"),
+      "link" : link(canonic_url, Roxen.html_encode_string(nid->not_query)),
+      "in" : LOCALE(33, "in"),
+      "conf" : link_configuration(nid->conf, id->misc->cf_locale)
+    ]);
+
+    res += stache->render(tmpl2, mctx2);
+
+    resolv = "<div class='resolve-result-body'><ol class='timing'>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
@@ -383,19 +401,22 @@ string parse( RequestID id )
 #endif
     while(level>0)
       trace_leave_ol ("Trace nesting inconsistency!", endtime);
-    res += resolv + "</ol>\n";
+    res += resolv + "</ol></div>\n";
 
     if (trace_timetype) {
+      res += "<div class='resolve-result-footer'>";
       res += format_time (hrrstart, hrvstart, endtime);
       if (int oh = nid->misc->trace_overhead) {
-	res += ", trace overhead (" + trace_timetype + "): " +
-	  Roxen.format_hrtime (oh) + "<br />\n"
-	  "Note: The trace overhead has been mostly canceled out from the " +
-	  trace_timetype + " values above.";
+        res += ", trace overhead (" + trace_timetype + "): " +
+          Roxen.format_hrtime (oh) + "<br />\n"
+          "Note: The trace overhead has been mostly canceled out from the " +
+          trace_timetype + " values above.";
       }
+      res += "</div>";
     }
   }
 
+  destruct(stache);
   destruct (nid);
 
   return res;
