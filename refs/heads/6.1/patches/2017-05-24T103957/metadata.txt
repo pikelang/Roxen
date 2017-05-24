@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Quarter number in strftime
+from: 2196191da83de2c987abe8fee244c9dd9a69adff
+to: 42ca0459663d4c14dcbb1d34f72307bc233fa207
+originator: Jonas Wallden
+depends: 2017-05-23T114611
+restart: true
+
+• Add %q to strftime for output of quarter number (1-4).
