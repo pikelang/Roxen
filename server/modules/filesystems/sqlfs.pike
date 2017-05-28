@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.3 2001/11/21 15:47:57 grubba Exp $";
+constant cvs_version= "$Id$";
 
 #include <module.h>
 #include <roxen.h>
@@ -38,7 +38,7 @@ void create()
   
   defvar("table", Variable.TableChoice( "docs", 0,
 				 _(61,"Filesystem table"),
-				 _(62,"The table that cotains the files."
+				 _(62,"The table that contains the files."
 				  " The table should contain at least the "
 				  "columns 'name' and 'contents'. Optionally "
 				  "you can also have the fields 'mtime', "
