@@ -7,7 +7,7 @@
 #include <config.h>
 #include <roxen.h>
 //<locale-token project="roxen_config">_</locale-token>
-#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+#define _(X,Y)  _STR_LOCALE("roxen_config",X,Y)
 
 #define CU_AUTH id->misc->config_user->auth
 
@@ -38,12 +38,12 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   if (!skip_conf) {
     if (c) {
       mn = "<a href='../sites/site.html/" +
-	Roxen.http_encode_url (mod_info->conf) + "/'>" +
-	Roxen.html_encode_string (c->query_name()) + "</a>";
+        Roxen.http_encode_url (mod_info->conf) + "/'>" +
+        Roxen.html_encode_string (c->query_name()) + "</a>";
     }
     else
       mn = Roxen.html_encode_string (
-	sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
+        sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
   }
 
   if( m ) {
@@ -59,13 +59,13 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
   else if( i ) {
     if (mn)
       mn = sprintf (
-	(string) _(544, "the deleted module %s in %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
-	mn);
+        (string) _(544, "the deleted module %s in %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
+        mn);
     else
       mn = sprintf (
-	(string) _(545, "the deleted module %s"),
-	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
+        (string) _(545, "the deleted module %s"),
+        Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
   }
 
   return mn;
@@ -94,45 +94,14 @@ string|mapping parse( RequestID id )
   }
 
   mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
-  if( !sizeof( q ) )
-    return _(549, "No defined databases.\n");
-	
-  string res = "<style type='text/css'>\n"
-    "#tbl {"
-    " font-size: smaller;"
-    " text-align: left;"
-    " empty-cells: show;"
-    "}\n"
-    "#tbl a {"
-    " color: #0033aa;"
-    " text-decoration: none;"
-    "}\n"
-    "#tbl a:hover {"
-    " color: #0055ff;"
-    " text-decoration: underline;"
-    "}\n"
-    "#tbl tr > * {"	// Cell defaults.
-    " padding-left: 1em;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    "}\n"
-    "#tbl tr > *:first-child {"
-    " white-space: nowrap;" // No wrapping between the table icon and the name.
-    " padding-left: 0;"
-    "}\n"
-    "#tbl .num {"
-    " text-align: right;"
-    " white-space: nowrap;"
-    "}\n"
-    "#tbl tr.group-hdr > * {"	// The cells in the database group name rows.
-    " font-weight: bold;"
-    " border-bottom-color: black;"
-    "}\n"
-    "#tbl tr.column-hdr > * {"	// The cells in the column header rows.
-    " font-weight: bold;"
-    " background-color: &usr.matrix12;;"
-    "}\n"
-    "</style>\n"
-    "<table id='tbl' border='0' cellpadding='2' cellspacing='0'>\n";
+  if( !sizeof( q ) ) {
+    return
+      "<div class='notify warn'>" +
+       _(549, "No defined databases.\n") +
+      "</div>";
+  }
+
+  string res = "<table id='tbl' class='db-list nice no-th'>\n";
 
   mapping(string:string) rres = ([]);
   foreach( DBManager.list_groups(), string g )
@@ -145,24 +114,24 @@ string|mapping parse( RequestID id )
 
     string res =
       "<tr><td class='db'>" +
-      (view_mode ? "" : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'>") +
-      "<cimg style='vertical-align: -2px' border='0' format='gif'"
-      " src='&usr.database-small;' alt='' max-height='12'/> " +
+      (view_mode ? ""
+                 : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'"
+                   " class='icon db'>") +
       db +
       (view_mode ? "" : "</a>") +
       "</td>";
 
     mapping(string:int) db_stats;
     if ( mixed e = catch {
-	db_stats = DBManager.db_stats( db ) || ([]);
+        db_stats = DBManager.db_stats( db ) || ([]);
       } ) {
       string em = describe_error(e);
       sscanf( em, "%*sreconnect to SQL-server%s", em);
       rres[db_group] += res +
-	"<td colspan='4'>" +
-	(db_url ? Roxen.html_encode_string (db_url) + "<br />" : "") +
-	"<font color='&usr.warncolor;'>" + em + "</font></td>"
-	"</tr>\n";
+        "<td colspan='4'>" +
+        (db_url ? Roxen.html_encode_string (db_url) + "<br />" : "") +
+        "<font color='&usr.warncolor;'>" + em + "</font></td>"
+        "</tr>\n";
       continue;
     }
 
@@ -183,17 +152,17 @@ string|mapping parse( RequestID id )
     else
     {
       if( mixed err = catch( DBManager.cached_get( db ) ) )
-	res += "<td><font color='&usr.warncolor;'>" +
-	  _(381,"Failed to connect") + ": " +
-	  describe_error(err) + "</font></td>";
+        res += "<td><font color='&usr.warncolor;'>" +
+          _(381,"Failed to connect") + ": " +
+          describe_error(err) + "</font></td>";
       else
-	res += "<td>remote</td>";
+        res += "<td>remote</td>";
     }
 
     // Backup schedule
 
     res += "<td>" + (DBManager.db_schedule(db) ||
-		     ("<i>" + _(1116, "NONE") + "</i>")) + "</td>";
+                     ("<i>" + _(1116, "NONE") + "</i>")) + "</td>";
 
     // Owner/info column
 
@@ -201,12 +170,12 @@ string|mapping parse( RequestID id )
 
     if (db == "local")
       res += "<td>" +
-	_(546, "Internal data that cannot be shared between servers.") +
-	"</td>";
+        _(546, "Internal data that cannot be shared between servers.") +
+        "</td>";
     else if (db == "shared")
       res += "<td>" +
-	_(547, "Internal data that may be shared between servers.") +
-	"</td>";
+        _(547, "Internal data that may be shared between servers.") +
+        "</td>";
     else if (db == "docs")
       res += "<td>" + _(1024, "Contains all documentation.") + "</td>";
     else if (!sizeof (db_mod_info))
@@ -215,23 +184,26 @@ string|mapping parse( RequestID id )
       res += "<td>" + String.capitalize (owner) + "</td>";
     else
       res += "<td>" +
-	Roxen.html_encode_string (db_mod_info->comment || "") + "</td>";
+        Roxen.html_encode_string (db_mod_info->comment || "") + "</td>";
 
     rres[db_group] += res + "</tr>\n";
   }
 
   array(array(string)) cats = ({});
-  foreach( indices(rres), string c )
-    if( c != "internal" )
+  foreach( indices(rres), string c ) {
+    if( c != "internal" ) {
       cats += ({ ({DBManager.get_group(c)->lname, c}) });
-    else
+    }
+    else {
       cats = ({ ({DBManager.get_group(c)->lname, c}) }) + cats;
-	
+    }
+  }
+
   foreach( cats[0..0]+sort(cats[1..]); int i; array q ) {
+    // TRACE("q: %O\n", q);
     res += "<tbody>\n"
-      "<tr class='group-hdr'><th colspan='6'>" + (i ? "<br/>" : "") +
-      "<a style='font-size: larger'"
-      " href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" + q[0] + "</a>"
+      "<tr class='group-hdr'><th colspan='6'>" + (i ? "" : "") +
+      "<a href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" + q[0] + "</a>"
       "</th></tr>\n"
       "<tr class='column-hdr'>"
       "<th>Name</th>"

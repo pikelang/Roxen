@@ -13,9 +13,10 @@ string parse( RequestID id )
 
   if(!v)
     return " Error in URL ";
-  
+
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s '>"
                   "<content>%s</content></tmpl>",
-		  LOCALE(466,"Difference"), (v->diff(2)||"") );
+		  LOCALE(466,"Difference"),
+                  Roxen.html_encode_string((v->diff(2)||"")) );
 }

@@ -41,39 +41,8 @@ string|mapping parse( RequestID id )
 
   array(string) conf_cols = sort (roxen->configurations->name);
 
-  string res = "<style type='text/css'>\n"
-    "#tbl {"
-    " font-size: smaller;"
-    " text-align: left;"
-    " empty-cells: show;"
-    "}\n"
-    "#tbl a {"
-    " color: #0033aa;"
-    " text-decoration: none;"
-    "}\n"
-    "#tbl a:hover {"
-    " color: #0055ff;"
-    " text-decoration: underline;"
-    "}\n"
-    "#tbl td, #tbl th {"	// Cell defaults.
-    " white-space: nowrap;"
-    " border-right: 1px solid &usr.matrix22;;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    "}\n"
-    "#tbl .db {"		// The database name cells.
-    " background-color: &usr.matrix12;;"
-    "}\n"
-    "#tbl tr.group-hdr > * {"	// The cells in the database group name rows.
-    " font-weight: bold;"
-    " vertical-align: bottom;"
-    " border-bottom-color: black;"
-    "}\n"
-    "#tbl tr.group-hdr > .conf {" // The cells containing configuration names.
-    " text-align: center;"
-    " background-color: &usr.matrix12;;"
-    "}\n"
-    "</style>\n"
-    "<table id='tbl' border='0' cellpadding='2' cellspacing='0'>\n";
+  string res =
+    "<table id='tbl' class='matrix'>\n";
 
   mapping(string:string) rres = ([]);
   foreach( DBManager.list_groups(), string g )
@@ -85,9 +54,10 @@ string|mapping parse( RequestID id )
 
     string res =
       "<tr><td class='db'>" +
-      (view_mode ? "" : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'>") +
-      "<cimg style='vertical-align: -2px' border='0' format='gif'"
-      " src='&usr.database-small;' alt='' max-height='12'/> " +
+      (view_mode ?
+        "" :
+        "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'"
+        " class='icon db no-decoration'>") +
       db +
       (view_mode ? "" : "</a>") +
       "</td>";
@@ -120,16 +90,15 @@ string|mapping parse( RequestID id )
 
   if (sizeof (cats)) {
     res += "<thead>\n"
-      "<tr class='group-hdr'><th><br/>"
-      "<a style='font-size: larger'"
+      "<tr class='group-hdr'><th>"
+      "<a"
       " href='edit_group.pike?group=" + cats[0][1] + "&amp;&usr.set-wiz-id;'>" +
       cats[0][0] + "</a></th>";
     foreach( conf_cols, string conf )
     {
       res += "<th class='conf'>"
-	"<gtext href='/sites/site.html/" + conf + "/' "
-	"scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" +
-	get_conf_name(conf) + "</gtext>"
+        "<a href='/sites/site.html/" + conf + "/'>" +
+	get_conf_name(conf) + "</a>"
 	"</th>";
     }
     res += "</tr>\n</thead>\n" +
@@ -138,8 +107,8 @@ string|mapping parse( RequestID id )
     foreach( sort(cats[1..]), array q )
     {
       res += "<tbody>\n"
-	"<tr class='group-hdr'><th><br/>"
-	"<a style='font-size: larger'"
+	"<tr class='group-hdr'><th>"
+	"<a"
 	" href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" +
 	q[0] + "</a></th>" +
 	("<td></td>" *

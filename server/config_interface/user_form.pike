@@ -22,6 +22,10 @@ mapping parse(RequestID id)
 
   foreach (sort(roxen.list_admin_users()), string uid) {
     object u  = roxen.find_admin_user(uid);
+    if (!u) {
+      TRACE("Found no user for %O\n", uid);
+      continue;
+    }
     res += "<h3 class='section'>" + uid + "</h3>";
     res += u->form(nid);
   }

@@ -16,7 +16,7 @@ constant action="debug_info";
 
 
 string name= LOCALE(21, "Open files");
-string doc = LOCALE(22, 
+string doc = LOCALE(22,
 		    "Show a list of all open files and network connections.");
 
 // Debug functions.  List _all_ open filedescriptors
@@ -38,7 +38,8 @@ string fix_port(string p)
 string parse( RequestID id )
 {
   return
-    ("<font size='+1'><b>" +LOCALE(23, "Active filedescriptors")+ "</b></font>\n"+
+    ("<cf-title>" +LOCALE(23, "Active filedescriptors")+ "</cf-title>"
+     "<hr class='section'>"+
      sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
 	     "fd", "type", "mode", "details")+
 

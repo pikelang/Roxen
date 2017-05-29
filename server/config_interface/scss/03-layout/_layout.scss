@@ -116,6 +116,7 @@ main {
 .main-column {
   background: $main-column-bg;
   height: 100%;
+  width: 100%;
 
   .contents {
     padding: $site-padding;
@@ -215,14 +216,15 @@ h3 {
 }
 
 a {
-  color: $link-color;
+  color: lighten($link-color, 15%);
 
   &:hover {
-    color: lighten($link-color, 15%);
+    color: lighten($link-color, 25%);
   }
 }
 
-.section {
+.section,
+.tagdoc h2 {
   padding: $site-padding/2 0;
   margin: $site-padding 0;
   // background: $topmenu-bg;

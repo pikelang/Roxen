@@ -47,7 +47,7 @@ string nice_name( string what )
 {
   return map(replace(what, ([ "_":" ","-":" " ]) )/" ",capitalize)*" ";
 }
-  
+
 mixed parse(object id)
 {
   string res;
@@ -55,7 +55,7 @@ mixed parse(object id)
   array disabled = all_features - features;
 
   res =
-    "<font size='+1'><b>" + LOCALE(6, "Pike module list") + "</b></font>"
+    "<cf-title>" + LOCALE(6, "Pike module list") + "</cf-title>"
     "<p />"
     ""+ LOCALE(238, "Features") +"\n"
     "<ul>\n"+

@@ -68,16 +68,16 @@ mixed page_0(object id)
 mixed parse( RequestID id )
 {
   string ret =
-    "<font size='+1'><b>"+
+    "<cf-title>"+
     LOCALE(181,"Request profiling information")+
-    "</b></font><p />\n";
+    "</cf-title><p />\n";
   if (roxen->configurations[0]->profile_map) {
     ret +=
       LOCALE(183,"All times are in microseconds.") + "<br />\n"
       "<p />"
       "<input type='hidden' name='action' value='request_profiling.pike' />\n"
       "<p /><submit-gbutton2 name='refresh' width='75' align='center'>" +
-      LOCALE(186, "Refresh") + 
+      LOCALE(186, "Refresh") +
       "</submit-gbutton2>\n"
       "<submit-gbutton2 name='reset' width='75' align='center'>" +
       LOCALE(187,"Reset") +
@@ -88,10 +88,10 @@ mixed parse( RequestID id )
   } else {
     ret +=
       "<p />\n"
-      "<font color='&usr.warncolor;'>" +
+      "<div class='notify error'>" +
       LOCALE(184,"NOTE: This information is only available if the "
 	     "server has been stared with <tt>-DPROFILE</tt>.") +
-      "</font>"
+      "</div>"
       "<p />\n"
       "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";
   }

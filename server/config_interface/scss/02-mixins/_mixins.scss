@@ -91,3 +91,27 @@
     }
   }
 }
+
+.__icon {
+  &:before {
+    display: inline-block;
+    font-family: FontAwesome;
+    margin-right: $spacing-unit/2.5;
+  }
+
+  &:after {
+    display: none;
+  }
+}
+
+.__icon-after {
+  &:before {
+    display: none;
+  }
+
+  &:after {
+    display: inline-block;
+    margin-left: $spacing-unit/2.5;
+    font-family: FontAwesome;
+  }
+}

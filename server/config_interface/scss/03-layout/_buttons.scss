@@ -7,6 +7,12 @@
   text-align: left;
 }
 
+.button-group {
+  button {
+    margin-right: -4px;
+  }
+}
+
 button {
   &.perm {
     @extend .__icon;
@@ -37,3 +43,4 @@ button {
     }
   }
 }
+

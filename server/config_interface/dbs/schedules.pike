@@ -54,13 +54,13 @@ mapping|string parse( RequestID id )
   }
 
   string res =
-    "<h3>" + _(1026, "Backup schedules") + ":</h3>\n"
-    "<table width='100%'>\n"
-    "<tr><th align='left'>" + _(1027, "Schedule") +
-    "</th><th align='left'>" + _(1028, "Period") +
-    "</th><th align='left'>" + _(1029, "Time") +
-    "</th><th align='left'>" + _(1030, "Generations") +
-    "</th><th align='left'>" + _(1031, "Method") +
+    "<cf-title>" + _(1026, "Backup schedules") + ":</cf-title>\n"
+    "<table>\n"
+    "<tr><th style='width:120px'>" + _(1027, "Schedule") +
+    "</th><th style='width:110px'>" + _(1028, "Period") +
+    "</th><th style='width:110px'>" + _(1029, "Time") +
+    "</th><th style='width:110px'>" + _(1030, "Generations") +
+    "</th><th>" + _(1031, "Method") +
     "</th><th></th></tr>\n";
 
   foreach(db->query("SELECT id, schedule, period, offset, dir, "
@@ -76,7 +76,7 @@ mapping|string parse( RequestID id )
 	continue;
       }
       res += "<tr><td colspan='6'><hr></td></tr>"
-	"<tr><td><input size='10em' name='schedule-" + schedule->id + "' "
+	"<tr><td><input size='12em' name='schedule-" + schedule->id + "' "
 	"value='" + Roxen.html_encode_string(schedule->schedule) + "' />"
 	"</td>";
     } else {
@@ -137,16 +137,15 @@ mapping|string parse( RequestID id )
       "</select></default></td>\n"
       "</tr>\n"
       "<tr><td>&nbsp;</td><td colspan='4'>" +
-      _(1039, "Backup directory") +
-      ": <input size='75%' name='directory-" + schedule->id +
+      "<input size='75%' name='directory-" + schedule->id +
       "' type='string' value='" + Roxen.html_encode_string(schedule->dir||"") +
-      "' />"
+      "' placeholder='" + _(1039, "Backup directory") + "' />"
       "</td><td align='right'>";
     if (schedule->id != "1") {
-      res += "<submit-gbutton2 name='delete-" + schedule->id + "'>" +
+      res += "<submit-gbutton2 type='remove' name='delete-" + schedule->id + "'>" +
 	_(227, "Delete") + "</submit-gbutton2>";
     } else {
-      res += "<submit-gbutton2 name='new'>" + _(1118, "New") + "</submit-gbutton2>";
+      res += "<submit-gbutton2 name='new' type='add'>" + _(1118, "New") + "</submit-gbutton2>";
     }
     res += "</td></tr>\n";
     if (schedule->id == "1") {
@@ -162,7 +161,7 @@ mapping|string parse( RequestID id )
     sprintf((string)_(1119, "Default directory: %s"),
 	    Roxen.html_encode_string(roxen_path("$VARDIR/backup/"))) +
     "</td><td align='right'>"
-    "<submit-gbutton2 name='ok'> "+_("bA","Save")+" </submit-gbutton2></td>\n"
+    "<submit-gbutton2 name='ok' type='save'>"+_("bA","Save")+"</submit-gbutton2></td>\n"
     "</tr>\n"
     "</table>\n";
 

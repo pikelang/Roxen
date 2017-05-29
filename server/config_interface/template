@@ -18,6 +18,10 @@
   <if not variable='_.nosave'><cf-save/></if>
 </define>
 
+<define container="cf-title">
+  <h2 class='no-margin-top'><contents /></h2>
+</define>
+
 <define container="st-tabs" scope="st-tabs">
   <define preparse="1" variable="var.__tabs"><contents scope="st-tabs"/></define>
 </define>
@@ -173,7 +177,8 @@
 
 <define tag="cf-save">
   <!-- cf-save -->
-  <button name="save" class="rxn-admin-btn icon save"><translate id="bA">Save</translate></button>
+  <set variable="var._c" type='text/xml'><translate id="bA">Save</translate></set>
+  <button name="save" class="rxn-admin-btn icon save" value='&var._c;'>&var._c:none;</button>
 </define>
 <define tag="cf-ok"><submit-gbutton2 type="ok" name="ok"><translate id="201">OK</translate></submit-gbutton2></define>
 <define tag="cf-cancel"><link-gbutton type="cancel" href="&_.href;"><translate id="202">Cancel</translate></link-gbutton></define>

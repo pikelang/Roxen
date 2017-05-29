@@ -480,9 +480,9 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->diff="";
     if( !res["diff-txt"] && var->diff( 1 ) )
       res->diff =
-        "<a target=rxdiff_"+var->path()+
-        " href='"+diff_url( id, mod, var )+"'><link-gbutton>"+
-        LOCALE(502,"Diff")+"</link-gbutton></a>";
+        "<link-gbutton type='diff' target='rxdiff_"+var->path()+
+        "' href='"+diff_url( id, mod, var )+"'>"+
+        LOCALE(502,"Diff")+"</link-gbutton>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
@@ -1253,6 +1253,7 @@ class TagCfRenderVariable
             <submit-gbutton2 type='reset' name='{{field_name}}'
               onclick='return confirm(\"{{ confirm_text }}\")'
             >{{ label }} {{ &diff_text }}</submit-gbutton2>
+            {{ #diff }}{{ &diff }}{{ /diff }}
           {{ /changed }}
         </dd>
         {{ #field.doc }}
@@ -1283,6 +1284,8 @@ class TagCfRenderVariable
           "diff_text"     : _("diff-txt"),
           "diff"          : _("diff")
         ]);
+
+        // TRACE("Diff changed: %O\n", mctx);
       }
 
       mctx->field = ([

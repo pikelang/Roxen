@@ -11,7 +11,11 @@ LocaleString box_name = _(367,"Server status");
 LocaleString box_doc  = _(368,"Various global server statistics");
 
 string add_row( string item, string value ) {
-  return "<dl><dt>" + item + ":</dt><dd>" + value + "</dd></dl>";
+  return
+    "<tr>"
+      "<th style='width:25%'>" + item + "</th>"
+      "<td>" + value + "</td>"
+    "</tr>";
 }
 
 string parse( RequestID id )
@@ -58,6 +62,9 @@ string parse( RequestID id )
 		       sprintf ("%{%.2f %}", System.getloadavg()));
 #endif
 
-  return ("<cbox type='"+box+"' title='"+box_name+"'>"+
-	  contents+"</cbox>");
+  return
+    "<cbox type='"+box+"' title='"+box_name+"'>"
+    "<div class='negative-wrapper'>"
+    "<table class='nice'>" + contents+"</table>"
+    "</div></cbox>";
 }

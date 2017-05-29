@@ -136,6 +136,21 @@
       if (siteNavJs) {
         makeSiteNavJs(siteNavJs);
       }
+
+      const gotoSelects = document.querySelectorAll('select[data-goto]');
+      if (gotoSelects) {
+        gotoSelects.forEach(sel => {
+          sel.addEventListener('change',
+            e => {
+              const my = e.srcElement || e.target;
+              const url =  my.options[my.selectedIndex].value;
+
+              if (url) {
+                document.location.href = url;
+              }
+            });
+        });
+      }
     });
 
 }(window, document));

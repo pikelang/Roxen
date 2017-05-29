@@ -1,0 +1,56 @@
+.tagdoc {
+  h2 {
+    &+ p {
+      margin-top: 0;
+    }
+
+    @extend .__icon;
+    &:before {
+      content: '\f121';
+      color: $brand-color;
+      margin-right: $spacing-unit;
+    }
+  }
+
+  h3 {
+    border-bottom: 1px solid darken($body-color, 20%);
+    padding-bottom: $spacing-unit/2;
+  }
+
+  dt {
+    color: lighten($body-color, 10%);
+
+    &+ dd {
+      > i:first-of-type {
+        font-family: monospace;
+      }
+    }
+  }
+
+  dd {
+    p {
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    h3 {
+      font-family: monospace;
+      @include text-size(md);
+    }
+  }
+
+  table {
+    background: transparent !important;
+    border: 0 !important;
+
+    td {
+      border: 0 !important;
+    }
+
+    div[style*='white-space:'] {
+      padding: $site-padding;
+      background: darken($main-column-bg, 5%);
+    }
+  }
+}

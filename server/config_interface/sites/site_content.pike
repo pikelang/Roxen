@@ -52,7 +52,7 @@ string describe_tags( RoxenModule m, int q )
 
   array pi=map(indices(new->get_proc_instr_names()), Roxen.html_encode_string);
 
-  TRACE("tags: %O\n", conts);
+  // TRACE("tags: %O\n", conts);
 
   return
       String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
@@ -91,7 +91,7 @@ do                                                                      \
 {                                                                       \
    if(t&X)                                                              \
      if( Y )                                                            \
-       res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
+       res += ("<table class='auto'><tr>" \
                "<td valign='top'><nobr>" + #X + " (</nobr></td>"        \
                "<td valign='top'>"+(Y)(m,Z)+")</td></tr></table>");     \
      else                                                               \
@@ -335,7 +335,7 @@ string get_site_snmp(Configuration conf)
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
 
-      return "<h3>SNMP</h3>\n" +
+      return "<h2 class='section'>SNMP</h2>\n" +
         get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
     }
   }
@@ -347,10 +347,7 @@ string get_snmp_values(ADT.Trie mib,
                        array(int) oid_start,
                        void|array(int) oid_ignore)
 {
-  array(string) res = ({
-    "<th align='left'>Name</th>"
-    "<th align='left'>Value</th>"
-  });
+  array(string) res = ({});
 
   for (array(int) oid = oid_start; oid; oid = mib->next(oid)) {
     if (!has_prefix((string)oid, (string)oid_start)) {
@@ -385,21 +382,26 @@ string get_snmp_values(ADT.Trie mib,
     }
     res += ({
         sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
-                "<td>%s</td>",
+                "<td>%s%s</td>",
                 oid_string,
                 Roxen.html_encode_string(name),
-                Roxen.html_encode_string(val)),
+                Roxen.html_encode_string(val),
+                sizeof(doc)
+                  ? "<br><small>" + doc + "</small>"
+                  : "")
     });
-    if (sizeof(doc)) {
-      res += ({
-        sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
-      });
-    }
   }
 
-  return "<table><tr>" +
+  return
+    "<table class='nice'>"
+    "<thead><tr>"
+      "<th align='left'>Name</th>"
+      "<th align='left'>Value</th>"
+    "</tr></thead>"
+    "<tbody>"
+    "<tr>" +
     res * "</tr>\n<tr>" +
-    "</tr></table>\n";
+    "</tr></tbody></table>\n";
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -418,9 +420,9 @@ string niceerror( function tocall, string y )
         bt[1] = bt[1][i+2..];
         break;
       }
-    return sprintf("Error while calling "+ y+":<br /><pre><font size='-1'>"+
+    return sprintf("Error while calling "+ y+":<div class='notify error'><pre>"+
                    Roxen.html_encode_string( describe_backtrace( bt ) )+
-                   "</font></pre>" );
+                   "</pre></div>" );
   }
   return res;
 }
@@ -478,9 +480,9 @@ string find_module_doc( string cn, string mn, RequestID id )
 #endif
 
   if( .State->current_compile_errors[ cn+"!"+mn ] ) {
-    dbuttons += "<font color='&usr.warncolor;'><pre>"+
+    dbuttons += "<div class='notify error'><pre>"+
       .State->current_compile_errors[ cn+"!"+mn ]+
-      "</pre></font>";
+      "</pre></div>";
   }
 
   string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
@@ -571,7 +573,7 @@ string find_module_documentation( string conf, string mn, RequestID id )
     }
   }
 
-  return "<br />"+full_doc;
+  return "<div class='tagdoc'>" + full_doc + "</div>";
 }
 
 string module_page( RequestID id, string conf, string module )

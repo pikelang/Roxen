@@ -7,7 +7,7 @@
 constant action="debug_info";
 
 string name= LOCALE(35, "Thread backtrace");
-string doc = LOCALE(36, 
+string doc = LOCALE(36,
 		    "Shows a backtrace (stack) for each and every "
 		    "thread in Roxen.");
 
@@ -104,14 +104,15 @@ mixed parse( RequestID id )
     </style>
     <script language='javascript'>
      function toggle_vis(div_id, h3) {
-       var div = document.getElementById(div_id); 
+       var div = document.getElementById(div_id);
        var is_open = (div.className == 'open');
        div.className = is_open ? 'closed' : 'open';
        h3.className = is_open ? 'closed' : 'open';
      }
      </script>" +
-    "<font size='+1'><b>" + name + "</b></font>\n"
-    "<p><cf-refresh/></p>\n";
+    "<cf-title>" + name + "</cf-title>\n"
+    "<p><cf-refresh/></p>\n"
+    "<hr class='section'>";
 
   int hrnow = gethrtime();
   mapping(Thread.Thread:int) thread_task_start_times =
@@ -124,7 +125,7 @@ mixed parse( RequestID id )
       busy_time = sprintf(" &ndash; busy for %.3fs",
 			  (hrnow - start_hrtime) / 1e6);
     string th_name =
-      roxen.thread_name(threads[i], 1) || 
+      roxen.thread_name(threads[i], 1) ||
       sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
     res +=
       sprintf ("<h3 class='%s' "

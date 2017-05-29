@@ -1,17 +1,18 @@
 /*
  * $Id$
  */
+#include <config_interface.h>
 #include <stat.h>
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
+#define LOCALE(X,Y)     _DEF_LOCALE("admin_tasks",X,Y)
 
 constant action = "debug_info";
 
 LocaleString name= LOCALE(1,"Pike memory usage information");
 LocaleString doc = LOCALE(2,
-		    "Show some information about how Pike is using the "
-		    "memory it has allocated. Mostly useful for developers.");
+                    "Show some information about how Pike is using the "
+                    "memory it has allocated. Mostly useful for developers.");
 
 int creation_date = time();
 
@@ -37,10 +38,10 @@ string render_table(mapping last_usage, mapping mem_usage)
     {
       int factor = 1;
       if (has_prefix(f, "num_free_")) {
-	factor = -1;
+        factor = -1;
       }
       if(f!="num_total")
-	mem_usage->num_total += mem_usage[f];
+        mem_usage->num_total += mem_usage[f];
 
       string bn = f[4..sizeof(f)-2]+"_bytes";
       mem_usage->total_bytes += factor*mem_usage[ bn ];
@@ -51,52 +52,65 @@ string render_table(mapping last_usage, mapping mem_usage)
       int cmp = factor*mem_usage[bn]/60;
 
       if (!diff) {
-	// Look at the count diff instead.
-	diff = mem_usage[f]-last_usage[f];
-	cmp = mem_usage[f]/60;
+        // Look at the count diff instead.
+        diff = mem_usage[f]-last_usage[f];
+        cmp = mem_usage[f]/60;
       }
 
-      if(diff < cmp)
-	col="&usr.warncolor;";
-      if(diff == 0)
-	col="&usr.fgcolor;";
-      if(diff < 0)
-	col="&usr.fade4;";
+      if(diff < cmp) {
+        TRACE("Warn\n");
+        // col="&usr.warncolor;";
+        col = "more";
+      }
+      if(diff == 0) {
+        TRACE("Equal\n");
+        // col="&usr.fgcolor;";
+        col = "equal";
+      }
+      if(diff < 0) {
+        TRACE("Less than\n");
+        // col="&usr.fade4;";
+        col = "less";
+      }
 
       if( bn == "tota_bytes" )
         bn = "total_bytes";
       table += ({ ({
-	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
+        col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
         sprintf( "%.1f",mem_usage[bn]/1024.0),
         sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
       }) });
     }
   roxen->set_var("__memory_usage", mem_usage);
 
-#define HCELL(thargs, color, text)					\
-  ("<th " + thargs + ">"						\
-   "&nbsp;<font color='" + color + "'><b>" + text + "</b></font>&nbsp;"	\
-   "</th>")
-#define TCELL(tdargs, color, text)					\
-  ("<td " + tdargs + ">"						\
-   "&nbsp;<font color='" + color + "'>" + text + "</font>&nbsp;"	\
-   "</td>")
+#define HCELL(thargs, color, text)                                      \
+  ("<th " + thargs + ">" + text + "</th>")
+#define TCELL(tdargs, color, text)                                      \
+  ("<td " + tdargs + ">" + text + "</td>")
 
-  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    "</tr>\n";
-  foreach (table, array entry)
-    res += "<tr>" +
-      TCELL ("align='left' ", entry[0], entry[1]) +
-      TCELL ("align='right'", entry[0], entry[2]) +
-      TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) +
-      TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
-  res += "</table></p>\n";
+  res += "<table class='mem'><thead><tr>\n" +
+    HCELL ("", "", (string)LOCALE(3,"Type")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(4,"Number")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
+    HCELL ("class='text-right'", "", "Kb") +
+    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
+    "</tr></thead>\n";
+  foreach (table, array entry) {
+    if (entry[1] == "total") {
+      res += "<tfoot>";
+    }
+    res += "<tr class='" + entry[0] + "'>" +
+      TCELL ("", "", entry[1]) +
+      TCELL ("class='text-right'", "", entry[2]) +
+      TCELL ("class='text-right'", "", entry[3]) +
+      TCELL ("class='text-right'", "", entry[4]) +
+      TCELL ("class='text-right'", "", entry[5]) + "</tr>\n";
+
+    if (entry[1] == "total") {
+      res += "</tfoot>";
+    }
+  }
+  res += "</table>\n";
 
   return res;
 }
@@ -138,19 +152,19 @@ mixed page_0( object id )
     if (p == this_program && obj == this_object()) this_found = 1;
     if (p) {
       p = functionp (p) && Function.defined (p) ||
-	programp (p) && Program.defined (p) ||
-	p;
+        programp (p) && Program.defined (p) ||
+        p;
       catch {
-	// Paranoia catch.
-	refs[p] += Debug.refs(obj) - 2; // obj and stack.
-	mem[p] += Pike.count_memory (-1, obj);
+        // Paranoia catch.
+        refs[p] += Debug.refs(obj) - 2; // obj and stack.
+        mem[p] += Pike.count_memory (-1, obj);
       };
       if (++numobjs[p] <= 50) {
 #if 0
-	if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
-	  _locate_references (obj);
+        if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
+          _locate_references (obj);
 #endif
-	allobj[p] += ({obj});
+        allobj[p] += ({obj});
       }
     }
     else
@@ -167,11 +181,11 @@ mixed page_0( object id )
   foreach (allobj; string|program prog; array objs)
     for (int i = 0; i < sizeof (objs); i++) {
       if (catch {
-	  // The object might have become destructed since the walk above.
-	  // Just ignore it in that case.
-	  objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
-	})
-	objs[i] = 0;
+          // The object might have become destructed since the walk above.
+          // Just ignore it in that case.
+          objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+        })
+        objs[i] = 0;
     }
 
   mapping(string:int) mem_usage_afterwards = _memory_usage();
@@ -186,24 +200,23 @@ mixed page_0( object id )
   mapping gc_status = _gc_status();
   threads_disabled = 0;
 
-  string res = "<p>Current time: " + ctime (time()) + "</p>\n"
-    "<p>";
+  string res = "<p>Current time: " + ctime (time()) + "<br>\n";
   if (id->real_variables->gc || id->real_variables["gc.x"])
     res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%d%%)."),
-		    gc_freed, gc_freed + num_things_afterwards,
-		    gc_freed * 100 / (gc_freed + num_things_afterwards));
+                    gc_freed, gc_freed + num_things_afterwards,
+                    gc_freed * 100 / (gc_freed + num_things_afterwards));
   else
     res += sprintf (LOCALE(170, "%d seconds since last garbage collection, "
-			   "%d%% of the interval is consumed."),
-		    time() - gc_status->last_gc,
-		    (gc_status->num_allocs + 1) * 100 /
-		    (gc_status->alloc_threshold + 1));
+                           "%d%% of the interval is consumed."),
+                    time() - gc_status->last_gc,
+                    (gc_status->num_allocs + 1) * 100 /
+                    (gc_status->alloc_threshold + 1));
 
   res += "</p>\n";
 
   if (!this_found)
-    res += "<p><font color='&usr.warncolor;'>" + LOCALE(173, "Internal inconsistency") +
-      ":</font> " + LOCALE(174, "Object(s) missing in object link list.") + "</p>\n";
+    res += "<p><span class='notify warn inline'>" + LOCALE(173, "Internal inconsistency") +
+      ":</span> " + LOCALE(174, "Object(s) missing in object link list.") + "</p>\n";
 
   mapping last_low_usage =
     ([ "num_malloc_blocks":0, "malloc_block_bytes":0,
@@ -219,15 +232,15 @@ mixed page_0( object id )
   res += render_table(last_usage - last_low_usage, mem_usage - low_usage);
 
   if (walked_objects != mem_usage->num_objects) {
-    res += "<p><font color='&usr.warncolor;'>" + LOCALE(175, "Warning") + ":</font> ";
+    res += "<p><span class='notify warn inline'>" + LOCALE(175, "Warning") + ":</span> ";
     if (mem_usage_afterwards->num_objects != mem_usage->num_objects)
       res += LOCALE(176, "Number of objects changed during object walkthrough "
-		    "(probably due to automatic gc call) - "
-		    "the list below is not complete.");
+                    "(probably due to automatic gc call) - "
+                    "the list below is not complete.");
     else
       res += sprintf (LOCALE(177, "The object walkthrough visited %d of %d objects - "
-			     "the list below is not accurate."),
-		      walked_objects, mem_usage->num_objects);
+                             "the list below is not accurate."),
+                      walked_objects, mem_usage->num_objects);
     res += "</p>\n";
   }
 
@@ -243,9 +256,9 @@ mixed page_0( object id )
   array table = (array) allobj;
 
   string cwd = getcwd() + "/";
-  constant inc_color  = "&usr.warncolor;";
-  constant dec_color  = "&usr.fade4;";
-  constant same_color = "&usr.fgcolor;";
+  constant inc_color  = "more";
+  constant dec_color  = "less";
+  constant same_color = "";
 
   for (int i = 0; i < sizeof (table); i++) {
     [string|program prog, array(string) objs] = table[i];
@@ -268,28 +281,28 @@ mixed page_0( object id )
     if (sizeof (objs) > 2 || abs (change) > 2) {
       string progstr;
       if (stringp (prog)) {
-	if (has_prefix (prog, cwd))
-	  progstr = prog[sizeof (cwd)..];
-	else if (has_prefix (prog, roxenloader.server_dir + "/"))
-	  progstr = prog[sizeof (roxenloader.server_dir + "/")..];
-	else
-	  progstr = prog;
+        if (has_prefix (prog, cwd))
+          progstr = prog[sizeof (cwd)..];
+        else if (has_prefix (prog, roxenloader.server_dir + "/"))
+          progstr = prog[sizeof (roxenloader.server_dir + "/")..];
+        else
+          progstr = prog;
       }
       else progstr = "?";
 
       string color;
       if (no_save_numobjs) {
-	change = "N/A";
-	color = same_color;
+        change = "N/A";
+        color = same_color;
       }
       else {
-	if (change > 0) color = inc_color, change = "+" + change;
-	else if (change < 0) color = dec_color;
-	else color = same_color;
+        if (change > 0) color = inc_color, change = "+" + change;
+        else if (change < 0) color = dec_color;
+        else color = same_color;
       }
 
       table[i] = ({ color, progstr, objstr,
-		    numobjs[prog], change, refs[prog], mem[prog] });
+                    numobjs[prog], change, refs[prog], mem[prog] });
     }
     else table[i] = 0;
   }
@@ -299,10 +312,10 @@ mixed page_0( object id )
     if (entry[0] > 2) {
       string progstr;
       if (stringp (prog)) {
-	if (has_prefix (prog, cwd))
-	  progstr = prog[sizeof (cwd)..];
-	else
-	  progstr = prog;
+        if (has_prefix (prog, cwd))
+          progstr = prog[sizeof (cwd)..];
+        else
+          progstr = prog;
       }
       else progstr = "";
       table += ({({dec_color, progstr, entry[1], 0, -entry[0], 0, 0})});
@@ -311,22 +324,22 @@ mixed page_0( object id )
   }
 
   table = Array.sort_array (table - ({0}),
-			    lambda (array a, array b) {
-			      return a[3] < b[3] || a[3] == b[3] && (
-				a[2] < b[2] || a[2] == b[2] && (
-				  a[1] < b[1]));
-			    });
+                            lambda (array a, array b) {
+                              return a[3] < b[3] || a[3] == b[3] && (
+                                a[2] < b[2] || a[2] == b[2] && (
+                                  a[1] < b[1]));
+                            });
 
   roxen->set_var("__num_clones", save_numobjs);
 
-  res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(427,"Bytes")) +
-    "</tr>\n";
+  res += "<hr class='section'><table class='small mem'><thead><tr>\n" +
+    HCELL ("", "", (string)LOCALE(141,"Source")) +
+    HCELL ("", "", (string)LOCALE(142,"Program")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(403,"References")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(143,"Clones")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
+    HCELL ("class='text-right'", "", (string)LOCALE(427,"Bytes")) +
+    "</tr></thead>\n";
   string trim_path( string what )
   {
     sscanf( what, "%*s/lib/modules/%s", what );
@@ -334,37 +347,35 @@ mixed page_0( object id )
   };
 
   foreach (table, array entry)
-    res += "<tr>" +
-      TCELL ("align='left' ", entry[0],
-	     replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
-      TCELL ("align='left' ", entry[0],
-	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
-      TCELL ("align='right'", entry[0], entry[5]) +
-      TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) +
-      TCELL ("align='right'", entry[0], entry[6]) + "</tr>\n";
-  res += "</table></p>\n";
+    res += "<tr class='" + entry[0] + "'>" +
+      TCELL ("", "",
+             replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
+      TCELL ("", entry[0],
+             replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
+      TCELL ("class='num'", "", entry[5]) +
+      TCELL ("class='num'", "", entry[3]) +
+      TCELL ("class='num'", "", entry[4]) +
+      TCELL ("class='num'", "", entry[6]) + "</tr>\n";
+  res += "</table>\n";
 
   if (gc_status->non_gc_time)
     gc_status->gc_time_ratio =
       (float) gc_status->gc_time / gc_status->non_gc_time;
 
-  res += "<p><b>" + LOCALE(172,"Garbage collector status") + "</b><br />\n"
-    "<table border='0' cellpadding='0'>\n";
+  res += "<h3 class='section'>" + LOCALE(172,"Garbage collector status") + "</h3>\n"
+    "<table class='mem'>\n";
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +
-      TCELL ("align='left'", "&usr.fgcolor;",
-	     Roxen.html_encode_string (field)) +
-      TCELL ("align='left'", "&usr.fgcolor;",
-	     Roxen.html_encode_string (gc_status[field])) +
+      TCELL ("", "", Roxen.html_encode_string (field)) +
+      TCELL ("", "", Roxen.html_encode_string (gc_status[field])) +
       "</tr>\n";
   res += "</table></p>\n"
-    "<p><font size='-1'>" + LOCALE(401, #"\
+    "<p class='small'>" + LOCALE(401, #"\
 Note that the garbage collector referred to here is not the same as
 the one for the <a
 href='/actions/?action=cachestatus.pike&amp;class=status&amp;&usr.set-wiz-id;'>Roxen memory
 cache</a>. This is the low-level garbage collector used internally by
-the Pike interpreter.") + "</font></p>\n";
+the Pike interpreter.") + "</p>\n";
     ;
 
   return res;
@@ -373,15 +384,14 @@ the Pike interpreter.") + "</font></p>\n";
 mixed parse( RequestID id )
 {
   return
-    "<font size='+1'><b>"+
+    "<cf-title>"+
     LOCALE(1,"Pike memory usage information")+
-    "</b></font>"
-    "<p />"
+    "</cf-title>"
     "<input type='hidden' name='action' value='debug_info.pike' />\n"
-    "<p><submit-gbutton2 name='refresh' img-align='middle'> "
+    "<p><submit-gbutton2 name='refresh' type='refresh'> "
     "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
     "</submit-gbutton2>\n"
-    "<submit-gbutton2 name='gc' img-align='middle'> "
+    "<submit-gbutton2 name='gc' type='gc'> "
     "<translate id='0'>Run garbage collector</translate> "
     "</submit-gbutton2>\n"
     "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>\n" +

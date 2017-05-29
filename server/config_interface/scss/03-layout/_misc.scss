@@ -20,12 +20,32 @@
   text-align: right;
 }
 
+.nowrap {
+  white-space: nowrap;
+}
+
+.no-decoration {
+  text-decoration: none;
+}
+
 .no-margin-top {
   margin-top: 0;
 }
 
 .no-margin-bottom {
   margin-bottom: 0;
+}
+
+.margin-top {
+  margin-top: $spacing-unit;
+}
+
+.margin-bottom {
+  margin-bottom: $spacing-unit;
+}
+
+.negative-wrapper {
+  margin: -($site-padding);
 }
 
 .indent {
@@ -38,6 +58,14 @@
 
 .small {
   @include text-size(sm);
+}
+
+.large {
+  @include text-size(lg);
+}
+
+.x-large {
+  @include text-size(xl);
 }
 
 .action-btn-spacer {
@@ -61,8 +89,23 @@
   display: block;
 }
 
+.scrollable {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.pre {
+  white-space: pre;
+  font-family: monospace;
+}
+
 .cbox {
   background: lighten($body-bg, 0%);
+
+  & + .cbox {
+    margin-top: $site-padding;
+  }
 
   .content {
     padding: $site-padding;

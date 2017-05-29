@@ -23,13 +23,16 @@ mapping|string parse( RequestID id )
 	     "make backup button. Please note that you can only make backups "
 	     "of databases managed by Roxen.</p>");
   }
-  
-  if( !id->variables->db )
+
+  if( !id->variables->db)
   {
-    res += "<table width='100%'>\n"
-      "<tr><th colspan='2' align='left'>" + _(463, "Database") +
+    if (!sizeof(bks)) {
+      return "<div class='notify'>" + res + "</div>";
+    }
+    res += "<table class='nice'>\n"
+      "<thead><tr><th colspan='2' align='left'>" + _(463, "Database") +
       "</th><th align='left'>"+_(405,"Directory")+
-      "</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
+      "</th><th align='left'>"+_(459,"Date")+"</th></tr></thead>\n";
     foreach( sort( indices( bks ) ), string bk )
     {
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
@@ -103,7 +106,7 @@ mapping|string parse( RequestID id )
 	"</gtext> <br />"
 	"<input type=hidden name=db value='&form.db:http;' />"
 	"<input type=hidden name=dir value='&form.dir:http;' />";
-      
+
       res += "<blockquote><table>";
       int n;
       foreach( possible, string d )
@@ -138,7 +141,7 @@ mapping|string parse( RequestID id )
 	}
       }
       res += "</select>";
-      
+
       res += "</blockquote><table width='100%'><tr><td>"
 	"<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
 	"<td align=right><cf-cancel href='backups.html'/></td></tr>\n</table>\n";

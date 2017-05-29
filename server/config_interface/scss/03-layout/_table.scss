@@ -4,6 +4,14 @@ table {
   width: 100%;
   border-collapse: collapse;
 
+  &+ table {
+    margin-top: $spacing-unit;
+  }
+
+  pre {
+    margin: 0;
+  }
+
   th {
     text-align: left;
   }
@@ -60,6 +68,15 @@ table {
   td,
   th {
     padding-bottom: $spacing-unit/2;
+
+    &.num {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    &.no-padding {
+      padding: 0;
+    }
   }
 
   td + td,
@@ -98,6 +115,15 @@ table {
       border-top: 1px solid $topmenu-bg;
     }
 
+    &.auto {
+      tr {
+        td:first-child,
+        th:first-child {
+          padding-left: $spacing-unit;
+        }
+      }
+    }
+
     tr {
       &:hover {
         color: $white;
@@ -107,16 +133,20 @@ table {
     th,
     td {
       padding: $spacing-unit/2 $spacing-unit;
+      &.no-padding {
+        padding: 0;
+      }
     }
 
-    thead {
+    thead,
+    table table thead {
       background: $topmenu-bg;
     }
 
     tbody {
       background: lighten($main-column-bg, 2%);
 
-      tr {
+      > tr {
         &:nth-child(2n+1) {
           background: lighten($main-column-bg, 4%);
         }
@@ -126,7 +156,8 @@ table {
 
     tbody,
     tfoot,
-    .sum {
+    .sum,
+    .column-hdr {
       td,
       th {
         border-bottom: 1px solid $topmenu-bg;
@@ -139,12 +170,204 @@ table {
     }
 
     tfoot,
-    .sum {
+    .sum,
+    .column-hdr,
+    .tbl-details,
+    .tbl-open {
       font-weight: bold;
       color: $light-grey;
-      background: lighten($body-bg, 2%);
+      background: lighten($body-bg, 2%) !important;
+    }
+  }
+
+  .tbl-open {
+    > td {
+      a {
+        color: $brand-color;
+      }
+    }
+  }
+
+  &.db-list {
+    table {
+      border-left: 1px solid $topmenu-bg;
+      border-right: 1px solid $topmenu-bg;
+      border-bottom: 1px solid $topmenu-bg;
+      margin-bottom: $spacing-unit/2;
+
+      tbody {
+        tr {
+          &:last-child {
+            td {
+              border-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+
+    tbody {
+
+      .group-hdr {
+        background: $topmenu-bg !important;
+        th {
+          padding-top: $spacing-unit;
+          padding-bottom: $spacing-unit;
+          @include text-size(lg);
+        }
+
+        a {
+          text-decoration: none;
+          color: $light-grey;
+        }
+      }
+
+      .db {
+        a {
+          text-decoration: none;
+          font-weight: bold;
+          display: block;
+        }
+      }
+
+      .tbl-details {
+        font-weight: normal;
+        td {
+          .description {
+            padding: $spacing-unit/2 0;
+            font-style: italic;
+            border-bottom: 1px solid $topmenu-bg;
+          }
+        }
+      }
+    }
+  }
+
+  &.matrix {
+    width: auto;
+
+    a {
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .db,
+    .conf {
+      background: lighten($body-bg, 4%);
+    }
+
+    .conf {
+      height:   220px;
+      width:    40px;
+      position: relative;
+
+      a {
+        @include     text-size(sm);
+        position:    absolute;
+        bottom:      $spacing-unit/2;
+        white-space: nowrap;
+        display:     inline-block;
+        transform:   rotate(-90deg);
+        transform-origin: left center 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 190px;
+        // padding-left: $spacing-unit;
+      }
+    }
+
+    tr {
+      &:nth-child(2n+1) {
+        td {
+          &:not(.db) {
+            background: lighten($main-column-bg, 3%);
+          }
+        }
+      }
+    }
+
+    th,
+    td {
+      border: 1px solid lighten($body-bg, 1%);
+      padding: $spacing-unit/2 $spacing-unit;
+    }
+
+
+    td {
+      white-space: nowrap;
+      &:not(.db) {
+        a {
+          color: $body-color;
+          padding: 2px;
+
+          &:hover {
+            color: lighten($body-color, 35%);
+          }
+        }
+      }
+    }
+
+    .group-hdr {
+      > th {
+        text-align: center;
+
+        &:first-child {
+          width: 220px;
+          background: darken($body-bg, 2%);
+          vertical-align: bottom;
+          text-align: left;
+          border-top: 0;
+          border-left: 0;
+          padding-top: $spacing-unit*2;
+        }
+      }
+    }
+  }
+
+  &.mem {
+    width: auto;
+
+    thead {
+      th {
+        &:first-child {
+          width: 180px;
+        }
+      }
+    }
+
+    tr {
+      border-bottom: 1px dotted lighten($main-column-bg, 7%);
+    }
+
+    th,
+    td {
+      padding: $spacing-unit/3 0;
+      padding-right: $spacing-unit;
+    }
+
+    .less {
+      color: $grey;
+    }
+
+    .more {
+      color: $rxn-red;
+    }
+
+    tbody,
+    tfoot {
+      font-family: monospace;
+      tr {
+        &:hover {
+          background: lighten($main-column-bg, 3%);
+        }
+      }
+    }
+    thead {
+      border-bottom: 1px solid lighten($main-column-bg, 10%);
+    }
+    tfoot {
+      font-weight: bold;
+      border-top: 1px solid lighten($main-column-bg, 10%);
     }
   }
 }
-
-

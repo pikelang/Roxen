@@ -52,4 +52,12 @@
       @include make-icon(error, '\f06a') // fa-exclamation-circle
     }
   }
+
+  *:first-child {
+    margin-top: 0;
+  }
+
+  *:last-child {
+    margin-bottom: 0;
+  }
 }

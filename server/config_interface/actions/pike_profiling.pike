@@ -126,9 +126,9 @@ mixed page_0(object id)
 mixed parse( RequestID id )
 {
   return
-    "<font size='+1'><b>"+
+    "<cf-title>"+
     LOCALE(162, "Pike profiling information")+
-    "</b></font>"
+    "</cf-title>"
     "<p />"
 #if constant( get_profiling_info )
     "<input type='hidden' name='action' value='pike_profiling.pike' />\n"
@@ -138,10 +138,10 @@ mixed parse( RequestID id )
     "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/><p />\n" +
     page_0( id )
 #else
-    "<font color='&usr.warncolor;'>" +
+    "<div class='notify error'>" +
     LOCALE(185,"This information is only available if the "
 	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
-    "</font>"
+    "</div>"
     "<p />\n"
     "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";
 #endif
