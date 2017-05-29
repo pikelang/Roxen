@@ -1,0 +1,12 @@
+subject: Roxen 5.4: insert#href
+from: 94243dbd50fc5ab0a74d0f3e3b48644587198115
+to: 00da2db8ac07788774e18d39c904a5a4f8e2e57b
+originator: Marcus Wellhardh
+depends: 2017-05-05T084011
+restart: true
+
+• insert#href: Don't destruct Query object prematurely.
+
+This could lead to lookup in destructed object if the query didn't
+return any data (possibly because the other party closed the connection).
+RT#28704.
