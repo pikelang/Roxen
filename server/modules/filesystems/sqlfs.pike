@@ -38,7 +38,7 @@ void create()
   
   defvar("table", Variable.TableChoice( "docs", 0,
 				 _(61,"Filesystem table"),
-				 _(62,"The table that cotains the files."
+				 _(62,"The table that contains the files."
 				  " The table should contain at least the "
 				  "columns 'name' and 'contents'. Optionally "
 				  "you can also have the fields 'mtime', "

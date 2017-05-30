@@ -2749,6 +2749,9 @@ string strftime(string fmt, int t,
       case 'P':	// am or pm
 	res += lt->hour<12 ? "am" : "pm";
 	break;
+      case 'q':	// Quarter number [1,4] (Roxen-specific)
+	res += (string) ((lt->mon / 3) + 1);
+	break;
       case 'r':	// Time in 12-hour clock format with %p
 	res += strftime("%I:%M:%S %p", t);
 	break;
