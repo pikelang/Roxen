@@ -1,0 +1,204 @@
+<!-- -*- html -*- -->
+
+<if variable="roxen.product-name == Roxen CMS">
+  <theme-set what=logo                 to="R.svg" themefile />
+  <theme-set what=logo-html
+           to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product cms'>CMS</span></div></div>"/>
+</if>
+<elseif variable="roxen.product-name == Roxen EP">
+  <theme-set what=logo                 to="R.svg" themefile />
+  <theme-set what=logo-html
+	   to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product ep'>Editorial Portal</span></div></div>"/>
+</elseif>
+<else>
+  <theme-set what=logo                 to="R.svg" themefile />
+  <theme-set what=logo-html
+           to="<div id='roxen-product'><div class='R'><img src='&usr.logo;'></div><div class='text'><span class='roxen'>Roxen</span> <span class='product webserver'>Webserver</span></div></div>"/>
+</else>
+
+<set variable="var.fg" value="#000000"/>
+<set variable="var.top-fg" value="#33323f"/>
+<set variable="var.page-bg" value="#f2f1eb"/>
+<set variable="var.content-bg" value="#ffffff"/>
+<set variable="var.content-titlebg" value="#ebe9e0"/>
+<set variable="var.dark-bg" value="#c9c9c6"/>
+<set variable="var.decor" value="#f6f6ff"/>
+<set variable="var.decor-faint" value="#e9eefc"/>
+<set variable="var.decor-faint2" value="#7aa0e6"/>
+<set variable="var.decor-faint3" value="7190e0"/>
+<set variable="var.obox-titlebg" value="#dcdbd3"/>
+<set variable="var.tab-text" value="#000000"/>
+<set variable="var.tab-dim-text" value="#000000"/>
+<set variable="var.linkcolor" value="#2331d1"/>
+<set variable="var.edge" value="#979796"/>
+<set variable="var.edge-light" value="#b0b0af"/>
+
+<theme-set what=font	  to="verdana"/>
+
+<theme-set what=bgcolor   to="&var.page-bg;"/>
+<theme-set what=fgcolor	  to="&var.fg;"/>
+<theme-set what=warncolor to="#bc301a"/>
+
+<theme-set what=gbutton-font		to="verdana"/>
+<theme-set what=gbutton-width		to="70"/>
+<theme-set what=tabs-font		to="verdana"/>
+<theme-set what=top-bgcolor		to="&var.dark-bg;" />
+<theme-set what=top-fgcolor		to="&var.top-fg;" />
+<theme-set what=toptabs-dimtextcolor	to="&var.tab-dim-text;" />
+<theme-set what=toptabs-seltextcolor	to="&var.tab-text;" />
+<theme-set what=toptabs-bgcolor		to="none" />
+<theme-set what=toptabs-selcolor	to="&var.page-bg;" />
+<theme-set what=toptabs-frame		to="tabframe.xcf" themefile />
+<theme-set what=top-tableargs
+	   to="bgcolor='&var.dark-bg;'
+               style='background-image: url(/internal-roxen-pixel-979796);
+	              background-repeat: repeat-x;
+		      background-position: bottom;
+		      font-size: 11px;
+	   '"/>
+<theme-set what=toptabs-args
+	   to="frame-image='&usr.toptabs-frame;'
+               pagebgcolor='&usr.top-bgcolor;'
+               bgcolor='&usr.toptabs-bgcolor;'
+               font='&usr.font;'
+               dimcolor='&usr.toptabs-dimcolor;'
+               textcolor='&usr.toptabs-dimtextcolor;'
+               seltextcolor='&usr.toptabs-seltextcolor;'
+               selcolor='&usr.toptabs-selcolor;'
+               quant='128'
+               &usr.toptab-extraargs;
+               width='80'
+	       align='center'
+	       title=''
+	   "/>
+
+
+<theme-set what=subtabs-dimtextcolor to="&var.tab-dim-text;" />
+<theme-set what=subtabs-seltextcolor to="&var.tab-text;" />
+<theme-set what=subtabs-bgcolor      to="&var.page-bg;" />
+<theme-set what=subtabs-selcolor     to="&var.content-bg;" />
+<theme-set what=subtabs-frame        to="tabframe-sub.xcf" themefile />
+<theme-set what=subtabs-tableargs
+           to="bgcolor='&usr.subtabs-bgcolor;'
+	       align='left' valign='bottom'
+	       style='background-image: url(/internal-roxen-pixel-b0b0af);
+	              background-repeat: repeat-x;
+		      background-position: bottom
+		  '"/>
+<theme-set what=subtabs-args
+           to="frame-image='&usr.subtabs-frame;'
+               bgcolor='&usr.subtabs-bgcolor;'
+	       font='&usr.subtabs-font;'
+	       textcolor='&usr.subtabs-dimtextcolor;'
+               dimcolor='&usr.subtabs-dimcolor;'
+               seltextcolor='&usr.subtabs-seltextcolor;'
+               selcolor='&usr.subtabs-selcolor;'
+	       &usr.subtabs-extraargs;
+	       width='60'
+	       align='center'
+	       title=''
+	   "/>
+
+<theme-set what=leftside-padwidth    to=180 />
+<theme-set what=leftside-padheight   to=19 />
+<theme-set what=toptabs-padwidth     to=5 />
+<theme-set what=left-buttonwidth     to=180 />
+
+<theme-set what=content-bg to="&var.content-bg;" />
+<theme-set what=content-extratableargs
+	   to="style='
+	       border-left: 1px solid &var.edge-light;;
+	       border-right: 2px solid &var.edge;;
+	       border-bottom: 2px solid &var.edge;;
+	       '" />
+<theme-set what=content-toptableargs
+           to="cellpadding='0' cellspacing='5'" />
+<theme-set what=content-titlefg to="black"/>
+<theme-set what=content-titlebg to="&var.content-titlebg;"/>
+<theme-set what=module-list-frame to="box-frame" />
+<theme-set what=module-list-style to="xlist" />
+<theme-set what=doc-content-box to="yes" />
+<theme-set what=split2-width to="0" />
+
+<theme-set what=fade1     to="&var.decor;"/>
+<theme-set what=fade2     to="&var.decor-faint;"/>
+<theme-set what=fade3     to="&var.decor-faint2;"/>
+<theme-set what=fade4     to="&var.decor-faint3;"/>
+
+<theme-set what=next			to="next.gif" themefile />
+<theme-set what=selected-indicator	to="bullet-black.gif" themefile />
+<theme-set what=item-indicator		to="bullet.gif" themefile />
+<theme-set what=padlock			to="padlock.gif" themefile />
+<theme-set what=unfolded		to="open-folder.gif" themefile />
+<theme-set what=folded			to="closed-folder.gif" themefile />
+<theme-set what=fold                    to="fold.gif" themefile/>
+<theme-set what=unfold                  to="unfold.gif" themefile/>
+
+<theme-set what=left-buttonbg     to="&var.page-bg;"/>
+<theme-set what=left-selbuttonbg  to="&var.content-bg;"/>
+<theme-set what=left-tableargs    to="valign=top width='180'"/>
+<theme-set what=left-buttonframe  to="gbutton.xcf" themefile />
+
+<!-- 
+  Now, this is ugly. :-) The only reason is that the browsers
+  really, really want to cache this image, so let's add something that
+  change now and then to the URL. This has the somewhat unexpected
+  side-benefit of making the image stay the same for somewhat longer
+  at a time, namely, one minute.
+-->
+
+<set variable="var.time"><date time="" /></set>
+<theme-set what=left-image to="image.pike?&var.time;" themefile />
+<theme-set what=lef-top-thtml
+           to="<img src='/inernal-roxen-unit' width=1 height=10>" />
+<theme-set what=lefthtml to="<br /><br />" />
+<!--define variable="var.leftside"></define-->
+
+
+<theme-set what=list-style-boxes to="list-style-boxes" />
+<theme-set what=obox-titlefg to="&var.tab-text;"/>
+<theme-set what=obox-titlebg to="&var.obox-titlebg;"/>
+<theme-set what=obox-border to="&var.edge;"/>
+<theme-set what=obox-titlefont to="Verdana, Arial, Helvetica, sans-serif"/>
+<theme-set what=obox-titlestyle to="font-size: 90%;"/>
+<theme-set what=obox-bodybg to="&var.content-bg;"/>
+
+<theme-set what=gbutton-frame-image to="gbutton.xcf"  themefile />
+<theme-set what=gbutton-disabled-frame-image to="gbutton-disabled.xcf"  themefile />
+
+<theme-set what=linkcolor to="&var.linkcolor;"/>
+<theme-set what=body-args
+           to="topmargin='0' leftmargin='0' rightmargin='0'
+	       link='&usr.linkcolor;' alink='&usr.fade1;'
+	       vlink='&usr.linkcolor;' bgcolor='&usr.bgcolor;'
+	       text='&usr.fgcolor;' style='margin: 0;padding: 0;'" />
+
+<theme-set what=err-1 to="err_1.gif" themefile/>
+<theme-set what=err-2 to="err_2.gif" themefile/>
+<theme-set what=err-3 to="err_3.gif" themefile/>
+
+<theme-set what="database-small" to="left-images/database-small.gif" themefile/>
+
+<theme-path match='/settings.html*'>
+  <theme-set what=left-image to="left-images/lock.gif" themefile />
+</theme-path>
+
+<theme-path match='/users.html*'>
+  <theme-set what=left-image to="left-images/lock.gif" themefile />
+</theme-path>
+
+<theme-path match='/global_settings/*'>
+  <theme-set what=left-image to="left-images/earth.gif" themefile />
+</theme-path>
+
+<theme-path match='/actions/*'>
+  <theme-set what=left-image to="left-images/admin.gif" themefile />
+</theme-path>
+
+<theme-path match='/dbs/*'>
+  <theme-set what=left-image to="left-images/database.gif" themefile />
+</theme-path>
+
+<theme-path match='/sites/*'>
+  <theme-set what=left-image to="/internal-roxen-unit" themefile />
+</theme-path>

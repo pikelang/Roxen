@@ -35,6 +35,7 @@ void add_id(array to)
       q[0]+=get_id(q[0]);
 }
 
+#if 0
 string link_to(string what, object id, int qq)
 {
   int line;
@@ -48,6 +49,7 @@ string link_to(string what, object id, int qq)
   }
   return "<a>";
 }
+#endif
 
 string format_backtrace(array bt, object id)
 {
@@ -56,7 +58,7 @@ string format_backtrace(array bt, object id)
   foreach(bt-({""}), string line)
   {
     line += get_id( (line/":")[0] );
-    res += ("<li value="+(--q)+"> "+Roxen.html_encode_string(line)+"<br />\n");
+    res += ("<li value="+(--q)+"> "+Roxen.html_encode_string(line)+"</li>\n");
   }
   return res;
 }
@@ -89,30 +91,9 @@ mixed parse( RequestID id )
     });
 
   string res =
-    #"
-    <style type='text/css'>
-      ol.open li   { display: list-item; }
-      ol.closed li { display: none; }
-      h3 {
-        cursor: pointer;
-        background: url('&usr.fold;') -4px 60% no-repeat;
-        padding-left: 18px;
-      }
-      h3.closed {
-        background-image: url('&usr.unfold;');
-      }
-    </style>
-    <script language='javascript'>
-     function toggle_vis(div_id, h3) {
-       var div = document.getElementById(div_id);
-       var is_open = (div.className == 'open');
-       div.className = is_open ? 'closed' : 'open';
-       h3.className = is_open ? 'closed' : 'open';
-     }
-     </script>" +
-    "<cf-title>" + name + "</cf-title>\n"
-    "<p><cf-refresh/></p>\n"
-    "<hr class='section'>";
+    #"<cf-title>" + name + "</cf-title>\n"
+     "<p><cf-refresh/></p>\n"
+     "<hr class='section'>";
 
   int hrnow = gethrtime();
   mapping(Thread.Thread:int) thread_task_start_times =
@@ -128,21 +109,18 @@ mixed parse( RequestID id )
       roxen.thread_name(threads[i], 1) ||
       sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
     res +=
-      sprintf ("<h3 class='%s' "
-	       " onclick='toggle_vis(\"%s\", this); return false;'>"
+      sprintf ("<h3 class='icon toggle-%s' data-toggle-next='ol'>"
 	       "%s%s</h3>\n"
-	       "<ol class='%s' id='%s'> %s</ol>\n",
+	       "<ol class='backtrace %s'>%s</ol>\n",
 	       open_state,
-	       "bt_" + div_num,
 	       th_name,
 	       busy_time,
 	       open_state,
-	       "bt_" + div_num,
 	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
 				"\n", id));
     div_num++;
   }
 
-  return res+"<p><cf-ok/></p>";
+  return res+"<hr class='section'><p><cf-ok/></p>";
 }
 #endif /* constant(all_threads) */

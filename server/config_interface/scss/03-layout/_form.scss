@@ -73,7 +73,11 @@ input {
                "[type='image']")
   {
     @extend .__input;
-    // width: 100%;
+  }
+
+  &[size='60'] {
+    width: 100%;
+    max-width: 550px;
   }
 
   &[type='number'] {

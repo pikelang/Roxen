@@ -1,3 +1,10 @@
+[data-toggle-next] {
+  cursor: pointer;
+
+  &:hover {
+    color: lighten($light-grey, 10%);
+  }
+}
 
 .site-width {
   max-width: $site-width;
@@ -98,6 +105,19 @@
 .pre {
   white-space: pre;
   font-family: monospace;
+}
+
+.diff {
+  background: $main-column-bg;
+  padding: $site-padding;
+
+  font[color='darkred'] {
+    color: $diff-red-color;
+  }
+
+  font[color='darkgreen'] {
+    color: $diff-green-color;
+  }
 }
 
 .cbox {

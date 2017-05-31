@@ -223,12 +223,23 @@ a {
   }
 }
 
-.section,
-.tagdoc h2 {
+.section {
   padding: $site-padding/2 0;
   margin: $site-padding 0;
   // background: $topmenu-bg;
   border-top: 1px dashed lighten($body-bg, 25%);
+}
+
+.__pre {
+  line-height: 1.3;
+  white-space: pre-wrap;
+  padding: $site-padding;
+  background: darken($main-column-bg, 5%);
+  color: $grey;
+}
+
+pre {
+  @extend .__pre;
 }
 
 hr {

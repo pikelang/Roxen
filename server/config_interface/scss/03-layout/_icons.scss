@@ -2,38 +2,48 @@
 &.icon {
   @extend .__icon;
 
-  @include make-icon(save,        '\f0c7') // fa-save
-  @include make-icon(user,        '\f007') // fa-user
-  @include make-icon(create-user, '\f235') // fa-user-plus
-  @include make-icon(delete-user, '\f235') // fa-user-times
-  @include make-icon(cancel,      '\f05e') // fa-ban
-  @include make-icon(clear,       '\f05e') // fa-ban
-  @include make-icon(ok,          '\f00c') // fa-check
-  @include make-icon(refresh,     '\f021') // fa-refresh
-  @include make-icon(reload,      '\f021') // fa-refresh
-  @include make-icon(reset,       '\f122') // fa-reply-all
-  @include make-icon(add,         '\f055') // fa-plus-circle
-  @include make-icon(remove,      '\f056') // fa-minus-circle
-  @include make-icon(delete,      '\f056') // fa-minus-circle
-  @include make-icon(next,        '\f101') // fa-angle-double-right
-  @include make-icon(warn,        '\f071') // fa-warning
-  @include make-icon(error,       '\f06a') // fa-exclamation-circle
-  @include make-icon(info,        '\f05a') // fa-info-circle
-  @include make-icon(up,          '\f077') // fa-chevron-up
-  @include make-icon(down,        '\f078') // fa-chevron-down
-  @include make-icon(db,          '\f1c0') // fa-database
-  @include make-icon(sort,        '\f0dc') // fa-sort
-  @include make-icon(sort-desc,   '\f0dd') // fa-sort-desc
-  @include make-icon(sort-asc,    '\f0de') // fa-sort-asc
-  @include make-icon(table,       '\f0ce') // fa-sort-asc
-  @include make-icon(diff,        '\f126') // fa-code-forḱ
-  @include make-icon(fork,        '\f126') // fa-code-forḱ
-  @include make-icon(gc,          '\f1b8') // fa-recycle
+  @include make-icon(save,         '\f0c7') // fa-save
+  @include make-icon(user,         '\f007') // fa-user
+  @include make-icon(create-user,  '\f235') // fa-user-plus
+  @include make-icon(delete-user,  '\f235') // fa-user-times
+  @include make-icon(cancel,       '\f05e') // fa-ban
+  @include make-icon(clear,        '\f05e') // fa-ban
+  @include make-icon(ok,           '\f00c') // fa-check
+  @include make-icon(refresh,      '\f021') // fa-refresh
+  @include make-icon(reload,       '\f021') // fa-refresh
+  @include make-icon(reset,        '\f122') // fa-reply-all
+  @include make-icon(add,          '\f055') // fa-plus-circle
+  @include make-icon(remove,       '\f056') // fa-minus-circle
+  @include make-icon(delete,       '\f056') // fa-minus-circle
+  @include make-icon(next,         '\f101') // fa-angle-double-right
+  @include make-icon(warn,         '\f071') // fa-warning
+  @include make-icon(error,        '\f06a') // fa-exclamation-circle
+  @include make-icon(info,         '\f05a') // fa-info-circle
+  @include make-icon(up,           '\f077') // fa-chevron-up
+  @include make-icon(down,         '\f078') // fa-chevron-down
+  @include make-icon(db,           '\f1c0') // fa-database
+  @include make-icon(sort,         '\f0dc') // fa-sort
+  @include make-icon(sort-desc,    '\f0dd') // fa-sort-desc
+  @include make-icon(sort-asc,     '\f0de') // fa-sort-asc
+  @include make-icon(table,        '\f0ce') // fa-sort-asc
+  @include make-icon(diff,         '\f126') // fa-code-forḱ
+  @include make-icon(fork,         '\f126') // fa-code-forḱ
+  @include make-icon(gc,           '\f1b8') // fa-recycle
+  @include make-icon(toggle-open,  '\f146') // fa-minus-square
+  @include make-icon(toggle-closed,'\f0fe') // fa-plus-square
 
   &.up,
   &.down {
     &:before {
       margin-right: 0;
     }
+  }
+}
+
+h3.icon {
+  &:before {
+    font-size: small;
+    vertical-align: middle;
+    margin-top: -2px;
   }
 }

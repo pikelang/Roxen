@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
+// This is a roxen module. Copyright Â© 1999 - 2009, Roxen IS.
 //
 inherit "module";
 inherit "html";
@@ -1293,6 +1293,10 @@ class TagCfRenderVariable
         "form" : _("form"),
         "doc"  : _("doc")
       ]);
+
+      // FIXME: I've currently disabled this option in the
+      //        Admin/Your Settings page, and if that's the way to go this
+      //        switch can be scrapped.
 
       switch (usr("changemark")) {
         case "not":

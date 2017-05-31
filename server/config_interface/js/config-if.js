@@ -3,6 +3,17 @@
 (function(window, document) {
   'use strict';
 
+  const findNext = function(el, what) {
+    let next = el.nextSibling;
+    what = what.toUpperCase();
+
+    while (next && next.nodeName !== what) {
+      next = next.nextSibling;
+    }
+
+    return next;
+  };
+
   // Handle all elements with a data-href attribute
   const handleDataHref = function(el, e) {
     e.preventDefault();
@@ -80,6 +91,20 @@
     src.classList.toggle('closed');
   };
 
+  const handleToogleNext = function(src, e) {
+    const type = src.dataset.toggleNext;
+    const next = findNext(src, type);
+
+    if (next) {
+      if (!src.classList.contains('toggle-open')) {
+        src.classList.add('toggle-open');
+      }
+
+      src.classList.toggle('toggle-closed');
+      next.classList.toggle('closed');
+    }
+  };
+
   // Trigger a custom `event` on `el`
   const trigger = function(el, event, options) {
     let ev;
@@ -124,6 +149,9 @@
           }
           else if (ds.submit !== undefined) {
             return handleDataSubmit(src, e);
+          }
+          else if (ds.toggleNext) {
+            handleToogleNext(src, e);
           }
           else if (src.nodeName === 'SPAN' &&
                    src.classList.contains('toggle'))

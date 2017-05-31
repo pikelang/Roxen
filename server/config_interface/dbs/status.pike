@@ -58,7 +58,7 @@ string parse( RequestID id )
       total += connections[c];
     }
   }
-  res += "<tr><td></td><td></td><td align=right>"+total+"</td></tr>";
+  res += "<tfoot><tr><td colspan='3' class='num'>Total: "+total+"</td></tr></tfoot>";
   res += "</table>";
 
   // Inactive connections.
@@ -81,7 +81,7 @@ string parse( RequestID id )
       connections[c]+"</td></tr>\n";
     total += connections[c];
   }
-  res += "<tr><td></td><td></td><td align=right>"+total+"</td></tr>";
+  res += "<tfoot><tr><td colspan='3' class='num'>Total: "+total+"</td></tr></tfoot>";
   res += "</table>";
 
 #ifdef DB_DEBUG

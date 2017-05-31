@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2000 - 2009, Roxen IS.
+// Copyright Â© 2000 - 2009, Roxen IS.
 //
 // Core part of the configuration user database.  Handles creation of
 // users and permissions, and verifies users against the database.
@@ -68,6 +68,7 @@ class ConfigIFCache
       query("REPLACE INTO "+dir+" VALUES (%s,%s)", name, encode_value(to));
       return to;
     }
+
 
     Stdio.File f;
     int mode = 0770;
@@ -339,6 +340,10 @@ class ConfigurationSettings
       return 0;
     };
 
+    int hide_defvar(RequestID i, Variable.Variable v) {
+      return 1;
+    };
+
     defvar( "left_boxes",
             BoxVariable( LOCALE(285,"Large Content Boxes"),
                          LOCALE(287,"Content boxes on the Startpage"),
@@ -353,17 +358,21 @@ class ConfigurationSettings
                                     LOCALE(327,"Theme"),
                                     LOCALE(343,"The theme to use") ) );
 
+
     defvar( "form-font-size", -1, LOCALE(167,"Form font size"),
             TYPE_INT_LIST,
             LOCALE(178,"The fontsize of the variables in the "
                    "configuration interface"),
-            ({ -2, -1, 0, 1, 2, }) );
+            ({ -2, -1, 0, 1, 2, }) )
+            ->set_invisibility_check_callback( hide_defvar );
 
     defvar( "docs-font-size", -1, LOCALE(179,"Documentation font size"),
             TYPE_INT_LIST,
             LOCALE(193,"The fontsize of the documentation in the "
                    "configuration interface"),
-            ({ -2, -1, 0, 1, 2, }) );
+            ({ -2, -1, 0, 1, 2, }) )
+            ->set_invisibility_check_callback( hide_defvar );
+
 
     mixed listmode_var =
     defvar( "modulelistmode", "uf",
@@ -441,9 +450,9 @@ class ConfigurationSettings
             LOCALE(243, "How to highlight variables that does not have "
                    "their default value" ),
             ([
-              "not"   :LOCALE(244, "Not at all"),
+              // "not"   :LOCALE(244, "Not at all"),
               "color" :LOCALE(268, "Different background color"),
-              "header":LOCALE(302, "Add a header")
+              // "header":LOCALE(302, "Add a header")
             ]) );
 
     defvar( "docs", 1, LOCALE(174, "Show documentation"),
@@ -476,21 +485,25 @@ class ConfigurationSettings
                    "useful for non-developer users. If you develop your own "
                    "Roxen modules, this option is for you."));
 
+
     defvar( "bgcolor", "white", LOCALE(182, "Background color"),
             TYPE_STRING,
             LOCALE(183, "Administration interface background color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+            ->set_invisibility_check_callback( hide_defvar );
 
     defvar( "fgcolor", "black", LOCALE(184, "Text color"),
             TYPE_STRING, LOCALE(185, "Administration interface text color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+            ->set_invisibility_check_callback( hide_defvar );
 
     defvar( "linkcolor", "darkblue", LOCALE(186, "Link color"),
             TYPE_STRING, LOCALE(185, "Administration interface text color."))
-            ->set_invisibility_check_callback( theme_can_change_colors );
+            ->set_invisibility_check_callback( hide_defvar );
 
     defvar( "font", "roxen builtin", LOCALE(187, "Font"),
-            TYPE_FONT, LOCALE(188, "Administration interface font."));
+            TYPE_FONT, LOCALE(188, "Administration interface font."))
+            ->set_invisibility_check_callback( hide_defvar );
+
+
 
     defvar( "group_tasks", 1, LOCALE(303,"Group Tasks"),
             TYPE_FLAG, LOCALE( 304, "If true, tasks are grouped acording to "

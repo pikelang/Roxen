@@ -127,3 +127,28 @@ dt {
   }
 }
 
+ol {
+  &.backtrace {
+    @include text-size(sm);
+    font-family: monospace;
+    list-style: square outside;
+    padding-left: 18px;
+    margin-left: 0px;
+    background: transparent url(/internal-roxen-pixel-52524c) 4px repeat-y;
+
+    li {
+      border-bottom: 1px dotted lighten($main-column-bg, 10%);
+      margin-bottom: $spacing-unit/2;
+      padding-bottom: $spacing-unit/2;
+
+      &:first-child {
+        padding-top: $spacing-unit/2;
+        border-top: 1px dotted lighten($main-column-bg, 10%);
+      }
+    }
+  }
+
+  &.closed {
+    display: none;
+  }
+}

@@ -117,7 +117,7 @@ void set_up_ftp_variables( Protocol o )
 	  LOCALE(60, "Welcome text"), TYPE_TEXT,
           LOCALE(61, "The text shown to the user on connect.") );
 
-  defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"), 
+  defvar( "ftp_user_session_limit", 0, LOCALE(62, "User session limit"),
 	  TYPE_INT,
           LOCALE(63, "The maximum number of times a user can connect at once."
           " 0 means unlimited.") );
@@ -128,18 +128,18 @@ void set_up_ftp_variables( Protocol o )
 		 "you will need to have the \"Authentication: Password\" "
 		 "module in your site.") );
 
-  defvar( "guest_ftp", 1, 
-	  LOCALE(66, "Allow login with incorrect password/user"), 
+  defvar( "guest_ftp", 1,
+	  LOCALE(66, "Allow login with incorrect password/user"),
 	  TYPE_FLAG,
           LOCALE(67, "If yes, users can connect with the wrong password "
 		 "and/or username. This is useful since things like .htaccess "
 		 "files can later on authenticate the user."));
 
-  defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"), 
+  defvar( "anonymous_ftp", 1, LOCALE(68, "Allow anonymous ftp"),
 	  TYPE_FLAG,
           LOCALE(69, "If yes, anonymous users are allowed to connect.") );
 
-  defvar( "shells", "",  LOCALE(70, "Shell database"), 
+  defvar( "shells", "",  LOCALE(70, "Shell database"),
 	  TYPE_FILE,
           LOCALE(71, "If this string is set to anything but the empty string, "
           "it should specify a file containing a list of valid shells. "
@@ -413,7 +413,7 @@ class PortOptions
 };
 
 array(string) old_module_dirs;
-void zap_all_module_caches( Variable.Variable v ) 
+void zap_all_module_caches( Variable.Variable v )
 {
   if( !equal( v->query(), old_module_dirs ) )
   {
@@ -442,7 +442,7 @@ void define_global_variables(  )
 			      "Normal check and repair",
 			      "Medium check and repair",
 			      "Extended check and repair" }),
-			   0, LOCALE(1014, "MySQL table check"), 
+			   0, LOCALE(1014, "MySQL table check"),
 			   LOCALE(1015, "Check MySQL tables on server start, "
 				  "and automatically repair if necessary. "
 				  "<b>Fast</b> checks only tables that haven't "
@@ -502,7 +502,7 @@ void define_global_variables(  )
 	  "bandwidth statistics on the log file will be incorrect. The "
 	  "statistics in Roxen will still be correct.</p>"));
 
-  defvar("default_font", "roxen builtin", LOCALE(92, "Default font"), 
+  defvar("default_font", "roxen builtin", LOCALE(92, "Default font"),
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
@@ -510,32 +510,32 @@ void define_global_variables(  )
          LOCALE(94, "Font directories"), TYPE_DIR_LIST,
 	 LOCALE(95, "This is where the fonts are located."));
 
-  defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"), 
+  defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"),
 	 TYPE_FLAG,
 	 LOCALE(522, "If set to Yes, fonts will be oversampled resulting "
 		"in higher quality but more fuzz. This will require clearing "
 		"of various graphics caches like the Graphic text and "
 		"GButton caches to take full effect."));
 
-  defvar("logdirprefix", getenv("LOGDIR") || "../logs/", 
+  defvar("logdirprefix", getenv("LOGDIR") || "../logs/",
 	 LOCALE(96, "Logging: Log directory prefix"),
 	 TYPE_STRING|VAR_MORE,
 	 LOCALE(97, "This is the default file path that will be prepended "
 		"to the log file path in all the default modules and the "
 		"site."));
 
-  defvar("cache", 0, LOCALE(98, "Cache: Proxy Disk Cache Enabled"), 
+  defvar("cache", 0, LOCALE(98, "Cache: Proxy Disk Cache Enabled"),
 	 TYPE_FLAG,
 	 LOCALE(99, "If set to Yes, caching will be enabled."));
 
-  defvar("garb_min_garb", 1, 
+  defvar("garb_min_garb", 1,
 	 LOCALE(100, "Cache: Proxy Disk Cache Clean size"),
 	 TYPE_INT,
 	 LOCALE(101, "Minimum number of Megabytes removed when a garbage collect is done."),
 	  0, cache_disabled_p);
 
   defvar("cache_minimum_left", 5,
-	 LOCALE(102, "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"), 
+	 LOCALE(102, "Cache: Proxy Disk Cache Minimum available free space and inodes (in %)"),
 	 TYPE_INT,
 	 LOCALE(103, "If less than this amount of disk space or inodes (in %) "
 		"is left, the cache will remove a few files. This check may "
@@ -549,15 +549,15 @@ void define_global_variables(  )
 #endif /* filesystem_stat */
 	 );
 
-  defvar("cache_size", 25, LOCALE(104, "Cache: Proxy Disk Cache Size"), 
+  defvar("cache_size", 25, LOCALE(104, "Cache: Proxy Disk Cache Size"),
 	 TYPE_INT,
 	 LOCALE(105, "How many MB may the cache grow to before a garbage "
 		"collect is done?"),
 	 0, cache_disabled_p);
 
   defvar("cache_max_num_files", 0,
-	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"), 
-	 TYPE_INT, 
+	 LOCALE(106, "Cache: Proxy Disk Cache Maximum number of files"),
+	 TYPE_INT,
 	 LOCALE(107, "How many cache files (inodes) may be on disk before "
 		"a garbage collect is done? May be left at zero to disable "
 		"this check."),
@@ -591,13 +591,13 @@ void define_global_variables(  )
 
   defvar("cache_keep_without_content_length", 1,
 	 LOCALE(114, "Cache: Proxy Disk Cache Keep without Content-Length"),
-	 TYPE_FLAG, 
+	 TYPE_FLAG,
 	 LOCALE(115, "Keep files without Content-Length header information "
 		"in the cache?"),
 	 0, cache_disabled_p);
 
   defvar("cache_check_last_modified", 0,
-	 LOCALE(116, "Cache: Proxy Disk Cache Refreshes on Last-Modified"), 
+	 LOCALE(116, "Cache: Proxy Disk Cache Refreshes on Last-Modified"),
 	 TYPE_FLAG,
 	 LOCALE(117, "If set, refreshes files without Expire header "
 		"information when they have reached double the age they had "
@@ -606,14 +606,14 @@ void define_global_variables(  )
 	 0, cache_disabled_p);
 
   defvar("cache_last_resort", 0,
-	 LOCALE(118, "Cache: Proxy Disk Cache Last resort (in days)"), 
+	 LOCALE(118, "Cache: Proxy Disk Cache Last resort (in days)"),
 	 TYPE_INT,
 	 LOCALE(119, "How many days shall files without Expires and without "
 		"Last-Modified header information be kept?"),
 	 0, cache_disabled_p);
 
   defvar("cache_gc_logfile",  "",
-	 LOCALE(120, "Cache: Proxy Disk Cache Garbage collector logfile"), 
+	 LOCALE(120, "Cache: Proxy Disk Cache Garbage collector logfile"),
 	 TYPE_FILE,
 	 LOCALE(121, "Information about garbage collector runs, removed and "
 		"refreshed files, cache and disk status goes here."),
@@ -622,7 +622,7 @@ void define_global_variables(  )
   /// End of cache variables..
 
   // FIXME: Should mention real_version.
-  defvar("default_ident", 1, 
+  defvar("default_ident", 1,
 	 LOCALE(124, "Identify, Use default identification string"),
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(125, "Setting this variable to No will display the "
@@ -639,22 +639,22 @@ void define_global_variables(  )
 	 "holes. Server implementors are encouraged to make this field "
 	 "a configurable option."
 	 "</i></blockquote></p>"));
-  
-  defvar("ident", replace(real_version," ","·"), 
+
+  defvar("ident", replace(real_version," ","·"),
 	 LOCALE(126, "Identify, Identify as"),
 	 TYPE_STRING /* |VAR_MORE */,
 	 LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
 	 0, ident_disabled_p);
-  
-  defvar("config_header_string", "", 
+
+  defvar("config_header_string", "",
 	 LOCALE(532, "Show this string in header"),
 	 TYPE_STRING /* |VAR_MORE */,
 	 LOCALE(533, "Enter a identifier that will be displayed in the head of "
 		   " config interface. This makes it easier to distinguish "
 		   "between different site configurations. "),
 	 0);
-  
-  defvar("User", "", LOCALE(128, "Change uid and gid to"), 
+
+  defvar("User", "", LOCALE(128, "Change uid and gid to"),
 	 TYPE_STRING,
 	 LOCALE(129, #"\
 When Roxen is run as root, to be able to open port 80 for listening,
@@ -693,13 +693,13 @@ The start script attempts to fix this for the standard file locations.</p>"));
                                cache.cache_expire("supports");
                              } );
 
-  defvar("audit", 0, LOCALE(136, "Logging: Audit trail"), 
+  defvar("audit", 0, LOCALE(136, "Logging: Audit trail"),
 	 TYPE_FLAG,
 	 LOCALE(137, "If Audit trail is set to Yes, all changes of uid will be "
 		"logged in the Event log."));
 
 #if constant(syslog)
-  defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"), 
+  defvar("LogA", "file", LOCALE(138, "Logging: Debug log method"),
 	 TYPE_STRING_LIST|VAR_MORE,
 	 LOCALE(139, "What method to use for the debug log, default is file, "
 	  "but "
@@ -708,26 +708,26 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	  "start script."),
 	 ({ "file", "syslog" }));
 
-  defvar("LogSP", 1, LOCALE(140, "Logging: Log PID"), 
+  defvar("LogSP", 1, LOCALE(140, "Logging: Log PID"),
 	 TYPE_FLAG,
 	 LOCALE(141, "If set, the PID will be included in the syslog."), 0,
 	 syslog_disabled);
 
-  defvar("LogCO", 0, LOCALE(142, "Logging: Log to system console"), 
+  defvar("LogCO", 0, LOCALE(142, "Logging: Log to system console"),
 	 TYPE_FLAG,
 	 LOCALE(143, "If set and syslog is used, the error/debug message "
 		"will be printed to the system console as well as to the "
 		"system log."),
 	  0, syslog_disabled);
 
-  defvar("LogST", "Daemon", LOCALE(144, "Logging: Syslog type"), 
+  defvar("LogST", "Daemon", LOCALE(144, "Logging: Syslog type"),
 	 TYPE_STRING_LIST,
 	 LOCALE(145, "When using SYSLOG, which log type should be used."),
 	 ({ "Daemon", "Local 0", "Local 1", "Local 2", "Local 3",
 	    "Local 4", "Local 5", "Local 6", "Local 7", "User" }),
 	 syslog_disabled);
 
-  defvar("LogWH", "Errors", LOCALE(146, "Logging: Log what to syslog"), 
+  defvar("LogWH", "Errors", LOCALE(146, "Logging: Log what to syslog"),
 	 TYPE_STRING_LIST,
 	 LOCALE(147, "When syslog is used, how much should be sent to it?<br /><hr />"
 		"Fatal:    Only messages about fatal errors<br />"
@@ -738,7 +738,7 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	 ({ "Fatal", "Errors",  "Warnings", "Debug", "All" }),
 	 syslog_disabled);
 
-  defvar("LogNA", "Roxen", LOCALE(148, "Logging: Log as"), 
+  defvar("LogNA", "Roxen", LOCALE(148, "Logging: Log as"),
 	 TYPE_STRING,
 	 LOCALE(149, "When syslog is used, this will be the identification "
 		"of the Roxen daemon. The entered value will be appended to "
@@ -858,7 +858,7 @@ be of real use.</p>"));
 #endif
 
 #ifdef THREADS
-  defvar("numthreads", 15, LOCALE(150, "Number of threads to run"), 
+  defvar("numthreads", 15, LOCALE(150, "Number of threads to run"),
 	 TYPE_INT,
 	 LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
@@ -902,7 +902,7 @@ be of real use.</p>"));
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
 			   Locale.list_languages("roxen_config"),
-			   0, LOCALE(158, "Default language"), 
+			   0, LOCALE(158, "Default language"),
 			   LOCALE(159, "Locale, used to localize all "
 				  "messages in Roxen. Standard means using "
 				  "the default locale, which varies "
@@ -931,7 +931,7 @@ be of real use.</p>"));
   set( "argcache_secret", secret );
   // force save.
 
-  
+
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Maintenance: Enable Automatic Restart"),
 	 TYPE_FLAG|VAR_MORE,
@@ -943,7 +943,7 @@ be of real use.</p>"));
 	  );
 
   definvisvar( "last_suicide", 0, TYPE_INT );
-  
+
   defvar("suicide_schedule",
 	 Variable.Schedule( ({ 2, 1, 1, 0, 4 }), 0,
 			    LOCALE(387,"Auto Maintenance: Restart Schedule"),
@@ -989,7 +989,7 @@ Running it too often causes unnecessary server load.</p>"))
 	      LOCALE(1044, #"\
 <p>Maximum size in MByte for all RAM caches taken together. This limit
 covers the caches visible in the <a
-href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>
+href='/actions/?action=cachestatus.pike&class=status&_roxen_wizard_id=&form._roxen_wizard_id;'>Cache status</a>
 page.</p>
 
 <p>Note that there are many more things in the Roxen WebServer that
@@ -1017,7 +1017,7 @@ the Roxen instance of the MySQL server).</p>"));
 		"server for this to work. Also, all servers has to have this "
 		"flag set. Roxen must be restarted before changes to this "
 		"variable takes effect." ) );
-  
+
   defvar("config_file_comments", 0,
 	 LOCALE(172, "Commented config files"),
 	 TYPE_FLAG,
@@ -1128,15 +1128,15 @@ the Roxen instance of the MySQL server).</p>"));
 	 LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
 		"external web sites through the Linkbrowser or when Insert "
 		"cached-href fetches data from an external location."));
-  
+
   defvar("proxy_url", "",
 	 LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
 	 LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
-  
+
   defvar("proxy_username", "",
          LOCALE(1056, "Proxy: Proxy username"), TYPE_STRING,
          LOCALE(1057, "Username for proxy authorization."));
-  
+
   defvar("proxy_password", "",
          LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
          LOCALE(1059, "Password for proxy authorization."));

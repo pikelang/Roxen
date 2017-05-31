@@ -16,7 +16,7 @@ string parse( RequestID id )
 
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s '>"
-                  "<content>%s</content></tmpl>",
+                  "<content><div class='diff'>%s</div></content></tmpl>",
 		  LOCALE(466,"Difference"),
                   Roxen.html_encode_string((v->diff(2)||"")) );
 }

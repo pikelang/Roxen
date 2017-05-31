@@ -8,6 +8,10 @@ table {
     margin-top: $spacing-unit;
   }
 
+  &+ .section {
+    margin-top: $spacing-unit*2;
+  }
+
   pre {
     margin: 0;
   }
@@ -368,6 +372,24 @@ table {
     tfoot {
       font-weight: bold;
       border-top: 1px solid lighten($main-column-bg, 10%);
+    }
+  }
+
+  &.hilite-1stcol {
+    tr {
+      td {
+        padding: $spacing-unit/2 $spacing-unit/2;
+        border-bottom: 1px solid $main-column-bg;
+        background: lighten($main-column-bg, 3%);
+
+        &:first-child {
+          font-family: monospace;
+          font-weight: bold;
+          white-space: nowrap;
+          background: darken($main-column-bg, 3%);
+          border-bottom: 1px solid $main-column-bg;
+        }
+      }
     }
   }
 }

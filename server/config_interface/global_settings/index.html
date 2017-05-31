@@ -5,7 +5,7 @@
   <set variable='form.section' value='Settings' />
 </if>
 
-<content><cv-split><subtablist width='100%'>
+<content><cv-split><subtablist>
  <st-tabs>
   <if variable='form.section is event_log'>
     <a selected='t' href='?section=event_log&amp;&usr.set-wiz-id;'><translate id="216">Events</translate></a>
@@ -57,11 +57,11 @@
         </emit>
         <then>
           <table class='ports-port'>&var.port-cont:none;</table>
+          <if variable="form.port is &_.port;">
+            <cfg-variables nosave='' source='port-variables' port="&port.port;"/>
+            <cf-save />
+          </if>
         </then>
-        <if variable="form.port is &_.port;">
-          <cfg-variables nosave='' source='port-variables' port="&port.port;"/>
-          <cf-save />
-        </if>
       </section>
     </emit>
   </elseif>

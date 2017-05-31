@@ -178,7 +178,8 @@
 <define tag="cf-save">
   <!-- cf-save -->
   <set variable="var._c" type='text/xml'><translate id="bA">Save</translate></set>
-  <button name="save" class="rxn-admin-btn icon save" value='&var._c;'>&var._c:none;</button>
+  <button class="rxn-admin-btn icon save" value='&var._c;'>&var._c:none;</button>
+  <input type='hidden' name='save.x' value='Save'>
 </define>
 <define tag="cf-ok"><submit-gbutton2 type="ok" name="ok"><translate id="201">OK</translate></submit-gbutton2></define>
 <define tag="cf-cancel"><link-gbutton type="cancel" href="&_.href;"><translate id="202">Cancel</translate></link-gbutton></define>
@@ -204,7 +205,12 @@
 </title>
 <link rel="stylesheet" href="/scss/font-awesome.css">
 <link rel="stylesheet" href="/scss/style.css">
-<link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico?v=17">
+<if variable="usr.favicon">
+  <link rel="shortcut icon" href="&usr.favicon;">
+</if>
+<else>
+  <link rel="shortcut icon" href="/img/R.svg?v=17">
+</else>
 <script src="/js/config-if.js"></script>
 <if exists="/themes/&usr.theme;/stylesheet.css">
   <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css">

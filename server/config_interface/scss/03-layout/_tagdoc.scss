@@ -4,6 +4,9 @@
       margin-top: 0;
     }
 
+    background: darken($main-column-bg, 10%);
+    padding: $spacing-unit/2 $spacing-unit;
+
     @extend .__icon;
     &:before {
       content: '\f121';
@@ -49,8 +52,7 @@
     }
 
     div[style*='white-space:'] {
-      padding: $site-padding;
-      background: darken($main-column-bg, 5%);
+      @extend .__pre;
     }
   }
 }
