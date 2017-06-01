@@ -2192,7 +2192,7 @@ protected string sql_table_exists( string name )
 {
   if(strlen(name))
     name = "_"+name;
-  
+
   string res = hash(_my_configuration->name)->digits(36)
     + "_" + replace(sname(), ({ "#","-" }), ({ "_","_" })) + name;
 
@@ -2214,13 +2214,13 @@ protected string|int get_my_table( string|array(string) name,
 //!
 //! You can use @[create_sql_tables] instead of this function if you want
 //! to create more than one table in one go.
-//! 
+//!
 //! If @[flag] is true, return 1 if a table was created, and 0 otherwise.
-//! 
+//!
 //! In the first form, @[name] is the (postfix of) the name of the
 //! table, and @[types] is an array of definitions, as an example:
 //!
-//! 
+//!
 //! @code
 //!   cache_table = get_my_table( "cache", ({
 //!               "id INT UNSIGNED AUTO_INCREMENT",
@@ -2265,7 +2265,7 @@ protected string|int get_my_table( string|array(string) name,
   }
   if( arrayp( definition ) )
     definition *= ", ";
-  
+
   if( catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" )) )
   {
     ddc++;
@@ -2292,7 +2292,7 @@ protected string|int get_my_table( string|array(string) name,
     return __my_tables[ "&"+oname+";" ] = res;
   }
 //   // Update definition if it has changed.
-//   mixed error = 
+//   mixed error =
 //     catch
 //     {
 //       get_my_sql()->query( "ALTER TABLE "+res+" ("+definition+")" );
@@ -2328,7 +2328,7 @@ Sql.Sql get_my_sql( int|void read_only, void|string charset )
 //! the database will be opened in read_only mode. @[charset] may be
 //! used to specify a charset for the connection if the database
 //! supports it.
-//! 
+//!
 //! See also @[DBManager.get]
 {
   return DBManager.cached_get( my_db, _my_configuration, read_only, charset );
