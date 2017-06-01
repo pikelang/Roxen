@@ -173,7 +173,7 @@ class BasicModule
     { predef::report_notice(fmt, @args); }
   void report_debug(sprintf_format fmt, sprintf_args ... args)
     { predef::report_debug(fmt, @args); }
-  
+
   string file_name_and_stuff() { return ""; }
   string module_identifier() {return _module_identifier;}
   string module_local_id() {return _module_local_identifier;}
@@ -209,7 +209,7 @@ class FakeModuleInfo( string sname )
   constant locked = 0;
   constant config_locked = ([]);
   string name, description;
-  
+
   void save()  { }
   void update_with( RoxenModule mod, string what )  { }
   int init_module( string what )  { }
@@ -272,7 +272,7 @@ class FakeModuleInfo( string sname )
 
     roxenp()->bootstrap_info->set (({bootstrap_conf,
 				     sname + "#" + copy_num}));
- 
+
     RoxenModule ret = NotAModule();
 
     roxenp()->bootstrap_info->set (0);
@@ -322,7 +322,7 @@ class ModuleInfo( string sname, string filename )
     }
   }
 
-  protected class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
+  protected class LoadFailed(roxenloader.ErrorContainer ec) // faked module.
   {
     inherit BasicModule;
     constant not_a_module = 1;
@@ -371,7 +371,7 @@ class ModuleInfo( string sname, string filename )
 	});
       }
     }
-    
+
     string _sprintf()
     {
       return sprintf("LoadFailed(%s)", sname);
@@ -405,7 +405,7 @@ class ModuleInfo( string sname, string filename )
       return 0;
     }
   }
-  
+
   RoxenModule instance( Configuration conf, void|int silent,
 			void|int copy_num)
   {
@@ -603,14 +603,14 @@ class ModuleInfo( string sname, string filename )
 
         if( strip_extention(file) == what )
         {
-	  
+
 	  if( (< "pike", "so" >)[ extension( file ) ] ||
 	      ( (< "class", "jar" >)[extension(file)] && got_java()))
           {
 	    //  Skip inner classes in Java
 	    if (has_value(file, "$") && has_suffix(file, ".class"))
 	      continue;
-	    
+
             Stdio.File f = Stdio.File();
 	    if( !f->open( fpath, "r" ) )
 	      report_error ("Failed to open %s: %s\n",
@@ -748,7 +748,7 @@ protected void rec_find_all_modules( string dir,
 	  //  Skip inner classes in Java
 	  if (has_value(file, "$") && has_suffix(file, ".class"))
 	    continue;
-	  
+
 	  Stdio.File f = Stdio.File();
 	  if (!f->open( fpath, "r" ))
 	    report_warning ("Failed to open %s: %s\n",
@@ -779,7 +779,7 @@ void clear_all_modules_cache()
 
 array(ModuleInfo) all_modules()
 {
-  if( all_modules_cache ) 
+  if( all_modules_cache )
     return all_modules_cache;
 
   report_debug("Searching for pike-modules directories ... \b");
@@ -793,7 +793,7 @@ array(ModuleInfo) all_modules()
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+    module_cache = roxenp()->ConfigIFCache( "modules" );
   }
 
   array(string) possible = ({});
@@ -863,7 +863,7 @@ ModuleInfo find_module( string name, int|void noforce )
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+    module_cache = roxenp()->ConfigIFCache( "modules" );
   }
 
   if( modules[ name ] )
@@ -884,6 +884,6 @@ ModuleInfo find_module( string name, int|void noforce )
 
   if( !modules[ name ] && !noforce )
     return FakeModuleInfo( name );
-  
+
   return modules[ name ];
 }
