@@ -284,6 +284,7 @@ class ModuleInfo( string sname, string filename )
 {
   int last_checked;
   int type, multiple_copies;
+  int deprecated;
   array(string) locked;
   string counter;
   mapping(Configuration:int) config_locked = ([]);
@@ -455,6 +456,9 @@ class ModuleInfo( string sname, string filename )
 				       sname + "#" + copy_num}));
       RoxenModule ret = prog( conf );
       roxenp()->bootstrap_info->set (0);
+      if (ret->module_deprecated) {
+        deprecated = 1;
+      }
       if (ret->module_is_disabled) {
 	destruct (ret);
 	return DisabledModule();
@@ -511,6 +515,7 @@ class ModuleInfo( string sname, string filename )
 	       "description":encode_string(description),
 	       "locked":locked && locked * ":",
 	       "counter":counter,
+               "deprecated":deprecated,
              ]) );
   }
 
@@ -543,6 +548,9 @@ class ModuleInfo( string sname, string filename )
       counter = data[6];
     else
       counter = sname;
+    if (sizeof(data) > 7) {
+      deprecated = data[7];
+    }
     last_checked = file_stat( filename )[ ST_MTIME ];
     save();
   }
@@ -667,6 +675,7 @@ class ModuleInfo( string sname, string filename )
             description = decode_string( data->description );
 	    locked = data->locked && data->locked/":";
 	    counter = data->counter || sname;
+            deprecated = data->deprecated;
             return 1;
           }
           else
