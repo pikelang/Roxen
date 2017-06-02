@@ -93,7 +93,7 @@ dt {
   }
 }
 
-&.action-group {
+.action-group {
   margin: 1px 0 0;
   background: darken($body-bg, 0%);
 
@@ -105,6 +105,12 @@ dt {
     margin-top: 0;
   }
 
+  &.open {
+    a {
+      color: $brand-color;
+    }
+  }
+
   dl {
     margin: 0;
   }
@@ -112,7 +118,10 @@ dt {
   dt {
     @include text-size(lg);
     font-weight: bold;
-    margin-bottom: $spacing-unit/3;
+
+    &+ dd {
+      margin-top: $spacing-unit/3;
+    }
   }
 
   dd {

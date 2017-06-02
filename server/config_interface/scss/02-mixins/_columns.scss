@@ -9,16 +9,36 @@
 
   @include clear;
 
-  &.boxes {
+  &.boxes,
+  &.space-around {
     justify-content: space-around;
+  }
+
+  &.padded {
+    margin-left: -$spacing-unit/2;
+    margin-right: -$spacing-unit/2;
+
+    > *[class~='flex'] {
+      padding-left: $spacing-unit/2;
+      padding-right: $spacing-unit/2;
+    }
   }
 
   > *[class~='flex'] {
     flex-grow: 1;
     align-self: stretch;
+
     &.flex-shrink {
       flex-shrink: 1;
       flex-grow: 0;
+    }
+
+    &.flex-fill {
+      flex-grow: 1;
+    }
+
+    &.col-1 {
+      width: 12%;
     }
 
     &.col-3 {
@@ -39,6 +59,10 @@
 
     &.col-9 {
       width: 66.6666%;
+    }
+
+    &.col-11 {
+      width: 88%;
     }
   }
 

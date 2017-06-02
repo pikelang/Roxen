@@ -46,6 +46,7 @@ void start() {
     global_env->SERVER_PORT = (string)query("FrontPagePort");
 }
 
+constant module_deprecated = 1;
 constant module_type = MODULE_LOCATION;
 constant module_name = "Frontpage Script support";
 constant module_doc  = "This module is an extension to the normal CGI module. "

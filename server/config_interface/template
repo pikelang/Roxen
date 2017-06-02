@@ -188,8 +188,7 @@
 <define tag="cf-ok-button"><link-gbutton href="&_.href;" type="ok"><translate id="201">OK</translate></link-gbutton></define>
 
 <define tag="cf-next">
-   <!-- <submit-gbutton2 preparse="1" name="next" width="&usr.gbutton-width;" ><translate id="203">Next</translate></submit-gbutton2> -->
-  <button data-submit='' class='icon next right'><translate id="203">Next</translate></button>
+  <button data-submit='' name='next' class='icon next right'><translate id="203">Next</translate></button>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
@@ -209,7 +208,7 @@
   <link rel="shortcut icon" href="&usr.favicon;">
 </if>
 <else>
-  <link rel="shortcut icon" href="/img/R.svg?v=17">
+  <link rel="shortcut icon" href="/img/R.png?v=17">
 </else>
 <script src="/js/config-if.js"></script>
 <if exists="/themes/&usr.theme;/stylesheet.css">

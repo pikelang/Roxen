@@ -4,6 +4,8 @@
 inherit "module";
 #include <request_trace.h>
 
+constant module_deprecated = 1;
+
 #define JS_PRESTATE(P) \
 "javascript:"           \
 "function R(a)"          \

@@ -63,6 +63,26 @@
   }
 }
 
+.float-right {
+  float: right;
+  margin-left: $spacing-unit;
+  margin-bottom: $spacing-unit/2;
+}
+
+.float-left {
+  float: left;
+  margin-right: $spacing-unit;
+  margin-bottom: $spacing-unit/2;
+}
+
+.clear-float {
+  @include clear;
+}
+
+.hidden {
+  display: none;
+}
+
 .small {
   @include text-size(sm);
 }
@@ -257,6 +277,118 @@ section {
 
     &:hover {
       opacity: 1;
+    }
+  }
+}
+
+
+.add-modules-wrapper {
+  .dim {
+    @include text-size(sm);
+    color: darken($body-color, 15%);
+  }
+
+  .group-header {
+    &.open {
+      border-left: 1px solid $brand-color;
+      background: darken($main-column-bg, 10%);
+    }
+
+    .select-multiple {
+      margin-right: $spacing-unit;
+      margin-top: $spacing-unit*1.5;
+    }
+  }
+
+  .module-checkbox {
+    display: block;
+    padding: $spacing-unit/2 $spacing-unit;
+    background: darken($main-column-bg, 10%);
+    border-radius: $border-radius;
+    border: 1px solid $black;
+    line-height: 1.2;
+
+    &:checked,
+    &.checked {
+      border-color: $brand-color;
+      color: $brand-color;
+
+      span {
+        color: $brand-color;
+        &:before {
+          content: '\f046' // fa-square-checked-o
+        }
+      }
+    }
+
+    &:focus,
+    &.focus {
+      border-color: $grey;
+      outline: 0;
+    }
+
+    input {
+      margin: 0;
+      display: inline-block;
+      vertical-align: middle;
+      visibility: hidden;
+      position: absolute;
+      opacity: 0;
+    }
+
+    span {
+      display: inline-block;
+      vertical-align: middle;
+      color: $grey;
+
+      @extend .__icon;
+
+      &:before {
+        width: 14px;
+        content: '\f096'; // fa-square-o
+      }
+    }
+  }
+
+  .module {
+    background: darken($main-column-bg, 3%);
+    padding: $spacing-unit;
+    border-top: 1px dashed lighten($main-column-bg, 10%);
+    border-left: 1px solid $rxn-red;
+
+    &:hover {
+      // background: lighten($main-column-bg, 0%);
+      border-left-color: $link-color;
+    }
+
+    &.deprecated {
+      border: 1px solid $rxn-red;
+      border-left-width: $spacing-unit;
+      margin-bottom: 1px;
+      margin-top: 1px;
+
+      .header {
+        h3 {
+          &:before {
+            content: 'Deprecated: ';
+            color: $rxn-red;
+          }
+        }
+      }
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+  }
+
+  .doc {
+    *:first-child {
+      margin-top: 0;
+    }
+
+    *:last-child {
+      margin-bottom: 0;
     }
   }
 }

@@ -6,12 +6,13 @@ constant cvs_version="$Id$";
 #include <module.h>
 inherit "module";
 
+constant module_deprecated = 1;
 
 //---------------------- Module Registration --------------------------------
 
 constant module_type   = MODULE_TAG;
 constant module_name   = "Tags: HTML color wiretap";
-constant module_doc    = 
+constant module_doc    =
 #"<p>Parses HTML tags for the text and background colors all over the
 page. This information can be used to let graphical modules like
 \"Graphic text\" and \"GButton\" generate images that automatically
@@ -128,7 +129,7 @@ class TagBody
   // Cached settings.
   int body_compat_mode = compat_mode, body_colormode = colormode;
   RXML.TagSet body_runtime_wiretap_tags =runtime_wiretap_tags;
-  
+
   void create(string _name)
   {
     name = _name;
@@ -150,7 +151,7 @@ class TagBody
 	  foreach(body_runtime_wiretap_tags->get_local_tags(), RXML.Tag tag)
 	    ctx->add_runtime_tag(tag);
 	}
-	
+
 	args =
 	  mkmapping(map(indices(args), lower_case), values(args)) -
 	  ({ "wiretap" });
@@ -174,22 +175,22 @@ class TagEndBody
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
-  
+
   // Cached settings.
   int body_compat_mode = compat_mode;
   RXML.TagSet body_runtime_wiretap_tags =runtime_wiretap_tags;
-  
+
   void create(string _name)
   {
     tagname = _name;
     name = "/" + _name;
   }
-  
+
   class Frame
   {
     inherit RXML.Frame;
     string raw_tag_text;
-    
+
     array do_return(RequestID id)
     {
       //  Unregister our temporary tags unless we're in compatibility mode
@@ -207,15 +208,15 @@ class TagEndBody
 class TagPushColor
 {
   inherit RXML.Tag;
-  
+
   string name;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
-  
+
   // Cached settings.
   int body_colormode = colormode;
-  
+
   void create(string _name)
   {
     name = _name;
@@ -225,7 +226,7 @@ class TagPushColor
   {
     inherit RXML.Frame;
     string raw_tag_text;
-    
+
     array do_return(RequestID id)
     {
       args = mkmapping(map(indices(args), lower_case), values(args));
@@ -240,12 +241,12 @@ class TagPushColor
 class TagPopColor
 {
   inherit RXML.Tag;
-  
+
   string name, tagname;
   constant flags = (RXML.FLAG_EMPTY_ELEMENT |
 		    RXML.FLAG_COMPAT_PARSE |
 		    RXML.FLAG_NO_PREFIX);
-  
+
   void create(string _name)
   {
     tagname = _name;

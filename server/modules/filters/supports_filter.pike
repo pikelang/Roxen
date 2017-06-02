@@ -4,6 +4,8 @@
 #include <module.h>
 inherit "module";
 
+constant module_deprecated = 1;
+
 constant cvs_version = "$Id$";
 constant module_name = "Supports filter";
 constant module_type = MODULE_FILTER;

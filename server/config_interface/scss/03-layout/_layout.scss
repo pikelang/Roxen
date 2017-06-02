@@ -221,6 +221,10 @@ a {
   &:hover {
     color: lighten($link-color, 25%);
   }
+
+  &:focus {
+    outline: 1px solid $grey;
+  }
 }
 
 .section {
