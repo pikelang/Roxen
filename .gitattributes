@@ -33,6 +33,8 @@
 *.sln eol=crlf
 *.tar binary
 *.ttf binary
+*.woff binary
+*.woff2 binary
 /server/nfonts/Andover.txt eol=crlf
 /server/nfonts/Font.txt eol=crlf
 /server/nfonts/Hultog.txt eol=crlf
