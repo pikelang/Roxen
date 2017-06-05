@@ -207,6 +207,7 @@ class FakeModuleInfo( string sname )
   constant type = 0;
   constant multiple_copies = 0;
   constant locked = 0;
+  constant deprecated = 0;
   constant config_locked = ([]);
   string name, description;
 
