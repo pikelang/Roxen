@@ -488,9 +488,18 @@ string find_module_doc( string cn, string mn, RequestID id )
   string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
   fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
   fnas = "<tr><td nowrap=''>"+
-    ((fnas/":</b>")*":</b></td><td><img src='/internal-roxen-unit' width=10 height=1 /></td><td>") +
+    ((fnas/":</b>")*":</b></td><td>") +
     "</td></tr>\n";
+
+  string prefix = "", suffix = "";
+
+  if (mi->deprecated) {
+    prefix = "<div class='site-module module-deprecated'>";
+    suffix = "</div>";
+  }
+
   return
+    prefix +
     replace( "<h2>" +
              Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
              + "</h2>"
@@ -498,14 +507,11 @@ string find_module_doc( string cn, string mn, RequestID id )
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
                   + dbuttons + snmp + eventlog +
                   ( config_setting( "devel_mode" ) ?
-                    "<br clear='all' />\n"
                     "<h3 class='section'>Developer information</h3>"
                     "<table class='devinfo auto'>"
                     "<tr nowrap=''><td><b>Identifier:</b></td>"
-                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
                     "<td>" + mi->sname + "</td></tr>\n"
                     "<td nowrap=''><b>Thread safe:</b></td>"
-                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
                     "<td>" + (m->thread_safe ?
                      LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
@@ -513,12 +519,10 @@ string find_module_doc( string cn, string mn, RequestID id )
                     "=locks.pike&amp;class=status&amp;&usr.set-wiz-id;'>"
                     "more info</a>)</small></td></tr>\n"
                     "<tr><td nowrap=''><b>Number of accesses:</b></td>"
-                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
                     "<td>" + my_accesses +
 #endif
                     "</td></tr>\n"
                     "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
-                    "<td><img src='/internal-roxen-unit' width=10 height=1 /></td>"
                     "<td valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr>\n"
                     + fnas +
@@ -531,7 +535,7 @@ string find_module_doc( string cn, string mn, RequestID id )
                     +
                     "</dl>"
                     : homepage + creators),
-                  ({ "/image/", }), ({ "/internal-roxen-" }));
+                  ({ "/image/", }), ({ "/internal-roxen-" })) + suffix;
 }
 
 string find_module_documentation( string conf, string mn, RequestID id )

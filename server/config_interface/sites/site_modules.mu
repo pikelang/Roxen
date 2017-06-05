@@ -10,7 +10,7 @@
       <a href="{{ url }}">{{ name }} <span class="nmodules">({{ nmodules }})</span></a>
       <ul class="{{ #fold }}folded{{ /fold }}">
         {{ #modules }}
-          <li{{#selected}} class="selected"{{/selected}}>
+          <li class='{{#selected}}selected{{/selected}}{{#deprecated}} deprecated{{/deprecated}}'>
             <a href="{{ url }}">{{ name }}</a>
           </li>
         {{ /modules }}

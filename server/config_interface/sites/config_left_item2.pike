@@ -105,9 +105,10 @@ string selected_item(string q, Configuration c, RequestID id,
           name = String.trim_whites(name);
         }
 
-        gg += ({ ([ "sname"  : q+"!"+i,
-                    "name"   : name,
-                    "locked" : mi->config_locked[c] ]) });
+        gg += ({ ([ "sname"      : q+"!"+i,
+                    "name"       : name,
+                    "deprecated" : mi->deprecated,
+                    "locked"     : mi->config_locked[c] ]) });
       }
     }
 
@@ -217,8 +218,6 @@ string selected_item(string q, Configuration c, RequestID id,
   Mustache my_stache = Mustache();
   string res = my_stache->render(stache_tmpl, m_state);
   destruct(my_stache);
-  // TRACE("state: %O\n", m_state);
-  // TRACE("res: %s\n", res);
 
   return "<eval>" + res + "</eval>";
 }
