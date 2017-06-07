@@ -210,6 +210,7 @@
 <else>
   <link rel="shortcut icon" href="/img/R.png?v=17">
 </else>
+<script src="/js/lib.js"></script>
 <script src="/js/config-if.js"></script>
 <if exists="/themes/&usr.theme;/stylesheet.css">
   <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css">
