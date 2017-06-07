@@ -15,6 +15,16 @@
     margin-bottom: 1px;
     position: relative;
 
+    &.deprecated {
+      a {
+        @extend .__icon;
+        color: $rxn-red;
+        &:before {
+          content: '\f071'; // fa-exclamation-triangle
+        }
+      }
+    }
+
     &.button {
       a {
         background: $black;
