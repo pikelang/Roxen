@@ -39,15 +39,47 @@ string extract_nonfluff(string from)
 
 string parse(RequestID id)
 {
-  string contents;
-  string url = "/press-ir/news/index.xml?__xsl=json.xsl";
-
-  if (!(contents = .Box.get_http_data("www.roxen.com", 80,
-                                      "GET "+ url + " HTTP/1.0")))
+#ifdef DEBUG
+  if (id->request_headers["pragma"] &&
+      id->request_headers["pragma"] == "no-cache" &&
+      !id->variables->_raw)
   {
-    contents = "Fetching data from www.roxen.com...";
+    .Box.clear_cache(true);
   }
+#endif
+
+  string contents;
+  string url = "http://www.roxen.com/press-ir/news/index.xml";
+  mapping rvars = ([ "__xsl": "json.xsl" ]);
+
+  int(-1..1)|string cc = .Box.get_http_data2(url, rvars);
+
+  // No previous request made.
+  if (cc == 0) {
+    string furl = "/boxes/ris_news.pike?_raw=1&amp;_roxen_wizard_id=" +
+                  id->variables->_roxen_wizard_id;
+    contents = "<div id='x-data'>Fetching data ..."
+               " <i class='fa fa-spinner fa-pulse'></i></div>"
+               "<script>"
+               " rxnlib.fetchInto('" + furl + "', 'x-data',"
+               "   function() {"
+               "     rxnlib.main(document.getElementById('x-data'));"
+               "   });"
+               "</script>";
+  }
+  // Pending request
+  else if (cc == 1) {
+    // Tell the Javascript to try again.
+    contents = "-1";
+  }
+  // Bad request
+  else if (cc == -1) {
+    contents = "Error parsing news.";
+  }
+  // Got cached data
   else {
+    contents = cc;
+
     if (mixed err = catch(contents = extract_nonfluff(contents))) {
       report_notice("Error parsing Roxen news: %s\n",
                     describe_backtrace(err));
@@ -55,7 +87,10 @@ string parse(RequestID id)
     }
   }
 
+  if (id->variables->_raw) {
+    return contents;
+  }
+
   return
     "<cbox type='"+box+"' title='"+box_name+"'>"+contents+"</cbox>";
 }
-
