@@ -8,17 +8,23 @@
         <st-page>
           <cf-title>{{ title }}</cf-title/>
 
+          {{^noform}}
+            <input type='hidden' name='reload' value='1'>
+          {{/noform}}
+
           <if not='1' variable='form.initial'>
-            <div class='flex-row space-around padded'>
+            <div class='flex-row space-around padded clear-float'>
               <div class='flex flex-shrink'>
                 <!-- AJAX search form -->
                 <form action=''>
                   <roxen-wizard-id-variable />
                   <input type='hidden' name='config' value='&form.config;'>
+                  <if variable="form.unfolded">
+                    <input type='hidden' name='unfolded' value='&form.unfolded;'>
+                  </if>
                   <div class='control-group inline'>
-                    <label for='list-type'>{{ list_type_title }}</label>
                     <default variable='form.method' value='{{ method }}'>
-                      <select name='method' id='list-type' data-auto-submit=''>
+                      <select name='method' id='list-type' data-auto-submit='' title='List Type'>
                         <option value='normal'>{{ list_types.normal }}</option>
                         <option value='faster'>{{ list_types.faster }}</option>
                         <option value='compact'>{{ list_types.compact }}</option>
@@ -27,7 +33,8 @@
                     </default>
                     <default variable="form.deprecated" value='&form.deprecated;'>
                       <label for='deprecated_'>
-                        <input type='checkbox' name='deprecated' value='1' id='deprecated_' />
+                        <input type='checkbox' name='deprecated' value='1'
+                               id='deprecated_' data-toggle-submit='' />
                         <span>Include deprecated modules</span>
                       </label>
                     </default>
@@ -44,17 +51,11 @@
                     <i class='fa fa-spinner fa-pulse hidden' id='mod-spinner'></i>
                   </form>
                   <script>
-                    // Old browser, sorry you can't search
-                    if (window.fetch === undefined) {
-                      document.getElementById('mod-search').style.display = 'none';
-                    }
-                    else {
-                      const e = document.createElement('script');
-                      e.setAttribute('async', true);
-                      e.setAttribute('src', '/js/find-module.js');
-                      document.getElementsByTagName('script')[0]
-                        .parentNode.appendChild(e);
-                    }
+                    var e = document.createElement('script');
+                    e.setAttribute('async', true);
+                    e.setAttribute('src', '/js/find-module.js');
+                    document.getElementsByTagName('script')[0]
+                      .parentNode.appendChild(e);
                   </script>
                 </div>
               {{/search_form}}

@@ -14,8 +14,8 @@
           </if>
         </if>
 
-        <li>
-          <select name='goto_site' onChange='form.submit();'>
+        <li class='margin-top'>
+          <select name='goto_site' data-toggle-submit=''>
             <option value=''><translate id="509">Select site</translate></option>
             <emit source='configurations'>
               <cf-perm perm="Site:&_.sname;">
@@ -23,7 +23,6 @@
               </cf-perm>
             </emit>
           </select>
-          <br />
           <input type="submit" value="Go" class="rxn-admin-btn" />
         </li>
       </if>

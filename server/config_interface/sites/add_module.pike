@@ -277,7 +277,6 @@ array(string) get_module_list( function describe_module,
 
   foreach( mods, ModuleInfo m ) {
     if (m->deprecated && !show_deprecated(id)) {
-      TRACE("::: DEPRECATED ModuleInfo: %O\n", m);
       mods -= ({ m });
     }
     if( module_nomore( m->sname, m, conf ) ) {
@@ -337,6 +336,7 @@ array(string) get_module_list( function describe_module,
       array m = classes[c]->modules;
       array q = m->get_name();
       sort( q, m );
+      int hits = 0;
       foreach(m, object q)
       {
         if( q->get_description() == "Undocumented" &&
@@ -351,7 +351,15 @@ array(string) get_module_list( function describe_module,
           locked_modules += ({ q });
           continue;
         }
+        hits += 1;
         res += describe_module( q, b );
+      }
+
+      if (!hits) {
+        res +=
+          "<div class='module no-modules'>"
+            "<span class='notify info inline'>No available modules</span>"
+          "</div>";
       }
     } else {
       if (!search_modules)
@@ -507,6 +515,7 @@ array(int|string) class_visible_normal(string c, string d, int size,
 
 string page_normal_low(RequestID id, int|void fast)
 {
+  TRACE("page_normal_low: %O : faster(%O)\n", id, fast);
   string desc, err;
   [desc,err] = get_module_list(describe_module_normal(fast),
                                class_visible_normal, id, fast);
@@ -514,10 +523,14 @@ string page_normal_low(RequestID id, int|void fast)
   string ret = "<div class='add-modules-wrapper'>";
 
   if (fast) {
-    ret += "<input type='hidden' name='config' value='&form.config;'>";
+    ret =
+      "<form method='post' action='add_module.pike'>"
+        "<input type='hidden' name='config' value='&form.config;'>"
+        "<roxen-wizard-id-variable/>" +
+      ret;
   }
 
-  return ret + desc + "</div>" + err;
+  return ret + desc + "</div>" + (fast ? "</form>" : "") + err;
 }
 
 string page_normal_search(RequestID id, void|bool fast)
@@ -532,8 +545,8 @@ string page_normal_search(RequestID id, void|bool fast)
 string page_normal( RequestID id, void|bool fast )
 {
   string content =
-    "<div id='mod_results' style='display: none'>"
-    "</div>"
+    "<form id='mod_results' method='post' action='add_module.pike' style='display: none'>"
+    "</form>"
     "<div id='mod_default'>" +
     page_normal_low(id, fast) +
     "</div>";
@@ -545,108 +558,21 @@ string page_fast( RequestID id )
   return page_normal(id);
 }
 
-string describe_module_faster( object module, object block)
-{
-  if(!block)
-  {
-return sprintf(
-   #"
-    <tr><td colspan='2'><table width='100%%'>
-        <td>#FASTER#<font size='+2'>%s</font></td>
-        <td align='right'><span class='dimtext'>(%s)</span> %s</td></table>
-        </td></tr>
-    <tr><td valign='top'><select multiple='multiple' size='1'
-                                 name='module_to_add'>
-                       <option value='%s'>%s</option></select>
-        </td><td valign='top'>%s<p class='dimtext'>%s</p></td>
-    </tr>
-",
-   //Roxen.html_encode_string(strip_leading(module->get_name())),
-   Roxen.html_encode_string(module->get_name()),
-   Roxen.html_encode_string (module->sname),
-   module_image(module->type),
-   module->sname,
-   //Roxen.html_encode_string(strip_leading(module->get_name())),
-   Roxen.html_encode_string(module->get_name()),
-   module->get_description() || LOCALE(1023, "Undocumented"),
-   LOCALE(266, "Will be loaded from: ")+module->filename
-  );
-  } else {
-    if( block == module )
-      return "";
-    return "";
-  }
-}
-
-array(int|string) class_visible_faster( string c, string d, int size,
-                                        RequestID id )
-{
-  int x;
-  string method = get_method(id);
-  string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
-                   "border='0' cellpadding='3' bgcolor='&usr.content-titlebg;'>"
-                   "<tr><td nowrap='nowrap' valign='top'>");
-
-  if (id->variables->mod_query) {
-    header+=("<gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
-             " </gbutton><br>"
-             "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
-             " </submit-gbutton>");
-    x = 1;
-  } else if( id->variables->unfolded == c ) {
-    header+=("<a name='"+Roxen.html_encode_string(c)+
-             "'></a><gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
-             " </gbutton><br>"
-             "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
-             " </submit-gbutton>");
-    x=1;
-  }
-  else
-    header+=("<a name='"+Roxen.html_encode_string(c)+
-             "'></a><gbutton hspace='5' vspace='5' "
-             "href='add_module.pike?config=&form.config;"
-             "&amp;method=" + method +
-             "&amp;unfolded="+Roxen.http_encode_url(c)+
-             "&amp;&usr.set-wiz-id;#"+Roxen.http_encode_url(c)+"' > "+
-             LOCALE(267, "View")+" </gbutton>");
-
-  header+=("</td><td width='100%'>"
-           "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
-           "<br />"+d+"</td></tr></table></td></tr>\n");
-
-  return ({ x, header });
-}
-
-string page_faster_low(RequestID id)
-{
-  string desc, err;
-  [desc,err] = get_module_list( describe_module_faster,
-                                class_visible_faster, id );
-  return
-    "<form method='post' action='add_module.pike'>"
-    "<input type='hidden' name='config' value='&form.config;'>"
-    "<roxen-wizard-id-variable />"
-    "<table cellspacing='3' cellpadding='0' border='0' width='100%'>" +
-    desc +
-    "</table>"
-    "</form>" +
-    err;
-}
-
 string page_faster_search(RequestID id)
 {
+  TRACE("Faster search: %O\n", id);
   return
     "<use file='/template-insert' />\n"
     "<tmpl>" +
-    page_faster_low(id) +
+    page_normal_low(id, true) +
     "</tmpl>";
 }
 
 string page_faster( RequestID id )
 {
   string content =
-    "<div id='mod_results' style='display: none'>"
-    "</div>"
+    "<form id='mod_results' method='post' action='add_module.pike' style='display: none'>"
+    "</form>"
     "<div id='mod_default'>" +
     page_normal_low(id, true) +
     "</div>";
@@ -796,25 +722,25 @@ array initial_form( RequestID id, Configuration conf, array modules )
       if( moo->getvar( v )->get_flags() & VAR_INITIAL )
       {
         num++;
-        res += "<tr><td colspan='3'><h2>"
+        res += "<tr><td colspan='3'><h3>"
         +LOCALE(1,"Initial variables for ")+
           //Roxen.html_encode_string(strip_leading(mi->get_name()))
           Roxen.html_encode_string(mi->get_name())
-          +"</h2></td></tr>"
+          +"</h3></td></tr>"
         "<emit source='module-variables' "
           " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\"/>
         <emit noset='1' source='module-variables' "
           " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
- <tr>
- <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
- <td valign='top'><eval>&_.form:none;</eval></td></tr>
- <tr>
-<td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
-  <td colspan=2>&_.doc:none;</td></tr>
- <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>
-</emit>";
+         <tr>
+          <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
+          <td valign='top'><eval>&_.form:none;</eval></td></tr>
+         <tr>
+          <td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
+          <td colspan=2>&_.doc:none;</td></tr>
+         <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>
+        </emit>";
         break;
       }
     }
@@ -911,8 +837,9 @@ mixed parse( RequestID id )
     return Roxen.http_redirect("/sites/", id);
   }
 
-  if( id->variables->module_to_add )
+  if( id->variables->module_to_add && !id->variables->reload) {
     return do_it( id );
+  }
 
   Configuration conf;
   foreach(id->variables->config/"\0", string config) {
