@@ -1,33 +1,10 @@
-// jshint esversion: 6
+// jshint esversion: 5
 
-(function(window, document) {
+(function(window, document, R) {
   'use strict';
 
-  const findNext = function(el, what) {
-    let next = el.nextSibling;
-    what = what.toUpperCase();
-
-    while (next && next.nodeName !== what) {
-      next = next.nextSibling;
-    }
-
-    return next;
-  };
-
-  const closest = function(node, tag) {
-    tag = tag.toUpperCase();
-
-    do {
-      node = node.parentNode;
-
-      if (node && node.nodeName === tag) {
-        return node;
-      }
-    } while (node);
-  };
-
   // Handle all elements with a data-href attribute
-  const handleDataHref = function(el, e) {
+  var handleDataHref = function(el, e) {
     e.preventDefault();
     var url = el.dataset.href;
 
@@ -47,21 +24,21 @@
   };
 
   // Handle all elements with a data-submit attribute
-  const handleDataSubmit = function(el, e) {
-    const name = el.getAttribute('name') || '';
+  var handleDataSubmit = function(el, e) {
+    var name = el.getAttribute('name') || '';
     // In the old A-IF the buttons we're images and when an input#type=image
     // button is clicked *.x and *.y variables are added. Some code in
-    // config_tags.pike rely on the *.x so lets emulate it.
+    // config_tags.pike rely on the *.x so vars emulate it.
     el.setAttribute('name', name + '.x');
     return true;
   };
 
   // Setup the js-popup site/module navigation
-  const makeSiteNavJs = function(base) {
-    let current = null;
-    const mds = base.querySelectorAll('.module-group');
+  var makeSiteNavJs = function(base) {
+    var current = null;
+    var mds = base.querySelectorAll('.module-group');
     // Not all browsers handle forEach on node lists
-    [].forEach.call(mds, item => {
+    [].forEach.call(mds, function(item) {
         var mainA = item.firstElementChild;
 
         if (item.classList.contains('unfolded')) {
@@ -75,7 +52,7 @@
           return;
         }
 
-        const child = item.querySelector('ul');
+        var child = item.querySelector('ul');
         child.classList.add('popup');
 
         mainA.addEventListener('click', function(e) {
@@ -96,16 +73,16 @@
   };
 
   // Handle toggleing of li's in Resolve Path
-  const handleResolvePathToggle = function(src, e) {
-    const inner = src.parentNode.querySelector('.inner');
+  var handleResolvePathToggle = function(src, e) {
+    var inner = src.parentNode.querySelector('.inner');
     inner.classList.toggle('hidden');
     src.classList.toggle('open');
     src.classList.toggle('closed');
   };
 
-  const handleToggleNext = function(src, e) {
-    const type = src.dataset.toggleNext;
-    const next = findNext(src, type);
+  var handleToggleNext = function(src, e) {
+    var type = src.dataset.toggleNext;
+    var next = R.next(src, type);
 
     if (next) {
       if (!src.classList.contains('toggle-open')) {
@@ -117,8 +94,8 @@
     }
   };
 
-  const handleToggleCheckbox = function(src, e) {
-    const label = src.closest('label');
+  var handleToggleCheckbox = function(src, e) {
+    var label = R.closest(src, 'label');
 
     if (src.checked) {
       label.classList.add('checked');
@@ -130,33 +107,53 @@
     return false;
   };
 
-  // Trigger a custom `event` on `el`
-  const trigger = function(el, event, options) {
-    let ev;
-    if (window.CustomEvent) {
-      ev = new window.CustomEvent(event, options);
-    }
-    else {
-      ev = document.createEvent('CustomEvent');
-      ev.initCustomEvent(ev, true, true, options);
-    }
+  var main = function(ctx) {
+    ctx = ctx || document;
 
-    el.dispatchEvent(ev);
-    return ev.returnValue;
-  };
+    R.every(ctx, 'select[data-goto]', function(i, el) {
+      el.addEventListener('change', function(e) {
+        var url = this.options[this.selectedIndex].value;
+        if (url) {
+          document.location.href = url;
+        }
+      });
+    });
 
-  const every = function(parent, what, fun) {
-    const r = parent.querySelectorAll(what);
-    if (r) {
-      let i = 0;
-      [].forEach.call(r, e => fun.call(e, i++, e));
-    }
+    R.every(ctx, 'select[data-auto-submit]', function(i, el) {
+      el.addEventListener('change', function(e) {
+        var f = R.closest(this, 'form');
+        if (f) {
+          f.submit();
+        }
+      });
+    });
+
+    R.every(ctx, '[data-toggle-cb-event]', function(i, el) {
+      el.addEventListener('keydown', function(e) {
+        if (e.code === 'Space' || e.code === 'Enter') {
+          var c = this.querySelector('[data-toggle-cb]');
+
+          if (c) {
+            c.checked = !c.checked;
+            handleToggleCheckbox(c, e);
+          }
+          e.preventDefault();
+          return false;
+        }
+      });
+    });
+
+    R.every(ctx, '[data-toggle-submit]', function(i, el) {
+      el.addEventListener('change', function(e) {
+        R.closest(this, 'form').submit();
+      });
+    });
   };
 
   // On DOM ready
-  document.addEventListener('DOMContentLoaded',
+  R.domready(
     function() {
-      let siteNavJs;
+      var siteNavJs;
 
       // Delegate all click events
       document.addEventListener('click',
@@ -166,14 +163,14 @@
             return false;
           }
 
-          const src = e.srcElement || e.target;
-          const ds  = src.dataset;
+          var src = e.srcElement || e.target;
+          var ds  = src.dataset;
 
           if (siteNavJs) {
-            const pop = siteNavJs.querySelector('.popup.open');
+            var pop = siteNavJs.querySelector('.popup.open');
 
             if (pop) {
-              return trigger(pop.parentNode.firstElementChild, 'click');
+              return R.trigger(pop.parentNode.firstElementChild, 'click');
             }
           }
 
@@ -203,41 +200,9 @@
         makeSiteNavJs(siteNavJs);
       }
 
-      every(document, 'select[data-goto]',
-        (i, el) => el.addEventListener('change',
-          function(e) {
-            const url = this.options[this.selectedIndex].value;
-
-            if (url) {
-              document.location.href = url;
-            }
-          }));
-
-      every(document, 'select[data-auto-submit]',
-        (i, el) => el.addEventListener('change',
-          function(e) {
-            const f = closest(this, 'form');
-            if (f) {
-              f.submit();
-            }
-          }));
-
-      every(document, '[data-toggle-cb-event]',
-        (i, el) => el.addEventListener('keydown',
-          function(e) {
-            if (e.code === 'Space' || e.code === 'Enter') {
-              const c = this.querySelector('[data-toggle-cb]');
-
-              if (c) {
-                c.checked = !c.checked;
-                handleToggleCheckbox(c, e);
-              }
-              e.preventDefault();
-              return false;
-            }
-          }));
+      main();
     });
 
-  window.every = every;
+  R.main = main;
 
-}(window, document));
+}(window, document, rxnlib));

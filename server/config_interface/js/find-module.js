@@ -1,61 +1,48 @@
-// jshint esversion: 6
+// jshint esversion: 5
 
-(function(window, document) {
+(function(window, document, R) {
   'use strict';
 
-  const getCookie = function(name) {
-    name += "=";
-    const cookies = document.cookie.split(';');
-
-    for (let c of cookies) {
-      c = c.trim();
-      // This means that c starts with `name`, i.e. our cookie
-      if (!c.indexOf(name)) {
-        return c.substring(name.length);
-      }
-    }
-  };
-
-  const getMethod = function() {
-    const l = document.getElementById('list-type');
+  var getMethod = function() {
+    var l = document.getElementById('list-type');
     return l.options[l.selectedIndex].value;
   };
 
-  const getShowDeprecated = function() {
+  var getShowDeprecated = function() {
     return document.getElementById('deprecated_').checked &&
       '&deprecated=1' || '';
   };
 
-  const wizid      = getCookie('RoxenWizardId')||'';
-  const inp        = document.getElementById('mod-query');
-  const spinner    = document.getElementById('mod-spinner');
-  const defMods    = document.getElementById('mod_default');
-  const resMods    = document.getElementById('mod_results');
-  const queryDelay = 400;
-  const queryUrl   = `add_module.pike?_roxen_wizard_id=${wizid}&config=`     +
-                     `${document.querySelector('input[name=config]').value}` +
-                     `&method=${getMethod()}${getShowDeprecated()}`          +
-                     `&mod_query=`;
+  var wizid      = R.getCookie('RoxenWizardId')||'';
+  var inp        = document.getElementById('mod-query');
+  var spinner    = document.getElementById('mod-spinner');
+  var defMods    = document.getElementById('mod_default');
+  var resMods    = document.getElementById('mod_results');
+  var queryDelay = 400;
+  var queryUrl   =
+    'add_module.pike?_roxen_wizard_id=' + wizid + '&config='  +
+    document.querySelector('input[name=config]').value        +
+    '&method=' + getMethod() + getShowDeprecated() + '&mod_query=';
 
-  let calloutId, cli, locked, lastQuery, spinnerCallout;
+  var calloutId, lastQuery, spinnerCallout;
 
-  const doSpinner = function(hide) {
+  var doSpinner = function(hide) {
     clearTimeout(spinnerCallout);
 
     if (hide) {
       spinner.style.display = 'none';
     }
     else {
-      spinnerCallout = setTimeout(() => spinner.style.display = 'inline-block',
-                                  queryDelay);
+      spinnerCallout = setTimeout(function() {
+        spinner.style.display = 'inline-block';
+      }, queryDelay);
     }
   };
 
-  const handleResult = function(res) {
+  var handleResult = function(res) {
     doSpinner(true);
-    locked = false;
 
-    const show = function(def) {
+    var show = function(def) {
       if (def) {
         defMods.style.display = 'block';
         resMods.style.display = 'none';
@@ -84,12 +71,7 @@
     }
   };
 
-  const doQuery = function() {
-    if (locked) {
-      window.console.log('Query running, skipping');
-      return;
-    }
-
+  var doQuery = function() {
     if (inp.value) {
       if (lastQuery && inp.value === lastQuery) {
         handleResult(-1);
@@ -98,24 +80,13 @@
 
       doSpinner();
 
-      const q = queryUrl + encodeURIComponent(inp.value);
-      const req = new Request(q, { credentials: 'same-origin' });
-
-      locked = true;
-
-      cli = fetch(req)
-        .then(r => {
-          if (r.status === 200) {
-            return r.text();
-          }
-          window.console.error('bad status, propagate?: ', r);
-          throw 'Bad status';
-        })
-        .then(r => {
+      R.wget(queryUrl + encodeURIComponent(inp.value),
+        function(r) {
           lastQuery = inp.value;
           handleResult(r);
-        })
-        .catch(e => {
+        },
+        function(code, text) {
+          window.console.log('fetch error: ', code, text);
           handleResult(0);
         });
     }
@@ -124,8 +95,7 @@
     }
   };
 
+  inp.addEventListener('keydown', function() { clearTimeout(calloutId); });
+  inp.addEventListener('input', function() { calloutId = setTimeout(doQuery, queryDelay); });
 
-  inp.addEventListener('keydown', e => clearTimeout(calloutId));
-  inp.addEventListener('input', e => calloutId = setTimeout(doQuery, queryDelay));
-
-}(window, document));
+}(window, document, rxnlib));
