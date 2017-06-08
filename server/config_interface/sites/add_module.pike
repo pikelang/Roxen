@@ -5,11 +5,11 @@
 #include <module_constants.h>
 #include <roxen.h>
 
-int no_reload()
-{
-  if( sizeof( already_added ) )
-    return 1; // Reloading this script now would destroy state.
-}
+// int no_reload()
+// {
+//   if( sizeof( already_added ) )
+//     return 1; // Reloading this script now would destroy state.
+// }
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)     _STR_LOCALE("roxen_config",X,Y)
@@ -356,10 +356,16 @@ array(string) get_module_list( function describe_module,
       }
 
       if (!hits) {
-        res +=
-          "<div class='module no-modules'>"
-            "<span class='notify info inline'>No available modules</span>"
-          "</div>";
+        if (class_visible == class_visible_compact) {
+          TRACE("Do nothing\n");
+          // res = 0;
+        }
+        else {
+          res +=
+            "<div class='module no-modules'>"
+              "<span class='notify info inline'>No available modules</span>"
+            "</div>";
+        }
       }
     } else {
       if (!search_modules)
@@ -560,7 +566,6 @@ string page_fast( RequestID id )
 
 string page_faster_search(RequestID id)
 {
-  TRACE("Faster search: %O\n", id);
   return
     "<use file='/template-insert' />\n"
     "<tmpl>" +
@@ -571,26 +576,38 @@ string page_faster_search(RequestID id)
 string page_faster( RequestID id )
 {
   string content =
-    "<form id='mod_results' method='post' action='add_module.pike' style='display: none'>"
-    "</form>"
+    "<form id='mod_results' method='post' action='add_module.pike'"
+    " style='display: none'></form>"
     "<div id='mod_default'>" +
     page_normal_low(id, true) +
     "</div>";
   return page_base( id, content, 0, 1);
 }
 
-int first;
+int first, skip_select;
 
 array(int|string) class_visible_compact( string c, string d, int size,
                                          RequestID id )
 {
   string res="";
-  if(first++)
-    res = "</select><br /><submit-gbutton vspace='3'> "+
-      LOCALE(200, "Add Modules")+ " </submit-gbutton> ";
-  res += "<p><a name='"+Roxen.html_encode_string(c)+
-    "'></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
-    "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
+
+  if (first++ && !skip_select) {
+    res = "</select><br /><submit-gbutton>" +
+          LOCALE(200, "Add Modules")+ "</submit-gbutton><hr class='section'>";
+  }
+
+  res += "<h3 id='"+Roxen.html_encode_string(c)+"' class='no-margin-bottom'>"+c+"</h3>"
+      "<p class='no-margin-top'>"+d+"</p>";
+
+  if (size) {
+    skip_select = false;
+    res += "<select size='"+size+"' multiple name='module_to_add'"
+           " class='add-module-select'>";
+  }
+  else {
+    res += "<div class='notify info'>No available modules</div>";
+    skip_select = true;
+  }
   return ({ 1, res });
 }
 
@@ -608,6 +625,15 @@ string describe_module_compact( object module, object block )
   return "";
 }
 
+// FIXME: Make this work like page_really_compact. The problem with the current
+//        solution with get_module_list() is that the <select>s gets the height
+//        set by how many modules are found, before those are filtered on
+//        wether they are locked/deprecated or not.
+//
+//        The result of this is that there might be completely empty selects as
+//        well as selects which are taller than what they have rows.
+//
+//        © 2107, Looks like crap
 string page_compact( RequestID id )
 {
   first=0;
@@ -659,26 +685,44 @@ string page_really_compact( RequestID id )
   mixed r;
   License.Key license_key = conf->getvar("license")->get_key();
   array(RoxenModule) locked_modules = ({});
+  array(string) mres = ({});
+  bool deprecated = show_deprecated(id);
+
+  mods = filter(mods, lambda (ModuleInfo m) {
+    if (m->deprecated && !deprecated) {
+      return 0;
+    }
+
+    if ((!m->get_description() ||
+         (m->get_description() == "Undocumented")) &&
+        m->type == 0)
+    {
+      return 0;
+    }
+
+    object b = module_nomore(m->sname, m, conf);
+
+    if (!b && m->locked &&
+        (!license_key || !m->unlocked(license_key, conf)))
+    {
+      locked_modules += ({ m });
+      return 0;
+    }
+
+    mres += ({ describe_module_compact(m, b) });
+
+    return 1;
+  });
+
+  mres -= ({ "" });
 
   if( (r = class_visible_compact( LOCALE(200,"Add Modules"),
                                   LOCALE(273,"Select one or several modules to add."),
-                                  sizeof(mods), id )) && r[0] ) {
-    res += r[1];
-    foreach(mods, object q) {
-      if( (!q->get_description() ||
-           (q->get_description() == "Undocumented")) &&
-          q->type == 0 )
-        continue;
-      object b = module_nomore(q->sname, q, conf);
-      if( !b && q->locked &&
-          (!license_key || !q->unlocked(license_key, conf)) )
-      {
-        locked_modules += ({ q });
-        continue;
-      }
-      res += describe_module_compact( q, b );
-    }
-  } else {
+                                  sizeof(mres), id )) && r[0] )
+  {
+    res += r[1] + (mres*"");
+  }
+  else {
     res += r[1];
   }
 
@@ -688,8 +732,8 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<roxen-wizard-id-variable />"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
-                   res+"</select><br /><submit-gbutton> "
-                   +LOCALE(200, "Add Modules")+" </submit-gbutton><br />"
+                   res+"</select><p><submit-gbutton> "
+                   +LOCALE(200, "Add Modules")+" </submit-gbutton></p>"
                    +pafeaw(ec->get(),ec->get_warnings(),
                            locked_modules)+"</form>",
                    );
@@ -713,34 +757,36 @@ array initial_form( RequestID id, Configuration conf, array modules )
   string res = "";
   int num;
 
+  string tmpl = #"
+    <div class='initial-module-conf'>
+      <h3>%s</h3>
+      <emit source='module-variables' configuration='%s' module='%s'/>
+      <emit noset='1' source='module-variables'
+            configuration='%[1]s' module='%[2]s'>
+        <dl class='config-var'>
+          <dt class='name small'>&_.name;</dt>
+          <dd class='value'>
+            <eval>&_.form:none;</eval>
+          </dd>
+          <dd class='doc'>&_.doc:none;</dd>
+        </dl>
+      </emit>
+    </div>";
+
   foreach( modules, string mod )
   {
     ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
-    foreach( indices(moo->query()), string v )
-    {
-      if( moo->getvar( v )->get_flags() & VAR_INITIAL )
-      {
+
+    foreach( indices(moo->query()), string v ) {
+      if( moo->getvar( v )->get_flags() & VAR_INITIAL ) {
         num++;
-        res += "<tr><td colspan='3'><h3>"
-        +LOCALE(1,"Initial variables for ")+
-          //Roxen.html_encode_string(strip_leading(mi->get_name()))
-          Roxen.html_encode_string(mi->get_name())
-          +"</h3></td></tr>"
-        "<emit source='module-variables' "
-          " configuration=\""+conf->name+"\""
-        " module=\""+mod+#"\"/>
-        <emit noset='1' source='module-variables' "
-          " configuration=\""+conf->name+"\""
-        " module=\""+mod+#"\">
-         <tr>
-          <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
-          <td valign='top'><eval>&_.form:none;</eval></td></tr>
-         <tr>
-          <td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
-          <td colspan=2>&_.doc:none;</td></tr>
-         <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>
-        </emit>";
+
+        res +=
+          sprintf(tmpl,
+                  LOCALE(1,"Initial variables for ") +
+                    Roxen.html_encode_string(mi->get_name()),
+                  conf->name, mod);
         break;
       }
     }
@@ -791,14 +837,14 @@ mixed do_it_pass_2( array modules, Configuration conf,
       site_url(id,conf->name)+"-!-/"+modules[-1]+"/" ,
       id);
   }
-  return page_base(id,"<table>"+
+  return page_base(id,
                    map( modules, lambda( string q ) {
-                                   return "<input type='hidden' "
-                                          "name='module_to_add' "
-                                          "value='"+q+"' />";
+                                   return "<input type='hidden'"
+                                          " name='module_to_add'"
+                                          " value='"+q+"' />";
                                  } )*"\n"
                    +"<input type='hidden' name='config' "
-                   "value='"+conf->name+"' />"+cf_form+"</table><p><cf-ok />");
+                    "value='"+conf->name+"' />"+cf_form+"<cf-ok />");
 }
 
 mixed do_it( RequestID id )

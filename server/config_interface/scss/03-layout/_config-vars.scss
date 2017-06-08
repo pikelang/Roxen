@@ -26,6 +26,10 @@
     margin-left: 0;
     padding-left: 0;
     padding-right: $spacing-unit;
+
+    &.small {
+      @include text-size(md);
+    }
   }
 
   .value {
@@ -37,6 +41,18 @@
     &.changed {
       padding: $spacing-unit;
       background: lighten($body-bg, 2%);
+    }
+
+    dl {
+      margin: 0;
+
+      dd {
+        margin-left: 0;
+
+        &+ dt {
+          margin-top: $spacing-unit/2;
+        }
+      }
     }
   }
 
@@ -84,6 +100,24 @@
           padding-top: 0;
         }
       }
+    }
+  }
+}
+
+.initial-module-conf {
+  padding: $site-padding;
+  background: darken($main-column-bg, 3%);
+  margin-bottom: $spacing-unit;
+
+  h3 {
+    margin-top: 0;
+  }
+
+  .config-var {
+    &:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
   }
 }

@@ -12,22 +12,23 @@ string site_url(RequestID id, string site)
 
 string page_base(RequestID id, string content)
 {
-  TRACE("page_base: %O\n", content);
   return sprintf("<use file=/template />"
                  "<tmpl title=''>"
                  "<topmenu base='&cf.num-dotdots;' selected='sites' />"
                  "<content><cv-split>"
-                 "<subtablist width='100%%'>"
+                 "<subtablist>"
                  "<st-tabs></st-tabs>"
                  "<st-page>"
-                 "\n%s\n"
-                 "</st-page></subtablist></td></tr></table>"
+                 "<cf-title>Drop module</cf-title>"
+                 "<ul class='nolist button-list'>"
+                 "%s"
+                 "</ul>"
+                 "</st-page></subtablist>"
                  "</cv-split></content></tmpl>", content);
 }
 
 mapping|string parse(RequestID id)
 {
-  TRACE("Parse: %O\n", id);
   if (!config_perm("Add Module")) {
     return LOCALE(226, "Permission denied");
   }
@@ -59,10 +60,10 @@ mapping|string parse(RequestID id)
   {
     RoxenModule m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);
-    res += ("<p><gbutton href='drop_module.pike?config=&form.config;&amp;"
-            "drop="+replace(q,"#","!")+"&amp;&usr.set-wiz-id;'> "+
-            LOCALE(252, "Drop Module")+
-            " </gbutton>"+"&nbsp; <font size='+2'>&nbsp;"+m->get_name()+"</font> "+(c?" #"+(c+1):"")+"</p>" );
+    res +=  "<li><link-gbutton href='drop_module.pike?config=&form.config;&amp;"
+            "drop="+replace(q,"#","!")+"&amp;&usr.set-wiz-id;' type='remove'> "+
+            "" + (m->get_name() + (c?" #"+(c+1):"")) + ""
+            "</link-gbutton></li>";
   }
   return page_base( id, res );
 }

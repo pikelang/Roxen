@@ -96,6 +96,10 @@ textarea {
 select {
   @extend .__input;
   min-width: 60px;
+
+  &.add-module-select {
+    font-family: monospace;
+  }
 }
 
 .input-row {
