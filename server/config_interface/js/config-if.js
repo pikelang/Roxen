@@ -26,9 +26,10 @@
   // Handle all elements with a data-submit attribute
   var handleDataSubmit = function(el, e) {
     var name = el.getAttribute('name') || '';
-    // In the old A-IF the buttons we're images and when an input#type=image
+    // In the old A-IF the buttons were images and when an input#type=image
     // button is clicked *.x and *.y variables are added. Some code in
-    // config_tags.pike rely on the *.x so vars emulate it.
+    // config_tags.pike (and else where) rely on the *.x var, so let's
+    // emulate it.
     el.setAttribute('name', name + '.x');
     return true;
   };
