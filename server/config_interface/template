@@ -219,11 +219,6 @@
 <gauge variable='var.time_spent' resultonly='yes'>
 <nooutput>
   <eval><insert file="/themes/&usr.theme;/theme"/></eval>
-  <define preparse="1" variable="var.leftimage"><img src="&usr.left-image;" alt="" /></define>
-  <define preparse="1" name="tab-frame-image">&usr.tab-frame-image;</define>
-  <define preparse="1" name="tab-font-size">&usr.tab-font-size;</define>
-  <define preparse="1" name="gbutton-frame-image">&usr.gbutton-frame-image;</define>
-  <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
 <gauge variable='var.time_parse_spent' resultonly='yes'>
   <contents/>
