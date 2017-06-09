@@ -6,11 +6,12 @@ mapping parse( RequestID id )
 {
   User u = id->conf->authenticate( id, roxen.config_userdb_module );
   roxen->error_log = ([]);
-  report_notice(sprintf(LOCALE(298, 
+  report_notice(sprintf(LOCALE(298,
 			       "Event log cleared by %s from %s")+"\n",
 			u?u->name():"a user",
-			(gethostbyaddr(id->remoteaddr)    ? 
+			(gethostbyaddr(id->remoteaddr)    ?
 			 gethostbyaddr(id->remoteaddr)[0] : id->remoteaddr))
 		);
-  return Roxen.http_redirect( "../global_settings/?section=event_log&amp;&usr.set-wiz-id;", id );
+  string wizid = Roxen.parse_rxml("&usr.set-wiz-id;", id);
+  return Roxen.http_redirect( "../global_settings/?section=event_log&" + wizid, id );
 }
