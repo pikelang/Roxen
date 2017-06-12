@@ -151,12 +151,13 @@
       function(r) {
         if (r === '-1') {
           setTimeout(function() {
-            lib.fetchInto(what, where);
+            lib.fetchInto(what, where, cb);
           }, 300);
         }
         else {
           var el = document.getElementById(where);
           el.innerHTML = r;
+
           if (cb) {
             cb(true);
           }

@@ -108,6 +108,17 @@
     return false;
   };
 
+  var handleToggleCheckboxes = function(src, e) {
+    e.preventDefault();
+    var t = document.getElementById(src.dataset.toggleCheckboxes);
+    // var cb = t.querySelectorAll('input[type=checkbox]');
+    R.every(t, 'input[type=checkbox]', function(i, el) {
+      el.checked = !el.checked;
+    });
+
+    return false;
+  };
+
   var main = function(ctx) {
     ctx = ctx || document;
 
@@ -188,6 +199,9 @@
           }
           else if (ds.toggleNext) {
             handleToggleNext(src, e);
+          }
+          else if (ds.toggleCheckboxes) {
+            return handleToggleCheckboxes(src, e);
           }
           else if (src.nodeName === 'SPAN' &&
                    src.classList.contains('toggle'))
