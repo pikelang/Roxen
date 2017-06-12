@@ -152,15 +152,23 @@
 
 <define container="disabled-gbutton" scope="disabled-gbutton">
   <set variable="_.type"> <resolve-button-type type='&_.type;' icon='&_.icon-src;' name='&_.name;'/></set>
+  <set variable="var.extra" value="" />
+  <if variable='_.width'>
+    <set variable='var.extra' value='style="width:&_.width;"' />
+  </if>
   <!-- disabled-gbutton -->
-  <button class="rxn-admin-btn&_.type;" disabled="">&_.contents;</button>
+  <button class="rxn-admin-btn&_.type;" ::="&var.extra;" disabled="">&_.contents;</button>
 </define>
 
 <define container="submit-gbutton" scope="submit-gbutton">
   <attrib name="name">ok</attrib>
   <set variable="_.type"> <resolve-button-type type='&_.type;' icon='&_.icon-src;' name='&_.name;'/></set>
+  <set variable="var.extra" value="" />
+  <if variable='_.width'>
+    <set variable='var.extra' value='style="width:&_.width;"' />
+  </if>
   <!-- submit-gbutton -->
-  <button class="rxn-admin-btn submit&_.type;" data-submit='' name="&_.contents;">&_.contents;</button>
+  <button class="rxn-admin-btn submit&_.type;" data-submit='' ::="&var.extra;" name="&_.contents;">&_.contents;</button>
 </define>
 
 <define container="submit-gbutton2" scope="submit-gbutton2">
@@ -170,9 +178,13 @@
   <if variable="_.onclick = ?*">
     <set variable="var.onclick-confirm" value='onclick="&_.onclick;"'/>
   </if>
+  <set variable="var.extra" value="" />
+  <if variable='_.width'>
+    <set variable='var.extra' value='style="width:&_.width;"' />
+  </if>
   <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
   <!-- submit-gbutton2 -->
-  <button class='rxn-admin-btn&_.type;' data-submit='' name='&_.name;' ::="&var.onclick-confirm;">&_.contents;</button>
+  <button class='rxn-admin-btn&_.type;' data-submit='' ::="&var.extra;" name='&_.name;' ::="&var.onclick-confirm;">&_.contents;</button>
 </define>
 
 <define tag="cf-save">
