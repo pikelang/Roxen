@@ -97,8 +97,9 @@ string|mapping parse( RequestID id )
     foreach( conf_cols, string conf )
     {
       res += "<th class='conf'>"
-        "<a href='/sites/site.html/" + conf + "/'>" +
-	get_conf_name(conf) + "</a>"
+        "<span class='rotated-wrapper'>"
+        "<a href='/sites/site.html/" + conf + "/' class='rotated'>" +
+	get_conf_name(conf) + "</a></span>"
 	"</th>";
     }
     res += "</tr>\n</thead>\n" +
