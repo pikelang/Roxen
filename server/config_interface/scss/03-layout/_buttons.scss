@@ -16,6 +16,7 @@
 button {
   white-space: nowrap;
   cursor: pointer;
+  text-align: left;
 
   &.perm {
     @extend .__icon;
@@ -38,11 +39,11 @@ button {
         content: '\f00c';
       }
     }
+  }
 
-    &:disabled {
-      cursor: default;
-      opacity: .5;
-    }
+  &:disabled {
+    cursor: default;
+    opacity: .5;
   }
 }
 

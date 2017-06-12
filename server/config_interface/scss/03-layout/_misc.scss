@@ -15,6 +15,10 @@
   padding: 0 $site-padding;
 }
 
+.site-padding-all {
+  padding: $site-padding;
+}
+
 .text-left {
   text-align: left;
 }
@@ -83,6 +87,10 @@
   display: none;
 }
 
+.bold {
+  font-weight: bold;
+}
+
 .small {
   @include text-size(sm);
 }
@@ -93,6 +101,28 @@
 
 .x-large {
   @include text-size(xl);
+}
+
+.rotated-wrapper {
+  display: inline-block;
+  text-align: left;
+  overflow: hidden;
+  width: 1.2em;
+  line-height: 1.2em;
+  padding: $spacing-unit 0 0 0;
+}
+
+.rotated {
+  display: inline-block;
+  white-space: nowrap;
+  transform: translate(0, 100%) rotate(-90deg);
+  transform-origin: 0 0;
+
+  &:after {
+    content: ' ';
+    float: left;
+    margin-top: 100%;
+  }
 }
 
 .action-btn-spacer {

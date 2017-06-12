@@ -32,6 +32,7 @@
   @include make-icon(gc,           '\f1b8'); // fa-recycle
   @include make-icon(toggle-open,  '\f146'); // fa-minus-square
   @include make-icon(toggle-closed,'\f0fe'); // fa-plus-square
+  @include make-icon(padlock,      '\f023'); // fa-lock
 
   &.up,
   &.down {

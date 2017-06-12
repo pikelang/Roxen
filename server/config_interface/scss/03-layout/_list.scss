@@ -97,8 +97,20 @@ dt {
   margin: 1px 0 0;
   background: darken($body-bg, 0%);
 
+  h2 {
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
   &:hover {
     opacity: .8;
+  }
+
+  &.no-hover {
+    &:hover {
+      opacity: initial;
+    }
   }
 
   &:first-child {
@@ -113,6 +125,14 @@ dt {
 
   dl {
     margin: 0;
+
+    &+ dl {
+      margin-top: $spacing-unit;
+    }
+
+    &:last-child {
+      border-bottom: 0;
+    }
   }
 
   dt {
