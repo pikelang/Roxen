@@ -1,7 +1,8 @@
 #include <module.h>
 #include <roxen.h>
+#include <config_interface.h>
 //<locale-token project="roxen_config">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+#define LOCALE(X,Y)     _STR_LOCALE("roxen_config",X,Y)
 
 //! @decl optional array(string) modules = ({});
 //!
@@ -33,7 +34,7 @@ object load_modules(Configuration conf)
 #else
   object enable_modules_lock;
 #endif
-  
+
   // The stuff below ought to be in configuration.pike and not here;
   // we have to meddle with locks and stuff that should be internal.
 
@@ -45,11 +46,11 @@ object load_modules(Configuration conf)
     // Enable the module but do not call start or save in the
     // configuration. Call start manually.
     if( !conf->find_module( mod ) &&
-	(module = conf->enable_module( mod, 0, 0, 1, 1 )))
+        (module = conf->enable_module( mod, 0, 0, 1, 1 )))
     {
-      conf->call_low_start_callbacks( module, 
-				      roxen.find_module( mod ), 
-				      conf->modules[ mod ] );
+      conf->call_low_start_callbacks( module,
+                                      roxen.find_module( mod ),
+                                      conf->modules[ mod ] );
     }
   }
   return enable_modules_lock;
@@ -76,7 +77,7 @@ void init_modules(Configuration conf, RequestID id);
 protected class PreStartCb (RequestID id)
 {
   void pre_start_cb (RoxenModule mod, int save_vars,
-		     Configuration conf, int newly_added)
+                     Configuration conf, int newly_added)
   {
     init_module (conf, mod, id);
   }
@@ -99,25 +100,24 @@ string initial_form( Configuration conf, RequestID id, int setonly )
       if(moo->getvar( v )->check_visibility(id, 1, 0, 0, 1, 1))
       {
         num++;
-        res += "<tr><td colspan='3'><h2>"
+        res += "<div class='action-group no-hover site-padding-all'><h2>"
         +LOCALE(1,"Initial variables for ")+
-            Roxen.html_encode_string(mi->get_name())+"</h2></td></tr>"
+            Roxen.html_encode_string(mi->get_name())+"</h2>"
         "<emit source='module-variables' "
-	  " configuration=\""+conf->name+"\""
-	  " module=\""+mod+#"\"/>";
-	if( !setonly )
-	  res += 
+          " configuration=\""+conf->name+"\""
+          " module=\""+mod+#"\"/>";
+        if( !setonly )
+          res +=
         "<emit noset='1' source='module-variables' "
-	  " configuration=\""+conf->name+"\""
+          " configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">
- <tr>
- <td width='150' valign='top' colspan='2'><b>&_.name;</b></td>
- <td valign='top'><eval>&_.form:none;</eval></td></tr>
- <tr>
-<td width='30'><img src='/internal-roxen-unit' width=50 height=1 alt='' /></td>
-  <td colspan=2>&_.doc:none;</td></tr>
- <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>
-</emit>";
+          <dl class='config-var'>
+            <dt class='name'>&_.name;</dt>
+            <dd class='value'><eval>&_.form:none;</eval></dd>
+            <dd class='doc'>&_.doc:none;</dd>
+          </dl>
+        </emit>
+        </div>";
         break;
       }
     }
@@ -157,25 +157,30 @@ int form_is_ok( RequestID id )
 
 mixed parse( RequestID id, mapping|void opt )
 {
+  TRACE("parse: %O\n", id);
   Configuration conf = id->misc->new_configuration;
-  id->misc->do_not_goto = 1;  
+  id->misc->do_not_goto = 1;
 
   // Load initial modules
   object enable_modules_lock = load_modules(conf);
-  
-  string cf_form = 
-    "<emit noset='1' source=config-variables configuration='"+conf->name+"'>"
-    "  <tr><td colspan=2 valign=top width=20%><b>&_.name;</b></td>"
-    "      <td valign=top><eval>&_.form:none;</eval></td></tr>"
-    "  <tr><td></td><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>"
-    "  <tr><td colspan='3'><img src='/internal-roxen-unit' height='18' /></td></tr>"
-    "</emit>";
-  
+
+  string cf_form =
+    "<div class='action-group no-hover site-padding-all'>"
+    + "<h2>" + LOCALE(190,"Initial variables for the site") + "</h2>"
+    "  <emit noset='1' source=config-variables configuration='"+conf->name+"'>"
+    "    <dl class='config-var'>"
+    "      <dt class='name'>&_.name;</dt>"
+    "      <dd class='value'><eval>&_.form:none;</eval></dd>"
+    "      <dd class='doc'>&_.doc:none;<p>&_.type_hint;</p></dd>"
+    "    </dl>"
+    "  </emit>"
+    "</div>";
+
   // set initial variables from form variables...
   Roxen.parse_rxml("<emit source=config-variables configuration='"+
-		   conf->name+"'/>", id );
+                   conf->name+"'/>", id );
   Roxen.parse_rxml( initial_form( conf, id, 1 ), id );
-  
+
   if( id->variables["ok.x"] && form_is_ok( id ) )
   {
     conf->set( "MyWorldLocation", Roxen.get_world(conf->query("URLs"))||"");
@@ -191,12 +196,12 @@ mixed parse( RequestID id, mapping|void opt )
       mod = replace (mod, "!", "#");
       RoxenModule module = conf->find_module( mod );
       if(module)
-	conf->call_start_callbacks( module,
-				    roxen.find_module( mod ),
-				    conf->modules[ mod ],
-				    1);
+        conf->call_start_callbacks( module,
+                                    roxen.find_module( mod ),
+                                    conf->modules[ mod ],
+                                    1);
     }
-    
+
     License.Key key = conf->getvar("license")->get_key();
     foreach( this->silent_modules || ({}), string mod )
     {
@@ -204,12 +209,12 @@ mixed parse( RequestID id, mapping|void opt )
       // one module copy is wanted then avoid it.
       if (!has_value (mod, "#")) mod += "#0";
       if (conf->enabled_modules[mod])
-	continue;
+        continue;
 
       ModuleInfo module = roxen.find_module(mod);
       if(module->locked && (!key || !module->unlocked(key)) ) {
-	report_debug("Ignoring module "+mod+", disabled in license.\n");
-	continue;
+        report_debug("Ignoring module "+mod+", disabled in license.\n");
+        continue;
       }
       conf->enable_module( mod );
     }
@@ -227,8 +232,7 @@ mixed parse( RequestID id, mapping|void opt )
     return "<done/>";
   }
   return
-    "<h2>"+LOCALE(190,"Initial variables for the site")+"</h2>"
-    "<table>" + cf_form + initial_form( conf, id, 0 ) + 
-         ((opt||([]))->no_end_table?"":"</table><p>")+
-         ((opt||([]))->no_ok?"":"<p align=right><cf-ok /></p>");
+    cf_form + initial_form( conf, id, 0 ) +
+         ((opt||([]))->no_end_table?"":"")+
+         ((opt||([]))->no_ok?"":"<hr><p><cf-ok /></p>");
 }

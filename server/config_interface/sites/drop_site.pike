@@ -18,7 +18,6 @@ constant tmpl = #"
       <st-tabs></st-tabs>
       <st-page>
         <div class='notify warn'><b>{{ warning }}</b></div>
-
       </st-page>
     </subtablist>
   </cv-split></content>
@@ -123,20 +122,9 @@ string|mapping parse( RequestID id )
                  "databases, uncheck the checkmark in front of the ones"
                  " you want to keep.") +
           #"</p>
-<script type='text/javascript'>
-  var check_all_toggle = 0;
-  function checkAll() {
-    var checkboxes = document.getElementById ('checkbox_list').
-      getElementsByTagName ('INPUT');
-    for (var i = 0; i < checkboxes.length; i++) {
-      checkboxes[i].checked = check_all_toggle;
-    }
-    check_all_toggle = !check_all_toggle;
-  }
-</script>
-<p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
+          <p><button id='check_all_button' data-toggle-checkboxes='checkbox_list'>" +
           LOCALE(1065, "Uncheck/Check All") +
-          "</gbutton></a></p>\n";
+          "</button></p>\n";
       }
       res += "<ul id='checkbox_list'>";
       int n;
@@ -156,7 +144,7 @@ string|mapping parse( RequestID id )
             Roxen.html_encode_string(id->variables->site)+"' />");
 
     res +=
-      "<p><submit-gbutton2 name='really'> "+
+      "<hr><p><submit-gbutton2 name='really'> "+
       LOCALE(249,"Drop old site") +
       " </submit-gbutton2> "
       "<cf-cancel href='./'/>";

@@ -12,7 +12,8 @@
   </if>
   <translate id="269" variable='var.sitename_txt'>Site name:</translate>
   <input name="name" value="&form.name;" id='site-name'
-    placeholder='&var.sitename_txt;' size='60' />
+    placeholder='&var.sitename_txt;' size='60' required=''
+    pattern='[ a-zA-Z0-9]+|(?!CVS)|(?!global variables)' />
   <p><translate id="270">
 The name of the configuration must contain characters other than space
 and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
