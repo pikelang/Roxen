@@ -27,8 +27,10 @@
  <st-page>
   <if variable='form.section is event_log'>
     <insert file="../event_log/log.pike" />
-    <a href="../event_log/clear_log.pike">
-      <gbutton preparse="1"> <translate id="247">Clear Log</translate> </gbutton></a>
+    <hr class='section'>
+    <link-gbutton href="../event_log/clear_log.pike" type="clear">
+      <translate id="247">Clear Log</translate>
+    </link-gbutton>
   </if>
   <elseif variable='form.section is ports'>
     <input type="hidden" name="port" value='&form.port;'>
