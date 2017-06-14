@@ -16,28 +16,30 @@ mixed query( mixed ... args ) {
 }
 
 string|mapping parse( RequestID id )
-{ 
+{
 	// Permissions check
 	if ( !(CU_AUTH( "Edit Global Variables" )) ) return "Access denied";
-	
+
 	// Draw continue button
-	string res = "<nooutput><eval><insert file='/themes/&usr.theme;/theme'/></eval><define preparse='1' variable='var.leftimage'><img src='&usr.left-image;' alt='' /></define><define preparse='1' name='tab-frame-image'>&usr.tab-frame-image;</define><define preparse='1' name='tab-font-size'>&usr.tab-font-size;</define><define preparse='1' name='gbutton-frame-image'>&usr.gbutton-frame-image;</define><define name='font' preparse='1'>&usr.font;</define><expire-time now='1'/></nooutput>\n";
-	res += "<a href='/dbs/'><gbutton>Continue...</gbutton></a><br/><br/>";
-	
+	string res =
+		"<use file='/template-insert' />"
+		"<tmpl>"
+		"<p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p>";
+
 	// Draw result table
-	res += "<table id='tbl' cellspacing='0' cellpadding='1'>\n"
-	  "<thead>\n"
+	res += "<table class='nice db-list'>"
+	  "<thead>"
 	  "<tr>"
 	  "<th>Target</td>"
 	  "<th>Result</td>"
 	  "<th>Time</td>"
-	  "<tr>\n"
-	  "</thead>\n"
-	  "<tbody>\n";
-	
+	  "<tr>"
+	  "</thead>"
+	  "<tbody>";
+
 	// Enumerate databases
 	mixed q_dbs = query( "SHOW DATABASES" );
-	
+
 	// Repair and optimize
 	float t3 = 0;
 	foreach (q_dbs,q_dbs) {
@@ -50,32 +52,33 @@ string|mapping parse( RequestID id )
 					int t = time();
 					float t1 = time(t);
 					float t2;
-					
+
 					if ( mixed e = catch { q = query( "REPAIR TABLE `" + q_dbs->Database + "`.`" + m->Name + "`" ); } ) {
-						result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+						result = "<span class='notify error inline'>Error: " + describe_error(e) + "</span>";
 					} else {
 						t2 = (time(t)-t1);
 						t3 += t2;
-						
-						if (q->Msg_text = "OK") 
-							result = "<font color='green'>OK</font>";
+
+						if (q->Msg_text = "OK")
+							result = "<span class='notify ok inline'>Ok</span>";
 						else
-							result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+							result = "<span class='notify error inline'>Failed: " + q->Msg_text + "</span>";
 					}
-					
+
 					res += "<tr>" +
 					"<td><a href='browser.pike?db=" + q_dbs->Database + "&amp;&usr.set-wiz-id;'>" + q_dbs->Database + "</a>.<a href='browser.pike?db=" + q_dbs->Database + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-					"<td><b>" + result + "</b></td>" +
+					"<td>" + result + "</td>" +
 					"<td>" + t2 + " sec</td>" +
 					"</tr>";
 				}
 			}
 		}
 	}
-	res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr>"
-	  "</tbody></table><br/>\n";
-	res += "<a href='/dbs/'><gbutton>Continue...</gbutton></a><br/>";
-	
+	res += "</tbody>"
+		"<tfoot><tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr>"
+	  "</tfoot></table>"
+	  "<p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p></tmpl>";
+
 	// Done
 	return Roxen.http_rxml_answer(res, id);
 }

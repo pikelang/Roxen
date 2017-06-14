@@ -5,52 +5,35 @@
   <cv-split>
     <subtablist width="100%">
       <st-tabs></st-tabs>
-
       <st-page>
-	<style type='text/css'>
-	  #tbl {
-	    font-size: smaller;
-	    text-align: left;
-	  }
-	  #tbl tr > td {
-	    padding-left: 1em;
-	    border-bottom: 1px solid &usr.matrix22;;
-	  }
-	  #tbl tr > th {
-	    font-weight: bold;
-	    background-color: &usr.matrix12;;
-	    padding-left: 1em;
-	  }
-	  #tbl tr > *:first-child {
-	    padding-left: 0;
-	  }
-	</style>
+				<cf-title><translate id="538">Optimize all tables</translate></cf-title>
 
-	<div style="position: absolute; left:0;top:0;display:none;"><img src="/img/ajax_progress.gif"/></div>
+				<if variable="form.c = execute">
+				  <div id="result" data-db-href='/dbs/db_optimizeall_ajax.pike'
+				       data-progress-msg='Optimizing tables...'>
+				  	<i class='fa fa-spinner fa-pulse'></i>
+				  	<span class='text'>Initializing query...</span>
+				  </div>
+					<script src='/js/fix-db.js' async=''></script>
+			  </if>
+			  <else>
+			  	<div class='notify warn'>
+					  <translate id="1042">
+					    <b>Warning!</b><br />
+					    This might take a long time to complete.<br/>
+					    The amount of time this takes depends on how large the tables are.<br/>
+					  </translate>
+					</div>
 
-	<h3><translate id="538">Optimize all tables</translate></h3>
-
-	<if variable="form.c = execute">
-	  <span id="result" class="df_text">Initializing AJAX...</a></span>
-	  
-	  <script type="text/javascript" src="ajax_optimizeall.js"></script>
-	  <script type="text/javascript">callPike();</script>
-	  </if><else>
-
-	  <translate id="1042">
-	    <b>Warning!</b><br />
-	    This might take a long time to complete.<br/>
-	    The amount of time this takes depends on how large the tables are.<br/>
-	  </translate>
-
-	  <br />
-
-	  <cf-perm perm="Edit Global Variables">
-	    <a href='index.html'><gbutton>Cancel</gbutton></a>
-	    <set variable="var.submit-btn"><gbutton-url>Optimize all tables</gbutton-url></set>
-	    <form id="execform" action="&page.path;" method="post"><roxen-wizard-id-variable /><input type="hidden" name="c" value="execute" /><input type="image" src="&var.submit-btn;"/></form>
-	  </cf-perm>
-	</else>
+				  <cf-perm perm="Edit Global Variables">
+				    <link-gbutton type='cancel' href='index.html'>Cancel</link-gbutton>
+				    <form id="execform" action="&page.path;" method="post">
+				    	<roxen-wizard_id_variable />
+				    	<input type="hidden" name="c" value="execute" />
+				    	<submit-gbutton2 type='ok'>Optimize all tables</submit-gbutton2>
+			    	</form>
+				  </cf-perm>
+				</else>
       </st-page>
     </subtablist>
   </cv-split>

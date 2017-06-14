@@ -32,8 +32,8 @@ mapping actions = ([
       ("<table><tr><td colspan='2'>\n"+                         \
        sprintf((string)(X), db)+                                \
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
-       "<submit-gbutton2 name='yes' align='center' "            \
-       " width='&usr.gbutton-width;'>"+_(0,"Yes")+              \
+       "<submit-gbutton2 name='yes' "            \
+       " type='ok'>"+_(0,"Yes")+              \
        "</submit-gbutton2></td>\n"                              \
        "<td align=right><cf-no href='"+Roxen.html_encode_string(id->not_query)+\
        "?db="+Roxen.html_encode_string(id->variables->db)+      \
@@ -47,19 +47,19 @@ mixed change_group( string db, RequestID id )
 {
   if( !id->variables->group )
   {
-    string res ="<br /><blockquote>"
+    string res =""
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(423,"Changing group for %s"), db )+"</h2>"
-      "<b>"+_(445,"Old group")+":</b> " +
-      DBManager.get_group(DBManager.db_group(db))->lname+"<br />"
-      "<b>"+_(504,"New group")+":</b> <select name='group'>";
+      "<cf-title>"+sprintf(_(423,"Changing group for %s"), db )+"</cf-title>"
+      "<p><b>"+_(445,"Old group")+":</b> " +
+      DBManager.get_group(DBManager.db_group(db))->lname+"</p>"
+      "<p><b>"+_(504,"New group")+":</b> <select name='group'>";
     foreach( DBManager.list_groups(), string g )
       if( g == DBManager.db_group( db ) )
         res += "<option selected value='"+g+"'>"+DBManager.get_group( g )->lname;
       else
         res += "<option value='"+g+"'>"+DBManager.get_group( g )->lname;
-    return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
-      "</submit-gbutton2>";
+    return res + "</select><submit-gbutton2 name='ok' type='ok'>"+(201,"OK")+
+      "</submit-gbutton2></p>";
   }
   DBManager.set_db_group( db, id->variables->group );
   return 0;
@@ -70,17 +70,17 @@ mixed change_charset( string db, RequestID id )
   if( !id->variables->default_charset )
   {
     string old_charset = DBManager.get_db_default_charset(db);
-    string res ="<br /><blockquote>"
+    string res =""
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(539,"Changing default character set for %s"), db )+
-      "</h2>"+
-      (old_charset?("<b>"+_(540, "Old default character set")+":</b> " +
-                    old_charset+"<br />"):"")+
-      "<b>"+_(541,"New default character set")+":</b> "
+      "<cf-title>"+sprintf(_(539,"Changing default character set for %s"), db )+
+      "</cf-title>"+
+      (old_charset?("<p><b>"+_(540, "Old default character set")+":</b> " +
+                    old_charset+"</p>"):"")+
+      "<p><b>"+_(541,"New default character set")+":</b> "
       "<input type='string' name='default_charset' value='" +
       Roxen.html_encode_string(old_charset||"") +"' />";
     return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
-      "</submit-gbutton2>";
+      "</submit-gbutton2></p>";
   }
   DBManager.set_db_default_charset( db, id->variables->default_charset );
   return 0;
@@ -132,29 +132,9 @@ mixed change_schedule( string db, RequestID id )
 
 mixed repair_db( string db, RequestID id )
 {
-  // CSS stylesheet
-  string res = "<style type='text/css'>"
-    "#tbl {"
-    " font-size: smaller;"
-    " text-align: left;"
-    "}\n"
-    "#tbl tr > td {"
-    " padding-left: 1em;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    "}\n"
-    "#tbl tr > th {"
-    " font-weight: bold;"
-    " background-color: &usr.matrix12;;"
-    " padding-left: 1em;"
-    "}\n"
-    "#tbl tr > *:first-child {"
-    " padding-left: 0;"
-    "}\n"
-    "</style>"
-
-    "<a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'><gbutton>Back</gbutton></a><br/><br/>"
-
-    "<table id='tbl' cellspacing='0' cellpadding='1'>"
+  string res =
+    "<p><link-gbutton type='back' href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>Back</link-gbutton></p>"
+    "<table id='tbl' class='nice tbl-details'>"
     "<thead>"
     "<tr>"
     "<th>Target</th>"
@@ -176,25 +156,28 @@ mixed repair_db( string db, RequestID id )
       float t2;
 
       if ( mixed e = catch { q = query( "REPAIR TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
-        result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+        result = "<span class='notify error inline'>Error: " + describe_error(e) + "</span>";
       } else {
         t2 = (time(t)-t1);
         t3 += t2;
 
         if (q->Msg_text = "OK")
-          result = "<font color='green'>OK</font>";
+          result = "<span class='notify ok inline'>Ok</span>";
         else
-          result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+          result = "<span class='notify error inline'>Failed: " + q->Msg_text + "</span>";
       }
 
       res += "<tr>" +
         "<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-        "<td><b>" + result + "</b></td>" +
+        "<td>" + result + "</td>" +
         "<td>" + t2 + " sec</td>" +
         "</tr>";
     }
   }
-  res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></tbody></table><br/>";
+  res +=
+    "</tbody>"
+    "<tfoot><tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></tfoot>"
+    "</table>";
 
   return res;
 }
@@ -202,28 +185,11 @@ mixed repair_db( string db, RequestID id )
 mixed optimize_db( string db, RequestID id )
 {
   // CSS stylesheet
-  string res = "<style type='text/css'>"
-    "#tbl {"
-    " font-size: smaller;"
-    " text-align: left;"
-    "}\n"
-    "#tbl tr > td {"
-    " padding-left: 1em;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    "}\n"
-    "#tbl tr > th {"
-    " font-weight: bold;"
-    " background-color: &usr.matrix12;;"
-    " padding-left: 1em;"
-    "}\n"
-    "#tbl tr > *:first-child {"
-    " padding-left: 0;"
-    "}\n"
-    "</style>"
+  string res =
+    "<p><link-gbutton type='back' href='browser.pike?db=" +
+        db + "&amp;&usr.set-wiz-id;'>Back</link-gbutton></p>"
 
-    "<a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'><gbutton>Back</gbutton></a><br/><br/>"
-
-    "<table id='tbl' class='db-list'>"
+    "<table id='tbl' class='nice db-list'>"
     "<thead>"
     "<tr>"
     "<th>Target</th>"
@@ -245,25 +211,29 @@ mixed optimize_db( string db, RequestID id )
       float t2;
 
       if ( mixed e = catch { q = query( "OPTIMIZE TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
-        result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+        result = "<span class='notify error inline'>Error: " + describe_error(e) + "</span>";
       } else {
         t2 = (time(t)-t1);
         t3 += t2;
 
         if (q->Msg_text = "OK")
-          result = "<font color='green'>OK</font>";
+          result = "<span class='notify ok inline'>Ok</span>";
         else
-          result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+          result = "<span class='notify error inline'>Failed: " + q->Msg_text + "</span>";
       }
 
       res += "<tr>" +
         "<td><a href='browser.pike?db=" + db + "&amp;&usr.set-wiz-id;'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-        "<td><b>" + result + "</b></td>" +
+        "<td>" + result + "</td>" +
         "<td>" + t2 + " sec</td>" +
         "</tr>";
     }
   }
-  res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></table><br/>";
+  res +=
+    "</tbody>"
+    "<tfoot>"
+    "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr>"
+    "</tfoot></table>";
 
   return res;}
 
@@ -409,9 +379,9 @@ mixed move_db( string db, RequestID id )
     id->variables->what = "move";
 
   return
-    "<gtext scale=0.6>"+_(414,"Copy or rename this database")+"</gtext><br />\n"
+    "<cf-title>"+_(414,"Copy or rename this database")+"</cf-title>\n"
     +warning+
-    "<table>\n"
+    "<table class='auto'>\n"
 
     "  <tr>\n"
     "    <td><b>"+_(415,"Action")+":</b></td>\n"
@@ -454,7 +424,7 @@ mixed move_db( string db, RequestID id )
     "?db=" + Roxen.html_encode_string(id->variables->db) +
     "&amp;&usr.set-wiz-id;'/></td>\n"
     "<td align=right>"
-    "<submit-gbutton2 name='ok'>" + _(201,"OK") + "</submit-gbutton2>"
+    "<submit-gbutton2 name='ok' type='ok'>" + _(201,"OK") + "</submit-gbutton2>"
     "</td>\n</table>\n";
 }
 

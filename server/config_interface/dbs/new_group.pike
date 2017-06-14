@@ -19,7 +19,7 @@ void really_do_create( RequestID id  )
 			     id->variables->lname,
 			     id->variables->comment,
 			     (strlen(id->variables->url)?
-			     "mysql://"+id->variables->url+"/" : 
+			     "mysql://"+id->variables->url+"/" :
 			     ""));
 }
 
@@ -31,52 +31,65 @@ mapping|string parse( RequestID id )
 
   if( !id->variables->name )
     id->variables->name = _(449,"automatic");
-  
+
   string error="",form =
 #"
-<h3>"+_(450,"Create a new database group")+#"</h3>
+<cf-title>"+_(450,"Create a new database group")+#"</cf-title>
 "+_(451,#"<p>The groups are used mainly to group the databases in the
 Administration interface, but also to indicate the default MySQL
 server external databases will be created in.</p>
 
 <p>If a group has a URL set, it will be used to select the database
 server in which the database will be created. Please note that it
-must be a MySQL server.</p>")+#"<p>
-<font size=+1><b>ERROR</b></font>
-<table>
-  <tr>
-    <td><b>"+_(452,"ID")+#":</b></td> <td><input name='name' value='&form.name;' size=20/></td>
-    <td><b>"+_(376,"Name")+#":</b></td> <td><input name='lname' value='&form.lname;' size=30/></td>
-  </tr>
-  <tr>
-  <td valign=top colspan='2'>
-    "+_(453,"The identifier of the group. This is used internally in Roxen,"
-	   " and must be unique. "
-	   "If you leave it as automatic, an identifier is selected "
-	   "automatically.")+#"
-   </td>
-   <td valign=top colspan='2' width='100%'>
-     "+_(454,"The name of the database group. This is what is"
-	 " shown in the configuration interface.")+#"
-   </td>
- </tr>
-  <tr>
-     <td><nbsp><b>"+_(444,"URL")+#":</b></nbsp></td>
-      <td colspan=3>mysql://<input name='url' size=30 value='&form.url;'/></td>
-      </tr>
-      <tr><td valign=top colspan='4'>
-      "+_(455, #"\
+must be a MySQL server.</p>")+#"
+[ERROR]
+<p>
+<dl class='config-var no-border narrow'>
+  <dt class='name'>" + _(452,"ID") + #":</dt>
+  <dd class='value'>
+    <input name='name' value='&form.name;' required=''/>
+  </dd>
+  <dd class='doc'>" +
+    _(453,"The identifier of the group. This is used internally in Roxen,"
+          " and must be unique. "
+          "If you leave it as automatic, an identifier is selected "
+          "automatically.")+#"
+  </dd>
+</dl>
+
+<dl class='config-var no-border narrow'>
+  <dt class='name'>" + _(376,"Name") + #":</dt>
+  <dd class='value'>
+    <input name='lname' value='&form.lname;' required='' size='60' />
+  </dd>
+  <dd class='doc'>" +
+    _(454,"The name of the database group. This is what is"
+          " shown in the configuration interface.")+#"
+  </dd>
+</dl>
+
+<dl class='config-var no-border narrow'>
+  <dt class='name'>" + _(444,"URL") + #":</dt>
+  <dd class='value'>
+    <input name='url' size=30 value='&form.url;' placeholder='mysql:// is added...'/>
+  </dd>
+  <dd class='doc'>" +
+    _(455, #"\
 This URL is used for <i>internal</i> databases created in this group,
 and it specifies which MySQL server they should be created in. As an
 example, if you want all databases created in the group to end up in
 the MySQL running on the host <i>wyrm</i>, using the account with
 the username <i>foo</i> and password <i>bar</i>, set this URL to
-<i>foo:bar@wyrm</i>.")+
-    "</td></tr>"
-#"<tr><td valign=top><nbsp><b>"+_(448,"Comment")+#":</b></nbsp></td>
-      <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
+<i>foo:bar@wyrm</i>.")+#"
+  </dd>
+</dl>
 
-    "</table>";
+<dl class='config-var no-border narrow'>
+  <dt class='name'>" + _(448,"Comment") + #":</dt>
+  <dd class='value'>
+    <textarea name='comment' rows='10'>&form.comment;</textarea>
+  </dd>
+</dl>";
 
   if( id->variables["ok.x"]  )
   {
@@ -118,5 +131,5 @@ the username <i>foo</i> and password <i>bar</i>, set this URL to
 	return "";
       }
   }
-  return replace( form, "ERROR", error );
+  return replace( form, "[ERROR]", error );
 }
