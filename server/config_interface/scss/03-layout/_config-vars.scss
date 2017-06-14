@@ -11,6 +11,10 @@
     padding-top: $spacing-unit;
   }
 
+  &.no-border {
+    border-bottom: 0;
+  }
+
   h3 {
     border-bottom: 1px solid lighten($main-column-bg, 10%);
     margin-top: $spacing-unit*2;
@@ -61,6 +65,7 @@
     padding-left: 0;
     margin-left: 0;
     margin-top: $spacing-unit/2;
+    margin-left: 25%;
     // @include text-size(sm);
 
     & > p {
@@ -71,6 +76,20 @@
       &:last-child {
         margin-bottom: 0;
       }
+    }
+  }
+
+  &.narrow {
+    .name {
+      width: 15%;
+    }
+
+    .value {
+      width: 85%;
+    }
+
+    .doc {
+      margin-left: 15%;
     }
   }
 

@@ -9,6 +9,10 @@
   padding: $spacing-unit;
   @include set-notify-color($notify-bg-color);
 
+  &.ok {
+    @include set-notify-color($notify-ok-bg-color);
+  }
+
   &.warn,
   &.warning {
     @include set-notify-color($notify-warn-bg-color);
@@ -38,13 +42,18 @@
 
     &.info {
       color: $notify-bg-color;
-      @include make-icon(info,  '\f05a') // fa-info-circle
+      @include make-icon(info,  '\f05a'); // fa-info-circle
+    }
+
+    &.ok {
+      color: $notify-ok-bg-color;
+      @include make-icon(ok,  '\f00c');
     }
 
     &.warn,
     &.warning {
       color: $notify-warn-bg-color;
-      @include make-icon(warn,  '\f071') // fa-warning
+      @include make-icon(warn,  '\f071'); // fa-warning
     }
 
     &.error {
