@@ -195,7 +195,7 @@
 </define>
 <define tag="cf-ok"><submit-gbutton2 type="ok" name="ok"><translate id="201">OK</translate></submit-gbutton2></define>
 <define tag="cf-cancel"><link-gbutton type="cancel" href="&_.href;"><translate id="202">Cancel</translate></link-gbutton></define>
-<define tag="cf-no">3#<gbutton href="&_.href;" width="&usr.gbutton-width;" align="center" vspace="4" img-align="middle" font="&usr.gbutton-font;"> <translate id="no">No</translate> </gbutton> </define>
+<define tag="cf-no"><link-gbutton href="&_.href;" type='clear'><translate id="no">No</translate></link-gbutton></define>
 <define tag="cf-refresh"><link-gbutton href="&page.url;" type="refresh"><translate id="520">Refresh</translate></link-gbutton></define>
 <define tag="cf-ok-button"><link-gbutton href="&_.href;" type="ok"><translate id="201">OK</translate></link-gbutton></define>
 
