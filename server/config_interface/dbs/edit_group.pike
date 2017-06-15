@@ -11,11 +11,11 @@
       ("<table><tr><td colspan='2'>\n"+				\
        sprintf((string)(X), group)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
-       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
-       "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+\
+       "<submit-gbutton2 name='yes' type='ok'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
+       "<td align=right><link-gbutton type='delete' href='"+Roxen.html_encode_string(id->not_query)+\
       "?group="+\
-       Roxen.html_encode_string(id->variables->group)+"&amp;&usr.set-wiz-id;'><gbutton> "+\
-       _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
+       Roxen.html_encode_string(id->variables->group)+"&amp;&usr.set-wiz-id;'>"+\
+       _(0,"No")+" </link-gbutton></td>\n</table>\n");			\
   }									\
 } while(0)
 
@@ -51,6 +51,7 @@ string parse( RequestID id )
       return tmp;
   }
 
+  constant encstr = Roxen.html_encode_string;
 
   if( id->variables->lname && !view_mode)
   {
@@ -64,38 +65,49 @@ string parse( RequestID id )
   c = DBManager.get_group( id->variables->group );
 
 
-  
-  
-  res += "<blockquote><br /><h2>"+c->lname+"</h2>"
-    ""+c->comment+"<table>";
-
-  res += "<tr><td><b>Name:</b></td><td> "+
-    (view_mode ? Roxen.html_encode_string(c->lname) :
-     "<input size=50 name=lname value='"+
-     Roxen.html_encode_string(c->lname)+"' />")+
-    "</td></tr>";
-  
-  res += "<tr><td><b>URL:</b> </td><td> "
-    "mysql://"+
-    (view_mode ? Roxen.html_encode_string(trim_sl((c->pattern/"://")[-1]))
-     : "<input size=42 name=pattern value='"+
-    Roxen.html_encode_string(trim_sl((c->pattern/"://")[-1]))+
-    "' />")+"</td></tr>";
-  
-  res += "<tr><td valign=top><b>Comment:</b></td><td valign=top> "+
-    (view_mode ? Roxen.html_encode_string(c->comment) :
-     "<textarea cols='50' rows=4 name=comment>"+
-     Roxen.html_encode_string(c->comment)+"</textarea>")+
-    "</td></tr>";
 
 
-  res += "<tr><td></td><td align=right>"
-    +(view_mode ? "" : "<cf-save />")+
-    "</td></tr>";
-  res += "</table>";
+  res += "<cf-title>"+c->lname+"</cf-title>"
+    "<p class='no-margin-top'>"+c->comment+"</p>";
 
-  res += sprintf("<font size=+1><b>"+_(434,"Databases in the group %s")+
-		 "</b></font><br />", c->lname );
+  res +=
+    "<dl class='config-var no-border narrow'>"
+      "<dt class='name'>Name:</dt>"
+      "<dd class='value'>" +
+      (view_mode ? encstr(c->lname) :
+        "<input size=50 name=lname value='"+encstr(c->lname)+"' />")+
+      "</dd>"
+    "</dl>";
+
+  res +=
+    "<dl class='config-var no-border narrow'>"
+      "<dt class='name'>URL:</dt>"
+      "<dd class='value'>" +
+      (view_mode ?
+        encstr(trim_sl((c->pattern/"://")[-1])) :
+        "<input size=50 name=pattern value='"+
+                encstr(trim_sl((c->pattern/"://")[-1]))+"'"
+        " placeholder='mysql:// added automatically'/>"
+      )+"</dd>"
+    "</dl>";
+
+  res +=
+    "<dl class='config-var no-border narrow'>"
+      "<dt class='name'>Comment:</dt>"
+      "<dd class='value'>" +
+      (view_mode ?
+        encstr(c->comment) :
+        "<textarea cols='50' rows=4 name=comment>"+encstr(c->comment)+
+        "</textarea>"
+      )+"</dd>"
+    "</dl>";
+
+  res += (view_mode ? "" : "<cf-save/>");
+
+
+  res += "<hr class='margin-top'>";
+
+  res += sprintf("<h3>"+_(434,"Databases in the group %s")+"</h3>", c->lname );
 
   array groups = DBManager.group_dbs( id->variables->group );
   res += "<dl>\n";
@@ -118,16 +130,16 @@ string parse( RequestID id )
   {
     string button;
     if ( sizeof(DBManager.group_dbs(id->variables->group)) )
-      button = sprintf("<gbutton textcolor='#BEC2CB'>%s</gbutton>",
+      button = sprintf("<disabled-button type='delete'>%s</disabled-button>",
 		       _(352, "Delete group"));
     else
-      button = sprintf("<a href='%s?group=%s&amp;action=%s&amp;&usr.set-wiz-id;'><gbutton>%s</gbutton></a>",
+      button = sprintf("<link-gbutton href='%s?group=%s&amp;action=%s&amp;&usr.set-wiz-id;'>%s</link-gbutton>",
 		       id->not_query, id->variables->group, "delete",
 		       _(352, "Delete group"));
-    res += "<br />"+button;
+    res += "<hr>"+button;
   }
 
-  return res + "\n</blockquote></st-page></content></tmpl>";
+  return res + "</st-page></content></tmpl>";
 }
 
 
