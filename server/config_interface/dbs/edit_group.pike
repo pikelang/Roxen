@@ -64,7 +64,12 @@ string parse( RequestID id )
   }
   c = DBManager.get_group( id->variables->group );
 
-
+  if (!c) {
+    return res + sprintf(
+      "<div class='notify error'>The database group <code>%s</code> doesn't"
+      " exist!</div>", id->variables->group) +
+      "</st-page></content></tmpl>";
+  }
 
 
   res += "<cf-title>"+c->lname+"</cf-title>"
