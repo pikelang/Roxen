@@ -61,11 +61,7 @@ string parse( RequestID id )
 //       tpost = "</cf-userwants>"+tpost;
 //     }
 
-    string ea="";
-    if( page == pages[0] )       ea = "first ";
-    if( page == pages[-1] )      ea = "last=30 ";
-
-    res += "<a "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
+    res += "<a href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
       page[4]+"</a>" + tpost;
   }
 
