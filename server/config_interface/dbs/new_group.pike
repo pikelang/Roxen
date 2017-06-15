@@ -43,7 +43,6 @@ server external databases will be created in.</p>
 server in which the database will be created. Please note that it
 must be a MySQL server.</p>")+#"
 [ERROR]
-<p>
 <dl class='config-var no-border narrow'>
   <dt class='name'>" + _(452,"ID") + #":</dt>
   <dd class='value'>
