@@ -114,6 +114,7 @@
       }
 
       client = new XMLHttpRequest();
+      client.withCredentials = true;
 
       isPending = true;
 
@@ -125,7 +126,7 @@
             if (onok) {
               var d = client.responseText;
 
-              if (client.responseType && client.responseType.match(/.+\/json/i)) {
+              if (client.responseType && client.responseType === 'json') {
                 try { d = JSON.parse(d); }
                 catch (ignore) {}
               }
@@ -142,7 +143,7 @@
       };
 
       client.open('GET', url, true);
-      client.send(0);
+      client.send(null);
     };
   };
 
