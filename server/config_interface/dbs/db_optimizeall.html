@@ -9,7 +9,9 @@
 				<cf-title><translate id="538">Optimize all tables</translate></cf-title>
 
 				<if variable="form.c = execute">
-				  <div id="result" data-db-href='/dbs/db_optimizeall_ajax.pike'
+				  <div id="result" data-db-href='/dbs/db_repair_optimize_all_ajax.pike'
+               data-db-action='optimize'
+               data-wizid='&usr.set-wiz-id;'
 				       data-progress-msg='Optimizing tables...'>
 				  	<i class='fa fa-spinner fa-pulse'></i>
 				  	<span class='text'>Initializing query...</span>

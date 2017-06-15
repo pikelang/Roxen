@@ -12,7 +12,10 @@
   var resTarget   = document.querySelector('#result'),
     resTargetText = resTarget.querySelector('.text'),
     href          = resTarget.dataset.dbHref,
-    typeStr       = resTarget.dataset.progressMsg;
+    action        = resTarget.dataset.dbAction,
+    wizid         = resTarget.dataset.wizid,
+    typeStr       = resTarget.dataset.progressMsg,
+    args          = [];
 
   if (!href) {
     resTarget.innerHTML =
@@ -20,6 +23,18 @@
       ' found on the result target. Something is really wrong!</div>';
 
     return;
+  }
+
+  if (action) {
+    args.push('action=' + action);
+  }
+
+  if (wizid) {
+    args.push(wizid);
+  }
+
+  if (args.length) {
+    href += '?' + args.join('&');
   }
 
   resTargetText.innerHTML = typeStr || 'Doing things...';

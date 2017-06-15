@@ -21,21 +21,24 @@ string|mapping parse( RequestID id )
 	if ( !(CU_AUTH( "Edit Global Variables" )) ) return "Access denied";
 
 	// Draw continue button
-	string res =
-		"<use file='/template-insert' />"
-		"<tmpl>"
-		"<p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p>";
+	string res = #"<use file='/template-insert' />
+	<tmpl>
+	  <p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p>
+		<table class='nice db-list'>
+	    <thead>
+	      <tr>
+	        <th>Target</td>
+	  			<th>Result</td>
+	  			<th>Time</td>
+	  		<tr>
+	  	</thead>
+	  	<tbody>";
 
-	// Draw result table
-	res += "<table class='nice db-list'>"
-	  "<thead>"
-	  "<tr>"
-	  "<th>Target</td>"
-	  "<th>Result</td>"
-	  "<th>Time</td>"
-	  "<tr>"
-	  "</thead>"
-	  "<tbody>";
+	string mysql_action = "REPAIR";
+
+	if (id->variables->action && id->variables->action == "optimize") {
+		mysql_action = "OPTIMIZE";
+	}
 
 	// Enumerate databases
 	mixed q_dbs = query( "SHOW DATABASES" );
@@ -53,31 +56,59 @@ string|mapping parse( RequestID id )
 					float t1 = time(t);
 					float t2;
 
-					if ( mixed e = catch { q = query( "REPAIR TABLE `" + q_dbs->Database + "`.`" + m->Name + "`" ); } ) {
-						result = "<span class='notify error inline'>Error: " + describe_error(e) + "</span>";
-					} else {
+					string sql = sprintf("%s TABLE `%s`.`%s`",
+						                   mysql_action,
+						                   q_dbs->Database,
+						                   m->Name);
+
+					if (mixed e = catch(q = query(sql))) {
+						result = "<span class='notify error inline'>Error: " +
+						         describe_error(e) + "</span>";
+					}
+					else {
 						t2 = (time(t)-t1);
 						t3 += t2;
 
-						if (q->Msg_text = "OK")
+						if (q->Msg_text = "OK") {
 							result = "<span class='notify ok inline'>Ok</span>";
-						else
-							result = "<span class='notify error inline'>Failed: " + q->Msg_text + "</span>";
+						}
+						else {
+							result = "<span class='notify error inline'>Failed: " +
+							         q->Msg_text + "</span>";
+						}
 					}
 
-					res += "<tr>" +
-					"<td><a href='browser.pike?db=" + q_dbs->Database + "&amp;&usr.set-wiz-id;'>" + q_dbs->Database + "</a>.<a href='browser.pike?db=" + q_dbs->Database + "&amp;table=" + m->Name + "&amp;&usr.set-wiz-id;'>" + m->Name + "</a></td>" +
-					"<td>" + result + "</td>" +
-					"<td>" + t2 + " sec</td>" +
-					"</tr>";
+					res += sprintf(#"
+						<tr>
+							<td>
+								<a href='browser.pike?db=%s&amp;&usr.set-wiz-id;'>%[0]s</a>."
+							 "<a href='browser.pike?db=%[0]s&amp;table=%s&amp;&usr.set-wiz-id;'"
+							#">%[1]s</a>
+							</td>
+							<td>%s</td>
+							<td>%.5f sec</td>
+						</tr>",
+						q_dbs->Database,
+						m->Name,
+						result,
+						t2 || 0.0
+					);
 				}
 			}
 		}
 	}
-	res += "</tbody>"
-		"<tfoot><tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr>"
-	  "</tfoot></table>"
-	  "<p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p></tmpl>";
+
+	res += #"
+		  </tbody>
+		  <tfoot>
+				<tr>
+			    <td colspan='2'>Total:</td>
+			    <td>" + t3 + #" sec</td>
+			  </tr>
+		  </tfoot>
+		</table>
+		<p><link-gbutton href='/dbs/'>Continue...</link-gbutton></p>
+	</tmpl>";
 
 	// Done
 	return Roxen.http_rxml_answer(res, id);
