@@ -518,11 +518,15 @@ class Patcher
     write_mess("Fetched rxp cluster file %s over HTTPS.\n", file->name);
 
     string temp_dir = Stdio.append_path(get_temp_dir(), file->name);
+
+    Privs privs = Privs("RoxenPatch: Saving downloaded patch cluster...");
     // Extra directory level to get rid of the sticky bit normally
     // present on /tmp/ that would require Privs for clean_up to work.
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, file->name);   
     write_file_to_disk(temp_file, file->data);
+    privs = 0;
+
     array(int|string) patch_ids = import_file(temp_file);
     clean_up(temp_dir);
 
@@ -2747,24 +2751,20 @@ class Patcher
 
     File out_file = File();
 
-    Privs privs = Privs(sprintf("Patcher: Opening %O for writing.", path));
-    
     if(!out_file->open(path, "cxw"))
     {
-      privs = 0;
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
     }
-    privs = 0;
-    
+
     if(out_file->write(data) != sizeof(data))
     {
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
     }
-    
+
     out_file->close();
-    
+
     write_mess("<green>Done!</green>\n");
     return 1;
   }
