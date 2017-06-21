@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.8 2009/11/12 12:54:04 jonasw Exp $
+ * $Id$
  */
 #include <stat.h>
 #include <roxen.h>

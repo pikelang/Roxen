@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.39 2012/04/13 17:08:30 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -166,6 +166,29 @@ mapping(string:string) get_extra_dicts(void|int(0..1) include_empty)
 }
 
 
+//  Returns tuple < encoding, chars to skip > if the given data string
+//  starts with a BOM, and zero otherwise.
+array(string|int) get_encoding_from_bom(string data)
+{
+  //  We only care about UTF-8 and UTF-16 BE/LE:
+  //
+  //    EF BB BF   - UTF-8
+  //    FE FF      - UTF-16 big-endian
+  //    FF FE      - UTF-16 little-endian
+  if (sizeof(data) >= 3) {
+    if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+      return ({ "utf-8", 3 });
+  }
+  if (sizeof(data) >= 2) {
+    if (data[0] == 0xFE && data[1] == 0xFF)
+      return ({ "utf-16", 2 });
+    if (data[0] == 0xFF && data[1] == 0xFE)
+      return ({ "utf-16le", 2 });
+  }
+  return 0;
+}
+
+
 int process_extra_dict(string ed_path, string pd_path)
 {
   //  Make sure destination directory exists
@@ -183,11 +206,36 @@ int process_extra_dict(string ed_path, string pd_path)
     (use_utf8 ? ({ "--encoding", "utf-8" }) : ({ }) ) +
     ({ "create", "master", pd_path });
   report_notice("Spell Checker: Converting dictionary %s... ", ed_path);
+
+  //  Aspell doesn't like MS-DOS line endings so write a clean temp file.
+  //  We also heed any BOM that we find.
+  string in_data = Stdio.read_bytes(ed_path);
+  if (!in_data) {
+    report_notice("Error reading dictionary: %s\n", ed_path);
+    return -1;
+  }
+  if (array bom_data = get_encoding_from_bom(in_data)) {
+    //  Skip BOM bytes and recode to UTF-8 if currently in a different format
+    in_data = in_data[bom_data[1]..];
+    if (bom_data[0] != "utf-8") {
+      if (object dec = Locale.Charset.decoder(bom_data[0]))
+	in_data = string_to_utf8(dec->feed(in_data)->drain());
+    }
+  }
+  in_data = replace(in_data, ({ "\r\n", "\r" }), ({ "\n", "\n" }) );
+  string ed_cleaned_path = ed_path + ".tmp";
+  if (mixed err = catch {
+      Stdio.write_file(ed_cleaned_path, in_data);
+    }) {
+    report_notice("Error writing temp file: %s\n", ed_cleaned_path);
+    return -1;
+  }
   
-  Stdio.File in_file = Stdio.File(ed_path);
+  Stdio.File in_file = Stdio.File(ed_cleaned_path);
   Process.Process p = Process.Process(args, ([ "stdin": in_file ]) );
   in_file->close();
   int err = p->wait();
+  rm(ed_cleaned_path);
   report_notice((err ? "Error" : "OK") + "\n");
   return err;
 }
@@ -383,7 +431,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
   array(string) ed_args = ({ });
   foreach (extra_dicts; string ed_path; string pd_path) {
     if (pd_path)
-      ed_args += ({ "--extra-dicts", pd_path });
+      ed_args += ({ "--add-extra-dicts", pd_path });
   }
   
   object file1=Stdio.File();

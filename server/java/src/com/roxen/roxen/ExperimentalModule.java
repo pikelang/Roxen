@@ -1,5 +1,5 @@
 /*
- * $Id: ExperimentalModule.java,v 1.3 2000/02/21 18:30:45 marcus Exp $
+ * $Id$
  *
  */
 

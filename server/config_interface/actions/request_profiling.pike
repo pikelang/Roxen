@@ -1,5 +1,5 @@
 /*
- * $Id: request_profiling.pike,v 1.4 2004/05/25 16:31:05 anders Exp $
+ * $Id$
  */
 #include <stat.h>
 #include <roxen.h>

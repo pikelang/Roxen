@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.16 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "module";

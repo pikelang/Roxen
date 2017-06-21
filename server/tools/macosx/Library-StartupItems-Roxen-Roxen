@@ -95,8 +95,11 @@ StartService()
 	ConsoleMessage "Starting Roxen in $roxenhome..."
 	cd $roxenhome && {
 	    if [ -x $roxenhome/start ]; then
-		./start $flags 2>/dev/null
-		ConsoleMessage "Roxen started."
+		./start $flags 2>/dev/null && {
+		    ConsoleMessage "Roxen started."
+		    return
+		}
+		ConsoleMessage "Failed to start Roxen. Already running?"
 	    else
 		ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
 	    fi

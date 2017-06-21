@@ -1,4 +1,4 @@
-// $Id: ClientSession.pike,v 1.2 2012/02/15 16:08:09 grubba Exp $
+// $Id$
 
 //!
 //! Represents a client session

@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.39 2010/06/28 06:57:48 marty Exp $
+// $Id$
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.39 2010/06/28 06:57:48 marty Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_name = "WebDAV: Protocol support";
 constant module_type = MODULE_FIRST;

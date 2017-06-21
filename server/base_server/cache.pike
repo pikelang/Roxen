@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.152 2012/09/24 08:07:01 wellhard Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2009, Roxen IS.
-// $Id: basic_defvar.pike,v 1.34 2009/10/31 17:12:34 mast Exp $
+// $Id$
 
 //! @appears BasicDefvar
 

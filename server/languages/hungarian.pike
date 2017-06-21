@@ -14,7 +14,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: hungarian.pike,v 1.8 2009/05/26 14:20:25 mast Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "hu", "hungarian", "" });
 constant _aliases = ({ "hu", "hun", "magyar", "hungarian" });
 

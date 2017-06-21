@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.17 2012/03/14 16:22:20 jonasw Exp $
+ * $Id$
  */
 
 #include <config_interface.h>
@@ -35,12 +35,12 @@ mixed parse( RequestID id )
 	"</font></p>";
       what = 0;
     }
-  
+
   switch (what) {
   case "restart":
      if( config_perm( "Restart" ) )
      {
-       roxen->restart(0.5);
+       roxen->restart(0.5, UNDEFINED, -1);
        return res +
 "<input type=hidden name=action value=restart.pike>"
 "<font color='&usr.warncolor;'><h1>"+LOCALE(197,"Restart")+"</h1></font>"+
@@ -56,7 +56,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
-       roxen->shutdown(0.5);
+       roxen->shutdown(0.5, -1);
        return res +
 "<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+

@@ -1,4 +1,4 @@
-// $Id: RoxenTest_ftp.pike,v 1.3 2008/08/07 10:53:17 mast Exp $
+// $Id$
 //
 // Tests of the ftp protocol module.
 //

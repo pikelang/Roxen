@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.10 2009/02/11 08:50:18 jonasw Exp $
+ * $Id$
  */
 
 string dir;

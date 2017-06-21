@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.7 2003/09/16 17:48:15 mast Exp $
+# $Id$
 
 package Roxen::Internal;
  
@@ -449,7 +449,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
       if ($cmd eq "P")
         { Sendreply(""); }
       elsif ($cmd eq "V")
-        { Sendreply('Roxen Perl Helper: $Id: perlhelper,v 1.7 2003/09/16 17:48:15 mast Exp $'); }
+        { Sendreply('Roxen Perl Helper: $Id$'); }
       else
         { die "perlhelper $$/MLQQ: exiting.\n"; }
     }

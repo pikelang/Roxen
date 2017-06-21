@@ -1,4 +1,4 @@
-/* $Id: ftpstatus.pike,v 1.4 2008/08/15 12:33:54 mast Exp $ */
+/* $Id$ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0

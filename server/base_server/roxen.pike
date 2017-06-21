@@ -509,7 +509,7 @@ private int shutdown_recurse;
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
-private void low_shutdown(int exit_code)
+private void low_shutdown(int exit_code, int|void apply_patches)
 {
   if(shutdown_recurse >= 4)
   {
@@ -520,7 +520,7 @@ private void low_shutdown(int exit_code)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
-    stop_error_log_cleaner();
+    stop_hourly_maintenance();
 #ifdef THREADS
 #if constant(Filesystem.Monitor.basic)
     stop_fsgarb();
@@ -536,6 +536,26 @@ private void low_shutdown(int exit_code)
   // Turn off the backend thread monitor while we're shutting down.
   slow_be_timeout_changed();
 #endif
+
+  if ((apply_patches || query("patch_on_restart")) > 0) {
+    mixed err = catch {
+	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
+	  report_notice("Applying patch %s...\n", item->metadata->id);
+	  mixed err = catch {
+	      plib->install_patch(item->metadata->id,
+				  "Internal Administrator");
+	    };
+	  if (err) {
+	    report_error("Failed to install patch %s: %s\n",
+			 item->metadata->id,
+			 describe_backtrace(err));
+	  }
+	}
+      };
+    if (err) {
+      master()->handle_error(err);
+    }
+  }
 
   if (mixed err = catch(stop_all_configurations()))
     master()->handle_error (err);
@@ -555,25 +575,25 @@ private int shutdown_started;
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
-void restart(float|void i, void|int exit_code)
+void restart(float|void i, void|int exit_code, void|int apply_patches)
 //! Restart roxen, if the start script is running
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, exit_code || -1);
+  call_out(low_shutdown, i, exit_code || -1, apply_patches);
 }
 
-void shutdown(float|void i)
+void shutdown(float|void i, void|int apply_patches)
 //! Shut down roxen
 {
   shutdown_started = 1;
-  call_out(low_shutdown, i, 0);
+  call_out(low_shutdown, i, 0, apply_patches);
 }
 
 void exit_when_done()
 {
   shutdown_started = 1;
   report_notice("Interrupt request received.\n");
-  low_shutdown(-1);
+  low_shutdown(-1, -1);
 }
 
 int is_shutting_down()
@@ -3226,7 +3246,7 @@ void nwrite(string s, int|void perr, int|void errtype,
     report_debug( s );
 }
 
-protected BackgroundProcess error_log_cleaner_process;
+protected BackgroundProcess hourly_maintenance_process;
 
 protected void clean_error_log(mapping(string:array(int)) log,
 		     mapping(string:int) cutoffs)
@@ -3268,19 +3288,45 @@ protected void error_log_cleaner()
   }
 }
 
-protected void start_error_log_cleaner()
+protected void patcher_report_notice(string msg, mixed ... args)
 {
-  if (error_log_cleaner_process) return;
-
-  // Clean the error log once every hour.
-  error_log_cleaner_process = BackgroundProcess(3600, error_log_cleaner);
+  if (sizeof(args)) msg = sprintf(msg, @args);
+  report_notice(RoxenPatch.wash_output(msg));
 }
 
-protected void stop_error_log_cleaner()
+protected void patcher_report_error(string msg, mixed ... args)
 {
-  if (error_log_cleaner_process) {
-    error_log_cleaner_process->stop();
-    error_log_cleaner_process = UNDEFINED;
+  if (sizeof(args)) msg = sprintf(msg, @args);
+  report_error(RoxenPatch.wash_output(msg));
+}
+
+RoxenPatch.Patcher plib =
+  RoxenPatch.Patcher(patcher_report_notice, patcher_report_error,
+		     getcwd(), getenv("LOCALDIR"));
+
+protected void hourly_maintenance()
+{
+  error_log_cleaner();
+
+  if (query("auto_fetch_rxps")) {
+    plib->import_file_http();
+  }
+}
+
+protected void start_hourly_maintenance()
+{
+  if (hourly_maintenance_process) return;
+
+  // Start a background process that performs maintenance tasks every hour
+  // (eg cleaning the error log).
+  hourly_maintenance_process = BackgroundProcess(3600, hourly_maintenance);
+}
+
+protected void stop_hourly_maintenance()
+{
+  if (hourly_maintenance_process) {
+    hourly_maintenance_process->stop();
+    hourly_maintenance_process = UNDEFINED;
   }
 }
 
@@ -3388,7 +3434,9 @@ protected void low_engage_abs()
   report_debug("**** %s: ABS exiting roxen!\n\n",
 	       ctime(time()) - "\n");
   _exit(1);	// It might not quit correctly otherwise, if it's
-		// locked up
+		// locked up. Note that this also inhibits the delay
+		// caused by the possible automatic installation of
+		// any pending patches.
 }
 
 protected void engage_abs(int n)
@@ -5922,6 +5970,9 @@ protected class GCTimestamp
   }
 }
 
+protected int gc_start;
+
+protected mapping(string:int) gc_histogram = ([]);
 
 array argv;
 int main(int argc, array tmp)
@@ -5940,7 +5991,37 @@ int main(int argc, array tmp)
 #endif
 
 #ifdef LOG_GC_TIMESTAMPS
-  GCTimestamp();
+  Pike.gc_parameters(([ "pre_cb": lambda() {
+				    gc_start = gethrtime();
+				    werror("GC runs at %s", ctime(time()));
+				  },
+			"post_cb":lambda() {
+				    werror("GC done after %dus\n",
+					   gethrtime() - gc_start);
+				  },
+			"destruct_cb":lambda(object o) {
+					gc_histogram[sprintf("%O", object_program(o))]++;
+					werror("GC cyclic reference in %O.\n",
+					       o);
+				      },
+			"done_cb":lambda(int n) {
+				    if (!n) return;
+				    werror("GC zapped %d things.\n", n);
+				    mapping h = gc_histogram + ([]);
+				    if (!sizeof(h)) return;
+				    array i = indices(h);
+				    array v = values(h);
+				    sort(v, i);
+				    werror("GC histogram (accumulative):\n");
+				    foreach(reverse(i)[..9], string p) {
+				      werror("GC:  %s: %d\n", p, h[p]);
+				    }
+				  },
+		     ]));
+  if (!Pike.gc_parameters()->pre_cb) {
+    // GC callbacks not available.
+    GCTimestamp();
+  }
 #endif
 
   // For RBF
@@ -6134,7 +6215,7 @@ int main(int argc, array tmp)
 #endif
 #endif /* THREADS */
 
-  start_error_log_cleaner();
+  start_hourly_maintenance();
 
 #ifdef TEST_EUID_CHANGE
   if (test_euid_change) {
@@ -7089,7 +7170,8 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // fun that trying to find the bug in the image-cache at the moment.
 
   // Note similar code in compile_log_format.
-
+  if (pattern == "")
+    return 0;
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)

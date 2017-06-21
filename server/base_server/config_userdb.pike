@@ -571,7 +571,7 @@ class AdminUser
          if( strlen( id->variables[rp] ) &&
              (id->variables[rp+"2"] == id->variables[rp]) )
          {
-           password = crypt( id->variables[rp] );
+           password = crypt_password( id->variables[rp] );
            save();
          }
          else if( strlen( id->variables[rp]  ) )
@@ -674,7 +674,7 @@ class AdminUser
   {
     mapping q = config_settings->get( name+"_uid" ) || ([]);
     real_name = q->real_name||"";
-    password = q->password||crypt("www");
+    password = q->password||crypt_password("www");
     permissions = mkmultiset( q->permissions||({}) );
     if( settings_cache[ name ] )
       settings = settings_cache[ name ];
@@ -705,7 +705,7 @@ class AdminUser
     array auth = id->realauth/":";
     if( sizeof(auth) < 2 )            return 0;
     if( auth[0] != name )             return 0;
-    if( crypt( auth[1], password ) )  return 1;
+    if( verify_password( auth[1], password ) )  return 1;
   }
 
   protected void create( string n )

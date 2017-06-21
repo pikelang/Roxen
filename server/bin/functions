@@ -1,7 +1,7 @@
 # -*- sh -*-
 # Support functions for the startscript and some other scripts.
 #
-# $Id: functions,v 1.21 2012/01/03 13:43:14 marty Exp $
+# $Id$
 #
 
 # Default number of generations for log rotation.

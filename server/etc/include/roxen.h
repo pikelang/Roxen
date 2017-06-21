@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.34 2009/10/31 13:37:34 mast Exp $
+// $Id$
 
 #ifndef _ROXEN_H_
 

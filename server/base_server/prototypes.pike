@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.290 2012/05/15 16:00:39 grubba Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -4007,7 +4007,7 @@ class User( UserDB database )
   //! implementation uses the crypted_password() method.
   {
     string c = crypted_password();
-    return !sizeof(c) || crypt(password, c);
+    return !sizeof(c) || verify_password(password, c);
   }
 
   int uid();

@@ -1,7 +1,7 @@
 #
 # Makefile for updating translations for locally installed modules.
 #
-# $Id: Makefile,v 1.2 2005/03/23 12:33:21 grubba Exp $
+# $Id$
 #
 # 2005-03-22 Henrik Grubbström
 #

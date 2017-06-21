@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.69 2012/08/24 12:10:43 grubba Exp $
+# $Id$
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to

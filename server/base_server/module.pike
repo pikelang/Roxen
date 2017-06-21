@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.247 2012/09/24 16:06:41 grubba Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -375,14 +375,16 @@ string location_url()
 	}
 	continue;
       }
-    return (string)uri + loc[1..];
+    uri->path += loc[1..];
+    return (string)uri;
   }
   if(candidate_uri) {
     report_warning("Warning: Could not find any suitable ports, continuing anyway. "
 		   "Please make sure that your Primary Server URL matches "
 		   "at least one port. Primary Server URL: %O, URLs: %s.\n",
 		 world_url, short_array(urls));
-    return (string)candidate_uri + loc[1..];
+    candidate_uri->path += loc[1..];
+    return (string)candidate_uri;
   }
   return 0;
 }

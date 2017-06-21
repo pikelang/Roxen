@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.15 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";

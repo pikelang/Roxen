@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.77 2009/11/11 14:29:23 mast Exp $";
+constant cvs_version="$Id$";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -24,16 +24,46 @@ inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: Pike script support";
-constant module_doc  = #"Support for user Pike-scripts, like CGI, but
-handled internally in the server, and thus much faster, but blocking,
-and less secure.
-<br />
-<br />
-<table><tr><td valign='top'><imgs src='&usr.err-2;' alt='Warning' /></td>
-<td>NOTE: This module should not be enabled if you allow anonymous PUT!<br />
-NOTE: Enabling this module is the same thing as letting your users run
-programs with the same right as the server!
-</td></tr></table>";
+constant module_doc  = #"
+<p>Support for user Pike-scripts, like CGI, but handled internally in the
+   server, and thus much faster, but blocking, and less secure.</p>
+
+<p>A script must include the function <tt>mixed parse(RequestID id)</tt>.
+   The return argument should be one of these:</p>
+
+<table>
+  <tr>
+    <td><tt>string</tt>&nbsp;</td>
+    <td>RXML code to be parsed and returned to the client.</td>
+  </tr><tr>
+    <td><tt>mapping</tt>&nbsp;</td>
+    <td>WebServer result mapping, typically built via <tt>Roxen.http_*</tt>
+        methods.</td>
+  </tr><tr>
+    <td><tt>-1</tt>&nbsp;</td>
+    <td>Dequeues the request from the handler queue but keeps the stream
+        open to the client.</td>
+  </tr>
+</table>
+
+<p>Scripts are compiled and cached in RAM with the path as key. Global
+   variables keep their values across invocations as long as the cached
+   program remains valid and is the source file is reached via a regular
+   filesystem module (i.e. not a Roxen CMS workarea). All accesses to a
+   given script are serialized with an internal mutex unless the script
+   defines <tt>int thread_safe = 1;</tt>.</p>
+
+<table>
+  <tr>
+    <td valign='top'><imgs src='&usr.err-2;' alt='Warning' />&nbsp;</td>
+    <td>
+      <p style='margin-top: 0'>
+         NOTE: This module should not be enabled if you allow anonymous PUT!</p>
+      <p>NOTE: Enabling this module is the same thing as letting your users run
+         programs with the same right as the server!</p>
+    </td>
+  </tr>
+</table>";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -46,26 +76,26 @@ void create()
 {
   defvar("exts", ({ "pike" }), "Extensions",
          TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 "The extensions to parse");
+	 "The extensions to parse.");
 
   defvar("rawauth", 0, "Raw user info", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
 	 "Please note that this will give the scripts access to the password "
-	 "used. This is not recommended !");
+	 "used. This is not recommended!");
 
   defvar("clearpass", 0, "Send decoded password", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the decoded password value will be sent to the script. "
-	 "This is not recommended !");
+	 "This is not recommended!");
 
   defvar("exec-mask", "0777", "Exec mask: Needed",
 	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Only run scripts matching this permission mask");
+	 "Only run scripts matching this permission mask.");
 
   defvar("noexec-mask", "0000", "Exec mask: Forbidden",
 	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Never run scripts matching this permission mask");
+	 "Never run scripts matching this permission mask.");
 
   defvar( "autoreload", 1, "Reload scripts automatically",
           TYPE_FLAG,
@@ -73,7 +103,7 @@ void create()
           "from disk if they have changed. This requires one stat for each "
           "access to the script, and also one stat for each file the script "
           "inherits, if any.  Please note that pike modules are currently not "
-          "automatically reloaded from disk" );
+          "automatically reloaded from disk." );
 
   defvar( "explicitreload", 1,
           "Reload scripts when the user sends a no-cache header",
@@ -82,7 +112,7 @@ void create()
           "a pragma: no-cache header (netscape does this when the user presses "
           "shift+reload, IE doesn't), even if they have not changed on disk. "
           " Please note that pike modules are currently not automatically "
-          "reloaded from disk" );
+          "reloaded from disk." );
 #if constant(__builtin.security)
   defvar( "trusted", 1,
 	  "Pike scripts are trusted",

@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.13 2010/11/25 14:06:03 grubba Exp $
+// $Id$
 //
 // 2007-08-29 Henrik Grubbström
 //

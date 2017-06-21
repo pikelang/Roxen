@@ -3,7 +3,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: captcha.pike,v 1.2 2010/04/08 12:44:41 grubba Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = "Tags: Captcha";
@@ -59,38 +59,68 @@ private constant timeout = 3600;
 private Image.Image|array(Image.Layer)|mapping generate_image(mapping args,
 							      RequestID id)
 {
-  Font f = resolve_font(font);
+  Font f = resolve_font(args->font || font);
 
-  array(Image.Layer) text_layers = ({ });
+  array(Image.Layer) layers = ({ });
 
   int xsize = 0;
   int i;
 
+  if(args["background-color"] || args["background-image"]) {
+    if(args["background-color"]) {
+      Image.Color color = Image.Color(args["background-color"]);
+      layers += ({ Image.Layer(width, height, color )});
+    }
+    if(args["background-image"]) {
+      array|Image.Layer tmp = roxen.load_layers(args["background-image"], id);
+      if(tmp) {
+        tmp = Image.lay(tmp);
+        Image.Image img = tmp->image();
+        Image.Image mask = tmp->alpha();
+        int imgwidth = img->xsize();
+        int imgheight = img->ysize();
+        int oversizewidth = imgwidth > width ? imgwidth - width : 0;
+        int oversizeheight = imgheight > height ? imgheight - height : 0;
+        int randx = -random(oversizewidth);
+        int randy = -random(oversizeheight);
+
+        Image.Image background = Image.Image(width, height);
+        Image.Image background_a = Image.Image(width, height);
+        background->paste(img, randx, randy);
+        background_a->paste(mask, randx, randy);
+        layers += ({ Image.Layer(background, background_a) });
+      }
+    }
+  }
+  else {
+    string background_data =
+      Stdio.read_file("roxen-images/captcha-background.png");
+
+    Image.Image background_image = Image.PNG.decode(background_data);
+    background_image = background_image->scale(width*2, height*2);
+    Image.Image background = Image.Image(width, height);
+    background->paste(background_image, -random(width), -random(height));
+    layers += ({ Image.Layer(background) });
+  }
+
   foreach ((array)args->challenge, int c) {
+    Image.Color color;
+    if(args["color"])
+      color = Image.Color(args["color"]);
     Image.Image image = f->write(sprintf("%c", c));
     image = image->rotate(random(80)-40)->scale(0.8);
+    Image.Image image_a = image->clone();
+    if(color)
+      image = image->color(color);
     Image.Layer l = Image.Layer();
-    l->set_image(image, image);
+    l->set_image(image, image_a);
     l->set_offset(i*20, random(height-l->ysize()));
-    text_layers += ({ l });
+    layers += ({ l });
     xsize += image->xsize();
     i++;
   }
 
-  string background_data =
-    Stdio.read_file("roxen-images/captcha-background.png");
-
-  Image.Image background_image = Image.PNG.decode(background_data);
-
-  background_image = background_image->scale(width*2, height*2);
-
-  Image.Image background = Image.Image(width, height);
-
-  background->paste(background_image, -random(width), -random(height));
-
-  Image.Layer bl = Image.Layer(background);
-
-  return ({ bl }) + text_layers;
+  return Image.lay(layers,0,0,width,height);
 }
 
 private string my_hash(string s)
@@ -100,7 +130,7 @@ private string my_hash(string s)
 
 // --- Public API below ---
 
-mapping(string:mixed) get_captcha(RequestID id)
+mapping(string:mixed) get_captcha(RequestID id, void|mapping options)
 //! Returns a mapping with parameters needed to present a captcha
 //! challenge to a user. The mapping will contain the indices:
 //! "url" - the captcha image URL.
@@ -117,9 +147,16 @@ mapping(string:mixed) get_captcha(RequestID id)
 			    });
   } while(consumed_captchas[challenge] || old_consumed_captchas[challenge]);
 
+  mapping opt_args = ([ "background-color":1,
+                        "background-image":1,
+                        "color":1,
+                        "font":1
+                        ]);
+  options = opt_args & (options || ([ ]) );
+  if(options["background-image"])
+    options["background-image"] = Roxen.fix_relative( options["background-image"], id );
 
-  mapping args = ([ "challenge" : challenge,
-		    "format"    : "png" ]);
+  mapping args = options + ([ "challenge" : challenge, "format" : "png" ]);
   string url =
     query_absolute_internal_location(id) +
     image_cache->store(args, id, timeout);
@@ -205,7 +242,7 @@ class TagEmitCaptcha {
 
   array(mapping(string:mixed)) get_dataset(mapping args, RequestID id)
   {
-    mapping(string:mixed) res = get_captcha(id);
+    mapping(string:mixed) res = get_captcha(id, args);
     return ({ res });
   }
 }
@@ -231,7 +268,29 @@ constant tagdoc = ([
             </emit>
           </ex-box>
          </p>
-       </desc>",
+       </desc>
+       <attr name='background-color' value='color'><p>
+         Captcha background color.
+         If the none of the \"background-color\" or \"background-image\" attributes
+         are specified, a default background image will be used.
+        </p>
+       </attr>
+       <attr name='background-image' value='path'><p>
+         Captcha background image. It's recommended that the image is larger than the captcha.
+         The image offset will be randomized then.
+         If the none of the \"background-color\" or \"background-image\" attributes
+         are specified, a default background image will be used.
+        </p>
+       </attr>
+       <attr name='color' value='color' default='white'><p>
+         Captcha text color.
+        </p>
+       </attr>
+       <attr name='font' value='string'><p>
+          Selects which font to use. You can get a list of all available fonts
+          by using the list fonts task in the administration interface. You can
+          optionally specify a font size too: <pre>font='yikes! 35'</pre></p>
+        </attr>",
      ([ "&_.url;":#"<desc type='entity'>
                        <p>URL to the captcha image.</p>
                      </desc>",

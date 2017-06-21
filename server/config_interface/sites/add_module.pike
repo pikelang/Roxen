@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.91 2011/10/27 16:38:32 jonasw Exp $
+// $Id$
 
 #include <config_interface.h>
 #include <module.h>
@@ -18,7 +18,7 @@ int no_reload()
 array(string) class_description( string d, RequestID id )
 {
   string name, doc;
-  while(!(< "", "/" >)[d] && !file_stat( d+"/INFO" ))
+  while(!(< "", "/" >)[d] && !Stdio.is_file( d+"/INFO" ))
     d = dirname(d);
   if((< "", "/" >)[d])
     return ({"Local modules", "" });

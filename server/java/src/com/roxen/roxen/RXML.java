@@ -1,5 +1,5 @@
 /*
- * $Id: RXML.java,v 1.2 2001/06/01 17:17:39 marcus Exp $
+ * $Id$
  *
  */
 

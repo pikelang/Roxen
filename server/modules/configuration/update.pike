@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.44 2012/11/08 13:52:52 jonasw Exp $
+ * $Id$
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2009, Roxen IS.

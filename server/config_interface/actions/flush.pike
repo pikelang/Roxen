@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.11 2004/09/15 16:33:18 jonasw Exp $
+ * $Id$
  */
 #include <config_interface.h>
 #include <roxen.h>

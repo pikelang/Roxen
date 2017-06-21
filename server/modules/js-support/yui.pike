@@ -11,7 +11,7 @@ inherit "roxen-module://filesystem";
 
 #define EXPIRE_TIME 31536000
 
-constant cvs_version = "$Id: yui.pike,v 1.21 2012/02/08 18:16:18 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
