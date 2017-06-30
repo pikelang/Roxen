@@ -1,0 +1,13 @@
+subject: Roxen 6.1: RoxenPatch fixes.
+from: 42ca0459663d4c14dcbb1d34f72307bc233fa207
+to: 32c3adfebed1bfee77f41b50db6fd1df821111b3
+originator: Erik Allemann
+depends: 2017-05-24T103957
+restart: true
+
+• RoxenPatch: Privs-related fixes.
+
+It's now the caller's responsibility to take Privs before
+calling write_file_to_disk().
+
+Potential fix for [WS-42].
