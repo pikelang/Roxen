@@ -3070,9 +3070,22 @@ class Patcher
   }
 
   mapping(string:string) fetch_latest_rxp_cluster_file() {
-    string get_url(Standards.URI uri, int|void use_etag) {
+    string get_url(Standards.URI uri, int|void use_etag)
+    {
       string etag = use_etag && http_cluster_etag;
       string last_modified = use_etag && http_cluster_last_modified;
+      string expected_sha1;
+
+      if (use_etag) {
+	// We use the query part of the URL to receive metadata information
+	// about the patch from the server.
+	mapping(string:string) variables = uri->get_query_variables();
+	expected_sha1 = variables->sha1;
+
+	// There's no need to send back the variables to the server.
+	uri->set_query_variables(([]));
+      }
+
       Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
       if ((query->status == 304) || (query->status == 412)) {
 	return 0;
@@ -3089,7 +3102,14 @@ class Patcher
 	    "; length=" + query->headers["content-length"];
 	}
       }
-      return query->data();
+      string data = query->data();
+      if (expected_sha1 &&
+	  (Crypto.SHA1.hash(data) != String.hex2string(expected_sha1))) {
+	error("SHA1 checksum mismatch for URL %s. Got: %s, expected: %s\n",
+	      (string)uri,
+	      String.string2hex(Crypto.SHA1.hash(data)), expected_sha1);
+      }
+      return data;
     };
 
     // If not running in a dist we can't fetch patches
@@ -3101,6 +3121,7 @@ class Patcher
     uri->add_query_variables(([ "product"  : product_code,
 				"version"  : dist_version,
 				"platform" : server_platform,
+				"checksum" : "sha1",
 				"action"   : "get-latest-rxp-cluster-url" ]));
     string res = get_url(uri);
 
