@@ -247,7 +247,24 @@ private
 	  //     permission errors are in the return value.
 	  //
 	  // We ignore them for now.
-	  sql->query("REPAIR TABLE `" + table + "`");
+	  mixed err = catch {
+	      sql->query("REPAIR TABLE `" + table + "`");
+	    };
+	  if (err && has_value(describe_error(err),
+			       "Incompatible key or row definition between "
+			       "the MariaDB .frm file")) {
+	    // Errors 185 and 190:
+	    // "Incompatible key or row definition between the MariaDB .frm "
+	    // "file and the information in the storage engine. You have to "
+	    // "dump and restore the table to fix this"
+	    werror("DBManager: Basic repair of table %O failed:\n"
+		   "%s\n"
+		   "DBManager: Retrying with forced use of .frm file.\n",
+		   table, describe_error(err));
+	    sql->query("REPAIR TABLE `" + table + "` USE_FRM");
+	  } else {
+	    throw(err);
+	  }
 	}
       }
       werror("DBManager: MySQL upgrade done.\n");
