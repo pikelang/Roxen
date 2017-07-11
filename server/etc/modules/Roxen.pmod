@@ -3174,6 +3174,18 @@ protected string low_roxen_encode(string val, string encoding)
 //!     Base-64 decoding (@rfc{4648@}).
 //!     C.f. @[MIME.decode_base64].
 //!
+//!   @value "base64url"
+//!   @value "base-64-url"
+//!   @value "b64url"
+//!     Base-64 URL encoding. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[MIME.encode_base64url].
+//!
+//!   @value "-base64url"
+//!   @value "-base-64-url"
+//!   @value "-b64url"
+//!     Base-64 URL decoding (@rfc{4648@}).
+//!     C.f. @[MIME.decode_base64url].
+//!
 //!   @value "md5"
 //!   @value "sha1"
 //!   @value "sha256"
