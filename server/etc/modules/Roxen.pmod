@@ -2917,11 +2917,25 @@ protected string low_roxen_encode(string val, string encoding)
   case "base64":
   case "base-64":
   case "b64":
+    // RFC 4648: 3.1 Line Feeds in Encoded Data
+    //
+    //   Implementations MUST NOT add line feeds to base-encoded data
+    //   unless the specification referring to this document explicitly
+    //   directs base encoders to add line feeds after a specific number
+    //   of characters.
+    return MIME.encode_base64(val, 1);
+
+  case "base64mime":
+  case "base-64-mime":
+  case "b64mime":
     return MIME.encode_base64(val);
 
   case "-base64":
   case "-base-64":
   case "-b64":
+  case "-base64mime":
+  case "-base-64-mime":
+  case "-b64mime":
     if( catch {
         return MIME.decode_base64(val);
       })
@@ -3132,14 +3146,37 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "base64"
 //!   @value "base-64"
 //!   @value "b64"
-//!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
+//!     Base-64 encoding (@rfc{4648@}). Requires octet (i.e. non-wide) strings.
+//!     C.f. @[MIME.encode_base64].
+//!
+//!   @value "base64mime"
+//!   @value "base-64-mime"
+//!   @value "b64mime"
+//!     Base-64 MIME content transfer encoding. Requires octet (i.e.
+//!     non-wide) strings. This encoding differs from @expr{"base64"@}
+//!     in that it enforces a maximum line length of 76 characters.
 //!     C.f. @[MIME.encode_base64].
 //!
 //!   @value "-base64"
 //!   @value "-base-64"
 //!   @value "-b64"
-//!     Base-64 MIME decoding.
+//!   @value "-base64mime"
+//!   @value "-base-64mime"
+//!   @value "-b64mime"
+//!     Base-64 decoding (@rfc{4648@}).
 //!     C.f. @[MIME.decode_base64].
+//!
+//!   @value "base64url"
+//!   @value "base-64-url"
+//!   @value "b64url"
+//!     Base-64 URL encoding. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[MIME.encode_base64url].
+//!
+//!   @value "-base64url"
+//!   @value "-base-64-url"
+//!   @value "-b64url"
+//!     Base-64 URL decoding (@rfc{4648@}).
+//!     C.f. @[MIME.decode_base64url].
 //!
 //!   @value "md5"
 //!   @value "sha1"
