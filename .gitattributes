@@ -270,7 +270,6 @@ worldmap binary
 /server/modules/icecast/icecast.pike foreign_ident
 /server/modules/js-support/javascript_support.pike foreign_ident
 /server/modules/js-support/scripts/ColorSelector.js foreign_ident
-/server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/userdb_ldap.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident

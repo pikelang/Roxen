@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.38 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -83,9 +83,21 @@ Modify (adds a second value to an existing attribute):
  module configuration will be used.</p>
 
  <p>URLs are written on the format:
-    <tt>ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
+    <tt>ldap[s]://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
     For details, see <a href=\"http://rfc.roxen.com/2255\">RFC 2255</a>.
  </p>
+</attr>
+
+<attr name='min-tls' value='tls version'><p>
+ Minimum version of TLS/SSL to support for LDAPS connections.</p>
+</attr>
+
+<attr name='max-tls' value='tls version'><p>
+ Maximum version of TLS/SSL to support for LDAPS connections.</p>
+<p>Note: Some TLS 1.2 implementations (notably SCHANNEL) abort connections
+when their certificates don't match the set of signature algorithms provided
+by the client. In that case specifying TLS 1.1 or earlier with this attribute
+may resolve the problem.</p>
 </attr>
 
 <attr name='binddn' value='distinguished name'><p>
@@ -237,9 +249,21 @@ Modify (adds a second value to an existing attribute):
  module configuration will be used.</p>
 
  <p>URLs are written on the format:
-    <tt>ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
+    <tt>ldap[s]://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]</tt>.
     For details, see <a href=\"http://rfc.roxen.com/2255\">RFC 2255</a>.
  </p>
+</attr>
+
+<attr name='min-tls' value='tls version'><p>
+ Minimum version of TLS/SSL to support for LDAPS connections.</p>
+</attr>
+
+<attr name='max-tls' value='tls version'><p>
+ Maximum version of TLS/SSL to support for LDAPS connections.</p>
+<p>Note: Some TLS 1.2 implementations (notably SCHANNEL) abort connections
+when their certificates don't match the set of signature algorithms provided
+by the client. In that case specifying TLS 1.1 or earlier with this attribute
+may resolve the problem.</p>
 </attr>
 
 <attr name='binddn' value='distinguished name'><p>
@@ -579,6 +603,30 @@ protected void join_attrvals (mapping(string:array) into,
       into[attr] = from[attr];
 }
 
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+int parse_tls_version_string(string ver)
+{
+  // Default to mapping 1.0 to TLS 1.0.
+  int adj = SSL.Constants.PROTOCOL_TLS_1_0 - 0x0100;
+  int val;
+  ver = lower_case(ver);
+  if (has_prefix(ver, "ssl")) {
+    ver = ver[3..];
+    // Map 3.0 to SSL 3.0.
+    adj = 0;
+  } else if (has_prefix(ver, "tls")) {
+    ver = ver[3..];
+  }
+  array(string) a = ver/".";
+  if (sizeof(a) == 1) a += ({ "0" });
+  foreach(a[..1], string part) {
+    val <<= 8;
+    val += (int)part;
+  }
+  return val + adj;
+}
+#endif
+
 int|array(mapping(string:string|array(string))) do_ldap_op (
   string op, mapping args, RequestID id)
 {
@@ -683,10 +731,32 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
     }
   }
 
+#if constant(SSL.Context)
+  // Pike 8.0 and later.
+  SSL.Context ctx = SSL.Context();
+#else
+  // Pike 7.8 and earlier.
+  SSL.context ctx = SSL.context();
+  ctx->rsa_mode(112);		// At least 3DES.
+#endif
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+  if (args["min-tls"]) {
+    ctx->min_version = parse_tls_version_string(args["min-tls"]);
+  }
+  if (args["max-tls"]) {
+    ctx->max_version = parse_tls_version_string(args["max-tls"]);
+  }
+#endif
+
   Connection con;
   ConnectionStatus status = get_conn_status (host);
+  // NB: Use splice to avoid need to check whether Protocols.LDAP.
+  //     get_connection() supports the ctx argument.
+  array(string|object) connection_args = ({
+    host, binddn, pass, UNDEFINED, ctx,
+  });
   if (mixed error =
-      catch (con = Protocols.LDAP.get_connection (host, binddn, pass)))
+      catch (con = Protocols.LDAP.get_connection(@connection_args)))
     connection_error (status, "Couldn't connect to LDAP server: %s",
 		      describe_error (error));
   if (con->error_number())
