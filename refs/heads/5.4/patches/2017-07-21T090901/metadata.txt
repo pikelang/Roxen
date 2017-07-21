@@ -1,0 +1,9 @@
+subject: Roxen 5.4: TLS additions in LDAP tags
+from: 00da2db8ac07788774e18d39c904a5a4f8e2e57b
+to: 479bdcd75a7be68838cdc5e5209fb01e5915ce8a
+originator: Pontus Ostlund
+depends: 2017-05-29T120929
+
+• <ldap/>, <emit#ldap/>: Support specifying TLS implementation level.
+
+Adds support for the attributes max-tls and min-tls.
