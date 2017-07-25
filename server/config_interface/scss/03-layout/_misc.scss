@@ -55,6 +55,10 @@
   margin-bottom: $spacing-unit;
 }
 
+.margin-top-bottom {
+  margin: $spacing-unit 0;
+}
+
 .negative-wrapper {
   margin: -($site-padding);
 }
