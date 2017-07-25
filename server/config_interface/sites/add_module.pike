@@ -211,25 +211,26 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
                           (X),                                                \
                           LOCALE(253, "Reload"))
 
-      if( !header_added++ )
+      if( !header_added++ ) {
         da_string +=
-                  "<p><a name='errors_and_warnings'></a><br />"
-                  "<font size='+2'><b><font color='&usr.warncolor;'>"
-                  "Compile errors and warnings</font></b><br />"
-                  "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
+                  "<hr><a name='errors_and_warnings'></a>"
+                  "<h3>Compile errors and warnings</h3>"
+                  "<table>";
+      }
 
       da_string += "<tr><td></td>"
-                "<td colspan='3' bgcolor='&usr.content-titlebg;'>"
-                + "<b><font color='&usr.content-titlefg;' size='+1'>"
-                + module_name_from_file(module)+"</font></b></td>"
-                + "<td align='right' bgcolor='&usr.content-titlebg;'>"
-                "<font color='&usr.content-titlefg;' size='+1'>"
+                "<td colspan='3'>"
+                + "<b>"
+                + module_name_from_file(module)+"</b></td>"
+                + "<td class='text-right'>"
                 + trim_name(module)
-                + "</font>&nbsp;"+RELOAD(module)+"</td><td></td></tr>";
+                + "&nbsp;"+RELOAD(module)+"</td><td></td></tr>";
 
       foreach( res, array e )
         da_string +=
-                  "<tr valign='top'><td></td><td><img src='/internal-roxen-unit' width='30' height='1' alt='' />"
+                  "<tr class'valign-top'>"
+                  "<td></td>"
+                  "<td><img src='/internal-roxen-unit' width='30' height='1' alt='' />"
                   "</td><td align='right'>"
                   "<tt>"+e[1]+":</tt></td><td align='right'><tt>"+
                   he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";
