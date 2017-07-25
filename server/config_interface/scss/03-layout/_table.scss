@@ -182,6 +182,14 @@ table {
       color: $light-grey;
       background: lighten($body-bg, 2%) !important;
     }
+
+    .nopad {
+      padding: 0;
+
+      table {
+        margin-bottom: -1px;
+      }
+    }
   }
 
   .tbl-open {
@@ -319,8 +327,9 @@ table {
     }
   }
 
+  // Memory usage
   &.mem {
-    width: auto;
+    width: 100%;
 
     thead {
       th {
@@ -382,5 +391,127 @@ table {
         }
       }
     }
+  }
+
+
+  &.module-list {
+    th,
+    td {
+      vertical-align: top;
+    }
+  }
+
+  // Patch manager
+
+  &.module-sub-list {
+    th {
+      white-space: nowrap;
+      padding-right: $spacing-unit;
+      width: 176px;
+    }
+  }
+
+  &.module-sub-list-2 {
+    border: 0;
+    // margin-left: -$spacing-unit;
+    // margin-top: -$spacing-unit/2;
+    // margin-bottom: -$spacing-unit/2 !important;
+    //margin: -($spacing-unit/2) -$spacing-unit;
+
+
+    thead th,
+    tbody th,
+    thead td,
+    tbody td {
+      border: 0;
+    }
+  }
+
+  &.patch-list {
+    & > thead {
+      font-weight: bold;
+      color: $light-grey;
+      background: darken($body-bg, 2%) !important;
+    }
+
+    th,
+    td {
+      vertical-align: top;
+    }
+
+    p {
+      &:first-child {
+        margin-top: 0;
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    & > thead > tr > th,
+    & > tbody > tr > td {
+      padding: $spacing-unit/2 $spacing-unit;
+    }
+
+    & > tbody {
+      background: darken($main-column-bg, 3%);
+
+      & > tr {
+        &:hover {
+          color: $white;
+        }
+
+        &:nth-child(4n+1) {
+          background: darken($main-column-bg, 1%);
+        }
+        &:nth-child(4n+2) {
+          background: darken($main-column-bg, 1%);
+        }
+      }
+    }
+
+    input {
+      display: block;
+      margin-top: $spacing-unit/2.5;
+    }
+  }
+
+  .tfoot {
+    background: darken($body-bg, 2%) !important;
+  }
+}
+
+.icon {
+  &.folded,
+  &.unfolded {
+    @extend .__icon;
+    margin-right: 0;
+    margin-top: 6px;
+    vertical-align: top;
+    display: inline-block;
+
+    &:before {
+      content: '\f0fe';
+      @include text-size(xs);
+    }
+  }
+
+  &.unfolded {
+    &:before {
+      content: '\f146';
+    }
+  }
+}
+
+td.icon {
+  display: table-cell !important;
+  margin-top: 0 !important;
+  padding-top: $spacing-unit/3 !important;
+  color: $rxn-red;
+
+  &:before {
+    display: inline-block !important;
+    margin-top: -6px !important;
   }
 }

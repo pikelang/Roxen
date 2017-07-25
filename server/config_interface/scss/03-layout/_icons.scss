@@ -33,6 +33,9 @@
   @include make-icon(toggle-open,  '\f146'); // fa-minus-square
   @include make-icon(toggle-closed,'\f0fe'); // fa-plus-square
   @include make-icon(padlock,      '\f023'); // fa-lock
+  @include make-icon(import,       '\f0ed'); // fa-cloud-download
+  @include make-icon(upload,       '\f093'); // fa-upload
+
 
   &.up,
   &.down {

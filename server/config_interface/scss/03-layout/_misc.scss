@@ -71,6 +71,14 @@
   }
 }
 
+.dimmed {
+  color: $grey;
+}
+
+.nobr {
+  white-space: nowrap;
+}
+
 .float-right {
   float: right;
   margin-left: $spacing-unit;
@@ -105,6 +113,10 @@
 
 .x-large {
   @include text-size(xl);
+}
+
+.cursor-pointer {
+  cursor: pointer;
 }
 
 .rotated-wrapper {
