@@ -24,7 +24,7 @@ Write_back wb =
     void write_mess(string s)
     {
       s = Roxen.html_encode_string(s);
-      s = replace(s, ([ "&lt;green&gt;"  : "<b style='color: green'>",
+      s = replace(s, ([ "&lt;green&gt;"  : "<b class='notify ok inline'>",
                         "&lt;/green&gt;" : "</b>" ]) );
       all_messages += ({ (["message":s ]) });
     }
@@ -136,7 +136,7 @@ array(array(string)) describe_metadata(Patcher po,
     multiset(string) platforms = files[file];
     array(string) post = ({});
     if (!platforms[0] && !platforms[po->server_platform]) {
-      res += "<span style='fgcolor:grey'>" + file + "</span>";
+      res += "<span class='dimmed'>" + file + "</span>";
     } else {
       res += file;
     }
@@ -210,9 +210,9 @@ protected string format_description(string desc)
   foreach(paragraphs, [int indent, int is_bullet, string paragraph]) {
     while (indent > tabstops[tab]) {
       if (!is_open) {
-        buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+        buf->add("<li'>\n");
       }
-      buf->add("<ul>\n");
+      buf->add("<ul class='no-list'>\n");
       is_open = 0;
       tab++;
     }
@@ -229,7 +229,7 @@ protected string format_description(string desc)
       if (is_bullet) {
         buf->add("<li>\n");
       } else {
-        buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+        buf->add("<li'>\n");
       }
       buf->add("<p>", paragraph, "</p>\n");
       is_open = 1;
@@ -271,23 +271,18 @@ string list_patches(RequestID id, Patcher po, string which_list)
     // This should never happen.
     return 0;
 
-  string table_bgcolor = "&usr.fade1;";
+  string table_bgcolor = "";
   if (list && sizeof(list))
   {
     multiset(string) extra_deps = (<>);
     foreach(list; int i; mapping item)
     {
-      if (table_bgcolor == "&usr.content-bg;")
-        table_bgcolor = "&usr.fade1;";
-      else
-        table_bgcolor = "&usr.content-bg;";
-
       string installed_date = "";
       if(which_list == "installed")
       {
         if (item->installed)
         {
-          installed_date = sprintf("        <td><date strftime='%%c'"
+          installed_date = sprintf("        <td class='nobr'><date strftime='%%c'"
                                    " iso-time='%d-%02d-%02d %02d:%02d:%02d' />"
                                    "</td>\n",
                                    (item->installed->year < 1900) ?
@@ -342,34 +337,30 @@ string list_patches(RequestID id, Patcher po, string which_list)
           deps += "not_installable";
       }
 
-
-      res += sprintf("      <tr style='background-color: %s' >\n"
+      res += sprintf("      <tr>\n"
                      "        <td style='width:20px;text-align:right'>\n"
                      "          <cf-perm perm='Update'>\n"
                      "          <input type='checkbox' id='%s'"
-                     " name='%s' value='%[1]s' dependencies='%s'" +
-                     " onclick='toggle_%[2]s(%s)' />\n"
+                     " name='%s' value='%[0]s' dependencies='%s'" +
+                     " onclick='toggle_%[1]s(%s)' />\n"
                      "          </cf-perm>\n"
                      "        </td>\n"
-                     "        <td class='folded' id='%s_img'"
-                     " style='background-color: %[0]s' "
-                     " onmouseover='this.style.cursor=\"pointer\"'"
-                     " onclick='expand(\"%[5]s\")' />&nbsp;</td>\n"
-                     "        <td onclick='expand(\"%[5]s\");'"
-                     " onmouseover='this.style.cursor=\"pointer\"'>%[1]s</td>\n"
-                     "        <td onclick='expand(\"%[5]s\");'"
-                     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
+                     "        <td class='icon folded cursor-pointer' id='%s_img'"
+                     " onclick='expand(\"%[4]s\")' /><span class='the-icon'></span></td>\n"
+                     "        <td onclick='expand(\"%[4]s\");' class='cursor-pointer'>%[0]s</td>\n"
+                     "        <td onclick='expand(\"%[4]s\");' class='cursor-pointer'>%s</td>\n"
                      "%s"
                      + (which_list == "imported" ?
                         "<td style='text-align:right'>"
                         "<cf-perm perm='Update'>"
-                        "<link-gbutton href='?action=patcher.pike&class=maintenance&remove-patch-id=%[1]s&amp;&usr.set-wiz-id;'>remove"
-                        "</link-gbutton>"
+                        "<link-gbutton href='?action=patcher.pike&"
+                          "class=maintenance&remove-patch-id=%[0]s"
+                          "&amp;&usr.set-wiz-id;' "
+                          " type='remove'>Remove</link-gbutton>"
                         "</cf-perm>"
                         "</td>"
                         : "") +
                      "      </tr>\n",
-                     table_bgcolor,
                      item->metadata->id,
                      (which_list == "imported") ? "install" : "uninstall",
                      deps,
@@ -427,19 +418,17 @@ string list_patches(RequestID id, Patcher po, string which_list)
       });
 
 
-      string active_flags = "        <table class='module-sub-list-2'"
-                            " width='50%' cellspacing='0' cellpadding='0'>\n";
+      string active_flags = "        <table class='module-sub-list-2'>\n";
       foreach(known_flags; string index; string long_reading)
       {
         active_flags += sprintf("          <tr><td>%s</td>"
-                                "<td>&nbsp;</td>"
                                 "<td style='width: 100%%'>%s</td></tr>\n",
                                 replace(long_reading, " ", "&nbsp;") + ":",
                                 (item->metadata->flags &&
                                  item->metadata->flags[index]) ?
-                                "<b style='color: green'>" +
+                                "<b class='notify ok inline'>" +
                                 LOCALE(335, "Yes") + "</b>" :
-                                "<b>" + LOCALE(336, "No") + "</b>");
+                                "<b class='notify warn inline'>" + LOCALE(336, "No") + "</b>");
       }
       md += ({ ({ LOCALE(337, "Flags:"), active_flags + "        </table>\n"}) });
 
@@ -455,7 +444,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         md += ({
           ({ is_right_platform ?
              LOCALE(340, "Platform:") :
-             "<b style='color:red'>" + LOCALE(340, "Platform:") + "</b>",
+             "<b class='notify error inline'>" + LOCALE(340, "Platform:") + "</b>",
              item->metadata->platform[0] })
         });
       }
@@ -464,7 +453,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         md += ({
           ({ is_right_platform ?
              LOCALE(338, "Platforms:") :
-             "<b style='color:red'>" + LOCALE(338, "Platforms:") + "</b>",
+             "<b class='notify error inline'" + LOCALE(338, "Platforms:") + "</b>",
              sprintf("%{%s<br />\n%}",
                      item->metadata->platform) })
         });
@@ -475,7 +464,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         md += ({
           ({ is_right_version ?
              LOCALE(342, "Target version:"):
-             "<b style='color:red'>" + LOCALE(342, "Target version:") + "</b>",
+             "<b class='notify error inline'>" + LOCALE(342, "Target version:") + "</b>",
              sprintf("%{%s<br />\n%}",
                      item->metadata->version) })
         });
@@ -494,7 +483,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         {
           foreach(dep/"|"; int i; string dep_id) {
             string dep_stat =
-              "<b style='color:red'>" + LOCALE(346, "unavailable") + "</b>";
+              "<b class='notify error inline'>" + LOCALE(346, "unavailable") + "</b>";
             if (!has_value(dep_id, "/")) {
               switch(po->patch_status(dep_id)->status)
               {
@@ -550,13 +539,11 @@ string list_patches(RequestID id, Patcher po, string which_list)
                                              item->metadata->id));
       }
 
-      res += sprintf("      <tr id='id%s' bgcolor='%s' "
-                     " style='display: none'>\n"
+      res += sprintf("      <tr id='id%s' style='display: none'>\n"
                      "        <td colspan='2'>&nbsp;</td>\n"
-                     "        <td colspan='%d'>\n"
-                     "          <table class='module-sub-list'"
-                     " cellspacing='0' cellpadding='3' border='0'>\n"
-                     "%{            <tr valign='top'>\n"
+                     "        <td colspan='%d' class='nopad'>\n"
+                     "          <table class='module-sub-list'>\n"
+                     "%{            <tr>\n"
                      "              <th align='right'>%s</th>\n"
                      "              <td>\n%s</td>\n"
                      "            </tr>\n%}"
@@ -564,7 +551,6 @@ string list_patches(RequestID id, Patcher po, string which_list)
                      "        </td>\n"
                      "      </tr>\n",
                      replace(item->metadata->id, "-", ""),
-                     table_bgcolor,
                      colspan - 2,
                      md);
     }
@@ -589,7 +575,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
   }
   else
   {
-    res += sprintf("      <tr bgcolor='&usr.content-bg;'>\n"
+    res += sprintf("      <tr>\n"
                    "        <td colspan='%d'"
                    " style='text-align:center;font-style:italic'>\n"
                    "          " + LOCALE(357, "No patches found") + "\n"
@@ -598,11 +584,11 @@ string list_patches(RequestID id, Patcher po, string which_list)
                    colspan);
   }
 
-  res += sprintf("      <tr>\n"
-                 "        <td bgcolor='&usr.fade2;' colspan='%d'"
+  res += sprintf("      <tr class='tfoot'>\n"
+                 "        <td colspan='%d'"
                  " align='left'>\n"
                  "          <cf-perm perm='Update'>\n"
-                 "          <submit-gbutton2"
+                 "          <submit-gbutton2 type='%[3]s'"
                  " name='%s-button'>%s</submit-gbutton2>\n"
                  "          </cf-perm>\n"
                  "        </td>\n"
@@ -610,7 +596,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
                  colspan,
                  (which_list == "installed") ? "uninstall" : "install",
                  (which_list == "installed") ? LOCALE(358, "Uninstall selected patches") :
-                                               LOCALE(359, "Install selected patches"));
+                                               LOCALE(359, "Install selected patches"),
+                 (which_list == "installed") ? "remove" : "add");
 
   return res; //+ sprintf("<td>&nbsp;</td>"
 //                     "<td>&nbsp;</td>"
@@ -644,50 +631,6 @@ mixed parse(RequestID id)
                          tmp_dir);
 
   string res = #"
-    <style type='text/css'>
-      td.folded {
-        width:      20px;
-        height:     20px;
-        background: url('&usr.unfold;') 50% 50% no-repeat;
-      }
-
-      td.unfolded {
-        width:      20px;
-        height:     20px;
-        background: url('&usr.fold;') 50% 50% no-repeat;
-      }
-
-      span.folded {
-        width:        20px;
-        height:       20px;
-        padding-left: 20px;
-        background:   url('&usr.unfold;') top left no-repeat;
-      }
-
-      span.unfolded {
-        width:        20px;
-        height:       20px;
-        padding-left: 20px;
-        background:   url('&usr.fold;') top left no-repeat;
-      }
-
-      div#idlog {
-        font-size:  smaller;
-        background: &usr.obox-bodybg;;
-        border:     2px solid &usr.obox-border;;
-      }
-
-      input#patchupload {
-        background: #f8f8f8;;
-        border:     1px solid #ddd;
-        padding:    5px;
-        margin:     0 4px 0 0;
-      }
-
-      table.module-sub-list p {
-        margin-top: 0px;
-      }
-    </style>
     <script type='text/javascript'>
       // <![CDATA[
       function expand(element)
@@ -698,12 +641,12 @@ mixed parse(RequestID id)
         if (blockToToggle.style.display == 'none')
         {
           blockToToggle.style.display = '';
-          pictureToToggle.className = 'unfolded';
+          pictureToToggle.className = 'unfolded icon cursor-pointer';
         }
         else
         {
           blockToToggle.style.display = 'none';
-          pictureToToggle.className = 'folded';
+          pictureToToggle.className = 'folded icon cursor-pointer';
         }
       }
       // ]]>
@@ -711,14 +654,14 @@ mixed parse(RequestID id)
 
   array(string) mbins = get_missing_binaries();
   if (sizeof(mbins)) {
-    res += "<font size='+1' style='color: #d22;' ><b>" + LOCALE(409, "Warning: Missing tools") + "</b></font><br/><br/>";
+    res += "<div class='notify warn'><b>" + LOCALE(409, "Warning: Missing tools") + "</b><br/><br/>";
     res += "Roxen can't find one or more tools required for the patch management to work properly.<br/>";
     res += "Before importing or installing any patches, please make sure you have the following executable(s) available on your system:<br/>";
 
     res += "<ul>";
     foreach (mbins, string a) res += "<li>" + a + "</li>";
     res += "</ul>";
-    res += "<br/>";
+    res += "</div>";
   }
 
 
@@ -740,11 +683,11 @@ mixed parse(RequestID id)
       if (!patch_ids) {
         report_error("Patch manager: RXP cluster import over HTTP failed.\n");
         res += sprintf("<p>"
-                       "  <b style='color: red'>"
+                       "  <b class='notify error inline'>"
                        + LOCALE(410, "RXP cluster import over HTTP failed..") +
                        "  </b>"
                        "</p>");
-          res += sprintf("<p><span id='log_img' class='unfolded'"
+          res += sprintf("<p><span id='log_img' class='unfolded icon'"
                          " onmouseover='this.style.cursor=\"pointer\"'"
                          " onclick='expand(\"log\")'>log</span>"
                          "<div  id='idlog'>%s</div></p>\n"
@@ -795,13 +738,13 @@ mixed parse(RequestID id)
     if (failed_patches) {
       if (failed_patches == sizeof(patch_ids)) {
         res += sprintf("<p>"
-                       "  <b style='color: red'>"
+                       "  <b class='notify error inline'>"
                        + LOCALE(411, "The patch import failed:") +
                        "  </b>"
                        "</p>");
       } else {
         res += sprintf("<p>"
-                       "  <b style='color: red'>"
+                       "  <b class='notify warn inline'>"
                        + LOCALE(412, "All patches were not imported:") +
                        "  </b>"
                        "</p>");
@@ -809,13 +752,13 @@ mixed parse(RequestID id)
 
     } else {
       res += sprintf("<p>"
-                     "  <b style='color: green'>"
+                     "  <b class='notify ok inline'>"
                      + LOCALE(413, "Patch import done.") +
                      "  </b>"
                      "</p>");
     }
 
-    res += sprintf("<p><span id='log_img' class='%s'"
+    res += sprintf("<p><span id='log_img' class='icon %s'"
                    " onmouseover='this.style.cursor=\"pointer\"'"
                    " onclick='expand(\"log\")'>log</span>"
                    "<div style='%s' id='idlog'>%s</div></p>\n"
@@ -894,7 +837,7 @@ mixed parse(RequestID id)
   </cf-perm>";
     }
 
-    res += sprintf("<p><span id='log_img' class='%s'"
+    res += sprintf("<p><span id='log_img' class='icon %s'"
                    " onmouseover='this.style.cursor=\"pointer\"'"
                    " onclick='expand(\"log\")'>log</span>"
                    "<div style='%s' id='idlog'>%s</div></p>\n"
@@ -971,19 +914,19 @@ mixed parse(RequestID id)
              + LOCALE(368, "The server needs to be restarted.") + #"
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
-        pid + #"&amp;&usr.set-wiz-id;' width=250 icon_src=&usr.err-2;> " +
-      LOCALE(197,"Restart") + #" </gbutton>
+    <link-gbutton href='?what=restart&amp;action=restart.pike&amp;class=maintenance&amp;pid=" +
+        pid + #"&amp;&usr.set-wiz-id;' type='restart'> " +
+      LOCALE(197,"Restart") + #" </link-gbutton>
   </cf-perm>
 
   <cf-perm not perm='Restart'>
-    <gbutton dim width=250 icon_src=&usr.err-2;> " +
-      LOCALE(197,"Restart") + #" </gbutton>
+    <disabled-gbutton type='restart'> " +
+      LOCALE(197,"Restart") + #" </disabled-gbutton>
   </cf-perm>
 ";
     }
 
-    res += sprintf("<p><span id='log_img' class='%s'"
+    res += sprintf("<p><span id='log_img' class='icon %s'"
                    " onmouseover='this.style.cursor=\"pointer\"'"
                    " onclick='expand(\"log\")'>log</span>"
                    "<div style='%s' id='idlog'>%s</div></p>\n"
@@ -1017,7 +960,7 @@ mixed parse(RequestID id)
       "</p>\n";
 
     res += sprintf("<p>"
-                   "  <span id='log_img' class='unfolded'"
+                   "  <span id='log_img' class='icon unfolded'"
                    "        onmouseover='this.style.cursor=\"pointer\"'"
                    "        onclick='expand(\"log\")'>log</span>"
                    "  <div id='idlog'>%s</div>"
@@ -1032,28 +975,28 @@ mixed parse(RequestID id)
 
   res += #"
     <cf-perm perm='Update'>
-    <font size='+1'><b>" + LOCALE(415, "Import New Patches") + #"</b></font>
+    <h3>" + LOCALE(415, "Import New Patches") + #"</h3>
 
-    <p style='margin-bottom: 5px'>" +
+    <p>" +
       LOCALE(416, "Fetch and import the latest patches from www.roxen.com") +
     ":</p>\n";
   if (Stdio.exist("VERSION.DIST")) {
     res += #"
-      <submit-gbutton2 name='auto-import-button' width='75' align='center'>" +
+      <submit-gbutton2 name='auto-import-button' type='import'>" +
       LOCALE(417, "Import from Roxen") +
       #"</submit-gbutton2>\n";
   } else {
     // Unknown distribution version.
     res += #"
-      <gbutton dim='' name='auto-import-button' width='75' align='center'>" +
+      <disabled-gbutton name='auto-import-button' type='import'>" +
       LOCALE(417, "Import from Roxen") +
-      #"</gbutton>\n";
+      #"</disabled-gbutton>\n";
   }
   res += #"
     <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
         <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
-        <submit-gbutton2 name='OK' width='75' align='center'
+        <submit-gbutton2 name='OK' type='upload'
       onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(419, "Import file") + #"</submit-gbutton2>
     <p>"
     + LOCALE(420, "You can upload either a single rxp file or a tar/tar.gz/tgz "
@@ -1061,9 +1004,9 @@ mixed parse(RequestID id)
     + LOCALE(421, "There is also a <tt>bin/rxnpatch</tt> command-line tool to "
              "manage patches, if you prefer a terminal over a web interface.") +
    #"</p>
-    <br />
+    <hr class='section'>
     </cf-perm>
-    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + " (" + patch_stats->imported_count + ")" + #"</b></font>
+    <h3>" + LOCALE(375, "Imported Patches") + " (" + patch_stats->imported_count + ")" + #"</h3>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
                 "they are imported but not applied. They can be found in "
@@ -1071,43 +1014,43 @@ mixed parse(RequestID id)
    "</p>\n    <p>" +
     LOCALE(377, "Click on a patch for more information.") +
   #"</p>
-    <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;'
-               box-frame='yes' padding='0'>\n
-      <table class='module-list' cellspacing='0' cellpadding='3' border='0'
-             width='100%' style='table-layout: fixed'>
-        <tr bgcolor='&usr.obox-titlebg;' >
-          <th style='width:20px;text-align:left'>
-            <cf-perm perm='Update'>
-            <input type='checkbox'
-                   name='install'
-                   id='install_all'
-                   onclick='check_all(\"install\")'/>
-            </cf-perm>
-          </th>
-          <th style='width:20px'>&nbsp;</th>
-          <th style='width:11em; text-align:left;'>Id</th>
-          <th style='width: auto; text-align:left'>Patch Name</th>
-          <th style='width: 70px;text-align:right'></th>
-        </tr>
+
+      <table class='patch-list'>
+        <thead>
+          <tr>
+            <th style='width:20px;text-align:left'>
+              <cf-perm perm='Update'>
+              <input type='checkbox'
+                     name='install'
+                     id='install_all'
+                     onclick='check_all(\"install\")'/>
+              </cf-perm>
+            </th>
+            <th style='width:20px'>&nbsp;</th>
+            <th style='width:11em; text-align:left;'>Id</th>
+            <th style='width: auto; text-align:left'>Patch Name</th>
+            <th style='width: 70px;text-align:right'></th>
+          </tr>
+        </thead>
+        <tbody>
 ";
   res += list_patches(id, plib, "imported");
   res += #"
+      </tbody>
       </table>
-    </box-frame>
 
-    <br clear='all' />
-    <br />
 
-    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + " (" + patch_stats->installed_count + ")" + #"</b></font>
+    <hr class='section'>
+
+    <h3>" + LOCALE(378, "Installed Patches") + " (" + patch_stats->installed_count + ")" + #"</h3>
     <p>" +
     LOCALE(379, "Click on a Patch for more information.") +
   #"</p>
     <input type='hidden' name='action' value='&form.action;'/>
-    <box-frame width='100%' iwidth='100%' bodybg='&usr.contentbg;'
-               box-frame='yes' padding='0'>
-      <table class='module-list' cellspacing='0' cellpadding='3' border='0'
-             width='100%' style='table-layout: fixed'>\n
-        <tr bgcolor='&usr.obox-titlebg;' >
+
+    <table class='patch-list'>
+      <thead>
+        <tr>
           <th style='width:20px; text-align:left'>
             <cf-perm perm='Update'>
             <input type='checkbox'
@@ -1121,11 +1064,13 @@ mixed parse(RequestID id)
           <th style='width:auto; text-align:left'>Patch Name</th>
           <th style='width:14em; text-align:left'>Time of Installation</th>
         </tr>
+      </thead>
+      <tbody>
 ";
   res += list_patches(id, plib, "installed");
   res += #"
-      </table>
-    </box-frame>
+      </tbody>
+    </table>
 
     <br clear='all' />
     <br />
