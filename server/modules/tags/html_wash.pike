@@ -155,7 +155,7 @@ class TagWashHtml
 		  replace(string_to_utf8(data), lambda(string link)
                                 {
                                   link = fix_link(link);
-                                  return sprintf("<a href='%s'%s>%s</a>",
+                                  return sprintf("<a href=\"%s\"%s>%s</a>",
                                                  link, attrs_string, link);
 				}) ) }); });
 
