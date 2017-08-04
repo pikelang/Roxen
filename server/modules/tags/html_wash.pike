@@ -124,7 +124,7 @@ class TagWashHtml
 		   ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
-  string linkify(string s, string|void target)
+  string linkify(string s, void|mapping attrs)
   {
     string fix_link(string l)
     {
@@ -140,18 +140,23 @@ class TagWashHtml
       return "http://"+l;
     };
 
-    Parser.HTML parser = Parser.HTML();
+    string attrs_string = "";
 
+    if (attrs && sizeof(attrs)) {
+      attrs_string = Roxen.make_tag_attributes(attrs);
+    }
+
+    Parser.HTML parser = Parser.HTML();
     parser->add_container("a", lambda(Parser.HTML p, mapping args)
 			       { return ({ p->current() }); });
     parser->_set_data_callback(
       lambda(Parser.HTML p, string data)
       { return ({ utf8_to_string(link_regexp->
 		  replace(string_to_utf8(data), lambda(string link)
-				{
-				  link = fix_link(link);
-				  return "<a href='"+link+"'"+(target?" "+Roxen.make_tag_attributes((["target":target])):"")+">"+
-				    link+"</a>";
+                                {
+                                  link = fix_link(link);
+                                  return sprintf("<a href='%s'%s>%s</a>",
+                                                 link, attrs_string, link);
 				}) ) }); });
 
     string res = parser->finish(s)->read();
@@ -210,8 +215,19 @@ class TagWashHtml
       if(args->paragraphify)
 	result = paragraphify(result);
 
-      if(args["linkify"])
-	result = linkify(result, args["link-target"]);
+      if(args["linkify"]) {
+        mapping attrs = ([]);
+
+        if (args["link-target"]) {
+          attrs->target = args["link-target"];
+        }
+
+        if (args["link-rel"]) {
+          attrs->rel = args["link-rel"];
+        }
+
+        result = linkify(result, attrs);
+      }
 
       if (!args["keep-all"])
 	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
@@ -234,6 +250,7 @@ class TagWashHtml
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
                        "link-target":RXML.t_text(RXML.PXml),
+                       "link-rel":RXML.t_text(RXML.PXml),
                        "unlinkify":RXML.t_text(RXML.PXml),
            "close-tags":RXML.t_text(RXML.PXml),
            "remove-unwanted-tags":RXML.t_text(RXML.PXml) ]);
@@ -352,6 +369,10 @@ constant tagdoc=([
 
 <attr name='link-target'><p>
   If the linkify attribute is used, set the link target to this.</p> 
+</attr>
+
+<attr name='link-rel'><p>
+  If the linkify attribute is used, set the link attribute 'rel' to this.</p>
 </attr>
 
 <attr name='unlinkify'><p>
