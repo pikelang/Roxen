@@ -372,7 +372,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='link-rel'><p>
-  If the linkify attribute is used, set the link attribute 'rel' to this.</p>
+  If the linkify attribute is used, set the link attribute \"rel\" to this.</p>
 </attr>
 
 <attr name='unlinkify'><p>
