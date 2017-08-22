@@ -1,0 +1,41 @@
+subject: Roxen 6.1: LDAP fixes, rxml base64 entity encoding fixes and roxenpatch improvements.
+from: 32c3adfebed1bfee77f41b50db6fd1df821111b3
+to: fa2304ff2369c2552d1d6240c541500572a411a7
+originator: Tobias Liin
+depends: 2017-06-30T112123
+restart: true
+
+• <ldap/>, <emit#ldap/>: Support specifying TLS implementation level.
+
+Adds support for the attributes max-tls and min-tls.
+
+Fixes [WS-51].
+
+• RXML: Document the "base64url" encoding.
+
+This encoding was undocumented.
+
+• RXML: Remove line feeds from the "base64" encoding.
+
+RFC 4648 3.1 requires that base64 encodings must not add line feeds
+unless specifically directed to do so.
+
+Adds encoding "base64mime" with the old behavior (ie enforcing
+a maximum line length of 76 characters).
+
+CAVEAT EMPTOR: This change of behavior is incompatible with older
+versions of Roxen.
+
+Fixes [WS-43].
+
+• RoxenPatch: Fixed HTTPS URL validation check.
+
+The wrong URL was checked...
+
+• PoxenPatch: Request and check cluster checksums.
+
+The automatic download of patch clusters now checks that the
+cluster files haven't been corrupted (ie usually truncated)
+during download.
+
+Fixes some of [WS-49].
