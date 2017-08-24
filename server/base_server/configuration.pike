@@ -1040,6 +1040,45 @@ array(AuthModule) auth_modules()
   return auth_module_cache = low_module_lookup(MODULE_AUTH);
 }
 
+array websocket_module_cache = UNDEFINED;
+array websocket_modules() {
+  if(!websocket_module_cache)
+  {
+    array new_websocket_module_cache=({ });
+    int prev_pri = -1;
+    array level_find_files = ({});
+    array(string) level_locations = ({});
+    foreach(low_module_lookup(MODULE_WEBSOCKET), RoxenModule me) {
+      int pri = me->query("_priority");
+      if (pri != prev_pri) {
+	//  Order after longest prefix length
+	sort(map(level_locations,
+		 lambda(string loc) { return -sizeof(loc); }),
+	     level_locations, level_find_files);
+	foreach(level_locations; int i; string path) {
+	  new_websocket_module_cache += ({ ({ path, level_find_files[i] }) });
+	}
+	level_locations = ({});
+	level_find_files = ({});
+      }
+      prev_pri = pri;
+      string location = me->websocket_open && me->query_location();
+      if (!location) continue;
+      level_find_files += ({ me });
+      level_locations += ({ location });
+    }
+
+    sort(map(level_locations,
+	     lambda(string loc) { return -sizeof(loc); }),
+	 level_locations, level_find_files);
+    foreach(level_locations; int i; string path) {
+      new_websocket_module_cache += ({ ({ path, level_find_files[i] }) });
+    }
+    websocket_module_cache = new_websocket_module_cache;
+  }
+  return websocket_module_cache;
+}
+
 array location_modules()
 //! Return an array of all location modules the request should be
 //! mapped through, by order of priority.
@@ -1772,6 +1811,7 @@ string examine_return_mapping(mapping m)
 
    if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
+   else if (m->upgrade_websocket) res += "(upgrade to websocket)";
 
    if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
@@ -2055,6 +2095,46 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   return lock;
 }
 
+//! This is a generic handler which will be called by the
+//! @[ws_handle_queue()] method in the request object. The purpose of
+//! this method is to sort out which module in the configuration that
+//! should handle the message and call the given callback in that
+//! module.
+void websocket_handle(RequestID id, mixed data, string callback) {
+  id->json_logger->log(([
+                         "event"    : "WEBSOCKET_MESSAGE_BEGIN",
+                         "callback" : callback,
+                       ]));
+
+  object key;
+  foreach(websocket_module_cache || websocket_modules(), array tmp) {
+    mixed ret;
+    string loc = tmp[0];
+    if(has_prefix(id->virtfile, loc) && tmp[1][callback])
+      {
+        TRACE_ENTER(sprintf("Websocket module [%s] ", id->virtfile), tmp[1]);
+        PROF_ENTER(tmp[1]->module_name,"websocket");
+        TRACE_ENTER(sprintf("Calling %s()...", callback), 0);
+        LOCK(tmp[1][callback]);
+        ret = tmp[1][callback](id, data);
+        UNLOCK();
+        TRACE_LEAVE("");
+        PROF_LEAVE(tmp[1]->module_name,"websocket");
+        TRACE_LEAVE("");
+        if (!ret) {
+          break;
+        }
+      }
+  }
+
+  id->json_logger->log(([
+                         "event"    : "WEBSOCKET_MESSAGE_END",
+                         "callback" : callback,
+                       ]));
+
+}
+
+
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All
 //! modules except last and filter type modules are mapped, in order,
@@ -2265,6 +2345,59 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
       TIMER_END(url_modules);
     }
 #endif
+
+    /* Check if a websocket module wants to upgrade this connection */
+    foreach(websocket_module_cache || websocket_modules(), tmp) {
+      loc = tmp[0];
+      if(has_prefix(file, loc))
+      {
+	TRACE_ENTER(sprintf("Websocket module [%s] ", loc), tmp[1]);
+        PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"websocket_open");
+        TRACE_ENTER("Calling websocket_open()...", 0);
+	LOCK(tmp[1]->websocket_open);
+	fid=tmp[1]->websocket_open( file[ strlen(loc) .. ] + id->extra_extension, id);
+	UNLOCK();
+	TRACE_LEAVE("");
+        PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"websocket_open");
+	if(fid)
+	{
+	  if (id)
+	    id->virtfile = loc;
+
+	  if(mappingp(fid))
+	  {
+            TRACE_LEAVE(""); // Websocket module [...]
+	    TRACE_LEAVE(examine_return_mapping(fid));
+	    TIMER_END(location_modules);
+	    return fid;
+	  }
+	  else
+	  {
+              TRACE_LEAVE("Unknown return value."
+			  );
+	    break;
+	  }
+	} else
+	  TRACE_LEAVE("");
+      } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
+	// This one is here to allow accesses to /local, even if
+	// the mountpoint is /local/. It will slow things down, but...
+
+	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
+	TRACE_LEAVE("");
+	TRACE_LEAVE("Returning data");
+
+	// Keep query (if any).
+	// FIXME: Should probably keep config <foo>
+	string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
+	  (id->query?("?"+id->query):"");
+	new_query=Roxen.add_pre_state(new_query, id->prestate);
+
+	TIMER_END(location_modules);
+	return Roxen.http_redirect(new_query, id);
+      }
+    } /* End of websocket processing */
+
 
     TIMER_START(location_modules);
     foreach(location_module_cache||location_modules(), tmp)

@@ -566,6 +566,18 @@ string canonicalize_http_header (string header)
   ])[lower_case (header)];
 }
 
+mapping(string:mixed) upgrade_to_websocket(void|int masking)
+//! Returns a mapping that will cause the server to upgrade the
+//! connection to a WebSocket.
+//! Specify @[masking] to enable masking on outgoing frames.
+{
+  return ([
+    "upgrade_websocket" : 1,
+    "masking" : masking,
+    "extra_heads" : ([]),
+  ]);
+}
+
 mapping(string:mixed) http_low_answer( int status_code, string data )
 //! Return a result mapping with the specified HTTP status code and
 //! data. @[data] is sent as the content of the response and is
