@@ -1609,6 +1609,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
     exit(1);
   }
 
+  array(array(string)) remapping_rules =
+    parse_remapping_rules(path_remapping_rules);
+
   write("Preparing patch...\n");
 
   // Description.
@@ -1692,7 +1695,8 @@ void make_patch(mapping(string:string|int|array(string)) options,
     block = "diff --git " + block + "\n";
     if (block == "diff --git \n") continue;
     mapping(string:array(string)) header = ([]);
-    foreach(block/"\n", string line) {
+    array(string) lines = block/"\n";
+    foreach(lines; int lineno; string line) {
       array a = line/" ";
       switch(a[0]) {
       case "diff":
@@ -1749,6 +1753,33 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	    has_suffix(path, "/testsuite.in")) {
 	  break;
 	}
+	// Perform any additional path remapping.
+	int remapped;
+	foreach(remapping_rules, array(string) rule) {
+	  if (has_prefix(header->a[0], rule[0])) {
+	    header->a = ({ rule[1] + header->a[0][sizeof(rule[0])..] });
+	    remapped = 1;
+	  }
+	  if (has_prefix(header->b[0], rule[0])) {
+	    header->b = ({ rule[1] + header->b[0][sizeof(rule[0])..] });
+	    remapped = 1;
+	  }
+	}
+	if (remapped) {
+	  string old_line = line;
+	  lines[lineno] = line =
+	    sprintf("diff --git %s %s",
+		    has_value(header->a[0], " ")?
+		    sprintf("%q", header->a[0]):header->a[0],
+		    has_value(header->b[0], " ")?
+		    sprintf("%q", header->b[0]):header->b[0]);
+	  block = lines * "\n";
+	  write("Remapping\n"
+		"  %s\n"
+		"to\n"
+		"  %s\n",
+		old_line, line);
+	}
 	if (has_prefix(path, "pike/lib/") &&
 	    !has_value(cmd, "--depends=roxenpatch/pike-support")) {
 	  // Support for patching pike files required.
@@ -1756,7 +1787,21 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	}
 	continue;
 
+      case "---":
       case "+++":
+	// Perform any additional path remapping.
+	foreach(remapping_rules, array(string) rule) {
+	  if (has_prefix(a[1], rule[0])) {
+	    write("Remapping path %s to %s.\n",
+		  a[1], rule[1] + a[1][sizeof(rule[0])..]);
+	    a[1] = rule[1] + a[1][sizeof(rule[0])..];
+	    lines[lineno] = line = sprintf("%s %s", a[0], a[1]);
+	    block = lines * "\n";
+	  }
+	}
+	header[a[0]] = a[1..];
+	if (a[0] == "---") continue;
+
 	if ((header["---"][0] != "/dev/null") && (a[1] != "/dev/null")) {
 	  // Not a new or deleted file, and not binary.
 	  diff += block;
