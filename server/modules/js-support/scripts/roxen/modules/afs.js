@@ -347,8 +347,9 @@ ROXEN.AFS = function () {
     //  Initiate transfer
     var url = actions_prefix + action + "?" + encode_afs_args(args);
     var fd = new FormData();
-    for (var i = 0; i < files.length; i++)
-      fd.append("upload-file-" + i, files[i]);
+    for (var i = 0; i < files.length; i++) {
+      fd.append("upload-file-" + i, files[i], files[i].name);
+    }
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
     xhr.onreadystatechange = function() {
