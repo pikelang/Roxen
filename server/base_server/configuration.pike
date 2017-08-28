@@ -2100,8 +2100,16 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 //! this method is to sort out which module in the configuration that
 //! should handle the message and call the given callback in that
 //! module.
-void websocket_handle(RequestID id, mixed data, string callback) {
-  id->json_logger->log(([
+void websocket_handle(WebSocket ws, mixed data, string callback) {
+  if (!has_prefix(callback, "websocket_")) {
+    // Invalid callback method
+    werror("INVALID CALLBACK %O\n", callback);
+    return;
+  }
+
+  RequestID id = ws->id;
+
+  ws->id->json_logger->log(([
                          "event"    : "WEBSOCKET_MESSAGE_BEGIN",
                          "callback" : callback,
                        ]));
@@ -2110,13 +2118,13 @@ void websocket_handle(RequestID id, mixed data, string callback) {
   foreach(websocket_module_cache || websocket_modules(), array tmp) {
     mixed ret;
     string loc = tmp[0];
-    if(has_prefix(id->virtfile, loc) && tmp[1][callback])
+    if(has_prefix(ws->id->virtfile, loc) && tmp[1][callback])
       {
-        TRACE_ENTER(sprintf("Websocket module [%s] ", id->virtfile), tmp[1]);
+        TRACE_ENTER(sprintf("Websocket module [%s] ", ws->id->virtfile), tmp[1]);
         PROF_ENTER(tmp[1]->module_name,"websocket");
         TRACE_ENTER(sprintf("Calling %s()...", callback), 0);
         LOCK(tmp[1][callback]);
-        ret = tmp[1][callback](id, data);
+        ret = tmp[1][callback](ws, data);
         UNLOCK();
         TRACE_LEAVE("");
         PROF_LEAVE(tmp[1]->module_name,"websocket");
@@ -2127,7 +2135,7 @@ void websocket_handle(RequestID id, mixed data, string callback) {
       }
   }
 
-  id->json_logger->log(([
+  ws->id->json_logger->log(([
                          "event"    : "WEBSOCKET_MESSAGE_END",
                          "callback" : callback,
                        ]));
