@@ -18,6 +18,7 @@ constant specific_options = ([
   "init": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
     ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+    ({ "path_remap_rule", Getopt.HAS_ARG, ({ "--path-remap-rule" }) }),
 
     ({ "force", Getopt.NO_ARG, ({ "-f", "--force" }) }),
   }),
@@ -25,10 +26,12 @@ constant specific_options = ([
   "make": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
     ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+    ({ "path_remap_rule", Getopt.HAS_ARG, ({ "--path-remap-rule" }) }),
   }),
   "new": ({
     ({ "path_prefix", Getopt.HAS_ARG, ({ "--path-prefix" }) }),
     ({ "subtree_prefix", Getopt.HAS_ARG, ({ "--relative" }) }),
+    ({ "path_remap_rule", Getopt.HAS_ARG, ({ "--path-remap-rule" }) }),
 
     ({ "depends", Getopt.HAS_ARG, ({ "-d", "--depends" }) }),
     ({ "flag", Getopt.HAS_ARG, ({ "-F", "--flag" }) }),
@@ -435,6 +438,11 @@ void git_delete_files(string branch, array(string) files, string message)
   git_push("origin", branch);
 }
 
+void git_delete_file(string branch, string file, string message)
+{
+  git_delete_files(branch, ({ file }), message);
+}
+
 int main(int argc, array(string) argv)
 {
   int help = 0;
@@ -713,6 +721,9 @@ string path_prefix;
 //! Repository subtree to extract.
 string subtree_prefix;
 
+//! Path remapping rules.
+string path_remapping_rules;
+
 //! Load dependencies corresponsing to @[sha1].
 array(string) load_deps(string sha1)
 {
@@ -734,6 +745,26 @@ array(string) load_deps(string sha1)
     ret += ({ dep });
   }
   return ret;
+}
+
+array(array(string)) parse_remapping_rules(string rules)
+{
+  array(array(string)) res = ({});
+  foreach(rules/"\n", string line) {
+    line = (line/"#")[0];
+    if (!sizeof(String.trim_all_whites(line))) continue;
+    array(string) pair = line/":";
+    if (sizeof(pair) != 2) {
+      werror("Warning: Invalid remapping rule: %O (ignored)\n", line);
+      continue;
+    }
+    if (pair[0] == pair[1]) {
+      werror("Warning: Noop remapping rule: %O (ignored)\n", line);
+      continue;
+    }
+    res += ({ pair });
+  }
+  return res;
 }
 
 //! Initialize common git information.
@@ -845,6 +876,62 @@ int init(mapping(string:string|int|array(string)) options)
 		    "New repository subtree prefix: " +
 		    subtree_prefix + ".\n");
     }
+  }
+
+  path_remapping_rules =
+    git_cat_file("refs/heads/rxnpatch/rxnpatch",
+		 "refs/heads/" + branch + "/path_remapping_rules.txt", 1) || "";
+
+  if (options->path_remap_rule) {
+    array(array(string)) remapping_rules =
+      parse_remapping_rules(path_remapping_rules);
+    array(string) new_rule = options->path_remap_rule/":";
+    if (sizeof(new_rule) != 2) {
+      werror("Invalid remapping rule syntax: %O\n", options->path_remap_rule);
+      exit(1);
+    }
+    int found;
+    foreach(remapping_rules, array(string) old_rule) {
+      if (old_rule[0] != new_rule[0]) continue;
+      found = 1;
+      if (old_rule[1] != new_rule[1]) {
+	if (new_rule[1] == new_rule[0]) {
+	  // NOOP ==> Remove rule.
+	  write("Removing old path remapping rule: %O ==> %O.\n",
+		old_rule[0], old_rule[1]);
+	  remapping_rules -= ({ old_rule });
+	} else {
+	  write("Updating old path remapping rule: %O ==> %O to %O.\n",
+		old_rule[0], old_rule[1], new_rule[1]);
+	  old_rule[1] = new_rule[1];
+	}
+	found = 2;	// Dirty.
+      }
+      break;
+    }
+    if (!found && (new_rule[0] != new_rule[1])) {
+      write("Adding new path remapping rule: %O ==> %O.\n",
+	    new_rule[0], new_rule[1]);
+      remapping_rules += ({ new_rule });
+      found = 2;
+    }
+    if (found == 2) {
+      write("Updating default path remapping rules for branch %s.\n", branch);
+      path_remapping_rules = sprintf("%{%s:%s\n%}", remapping_rules);
+      if (path_remapping_rules != "") {
+	git_save_file("refs/heads/rxnpatch/rxnpatch",
+		      "refs/heads/" + branch + "/path_remapping_rules.txt",
+		      path_remapping_rules,
+		      "New path remapping rules.\n");
+      } else {
+	git_delete_file("refs/heads/rxnpatch/rxnpatch",
+			"refs/heads/" + branch + "/path_remapping_rules.txt",
+			"Removed path remapping rules.\n");
+      }
+    }
+    write("Path remapping rules:\n"
+	  "%{  %O ==> %O\n%}",
+	  remapping_rules);
   }
 
   depends = load_deps(patch_sha1);
@@ -980,6 +1067,29 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
 
   subtree_prefix = options->subtree_prefix || "";
 
+  path_remapping_rules = "";
+  if (options->path_remap_rule) {
+    array(string) new_rule = options->path_remap_rule/":";
+    if (sizeof(new_rule) != 2) {
+      werror("Invalid remapping rule syntax: %O\n", options->path_remap_rule);
+      exit(1);
+    }
+    if (new_rule[0] != new_rule[1]) {
+      write("Adding new path remapping rule: %O ==> %O.\n",
+	    new_rule[0], new_rule[1]);
+
+      write("Setting default path remapping rules for branch %s.\n", branch);
+      path_remapping_rules = sprintf("%s:%s\n", new_rule[0], new_rule[1]);
+      git_save_file("refs/heads/rxnpatch/rxnpatch",
+		    "refs/heads/" + branch + "/path_remapping_rules.txt",
+		    path_remapping_rules,
+		    "Added path remapping rules.\n");
+      write("Path remapping rules:\n"
+	    "  %O ==> %O\n",
+	    new_rule[0], new_rule[1]);
+    }
+  }
+
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
   write("Created patch branch %s.\n", patch_branch);
 }
@@ -1014,6 +1124,11 @@ void display_status(mapping(string:string|int|array(string)) options,
   }
   if (sizeof(path_prefix)) {
     write("Path prefix: %s\n", path_prefix);
+  }
+  if (sizeof(path_remapping_rules)) {
+    write("Path remapping rules:\n"
+	  "%{  %s ==> %s\n%}",
+	  parse_remapping_rules(path_remapping_rules));
   }
 
   mapping(string:string) patches = ([]);
@@ -1494,6 +1609,9 @@ void make_patch(mapping(string:string|int|array(string)) options,
     exit(1);
   }
 
+  array(array(string)) remapping_rules =
+    parse_remapping_rules(path_remapping_rules);
+
   write("Preparing patch...\n");
 
   // Description.
@@ -1577,7 +1695,8 @@ void make_patch(mapping(string:string|int|array(string)) options,
     block = "diff --git " + block + "\n";
     if (block == "diff --git \n") continue;
     mapping(string:array(string)) header = ([]);
-    foreach(block/"\n", string line) {
+    array(string) lines = block/"\n";
+    foreach(lines; int lineno; string line) {
       array a = line/" ";
       switch(a[0]) {
       case "diff":
@@ -1634,6 +1753,33 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	    has_suffix(path, "/testsuite.in")) {
 	  break;
 	}
+	// Perform any additional path remapping.
+	int remapped;
+	foreach(remapping_rules, array(string) rule) {
+	  if (has_prefix(header->a[0], rule[0])) {
+	    header->a = ({ rule[1] + header->a[0][sizeof(rule[0])..] });
+	    remapped = 1;
+	  }
+	  if (has_prefix(header->b[0], rule[0])) {
+	    header->b = ({ rule[1] + header->b[0][sizeof(rule[0])..] });
+	    remapped = 1;
+	  }
+	}
+	if (remapped) {
+	  string old_line = line;
+	  lines[lineno] = line =
+	    sprintf("diff --git %s %s",
+		    has_value(header->a[0], " ")?
+		    sprintf("%q", header->a[0]):header->a[0],
+		    has_value(header->b[0], " ")?
+		    sprintf("%q", header->b[0]):header->b[0]);
+	  block = lines * "\n";
+	  write("Remapping\n"
+		"  %s\n"
+		"to\n"
+		"  %s\n",
+		old_line, line);
+	}
 	if (has_prefix(path, "pike/lib/") &&
 	    !has_value(cmd, "--depends=roxenpatch/pike-support")) {
 	  // Support for patching pike files required.
@@ -1641,7 +1787,21 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	}
 	continue;
 
+      case "---":
       case "+++":
+	// Perform any additional path remapping.
+	foreach(remapping_rules, array(string) rule) {
+	  if (has_prefix(a[1], rule[0])) {
+	    write("Remapping path %s to %s.\n",
+		  a[1], rule[1] + a[1][sizeof(rule[0])..]);
+	    a[1] = rule[1] + a[1][sizeof(rule[0])..];
+	    lines[lineno] = line = sprintf("%s %s", a[0], a[1]);
+	    block = lines * "\n";
+	  }
+	}
+	header[a[0]] = a[1..];
+	if (a[0] == "---") continue;
+
 	if ((header["---"][0] != "/dev/null") && (a[1] != "/dev/null")) {
 	  // Not a new or deleted file, and not binary.
 	  diff += block;
