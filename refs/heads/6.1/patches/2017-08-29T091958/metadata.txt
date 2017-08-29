@@ -1,0 +1,28 @@
+subject: Roxen 6.1:  RoxenPatch fixes.
+from: fa2304ff2369c2552d1d6240c541500572a411a7
+to: f721e4d4dd97587494eb59780aa681277c7313ac
+originator: Erik Allemann
+depends: 2017-08-22T155815
+restart: true
+
+• git-rxnpatch: Fixed some option name typos.
+
+The --path-remap-rule option should now work.
+
+Fixes [WS-58] some more.
+
+• git-rxnpatch: Add support for filename remapping.
+
+The "make" command now rewrites relevant parts of the generated diffs
+to support remapping of filenames.
+
+Fixes remainder of [WS-58].
+
+• git-rxnpatch: Added option --path-remap-rule.
+
+This option is used to edit the path_remapping_rules.txt file.
+
+It will in turn be used to perform custom remapping of files to
+handle files that have been moved by the build system.
+
+Fixes some of [WS-58].
