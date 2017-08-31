@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.561 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1079,7 +1079,7 @@ void end(int|void keepit)
     object fd = my_fd;
     my_fd=0;
     pipe = 0;
-    chained_to = o;
+    chained_to = o->my_fd_released;
     call_out (o->chain, 0, fd,port_obj,leftovers);
     disconnect();
     return;
@@ -1486,7 +1486,7 @@ int wants_more()
   return !!cache;
 }
 
-protected object(this_program) chained_to;
+protected function(:void) chained_to;
 
 protected void destroy()
 {
@@ -1498,7 +1498,7 @@ protected void destroy()
   if (chained_to) {
     // This happens when do_log() is called before the request
     // has been chained (eg for short data over fast connections).
-    call_out(chained_to->my_fd_released, 0);
+    call_out(chained_to, 0);
     chained_to = 0;
   }
 }
@@ -1512,7 +1512,7 @@ void do_log( int|void fsent )
   MARK_FD("HTTP logging"); // fd can be closed here
   if (chained_to) {
     // Release the other sender.
-    call_out(chained_to->my_fd_released, 0);
+    call_out(chained_to, 0);
     chained_to = 0;
   }
   TIMER_START(do_log);
