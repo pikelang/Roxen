@@ -1,0 +1,12 @@
+subject: Roxen 6.0: Support specifying TLS implementation level.
+from: e8232f028cab12a95bfd60a013c7fa1252fa93ee
+to: 21742abcc91bf2fea4ac3ff130bf5fc1aa4c3c0c
+originator: Jonas Lonnberg
+depends: 2017-05-22T104620
+restart: true
+
+• <ldap/>, <emit#ldap/>: Support specifying TLS implementation level.
+
+Adds support for the attributes max-tls and min-tls.
+
+Fixes [WS-51].
