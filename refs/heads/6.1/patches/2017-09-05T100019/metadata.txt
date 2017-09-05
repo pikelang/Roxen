@@ -1,0 +1,11 @@
+subject: Roxen 6.1: Fixes IE problem when uploading files
+from: f721e4d4dd97587494eb59780aa681277c7313ac
+to: 1ab599575a0f76d46d62d87506ea3b8256b017fd
+originator: Tobias Liin
+depends: 2017-08-29T091958
+restart: true
+
+• AFS post_files: Prevent full local path as filename. [CMS-247]
+
+Specifying filename when using FormData.append() prevents browsers
+(like IE) from using full local path as filename.
