@@ -745,7 +745,7 @@ private
 		   "DBManager: Retrying with forced use of .frm file.\n",
 		   table, describe_error(err));
 	    sql->query("REPAIR TABLE `" + table + "` USE_FRM");
-	  } else {
+	  } else if (err) {
 	    throw(err);
 	  }
 	}
@@ -2917,5 +2917,9 @@ CREATE TABLE db_permissions (
   return;
   };
 
-  werror( describe_backtrace( err ) );
+  if (err) {
+    werror( describe_backtrace( err ) );
+  } else {
+    werror("DBManager: Internal error; something threw a %O.\n", err);
+  }
 }
