@@ -1804,5 +1804,9 @@ CREATE TABLE db_permissions (
   return;
   };
 
-  werror( describe_backtrace( err ) );
+  if (err) {
+    werror( describe_backtrace( err ) );
+  } else {
+    werror("DBManager: Internal error; something threw a %O.\n", err);
+  }
 }
