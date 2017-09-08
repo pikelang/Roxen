@@ -262,7 +262,7 @@ private
 		   "DBManager: Retrying with forced use of .frm file.\n",
 		   table, describe_error(err));
 	    sql->query("REPAIR TABLE `" + table + "` USE_FRM");
-	  } else {
+	  } else if (err) {
 	    throw(err);
 	  }
 	}
