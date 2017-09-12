@@ -1,0 +1,4 @@
+Modified files:
+  etc/include/version.h
+  etc/modules/DBManager.pmod
+  tools/git-rxnpatch
