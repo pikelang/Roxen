@@ -1649,15 +1649,11 @@ void make_patch(mapping(string:string|int|array(string)) options,
     string distignore = replace(git_cat_file(head_sha1, path), "\r", "\n");
     path = path[sizeof(subtree_prefix)..];
     string dir = path_prefix + dirname(path);
-    if (distignore == "") {
-      distignore_prefixes += ({ dir });
-    } else {
-      foreach(distignore/"\n" - ({""}), string path) {
-	path = (path/"#")[0];
-	if (path == "") continue;
-	if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
-	distignore_prefixes += ({ combine_path(dir, path) });
-      }
+    foreach(distignore/"\n" - ({""}), string path) {
+      path = (path/"#")[0];
+      if (path == "") continue;
+      if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+      distignore_prefixes += ({ combine_path(dir, path) });
     }
   }
   distignore_prefixes = Array.uniq(distignore_prefixes);
