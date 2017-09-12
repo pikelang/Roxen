@@ -1,0 +1,48 @@
+subject: Roxen 6.1: Fixes to rxnpatch and DB upgrade code.
+from: 1ab599575a0f76d46d62d87506ea3b8256b017fd
+to: db25664687a4cffaeae05355931d9ed8a784c49f
+originator: Erik Allemann
+depends: 2017-09-05T100019
+restart: true
+
+• git-rxnpatch: Fixed .distignore handling.
+
+Empty .distignore files are noops; NOT directives to ignore the
+entire directory.
+
+Fixes issues with patches missing some files.
+
+• DBManager: Improved robustness of DB upgrade code.
+
+When upgrading from MySQL 5.0 to MariaDB 10.1, the mysql_upgrade
+script apparently forgets to flush something, which causes the
+database to complain, and the upgrade to fail (verbose mode):
+
+[...]
+| Phase 3/7: Fixing views
+| Processing databases
+| information_schema
+| mysql
+| Phase 4/7: Running 'mysql_fix_privilege_tables'
+| [TIMESTAMP] [ERROR] Column count of mysql.db is wrong. Expected 22, found 21. The table is probably corrupted
+| [TIMESTAMP] [ERROR] mysqld: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+| ERROR 1408 (HY000) at line 542: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+| FATAL ERROR: Upgrade failed
+
+Rerunning the mysql_upgrade script immediately after completes
+without further complaints (still verbose mode):
+
+[...]
+| Phase 3/7: Fixing views
+| Processing databases
+| information_schema
+| mysql
+| performance_schema
+| Phase 4/7: Running 'mysql_fix_privilege_tables'
+| Phase 5/7: Fixing table and database names
+[...]
+
+check_upgrade_mysql() now reruns mysql_upgrade once if it failed the
+first time. It also throws an error if it also fails the second time.
+
+Fixes [WS-60].
