@@ -531,14 +531,54 @@ private
       if (mysql_location->mysql_upgrade) {
 	// Upgrade method in MySQL 5.0.19 and later (UNIX),
 	// MySQL 5.0.25 and later (NT).
-	Process.Process(({ mysql_location->mysql_upgrade,
+	int err = Process.Process(({ mysql_location->mysql_upgrade,
 #ifdef __NT__
-			   "--pipe",
+				     "--pipe",
 #endif
-			   "-S", roxenloader.query_mysql_socket(),
-			   "--user=rw",
-			   // "--verbose",
-			}))->wait();
+				     "-S", roxenloader.query_mysql_socket(),
+				     "--user=rw",
+				     // "--verbose",
+				  }))->wait();
+	if (err) {
+	  // NB: The first invocation of mysql_upgrade often fails with
+	  //     (--verbose mode):
+	  //
+	  //       Phase 3/7: Fixing views
+	  //       Processing databases
+	  //       information_schema
+	  //       mysql
+	  //       Phase 4/7: Running 'mysql_fix_privilege_tables'
+	  //       [TIMESTAMP] [ERROR] Column count of mysql.db is wrong. Expected 22, found 21. The table is probably corrupted
+	  //       [TIMESTAMP] [ERROR] mysqld: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+	  //       ERROR 1408 (HY000) at line 542: Event Scheduler: An error occurred when initializing system tables. Disabling the Event Scheduler.
+	  //       FATAL ERROR: Upgrade failed
+	  //
+	  //     When run a second time (still --verbose mode) it works fine:
+	  //
+	  //       Phase 3/7: Fixing views
+	  //       Processing databases
+	  //       information_schema
+	  //       mysql
+	  //       performance_schema
+	  //       Phase 4/7: Running 'mysql_fix_privilege_tables'
+	  //       Phase 5/7: Fixing table and database names
+	  //
+	  //     Note that the performance_schema doesn't show up in
+	  //     the first pass.
+	  werror("Warning: Upgrade failed with code %d; trying once more...\n",
+		 err);
+	  err = Process.Process(({ mysql_location->mysql_upgrade,
+#ifdef __NT__
+				   "--pipe",
+#endif
+				   "-S", roxenloader.query_mysql_socket(),
+				   "--user=rw",
+				   // "--verbose",
+				}))->wait();
+	  if (err) {
+	    error("Upgrading to %s failed with code %d.\n", mysql_version, err);
+	  }
+	}
       } else if ((mysql_location->basedir) &&
 		 (update_mysql =
 		  (Stdio.read_bytes(combine_path(mysql_location->basedir,
@@ -690,7 +730,24 @@ private
 	  //     permission errors are in the return value.
 	  //
 	  // We ignore them for now.
-	  sql->query("REPAIR TABLE `" + table + "`");
+	  mixed err = catch {
+	      sql->query("REPAIR TABLE `" + table + "`");
+	    };
+	  if (err && has_value(describe_error(err),
+			       "Incompatible key or row definition between "
+			       "the MariaDB .frm file")) {
+	    // Errors 185 and 190:
+	    // "Incompatible key or row definition between the MariaDB .frm "
+	    // "file and the information in the storage engine. You have to "
+	    // "dump and restore the table to fix this"
+	    werror("DBManager: Basic repair of table %O failed:\n"
+		   "%s\n"
+		   "DBManager: Retrying with forced use of .frm file.\n",
+		   table, describe_error(err));
+	    sql->query("REPAIR TABLE `" + table + "` USE_FRM");
+	  } else if (err) {
+	    throw(err);
+	  }
 	}
       }
       werror("DBManager: MySQL upgrade done.\n");
@@ -2860,5 +2917,9 @@ CREATE TABLE db_permissions (
   return;
   };
 
-  werror( describe_backtrace( err ) );
+  if (err) {
+    werror( describe_backtrace( err ) );
+  } else {
+    werror("DBManager: Internal error; something threw a %O.\n", err);
+  }
 }

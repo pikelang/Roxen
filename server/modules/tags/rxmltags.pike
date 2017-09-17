@@ -4584,7 +4584,6 @@ class TagValue
     "index": RXML.t_any (RXML.PEnt),
   ]);
 
-  RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_any});
   constant flags = RXML.FLAG_DONT_RECOVER;
 
@@ -4595,7 +4594,16 @@ class TagValue
     array do_enter (RequestID id)
     {
       RXML.Type type = args->type;
-      if (type) content_type = type (RXML.PXml);
+      if (type) {
+	content_type = type(RXML.PXml);
+      } else if (result_type->handle_literals) {
+	// t_any, t_array, t_mapping, etc.
+	content_type = RXML.t_any(RXML.PXml);
+      } else {
+	// Typically t_html.
+	// Encode the content with the same type as our result_type.
+	content_type = result_type(RXML.PXml);
+      }
 
       if (args->index) {
 	if (result_type != RXML.t_mapping)
@@ -10403,6 +10411,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <row><c><p>%n</p></c><c><p>Newline</p></c></row>
  <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
  <row><c><p>%P</p></c><c><p>\"am\" or \"pm\"</p></c></row>
+ <row><c><p>%q</p></c><c><p>Quarter number (1-4)</p></c></row>
  <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
  <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
  <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. 60 only occurs in case of a leap second.</p></c></row>

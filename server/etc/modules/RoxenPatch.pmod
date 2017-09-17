@@ -518,11 +518,15 @@ class Patcher
     write_mess("Fetched rxp cluster file %s over HTTPS.\n", file->name);
 
     string temp_dir = Stdio.append_path(get_temp_dir(), file->name);
+
+    Privs privs = Privs("RoxenPatch: Saving downloaded patch cluster...");
     // Extra directory level to get rid of the sticky bit normally
     // present on /tmp/ that would require Privs for clean_up to work.
     mkdir(temp_dir);
     string temp_file = Stdio.append_path(temp_dir, file->name);   
     write_file_to_disk(temp_file, file->data);
+    privs = 0;
+
     array(int|string) patch_ids = import_file(temp_file);
     clean_up(temp_dir);
 
@@ -2747,24 +2751,20 @@ class Patcher
 
     File out_file = File();
 
-    Privs privs = Privs(sprintf("Patcher: Opening %O for writing.", path));
-    
     if(!out_file->open(path, "cxw"))
     {
-      privs = 0;
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
     }
-    privs = 0;
-    
+
     if(out_file->write(data) != sizeof(data))
     {
       write_err("FAILED: %s\n", strerror(errno()));
       return 0;
     }
-    
+
     out_file->close();
-    
+
     write_mess("<green>Done!</green>\n");
     return 1;
   }
@@ -2957,21 +2957,30 @@ class Patcher
   int(0..1) add_file_to_tar_archive(string file_name,
 				    string base_path,
 				    string tar_archive)
-  //! Add a file to @[tar_archive]. If the archive doesn't exist it will be 
+  //! Add a file to @[tar_archive]. If the archive doesn't exist it will be
   //! created automagically by tar. @[file_name] cannot be a relative path
   //! higher than base_path.
   {
-    array args = ({ tar_bin, "rf", 
-		    unixify_path(tar_archive), 
+    array args = ({ tar_bin, "rf",
+		    unixify_path(tar_archive),
 		    simplify_path(unixify_path(file_name)) });
-  
-    Privs privs = Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
+
+    string tar_path = combine_path(base_path, tar_archive);
+    Privs privs;
+    if (!Stdio.exist(tar_path)) {
+      // Some versions of tar (eg Solaris) don't like creating new tar
+      // files with "rf"...
+      args[1] = "cf";
+      privs = Privs(sprintf("RoxenPatch: Creating tar file %O.", tar_archive));
+    } else {
+      privs = Privs(sprintf("RoxenPatch: Appending to tar file %O.", tar_archive));
+    }
     Process.Process p = Process.Process(args, ([ "cwd" : base_path ]));
     privs = 0;
     if (!p || p->wait())
       return 0;
-  
-    return 1; 
+
+    return 1;
   }
 
 
@@ -3068,9 +3077,22 @@ class Patcher
   }
 
   mapping(string:string) fetch_latest_rxp_cluster_file() {
-    string get_url(Standards.URI uri, int|void use_etag) {
+    string get_url(Standards.URI uri, int|void use_etag)
+    {
       string etag = use_etag && http_cluster_etag;
       string last_modified = use_etag && http_cluster_last_modified;
+      string expected_sha1;
+
+      if (use_etag) {
+	// We use the query part of the URL to receive metadata information
+	// about the patch from the server.
+	mapping(string:string) variables = uri->get_query_variables();
+	expected_sha1 = variables->sha1;
+
+	// There's no need to send back the variables to the server.
+	uri->set_query_variables(([]));
+      }
+
       Protocols.HTTP.Query query = try_get_url(uri, 20, etag, last_modified);
       if ((query->status == 304) || (query->status == 412)) {
 	return 0;
@@ -3087,7 +3109,14 @@ class Patcher
 	    "; length=" + query->headers["content-length"];
 	}
       }
-      return query->data();
+      string data = query->data();
+      if (expected_sha1 &&
+	  (Crypto.SHA1.hash(data) != String.hex2string(expected_sha1))) {
+	error("SHA1 checksum mismatch for URL %s. Got: %s, expected: %s\n",
+	      (string)uri,
+	      String.string2hex(Crypto.SHA1.hash(data)), expected_sha1);
+      }
+      return data;
     };
 
     // If not running in a dist we can't fetch patches
@@ -3099,6 +3128,7 @@ class Patcher
     uri->add_query_variables(([ "product"  : product_code,
 				"version"  : dist_version,
 				"platform" : server_platform,
+				"checksum" : "sha1",
 				"action"   : "get-latest-rxp-cluster-url" ]));
     string res = get_url(uri);
 
@@ -3107,7 +3137,7 @@ class Patcher
       error("No rxp cluster URL was found.\n");
 
     Standards.URI uri2 = Standards.URI(String.trim_all_whites(res), uri);
-    if (uri->scheme != "https")
+    if (uri2->scheme != "https")
       error("Fetch: Not HTTPS: %s\n", (string)uri2);
     string res2 = get_url(uri2, 1);
 

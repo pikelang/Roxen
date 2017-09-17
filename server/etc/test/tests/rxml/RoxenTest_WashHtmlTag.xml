@@ -44,12 +44,12 @@
     ftp.roxen.com
     ftp://ftp.roxen.com</wash-html></rxml>
   <result>
-    <a href='http://www.roxen.com'>http://www.roxen.com</a>
-    <a href='http://www.roxen.com/projects'>http://www.roxen.com/projects</a>
-    <a href='http://www.roxen.com'>http://www.roxen.com</a>
-    <a href='https://www.roxen.com'>https://www.roxen.com</a>
-    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a>
-    <a href='ftp://ftp.roxen.com'>ftp://ftp.roxen.com</a></result>
+    <a href="http://www.roxen.com">http://www.roxen.com</a>
+    <a href="http://www.roxen.com/projects">http://www.roxen.com/projects</a>
+    <a href="http://www.roxen.com">http://www.roxen.com</a>
+    <a href="https://www.roxen.com">https://www.roxen.com</a>
+    <a href="ftp://ftp.roxen.com">ftp://ftp.roxen.com</a>
+    <a href="ftp://ftp.roxen.com">ftp://ftp.roxen.com</a></result>
 </test>
 
 <test no-strip-ws="" no-canon="t">
@@ -59,7 +59,7 @@
     The new server for www. It is fast.
     <a href="http://www.roxen.com">Roxen</a></wash-html></rxml>
   <result>
-    <a href='http://www.roxen.com'>http://www.roxen.com</a>
+    <a href="http://www.roxen.com">http://www.roxen.com</a>
     cvs.roxen.com
     The new server for www. It is fast.
     <a href="http://www.roxen.com">Roxen</a></result>

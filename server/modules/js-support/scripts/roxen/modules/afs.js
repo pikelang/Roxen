@@ -15,7 +15,8 @@ ROXEN.AFS = function () {
   // 2 - Also log calls to tagged callbacks, i.e. the single-response
   //     callbacks passed to call().
   // 3 - Also log calls to global and error callbacks.
-  var debug_log = 0;
+  var debug_log = parseInt(ROXEN.getQueryVariable(window.location.href,
+                                                  "__afs-debug"), 10);
 
   var session = ROXEN.config.session;
 
@@ -256,6 +257,8 @@ ROXEN.AFS = function () {
           cb (msg);
         } catch (err) {
           ROXEN.log ("AFS: error in callback " + cb.name + ": " + err);
+          if (ROXEN.debug)
+            throw err;
         }
       }
     }
@@ -344,8 +347,9 @@ ROXEN.AFS = function () {
     //  Initiate transfer
     var url = actions_prefix + action + "?" + encode_afs_args(args);
     var fd = new FormData();
-    for (var i = 0; i < files.length; i++)
-      fd.append("upload-file-" + i, files[i]);
+    for (var i = 0; i < files.length; i++) {
+      fd.append("upload-file-" + i, files[i], files[i].name);
+    }
     var xhr = new XMLHttpRequest();
     xhr.open("POST", url, true);
     xhr.onreadystatechange = function() {
