@@ -480,6 +480,17 @@ table {
   .tfoot {
     background: darken($body-bg, 2%) !important;
   }
+
+  &.pike-prof {
+    th,
+    td {
+      text-align: right;
+
+      &:first-child {
+        text-align: left;
+      }
+    }
+  }
 }
 
 .icon {

@@ -3,6 +3,7 @@
  */
 #include <stat.h>
 #include <roxen.h>
+#include <config_interface.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("admin_tasks",X,Y)
 
@@ -105,21 +106,55 @@ array get_prof_info(string|void foo)
 
 mixed page_0(object id)
 {
-  string res = ("All times are in milliseconds, and real-time. Times include "
-		"time of child functions. No callgraph is available yet.<br />"
-		"Function glob: <input type=text name=subnode value='"+
-                Roxen.html_encode_string(id->variables->subnode||"")
-                +"'><br />");
+  string tmpl = #"
+    <p>All times are in milliseconds, and real-time. Times include
+    time of child functions. No callgraph is available yet.<p>
+    <p>Function glob: <input type=text name=subnode value='{{subnode}}''></p>
 
-  object t = ADT.Table->table(get_prof_info("*"+
-                                            (id->variables->subnode||"")+"*"),
-			      ({ "Function",
-                                 "Calls",
-                                 "Time(ms)",
-                                 "+chld(ms)",
-                                 "t/call(ms)",
-				 "+chld(ms)"}));
-  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
+    <table class='mem pike-prof'>
+      <thead>
+        <tr>
+        {{ #header }}
+          <th>{{ . }}</th>
+        {{ /header }}
+        </tr>
+      </thead>
+      <tbody>
+        {{ #data }}
+          <tr>
+            {{ #row }}
+              <td>{{ . }}</td>
+            {{ /row }}
+          </tr>
+        {{ /data }}
+      </tbody>
+    </table>";
+
+  array rows = map(get_prof_info("*"+(id->variables->subnode||"")+"*"),
+    lambda (array row) {
+      return ([
+        "row" : map(row, lambda (string s) {
+          return replace(s, "\0", "");
+        })
+      ]);
+    });
+
+  mapping data = ([
+    "header"  : ({ "Function",
+                   "Calls",
+                   "Time(ms)",
+                   "+chld(ms)",
+                   "t/call(ms)",
+                   "+chld(ms)"}),
+    "subnode" : Roxen.html_encode_string(id->variables->subnode||""),
+    "data"    : rows
+  ]);
+
+  Mustache stash = Mustache();
+  string res = stash->render(tmpl, data);
+  destruct(stash);
+
+  return res;
 }
 #endif
 
@@ -129,20 +164,18 @@ mixed parse( RequestID id )
     "<cf-title>"+
     LOCALE(162, "Pike profiling information")+
     "</cf-title>"
-    "<p />"
 #if constant( get_profiling_info )
     "<input type='hidden' name='action' value='pike_profiling.pike' />\n"
-    "<p /><submit-gbutton2 name='refresh' width='75' img-align='middle' align='center'>" +
+    "<submit-gbutton2 name='refresh' type='refresh'>" +
     LOCALE(186,"Refresh") +
     "</submit-gbutton2>\n"
-    "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/><p />\n" +
+    "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>\n" +
     page_0( id )
 #else
     "<div class='notify error'>" +
     LOCALE(185,"This information is only available if the "
 	   "pike binary has been compiled with <tt>--with-profiling</tt>.") +
     "</div>"
-    "<p />\n"
     "<cf-ok-button href='?class=&form.class;&amp;&usr.set-wiz-id;'/>";
 #endif
     ;

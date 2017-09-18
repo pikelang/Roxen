@@ -215,9 +215,9 @@ h3 {
   @include font-size(lg);
 }
 
-p + p {
-  margin-top: -($spacing-unit/2);
-}
+// p + p {
+//   margin-top: -($spacing-unit/2);
+// }
 
 a {
   color: lighten($link-color, 15%);
