@@ -588,13 +588,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
                  "        <td colspan='%d'"
                  " align='left'>\n"
                  "          <cf-perm perm='Update'>\n"
-                 "          <submit-gbutton2 type='%[3]s'"
-                 " name='%s-button'>%s</submit-gbutton2>\n"
+                 "          <submit-gbutton2 type='%[4]s'"
+                 " name='%s-button'%s>%s</submit-gbutton2>\n"
                  "          </cf-perm>\n"
                  "        </td>\n"
                  "      </tr>\n",
                  colspan,
                  (which_list == "installed") ? "uninstall" : "install",
+                 (sizeof(list))              ? "" : " disabled='disabled'",
                  (which_list == "installed") ? LOCALE(358, "Uninstall selected patches") :
                                                LOCALE(359, "Install selected patches"),
                  (which_list == "installed") ? "remove" : "add");
