@@ -126,8 +126,8 @@ void create()
 {
   defvar("crawl_src", "http://localhost/periodic-crawl.txt", 
 	 "Crawl list URL", TYPE_STRING,
-	 "<p>The URL to the file that contains the list of URLs to fetch. "
-	 "It should be a text file with one URL, and its periodicity in "
+         "<p>The URL to the file that contains the list of URLs or paths to fetch. "
+         "It should be a text file with one URL or path, and its periodicity in "
 	 "seconds separated by space, per line. It is also possible to specify "
 	 "an optional host header at the end of the line, e.g:</p>"
 	 "<pre>"
@@ -135,8 +135,16 @@ void create()
 	 "  http://localhost:8080/ 5 mobile.roxen.com<br/>"
 	 "  http://localhost:8080/news 10<br/>"
 	 "  http://localhost:8080/sports 10<br/>"
-	 "  http://localhost:8080/rss.xml?category=3455&id=47 20"
-	 "</pre>");
+         "  /rss.xml?category=3455&id=47 20"
+         "</pre>"
+         "When a path is provided instead of a URL, a full URL will be constructed by "
+         "prepending the path with the URL in the 'Base URL' setting.");
+
+  defvar("base_url", "http://localhost:8080",
+         "Base URL", TYPE_STRING,
+         "For lines in the text file that contain a path instead of URL, "
+         "this URL is prepended to construct a complete URL. This is useful "
+         "if the frontends need to crawl using separate URLs.");
 
   defvar("crawl_delay", 60, 
 	 "Crawl Delay", TYPE_INT,
@@ -226,6 +234,7 @@ array(Event) fetch_events(string crawl_src)
   array(Event) events = ({ });
   foreach(lines, string line)
   {
+    string url;
     array fields = line / " " - ({""});
     if(sizeof(fields) < 2)
     {
@@ -238,7 +247,13 @@ array(Event) fetch_events(string crawl_src)
       return 0;
     }
 
-    events += ({ Event(fields[0], (int)fields[1], (sizeof(fields) >= 3)? fields[2]:0) });
+    if (has_value(fields[0], "://")) {
+      url = fields[0];
+    } else {
+      url = query("base_url") + fields[0];
+    }
+
+    events += ({ Event(url, (int)fields[1], (sizeof(fields) >= 3)? fields[2]:0) });
   }
   return events;
 }
