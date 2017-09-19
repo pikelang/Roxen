@@ -1615,6 +1615,7 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int read_only,
 }
 
 protected Thread.Local table_locks = Thread.Local();
+
 protected class TableLockInfo (
   Sql.Sql db,
   int count,

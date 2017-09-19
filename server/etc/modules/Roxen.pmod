@@ -224,6 +224,7 @@ string http_roxen_id_cookie(void|string unique_id)
 
 protected mapping(string:function(string, RequestID:string)) cookie_callbacks =
   ([]);
+
 protected class CookieChecker(string cookie)
 {
   string `()(string path, RequestID id)
@@ -239,6 +240,7 @@ protected class CookieChecker(string cookie)
     return c == 'O' && sprintf("CookieChecker(%O)", cookie);
   }
 }
+
 function(string, RequestID:string) get_cookie_callback(string cookie)
 {
   function(string, RequestID:string) cb = cookie_callbacks[cookie];
