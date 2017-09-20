@@ -1,0 +1,12 @@
+subject: Roxen 6.1: Periodic fetcher
+from: 6309e8e9b0042e7ba86afd759f3715b8bb24b36b
+to: 11ac808e0fba2f7429c09e01406173fea364f566
+originator: Marcus Wellhardh
+depends: roxen/6.1.215|2017-09-13T150650
+restart: true
+
+• Added support for configuring paths in the periodic fetcher config file.
+
+If a line in the text file contains a path instead of a URL, a module
+setting "Base URL" will be prepended to the path to construct a full
+URL. This allows for frontend specific crawl url:s.
