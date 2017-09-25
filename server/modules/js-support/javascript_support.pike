@@ -44,14 +44,14 @@ mapping find_internal(string f, RequestID id)
     return Roxen.http_string_answer((cb && cb(token, path, id)) || "",
 				    "application/x-javascript");
   }
-  
+
   if (sscanf(f, "__ex/%s", string key) == 1) {
     mixed error = catch {key = MIME.decode_base64(key);};
     if(error || !externals[key])
       return 0;
     return Roxen.http_string_answer(externals[key], "application/x-javascript");
   }
-  
+
   //  Cache the files
   string file = combine_path(__FILE__, "../scripts", (f-".."));
   int|array data;
@@ -101,7 +101,7 @@ class JSInsert
   {
     return content;
   }
-  
+
   string _sprintf()
   {
     return sprintf("JSInsert(%O)", name);
@@ -126,9 +126,9 @@ class JSSupport
 
   string get_unique_id(string name)
   {
-    return name+sprintf("%02x", keys[name]++); 
+    return name+sprintf("%02x", keys[name]++);
   }
-  
+
   void create_insert(string name, string tag_name,
 		     mapping(string:string) args)
   {
@@ -139,10 +139,10 @@ class JSSupport
   {
     if(!inserts[name])
       create_insert(name, 0, 0);
-    
+
     return inserts[name];
   }
-  
+
   string _sprintf()
   {
     return sprintf("JSSupport(%d inserts)", sizeof (inserts));
@@ -163,7 +163,7 @@ string c_js_quote(string name, mapping args, string contents)
 		      ({ "\"", "<script", "</script>",
 			 "<SCRIPT", "</SCRIPT>" }),
 		      ({ "\\\"", "<scr\" + \"ipt", "</scr\" + \"ipt>",
-			 "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n", 
+			 "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n",
 	      lambda(string row) {
 		//  Quote wide characters inside JavaScript var assignment
 		//  using \uXXXX form.
@@ -194,7 +194,7 @@ string container_js_write(string name, mapping args, string contents,
     if(upper_case(args->language||"") == upper_case(xargs->language||""))
       return "</"INT_TAG">"+contents+"<"INT_TAG">";
   };
-  
+
   // Do not js-quote contents inside a <script>-tag with the same language-arg.
   contents = parse_html(contents, ([]), ([ "script": c_script ]), args);
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
@@ -239,7 +239,7 @@ JSSupport get_jss(RequestID id)
     else
       id->root_id->misc->javascript_support = jssupport;
   }
-  
+
   //werror("get_jss: %O\n", jssupport);
   return jssupport;
 }
@@ -282,7 +282,7 @@ string container_js_popup(string name, mapping args, string contents,
       args->props = "("+args->props+").setParentRightOffset("+args->op+")";
     }
   }
-  
+
   if(!args->props)
     args->props = "default_props";
   if(!largs->href)
@@ -298,10 +298,10 @@ string container_js_popup(string name, mapping args, string contents,
   string event = args->event || "onMouseOver";
   if(lower_case(args->event||"") == "onclick")
     event = "onClick";
-  
+
   largs[event] = "return showPopup(event, '"+popupname+"', '"+popupparent+
 		 "', "+args->props+");";
-  
+
   string css_ident = "#" + popupname;
   string shared_css = args["shared-css-class"];
   if (shared_css) {
@@ -313,11 +313,11 @@ string container_js_popup(string name, mapping args, string contents,
 	(id->supports->msie?"width:1; ":"")+
 	"z-index:"+
 	(id->misc->_popuplevel+1)+"}\n", 1);
-  
+
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
   id->misc->_popuplevel++;
-  
+
   if(args["args-variable"])
     id->variables[args["args-variable"]] = make_args_unquoted(largs);
   if(args["name-variable"])
@@ -329,14 +329,14 @@ string container_js_popup(string name, mapping args, string contents,
   get_jss(id)->get_insert("div")->
     add("<div id='" + popupname + "'" + css_class + ">\n"+
 	Roxen.parse_rxml(contents, id)+"</div>\n");
-  
+
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
   id->misc->_popupname = popupname;
-  
+
   if(!args->label)
     return "";
-  
+
   return make_container_unquoted("a", largs, args->label);
 }
 
@@ -393,7 +393,7 @@ class TagJSExternal
 		MIME.encode_base64(key)+"\"></script>" });
     }
   }
-  
+
   void create()
   {
     externals = ([]);
@@ -445,12 +445,12 @@ protected mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
   SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
 		      Roxen.make_tag_attributes (args));
   JSInsert js_insert = get_jss(id)->get_insert(args->name);
-  
+
   if(!js_insert) {
     SIMPLE_TRACE_LEAVE ("Got no record of this tag");
     return "";
   }
-    
+
   SIMPLE_TRACE_LEAVE ("");
   if(args->name == "javascript1.2") {
     string content = js_insert->get();
@@ -462,7 +462,7 @@ protected mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 
   if(args->jswrite)
     return container_js_write("js-post-write", ([]), js_insert->get(), id);
-  
+
   return js_insert->get();
 }
 
@@ -587,7 +587,7 @@ javascript support.</p></desc>
   <p><short hide=\"hide\">Creates a javascript popup.</short>
   This tag creates a popup of its content and returns a link that
   activates the popup if the cursor hovers over the link.</p>
-  
+
   <p>This tag generates some javascript support strings that have to be
   inserted into the page with the <tag>js-insert</tag> tag. The strings are:
   <i>div</i> and <i>style</i>.</p>

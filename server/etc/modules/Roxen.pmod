@@ -53,15 +53,15 @@ int(0..0) raise_err (OnError on_error, sprintf_format msg,
 //!       Throw a generic exception (@expr{"internal server error"@}).
 //!       Use this for error conditions that never should
 //!       happen if the code is correct. This is the default.
-//!   
+//!
 //!     @value THROW_RXML
 //!       Throw the error as a RXML run error.
 //!       Convenient in rxml tag implementations.
-//!   
+//!
 //!     @value LOG_ERROR
 //!       Print a message using @[report_error] and
 //!       return @expr{0@} (zero).
-//!   
+//!
 //!     @value RETURN_ZERO
 //!       Just return @expr{0@} (zero).
 //!   @endint
@@ -141,7 +141,7 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
     return compile_string( code, xml_file )();
   };
 
-  
+
   p->xml_tag_syntax( 2 );
   p->add_quote_tag ("!--", "", "--");
   p->add_container( ttag,
@@ -171,7 +171,7 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
 			  else
 			    row[current_tag] = html_decode_string(c);
 		      };
-		       
+
 		      p = Parser.HTML( );
 		      p->xml_tag_syntax( 2 );
 		      p->add_quote_tag ("!--", "", "--")
@@ -270,7 +270,7 @@ protected class LangChecker(multiset(string) known_langs, string header,
     case "cookie":
       if (!id->real_cookies)
 	id->init_cookies();
-      
+
       //  Avoid cookie jar tracking
       if (string cookie_val = id->real_cookies[extra]) {
 	if (known_langs[cookie_val])
@@ -278,10 +278,10 @@ protected class LangChecker(multiset(string) known_langs, string header,
       }
       break;
     }
-    
+
     return proto_key;
   }
-  
+
   string _sprintf(int c)
   {
     return (c == 'O') && sprintf("LangChecker(%O,%O,%O)",
@@ -448,7 +448,7 @@ int is_mysql_keyword( string name )
       "timestamp", "tinyblob", "tinytext", "tinyint", "trailing", "to",
       "type", "use", "using", "unique", "unlock", "unsigned", "update",
       "usage", "values", "varchar", "variables", "varying", "varbinary",
-      "with", "write", "when", "where", "year", "year_month", "zerofill",      
+      "with", "write", "when", "where", "year", "year_month", "zerofill",
   >)[ name ];
 }
 
@@ -470,7 +470,7 @@ string short_name(string|Configuration long_name)
   }
 
   id = Unicode.split_words_and_normalize( lower_case(long_name) )*"_";
-  
+
   if( strlen( id ) > 20 )
     id = (id[..16]+"_"+hash(id)->digits(36))[..19];
 
@@ -645,7 +645,7 @@ mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
 //! easiest way to do it if you don't want to worry about the internal
 //! roxen structures.
 {
-  rxml = 
+  rxml =
        ([function(string,RequestID,Stdio.File:string)]id->conf->parse_rxml)
        (rxml, id, file);
   HTTP_WERR("RXML answer ("+(type||"text/html")+")");
@@ -745,7 +745,7 @@ string log_date(int t) {
   return(sprintf("%04d-%02d-%02d",
 		 1900+lt->year,lt->mon+1, lt->mday));
 }
- 
+
 string log_time(int t) {
   mapping(string:int) lt = localtime(t);
   return(sprintf("%02d:%02d:%02d",
@@ -1371,7 +1371,7 @@ string make_absolute_url (string url, RequestID|void id,
 {
   // If the URL is a local relative URL we make it absolute.
   url = fix_relative(url, id);
-  
+
   // Add protocol and host to local absolute URLs.
   if (has_prefix (url, "/")) {
     if(id) {
@@ -2293,7 +2293,7 @@ string make_tag_attributes(mapping(string:string) in,
     }
     return out + html_encode_string(text);
   };
-  
+
   string res = "";
   array(string) sorted_attrs = sort(indices(in));
   if (preserve_roxen_entities) {
@@ -2586,7 +2586,7 @@ string strftime(string fmt, int t,
   array(string) a = fmt/"%";
   string res = a[0];
   mapping(string:string) m = (["type":"string"]);
-  
+
   foreach(a[1..], string key) {
     m_delete (m, "case");
     int(0..1) prefix = 1;
@@ -2974,7 +2974,7 @@ protected string low_roxen_encode(string val, string encoding)
     if (String.width(val) > 8)
       RXML.run_error("Cannot hash wide characters.\n");
     return Crypto[upper_case(encoding)]->hash(val);
-    
+
    case "quotedprintable":
    case "quoted-printable":
    case "qp":
@@ -3351,7 +3351,7 @@ string fix_relative( string file, RequestID|void id )
 Stdio.File open_log_file( string logfile )
   //! Opens a log file with the provided name, but
   //! with %y, %m, %d and %h replaced with year, month
-  //! day and hour. 
+  //! day and hour.
 {
   mapping m = localtime(time(1));
   m->year += 1900;	// Adjust for years being counted since 1900
@@ -3764,7 +3764,7 @@ string get_client_charset (string едц)
 		    "?", "?", "?",
 		    "?", "?", "?",
 		    "?", "?", }));
-  
+
   switch( test ) {
   case "edv":
   case "edv?":
@@ -3777,15 +3777,15 @@ string get_client_charset (string едц)
     // FALL_THROUGH
   case "едц":
     return "iso-8859-1";
-    
+
   case "\33-Aедц":
   case "\33-A\345\344\366\33$Bgl":
     return "iso-2022-jp";
-    
+
   case "+AOUA5AD2-":
   case "+AOUA5AD2gp8-":
     return "utf-7";
-     
+
   case "ГҐГ¤Г¶?":
     if (test != test2) {
       return "html|utf-8";
@@ -3804,11 +3804,11 @@ string get_client_charset (string едц)
     // FALL_THROUGH
   case "\214\212\232":
     return "mac";
-    
+
   case "\0е\0д\0ц":
   case "\0е\0д\0ц\202\237":
      return "utf-16";
-     
+
   case "\344\214":
   case "???\344\214":
   case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
@@ -3821,7 +3821,7 @@ string get_client_charset (string едц)
       get_decoder_for_client_charset (charset);
       return charset;
     };
-  
+
   if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
     charset_warned_for[test] = 1;
     report_warning( "Unable to find charset decoder for %O "
@@ -4163,7 +4163,7 @@ class QuotaDB
 	    QD_WRITE(sprintf("QuotaDB::rebuild_index(): "
 			     "key:%O lo:%d probe:%d hi:%d\n",
 			     key, lo, probe, hi));
-	    
+
 	    object e = read_entry(index[probe]);
 	    if (e->name < key) {
 	      lo = probe + 1;
@@ -4288,7 +4288,7 @@ class QuotaDB
 			   key, lo, probe, hi));
 
 	  object e = read_entry(index[probe], quota);
-	
+
 	  if (e->name < key) {
 	    lo = probe + 1;
 	  } else if (e->name > key) {
@@ -4437,18 +4437,18 @@ class QuotaDB
 }
 
 
-#define CTX()   
+#define CTX()
 class EScope(string scope)
 {
   void delete( string var )
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     ctx->delete_var( var, scope );
   }
 
   string name()
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     return scope == "_" ? ctx->current_scope() : scope;
   }
 
@@ -4468,7 +4468,7 @@ class EScope(string scope)
 
   protected mixed `[]=( string what, mixed nval )
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     ctx->set_var( what, nval, scope );
     return nval;
   }
@@ -4480,13 +4480,13 @@ class EScope(string scope)
 
   protected array(string) _indices( )
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     return ctx->list_var( scope );
-  } 
+  }
 
   protected array(string) _values( )
   {
-    RXML.Context ctx = RXML.get_context( );  
+    RXML.Context ctx = RXML.get_context( );
     return map( ctx->list_var( scope ), `[] );
   }
 }
@@ -4496,7 +4496,7 @@ class SRestore
   mapping osc = ([]);
   void destroy()
   {
-    foreach( indices( osc ), string o ) 
+    foreach( indices( osc ), string o )
       add_constant( o, osc[o] );
     add_constant( "roxen", roxenp() );
   }
@@ -4631,14 +4631,14 @@ class ScopeRoxen {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
-    
+
     mixed val = c->misc->scope_roxen[var];
     if(!zero_type(val))
     {
       if (objectp(val) && val->rxml_var_eval) return val;
       return ENCODE_RXML_TEXT(val, type);
     }
-    
+
     switch(var)
     {
      case "nodename":
@@ -4695,7 +4695,7 @@ class ScopeRoxen {
      case "dist-os":
        return ENCODE_RXML_TEXT(roxen_dist_os, type);
      case "product-name":
-       return ENCODE_RXML_TEXT(roxen_product_name, type);     
+       return ENCODE_RXML_TEXT(roxen_product_name, type);
      case "time":
        c->id->lower_max_cache (1);
        return ENCODE_RXML_INT(time(),  type);
@@ -4741,11 +4741,11 @@ class ScopeRoxen {
     case "false":
       return Val->false;
     }
-    
+
     return RXML.nil;
   }
 
-  mixed `[]= (string var, mixed val, void|RXML.Context c, 
+  mixed `[]= (string var, mixed val, void|RXML.Context c,
 	      void|string scope_name) {
     if (!c) c = RXML_CONTEXT;
     return c->misc->scope_roxen[var]=val;
@@ -4796,7 +4796,7 @@ class ScopePage {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
-    
+
     mixed val;
     if(converter[var])
       val = c->misc[converter[var]];
@@ -4808,14 +4808,14 @@ class ScopePage {
 	return val;
       return ENCODE_RXML_TEXT(val, type);
     }
-    
+
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
       case "mountpoint":
 	string s = c->id->virtfile || "";
-	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
+	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type);
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
@@ -4839,7 +4839,7 @@ class ScopePage {
       case "counter":
 	return ENCODE_RXML_INT(++c->misc->internal_counter, type);
     }
-    
+
     return RXML.nil;
   }
 
@@ -4940,7 +4940,7 @@ class ScopeModVar
 {
   class Modules( mapping module, string sname )
   {
-    class ModVars( RoxenModule mod ) 
+    class ModVars( RoxenModule mod )
     {
       class Var(object var )
       {
@@ -5016,7 +5016,7 @@ class ScopeModVar
       return sort(indices( module ));
     }
 
-    
+
     mixed `[]( string what )
     {
       mixed mod;
@@ -5029,7 +5029,7 @@ class ScopeModVar
       return ModVars( values( module )[0] )[ what ];
     }
   }
-  
+
   mixed `[]( string what, void|RXML.Context ctx )
   {
     if( what == "global" )
@@ -5202,10 +5202,10 @@ int httpdate_to_time(string date)
 }
 
 void set_cookie( RequestID id,
-                 string name, 
-                 string value, 
-                 int|void expire_time_delta, 
-                 string|void domain, 
+                 string name,
+                 string value,
+                 int|void expire_time_delta,
+                 string|void domain,
                  int(0..1)|string|void path,
                  int(0..1)|string|void secure,
                  int(0..1)|string|void httponly)
@@ -5306,7 +5306,7 @@ string get_world(array(string) urls) {
   mapping(string:Standards.URI) uris = ([ ]);
   foreach (urls, string u)
     uris[u] = Standards.URI(u);
-  
+
   foreach( ({"http:","https:","ftp:"}), string p)
     foreach(urls, string u)
       if (has_prefix(u, p)) {
@@ -5315,7 +5315,7 @@ string get_world(array(string) urls) {
 	uris[url] = uris[u];
 	break;
       }
-  
+
   Standards.URI uri = uris[url];
   string server = uri->host;
   if (server == "::")
@@ -5392,7 +5392,7 @@ string get_world(array(string) urls) {
 	  hosts += ({ "localhost" });
 	break;
       }
-      
+
       if ((dns = Protocols.DNS.gethostbyaddr(addr)) && sizeof(dns)) {
 	if (dns[0]) {
 	  hosts += ({ dns[0] });
@@ -6190,7 +6190,7 @@ mapping(string:int) get_memusage()
   string res;
 #ifdef __NT__
   constant divisor = 1024;
-  if(mixed err = catch { 
+  if(mixed err = catch {
       res = Process.run( ({ "wmic", "process", "where",
 			    "ProcessId=" + (string)getpid(),
 			    "get", "ProcessId,VirtualSize,WorkingSetSize" }) )->stdout;
@@ -6207,8 +6207,8 @@ mapping(string:int) get_memusage()
     Process.locate_binary( ({ "/sbin", "/usr/sbin", "/bin", "/usr/bin" }), "ps");
   if(!ps_location)
     return default_value;
-  
-  if(mixed err = catch { 
+
+  if(mixed err = catch {
       res = Process.run( ({ ps_location, "-o", "pid,vsz,rss",
 			    (string)getpid() }) )->stdout;
     })
@@ -6222,11 +6222,11 @@ mapping(string:int) get_memusage()
   array rows = (res / "\n") - ({ "" });
   if(sizeof(rows) < 2)
     return default_value;
-  
+
   array values = (rows[1]/" ") - ({ "" });
   if(sizeof(values) < 3)
     return default_value;
-  
+
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
 }
 
