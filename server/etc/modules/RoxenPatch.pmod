@@ -556,6 +556,19 @@ class Patcher
     return patch_version;
   }
 
+  string get_prestate_version()
+  //! Returns a prestate with dist and patch version.
+  //! For example "(6.1.215-2017-09-20T144208)".
+  //! The return value is HTML encoded.
+  //! NB leading "/" is not included!
+  {
+    string patch_ver = get_current_patch_version();
+    return "(" +
+      Roxen.html_encode_string(
+        roxen_dist_version + (patch_ver ? "-" + patch_ver : "")) +
+    ")";
+  }
+
   int(0..1) install_patch(string patch_id,
 			  string user,
 			  void|int(0..1) dry_run,
