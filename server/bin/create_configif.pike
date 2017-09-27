@@ -362,12 +362,13 @@ ent text/html
   mkdirhier( ufile );
   Stdio.File( ufile, "wct", 0770 )
     ->write(
-string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
+string_to_utf8(#"<?xml version=\"1.0\"  encoding=\"utf-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Administrator</str>
   <str>password</str>    : <str>" + hash_password(password) + #"</str>
-  <str>name</str>        : <str>" + user + "</str>\n</map>" ));
+  <str>name</str>        : <str>" + user + #"</str>
+</map>\n" ));
 
   write("\n   Administrator user \"" + user + "\" created.\n");
 }
