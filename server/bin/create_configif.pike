@@ -67,10 +67,18 @@ class Readline
   }
 }
 
-string read_string(Readline rl, string prompt, string|void def,
-		   string|void batch)
+mapping(string:string) batch;
+
+string read_string(Readline rl, string prompt,
+		   string|void batch_symbol, string|void def)
 {
-  string res = batch || rl->edit(def || "", prompt+" ", ({ "bold" }));
+  string res;
+  if (batch && batch_symbol) {
+    res = batch[batch_symbol] || def;
+    if (res) return res;
+  }
+
+  res = rl->edit(def || "", prompt+" ", ({ "bold" }));
   if( def && !strlen(res-" ") )
     res = def;
   return res;
@@ -87,7 +95,6 @@ int main(int argc, array argv)
   Readline rl = Readline();
   string name, user, password, configdir, port;
   string passwd2;
-  mapping(string:string) batch = ([]);
 
 #if constant( SSL )
   string def_port = "https://*:"+(random(20000)+10000)+"/";
@@ -105,8 +112,7 @@ interface. Arguments:
  -d dir   The location of the configuration interface.
           Defaults to \"../configurations\".
  -a       Only create a new administration user.
-          Useful when the administration password is
-          lost.
+          Useful when the administration password is lost.
  --help   Displays this text.
  --batch  Create a configuration interface in batch mode.
           The --batch argument should be followed by a
@@ -115,19 +121,20 @@ interface. Arguments:
           filled into it. Available fields:
       server_name    The name of the server. Defaults to
                      \"Administration Interface\".
-      server_url     The server url, e.g.
-                     \"http://*:1234/\".
+      server_url     The server url, e.g. \"http://*:1234/\".
+                     Defaults to \"https://*:22202/\" in batch mode.
       user           The name of the administrator.
                      Defaults to \"administrator\".
       password       The administrator password.
-      ok             Disable user confirmation of the
-                     above information with the value
-                     pair \"ok y\".
+                     NB: No default; if not specified, it
+                     will be queried interactively.
+      ok             Require interactive user confirmation of the
+                     above information with the value pair \"ok n\".
 
-Example of a batch installation:
+Example of batch installation with interactive password entry:
 
- ./create_configinterface --help server_name Admin server_url
- http://*:8080/ ok y user admin
+ ./create_configinterface --batch server_name Admin server_url \\
+   http://*:8080/ ok y user admin
 
 ");
     return 0;
@@ -146,20 +153,25 @@ Example of a batch installation:
   if(batch_args>=0)
     batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
 
-  if (batch["__semicolon_separated__"]) {
-    // Used by Win32Installer.vbs:CreateConfigInterface().
-    array(string) sections = batch["__semicolon_separated__"]/";";
-    if (sizeof(sections) < 6) {
-      error("Too few sections in __semicolon_separated__: %O.\n",
-	    batch["__semicolon_separated__"]);
+  if (batch) {
+    if (!batch->server_url) {
+      batch->server_url = "https://*:22202/";
     }
-    cd(sections[0]);				// SERVERDIR
-    batch->server_name = sections[1];		// SERVER_NAME
-    batch->server_url = sprintf("%s://*:%s/",
-				sections[2],	// SERVER_PROTOCOL
-				sections[3]);	// SERVER_PORT
-    batch->user = sections[4];			// ADM_USER
-    batch->password = sections[5..]*";";	// ADM_PASS1
+    if (batch["__semicolon_separated__"]) {
+      // Used by Win32Installer.vbs:CreateConfigInterface().
+      array(string) sections = batch["__semicolon_separated__"]/";";
+      if (sizeof(sections) < 6) {
+	error("Too few sections in __semicolon_separated__: %O.\n",
+	      batch["__semicolon_separated__"]);
+      }
+      cd(sections[0]);				// SERVERDIR
+      batch->server_name = sections[1];		// SERVER_NAME
+      batch->server_url = sprintf("%s://*:%s/",
+				  sections[2],	// SERVER_PROTOCOL
+				  sections[3]);	// SERVER_PORT
+      batch->user = sections[4];			// ADM_USER
+      batch->password = sections[5..]*";";	// ADM_PASS1
+    }
   }
 
   foreach( get_dir( configdir )||({}), string cf )
@@ -194,16 +206,15 @@ Example of a batch installation:
     if(!admin) 
     {
       write("\n");
-      name = read_string(rl, "Server name:", "Administration Interface",
-			 batch->server_name);
+      name = read_string(rl, "Server name:", "server_name",
+			 "Administration Interface");
 
       int port_ok;
       while( !port_ok )
       {
         string protocol, host, path;
 
-        port = read_string(rl, "Port URL:", def_port, batch->server_url);
-	m_delete(batch, "server_url");
+        port = read_string(rl, "Port URL:", "server_url", def_port);
         if( port == def_port )
           ;
         else if( (int)port )
@@ -211,10 +222,10 @@ Example of a batch installation:
           int ok;
           while( !ok )
           {
-            switch( protocol = lower_case(read_string(rl, "Protocol:", "http")))
+            switch( protocol = lower_case(read_string(rl, "Protocol:", "protocol", "https")))
             {
              case "":
-               protocol = "http";
+               protocol = "https";
              case "http":
              case "https":
                port = protocol+"://*:"+port+"/";
@@ -223,6 +234,7 @@ Example of a batch installation:
              default:
                write("\n   Only http and https are supported for the "
                      "configuration interface.\n");
+	       if (batch) m_delete(batch, "protocol");
                break;
             }
           }
@@ -243,6 +255,7 @@ Example of a batch installation:
            default:
              write("\n   Only http and https are supported for the "
                    "configuration interface.\n\n");
+	     if (batch) m_delete(batch, "server_url");
              break;
           }
         }
@@ -251,9 +264,9 @@ Example of a batch installation:
 
     do
     {
-      user = read_string(rl, "Administrator user name:", "administrator",
-			 batch->user);
-      m_delete(batch, "user");
+      user =
+	read_string(rl, "Administrator user name:", "user", "administrator");
+      if (batch) m_delete(batch, "user");
     } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
             write("User name may not contain slashes.\n"));
 
@@ -264,15 +277,22 @@ Example of a batch installation:
 	      "You will\n   be asked to type the password twice for "
 	      "verification.\n\n");
       rl->get_input_controller()->dumb=1;
-      password = read_string(rl, "Administrator password:", 0, batch->password);
-      passwd2 = read_string(rl, "Administrator password (again):", 0, batch->password);
+      password = read_string(rl, "Administrator password:", "password");
+      passwd2 = read_string(rl, "Administrator password (again):", "password");
       rl->get_input_controller()->dumb=0;
-      if(batch->password)
-	m_delete(batch, "password");
+      if(batch) m_delete(batch, "password");
       else
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
-  } while( strlen( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
+
+    if (!batch || has_prefix(lower_case(batch->ok), "n")) {
+      passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", 0, "");
+      if (has_prefix(lower_case(passwd2), "n")) {
+	continue;
+      }
+    }
+    break;
+  } while(1);
 
   if( !admin )
   {
