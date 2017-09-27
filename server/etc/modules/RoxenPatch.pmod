@@ -546,10 +546,8 @@ class Patcher
   //! is returned.
   {
     string patch_version = UNDEFINED;
-    array(mapping(string:string|mapping(string:mixed))) tmp = installed_patches;
-    if (!tmp) {
-      tmp = file_list_installed();
-    }
+    array(mapping(string:string|mapping(string:mixed))) tmp =
+      file_list_installed();
     if (sizeof(tmp)) {
       patch_version = tmp[0]->metadata->id;
     }
@@ -1450,6 +1448,8 @@ class Patcher
 		append_path(installed_path, id), dest_path);
       errors++;
     }
+
+    clear_installed_patches_cache();
 
     if (errors)
     {
