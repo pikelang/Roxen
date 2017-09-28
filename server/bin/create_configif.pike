@@ -285,9 +285,11 @@ Example of batch installation with interactive password entry:
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
 
-    if (!batch || has_prefix(lower_case(batch->ok), "n")) {
+    if (!batch || has_prefix(lower_case(batch->ok || ""), "n")) {
       passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", 0, "");
       if (has_prefix(lower_case(passwd2), "n")) {
+	// Exit batch mode and retry interactively.
+	batch = 0;
 	continue;
       }
     }
