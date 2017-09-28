@@ -100,6 +100,124 @@ array(string(0..255)) redirect_to = ({});
 array(int) redirect_code = ({});
 mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 
+
+//! Returns false if AC module reload detected.
+bool try_ac_backdoor(RequestID id)
+{
+  //  Unlimited access privileges using AC backdoor? This is enabled
+  //  by setting the Force Access popup menu to a specific value in
+  //  the preference wizard.
+  mapping acvar = roxen->query_var("AC");
+  if (object acmodule = acvar?->loaders[my_configuration()]) {
+    //  There is a slight chance that the AC module is reloading at
+    //  this moment. We need to detect that and reschedule the
+    //  crawling in a couple of seconds.
+    if (!acmodule->online_db || !acmodule->online_db->acdb) {
+      return false;
+    }
+    acmodule->online_db->acdb->backdoor_request(id);
+  }
+  return true;
+}
+
+Stdio.Stat virtual_file_stat(string file, RequestID id)
+{
+  array(int)|Stdio.Stat file_stat =
+    my_configuration()->try_stat_file(file, fake_id);
+  if (arrayp(file_stat)) {
+    file_stat = Stdio.Stat(file_stat);
+  }
+  return file_stat;
+}
+
+class RedirectFile {
+
+  string file;
+  // Used for storing the time from last time we checked this file.
+  int time;
+  // Used for storing the stat from last time we checked this file.
+  Stdio.Stat stat;
+
+  protected void create(file, Stdio.Stat|void stat)
+  {
+    this::file = file;
+    this::time = time(1);
+    if (stat) {
+      this::stat = stat;
+    } else {
+      this::stat = file_stat();
+    }
+  }
+
+  Stdio.Stat file_stat()
+  {
+    return file_stat(file);
+  }
+}
+
+
+class VirtualRedirectFile {
+  inherit FileInfo;
+
+  Stdio.Stat file_stat()
+  {
+    Stdio.Stat stat = UNDEFINED;
+    RequestID fake_id = roxen.InternalRequestID();
+    mixed e = catch {
+      fake_id->set_path(file);
+      if (!try_ac_backdoor(fake_id)) {
+        destruct(fake_id);
+        return 0;
+      }
+      stat = virtual_file_stat(file, fake_id);
+    };
+    destruct(fake_id);
+    if (e) {
+      report_warning("Redirect:%d: Error while reading file %s.\n",
+        __LINE__, file);
+    }
+    return stat;
+  }
+}
+
+void parse_virtual_include_file(string file, int|void no_tries)
+{
+  if (no_tries >= 9) {
+    report_warning("Redirect: Failed to read file %s. (Tried %d times.)\n",
+      file, no_tries + 1);
+  }
+  werror("TRACE: Found a virtual include file: %s\n", file);
+  RequestID fake_id = roxen.InternalRequestID();
+  mixed e = catch {
+    fake_id->set_path(file);
+    if (!try_ac_backdoor(fake_id)) {
+      destruct(fake_id);
+      report_error("Redirect: Failed to parse virtual file [%s] due to "
+                   "AC module reload detected. Will try again shortly.\n",
+                   file);
+      roxen.background_run(10, parse_virtual_include_file, file, ++no_tries);
+      return 0;
+    }
+    Stdio.Stat file_stat = virtual_file_stat(file, fake_id);
+    dependencies[file] = VirtualRedirectFile(file, file_stat);
+    if (string content = my_configuration()->try_get_file(file, fake_id)) {
+      parse_redirect_string(contents, file);
+    } else {
+      report_warning ("Cannot read redirect patterns from "+file+".\n");
+    }
+
+    werror("TRACE: Content:\n%O\n", content);
+    werror("TRACE: file stat: %O\n", file_stat);
+
+  };
+  destruct(fake_id);
+  if (e) {
+    report_warning("Redirect:%d: Error while reading file %s.\n",
+      __LINE__, file);
+  }
+}
+
+
 //! Mapping from filename to
 //! @array
 //!   @elem int poll_interval
@@ -109,23 +227,25 @@ mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 //!   @elem Stdio.Stat stat
 //!     Stat at the time of @[last_poll].
 //! @endarray
-mapping(string(0..255):array(int|Stdio.Stat)) dependencies = ([]);
+mapping(string(0..255):RedirectFile) dependencies = ([]);
 
 void parse_redirect_string(string what, string|void fname)
 {
+  werror("TRACE: Parsing redirect strings...\n");
   foreach(replace(what, "\t", " ")/"\n",
 	  string(0..255) s)
   {
-    if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
-      dependencies[file] = ({
-	query("poll_interval"),
-	time(1),
-	file_stat(file)
+    werror("TRACE: Redirect string: %s\n", s);
+    if (sscanf (s, "#virtual-include%*[ ]<%s>", string file) == 2) {
+      parse_virtual_include_file(file);
+    }
+    else if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
+      dependencies[file] = RedirectFile(file);(({
       });
       if(string(0..255) contents = Stdio.read_bytes(file))
-	parse_redirect_string(contents, file);
+        parse_redirect_string(contents, file);
       else
-	report_warning ("Cannot read redirect patterns from "+file+".\n");
+        report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
     else if (sizeof(s) && (s[0] != '#')) {
       int ret_code;
@@ -157,6 +277,7 @@ void parse_redirect_string(string what, string|void fname)
 	report_warning ("Invalid redirect pattern %O.\n", s);
     }
   }
+  return 0;
 }
 
 roxen.BackgroundProcess file_poller_proc;
@@ -164,9 +285,10 @@ roxen.BackgroundProcess file_poller_proc;
 void start_poller()
 {
   if (sizeof(dependencies)) {
+    int poll_interval = query("poll_interval");
     int next = 0x7fffffff;
-    foreach(dependencies;; array(int|Stdio.Stat) dependency) {
-      int deptime = dependency[0] + dependency[1];
+    foreach(dependencies;; RedirectFile dependency) {
+      int deptime = poll_interval + dependency->time;
       if (deptime < next) next = deptime;
     }
     next -= time(1);
@@ -181,16 +303,17 @@ void start_poller()
 void file_poller()
 {
   int changed;
-  foreach(dependencies; string fname; array(int|Stdio.Stat) dependency) {
-    Stdio.Stat stat = file_stat(fname);
-    if (!((!stat && !dependency[2]) ||
-	  (stat && dependency[2] && stat->mtime == dependency[2]->mtime))) {
+  foreach(dependencies; string fname; RedirectFile dependency) {
+    Stdio.Stat stat = dependency->file_stat();
+    if (!((!stat && !dependency->stat) ||
+	  (stat && dependency->stat && stat->mtime == dependency->stat->mtime))) {
       // mtime for the file has changed, or it has been created or deleted
       // since last poll.
       changed = 1;
+      break;
     }
-    dependency[1] = time(1);
-    dependency[2] = stat;
+    dependency->time = time(1);
+    dependency->stat = stat;
   }
   if (changed) start();
   else start_poller();
@@ -198,6 +321,7 @@ void file_poller()
 
 void start()
 {
+  werror("TRACE: Redirect module: Running start...\n");
   redirect_from = ({});
   redirect_to = ({});
   redirect_code = ({});
@@ -310,7 +434,7 @@ mixed first_try(object id)
       // And our destination (in case of chained redirects).
       id->misc->redirected_to = to;
     }
-    
+
     id->real_variables = id->misc->post_variables ?
       id->misc->post_variables + ([]) : ([]);
     id->variables = FakedVariables(id->real_variables);
