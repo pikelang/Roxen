@@ -126,8 +126,8 @@ interface. Arguments:
       user           The name of the administrator.
                      Defaults to \"administrator\".
       password       The administrator password.
-                     NB: No default; if not specified, it
-                     will be queried interactively.
+                     NB: No default; if not specified, no
+                     administration user will be created.
       ok             Require interactive user confirmation of the
                      above information with the value pair \"ok n\".
 
@@ -262,28 +262,30 @@ Example of batch installation with interactive password entry:
       }
     }
 
-    do
-    {
-      user =
-	read_string(rl, "Administrator user name:", "user", "administrator");
-      if (batch) m_delete(batch, "user");
-    } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
-            write("User name may not contain slashes.\n"));
+    // NB: Don't create a user if batch mode and no password.
+    if (!batch || batch->password) {
+      do
+      {
+	user = read_string(rl, "Administrator user name:", "user", user);
+	if (batch) m_delete(batch, "user");
+      } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
+	      write("User name may not contain slashes.\n"));
 
-    do
-    {
-      if(passwd2 && password)
-	write("\n   Please select a password with one or more characters. "
-	      "You will\n   be asked to type the password twice for "
-	      "verification.\n\n");
-      rl->get_input_controller()->dumb=1;
-      password = read_string(rl, "Administrator password:", "password");
-      passwd2 = read_string(rl, "Administrator password (again):", "password");
-      rl->get_input_controller()->dumb=0;
-      if(batch) m_delete(batch, "password");
-      else
-	write("\n");
-    } while(!strlen(password) || (password != passwd2));
+      do
+      {
+	if(passwd2 && password)
+	  write("\n   Please select a password with one or more characters. "
+		"You will\n   be asked to type the password twice for "
+		"verification.\n\n");
+	rl->get_input_controller()->dumb=1;
+	password = read_string(rl, "Administrator password:", "password");
+	passwd2 = read_string(rl, "Administrator password (again):", "password");
+	rl->get_input_controller()->dumb=0;
+	if(batch) m_delete(batch, "password");
+	else
+	  write("\n");
+      } while(!strlen(password) || (password != passwd2));
+    }
 
     if (!batch || has_prefix(lower_case(batch->ok || ""), "n")) {
       passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", 0, "");
@@ -360,10 +362,11 @@ ent text/html
     write("\n   Administration interface created.\n");
   }
 
-  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
-  mkdirhier( ufile );
-  Stdio.File( ufile, "wct", 0770 )
-    ->write(
+  if (password) {
+    string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
+    mkdirhier( ufile );
+    Stdio.File( ufile, "wct", 0770 )
+      ->write(
 string_to_utf8(#"<?xml version=\"1.0\"  encoding=\"utf-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
@@ -372,5 +375,13 @@ string_to_utf8(#"<?xml version=\"1.0\"  encoding=\"utf-8\"?>
   <str>name</str>        : <str>" + user + #"</str>
 </map>\n" ));
 
-  write("\n   Administrator user \"" + user + "\" created.\n");
+    write("\n   Administrator user \"" + user + "\" created.\n");
+  } else {
+    write(#"
+
+   NOTE: No administration user has been created.
+         To create an administration user later; run
+
+           create_configinterface -a\n");
+  }
 }
