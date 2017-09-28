@@ -115,10 +115,10 @@ interface. Arguments:
           Useful when the administration password is lost.
  --help   Displays this text.
  --batch  Create a configuration interface in batch mode.
-          The --batch argument should be followed by a
-          list of value pairs, each pair representing the
-          name of a question field and the value to be
-          filled into it. Available fields:
+          The --batch argument should be followed by an optional
+          list of value pairs, each pair representing the name
+          of a question field and the value to be filled in.
+          Available fields:
       server_name    The name of the server. Defaults to
                      \"Administration Interface\".
       server_url     The server url, e.g. \"http://*:1234/\".
@@ -151,7 +151,7 @@ Example of batch installation with interactive password entry:
 
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
-    batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
+    batch = (mapping)(argv[batch_args+1..]/2);
 
   if (batch) {
     if (!batch->server_url) {
