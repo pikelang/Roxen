@@ -188,11 +188,13 @@ Example of batch installation with interactive password entry:
 	  Stdio.write_file(configdir+"/server_version","server-"+server_version);
         werror("   There is already an administration interface present in "
                "this\n   server. A new one will not be created.\n");
-        if(!admin++) exit( 0 );
+        if(!admin++) exit( 1 );
       }
     };
-  if(admin==1)
+  if(admin==1) {
     werror("   No administration interface was found. A new one will be created.\n");
+    admin = 0;
+  }
   if(configdir[-1] != '/')
     configdir+="/";
   if(admin)
