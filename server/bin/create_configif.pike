@@ -93,7 +93,9 @@ constant hash_password = Crypto.make_crypt_md5;
 int main(int argc, array argv)
 {
   Readline rl = Readline();
-  string name, user, password, configdir, port;
+  string name = "Administration Interface";
+  string user = "administrator";
+  string password, configdir, port;
   string passwd2;
 
 #if constant( SSL )
@@ -115,10 +117,10 @@ interface. Arguments:
           Useful when the administration password is lost.
  --help   Displays this text.
  --batch  Create a configuration interface in batch mode.
-          The --batch argument should be followed by a
-          list of value pairs, each pair representing the
-          name of a question field and the value to be
-          filled into it. Available fields:
+          The --batch argument should be followed by an optional
+          list of value pairs, each pair representing the name
+          of a question field and the value to be filled in.
+          Available fields:
       server_name    The name of the server. Defaults to
                      \"Administration Interface\".
       server_url     The server url, e.g. \"http://*:1234/\".
@@ -126,8 +128,8 @@ interface. Arguments:
       user           The name of the administrator.
                      Defaults to \"administrator\".
       password       The administrator password.
-                     NB: No default; if not specified, it
-                     will be queried interactively.
+                     NB: No default; if not specified, no
+                     administration user will be created.
       ok             Require interactive user confirmation of the
                      above information with the value pair \"ok n\".
 
@@ -151,7 +153,7 @@ Example of batch installation with interactive password entry:
 
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
-    batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
+    batch = (mapping)(argv[batch_args+1..]/2);
 
   if (batch) {
     if (!batch->server_url) {
@@ -186,11 +188,13 @@ Example of batch installation with interactive password entry:
 	  Stdio.write_file(configdir+"/server_version","server-"+server_version);
         werror("   There is already an administration interface present in "
                "this\n   server. A new one will not be created.\n");
-        if(!admin++) exit( 0 );
+        if(!admin++) exit( 1 );
       }
     };
-  if(admin==1)
+  if(admin==1) {
     werror("   No administration interface was found. A new one will be created.\n");
+    admin = 0;
+  }
   if(configdir[-1] != '/')
     configdir+="/";
   if(admin)
@@ -206,13 +210,17 @@ Example of batch installation with interactive password entry:
     if(!admin) 
     {
       write("\n");
-      name = read_string(rl, "Server name:", "server_name",
-			 "Administration Interface");
+      do {
+	if (!sizeof(name)) name = "Administration Interface";
+	name = read_string(rl, "Server name:", "server_name", name);
+	if (batch) m_delete(batch, "server_name");
+      } while (!sizeof(name));
 
       int port_ok;
       while( !port_ok )
       {
-        string protocol, host, path;
+        string protocol = "https";
+	string host, path;
 
         port = read_string(rl, "Port URL:", "server_url", def_port);
         if( port == def_port )
@@ -222,7 +230,7 @@ Example of batch installation with interactive password entry:
           int ok;
           while( !ok )
           {
-            switch( protocol = lower_case(read_string(rl, "Protocol:", "protocol", "https")))
+            switch( protocol = lower_case(read_string(rl, "Protocol:", "protocol", protocol)))
             {
              case "":
                protocol = "https";
@@ -262,32 +270,36 @@ Example of batch installation with interactive password entry:
       }
     }
 
-    do
-    {
-      user =
-	read_string(rl, "Administrator user name:", "user", "administrator");
-      if (batch) m_delete(batch, "user");
-    } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
-            write("User name may not contain slashes.\n"));
+    // NB: Don't create a user if batch mode and no password.
+    if (!batch || batch->password) {
+      do
+      {
+	user = read_string(rl, "Administrator user name:", "user", user);
+	if (batch) m_delete(batch, "user");
+      } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
+	      write("User name may not contain slashes.\n"));
 
-    do
-    {
-      if(passwd2 && password)
-	write("\n   Please select a password with one or more characters. "
-	      "You will\n   be asked to type the password twice for "
-	      "verification.\n\n");
-      rl->get_input_controller()->dumb=1;
-      password = read_string(rl, "Administrator password:", "password");
-      passwd2 = read_string(rl, "Administrator password (again):", "password");
-      rl->get_input_controller()->dumb=0;
-      if(batch) m_delete(batch, "password");
-      else
-	write("\n");
-    } while(!strlen(password) || (password != passwd2));
+      do
+      {
+	if(passwd2 && password)
+	  write("\n   Please select a password with one or more characters. "
+		"You will\n   be asked to type the password twice for "
+		"verification.\n\n");
+	rl->get_input_controller()->dumb=1;
+	password = read_string(rl, "Administrator password:", "password");
+	passwd2 = read_string(rl, "Administrator password (again):", "password");
+	rl->get_input_controller()->dumb=0;
+	if(batch) m_delete(batch, "password");
+	else
+	  write("\n");
+      } while(!strlen(password) || (password != passwd2));
+    }
 
-    if (!batch || has_prefix(lower_case(batch->ok), "n")) {
+    if (!batch || has_prefix(lower_case(batch->ok || ""), "n")) {
       passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", 0, "");
       if (has_prefix(lower_case(passwd2), "n")) {
+	// Exit batch mode and retry interactively.
+	batch = 0;
 	continue;
       }
     }
@@ -358,10 +370,11 @@ ent text/html
     write("\n   Administration interface created.\n");
   }
 
-  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
-  mkdirhier( ufile );
-  Stdio.File( ufile, "wct", 0770 )
-    ->write(
+  if (password) {
+    string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
+    mkdirhier( ufile );
+    Stdio.File( ufile, "wct", 0770 )
+      ->write(
 string_to_utf8(#"<?xml version=\"1.0\"  encoding=\"utf-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
@@ -370,5 +383,13 @@ string_to_utf8(#"<?xml version=\"1.0\"  encoding=\"utf-8\"?>
   <str>name</str>        : <str>" + user + #"</str>
 </map>\n" ));
 
-  write("\n   Administrator user \"" + user + "\" created.\n");
+    write("\n   Administrator user \"" + user + "\" created.\n");
+  } else {
+    write(#"
+
+   NOTE: No administration user has been created.
+         To create an administration user later; run
+
+           create_configinterface -a\n");
+  }
 }
