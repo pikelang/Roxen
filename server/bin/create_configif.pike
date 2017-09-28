@@ -93,7 +93,9 @@ constant hash_password = Crypto.make_crypt_md5;
 int main(int argc, array argv)
 {
   Readline rl = Readline();
-  string name, user, password, configdir, port;
+  string name = "Administration Interface";
+  string user = "administrator";
+  string password, configdir, port;
   string passwd2;
 
 #if constant( SSL )
@@ -206,13 +208,17 @@ Example of batch installation with interactive password entry:
     if(!admin) 
     {
       write("\n");
-      name = read_string(rl, "Server name:", "server_name",
-			 "Administration Interface");
+      do {
+	if (!sizeof(name)) name = "Administration Interface";
+	name = read_string(rl, "Server name:", "server_name", name);
+	if (batch) m_delete(batch, "server_name");
+      } while (!sizeof(name));
 
       int port_ok;
       while( !port_ok )
       {
-        string protocol, host, path;
+        string protocol = "https";
+	string host, path;
 
         port = read_string(rl, "Port URL:", "server_url", def_port);
         if( port == def_port )
@@ -222,7 +228,7 @@ Example of batch installation with interactive password entry:
           int ok;
           while( !ok )
           {
-            switch( protocol = lower_case(read_string(rl, "Protocol:", "protocol", "https")))
+            switch( protocol = lower_case(read_string(rl, "Protocol:", "protocol", protocol)))
             {
              case "":
                protocol = "https";
