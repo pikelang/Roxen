@@ -81,7 +81,6 @@ worldmap binary
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
-/server/base_server/roxenloader.pike foreign_ident
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/slowpipe.pike foreign_ident
 /server/base_server/smtprelay.pike foreign_ident
@@ -373,7 +372,6 @@ worldmap binary
 /server/rxml_packages/roxenlogo foreign_ident
 /server/sbin/roxen foreign_ident
 /server/sbin/roxen-create-server foreign_ident
-/server/start foreign_ident
 /server/tools/addfp98.pike foreign_ident
 /server/tools/init.d_roxen foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.cpp foreign_ident
