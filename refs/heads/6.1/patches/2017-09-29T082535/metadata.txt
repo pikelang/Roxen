@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Recaptcha: Minor fixes to tagdoc. 
+from: 11ac808e0fba2f7429c09e01406173fea364f566
+to: 169e5bb73dda5f490549dae2d8cb3a20e14e1b0a
+originator: Jonas Lonnberg
+depends: 2017-09-20T144208
+restart: true
+
+• Recaptcha: Minor fixes to tagdoc
