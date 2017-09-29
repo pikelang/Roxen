@@ -3893,6 +3893,15 @@ the correct system time.
 
   add_constant("_cur_rxml_context", Thread.Local());
 
+  int mysql_only_mode =
+    (int)Getopt.find_option(hider, "mysql-only", ({ "mysql-only" }));
+  if (mysql_only_mode) {
+    // Force --once mode.
+    //
+    // This avoids starting eg the tailf thread.
+    once_mode = 1;
+  }
+
   if (has_value (hider, "--mysql-log-queries")) {
     hider -= ({"--mysql-log-queries"});
     argc = sizeof (hider);
@@ -3900,6 +3909,10 @@ the correct system time.
   }
   else
     start_mysql (0);
+
+  if (mysql_only_mode) {
+    exit(0);
+  }
 
   if (err = catch {
     if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);
