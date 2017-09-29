@@ -1,0 +1,2 @@
+Modified files:
+  modules/tags/recaptcha.pike
