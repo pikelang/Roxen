@@ -31,22 +31,23 @@ class LanguagePrefs
     _initial = "prestate\nroxen-config\naccept-language";
     __name = "Language sources";
     __doc =
-#"List of sources used for building the list of preferred languages.
-Languages added from sources on top of the list will have a higher priority.<br />
-<b>Accept-Language header</b> will add languages from the browser settings.<br />
-<b>Prestate</b> will add languages from prestates.<br />
-<b>Cookie</b> will add languages from a specified cookie.<br />
-<b>Variable</b> will add languages from a specified variable.<br />
-<b>Match host name</b> will add a specified list of languages if the host name
+#"<p>List of sources used for building the list of preferred languages.
+Languages added from sources on top of the list will have a higher priority.</p>
+<ul>
+  <li><b>Accept-Language header</b> will add languages from the browser settings.</li>
+  <li><b>Prestate</b> will add languages from prestates.</li>
+  <li><b>Cookie</b> will add languages from a specified cookie.</li>
+  <li><b>Variable</b> will add languages from a specified variable.</li>
+  <li><b>Match host name</b> will add a specified list of languages if the host name
 matches a given pattern. This can be used to select languages based on the URL,
-such as using Swedish for roxen.se and English for roxen.com.<br />
-<b>Match path</b> will add languages based on the path.<br />
-<br />
-The &lt;emit source=\"languages\"&gt; tag can be used to easily build a language
-selector which will change prestates and the roxen config cookie.<br />
-Note that the \"Valid 'Prestate' and 'Config cookie' languages\" setting determines
+such as using Swedish for roxen.se and English for roxen.com.</li>
+  <li><b>Match path</b> will add languages based on the path.</li>
+</ul>
+<p>The <code>&lt;emit source=\"languages\"&gt;</code> tag can be used to easily build a language
+selector which will change prestates and the roxen config cookie.</p>
+<p>Note that the <b>\"Valid 'Prestate' and 'Config cookie' languages\"</b> setting determines
 which prestates and which entries in the Roxen config cookie that are actually treated
-as language settings.";
+as language settings.</p>";
   }
 
   string make_input_tag(string name, string value, int size) {
@@ -163,7 +164,7 @@ as language settings.";
     string prefix = path()+".";
     int i;
 
-    string res = "<a name='"+path()+"'>\n</a><table>\n"
+    string res = "<a name='"+path()+"'>\n</a><table class='auto rxn-var-list'>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
 
@@ -171,7 +172,7 @@ as language settings.";
     {
       string action = _action[0];
 
-      res += "<tr>\n<td><font size='-1'>";
+      res += "<tr>\n<td style='width:100%'>";
 
        switch(action) {
        case "accept-language":
@@ -198,22 +199,22 @@ as language settings.";
 	   " if the path matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
        }
 
-       res += "</font></td>\n";
+       res += "</td>\n";
 
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
-#define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
+#define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' type='"+Y+"'></submit-gbutton2>")
       if( i )
         res += "\n<td>"+
-            REORDER(prefix+"up."+i, "/internal-roxen-up")+
+            REORDER(prefix+"up."+i, "up")+
             "</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td><disabled-gbutton type='up'/></td>";
       if( i != sizeof( query()/"\n")- 1 )
         res += "\n<td>"+
-            REORDER(prefix+"down."+i, "/internal-roxen-down")
+            REORDER(prefix+"down."+i, "down")
             +"</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td><disabled-gbutton type='down'/></td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, "Delete" )
           +"</td>";
@@ -233,7 +234,7 @@ as language settings.";
       "<option value=\"pathmatch\">Match path</option>\n"+
       "</select> "+
       BUTTON(prefix+"new", "Add")+
-      "</td></tr></table>\n\n";
+      "</td></tr></table>\n<hr>\n";
 
     return res;
   }
