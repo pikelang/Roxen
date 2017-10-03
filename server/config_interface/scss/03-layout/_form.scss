@@ -73,9 +73,15 @@ input {
                "[type='image']")
   {
     @extend .__input;
+
+    &:not([size]) {
+      width: 100%;
+      max-width: 550px;
+    }
   }
 
-  &[size='60'] {
+  &[size='60'],
+  &[size='40'] {
     width: 100%;
     max-width: 550px;
   }
