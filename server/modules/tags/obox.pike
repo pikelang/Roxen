@@ -18,7 +18,7 @@ inherit "module";
 #define SLOCALE(X,Y)	_STR_LOCALE("mod_obox",X,Y)
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_obox",X,Y)
 // end locale stuff
-  
+
 
 constant module_type = MODULE_TAG;
 LocaleString module_name = LOCALE(1,"Tags: Outlined box");
@@ -115,7 +115,7 @@ protected string title(mapping args)
 		   "</b>&nbsp;</td>\n"
 		   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
 		   "<tr bgcolor=\"%s\">"		/* outlinecolor */
-		   "<td colspan=\"2\">\n"	
+		   "<td colspan=\"2\">\n"
 		   "%s</td>\n"				/* empty */
 		   "<td colspan=\"2\">\n"
 		   "%s</td></tr>\n"			/* empty */
