@@ -47,7 +47,7 @@
  <table ::="&usr.content-toptableargs:none;" width="100%">
    <tr>
      <td ::="&usr.left-tableargs:none;">
-       <cset variable="var.left-content">&var.leftside:none;</cset>
+       <set variable="var.left-content">&var.leftside:none;</set>
        <if variable="var.left-content is ?*">
 	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
        </if>
@@ -160,7 +160,7 @@
    <submit-gbutton2 preparse="1" name="next" width="&usr.gbutton-width;" align="center" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
 </define>
 
-<define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
+<define container="content"><set variable="var.content" type="text/html"><contents/></set></define>
 
 <define container="tmpl"><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
   <trans-reg project="roxen_config" />
