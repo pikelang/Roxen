@@ -14,7 +14,7 @@ LocaleString box_doc  = _(0,"Warn when sites contains deprecated modules");
 
 string get_module_group(ModuleInfo m)
 {
-  string name = m->get_name();
+  string name = (string)m->get_name();
 
   if (sscanf(name, "%s:%*s", string g) == 2) {
     return Roxen.http_encode_invalids(g);
