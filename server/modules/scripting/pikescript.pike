@@ -78,13 +78,13 @@ void create()
          TYPE_STRING_LIST|VAR_NOT_CFIF,
 	 "The extensions to parse.");
 
-  defvar("rawauth", 0, "Raw user info", 
+  defvar("rawauth", 0, "Raw user info",
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
 	 "Please note that this will give the scripts access to the password "
 	 "used. This is not recommended!");
 
-  defvar("clearpass", 0, "Send decoded password", 
+  defvar("clearpass", 0, "Send decoded password",
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the decoded password value will be sent to the script. "
 	 "This is not recommended!");
