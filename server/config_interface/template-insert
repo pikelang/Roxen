@@ -155,8 +155,6 @@
    <submit-gbutton2 preparse="1" name="next" width="&usr.gbutton-width;" align="center" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
 </define>
 
-<define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
-
 <define container="tmpl">
   <trans-reg project="roxen_config" />
 <nooutput>
