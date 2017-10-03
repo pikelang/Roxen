@@ -53,17 +53,14 @@ constant module_doc  = #"
    given script are serialized with an internal mutex unless the script
    defines <tt>int thread_safe = 1;</tt>.</p>
 
-<table>
-  <tr>
-    <td valign='top'><imgs src='&usr.err-2;' alt='Warning' />&nbsp;</td>
-    <td>
-      <p style='margin-top: 0'>
-         NOTE: This module should not be enabled if you allow anonymous PUT!</p>
-      <p>NOTE: Enabling this module is the same thing as letting your users run
-         programs with the same right as the server!</p>
-    </td>
-  </tr>
-</table>";
+
+<p>
+ <span class='notify warn inline'>NOTE:</span> This module should not be enabled
+ if you allow anonymous PUT!</p>
+<p>
+ <span class='notify warn inline'>NOTE:</span> Enabling this module is the same
+ thing as letting your users run programs with the same right as the server!</p>
+";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -309,18 +306,18 @@ string status()
   string res="", foo;
 
 #if constant(__builtin.security)
-  res += "<hr><h3>Credential system enabled</h3>\n";
+  res += "<h3 class='section'>Credential system enabled</h3>\n";
 #endif /* constant(__builtin.security) */
 
   if(sizeof(scripts))
   {
-    res += "<hr><h3>Loaded scripts</h3><p>";
+    res += "<h3 class='section'>Loaded scripts</h3><pre>";
     foreach(indices(scripts), foo )
       res += foo+"\n";
+    res += "</pre>";
   } else {
-    return "<h3>No loaded scripts</h3>";
+    res += "<h3 class='section'>No loaded scripts</h3>";
   }
-  res += "<hr>";
 
-  return ("<pre><font size=\"+1\">" + res + "</font></pre>");
+  return res;
 }
