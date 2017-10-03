@@ -11,7 +11,7 @@ inherit Variable.Variable;
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
 constant type = "Mapping";
-int width = 40;
+int width = 0;
 
 string transform_to_form( mixed what )
 //! Override this function to do the value->form mapping for
@@ -104,7 +104,7 @@ int(0..1) set_from_form(RequestID id)
       (section ? ("section=" + section + "&") : "") +
       "random=" + random(4949494);
     query += "&_roxen_wizard_id=" + id->cookies["RoxenWizardId"];
-    
+
     nid->misc->moreheads =
       ([
 	"Location":nid->not_query+(nid->misc->path_info||"")+
@@ -141,10 +141,8 @@ string render_view( RequestID id, void|mapping additional_args )
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
-	"<td><font size='-1'>"+var+
-	"</font></td><td><font size='-1'>"
-	+transform_to_form(val[var])+
-	"</font></td>\n"
+	"<td>"+var+"</td>"
+        "<td>"+transform_to_form(val[var])+"</td>\n"
 	"</tr>\n";
     }
   }
@@ -168,11 +166,11 @@ string render_form( RequestID id, void|mapping additional_args )
       "<th align='left'>" + val_title + "</th></tr>";
 
     foreach( sort(indices(val)), mixed var ) {
-      res += "<tr>\n<td><font size='-1'>"+
+      res += "<tr>\n<td>"+
 	render_row(prefix+"set."+i,
 		   ({ var,transform_to_form(val[var]) }) ,
-		   width) * "</font></td><td><font size='-1'>"
-	+ "</font></td>\n";
+		   width) * "</td><td>"
+	+ "</td>\n";
       res += "\n<td>"+
 	BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
 	+"</td>";
