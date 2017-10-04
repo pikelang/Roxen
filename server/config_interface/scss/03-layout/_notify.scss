@@ -5,6 +5,7 @@
 }
 
 .notify {
+  margin-top: $spacing-unit;
   margin-bottom: $spacing-unit;
   padding: $spacing-unit;
   @include set-notify-color($notify-bg-color);
@@ -35,7 +36,8 @@
     padding: 0;
     border: 0;
     color: $body-color;
-    margin-bottom: 0;
+    margin-bottom: initial;
+    margin-top: initial;
     display: inline-block;
 
     @extend .__icon;

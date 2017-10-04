@@ -83,6 +83,10 @@ table {
     }
   }
 
+  &.tight {
+    padding-bottom: $spacing-unit/4;
+  }
+
   td + td,
   th + th {
     padding-left: $spacing-unit/2;

@@ -31,7 +31,7 @@
   text-align: right;
 }
 
-.nowrap {
+.nowrap, .nobr {
   white-space: nowrap;
 }
 
@@ -75,8 +75,10 @@
   color: $grey;
 }
 
-.nobr {
-  white-space: nowrap;
+.ellipsis {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
 }
 
 .float-right {
@@ -170,6 +172,10 @@
 
 .pre {
   white-space: pre;
+  font-family: monospace;
+}
+
+.monospace {
   font-family: monospace;
 }
 
