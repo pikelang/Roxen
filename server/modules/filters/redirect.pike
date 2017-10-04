@@ -65,7 +65,7 @@ provide one yourself.</p>
 <p>In addition, patterns can also be included from another file using
 an include directive:
 
-<blockquote><tt>#include &lt;</tt><i>filename</i><tt>&gt;</tt></blockquote>
+<blockquote><tt>#include &lt;</tt><i>path</i><tt>&gt;</tt></blockquote>
 
 The path is relative to the Roxen server directory in the real
 filesystem.</p>
@@ -100,6 +100,32 @@ array(string(0..255)) redirect_to = ({});
 array(int) redirect_code = ({});
 mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 
+
+class RedirectFile {
+  string file;
+  // Used for storing the time from last time we checked this file.
+  int check_time;
+  // Used for storing the stat from last time we checked this file.
+  Stdio.Stat stat;
+
+  protected void create(string file, Stdio.Stat|void stat)
+  {
+    this::file = file;
+    this::check_time = time(1);
+    if (stat) {
+      this::stat = stat;
+    } else {
+      this::stat = stat_file();
+    }
+  }
+
+  Stdio.Stat stat_file()
+  {
+    return file_stat(file);
+  }
+}
+
+
 //! Mapping from filename to
 //! @array
 //!   @elem int poll_interval
@@ -109,23 +135,20 @@ mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 //!   @elem Stdio.Stat stat
 //!     Stat at the time of @[last_poll].
 //! @endarray
-mapping(string(0..255):array(int|Stdio.Stat)) dependencies = ([]);
+mapping(string(0..255):RedirectFile) dependencies = ([]);
 
-void parse_redirect_string(string what, string|void fname)
+void parse_redirect_string(string what)
 {
   foreach(replace(what, "\t", " ")/"\n",
 	  string(0..255) s)
   {
     if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
-      dependencies[file] = ({
-	query("poll_interval"),
-	time(1),
-	file_stat(file)
-      });
-      if(string(0..255) contents = Stdio.read_bytes(file))
-	parse_redirect_string(contents, file);
-      else
-	report_warning ("Cannot read redirect patterns from "+file+".\n");
+      dependencies[file] = RedirectFile(file);
+      if (string(0..255) contents = Stdio.read_bytes(file)) {
+        parse_redirect_string(contents);
+      } else {
+        report_warning ("Cannot read redirect patterns from "+file+".\n");
+      }
     }
     else if (sizeof(s) && (s[0] != '#')) {
       int ret_code;
@@ -164,9 +187,10 @@ roxen.BackgroundProcess file_poller_proc;
 void start_poller()
 {
   if (sizeof(dependencies)) {
+    int poll_interval = query("poll_interval");
     int next = 0x7fffffff;
-    foreach(dependencies;; array(int|Stdio.Stat) dependency) {
-      int deptime = dependency[0] + dependency[1];
+    foreach(dependencies;; RedirectFile dependency) {
+      int deptime = poll_interval + dependency->check_time;
       if (deptime < next) next = deptime;
     }
     next -= time(1);
@@ -181,16 +205,17 @@ void start_poller()
 void file_poller()
 {
   int changed;
-  foreach(dependencies; string fname; array(int|Stdio.Stat) dependency) {
-    Stdio.Stat stat = file_stat(fname);
-    if (!((!stat && !dependency[2]) ||
-	  (stat && dependency[2] && stat->mtime == dependency[2]->mtime))) {
+  foreach(dependencies; string fname; RedirectFile dependency) {
+    Stdio.Stat stat = dependency->stat_file();
+    if (!((!stat && !dependency->stat) ||
+	  (stat && dependency->stat && stat->mtime == dependency->stat->mtime))) {
       // mtime for the file has changed, or it has been created or deleted
       // since last poll.
       changed = 1;
+      break;
     }
-    dependency[1] = time(1);
-    dependency[2] = stat;
+    dependency->check_time = time(1);
+    dependency->stat = stat;
   }
   if (changed) start();
   else start_poller();
@@ -310,7 +335,7 @@ mixed first_try(object id)
       // And our destination (in case of chained redirects).
       id->misc->redirected_to = to;
     }
-    
+
     id->real_variables = id->misc->post_variables ?
       id->misc->post_variables + ([]) : ([]);
     id->variables = FakedVariables(id->real_variables);
