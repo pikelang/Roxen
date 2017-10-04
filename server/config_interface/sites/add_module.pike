@@ -155,11 +155,17 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
   }
 
 
-  string da_string = "";
+  string da_string = "",
+    divider;
 
   int header_added;
   foreach( sort((array)by_module), [string module, array errors] )
   {
+    if (divider) {
+      da_string += divider;
+      divider = 0;
+    }
+
     array res = ({ });
     int remove_suspicious = 0;
     sort( errors );
@@ -218,29 +224,30 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
                   "<table>";
       }
 
-      da_string += "<tr><td></td>"
-                "<td colspan='3'>"
+      da_string += "<tr>"
+                "<td colspan='4'>"
+                "<div class='flex-row'>"
+                "<div class='flex col-6'>"
                 + "<b>"
-                + module_name_from_file(module)+"</b></td>"
-                + "<td class='text-right'>"
+                + module_name_from_file(module)+"</b></div>"
+                + "<div class='flex col-6 text-right'>"
                 + trim_name(module)
-                + "&nbsp;"+RELOAD(module)+"</td><td></td></tr>";
+                + "&nbsp;"+RELOAD(module)+"</div>"
+                "</div></td></tr>";
 
       foreach( res, array e )
         da_string +=
-                  "<tr class'valign-top'>"
-                  "<td></td>"
-                  "<td><img src='/internal-roxen-unit' width='30' height='1' alt='' />"
-                  "</td><td align='right'>"
-                  "<tt>"+e[1]+":</tt></td><td align='right'><tt>"+
-                  he(e[2])+":</tt></td><td><tt>"+hc(e[3])+"</tt></td></tr>\n";
-      da_string += "<tr valign='top'><td colspan='5'>&nbsp;</td><td></td></tr>\n";
+                  "<tr class='valign-top monospace'>"
+                  "<td style='width:30px'>&nbsp;</td>"
+                  "<td class='text-right'>"+e[1]+":</td>"
+                  "<td class='text-right nowrap'>"+ he(e[2])+":</td>"
+                  "<td>"+hc(e[3])+"</td></tr>\n";
 
+      divider = "<tr><td colspan='4'><hr></td></tr>";
     }
   }
   if( strlen( da_string ) )
     da_string += "</table>";
-// "<pre>"+Roxen.html_encode_string( sprintf( "%O", by_module ) )+"</pre>";
 
   return da_string + format_locked_modules(locked_modules);
 }
@@ -251,10 +258,10 @@ string format_locked_modules(array(ModuleInfo) locked_modules)
     return "";
 
   return
-    "<p class='large'>Locked modules</p>\n"
+    "<h3>Locked modules</h3>\n"
     "<p>These modules are locked and can not be enabled because they are "
     "not part of the license key for this configuration.</p>\n"
-    "<div class='notify error'>"+
+    "<div class='notify error no-margin-top'>"+
     (((array(string))locked_modules->get_name())*"<br />\n")+"</div>";
 }
 
@@ -497,8 +504,12 @@ array(int|string) class_visible_normal(string c, string d, int size,
   string content = sprintf("<a href='add_module.pike?%s'><dl><dt>%s</dt>",
                            qss, c);
 
-  if (d && sizeof(String.trim_all_whites(d))) {
-    content += "<dd>" + d + "</dd>";
+  if (d && !sizeof(String.trim_all_whites(d))) {
+    d = 0;
+  }
+
+  if (fast && (x || d)) {
+    content += "<dd>" + (d||"&nbsp;") + "</dd>";
   }
 
   content += "</dl></a>";
@@ -535,6 +546,12 @@ string page_normal_low(RequestID id, int|void fast)
         "<input type='hidden' name='config' value='&form.config;'>"
         "<roxen-wizard-id-variable/>" +
       ret;
+  }
+
+  if (id->variables->mod_query && !sizeof(desc)) {
+    ret += sprintf(
+      "<div class='notify warn'>No modules matching \"%s\" were found</div>",
+      id->variables->mod_query);
   }
 
   return ret + desc + "</div>" + (fast ? "</form>" : "") + err;
