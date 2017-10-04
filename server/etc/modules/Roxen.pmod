@@ -4641,6 +4641,12 @@ class ScopeRoxen {
 
     switch(var)
     {
+     case "dist-patch-version":
+       string patch_ver = roxen->plib->get_current_patch_version();
+       return ENCODE_RXML_TEXT(
+         roxen_dist_version + (patch_ver ? "-" + patch_ver : ""), type);
+     case "patch-version":
+       return ENCODE_RXML_TEXT(roxen->plib->get_current_patch_version(), type);
      case "nodename":
        return uname()->nodename;
      case "uptime":
@@ -4809,13 +4815,25 @@ class ScopePage {
       return ENCODE_RXML_TEXT(val, type);
     }
 
+    string get_mountpoint()
+    {
+      string s = c->id->virtfile || "";
+      return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type);
+    };
+
     switch (var) {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
+      case "mountpoint-ver":
+        string patch_ver = roxen->plib->get_current_patch_version();
+        return "/(" +
+          ENCODE_RXML_TEXT(
+            roxen_dist_version + (patch_ver ? "-" + patch_ver : ""), type) +
+          ")" +
+          get_mountpoint();
       case "mountpoint":
-	string s = c->id->virtfile || "";
-	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type);
+        return get_mountpoint();
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);

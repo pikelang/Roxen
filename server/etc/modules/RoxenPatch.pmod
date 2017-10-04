@@ -533,6 +533,40 @@ class Patcher
     return patch_ids;
   }
 
+  private array(mapping(string:string|mapping(string:mixed)))
+    installed_patches = UNDEFINED;
+
+  private void clear_installed_patches_cache()
+  {
+    installed_patches = UNDEFINED;
+  }
+
+  string|void get_current_patch_version()
+  //! Returns id of latest installed patch. If no patch is installed, UNDEFINED
+  //! is returned.
+  {
+    string patch_version = UNDEFINED;
+    array(mapping(string:string|mapping(string:mixed))) tmp =
+      file_list_installed();
+    if (sizeof(tmp)) {
+      patch_version = tmp[0]->metadata->id;
+    }
+    return patch_version;
+  }
+
+  string get_prestate_version()
+  //! Returns a prestate with dist and patch version.
+  //! For example "(6.1.215-2017-09-20T144208)".
+  //! The return value is HTML encoded.
+  //! NB leading "/" is not included!
+  {
+    string patch_ver = get_current_patch_version();
+    return "(" +
+      Roxen.html_encode_string(
+        roxen_dist_version + (patch_ver ? "-" + patch_ver : "")) +
+    ")";
+  }
+
   int(0..1) install_patch(string patch_id,
 			  string user,
 			  void|int(0..1) dry_run,
@@ -605,6 +639,7 @@ class Patcher
 
 	write_err("Writing log to <u>%s</u>\n", log_path);
       }
+      clear_installed_patches_cache();
     };
 
     int post_process_path(string path, mapping(string:string) file) {
@@ -1281,6 +1316,7 @@ class Patcher
     }
     privs = 0;
 
+    clear_installed_patches_cache();
     return 1;
   }
 
@@ -1412,6 +1448,8 @@ class Patcher
 		append_path(installed_path, id), dest_path);
       errors++;
     }
+
+    clear_installed_patches_cache();
 
     if (errors)
     {
@@ -1815,16 +1853,22 @@ class Patcher
   //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
-    array(mapping(string:string|mapping(string:mixed))) res =
+    array(mapping(string:string|mapping(string:mixed))) res = installed_patches;
+    if (res) {
+      return res;
+    }
+    res =
       filter(map(get_dir(installed_path) || ({ }), describe_installed_patch),
 	     mappingp);
 
     //  Return in reverse chronological order, i.e. newest first
-    return Array.sort_array(res, lambda (mapping a, mapping b)
+    res = Array.sort_array(res, lambda (mapping a, mapping b)
 				 {
 				   return a->metadata->id < b->metadata->id;
 				 }
 			    );
+    installed_patches = res;
+    return res;
   }
 
   array(mapping(string:string|mapping(string:int)|PatchObject)) file_list_imported()

@@ -348,11 +348,13 @@ class TagJSInclude {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      string src = "/" + roxen->plib->get_prestate_version() +
+        query_absolute_internal_location(id) + args->file;
       result =
 	"<script charset=\"iso-8859-1\" type=\"text/javascript\" "
 	"language=\"javascript\" " +
 	(args->defer ? "defer='defer' " : "") +
-	"src=\"" + query_absolute_internal_location(id) + args->file + "\">"
+	"src=\"" + src + "\">"
 	"</script>";
       return 0;
     }
