@@ -9612,6 +9612,9 @@ class PCode
       if (functionp (entry) || visited[entry])
 	continue;
 
+      if (objectp(entry) && entry->is_RXML_Type)
+        continue;
+
       visited[entry] = 1;
 
       if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
