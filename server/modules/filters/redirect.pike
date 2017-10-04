@@ -70,6 +70,12 @@ an include directive:
 The path is relative to the Roxen server directory in the real
 filesystem.</p>
 
+<p>If the include file is accessible from Roxen's virtual file system use the
+virtual-include directive instead.
+
+<blockquote><tt>#virtual-include &lt;</tt><i>path</i><tt>&gt;</tt></blockquote>
+</p>
+
 <p>Other lines beginning with '#' are treated as comments. Empty lines
 are ignored.</p>
 
@@ -101,6 +107,35 @@ array(int) redirect_code = ({});
 mapping(string(0..255):array(string(0..255)|int)) exact_patterns = ([]);
 
 
+//! Returns false if AC module reload detected.
+bool try_ac_backdoor(RequestID id)
+{
+  //  Unlimited access privileges using AC backdoor? This is enabled
+  //  by setting the Force Access popup menu to a specific value in
+  //  the preference wizard.
+  mapping acvar = roxen->query_var("AC");
+  if (object acmodule = acvar?->loaders[my_configuration()]) {
+    //  There is a slight chance that the AC module is reloading at
+    //  this moment. We need to detect that and reschedule the
+    //  crawling in a couple of seconds.
+    if (!acmodule->online_db || !acmodule->online_db->acdb) {
+      return false;
+    }
+    acmodule->online_db->acdb->backdoor_request(id);
+  }
+  return true;
+}
+
+Stdio.Stat virtual_file_stat(string file, RequestID id)
+{
+  array(int)|Stdio.Stat file_stat =
+    my_configuration()->try_stat_file(file, id);
+  if (arrayp(file_stat)) {
+    file_stat = Stdio.Stat(file_stat);
+  }
+  return file_stat;
+}
+
 class RedirectFile {
   string file;
   // Used for storing the time from last time we checked this file.
@@ -125,6 +160,65 @@ class RedirectFile {
   }
 }
 
+class VirtualRedirectFile {
+  inherit RedirectFile;
+
+  //! NB: May return 0.
+  Stdio.Stat stat_file()
+  {
+    Stdio.Stat stat = UNDEFINED;
+    RequestID fake_id = roxen.InternalRequestID();
+    mixed e = catch {
+      fake_id->set_path(file);
+      if (!try_ac_backdoor(fake_id)) {
+        destruct(fake_id);
+        return 0;
+      }
+      stat = virtual_file_stat(file, fake_id);
+    };
+    destruct(fake_id);
+    if (e) {
+      report_warning("Redirect: Error while trying to stat file %s.\n", file);
+    }
+    return stat;
+  }
+
+  string file_read(RequestID id) {
+    return my_configuration()->try_get_file(file, id);
+  }
+}
+
+void parse_virtual_include_file(string file, int|void no_tries)
+{
+  if (no_tries >= 9) {
+    report_warning("Redirect: Failed to read file %s. (Tried %d times.)\n",
+      file, no_tries + 1);
+  }
+  RequestID fake_id = roxen.InternalRequestID();
+  mixed e = catch {
+    fake_id->set_path(file);
+    if (!try_ac_backdoor(fake_id)) {
+      destruct(fake_id);
+      report_error("Redirect: Failed to parse virtual file [%s] due to "
+                   "AC module reload detected. Will try again shortly.\n",
+                   file);
+      roxen.background_run(10, parse_virtual_include_file, file, ++no_tries);
+      return 0;
+    }
+    Stdio.Stat file_stat = virtual_file_stat(file, fake_id);
+    RedirectFile redirect_file = VirtualRedirectFile(file, file_stat);
+    dependencies[file] = redirect_file;
+    if (string contents = redirect_file->file_read(fake_id)) {
+      parse_redirect_string(contents);
+    } else {
+      report_warning ("Cannot read redirect patterns from "+file+".\n");
+    }
+  };
+  destruct(fake_id);
+  if (e) {
+    report_warning("Redirect: Error while reading file %s.\n", file);
+  }
+}
 
 //! Mapping from filename to
 //! @array
@@ -142,7 +236,10 @@ void parse_redirect_string(string what)
   foreach(replace(what, "\t", " ")/"\n",
 	  string(0..255) s)
   {
-    if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
+    if (sscanf (s, "#virtual-include%*[ ]<%s>", string file) == 2) {
+      parse_virtual_include_file(file);
+    }
+    else if (sscanf (s, "#include%*[ ]<%s>", string file) == 2) {
       dependencies[file] = RedirectFile(file);
       if (string(0..255) contents = Stdio.read_bytes(file)) {
         parse_redirect_string(contents);
