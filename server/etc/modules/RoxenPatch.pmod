@@ -11,7 +11,7 @@ constant known_flags = ([ "restart" : "Need to restart server" ]);
 
 // NB: Platforms added here also need to be added to the test patch
 //     etc/test/tests/patcher/2009-02-25T1124.rxp.
-constant known_platforms = (< "macosx_ppc32", 
+constant known_platforms = (< "macosx_ppc32",
 			      "macosx_x86",
 			      "macosx_x86_64",
 			      "rhel4_x86",
@@ -42,7 +42,7 @@ constant RXP_ACTION_URL = "https://extranet.roxen.com/rxp/action.html";
 //! URL for fetching rxp clusters.
 
 //! Contains the patchdata
-//! 
+//!
 class PatchObject(string|void id)
 {
   //! @decl string id
@@ -159,7 +159,7 @@ string html_encode(string s)
 {
   s = replace(s, (["&":"&amp;", "<":"&lt;", ">":"&gt;"]));
   return replace(s, (["&amp;amp;":"&amp;",
-		      "&amp;lt;" :"&lt;", 
+		      "&amp;lt;" :"&lt;",
 		      "&amp;gt;" :"&gt;"]));
 }
 
@@ -241,7 +241,7 @@ class Patcher
   void create(function      message_callback,
 	      function      error_callback,
               string        server_dir,
-	      void | string local_dir, 
+	      void | string local_dir,
 	      void | string temp_dir)
   //! Instantiate the Patcher class.
   //! @param message_callback
@@ -249,10 +249,10 @@ class Patcher
   //! @param error_callback
   //!   A callback function which is used for status callback.
   //! @param server_dir
-  //!   Path to the the roxen server directory 
+  //!   Path to the the roxen server directory
   //!   Eg @tt{/usr/local/roxen/server-x.x.xxx/@}
   //! @param local_dir
-  //!   Path to the the roxen local directory 
+  //!   Path to the the roxen local directory
   //!   Defaults to @expr{"../local/"@} relative the server path.
   //! @param temp_dir
   //!   Path to the the system temp dir. Depending on operating system it
@@ -260,23 +260,23 @@ class Patcher
   //!   environment variable @tt{TEMP@}
   {
     // Set callback functions
-    write_mess = lambda(mixed ... arg) 
-		 { 
-		   message_callback(sprintf(@arg)); 
+    write_mess = lambda(mixed ... arg)
+		 {
+		   message_callback(sprintf(@arg));
 		 };
 
-    write_err  = lambda(mixed ... arg) 
-		 { 
-		   error_callback(sprintf(@arg)); 
+    write_err  = lambda(mixed ... arg)
+		 {
+		   error_callback(sprintf(@arg));
 		 };
 
     // Verify server dir
     server_path = combine_and_check_path(server_dir);
     if (!server_path)
       error("Cannot access server dir!\n");
-    
+
 //     write_mess("Server path set to %s\n", server_path);
- 
+
     // Set default import directory
     if (!local_dir)
       local_dir = default_local_dir;
@@ -325,14 +325,14 @@ class Patcher
       program ver = compile_file(version_h);
       server_version = ver->roxen_ver + "." + ver->roxen_build;
     };
-    
+
     if (err)
       error("Can't fetch server version.\n");
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
 
     // Set dist version
-    dist_version = 
+    dist_version =
       (replace(Stdio.read_bytes("VERSION.DIST") || "", "\r", "\n") / "\n")[0];
 
     if (dist_version != "")
@@ -351,7 +351,7 @@ class Patcher
 #if constant(roxen_product_code)
     // Added by roxenloader.pike when starting roxen
     product_code = roxen_product_code;
-#else 
+#else
     // When invoked via the command line, we need to find the
     // product code ourselves.
     //
@@ -363,9 +363,9 @@ class Patcher
 
       int roxen_is_cms = !!file_stat(combine_path(modules_path, "sitebuilder")) ||
 	!!file_stat(combine_path(packages_path, "sitebuilder"));
-      
+
       if(roxen_is_cms) {
-	if (file_stat(combine_path(modules_path, "print")) || 
+	if (file_stat(combine_path(modules_path, "print")) ||
 	    file_stat(combine_path(packages_path, "print"))) {
 	  product_code = "rep";
 	} else {
@@ -379,14 +379,14 @@ class Patcher
 
     write_mess("Product code ... <green>%s</green>\n", product_code);
   }
-  
+
   string extract_id_from_filename(string filename)
   //! Takes a filename and returns the patch id.
   {
     // Check if the file has a valid id
     if(!patchid_regexp->match(filename))
       return 0;
-    
+
     return patchid_regexp->split(filename)[0];
   }
 
@@ -394,7 +394,7 @@ class Patcher
   //! Returns the flags for a given patch. Returns 0 if no patch with
   //! that id is available. NOT IMPLEMENTED!
   {
-    
+
   }
 
   array(string) get_dependencies(string id)
@@ -404,7 +404,7 @@ class Patcher
     PatchObject md = get_metadata(id);
 
     if (!md)
-      return 0; 
+      return 0;
 
     return md->depends || ({ });
   }
@@ -412,7 +412,7 @@ class Patcher
   array(int|string) import_file(string path, void|int(0..1) dry_run)
   //! Copies the file at @tt{path@} to the directory of imported patches.
   //! It will check if the file exists and that its name contains a valid
-  //! patch id. 
+  //! patch id.
   //! If the file at @tt{path@} is a tar file, the enclosed rxp files will
   //! be extracted first and each of them will be imported.
   //! @returns
@@ -429,11 +429,11 @@ class Patcher
       write_err("<b>%s</b> could not be found!\n", path);
       return ({ 0 });
     }
-    
+
     int is_tar, is_tar_gz;
     if (glob("*.tar", lower_case(path)))
       is_tar = 1;
-    else if (glob("*.tar.gz", lower_case(path)) || 
+    else if (glob("*.tar.gz", lower_case(path)) ||
 	     glob("*.tgz", lower_case(path)))
       is_tar_gz = 1;
 
@@ -476,14 +476,14 @@ class Patcher
 	patch_ids += ({ 0 });
 	continue;
       }
-      
+
       // Check if it's installed already.
       if (is_installed(patch_id)) {
 	write_mess("Patch %s is already installed.\n", patch_id);
 	patch_ids += ({ -1 });
 	continue;
       }
-   
+
       PatchObject po = extract_patch(rxp_path, import_path, dry_run);
       if (po)
 	patch_ids += ({ po->id });
@@ -523,7 +523,7 @@ class Patcher
     // Extra directory level to get rid of the sticky bit normally
     // present on /tmp/ that would require Privs for clean_up to work.
     mkdir(temp_dir);
-    string temp_file = Stdio.append_path(temp_dir, file->name);   
+    string temp_file = Stdio.append_path(temp_dir, file->name);
     write_file_to_disk(temp_file, file->data);
     privs = 0;
 
@@ -533,8 +533,42 @@ class Patcher
     return patch_ids;
   }
 
-  int(0..1) install_patch(string patch_id, 
-			  string user, 
+  private array(mapping(string:string|mapping(string:mixed)))
+    installed_patches = UNDEFINED;
+
+  private void clear_installed_patches_cache()
+  {
+    installed_patches = UNDEFINED;
+  }
+
+  string|void get_current_patch_version()
+  //! Returns id of latest installed patch. If no patch is installed, UNDEFINED
+  //! is returned.
+  {
+    string patch_version = UNDEFINED;
+    array(mapping(string:string|mapping(string:mixed))) tmp =
+      file_list_installed();
+    if (sizeof(tmp)) {
+      patch_version = tmp[0]->metadata->id;
+    }
+    return patch_version;
+  }
+
+  string get_prestate_version()
+  //! Returns a prestate with dist and patch version.
+  //! For example "(6.1.215-2017-09-20T144208)".
+  //! The return value is HTML encoded.
+  //! NB leading "/" is not included!
+  {
+    string patch_ver = get_current_patch_version();
+    return "(" +
+      Roxen.html_encode_string(
+        roxen_dist_version + (patch_ver ? "-" + patch_ver : "")) +
+    ")";
+  }
+
+  int(0..1) install_patch(string patch_id,
+			  string user,
 			  void|int(0..1) dry_run,
 			  void|int(0..1) force)
   //! Install a patch. Patch must be imported.
@@ -554,25 +588,25 @@ class Patcher
 
     // Create a tar ball for backed up files.
     string backup_file = combine_path(source_path,
-				      sprintf("backup_%s.tar", 
+				      sprintf("backup_%s.tar",
 					      create_id(current_time)));
 
     // We set log path by default to the source directory.
     // When the installation succeeds it's re-set to the installation dir.
     string log_path = combine_path(source_path,
-				   sprintf("failed_install_%s.log", 
+				   sprintf("failed_install_%s.log",
 					   create_id(current_time)));
 
     void write_log(int(0..1) error, mixed ... s)
     {
       log += wash_output(sprintf(@s));
-      
+
       if(error)
 	write_err(@s);
       else
 	write_mess(@s);
     };
-    
+
     void undo_changes_and_dump_log_to_file()
     {
       Privs privs = Privs("RoxenPatch: Rollback");
@@ -605,6 +639,7 @@ class Patcher
 
 	write_err("Writing log to <u>%s</u>\n", log_path);
       }
+      clear_installed_patches_cache();
     };
 
     int post_process_path(string path, mapping(string:string) file) {
@@ -714,18 +749,18 @@ class Patcher
     // Check if the patch is already installed
     if (is_installed(patch_id))
     {
-      write_err("Patch <b>%s</b> is already installed!\n", patch_id); 
+      write_err("Patch <b>%s</b> is already installed!\n", patch_id);
       return 0;
     }
 
     // Read metadata
-    
+
     if (!source_path || sizeof(source_path) == 0)
     {
       write_err("Patch <b>%s</b> is not imported!\n", patch_id);
       return 0;
     }
-    
+
     string mdfile = combine_path(source_path, "metadata");
     if (!is_file(mdfile))
     {
@@ -736,7 +771,7 @@ class Patcher
     PatchObject ptchdata = parse_metadata(read_file(mdfile), patch_id);
 
     // Create a log file
-    log = sprintf("Name:\t\t%s\nInstalled:\t%s\nUser:\t\t%s\n\n\n", 
+    log = sprintf("Name:\t\t%s\nInstalled:\t%s\nUser:\t\t%s\n\n\n",
 		  ptchdata->name,
 		  current_time->format_mtime(),
 		  user);
@@ -748,11 +783,11 @@ class Patcher
       if (!sizeof(filter(ptchdata->platform, check_platform)))
       {
 	write_log(1, "FAILED: current platform not supported by this patch.\n");
-	
+
 	// TO DO: Ask if the user wants to abort or continue
 	if (!force)
 	{
-	  
+
 	  return 0;
 	}
 	else
@@ -771,11 +806,11 @@ class Patcher
       if (!sizeof(filter(ptchdata->version, check_server_version)))
       {
 	write_log(1, "FAILED: server version not supported by this patch.\n");
-	
+
 	// TO DO: Ask if the user wants to abort or continue
 	if (!force)
 	{
-	  
+
 	  return 0;
 	}
 	else
@@ -783,7 +818,7 @@ class Patcher
       }
       else
 	write_log(0, "<green>ok.</green>\n");
-    }   
+    }
     else
       write_log(0, "<green>ok.</green>\n");
 
@@ -839,7 +874,7 @@ class Patcher
       }
     }
     else
-      write_log(0, "<green>ok.</green>\n");   
+      write_log(0, "<green>ok.</green>\n");
 
     // Handle new files
     if (ptchdata->new)
@@ -852,7 +887,7 @@ class Patcher
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
 	write_log(0, "Writing new file <u>%s</u> ... ", dest);
-	
+
 	// Check if it already exists
 	if(!file_stat(dest))
 	{
@@ -886,7 +921,7 @@ class Patcher
 	  if (file->force || force)
 	  // Since the file exists we better make a backup!
 	  {
-	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest, 
+	    write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ", dest,
 		                                     basename(backup_file));
 
 	    if (add_file_to_tar_archive(file->destination,
@@ -912,7 +947,7 @@ class Patcher
 	{
 	  // Set correct mtime - if possible.
 	  Stat fstat = file_stat(source);
-	  
+
 	  if(fstat) {
 	    if (file["file-mode"]) {
 	      chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
@@ -955,13 +990,13 @@ class Patcher
 	}
 	string source = append_path(source_path, file->source);
 	string dest = append_path(server_path, file->destination);
-	
+
 	// Make sure that the destination already exists
 	if(is_file(dest))
 	{
 	  // Backup the original file to a tar_archive
 	  write_log(0, "Backing up <b>%s</b> to <u>%s</u> ... ",
-		    dest, 
+		    dest,
 		    basename(backup_file));
 
 	  if (add_file_to_tar_archive(file->destination,
@@ -971,14 +1006,14 @@ class Patcher
 	  else
 	  {
 	    write_err("FAILED: Could not append tar file!\n");
-	    
+
 	    if (!force)
 	    {
 	      undo_changes_and_dump_log_to_file();
 	      return 0;
 	    }
 	  }
-  
+
 	  // copy the file from the archive to it's destination in the system.
 	  write_log(0, "Replacing file <u>%s</u> ... ", dest);
 	  privs = Privs("RoxenPatch: Replace file \"" + source + "\" -> \"" + dest + "\"");
@@ -1042,30 +1077,30 @@ class Patcher
 	}
 	string dest = append_path(server_path, del_info->destination);
 	write_log(0, "Removing file <u>%s</u> ... ", dest);
-	
+
 	// Make sure that the destination already exists
 	if(is_file(dest))
 	{
 	  // Backup the original file to a tar_archive
 	  write_log(0, "Backing up <u>%s</u> to <u>%s</u> ... ",
-		    dest, 
+		    dest,
 		    basename(backup_file));
 
 	  if (add_file_to_tar_archive(del_info->destination,
 				      server_path,
 				      backup_file))
-	    write_log(0, "<green>ok.</green>\n");       
+	    write_log(0, "<green>ok.</green>\n");
 	  else
 	  {
 	    write_err("FAILED: Could not append tar file!\n");
-	    
+
 	    if (!force)
 	    {
 	      undo_changes_and_dump_log_to_file();
 	      return 0;
 	    }
 	  }
-	  
+
 	  // Remove the file
 	  privs = Privs("RoxenPatch: Remove file: " + dest);
 	  if (!dry_run && rm(dest))
@@ -1103,7 +1138,7 @@ class Patcher
     if (ptchdata->patch)
     {
       int error = 0;
-      
+
       foreach (ptchdata->patch, mapping(string:string) patch_info)
       {
 	if ((patch_info->platform || server_platform) != server_platform) {
@@ -1120,18 +1155,18 @@ class Patcher
 	  write_log(0, "Checking %s ... ", affected_file);
 	  if (is_file(append_path(server_path, affected_file)))
 	  {
-	    write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ", 
+	    write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
 		      affected_file,
 		      basename(backup_file));
 	    if (add_file_to_tar_archive(affected_file,
 					server_path,
 					backup_file))
-	      write_log(0, "<green>ok.</green>\n");       
+	      write_log(0, "<green>ok.</green>\n");
 	    else
 	    {
 	      write_log(1, "FAILED: Could not append tar file!\n");
 	      error_count++;
-	      
+
 	      if (!force)
 	      {
 		undo_changes_and_dump_log_to_file();
@@ -1151,7 +1186,7 @@ class Patcher
 	  }
 	}
 	privs = 0;
-	
+
 	// Patch file.
 	write_log(0, "Applying patch ... ");
 	udiff_data->seek(0); // Start from the beginning of the file again.
@@ -1167,16 +1202,16 @@ class Patcher
 // 			"--global-reject-file=" +
 // 			   append_path(source_path, "rejects"),
 			"-d", combine_path(getcwd(), server_path) });
-	
-	if (dry_run) 
+
+	if (dry_run)
 	  args += ({ "--dry-run" });
 
 	Privs privs = Privs(sprintf("RoxenPatch: Spawning %O.", patch_bin));
-	Process.Process p = 
-	  Process.Process(args, 
-			  ([ 
-			    "cwd"   : server_path, 
-			    "stdin" : udiff_data 
+	Process.Process p =
+	  Process.Process(args,
+			  ([
+			    "cwd"   : server_path,
+			    "stdin" : udiff_data
 			  ]));
 	privs = 0;
 
@@ -1205,7 +1240,7 @@ class Patcher
 	    return 0;
 	  }
 	}
-	
+
 	// Close file object again
 	udiff_data->close();
 
@@ -1224,7 +1259,7 @@ class Patcher
 	}
       }
     }
-    
+
     // Move dir
     if (!dry_run)
     {
@@ -1234,7 +1269,7 @@ class Patcher
       privs = Privs("RoxenPatch: Move patch files");
       // This is because the file locks in Windows are evil and don't let go as
       // soon as one would wish. That's why a time out before reporting
-      // permission denied is needed. 
+      // permission denied is needed.
       int i = 8; // Two seconds
       int mv_status = Stdio.recursive_mv(source_path, dest_path);
       while (!mv_status && errno() == 13 && i > 0)
@@ -1281,15 +1316,16 @@ class Patcher
     }
     privs = 0;
 
+    clear_installed_patches_cache();
     return 1;
   }
 
   int(0..1) uninstall_patch(string id, string user)
   //! Uninstalls a patch by simply deleting all new files created and then
-  //! unrolling the tarball containing the backuped files. 
+  //! unrolling the tarball containing the backuped files.
   //! @param user
-  //!   
-  //! @returns 
+  //!
+  //! @returns
   //!   true (1) upon success and false (0) if it
   //!   fails including if patch is not installed or got dependers.
   {
@@ -1313,8 +1349,8 @@ class Patcher
     write_mess("<green>Done!</green>\n");
 
     write_mess("Reading installation log ... ");
-    string log = read_file(combine_path(installed_path, 
-					id, 
+    string log = read_file(combine_path(installed_path,
+					id,
 					"installation.log"));
     if (!(log && sizeof(log)))
     {
@@ -1324,8 +1360,8 @@ class Patcher
     write_mess("<green>Done!</green>\n");
 
     write_mess("Checking metadata ... ");
-    string mdxml = read_file(combine_path(installed_path, 
-					  id, 
+    string mdxml = read_file(combine_path(installed_path,
+					  id,
 					  "metadata"));
     if (!(mdxml && sizeof(mdxml)))
     {
@@ -1339,15 +1375,15 @@ class Patcher
       return 0;
     }
     write_mess("<green>Done!</green>\n");
-      
-    // We only need to check for backups if we have replaced, deleted or 
+
+    // We only need to check for backups if we have replaced, deleted or
     // patched an old file. If the RXP only put new files in the system then
     // there should be no backup file unless the user forced an install.
     write_mess("Checking for backups ... ");
     string backup_file;
-    if (sscanf(log, "%*sBacking up %*s to %s ... ok.\n", 
+    if (sscanf(log, "%*sBacking up %*s to %s ... ok.\n",
 	       backup_file) == 3)
-    { 
+    {
       if ( !(backup_file && sizeof(backup_file)) )
       {
 	write_err("FAILED: No known backups!\n");
@@ -1396,7 +1432,7 @@ class Patcher
 	errors++;
       }
     }
-    
+
     // Move patch dir to Imported Patches
     write_mess("Moving patch files ...");
     string dest_path = combine_path(import_path, id);
@@ -1413,6 +1449,8 @@ class Patcher
       errors++;
     }
 
+    clear_installed_patches_cache();
+
     if (errors)
     {
       write_err("Some problems occurred when uninstalling patch!\n");
@@ -1420,7 +1458,7 @@ class Patcher
     }
 
     // Write to the installation log when the patch was uninstalled:
-    log += sprintf("\nUninstalled:\t%s\nUser:\t\t%s\n", 
+    log += sprintf("\nUninstalled:\t%s\nUser:\t\t%s\n",
 		   Calendar.ISO->now()->format_mtime(),
 		   user);
     privs = Privs("RoxenPatch: Creating installation.log file.");
@@ -1429,7 +1467,7 @@ class Patcher
     return 1;
   }
 
-  int(0..1) remove_patch(string patch_id, string user) 
+  int(0..1) remove_patch(string patch_id, string user)
   //! Removes an imported patch from disk.
   //! @returns
   //!   Returns 1 if the patch was successfully removed, otherwise 0
@@ -1438,7 +1476,7 @@ class Patcher
     if (!path) {
       return 0;
     }
-    
+
     Privs privs = Privs("RoxenPatch: Remove patch " + patch_id + ", " + sprintf("%O", path));
     if (!Stdio.recursive_rm(path)) {
       privs = 0;
@@ -1465,10 +1503,10 @@ class Patcher
   //!       Date the patch was installed last time. Only available if the
   //!       @tt{status@} is "uninstalled".
   //!     @member string "user"
-  //!       Name of the user that installed the patch the last time. Only 
+  //!       Name of the user that installed the patch the last time. Only
   //!       available if the @tt{status@} is "installed" or "uninstalled".
   //!     @member string "uninstall_user"
-  //!       Name of the user that installed the patch the last time. Only 
+  //!       Name of the user that installed the patch the last time. Only
   //!       available if the @tt{status@} is "installed" or "uninstalled".
   //!     @member PatchObject "metadata"
   //!       Metadata block as returned from parse_metadata()
@@ -1476,7 +1514,7 @@ class Patcher
   {
     mapping res = ([ ]);
     string file_path = id_to_filepath(id);
-    
+
     if (!(file_path && sizeof(file_path)))
       return ([
 	"metadata" : PatchObject(id),
@@ -1499,9 +1537,9 @@ class Patcher
     mapping(string:int) inst_date, uninst_date;
     if (is_file(append_path(file_path, "installation.log")))
     {
-      string install_log = read_file(append_path(file_path, 
+      string install_log = read_file(append_path(file_path,
 						 "installation.log"));
-      sscanf(install_log, 
+      sscanf(install_log,
 	     "%*sInstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
 	     int year,
 	     int month,
@@ -1509,17 +1547,17 @@ class Patcher
 	     int hour,
 	     int minute,
 	     inst_user);
-	
+
       inst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
 		     "mon"  : month,
 		     "mday" : day,
 		     "hour" : hour,
 		     "min"  : minute ]);
-	
+
       res->installed	= inst_date;
       res->user	= inst_user || "Unknown";
 
-      if (sscanf(install_log, 
+      if (sscanf(install_log,
 		 "%*sUninstalled:\t%4d-%2d-%2d %2d:%2d\nUser:\t\t%s\n",
 		 year,
 		 month,
@@ -1527,7 +1565,7 @@ class Patcher
 		 hour,
 		 minute,
 		 uninst_user) == 7)
-      {	   
+      {
 	uninst_date = ([ "year" : (year > 1900) ? year - 1900 : year,
 			 "mon"  : month,
 			 "mday" : day,
@@ -1538,7 +1576,7 @@ class Patcher
 	res->uninstall_user	= uninst_user;
 	return res;
       }
-	
+
       // Assume the patch is installed.
       res->status = "installed";
     }
@@ -1549,7 +1587,7 @@ class Patcher
     }
     else
       res->status		= "imported";
-  
+
     return res;
   }
 
@@ -1629,11 +1667,11 @@ class Patcher
 	break;
       }
     }
-    
+
     if (!verify_patch_object(p, 1 /* Silent mode */))
       return 0;
 
-    return p;  
+    return p;
   }
 
   mapping(string:string|mapping(string:mixed)) describe_installed_patch(string id)
@@ -1815,16 +1853,22 @@ class Patcher
   //!       Metadata block as returned from parse_metadata()
   //!   @endmapping
   {
-    array(mapping(string:string|mapping(string:mixed))) res =
+    array(mapping(string:string|mapping(string:mixed))) res = installed_patches;
+    if (res) {
+      return res;
+    }
+    res =
       filter(map(get_dir(installed_path) || ({ }), describe_installed_patch),
 	     mappingp);
 
     //  Return in reverse chronological order, i.e. newest first
-    return Array.sort_array(res, lambda (mapping a, mapping b)
+    res = Array.sort_array(res, lambda (mapping a, mapping b)
 				 {
 				   return a->metadata->id < b->metadata->id;
 				 }
 			    );
+    installed_patches = res;
+    return res;
   }
 
   array(mapping(string:string|mapping(string:int)|PatchObject)) file_list_imported()
@@ -1865,7 +1909,7 @@ class Patcher
 				 }
 			    );
   }
-  
+
   string current_version()
   //! @returns
   //!   current version of the patch file lib.
@@ -1873,8 +1917,8 @@ class Patcher
     sscanf(lib_version, "$""Id: %s""$", string ver);
     return ver || "n/a";
   }
-  
-  void set_installed_path(string path) 
+
+  void set_installed_path(string path)
   //! Sets the new path to the installed patches directory. If the path is
   //! relative then it is assumed that it is relative the server dir.
   //!
@@ -1884,11 +1928,11 @@ class Patcher
     installed_path = combine_path(server_path, path);
     if (!is_dir(installed_path))
       error("Couldn't set %s as path for installed patches.\n", installed_path);
-  }  
-  
-  void set_imported_path(string path) 
+  }
+
+  void set_imported_path(string path)
   //! Sets the new path to the imported patches directory. If the path is
-  //! relative then it is assumed that it is relative the current working 
+  //! relative then it is assumed that it is relative the current working
   //! directory.
   //!
   //! Raises an exception if the directory does not exist or if it lacks write
@@ -1898,7 +1942,7 @@ class Patcher
     if (!is_dir(import_path))
       error("Couldn't set %s as path for imported patches.\n", import_path);
   }
-  
+
   void set_temp_dir(void | string path)
   //! Sets the new path to the temp directory
   //!
@@ -1937,7 +1981,7 @@ class Patcher
   //! Return the current server version
 
   string get_server_platform() { return server_platform; }
-  // Return the current server platform 
+  // Return the current server platform
 
   string build_metadata_block(PatchObject metadata)
   //! Builds an XML metadatablock from the mapping provided.
@@ -1945,14 +1989,14 @@ class Patcher
   {
     string xml = "<?xml version=\"1.0\"?>\n";
     xml += sprintf("<rxp version=\"%s\">\n", rxp_version);
-    
-    xml += sprintf("  <name>%s</name>\n", 
+
+    xml += sprintf("  <name>%s</name>\n",
 		   html_encode(metadata->name));
-    
+
     string desc = String.trim_all_whites(metadata->description);
     xml += sprintf("  <description type='text/plain'>\n%s\n  </description>\n",
 		   html_encode(desc));
-    
+
     xml += sprintf("  <originator>%s</originator>\n",
 		   html_encode(metadata->originator));
 
@@ -2015,9 +2059,9 @@ class Patcher
       }
     }
 
-    return xml += "</rxp>";  
+    return xml += "</rxp>";
   }
-  
+
   int(-1..1) got_dependers(string id, void|multiset(string) pretend_installed)
   //! Checks if there are patches installed after this one. If the patch given
   //! isn't installed instead return true if it depends on patches that are not
@@ -2034,8 +2078,8 @@ class Patcher
     if (is_installed(id))
     {
       array file_list = file_list_installed();
-    
-      array filtered_list = filter(file_list, 
+
+      array filtered_list = filter(file_list,
 				   lambda (mapping m)
 				   {
 				     return m->metadata->id > id &&
@@ -2043,7 +2087,7 @@ class Patcher
 				   } );
       return !!sizeof(filtered_list);
     }
-    
+
     if (is_imported(id))
     {
       PatchObject po = get_metadata(id);
@@ -2053,8 +2097,8 @@ class Patcher
 
       if (!po->depends)
 	return 0;
-      
-      array filtered_list = filter(po->depends, 
+
+      array filtered_list = filter(po->depends,
 				   lambda (string id, string rxp_version)
 				   {
 				     array(string) ids;
@@ -2080,7 +2124,7 @@ class Patcher
     // If the patch is neither imported nor installed then return -1
     return -1;
   }
-  
+
   int(0..1) create_patch(PatchObject metadata, string|void destination_path)
   //! Creates a patch archive from the given PatchObject
   {
@@ -2183,10 +2227,10 @@ class Patcher
     return 1;
   }
 
-  PatchObject extract_patch(string file, 
+  PatchObject extract_patch(string file,
 			    string target_dir,
 			    void|int(0..1) dry_run)
-  //! Creates a directory in target_dir named after the patch's id and 
+  //! Creates a directory in target_dir named after the patch's id and
   //! extracts the patch there. Then returns the parsed metadata.
   {
     string source_file = combine_path(getcwd(), file);
@@ -2199,13 +2243,13 @@ class Patcher
     }
 
     write_mess("<green>Done!</green>\n");
-    
+
     // Read metadata
     string patchid = extract_id_from_filename(file);
     string mdfile = combine_path(target_dir, patchid, "metadata");
     write_mess("Extracting %s ... ", mdfile);
     string md = read_file(mdfile);
-    
+
     if (md && sizeof(md))
       write_mess("<green>Done!</green>\n");
     else
@@ -2244,7 +2288,7 @@ class Patcher
     }
 
     // Make an array of the paths where we want to check for the dir
-    array inst_ptchs = filter(get_dir(import_path) || ({ }), 
+    array inst_ptchs = filter(get_dir(import_path) || ({ }),
 			      lambda(string s)
 			      {
 				return is_dir(combine_path(import_path, s));
@@ -2256,7 +2300,7 @@ class Patcher
       if(sscanf(dir_name, "%*s"+id+"%*s"))
 	return 1;
     }
-      
+
     // Not found.
     return 0;
   }
@@ -2317,7 +2361,7 @@ class Patcher
     }
 
     // Make an array of the paths where we want to check for the dir
-    array inst_ptchs = filter(get_dir(installed_path) || ({ }), 
+    array inst_ptchs = filter(get_dir(installed_path) || ({ }),
 			      lambda(string s)
 			      {
 				return is_dir(combine_path(installed_path, s));
@@ -2352,7 +2396,7 @@ class Patcher
 
     foreach(all_paths, string path)
     {
-      array inst_ptchs = filter(get_dir(path) || ({ }), 
+      array inst_ptchs = filter(get_dir(path) || ({ }),
 				lambda(string s)
 				{
 				  return is_dir(combine_path(path, s));
@@ -2385,7 +2429,7 @@ class Patcher
 
     if (!is_file(mdfile))
       return 0;
-    
+
     string mdblock = read_file(mdfile);
     return parse_metadata(mdblock, id);
   }
@@ -2400,7 +2444,7 @@ class Patcher
   }
 
   array(string) parse_version(string raw_string)
-  //! Takes a raw string and checks if it's a correctly formatted server 
+  //! Takes a raw string and checks if it's a correctly formatted server
   //! version and returns a list of versions parsed.
   {
     if (sscanf(raw_string, "%1d.%d.%d", int major, int minor, int build) == 3)
@@ -2442,7 +2486,7 @@ class Patcher
 			   {
 			     return ([ "source" : path,
 				       "destination" : path ]);
-			   } 
+			   }
 		);
     }
     else
@@ -2480,35 +2524,35 @@ class Patcher
 	write_err("FAILED: No ID in metadata!\n");
       return 0;
     }
-    
+
     if(!verify_patch_id(ptc_obj->id))
     {
       if (!silent)
 	write_err("FAILED: ID is not valid!\n");
       return 0;
     }
-    
+
     if (!(ptc_obj->name && sizeof(ptc_obj->name)))
     {
       if (!silent)
 	write_err("FAILED: No patch name given in metadata!\n");
       return 0;
     }
-    
+
     if (!(ptc_obj->description && sizeof(ptc_obj->description)))
     {
       if (!silent)
 	write_err("FAILED: No description given in metadata!\n");
       return 0;
     }
-    
+
     if (!sizeof(ptc_obj->originator))
     {
       if (!silent)
 	write_err("FAILED: No originator given in metadata!\n");
       return 0;
     }
-    
+
     if (ptc_obj->depends)
       foreach(ptc_obj->depends, string patch_id_list) {
 	if (ptc_obj->rxp_version > "1.0") {
@@ -2561,7 +2605,7 @@ class Patcher
     if (ptc_obj->delete)
     {
     }
-    
+
     // We have passed all the above tests.
     if (!silent)
       write_mess("<green>Done!</green>\n");
@@ -2589,7 +2633,7 @@ class Patcher
   }
 
   string find_file(string raw_path)
-  //! Search for a file by checking each directory from the given path up to 
+  //! Search for a file by checking each directory from the given path up to
   //! root
   {
     string res = "";
@@ -2599,14 +2643,14 @@ class Patcher
 
     // Extract the file name
     string filename = basename(raw_path);
-    
+
     // do an iterative search for the source file.
     // But first check the current working dir before checking any paths
     // parallel dirs.
     if (raw_path[0..1] == "..")
     {
       string s = combine_path(getcwd(), filename);
-      
+
       write_mess("Fetching %s ... ", s);
 
       if(is_file(s))
@@ -2617,10 +2661,10 @@ class Patcher
       else
 	write_mess("Not Found!\n");
     }
-    
+
     // Create a full path and reverse it for easier traversion
     string path_rev = reverse(combine_path(getcwd(), raw_path));
-    
+
     // Remove file name from path
     sscanf(path_rev, "%*s/%s", path_rev);
 
@@ -2628,9 +2672,9 @@ class Patcher
     {
       string test_path = combine_path(reverse(path_rev), filename);
       test_path = combine_path(getcwd(), test_path);
-      
+
       write_mess("Fetching %s ... ", test_path);
-      
+
       if(is_file(test_path))
       {
 	write_mess("<green>Done!</green>\n");
@@ -2642,9 +2686,9 @@ class Patcher
       // If we can't find any '/' then we only have one directory left
       // and that needs to be removed too.
       if(sscanf(path_rev, "%*s/%s", path_rev) < 2)
-	path_rev = ""; 
+	path_rev = "";
     }
-    
+
     write_err("FAILED!\n");
     return 0;
   }
@@ -2655,7 +2699,7 @@ class Patcher
   //!   Returns an array of file paths.
   {
     array res = ({ });
-    array current_dir = (path && sizeof(path)) ? get_dir(path) 
+    array current_dir = (path && sizeof(path)) ? get_dir(path)
                                                : get_dir(getcwd());
 
     foreach(current_dir, string file_name)
@@ -2666,7 +2710,7 @@ class Patcher
       else if (is_file(current_file))
 	res += ({ current_file });
     }
-    
+
     return res;
   }
 
@@ -2696,9 +2740,9 @@ class Patcher
 			   );
       }
     }
-    else 
+    else
       return 0;
-    
+
     return glob(glob_pattern, all_files);
   }
 
@@ -2710,12 +2754,12 @@ class Patcher
     string full_path = combine_path(getcwd(), m->source);
     if(!sizeof(filename))
       return 0;
-    
+
     string dest = combine_path(temp_data_path, filename);
 
     write_mess("Copying %s to %s ... ", full_path, dest);
 
-    // Check if another file exists already in the temp dir. 
+    // Check if another file exists already in the temp dir.
     // If so, rename the new one.
     if (is_file(dest))
     {
@@ -2801,7 +2845,7 @@ class Patcher
 	  s[i] == '\r' ||
 	  s[i] == '\t')
       {
-	
+
 	// This is safe since we know that the last char is not a blank:
 	int j = i + 1;
 	if (s[j] != ' '  &&
@@ -2812,7 +2856,7 @@ class Patcher
       }
       else
 	res += s[i..i];
-      i++;    
+      i++;
     }
     return res;
   }
@@ -2938,7 +2982,7 @@ class Patcher
     dest = unixify_path(dest);
     write_mess("Creating tar file %s ... ", dest);
     array args = ({ tar_bin, "czf", dest, id });
-  
+
     Privs privs =
       Privs(sprintf("RoxenPatch: Creating tar file %O.", dest));
     Process.Process p = Process.Process(args, ([ "cwd" : temp_path ]));
@@ -2948,12 +2992,12 @@ class Patcher
       write_err("FAILED: Could not create tar file!\n");
       return 0;
     }
-  
+
     write_mess("<green>Done!</green>\n");
     return 1;
   }
 
-  
+
   int(0..1) add_file_to_tar_archive(string file_name,
 				    string base_path,
 				    string tar_archive)
@@ -2984,7 +3028,7 @@ class Patcher
   }
 
 
-  int(0..1) extract_tar_archive(string file_name, string path, int|void gzip) 
+  int(0..1) extract_tar_archive(string file_name, string path, int|void gzip)
   //! Extract a tar archive to @[path].
   {
     object(Stdio.File)|Gz.File file = Stdio.File(file_name, "rb");
@@ -3010,9 +3054,9 @@ class Patcher
       file->close();
       return 0;
     }
-    
+
     file->close();
-    return 1; 
+    return 1;
   }
 
 
@@ -3021,10 +3065,10 @@ class Patcher
   {
     if (!silent)
       write_mess("Cleaning up ... ");
-    
+
     if (recursive_rm(temp_path))
     {
-      if (!silent) 
+      if (!silent)
 	write_mess("<green>Done!</green>\n");
       return 1;
     }
@@ -3053,7 +3097,7 @@ class Patcher
   //!   Returns an array of file names.
   {
     array(string) res = ({ });
-    
+
     if (patch_data)
     {
       // Normalize line breaks.
@@ -3209,9 +3253,9 @@ class Patcher
 #else
       Protocols.HTTP.do_async_method("GET", uri, 0, request_headers, con);
 #endif
-  
+
       queue->read();
-  
+
       return con;
     }
 
