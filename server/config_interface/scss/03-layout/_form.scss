@@ -93,6 +93,22 @@ input {
   }
 }
 
+.port-url {
+  input {
+    @include not("[type='checkbox']",
+                 "[type='radio']",
+                 "[type='submit']",
+                 "[type='reset']",
+                 "[type='button']",
+                 "[type='image']")
+    {
+      &:not([size]) {
+        width: auto;
+      }
+    }
+  }
+}
+
 textarea {
   @extend .__input;
   width: 100%;
