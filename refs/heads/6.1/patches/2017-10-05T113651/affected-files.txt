@@ -1,0 +1,10 @@
+Modified files:
+  base_server/roxenloader.pike
+  bin/create_configif.pike
+  etc/include/version.h
+  etc/modules/RXML.pmod/module.pmod
+  etc/modules/Roxen.pmod
+  etc/modules/RoxenPatch.pmod
+  modules/filters/redirect.pike
+  modules/js-support/javascript_support.pike
+  start
