@@ -56,7 +56,7 @@ string parse(RequestID id)
 
   // No previous request made.
   if (cc == 0) {
-    string furl = "/boxes/ris_news.pike?_raw=1&amp;_roxen_wizard_id=" +
+    string furl = "/boxes/ris_news.pike?_raw=1&_roxen_wizard_id=" +
                   id->variables->_roxen_wizard_id;
     contents = "<div id='x-data'>Fetching data ..."
                " <i class='fa fa-spinner fa-pulse'></i></div>"
