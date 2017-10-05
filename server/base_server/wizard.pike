@@ -76,6 +76,15 @@ inherit "roxenlib";
 # define DEBUGMSG(msg)
 #endif
 
+// CFIF17: This is here while the new Admin IF is created. When and if this
+//         branch is merged into devel this should be removed
+#ifdef ADMIN_IF_DEBUG
+# define CFIF_WERR(X...)werror("%s:%d: %s",basename(__FILE__),__LINE__,sprintf(X))
+# define CFIF_THROW(X...)error("CFIF17: " + sprintf(X))
+#else
+# define CFIF_WERR(X...)
+# define CFIF_THROW(X...)
+#endif
 
 string loc_encode(string val, void|mapping args, void|string def)
 {
@@ -107,6 +116,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       m["default"] = a;
   } else // tag. No contents, id in 'a'.
     id = a;
+
+
+  CFIF_WERR("Enter wizard_tag_var(n: %O, type: %O)\n", n, m->type);
 
   string current = id->variables[m->name] || m["default"];
   if(current)
@@ -189,6 +201,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     return make_tag("input", m);
 
    case "color":
+     CFIF_THROW("Dude, do we really need this?\n");
      int h, s, v;
      array a;
      if(id->variables[m->name+".hsv"])
@@ -257,6 +270,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       color_name(a)+"\"> <input type=\"submit\" value=\"OK\"></font></td></table>\n");
 
    case "color-small":
+     CFIF_THROW("Dude, do we really need this?\n");
      if(id->variables[m->name+".hsv"])
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
@@ -320,6 +334,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "</table>\n");
 
    case "color-js":
+     CFIF_THROW("Can't we use the same color picker as in SiteBuilder?\n");
      //  Note: This code requires ColorSelector.js
      if (string color_input = id->variables[m->name])
        current = color_input;
@@ -441,6 +456,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      return replace(output, "PREFIX", clean_name);
 
    case "font":
+     CFIF_THROW("Dude, really? It's 2017 (at least)!\n");
      m->type = "select";
      m->lines = "20";
      m->choices = roxen.fonts->available_fonts() * ",";
@@ -639,7 +655,7 @@ string compress_state(mapping state)
 
   foreach(glob("!_*", indices(state)), string s)
     m_delete(state, s);
-  
+
 //  report_debug(sprintf("State=%O\n", state));
 
   string from = encode_value(state);
@@ -662,7 +678,7 @@ string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
 
 string make_title()
 {
-  string s = (string)(this_object()->wizard_name || 
+  string s = (string)(this_object()->wizard_name ||
 		      this_object()->name || LOCALE(51, "No name")) -
     "<p>";
   sscanf(s, "%*s//%s", s);
@@ -686,6 +702,8 @@ int num_pages(string wiz_name)
 
 string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
 {
+  CFIF_WERR("Enter parse_wizard_page(form: %O, %O, wiz_name: %O, page_name: %O)\n",
+            form, id, wiz_name, page_name);
   mapping(string:array) automaton = this_object()->wizard_automaton;
   int max_page = !automaton && num_pages(wiz_name)-1;
   string res;
@@ -730,6 +748,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 #endif
 
   string wizard_id = id->cookies["RoxenWizardId"];
+  // CFIF17: This makes me sick to my stomach.
+  //         How many nested tables to you need?
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n"
 	 "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
@@ -1166,13 +1186,13 @@ int zonk=time(1);
 mapping get_actions(RequestID id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
-  
+
   //  Cannot clear wizard cache since it will trigger massive recompiles of
   //  wizards from inside SiteBuilder. It also breaks wizards which use
   //  persistent storage.
   //
   //  if(id->pragma["no-cache"]) wizards=([]);
-  
+
   foreach(get_dir(dir) - ({ ".distignore" }), string act)
   {
     mixed err;
@@ -1233,7 +1253,7 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
   //  persistent storage.
   //
   //  if(id->pragma["no-cache"]) wizards=([]);
-  
+
   if(!id->variables->sm)
     id->variables->sm = focused_wizard_menu;
   else
