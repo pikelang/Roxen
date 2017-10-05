@@ -131,10 +131,10 @@ class Diff
       {
         case '&': r += "<tt>"+row+"</tt><br>\n";
           break;
-        case '+': r += "<tt><font color='darkgreen'>"+row+"</font></tt><br>\n";
+        case '+': r += "<font color='darkgreen'><tt>"+row+"</tt></font><br>\n";
           added++;
           break;
-        case '-': r += "<tt><font color='darkred'>"+row+"</font></tt><br>\n";
+        case '-': r += "<font color='darkred'><tt>"+row+"</tt></font><br>\n";
           deleted++;
           break;
         case 'L': r += "<i>"+row+"</i><br>\n";

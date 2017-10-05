@@ -5710,7 +5710,7 @@ class UserTag {
       // which in turn helps reduce garbage produced by user defined
       // tags by quite a lot.
       cache_set (user_tag_comp_def_loc, comp_def_key,
-		 CompDefCacheEntry (comp_def));
+		 CompDefCacheEntry (comp_def), 300);
       tagdef[6] = comp_def_key;
 
       RXML_CONTEXT->state_update();

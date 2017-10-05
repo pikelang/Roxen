@@ -249,7 +249,7 @@ constant tagdoc = ([
     <p>Either the <tt>site-key</tt> or <tt>secret</tt> attribute is required.</p>
   </desc>
 
-  <attr name='recaptcha-verify' value='&amp;form.g-recaptcha-response;'
+  <attr name='recaptcha-verify' value='string'
         required='1'>
     <p>The response code your form gets populated with when someone does a
      reCAPTCHA.</p>
@@ -271,17 +271,18 @@ constant tagdoc = ([
 "recaptcha-site-key" : #"
   <desc type='tag'>
     <p>Returns the Site Key for a named key pair</p>
-  </desc>
 
-  <ex-box>
-  <script>
-  var reCaptchaCallback = function() {
-    grecaptcha.render('my-recaptcha-container', {
-      sitekey: '<recaptcha-site-key name=\"my-configuration\" />'
-    });
-  };
-  </script>
-  </ex-box>
+    <ex-box>
+    <script>
+    var reCaptchaCallback = function() {
+      grecaptcha.render('my-recaptcha-container', {
+        sitekey: '<recaptcha-site-key name=\"my-configuration\" />'
+      });
+    };
+    </script>
+    </ex-box>
+
+  </desc>
 
   <attr name='name' value='string' required=''>
     <p>The name of the named key pair to get the Site Key for.</p>

@@ -37,7 +37,7 @@
 </define>
 
 <define container="cv-split">
-  <cset variable="var.left-content">&var.leftside:none;</cset>
+  <set variable="var.left-content">&var.leftside:none;</set>
   <div class="flex-row page-contents">
     <if sizeof="var.left-content &gt; 0">
       <div class="left-content flex">&var.left-content:none;</div>
@@ -206,7 +206,7 @@
   <button data-submit='' name='next' class='icon next right'><translate id="203">Next</translate></button>
 </define>
 
-<define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
+<define container="content"><set variable="var.content" type="text/html"><contents/></set></define>
 
 <define container="tmpl"><!doctype html>
   <trans-reg project="roxen_config" />
