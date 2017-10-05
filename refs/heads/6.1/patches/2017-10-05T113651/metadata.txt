@@ -1,0 +1,82 @@
+subject: Roxen 6.1: Start script, mysql-only, redirect, cache busting, pcode size calculation
+from: 169e5bb73dda5f490549dae2d8cb3a20e14e1b0a
+to: 4817761a0a253e8eb78ec6dd43a08b5ad8ba1ff6
+originator: Marcus Wellhardh
+depends: 2017-09-29T082535
+restart: true
+
+• Don't try to count ints and floats to PCode entry size
+
+• Also exempt Tag objects when calculating PCode entry size
+
+Since they are global objects referenced from many PCode objects.
+
+• Don't add RXML.Type objects size to calculated PCode size
+
+When objects like RXML.t_html(text/html, xml) was added to the
+calculated size of PCode objects it could inflate the numbers by up to
+several MB per object.
+
+• JS and CSS cache busting [CMS-205]
+
+• Removed trailing spaces.
+
+• Redirect Module [CMS-274]:
+
+Added support for redirect files accessible from Roxen's virtual file
+system. For example for redirect files residing in SiteBuilder or in a
+File system module.
+
+• Redirect Module ("abstraction rewrite") [CMS-274]:
+
+Preparing for new feature: support for redirect files accessible from
+Roxen's virtual file system.
+
+• Start script: Add option --mysql-only.
+
+This is an option used to start/stop the embedded MySQL/MariaDB
+without also starting Roxen.
+
+Fixes [WS-71].
+
+• create_configif: Some minor interface cleanup.
+
+Fixes remainder of [WS-69].
+
+• create_configif: Improved defaults on interactive redo.
+
+The previously configured values are now used as defaults
+the second time around if the user failed to confirm them.
+
+Fixes some more of [WS-69].
+
+• create_configif: Support --batch without any value pairs.
+
+Fixes even more of [WS-69].
+
+• create_configif: Don't create a user in --batch mode if no password.
+
+Fixes some more of [WS-69].
+
+• create_configif: Fixed confirmation test in --batch mode.
+
+Using --batch without specifying a value for ok should now work.
+
+Fixes some of [WS-69].
+
+• create_configif: Improved XML formatting somewhat.
+
+• create_configif: Improved --batch mode.
+
+Previously it was necessary to list all settings for --batch
+(also those that have defaults) to avoid interactive queries.
+
+Setting the batch setting "ok" to "n" now causes interactive
+confirmation. Previously it caused an infinite loop.
+
+The batch setting "server_url" now defaults to "https://*:22202/"
+as per tradition.
+
+The server url protocol setting now defaults to "https".
+
+The settings confirmation check is now case insensitive.
