@@ -9612,7 +9612,7 @@ class PCode
       if (functionp (entry) || visited[entry])
 	continue;
 
-      if (objectp(entry) && entry->is_RXML_Type)
+      if (objectp(entry) && (entry->is_RXML_Type || entry->is_RXML_Tag))
         continue;
 
       visited[entry] = 1;
