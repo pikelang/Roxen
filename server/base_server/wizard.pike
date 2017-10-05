@@ -11,20 +11,20 @@
      ...
    ]);
 
-   dispatch:	A string redirects the wizard to that page. 0 or the
-		name of this page continues with it.
-   prev_page:	A string is the page for the previous button. 0 if none.
-   next_page:	A string is the page for the next button. 0 makes an
-		ok button instead. -1 gives neither button.
-   page_name:	Optional page name. Defaults to "".
+   dispatch:    A string redirects the wizard to that page. 0 or the
+                name of this page continues with it.
+   prev_page:   A string is the page for the previous button. 0 if none.
+   next_page:   A string is the page for the next button. 0 makes an
+                ok button instead. -1 gives neither button.
+   page_name:   Optional page name. Defaults to "".
 
    Any of these may be a function that returns the value:
 
    lambda (RequestID id, string page, mixed ... args);
 
-   id:		Request id.
-   page:	The entry in wizard_automaton.
-   args:	The extra args to wizard_menu() or wizard_for().
+   id:          Request id.
+   page:        The entry in wizard_automaton.
+   args:        The extra args to wizard_menu() or wizard_for().
 
    Other callbacks:
 
@@ -56,10 +56,10 @@
 
    Special pages:
 
-   "start":	Start page.
-   "done":	Finish page. The page function is wizard_done(). Only
-		dispatch is used in the wizard_automaton entry.
-   "cancel":	Cancels the wizard. Has no wizard_automaton entry.
+   "start":     Start page.
+   "done":      Finish page. The page function is wizard_done(). Only
+                dispatch is used in the wizard_automaton entry.
+   "cancel":    Cancels the wizard. Has no wizard_automaton entry.
 
    Bugs: There's no good way to share variables between the functions.
    Can we say id->misc? :P */
@@ -68,7 +68,7 @@ inherit "roxenlib";
 #include <roxen.h>
 
 //<locale-token project="roxen_message">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("roxen_message",X,Y)
+#define LOCALE(X,Y)     _STR_LOCALE("roxen_message",X,Y)
 
 #ifdef DEBUG_WIZARD
 # define DEBUGMSG(msg) report_debug(msg)
@@ -107,9 +107,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     if(m->type == "select" || m->type == "select_multiple")
       if (m->parse)
         m->options = (replace(parse_rxml( a, id ), ",", "__CoMma__") / "\n" -
-		      ({ "" })) * ",";
+                      ({ "" })) * ",";
       else
-	m->options = (a / "\n") * ",";
+        m->options = (a / "\n") * ",";
     else if (m->parse)
       m["default"] = parse_rxml( a, id );
     else
@@ -178,7 +178,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m_delete(m,"default");
     if (!m->value) m->value="on";
     if (current && current != "0" &&
-	(current == "1"||mkmultiset(current/"\0")[m->value]))
+        (current == "1"||mkmultiset(current/"\0")[m->value]))
       m->checked="checked";
     res=make_tag("input",m);
     m->type="hidden";   //  Yes, this hidden var is needed! Cleared boxes may
@@ -217,7 +217,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      } else if(id->variables[m->name+".bar.y"])
        s=255-(int)id->variables[m->name+".bar.y"];
      else if(id->variables[m->name+".entered"] &&
-	     strlen(current=id->variables[m->name+".entered"]))
+             strlen(current=id->variables[m->name+".entered"]))
      {
        a = parse_color(current||"black");
        [h,s,v] = rgb_to_hsv(@a);
@@ -284,7 +284,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      } else if(id->variables[m->name+".bar.y"])
        s = 255-((int)id->variables[m->name+".bar.y"])*2;
      else if(id->variables[m->name+".entered"] &&
-	     strlen(current=id->variables[m->name+".entered"]))
+             strlen(current=id->variables[m->name+".entered"]))
      {
        a = parse_color(current||"black");
        [h,s,v] = rgb_to_hsv(@a);
@@ -440,11 +440,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "  <td>"
        "    <table border='0' cellspacing='0' cellpadding='0' bgcolor='#ffffff'>"
        "      <tr>"
-       "      	<td style='background: " + current + "; border: 1px solid #888888' "
-       "      	    id='PREFIX_preview'"
-       "      	  ><img src='/internal-roxen-colsel-arrow'"
+       "        <td style='background: " + current + "; border: 1px solid #888888' "
+       "            id='PREFIX_preview'"
+       "          ><img src='/internal-roxen-colsel-arrow'"
        "                width='49' height='16' border='0'"
-       "      	        style='border: 4px solid #ffffff; cursor: pointer'"
+       "                style='border: 4px solid #ffffff; cursor: pointer'"
        "                ::='&form.__popup;'"
        "        ></td>"
        "      </tr>"
@@ -462,19 +462,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m->choices = roxen.fonts->available_fonts() * ",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
-	      ((current&&strlen(current))?
-	       "<gtext font=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
-	       :""));
+              ((current&&strlen(current))?
+               "<gtext font=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
+               :""));
      m_delete(m, "noexample");
      return wizard_tag_var("var", m, id) + res;
 
    case "toggle":
     m_delete(m,"default");
     return make_container("select", m,
-			  "<option"+((int)current?" selected=\"selected\"":"")+" value=\"1\">" +
-			  LOCALE(49, "Yes") + "</option>\n"
-			  "<option"+(!(int)current?" selected=\"selected\"":"")+" value=\"0\">" +
-			  LOCALE(50, "No") + "</option>\n");
+                          "<option"+((int)current?" selected=\"selected\"":"")+" value=\"1\">" +
+                          LOCALE(49, "Yes") + "</option>\n"
+                          "<option"+(!(int)current?" selected=\"selected\"":"")+" value=\"0\">" +
+                          LOCALE(50, "No") + "</option>\n");
 
    case "select":
      if(!m->choices && m->options)
@@ -484,36 +484,36 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      mapping m2 = copy_value(m);
      if (m->select_override) {
        if (!m->id) {
-	 m->id = "wizard-select-" + random(65536) + "-" + random(65536);
+         m->id = "wizard-select-" + random(65536) + "-" + random(65536);
        }
        m_delete(m2, "select_override");
        m2->id = m->id + "-selector";
        m2->onchange =
-	 "var field = document.getElementById('" + m->id + "-field');"
-	 "if (field) { ";
+         "var field = document.getElementById('" + m->id + "-field');"
+         "if (field) { ";
        if (m->select_none) {
-	 m2->onchange +=
-	   "  if (this.value == '" + m2->select_none +"') {"
-	   "    field.setAttribute('disabled', 'yes');"
-	   "    field.disabled = 'disabled';"
-	   "    field.value = '';"
-	   "  } else {"
-	   "    field.disabled = '';"
-	   "    field.removeAttribute('disabled');";
+         m2->onchange +=
+           "  if (this.value == '" + m2->select_none +"') {"
+           "    field.setAttribute('disabled', 'yes');"
+           "    field.disabled = 'disabled';"
+           "    field.value = '';"
+           "  } else {"
+           "    field.disabled = '';"
+           "    field.removeAttribute('disabled');";
        }
        m2->onchange +=
-	 "  if (this.value != '" + m->select_override +"') {"
-	 "    field.value = this.value;"
-	 "  }";
+         "  if (this.value != '" + m->select_override +"') {"
+         "    field.value = this.value;"
+         "  }";
        if (m->select_none) {
-	 m2->onchange +=
-	   "  }";
+         m2->onchange +=
+           "  }";
        }
        m2->onchange +=
-	 "}";
+         "}";
        if (m->autosubmit) {
-	 m2->onchange += "submit();";
-	 m_delete(m2, "autosubmit");
+         m2->onchange += "submit();";
+         m_delete(m2, "autosubmit");
        }
      } else if (m->autosubmit) {
        m2->onchange = "javascript:submit();";
@@ -523,19 +523,19 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(m2, "options");
      //escape the characters we need for internal purposes..
      m->choices=replace(m->choices,
-			({"\\,", "\\:"}),
-			({"__CoMma__", "__CoLon__"}));
+                        ({"\\,", "\\:"}),
+                        ({"__CoMma__", "__CoLon__"}));
      string tc = current && replace(current,
-				    ({"\\,", "\\:"}),
-				    ({"__CoMma__", "__CoLon__"}));
+                                    ({"\\,", "\\:"}),
+                                    ({"__CoMma__", "__CoLon__"}));
 
      array(string) choices = m->choices/",";
 
      foreach(choices, string c) {
        sscanf(c, "%[^:]", c);
        if (c == tc) {
-	 tc = 0;
-	 break;
+         tc = 0;
+         break;
        }
      }
      if (!tc) {
@@ -545,48 +545,48 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      } else {
        // Unlisted choice selected!
        if (tc != "")
-	 choices += ({ tc + ":" + tc });
+         choices += ({ tc + ":" + tc });
        tc = current;
      }
 
      string selector =
        make_container("select", m2,
-		      map(choices,
-			  lambda(string s, string c, mapping m) {
+                      map(choices,
+                          lambda(string s, string c, mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
-	  t = s;
-	s=replace(s,({"__CoMma__",
-		      "__CoLon__"}),({",",":"})); //can't be done before.
-	t=replace(t,({"__CoMma__",
-		      "__CoLon__"}),({",",":"}));
+          t = s;
+        s=replace(s,({"__CoMma__",
+                      "__CoLon__"}),({",",":"})); //can't be done before.
+        t=replace(t,({"__CoMma__",
+                      "__CoLon__"}),({",",":"}));
 
         return "<option value=\"" + s + "\" " +
-	  (s==c ? " selected=\"selected\"":"") + ">" +
-	  loc_encode(t, m, "html") + "</option>\n";
+          (s==c ? " selected=\"selected\"":"") + ">" +
+          loc_encode(t, m, "html") + "</option>\n";
      }, tc, m)*"");
 
      if (m->select_override) {
        m2->id = m->id + "-field";
        m2->onchange =
-	 "var selector = document.getElementById('" + m->id + "-selector');"
-	 "if (selector) { "
-	 "  selector.value = this.value;"
-	 "  if (selector.value != this.value) {"
-	 "    selector.value = '" + m->select_override + "';"
-	 "  }"
-	 "}";
+         "var selector = document.getElementById('" + m->id + "-selector');"
+         "if (selector) { "
+         "  selector.value = this.value;"
+         "  if (selector.value != this.value) {"
+         "    selector.value = '" + m->select_override + "';"
+         "  }"
+         "}";
        m2->value = "";
        if (current == m->select_none) {
-	 m2->disabled = "yes";
+         m2->disabled = "yes";
        } else if (current != m->select_override) {
-	 m2->value = current;
+         m2->value = current;
        }
 
        selector +=
-	 "&nbsp;" + make_tag("input", m2) +
-	 "<input type='hidden' name='__select_override_vars' "
-	 "       value='" + m2->name + ":" + m->select_override + "' />";
+         "&nbsp;" + make_tag("input", m2) +
+         "<input type='hidden' name='__select_override_vars' "
+         "       value='" + m2->name + ":" + m->select_override + "' />";
      }
 
      return selector;
@@ -602,21 +602,21 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m2->multiple="1";
     //escape the characters we need for internal purposes..
     m->choices=replace(m->choices,
-		       ({"\\,", "\\:"}),
-		       ({"__CoMma__", "__CoLon__"}));
+                       ({"\\,", "\\:"}),
+                       ({"__CoMma__", "__CoLon__"}));
 
     return make_container("select", m2, map(m->choices/"," - ({ "" }),
-				 lambda(string s, array c, mapping m) {
+                                 lambda(string s, array c, mapping m) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
         t = s;
       s=replace(s,({"__CoMma__",
-		    "__CoLon__"}),({",",":"})); //can't be done before.
+                    "__CoLon__"}),({",",":"})); //can't be done before.
       t=replace(t,({"__CoMma__",
-		    "__CoLon__"}),({",",":"}));
+                    "__CoLon__"}),({",",":"}));
 
       return "<option value=\""+s+"\" "+(search(c,s)!=-1?"selected=\"selected\"":"")+">"+
-	loc_encode(t, m, "html")+"</option>\n";
+        loc_encode(t, m, "html")+"</option>\n";
     },(current||"")/"\0",m)*"");
   }
 }
@@ -666,7 +666,7 @@ string compress_state(mapping state)
 }
 
 string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
-			 RequestID id, void|mapping v)
+                         RequestID id, void|mapping v)
 {
   if(v)
     v->help=1;
@@ -679,7 +679,7 @@ string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
 string make_title()
 {
   string s = (string)(this_object()->wizard_name ||
-		      this_object()->name || LOCALE(51, "No name")) -
+                      this_object()->name || LOCALE(51, "No name")) -
     "<p>";
   sscanf(s, "%*s//%s", s);
   sscanf(s, "%*d:%s", s);
@@ -716,10 +716,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 
   // Cannot easily be inlined below, believe me... Side-effects.
   form = parse_html(form,(id->misc->extra_wizard_tags||([]))+
-		    ([ "var":wizard_tag_var, ]),
-		    (id->misc->extra_wizard_container||([]))+
-		    ([ "cvar":wizard_tag_var,
-		       "help":parse_wizard_help]), id, foo );
+                    ([ "var":wizard_tag_var, ]),
+                    (id->misc->extra_wizard_container||([]))+
+                    ([ "cvar":wizard_tag_var,
+                       "help":parse_wizard_help]), id, foo );
 
   // We commonly feed the action variable both from the URL with
   // "...?action=foo.pike" and with an <input> tag from the previous
@@ -740,11 +740,11 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   // then.
   string state_form = "";
   id->add_response_header("Set-Cookie",
-			  sprintf("WizardState=%s; path=/",
-				  compress_state(id->real_variables) - "\r\n"));
+                          sprintf("WizardState=%s; path=/",
+                                  compress_state(id->real_variables) - "\r\n"));
 #else
   string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
-		      compress_state(id->real_variables)+"\" />\n";
+                      compress_state(id->real_variables)+"\" />\n";
 #endif
 
   string wizard_id = id->cookies["RoxenWizardId"];
@@ -752,88 +752,88 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   //         How many nested tables to you need?
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n"
-	 "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
-	 html_encode_string(wizard_id) + "\" />\n" +
-	 (stringp (id->variables->action) ?
-	  "<input type=\"hidden\" name=\"action\" value=\"" +
-	  html_encode_string(id->variables->action) + "\" />\n" :
-	  "") +
-	 "<input type=\"hidden\" name=\"_page\" value=\"" +
-	 html_encode_string(page) + "\" />\n"
-	 +state_form+
-	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
-	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
-	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
-	 "    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
+         "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
+         html_encode_string(wizard_id) + "\" />\n" +
+         (stringp (id->variables->action) ?
+          "<input type=\"hidden\" name=\"action\" value=\"" +
+          html_encode_string(id->variables->action) + "\" />\n" :
+          "") +
+         "<input type=\"hidden\" name=\"_page\" value=\"" +
+         html_encode_string(page) + "\" />\n"
+         +state_form+
+         "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
+         "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
+           "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
+         "    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
          "      <tr><td valign=top><font size=\"+2\">"+make_title()+"</font></td>\n"
          "<td align=\"right\">"+
-	 (wiz_name=="done"
-	  ?LABEL(completed_label, LOCALE(52, "Completed"))
-	  :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page "))+(pageno+1)+"/"+(max_page+1):""))+
-	 "</td>\n"
-	  " \n<td align=\"right\">"+
-	 (foo->help && !id->variables->help?
-	  "<font size=-1><input type=image name=help src="+
-	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
-	  " border=\"0\" value=\"Help\"></font>":"")
-	 +"</td>\n"
-	 " </tr><tr><td colspan=\"3\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">"
+         (wiz_name=="done"
+          ?LABEL(completed_label, LOCALE(52, "Completed"))
+          :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page "))+(pageno+1)+"/"+(max_page+1):""))+
+         "</td>\n"
+          " \n<td align=\"right\">"+
+         (foo->help && !id->variables->help?
+          "<font size=-1><input type=image name=help src="+
+          (id->conf?"/internal-roxen-help":"/image/help.gif")+
+          " border=\"0\" value=\"Help\"></font>":"")
+         +"</td>\n"
+         " </tr><tr><td colspan=\"3\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">"
            "<tr bgcolor=\"#000000\"><td><img src=\""+
-	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
-	 "\" width=\"1\" height=\"1\" alt=\"\" /></td></tr></table></td></tr>\n"
-	 "  </table><table cellpadding=\"6\"><tr><td>\n"
-	 "<!-- The output from the page function -->\n"
-	 +form+
-	 "\n<!-- End of the output from the page function -->\n"
-	 "\n</td></tr></table>\n"
-	 "      <table width=\"100%\"><tr><td width=\"33%\">"+
-	 (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
-	   wiz_name!="done")?
-	  "\n        <input type=submit name=prev_page value=\""+
-	  LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"\" />":"")+
+         (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
+         "\" width=\"1\" height=\"1\" alt=\"\" /></td></tr></table></td></tr>\n"
+         "  </table><table cellpadding=\"6\"><tr><td>\n"
+         "<!-- The output from the page function -->\n"
+         +form+
+         "\n<!-- End of the output from the page function -->\n"
+         "\n</td></tr></table>\n"
+         "      <table width=\"100%\"><tr><td width=\"33%\">"+
+         (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
+           wiz_name!="done")?
+          "\n        <input type=submit name=prev_page value=\""+
+          LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"\" />":"")+
 
-	 "</td><td width=\"33%\" align=\"center\">"+
-	 (wiz_name!="done"
-	  ?(((automaton ? !id->variables->_next : pageno==max_page)
-	     ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
-	     LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
-	     :"")+
-	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
-	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
-	  LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
-	 "</td><td width=\"33%\" align=\"right\">"+
-	 (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
-	   wiz_name!="done")?
-	  "\n        <input type=\"submit\" name=\"next_page\" value=\""+
-	  LABEL(next_label, LOCALE(57, "Next -&gt;"))+"\" />":"")+
-	 "</td></tr></table>\n"
-	 "    </td></tr>\n"
-	 "  </table>\n"
-	 "  </td></tr>\n"
+         "</td><td width=\"33%\" align=\"center\">"+
+         (wiz_name!="done"
+          ?(((automaton ? !id->variables->_next : pageno==max_page)
+             ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
+             LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
+             :"")+
+            "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
+            LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
+          :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
+          LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
+         "</td><td width=\"33%\" align=\"right\">"+
+         (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
+           wiz_name!="done")?
+          "\n        <input type=\"submit\" name=\"next_page\" value=\""+
+          LABEL(next_label, LOCALE(57, "Next -&gt;"))+"\" />":"")+
+         "</td></tr></table>\n"
+         "    </td></tr>\n"
+         "  </table>\n"
+         "  </td></tr>\n"
          "</table>\n"
          "</form>\n"
-	  );
+          );
   return res;
 }
 
 
 mapping|string wizard_cancel_exit (mapping state, string default_return_url,
-				   RequestID id)
+                                   RequestID id)
 {
   return http_redirect ((state->cancel_url && state->cancel_url[0]) ||
-			default_return_url || id->not_query,
-			// id->conf check is probably just old crud.
-			id->conf && id);
+                        default_return_url || id->not_query,
+                        // id->conf check is probably just old crud.
+                        id->conf && id);
 }
 
 mapping|string wizard_done_exit (mapping state, string default_return_url,
-				 RequestID id)
+                                 RequestID id)
 {
   return http_redirect ((state->done_url && state->done_url[0]) ||
-			default_return_url || id->not_query,
-			// id->conf check is probably just old crud.
-			id->conf && id);
+                        default_return_url || id->not_query,
+                        // id->conf check is probably just old crud.
+                        id->conf && id);
 }
 
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
@@ -857,7 +857,7 @@ mapping(string:array) wizard_get_state (RequestID id)
   else {
     s = ([]);
     if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
-	id->referer && sizeof (id->referer)) {
+        id->referer && sizeof (id->referer)) {
       // Define return_to_referrer to use the Referer to go back to
       // the previous place after the wizard is done. This currently
       // doesn't use a stack, so if we're coming here from another
@@ -869,9 +869,9 @@ mapping(string:array) wizard_get_state (RequestID id)
       // variable in later links.
       string referrer = id->referer[0];
       if (!has_value (referrer, "&_wiz_ret=") &&
-	  !has_value (referrer, "?_wiz_ret=")) {
-	if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
-	else referrer += "?_wiz_ret=";
+          !has_value (referrer, "?_wiz_ret=")) {
+        if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
+        else referrer += "?_wiz_ret=";
       }
       s->cancel_url = s->done_url = ({referrer});
     }
@@ -911,21 +911,21 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   //  Handle double posting of variables in select override widgets
   foreach(Array.uniq(id->real_variables->__select_override_vars || ({ }) ),
-	  string override_combo) {
+          string override_combo) {
     [string override_var, string override_marker] = override_combo / ":";
     array(string) override_info = id->real_variables[override_var];
     if (sizeof(override_info) > 1) {
       string override_value = override_info[0];
       if (override_value != override_info[1]) {
-	if (override_value == override_marker) {
-	  override_value = override_info[1];
+        if (override_value == override_marker) {
+          override_value = override_info[1];
 #if 0
-	} else if (override_info[1] == override_marker) {
-	  /* Already ok. */
-	} else {
-	  /* Ambiguous case. Warn? */
+        } else if (override_info[1] == override_marker) {
+          /* Already ok. */
+        } else {
+          /* Ambiguous case. Warn? */
 #endif /* 0 */
-	}
+        }
       }
       id->real_variables[override_var] = ({ override_value });
     }
@@ -939,7 +939,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   if (!sizeof(wizard_id || "")) {
     wizard_id = (string)random(0x7fffffff);
     id->add_response_header("Set-Cookie",
-			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+                            sprintf("RoxenWizardId=%s; path=/", wizard_id));
     id->cookies["RoxenWizardId"] = wizard_id;
     DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
   }
@@ -947,9 +947,9 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     // Invalid or unset roxen_wizard_id.
     if (current_page) {
       report_warning("Wizard: Invalid wizard_id: %O != %O.\n"
-		     "Resetting page from %O to 0.\n",
-		     v["_roxen_wizard_id"], wizard_id,
-		     current_page);
+                     "Resetting page from %O to 0.\n",
+                     v["_roxen_wizard_id"], wizard_id,
+                     current_page);
     }
     // Correct it, and return to page #0.
     id->real_variables["_roxen_wizard_id"] = ({ wizard_id });
@@ -965,26 +965,26 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   function dispatcher;
   string oldpage, page_name;
   if (automaton && (!v->_page || v->next_page || v["next_page.x"] ||
-		    v->prev_page || v["prev_page.x"] ||
-		    v->ok || v["ok.x"])) {
+                    v->prev_page || v["prev_page.x"] ||
+                    v->ok || v["ok.x"])) {
     if (!v->_page && automaton->start) v->_page = "start";
     oldpage = v->_page;
     if (v->_page) {
       array page_state = automaton[v->_page];
       if (!page_state) return "Internal error in wizard code: "
-			 "No entry " + v->_page + " in automaton.";
+                         "No entry " + v->_page + " in automaton.";
       function|string redirect = page_state[0];
       if (functionp (redirect)) {
-	dispatcher = redirect;
-	DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			   redirect, v->_page));
-	redirect = redirect (id, v->_page, @args);
+        dispatcher = redirect;
+        DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+                           redirect, v->_page));
+        redirect = redirect (id, v->_page, @args);
       }
       if (stringp (redirect) && redirect != v->_page) {
-	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
-	// Redirect takes precedence over the user choice.
-	reset_buttons(v);
-	v->_page = redirect;
+        DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
+        // Redirect takes precedence over the user choice.
+        reset_buttons(v);
+        v->_page = redirect;
       }
     }
   }
@@ -996,7 +996,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     if (functionp (c)) {
       fail = c (id, @args);
       DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
-			 fail ? "failed" : "succeeded"));
+                         fail ? "failed" : "succeeded"));
     }
     if (!fail) {
       v->_page = automaton ? v->_next : PAGE(1);
@@ -1016,20 +1016,20 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     if (functionp (c)) {
       fail = c (id, @args);
       DEBUGMSG (sprintf ("Wizard: Verify function %O %s\n", c,
-			 fail ? "failed" : "succeeded"));
+                         fail ? "failed" : "succeeded"));
     }
     if(!fail)
       if (automaton) v->_page = 0; // Handle done state in the automaton code below.
       else
       {
-	mixed res;
-	if(c=this_object()->wizard_done) {
-	  DEBUGMSG ("Wizard: \"Ok\" pressed; running wizard_done\n");
-	  res = c(id,@args);
-	}
-	if(res != -1)
-	  return res || wizard_done_exit (s, cancel, id);
-	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
+        mixed res;
+        if(c=this_object()->wizard_done) {
+          DEBUGMSG ("Wizard: \"Ok\" pressed; running wizard_done\n");
+          res = c(id,@args);
+        }
+        if(res != -1)
+          return res || wizard_done_exit (s, cancel, id);
+        DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
   }
   else if(v["help.x"])
@@ -1045,10 +1045,10 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     {
       if((v->_Add) && strlen(v[on]-"\r"))
       {
-	if(v[n]) v[n]+="\0"+v[on];
-	else v[n]=v[on];
-	m_delete(v, on);
-	m_delete(v, "_Add");
+        if(v[n]) v[n]+="\0"+v[on];
+        else v[n]=v[on];
+        m_delete(v, on);
+        m_delete(v, "_Add");
       }
     } else if(sscanf(n, "_delete_%s:%s", n,q)==2) {
       if(v[n]) v[n]=replace(replace(v[n]/"\0",q,"")*"\0","\0\0","\0");
@@ -1060,77 +1060,77 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     int i = 0;
     while (1) {
       if (++i == 4711) return "Internal error in wizard code: "
-			 "Probably infinite redirect loop in automaton.";
+                         "Probably infinite redirect loop in automaton.";
 
       if (v->_page == "cancel") {
-	DEBUGMSG ("Wizard: Canceling\n");
-	return wizard_cancel_exit (s, cancel, id);
+        DEBUGMSG ("Wizard: Canceling\n");
+        return wizard_cancel_exit (s, cancel, id);
       }
 
       if (!v->_page) v->_page = "done", oldpage = 0;
       function|string redirect = 0;
       array page_state = automaton[v->_page];
       if (!page_state && v->_page != "done")
-	return "Internal error in wizard code: No entry " + v->_page + " in automaton.";
+        return "Internal error in wizard code: No entry " + v->_page + " in automaton.";
 
       if (page_state && v->_page != oldpage) {
-	redirect = page_state[0];
-	if (functionp (redirect)) {
-	  dispatcher = redirect;
-	  DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			     dispatcher, v->_page));
-	  redirect = dispatcher (id, v->_page, @args);
-	}
-	else dispatcher = 0;
+        redirect = page_state[0];
+        if (functionp (redirect)) {
+          dispatcher = redirect;
+          DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+                             dispatcher, v->_page));
+          redirect = dispatcher (id, v->_page, @args);
+        }
+        else dispatcher = 0;
       }
       oldpage = 0;
 
       if (redirect && redirect != v->_page) {
-	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
-	v->_page = redirect;
+        DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
+        v->_page = redirect;
       }
       else if (v->_page == "done") {
-	function donefn = this_object()->wizard_done;
-	if (!functionp (donefn))
-	  return "Internal error in wizard code: No wizard_done function.";
-	DEBUGMSG ("Wizard: Running wizard_done\n");
-	data = donefn (id, @args);
-	if (!data) return wizard_done_exit (s, cancel, id);
-	wiz_name = "done";
-	break;
+        function donefn = this_object()->wizard_done;
+        if (!functionp (donefn))
+          return "Internal error in wizard code: No wizard_done function.";
+        DEBUGMSG ("Wizard: Running wizard_done\n");
+        data = donefn (id, @args);
+        if (!data) return wizard_done_exit (s, cancel, id);
+        wiz_name = "done";
+        break;
       }
       else {
-	function pagefn = this_object()[wiz_name + v->_page];
-	if (!functionp (pagefn)) return "Internal error in wizard code: "
-				   "No page function for " + v->_page + ".";
-	DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pagefn));
-	data = pagefn (id, @args);
-	if (data) {
-	  id->variables->_prev = functionp (page_state[1]) ?
-	    page_state[1] (id, v->_page, @args) : page_state[1];
-	  id->variables->_next = functionp (page_state[2]) ?
-	    page_state[2] (id, v->_page, @args) : page_state[2];
+        function pagefn = this_object()[wiz_name + v->_page];
+        if (!functionp (pagefn)) return "Internal error in wizard code: "
+                                   "No page function for " + v->_page + ".";
+        DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pagefn));
+        data = pagefn (id, @args);
+        if (data) {
+          id->variables->_prev = functionp (page_state[1]) ?
+            page_state[1] (id, v->_page, @args) : page_state[1];
+          id->variables->_next = functionp (page_state[2]) ?
+            page_state[2] (id, v->_page, @args) : page_state[2];
 
-	  // So that dispatch functions may be used for prev/next too.
-	  if ((<"cancel", "done">)[id->variables->_prev]) id->variables->_prev = 0;
-	  if ((<"cancel", "done">)[id->variables->_next]) id->variables->_next = 0;
+          // So that dispatch functions may be used for prev/next too.
+          if ((<"cancel", "done">)[id->variables->_prev]) id->variables->_prev = 0;
+          if ((<"cancel", "done">)[id->variables->_next]) id->variables->_next = 0;
 
-	  page_name = sizeof (page_state) < 4 ? "" : functionp (page_state[3]) ?
-	    page_state[3] (id, v->_page, @args) : page_state[3];
-	  DEBUGMSG ("Wizard: prev_page " + id->variables->_prev + ", next_page " +
-		    id->variables->_next + ", page_name \"" + page_name + "\"\n");
-	  break;
-	}
-	else {
-	  int dir = offset > 0 ? 2 : 1;
-	  v->_page =
-	    functionp (page_state[dir]) ?
-	    page_state[dir] (id, v->_page, @args) : page_state[dir];
-	  DEBUGMSG ("Wizard: No data from page function; going to " +
-		    (stringp (v->_page) ? (offset > 0 ? "next" : "previous") +
-		     " page " + v->_page : "done page") + "\n");
-	  if (!stringp (v->_page)) v->_page = 0;
-	}
+          page_name = sizeof (page_state) < 4 ? "" : functionp (page_state[3]) ?
+            page_state[3] (id, v->_page, @args) : page_state[3];
+          DEBUGMSG ("Wizard: prev_page " + id->variables->_prev + ", next_page " +
+                    id->variables->_next + ", page_name \"" + page_name + "\"\n");
+          break;
+        }
+        else {
+          int dir = offset > 0 ? 2 : 1;
+          v->_page =
+            functionp (page_state[dir]) ?
+            page_state[dir] (id, v->_page, @args) : page_state[dir];
+          DEBUGMSG ("Wizard: No data from page function; going to " +
+                    (stringp (v->_page) ? (offset > 0 ? "next" : "previous") +
+                     " page " + v->_page : "done page") + "\n");
+          if (!stringp (v->_page)) v->_page = 0;
+        }
       }
     }
   }
@@ -1140,26 +1140,26 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       function pg=this_object()[wiz_name+((int)v->_page)];
       function c = !pg && this_object()["wizard_done"];
       if(functionp(c)) {
-	DEBUGMSG ("Wizard: Running wizard_done\n");
-	mixed res = c(id,@args);
-	if(res != -1)
-	  return res || wizard_done_exit (s, cancel, id);
+        DEBUGMSG ("Wizard: Running wizard_done\n");
+        mixed res = c(id,@args);
+        if(res != -1)
+          return res || wizard_done_exit (s, cancel, id);
       }
       if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
       DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
       if(data = pg(id,@args)) break;
       DEBUGMSG ("Wizard: No data from page function; going to " +
-		(offset > 0 ? "next" : "previous") + " page\n");
+                (offset > 0 ? "next" : "previous") + " page\n");
 
       //  If going backwards and we end up on a negative page (e.g. due to
       //  intermediate pages returning 0) we remain on current page. This is
       //  done so that wizards which skip pages in the beginning won't result
       //  in wizard_done() when trying to step into hidden pages.
       if ((offset < 0) && ((int) v->_page <= 0)) {
-	v->_page = current_page;
-	pg = this_object()[wiz_name + ((int) v->_page)];
-	if (pg && (data = pg(id, @args)))
-	  break;
+        v->_page = current_page;
+        pg = this_object()[wiz_name + ((int) v->_page)];
+        if (pg && (data = pg(id, @args)))
+          break;
       }
     }
   }
@@ -1202,24 +1202,24 @@ mapping get_actions(RequestID id, string base,string dir, array args)
     {
       if(!(<'#', '_'>)[act[0]] && act[-1]=='e')
       {
-	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
-	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
-	sscanf(name, "%s//%s", sm, name);
-	if(!acts[sm]) acts[sm] = ({ });
+        string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
+        if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
+        sscanf(name, "%s//%s", sm, name);
+        if(!acts[sm]) acts[sm] = ({ });
 
-	if(id->misc->raw_wizard_actions)
-	{
-	  // This is probably dead code.
-	  if(!sizeof(acts[sm])) acts[sm] += ({ ([]) });
- 	  acts[sm][0][name]=
- 	    ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
- 		  (get_wizard(act,dir,@args)->doc||"") });
-	}
- 	else
-	  acts[sm]+=
-	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
-	      "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
-	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
+        if(id->misc->raw_wizard_actions)
+        {
+          // This is probably dead code.
+          if(!sizeof(acts[sm])) acts[sm] += ({ ([]) });
+          acts[sm][0][name]=
+            ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
+                  (get_wizard(act,dir,@args)->doc||"") });
+        }
+        else
+          acts[sm]+=
+            ({"<!-- "+rn+" --><dt><font size=\"+2\">"
+              "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
+              name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
     if( strlen( e->get_warnings() ) )
@@ -1265,24 +1265,24 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
     wizbug = catch {
       mapping acts = get_actions(id, base, dir, args);
       if(id->misc->raw_wizard_actions)
-	return acts[id->variables->sm];
+        return acts[id->variables->sm];
       string res;
       string submenus =
-	act_describe_submenues(indices(acts),base,id->variables->sm);
+        act_describe_submenues(indices(acts),base,id->variables->sm);
       if (sizeof(submenus)) {
-	submenus =
-	  "<td valign='top' bgcolor='#eeeeee'>" +
-	  submenus +
-	  "</td>\n";
+        submenus =
+          "<td valign='top' bgcolor='#eeeeee'>" +
+          submenus +
+          "</td>\n";
       }
       res= ("<table cellpadding=\"3\"><tr>" +
-	    submenus +
-	    "<td valign=\"top\">"+
-	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=\"+3\">"+
-	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
-	    (sort(acts[id->variables->sm]||({}))*"\n")+
-	    "</dl></td></tr></table>"+
-	    (err && strlen(err)?"<pre>"+err+"</pre>":""));
+            submenus +
+            "<td valign=\"top\">"+
+            (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=\"+3\">"+
+             (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
+            (sort(acts[id->variables->sm]||({}))*"\n")+
+            "</dl></td></tr></table>"+
+            (err && strlen(err)?"<pre>"+err+"</pre>":""));
       err="";
       return res;
     };
@@ -1333,7 +1333,7 @@ string format_numeric(string s, string|void sep)
 }
 
 string html_table(array(string) subtitles, array(array(string)) table,
-		  mapping|void opt)
+                  mapping|void opt)
 {
   /* Options:
    *   bordercolor, titlebgcolor, titlecolor, oddbgcolor, evenbgcolor, modulo
@@ -1361,8 +1361,8 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
   int m = (int)(opt->modulo?opt->modulo:1);
   r += ("<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
-	"cellspacing=\"0\" cellpadding=\"1\">\n"
-	"<tr><td>\n");
+        "cellspacing=\"0\" cellpadding=\"1\">\n"
+        "<tr><td>\n");
   r += "<table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n";
   r += "<tr bgcolor=\""+(opt->titlebgcolor||"#113377")+"\">\n";
   int cols;
@@ -1371,13 +1371,13 @@ string html_table(array(string) subtitles, array(array(string)) table,
     if(stringp(s))
     {
       r+=("<th nowrap=\"nowrap\" align=\"left\"><font color=\""+
-	  (opt->titlecolor||"#ffffff")+"\">"+s+" &nbsp; </font></th>");
+          (opt->titlecolor||"#ffffff")+"\">"+s+" &nbsp; </font></th>");
       cols++;
     } else {
       r+=("</tr><tr bgcolor=\""+(opt->titlebgcolor||"#113377")+"\">"
-	  "<th nowrap=\"nowrap\" align=\"left\" colspan=\""+cols+"\">"
-	  "<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s[0]+
-	  " &nbsp; </font></th>");
+          "<th nowrap=\"nowrap\" align=\"left\" colspan=\""+cols+"\">"
+          "<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s[0]+
+          " &nbsp; </font></th>");
     }
   }
   r += "</tr>";
@@ -1385,48 +1385,48 @@ string html_table(array(string) subtitles, array(array(string)) table,
   for(int i = 0; i < sizeof(table); i++) {
     string tr;
     r += tr = "<tr bgcolor="+((i/m)%2?opt->evenbgcolor||"#ddeeff":
-			      opt->oddbgcolor||"#ffffff")+">";
+                              opt->oddbgcolor||"#ffffff")+">";
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
       if(arrayp(s))
-	r += "</tr>"+tr+"<td colspan=\""+cols+"\">"+s[0]+" &nbsp;</td>";
+        r += "</tr>"+tr+"<td colspan=\""+cols+"\">"+s[0]+" &nbsp;</td>";
       else {
-	string type = "text";
-	if(arrayp(opt->fields) && j < sizeof(opt->fields))
-	  type = opt->fields[j];
-	switch(type) {
-	case "num":
-	  array a = s/".";
-	  r += "<td nowrap=\"nowrap\" align=\"right\">";
-	  if(sizeof(a) > 1) {
-	    r += (format_numeric(a[0])+"."+
-		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
-	  } else
-	    r += format_numeric(s, "&nbsp;");
-	  break;
-	case "right":
-	  r += "<td align=\"right\">"+s;
-	  break;
-	case "center":
-	  r += "<td align=\"center\">"+s;
-	  break;
-	case "left":
-	  r += "<td align=\"left\">"+s;
-	  break;
-	case "text":
-	default:
-	  r += "<td nowrap=\"nowrap\">"+s;
-	}
-	//  Simple heuristics to detect cells containing a table, image etc
-	//  where trailing spaces will give really ugly results
-	if (!(stringp(s)
-	      && (strlen(s) > 2)
-	      && (< "<img ", "<tabl", "<gtex", "<var ",
-		    "<pre>", "<sb-i" >)[s[0..4]]
-	      && (s[-1] == '>' || s[-2] == '>'))) {
-	  r += "&nbsp;&nbsp;";
-	}
-	r += "</td>";
+        string type = "text";
+        if(arrayp(opt->fields) && j < sizeof(opt->fields))
+          type = opt->fields[j];
+        switch(type) {
+        case "num":
+          array a = s/".";
+          r += "<td nowrap=\"nowrap\" align=\"right\">";
+          if(sizeof(a) > 1) {
+            r += (format_numeric(a[0])+"."+
+                  reverse(format_numeric(reverse(a[1]), ";psbn&")));
+          } else
+            r += format_numeric(s, "&nbsp;");
+          break;
+        case "right":
+          r += "<td align=\"right\">"+s;
+          break;
+        case "center":
+          r += "<td align=\"center\">"+s;
+          break;
+        case "left":
+          r += "<td align=\"left\">"+s;
+          break;
+        case "text":
+        default:
+          r += "<td nowrap=\"nowrap\">"+s;
+        }
+        //  Simple heuristics to detect cells containing a table, image etc
+        //  where trailing spaces will give really ugly results
+        if (!(stringp(s)
+              && (strlen(s) > 2)
+              && (< "<img ", "<tabl", "<gtex", "<var ",
+                    "<pre>", "<sb-i" >)[s[0..4]]
+              && (s[-1] == '>' || s[-2] == '>'))) {
+          r += "&nbsp;&nbsp;";
+        }
+        r += "</td>";
       }
     }
     r += "</tr>\n";
@@ -1459,13 +1459,13 @@ string html_error(string notice, RequestID id)
 }
 
 string html_border(string what, int|void width, int|void ww,
-		   string|void bgcolor, string|void bdcolor)
+                   string|void bgcolor, string|void bdcolor)
 {
   return ("<table border=\"0\" cellpadding=\""+(width+1)+"\" cellspacing=\"0\" "
-	  "bgcolor=\""+(bdcolor||"#000000")+
-	  "\"><tr><td><table border=\"0\" cellpadding=\""+(ww)+
-	  "\" cellspacing=\"0\" bgcolor=\""+(bgcolor||"#ffffff")+
-	  "\"><tr><td>"+what+"</tr></td></table>"
+          "bgcolor=\""+(bdcolor||"#000000")+
+          "\"><tr><td><table border=\"0\" cellpadding=\""+(ww)+
+          "\" cellspacing=\"0\" bgcolor=\""+(bgcolor||"#ffffff")+
+          "\"><tr><td>"+what+"</tr></td></table>"
           "</td></tr></table>");
 }
 
