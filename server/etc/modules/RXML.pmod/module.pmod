@@ -9609,7 +9609,7 @@ class PCode
     for (int i = 0; sizeof (queue) && i < limit; i++) {
       mixed entry = queue->read();
 
-      if (functionp (entry) || visited[entry])
+      if (functionp (entry) || intp (entry) || visited[entry] || floatp (entry))
 	continue;
 
       if (objectp(entry) && (entry->is_RXML_Type || entry->is_RXML_Tag))
