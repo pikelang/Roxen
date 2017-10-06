@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1997 - 2009, Roxen IS.
+// Copyright Â© 1997 - 2009, Roxen IS.
 //
 // Wizard generator
 // $Id$
@@ -699,6 +699,9 @@ int num_pages(string wiz_name)
 }
 #define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
 #define LABEL(X,Y) (this_object()->X?Q(this_object()->X):Y)
+// CFIF17: This can replace LABEL when the Mustache version is done since
+//         Mustache quotes HTML by default.
+#define NLABEL(X,Y) (this_object()->X || Y)
 
 string parse_wizard_page(string form, RequestID id, string wiz_name, void|string page_name)
 {
@@ -748,6 +751,115 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 #endif
 
   string wizard_id = id->cookies["RoxenWizardId"];
+
+#define SHOW_NAV_BTN(V, E) \
+  ((automaton ? stringp(id->variables[V]) : (E)) && wiz_name != "done")
+
+  bool is_done = wiz_name == "done";
+
+  string get_page_info() {
+    if (is_done) {
+      return NLABEL(completed_label, LOCALE(52, "Completed"));
+    }
+
+    if (page_name) {
+      return page_name;
+    }
+
+    if (max_page) {
+      return sprintf("%s %d/%d",
+                     NLABEL(page_label, LOCALE(53, "Page ")),
+                     pageno + 1, max_page + 1);
+    }
+  };
+
+
+  string get_ok_button() {
+    if (is_done ||
+        ((automaton && !id->variables->_next) || pageno == max_page))
+    {
+      return NLABEL(ok_label, LOCALE(55, "OK"));
+    }
+  };
+
+  mapping ctx = ([
+    "method"    : method,
+    "wiz_id"    : wizard_id,
+    "action"    : stringp(id->variables->action) ?
+                    id->variables->action : Roxen.false,
+    "page"      : page,
+    "title"     : make_title(),
+    "page_info" : get_page_info(),
+    "show_help" : (foo->help && !id->variables->help),
+    "form"      : form,
+    // CFIF17: I skipped the LOCALE below since that one contains "&lt-"
+    "prev_page" : SHOW_NAV_BTN("_prev", pageno > 0),
+    "ok_button" : get_ok_button(),
+    "cancel_button" : !is_done && NLABEL(cancel_label, LOCALE(56, "Cancel")),
+    // CFIF17: Same as for prev_page above
+    "next_page" : SHOW_NAV_BTN("_next", pageno != max_page),
+  ]);
+
+  CFIF_WERR("CTX: %O\n", ctx);
+
+  string template_mu = #"
+  <form {{ &method }}>
+    <input type='hidden' name='_roxen_wizard_id' value='{{ wiz_id }}'>
+    <input type='hidden' name='action' value='{{ action }}'>
+    <input type='hidden' name='page' value='{{ page }}'>
+
+    <div class='wizard'>
+      <div class='flex-row title'>
+        <h2 class='flex col-6'>{{ title }}</h2>
+        <div class='flex col-6 text-right page-info'>{{ page_info }}</div>
+      </div>
+      <div class='content'>
+        <!-- The output from the page function -->
+        {{ &form }} {{!-- No HTML escapeing --}}
+        <!-- End of the output from the page function -->
+      </div>
+      <div class='flex-row nav'>
+        <div class='flex col-3'>
+          {{#prev_page}}
+            <submit-gbutton2
+              name='prev_page'
+              value='1'
+              type='previous'
+              keep-name='1'
+            >Previous</submit-gbutton2>
+          {{/prev_page}}
+        </div>
+        <div class='flex col-3 text-center'>
+          {{#cancel_button}}
+            <submit-gbutton2 name='cancel' value='1' type='cancel' keep-name='1'>
+              {{ cancel_button }}
+            </submit-gbutton2>
+          {{/cancel_button}}
+          {{#ok_button}}
+            <submit-gbutton2 name='cancel' value='1' type='ok' keep-name='1'>
+              {{ ok_button }}
+            </submit-gbutton2>
+          {{/ok_button}}
+        </div>
+        <div class='flex col-3 text-right'>
+          {{#next_page}}
+            <submit-gbutton2
+              name='next_page'
+              value='1'
+              type='next'
+              keep-name='1'
+            >Next</submit-gbutton2>
+          {{/next_page}}
+        </div>
+      </div>
+    </div>
+  </form>";
+
+  Mustache stache = Mustache();
+  res = stache->render(template_mu, ctx);
+  destruct(stache);
+  return res;
+
   // CFIF17: This makes me sick to my stomach.
   //         How many nested tables to you need?
   res = ("\n<!--Wizard-->\n"
