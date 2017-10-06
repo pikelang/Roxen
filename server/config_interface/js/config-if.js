@@ -25,6 +25,10 @@
 
   // Handle all elements with a data-submit attribute
   var handleDataSubmit = function(el, e) {
+    if (el.dataset.keepName) {
+      return;
+    }
+
     var name = el.getAttribute('name') || '';
     // In the old A-IF the buttons were images and when an input#type=image
     // button is clicked *.x and *.y variables are added. Some code in

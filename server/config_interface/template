@@ -182,6 +182,9 @@
   <if variable='_.width'>
     <set variable='var.extra' value='style="width:&_.width;"' />
   </if>
+  <if variable='_.keep-name'>
+    <append variable='var.extra' value=' data-keep-name="1"' />
+  </if>
   <if variable="_.disabled">
     <append variable="var.extra" value=' disabled=""'/>
   </if>
