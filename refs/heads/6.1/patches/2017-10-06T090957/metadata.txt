@@ -1,0 +1,11 @@
+subject: Roxen 6.1: Added timeout on UserTag PCode cache entries.
+from: 4817761a0a253e8eb78ec6dd43a08b5ad8ba1ff6
+to: 670f3a73bb1587bfa5d5c03373444b49997bb00c
+originator: Jonas Lonnberg
+depends: 2017-10-05T113651
+restart: true
+
+• Added timeout on UserTag PCode cache entries
+
+Let the garbage collector remove them since they are only accessible
+during a single request.
