@@ -2352,6 +2352,39 @@ class RequestID
     }
   }
 
+  protected mapping find_in_misc_forwarded(multiset keys) {
+    multiset _keys = copy_value(keys);
+    mapping _map = ([]);
+    foreach(misc->forwarded || ({}), array(int|string) entry) {
+      foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
+        if ((sizeof(forwarded_pair) != 3) ||
+            (forwarded_pair[1] != '=') ||
+            !stringp(forwarded_pair[0]) ||
+            !stringp(forwarded_pair[2])) {
+          continue;
+        }
+        string key = lower_case(forwarded_pair[0]);
+        if (_keys[key]) {
+          _map[key] = forwarded_pair[2];
+          _keys[key] = 0;
+        }
+        if (!sizeof(_keys)) {
+          return _map;
+        }
+      }
+    }
+    return _map;
+  }
+
+  string client_prot()
+  {
+    string proto = find_in_misc_forwarded((<"proto">))->proto;
+    if (!proto) {
+      proto = port_obj->prot_name;
+    }
+    return lower_case(proto);
+  }
+
   protected string cached_url_base;
 
   string url_base()
@@ -2372,27 +2405,9 @@ class RequestID
 
       // First look at the forwarded header.
       if (misc->forwarded) {
-      got_both:
-	foreach(misc->forwarded, array(int|string) entry) {
-	  foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
-	    if ((sizeof(forwarded_pair) != 3) ||
-		(forwarded_pair[1] != '=') ||
-		!stringp(forwarded_pair[0]) ||
-		!stringp(forwarded_pair[2])) continue;
-	    switch(lower_case(forwarded_pair[0])) {
-	    case "proto":
-	      if (scheme) continue;
-	      scheme = lower_case(forwarded_pair[2]);
-	      if (host) break got_both;
-	      break;
-	    case "host":
-	      if (host) continue;
-	      host = forwarded_pair[2];
-	      if (scheme) break got_both;
-	      break;
-	    }
-	  }
-	}
+        mapping forwarded = find_in_misc_forwarded((<"proto", "host">));
+        scheme = forwarded->proto ? lower_case(forwarded->proto) : 0;
+        host = forwarded->host ? forwarded->host : 0;
       }
 
       // Second look at the host header in the request.
