@@ -554,6 +554,9 @@ class Patcher
     return patch_version;
   }
 
+#if constant(roxenp)
+  // NB: The Roxen module is only available in Roxen; and
+  //     this module MUST be usable from a stand-alone pike.
   string get_prestate_version()
   //! Returns a prestate with dist and patch version.
   //! For example "(6.1.215-2017-09-20T144208)".
@@ -566,6 +569,7 @@ class Patcher
         roxen_dist_version + (patch_ver ? "-" + patch_ver : "")) +
     ")";
   }
+#endif
 
   int(0..1) install_patch(string patch_id,
 			  string user,
