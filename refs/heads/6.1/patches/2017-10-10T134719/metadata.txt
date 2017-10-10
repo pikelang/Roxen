@@ -1,0 +1,14 @@
+subject: Roxen 6.1: Fixes to RoxenPatch
+from: 670f3a73bb1587bfa5d5c03373444b49997bb00c
+to: e4f769a5149d11d80c376cb682b8fd8edf36a734
+originator: Erik Allemann
+depends: 2017-10-06T090957
+restart: true
+
+• RoxenPatch: Make the module usable stand-alone again.
+
+This module is used by stand-alone scripts (like bin/rxnpatch.pike),
+ant that means that it MUST guard any use of Roxen-specific modules
+(like eg Roxen).
+
+Fixes testsuite failures, where bin/rxnpatch.pike won't compile.
