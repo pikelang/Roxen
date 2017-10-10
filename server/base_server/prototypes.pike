@@ -2376,13 +2376,16 @@ class RequestID
     return _map;
   }
 
-  string client_prot()
+  string client_scheme()
+  //! The scheme used by the client. Typically http or https. If the client
+  //! talks https with a proxy and the proxy talkes http with the server, this
+  //! function returns the string "https".
   {
-    string proto = find_in_misc_forwarded((<"proto">))->proto;
-    if (!proto) {
-      proto = port_obj->prot_name;
+    string scheme = find_in_misc_forwarded((<"proto">))->proto;
+    if (!scheme) {
+      scheme = port_obj->prot_name;
     }
-    return lower_case(proto);
+    return lower_case(scheme);
   }
 
   protected string cached_url_base;
