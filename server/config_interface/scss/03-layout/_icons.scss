@@ -35,6 +35,7 @@
   @include make-icon(padlock,      '\f023'); // fa-lock
   @include make-icon(import,       '\f0ed'); // fa-cloud-download
   @include make-icon(upload,       '\f093'); // fa-upload
+  @include make-icon(help,         '\f059'); // fa-question-circle
 
 
   &.up,

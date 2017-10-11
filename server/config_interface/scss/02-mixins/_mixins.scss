@@ -102,6 +102,12 @@
   &:after {
     display: none;
   }
+
+  &.no-content {
+    &:before {
+      margin-right: 0;
+    }
+  }
 }
 
 .__icon-after {
@@ -113,5 +119,11 @@
     display: inline-block;
     margin-left: $spacing-unit/2.5;
     font-family: FontAwesome;
+  }
+
+  &.no-content {
+    &:after {
+      margin-left: 0;
+    }
   }
 }

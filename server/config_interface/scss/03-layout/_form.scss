@@ -18,6 +18,11 @@ input[type='submit'],
   border-bottom: 1px solid darken($button-bg, 10%);
   vertical-align: middle;
 
+  &.no-content {
+    padding-top: $spacing-unit/3;
+    padding-bottom: $spacing-unit/3;
+  }
+
   &.fill {
     width: 100%;
   }
@@ -33,6 +38,7 @@ input[type='submit'],
   &:disabled,
   &[disabled] {
     opacity: .5;
+    cursor: not-allowed;
   }
 
 
