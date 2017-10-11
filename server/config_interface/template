@@ -188,6 +188,9 @@
   <if variable="_.disabled">
     <append variable="var.extra" value=' disabled=""'/>
   </if>
+  <if variable="_.title">
+    <append variable="var.extra" value=' title="&_.title;"' />
+  </if>
   <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
   <!-- submit-gbutton2 -->
   <button class='rxn-admin-btn&_.type;' data-submit='' ::="&var.extra;" name='&_.name;' ::="&var.onclick-confirm;">&_.contents;</button>
