@@ -808,10 +808,19 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
     <input type='hidden' name='action' value='{{ action }}'>
     <input type='hidden' name='page' value='{{ page }}'>
 
-    <div class='wizard'>
+    <div class='rxn-wizard'>
       <div class='flex-row title'>
         <h2 class='flex col-6'>{{ title }}</h2>
-        <div class='flex col-6 text-right page-info'>{{ page_info }}</div>
+        <div class='flex col-6 text-right page-info'>
+          {{ page_info }}
+          <submit-gbutton2
+            type='help no-content'
+            name='help'
+            keep-name='1'
+            title='Show extended description'
+            {{^show_help}}disabled{{/show_help}}
+          ></submit-gbutton2>
+        </div>
       </div>
       <div class='content'>
         <!-- The output from the page function -->
@@ -858,74 +867,6 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   Mustache stache = Mustache();
   res = stache->render(template_mu, ctx);
   destruct(stache);
-  return res;
-
-  // CFIF17: This makes me sick to my stomach.
-  //         How many nested tables to you need?
-  res = ("\n<!--Wizard-->\n"
-         "<form " + method + ">\n"
-         "<input type=\"hidden\" name=\"_roxen_wizard_id\" value=\"" +
-         html_encode_string(wizard_id) + "\" />\n" +
-         (stringp (id->variables->action) ?
-          "<input type=\"hidden\" name=\"action\" value=\"" +
-          html_encode_string(id->variables->action) + "\" />\n" :
-          "") +
-         "<input type=\"hidden\" name=\"_page\" value=\"" +
-         html_encode_string(page) + "\" />\n"
-         +state_form+
-         "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
-         "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
-           "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
-         "    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
-         "      <tr><td valign=top><font size=\"+2\">"+make_title()+"</font></td>\n"
-         "<td align=\"right\">"+
-         (wiz_name=="done"
-          ?LABEL(completed_label, LOCALE(52, "Completed"))
-          :page_name || (max_page?LABEL(page_label, LOCALE(53, "Page "))+(pageno+1)+"/"+(max_page+1):""))+
-         "</td>\n"
-          " \n<td align=\"right\">"+
-         (foo->help && !id->variables->help?
-          "<font size=-1><input type=image name=help src="+
-          (id->conf?"/internal-roxen-help":"/image/help.gif")+
-          " border=\"0\" value=\"Help\"></font>":"")
-         +"</td>\n"
-         " </tr><tr><td colspan=\"3\"><table cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">"
-           "<tr bgcolor=\"#000000\"><td><img src=\""+
-         (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
-         "\" width=\"1\" height=\"1\" alt=\"\" /></td></tr></table></td></tr>\n"
-         "  </table><table cellpadding=\"6\"><tr><td>\n"
-         "<!-- The output from the page function -->\n"
-         +form+
-         "\n<!-- End of the output from the page function -->\n"
-         "\n</td></tr></table>\n"
-         "      <table width=\"100%\"><tr><td width=\"33%\">"+
-         (((automaton ? stringp (id->variables->_prev) : pageno>0) &&
-           wiz_name!="done")?
-          "\n        <input type=submit name=prev_page value=\""+
-          LABEL(previous_label, LOCALE(54, "&lt;- Previous"))+"\" />":"")+
-
-         "</td><td width=\"33%\" align=\"center\">"+
-         (wiz_name!="done"
-          ?(((automaton ? !id->variables->_next : pageno==max_page)
-             ?"\n&nbsp;&nbsp;<input type=\"submit\" name=\"ok\" value=\" "+
-             LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
-             :"")+
-            "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-            LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
-          :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
-          LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
-         "</td><td width=\"33%\" align=\"right\">"+
-         (((automaton ? stringp (id->variables->_next) : pageno!=max_page) &&
-           wiz_name!="done")?
-          "\n        <input type=\"submit\" name=\"next_page\" value=\""+
-          LABEL(next_label, LOCALE(57, "Next -&gt;"))+"\" />":"")+
-         "</td></tr></table>\n"
-         "    </td></tr>\n"
-         "  </table>\n"
-         "  </td></tr>\n"
-         "</table>\n"
-         "</form>\n"
-          );
   return res;
 }
 
