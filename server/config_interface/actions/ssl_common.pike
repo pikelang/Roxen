@@ -36,7 +36,7 @@ string doc_string_end_b = LOCALE(89,
 
 mixed page_0(object id, object mc)
 {
-  return 
+  return
     ssl_errors(id) +
     rsa_key_form +
     key_file_form("my_rsa_key.pem");
@@ -80,7 +80,7 @@ mixed verify_0(object id, object mc)
   string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
 					   Standards.PKCS.RSA.private_key(rsa));
   WERROR(key);
-  
+
   if (strlen(key) != file->write(key))
   {
     id->variables->_error =
@@ -106,16 +106,20 @@ string ssl_errors (RequestID id) {
 
 string key_size_question = LOCALE(92, "How large key do you want to generate?");
 
-string generic_key_size_string = 
+string generic_key_size_string =
    LOCALE(93, "The desired key size. This is a security parameter; larger "
 	  "keys gives better security, but it also makes connecting to "
 	  "the server a little slower.");
 
-string rsa_key_form = 
-      ("<p><font size='+1'>" + key_size_question + "</font></p>"
-       "<b>" + LOCALE(94, "Key size") + "</b><br />"
-       "<var name='key_size' type='int' default='2048'/><br />\n<blockquote>"
-       "<p>"+generic_key_size_string+"</p><help>" +
+string rsa_key_form =
+      ("<p class='large'>" + key_size_question + "</p>"
+       "<div class='control-group'>"
+         "<label for='key_size'>" + LOCALE(94, "Key size") +
+         " <small>" + generic_key_size_string + "</small></label>"
+         "<var name='key_size' type='int' id='key_size' default='2048'/>"
+       "</div>"
+       "<blockquote>"
+       "<help><div class='wiz-help'>" +
 // http://www.rsasecurity.com/rsalabs/challenges/factoring/status.html
        LOCALE(95,"The largest key that is publicly known to have been broken "
 	      "was 155 decimal digits, or 512 bits large. This "
@@ -123,23 +127,28 @@ string rsa_key_form =
 	      "A key 2048 bits large should be secure enough for most "
 	      "applications, but of course you can you use an even larger key "
 	      "if you so wish.") +
-       "</help></blockquote>");
+       "</div></help></blockquote>");
 
 
-string key_file_form (string filename) 
+string key_file_form (string filename)
 {
   return
-    "<b>"+ LOCALE(96, "Key file") +"</b><br />"
-    "<var name='key_file' type='string' default='"+filename+"'/><blockquote>\n"+
-    sprintf(LOCALE(97, 
-		   "Where to store the file, may be relative to %s."),
-	    combine_path(getcwd(), "../local/")) +
-    "\n<help><p>" +
-    LOCALE(98, 
+    "<div class='control-group'>"
+      "<label for='key_file'>"+ LOCALE(96, "Key file") + " "
+      "<small>" +
+        sprintf(LOCALE(97,
+               "Where to store the file, may be relative to %s."),
+               combine_path(getcwd(), "../local/")) +
+      "</small></label>"
+      "<var name='key_file' id='key_file' type='string' default='"+filename+"'/>"
+    "</div>"
+    "<blockquote>"
+    "<help><div class='wiz-help'>" +
+    LOCALE(98,
 	   "A filename in the real filesystem, where the secret key should "
 	   "be stored. This is the filename you enter in the "
 	   "'Key file'-field when you configure an SSL listen port.") +
-    "</p></help></blockquote>";      
+    "</div></help></blockquote>";
 }
 
 string certificate_parameters =
@@ -215,13 +224,13 @@ string certificate_TTL =
 	  "from now, do you want the certificate to be valid?")+
    "</blockquote>");
 
-string save_certificate_form (string name, string filename) 
+string save_certificate_form (string name, string filename)
 {
-  return 
+  return
     "<p><b>"+LOCALE(116,"Save the request in a file:")+"</b></p>"
     "<blockquote><b>"+LOCALE(117,"Filename")+"</b><br />"
     "<var type='string' name='"+name+"' default='"+filename+"'/>"
-    "<br />"+ 
+    "<br />"+
     sprintf(LOCALE(97, "Where to store the file, may be relative to %s."),
 	    combine_path(getcwd(), "../local/")) +
     "</blockquote>";
