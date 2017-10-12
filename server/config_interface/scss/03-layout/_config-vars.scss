@@ -140,3 +140,29 @@
     }
   }
 }
+
+.cfg-variable-group {
+  padding: 0 $spacing-unit $spacing-unit $spacing-unit;
+  border: 1px solid darken($body-bg, 5%);
+  margin-bottom: $spacing-unit*2;
+
+  .cfg-variable-group-label {
+    font-weight: bold;
+    // display: inline-block;
+    background: darken($body-bg, 5%);
+    padding: $spacing-unit/2 $spacing-unit;
+    margin-left: -$spacing-unit;
+    margin-right: -$spacing-unit;
+  }
+
+  .config-var {
+    &:first-of-type {
+      border-top: 0;
+    }
+
+    &:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+    }
+  }
+}

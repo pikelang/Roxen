@@ -34,10 +34,10 @@ $txtsize: (
 );
 
 // Widths and paddings
-$site-width:   100%;
-$spacing-unit: 15px;
-$site-padding: $spacing-unit;
-$gutter-width: $spacing-unit * 2;
+$site-width:   100% !default;
+$spacing-unit: 15px !default;
+$site-padding: $spacing-unit !default;
+$gutter-width: $spacing-unit * 2 !default;
 
 // Roxen colors
 $rxn-red:        #e94c37;
@@ -49,47 +49,47 @@ $rxn-dark-red:   #b42339;
 
 
 // Basic colors
-$brand-color: $rxn-red;
-$black:       darken($rxn-black, 5%);
-$dark-grey:   lighten($black, 10%);
-$grey:        $rxn-grey;
-$light-grey:  $rxn-light-grey;
-$blue:        $rxn-blue;
-$white:       #fff;
+$brand-color: $rxn-red !default;
+$black:       darken($rxn-black, 5%) !default;
+$dark-grey:   lighten($black, 10%) !default;
+$grey:        $rxn-grey !default;
+$light-grey:  $rxn-light-grey !default;
+$blue:        $rxn-blue !default;
+$white:       #fff !default;
 
 // Element colors
-$body-bg: lighten($black, 10%);
-$body-color: #aaa;
-$header-bg: $black;
-$topmenu-bg: lighten($black, 5%);
-$topmenu-color: $brand-color;
-$topmenu-selected-bg: $body-bg;
-$topmenu-selected-color: $light-grey;
-$main-column-bg: lighten($body-bg, 5%);
-$footer-bg: $header-bg;
-$footer-color: $grey;
-$site-message-color: $rxn-dark-red;
-$link-color:  $blue;
-$button-bg: $topmenu-bg;
-$button-color: $grey;
+$body-bg: lighten($black, 10%) !default;
+$body-color: #aaa !default;
+$header-bg: $black !default;
+$topmenu-bg: lighten($black, 5%) !default;
+$topmenu-color: $brand-color !default;
+$topmenu-selected-bg: $body-bg !default;
+$topmenu-selected-color: $light-grey !default;
+$main-column-bg: lighten($body-bg, 5%) !default;
+$footer-bg: $header-bg !default;
+$footer-color: $grey !default;
+$site-message-color: $rxn-dark-red !default;
+$link-color:  $blue !default;
+$button-bg: $topmenu-bg !default;
+$button-color: $grey !default;
 
 
-$input-focus-color: $grey;
+$input-focus-color: $grey !default;
 
 
-$notify-bg-color:      $rxn-blue;
-$notify-warn-bg-color: #B4A612;
-$notify-error-bg-color: $rxn-dark-red;
-$notify-ok-bg-color:    #A8DAB8;
-$border-color:         #ddd;
-$dotted-border-color:  #ccc;
-$th-bg-color:          $brand-color;
-$th-color:             white;
+$notify-bg-color:      $rxn-blue !default;
+$notify-warn-bg-color: #B4A612 !default;
+$notify-error-bg-color: $rxn-dark-red !default;
+$notify-ok-bg-color:    #A8DAB8 !default;
+$border-color:         #ddd !default;
+$dotted-border-color:  #ccc !default;
+$th-bg-color:          $brand-color !default;
+$th-color:             white !default;
 
-$ok-color: #79BC89;
+$ok-color: #79BC89 !default;
 
-$diff-red-color: $rxn-red;
-$diff-green-color: $ok-color;
+$diff-red-color: $rxn-red !default;
+$diff-green-color: $ok-color !default;
 
 // Other
-$border-radius: 2px;
+$border-radius: 2px !default;
