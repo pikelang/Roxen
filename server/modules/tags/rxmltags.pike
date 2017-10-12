@@ -2183,7 +2183,10 @@ class TagScope {
   inherit RXML.Tag;
 
   constant name = "scope";
-  mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+        "extend" : RXML.t_text(RXML.PEnt),
+        "variable" : RXML.t_text(RXML.PEnt)
+  ]);
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -2205,6 +2208,12 @@ class TagScope {
 	mapping|object old = RXML_CONTEXT->get_scope (extend_scope);
 	if (!old) run_error ("There is no scope %O.\n", extend_scope);
 	vars=copy_value(old);
+      }
+      else if (string var = args->variable) {
+        vars = RXML.user_get_var(var);
+        if (!mappingp(vars)) {
+          RXML.run_error("Variable given to <tt>&lt;scope&gt;</tt> is not a mapping");
+        }
       }
       else
 	vars=([]);
@@ -11771,6 +11780,20 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
 <attr name='scope' value='name' default='form'>
  <p>The name of the new scope, besides \"_\".</p>
+</attr>
+
+<attr name='variable' value='scope.name (mapping)'>
+  <p>If set, the <tt>variable</tt> will be extracted into the scope. Note, that 
+   <tt>scope.name</tt> has to be a mapping.</p>
+  <p>This can be useful in e.g. <tag>emit#values</tag> and the inner 
+   <tt>_.value</tt> member is a mapping.</p>
+  <ex>
+<emit source='values' variable='var.my-array-of-mappings'>
+  <scope variable='_.value' scope='my'>
+    Name: &my.name;<br/>
+  </scope>
+</emit>
+  </ex>
 </attr>",
 
 //----------------------------------------------------------------------
