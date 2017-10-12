@@ -494,6 +494,7 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->doc = config_setting2("docs")?(string)var->doc():"";
     res->value = var->query();
     res->type = var->type;
+    res->group = var->group && var->group();
   }
   return res;
 }
@@ -619,6 +620,10 @@ array get_variable_maps( object mod,
         mod->save();
     }
   }
+
+
+  // TRACE("%O: %O\n", this_function, variables);
+
   return variables;
 }
 
@@ -953,7 +958,37 @@ class TagModuleVariablesplugin
            ->find_module( replace( m->module, "!", "#" ) );
     if( !mod )
       RXML.run_error("Unknown module "+ m->module +"\n");
-    return get_variable_maps( mod, m, id, !!m->noset);
+
+    array r = get_variable_maps( mod, m, id, !!m->noset);
+
+    if (sizeof(r->group - ({ 0 }))) {
+      mapping gs = ([]);
+
+      for (int i; i < sizeof(r); i++) {
+        mapping m = r[i];
+
+        if (m->group) {
+          if (!gs[m->group]) {
+            gs[m->group] = ([ "is-group" : "1",
+                              "group"    : m->group,
+                              "vars"     : ({}) ]);
+            r[i] = gs[m->group];
+          }
+          else {
+            r[i] = 0;
+          }
+
+          gs[m->group]->vars += ({ copy_value(m) });
+        }
+        else {
+          m_delete(m, "group");
+        }
+      }
+
+      r -= ({ 0 });
+    }
+
+    return r;
   }
 }
 
@@ -1240,11 +1275,7 @@ class TagCfRenderVariable
 #define usr(X) RXML.get_var(X, "usr")
 #define var(X) RXML.get_var(X, "var")
 
-  class Frame
-  {
-    inherit RXML.Frame;
-
-    string tmpl = #"
+  string tmpl = #"
       <dl class='config-var'>
         <dt class='name'>{{ field.name }}</dt>
         <dd class='value{{ #changed }} changed{{ /changed }}'>
@@ -1261,10 +1292,13 @@ class TagCfRenderVariable
         {{ /field.doc }}
       </dl>";
 
+  class Frame
+  {
+    inherit RXML.Frame;
 
     // void create()
     // {
-    //   // stash->parse(tmpl);
+    //   my_stash->parse(tmpl);
     // }
 
     array do_return(RequestID id)

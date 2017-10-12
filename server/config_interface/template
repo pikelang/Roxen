@@ -12,7 +12,19 @@
   <set variable='var.oldchanged' value='0'/>
   <div class="cfg-variables">
     <eval><emit ::='&_.args;'>
-      <cf-render-variable/>
+      <if variable="_.is-group">
+        <div class="cfg-variable-group">
+          <div class="cfg-variable-group-label">&_.group;</div>
+          <emit source="values" variable="_.vars">
+            <scope variable="_.value" name="my">
+              <cf-render-variable values="_.value" />
+            </scope>
+          </emit>
+        </div>
+      </if>
+      <else>
+        <cf-render-variable/>
+      </else>
     </emit></eval>
   </div>
   <if not variable='_.nosave'><cf-save/></if>
@@ -233,13 +245,18 @@
 </else>
 <script src="/js/lib.js"></script>
 <script src="/js/config-if.js"></script>
-<if exists="/themes/&usr.theme;/stylesheet.css">
-  <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css">
+<if exists="/themes/&usr.theme;/style.css">
+  <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/style.css">
 </if>
 </head>
 <gauge variable='var.time_spent' resultonly='yes'>
 <nooutput>
-  <eval><insert file="/themes/&usr.theme;/theme"/></eval>
+  <if exists="/themes/&usr.theme;/theme">
+    <eval><insert file="/themes/&usr.theme;/theme"/></eval>
+  </if>
+  <else>
+    <eval><insert file="/themes/default/theme"/></eval>
+  </else>
   <expire-time now="1"/>
 <gauge variable='var.time_parse_spent' resultonly='yes'>
   <contents/>

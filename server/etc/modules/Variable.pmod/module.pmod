@@ -202,7 +202,7 @@ class Variable
 
   protected mixed _initial; // default value
   protected string _path = sprintf("v%s",_id);   // used for forms
-  protected LocaleString  __name, __doc;
+  protected LocaleString  __name, __doc, __group;
 
   string diff( int render )
   //! Generate a html diff of the difference between the current
@@ -266,7 +266,7 @@ class Variable
     return all_flags[_id];
   }
 
-  void set_flags( int flags )
+  this_program set_flags( int flags )
     //! Set the flags for this variable.
     //! Flags is a bitwise or of one or more of
     //!
@@ -282,11 +282,16 @@ class Variable
     //!   @value VAR_INVISIBLE
     //!     The variable is permanently hidden from view.
     //! @endint
+    //!
+    //! @returns
+    //!  The object being called.
   {
     if(!flags )
       m_delete( all_flags, _id );
     else
       all_flags[_id] = flags;
+
+    return this;
   }
 
   int check_visibility( RequestID id,
@@ -323,16 +328,22 @@ class Variable
     return 1;
   }
 
-  void set_invisibility_check_callback( function(RequestID,Variable:int) cb )
+  this_program set_invisibility_check_callback(
+        function(RequestID,Variable:int) cb )
     //! If the function passed as argument returns 1, the variable
     //! will not be visible in the configuration interface.
     //!
     //! Pass 0 to remove the invisibility callback.
+    //!
+    //! @returns
+    //!  The object being called.
   {
     if( functionp( cb ) )
       invisibility_callbacks[ _id ] = cb;
     else
       m_delete( invisibility_callbacks, _id );
+
+    return this;
   }
 
   function(Variable:void) get_changed_callback( )
@@ -341,22 +352,30 @@ class Variable
     return changed_callbacks[ _id ];
   }
 
-  void set_changed_callback( function(Variable:void) cb )
+  this_program set_changed_callback( function(Variable:void) cb )
     //! The function passed as an argument will be called
     //! when the variable value is changed.
     //!
     //! Pass 0 to remove the callback.
+    //!
+    //! @returns
+    //!  The object being called.
   {
     if( functionp( cb ) )
       changed_callbacks[ _id ] = cb;
     else
       m_delete( changed_callbacks, _id );
+
+    return this;
   }
 
-  void add_changed_callback( function(Variable:void) cb )
+  this_program add_changed_callback( function(Variable:void) cb )
   //! Add a new callback to be called when the variable is changed.
   //! If set_changed_callback is called, callbacks added with this function
   //! are overridden.
+  //!
+  //! @returns
+  //!  The object being called.
   {
     mixed oc = get_changed_callback( );
     if( arrayp( oc ) )
@@ -364,6 +383,8 @@ class Variable
     else
       oc = ({ oc, cb }) - ({ 0 });
     changed_callbacks[ _id ] = oc;
+
+    return this;
   }
 
   function(RequestID,Variable:int) get_invisibility_check_callback()
@@ -381,10 +402,14 @@ class Variable
     return __doc || "";
   }
 
-  void set_doc (LocaleString doc)
+  this_program set_doc (LocaleString doc)
   //! Set the (locale dependent) documentation for this variable.
+  //!
+  //! @returns
+  //!  The object being called.
   {
     __doc = doc;
+    return this;
   }
 
   LocaleString name(  )
@@ -396,10 +421,30 @@ class Variable
     return __name || LOCALE(326,"unnamed")+" "+_id;
   }
 
-  void set_name (LocaleString name)
+  this_program set_name (LocaleString name)
   //! Set the (locale dependent) name for this variable.
+  //!
+  //! @returns
+  //!  The object being called.
   {
     __name = name;
+    return this;
+  }
+
+  LocaleString group()
+  //! Return the group, if any, of this variable (locale dependant).
+  {
+    return __group;
+  }
+
+  this_program set_group(LocaleString group)
+  //! Set group for this variable to @[group].
+  //!
+  //! @returns
+  //!  The object being called.
+  {
+    __group = group;
+    return this;
   }
 
   LocaleString type_hint(  )
@@ -415,26 +460,39 @@ class Variable
     return _initial;
   }
 
-  void set_default_value (mixed to)
+  this_program set_default_value (mixed to)
   //! Change the default value. If the variable was previously set to
   //! the old default value, this will also change its actual value.
+  //!
+  //! @returns
+  //!  The object being called.
   {
     _initial = to;
+    return this;
   }
 
-  void set_warning( string to )
+  this_program set_warning( string to )
     //! Set the warning shown in the configuration interface
+    //!
+    //! @returns
+    //!  The object being called.
   {
     if( to && strlen(to) )
       all_warnings[ _id ] = to;
     else
       m_delete( all_warnings, _id );
+
+    return this;
   }
 
-  void add_warning( string to )
+  this_program add_warning( string to )
   //! Like set_warning, but adds to the current warning, if any.
+  //!
+  //! @returns
+  //!  The object being called.
   {
     if(to) set_warning( (get_warnings()||"") + to );
+    return this;
   }
 
   int set( mixed to )
@@ -620,17 +678,21 @@ class Variable
     return _path;
   }
 
-  void set_path( string to )
+  this_program set_path( string to )
     //! Set the path. Not normally called from user-level code.
     //!
     //! This function must be called at least once before render_form
     //! can be called (at least if more than one variable is to be
     //! shown on the same page). This is normally done by the
     //! configuration interface.
+    //!
+    //! @returns
+    //!  The object being called.
   {
     m_delete( all_variables, _path );
     _path = to;
     all_variables[ to ] = this_object();
+    return this;
   }
 
   string render_form( RequestID id, void|mapping additional_args );
