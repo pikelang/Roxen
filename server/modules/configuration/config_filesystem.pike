@@ -197,7 +197,7 @@ mixed find_file( string f, RequestID id )
       //  We exclude theme resources from authentication since we often
       //  cannot prevent repeated auth dialogs despite the redirect below.
       if (has_prefix(f, "themes/") &&
-	  (< "png", "gif", "jpg", "css", "xcf", "ico" >)[(f / ".")[-1]]) {
+	  (< "png", "gif", "jpg", "css", "xcf", "ico", "svg" >)[(f / ".")[-1]]) {
 	//  Fake some settings
 	roxen.adminrequest_get_context(" no-auth ", host, id);
 	break request_auth;
