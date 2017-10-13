@@ -3813,13 +3813,7 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("draw args: %O\n", args );
 #endif
-    mixed reply;
-    if (mixed err = catch {
-	reply = draw_function( @copy_value(args), id );
-      }) {
-      master()->handle_error(err);
-      return;
-    }
+    mixed reply = draw_function( @copy_value(args), id );
 
     if( !reply ) {
 #ifdef ARG_CACHE_DEBUG
@@ -4650,6 +4644,10 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
+#ifdef ARG_CACHE_DEBUG
+	werror("draw() failed with error: %s\n",
+	       describe_backtrace(err));
+#endif
 	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
 	  // If we get an rxml error and there's no rxml context then
 	  // we're called from a direct request to the image cache.
@@ -4675,6 +4673,9 @@ class ImageCache
 	    return 0;
 	  }
 	}
+#ifdef ARG_CACHE_DEBUG
+	werror("Rethrowing error...\n");
+#endif
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
