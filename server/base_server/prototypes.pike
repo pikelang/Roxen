@@ -2352,9 +2352,28 @@ class RequestID
     }
   }
 
-  protected mapping find_in_misc_forwarded(multiset keys) {
-    multiset _keys = copy_value(keys);
-    mapping _map = ([]);
+  protected variant string find_in_misc_forwarded(string key,
+                                                  bool|void case_insensitive)
+  //! Wrapper for
+  //! find_in_misc_forwarded(multiset(string) keys, bool|void case_insensitive)
+  {
+    return find_in_misc_forwarded((<key>), case_insensitive)[key];
+  }
+
+  protected variant mapping(string:string)
+    find_in_misc_forwarded(multiset(string) keys, bool|void case_insensitive)
+  //! If @[case_insensitive] is true, indeces in arg @[keys] will be converted
+  //! to lower case. Indeces in returned mapping will also be only in lower
+  //! case.
+  {
+    keys += (<>); // Shallow copy is ok since keys are strings.
+    if (case_insensitive) {
+      for (keys; string key;) {
+        keys[key] = 0;
+        keys[lower_case(key)] = 1;
+      }
+    }
+    mapping(string:string) map_ = ([]);
     foreach(misc->forwarded || ({}), array(int|string) entry) {
       foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
         if ((sizeof(forwarded_pair) != 3) ||
@@ -2364,16 +2383,21 @@ class RequestID
           continue;
         }
         string key = lower_case(forwarded_pair[0]);
-        if (_keys[key]) {
-          _map[key] = forwarded_pair[2];
-          _keys[key] = 0;
+        if (case_insensitive) {
+          key = lower_case(key);
         }
-        if (!sizeof(_keys)) {
-          return _map;
+        if (keys[key]) {
+          // If keys contained key add key and value to map_.
+          map_[key] = forwarded_pair[2];
+          // Do not try to find another value for this key.
+          keys[key] = 0;
+        }
+        if (!sizeof(keys)) {
+          return map_;
         }
       }
     }
-    return _map;
+    return map_;
   }
 
   string client_scheme()
@@ -2381,7 +2405,7 @@ class RequestID
   //! talks https with a proxy and the proxy talkes http with the server, this
   //! function returns the string "https".
   {
-    string scheme = find_in_misc_forwarded((<"proto">))->proto;
+    string scheme = find_in_misc_forwarded("proto", true);
     if (!scheme) {
       scheme = port_obj->prot_name;
     }
@@ -2408,7 +2432,8 @@ class RequestID
 
       // First look at the forwarded header.
       if (misc->forwarded) {
-        mapping forwarded = find_in_misc_forwarded((<"proto", "host">));
+        mapping(string:string) forwarded =
+          find_in_misc_forwarded((<"proto", "host">), true);
         scheme = forwarded->proto ? lower_case(forwarded->proto) : 0;
         host = forwarded->host ? forwarded->host : 0;
       }
