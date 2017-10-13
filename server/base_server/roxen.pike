@@ -4256,6 +4256,10 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
+#ifdef ARG_CACHE_DEBUG
+	werror("draw() failed with error: %s\n",
+	       describe_backtrace(err));
+#endif
 	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
 	  // If we get an rxml error and there's no rxml context then
 	  // we're called from a direct request to the image cache.
@@ -4270,6 +4274,9 @@ class ImageCache
 	  report_error (errmsg + "\n");
 	  return 0;
 	}
+#ifdef ARG_CACHE_DEBUG
+	werror("Rethrowing error...\n");
+#endif
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
