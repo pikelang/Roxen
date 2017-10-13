@@ -3471,13 +3471,7 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("draw args: %O\n", args );
 #endif
-    mixed reply;
-    if (mixed err = catch {
-	reply = draw_function( @copy_value(args), id );
-      }) {
-      master()->handle_error(err);
-      return;
-    }
+    mixed reply = draw_function( @copy_value(args), id );
 
     if( !reply ) {
 #ifdef ARG_CACHE_DEBUG
