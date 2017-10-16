@@ -1,0 +1,24 @@
+subject: Roxen 6.1: Added attribute to <wash-html>. Fixed empty images error in emit#cimg.
+from: e4f769a5149d11d80c376cb682b8fd8edf36a734
+to: c6d5d35ea49d405af775df185251c2a2c272d5c6
+originator: Erik Allemann
+depends: 2017-10-10T134719
+restart: true
+
+• Added attribute link-rel='' to <wash-html>.
+
+[WS-47]
+* 775724c - Added attribute link-rel='' to <wash-html>. <Tobias Liin>
+* 35d6f01 - Changed from '' to "" in tagdoc for coherency with the
+            existing doc. <Tobias Liin>
+* 71938a5 - Replaced ' with " in href attribute when linkifying.
+            <Tobias Liin>
+
+• Image-Cache: Added some more ARG_CACHE_DEBUG.
+
+• Image-Cache: Reverted some of 99a96a3d11.
+
+This catch caused <emit#cimg/> to perform sizeof() on zero,
+triggering a 500-error.
+
+Fixes [WS-77].
