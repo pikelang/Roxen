@@ -2404,12 +2404,16 @@ class RequestID
   //! The scheme used by the client. Typically http or https. If the client
   //! talks https with a proxy and the proxy talkes http with the server, this
   //! function returns the string "https".
+  //! Returns 0 if client scheme cannot be found.
   {
     string scheme = find_in_misc_forwarded("proto", true);
     if (!scheme) {
-      scheme = port_obj->prot_name;
+      scheme = port_obj?->prot_name;
     }
-    return lower_case(scheme);
+    if (scheme) {
+      scheme = lower_case(scheme);
+    }
+    return scheme;
   }
 
   protected string cached_url_base;
