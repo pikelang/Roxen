@@ -136,8 +136,8 @@ string render_view( RequestID id, void|mapping additional_args )
 
   if(sizeof(val))
   {
-    res += "<tr><th align='left'>" + key_title + "</th>"
-      "<th align='left'>" + val_title + "</th></tr>";
+    res += "<tr><th>" + key_title + "</th>"
+      "<th>" + val_title + "</th></tr>";
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
@@ -162,8 +162,8 @@ string render_form( RequestID id, void|mapping additional_args )
   mapping val = query();
 
   if(sizeof(val)) {
-    res += "<tr><th align='left'>" + key_title + "</th>"
-      "<th align='left'>" + val_title + "</th></tr>";
+    res += "<tr><th>" + key_title + "</th>"
+      "<th>" + val_title + "</th></tr>";
 
     foreach( sort(indices(val)), mixed var ) {
       res += "<tr>\n<td>"+
@@ -171,7 +171,7 @@ string render_form( RequestID id, void|mapping additional_args )
 		   ({ var,transform_to_form(val[var]) }) ,
 		   width) * "</td><td>"
 	+ "</td>\n";
-      res += "\n<td>"+
+      res += "\n<td class='button-cell'>"+
 	BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
 	+"</td>";
       "</tr>";
