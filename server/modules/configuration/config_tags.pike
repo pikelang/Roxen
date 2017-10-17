@@ -963,6 +963,7 @@ class TagModuleVariablesplugin
 
     if (sizeof(r->group - ({ 0 }))) {
       mapping gs = ([]);
+      mapping prio;
 
       for (int i; i < sizeof(r); i++) {
         mapping m = r[i];
@@ -972,20 +973,25 @@ class TagModuleVariablesplugin
             gs[m->group] = ([ "is-group" : "1",
                               "group"    : m->group,
                               "vars"     : ({}) ]);
-            r[i] = gs[m->group];
-          }
-          else {
-            r[i] = 0;
           }
 
+          r[i] = 0;
           gs[m->group]->vars += ({ copy_value(m) });
         }
         else {
           m_delete(m, "group");
+          if (m->sname == "_priority") {
+            prio = m;
+            r[i] = 0;
+          }
         }
       }
 
-      r -= ({ 0 });
+      r = (r - ({ 0 })) + values(gs);
+
+      if (prio) {
+        r += ({ prio });
+      }
     }
 
     return r;
