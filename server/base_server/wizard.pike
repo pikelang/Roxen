@@ -642,6 +642,7 @@ string compress_state(mapping state)
   //       not be compressed in the state.
 
   state = copy_value(state);
+  CFIF_WERR("Full state: %O\n", state);
   m_delete(state,"_state");
   m_delete(state,"next_page");
   m_delete(state,"next_page.x");
@@ -656,7 +657,7 @@ string compress_state(mapping state)
   foreach(glob("!_*", indices(state)), string s)
     m_delete(state, s);
 
-//  report_debug(sprintf("State=%O\n", state));
+  CFIF_WERR("State=%O\n", state);
 
   string from = encode_value(state);
   object gz = Gz;
@@ -741,13 +742,14 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   // getting mixed up between wizards when one wizard initiates
   // another. The state should be extended with a wizard identifier
   // then.
-  string state_form = "";
+  string state_form;
   id->add_response_header("Set-Cookie",
                           sprintf("WizardState=%s; path=/",
                                   compress_state(id->real_variables) - "\r\n"));
 #else
-  string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
-                      compress_state(id->real_variables)+"\" />\n";
+  // string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
+  //                     compress_state(id->real_variables)+"\" />\n";
+  string state_form = compress_state(id->real_variables);
 #endif
 
   string wizard_id = id->cookies["RoxenWizardId"];
@@ -798,6 +800,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
     "cancel_button" : !is_done && NLABEL(cancel_label, LOCALE(56, "Cancel")),
     // CFIF17: Same as for prev_page above
     "next_page" : SHOW_NAV_BTN("_next", pageno != max_page),
+    "state"     : state_form,
   ]);
 
   CFIF_WERR("CTX: %O\n", ctx);
@@ -806,7 +809,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   <form {{ &method }}>
     <input type='hidden' name='_roxen_wizard_id' value='{{ wiz_id }}'>
     <input type='hidden' name='action' value='{{ action }}'>
-    <input type='hidden' name='page' value='{{ page }}'>
+    <input type='hidden' name='_page' value='{{ page }}'>
+    {{ #state }}
+      <input type='hidden' name='_state' value='{{ &state }}'>
+    {{/state}}
 
     <div class='rxn-wizard'>
       <div class='flex-row title'>
@@ -816,7 +822,6 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
           <submit-gbutton2
             type='help no-content'
             name='help'
-            keep-name='1'
             title='Show extended description'
             {{^show_help}}disabled{{/show_help}}
           ></submit-gbutton2>
@@ -834,7 +839,6 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
               name='prev_page'
               value='1'
               type='previous'
-              keep-name='1'
             >Previous</submit-gbutton2>
           {{/prev_page}}
         </div>
@@ -845,7 +849,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
             </submit-gbutton2>
           {{/cancel_button}}
           {{#ok_button}}
-            <submit-gbutton2 name='cancel' value='1' type='ok' keep-name='1'>
+            <submit-gbutton2 name='ok' value='1' type='ok' keep-name='1'>
               {{ ok_button }}
             </submit-gbutton2>
           {{/ok_button}}
@@ -856,7 +860,6 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
               name='next_page'
               value='1'
               type='next'
-              keep-name='1'
             >Next</submit-gbutton2>
           {{/next_page}}
         </div>
@@ -956,6 +959,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   string data;
   int offset = 1;
   string wiz_name = "page_";
+
+ CFIF_WERR("Vars: %O\n", id->real_variables);
 
   mapping(string:array) s = wizard_get_state (id);
 
@@ -1191,6 +1196,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     for(; !data; v->_page=PAGE(offset))
     {
       function pg=this_object()[wiz_name+((int)v->_page)];
+      CFIF_WERR("pg fun: %O\n", pg);
       function c = !pg && this_object()["wizard_done"];
       if(functionp(c)) {
         DEBUGMSG ("Wizard: Running wizard_done\n");
@@ -1492,23 +1498,17 @@ string html_table(array(string) subtitles, array(array(string)) table,
 
 string html_notice(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_1.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return "<div class='nofiy info'>" + notice + "</div>";
 }
 
 string html_warning(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Warning:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_2.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return "<div class='notify warn'>" + notice + "</div>";
 }
 
 string html_error(string notice, RequestID id)
 {
-  return ("<table><tr><td valign=\"top\"><img \nalt=\"Error:\" src=\""+
-        (id->conf?"/internal-roxen-":"/image/")
-        +"err_3.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
+  return "<div class='notify error'>" + notice + "</div>";
 }
 
 string html_border(string what, int|void width, int|void ww,
