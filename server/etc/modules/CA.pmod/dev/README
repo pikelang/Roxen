@@ -1,0 +1,23 @@
+This is the start of the implementation of an ACME client in Pike/Roxen.
+
+You will need a Pike with Crypto.Sign.State()->jwk().
+
+The initial goal is to implement the ACME standard where Boulder behaves
+according to the standard since the primary objective is to provide an
+integration with Let's Encrypt. Once Let's Encrypt supports the ACME standard
+it should be a minimal effort to replace Boulder specific stuff with the
+corresponding ACME implementation.
+
+At the current state of this module it has no actual integration with Roxen,
+and can be seen as a completly standalone Pike module.
+
+The `test.pike` script can be used when developing this module.
+
+  pike -M../../ -DACME_DEBUG test.pike
+
+
+Documentation links
+-------------------
+https://letsencrypt.org/docs/
+https://ietf-wg-acme.github.io/acme/draft-ietf-acme-acme.html
+https://github.com/letsencrypt/boulder/tree/master/docs
