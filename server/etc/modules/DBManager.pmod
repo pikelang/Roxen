@@ -1720,6 +1720,16 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
     db,
   });
 
+  /* Mark this directory as an incomplete backup,
+   * by having an entry for the table "".
+   */
+  query( "DELETE FROM db_backups WHERE "
+	 "db=%s AND directory=%s AND tbl=%s",
+	 dbname, directory, "" );
+  query( "INSERT INTO db_backups (db,tbl,directory,whn,tag) "
+	 "VALUES (%s,%s,%s,%d,%s)",
+	 dbname, "", directory, time(), tag );
+
   werror("Backing up database %s to %s/dump.sql...\n", dbname, directory);
   // werror("Starting mysqldump command: %O...\n", cmd);
 
@@ -1736,6 +1746,13 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 	   "VALUES (%s,%s,%s,%d,%s)",
 	   dbname, table, directory, time(), tag );
   }
+
+  /* The directory now contains a complete backup.
+   * Remove the entry for the table "".
+   */
+  query( "DELETE FROM db_backups WHERE "
+	 "db=%s AND directory=%s AND tbl=%s",
+	 dbname, directory, "" );
 
   if (Process.Process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
       wait() &&
@@ -1814,6 +1831,17 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
   if( is_internal( dbname ) )
   {
     mkdirhier( directory+"/" );
+
+    /* Mark this directory as an incomplete backup,
+     * by having an entry for the table "".
+     */
+    query( "DELETE FROM db_backups WHERE "
+	   "db=%s AND directory=%s AND tbl=%s",
+	   dbname, directory, "" );
+    query( "INSERT INTO db_backups (db,tbl,directory,whn,tag) "
+	   "VALUES (%s,%s,%s,%d,%s)",
+	   dbname, "", directory, time(), tag );
+
     array tables = db_tables( dbname );
     array res = ({});
     foreach( tables, string table )
@@ -1826,6 +1854,13 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 	     "VALUES (%s,%s,%s,%d,%s)",
 	     dbname, table, directory, time(), tag );
     }
+
+    /* The directory now contains a complete backup.
+     * Remove the entry for the table "".
+     */
+    query( "DELETE FROM db_backups WHERE "
+	   "db=%s AND directory=%s AND tbl=%s",
+	   dbname, directory, "" );
 
     return ({ directory,res });
   }
