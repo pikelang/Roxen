@@ -238,7 +238,7 @@ protected class Scanner
 
 //! A @[Token] is an array like object with at least 4 elements. The first
 //! element is the mustache symbol that was used inside the tag, e.g. "#" or
-//! "&". If the tag did not contain a symbol (i.e. @code{{{myValue}}@}) this
+//! "&". If the tag did not contain a symbol (i.e. @tt{{{myValue}}@}) this
 //! element is "name". For all text that appears outside a symbol this element
 //! is "text".
 //!
@@ -321,7 +321,7 @@ protected class Token
 //! Breaks up the given @[template] string into a tree of tokens. If the
 //! @[_tags] argument is given here it must be an array with two string values:
 //! the opening and closing tags used in the template (e.g.
-//! @code{[ "<%", "%>" ]@}). Of course, the default is to use mustaches
+//! @tt{[ "<%", "%>" ]@}). Of course, the default is to use mustaches
 //! (i.e. mustache.tags).
 array(Token) parse_template(string|function template, void|array(string) _tags)
 {
