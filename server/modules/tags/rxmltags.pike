@@ -11783,9 +11783,9 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 </attr>
 
 <attr name='variable' value='scope.name (mapping)'>
-  <p>If set, the <tt>variable</tt> will be extracted into the scope. Note, that 
+  <p>If set, the <tt>variable</tt> will be extracted into the scope. Note, that
    <tt>scope.name</tt> has to be a mapping.</p>
-  <p>This can be useful in e.g. <tag>emit#values</tag> and the inner 
+  <p>This can be useful in e.g. <tag>emit#values</tag> and the inner
    <tt>_.value</tt> member is a mapping.</p>
   <ex>
 <emit source='values' variable='var.my-array-of-mappings'>
