@@ -98,7 +98,7 @@ string ssl_errors (RequestID id) {
   string msg = "";
   if (id->variables->_error)
   {
-    msg = "<p><font color='red'>" + id->variables->_error + "</font></p>";
+    msg = "<p class='notify error inline'>" + id->variables->_error + "</p>";
     id->variables->_error = 0;
   }
   return msg;
@@ -153,8 +153,8 @@ string key_file_form (string filename)
 
 string certificate_parameters =
 // page_1() for make_rsa_csr.pike and make_selfsigned_???.pike
-  ("<p><font size='+1'>"+LOCALE(99,"Your Distinguished Name?")+
-   "</font></p><blockquote>"+
+  ("<p class='large'>"+LOCALE(99,"Your Distinguished Name?")+
+   "</p><div class='notify ino'>"+
    LOCALE(100, "Your X.501 Distinguished Name consists of a chain of attributes "
 	  "and values, where each link in the chain defines more precisely "
 	  "who you are. Which attributes are necessary or useful "
@@ -164,75 +164,115 @@ string certificate_parameters =
 	  "that attribute will be omitted from your name.<p>\n"
 	  "Although most browsers will accept 8 bit ISO 8859-1 characters in "
 	  "these fields, it can't be counted on. To be on the safe side, "
-	  "use only US-ASCII.")+ "</blockquote>"
+	  "use only US-ASCII.")+ "</div>"
 
-   "<b>"+LOCALE(101,"Your country code")+"</b><br />\n"
-   "<var name='countryName' type='string' default='SE'/><br /><blockquote>"+
-   LOCALE(102,"Your two-letter country code, for example GB (United Kingdom). "
-	  "This attribute is required.")+ "</blockquote>"
+   "<div class='control-group'>"
+     "<label for='countryName'>"+
+        LOCALE(101,"Your country code") +
+        "<small>"+
+          LOCALE(102,"Your two-letter country code, for example GB (United Kingdom). "
+                     "This attribute is required.")+
+        "</small>"
+     "</label>"
+     "<var name='countryName' id='countryName' type='string' default='SE'/>"
+   "</div>"
 
-   "<b>"+LOCALE(103,"State/Province")+"</b><br />\n"
-   "<var name='stateOrProvinceName' type='string' /><br /><blockquote>"+
-   LOCALE(104,"The state where you are operating. VeriSign requires this "
-	  "attribute to be present for US and Canadian customers. "
-	  "Do not abbreviate.")+
-   "</blockquote>"
+   "<div class='control-group'>"
+     "<label for='stateOrProvinceName'>"
+        + LOCALE(103,"State/Province") +
+        "<small>"+
+           LOCALE(104,"The state where you are operating. VeriSign requires this "
+                      "attribute to be present for US and Canadian customers. "
+                      "Do not abbreviate.")+
+        "</small>"
+     "</label>"
+     "<var name='stateOrProvinceName' id='stateOrProvinceName' type='string' />"
+   "</div>"
 
-   "<b>"+LOCALE(105,"City/Locality")+"</b><br />\n"
-   "<var name='localityName' type='string' default='Stockholm'/><br />"
-   "<blockquote>"+
-   LOCALE(106, "The city or locality where you are registered. VeriSign "
-	  "requires that at least one of the locality and the state "
-	  "attributes are present. Do not abbreviate.")+ "</blockquote>"
+   "<div class='control-group'>"
+     "<label for='localityName'>"
+        +LOCALE(105,"City/Locality")+
+        "<small>"+
+           LOCALE(106, "The city or locality where you are registered. VeriSign "
+                       "requires that at least one of the locality and the state "
+                       "attributes are present. Do not abbreviate.")+
+        "</small>"
+     "</label>"
+     "<var name='localityName' id='localityName' type='string' default='Stockholm'/>"
+   "</div>"
 
-   "<b>"+LOCALE(107,"Organization/Company")+"</b><br />\n"
-   "<var name='organizationName' type='string' default='Roxen AB'/><br />"
-   "<blockquote>"+
-   LOCALE(108, "The organization name under which you are registered with some "
-	  "national or regional authority.")+ "</blockquote>"
+   "<div class='control-group'>"
+     "<label for='organizationName'>"
+        +LOCALE(107,"Organization/Company")+
+        "<small>"+
+           LOCALE(108, "The organization name under which you are registered with some "
+                  "national or regional authority.")+
+        "</small>"
+     "</label>"
+     "<var name='organizationName' id='organizationName' type='string' default='Roxen AB'/>"
+   "</div>"
 
-   "<b>"+LOCALE(109,"Organizational unit")+"</b><br />\n"
-   "<var name='organizationUnitName' type='string' "
-   "default='Roxen Development'/><br />"
-   "<blockquote>"+
-   LOCALE(110, "This attribute is optional, and there are no "
-	  "specific requirements on the value of this attribute.")+ "</blockquote>"
 
-   "<b>"+LOCALE(111,"Common Name")+"</b><br />\n"
-   "<var name='commonName' type='string' default='www.roxen.com'/><br />"
-   "<blockquote>"+
-   LOCALE(112, "This is the DNS name of your server (i.e. the host part of "
-	  "the URL).<p>"
-	  "Browsers will compare the URL they are connecting to with "
-	  "the Common Name in the server's certificate, and warn the user "
-	  "if they don't match.<p>"
-	  "Some Certificate Authorities allow wild cards in the Common "
-	  "Name. This means that you can have a certificate for "
-	  "<tt>*.roxen.com</tt> which will match all servers at Roxen."
-	  "Thawte allows wild card certificates, while VeriSign does not.")+
-   "</blockquote>");
+   "<div class='control-group'>"
+     "<label for='organizationUnitName'>"
+        +LOCALE(109,"Organizational unit")+
+        "<small>"+
+           LOCALE(110, "This attribute is optional, and there are no "
+                  "specific requirements on the value of this attribute.")+
+        "</small>"
+     "</label>"
+     "<var name='organizationUnitName' id='organizationUnitName'"
+     " type='string' default='Roxen Development'/>"
+   "</div>"
+
+   "<div class='control-group'>"
+     "<label for='commonName'>"
+        +LOCALE(111,"Common Name")+
+     "</label>"
+     "<var name='commonName' id='commonName' type='string' default='www.roxen.com'/>"
+     "<blockquote>"+
+        LOCALE(112, "This is the DNS name of your server (i.e. the host part of "
+                  "the URL).<p>"
+                  "Browsers will compare the URL they are connecting to with "
+                  "the Common Name in the server's certificate, and warn the user "
+                  "if they don't match.<p>"
+                  "Some Certificate Authorities allow wild cards in the Common "
+                  "Name. This means that you can have a certificate for "
+                  "<tt>*.roxen.com</tt> which will match all servers at Roxen."
+                  "Thawte allows wild card certificates, while VeriSign does not.")+
+     "</blockquote>"
+   "</div>");
 
 string certificate_TTL =
 // page_2() for make_selfsigned_???.pike
-  ("<p><font size='+1'>"+
+  ("<p class='large'>"+
    LOCALE(113,"For how long should the certificate be valid?")+
-   "</font></p>\n"
-   "<b>"+LOCALE(114,"Certificate lifetime, in days")+"</b><br />\n"
-   "<var name='ttl' type='int' default='500'/><br />\n"
-   "<blockquote>"+
-   LOCALE(115,"A certificate includes a validity period. How many days, "
-	  "from now, do you want the certificate to be valid?")+
-   "</blockquote>");
+   "</p>"
+   "<div class='control-group'>"
+     "<label for='ttl'>"+LOCALE(114,"Certificate lifetime, in days")+
+       "<small>"+
+           LOCALE(115,"A certificate includes a validity period. How many days, "
+                  "from now, do you want the certificate to be valid?")+
+       "</small>"
+     "</label>"
+     "<var name='ttl' type='int' default='500'/>"
+   "</div>");
 
 string save_certificate_form (string name, string filename)
 {
   return
     "<p><b>"+LOCALE(116,"Save the request in a file:")+"</b></p>"
-    "<blockquote><b>"+LOCALE(117,"Filename")+"</b><br />"
-    "<var type='string' name='"+name+"' default='"+filename+"'/>"
-    "<br />"+
-    sprintf(LOCALE(97, "Where to store the file, may be relative to %s."),
-	    combine_path(getcwd(), "../local/")) +
+    "<blockquote>"
+    "<div class='control-group'>"
+      "<label for='cert-file-name'>"
+        +LOCALE(117,"Filename")+
+        "<small>"+
+            sprintf(LOCALE(97, "Where to store the file, may be relative to %s."),
+                    combine_path(getcwd(), "../local/")) +
+        "</small>"
+      "</label>"
+      "<var type='string' id='cert-file-name' name='"+name+"' default='"+filename+"'/>"
+    "</div>"
     "</blockquote>";
 }
 
