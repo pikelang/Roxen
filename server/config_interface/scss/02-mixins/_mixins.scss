@@ -83,6 +83,17 @@
   width:          auto;
 }
 
+@mixin fixed-grid(
+  $cols,
+  $rows,
+  $grid-gap: $spacing-unit)
+{
+  display: grid;
+  grid-gap: $grid-gap;
+  grid-template-columns: #{$cols};
+  grid-template-rows: #{$rows};
+}
+
 @mixin make-icon($name, $icon) {
   &.#{$name} {
     &:before,

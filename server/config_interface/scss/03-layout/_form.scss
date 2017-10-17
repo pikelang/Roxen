@@ -18,6 +18,10 @@ input[type='submit'],
   border-bottom: 1px solid darken($button-bg, 10%);
   vertical-align: middle;
 
+  &:hover {
+    color: lighten($button-color, 10%);
+  }
+
   &.no-content {
     padding-top: $spacing-unit/3;
     padding-bottom: $spacing-unit/3;

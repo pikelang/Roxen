@@ -1,5 +1,6 @@
 .config-var {
-  @include flex-row;
+  @include fixed-grid('[col1-start] 25% [col2-start] auto [col2-end]',
+                      '[row1-start] auto [row2-start] auto [row2-end]');
   @include clear;
 
   margin-top: $spacing-unit;
@@ -25,11 +26,13 @@
     @include text-size(lg);
     color: $light-grey;
     font-weight: bold;
-    width: 25%;
-    flex-grow: 1;
+    // width: 25%;
+    // flex-grow: 1;
     margin-left: 0;
     padding-left: 0;
-    padding-right: $spacing-unit;
+    // padding-right: $spacing-unit;
+    grid-column: col1-start;
+    grid-row: row1-start / row2-end;
 
     &.small {
       @include text-size(md);
@@ -37,8 +40,10 @@
   }
 
   .value {
-    width: 75%;
-    flex-grow: 1;
+    // width: 75%;
+    // flex-grow: 1;
+    grid-column: col2-start;
+    grid-row: row1-start;
     margin-left: 0;
     padding-left: 0;
 
@@ -65,7 +70,9 @@
     padding-left: 0;
     margin-left: 0;
     margin-top: $spacing-unit/2;
-    margin-left: 25%;
+    grid-column: col2-start;
+    grid-row: row2-start;
+    // margin-left: 25%;
     // @include text-size(sm);
 
     & > p {
@@ -95,6 +102,10 @@
 
   + .config-var {
     // padding-top: $spacing-unit;
+  }
+
+  .button-cell {
+    width: 50px;
   }
 }
 
