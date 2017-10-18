@@ -32,13 +32,18 @@ mapping|string parse( RequestID id )
       "</th><th>&nbsp;</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
     foreach( sort( indices( bks ) ), string bk )
     {
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      string extra = "";
       // Hide the Roxen-internal databases.
-      if ((<"roxen", "mysql">)[bk]) continue;
+      if ((<"roxen", "mysql">)[bk]) {
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+	continue;
+#else
+	extra = " " + _(0, "(Roxen-internal database)");
 #endif
+      }
       mapping done = ([ ]);
       res += "<tr><td colspan='4'><gtext scale='0.6'>" +
-	Roxen.html_encode_string(bk) + "</gtext></td></tr>\n";
+	Roxen.html_encode_string(bk + extra) + "</gtext></td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {

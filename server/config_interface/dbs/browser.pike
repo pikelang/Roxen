@@ -948,16 +948,30 @@ mapping|string parse( RequestID id )
 
   res += "<p><ul>\n";
 
-  if (id->variables->db == "local")
+  switch(id->variables->db) {
+  case "local":
     res += "<li>" +
       _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
-  else if (id->variables->db == "shared")
+    break;
+  case "shared":
     res += "<li>" +
       _(547, "Internal data that may be shared between servers.") + "</li>\n";
-  else if( !url )
-    res += "<li>Internal database.</li>\n";
-  else
-    res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+  case "mysql":
+    res += "<li>" +
+      _(0, "MySQL/MariaDB-internal database.") + "</li>\n";
+    break;
+  case "roxen":
+    res += "<li>" +
+      _(0, "Roxen-internal database.") + "</li>\n";
+    break;
+  default:
+    if( !url )
+      res += "<li>Internal database.</li>\n";
+    else
+      res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+  }
 
   mapping(string:string) db_info =
     DBManager.module_table_info (id->variables->db, "");
