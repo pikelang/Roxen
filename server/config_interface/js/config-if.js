@@ -164,6 +164,25 @@
         R.closest(this, 'form').submit();
       });
     });
+
+    R.every(ctx, '[data-form-key]', function(i, el) {
+      var f = R.closest(el, 'form');
+
+      if (f) {
+        var doKey = el.dataset.formKey;
+        f.addEventListener('keyup', function(e) {
+          var k = e.key || e.code;
+
+          if (k === doKey) {
+            window.console.log('Trigger button: ', el);
+            // R.trigger(el, 'click');
+            // e.stopPropagation();
+            // f.preventDefault();
+            return false;
+          }
+        }, true);
+      }
+    });
   };
 
   // On DOM ready

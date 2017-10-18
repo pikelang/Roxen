@@ -1600,4 +1600,61 @@ class TagEmitLicenses {
   }
 }
 
+class TagCFIFDataAttrFromRest
+{
+  inherit RXML.Tag;
+  constant name = "cf-data-attr-from-rest-args";
+
+  mapping(string:RXML.Type) req_arg_types = ([
+    // "attribute" : RXML.t_text(RXML.PEnt)
+  ]);
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "setvar" : RXML.t_text(RXML.PEnt)
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id)
+    {
+      string v = RXML.user_get_var("_.rest-args");
+
+      if (sizeof(v)) {
+        string s = "<tag " + v + "/>";
+        mapping a = ([]);
+        parse_html(s,
+                   ([ "tag" :
+                      lambda (Parser.HTML p, mapping attr) {
+                         foreach (attr || ([]); string key; string val) {
+                           if (has_prefix(key, "data-")) {
+                             a[key] = val;
+                           }
+                         }
+                      }
+                   ]),
+                   ([]));
+
+        if (sizeof(a)) {
+          string r = sprintf("%{ %s='%s'%}", (array(array(string))) a);
+
+          if (args->setvar) {
+            RXML.user_set_var(args->setvar, r);
+          }
+          else {
+            result = r;
+          }
+        }
+
+        return 0;
+      }
+
+      result = "";
+
+      return 0;
+    }
+  }
+}
+
 // TagEmitLicenseWarnings is moved to server/modules/tags/rxmltags.pike

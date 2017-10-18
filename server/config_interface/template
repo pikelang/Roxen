@@ -203,9 +203,17 @@
   <if variable="_.title">
     <append variable="var.extra" value=' title="&_.title;"' />
   </if>
+
+  <cf-data-attr-from-rest-args setvar="var.data-attr" />
+
   <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
   <!-- submit-gbutton2 -->
-  <button class='rxn-admin-btn&_.type;' data-submit='' ::="&var.extra;" name='&_.name;' ::="&var.onclick-confirm;">&_.contents;</button>
+  <button class='rxn-admin-btn&_.type;'
+          data-submit=''
+          name='&_.name;'
+          ::="&var.extra;"
+          ::="&var.data-attr;"
+          ::="&var.onclick-confirm;">&_.contents;</button>
 </define>
 
 <define tag="cf-save">
