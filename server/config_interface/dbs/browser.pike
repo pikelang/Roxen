@@ -1105,11 +1105,12 @@ mapping|string parse( RequestID id )
 	owner = format_table_owner (tbl_info, 0);
       else if ((db_info->module || "") != (tbl_info->module || ""))
 	owner = format_table_owner (tbl_info, 1);
+      res += "<td>";
       if (owner) {
-	res += "<td>" + String.capitalize (owner) + "</td>";
+	res += owner;
 	got_owner_column = 1;
       }
-      else res += "<td></td>";
+      res += "</td>";
 
       if (deep_info) {
 	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
