@@ -2339,22 +2339,71 @@ int set_permission( string name, Configuration c, int level )
   return 1;
 }
 
+//! Check if backups are inhibited for the specified @[db] and @[table].
+//!
+//! @seealso
+//!   @[module_table_info()]
+int(0..1) backups_inhibited(string db, string table)
+{
+  return sizeof(query("SELECT tbl FROM db_backup_inhibitions "
+		      " WHERE db = %s AND tbl = %s",
+		      db, table));
+}
+
+//! Return metadata about the specified @[db] and @[table].
+//!
+//! @param db
+//!   Database identifier.
+//!
+//! @param table
+//!   Table name or @expr{""@} to query metadata about the @[db].
+//!
+//! @returns
+//!   Returns a mapping containing some of the following information;
+//!   all fields are optional:
+//!   @mapping
+//!     @member string "comment"
+//!       Description of the table.
+//!     @member string "conf"
+//!       Name of @[Configuration] owning the table if known.
+//!     @member string "conf_varies"
+//!       Set to @expr{"yes"@} if @[table] is @expr{""@} and
+//!       multiple @[Configurations] have tables in the @[db].
+//!     @member string "db"
+//!       Name of the database; typically the same value as @[db].
+//!     @member string "inhibit_backups"
+//!       Set to @expr{"yes"@} if backups of this table are inhibited.
+//!     @member string "module"
+//!       Name of the @[RoxenModule] owning the table if known.
+//!     @member string "module_varies"
+//!       Set to @expr{"yes"@} if @[table] is @expr{""@} and
+//!       multiple modules have tables in the @[db].
+//!     @member string "tbl"
+//!       Name of the table; typically the same value as @[table].
+//!   @endmapping
+//!
+//! @seealso
+//!   @[backups_inhibited()]
 mapping(string:string) module_table_info( string db, string table )
 {
   array(mapping(string:string)) td;
-  mapping(string:string) res1;
+  mapping(string:string) res = ([]);
+
+  if ((table != "") && backups_inhibited(db, table)) {
+    res["inhibit_backups"] = "yes";
+  }
+
   if( sizeof(td=query("SELECT * FROM module_tables WHERE db=%s AND tbl=%s",
 		      db, table ) ) ) {
-    res1 = td[0];
     foreach (td, mapping(string:mixed) row) {
       if (table != "" ||
 	  (row->conf && sizeof (row->conf) &&
 	   row->module && sizeof (row->module)))
-	return row;
+	return res + row;
     }
+
+    res += td[0];
   }
-  else
-    res1 = ([]);
 
   // Many modules don't set the conf and module on the database but
   // only on the individual tables, so do some more effort to find a
@@ -2366,8 +2415,8 @@ mapping(string:string) module_table_info( string db, string table )
     if (sizeof (td) == 1 &&
 	(td[0]->conf && sizeof (td[0]->conf) &&
 	 td[0]->module && sizeof (td[0]->module)))
-      return res1 + td[0];
-    res1->module_varies = "yes";
+      return res + td[0];
+    res->module_varies = "yes";
 
     string conf;
     foreach (td, mapping(string:string) ent)
@@ -2378,13 +2427,11 @@ mapping(string:string) module_table_info( string db, string table )
 	  break;
 	}
       }
-    if (conf) res1->conf = conf;
-    else res1->conf_varies = "yes";
-
-    return res1;
+    if (conf) res->conf = conf;
+    else res->conf_varies = "yes";
   }
 
-  return res1;
+  return res;
 }
 
 string insert_statement( string db, string table, mapping row )
