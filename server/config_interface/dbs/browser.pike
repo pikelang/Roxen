@@ -1066,7 +1066,11 @@ mapping|string parse( RequestID id )
 
       int deep_info = id->variables->table == table;
 
-      string res = "<tr>"
+      string res =
+	"<tr" +
+	(tbl_info->inhibit_backups == "yes"?
+	 " bgcolor='&usr.top-bgcolor;' fgcolor='&usr.top-fgcolor;'":"") +
+	">"
 	"<td style='white-space: nowrap'>"
 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
 	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
@@ -1114,6 +1118,11 @@ mapping|string parse( RequestID id )
 	  c = String.trim_all_whites (c);
 	  if (c != "" && c != "0")
 	    res += Roxen.html_encode_string (c) + "<br/>\n";
+	}
+
+	if (tbl_info->inhibit_backups == "yes") {
+	  res += _(0, "The table is not included in backups of this database.") +
+	    "<br />\n";
 	}
 
 	res += deep_table_info (table) + "</td></tr>\n";
