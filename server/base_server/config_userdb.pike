@@ -52,6 +52,7 @@ class ConfigIFCache
 	case "modules":
 	  master()->resolv("DBManager.is_module_table")
 	    (0, "local", name, "Module information cache");
+	  master()->resolv("DBManager.inhibit_backups")("local", name);
 	  break;
 	default:
 	  master()->resolv("DBManager.is_module_table")

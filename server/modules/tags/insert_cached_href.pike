@@ -327,7 +327,10 @@ class HrefDatabase {
     //  Failure to create tables will lead to zero return values.
     request_table = get_my_table("request", ({request_table_def}));
     data_table = get_my_table("data", ({data_table_def}));
-    
+
+    DBManager.inhibit_backups(my_db, request_table);
+    DBManager.inhibit_backups(my_db, data_table);
+
     // If request_table exists but not the column out_of_date, create
     // indexed column out_of_date and populate it with the sum of
     // latest_request and ttl to optimize the remove_old_entrys.

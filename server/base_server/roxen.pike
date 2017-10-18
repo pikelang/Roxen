@@ -4463,6 +4463,9 @@ class ImageCache
 	    ")" );
     }
 
+    // Inhibit backups of this table.
+    master()->resolv("DBManager.inhibit_backups")("local", name);
+
     // Create index in old databases. Index is used when flushing old
     // entries. Column 'id' is included in index in order to avoid
     // reading data file.
@@ -4605,6 +4608,10 @@ class ArgCache
 	    "          INDEX(sync_time)"
 	    ")");
     }
+
+    // Inhibit backups of the arguments2 table.
+    master()->resolv("DBManager.inhibit_backups")
+      ("local", name + "2");
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
     {
@@ -5944,7 +5951,9 @@ int main(int argc, array tmp)
   master()->resolv( "DBManager.is_module_table" )
     ( 0, "local", "compiled_formats",
       "Compiled and cached log and security pattern code. ");
-  
+  master()->resolv( "DBManager.inhibit_backups" )
+    ( "local", "compiled_formats", );
+
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "etc/modules/DBManager.pmod" );

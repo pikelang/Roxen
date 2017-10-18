@@ -2924,8 +2924,16 @@ void start_mysql (void|int log_queries_to_stdout)
 			 "boot time of Roxen by keeping the compiled "
 			 "data instead of recompiling it every time.");
 		}, 1 );
-
     }
+
+    // At this moment new_master does not exist, and
+    // DBManager can not possibly compile. :-)
+    call_out( lambda(){
+		// Inhibit backups of the precompiled_files table.
+		new_master->resolv("DBManager.inhibit_backups")
+		  ("local", "precompiled_files");
+	      }, 1 );
+
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
