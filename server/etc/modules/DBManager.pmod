@@ -1733,6 +1733,17 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
     db,
   });
 
+  array(string) inhibited_tables =
+    query("SELECT tbl FROM db_backup_inhibitions WHERE db = %s", dbname)->tbl;
+  if (sizeof(inhibited_tables)) {
+    // List all non-backup inhibited tables explicitly.
+    foreach(db_tables(dbname), string table) {
+      if (!has_value(inhibited_tables, table)) {
+	cmd += ({ table });
+      }
+    }
+  }
+
   /* Mark this directory as an incomplete backup,
    * by having an entry for the table "".
    */
@@ -1752,6 +1763,10 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 
   foreach( db_tables( dbname ), string table )
   {
+    if (has_value(inhibited_tables, table)) {
+      // Backup inhibited.
+      continue;
+    }
     query( "DELETE FROM db_backups WHERE "
 	   "db=%s AND directory=%s AND tbl=%s",
 	   dbname, directory, table );
@@ -1855,10 +1870,17 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 	   "VALUES (%s,%s,%s,%d,%s)",
 	   dbname, "", directory, time(), tag );
 
+    array(string) inhibited_tables =
+      query("SELECT tbl FROM db_backup_inhibitions WHERE db = %s", dbname)->tbl;
+
     array tables = db_tables( dbname );
     array res = ({});
     foreach( tables, string table )
     {
+      if (has_value(inhibited_tables, table)) {
+	// Backup inhibited table.
+	continue;
+      }
       res += db->query( "BACKUP TABLE "+table+" TO %s",directory);
       query( "DELETE FROM db_backups WHERE "
 	     "db=%s AND directory=%s AND tbl=%s",
@@ -2406,6 +2428,33 @@ void is_module_db( RoxenModule module, string db, string|void comment )
   is_module_table( module, db, "", comment );
 }
 
+//! Exclude the specified @[table] from backups of @[db].
+//!
+//! This function is typically used on tables that contain
+//! redundant or regeneratable data, to make backups of @[db]
+//! smaller and complete faster.
+//!
+//! @seealso
+//!   @[permit_backups()]
+void inhibit_backups(string db, string table)
+{
+  query("REPLACE INTO db_backup_inhibitions (db, tbl) VALUES(%s, %s)",
+	db, table);
+}
+
+//! Include the specified @[table] in backups of @[db].
+//!
+//! Tables default to being included in backups; this function
+//! reverses the effect of @[inhibit_backups()].
+//!
+//! @seealso
+//!   @[inhibit_backups()]
+void permit_backups(string db, string table)
+{
+  query("DELETE FROM db_backup_inhibitions WHERE db = %s AND tbl = %s",
+	db, table);
+}
+
 protected void create()
 {
   mixed err = 
@@ -2424,7 +2473,14 @@ protected void create()
       query("ALTER TABLE db_backups "
 	    "  ADD tag varchar(20) null");
     }
-       
+
+    // NB: Could be a field in module_tables, but having it separate
+    //     makes it easier.
+    query("CREATE TABLE IF NOT EXISTS db_backup_inhibitions ("
+	  " db varchar(80) not null, "
+	  " tbl varchar(80) not null, "
+	  " UNIQUE INDEX (db, tbl))");
+
   query("CREATE TABLE IF NOT EXISTS db_groups ("
 	" db varchar(80) not null, "
 	" groupn varchar(80) not null)");
