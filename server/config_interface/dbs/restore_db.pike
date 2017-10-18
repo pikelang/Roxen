@@ -29,23 +29,28 @@ mapping|string parse( RequestID id )
     res += "<table width='100%'>\n"
       "<tr><th colspan='2' align='left'>" + _(463, "Database") +
       "</th><th align='left'>"+_(405,"Directory")+
-      "</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
+      "</th><th>&nbsp;</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
     foreach( sort( indices( bks ) ), string bk )
     {
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      string extra = "";
       // Hide the Roxen-internal databases.
-      if ((<"roxen", "mysql">)[bk]) continue;
+      if ((<"roxen", "mysql">)[bk]) {
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+	continue;
+#else
+	extra = " " + _(0, "(Roxen-internal database)");
 #endif
+      }
       mapping done = ([ ]);
       res += "<tr><td colspan='4'><gtext scale='0.6'>" +
-	Roxen.html_encode_string(bk) + "</gtext></td></tr>\n";
+	Roxen.html_encode_string(bk + extra) + "</gtext></td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {
 	if( !done[b->directory] )
 	{
 	  done[b->directory] = ({
-	    b->whn, b->directory,
+	    (int)b->whn, b->directory,
 	    ({ b->tbl }),
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&amp;dir="+Roxen.html_encode_string( b->directory )+
@@ -61,13 +66,20 @@ mapping|string parse( RequestID id )
 	  done[b->directory][2] += ({ b->tbl });
       }
 
-      foreach( sort( values( done ) ), array r )
+      foreach(sort(indices(done)), string dir)
       {
+	[int when, string d, array(string) tables, string buttons] = done[dir];
 	res += "<tr>";
 	res += "  <td>&nbsp;</td>\n";
-	res += "  <td>"+r[3]+"</td>\n";
-	res += "  <td>"+r[1]+"</td>\n";
-	res += "  <td>"+isodate((int)r[0])+"</td>\n";
+	res += "  <td>" + buttons + "</td>\n";
+	res += "  <td><tt>" + basename(d) + "</tt></td>";
+	if (has_value(tables, "")) {
+	  // In progress marker.
+	  res += "<td><strong>" + _(0, "Incomplete") + "</strong></td>";
+	} else {
+	  res += "<td>&nbsp;</td>\n";
+	}
+	res += "  <td>" + isodate(when) + "</td>\n";
 	res += "</tr>\n";
       }
     }
@@ -95,7 +107,7 @@ mapping|string parse( RequestID id )
     {
       array possible = ({});
       foreach( bks[ id->variables->db ], mapping bk )
-	if( bk->directory == id->variables->dir )
+	if( bk->directory == id->variables->dir && sizeof(bk->tbl) )
 	  possible += ({ bk->tbl });
 
       res += "<gtext scale=0.5>"+
