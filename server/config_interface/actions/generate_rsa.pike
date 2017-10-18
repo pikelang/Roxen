@@ -27,11 +27,14 @@ string doc = doc_string_start + doc_string_end_a +
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf( LOCALE(120,"Wrote %d-bit key in %s")+
-				      "<p><cf-ok/></p>",
-                                      (int)id->variables->key_size,
-                                      combine_path(getcwd(),
-                                                   id->variables->key_file)) );
+  return http_string_answer( sprintf(
+        "<p class='notify ok inline'>"
+        + LOCALE(120,"Wrote %d-bit key in %s") +
+        "</p>"
+        "<p><cf-ok/></p>",
+        (int)id->variables->key_size,
+        combine_path(getcwd(), "../local",
+                     id->variables->key_file)) );
 }
 
 mixed parse( RequestID id ) { return wizard_for(id,0); }

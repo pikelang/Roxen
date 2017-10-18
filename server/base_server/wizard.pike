@@ -788,8 +788,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
     "method"    : method,
     "wiz_id"    : wizard_id,
     "action"    : stringp(id->variables->action) ?
-                    id->variables->action : Roxen.false,
-    "page"      : page,
+                    id->variables->action : 0,
+    "page"      : (string)pageno,
     "title"     : make_title(),
     "page_info" : get_page_info(),
     "show_help" : (foo->help && !id->variables->help),
@@ -797,6 +797,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
     // CFIF17: I skipped the LOCALE below since that one contains "&lt-"
     "prev_page" : SHOW_NAV_BTN("_prev", pageno > 0),
     "ok_button" : get_ok_button(),
+    "ok_button_name" : !is_done && pageno == max_page ? "ok" : "cancel",
     "cancel_button" : !is_done && NLABEL(cancel_label, LOCALE(56, "Cancel")),
     // CFIF17: Same as for prev_page above
     "next_page" : SHOW_NAV_BTN("_next", pageno != max_page),
@@ -808,8 +809,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   string template_mu = #"
   <form {{ &method }}>
     <input type='hidden' name='_roxen_wizard_id' value='{{ wiz_id }}'>
-    <input type='hidden' name='action' value='{{ action }}'>
     <input type='hidden' name='_page' value='{{ page }}'>
+    {{ #action }}
+      <input type='hidden' name='action' value='{{ action }}'>
+    {{ /action }}
     {{ #state }}
       <input type='hidden' name='_state' value='{{ &state }}'>
     {{/state}}
@@ -819,12 +822,13 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
         <h2 class='flex col-6'>{{ title }}</h2>
         <div class='flex col-6 text-right page-info'>
           {{ page_info }}
-          <submit-gbutton2
-            type='help no-content'
-            name='help'
-            title='Show extended description'
-            {{^show_help}}disabled{{/show_help}}
-          ></submit-gbutton2>
+          {{ #show_help }}
+            <submit-gbutton2
+              type='help no-content'
+              name='help'
+              title='Show extended description'
+            ></submit-gbutton2>
+          {{ /show_help }}
         </div>
       </div>
       <div class='content'>
@@ -838,20 +842,26 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
             <submit-gbutton2
               name='prev_page'
               value='1'
-              type='previous'
+              type='prev'
             >Previous</submit-gbutton2>
           {{/prev_page}}
         </div>
         <div class='flex col-3 text-center'>
           {{#cancel_button}}
-            <submit-gbutton2 name='cancel' value='1' type='cancel' keep-name='1'>
-              {{ cancel_button }}
-            </submit-gbutton2>
+            <submit-gbutton2
+              name='cancel'
+              value='1'
+              type='cancel'
+              data-form-key='Escape'
+              keep-name='1'>{{ cancel_button }}</submit-gbutton2>
           {{/cancel_button}}
           {{#ok_button}}
-            <submit-gbutton2 name='ok' value='1' type='ok' keep-name='1'>
-              {{ ok_button }}
-            </submit-gbutton2>
+            <submit-gbutton2
+              name='{{ ok_button_name }}'
+              value='1'
+              type='ok'
+              data-form-key='Enter'
+              keep-name='1'>{{ ok_button }}</submit-gbutton2>
           {{/ok_button}}
         </div>
         <div class='flex col-3 text-right'>
@@ -860,6 +870,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
               name='next_page'
               value='1'
               type='next'
+              data-form-key='Enter'
             >Next</submit-gbutton2>
           {{/next_page}}
         </div>
@@ -991,6 +1002,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   FakedVariables v=id->variables;
 
+  CFIF_WERR(">>>> variables: %O\n", v);
+
   int current_page = (int) v->_page;
 
   string wizard_id = id->cookies["RoxenWizardId"];
@@ -1002,6 +1015,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
     DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
   }
   if (wizard_id != id->variables["_roxen_wizard_id"]) {
+    CFIF_WERR("Invalid or unset roxen_wizard_id.\n");
     // Invalid or unset roxen_wizard_id.
     if (current_page) {
       report_warning("Wizard: Invalid wizard_id: %O != %O.\n"

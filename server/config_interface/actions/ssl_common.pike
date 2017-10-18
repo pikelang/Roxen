@@ -5,6 +5,7 @@
 #if constant (Nettle)
 
 #include <roxen.h>
+#include <config_interface.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
@@ -45,6 +46,8 @@ mixed page_0(object id, object mc)
 
 mixed verify_0(object id, object mc)
 {
+  TRACE("verify_0(%O)\n", id->variables);
+
   int key_size = (int) id->variables->key_size;
   if (key_size < 300)
   {
@@ -64,6 +67,7 @@ mixed verify_0(object id, object mc)
   object privs = Privs("Storing private key.");
   if (!(file = lopen(id->variables->key_file, "wxc", 0600)))
   {
+    TRACE("No write: %O\n", strerror(errno()) || errno());
     id->variables->_error =
       "Could not open file: "
       + (strerror(errno()) || (string) errno())
@@ -79,7 +83,7 @@ mixed verify_0(object id, object mc)
 
   string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
 					   Standards.PKCS.RSA.private_key(rsa));
-  WERROR(key);
+  TRACE(key);
 
   if (strlen(key) != file->write(key))
   {

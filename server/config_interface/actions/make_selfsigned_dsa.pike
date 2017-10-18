@@ -28,11 +28,15 @@ mixed page_0(object id, object mc)
 {
   return
     ssl_errors(id) +
-    "<p><font size='+1'>" + key_size_question + "</font></p>\n"
-    "<b>" + LOCALE(94, "Key size") + "</b><br />"
-    "<var name='key_size' type='select' default='1024' "
-    "choices='512,576,640,704,768,832,896,960,1024'/><br />\n"
-    "<blockquote><p>"+generic_key_size_string+"</p></blockquote>"
+    "<p class='large'>" + key_size_question + "</p>\n"
+    "<div class='control-group'>"
+      "<label for='key_size'>"
+        + LOCALE(94, "Key size") +
+        "<small>" + generic_key_size_string + "</small>"
+      "</label>"
+      "<var name='key_size' type='select' default='1024' id='key_size' "
+      " choices='512,576,640,704,768,832,896,960,1024'/>\n"
+    "</div>"
     + key_file_form("my_dsa_key.pem");
 }
 
@@ -117,25 +121,25 @@ mixed page_3(object id, object mc)
   {
     privs = 0;
 
-    return "<font color='red'>Could not open key file: "
-      + strerror(errno()) + "\n</font>";
+    return "<span class='notify inline error'>Could not open key file: "
+      + strerror(errno()) + "\n</span>";
   }
   privs = 0;
   string s = file->read(0x10000);
   if (!s)
-    return "<font color='red'>Could not read private key: "
-      + strerror(file->errno()) + "\n</font>";
+    return "<span class='notify inline error'>Could not read private key: "
+      + strerror(file->errno()) + "\n</span>";
 
   object msg = Tools.PEM.pem_msg()->init(s);
   object part = msg->parts["DSA PRIVATE KEY"];
 
   if (!part)
-    return "<font color='red'>Key file not formatted properly.\n</font>";
+    return "<span class='notify inline error'>Key file not formatted properly.\n</span>";
 
   object dsa = DSA.parse_private_key(part->decoded_body());
 
   if (!dsa)
-    return "<font color='red'>Invalid key.\n</font>";
+    return "<span class='notify inline error'>Invalid key.</span>";
 
   dsa->set_random(Crypto.Random.random_string);
 
@@ -169,8 +173,8 @@ mixed page_3(object id, object mc)
   string cert = Tools.X509.make_selfsigned_dsa_certificate
     (dsa, 24 * 3600 * (int) id->variables->ttl, name);
 
-  string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
-	      "</font>"
+  string res=("<p class='large'>"+LOCALE(133,"This is your Certificate.")+
+	      "</p>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
@@ -212,11 +216,13 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->certificate),
-				     combine_path(getcwd(), "../local", 
-						  id->variables->cert_file)) );
+  return http_string_answer(
+        sprintf("<p class='notify inline ok'>"
+                +LOCALE(131,"Wrote %d bytes to %s.")+
+	        "</p>\n<p><cf-ok/></p>\n",
+  	        strlen(id->variables->certificate),
+	        combine_path(getcwd(), "../local",
+		    	     id->variables->cert_file)) );
 }
 
 

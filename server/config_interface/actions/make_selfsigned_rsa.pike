@@ -56,25 +56,25 @@ mixed page_3(object id, object mc)
   {
     privs = 0;
 
-    return "<font color='red'>Could not open key file: "
-      + strerror(errno()) + "\n</font>";
+    return "<span class='notify error inline'>Could not open key file: "
+      + strerror(errno()) + "\n</span>";
   }
   privs = 0;
   string s = file->read(0x10000);
   if (!s)
-    return "<font color=red>Could not read private key: "
-      + strerror(file->errno()) + "\n</font>";
+    return "<span class='notify error inline'>Could not read private key: "
+      + strerror(file->errno()) + "\n</span>";
 
   object msg = Tools.PEM.pem_msg()->init(s);
   object part = msg->parts["RSA PRIVATE KEY"];
 
   if (!part)
-    return "<font color='red'>Key file not formatted properly.\n</font>";
+    return "<span class='notify error inline'>Key file not formatted properly.\n</span>";
 
   object rsa = RSA.parse_private_key(part->decoded_body());
 
   if (!rsa)
-    return "<font color='red'>Invalid key.\n</font>";
+    return "<span class='notify error inline'>Invalid key.\n</span>";
 
   mapping attrs = ([]);
   string attr;
@@ -106,8 +106,8 @@ mixed page_3(object id, object mc)
   string cert = Standards.X509.make_selfsigned_certificate
     (rsa, 24 * 3600 * (int) id->variables->ttl, name);
 
-  string res=("<font size='+2'>"+LOCALE(133,"This is your Certificate.")+
-	      "</font>"
+  string res=("<p class='large'>"+LOCALE(133,"This is your Certificate.")+
+	      "</span>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);
@@ -149,11 +149,13 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
-				     "</p>\n<p><cf-ok/></p>\n",
-				     strlen(id->variables->certificate),
-				     combine_path(getcwd(), "../local/",
-						  id->variables->cert_file)) );
+  return http_string_answer(
+        sprintf("<p class='notify ok inline'>"
+                 +LOCALE(131,"Wrote %d bytes to %s.")+
+  	        "</p>\n<p><cf-ok/></p>\n",
+  	        strlen(id->variables->certificate),
+	        combine_path(getcwd(), "../local/",
+		             id->variables->cert_file)) );
 }
 
 
