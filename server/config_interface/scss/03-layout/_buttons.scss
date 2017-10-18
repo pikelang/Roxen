@@ -41,6 +41,10 @@ button {
     }
   }
 
+  &[data-form-key='ENTER'] {
+    outline: 1px solid $button-enter-outline-color;
+  }
+
   &:disabled {
     cursor: default;
     opacity: .5;
