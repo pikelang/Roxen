@@ -1563,14 +1563,27 @@ void delete_backup( string dbname, string directory )
       query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
 	     dbname, directory )->tbl;
   }
+  int(0..1) partial;
   foreach( tables, string table )
   {
     rm( directory+"/"+table+".frm" );
     rm( directory+"/"+table+".MYD" );
+    rm( directory+"/"+table+".MYI" );
+    partial = partial || !sizeof(table);
   }
   rm( directory+"/dump.sql" );
   rm( directory+"/dump.sql.bz2" );
   rm( directory+"/dump.sql.gz" );
+  if (partial) {
+    foreach(get_dir(directory), string file) {
+      if (has_suffix(file, ".frm") ||
+	  has_suffix(file, ".MYD") ||
+	  has_suffix(file, ".MYI")) {
+	report_notice("Deleting partial backup file %O.\n", file);
+	rm(directory + "/" + file);
+      }
+    }
+  }
   rm( directory );
 
   // 2: Delete the information about this backup.
