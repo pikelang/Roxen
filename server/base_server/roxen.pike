@@ -4239,6 +4239,12 @@ class ImageCache
 
       switch(format)
       {
+#if constant(Image.WebP) && constant(Image.WebP.encode)
+        case "webp":
+          // Only mixed case module
+          data = Image.WebP.encode( reply, enc_args );
+          break;
+#endif
 	case "wbf":
 	  format = "wbmp";
 	case "wbmp":
