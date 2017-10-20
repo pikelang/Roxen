@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.62 2001/01/13 18:15:41 nilsson Exp $";
+constant cvs_version="$Id$";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -33,8 +33,11 @@ their own. So on one server the user Anne's files might be mounted on
 Anne a web site of her own at <tt>http://anne.domain.com/</tt>.\n";
 constant module_unique = 0;
 
+// NB: MySQL 4.1 and later prefix hashes from their internal
+//     password hashing function with a single "*". cf [bug 7834].
 #define BAD_PASSWORD(us)	(query("only_password") && \
-                                 ((us[1] == "") || (us[1][0] == '*')))
+                                 ((us[1] == "") || \
+				  ((us[1][0] == '*') && (us[1][-1] == '*'))))
 
 int uid_was_zero()
 {
