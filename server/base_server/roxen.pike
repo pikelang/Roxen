@@ -6630,6 +6630,87 @@ int main(int argc, array tmp)
 #if constant(SSL.File)
   add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS acme_cas ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Flags indicating type of ACME implementation.
+	  //   -1	Roxen-internal (Not implemented yet).
+	  //	0	ACME RFC Compliant.
+	  //    1	Let's Encrypt Boulder.
+	  "  flags   INT            NOT NULL DEFAULT 0, "
+	  // Display name of CA.
+	  "  name    VARCHAR(255)   NOT NULL, "
+	  // ACME base URL for CA.
+	  "  url     VARCHAR(255)   NOT NULL"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "acme_cas",
+      "ACME Certificate Authorities.");
+
+  if (!sizeof(dbm_cached_get("roxen")->query("SELECT id FROM acme_cas"))) {
+    // Empty table -- Add the default set of ACME CAs.
+#if 0
+    dbm_cached_get("roxen")->
+      query("INSERT INTO acme_cas (flags, name, url) "
+	    "VALUES (%d, %s, %s)",
+	    -1, "Roxen internal",
+	    "");
+#endif
+    dbm_cached_get("roxen")->
+      query("INSERT INTO acme_cas (flags, name, url) "
+	    "VALUES (%d, %s, %s)",
+	    1, "Let's Encrypt (ACME Staging)",
+	    "https://acme-staging.api.letsencrypt.org/directory");
+  }
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS acme_ca_certs ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id for the CA.
+	  "  ca_id   INT            NOT NULL, "
+	  // Intermediate certificate.
+	  // PEM; Consider storing as binary?
+	  "  cert    TEXT           NOT NULL, "
+	  "  INDEX   ca_id (ca_id)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "acme_ca_certs",
+      "Intermediate certificates for ACME CAs.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS acme_accounts ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id for the CA that the account belongs to.
+	  "  ca_id   INT            NOT NULL, "
+	  // Email address that the account is registered for.
+	  "  email   VARCHAR(255)   NOT NULL, "
+	  // Account URL if account has been created.
+	  // NULL otherwise.
+	  "  url     VARCHAR(512)   NULL, "
+	  // Private JWK for the account.
+	  "  jwk     TEXT           NOT NULL, "
+	  // URL for latest accepted terms of service if any.
+	  // NULL otherwise.
+	  "  tos     VARCHAR(512)   NULL"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "acme_cas",
+      "ACME Accounts.");
+
+#if 0
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS acme_orders ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  "  expiry  INT            NOT NULL, "
+	  // PEM; Consider storing as binary?
+	  "  key     TEXT           NOT NULL, "
+	  // PEM; Consider storing as binary?
+	  "  cert    TEXT           NOT NULL"
+	  // FIXME: Challenges.
+	  ")");
+#endif
+
 #endif
 
   dump( "etc/modules/Variable.pmod/module.pmod" );
