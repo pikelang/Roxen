@@ -6630,6 +6630,103 @@ int main(int argc, array tmp)
 #if constant(SSL.File)
   add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_pem_files ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // lopen()-compatible path to the PEM file.
+	  "  path    VARCHAR(2047)  NOT NULL, "
+	  // Password to decode the PEM data (if any).
+	  "  pass    VARCHAR(255)       NULL, "
+	  // mtime for the PEM file at last scan.
+	  // NULL if not valid.
+	  "  mtime   INT                NULL, "
+	  // time at which the PEM file was last imported.
+	  // NULL if not imported yet.
+	  "  itime   INT                NULL, "
+	  // Hash (currently SHA256) of PEM file data at last scan.
+	  // NULL if not imported.
+	  "  hash    VARBINARY(64)      NULL, "
+	  // Index used when (un-)registering PEM files.
+	  "  INDEX   path           (path), "
+	  // Index used when rescanning PEM files.
+	  "  INDEX   itime          (itime)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "certs", "Registry of known PEM files.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS certs ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Distinguished Name for the certified subject.
+	  "  subject VARBINARY(255) NOT NULL, "
+	  // DN for the issuer of this certificate.
+	  "  issuer  VARBINARY(255) NOT NULL, "
+	  // Id for the cert that this cert is issued by.
+	  // NULL for self-signed or well known.
+	  "  parent  INT                NULL, "
+	  // Id of the source PEM file.
+	  // NULL if stale.
+	  "  pem_id  INT                NULL, "
+	  // Message number in the PEM file.
+	  // NULL if stale or refresh in progress.
+	  "  msg_no  INT DEFAULT 0      NULL, "
+	  // Expiry timestamp for the certificate.
+	  "  expires INT            NOT NULL, "
+	  // Data contained in the PEM.
+	  "  data    BLOB           NOT NULL, "
+	  // Public key hash.
+	  "  keyhash VARBINARY(64)  NOT NULL, "
+	  // Index used when refreshing a PEM file.
+	  "  INDEX                  (pem_id, msg_no), "
+	  // Index used when searching for certs matching a key.
+	  "  INDEX   keyhash        (keyhash), "
+	  // Index used when searching for issuers and refreshing the cert.
+	  "  INDEX   subject        (subject),"
+	  // Index used when searching for signed entities when
+	  // refreshing the cert.
+	  "  INDEX   issuer         (issuer)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "certs", "SSL/TLS Certificates.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_keys ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id of the source PEM file.
+	  // NULL if stale.
+	  "  pem_id  INT                NULL, "
+	  // Message number in the PEM file.
+	  // NULL if stale or refresh in progress.
+	  "  msg_no  INT DEFAULT 0      NULL, "
+	  // Public key hash.
+	  // NULL if PEM decryption unsuccessful.
+	  "  keyhash VARBINARY(64)      NULL, "
+	  // Encrypted private key ASN.1.
+	  // Encrypted with AES.CCM keyed with SHA256(cert_secret + keyhash).
+	  // NULL if PEM decryption unsuccessful.
+	  "  data    BLOB               NULL, "
+	  // Index used when refreshing a PEM file.
+	  "  INDEX                  (pem_id, msg_no), "
+	  // Index used when searching for keys matching a cert.
+	  "  INDEX   keyhash        (keyhash)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "cert_keys", "SSL/TLS Private Keys.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_keypairs ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id for the cert.
+	  "  cert_id INT            NOT NULL, "
+	  // Id for the corresponding key.
+	  "  key_id  INT            NOT NULL, "
+	  // Display name for the keypair.
+	  "  name    VARCHAR(255)   NOT NULL DEFAULT '', "
+	  "  INDEX                  (cert_id, key_id)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "cert_keys", "SSL/TLS Key and Certificate matching.");
 #endif
 
   dump( "etc/modules/Variable.pmod/module.pmod" );
