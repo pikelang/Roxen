@@ -1,0 +1,15 @@
+subject: Roxen 6.1: UserFS MySQL password
+from: c6d5d35ea49d405af775df185251c2a2c272d5c6
+to: a14685314b3e5a8a5bc473eb894cdd49fc3b124b
+originator: Marcus Wellhardh
+depends: 2017-10-16T120053
+restart: true
+
+• UserFS: Support users with new-style MySQL password hashes.
+
+MySQL 4.1 and later prefix hashes from their internal
+password hashing function with a single "*".
+
+Thanks to Eiichiro ITANI <emu@@ceres.dti.ne.jp> for the report.
+
+Fixes [bug 7834].
