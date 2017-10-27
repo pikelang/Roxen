@@ -1083,7 +1083,7 @@ mapping|string parse( RequestID id )
       string res =
 	"<tr" +
 	(tbl_info->inhibit_backups == "yes"?
-	 " bgcolor='&usr.top-bgcolor;' fgcolor='&usr.top-fgcolor;'":"") +
+	 " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
 	">"
 	"<td style='white-space: nowrap'>"
 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
