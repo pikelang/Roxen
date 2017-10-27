@@ -46,15 +46,6 @@ private
 
   void clear_sql_caches()
   {
-#ifdef DBMANAGER_DEBUG
-    werror("DBManager: clear_sql_caches():\n"
-	   "  dead_sql_cache: %O\n"
-	   "  sql_cache: %O\n"
-	   "  connection_cache: %O\n",
-	   dead_sql_cache,
-	   sql_cache,
-	   connection_cache);
-#endif /* DMBMANAGER_DEBUG */
     /* Rotate the sql_caches.
      *
      * Perform the rotation first, to avoid thread-races.
@@ -162,10 +153,6 @@ private
       db->big_query("REPLACE INTO user (Host, User) VALUES (%s, %s)",
 		    host, user);
     }
-#ifdef DBMANAGER_DEBUG
-    werror("DBManager: Updating privs for %s@%s to %O.\n",
-	   user, host, privs);
-#endif /* DMBMANAGER_DEBUG */
     // Current as of MySQL 5.0.70.
     foreach(({ "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
 	       "Create_priv", "Drop_priv", "Reload_priv", "Shutdown_priv",
