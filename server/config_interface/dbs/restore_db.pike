@@ -26,7 +26,15 @@ mapping|string parse( RequestID id )
   
   if( !id->variables->db )
   {
-    res += "<table width='100%'>\n"
+    res += "<style type='text/css'>\n"
+      ".dbrestore { border-spacing: 0; }\n"
+      ".dbrestore td, .dbrestore th { padding: 2px 4px 2px 0; }\n"
+      ".dbrestore td:last-child, .dbrestore th:last-child { padding-right: 0; }\n"
+      ".dbrestore th { border-bottom: 1px solid black; }\n"
+      ".dbrestore .flag { font-size: smaller; }\n"
+      ".dbrestore .date { font-size: smaller; white-space: nowrap; }\n"
+      "</style>\n"
+      "<table width='100%' class='dbrestore'>\n"
       "<tr><th colspan='2' align='left'>" + _(463, "Database") +
       "</th><th align='left'>"+_(405,"Directory")+
       "</th><th>&nbsp;</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
@@ -42,8 +50,9 @@ mapping|string parse( RequestID id )
 #endif
       }
       mapping done = ([ ]);
-      res += "<tr><td colspan='4'><gtext scale='0.6'>" +
-	Roxen.html_encode_string(bk + extra) + "</gtext></td></tr>\n";
+      res += "<tr><td colspan='4'>" +
+        Roxen.html_encode_string(bk + extra) +
+        "</td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {
@@ -75,11 +84,11 @@ mapping|string parse( RequestID id )
 	res += "  <td><tt>" + d + "</tt></td>";
 	if (has_value(tables, "")) {
 	  // In progress marker.
-	  res += "<td><strong>" + _(0, "Incomplete") + "</strong></td>";
+	  res += "<td class='flag'><em>" + _(0, "Incomplete") + "<em></td>";
 	} else {
 	  res += "<td>&nbsp;</td>\n";
 	}
-	res += "  <td>" + isodate(when) + "</td>\n";
+	res += "  <td class='date'>" + isodate(when) + "</td>\n";
 	res += "</tr>\n";
       }
     }
