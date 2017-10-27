@@ -72,7 +72,7 @@ mapping|string parse( RequestID id )
 	res += "<tr>";
 	res += "  <td>&nbsp;</td>\n";
 	res += "  <td>" + buttons + "</td>\n";
-	res += "  <td><tt>" + basename(d) + "</tt></td>";
+	res += "  <td><tt>" + d + "</tt></td>";
 	if (has_value(tables, "")) {
 	  // In progress marker.
 	  res += "<td><strong>" + _(0, "Incomplete") + "</strong></td>";
