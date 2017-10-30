@@ -1,0 +1,15 @@
+subject: Roxen 6.0: Image-Cache
+from: 21742abcc91bf2fea4ac3ff130bf5fc1aa4c3c0c
+to: 86da97a28e601fa51b92755bb5cece019c3b94ed
+originator: Marcus Wellhardh
+depends: 2017-09-01T132327
+restart: true
+
+• Image-Cache: Added some more ARG_CACHE_DEBUG.
+
+• Image-Cache: Reverted some of 99a96a3d11.
+
+This catch caused <emit#cimg/> to perform sizeof() on zero,
+triggering a 500-error.
+
+Fixes [WS-77].
