@@ -2590,164 +2590,61 @@ class StartTLSProtocol
     int old_cert_failure = cert_failure;
     cert_failure = 0;
 
-    array(string) certificates = ({});
-    array(object) decoded_certs = ({});
-    array(object) decoded_keys = ({});
+    Variable.Variable Keys = getvar("ssl_keys");
 
-    void handle_pem_file(string pem_file, Variable.Variable conf_var)
-    {
-      string raw_cert;
-      SSL3_WERR (sprintf ("Reading PEM file %O\n", pem_file));
-      if( catch{ raw_cert = lopen(pem_file, "r")->read(); } )
-      {
-	CERT_WARNING (conf_var,
-		      LOC_M(66, "Reading PEM file %O failed: %s\n"),
-		      pem_file, strerror (errno()));
+    array(int) keypairs = Keys->query();
+    if (!sizeof(keypairs)) {
+      // No new-style certificates configured.
+
+      // Check if there are old-style certificates; in case of which
+      // this is probably an upgrade.
+      Variable.Variable Certificates = getvar("ssl_cert_file");
+      Variable.Variable KeyFile = getvar("ssl_key_file");
+
+      keypairs =
+	CertDB.register_pem_files(Certificates->query() + ({ KeyFile->query() }),
+				  query("ssl_password"));
+
+      if (!sizeof(keypairs)) {
+	// No Old-style certificate configuration found.
+	// Fall back to using all known certs.
+	keypairs = Keys->get_choice_list();
+      }
+
+      if (sizeof(keypairs)) {
+	// Certificates found.
+	Keys->set(keypairs);
+
+	// Clear the old-style variables.
+	//Certificates->set(({}));
+	//KeyFile->set("");
+
+	save();
+      } else {
+	// FIXME: Use anonymous suites?
+	report_error ("TLS port %s: %s", get_url(),
+		      LOC_M(63,"No certificates found.\n"));
+	cert_err_unbind();
+	cert_failure = 1;
 	return;
       }
-
-      Standards.PEM.Messages msgs = Standards.PEM.Messages(raw_cert);
-
-      foreach(msgs->fragments, string|Standards.PEM.Message msg) {
-	if (stringp(msg)) {
-	  if (String.trim_all_whites(msg) != "") {
-	    CERT_WARNING(conf_var,
-			 LOC_M(67, "Invalid PEM in %O.\n"),
-			 pem_file);
-	  }
-	  continue;
-	}
-	string body = msg->body;
-	if (msg->headers["dek-info"]) {
-	  mixed err = catch {
-	      body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
-						body, query("ssl_password"));
-	    };
-	  if (err) {
-	    CERT_WARNING(conf_var,
-			 LOC_M(68, "Invalid decryption password for %O.\n"),
-			 pem_file);
-	  }
-	}
-	switch(msg->pre) {
-	case "CERTIFICATE":
-	case "X509 CERTIFICATE":
-	  Standards.X509.TBSCertificate tbs =
-	    Standards.X509.decode_certificate(body);
-	  if (!tbs) {
-	    CERT_WARNING (conf_var,
-			  LOC_M(13, "Certificate not valid (DER).\n"));
-	    return;
-	  }
-	  certificates += ({ body });
-	  decoded_certs += ({ Standards.X509.decode_certificate(body) });
-	  break;
-	case "PRIVATE KEY":
-	case "RSA PRIVATE KEY":
-	case "DSA PRIVATE KEY":
-	case "ECDSA PRIVATE KEY":
-	  Crypto.Sign key = Standards.X509.parse_private_key(body);
-	  if (!key) {
-	    CERT_ERROR (conf_var,
-			LOC_M(69,"Private key not valid")+" (DER).\n");
-	    return;
-	  }
-	  decoded_keys += ({ key });
-	  break;
-	}
-      }
-    };
-
-    Variable.Variable Certificates = getvar("ssl_cert_file");
-    Variable.Variable KeyFile = getvar("ssl_key_file");
-
-    object privs = Privs("Reading cert file");
-
-    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
-      if (cert_file == "") continue;
-      handle_pem_file(cert_file, Certificates);
-    }
-
-    string key_file = String.trim_whites(KeyFile->query());
-    if (key_file != "") {
-      handle_pem_file(key_file, KeyFile);
-    } else {
-      KeyFile = Certificates;
-    }
-
-    privs = 0;
-
-    if (!sizeof(decoded_certs)) {
-      CERT_ERROR(Certificates, LOC_M(63,"No certificates found.\n"));
-      report_error ("TLS port %s: %s", get_url(),
-		    LOC_M(63,"No certificates found.\n"));
-      cert_err_unbind();
-      cert_failure = 1;
-      return;
-    }
-
-    if (!sizeof(decoded_keys)) {
-      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
-      report_error ("TLS port %s: %s", get_url(),
-		    LOC_M (17,"No private key found.\n"));
-      cert_err_unbind();
-      cert_failure = 1;
-      return;
     }
 
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
+    // NB: Race condition here where the new SSLContext is
+    //     live before it has been configured completely.
     ctx = SSLContext();
     set_version();
     filter_preferred_suites();
 
-    mapping(string:array(int)) cert_lookup = ([]);
-    foreach(decoded_certs; int no; Standards.X509.TBSCertificate tbs) {
-      cert_lookup[tbs->subject->get_der()] += ({ no });
-    }
+    foreach(keypairs, int keypair_id) {
+      array(Crypto.Sign.State|array(string)) keypair =
+	CertDB.get_keypair(keypair_id);
+      if (!keypair) continue;
 
-    foreach(decoded_keys, Crypto.Sign key) {
-      // NB: We need to support multiple certificates with the same key.
-      int found;
-      Standards.X509.TBSCertificate tbs;
-      foreach(decoded_certs; int no; tbs) {
-	if (!tbs->public_key->pkc->public_key_equal(key))
-	  continue;
-
-	array(int) cert_nos = ({ no });
-
-	// Build the certificate chain.
-	Standards.X509.TBSCertificate issuer;
-	do {
-	  string issuer_der = tbs->issuer->get_der();
-	  array(int) issuer_nos = cert_lookup[issuer_der];
-	  if (!issuer_nos) break;
-
-	  issuer = decoded_certs[issuer_nos[0]];
-
-	  // FIXME: Verify that the issuer has signed the cert.
-
-	  if (issuer != tbs) {
-	    cert_nos += ({ issuer_nos[0] });
-	  } else {
-	    // Self-signed.
-	    issuer = UNDEFINED;
-	    break;
-	  }
-	} while ((tbs = issuer));
-
-	report_notice("Adding %s certificate (%d certs) for %s\n",
-		      key->name(), sizeof(cert_nos), get_url());
-	// FIXME: Ought to only add "*" for the certificate chains
-	//        belonging to the default server.
-	ctx->add_cert(key, rows(certificates, cert_nos), ({ name, "*" }));
-	found = 1;
-      }
-      if (!found) {
-	CERT_ERROR (KeyFile,
-		    LOC_M(70, "Private key without matching certificate.\n"));
-	continue;
-      }
+      [Crypto.Sign.State private_key, array(string) certs] = keypair;
+      ctx->add_cert(private_key, certs, ({ name, "*" }));
     }
 
 #if 0
@@ -2772,6 +2669,40 @@ class StartTLSProtocol
     }
   }
 
+  class CertificateKeyChoiceVariable
+  {
+    inherit Variable.IntChoice;
+
+    mapping(int:string) get_translation_table()
+    {
+      array(mapping(string:int|string)) keypairs = CertDB.list_keypairs();
+      return mkmapping(keypairs->id, keypairs->name);
+    }
+
+    array(int) get_choice_list()
+    {
+      return CertDB.list_keypairs()->id;
+    }
+
+    array(string|mixed) verify_set(array(int) new_value)
+    {
+      if (!sizeof(new_value)) {
+	// The list of certificates should never be empty.
+	return ({ "Selection reset to all selected.", get_choice_list() });
+      }
+      return ::verify_set(new_value);
+    }
+
+    protected void create( void|int _flags, void|LocaleString std_name,
+			   void|LocaleString std_doc )
+    {
+      ::create(({}), UNDEFINED, _flags, std_name, std_doc);
+    }
+  }
+
+#if 1
+  // Old-style SSL Certificate variables.
+  // FIXME: Keep these around for at least a few major versions (10 years?).
   class CertificateListVariable
   {
     inherit Variable.FileList;
@@ -2795,6 +2726,7 @@ class StartTLSProtocol
 		     getcwd());
     }
   }
+#endif
 
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
@@ -2820,6 +2752,7 @@ class StartTLSProtocol
     //        changed callback is called. Currently you can get warnings
     //        that the files don't match if you update both variables
     //        at the same time.
+    getvar ("ssl_keys")->set_changed_callback(certificates_changed);
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
 

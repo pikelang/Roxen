@@ -216,13 +216,21 @@ void set_up_http_variables( Protocol o )
 
 protected int hide_if_empty(RequestID id, Variable.Variable var)
 {
-  return var->query() == "";
+  return !sizeof(var->query());
 }
 
 void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
+  defvar( "ssl_keys", o->CertificateKeyChoiceVariable
+	  (VAR_NO_DEFAULT,
+	   LOCALE(0, "SSL/TLS Certificate(s)"),
+	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n")));
+
+#if 1
+  // Old-style SSL Certificate variables.
+  // FIXME: Keep these around for at least a few major versions (10 years?).
   defvar( "ssl_cert_file",
 	  o->CertificateListVariable
 	  ( ({ "demo_certificate.pem" }), 0,
@@ -233,7 +241,8 @@ void set_up_ssl_variables( Protocol o )
 		    "corresponding private key files in any order.</p>\n"
 		    "<p>If a path is relative, it will first be "
 		    "searched for relative to %s, "
-		    "and if not found there relative to %s.</p>\n")));
+		    "and if not found there relative to %s.</p>\n")))->
+    set_invisibility_check_callback(hide_if_empty);
 
   defvar( "ssl_key_file",
 	  o->KeyFileVariable
@@ -248,6 +257,7 @@ void set_up_ssl_variables( Protocol o )
 		   "This field is obsolete, since the same setting "
 		   "can be done in <b>SSL certificate file(s)</b>.")))->
     set_invisibility_check_callback(hide_if_empty);
+#endif
 
 #if constant(SSL.Constants.CIPHER_aead)
   // NB: This constant was added a few days after get_suites() in Pike 8.0,
