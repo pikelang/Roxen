@@ -54,7 +54,7 @@ protected class Variable
   mixed default_value();
   void set_warning( string to );
   int set( mixed to );
-  int low_set( mixed to );  
+  int low_set( mixed to );
   mixed query();
   int is_defaulted();
   array(string|mixed) verify_set( mixed new_value );
@@ -76,10 +76,10 @@ class BasicDefvar
   void set(string var, mixed value);
   int killvar(string var);
   void setvars( mapping (string:mixed) vars );
-  Variable defvar(string var, mixed value, 
+  Variable defvar(string var, mixed value,
                   mapping|string|void|object name,
-                  int|void type, 
-                  mapping|string|void|object doc_str, 
+                  int|void type,
+                  mapping|string|void|object doc_str,
                   mixed|void misc,
                   int|function|void not_in_config,
                   mapping|void option_translations);
@@ -140,7 +140,7 @@ class ModuleInfo
   int type, multiple_copies;
   array(string) locked;
   mapping(Configuration:int) config_locked;
-  
+
   string get_name();
   string get_description();
   RoxenModule instance( object conf, void|int silent );
@@ -426,7 +426,7 @@ class Configuration
 
   function(string:int) log_function;
   DataCache datacache;
-  
+
   int get_config_id();
   string get_doc_for( string region, string variable );
   string query_internal_location(RoxenModule|void mod);
@@ -486,16 +486,16 @@ class Configuration
   void save_me();
   int save_one( RoxenModule o );
   RoxenModule reload_module( string modname );
-  RoxenModule enable_module( string modname, RoxenModule|void me, 
-                             ModuleInfo|void moduleinfo, 
+  RoxenModule enable_module( string modname, RoxenModule|void me,
+                             ModuleInfo|void moduleinfo,
                              int|void nostart,
                              int|void nosave );
-  void call_start_callbacks( RoxenModule me, 
-                             ModuleInfo moduleinfo, 
+  void call_start_callbacks( RoxenModule me,
+                             ModuleInfo moduleinfo,
 			     ModuleCopies module,
 			     void|int newly_added);
-  void call_low_start_callbacks( RoxenModule me, 
-                                 ModuleInfo moduleinfo, 
+  void call_low_start_callbacks( RoxenModule me,
+                                 ModuleInfo moduleinfo,
                                  ModuleCopies module );
   int disable_module( string modname, int|void nodest );
   int add_modules( array(string) mods, int|void now );
@@ -541,7 +541,7 @@ class Configuration
 }
 
 //! @appears Protocol
-class Protocol 
+class Protocol
 {
   inherit BasicDefvar;
 
@@ -569,7 +569,7 @@ class Protocol
 
   void ref(string url, mapping data);
   void unref(string url);
-  Configuration find_configuration_for_url( string url, RequestID id, 
+  Configuration find_configuration_for_url( string url, RequestID id,
                                             int|void no_default );
   string get_key();
   void save();
@@ -671,8 +671,8 @@ class FakedVariables( mapping real_variables )
     {
        array v=indices(real_variables);
        return mkmapping(v,map(v,`[]));
-    }	  
-	  
+    }
+
     error("can't cast to %O\n",to);
   }
 }
@@ -697,7 +697,7 @@ class PrefLanguages
   array(array(string|array)) delayed_vary_actions =
     ({ ({ "accept-language", 0 }) });
   multiset(string) known_langs = (< >);
-  
+
   protected string _sprintf(int c, mapping|void attrs)
   {
     return c == 'O' && sprintf("PrefLanguages(%O)", get_languages());
@@ -722,14 +722,14 @@ class PrefLanguages
   {
     return known_langs;
   }
-  
+
   void finalize_delayed_vary(RequestID id)
   {
     //  No point in installing protocol cache arbitration when the requested
     //  page isn't multilingual.
     if (sizeof(known_langs) < 2)
       return;
-    
+
     VARY_WERROR("finalize_delayed_vary: actions: %O\n", delayed_vary_actions);
     foreach (delayed_vary_actions, array(string|array(string)) item) {
       function cb;
@@ -738,17 +738,17 @@ class PrefLanguages
 	cb = Roxen->get_lang_vary_cb(known_langs, "accept-language");
 	id->register_vary_callback("accept-language", cb);
 	break;
-	
+
       case "cookie":
 	string lang_cookie = item[1];
 	cb = Roxen->get_lang_vary_cb(known_langs, "cookie", lang_cookie);
 	id->register_vary_callback("cookie", cb);
 	break;
-	
+
       case "host":
 	id->register_vary_callback("host");
 	break;
-	
+
       case "variable":
       case "prestate":
       case "path":
@@ -767,7 +767,7 @@ class PrefLanguages
       }
     }
   }
-  
+
   array(string) get_languages() {
     sort_lang();
     return languages;
@@ -799,12 +799,12 @@ class PrefLanguages
     sorted=1;
     decoded=1;
   }
-  
+
   void sort_lang() {
     if(sorted && decoded) return;
     array(float) q;
     array(string) s=reverse(languages)-({""}) /*, u=({})*/;
-    
+
     if(!decoded) {
       q=({});
       s=Array.map(s, lambda(string x) {
@@ -842,7 +842,7 @@ class PrefLanguages
     }
     languages -= ({ 0 });
     qualities -= ({ 0 });
-    
+
     sorted=1;
   }
 }
@@ -1298,7 +1298,7 @@ class RequestID
   //! client (this happens, as an example, if you have checkbox
   //! variables with the same name but different values), the values
   //! will be separated with \0 (the null character) in this mapping.
-  
+
   mapping misc;			// Note that non-string indices are ok.
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own request-local data for
@@ -1506,7 +1506,7 @@ class RequestID
       }
 
       array tmp = arrayp(contents) ? contents : ({ contents});
-  
+
       foreach(tmp, string cookieheader) {
 	foreach(cookieheader/";", string c)
 	{
@@ -1523,7 +1523,7 @@ class RequestID
 	    name=_Roxen.http_decode_string(name);
 	  };
 	  real_cookies[ name ]=value;
-	  
+
 #ifdef OLD_RXML_CONFIG
 	  // FIXME: Really ought to register this one...
 	  if( (name == "RoxenConfig") && strlen(value) )
@@ -1988,7 +1988,7 @@ class RequestID
       case "special":
 	switch(symbol[1]) {
 	case '<': tmp_resource = ""; break;
-	case '>': 
+	case '>':
 	  resource = tmp_resource;
 	  tmp_resource = 0;
 	  // Normalize.
@@ -2450,6 +2450,42 @@ class RequestID
     }
   }
 
+  protected mapping find_in_misc_forwarded(multiset keys) {
+    multiset _keys = copy_value(keys);
+    mapping _map = ([]);
+    foreach(misc->forwarded || ({}), array(int|string) entry) {
+      foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
+        if ((sizeof(forwarded_pair) != 3) ||
+            (forwarded_pair[1] != '=') ||
+            !stringp(forwarded_pair[0]) ||
+            !stringp(forwarded_pair[2])) {
+          continue;
+        }
+        string key = lower_case(forwarded_pair[0]);
+        if (_keys[key]) {
+          _map[key] = forwarded_pair[2];
+          _keys[key] = 0;
+        }
+        if (!sizeof(_keys)) {
+          return _map;
+        }
+      }
+    }
+    return _map;
+  }
+
+  string client_scheme()
+  //! The scheme used by the client. Typically http or https. If the client
+  //! talks https with a proxy and the proxy talkes http with the server, this
+  //! function returns the string "https".
+  {
+    string scheme = find_in_misc_forwarded((<"proto">))->proto;
+    if (!scheme) {
+      scheme = port_obj->prot_name;
+    }
+    return lower_case(scheme);
+  }
+
   protected string cached_url_base;
 
   string url_base()
@@ -2470,27 +2506,9 @@ class RequestID
 
       // First look at the forwarded header.
       if (misc->forwarded) {
-      got_both:
-	foreach(misc->forwarded, array(int|string) entry) {
-	  foreach(entry/ ({ ';' }), array(int|string) forwarded_pair) {
-	    if ((sizeof(forwarded_pair) != 3) ||
-		(forwarded_pair[1] != '=') ||
-		!stringp(forwarded_pair[0]) ||
-		!stringp(forwarded_pair[2])) continue;
-	    switch(lower_case(forwarded_pair[0])) {
-	    case "proto":
-	      if (scheme) continue;
-	      scheme = lower_case(forwarded_pair[2]);
-	      if (host) break got_both;
-	      break;
-	    case "host":
-	      if (host) continue;
-	      host = forwarded_pair[2];
-	      if (scheme) break got_both;
-	      break;
-	    }
-	  }
-	}
+        mapping forwarded = find_in_misc_forwarded((<"proto", "host">));
+        scheme = forwarded->proto ? lower_case(forwarded->proto) : 0;
+        host = forwarded->host ? forwarded->host : 0;
       }
 
       // Second look at the host header in the request.
@@ -2845,7 +2863,7 @@ class RequestID
 
 
   //  Charset handling
-  
+
   array(string) output_charset = ({});
 
   void set_output_charset( string|function to, int|void mode )
@@ -2891,7 +2909,7 @@ class RequestID
       [charset,encoder] = join_charset(charset, f, encoder, 0);
     return charset || encoder;
   }
-  
+
   protected string charset_name(function|string what)
   {
     if (what == string_to_unicode) return "ISO10646-1";
@@ -2906,10 +2924,10 @@ class RequestID
     case "ISO-10646-1":
     case "ISO10646-1":
       return string_to_unicode;
-      
+
     case "UTF-8":
       return string_to_utf8;
-      
+
     default:
       //  Use entity fallback if content type allows it
       function fallback_func =
@@ -2917,7 +2935,7 @@ class RequestID
 	lambda(string char) {
 	  return sprintf("&#x%x;", char[0]);
 	};
-	
+
       _charset_decoder_func =
 	_charset_decoder_func || Roxen->_charset_decoder;
       return
@@ -2925,7 +2943,7 @@ class RequestID
 	->decode;
     }
   }
-  
+
   protected array(string) join_charset(string old,
 				       function|string add,
 				       function oldcodec,
@@ -2951,14 +2969,14 @@ class RequestID
 #endif
     }
   }
-  
+
   array replace_charset_placeholder(string charset, string what, int allow_entities) {
     // If we allow entities we also replace the automatic charset placeholder with the charset in use
     if(allow_entities && charset)
       what = replace(what, Roxen->magic_charset_variable_placeholder, charset);
     return ({ charset, what });
-  } 
-  
+  }
+
   array(string) output_encode(string what, int|void allow_entities,
 			      string|void force_charset)
   {
@@ -2974,11 +2992,11 @@ class RequestID
 	  return replace_charset_placeholder("ISO-8859-1", what, allow_entities);
       }
     }
-    
+
     if (!force_charset) {
       string charset;
       function encoder;
-      
+
       foreach( output_charset, string|function f )
 	[charset,encoder] = join_charset(charset, f, encoder, allow_entities);
       if (!encoder)
@@ -3210,7 +3228,7 @@ class RequestID
 	file->len = fstat[1];
       if ( fstat[ST_MTIME] > misc->last_modified )
 	misc->last_modified = fstat[ST_MTIME];
-    }	
+    }
 
     if (!file->error)
       file->error = Protocols.HTTP.HTTP_OK;
@@ -3223,7 +3241,7 @@ class RequestID
     //  and Vary header effects.
     if (PrefLanguages pl = misc->pref_languages)
       pl->finalize_delayed_vary(this);
-    
+
     if( !zero_type(misc->cacheable) &&
 	(misc->cacheable != INITIAL_CACHEABLE) ) {
       if (!misc->cacheable) {
@@ -3264,7 +3282,7 @@ class RequestID
 	  [charset, file->data] = output_encode( file->data, allow_entities );
 	}
       }
-      
+
       //  Only declare charset if we have exact knowledge of it. We cannot
       //  provide a default for other requests since e.g. Firefox will
       //  complain if it receives a charset=ISO-8859-1 header for text data
@@ -4067,7 +4085,7 @@ class AuthModule
   constant thread_safe=1;
 
   constant name = "method name";
-  
+
   User authenticate( RequestID id, UserDB db );
   //! Try to authenticate the request with users from the specified user
   //! database. If no @[db] is specified, all datbases in the current
@@ -4129,7 +4147,7 @@ class Group( UserDB database )
 	res += ({ u });
     return res;
   }
-  
+
   int gid();
   //! A numerical GID, or -1 if not applicable
 
@@ -4138,7 +4156,7 @@ class Group( UserDB database )
   int set_gid( int new_gid )  {    return 0;  }
   int set_members( array(string) members ) {   return 0;  }
   //! Returns 1 if it was possible to set the variable.
-  
+
 }
 
 #ifdef THREADS
@@ -4172,7 +4190,7 @@ class User( UserDB database )
 
   string shell();
   //! The shell, or 0 if not applicable
-  
+
   string gecos()
   //! The gecos field, defaults to return the real name
   {
@@ -4200,7 +4218,7 @@ class User( UserDB database )
   int set_crypted_password(string passwd) {}
   int set_password(string passwd)         {}
   //! Returns 1 if it was possible to set the variable.
-  
+
   array compat_userinfo( )
   //! Return a unix passwd compatible array with user information. The
   //! defualt implementation uses the other methods to assemble this
@@ -4236,14 +4254,14 @@ class User( UserDB database )
     else
       return replace("'"+user_mysql->quote(module->sname())+"'","%","%%");
   }
-  
+
   mixed set_var( RoxenModule module, string index, mixed value )
   //! Set a specified variable in the user. If @[value] is a string,
   //! it's stored as is in the database, otherwise it's encoded using
   //! encode_value before it's stored. Returns the value.
   //!
   //! You can use 0 for the @[module] argument.
-  //! 
+  //!
   //! The default implementation stores the value in a mysql table
   //! '*_user_data' in the 'shared' database.
   //!
@@ -4325,14 +4343,14 @@ class UserDB
     foreach( list_users(), string u )
       if( (user = find_user( u )) && (user->uid() == uid) )
 	return user;
-  }    
+  }
 
   Group find_group( string group, RequestID|void id )
   //! Find a group object given a group name.
   //! The default implementation returns 0.
   {
   }
-  
+
   Group find_group_from_gid( int gid, RequestID|void id )
   //! Find a group given a GID. The default implementation loops over
   //! list_groups() and checks the gid() of each one.
@@ -4342,7 +4360,7 @@ class UserDB
       if( (group = find_group( u )) && (group->gid() == gid) )
 	return group;
   }
-  
+
   array(string) list_groups( RequestID|void id )
   //! Return a list of all groups handled by this database module.
   //! The default implementation returns the empty array.
