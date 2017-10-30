@@ -2336,6 +2336,7 @@ private void setup_tables() {
   setup_session_table ("local");
   master()->resolv("DBManager.is_module_table")
     ( 0, "local", "session_cache", "Used by the session manager" );
+  master()->resolv("DBManager.inhibit_backups")( "local", "session_cache" );
 }
 
 //! Initializes the session handler.
