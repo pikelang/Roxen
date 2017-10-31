@@ -13,6 +13,10 @@
 #endif
 
 
+// Some convenience constants.
+protected local constant Compound = Standards.ASN1.Types.Compound;
+protected local constant Identifier = Standards.ASN1.Types.Identifier;
+protected local constant Sequence = Standards.ASN1.Types.Sequence;
 
 //!
 array(mapping(string:int|string)) list_keys()
@@ -43,6 +47,48 @@ mapping(string:int|string) get_cert(int cert_id)
 		    cert_id);
   if (!sizeof(res)) return 0;
   return res[0];
+}
+
+//! Attempt to create a presentable string from DN.
+protected string format_dn(Sequence dn)
+{
+  mapping(Identifier:string) ids = ([]);
+  foreach(dn->elements, Compound pair)
+  {
+    if(pair->type_name!="SET" || !sizeof(pair)) continue;
+    pair = pair[0];
+    if(pair->type_name!="SEQUENCE" || sizeof(pair)!=2)
+      continue;
+    if(pair[0]->type_name=="OBJECT IDENTIFIER" &&
+       pair[1]->value && !ids[pair[0]])
+      ids[pair[0]] = pair[1]->value;
+  }
+
+  string res;
+  // NB: Loop backwards to join oun and on before cn.
+  foreach(({ Standards.PKCS.Identifiers.at_ids.organizationUnitName,
+	     Standards.PKCS.Identifiers.at_ids.organizationName,
+	     Standards.PKCS.Identifiers.at_ids.commonName,
+	  }); int i; Identifier id) {
+    string val = ids[id];
+    if (!val) continue;
+    if (res) {
+      if (i == 2) {
+	res = "(" + res + ")";
+      }
+      res = val + " " + res;
+    } else {
+      res = val;
+    }
+  }
+  return res || "<NO SUITABLE NAME>";
+}
+
+protected variant string format_dn(string(8bit) dn)
+{
+  // FIXME: Support X.509v2?
+  Sequence seq = Standards.ASN1.Decode.secure_der_decode(dn, ([]));
+  return format_dn(seq);
 }
 
 protected void low_refresh_pem(int pem_id)
@@ -206,10 +252,16 @@ protected void low_refresh_pem(int pem_id)
 	  // Keypair already exists.
 	  continue;
 	}
+	string name = format_dn(cert_info->subject);
+	if (cert_info->issuer == cert_info->subject) {
+	  name += " (self-signed)";
+	} else {
+	  name += " " + format_dn(cert_info->issuer);
+	}
 	db->query("INSERT INTO cert_keypairs "
-		  "       (cert_id, key_id) "
-		  "VALUES (%d, %d)",
-		  cert_info->id, key_info->id);
+		  "       (cert_id, key_id, name) "
+		  "VALUES (%d, %d, %s)",
+		  cert_info->id, key_info->id, name);
       }
     } else {
       // Zap any stale or update in progress marker for the key.
@@ -248,10 +300,16 @@ protected void low_refresh_pem(int pem_id)
 			    cert_info->keyhash);
       if (sizeof(tmp)) {
 	// FIXME: Key selection policy.
+	string name = format_dn(cert_info->subject);
+	if (cert_info->issuer == cert_info->subject) {
+	  name += " (self-signed)";
+	} else {
+	  name += " " + format_dn(cert_info->issuer);
+	}
 	db->query("INSERT INTO cert_keypairs "
-		  "       (cert_id, key_id) "
-		  "VALUES (%d, %d)",
-		  cert_info->id, tmp[0]->id);
+		  "       (cert_id, key_id, name) "
+		  "VALUES (%d, %d, %s)",
+		  cert_info->id, tmp[0]->id, name);
       }
 
       if (cert_info->subject != cert_info->issuer) {
