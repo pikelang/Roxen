@@ -130,19 +130,30 @@ protected void low_refresh_pem(int pem_id)
     }
   }
 
-  // Mark the old certs and keys as no longer in the PEM file.
+  if (!raw_pem) {
+    // Mark any old certs and keys as stale.
+    db->query("UPDATE certs "
+	      "   SET pem_id = NULL, "
+	      "       msg_no = NULL "
+	      " WHERE pem_id = %d",
+	      pem_id);
+    db->query("UPDATE cert_keys "
+	      "   SET pem_id = NULL, "
+	      "       msg_no = NULL "
+	      " WHERE pem_id = %d",
+	      pem_id);
+    return;
+  }
+
+  // Mark any old certs and keys as update in progress.
   db->query("UPDATE certs "
-	    "   SET pem_id = NULL, "
-	    "       msg_no = NULL "
+	    "   SET msg_no = NULL "
 	    " WHERE pem_id = %d",
 	    pem_id);
   db->query("UPDATE cert_keys "
-	    "   SET pem_id = NULL, "
-	    "       msg_no = NULL "
+	    "   SET msg_no = NULL "
 	    " WHERE pem_id = %d",
 	    pem_id);
-
-  if (!raw_pem) return;
 
   mixed err =
     catch {
@@ -352,6 +363,27 @@ protected void low_refresh_pem(int pem_id)
 		tmp[0]->id);
     }
   }
+
+  // Mark any old certs and keys that are still update in progress as stale.
+  db->query("UPDATE certs "
+	    "   SET pem_id = NULL "
+	    " WHERE pem_id = %d "
+	    "   AND msg_no IS NULL",
+	    pem_id);
+  db->query("UPDATE cert_keys "
+	    "   SET pem_id = NULL "
+	    " WHERE pem_id = %d "
+	    "   AND msg_no IS NULL",
+	    pem_id);
+
+  // Update metadata about the imported PEM file.
+  db->query("UPDATE cert_pem_files "
+	    "   SET hash = %s, "
+	    "       mtime = %d, "
+	    "       itime = %d "
+	    " WHERE id = %d",
+	    pem_hash, st->mtime, time(1),
+	    pem_id);
 }
 
 void refresh_pem(int pem_id)
