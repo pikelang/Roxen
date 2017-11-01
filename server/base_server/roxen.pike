@@ -6268,6 +6268,48 @@ void show_timers()
 }
 #endif
 
+void scan_certs(int|void force)
+{
+  foreach(query("CertGlobs"), string glob_pattern) {
+    glob_pattern = String.trim_all_whites(glob_pattern);
+    if (glob_pattern == "") continue;
+    if (!has_value(glob_pattern, "*") && !has_value(glob_pattern, "?")) {
+      CertDB.register_pem_file(glob_pattern);
+      continue;
+    }
+    string dir = dirname(glob_pattern);
+    string base = basename(glob_pattern);
+    array(string) dirs = ({});
+    if (has_value(dir, "*") || has_value(dir, "?")) {
+      // FIXME: Complicated case; expand the globbed dir.
+      dirs = ({ dir });
+    } else {
+      dirs = ({ dir });
+    }
+    foreach(dirs, dir) {
+      array(string) rdirs;
+      if (has_prefix(dir, "/")) {
+	// Absolute path.
+	rdirs = ({ "/" });
+      } else {
+	// lopen path
+	rdirs = map(roxenloader.package_directories, roxen_path);
+      }
+      foreach(rdirs, string rdir) {
+        foreach(glob(base, get_dir(combine_path(rdir, dir)) || ({})),
+		string fname) {
+	  werror("Found PEM file %O, matching %O.\n",
+		 Stdio.append_path(dir, fname), glob_pattern);
+	  CertDB.register_pem_file(Stdio.append_path(dir, fname));
+	}
+      }
+    }
+  }
+  CertDB.refresh_all_pem_files(force);
+
+  call_out(scan_certs, 600);	// Scan for new certs every 10 minutes.
+}
+
 
 protected class GCTimestamp
 {
@@ -6583,6 +6625,7 @@ int main(int argc, array tmp)
 
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
     if (!sizeof(roxenloader.package_directories)) break;
+    CertDB.register_pem_file(file_name);
     string cert;
     if (lfile_path(file_name) == file_name) {
       file_name = roxen_path (roxenloader.package_directories[0] + "/" +
@@ -6678,6 +6721,10 @@ int main(int argc, array tmp)
       }
     }
   }
+
+  // Update the certificate registry before opening any ports.
+  // NB: Force all certificate files to be reread and reparsed.
+  scan_certs(1);
 
   enable_configurations();
 

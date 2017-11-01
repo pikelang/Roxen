@@ -692,6 +692,15 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"directory you started Roxen. "
 		"The directories are searched in order for modules."));
 
+  defvar("CertGlobs", ({ "*.pem", "certs/*.pem" }),
+	 LOCALE(0, "Certificate and Private Key Globs"),
+	 TYPE_STRING_LIST,
+	 LOCALE(0, "<p>This is a list of globs for which corresponding files "
+		"will automatically be imported into the certificate "
+		"database on server start.</p>\n"
+		"<p>It may be left empty, in which case any certificates "
+		"to use will need to be added by hand.</p>\n"));
+
   defvar("Supports",
          Variable.Text( "#include <etc/supports>\n",
                         VAR_MORE, LOCALE(134, "Client supports regexps"),
