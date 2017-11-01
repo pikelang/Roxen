@@ -91,7 +91,7 @@ protected variant string format_dn(string(8bit) dn)
   return format_dn(seq);
 }
 
-protected void low_refresh_pem(int pem_id)
+protected void low_refresh_pem(int pem_id, int|void force)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
 
@@ -109,6 +109,8 @@ protected void low_refresh_pem(int pem_id)
 
   string pem_file = pem_info->path;
 
+  if (!sizeof(pem_file)) return;
+
   string raw_pem;
   string pem_hash;
 
@@ -123,7 +125,7 @@ protected void low_refresh_pem(int pem_id)
 	     pem_file, strerror(errno()));
     } else {
       pem_hash = Crypto.SHA256.hash(raw_pem);
-      if (pem_info->hash == pem_hash) {
+      if ((pem_info->hash == pem_hash) && !force) {
 	// No change.
 	return;
       }
@@ -386,11 +388,24 @@ protected void low_refresh_pem(int pem_id)
 	    pem_id);
 }
 
+//! Refresh a single PEM file.
 void refresh_pem(int pem_id)
 {
   object privs = Privs("Reading cert file");
 
   low_refresh_pem(pem_id);
+}
+
+//! Refresh all known PEM files.
+void refresh_all_pem_files(int|void force)
+{
+  Sql.Sql db = DBManager.cached_get("roxen");
+
+  object privs = Privs("Reading cert file");
+
+  foreach(db->typed_query("SELECT id FROM cert_pem_files")->id, int pem_id) {
+    low_refresh_pem(pem_id, force);
+  }
 }
 
 //! Register a single PEM file (no @[Privs]).
@@ -475,7 +490,7 @@ array(int) register_pem_files(array(string) pem_files, string|void password)
   object privs = Privs("Reading cert file");
 
   array(int) pem_ids = ({});
-  foreach(map(pem_files, String.trim_whites), string pem_file) {
+  foreach(map(pem_files, String.trim_all_whites), string pem_file) {
     if (pem_file == "") continue;
 
     pem_ids += ({ low_register_pem_file(pem_file, password) });
