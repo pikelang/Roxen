@@ -2693,6 +2693,118 @@ class StartTLSProtocol
       return ::verify_set(new_value);
     }
 
+    protected mapping(Standards.ASN1.Types.Identifier:string)
+      parse_dn(Standards.ASN1.Types.Sequence dn)
+    {
+      mapping(Standards.ASN1.Types.Identifier:string) ids = ([]);
+      foreach(dn->elements, Standards.ASN1.Types.Compound pair)
+      {
+	if(pair->type_name!="SET" || !sizeof(pair)) continue;
+	pair = pair[0];
+	if(pair->type_name!="SEQUENCE" || sizeof(pair)!=2)
+	  continue;
+	if(pair[0]->type_name=="OBJECT IDENTIFIER" &&
+	   pair[1]->value && !ids[pair[0]])
+	  ids[pair[0]] = pair[1]->value;
+      }
+      return ids;
+    }
+
+    protected string render_element(int keypair_id)
+    {
+      array(Crypto.Sign.State|array(string)) keypair =
+	CertDB.get_keypair(keypair_id);
+      if (!keypair) {
+	return "Lost certificate";
+      }
+      [Crypto.Sign.State private_key, array(string) certs] = keypair;
+
+      Standards.X509.TBSCertificate tbs =
+	Standards.X509.decode_certificate(certs[0]);
+
+      array(string) res = ({});
+
+      if (!tbs) {
+	res += ({ "<b>Invalid certificate.</b>" });
+      } else {
+	mapping(Standards.ASN1.Types.Identifier:string) dn =
+	  parse_dn(tbs->subject);
+
+	string tmp;
+	if ((tmp = dn[Standards.PKCS.Identifiers.at_ids.commonName])) {
+	  res += ({
+	    sprintf("<b><tt>%s</tt></b>", Roxen.html_encode_string(tmp)),
+	  });
+	} else {
+	  res += ({ "" });
+	}
+
+	res[-1] += sprintf(" (%s, %d bits)",
+			   Roxen.html_encode_string(private_key->name()),
+			   private_key->key_size());
+
+	if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationName]) {
+	  if (dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	    tmp += "/" +
+	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
+	  }
+	  res += ({
+	    sprintf("Issued to: %s", Roxen.html_encode_string(tmp)),
+	  });
+	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	  res += ({
+	    sprintf("Issued to: %s", Roxen.html_encode_string(tmp)),
+	  });
+	}
+
+	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
+	  res += ({ "Self-signed" });
+	} else {
+	  dn = parse_dn(tbs->issuer);
+	  tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationName];
+	  if (dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	    tmp = (tmp?(tmp + "/"):"") +
+	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
+	  }
+	  string tmp2 = dn[Standards.PKCS.Identifiers.at_ids.commonName];
+	  if (tmp2) {
+	    if (tmp) {
+	      tmp = tmp2 + " (" + tmp + ")";
+	    } else {
+	      tmp = tmp2;
+	    }
+	  }
+	  if (tmp) {
+	    res += ({
+	      sprintf("Issued by: %s", Roxen.html_encode_string(tmp)),
+	    });
+	  }
+	}
+
+	tmp = Roxen.html_encode_string(Calendar.Second(tbs->not_after)->
+				       format_time());
+	if (tbs->not_after < time(1)) {
+	  // Already expired.
+	  res += ({
+	    sprintf("Expired: <font color='&usr.warncolor;'>%s</font>\n"
+		    "<img src='&usr.err-3;' />", tmp),
+	  });
+	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
+	  // Expires within 30 days.
+	  res += ({
+	    sprintf("Expires: <font color='&usr.warncolor;'>%s</font>\n"
+		    "<img src='&usr.err-2;' />", tmp),
+	  });
+	} else {
+	  res += ({
+	    sprintf("Expires: %s", tmp),
+	  });
+	}
+      }
+
+      return res * "<br />\n";
+    }
+
     protected void create( void|int _flags, void|LocaleString std_name,
 			   void|LocaleString std_doc )
     {
