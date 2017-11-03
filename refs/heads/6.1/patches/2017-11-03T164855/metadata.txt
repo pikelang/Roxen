@@ -1,0 +1,97 @@
+subject: Roxen 6.1: RequestID API additions, DB Backup fixes, FS Proxy fix
+from: a14685314b3e5a8a5bc473eb894cdd49fc3b124b
+to: 646a36ee3fb7e0ed6e7206650d2ca8d82ee2b0ba
+originator: Martin Karlgren
+depends: 2017-10-24T090236
+restart: true
+
+• FS Proxy: Allow multiple instances.
+
+• DB-browser: Nicer color for tables without backup
+
+• DB-browser: Improved layout of existing backups table
+
+• DB-browser: Show full path to backups again
+
+They are essential when using manual directory names.
+
+• DB-browser: Removed extranous String.capitalize().
+
+• DB-browser: Improved YES_I_KNOW_WHAT_I_AM_DOING.
+
+• DB-browser: Add indication that a table isn't backed up.
+
+Fixes some of [WS-52]/[WS-80].
+
+• DBManager: Add APIs to check whether backups are inhibited.
+
+module_table_info() now indicates whether the selected table
+is backed up or not.
+
+Also adds documentation for module_table_info().
+
+• DBManager: Inhibit backups of quite a few tables in the local db.
+
+Inhibits backup of tables for:
+
+* The argument cache.
+
+* The image caches.
+
+* The compiled log formats cache.
+
+* The cache of available modules.
+
+* The precompiled files cache.
+
+* The session cache.
+
+This should cause backups of the local db to complete much faster.
+
+Fixes some of [WS-52].
+
+• DBManager: Added support to exclude some tables from backup.
+
+Adds inhibit_backups() and permit_backups().
+
+Fixes some of [WS-52]/[WS-80].
+
+• DBManager: delete_backup() now knows about partial backups.
+
+Fixes some more of [WS-52]/[WS-79].
+
+• DB-browser: Indicate incomplete backups.
+
+The DB-browser now knows of the entry in db_backups that indicates
+that a backup is in progress, and marks such backups as incomplete
+in the interface.
+
+Fixes some of [WS-52].
+
+• DBManager: Keep track of backups in progress.
+
+Backups in progress now have a temporary entry in the
+db_backups table (indicated as a backup of the table "").
+The temporary entry is replaced by entries for the
+individual tables when the backup completes.
+
+This means that we no longer lose track of backups that are
+in progress when the server restarts.
+
+Fixes some of [WS-52].
+
+• Fixed NPE in RequestID->client_scheme() [CMS-297]
+
+• Refactoring after QA feedback. [CMS-297]
+
+• Renamed RequestID->client_prot(). [CMS-297]
+
+Renamed RequestID->client_prot() in prototypes.pike to
+client_scheme().
+
+• New function 'client_prot()' [CMS-297]
+
+Added new function 'client_prot()', returns the original client
+protocol name.
+
+• Removed trailing spaces.
