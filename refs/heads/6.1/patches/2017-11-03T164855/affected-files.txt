@@ -1,0 +1,11 @@
+Modified files:
+  base_server/cache.pike
+  base_server/config_userdb.pike
+  base_server/prototypes.pike
+  base_server/roxen.pike
+  base_server/roxenloader.pike
+  config_interface/dbs/browser.pike
+  config_interface/dbs/restore_db.pike
+  etc/modules/DBManager.pmod
+  modules/filesystems/fs_proxy.pike
+  modules/tags/insert_cached_href.pike
