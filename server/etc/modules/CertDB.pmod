@@ -7,9 +7,9 @@
 //! Certificate Database API
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) report_debug("CertDB: %s\n", X)
+# define SSL3_WERR(X ...) report_debug("CertDB: " + X)
 #else
-# define SSL3_WERR(X)
+# define SSL3_WERR(X ...)
 #endif
 
 
@@ -118,15 +118,16 @@ protected void low_refresh_pem(int pem_id, int|void force)
   if (st) {
     // FIXME: Check if mtime hash changed before reading the file?
 
-    SSL3_WERR (sprintf ("Reading cert file %O", pem_file));
+    SSL3_WERR("Reading cert file %O\n", pem_file);
     if( catch{ raw_pem = lopen(pem_file, "r")->read(); } )
     {
-      werror("Reading PEM file %O failed: %s\n",
-	     pem_file, strerror(errno()));
+      SSL3_WERR("Reading PEM file %O failed: %s\n",
+		pem_file, strerror(errno()));
     } else {
       pem_hash = Crypto.SHA256.hash(raw_pem);
       if ((pem_info->hash == pem_hash) && !force) {
 	// No change.
+	SSL3_WERR("PEM file not modified since last import.\n");
 	return;
       }
     }
@@ -176,9 +177,11 @@ protected void low_refresh_pem(int pem_id, int|void force)
 						body, pem_info->pass);
 	    };
 	  if (err) {
-	    werror("Invalid decryption password for %O.\n", pem_file);
+	    SSL3_WERR("Invalid decryption password for %O.\n", pem_file);
 	  }
 	}
+
+	SSL3_WERR("Got %s.\n", msg->pre);
 
 	switch(msg->pre) {
 	case "CERTIFICATE":
@@ -202,7 +205,6 @@ protected void low_refresh_pem(int pem_id, int|void force)
 	case "RSA PRIVATE KEY":
 	case "DSA PRIVATE KEY":
 	case "ECDSA PRIVATE KEY":
-	  werror("CERTDB: Got %s.\n", msg->pre);
 	  Crypto.Sign.State private_key =
 	    Standards.X509.parse_private_key(body);
 
@@ -225,7 +227,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 	  break;
 
 	default:
-	  werror("Unsupported PEM message: %O\n", msg->pre);
+	  SSL3_WERR("Unsupported PEM message: %O\n", msg->pre);
 	  break;
 	}
       }
@@ -234,8 +236,6 @@ protected void low_refresh_pem(int pem_id, int|void force)
     werror("Failed to handle PEM file:\n");
     master()->handle_error(err);
   }
-
-  werror("New keys: %d\n", sizeof(keys));
 
   foreach(keys, mapping(string:string|int) key_info) {
     tmp = db->typed_query("SELECT * "
@@ -354,6 +354,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
     } else if (tmp[0]->expires <= cert_info->expires) {
       // NB: Keep more recent certificates unmodified (even if stale).
       // NB: keyhash, subject and issuer are unmodified (cf above).
+      SSL3_WERR("Updating cert #%d: %O\n", tmp[0]->id, cert_info);
       db->query("UPDATE certs "
 		"   SET pem_id = %d, "
 		"       msg_no = %d, "
@@ -363,6 +364,9 @@ protected void low_refresh_pem(int pem_id, int|void force)
 		cert_info->pem_id, cert_info->msg_no,
 		cert_info->expires, cert_info->data,
 		tmp[0]->id);
+    } else {
+      SSL3_WERR("Got certificate older than that in db: %d < %d\n",
+		cert_info->expires, tmp[0]->expires);
     }
   }
 
@@ -543,8 +547,8 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
   string digest = tmp[0]->data[<Crypto.AES.CCM.digest_size()-1..];
   string raw = ccm->crypt(tmp[0]->data[..<Crypto.AES.CCM.digest_size()]);
   if (digest != ccm->digest()) {
-    werror("Invalid key digest for key #%d. Has the server salt changed?\n",
-	   key_id);
+    SSL3_WERR("Invalid key digest for key #%d. Has the server salt changed?\n",
+	      key_id);
     return 0;
   }
   Crypto.Sign.State private_key = Standards.X509.parse_private_key(raw);
@@ -561,7 +565,7 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
     cert_id = tmp[0]->parent;
   }
   if (!sizeof(certs)) {
-    werror("Missing certificate (#%d) for keypair %d.\n", cert_id, keypair_id);
+    SSL3_WERR("Missing certificate (#%d) for keypair %d.\n", cert_id, keypair_id);
     return 0;
   }
 
