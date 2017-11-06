@@ -2546,7 +2546,7 @@ class StartTLSProtocol
 	  }
 	  if (tmp) {
 	    res += ({
-              sprintf("<td style='white-space:nowrap'>" +
+              sprintf("<td style='white-space:nowrap;vertical-align:top'>" +
                       LOC_C(0, "Issued by") +
                       "</td><td>%s</td>",
                       Roxen.html_encode_string(tmp)),
@@ -2579,6 +2579,19 @@ class StartTLSProtocol
 	    sprintf("<td>%s</td><td>%s</td>", LOC_C(0, "Expires"), tmp),
 	  });
 	}
+
+        mapping keypair_metadata = CertDB.get_keypair_metadata(keypair_id);
+
+        array(string) paths = keypair_metadata->certs->pem_path +
+          ({ keypair_metadata->key->pem_path });
+        if (sizeof(paths)) {
+          paths = Array.uniq(paths);
+          res += ({
+            sprintf("<td style='vertical-align:top'>%s</td><td><tt>%s</tt></td>",
+                    LOC_C(0, "Path(s)"),
+                    map(paths, Roxen.html_encode_string) * "</tt><br/><tt>")
+          });
+        }
       }
 
       return res;
