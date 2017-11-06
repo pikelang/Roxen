@@ -18,8 +18,10 @@ protected local constant Compound = Standards.ASN1.Types.Compound;
 protected local constant Identifier = Standards.ASN1.Types.Identifier;
 protected local constant Sequence = Standards.ASN1.Types.Sequence;
 
+protected typedef mapping(string:int|string) sql_row;
+
 //!
-array(mapping(string:int|string)) list_keys()
+array(sql_row) list_keys()
 {
   Sql.Sql db = DBManager.cached_get("roxen");
   return db->typed_query("SELECT * "
@@ -28,7 +30,7 @@ array(mapping(string:int|string)) list_keys()
 }
 
 //!
-array(mapping(string:int|string)) list_keypairs()
+array(sql_row) list_keypairs()
 {
   Sql.Sql db = DBManager.cached_get("roxen");
   return db->typed_query("SELECT * "
@@ -37,7 +39,7 @@ array(mapping(string:int|string)) list_keypairs()
 }
 
 //!
-mapping(string:int|string) get_cert(int cert_id)
+sql_row get_cert(int cert_id)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
   array(mapping(string:int|string)) res =
@@ -95,17 +97,17 @@ protected void low_refresh_pem(int pem_id, int|void force)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
 
-  array(mapping(string:int|string)) tmp =
+  array(sql_row) tmp =
     db->typed_query("SELECT * "
 		    "  FROM cert_pem_files "
 		    " WHERE id = %d",
 		    pem_id);
   if (!sizeof(tmp)) return;
 
-  mapping(string:int|string) pem_info = tmp[0];
+  sql_row pem_info = tmp[0];
 
-  array(mapping(string:int|string)) certs = ({});
-  array(mapping(string:int|string)) keys = ({});
+  array(sql_row) certs = ({});
+  array(sql_row) keys = ({});
 
   string pem_file = pem_info->path;
 
@@ -237,7 +239,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
     master()->handle_error(err);
   }
 
-  foreach(keys, mapping(string:string|int) key_info) {
+  foreach(keys, sql_row key_info) {
     tmp = db->typed_query("SELECT * "
 			  "  FROM cert_keys "
 			  " WHERE keyhash = %s",
@@ -257,7 +259,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 			      " WHERE keyhash = %s "
 			      " ORDER BY id ASC",
 			      key_info->keyhash),
-	      mapping(string:string|int) cert_info) {
+	      sql_row cert_info) {
 	if (sizeof(db->query("SELECT * "
 			     "  FROM cert_keypairs "
 			     " WHERE cert_id = %d",
@@ -287,7 +289,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
     }
   }
 
-  foreach(certs, mapping(string:string|int) cert_info) {
+  foreach(certs, sql_row cert_info) {
     tmp = db->typed_query("SELECT * "
 			  "  FROM certs "
 			  " WHERE keyhash = %s "
@@ -429,7 +431,7 @@ protected int low_register_pem_file(string pem_file, string|void password)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
 
-  array(mapping(string:int|string)) row =
+  array(sql_row) row =
     db->typed_query("SELECT * "
 		    "  FROM cert_pem_files "
 		    " WHERE path = %s",
@@ -524,7 +526,7 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
 
   Sql.Sql db = DBManager.cached_get("roxen");
 
-  array(mapping(string:string|int)) tmp =
+  array(sql_row) tmp =
     db->typed_query("SELECT * "
 		    "  FROM cert_keypairs "
 		    " WHERE id = %d",
@@ -570,4 +572,68 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
   }
 
   return ({ private_key, certs });
+}
+
+//! Get metadata for a keypair id.
+mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_id)
+{
+  Sql.Sql db = DBManager.cached_get("roxen");
+
+  array(sql_row) tmp =
+    db->typed_query("SELECT * "
+		    "  FROM cert_keypairs "
+		    " WHERE id = %d",
+		    keypair_id);
+  if (!sizeof(tmp)) return 0;
+
+  int key_id = tmp[0]->key_id;
+  int cert_id = tmp[0]->cert_id;
+
+  mapping(string:string|sql_row|array(sql_row)) res = ([
+    "name": tmp[0]->name,
+  ]);
+
+  tmp = db->typed_query("SELECT id, pem_id, msg_no, HEX(keyhash) AS keyhash "
+			"  FROM cert_keys "
+			" WHERE id = %d",
+			key_id);
+  if (sizeof(tmp)) {
+    res->key = tmp[0];
+
+    if (tmp[0]->pem_id) {
+      tmp = db->typed_query("SELECT path "
+			    "  FROM cert_pem_files "
+			    " WHERE id = %d",
+			    tmp[0]->pem_id);
+      if (sizeof(tmp)) {
+	res->key->pem_path = tmp[0]->path;
+      }
+    }
+  }
+
+  while(cert_id) {
+    tmp = db->typed_query("SELECT id, HEX(subject) AS subject, "
+			  "       HEX(issuer) AS issuer, parent, "
+			  "       pem_id, msg_no, expires, "
+			  "       HEX(keyhash) AS keyhash "
+			  "  FROM certs "
+			  " WHERE id = %d",
+			  cert_id);
+    if (!sizeof(tmp)) break;
+
+    res->certs += tmp;
+    cert_id = tmp[0]->parent;
+
+    if (tmp[0]->pem_id) {
+      tmp = db->typed_query("SELECT path "
+			    "  FROM cert_pem_files "
+			    " WHERE id = %d",
+			    tmp[0]->pem_id);
+      if (sizeof(tmp)) {
+	res->certs[-1]->pem_path = tmp[0]->path;
+      }
+    }
+  }
+
+  return res;
 }
