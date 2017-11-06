@@ -46,9 +46,11 @@ Thread.Thread backend_thread;
 
 //<locale-token project="roxen_start">   LOC_S </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
-#define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
-#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
-#define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
+//<locale-token project="roxen_config">  LOC_C </locale-token>
+#define LOC_S(X,Y)      _STR_LOCALE("roxen_start",X,Y)
+#define LOC_M(X,Y)      _STR_LOCALE("roxen_message",X,Y)
+#define LOC_C(X,Y)      _STR_LOCALE("roxen_config",X,Y)
+#define CALL_M(X,Y)     _LOCALE_FUN("roxen_message",X,Y)
 
 // --- Debug defines ---
 
@@ -2464,12 +2466,14 @@ class StartTLSProtocol
       return ids;
     }
 
-    protected string render_element(int keypair_id)
+    protected array(string) render_element(int keypair_id)
     {
       array(Crypto.Sign.State|array(string)) keypair =
 	CertDB.get_keypair(keypair_id);
       if (!keypair) {
-	return "Lost certificate";
+        return ({ "<td colspan='2'>" +
+                  LOC_C(0, "Lost certificate") +
+                  "</td>" });
       }
       [Crypto.Sign.State private_key, array(string) certs] = keypair;
 
@@ -2479,7 +2483,9 @@ class StartTLSProtocol
       array(string) res = ({});
 
       if (!tbs) {
-	res += ({ "<b>Invalid certificate.</b>" });
+        res += ({ "<td colspan='2'><b>" +
+                  LOC_C(0, "Invalid certificate") +
+                  ".</b>" });
       } else {
 	mapping(Standards.ASN1.Types.Identifier:string) dn =
 	  parse_dn(tbs->subject);
@@ -2487,13 +2493,14 @@ class StartTLSProtocol
 	string tmp;
 	if ((tmp = dn[Standards.PKCS.Identifiers.at_ids.commonName])) {
 	  res += ({
-	    sprintf("<b><tt>%s</tt></b>", Roxen.html_encode_string(tmp)),
+            sprintf("<td colspan='2'><b><tt>%s</tt></b>",
+                    Roxen.html_encode_string(tmp)),
 	  });
 	} else {
-	  res += ({ "" });
+	  res += ({ "<td colspan='2'>" });
 	}
 
-	res[-1] += sprintf(" (%s, %d bits)",
+	res[-1] += sprintf(" (%s, " + LOC_C(0, "%d bits") + ")</td>",
 			   Roxen.html_encode_string(private_key->name()),
 			   private_key->key_size());
 
@@ -2503,16 +2510,25 @@ class StartTLSProtocol
 	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
 	  }
 	  res += ({
-	    sprintf("Issued to: %s", Roxen.html_encode_string(tmp)),
+            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+                    LOC_C(0, "Issued to"),
+                    Roxen.html_encode_string(tmp)),
 	  });
 	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
 	  res += ({
-	    sprintf("Issued to: %s", Roxen.html_encode_string(tmp)),
+            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+                    LOC_C(0, "Issued to"),
+                    Roxen.html_encode_string(tmp)),
 	  });
 	}
 
 	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
-	  res += ({ "Self-signed" });
+          res += ({
+            sprintf("<td style='white-space:nowrap'>" +
+                    LOC_C(0, "Issued by") +
+                    "</td><td>%s</td>",
+                    LOC_C(0, "Self-signed"))
+          });
 	} else {
 	  dn = parse_dn(tbs->issuer);
 	  tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationName];
@@ -2530,7 +2546,10 @@ class StartTLSProtocol
 	  }
 	  if (tmp) {
 	    res += ({
-	      sprintf("Issued by: %s", Roxen.html_encode_string(tmp)),
+              sprintf("<td style='white-space:nowrap'>" +
+                      LOC_C(0, "Issued by") +
+                      "</td><td>%s</td>",
+                      Roxen.html_encode_string(tmp)),
 	    });
 	  }
 	}
@@ -2540,23 +2559,74 @@ class StartTLSProtocol
 	if (tbs->not_after < time(1)) {
 	  // Already expired.
 	  res += ({
-	    sprintf("Expired: <font color='&usr.warncolor;'>%s</font>\n"
-		    "<img src='&usr.err-3;' />", tmp),
+            sprintf("<td>%s</td>"
+                    "<td><font color='&usr.warncolor;'>%s</font>\n"
+                    "<img src='&usr.err-3;' /></td>",
+                    LOC_C(0, "Expired"),
+                    tmp),
 	  });
 	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
 	  // Expires within 30 days.
 	  res += ({
-	    sprintf("Expires: <font color='&usr.warncolor;'>%s</font>\n"
-		    "<img src='&usr.err-2;' />", tmp),
+            sprintf("<td>%s</td>"
+                    "<td><font color='&usr.warncolor;'>%s</font>\n"
+                    "<img src='&usr.err-2;' /></td>",
+                    LOC_C(0, "Expires"),
+                    tmp),
 	  });
 	} else {
 	  res += ({
-	    sprintf("Expires: %s", tmp),
+	    sprintf("<td>%s</td><td>%s</td>", LOC_C(0, "Expires"), tmp),
 	  });
 	}
       }
 
-      return res * "<br />\n";
+      return res;
+    }
+
+    string render_form(RequestID id, void|mapping additional_args) {
+      array(string) current = map(query(), _name);
+      string res = "<table width='100%'>\n";
+      foreach( get_choice_list(); int i; mixed elem ) {
+        if (i != 0) {
+          res += "<tr><td colspan='3'><hr/></td></tr>\n";
+        }
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": _name(elem),
+        ]);
+        if(has_value(current, m->value)) {
+          m->checked="checked";
+          current -= ({ m->value });
+        }
+        array(string) el_rows = render_element(elem);
+        res += sprintf("<tr><td rowspan='%d'>%s</td>"
+                       "%s"
+                       "</tr>\n",
+                       sizeof(el_rows),
+                       Roxen.make_tag( "input", m),
+                       el_rows[0]);
+        foreach(el_rows[1..], string row) {
+          res += sprintf("<tr>%s</tr>", row);
+        }
+      }
+      // Make an entry for the current values if they're not in the list,
+      // to ensure that the value doesn't change as a side-effect by
+      // another change.
+      foreach(current, string value) {
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": value,
+          "checked": "checked",
+        ]);
+        string title = sprintf(LOC_C(1121,"(stale value %s)"), value);
+        res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+                       Roxen.make_tag( "input", m),
+                       Roxen.html_encode_string(title));
+      }
+      return res + "</table>";
     }
 
     protected void create( void|int _flags, void|LocaleString std_name,
