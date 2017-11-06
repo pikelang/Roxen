@@ -2739,7 +2739,9 @@ class StartTLSProtocol
 	string tmp;
 	if ((tmp = dn[Standards.PKCS.Identifiers.at_ids.commonName])) {
 	  res += ({
-            sprintf("<td colspan='2'><b><tt>%s</tt></b>",
+            sprintf("<td style='white-space:nowrap'>%s</td>"
+                    "<td><b><tt>%s</tt></b>",
+                    LOC_C(0, "Common Name"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else {
@@ -2757,13 +2759,13 @@ class StartTLSProtocol
 	  }
 	  res += ({
             sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued to"),
+                    LOC_C(0, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
 	  res += ({
             sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued to"),
+                    LOC_C(0, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	}
@@ -2771,7 +2773,7 @@ class StartTLSProtocol
 	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
           res += ({
             sprintf("<td style='white-space:nowrap'>" +
-                    LOC_C(0, "Issued by") +
+                    LOC_C(0, "Issued By") +
                     "</td><td>%s</td>",
                     LOC_C(0, "Self-signed"))
           });
@@ -2793,7 +2795,7 @@ class StartTLSProtocol
 	  if (tmp) {
 	    res += ({
               sprintf("<td style='white-space:nowrap;vertical-align:top'>" +
-                      LOC_C(0, "Issued by") +
+                      LOC_C(0, "Issued By") +
                       "</td><td>%s</td>",
                       Roxen.html_encode_string(tmp)),
 	    });
@@ -2828,16 +2830,25 @@ class StartTLSProtocol
 
         mapping keypair_metadata = CertDB.get_keypair_metadata(keypair_id);
 
-        array(string) paths = keypair_metadata->certs->pem_path +
+        array(string) paths =
+          keypair_metadata->certs->pem_path +
           ({ keypair_metadata->key->pem_path });
-        if (sizeof(paths)) {
-          paths = Array.uniq(paths);
-          res += ({
-            sprintf("<td style='vertical-align:top'>%s</td><td><tt>%s</tt></td>",
-                    LOC_C(0, "Path(s)"),
-                    map(paths, Roxen.html_encode_string) * "</tt><br/><tt>")
-          });
-        }
+        paths = Array.uniq(paths);
+        paths = replace(paths, 0, "__LOST__");
+        paths = map(paths, lfile_path);
+        res += ({
+          sprintf("<td style='vertical-align:top'>%s</td><td>%s</td>",
+                  LOC_C(0, "Path(s)"),
+                  map(paths, lambda(string p) {
+                    if (p)
+                      return "<tt>" + Roxen.html_encode_string(p) + "</tt>";
+                    else
+                      return
+                        "<font color='&usr.warncolor;'>" +
+                        LOC_C(0, "Lost file") +
+                        "</font>";
+                  }) * "<br/>")
+        });
       }
 
       return res;
