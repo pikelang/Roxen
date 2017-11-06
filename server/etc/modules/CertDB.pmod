@@ -573,3 +573,67 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
 
   return ({ private_key, certs });
 }
+
+//! Get metadata for a keypair id.
+mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_id)
+{
+  Sql.Sql db = DBManager.cached_get("roxen");
+
+  array(sql_row) tmp =
+    db->typed_query("SELECT * "
+		    "  FROM cert_keypairs "
+		    " WHERE id = %d",
+		    keypair_id);
+  if (!sizeof(tmp)) return 0;
+
+  int key_id = tmp[0]->key_id;
+  int cert_id = tmp[0]->cert_id;
+
+  mapping(string:string|sql_row|array(sql_row)) res = ([
+    "name": tmp[0]->name,
+  ]);
+
+  tmp = db->typed_query("SELECT id, pem_id, msg_no, HEX(keyhash) AS keyhash "
+			"  FROM cert_keys "
+			" WHERE id = %d",
+			key_id);
+  if (sizeof(tmp)) {
+    res->key = tmp[0];
+
+    if (tmp[0]->pem_id) {
+      tmp = db->typed_query("SELECT path "
+			    "  FROM cert_pem_files "
+			    " WHERE id = %d",
+			    tmp[0]->pem_id);
+      if (sizeof(tmp)) {
+	res->key->pem_path = tmp[0]->path;
+      }
+    }
+  }
+
+  while(cert_id) {
+    tmp = db->typed_query("SELECT id, HEX(subject) AS subject, "
+			  "       HEX(issuer) AS issuer, parent, "
+			  "       pem_id, msg_no, expires, "
+			  "       HEX(keyhash) AS keyhash "
+			  "  FROM certs "
+			  " WHERE id = %d",
+			  cert_id);
+    if (!sizeof(tmp)) break;
+
+    res->certs += tmp;
+    cert_id = tmp[0]->parent;
+
+    if (tmp[0]->pem_id) {
+      tmp = db->typed_query("SELECT path "
+			    "  FROM cert_pem_files "
+			    " WHERE id = %d",
+			    tmp[0]->pem_id);
+      if (sizeof(tmp)) {
+	res->certs[-1]->pem_path = tmp[0]->path;
+      }
+    }
+  }
+
+  return res;
+}
