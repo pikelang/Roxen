@@ -707,7 +707,10 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"will automatically be imported into the certificate "
 		"database on server start.</p>\n"
 		"<p>It may be left empty, in which case any certificates "
-		"to use will need to be added by hand.</p>\n"));
+		"to use will need to be added by hand.</p>\n"))
+    ->set_changed_callback(lambda() {
+                             roxenp()->background_run(0, roxenp()->scan_certs);
+                           });
 
   defvar("Supports",
          Variable.Text( "#include <etc/supports>\n",
