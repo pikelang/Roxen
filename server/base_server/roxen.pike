@@ -6282,8 +6282,10 @@ void scan_certs(int|void force)
       foreach(rdirs, string rdir) {
         foreach(glob(base, get_dir(combine_path(rdir, dir)) || ({})),
 		string fname) {
+#ifdef SSL3_DEBUG
 	  werror("Found PEM file %O, matching %O.\n",
 		 Stdio.append_path(dir, fname), glob_pattern);
+#endif
 	  CertDB.register_pem_file(Stdio.append_path(dir, fname));
 	}
       }

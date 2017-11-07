@@ -226,14 +226,24 @@ void set_up_ssl_variables( Protocol o )
   defvar( "ssl_keys", o->CertificateKeyChoiceVariable
 	  (VAR_NO_DEFAULT,
 	   LOCALE(0, "SSL/TLS Certificate(s)"),
-	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n")));
+	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n"
+		  "<p>Certificate and key files matching the "
+		  "<b>Global Variables/Settings/Certificate and "
+		  "Private Key Globs</b> setting"
+		  "are automatically imported and valid "
+		  "combinations are listed above.</p>\n"
+		  "<p>At least one certificate must be selected.</p>\n"
+		  "<p>The Server Name Indication (SNI) extension sent by the "
+		  "TLS client will be used to choose a specific certificate "
+		  "for the connection from the set selected here.</p>\n"
+		  )));
 
 #if 1
   // Old-style SSL Certificate variables.
   // FIXME: Keep these around for at least a few major versions (10 years?).
   defvar( "ssl_cert_file",
 	  o->CertificateListVariable
-	  ( ({ "demo_certificate.pem" }), 0,
+	  ( ({ "demo_certificate.pem" }), VAR_INVISIBLE,
 	     LOCALE(86, "SSL certificate file(s)"),
 	     LOCALE(87, "<p>The SSL certificate file(s) to use.</p>\n"
 		    "<p>This is a list of certificates, "
@@ -241,12 +251,11 @@ void set_up_ssl_variables( Protocol o )
 		    "corresponding private key files in any order.</p>\n"
 		    "<p>If a path is relative, it will first be "
 		    "searched for relative to %s, "
-		    "and if not found there relative to %s.</p>\n")))->
-    set_invisibility_check_callback(hide_if_empty);
+		    "and if not found there relative to %s.</p>\n")));
 
   defvar( "ssl_key_file",
 	  o->KeyFileVariable
-	  ( "", 0, LOCALE(88, "SSL key file"),
+	  ( "", VAR_INVISIBLE, LOCALE(88, "SSL key file"),
 	    LOCALE(89, "The SSL key file to use. If the path is "
 		   "relative, it will first be searched for "
 		   "relative to %s, and if not found there "
@@ -255,8 +264,7 @@ void set_up_ssl_variables( Protocol o )
 		   "file, leave this field empty to use the "
 		   "certificate file only. "
 		   "This field is obsolete, since the same setting "
-		   "can be done in <b>SSL certificate file(s)</b>.")))->
-    set_invisibility_check_callback(hide_if_empty);
+		   "can be done in <b>SSL certificate file(s)</b>.")));
 #endif
 
 #if constant(SSL.Constants.CIPHER_aead)
