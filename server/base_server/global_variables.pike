@@ -226,7 +226,17 @@ void set_up_ssl_variables( Protocol o )
   defvar( "ssl_keys", o->CertificateKeyChoiceVariable
 	  (VAR_NO_DEFAULT,
 	   LOCALE(0, "SSL/TLS Certificate(s)"),
-	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n")));
+	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n"
+		  "<p>Certificate and key files matching the "
+		  "<b>Global Variables/Settings/Certificate and "
+		  "Private Key Globs</b> setting"
+		  "are automatically imported and valid "
+		  "combinations are listed above.</p>\n"
+		  "<p>At least one certificate must be selected.</p>\n"
+		  "<p>The Server Name Indication (SNI) extension sent by the "
+		  "TLS client will be used to choose a specific certificate "
+		  "for the connection from the set selected here.</p>\n"
+		  )));
 
 #if 1
   // Old-style SSL Certificate variables.
