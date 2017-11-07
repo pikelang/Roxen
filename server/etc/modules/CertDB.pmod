@@ -235,8 +235,10 @@ protected void low_refresh_pem(int pem_id, int|void force)
       }
     };
   if (err) {
-    werror("Failed to handle PEM file:\n");
+    werror("Failed to handle PEM file %O:\n", pem_file);
     master()->handle_error(err);
+
+    // NB: No return here. We want to zap the pem_id fields.
   }
 
   foreach(keys, sql_row key_info) {
