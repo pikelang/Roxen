@@ -534,6 +534,7 @@ private void low_shutdown(int exit_code, int|void apply_patches)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
+    stop_scan_certs();
     stop_hourly_maintenance();
 #ifdef THREADS
 #if constant(Filesystem.Monitor.basic)
@@ -6521,10 +6522,25 @@ void scan_certs(int|void force)
     }
   }
   CertDB.refresh_all_pem_files(force);
-
-  call_out(scan_certs, 600);	// Scan for new certs every 10 minutes.
 }
 
+protected BackgroundProcess scan_certs_process;
+
+// Start a background process that scan for new certs every 10 minutes.
+protected void start_scan_certs()
+{
+  if (scan_certs_process) return;
+
+  scan_certs_process = BackgroundProcess(600, scan_certs);
+}
+
+protected void stop_scan_certs()
+{
+  if (scan_certs_process) {
+    scan_certs_process->stop();
+    scan_certs_process = UNDEFINED;
+  }
+}
 
 protected class GCTimestamp
 {
@@ -6970,6 +6986,7 @@ int main(int argc, array tmp)
 #endif
 #endif /* THREADS */
 
+  start_scan_certs();
   start_hourly_maintenance();
 
 #ifdef TEST_EUID_CHANGE
