@@ -2125,6 +2125,10 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   // werror("Starting mysqldump command: %O...\n", cmd);
 
   if (Process.Process(cmd)->wait()) {
+    // Clean up failed backup from table "".
+    query( "DELETE FROM db_backups WHERE "
+           "db=%s AND directory=%s AND tbl=%s",
+           dbname, directory, "" );
     error("Mysql dump command failed for DB %s.\n", dbname);
   }
 
