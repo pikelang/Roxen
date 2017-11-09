@@ -1937,7 +1937,7 @@ void delete_backup( string dbname, string directory )
   rm( directory+"/dump.sql.bz2" );
   rm( directory+"/dump.sql.gz" );
   if (partial) {
-    foreach(get_dir(directory), string file) {
+    foreach(get_dir(directory)||({}), string file) {
       if (has_suffix(file, ".frm") ||
 	  has_suffix(file, ".MYD") ||
 	  has_suffix(file, ".MYI")) {
