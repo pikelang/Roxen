@@ -253,6 +253,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 		key_info->pem_id, key_info->msg_no,
 		key_info->keyhash, key_info->data);
       key_info->id = db->master_sql->insert_id();
+      SSL3_WERR("Added cert key #%d.\n", key_info->id);
 
       // Check if we have any matching certificates that currently lack keys,
       // and add corresponding keypairs.
@@ -282,12 +283,27 @@ protected void low_refresh_pem(int pem_id, int|void force)
       }
     } else {
       // Zap any stale or update in progress marker for the key.
-      db->query("UPDATE cert_keys "
-		"   SET pem_id = %d, "
-		"       msg_no = %d "
-		" WHERE id = %d",
-		key_info->pem_id, key_info->msg_no,
-		tmp[0]->id);
+      if (tmp[0]->data != key_info->data) {
+	// The encrypted data string has changed; this may be due
+	// to the server salt having been changed, or due to the
+	// old value having been created with an old proken Pike.
+	SSL3_WERR("Updating cert key #%d. Has the server salt changed?\n",
+		  tmp[0]->id);
+	db->query("UPDATE cert_keys "
+		  "   SET pem_id = %d, "
+		  "       msg_no = %d, "
+		  "       data = %s "
+		  " WHERE id = %d",
+		  key_info->pem_id, key_info->msg_no, key_info->data,
+		  tmp[0]->id);
+      } else {
+	db->query("UPDATE cert_keys "
+		  "   SET pem_id = %d, "
+		  "       msg_no = %d "
+		  " WHERE id = %d",
+		  key_info->pem_id, key_info->msg_no,
+		  tmp[0]->id);
+      }
     }
   }
 
