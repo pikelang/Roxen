@@ -2619,6 +2619,8 @@ class StartTLSProtocol
 
 	save();
       } else {
+	// No certs known to the server.
+	// Not reached except in very special circumstances.
 	// FIXME: Use anonymous suites?
 	report_error ("TLS port %s: %s", get_url(),
 		      LOC_M(63,"No certificates found.\n"));
