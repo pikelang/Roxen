@@ -2617,10 +2617,6 @@ class StartTLSProtocol
 	// Certificates found.
 	Keys->set(keypairs);
 
-	// Clear the old-style variables.
-	//Certificates->set(({}));
-	//KeyFile->set("");
-
 	save();
       } else {
 	// FIXME: Use anonymous suites?
