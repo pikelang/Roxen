@@ -1,0 +1,18 @@
+subject: Roxen 6.1: Custom Headers Filter Module.
+from: 646a36ee3fb7e0ed6e7206650d2ca8d82ee2b0ba
+to: 4cb541375b9f18ec244c92213507d0a551d97a60
+originator: Jonas Lonnberg
+depends: 2017-11-03T164855
+restart: true
+
+• Custom Headers Filter Module. [WS-63]
+
+Adjustments after QA.
+
+• Custom Headers Filter Module. [WS-63]
+
+• Custom Headers Filter Module. [WS-63]
+
+Adjustments after QA.
+
+• Custom Headers Filter Module. [WS-63]
