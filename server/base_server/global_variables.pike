@@ -229,7 +229,7 @@ void set_up_ssl_variables( Protocol o )
 	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n"
 		  "<p>Certificate and key files matching the "
 		  "<b>Global Variables/Settings/Certificate and "
-		  "Private Key Globs</b> setting"
+		  "Private Key Globs</b> setting "
 		  "are automatically imported and valid "
 		  "combinations are listed above.</p>\n"
 		  "<p>At least one certificate must be selected.</p>\n"

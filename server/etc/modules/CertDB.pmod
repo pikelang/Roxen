@@ -93,6 +93,179 @@ protected variant string format_dn(string(8bit) dn)
   return format_dn(seq);
 }
 
+protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
+{
+  Standards.X509.TBSCertificate tbs =
+    Standards.X509.decode_certificate(data);
+  if (!tbs) return;
+
+  string(8bit) subject = tbs->subject->get_der();
+  string(8bit) issuer = tbs->issuer->get_der();
+  int expires = tbs->not_after;
+
+  string(8bit) keyhash =
+    Crypto.SHA256.hash(tbs->public_key->pkc->pkcs_public_key()->get_der());
+
+  array(sql_row) tmp =
+    db->typed_query("SELECT * "
+		    "  FROM certs "
+		    " WHERE keyhash = %s "
+		    "   AND subject = %s "
+		    "   AND issuer = %s",
+		    keyhash,
+		    subject,
+		    issuer);
+  if (!sizeof(tmp)) {
+    db->query("INSERT INTO certs "
+	      "    (pem_id, msg_no, subject, issuer, expires, keyhash, data) "
+	      "VALUES (%d, %d, %s, %s, %d, %s, %s)",
+	      pem_id, msg_no, subject, issuer, expires, keyhash, data);
+    int cert_id = db->master_sql->insert_id();
+
+    // Check if we have a matching private key.
+    tmp = db->typed_query("SELECT * "
+			  "  FROM cert_keys "
+			  " WHERE keyhash = %s "
+			  " ORDER BY id ASC",
+			  keyhash);
+    if (sizeof(tmp)) {
+      // FIXME: Key selection policy.
+      string name = format_dn(subject);
+      if (issuer == subject) {
+	name += " (self-signed)";
+      } else {
+	name += " " + format_dn(issuer);
+      }
+      db->query("INSERT INTO cert_keypairs "
+		"       (cert_id, key_id, name) "
+		"VALUES (%d, %d, %s)",
+		cert_id, tmp[0]->id, name);
+    }
+
+    if (subject != issuer) {
+      // Not a self-signed certificate.
+
+      // Check if we have the cert that this cert was signed by.
+      tmp = db->typed_query("SELECT * "
+			    "  FROM certs "
+			    " WHERE subject = %s",
+			    issuer);
+      if (sizeof(tmp)) {
+	db->query("UPDATE certs "
+		  "   SET parent = %d "
+		  " WHERE id = %d",
+		  tmp[0]->id,
+		  cert_id);
+      }
+    }
+
+    // Update any cert that lacks a parent and
+    // is signed by us.
+    tmp = db->typed_query("UPDATE certs "
+			  "   SET parent = %d "
+			  " WHERE issuer = %s "
+			  "   AND parent IS NULL "
+			  "   AND subject != issuer",
+			  cert_id,
+			  subject);
+  } else if (tmp[0]->expires <= expires) {
+    // NB: Keep more recent certificates unmodified (even if stale).
+    // NB: keyhash, subject and issuer are unmodified (cf above).
+    SSL3_WERR("Updating cert #%d.\n", tmp[0]->id);
+    db->query("UPDATE certs "
+	      "   SET pem_id = %d, "
+	      "       msg_no = %d, "
+	      "       expires = %d, "
+	      "       data = %s "
+	      " WHERE id = %d",
+	      pem_id, msg_no, expires, data,
+	      tmp[0]->id);
+  } else {
+    SSL3_WERR("Got certificate older than that in db: %d < %d\n",
+	      expires, tmp[0]->expires);
+  }
+}
+
+protected void refresh_private_key(Sql.Sql db, int pem_id, int msg_no,
+				   string raw)
+{
+  Crypto.Sign.State private_key = Standards.X509.parse_private_key(raw);
+
+  string(8bit) keyhash =
+    Crypto.SHA256.hash(private_key->pkcs_public_key()->get_der());
+
+  Crypto.AES.CCM.State ccm = Crypto.AES.CCM();
+  // NB: Using the server salt as a straight encryption key
+  //     is a BAD idea as CCM is a stream crypto.
+  ccm->set_encrypt_key(Crypto.SHA256.hash(roxenp()->query("server_salt") +
+					  "\0" + keyhash));
+  string(8bit) data = ccm->crypt(raw) + ccm->digest();
+
+  array(sql_row) tmp =
+    db->typed_query("SELECT * "
+		    "  FROM cert_keys "
+		    " WHERE keyhash = %s",
+		    keyhash);
+  if (!sizeof(tmp)) {
+    db->query("INSERT INTO cert_keys "
+	      "       (pem_id, msg_no, keyhash, data) "
+	      "VALUES (%d, %d, %s, %s)",
+	      pem_id, msg_no, keyhash, data);
+    int key_id = db->master_sql->insert_id();
+    SSL3_WERR("Added cert key #%d.\n", key_id);
+
+    // Check if we have any matching certificates that currently lack keys,
+    // and add corresponding keypairs.
+    foreach(db->typed_query("SELECT * "
+			    "  FROM certs "
+			    " WHERE keyhash = %s "
+			    " ORDER BY id ASC",
+			    keyhash),
+	    sql_row cert_info) {
+      if (sizeof(db->query("SELECT * "
+			   "  FROM cert_keypairs "
+			   " WHERE cert_id = %d",
+			   cert_info->id))) {
+	// Keypair already exists.
+	continue;
+      }
+      string name = format_dn(cert_info->subject);
+      if (cert_info->issuer == cert_info->subject) {
+	name += " (self-signed)";
+      } else {
+	name += " " + format_dn(cert_info->issuer);
+      }
+      db->query("INSERT INTO cert_keypairs "
+		"       (cert_id, key_id, name) "
+		"VALUES (%d, %d, %s)",
+		cert_info->id, key_id, name);
+    }
+  } else {
+    // Zap any stale or update in progress marker for the key.
+    if (tmp[0]->data != data) {
+      // The encrypted data string has changed; this may be due
+      // to the server salt having been changed, or due to the
+      // old value having been created with an old proken Pike.
+      SSL3_WERR("Updating cert key #%d. Has the server salt changed?\n",
+		tmp[0]->id);
+      db->query("UPDATE cert_keys "
+		"   SET pem_id = %d, "
+		"       msg_no = %d, "
+		"       data = %s "
+		" WHERE id = %d",
+		pem_id, msg_no, data,
+		tmp[0]->id);
+    } else {
+      db->query("UPDATE cert_keys "
+		"   SET pem_id = %d, "
+		"       msg_no = %d "
+		" WHERE id = %d",
+		pem_id, msg_no,
+		tmp[0]->id);
+    }
+  }
+}
+
 protected void low_refresh_pem(int pem_id, int|void force)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
@@ -106,9 +279,6 @@ protected void low_refresh_pem(int pem_id, int|void force)
 
   sql_row pem_info = tmp[0];
 
-  array(sql_row) certs = ({});
-  array(sql_row) keys = ({});
-
   string pem_file = pem_info->path;
 
   if (!sizeof(pem_file)) return;
@@ -118,7 +288,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 
   Stdio.Stat st = lfile_stat(pem_file);
   if (st) {
-    // FIXME: Check if mtime hash changed before reading the file?
+    // FIXME: Check if mtime has changed before reading the file?
 
     SSL3_WERR("Reading cert file %O\n", pem_file);
     if( catch{ raw_pem = lopen(pem_file, "r")->read(); } )
@@ -166,11 +336,6 @@ protected void low_refresh_pem(int pem_id, int|void force)
       foreach(messages->fragments; int msg_no; string|Standards.PEM.Message msg) {
 	if (stringp(msg)) continue;
 
-	mapping(string:string|int) entry = ([
-	  "pem_id": pem_id,
-	  "msg_no": msg_no,
-	]);
-
 	string body = msg->body;
 
 	if (msg->headers["dek-info"] && pem_info->pass) {
@@ -188,40 +353,14 @@ protected void low_refresh_pem(int pem_id, int|void force)
 	switch(msg->pre) {
 	case "CERTIFICATE":
 	case "X509 CERTIFICATE":
-	  Standards.X509.TBSCertificate tbs =
-	    Standards.X509.decode_certificate(body);
-          if (!tbs) continue;
-
-	  entry->subject = tbs->subject->get_der();
-	  entry->issuer = tbs->issuer->get_der();
-	  entry->expires = tbs->not_after;
-	  entry->data = body;
-
-	  entry->keyhash =
-	    Crypto.SHA256.hash(tbs->public_key->pkc->
-			       pkcs_public_key()->get_der());
-	  certs += ({ entry });
+	  refresh_cert(db, pem_id, msg_no, body);
 	  break;
 
 	case "PRIVATE KEY":
 	case "RSA PRIVATE KEY":
 	case "DSA PRIVATE KEY":
 	case "ECDSA PRIVATE KEY":
-	  Crypto.Sign.State private_key =
-	    Standards.X509.parse_private_key(body);
-
-	  entry->keyhash =
-	    Crypto.SHA256.hash(private_key->
-			       pkcs_public_key()->get_der());
-
-	  Crypto.AES.CCM.State ccm = Crypto.AES.CCM();
-	  // NB: Using the server salt as a straight encryption key
-	  //     is a BAD idea as CCM is a stream crypto.
-	  ccm->set_encrypt_key(Crypto.SHA256.hash(roxenp()->query("server_salt") +
-						  "\0" + entry->key_hash));
-	  entry->data = ccm->crypt(body) + ccm->digest();
-
-	  keys += ({ entry });
+	  refresh_private_key(db, pem_id, msg_no, body);
 	  break;
 
 	case "CERTIFICATE REQUEST":
@@ -239,139 +378,6 @@ protected void low_refresh_pem(int pem_id, int|void force)
     master()->handle_error(err);
 
     // NB: No return here. We want to zap the pem_id fields.
-  }
-
-  foreach(keys, sql_row key_info) {
-    tmp = db->typed_query("SELECT * "
-			  "  FROM cert_keys "
-			  " WHERE keyhash = %s",
-			  key_info->keyhash);
-    if (!sizeof(tmp)) {
-      db->query("INSERT INTO cert_keys "
-		"       (pem_id, msg_no, keyhash, data) "
-		"VALUES (%d, %d, %s, %s)",
-		key_info->pem_id, key_info->msg_no,
-		key_info->keyhash, key_info->data);
-      key_info->id = db->master_sql->insert_id();
-
-      // Check if we have any matching certificates that currently lack keys,
-      // and add corresponding keypairs.
-      foreach(db->typed_query("SELECT * "
-			      "  FROM certs "
-			      " WHERE keyhash = %s "
-			      " ORDER BY id ASC",
-			      key_info->keyhash),
-	      sql_row cert_info) {
-	if (sizeof(db->query("SELECT * "
-			     "  FROM cert_keypairs "
-			     " WHERE cert_id = %d",
-			     cert_info->id))) {
-	  // Keypair already exists.
-	  continue;
-	}
-	string name = format_dn(cert_info->subject);
-	if (cert_info->issuer == cert_info->subject) {
-	  name += " (self-signed)";
-	} else {
-	  name += " " + format_dn(cert_info->issuer);
-	}
-	db->query("INSERT INTO cert_keypairs "
-		  "       (cert_id, key_id, name) "
-		  "VALUES (%d, %d, %s)",
-		  cert_info->id, key_info->id, name);
-      }
-    } else {
-      // Zap any stale or update in progress marker for the key.
-      db->query("UPDATE cert_keys "
-		"   SET pem_id = %d, "
-		"       msg_no = %d "
-		" WHERE id = %d",
-		key_info->pem_id, key_info->msg_no,
-		tmp[0]->id);
-    }
-  }
-
-  foreach(certs, sql_row cert_info) {
-    tmp = db->typed_query("SELECT * "
-			  "  FROM certs "
-			  " WHERE keyhash = %s "
-			  "   AND subject = %s "
-			  "   AND issuer = %s",
-			  cert_info->keyhash,
-			  cert_info->subject,
-			  cert_info->issuer);
-    if (!sizeof(tmp)) {
-      db->query("INSERT INTO certs "
-		"    (pem_id, msg_no, subject, issuer, expires, keyhash, data) "
-		"VALUES (%d, %d, %s, %s, %d, %s, %s)",
-		cert_info->pem_id, cert_info->msg_no,
-		cert_info->subject, cert_info->issuer,
-		cert_info->expires, cert_info->keyhash, cert_info->data);
-      cert_info->id = db->master_sql->insert_id();
-
-      // Check if we have a matching private key.
-      tmp = db->typed_query("SELECT * "
-			    "  FROM cert_keys "
-			    " WHERE keyhash = %s "
-			    " ORDER BY id ASC",
-			    cert_info->keyhash);
-      if (sizeof(tmp)) {
-	// FIXME: Key selection policy.
-	string name = format_dn(cert_info->subject);
-	if (cert_info->issuer == cert_info->subject) {
-	  name += " (self-signed)";
-	} else {
-	  name += " " + format_dn(cert_info->issuer);
-	}
-	db->query("INSERT INTO cert_keypairs "
-		  "       (cert_id, key_id, name) "
-		  "VALUES (%d, %d, %s)",
-		  cert_info->id, tmp[0]->id, name);
-      }
-
-      if (cert_info->subject != cert_info->issuer) {
-	// Not a self-signed certificate.
-
-	// Check if we have the cert that this cert was signed by.
-	tmp = db->typed_query("SELECT * "
-			      "  FROM certs "
-			      " WHERE subject = %s",
-			      cert_info->issuer);
-	if (sizeof(tmp)) {
-	  db->query("UPDATE certs "
-		    "   SET parent = %d "
-		    " WHERE id = %d",
-		    tmp[0]->id,
-		    cert_info->id);
-	}
-      }
-
-      // Update any cert that lacks a parent and
-      // is signed by us.
-      tmp = db->typed_query("UPDATE certs "
-			    "   SET parent = %d "
-			    " WHERE issuer = %s "
-			    "   AND parent IS NULL "
-			    "   AND subject != issuer",
-			    cert_info->id,
-			    cert_info->subject);
-    } else if (tmp[0]->expires <= cert_info->expires) {
-      // NB: Keep more recent certificates unmodified (even if stale).
-      // NB: keyhash, subject and issuer are unmodified (cf above).
-      SSL3_WERR("Updating cert #%d: %O\n", tmp[0]->id, cert_info);
-      db->query("UPDATE certs "
-		"   SET pem_id = %d, "
-		"       msg_no = %d, "
-		"       expires = %d, "
-		"       data = %s "
-		" WHERE id = %d",
-		cert_info->pem_id, cert_info->msg_no,
-		cert_info->expires, cert_info->data,
-		tmp[0]->id);
-    } else {
-      SSL3_WERR("Got certificate older than that in db: %d < %d\n",
-		cert_info->expires, tmp[0]->expires);
-    }
   }
 
   // Mark any old certs and keys that are still update in progress as stale.
@@ -547,7 +553,7 @@ array(Crypto.Sign.State|array(string)) get_keypair(int keypair_id)
   if (sizeof(tmp[0]->data) < Crypto.AES.CCM.digest_size()) return 0;
   Crypto.AES.CCM.State ccm = Crypto.AES.CCM();
   ccm->set_decrypt_key(Crypto.SHA256.hash(roxenp()->query("server_salt") +
-					  "\0" + tmp[0]->key_hash));
+					  "\0" + tmp[0]->keyhash));
   string digest = tmp[0]->data[<Crypto.AES.CCM.digest_size()-1..];
   string raw = ccm->crypt(tmp[0]->data[..<Crypto.AES.CCM.digest_size()]);
   if (digest != ccm->digest()) {
