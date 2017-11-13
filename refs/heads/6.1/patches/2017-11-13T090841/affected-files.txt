@@ -1,0 +1,2 @@
+Added files:
+  modules/filters/custom_header.pike
