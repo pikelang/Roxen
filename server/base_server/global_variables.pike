@@ -320,7 +320,8 @@ void set_up_ssl_variables( Protocol o )
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar( "ssl_password",
-	  Variable.String("", 0, LOCALE(1082, "SSL decryption password"),
+	  Variable.String("", VAR_INVISIBLE,
+			  LOCALE(1082, "SSL decryption password"),
 			  LOCALE(1083, "Optional password to decrypt the "
 				 "SSL key file(s).")));
 
