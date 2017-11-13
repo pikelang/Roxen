@@ -288,7 +288,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 
   Stdio.Stat st = lfile_stat(pem_file);
   if (st) {
-    // FIXME: Check if mtime hash changed before reading the file?
+    // FIXME: Check if mtime has changed before reading the file?
 
     SSL3_WERR("Reading cert file %O\n", pem_file);
     if( catch{ raw_pem = lopen(pem_file, "r")->read(); } )
