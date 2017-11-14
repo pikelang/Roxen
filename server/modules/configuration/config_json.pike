@@ -54,11 +54,71 @@ constant module_type = MODULE_LOCATION;
 constant resource_all = 1;
 constant perm_name = "REST API";
 
+
+
+typedef function(string, array(string), RequestID : RouterResponse) RouterCallback;
+
+class Route(Regexp.PCRE regexp, RouterCallback callback) {};
+
+class RouterResponse(int status_code, void|mixed data) {
+  void|string location;
+};
+
+class Router {
+  mapping(string: array(Route) ) method_callbacks = ([
+   "GET": ({}),
+   "POST": ({}),
+   "PUT": ({}),
+   "PATCH": ({}),
+   "DELETE": ({})
+   ]);
+
+  private void add_route(string method, Regexp.PCRE regexp, RouterCallback callback) {
+     method_callbacks[method] += ({ Route(regexp, callback) });
+  }
+  private function make_route_function(string method) {
+     return lambda(Regexp.PCRE regexp, RouterCallback callback) {
+        return add_route(method, regexp, callback);
+     };
+  }
+
+  function get = make_route_function("GET");
+  function post = make_route_function("POST");
+  function put = make_route_function("PUT");
+  function patch = make_route_function("PATCH");
+  function delete = make_route_function("DELETE");
+
+  void|RouterResponse handle_request(string path, RequestID id) {
+
+    foreach (method_callbacks[id->method] || ({ }), Route route ) {
+            werror("handle %O %O %O %O \n", id, id->method, path, route->regexp);
+       if(array(string) res = route->regexp->split(path)) {
+          return route->callback(id->method, res, id);
+       }
+    }
+
+    return;
+  }
+}
+
+Router router = Router();
+
 protected void create()
 {
   defvar("location", "/rest/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
+
+  RouterResponse test_cb = lambda(string method, array(string) matches, RequestID id) {
+    werror("test for %O\n", id);
+    return RouterResponse(Protocols.HTTP.HTTP_OK,1);
+  };
+  RouterResponse test_cb2 = lambda(string method, array(string) matches, RequestID id) {
+    werror("test2 for %O\n", id);
+    return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
+  };
+  router->get(Regexp.PCRE("^test2"), test_cb2);
+  router->get(Regexp.PCRE("^test"), test_cb);
 }
 
 typedef object RESTObj;
@@ -458,6 +518,15 @@ mapping(string:mixed) find_file (string f, RequestID id)
                              Standards.JSON.encode (([ "error": errstr ]),
                                                     jsonflags) + "\n");
 
+  }
+
+  if(void|RouterResponse router_response = router->handle_request(f, id)) {
+    mapping(string:mixed) res =
+      Roxen.http_low_answer (router_response->code, router_response->data ?
+                         Standards.JSON.encode (router_response->data, jsonflags) + "\n" : "");
+    id->set_output_charset ("utf-8");
+    res->type = "application/json";
+    return res;
   }
 
   array(string) segments = f / "/";
