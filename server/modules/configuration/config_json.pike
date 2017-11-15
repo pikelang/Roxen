@@ -102,6 +102,10 @@ class Router {
 
 Router router = Router();
 
+RouterResponse getDatabasegroups(string method, array(string) matches, RequestID id) {
+  return RouterResponse(Protocols.HTTP.HTTP_OK, DBManager.list_groups() + ({ "_all" }) );
+}
+
 protected void create()
 {
   defvar("location", "/rest/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
@@ -117,6 +121,7 @@ protected void create()
   router->get(Regexp.PCRE("^test/?$"), lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
+  router->get(Regexp.PCRE("^databasegroups/?$"), getDatabasegroups);
 }
 
 typedef object RESTObj;
