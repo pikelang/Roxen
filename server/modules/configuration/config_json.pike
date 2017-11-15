@@ -518,10 +518,20 @@ mapping(string:mixed) find_file (string f, RequestID id)
 
   }
 
-  if(void|RouterResponse router_response = router->handle_request(f, id)) {
-    mapping(string:mixed) res =
-      Roxen.http_low_answer (router_response->code, router_response->data ?
+  if (mixed err = catch {
+    if(void|RouterResponse router_response = router->handle_request(f, id)) {
+      mapping(string:mixed) res =
+        Roxen.http_low_answer (router_response->code, router_response->data ?
                          Standards.JSON.encode (router_response->data, jsonflags) + "\n" : "");
+      id->set_output_charset ("utf-8");
+      res->type = "application/json";
+      return res;
+    }
+  }) {
+    string errstr = describe_error (err);
+    mapping(string:mixed) res =
+      Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
+                             Standards.JSON.encode ((["error": errstr]), jsonflags) + "\n");
     id->set_output_charset ("utf-8");
     res->type = "application/json";
     return res;
