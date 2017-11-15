@@ -135,13 +135,18 @@ class Router {
   function delete = make_route_function("DELETE");
 
   void|RouterResponse handle_request(string path, RequestID id) {
+    string method = id->method;
+    string method_override = id->request_headers["x-http-method-override"];
+    if(method == "POST" && (<"PUT","PATCH","DELETE">)[method_override])
+      method = method_override;
+
     //FIXME: conent-type: return HTTP_BAD etc
     mixed client_data;
     if ((id->method == "PUT" || id->method == "POST") && sizeof (id->data)) {
         client_data = Standards.JSON.decode (id->data);
     }
 
-    foreach (method_callbacks[id->method] || ({ }), Route route ) {
+    foreach (method_callbacks[method] || ({ }), Route route ) {
        if(mapping res = route->matcher->match(path, id)) {
           return route->callback(method, res, client_data, id);
        }
@@ -181,6 +186,9 @@ protected void create()
   });
   router->get("test2", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
+  });
+  router->patch("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
+    return RouterResponse(Protocols.HTTP.HTTP_OK,"patch test");
   });
   router->get("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
