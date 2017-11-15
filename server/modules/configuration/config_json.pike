@@ -526,7 +526,7 @@ mapping(string:mixed) find_file (string f, RequestID id)
   if (mixed err = catch {
     if(void|RouterResponse router_response = router->handle_request(f, id)) {
       mapping(string:mixed) res =
-        Roxen.http_low_answer (router_response->code, router_response->data ?
+        Roxen.http_low_answer (router_response->status_code, router_response->data ?
                          Standards.JSON.encode (router_response->data, jsonflags) + "\n" : "");
       id->set_output_charset ("utf-8");
       res->type = "application/json";
