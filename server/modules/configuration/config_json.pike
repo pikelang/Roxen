@@ -102,6 +102,19 @@ class Router {
 
 Router router = Router();
 
+RouterResponse dummyAction(string method, array(string) matches, RequestID id) {
+  return RouterResponse(Protocols.HTTP.HTTP_OK,1);
+}
+
+RouterResponse getDatabasegroup(string method, array(string) matches, RequestID id) {
+  //FIXME: "_all"
+  mapping group_data = DBManager.get_group( matches[0] );
+  if(!group_data)
+    return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+  mapping result_data = ([ "long_name": group_data->lname, "comment": group_data->comment]);
+  return RouterResponse(Protocols.HTTP.HTTP_OK, result_data );
+}
+
 RouterResponse getDatabasegroups(string method, array(string) matches, RequestID id) {
   return RouterResponse(Protocols.HTTP.HTTP_OK, DBManager.list_groups() + ({ "_all" }) );
 }
@@ -121,6 +134,8 @@ protected void create()
   router->get(Regexp.PCRE("^test/?$"), lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
+
+  router->get(Regexp.PCRE("^databasegroups/([^/]+)/?$"), getDatabasegroup);
   router->get(Regexp.PCRE("^databasegroups/?$"), getDatabasegroups);
 }
 
