@@ -162,7 +162,84 @@ RouterResponse dummyAction(string method, mapping(string:string) params, mixed d
   return RouterResponse(Protocols.HTTP.HTTP_OK,1);
 }
 
-RouterResponse getDatabasegroup(string method, mapping(string:string) params, RequestID id) {
+mapping list_dbs() {
+  mapping(string:mapping(string:int)) q = DBManager.get_permission_map();
+  mapping dbs = ([ ]);
+
+  foreach( sort(indices(q)), string db ) {
+    string db_group = DBManager.db_group(db);
+    string db_url = DBManager.db_url( db );
+    dbs[db] = ([ "name":db, "group":db_group,"url":db_url]);
+  }
+
+  return dbs;
+}
+
+RouterResponse postDatabase(string method, mapping(string:string) params, mixed data, RequestID id) {
+  string url;
+  string name;
+  werror("postDatabase %O %O %O %O\n",method, params, data, id);
+  if(mappingp(data)) {
+    if(data->name && stringp(data->name) && sizeof(data->name))
+      name = data->name;
+    if(data->url && stringp(data->url) && sizeof(data->url))
+      url = data->url;
+  }
+
+  if(!name) {
+   return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":"name missing."]) );
+  }
+
+  DBManager.create_db( name,
+                       url,
+                       url ? 0 : 1,
+                       params->group );
+
+
+  //FIXME: return created info + location header
+  mapping result_data = ([ ]);
+  return RouterResponse(Protocols.HTTP.HTTP_CREATED, result_data );
+}
+
+RouterResponse getDatabases(string method, mapping(string:string) params,mixed data, RequestID id) {
+  mapping dbs = list_dbs();
+  array res = ({ });
+
+  foreach (values(dbs), mapping db ) {
+    if(db->group == params->group) {
+      res += ({ db->name });
+    }
+  }
+  return RouterResponse(Protocols.HTTP.HTTP_OK, res );
+}
+
+RouterResponse postDatabasegroups(string method, mapping(string:string) params, mixed data, RequestID id) {
+  string name;
+  string comment;
+  string long_name;
+  if(mappingp(data)) {
+    if(data->name && stringp(data->name) && sizeof(data->name))
+      name = data->name;
+    if(data->comment && stringp(data->comment) && sizeof(data->comment))
+      comment = data->comment;
+    if(data->long_name && stringp(data->long_name) && sizeof(data->long_name))
+      long_name = data->long_name;
+  }
+
+  if(!name) {
+   return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":"name missing."]) );
+  }
+
+  DBManager.create_group( name, long_name || name, comment || "", "");
+
+  //FIXME: return created info + location header
+  mapping result_data = ([ ]);
+  return RouterResponse(Protocols.HTTP.HTTP_CREATED, result_data );
+}
+
+
+
+RouterResponse getDatabasegroup(string method, mapping(string:string) params, mixed data, RequestID id) {
   //FIXME: "_all"
   mapping group_data = DBManager.get_group( params->group );
   if(!group_data)
@@ -194,7 +271,14 @@ protected void create()
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
 
+  //router->get("databasegroups/:group/databases/:database", getDatabase);
+  router->get("databasegroups/:group/databases", getDatabases);
+
+  router->post("databasegroups/:group/databases/", postDatabase);
+
   router->get("databasegroups/:group", getDatabasegroup);
+
+  router->post("databasegroups", postDatabasegroups);
   router->get("databasegroups", getDatabasegroups);
 }
 
