@@ -56,13 +56,59 @@ constant perm_name = "REST API";
 
 
 
-typedef function(string, array(string), RequestID : RouterResponse) RouterCallback;
+typedef function(string, mapping, RequestID : RouterResponse) RouterCallback;
 
-class Route(Regexp.PCRE regexp, RouterCallback callback) {};
+class Route(PathMatcher matcher, RouterCallback callback) {}
 
 class RouterResponse(int status_code, void|mixed data) {
   void|string location;
-};
+}
+
+class PathMatcher {
+  // matches simple path patterns like /foo/:param1/bar/:param2
+  // lot's of improvement potiential
+  // see https://www.npmjs.com/package/path-to-regexp
+  string pattern;
+  Regexp.PCRE regexp;
+  array regexp_params = ({ });
+
+  mapping|void match(string path, RequestID id) {
+    if(!regexp) {
+      if( path == pattern || path == pattern + "/")
+        return ([ ]);
+    } else {
+      if(array(string) parts = regexp->split(path)) {
+        mapping(string:string) res = ([]);
+        for (int i; i < sizeof(regexp_params); i++) {
+          res[regexp_params[i]] = parts[i];
+        }
+        return res;
+      }
+    }
+    return;
+  }
+
+  void create (string _pattern) {
+   array pattern_parts = ((_pattern/"/") - ({ "" }));
+   if(has_value(_pattern, ":")) {
+     string re_string = "^";
+     array new_parts = ({ });
+     foreach(pattern_parts, string part) {
+        if(has_prefix(part, ":")) {
+          new_parts += ({ "([^/]+)" });
+          regexp_params += ({ part[1..] });
+        } else {
+          new_parts += ({ part });
+        }
+     }
+     re_string += new_parts * "/" + "/?$";
+     regexp = Regexp.PCRE(re_string);
+   } else {
+     pattern = pattern_parts * "/";
+   }
+  }
+
+}
 
 class Router {
   mapping(string: array(Route) ) method_callbacks = ([
@@ -73,12 +119,12 @@ class Router {
     "DELETE": ({})
    ]);
 
-  private void add_route(string method, Regexp.PCRE regexp, RouterCallback callback) {
-     method_callbacks[method] += ({ Route(regexp, callback) });
+  private void add_route(string method, PathMatcher matcher, RouterCallback callback) {
+     method_callbacks[method] += ({ Route(matcher, callback) });
   }
   private function make_route_function(string method) {
-     return lambda(Regexp.PCRE regexp, RouterCallback callback) {
-        return add_route(method, regexp, callback);
+     return lambda(string pattern, RouterCallback callback) {
+        return add_route(method, PathMatcher(pattern), callback);
      };
   }
 
@@ -91,7 +137,7 @@ class Router {
   void|RouterResponse handle_request(string path, RequestID id) {
 
     foreach (method_callbacks[id->method] || ({ }), Route route ) {
-       if(array(string) res = route->regexp->split(path)) {
+       if(mapping res = route->matcher->match(path, id)) {
           return route->callback(id->method, res, id);
        }
     }
@@ -102,13 +148,13 @@ class Router {
 
 Router router = Router();
 
-RouterResponse dummyAction(string method, array(string) matches, RequestID id) {
+RouterResponse dummyAction(string method, mapping(string:string) params, RequestID id) {
   return RouterResponse(Protocols.HTTP.HTTP_OK,1);
 }
 
-RouterResponse getDatabasegroup(string method, array(string) matches, RequestID id) {
+RouterResponse getDatabasegroup(string method, mapping(string:string) params, RequestID id) {
   //FIXME: "_all"
-  mapping group_data = DBManager.get_group( matches[0] );
+  mapping group_data = DBManager.get_group( params->group );
   if(!group_data)
     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
   mapping result_data = ([ "long_name": group_data->lname, "comment": group_data->comment]);
@@ -125,18 +171,18 @@ protected void create()
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 
-  router->get(Regexp.PCRE("^test3/?$"), lambda(string method, array(string) matches, RequestID id) {
+  router->get("test3", lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
   });
-  router->get(Regexp.PCRE("^test2/?$"), lambda(string method, array(string) matches, RequestID id) {
+  router->get("test2", lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
   });
-  router->get(Regexp.PCRE("^test/?$"), lambda(string method, array(string) matches, RequestID id) {
+  router->get("test", lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
 
-  router->get(Regexp.PCRE("^databasegroups/([^/]+)/?$"), getDatabasegroup);
-  router->get(Regexp.PCRE("^databasegroups/?$"), getDatabasegroups);
+  router->get("databasegroups/:group", getDatabasegroup);
+  router->get("databasegroups", getDatabasegroups);
 }
 
 typedef object RESTObj;
