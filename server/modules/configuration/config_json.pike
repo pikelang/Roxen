@@ -56,7 +56,7 @@ constant perm_name = "REST API";
 
 
 
-typedef function(string, mapping, RequestID : RouterResponse) RouterCallback;
+typedef function(string, mapping(string:string), mixed, RequestID : RouterResponse) RouterCallback;
 
 class Route(PathMatcher matcher, RouterCallback callback) {}
 
@@ -135,10 +135,15 @@ class Router {
   function delete = make_route_function("DELETE");
 
   void|RouterResponse handle_request(string path, RequestID id) {
+    //FIXME: conent-type: return HTTP_BAD etc
+    mixed client_data;
+    if ((id->method == "PUT" || id->method == "POST") && sizeof (id->data)) {
+        client_data = Standards.JSON.decode (id->data);
+    }
 
     foreach (method_callbacks[id->method] || ({ }), Route route ) {
        if(mapping res = route->matcher->match(path, id)) {
-          return route->callback(id->method, res, id);
+          return route->callback(method, res, client_data, id);
        }
     }
 
@@ -148,7 +153,7 @@ class Router {
 
 Router router = Router();
 
-RouterResponse dummyAction(string method, mapping(string:string) params, RequestID id) {
+RouterResponse dummyAction(string method, mapping(string:string) params, mixed data, RequestID id) {
   return RouterResponse(Protocols.HTTP.HTTP_OK,1);
 }
 
@@ -161,7 +166,7 @@ RouterResponse getDatabasegroup(string method, mapping(string:string) params, Re
   return RouterResponse(Protocols.HTTP.HTTP_OK, result_data );
 }
 
-RouterResponse getDatabasegroups(string method, array(string) matches, RequestID id) {
+RouterResponse getDatabasegroups(string method, mapping(string:string) params,mixed data, RequestID id) {
   return RouterResponse(Protocols.HTTP.HTTP_OK, DBManager.list_groups() + ({ "_all" }) );
 }
 
@@ -171,13 +176,13 @@ protected void create()
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 
-  router->get("test3", lambda(string method, array(string) matches, RequestID id) {
+  router->get("test3", lambda(string method, mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
   });
-  router->get("test2", lambda(string method, array(string) matches, RequestID id) {
+  router->get("test2", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
   });
-  router->get("test", lambda(string method, array(string) matches, RequestID id) {
+  router->get("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
 
