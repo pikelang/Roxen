@@ -600,6 +600,9 @@ mapping(string:mixed) find_file (string f, RequestID id)
     }
   }) {
     string errstr = describe_error (err);
+#ifdef MODULE_DEBUG
+    report_error (describe_backtrace (err));
+#endif
     mapping(string:mixed) res =
       Roxen.http_low_answer (Protocols.HTTP.HTTP_BAD,
                              Standards.JSON.encode ((["error": errstr]), jsonflags) + "\n");
