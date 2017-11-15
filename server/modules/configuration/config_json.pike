@@ -66,11 +66,11 @@ class RouterResponse(int status_code, void|mixed data) {
 
 class Router {
   mapping(string: array(Route) ) method_callbacks = ([
-   "GET": ({}),
-   "POST": ({}),
-   "PUT": ({}),
-   "PATCH": ({}),
-   "DELETE": ({})
+    "GET": ({}),
+    "POST": ({}),
+    "PUT": ({}),
+    "PATCH": ({}),
+    "DELETE": ({})
    ]);
 
   private void add_route(string method, Regexp.PCRE regexp, RouterCallback callback) {
@@ -91,7 +91,6 @@ class Router {
   void|RouterResponse handle_request(string path, RequestID id) {
 
     foreach (method_callbacks[id->method] || ({ }), Route route ) {
-            werror("handle %O %O %O %O \n", id, id->method, path, route->regexp);
        if(array(string) res = route->regexp->split(path)) {
           return route->callback(id->method, res, id);
        }
@@ -109,16 +108,15 @@ protected void create()
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 
-  RouterResponse test_cb = lambda(string method, array(string) matches, RequestID id) {
-    werror("test for %O\n", id);
-    return RouterResponse(Protocols.HTTP.HTTP_OK,1);
-  };
-  RouterResponse test_cb2 = lambda(string method, array(string) matches, RequestID id) {
-    werror("test2 for %O\n", id);
+  router->get(Regexp.PCRE("^test3/?$"), lambda(string method, array(string) matches, RequestID id) {
+    return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+  });
+  router->get(Regexp.PCRE("^test2/?$"), lambda(string method, array(string) matches, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
-  };
-  router->get(Regexp.PCRE("^test2"), test_cb2);
-  router->get(Regexp.PCRE("^test"), test_cb);
+  });
+  router->get(Regexp.PCRE("^test/?$"), lambda(string method, array(string) matches, RequestID id) {
+    return RouterResponse(Protocols.HTTP.HTTP_OK,1);
+  });
 }
 
 typedef object RESTObj;
