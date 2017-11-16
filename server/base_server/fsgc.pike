@@ -369,8 +369,10 @@ class FSGarb
     if (st->mtime >= time(1) - stable_time) {
       GC_WERR("FSGC: Keeping file: %O\n", path);
       // Remove the stable notification marker, and reschedule.
-      last_change = st->mtime;
-      update(st);
+      Monitor m = monitor(path, MF_AUTO);
+      m->last_change = st->mtime;
+      // m->update(st);
+      m->check();	// Force an update().
       return;
     }
     rm(path);
