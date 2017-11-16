@@ -368,6 +368,9 @@ class FSGarb
     // Override accelerated stable change notification.
     if (st->mtime > time(1) - stable_time) {
       GC_WERR("FSGC: Keeping file: %O\n", path);
+      // Remove the stable notification marker, and reschedule.
+      last_change = st->mtime;
+      update(st);
       return;
     }
     rm(path);
