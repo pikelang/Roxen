@@ -105,6 +105,7 @@ mapping get_configuration_module_variable(mapping(string:string) params) {
     }
     res->configuration = conf;
     if(params->module) {
+      // module variable
       string module_name = decode_mod_name (params->module);
       RoxenModule module = conf->find_module (module_name);
       if (!module || module->not_a_module) {
@@ -115,6 +116,19 @@ mapping get_configuration_module_variable(mapping(string:string) params) {
       res->module = module;
       if(params->variable) {
         Variable.Variable var = module->getvar ( params->variable );
+        if (!var) {
+          res["error"] = RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND,
+                                        ([ "error": "Variable not found." ]) );
+          return res;
+
+        }
+        res->variable = var;
+
+      }
+    } else {
+      // configuration variable
+      if(params->variable) {
+        Variable.Variable var = conf->getvar ( params->variable );
         if (!var) {
           res["error"] = RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND,
                                         ([ "error": "Variable not found." ]) );
@@ -486,6 +500,17 @@ protected void create()
     }
     RouterResponse res = RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT );
     return res;
+  });
+
+  router->get("configurations/:configuration/variables/:variable", handle_get_variable);
+
+  router->get("configurations/:configuration/variables",lambda(string method,  mapping(string:string) params) {
+    //FIXME: _all
+    mapping stuff = get_configuration_module_variable(params);
+    if(stuff->error)
+      return stuff->error;
+    array vars = sort (indices (stuff->configuration->query()));
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(vars) + ({ "_all"}) );
   });
 
   router->get("configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
