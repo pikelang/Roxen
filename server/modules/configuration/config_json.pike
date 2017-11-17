@@ -332,6 +332,23 @@ RouterResponse handle_get_variable(string method, mapping(string:string) params,
   return RouterResponse(Protocols.HTTP.HTTP_OK, res );
 }
 
+RouterResponse handle_put_variable(string method, mapping(string:string) params,mixed data, RequestID id) {
+  //FIXME: _all
+  mapping stuff = get_configuration_module_variable(params);
+  if(stuff->error)
+    return stuff->error;
+  string err;
+  mixed mangled_value;
+  [err, mangled_value] = stuff->variable->verify_set (data);
+  if (err) {
+    return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error": err ]) );
+  }
+
+  if (stuff->variable->set (mangled_value))
+    (stuff->module || roxen)->save();
+  return RouterResponse(Protocols.HTTP.HTTP_OK, mangled_value );
+}
+
 protected void create()
 {
   defvar("location", "/rest/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
@@ -376,6 +393,7 @@ protected void create()
   });
 
 
+  router->put("configurations/:configuration/modules/:module/variables/:variable", handle_put_variable);
   router->get("configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
 
   router->get("configurations/:configuration/modules/:module/variables",lambda(string method,  mapping(string:string) params) {
@@ -399,6 +417,7 @@ protected void create()
     return RouterResponse(Protocols.HTTP.HTTP_OK, sort(roxen.configurations->name) + ({ "_all"}) );
   });
 
+  router->put("variables/:variable", handle_put_variable);
   router->get("variables/:variable", handle_get_variable);
 
   router->get("variables",lambda() {
