@@ -5510,7 +5510,7 @@ void create()
 //report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
 }
 
-mixed get_locale( )
+string get_locale( )
 {
   return locale->get();
 }

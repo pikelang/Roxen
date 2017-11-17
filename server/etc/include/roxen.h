@@ -22,7 +22,7 @@
 
 #ifndef __LOCALEOBJECT
 #ifdef IN_ROXEN
-mixed get_locale();
+string get_locale();
 #define __LOCALE (get_locale)
 #else /* !IN_ROXEN */
 #define __LOCALE (roxen.get_locale)
