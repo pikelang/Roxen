@@ -73,6 +73,14 @@ Configuration get_configuration(string name) {
   return conf;
 }
 
+string module_endpoint(RoxenModule mod) {
+  return query("location") +
+         "configurations/" +
+         Roxen.http_encode_url(mod->my_configuration()->name) +
+         "/modules/" +
+         encode_mod_name(mod->module_local_id());
+}
+
 mapping get_configuration_module_variable(mapping(string:string) params) {
   mapping res = ([ ]);
 
@@ -402,6 +410,23 @@ protected void create()
     if(stuff->error)
       return stuff->error;
     return RouterResponse(Protocols.HTTP.HTTP_OK,sort(indices(stuff->module->query())) );
+  });
+
+  router->post("configurations/:configuration/modules/:new_module",lambda(string method,  mapping(string:string) params) {
+    mapping stuff = get_configuration_module_variable(params);
+    if(stuff->error)
+      return stuff->error;
+    string module_name = decode_mod_name (params->new_module);
+    ModuleInfo mod_info = roxen.find_module (module_name, 1);
+    RoxenModule mod;
+    if (!mod_info || !(mod = stuff->configuration->enable_module (module_name, UNDEFINED, mod_info))) {
+       //FIXME: other return code?
+      return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":sprintf("No such module %s.\n", module_name)]) );
+    }
+    RouterResponse res = RouterResponse(Protocols.HTTP.HTTP_OK );
+    res->location = module_endpoint( mod );
+    //FIXME: add module data to response
+    return res;
   });
 
   router->get("configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
@@ -840,6 +865,8 @@ mapping(string:mixed) find_file (string f, RequestID id)
                          Standards.JSON.encode (router_response->data, jsonflags) + "\n" : "");
       id->set_output_charset ("utf-8");
       res->type = "application/json";
+      if(router_response->location)
+        id->set_response_header ("Location",  (string)Standards.URI(router_response->location, id->url_base()));
       return res;
     }
   }) {
