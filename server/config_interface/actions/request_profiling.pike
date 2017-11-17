@@ -76,10 +76,10 @@ mixed parse( RequestID id )
       LOCALE(183,"All times are in microseconds.") + "<br />\n"
       "<p />"
       "<input type='hidden' name='action' value='request_profiling.pike' />\n"
-      "<p /><submit-gbutton2 name='refresh' width='75' align='center'>" +
-      LOCALE(186, "Refresh") + 
+      "<p /><submit-gbutton2 name='refresh' width='75' align='center' img-align='middle'>" +
+      LOCALE(186, "Refresh") +
       "</submit-gbutton2>\n"
-      "<submit-gbutton2 name='reset' width='75' align='center'>" +
+      "<submit-gbutton2 name='reset' width='75' align='center' img-align='middle'>" +
       LOCALE(187,"Reset") +
       "</submit-gbutton2>\n"
       "<cf-cancel href='?class=&form.class;&amp;&usr.set-wiz-id;'/>\n"

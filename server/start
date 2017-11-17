@@ -176,6 +176,7 @@ ARGS=""
 #   keep_mysql	""
 #	""	Shut down mysqld between restarts.
 #	1	Do not touch mysqld on restart.
+#	2	--mysql-only mode.
 #   once	""
 #	""	Loop the program until it exits with success (0).
 #	1	Verbose --once mode.
@@ -191,11 +192,33 @@ ARGS=""
 #	other	Create a pid file and associated lock files.
 #   program	"base_server/roxen_loader.pike"
 #	-	The Pike program to start.
+#   start	1
+#	""	Do not attempt to start the server.
+#	1	Attempt to start or restart the server.
+#   stop	""
+#	""	--stop or --restart not specified.
+#	1	--stop or --restart specified.
 #   verbose	1
 #	0	Quiet mode.
 #	1	Default verbosity.
 #	2	Verbose mode.
 #
+
+stop_mysql() {
+  # Kill roxen mysql if it's running...
+  if [ -f "$DIR/_mysql/mysql_pid" ] ; then
+    if kill -0 `cat "$DIR/_mysql/mysql_pid"` >/dev/null 2>&1; then
+      dp "Stopping MySQL/MariaDB..."
+      if kill `cat "$DIR/_mysql/mysql_pid"`; then
+	dp "Ok."
+      else
+	dp "Failed to stop MySQL/MariaDB."
+      fi
+    else
+      dp "MySQL/MariaDB does not appear to be running."
+    fi
+  fi
+}
 
 setup_for_tests() {
     # Kill roxen mysql if it's running...
@@ -352,6 +375,11 @@ parse_args() {
   '--keep-mysql')
     keep_mysql=1
   ;;
+  '--mysql-only')
+    keep_mysql=2
+    once=1
+    pass="$pass --mysql-only"
+    ;;
   '--gdb')
     gdb=gdb
     once=2
@@ -520,6 +548,10 @@ the default arguments.
 				  the start script. Useful during development
 				  or any other scenario where the start script
 				  is frequently terminated.
+
+      .B--mysql-onlyB.:               Start the embedded MySQL process, but
+                                  do not start the rest of Roxen. May be
+                                  combined with --stop.
 
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
@@ -1136,6 +1168,12 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
 	dp "but it seems to be truncated."
 	exit 1
       fi < "$pidfile"
+
+      if [ "x$keep_mysql" = "x2" ]; then
+	stop_mysql;
+      fi
+    elif [ "x$keep_mysql" = "x2" ]; then
+      stop_mysql;
     else
       dp "The pid file $pidfile does not exist."
       dp "The server is probably not running."

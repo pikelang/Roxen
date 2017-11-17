@@ -216,16 +216,34 @@ void set_up_http_variables( Protocol o )
 
 protected int hide_if_empty(RequestID id, Variable.Variable var)
 {
-  return var->query() == "";
+  return !sizeof(var->query());
 }
 
 void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
+  defvar( "ssl_keys", o->CertificateKeyChoiceVariable
+	  (VAR_NO_DEFAULT,
+	   LOCALE(0, "SSL/TLS Certificate(s)"),
+	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n"
+		  "<p>Certificate and key files matching the "
+		  "<b>Global Variables/Settings/Certificate and "
+		  "Private Key Globs</b> setting "
+		  "are automatically imported and valid "
+		  "combinations are listed above.</p>\n"
+		  "<p>At least one certificate must be selected.</p>\n"
+		  "<p>The Server Name Indication (SNI) extension sent by the "
+		  "TLS client will be used to choose a specific certificate "
+		  "for the connection from the set selected here.</p>\n"
+		  )));
+
+#if 1
+  // Old-style SSL Certificate variables.
+  // FIXME: Keep these around for at least a few major versions (10 years?).
   defvar( "ssl_cert_file",
 	  o->CertificateListVariable
-	  ( ({ "demo_certificate.pem" }), 0,
+	  ( ({ "demo_certificate.pem" }), VAR_INVISIBLE,
 	     LOCALE(86, "SSL certificate file(s)"),
 	     LOCALE(87, "<p>The SSL certificate file(s) to use.</p>\n"
 		    "<p>This is a list of certificates, "
@@ -237,7 +255,7 @@ void set_up_ssl_variables( Protocol o )
 
   defvar( "ssl_key_file",
 	  o->KeyFileVariable
-	  ( "", 0, LOCALE(88, "SSL key file"),
+	  ( "", VAR_INVISIBLE, LOCALE(88, "SSL key file"),
 	    LOCALE(89, "The SSL key file to use. If the path is "
 		   "relative, it will first be searched for "
 		   "relative to %s, and if not found there "
@@ -246,8 +264,8 @@ void set_up_ssl_variables( Protocol o )
 		   "file, leave this field empty to use the "
 		   "certificate file only. "
 		   "This field is obsolete, since the same setting "
-		   "can be done in <b>SSL certificate file(s)</b>.")))->
-    set_invisibility_check_callback(hide_if_empty);
+		   "can be done in <b>SSL certificate file(s)</b>.")));
+#endif
 
 #if constant(SSL.Constants.CIPHER_aead)
   // NB: This constant was added a few days after get_suites() in Pike 8.0,
@@ -302,7 +320,8 @@ void set_up_ssl_variables( Protocol o )
   // Pike 8.0 and later has much more advanced support for SSL/TLS.
 
   defvar( "ssl_password",
-	  Variable.String("", 0, LOCALE(1082, "SSL decryption password"),
+	  Variable.String("", VAR_INVISIBLE,
+			  LOCALE(1082, "SSL decryption password"),
 			  LOCALE(1083, "Optional password to decrypt the "
 				 "SSL key file(s).")));
 
@@ -681,6 +700,18 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"for modules. Can be relative paths, from the "
 		"directory you started Roxen. "
 		"The directories are searched in order for modules."));
+
+  defvar("CertGlobs", ({ "*.pem", "certs/*.pem" }),
+	 LOCALE(0, "Certificate and Private Key Globs"),
+	 TYPE_STRING_LIST,
+	 LOCALE(0, "<p>This is a list of globs for which corresponding files "
+		"will automatically be imported into the certificate "
+		"database on server start.</p>\n"
+		"<p>It may be left empty, in which case any certificates "
+		"to use will need to be added by hand.</p>\n"))
+    ->set_changed_callback(lambda() {
+                             roxenp()->background_run(0, roxenp()->scan_certs);
+                           });
 
   defvar("Supports",
          Variable.Text( "#include <etc/supports>\n",

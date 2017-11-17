@@ -1056,16 +1056,30 @@ mapping|string parse( RequestID id )
 
   res += "<p><ul>\n";
 
-  if (id->variables->db == "local")
+  switch(id->variables->db) {
+  case "local":
     res += "<li>" +
       _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
-  else if (id->variables->db == "shared")
+    break;
+  case "shared":
     res += "<li>" +
       _(547, "Internal data that may be shared between servers.") + "</li>\n";
-  else if( !url )
-    res += "<li>Internal database.</li>\n";
-  else
-    res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+  case "mysql":
+    res += "<li>" +
+      _(0, "MySQL/MariaDB-internal database.") + "</li>\n";
+    break;
+  case "roxen":
+    res += "<li>" +
+      _(0, "Roxen-internal database.") + "</li>\n";
+    break;
+  default:
+    if( !url )
+      res += "<li>Internal database.</li>\n";
+    else
+      res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+  }
 
   mapping(string:string) db_info =
     DBManager.module_table_info (id->variables->db, "");
@@ -1187,7 +1201,11 @@ mapping|string parse( RequestID id )
 
       int deep_info = id->variables->table == table;
 
-      string res = "<tr>"
+      string res =
+	"<tr" +
+	(tbl_info->inhibit_backups == "yes"?
+	 " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
+	">"
 	"<td style='white-space: nowrap'>"
 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
 	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
@@ -1208,11 +1226,12 @@ mapping|string parse( RequestID id )
 	owner = format_table_owner (tbl_info, 0);
       else if ((db_info->module || "") != (tbl_info->module || ""))
 	owner = format_table_owner (tbl_info, 1);
+      res += "<td>";
       if (owner) {
-	res += "<td>" + String.capitalize (owner) + "</td>";
+	res += owner;
 	got_owner_column = 1;
       }
-      else res += "<td></td>";
+      res += "</td>";
 
       if (deep_info) {
 	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
@@ -1235,6 +1254,11 @@ mapping|string parse( RequestID id )
 	  c = String.trim_all_whites (c);
 	  if (c != "" && c != "0")
 	    res += Roxen.html_encode_string (c) + "<br/>\n";
+	}
+
+	if (tbl_info->inhibit_backups == "yes") {
+	  res += _(0, "The table is not included in backups of this database.") +
+	    "<br />\n";
 	}
 
 	res += deep_table_info (table) + "</td></tr>\n";

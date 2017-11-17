@@ -3400,8 +3400,16 @@ void start_mysql (void|int log_queries_to_stdout)
 			 "boot time of Roxen by keeping the compiled "
 			 "data instead of recompiling it every time.");
 		}, 1 );
-
     }
+
+    // At this moment new_master does not exist, and
+    // DBManager can not possibly compile. :-)
+    call_out( lambda(){
+		// Inhibit backups of the precompiled_files table.
+		new_master->resolv("DBManager.inhibit_backups")
+		  ("local", "precompiled_files");
+	      }, 1 );
+
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
@@ -3949,6 +3957,15 @@ the correct system time.
 
   add_constant("_cur_rxml_context", Thread.Local());
 
+  int mysql_only_mode =
+    (int)Getopt.find_option(hider, "mysql-only", ({ "mysql-only" }));
+  if (mysql_only_mode) {
+    // Force --once mode.
+    //
+    // This avoids starting eg the tailf thread.
+    once_mode = 1;
+  }
+
   if (has_value (hider, "--mysql-log-queries")) {
     hider -= ({"--mysql-log-queries"});
     argc = sizeof (hider);
@@ -3956,6 +3973,10 @@ the correct system time.
   }
   else
     start_mysql (0);
+
+  if (mysql_only_mode) {
+    exit(0);
+  }
 
   if (err = catch {
     if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);

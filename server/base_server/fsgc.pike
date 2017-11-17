@@ -363,8 +363,18 @@ class FSGarb
 
   void stable_data_change(string path, Stdio.Stat st)
   {
-    GC_WERR("FSGC: Deleting stale file: %O\n", path);
     if (path == root) return;
+    GC_WERR("FSGC: Deleting stale file: %O\n", path);
+    // Override accelerated stable change notification.
+    if (st->mtime >= time(1) - stable_time) {
+      GC_WERR("FSGC: Keeping file: %O\n", path);
+      // Remove the stable notification marker, and reschedule.
+      Monitor m = monitor(path, MF_AUTO);
+      m->last_change = st->mtime;
+      // m->update(st);
+      m->check();	// Force an update().
+      return;
+    }
     rm(path);
   }
 

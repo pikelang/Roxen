@@ -131,10 +131,10 @@ class Diff
       {
         case '&': r += "<tt>"+row+"</tt><br>\n";
           break;
-        case '+': r += "<tt><font color='darkgreen'>"+row+"</font></tt><br>\n";
+        case '+': r += "<font color='darkgreen'><tt>"+row+"</tt></font><br>\n";
           added++;
           break;
-        case '-': r += "<tt><font color='darkred'>"+row+"</font></tt><br>\n";
+        case '-': r += "<font color='darkred'><tt>"+row+"</tt></font><br>\n";
           deleted++;
           break;
         case 'L': r += "<i>"+row+"</i><br>\n";
@@ -1379,6 +1379,18 @@ class MultipleChoice
     return (string)what;
   }
 
+  protected string render_element(mixed elem)
+  //! Render the title used as description (shown to the user) for an
+  //! element gotten from the get_choice_list() function.
+  //!
+  //! The default implementation just calls @[_title()],
+  //! and quotes the result.
+  //!
+  //! Overload this for more advanced rendering.
+  {
+    return Roxen.html_encode_string(_title(elem));
+  }
+
   string render_form( RequestID id, void|mapping additional_args )
   {
     string autosubmit = "";
@@ -1400,7 +1412,7 @@ class MultipleChoice
 	}
 	res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
 		       Roxen.make_tag( "input", m),
-		       Roxen.html_encode_string(_title(elem)));
+		       render_element(elem));
       }
       // Make an entry for the current values if they're not in the list,
       // to ensure that the value doesn't change as a side-effect by
