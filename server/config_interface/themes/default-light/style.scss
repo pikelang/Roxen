@@ -1,1 +1,20 @@
+@import '../../scss/01-conf/vars';
+
+// Element colors
+$body-bg:                    lighten($black, 80%);
+$body-color:                 #444;
+// $header-bg:                  $black !default;
+$topmenu-bg:                 lighten($black, 55%);
+$topmenu-color:              $brand-color;
+$topmenu-selected-bg:        $body-bg;
+$topmenu-selected-color:     $grey;
+$main-column-bg:             lighten($body-bg, 5%);
+$footer-bg:                  $header-bg;
+$footer-color:               $grey;
+$site-message-color:         $rxn-dark-red;
+$link-color:                 $blue;
+$button-bg:                  $topmenu-bg;
+$button-color:               $grey;
+// $button-enter-outline-color: orange !default;
+
 @import '../../scss/style.scss';
