@@ -260,6 +260,7 @@ protected void create()
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 
+#if 0
   router->get("test3", lambda(string method, mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
   });
@@ -272,6 +273,7 @@ protected void create()
   router->get("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     return RouterResponse(Protocols.HTTP.HTTP_OK,1);
   });
+#endif
 
   //router->get("databasegroups/:group/databases/:database", getDatabase);
   router->get("databasegroups/:group/databases", getDatabases);
