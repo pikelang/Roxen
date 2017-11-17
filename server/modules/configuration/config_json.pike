@@ -357,6 +357,53 @@ RouterResponse handle_put_variable(string method, mapping(string:string) params,
   return RouterResponse(Protocols.HTTP.HTTP_OK, mangled_value );
 }
 
+RouterResponse handle_put_action(string method, mapping(string:string) params, mixed data, RequestID id) {
+  //FIXME: _all
+  mapping stuff = get_configuration_module_variable(params);
+  if(stuff->error)
+    return stuff->error;
+
+  if (params->action == "Reload") {
+    roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
+    RoxenModule new_module;
+    Configuration conf = stuff->module->my_configuration();
+    string mod_id = stuff->module->module_local_id();
+    string mod_id_2 = replace (mod_id, "#", "!");
+
+    roxenloader.push_compile_error_handler (ec);
+    new_module = conf->reload_module(mod_id);
+    roxenloader.pop_compile_error_handler();
+
+    if (sizeof (ec->get())) {
+      report_debug (ec->get());
+      return RouterResponse(Protocols.HTTP.HTTP_INTERNAL_ERR, (["error": ec->get()]) );
+    }
+    return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+ } else if (function qab = stuff->module->query_action_buttons) {
+    mapping(string:function|array(function|string)) buttons = qab (id);
+    function action;
+    foreach(indices(buttons), string title) {
+      // Is this typecast really needed? The return value of
+      // query_action_buttons is defined as mapping(string:...)
+      // after all... (Code copied from site_content.pike.)
+      if (params->action == (string)title) {
+        function|array(function|string) _action = buttons[title];
+        if (arrayp(_action))
+          action = _action[0];
+        else
+          action = _action;
+        break;
+      }
+    }
+    if(action) {
+      action();
+      return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+    }
+  }
+
+ return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND, ([ "error":"No such action.\n" ]) );
+}
+
 protected void create()
 {
   defvar("location", "/rest/", LOCALE(264,"Mountpoint"), TYPE_LOCATION,
@@ -400,6 +447,7 @@ protected void create()
     return RouterResponse(Protocols.HTTP.HTTP_OK,  ({ "Reload" }) + sort(indices(mod_buttons)) );
   });
 
+  router->put("configurations/:configuration/modules/:module/actions/:action", handle_put_action);
 
   router->put("configurations/:configuration/modules/:module/variables/:variable", handle_put_variable);
   router->get("configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
