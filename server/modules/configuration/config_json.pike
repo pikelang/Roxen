@@ -56,7 +56,22 @@ constant module_type = MODULE_LOCATION;
 constant resource_all = 1;
 constant perm_name = "REST API";
 
+protected string encode_mod_name (string s)
+{
+  return replace (s, "#", "!");
+}
 
+protected string decode_mod_name (string s)
+{
+  return replace (s, "!", "#");
+}
+
+Configuration get_configuration(string name) {
+  Configuration conf = roxen.get_configuration (name);
+  if (conf && !conf->inited)
+    conf->enable_all_modules();
+  return conf;
+}
 
 typedef function(string, mapping(string:string), mixed, RequestID : RouterResponse) RouterCallback;
 
@@ -284,6 +299,78 @@ protected void create()
 
   router->post("databasegroups", postDatabasegroups);
   router->get("databasegroups", getDatabasegroups);
+
+#ifndef USE_OLD
+
+  router->get("configurations/:configuration/modules/:module/actions",lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
+    //FIXME: _all
+    object conf = get_configuration(params->configuration);
+    if(!conf)
+     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    string module_name = decode_mod_name (params->module);
+    RoxenModule module = conf->find_module (module_name);
+    if (!module || module->not_a_module)
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    mapping(string:function|array(function|string)) mod_buttons =
+       module->query_action_buttons && module->query_action_buttons(id) || ({ });
+    return RouterResponse(Protocols.HTTP.HTTP_OK,  ({ "Reload" }) + sort(indices(mod_buttons)) );
+  });
+
+
+  router->get("configurations/:configuration/modules/:module/variables/:variable",lambda(string method,  mapping(string:string) params) {
+    //FIXME: _all
+    object conf = get_configuration(params->configuration);
+    if(!conf)
+     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    string module_name = decode_mod_name (params->module);
+    RoxenModule module = conf->find_module (module_name);
+    if (!module || module->not_a_module)
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    Variable.Variable var = module->getvar ( params->variable );
+    if (!var)
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    mixed res = var->query();
+    if (objectp (res)) {
+      // ModuleChoice. Return module identifier.
+      res = conf->otomod[res];
+    }
+
+    return RouterResponse(Protocols.HTTP.HTTP_OK, res );
+  });
+
+  router->get("configurations/:configuration/modules/:module/variables",lambda(string method,  mapping(string:string) params) {
+    //FIXME: _all
+    object conf = get_configuration(params->configuration);
+    if(!conf)
+     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    string module_name = decode_mod_name (params->module);
+    RoxenModule module = conf->find_module (module_name);
+    if (!module || module->not_a_module)
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    return RouterResponse(Protocols.HTTP.HTTP_OK,sort(indices(module->query())) );
+  });
+
+  router->get("configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
+    //FIXME: _all
+    object conf = get_configuration(params->configuration);
+    if(!conf)
+     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    array mods = map (indices (conf->enabled_modules), encode_mod_name);
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(mods) + ({ "_all"}) );
+  });
+
+  router->get("configurations",lambda() {
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(roxen.configurations->name) + ({ "_all"}) );
+  });
+
+  router->get("variables",lambda() {
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(indices(roxen->query())) + ({ "_all"}) );
+  });
+
+  router->get("",lambda() {
+    return RouterResponse(Protocols.HTTP.HTTP_OK,({ "variables", "configurations", "databasegroups" }));
+  });
+#endif
 }
 
 typedef object RESTObj;
