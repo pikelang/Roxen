@@ -330,6 +330,8 @@ class FSGarb
     }
   }
 
+  constant DefaultMonitor = Monitor;
+
   protected void create(string modid, string path, int max_age,
 			int|void max_size, int|void max_files,
 			string|void quarantine)
@@ -365,6 +367,10 @@ class FSGarb
   {
     if (path == root) return;
     GC_WERR("FSGC: Deleting stale file: %O\n", path);
+
+#if 0
+    // If we ever use accelerated notifications again.
+
     // Override accelerated stable change notification.
     if (st->mtime >= time(1) - stable_time) {
       GC_WERR("FSGC: Keeping file: %O\n", path);
@@ -375,6 +381,7 @@ class FSGarb
       m->check();	// Force an update().
       return;
     }
+#endif
     rm(path);
   }
 
