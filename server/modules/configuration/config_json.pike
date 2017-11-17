@@ -3,6 +3,8 @@
 
 inherit "module";
 
+//#define USE_OLD 1
+
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 
@@ -651,7 +653,11 @@ class RESTConfigurations
   }
 }
 
+#ifdef USE_OLD
 array top_level_resources = ({ RESTConfigurations(), RESTVariables() });
+#else
+array top_level_resources = ({ });
+#endif
 mapping(string:object) top_level_map = mkmapping (top_level_resources->name,
 						  top_level_resources);
 
