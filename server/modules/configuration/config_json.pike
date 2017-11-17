@@ -429,6 +429,17 @@ protected void create()
     return res;
   });
 
+  router->delete("configurations/:configuration/modules/:module",lambda(string method,  mapping(string:string) params) {
+    mapping stuff = get_configuration_module_variable(params);
+    if(stuff->error)
+      return stuff->error;
+    if (!stuff->configuration->disable_module(decode_mod_name(params->module))) {
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND, ([ "error":"No such module.\n" ]) );
+    }
+    RouterResponse res = RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT );
+    return res;
+  });
+
   router->get("configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
     //FIXME: _all
     mapping stuff = get_configuration_module_variable(params);
