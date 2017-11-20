@@ -226,7 +226,7 @@ class Router {
     if(method == "POST" && (<"PUT","PATCH","DELETE">)[method_override])
       method = method_override;
 
-    //FIXME: conent-type: return HTTP_BAD etc
+    //FIXME: content-type: return HTTP_BAD etc
     mixed client_data;
     if ((id->method == "PUT" || id->method == "POST") && sizeof (id->data)) {
         client_data = Standards.JSON.decode (id->data);
@@ -244,10 +244,6 @@ class Router {
 
 Router router = Router();
 
-RouterResponse dummyAction(string method, mapping(string:string) params, mixed data, RequestID id) {
-  return RouterResponse(Protocols.HTTP.HTTP_OK,1);
-}
-
 mapping list_dbs() {
   mapping(string:mapping(string:int)) q = DBManager.get_permission_map();
   mapping dbs = ([ ]);
@@ -264,7 +260,6 @@ mapping list_dbs() {
 RouterResponse postDatabase(string method, mapping(string:string) params, mixed data, RequestID id) {
   string url;
   string name;
-  werror("postDatabase %O %O %O %O\n",method, params, data, id);
   if(mappingp(data)) {
     if(data->name && stringp(data->name) && sizeof(data->name))
       name = data->name;
