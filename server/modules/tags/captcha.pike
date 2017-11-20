@@ -184,7 +184,7 @@ int(0..1) verify_captcha(string response, string secret)
     string compact_time = elems[0];
     string hash = elems[1];
 
-    int ts = Gmp.mpz(compact_time, 36)->cast_to_int();
+    int ts = (int)Gmp.mpz(compact_time, 36);
 
     if (time(1) - ts < timeout &&
 	my_hash (compact_time + lower_case(response)) == hash &&
@@ -271,14 +271,14 @@ constant tagdoc = ([
        </desc>
        <attr name='background-color' value='color'><p>
          Captcha background color.
-         If the none of the \"background-color\" or \"background-image\" attributes
+         If none of the \"background-color\" or \"background-image\" attributes
          are specified, a default background image will be used.
         </p>
        </attr>
        <attr name='background-image' value='path'><p>
          Captcha background image. It's recommended that the image is larger than the captcha.
          The image offset will be randomized then.
-         If the none of the \"background-color\" or \"background-image\" attributes
+         If none of the \"background-color\" or \"background-image\" attributes
          are specified, a default background image will be used.
         </p>
        </attr>

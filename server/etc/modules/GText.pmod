@@ -238,7 +238,7 @@ array(Image.Image)|mapping make_text_image(
 
   Image.Image background,foreground;
 
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_start_use_imagecache)
   if (Sitebuilder.sb_start_use_imagecache) {
     Sitebuilder.sb_start_use_imagecache(args, id);
   }
@@ -317,7 +317,7 @@ array(Image.Image)|mapping make_text_image(
   } else
     background = Image.Image(xsize, ysize, @bgcolor);
 
-#if constant(Sitebuilder)
+#if constant(Sitebuilder) && constant(Sitebuilder.sb_end_use_imagecache)
   if (Sitebuilder.sb_end_use_imagecache) {
     Sitebuilder.sb_end_use_imagecache(args, id);
   }

@@ -64,6 +64,14 @@ Thread.Thread backend_thread;
 # define THREAD_WERR(X)
 #endif
 
+#ifdef LOG_GC_VERBOSE
+#define LOG_GC_HISTOGRAM
+#endif
+
+#ifdef LOG_GC_HISTOGRAM
+#define LOG_GC_TIMESTAMPS
+#endif
+
 // Needed to get core dumps of seteuid()'ed processes on Linux.
 #if constant(System.dumpable)
 #define enable_coredumps(X)	System.dumpable(X)
@@ -115,8 +123,8 @@ array(string|int) filename_2 (program|object o)
   string cwd = getcwd() + "/";
   if (has_prefix (fname, cwd))
     fname = fname[sizeof (cwd)..];
-  else if (has_prefix (fname, roxenloader.server_dir))
-    fname = fname[sizeof (roxenloader.server_dir)..];
+  else if (has_prefix (fname, roxenloader.server_dir + "/"))
+    fname = fname[sizeof (roxenloader.server_dir + "/")..];
 
   return ({fname, line});
 }
@@ -133,10 +141,14 @@ protected int once_mode;
 // cache static optimization for tags such as <if> and <emit> inside
 // <cache> since that optimization can give tricky incompatibilities
 // with 2.4.
+// Note also that 5.3 only existed in the Print repository, and
+// thus is skipped here.
 array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 				"3.3", "3.4",
 				"4.0", "4.5",
-				"5.0", "5.1", "5.2" });
+				"5.0", "5.1", "5.2", "5.4", "5.5",
+				"6.0",
+});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -520,6 +532,7 @@ private void low_shutdown(int exit_code)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
+    stop_error_log_cleaner();
 #ifdef THREADS
 #if constant(Filesystem.Monitor.basic)
     stop_fsgarb();
@@ -787,9 +800,13 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
   }
 
   else {
-    report_debug ("###### %s 0x%x has been busy for more than %g seconds.\n",
+    string th_name =
+      ((thread != backend_thread) && thread_name(thread, 1)) || "";
+    if (sizeof(th_name))
+      th_name = " - " + th_name + " -";
+    report_debug ("###### %s 0x%x%s has been busy for more than %g seconds.\n",
 		  thread == backend_thread ? "Backend thread" : "Thread",
-		  thread->id_number(), timeout);
+		  thread->id_number(), th_name, timeout);
     describe_all_threads (0, threads_disabled);
   }
 
@@ -1528,8 +1545,8 @@ class BackgroundProcess
     // o  One in the task array in bg_process_queue.
     // o  One on the stack in the call in bg_process_queue.
     // o  One as current_object in the stack frame.
-    // o  One on the stack as argument to _refs.
-    int self_refs = _refs (this);
+    // o  One on the stack as argument to Debug.refs.
+    int self_refs = Debug.refs (this);
 #ifdef DEBUG
     if (self_refs < 4)
       error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
@@ -1761,6 +1778,12 @@ class InternalRequestID
       if (string config_path = url_data->path)
 	adjust_for_config_path (config_path);
     }
+
+    // Update the cached URL base to keep url_base() happy.
+    uri->path = (misc->site_prefix_path || "") + "/";
+    uri->query = UNDEFINED;
+    uri->fragment = UNDEFINED;
+    cached_url_base = sprintf("%s", uri);
     return set_path( raw_url );
   }
 
@@ -1773,10 +1796,12 @@ class InternalRequestID
   {
     client = ({ "Roxen" });
     prot = "INTERNAL";
+    port_obj = InternalProtocol();
     method = "GET";
     real_variables = ([]);
     variables = FakedVariables( real_variables );
     root_id = this_object();
+    cached_url_base = "internal://0.0.0.0:0/";
 
     misc = ([ "pref_languages": PrefLanguages(),
 	      "cacheable": INITIAL_CACHEABLE,
@@ -2287,7 +2312,27 @@ class Protocol
   }
 }
 
-#if constant(SSL.sslfile)
+class InternalProtocol
+//! Protocol for internal requests that are not linked to any real request.
+{
+  inherit Protocol;
+
+  constant name = "internal";
+
+  constant prot_name = "internal";
+
+  constant supports_ipless = 1;
+  constant default_port = 0;
+
+  protected void create()
+  {
+    path = "";
+    port = default_port;
+    ip = "0.0.0.0";
+  }
+}
+
+#if constant(SSL.File)
 
 class SSLContext {
 #if constant(SSL.Context)
@@ -2361,7 +2406,7 @@ class StartTLSProtocol
     return;								\
   } while (0)
 
-#if constant(SSL.ServerConnection)
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
   protected void set_version()
   {
     ctx->min_version = query("ssl_min_version");
@@ -2402,7 +2447,7 @@ class StartTLSProtocol
 	set_version();
       }
     } else {
-      suites = ctx->get_suites(bits);
+      suites = ctx->get_suites(bits, 1);
 
       // Make sure the min version is restored in case we've
       // switched from Suite B.
@@ -2562,44 +2607,47 @@ class StartTLSProtocol
     }
 
     foreach(decoded_keys, Crypto.Sign key) {
-      // FIXME: Multiple certificates with the same key?
-      array(int) cert_nos;
+      // NB: We need to support multiple certificates with the same key.
+      int found;
       Standards.X509.TBSCertificate tbs;
       foreach(decoded_certs; int no; tbs) {
-	if (tbs->public_key->pkc->public_key_equal(key)) {
-	  cert_nos = ({ no });
-	  break;
-	}
+	if (!tbs->public_key->pkc->public_key_equal(key))
+	  continue;
+
+	array(int) cert_nos = ({ no });
+
+	// Build the certificate chain.
+	Standards.X509.TBSCertificate issuer;
+	do {
+	  string issuer_der = tbs->issuer->get_der();
+	  array(int) issuer_nos = cert_lookup[issuer_der];
+	  if (!issuer_nos) break;
+
+	  issuer = decoded_certs[issuer_nos[0]];
+
+	  // FIXME: Verify that the issuer has signed the cert.
+
+	  if (issuer != tbs) {
+	    cert_nos += ({ issuer_nos[0] });
+	  } else {
+	    // Self-signed.
+	    issuer = UNDEFINED;
+	    break;
+	  }
+	} while ((tbs = issuer));
+
+	report_notice("Adding %s certificate (%d certs) for %s\n",
+		      key->name(), sizeof(cert_nos), get_url());
+	// FIXME: Ought to only add "*" for the certificate chains
+	//        belonging to the default server.
+	ctx->add_cert(key, rows(certificates, cert_nos), ({ name, "*" }));
+	found = 1;
       }
-      if (!cert_nos) {
+      if (!found) {
 	CERT_ERROR (KeyFile,
-		    LOC_M(14, "Certificate and private key do not match.\n"));
+		    LOC_M(14, "Private key without matching certificate.\n"));
 	continue;
       }
-
-      // Build the certificate chain.
-      Standards.X509.TBSCertificate issuer;
-      do {
-	string issuer_der = tbs->issuer->get_der();
-	array(int) issuer_nos = cert_lookup[issuer_der];
-	if (!issuer_nos) break;
-
-	issuer = decoded_certs[issuer_nos[0]];
-
-	// FIXME: Verify that the issuer has signed the cert.
-
-	if (issuer != tbs) {
-	  cert_nos += ({ issuer_nos[0] });
-	} else {
-	  // Self-signed.
-	  issuer = UNDEFINED;
-	  break;
-	}
-      } while ((tbs = issuer));
-
-      report_notice("Adding %s certificate (%d certs) for %s\n",
-		    key->name(), sizeof(cert_nos), get_url());
-      ctx->add_cert(key, rows(certificates, cert_nos), ({ name }));
     }
 
 #if 0
@@ -2837,6 +2885,10 @@ class StartTLSProtocol
 
     set_up_ssl_variables( this_object() );
 
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
+    set_version();
+#endif
+
     filter_preferred_suites();
 
     ::setup(pn, i);
@@ -2855,6 +2907,8 @@ class StartTLSProtocol
 #if constant(SSL.ServerConnection)
     getvar("ssl_key_bits")->set_changed_callback(filter_preferred_suites);
     getvar("ssl_suite_filter")->set_changed_callback(filter_preferred_suites);
+#endif
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
     getvar("ssl_min_version")->set_changed_callback(set_version);
 #endif
   }
@@ -2872,11 +2926,11 @@ class SSLProtocol
 {
   inherit StartTLSProtocol;
 
-  SSL.sslfile accept()
+  SSL.File accept()
   {
     Stdio.File q = ::accept();
     if (q) {
-      SSL.sslfile ssl = SSL.sslfile (q, ctx);
+      SSL.File ssl = SSL.File (q, ctx);
       if (ssl->accept) ssl->accept();
       return ssl;
     }
@@ -2887,7 +2941,7 @@ class SSLProtocol
   protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
-    if (!sizeof(ctx->cert_pairs)) return;
+    // if (!sizeof(ctx->cert_pairs)) return;
     ::bind (ignore_eaddrinuse);
   }
 #else
@@ -2940,7 +2994,7 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
   foreach( glob( "prot_*.pike", get_dir("protocols") ), string s )
   {
     sscanf( s, "prot_%s.pike", s );
-#if !constant(SSL.sslfile)
+#if !constant(SSL.File)
     switch( s )
     {
       case "https":
@@ -2962,7 +3016,7 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
   foreach( glob("prot_*.pike",get_dir("../local/protocols")||({})), string s )
   {
     sscanf( s, "prot_%s.pike", s );
-#if !constant(SSL.sslfile)
+#if !constant(SSL.File)
     switch( s )
     {
       case "https":
@@ -3541,6 +3595,64 @@ void nwrite(string s, int|void perr, int|void errtype,
     report_debug( s );
 }
 
+protected BackgroundProcess error_log_cleaner_process;
+
+protected void clean_error_log(mapping(string:array(int)) log,
+		     mapping(string:int) cutoffs)
+{
+  if (!log || !sizeof(log)) return;
+  foreach(cutoffs; string prefix; int cutoff) {
+    foreach(log; string key; array(int) times) {
+      if (!has_prefix(key, prefix)) continue;
+      int sz = sizeof(times);
+      times = filter(times, `>=, cutoff);
+      if (sizeof(times) == sz) continue;
+      // NB: There's a race here, where newly triggered errors may be lost.
+      //     It's very unlikely to be a problem in practice though.
+      if (!sizeof(times)) {
+	m_delete(log, key);
+      } else {
+	log[key] = times;
+      }
+    }
+  }
+}
+
+protected void error_log_cleaner()
+{
+  mapping(string:int) cutoffs = ([
+    "1,": time(1) - 3600*24*7,		// Keep notices for 7 days.
+  ]);
+
+  // First the global error_log.
+  clean_error_log(error_log, cutoffs);
+
+  // Then all configurations and modules.
+  foreach(configurations, Configuration conf) {
+    clean_error_log(conf->error_log, cutoffs);
+
+    foreach(indices(conf->otomod), RoxenModule mod) {
+      clean_error_log(mod->error_log, cutoffs);
+    }
+  }
+}
+
+protected void start_error_log_cleaner()
+{
+  if (error_log_cleaner_process) return;
+
+  // Clean the error log once every hour.
+  error_log_cleaner_process = BackgroundProcess(3600, error_log_cleaner);
+}
+
+protected void stop_error_log_cleaner()
+{
+  if (error_log_cleaner_process) {
+    error_log_cleaner_process->stop();
+    error_log_cleaner_process = UNDEFINED;
+  }
+}
+
 // When was Roxen started?
 int boot_time  =time();
 int start_time =time();
@@ -3802,7 +3914,13 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("draw args: %O\n", args );
 #endif
-    mixed reply = draw_function( @copy_value(args), id );
+    mixed reply;
+    if (mixed err = catch {
+	reply = draw_function( @copy_value(args), id );
+      }) {
+      master()->handle_error(err);
+      return;
+    }
 
     if( !reply ) {
 #ifdef ARG_CACHE_DEBUG
@@ -4319,10 +4437,46 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("Replacing entry for %O\n", id );
 #endif
-    QUERY("REPLACE INTO "+name+
-	  " (id,size,atime,meta,data) VALUES"
-	  " (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
-	  id, strlen(data)+strlen(meta_data), meta_data, data );
+    if (sizeof(data) <= 8*1024*1024) {
+      // Should fit in the 16 MB query limit without problem.
+      // Albeit it might trigger a slow query entry for large
+      // entries.
+      QUERY("REPLACE INTO " + name +
+	    " (id,size,atime,meta,data) VALUES"
+	    " (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
+	    id, strlen(data)+strlen(meta_data), meta_data, data );
+    } else {
+      // We need to perform multiple queries.
+#ifdef ARG_CACHE_DEBUG
+      werror("Writing %d bytes of padding for %s.\n", sizeof(data), id);
+#endif
+      array(string) a = data/(8.0*1024*1024);
+      // NB: We clear the meta field to ensure that the entry
+      //     is invalid while we perform the insert.
+      QUERY("REPLACE INTO " + name +
+	    " (id,size,atime,meta,data) VALUES"
+	    " (%s,%d,UNIX_TIMESTAMP(),'',SPACE(%d))",
+	    id, strlen(data)+strlen(meta_data), sizeof(data));
+      int pos;
+      foreach(a, string frag) {
+#ifdef ARG_CACHE_DEBUG
+	werror("Writing fragment at position %d for %s.\n", pos, id);
+#endif
+	QUERY("UPDATE " + name +
+	      " SET data = INSERT(data, %d, %d, "MYSQL__BINARY "%s)"
+	      " WHERE id = %s",
+	      pos+1, sizeof(frag), frag, id);
+	pos += sizeof(frag);
+      }
+      /* Set the meta data field to a valid value to enable the entry. */
+#ifdef ARG_CACHE_DEBUG
+      werror("Writing metadata for %s.\n", id);
+#endif
+      QUERY("UPDATE " + name +
+	    " SET meta = " MYSQL__BINARY "%s"
+	    " WHERE id = %s",
+	    meta_data, id);
+    }
 #ifdef ARG_CACHE_DEBUG
     array(mapping(string:string)) q =
       QUERY("SELECT meta, data FROM " + name +
@@ -4336,8 +4490,15 @@ class ImageCache
 	       meta_data, q[0]->meta);
       }
       if (q[0]->data != data) {
-	werror("Data differs: %O != %O\n",
-	       data, q[0]->data);
+	string d = q[0]->data;
+	int i;
+	int cnt;
+	for (i = 0; i < sizeof(data); i++) {
+	  if (data[i] == d[i]) continue;
+	  werror("Data differs at offset %d: %d != %d\n",
+		 i, data[i], d[i]);
+	  if (cnt++ > 10) break;
+	}
       }
     }
 #endif
@@ -4615,10 +4776,11 @@ class ImageCache
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
-	error("Draw callback %O did not generate any data.\n"
-	      "na: %O\n"
-	      "id: %O\n",
-	      draw_function, na, id);
+	report_error("Draw callback %O did not generate any data.\n"
+		     "na: %O\n"
+		     "id: %O\n",
+		     draw_function, na, id);
+	return 0;
       }
     }
     res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
@@ -4626,7 +4788,9 @@ class ImageCache
     //  Setting the cacheable flag is done in order to get headers sent which
     //  cause the image to be cached in the client even when using https
     //  sessions.
-    RAISE_CACHE(INITIAL_CACHEABLE);
+    //
+    //  NB: Raise it above INITIAL_CACHEABLE to force an Expires header.
+    RAISE_CACHE(31557600);	// A year.
 
     //  With the new (5.0 and newer) arg-cache enabled by default we can
     //  allow authenticated images in the protocol cache. At this point
@@ -4771,7 +4935,7 @@ class ImageCache
 	    "uid    CHAR(32) NOT NULL DEFAULT '', "
 	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "data MEDIUMBLOB NOT NULL DEFAULT '',"
+	    "data   LONGBLOB NOT NULL DEFAULT '',"
 	    "INDEX atime_id (atime, id)"
 	    ")" );
     }
@@ -4790,6 +4954,15 @@ class ImageCache
 		   "Dropping index atime on %s... ", name);
       start_time = gethrtime();
       QUERY("DROP INDEX atime ON " + name);
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
+    }
+    res = QUERY("SHOW COLUMNS FROM " + name + " WHERE Field = 'data'");
+    if (lower_case(res[0]->Type) != "longblob") {
+      report_debug("Updating " + name + " image cache: "
+		   "Increasing maximum blob size...");
+      int start_time = gethrtime();
+      QUERY("ALTER TABLE " + name +
+	    " MODIFY COLUMN data LONGBLOB NOT NULL DEFAULT ''");
       report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
   }
@@ -4814,7 +4987,7 @@ class ImageCache
     // Note: The OPTIMIZE TABLE step has been disabled. /mast
     int now = time();
     mapping info = localtime(now);
-    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    int wait = (int) (((24 - info->hour) + 24 + 4.5) % 24) * 3600 + random(500);
     background_run(wait, do_cleanup);
 
     //  Remove items older than one week
@@ -5335,13 +5508,13 @@ class ArgCache
   }
 }
 
-mapping cached_decoders = ([]);
+mapping(string:Charset.Decoder) cached_decoders = ([]);
 string decode_charset( string charset, string data )
 {
   // FIXME: This code is probably not thread-safe!
   if( charset == "iso-8859-1" ) return data;
   if( !cached_decoders[ charset ] )
-    cached_decoders[ charset ] = Locale.Charset.decoder( charset );
+    cached_decoders[ charset ] = Charset.decoder( charset );
   data = cached_decoders[ charset ]->feed( data )->drain();
   cached_decoders[ charset ]->clear();
   return data;
@@ -6211,29 +6384,39 @@ int main(int argc, array tmp)
 #ifdef LOG_GC_TIMESTAMPS
   Pike.gc_parameters(([ "pre_cb": lambda() {
 				    gc_start = gethrtime();
+				    gc_histogram = ([]);
 				    werror("GC runs at %s", ctime(time()));
 				  },
 			"post_cb":lambda() {
 				    werror("GC done after %dus\n",
 					   gethrtime() - gc_start);
 				  },
+#ifdef LOG_GC_HISTOGRAM
 			"destruct_cb":lambda(object o) {
+					// NB: These calls to sprintf(%O) can
+					//     take significant time.
 					gc_histogram[sprintf("%O", object_program(o))]++;
+#ifdef LOG_GC_VERBOSE
 					werror("GC cyclic reference in %O.\n",
 					       o);
+#endif
 				      },
+#endif /* LOG_GC_HISTOGRAM */
 			"done_cb":lambda(int n) {
 				    if (!n) return;
 				    werror("GC zapped %d things.\n", n);
-				    mapping h = gc_histogram + ([]);
+#ifdef LOG_GC_HISTOGRAM
+				    mapping h = gc_histogram;
+				    gc_histogram = ([]);
 				    if (!sizeof(h)) return;
 				    array i = indices(h);
 				    array v = values(h);
 				    sort(v, i);
-				    werror("GC histogram (accumulative):\n");
+				    werror("GC histogram:\n");
 				    foreach(reverse(i)[..9], string p) {
 				      werror("GC:  %s: %d\n", p, h[p]);
 				    }
+#endif /* LOG_GC_HISTOGRAM */
 				  },
 		     ]));
   if (!Pike.gc_parameters()->pre_cb) {
@@ -6275,7 +6458,7 @@ int main(int argc, array tmp)
   call_out( show_timers, 30 );
 #endif
 
-#if constant(SSL.sslfile)
+#if constant(SSL.File)
   add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
 #endif
@@ -6413,10 +6596,10 @@ int main(int argc, array tmp)
 
       int upgrade_needed;
 
-      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+      foreach(msgs->parts; string part; array(Standards.PEM.Message) msg) {
 	if (!has_suffix(part, "CERTIFICATE")) continue;
 	Standards.X509.TBSCertificate tbs =
-	  Standards.X509.decode_certificate(msg->body);
+	  Standards.X509.decode_certificate(msg[0]->body);
 	upgrade_needed = (tbs->version < 3);
 	break;
       }
@@ -6425,13 +6608,13 @@ int main(int argc, array tmp)
 
       // NB: We reuse the old key.
       Crypto.Sign key;
-      foreach(msgs->parts; string part; Standards.PEM.Message msg) {
+      foreach(msgs->parts; string part; array(Standards.PEM.Message) msg) {
 	if (!has_suffix(part, "PRIVATE KEY")) continue;
-	if (msg->headers["dek-info"]) {
+	if (msg[0]->headers["dek-info"]) {
 	  // Not supported here.
 	  break;
 	}
-	key = Standards.X509.parse_private_key(msg->body);
+	key = Standards.X509.parse_private_key(msg[0]->body);
       }
       if (!key) continue;
 
@@ -6483,6 +6666,8 @@ int main(int argc, array tmp)
   start_fsgarb();
 #endif
 #endif /* THREADS */
+
+  start_error_log_cleaner();
 
 #ifdef TEST_EUID_CHANGE
   if (test_euid_change) {
@@ -7318,7 +7503,7 @@ array(array(string|int|array)) security_checks = ({
   }), "ip", }),
   ({ "user=%s",1,({ 1,
     lambda( string x ) {
-      return ({sprintf("(< %{%O, %}>)", x/"," )});
+      return ({sprintf("((multiset)(< %{%O, %}>))", x/"," )});
     },
 
     "    if (((user || (user = authmethod->authenticate(id, userdb_module)))\n"
@@ -7329,7 +7514,7 @@ array(array(string|int|array)) security_checks = ({
   }), "user", }),
   ({ "group=%s",1,({ 1,
     lambda( string x ) {
-      return ({sprintf("(< %{%O, %}>)", x/"," )});
+      return ({sprintf("((multiset)(< %{%O, %}>))", x/"," )});
     },
     "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
     "        && ((%[0]s->any && sizeof(user->groups())) ||\n"

@@ -702,19 +702,6 @@ program low_findprog(string pname, string ext,
   Stat s;
   string fname=pname+ext;
 
-  object key;
-  mixed err = catch {
-    key=compilation_mutex->lock(2);
-  };
-  if (err &&
-      // Ugly kludge to ignore the error we can get if we're being
-      // called from within the compiler, which uses _disable_threads.
-      !has_value (describe_error (err),
-		  "Cannot wait for mutexes when threads are disabled")) {
-    werror( "low_findprog: Caught spurious error:\n"
-	    "%s\n", describe_backtrace(err) );
-  }
-
 #if constant(PIKE_MODULE_RELOC)
   fname = unrelocate_module(fname);
 #endif

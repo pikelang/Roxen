@@ -21,7 +21,7 @@ constant ARGS=(< "type", "min", "max", "scope", "trim",
 		 "disable-domain-check", >);
 
 // pass along some HTML5-specific attributes (<type>:<attribute>)
-constant HTML5_ARGS = (< "number:min", "number:max" >);
+constant HTML5_ARGS = (< "number:min", "number:max", "range:min", "range:max" >);
 
 constant HTML5_TYPES = (< "number", "email", "url", "tel", "date", "datetime",
 			  "datetime-local", "search", "month", "week", "time",

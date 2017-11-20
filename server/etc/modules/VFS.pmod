@@ -155,7 +155,8 @@ string find_above( string above,
 
   if( cache )  res = cache_lookup( (ck=cache+":"+
 				    id->conf->name+":"+id->misc->host), above );
-  if( res )    return res;
+
+  if (res) return stringp (res) ? res : 0;
 
   // No luck. Try to locate the file in the VFS.
   array(string) segments = ({""})+(above/"/"-({""}));
@@ -169,7 +170,6 @@ string find_above( string above,
       break;
     }
   }
-  if( res && cache )
-    return cache_set( ck, above, res );
+  cache_set( ck, above, res || -1, res ? 60 : 5);
   return res;
 }

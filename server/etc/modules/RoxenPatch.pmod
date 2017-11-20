@@ -17,14 +17,19 @@ constant known_platforms = (< "macosx_ppc32",
 			      "rhel5_x86",
 			      "rhel5_x86_64",
 			      "rhel6_x86_64",
+			      "rhel7_x86_64",
 			      "sol10_x86_64",
-			      "win32_x86" >);
+			      "win32_x86",
+			      "win32_x86_64",
+>);
 
 //! All currently supported subfeatures.
 constant features = (<
   "pike-support",		// Support patching master.pike.in and
 				// removal of .o-files, etc.
   "file-modes",			// Support patching and restoring of
+				// files with eg the exec bit set (broken).
+  "file-modes-2",		// Support patching and restoring of
 				// files with eg the exec bit set.
 >);
 
@@ -33,10 +38,14 @@ constant RXP_ACTION_URL = "http://www.roxen.com/rxp/action.html";
 
 //! Contains the patchdata
 //! 
-class PatchObject(string|void id
-		  //! Taken from filename.
-		  )
+class PatchObject(string|void id)
 {
+  //! @decl string id
+  //! Taken from filename.
+
+  //! @decl void create(string|void id)
+  //! Taken from filename.
+
   string name;
   //! "name" field in the metadata block
 
@@ -72,6 +81,7 @@ class PatchObject(string|void id
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -83,6 +93,7 @@ class PatchObject(string|void id
   //!       @member string "source"
   //!       @member string "destination"
   //!       @member string "platform"
+  //!       @member string "file-mode"
   //!     @endmapping
   //! @endarray
 
@@ -252,7 +263,7 @@ class Patcher
     // Verify server dir
     server_path = combine_and_check_path(server_dir);
     if (!server_path)
-      throw(({ "Cannot access server dir!" }));
+      error("Cannot access server dir!");
     
 //     write_mess("Server path set to %s\n", server_path);
  
@@ -265,7 +276,7 @@ class Patcher
       if(!mkdirhier(import_path))
       {
 	// If the dir does not exist and we failed to create it.
-	throw(({ "Can't access import dir!" }));
+	error("Can't access import dir!");
       }
     }
 //     write_mess("Import dir set to %s\n", import_path);
@@ -277,7 +288,7 @@ class Patcher
       if(!mkdirhier(installed_path))
       {
 	// If the dir does not exist and we failed to create it.
-	throw(({"Can't access installed dir!"}));
+	error("Can't access installed dir!");
       }
     }
 //     write_mess("Installed dir set to %s\n", installed_path);
@@ -297,7 +308,7 @@ class Patcher
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
     if (!is_file(version_h))
-      throw( ({ "Cannot access " + version_h  }) );
+      error("Cannot access " + version_h);
 
     object err = catch
     {
@@ -306,7 +317,7 @@ class Patcher
     };
     
     if (err)
-      throw(({"Can't fetch server version"}));
+      error("Can't fetch server version");
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
 
@@ -880,8 +891,14 @@ class Patcher
 	  // Set correct mtime - if possible.
 	  Stat fstat = file_stat(source);
 	  
-	  if(fstat)
+	  if(fstat) {
+	    if (file["file-mode"]) {
+	      chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	    } else {
+	      chmod(dest, fstat->mode & 0777);
+	    }
 	    System.utime(dest, fstat->atime, fstat->mtime);
+	  }
 	  privs = 0;
 	  write_log(0, "<green>ok.</green>\n");
 	  new_files += ({ dest });
@@ -948,8 +965,14 @@ class Patcher
 	    // Set correct mtime - if possible.
 	    Stat fstat = file_stat(source);
 
-	    if(fstat)
+	    if(fstat) {
+	      if (file["file-mode"]) {
+		chmod(dest, array_sscanf(file["file-mode"], "%O")[0] & 0777);
+	      } else {
+		chmod(dest, fstat->mode & 0777);
+	      }
 	      System.utime(dest, fstat->atime, fstat->mtime);
+	    }
 	    privs = 0;
 	    write_log(0, "<green>ok.</green>\n");
 
@@ -1113,6 +1136,11 @@ class Patcher
 
 	array args = ({ patch_bin,
 			"-p0",
+#ifdef __NT__
+			// Make sure that patch doesn't mess around
+			// with EOL (cf [bug 7244]).
+			"--binary",
+#endif
 			// Reject file
 // 			"--global-reject-file=" +
 // 			   append_path(source_path, "rejects"),
@@ -1558,19 +1586,20 @@ class Patcher
 	p->originator = tag_content;
 	break;
       case "delete":
-	p->delete += ({ ([ "destination": tag_content ]) });
-	break;
       case "new":
       case "replace":
+	if (sizeof(attrs)) {
+	  if (!p[name]) p[name] = ({});
+	  attrs->destination = attrs->destination || tag_content;
+	  p[name] += ({ attrs });
+	}
+	break;
       default:
 	if (sizeof(attrs)) {
 	  if (!p[name]) p[name] = ({});
 	  foreach(attrs; string i; string v) {
+	    // FIXME: Why?
 	    p[name] += ({ ([i:v]) });
-	    if (i == "source") {
-	      // NB: This is for <new> and <replace>.
-	      p[name][-1]->destination = tag_content;
-	    }
 	  }
 	  break;
 	}
@@ -1832,8 +1861,8 @@ class Patcher
   {
     installed_path = combine_path(server_path, path);
     if (!is_dir(installed_path))
-      throw( ({ sprintf("Couldn't set %s as path for installed patches", 
-			installed_path) }) );
+      error(sprintf("Couldn't set %s as path for installed patches",
+		    installed_path));
   }  
   
   void set_imported_path(string path) 
@@ -1846,8 +1875,8 @@ class Patcher
   {
     import_path = combine_path(getcwd(), path);
     if (!is_dir(installed_path))
-      throw( ({ sprintf("Couldn't set %s as path for installed patches", 
-			import_path) }) );
+      error(sprintf("Couldn't set %s as path for installed patches",
+		    import_path));
   }
   
   void set_temp_dir(void | string path)
@@ -1872,7 +1901,7 @@ class Patcher
     else if (is_dir("/tmp/"))
       temp_path = "/tmp/";
     else
-      throw(({"Couldn't set a standard temp dir."}));
+      error("Couldn't set a standard temp dir.");
   }
 
   string get_temp_dir() { return temp_path; }
@@ -1907,6 +1936,17 @@ class Patcher
     xml += sprintf("  <originator>%s</originator>\n",
 		   html_encode(metadata->originator));
 
+    // Add feature dependency on file-modes-2 if used.
+    foreach((metadata->new || ({})) +
+	    (metadata->replace || ({})), mapping(string:string) f) {
+      if (f["file-mode"]) {
+	if (!has_value(metadata->depends, "roxenpatch/file-modes-2")) {
+	  metadata->depends += ({ "roxenpatch/file-modes-2" });
+	}
+	break;
+      }
+    }
+
     array valid_tags = ({ "version", "platform", "depends", "flags", "reload",
 			  "patch", "new", "replace", "delete" });
 
@@ -1927,16 +1967,21 @@ class Patcher
 	}
 	else if (mappingp(metadata[tag_name][0]))
 	{
+	  // array(mapping) -- eg new, replace & delete.
 	  foreach(metadata[tag_name], mapping m) {
 	    if (m->source) {
-	      xml += sprintf("  <%s source=\"%s\">%s</%s>\n",
+	      xml += sprintf("  <%s source=\"%s\"%s>%s</%s>\n",
 			     tag_name,
 			     m->source,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    } else {
-	      xml += sprintf("  <%s>%s</%s>\n",
+	      xml += sprintf("  <%s%s>%s</%s>\n",
 			     tag_name,
+			     m["file-mode"]?
+			     (" file-mode=\"" + m["file-mode"] + "\""):"",
 			     m->destination,
 			     tag_name);
 	    }
@@ -2027,8 +2072,7 @@ class Patcher
     string id = metadata->id;
 
     if (!destination_path) destination_path = getcwd();
-    string dest =
-      unixify_path(combine_path(destination_path || getcwd(), id + ".rxp"));
+    string dest = combine_path(destination_path || getcwd(), id + ".rxp");
     write_mess("Creating rxp file %s ... ", dest);
     Stdio.File rxpfile = Stdio.File();
     if (!rxpfile->open(dest, "wbct")) {
@@ -2213,7 +2257,9 @@ class Patcher
 	} else if (path[0] == "pike") {
 	  string headerfile =
 	    Stdio.read_bytes(combine_path(server_path,
-					  "pike/include/version.h"));
+					  "pike/include/version.h")) ||
+	    Stdio.read_bytes(combine_path(server_path,
+					  "pike/include/pike/version.h"));
 	  if (headerfile) {
 	    /* Filter everything but cpp-directives. */
 	    headerfile = filter(headerfile/"\n", has_prefix, "#")*"\n" + "\n";
@@ -2666,6 +2712,11 @@ class Patcher
       return 0;
     }
 
+    Stat st = file_stat(full_path);
+    if (st) {
+      chmod(dest, st->mode & 0777);
+    }
+
     // Since the filename may have been changed we'll extract it again from
     // dest.
     m->source = basename(dest);
@@ -2836,6 +2887,10 @@ class Patcher
     Stat st = file_stat(full_path);
     int mtime = st && st->mtime;
     int mode = st ? st->mode : 0644;
+    if (mode & 0111) {
+      // Propagate the file-mode to the meta data file.
+      m["file-mode"] = "0755";
+    }
     return add_blob_to_rxp(rxp, data, dest, mtime, mode);
   }
 
@@ -3000,7 +3055,7 @@ class Patcher
     Standards.URI new_uri(string url) {
       Standards.URI uri;
       mixed err = catch { uri = Standards.URI(url); };
-      if (err) { throw(sprintf("Malformed URL: %s", url || "")); }
+      if (err) { error(sprintf("Malformed URL: %s", url || "")); }
       return uri;
     };
 
@@ -3011,7 +3066,7 @@ class Patcher
       Protocols.HTTP.Query query = Protocols.HTTP.get_url(uri);
 #endif
       if (query->status != 200) {
-	throw(sprintf("HTTP request for URL %s failed with status %d: %s.", 
+	error(sprintf("HTTP request for URL %s failed with status %d: %s.",
 		      (string)uri || "", query->status, query->status_desc || ""));
       }
       return query->data();
@@ -3019,7 +3074,7 @@ class Patcher
 
     // If not running in a dist we can't fetch patches
     if (dist_version == "")
-      throw("Not running a proper distribution.");
+      error("Not running a proper distribution.");
     
     // Get rxp action url
     Standards.URI uri = new_uri(RXP_ACTION_URL);
@@ -3031,7 +3086,7 @@ class Patcher
 
     // Get rxp cluster url
     if (!res || !sizeof(res))
-      throw("No rxp cluster URL was found.");
+      error("No rxp cluster URL was found.");
 
     Standards.URI uri2 = new_uri(res);
     string res2 = get_url(uri2); 

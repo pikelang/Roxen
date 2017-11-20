@@ -269,6 +269,13 @@ class TagEmail {
 	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
 	content_disp = ((args->disposition || "attachment") +
 			(aname ? "; filename=\""+aname+"\"" : ""));
+
+	//  Decide on suitable charset. If data is wide string we use UTF-8,
+	//  otherwise nothing.
+	if (String.width(body) > 8) {
+	  content_type += "; charset=utf-8";
+	  body = string_to_utf8(body);
+	}
 	
 	//  Use "nocid" for first attachment (backwards compatibility)
 	//  but counter-based strings for subsequent attachments.
@@ -481,8 +488,8 @@ class TagEmail {
      // UTF8 -> dest. charset
      if(sizeof(chs))
      {
-       object /* Locate.Charset.encoder */ enc;
-       if (mixed err = catch (enc = Locale.Charset.encoder (chs)))
+       Charset.Encoder enc;
+       if (mixed err = catch (enc = Charset.encoder (chs)))
 	 if (has_prefix (describe_error (err), "Unknown character encoding"))
 	   parse_error ("Unknown charset %O.\n", chs);
 	 else

@@ -22,7 +22,7 @@ check_owner() {
      fi
      ugid=`grep $gargs "='User'>" $DIR/Global_Variables 2>/dev/null\
            | sed -e 's/.*<str>//' -e 's,</str>.*,,'`
-     if [ ! x$ugid = x ] ; then
+     if [ ! "x$ugid" = x ] ; then
         dp "Doing uid change to $ugid"
         oifs="$IFS";IFS=':';set $ugid;IFS="$oifs"
 	if [ ! "x$2" = x ]; then
@@ -137,37 +137,16 @@ setup_environment
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
-
-
-# Thread enabling.
-# FIXME: Ought to use case...esac.
-
-# Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  vers="`uname -r|sed -e 's/5.\([0-9]*\)/\1/p' -ed`"
-  if [ "$vers" -ge "5" ]; then
-#    if [ $verbose -gt 0 ] ; then
-#      dp "Solaris 2.5 or later detected. Using threads by default."
-#    fi
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
-fi
-# Darwin uses threads.
-if uname | grep 'Darwin' >/dev/null 2>&1; then
-  DEFINES="$DEFINES -DENABLE_THREADS"
-fi
-# Also enabled on Linux.
-if uname | grep 'Linux' >/dev/null 2>&1; then
-  DEFINES="$DEFINES -DENABLE_THREADS"
-fi
+DEFINES="$DEFINES -DRAM_CACHE -DHTTP_COMPRESSION"
 
 gdb=no
 valgrind=
 truss=
 
+daemonize=yes
+
 remove_dumped_passed=no
+
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
@@ -308,13 +287,16 @@ parse_args() {
     DEFINES="-DENABLE_THREADS $DEFINES"
   ;;
   '--no-threads'|'--without-threads'|'--disable-threads')
-    DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//g'`"
+    echo "Thread support not optional -- ignoring $1" >&2
   ;;
   '--with-profile'|'--profile')
     DEFINES="-DPROFILE $DEFINES"
   ;;
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
+  ;;
+  '--without-daemon'|'--without-deamonize')
+    daemonize=no
   ;;
   '--generations='*)
     GENERATIONS=`echo $1 | sed -e 's/--generations=//'`
@@ -483,6 +465,9 @@ the default arguments.
                                   this argument must be the first one.
 
       .B--strip-backslashB.:          Replace all \\ characters in URIs with /
+
+      .B--without-daemonB.:           Do not detach from the started server.
+                                  This is typically used with launchd.
 
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
@@ -1327,6 +1312,12 @@ if [ -z "$once" ] ; then
     trap "" 0
     dp "Forked start script, pid $start_pid." 2>&3
     dp "Start script pid $start_pid."
+
+    if test "x$daemonize" = "xyes"; then :; else
+      trap "stop_roxen $start_pid TERM start \"$canonicalconf\" \"start script\"" 2 15
+      wait;
+      signal_exit
+    fi
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :

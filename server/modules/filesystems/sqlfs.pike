@@ -93,7 +93,7 @@ private Thread.Mutex lfm = Thread.Mutex();
 protected string decode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
-    p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
+    p = Charset.encoder( path_encoding )->feed( p )->drain();
 
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );

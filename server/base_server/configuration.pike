@@ -928,7 +928,7 @@ protected mixed strip_fork_information(RequestID id)
 	has_value(lower_case(id->not_query), ".ds_store"))
       //  Skip elaborate error page since we get these e.g. for WebDAV
       //  mounts in OS X Finder.
-      return Roxen.http_string_answer("No such file", "text/plain");
+      return Roxen.http_status(404, "No such file.");
   }
   
   array a = id->not_query/"::";
@@ -1514,7 +1514,10 @@ protected array(string) draw_saturation_bar(int hue,int brightness, int where,
 {
   Image.Image bar =
     small_version ? Image.Image(16, 128) : Image.Image(30, 256);
-  
+
+  hue &= 0xff;
+  brightness &= 0xff;
+
   for(int i=0;i<128;i++)
   {
     int j = i * 2;
@@ -2266,7 +2269,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"location");
 	if(fid)
 	{
-	  id->virtfile = loc;
+	  if (id)
+	    id->virtfile = loc;
 
 	  if(mappingp(fid))
 	  {
@@ -2521,28 +2525,39 @@ mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
   res = low_get_file(id, no_magic);
   TIMER_END(get_file);
 
-  // finally map all filter type modules.
-  // Filter modules are like TYPE_LAST modules, but they get called
-  // for _all_ files.
-  TIMER_START(filter_modules);
-  foreach(filter_module_cache||filter_modules(), tmp)
-  {
-    TRACE_ENTER("Filter module", tmp);
-    PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
-    if(res2=tmp(res,id))
+  // Note: id may be destructed at this point already (when the
+  // request is handled asynchronously,
+  // i.e. Roxen.http_pipe_in_progress() is returned, but
+  // id->send_result() finishes in another thread before the calling
+  // thread gets to this point.)
+  if (id && (!mappingp (res) || !res->pipe)) {
+    // finally map all filter type modules.
+    // Filter modules are like TYPE_LAST modules, but they get called
+    // for _all_ files.
+    TIMER_START(filter_modules);
+    foreach(filter_module_cache||filter_modules(), tmp)
     {
-      if(mappingp(res) && res->file && (res2->file != res->file))
-	destruct(res->file);
-      TRACE_LEAVE("Rewrote result.");
-      res=res2;
-    } else
-      TRACE_LEAVE("");
-    PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
+      TRACE_ENTER("Filter module", tmp);
+      PROF_ENTER(Roxen.get_owning_module(tmp)->module_name,"filter");
+      if(res2=tmp(res,id))
+      {
+	if(mappingp(res) && res->file && (res2->file != res->file))
+	  destruct(res->file);
+	TRACE_LEAVE("Rewrote result.");
+	res=res2;
+      } else
+	TRACE_LEAVE("");
+      PROF_LEAVE(Roxen.get_owning_module(tmp)->module_name,"filter");
+    }
+    TIMER_END(filter_modules);
   }
-  TIMER_END(filter_modules);
 
-  root_id->misc->_request_depth--;
-  id->misc->internal_get = orig_internal_get;
+  if (root_id)
+    root_id->misc->_request_depth--;
+
+  if (id)
+    id->misc->internal_get = orig_internal_get;
+
   return res;
 }
 
@@ -2595,6 +2610,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 	throw(err);
       return dir;
     }
+    TRACE_LEAVE("");
     id->not_query=of;
   }
 #endif /* URL_MODULES */
@@ -5033,6 +5049,8 @@ hyphens ('-') occur in the specifier names.</p>
     that describes how the page has been evaluated:
 
     <table class='hilite-1stcol'><tbody valign='top'>
+    <tr><td>bad-charset</td>
+        <td>Detected invalid charset in declared content-type.</td></tr>
     <tr><td>xslt</td>
 	<td>XSL transform.</td></tr>
     <tr><td>rxmlsrc</td>
@@ -5116,7 +5134,9 @@ below.</p>
   getvar ("LogFormat")->cols = 80;
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
-  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
+  string log_suffix = ".%y-%m-%d";
+  if (name == "Administration Interface") log_suffix = ".%y-%m";
+  defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log" + log_suffix,
 	 DLOCALE(30, "Logging: Log file"), TYPE_FILE,
 	 DLOCALE(31, "The log file. "
 	 "A file name. Some substitutions will be done:"
@@ -5128,8 +5148,16 @@ below.</p>
 	 "%H    Hostname\n"
 	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-  
-  defvar("LogFileCompressor", "",
+
+  string default_compressor = "";
+  foreach(({ "/bin/bzip2", "/usr/bin/bzip2", "/bin/gzip", "/usr/bin/gzip", }),
+	  string bin) {
+    if (Stdio.is_file(bin)) {
+      default_compressor = bin;
+      break;
+    }
+  }
+  defvar("LogFileCompressor", default_compressor,
 	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
 	 DLOCALE(259, "Path to a program to compress log files, "
 		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
@@ -5331,6 +5359,7 @@ low."))->add_changed_callback(lambda(object v)
 	    "application/x-javascript",
 	    "application/json",
 	    "application/xhtml+xml",
+	    "image/x-icon",
 	    "image/svg+xml" }),
 	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
@@ -5430,83 +5459,55 @@ low."))->add_changed_callback(lambda(object v)
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"<html>
-<head>
-  <title>404 - Page Not Found</title>
-  <style>
-    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      12px;
-            line-height:    160% }
-    .url  { font-family:    georgia, times, serif;
-            font-size:      18px;
-            padding-top:    6px;
-            padding-bottom: 20px }
-    .info { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      10px;
-            color:          #999999 }
-  </style>
-</head>
-<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
-      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
-      style='margin: 0; padding: 0'>
-
-<table border='0' cellspacing='0' cellpadding='0' height='99%'>
-  <colgroup>
-    <col span='3' />
-    <col width='356' />
-    <col width='0*' />
-  </colgroup>
-  <tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td></td>
-    <td><img src='/internal-roxen-404' /></td>
-    <td><img src='/internal-roxen-unit' width='30' /></td>
-    <td valign='bottom'><img src='/internal-roxen-page-not-found-2' /></td>
-    <td></td>
-  </tr><tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td colspan='3'></td>
-    <td colspan='2'>
-      <div class='msg'>Unable to retrieve</div>
-      <div class='url'>&page.virtfile;</div>
-    </td>
-  </tr><tr>
-    <td colspan='3'></td>
-    <td width='356'>
-      <div class='msg'>
-        If you feel this is a configuration error, please contact
-        the administrators of this server or the author of the
-        <if referrer=''>
-          <a href='&client.referrer;'>referring page</a>.
-        </if><else>
-          referring page.
-        </else>
+  defvar("404-message", #"<!DOCTYPE html>
+<html>
+  <head>
+    <title>404 - Page Not Found</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+      body {
+        background:  #f2f1eb;
+        color:       #000;
+        margin:      0 0 49px;
+        padding:     30px 30px 0;
+        font-family: Verdana, Helvetica, Arial, sans-serif;
+        font-size:   12px;
+        line-height: 160%;
+      }
+      html        { position: relative; min-height: 100%; }
+      a           { color: #2331d1; }
+      .number     { float: left; margin-right: 30px; }
+      .header     { display: block; margin: 34px 0 30px; max-width: 100%; height: auto; }
+      .main       { float: left; width: 387px; max-width: 100%; }
+      .url        { display: block; font-family: Georgia, Times, serif; font-size: 18px; font-weight: normal; margin: 6px 0 20px; }
+      .separator  { color: #ffbe00; }
+      .footer     { position: absolute; bottom: 0; height: 49px; }
+      .footer img { vertical-align: middle; margin-right: 3px; }
+      .info       { font-size: 10px; color: #999; }
+    </style>
+  </head>
+  <body>
+    <img src='/internal-roxen-404' class='number' alt='404' width='142' height='57'/>
+    <div class='main'>
+      <img src='/internal-roxen-page-not-found-2' class='header' alt='Page Not Found' width='356' height='23'/>
+      <p>Unable to retrieve <b class='url'>&page.virtfile;</b></p>
+      <p>If you feel this is a configuration error, please contact
+         the administrators of this server or the author of the
+         <if referrer=''><a href='&client.referrer;'>referring page</a>.</if>
+         <else>referring page.</else>
+      </p>
+      <div class='footer'>
+        <img src='/internal-roxen-roxen-mini.gif' width='19' height='15'/>
+        <span class='info'>
+          <strong>&roxen.product-name;</strong> <span class='separator'>|</span>
+          version &roxen.dist-version;
+        </span>
       </div>
-    </td>
-    <td>&nbsp;</td>
-  </tr><tr valign='bottom' height='100%'>
-    <td colspan='3'></td>
-    <td>
-      <img src='/internal-roxen-unit' height='20' />
-      <table border='0' cellspacing='0' cellpadding='0'>
-        <tr>
-          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
-          <td class='info'>
-            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
-          </td>
-        </tr>
-      </table>
-      <img src='/internal-roxen-unit' height='15' />
-    </td>
-    <td></td>
-  </tr>
-</table>
-
-</body>
-</html>",
+    </div>
+    <br clear='all'/>
+  </body>
+</html>
+",
 	 DLOCALE(58, "No such file message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(59, "What to return when there is no resource or file "
@@ -5552,83 +5553,55 @@ low."))->add_changed_callback(lambda(object v)
   
   defvar("ZAuthFailed", AuthFailedOverride() );
 
-  defvar("401-message", #"<html>
-<head>
-  <title>401 - Authentication Failed</title>
-  <style>
-    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      12px;
-            line-height:    160% }
-    .url  { font-family:    georgia, times, serif;
-            font-size:      18px;
-            padding-top:    6px;
-            padding-bottom: 20px }
-    .info { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      10px;
-            color:          #999999 }
-  </style>
-</head>
-<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
-      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
-      style='margin: 0; padding: 0'>
-
-<table border='0' cellspacing='0' cellpadding='0' height='99%'>
-  <colgroup>
-    <col span='3' />
-    <col width='356' />
-    <col width='0*' />
-  </colgroup>
-  <tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td></td>
-    <td><img src='/internal-roxen-401' /></td>
-    <td><img src='/internal-roxen-unit' width='30' /></td>
-    <td valign='bottom'><img src='/internal-roxen-authentication-failed' /></td>
-    <td></td>
-  </tr><tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td colspan='3'></td>
-    <td colspan='2'>
-      <div class='msg'>Unable to retrieve</div>
-      <div class='url'>&page.virtfile;</div>
-    </td>
-  </tr><tr>
-    <td colspan='3'></td>
-    <td width='356'>
-      <div class='msg'>
-        If you feel this is a configuration error, please contact
-        the administrators of this server or the author of the
-        <if referrer=''>
-          <a href='&client.referrer;'>referring page</a>.
-        </if><else>
-          referring page.
-        </else>
+  defvar("401-message", #"<!DOCTYPE html>
+<html>
+  <head>
+    <title>401 - Authentication Failed</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+      body {
+        background:  #f2f1eb;
+        color:       #000;
+        margin:      0 0 49px;
+        padding:     30px 30px 0;
+        font-family: Verdana, Helvetica, Arial, sans-serif;
+        font-size:   12px;
+        line-height: 160%;
+      }
+      html        { position: relative; min-height: 100%; }
+      a           { color: #2331d1; }
+      .number     { float: left; margin-right: 30px; }
+      .header     { display: block; margin: 34px 0 30px; max-width: 100%; height: auto; }
+      .main       { float: left; width: 387px; max-width: 100%; }
+      .url        { display: block; font-family: Georgia, Times, serif; font-size: 18px; font-weight: normal; margin: 6px 0 20px; }
+      .separator  { color: #ffbe00; }
+      .footer     { position: absolute; bottom: 0; height: 49px; }
+      .footer img { vertical-align: middle; margin-right: 3px; }
+      .info       { font-size: 10px; color: #999; }
+    </style>
+  </head>
+  <body>
+    <img src='/internal-roxen-401' class='number' alt='401' width='142' height='57'/>
+    <div class='main'>
+      <img src='/internal-roxen-authentication-failed' class='header' alt='Authentication Failed' width='387' height='23'/>
+      <p>Unable to retrieve <b class='url'>&page.virtfile;</b></p>
+      <p>If you feel this is a configuration error, please contact
+         the administrators of this server or the author of the
+         <if referrer=''><a href='&client.referrer;'>referring page</a>.</if>
+         <else>referring page.</else>
+      </p>
+      <div class='footer'>
+        <img src='/internal-roxen-roxen-mini.gif' width='19' height='15'/>
+        <span class='info'>
+          <strong>&roxen.product-name;</strong> <span class='separator'>|</span>
+          version &roxen.dist-version;
+        </span>
       </div>
-    </td>
-    <td>&nbsp;</td>
-  </tr><tr valign='bottom' height='100%'>
-    <td colspan='3'></td>
-    <td>
-      <img src='/internal-roxen-unit' height='20' />
-      <table border='0' cellspacing='0' cellpadding='0'>
-        <tr>
-          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
-          <td class='info'>
-            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
-          </td>
-        </tr>
-      </table>
-      <img src='/internal-roxen-unit' height='15' />
-    </td>
-    <td></td>
-  </tr>
-</table>
-
-</body>
-</html>",
+    </div>
+    <br clear='all'/>
+  </body>
+</html>
+",
 	 DLOCALE(413, "Authentication failed message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(420, "What to return when an authentication attempt failed."));
@@ -5637,76 +5610,48 @@ low."))->add_changed_callback(lambda(object v)
     // Do not use a handler queue timeout of the administration
     // interface. You most probably don't want to get a 503 in your
     // face when you're trying to reconfigure an overloaded server...
-    defvar("503-message", #"<html>
-<head>
-  <title>503 - Server Too Busy</title>
-  <style>
-    .header { font-family:  arial;
-            font-size:      20px;
-            line-height:    160% }
-    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      12px;
-            line-height:    160% }
-    .url  { font-family:    georgia, times, serif;
-            font-size:      18px;
-            padding-top:    6px;
-            padding-bottom: 20px }
-    .info { font-family:    verdana, helvetica, arial, sans-serif;
-            font-size:      10px;
-            color:          #999999 }
-  </style>
-</head>
-<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
-      leftmargin='50' rightmargin='0' topmargin='50' bottommargin='0'
-      style='margin: 0; padding: 0'>
-
-<table border='0' cellspacing='0' cellpadding='0' height='99%'>
-  <colgroup>
-    <col span='3' />
-    <col width='356' />
-    <col width='0*' />
-  </colgroup>
-  <tr><td height='50'></td></tr>
-  <tr>
-    <td width='100'></td>
-    <td>
+    defvar("503-message", #"<!DOCTYPE html>
+<html>
+  <head>
+    <title>503 - Server Too Busy</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <style>
+      body {
+        background:  #f2f1eb;
+        color:       #000;
+        margin:      0 0 49px;
+        padding:     30px 30px 0;
+        font-family: Verdana, Helvetica, Arial, sans-serif;
+        font-size:   12px;
+        line-height: 160%;
+      }
+      html        { position: relative; min-height: 100%; }
+      .header     { font-size: 20px }
+      .main       { width: 387px; max-width: 100%; }
+      .url        { display: block; font-family: Georgia, Times, serif; font-size: 18px; font-weight: normal; margin: 6px 0 20px; }
+      .separator  { color: #ffbe00; }
+      .footer     { position: absolute; bottom: 0; height: 49px; }
+      .info       { font-size: 10px; color: #999; }
+    </style>
+  </head>
+  <body>
+    <div class='main'>
       <div class='header'>503 &mdash; Server Too Busy</div>
-    </td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-      <div class='msg'>Unable to retrieve</div>
-      <div class='url'>&page.virtfile;</div>
-    </td>
-  </tr>
-  <tr>
-    <td></td>
-    <td>
-      <div class='msg'>
-        The server is currently too busy to serve your request. Please try again in a few moments.
+      <p>Unable to retrieve <b class='url'>&page.virtfile;</b></p>
+      <p>The server is currently too busy to serve your request.
+         Please try again in a few moments.
+      </p>
+      <div class='footer'>
+        <span class='info'>
+          <strong>&roxen.product-name;</strong> <span class='separator'>|</span>
+          version &roxen.dist-version;
+        </span>
       </div>
-    </td>
-    <td>&nbsp;</td>
-  </tr>
-  <tr valign='bottom' height='100%'>
-    <td></td>
-    <td>
-      <table border='0' cellspacing='0' cellpadding='0'>
-        <tr>
-          <td class='info'>
-            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
-          </td>
-        </tr>
-      </table>
-   </td>
-   <td></td>
- </tr>
-</table>
-
-</body>
-</html>",
+    </div>
+    <br clear='all'/>
+  </body>
+</html>
+",
 	   DLOCALE(1048, "Server too busy message"),
 	   TYPE_TEXT_FIELD|VAR_PUBLIC,
 	   DLOCALE(1049, "What to return if the server is too busy. See also "

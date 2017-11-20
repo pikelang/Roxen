@@ -64,7 +64,7 @@ class AsyncHTTPClient {
 
   void do_method(string _method,
 		 string|Standards.URI _url,
-		 void|mapping post_variables,
+                 void|mapping post_put_variables,
 		 void|mapping _request_headers,
 		 void|Protocols.HTTP.Query _con, void|string _data)
   {
@@ -81,11 +81,11 @@ class AsyncHTTPClient {
     else
       request_headers = _request_headers;
 
-    if(post_variables) {
+    if(post_put_variables) {
       request_headers += 
 		   (["content-type":
 		     "application/x-www-form-urlencoded"]);
-      _data = Protocols.HTTP.http_encode_query(post_variables);
+      _data = Protocols.HTTP.http_encode_query(post_put_variables);
     }
 
     req_data = _data;
@@ -212,15 +212,15 @@ class AsyncHTTPClient {
   void create(string method, mapping args,
 	      mapping|void headers, string|mapping|void data)
   {
-    if(method == "POST") {
+    if(method == "POST" || method == "PUT") {
       if (mappingp(data)) {
-	do_method(method, args->href, data, headers, 0, UNDEFINED);
+        do_method(method, args->href, data, headers, 0, UNDEFINED);
       } else {
-	do_method(method, args->href, UNDEFINED, headers, 0, data);
+        do_method(method, args->href, UNDEFINED, headers, 0, data);
       }
+    } else if (method == "GET" || method == "DELETE") {
+      do_method(method, args->href, 0, headers);
     }
-    else
-      do_method("GET", args->href, 0, headers);
 
     if(args->timeout) {
       con->timeout = (int) args->timeout;
@@ -274,11 +274,6 @@ class TagInsertHref {
     else
       CACHE(60);
 
-    string method = "GET";
-    if(args->method && lower_case(args->method) == "post")
-      method = "POST";
-    if (args["soap-action"]) method = "POST";
-
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
     mapping(string:string) headers = ([ "X-Roxen-Recursion-Depth":
@@ -290,33 +285,39 @@ class TagInsertHref {
 	  headers[name] = val;
     }
 
+    string method = "GET";
     string|mapping data;
-    if (method == "POST")
-    {
-      int set;
-      data = args["post-data"];
-      if (data) set++;
-      if(args["soap-action"]) {
-	headers["SOAPACTION"] = args["soap-action"];
-	headers["content-type"] = "text/xml; charset=utf-8";
-	// NB: frame->content has been RXML parsed.
-	data = String.trim_all_whites(string_to_utf8(frame->content));
-	set++;
+
+    if (args["soap-action"]) {
+      method = "POST";
+      headers["SOAPACTION"] = args["soap-action"];
+      headers["content-type"] = "text/xml; charset=utf-8";
+      // NB: frame->content has been RXML parsed.
+      data = String.trim_all_whites(string_to_utf8(frame->content));
+
+    } else if (lower_case(args->method || "") == "post" ||
+               lower_case(args->method || "") == "put") {
+      method = upper_case(args->method);
+      string method_lc = lower_case(args->method);
+
+      if (args[method_lc + "-data"] && args[method_lc + "-variables"]) {
+        RXML.run_error("The '" + method_lc + "-variables' and '" +
+                       method_lc + "-data' attributes are mutually "
+                       "exclusive.");
       }
-      if (args["post-variables"]) {
-	data = ([]);
-	foreach(args["post-variables"] / ",", string var) {
-	  array a = var / "=";
-	  if(sizeof(a) == 2)
-	    data[String.trim_whites(a[0])] =
-	      RXML.user_get_var(String.trim_whites(a[1]));
-	}
-	set++;
+
+      data = args[method_lc + "-data"];
+      if (args[method_lc + "-variables"]) {
+        data = ([]);
+        foreach(args[method_lc + "-variables"] / ",", string var) {
+          array a = var / "=";
+          if(sizeof(a) == 2)
+            data[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
+        }
       }
-      if (set > 1) {
-	RXML.run_error("The 'post-variables', 'post-data' and 'soap-action' "
-		       "attributes are mutually exclusive.");
-      }
+
+    } else if (lower_case(args->method || "") == "delete") {
+      method = "DELETE";
     }
 
 #ifdef THREADS
@@ -1225,7 +1226,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='method' value='string' default='GET'><p>
- Method to use when requesting the page. GET or POST.</p>
+ Method to use when requesting the page. GET, POST, PUT or DELETE.</p>
 </attr>
 
 <attr name='silent' value='string' ><p>
@@ -1262,6 +1263,22 @@ constant tagdoc=([
 <ex-box>
 <insert href='http://www.somesite.com/webservice/' 
          method='POST' post-data='&var.data;' />
+</ex-box> 
+</attr>
+
+<attr name='put-variables' value='\"variable=rxml variable[,variable2=rxml variable2,...]\"'><p>
+ Comma-separated list of variables to send in a PUT request.</p>
+<ex-box>
+<insert href='http://www.somesite.com/news/' 
+         method='PUT' put-variables='action=var.action,data=form.data' />
+</ex-box> 
+</attr>
+
+<attr name='put-data' value='string'><p>
+ String to send as the body content of the PUT request. Mutually exclusive with the 'put-variables' argument.</p>
+<ex-box>
+<insert href='http://www.somesite.com/webservice/' 
+         method='PUT' put-data='&var.data;' />
 </ex-box> 
 </attr>
 

@@ -40,7 +40,28 @@ string parse( RequestID id )
   string res = tablist;
   foreach( selections, array t )
   {
-    if(!t[3] || config_perm( t[3] ) )
+    if(t[3] && !config_perm( t[3] ) ) {
+      if (!id->misc->config_user || (t[1] != "sites")) continue;
+      // Allow access to the sites tab even without "View Settings"
+      // if there are permissions for any site.
+      int access_ok;
+      foreach(id->misc->config_user->permissions; string perm;) {
+	if (has_prefix(perm, "Site:")) {
+	  access_ok = 1;
+	  break;
+	}
+      }
+      if (!access_ok) continue;
+    }
+    if (t[1] == "docs") {
+      // Hide the docs tab if there are no docs.
+      Sql.Sql docs = DBManager.get("docs", id->conf);
+      if (!docs || !sizeof(docs->query("SHOW TABLES LIKE 'docs'"))) {
+	continue;
+      }
+      docs = UNDEFINED;
+    }
+
     {
       mapping a = ([]);
       string default_href()

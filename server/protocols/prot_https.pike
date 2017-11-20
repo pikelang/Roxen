@@ -13,7 +13,9 @@
 
 inherit SSLProtocol;
 
-constant supports_ipless = 0;
+// SSL in Pike 8.0 and later supports SNI, and even in older versions
+// it is possible to use glob-certs that match several sites.
+constant supports_ipless = 1;
 constant name = "https";
 constant prot_name = "https";
 constant requesthandlerfile = "protocols/http.pike";
@@ -167,7 +169,7 @@ class fallback_redirect_request
 
 class http_fallback
 {
-  SSL.sslfile my_fd;
+  SSL.File my_fd;
 
   void ssl_alert_callback(object alert, object|int n, string data)
   {
@@ -191,8 +193,15 @@ class http_fallback
 	my_fd->socket = 0;
       }
 
-      /* Redirect to a https-url */
-      Configuration conf = sizeof(urls) && values(urls)[0]->conf; // Should be just one possible config for https
+      /* Redirect to an https-url */
+      Configuration conf;
+      foreach(values(urls)->conf, conf) {
+	if (conf->query("default_server")) {
+	  // This configuration has been tagged as a default server.
+	  break;
+	}
+      }
+      // FIXME: Consider the case where the port has been remapped.
       fallback_redirect_request(raw_fd, data,
 				conf && conf->query("MyWorldLocation"),
 				port);
@@ -215,7 +224,7 @@ class http_fallback
     my_fd = 0;          /* Not needed any more */
   }
 
-  void create(SSL.sslfile|Stdio.File fd)
+  void create(SSL.File|Stdio.File fd)
   {
     my_fd = fd;
     fd->set_alert_callback(ssl_alert_callback);
@@ -230,7 +239,7 @@ class http_fallback
 
 Stdio.File accept()
 {
-  object(Stdio.File)|SSL.sslfile q = ::accept();
+  object(Stdio.File)|SSL.File q = ::accept();
 
   if (q) {
     http_fallback(q);

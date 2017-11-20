@@ -9,7 +9,7 @@ constant cvs_version = "$Id$";
 #define REQUESTID this
 
 #ifdef MAGIC_ERROR
-inherit "highlight_pike";
+//inherit "highlight_pike";
 #endif
 
 // HTTP protocol module.
@@ -519,9 +519,16 @@ int things_to_do_when_not_sending_from_cache( )
 	      Roxen.get_decoder_for_client_charset (input_charset);
 	    mapping(string:array(string)) decoded_vars = ([]);
 	    foreach (misc->post_variables; string var; array(string) vals) {
-	      var = decoder (var);
+	      string dec_var = decoder (var);
 	      // We know the post_variables are first in the array values.
-	      decoded_vars[var] = real_variables[var][..sizeof (vals) - 1];
+	      if (real_variables[dec_var]) {
+		decoded_vars[dec_var] =
+		  real_variables[dec_var][..sizeof (vals) - 1];
+	      } else {
+		report_debug("Lost track of posted variable %O(%O).\n"
+			     "Original value: %O\n",
+			     dec_var, var, vals);
+	      }
 	    }
 	    misc->post_variables = decoded_vars;
 	  }
@@ -619,18 +626,7 @@ int things_to_do_when_not_sending_from_cache( )
       not_query = combine_path_unix ("/", f)[1..];
   }
 
-  {
-    int i = search (client, "MSIE");
-    if (i < 0)
-      supports->vary = 1;
-    else if (++i < sizeof (client) &&
-	     sscanf (client[i], "%d", int msie_major) == 1) {
-      // Vary doesn't work in MSIE <= 6.
-      // FIXME: Does it really work in MSIE 7?
-      if (msie_major >= 7)
-	supports->vary = 1;
-    }
-  }
+  supports->vary = 1;
 
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
@@ -919,10 +915,7 @@ private int parse_got( string new_data )
 	  sscanf( method, "%s%*[\r\n]", method );
 	
 	clientprot = prot = "HTTP/0.9";
-	if(method != "PING")
-	  method = "GET"; // 0.9 only supports get.
-	else
-	{
+	if(method == "PING") {
 	  // FIXME: my_fd_busy.
 #ifdef CONNECTION_DEBUG
 	  werror ("HTTP[%s]: Response =============================================\n"
@@ -934,7 +927,9 @@ private int parse_got( string new_data )
 	  TIMER_END(parse_got_2_parse_line);
 	  TIMER_END(parse_got_2);
 	  return 2;
-	}
+	} else if (method != "CONNECT")
+	  method = "GET"; // 0.9 only supports get.
+
 	data = ""; // no headers or extra data...
 	sscanf( f, "%s%*[\r\n]", f );
 	if (sizeof(sl) == 1)
@@ -1242,7 +1237,7 @@ private int parse_got( string new_data )
 	      string data = part->getdata();
 	      if (string charset = part->param->charset) {
 		if (mixed err = catch {
-		    data = Locale.Charset.decoder (charset)->
+		    data = Charset.decoder (charset)->
 		      feed (data)->drain();
 		  })
 		  report_debug ("Client %q sent data for %q which failed to "
@@ -1704,8 +1699,8 @@ int store_error(mixed _err)
 	if (sizeof (ent) && stringp (ent[0]))
 	  if (has_prefix (ent[0], cwd))
 	    file = ent[0] = ent[0][sizeof (cwd)..];
-	  else if (has_prefix (ent[0], roxenloader.server_dir))
-	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir)..];
+	  else if (has_prefix (ent[0], roxenloader.server_dir + "/"))
+	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir + "/")..];
 	  else
 	    file = ent[0];
 	if (sizeof (ent) >= 2) line = ent[1];
@@ -2946,8 +2941,9 @@ void send_result(mapping|void result)
 	      skip = 1;
 	    }
 	  } else {
+	    //  Needs strict equality according to RFC 7233
 	    array(int) since_info = Roxen.parse_since(if_range);
-	    if (!since_info || (since_info[0] < misc->last_modified)) {
+	    if (!since_info || (since_info[0] != misc->last_modified)) {
 	      // Failed to parse since info, or the file has changed.
 	      skip = 1;
 	    }
@@ -3250,7 +3246,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	     misc->host, raw_url);
     }
 
-    string canon_hostport;
+    string canon_host = "*:";
     if (string host = misc->host) {
       // Parse and canonicalize the host header for use in the url
       // used for port matching.
@@ -3259,10 +3255,10 @@ void got_data(mixed fooid, string s, void|int chained)
 	//  IPv6 address
 	sscanf(lower_case(host), "[%s]:%d", host, port);
 	host = Protocols.IPv6.normalize_addr_basic (host) || host;
-	canon_hostport = "[" + host + "]:" + port;
+	canon_host = "[" + host + "]:";
       } else {
 	sscanf(lower_case(host), "%[^:]:%d", host, port);
-	canon_hostport = host + ":" + port;
+	canon_host = host + ":";
       }
       misc->hostname = host;
       misc->port = port;
@@ -3270,11 +3266,15 @@ void got_data(mixed fooid, string s, void|int chained)
 
     if( !conf || !(path = port_obj->path ) ||
 	(sizeof( path ) && !has_prefix(raw_url, path)) ) {
-      // FIXME: port_obj->name & port_obj->default_port are constant
+      // FIXME: port_obj->name & port_obj->port are constant
       // consider caching them?
 
+      // NB: Ignore the port number from the host header here, as
+      //     the client may access us via a load balancing proxy
+      //     or similar on a different port than our actual port.
+      //     cf [bug 7385].
       string port_match_url = (port_obj->url_prefix +
-			       (canon_hostport || ("*:" + port_obj->port)) +
+			       canon_host + port_obj->port +
 			       raw_url);
       conf = port_obj->find_configuration_for_url(port_match_url, this);
 
@@ -3556,8 +3556,9 @@ void got_data(mixed fooid, string s, void|int chained)
 		    skip = 1;
 		  }
 		} else {
+		  //  Needs strict equality according to RFC 7233
 		  array(int) since_info = Roxen.parse_since(if_range);
-		  if (!since_info || (since_info[0] < file->last_modified)) {
+		  if (!since_info || (since_info[0] != file->last_modified)) {
 		    // Failed to parse since info, or the file has changed.
 		    skip = 1;
 		  }

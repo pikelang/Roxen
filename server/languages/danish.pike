@@ -136,7 +136,7 @@ string number(int num)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

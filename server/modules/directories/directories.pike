@@ -197,9 +197,10 @@ mapping parse_directory(RequestID id)
   // is set, a directory listing should be sent instead of the
   // indexfile.
 
+  array dir=id->conf->find_dir(f, id, 1)||({});
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles, string file)
+    foreach(indexfiles & dir, string file)
     {
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
@@ -214,7 +215,6 @@ mapping parse_directory(RequestID id)
     id->not_query = f;
   }
 
-  array dir=id->conf->find_dir(f, id, 1)||({});
   if(!sizeof(dir) || !dir[0])
     foreach(dir[1..], string file) 
     {

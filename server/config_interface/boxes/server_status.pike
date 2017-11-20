@@ -22,15 +22,14 @@ string parse( RequestID id )
 		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
   contents += add_row( _(370, "Server uptime"),
 		      Roxen.msectos( dt*1000 ));
-  array ru;
-#pike 7.4
-  if(!catch(ru=rusage())) {
-#pike __REAL_VERSION__
+  
+  mapping(string:int) ru;
+ if(!catch(ru = System.getrusage())) {
     int tmp;
-    if(ru[0])
-      tmp = ru[0]/(time() - roxen->start_time+1);
+    if (ru->utime)
+      tmp = ru->utime / (time() - roxen->start_time + 1);
     contents += add_row( _(371, "CPU-time used"),
-			 Roxen.msectos(ru[0]+ru[1]) +
+			 Roxen.msectos(ru->utime + ru->stime) +
 			 (tmp?(" ("+tmp/10+"."+tmp%10+"%)"):""));
   }
 

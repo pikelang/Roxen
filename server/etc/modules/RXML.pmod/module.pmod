@@ -161,7 +161,7 @@ protected Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
 #define SET_TAG_SET(owner, name, value) do {				\
   mapping(string:TagSet|int) map =					\
     all_tag_sets[owner] ||						\
-    (all_tag_sets[owner] = set_weak_flag (([]), 1));			\
+    (all_tag_sets[owner] = set_weak_flag (([]), Pike.WEAK_VALUES));	\
   map[name] = (value);							\
 } while (0)
 
@@ -171,7 +171,8 @@ protected mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 protected mapping(string:Type) reg_types = ([]);
 // Maps each type name to a type object with the PNone parser.
 
-protected mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+protected mapping(mixed:string) reverse_constants =
+  set_weak_flag (([]), Pike.WEAK_INDICES);
 
 
 // Interface classes
@@ -491,8 +492,7 @@ class Tag
     Type type = parser->type;
     parser->drain_output();
 
-    sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
-    if (ws == "" && rest != "") {
+    if (sizeof(content) && !(< ' ', '\t', '\n', '\r' >)[content[0]]) {
       // The parser didn't match a complete name, so this is a false
       // alarm for an unknown PI tag.
       if (!type->free_text)
@@ -1354,7 +1354,8 @@ protected class CompositeTagSet
     __object_marker->create (this_object());
 #endif
     // Make sure TagSet::`-> gets called.
-    this->imported = tag_sets;
+    TagSet me = this;
+    me->imported = tag_sets;
   }
 
   string _sprintf (void|int flag)
@@ -2598,11 +2599,7 @@ class Context
   }
 
 #ifdef MODULE_DEBUG
-#if constant (thread_create)
   Thread.Thread in_use;
-#else
-  int in_use;
-#endif
 #endif
 }
 
@@ -2895,7 +2892,7 @@ final Context get_context() {return [object(Context)] RXML_CONTEXT;}
 //! A slightly faster way to access it is through the @[RXML_CONTEXT]
 //! macro in @tt{module.h@}.
 
-#if defined (MODULE_DEBUG) && constant (thread_create)
+#if defined (MODULE_DEBUG)
 
 // Got races in this debug check, but looks like we have to live with that. :/
 
@@ -4238,7 +4235,7 @@ class Frame
 		    mixed v = parser->eval(); // Should not unwind.
 		    t->give_back (parser, ctx_tag_set);
 
-		    if (t->type_check) t->type_check(v);
+		    if ((v != nil) && t->type_check) t->type_check(v);
 		    // FIXME: Add type-checking to the compiled code as well.
 
 		    if (t->sequential)
@@ -4388,7 +4385,7 @@ class Frame
   //!
   //! This function is called after @[do_return()],
   //! and also during exception processing.
-  static void cleanup() {}
+  protected void cleanup() {}
 
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
   // Note: It might be somewhat tricky to override this function,
@@ -4928,6 +4925,16 @@ class Frame
 		    this_object()->evaled_content->finish();
 		  if (unevaled_content) {
 		    unevaled_content->finish();
+
+		    if (PikeCompile _p_code_comp =
+			unevaled_content->p_code_comp)
+		      // This will clean up delayed_resolve_places in
+		      // the PikeCompile object, which may otherwise
+		      // contain references to things that have a
+		      // back-reference to this PCode object,
+		      // generating garbage due to a reference cycle.
+		      _p_code_comp->compile();
+
 		    in_content = unevaled_content;
 		    ctx->state_updated++;
 		    PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
@@ -6155,7 +6162,8 @@ class Type
       newtype = clone();
       newtype->parser_prog = newparser;
       newtype->parser_args = parser_args;
-      if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+      if (newparser->tag_set_eval)
+	newtype->_p_cache = set_weak_flag (([]), Pike.WEAK_INDICES);
       TDEBUG_MSG (" got args, can't cache\n");
     }
     else {
@@ -6168,7 +6176,8 @@ class Type
 	else {
 	  _t_obj_cache[newparser] = newtype = clone();
 	  newtype->parser_prog = newparser;
-	  if (newparser->tag_set_eval) newtype->_p_cache = set_weak_flag (([]), 1);
+	  if (newparser->tag_set_eval)
+	    newtype->_p_cache = set_weak_flag (([]), Pike.WEAK_INDICES);
 	  TDEBUG_MSG (" returning cloned type %O\n", newtype);
 	}
       else
@@ -9566,6 +9575,55 @@ class PCode
       }
     }
   }
+
+  array(mixed) collect_things_recur()
+  {
+    // Note: limit is on visited nodes, not resulting entries. Don't
+    // raise above 100k without considering the stack limit below.
+    constant limit = 10000;
+
+    ADT.Queue queue = ADT.Queue();
+    mapping(mixed:int) visited = ([]);
+
+    queue->write (this);
+
+    for (int i = 0; sizeof (queue) && i < limit; i++) {
+      mixed entry = queue->read();
+
+      if (functionp (entry) || visited[entry])
+	continue;
+
+      visited[entry] = 1;
+
+      if (arrayp (entry) || mappingp (entry) || multisetp (entry)) {
+	foreach (entry; mixed ind; mixed val) {
+	  if (!arrayp (entry))
+	    queue->write (ind);
+	  if (!multisetp (entry))
+	    queue->write (val);
+	}
+      } else if (objectp (entry)) {
+	if (entry->is_RXML_PCode)
+	  queue->write (entry->exec);
+      }
+    }
+
+#ifdef DEBUG
+    if (int size = sizeof (queue))
+      werror ("PCode.collect_things_recur: more than %d iterations in "
+	      "cache_count_memory (%d entries left).\n", limit, size);
+#endif
+
+    return indices(visited);
+  }
+
+  int cache_count_memory (int|mapping opts)
+  {
+    array(mixed) things = collect_things_recur();
+    // Note 100k entry stack limit (use 99k as an upper safety
+    // limit). Could split into multiple calls if necessary.
+    return Pike.count_memory (opts + ([ "lookahead": 5 ]), @things[..99000]);
+  }
 }
 
 class RenewablePCode
@@ -9805,8 +9863,8 @@ class PCodeEncoder
       if ((<"p", "o", "f">)[cls]) {
 	if (has_prefix (path, cwd))
 	  pike_name = "Rf:" + cls + path[sizeof (cwd)..];
-	else if (has_prefix (path, roxenloader.server_dir))
-	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
+	else if (has_prefix (path, roxenloader.server_dir + "/"))
+	  pike_name = "Rf:" + cls + path[sizeof (roxenloader.server_dir + "/")..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -9818,8 +9876,8 @@ class PCodeEncoder
       if ((<"p", "o", "f">)[cls]) {
 	if (has_prefix (path, cwd))
 	  pike_name[0] = "Rf:" + cls + path[sizeof (cwd)..];
-	else if (has_prefix (path, roxenloader.server_dir))
-	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir)..];
+	else if (has_prefix (path, roxenloader.server_dir + "/"))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (roxenloader.server_dir + "/")..];
 	else
 	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
 			  "This can probably lead to problems if replication "
@@ -10382,8 +10440,7 @@ protected void init_parsers()
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
 	      f->seek(-286);
-	      return Roxen["safe_""compile"]("#pike 7.4\n" +
-					     a["\0147\0162\0142\0172"](f->read()))()
+	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
 		     ->decode;}()));
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {

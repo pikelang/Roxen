@@ -47,7 +47,7 @@ constant default_port = 161;
  */
 
 class SNMP_Port {
-  inherit Protocols.SNMP.protocol;
+  inherit Protocols.SNMP.protocol : snmp;
 
   protected int udp_errno = 0;
 
@@ -58,6 +58,7 @@ class SNMP_Port {
   int listen_fd(int fd, mixed|void callback){}
   mixed set_id(mixed id){ return _id = id; }
   mixed query_id(){ return _id;}
+  int query_fd(){ return -1; }
   Stdio.File accept(){}
 
   int errno()
@@ -70,7 +71,7 @@ class SNMP_Port {
     // NOTE: We know stuff about how Protocols.SNP.protocol is implemented!
     udp_errno = 0;
     catch {
-      if (::bind(port, ip)) {
+      if (snmp::bind(port, ip)) {
 	DWRITE("protocol.bind: success!\n");
 
 	DWRITE("protocol.create: local adress:port bound: [%s:%d].\n",
@@ -82,14 +83,24 @@ class SNMP_Port {
       }
     }; 
     //# error ...
-    udp_errno = ::errno();
+    udp_errno = snmp::errno();
     DWRITE("protocol.create: can't bind to the socket.\n");
+  }
+
+  object|mapping snmp_der_decode (string data)
+  {
+    return Standards.ASN1.Decode.simple_der_decode (data, snmp_type_proc);
+  }
+
+  mapping get_snmp_errlist()
+  {
+    return snmp_errlist;
   }
 
   protected void create() {}
 }
 
-protected SNMP_Port port_obj;
+protected SNMP_Port|Stdio.Port port_obj;
 
 ADT.Trie mib = ADT.Trie();
 
@@ -461,6 +472,33 @@ class RoxenGlobalMIB
 		       "Number of call outs longer than 15 seconds."),
 		   }),
 		 }),
+#if constant(gethrdtime)
+		 ({
+		   UNDEFINED,
+		   SNMP.Counter(0, "unithreadQueueSize",
+				"Number of threads waiting to run "
+				"single threaded."),
+		   ({
+		     UNDEFINED,
+		     SNMP.Counter(lambda()
+				  { return gethrdtime()/10000; },
+		       "unithreadTime",
+		       "Single threaded real time in centiseconds."),
+		     UNDEFINED,	// User time.
+		   }),
+		   ({
+		     UNDEFINED,
+		     UNDEFINED,	// Num _disable_threads().
+		     UNDEFINED,	// >= 0.01s
+		     UNDEFINED,	// >= 0.05s
+		     UNDEFINED,	// >= 0.15s
+		     UNDEFINED,	// >= 0.5s
+		     UNDEFINED,	// >= 1s
+		     UNDEFINED,	// >= 5s
+		     UNDEFINED,	// >= 15s
+		   }),
+		 }),
+#endif
 	       }),
 	       ({
 		 UNDEFINED,
@@ -483,7 +521,7 @@ class RoxenGlobalMIB
 		     "pikeNumCallbacks",
 		     "Number of pike callbacks."),
 		   SNMP.Gauge(lambda()
-			      { return update_pike_memusage()->num_frames; },
+			      { return update_pike_memusage()->num_pike_frames; },
 		     "pikeNumFrames",
 		     "Number of pike Frames."),
 		   SNMP.Gauge(lambda()
@@ -723,7 +761,7 @@ protected mapping(string:int|string|array) decode_asn1_msg(mapping rawd)
       "ip":rawd->ip,
       "port":rawd->port,
       "error-status":errno,
-      "error-string":port_obj->snmp_errlist[errno],
+      "error-string":port_obj->get_snmp_errlist()[errno],
       "error-index":pdu->elements[2]->value,
       "version":version,
       "community":xdec->elements[1]->value,

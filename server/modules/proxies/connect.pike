@@ -50,7 +50,7 @@ void create()
   defvar("NoHost", 
 	 /**/
 	 "505 No such host\nContent-type: text/html\n\n"
-	 "<title>The host does not erxist</title>\n" 
+	 "<title>The host does not exist</title>\n" 
 	 "<h1 align=center>I am unable to locate that host</h1>\n"
 	 "<i>Sorry</i>\n<hr noshade>",
 	 /**/
@@ -150,6 +150,7 @@ void connected(object to, object id)
   id->my_fd->set_id(({ 0, myid, hmm }));
   id->my_fd->set_nonblocking(send_some, write_some, end_it);
   id->do_not_disconnect = 0;
+  id->my_fd = 0;
   id->disconnect();
 }
 

@@ -93,6 +93,9 @@
 
 #define FTP2_TIMEOUT	(5*60)
 
+// Enable the use of handler threads.
+#define FTP_USE_HANDLER_THREADS
+
 // #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
@@ -101,11 +104,7 @@
 # define DWRITE(X ...)
 #endif
 
-#if constant(thread_create)
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
-#else /* !constant(thread_create) */
-#define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); FD->close(); FD = 0; } while(0)
-#endif /* constant(thread_create) */
 
 class RequestID2
 {
@@ -409,7 +408,7 @@ class ToEBCDICWrapper
 
   int converted;
 
-  protected object converter = Locale.Charset.encoder("EBCDIC-US", "");
+  protected Charset.Encoder converter = Charset.encoder("EBCDIC-US", "");
 
   protected string convert(string s)
   {
@@ -424,7 +423,7 @@ class FromEBCDICWrapper
 
   int converted;
 
-  protected object converter = Locale.Charset.decoder("EBCDIC-US");
+  protected Charset.Decoder converter = Charset.decoder("EBCDIC-US");
 
   protected string convert(string s)
   {
@@ -728,7 +727,7 @@ class LSFile
 
   protected mapping(string:array|object) stat_cache = ([]);
 
-  protected object conv;
+  protected Charset.Encoder conv;
 
   protected array|object stat_file(string long, RequestID|void session)
   {
@@ -1059,7 +1058,7 @@ class LSFile
 
     if (output_mode == "E") {
       // EBCDIC
-      conv = Locale.Charset.encoder("EBCDIC-US", "");
+      conv = Charset.encoder("EBCDIC-US", "");
     }
 
     array(string) files = allocate(sizeof(argv));
@@ -1549,9 +1548,9 @@ class FTPSession
 #else
 	  fd = SSL.sslfile(fd, port_obj->ctx);
 #endif
-	  // Restore the callbacks in the new SSL connection.
-	  ::set_write_callback(write_cb);
 	}
+	// Restore the callbacks in the new SSL connection.
+	::set_write_callback(write_cb);
 	return "";
       } else if (s == 2) {
 	DWRITE("FTP2: write_cb(): ENDTLS.\n");
@@ -1573,7 +1572,8 @@ class FTPSession
 
       if ((to_send->is_empty()) && (!end_marker)) {
 	::set_write_callback(0);
-      } else {
+      } else if (stringp(to_send->peek())) {
+	// Not about to switch TLS mode.
 	::set_write_callback(write_cb);
       }
       return(s);
@@ -1791,7 +1791,7 @@ class FTPSession
       return;
     }
 
-    object(Stdio.File)|object(SSL.sslfile) f = Stdio.File();
+    object(Stdio.File)|object(SSL.File) f = Stdio.File();
 
     // FIXME: Race-condition: open_socket() for other connections will fail
     //        until the socket has been connected.
@@ -1834,12 +1834,14 @@ class FTPSession
 			 fun(f, "", @args);
 		       },
 		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed\n");
+			 DWRITE("FTP: connect_and_send failed: %s (%d)\n",
+				strerror(f->errno()), f->errno());
 			 destruct(f);
 			 fun(0, 0, @args);
 		       },
 		       lambda(mixed ignored) {
-			 DWRITE("FTP: connect_and_send failed\n");
+			 DWRITE("FTP: connect_and_send failed (oob): %s (%d)\n",
+				strerror(f->errno()), f->errno());
 			 destruct(f);
 			 fun(0, 0, @args);
 		       });
@@ -1851,19 +1853,22 @@ class FTPSession
 		    dataport_addr, dataport_port));
 #endif
 
-    if(catch{
+    if(mixed err = catch{
 	if (!(raw_connection->connect(dataport_addr, dataport_port))) {
 	  DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
 		 "FTP: local_addr: %O:%O (%O)\n",
 		 dataport_addr, dataport_port,
 		 strerror(raw_connection->errno()),
-		 local_addr, local_port-1, raw_connection->query_address(1));
+		 local_addr, local_port-1,
+		 raw_connection->is_open() && raw_connection->query_address(1));
 	  destruct(f);
 	  fun(0, 0, @args);
 	  return;
 	}
       }) {
-      DWRITE("FTP: Illegal internet address in connect in async comm.\n");
+      DWRITE("FTP: Illegal IP address (%s:%d) in async connect.\n",
+	     dataport_addr||"", dataport_port);
+      DWRITE("FTP: %s\n", describe_backtrace(err));
       destruct(f);
       fun(0, 0, @args);
       return;
@@ -2120,7 +2125,7 @@ class FTPSession
     case "E":
       // EBCDIC handling here.
       if (file->data) {
-	object conv = Locale.Charset.encoder("EBCDIC-US", "");
+	Charset.Encoder conv = Charset.encoder("EBCDIC-US", "");
 	file->data = conv->feed(file->data)->drain();
       }
       if(objectp(file->file) && file->file->set_nonblocking)
@@ -2919,8 +2924,16 @@ class FTPSession
     // RFC 4217 4.2 requires REIN.
     ftp_REIN(1);
 
+    // Inform the client that we agree to switch to TLS.
     low_send(234, ({ "TLS enabled." }));
-    to_send->put(1);	// Switch to TLS marker.
+
+    // Make sure not to read any more from the fd before
+    // the TLS handshaking is done.
+    fd->set_read_callback(0);
+    fd->set_close_callback(0);
+
+    // Switch to TLS marker.
+    to_send->put(1);
 
     // Compatibility with early draft-murray-auth-ftp-ssl
     // (drafts of RFC 4217).
@@ -4354,6 +4367,14 @@ class FTPSession
   {
     DWRITE("FTP2: terminate_connection()\n");
 
+    if (fd) {
+      // Close the command connection.
+      // Note that we have delayed the closing to reduce the risk of races.
+      fd->close();
+      destruct(fd);
+      fd = 0;
+    }
+
     logout();
 
     if (pasv_port) {
@@ -4373,14 +4394,13 @@ class FTPSession
   {
     DWRITE("FTP2: con_closed()\n");
 
-    send(0, 0);		// EOF marker.
-
     if (fd) {
-      // There's no reason to keep the command connection around any more.
-      fd->close();
-      destruct(fd);
-      fd = 0;
+      // Clear the read-side callbacks.
+      fd->set_close_callback(0);
+      fd->set_read_callback(0);
     }
+
+    send(0, 0);		// EOF marker.
 
     // Queue a command queue terminator.
     // This will terminate the connection as soon as all pending commands

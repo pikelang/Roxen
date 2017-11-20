@@ -1,9 +1,10 @@
 // Version information
 // 
 // Note that version information (major and minor) is also
-// present in module.h.
-constant roxen_ver = "5.4";
-constant roxen_build = "1";
+// present in module.h and in the roxen.version test in
+// ../test/tests/rxml/RoxenTest_BaseRXML.xml .
+constant roxen_ver = "6.0";
+constant roxen_build = "48";
 
 #if !constant(roxen_release)
 constant roxen_release = "-git";

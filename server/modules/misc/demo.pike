@@ -61,6 +61,9 @@ constant module_doc  = "This module makes it possible to develop RXML code inter
 object mdb;
 array(string) stack=({ });
 
+// NB: Yabu is deprecated.
+#pragma no_deprecation_warnings
+
 mapping find_file( string f, RequestID id )
 {
   if(id->variables->go)
@@ -118,3 +121,5 @@ No more bottles of beer on the wall";
 					      ((int)f)-1,
 					      ((int)f)+1), id));
 }
+
+#pragma deprecation_warnings

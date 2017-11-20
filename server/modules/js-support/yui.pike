@@ -70,8 +70,13 @@ void start(int when) {
   set("no-parse", 1);
   ::start();
   limit_yui_paths = query("limit-yui-paths");
-  if(when == 0)
+  if(when == 0) {
     setup_yui();
+    
+    //  Windows needs another initialization of filesystem paths since the
+    //  path normalization doesn't work for non-existing directories.
+    ::start();
+  }
 }
 
 void set_invisible(string var)

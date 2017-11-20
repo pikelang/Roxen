@@ -1627,7 +1627,8 @@ class List
       // Backward compatibility junk...
       return ({ "Compatibility: "
 		"Converted from TYPE_STRING to TYPE_STRING_LIST.\n",
-	       (to-" ")/"," });
+		map(to/",", global.String.trim_all_whites),
+      });
     }
     return ::verify_set(to);
   }

@@ -27,6 +27,8 @@ constant WRITE = 2;
 
 private
 {
+  string normalized_server_version;
+
   mixed query( mixed ... args )
   {
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
@@ -44,7 +46,7 @@ private
 
   void clear_sql_caches()
   {
-#if DBMANAGER_DEBUG
+#ifdef DBMANAGER_DEBUG
     werror("DBManager: clear_sql_caches():\n"
 	   "  dead_sql_cache: %O\n"
 	   "  sql_cache: %O\n"
@@ -89,10 +91,10 @@ private
   {
     if( password )
     {
-      // According to the documentation MySQL is 4.1 or newer is required
-      // for OLD_PASWORD(). There does however seem to exist versions of
+      // According to the documentation MySQL 4.1 or newer is required
+      // for OLD_PASSWORD(). There does however seem to exist versions of
       // at least 4.0 that know of OLD_PASSWORD().
-      if (db->server_info() >= "mysql/4.1") {
+      if (normalized_server_version >= "004.001") {
 	db->query( "REPLACE INTO user (Host,User,Password) "
 		   "VALUES (%s, %s, OLD_PASSWORD(%s)), "
 		   "       (%s, %s, OLD_PASSWORD(%s))",
@@ -115,6 +117,72 @@ private
     }
   }
 
+  void set_perms_in_user_table(Sql.Sql db, string host, string user, int level)
+  {
+    multiset(string) privs = (<>);
+
+    switch (level) {
+      case NONE:
+	db->big_query ("DELETE FROM user "
+		       " WHERE Host = %s AND User = %s", host, user);
+	return;
+
+      case READ:
+	privs = (<
+	  "Select_priv", "Show_db_priv", "Create_tmp_table_priv",
+	  "Lock_tables_priv", "Execute_priv", "Show_view_priv",
+	>);
+	break;
+
+      case WRITE:
+	// Current as of MySQL 5.0.70.
+	privs = (<
+	  "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
+	  "Create_priv", "Drop_priv", "Reload_priv", "Shutdown_priv",
+	  "Process_priv", "File_priv", "Grant_priv", "References_priv",
+	  "Index_priv", "Alter_priv", "Show_db_priv", "Super_priv",
+	  "Create_tmp_table_priv", "Lock_tables_priv", "Execute_priv",
+	  "Repl_slave_priv", "Repl_client_priv", "Create_view_priv",
+	  "Show_view_priv",  "Create_routine_priv", "Alter_routine_priv",
+	  "Create_user_priv",
+	>);
+	break;
+
+      case -1:
+	// Special case to create a record for a user that got no access.
+	break;
+
+      default:
+	error ("Invalid level %d.\n", level);
+    }
+    if (!sizeof(db->query("SELECT User FROM user "
+			  " WHERE Host = %s AND User = %s",
+			  host, user))) {
+      // Ensure that the user exists.
+      db->big_query("REPLACE INTO user (Host, User) VALUES (%s, %s)",
+		    host, user);
+    }
+#ifdef DBMANAGER_DEBUG
+    werror("DBManager: Updating privs for %s@%s to %O.\n",
+	   user, host, privs);
+#endif /* DMBMANAGER_DEBUG */
+    // Current as of MySQL 5.0.70.
+    foreach(({ "Select_priv", "Insert_priv", "Update_priv", "Delete_priv",
+	       "Create_priv", "Drop_priv", "Reload_priv", "Shutdown_priv",
+	       "Process_priv", "File_priv", "Grant_priv", "References_priv",
+	       "Index_priv", "Alter_priv", "Show_db_priv", "Super_priv",
+	       "Create_tmp_table_priv", "Lock_tables_priv", "Execute_priv",
+	       "Repl_slave_priv", "Repl_client_priv", "Create_view_priv",
+	       "Show_view_priv",  "Create_routine_priv", "Alter_routine_priv",
+	       "Create_user_priv",
+	    }), string field) {
+      db->big_query("UPDATE user SET " + field + " = %s "
+		    " WHERE Host = %s AND User = %s AND " + field + " != %s",
+		    privs[field]?"Y":"N",
+		    host, user, privs[field]?"Y":"N");
+    }
+  }
+
   void set_perms_in_db_table (Sql.Sql db, string host, array(string) dbs,
 			      string user, int level)
   {
@@ -130,14 +198,15 @@ private
 
       case READ:
 	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv, "
-		       "Execute_priv) "
+		       "Create_tmp_table_priv, Lock_tables_priv, "
+		       "Show_view_priv, Execute_priv) "
 		       "VALUES " +
 		       map (dbs, lambda (string db_name) {
 				   return "("
 				     "'" + q (host) + "',"
 				     "'" + q (db_name) + "',"
 				     "'" + q (user) + "',"
-				     "'Y','Y')";
+				     "'Y','Y','Y','Y','Y')";
 				 }) * ",");
 	break;
 
@@ -199,10 +268,10 @@ private
 
 	// Quote characters...
       case '\"': case '\'': case '\`': case '\´':
-	while (i < sizeof(script)) {
+	while (i < sizeof(script) - 1) {
 	  i++;
 	  if ((cc = script[i]) == c) {
-	    if (script[i+1] == c) {
+	    if ((i < sizeof(script) - 1) && (script[i+1] == c)) {
 	      i++;
 	      continue;
 	    }
@@ -215,7 +284,8 @@ private
 	// Comments...
       case '/':
 	i++;
-	if ((cc = script[i]) == '*') {
+	if ((i < sizeof(script)) &&
+	    ((cc = script[i]) == '*')) {
 	  // C-style comment.
 	  int p = search(script, "*/", i+1);
 	  if (p > i) i = p+1;
@@ -224,8 +294,9 @@ private
 	break;
       case '-':
 	i++;
-	if ((script[i] == '-') &&
-	    ((script[i+1] == ' ') || (script[i+1] == '\t'))) {
+	if ((i < sizeof(script) - 1) &&
+	    ((script[i] == '-') &&
+	     ((script[i+1] == ' ') || (script[i+1] == '\t')))) {
 	  // "-- "-style comment.
 	  int p = search(script, "\n", i+2);
 	  int p2 = search(script, "\r", i+2);
@@ -334,9 +405,8 @@ private
     string update_mysql;
 
     string mysql_version = db->server_info();
-    // Typically a string like "mysql/5.5.30-log".
+    // Typically a string like "mysql/5.5.30-log" or "mysql/5.5.39-MariaDB-log".
     if (has_value(mysql_version, "/")) mysql_version = (mysql_version/"/")[1];
-    mysql_version = (mysql_version/"-")[0];
 
     string db_version;
     // Catch in case mysql_upgrade_info is a directory (unlikely, but...).
@@ -344,32 +414,131 @@ private
       db_version =
 	Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
 				      "mysql_upgrade_info"));
-      // Typically a string like "5.5.30".
+      // Typically a string like "5.5.30" or "5.5.39-MariaDB".
     };
     db_version = db_version && (db_version - "\n");
 
+    if (db_version &&
+	has_suffix(mysql_version, "-log") &&
+	!has_suffix(db_version, "-log")) {
+      db_version += "-log";
+    }
+
     if (db_version == mysql_version) {
       // Already up-to-date.
-    } else if (mysql_location->mysql_upgrade) {
-      // Upgrade method in MySQL 5.0.19 and later (UNIX),
-      // MySQL 5.0.25 and later (NT).
-      Process.Process(({ mysql_location->mysql_upgrade,
-			 "-S", roxenloader.query_mysql_socket(),
-			 "--user=rw",
-			 // "--verbose",
-		      }))->wait();
-    } else if ((mysql_location->basedir) &&
-	       (update_mysql =
-		(Stdio.read_bytes(combine_path(mysql_location->basedir,
-					       "share/mysql",
-					       "mysql_fix_privilege_tables.sql")) ||
-		 Stdio.read_bytes(combine_path(mysql_location->basedir,
-					       "share",
-					       "mysql_fix_privilege_tables.sql"))))) {
-      // Don't complain about failures, they're expected...
-      execute_sql_script(db, update_mysql, 1);
     } else {
-      report_warning("Couldn't find MySQL upgrading script.\n");
+      werror("Upgrading database from %s to %s...\n",
+	     db_version || "UNKNOWN", mysql_version);
+
+      if (mysql_location->mysql_upgrade) {
+	// Upgrade method in MySQL 5.0.19 and later (UNIX),
+	// MySQL 5.0.25 and later (NT).
+	Process.Process(({ mysql_location->mysql_upgrade,
+#ifdef __NT__
+			   "--pipe",
+#endif
+			   "-S", roxenloader.query_mysql_socket(),
+			   "--user=rw",
+			   // "--verbose",
+			}))->wait();
+      } else if ((mysql_location->basedir) &&
+		 (update_mysql =
+		  (Stdio.read_bytes(combine_path(mysql_location->basedir,
+						 "share/mysql",
+						 "mysql_fix_privilege_tables.sql")) ||
+		   Stdio.read_bytes(combine_path(mysql_location->basedir,
+						 "share",
+						 "mysql_fix_privilege_tables.sql"))))) {
+	// Don't complain about failures, they're expected...
+	execute_sql_script(db, update_mysql, 1);
+      } else {
+	report_warning("Couldn't find MySQL upgrading script.\n");
+      }
+
+      // These table definitions come from [bug 7264], which in turn got them
+      // from http://dba.stackexchange.com/questions/54608/innodb-error-table-mysql-innodb-table-stats-not-found-after-upgrade-to-mys
+      foreach(({ #"CREATE TABLE IF NOT EXISTS `innodb_index_stats` (
+  `database_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `table_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `index_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `stat_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `stat_value` bigint(20) unsigned NOT NULL,
+  `sample_size` bigint(20) unsigned DEFAULT NULL,
+  `stat_description` varchar(1024) COLLATE utf8_bin NOT NULL,
+  PRIMARY KEY (`database_name`,`table_name`,`index_name`,`stat_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin STATS_PERSISTENT=0",
+		 #"CREATE TABLE IF NOT EXISTS `innodb_table_stats` (
+  `database_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `table_name` varchar(64) COLLATE utf8_bin NOT NULL,
+  `last_update` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `n_rows` bigint(20) unsigned NOT NULL,
+  `clustered_index_size` bigint(20) unsigned NOT NULL,
+  `sum_of_other_index_sizes` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`database_name`,`table_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin STATS_PERSISTENT=0",
+		 #"CREATE TABLE IF NOT EXISTS `slave_master_info` (
+  `Number_of_lines` int(10) unsigned NOT NULL COMMENT 'Number of lines in the file.',
+  `Master_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT 'The name of the master binary log currently being read from the master.',
+  `Master_log_pos` bigint(20) unsigned NOT NULL COMMENT 'The master log position of the last read event.',
+  `Host` char(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT '' COMMENT 'The host name of the master.',
+  `User_name` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The user name used to connect to the master.',
+  `User_password` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The password used to connect to the master.',
+  `Port` int(10) unsigned NOT NULL COMMENT 'The network port used to connect to the master.',
+  `Connect_retry` int(10) unsigned NOT NULL COMMENT 'The period (in seconds) that the slave will wait before trying to reconnect to the master.',
+  `Enabled_ssl` tinyint(1) NOT NULL COMMENT 'Indicates whether the server supports SSL connections.',
+  `Ssl_ca` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The file used for the Certificate Authority (CA) certificate.',
+  `Ssl_capath` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The path to the Certificate Authority (CA) certificates.',
+  `Ssl_cert` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The name of the SSL certificate file.',
+  `Ssl_cipher` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The name of the cipher in use for the SSL connection.',
+  `Ssl_key` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The name of the SSL key file.',
+  `Ssl_verify_server_cert` tinyint(1) NOT NULL COMMENT 'Whether to verify the server certificate.',
+  `Heartbeat` float NOT NULL,
+  `Bind` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'Displays which interface is employed when connecting to the MySQL server',
+  `Ignored_server_ids` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The number of server IDs to be ignored, followed by the actual server IDs',
+  `Uuid` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The master server uuid.',
+  `Retry_count` bigint(20) unsigned NOT NULL COMMENT 'Number of reconnect attempts, to the master, before giving up.',
+  `Ssl_crl` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The file used for the Certificate Revocation List (CRL)',
+  `Ssl_crlpath` text CHARACTER SET utf8 COLLATE utf8_bin COMMENT 'The path used for Certificate Revocation List (CRL) files',
+  `Enabled_auto_position` tinyint(1) NOT NULL COMMENT 'Indicates whether GTIDs will be used to retrieve events from the master.',
+  PRIMARY KEY (`Host`,`Port`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 STATS_PERSISTENT=0 COMMENT='Master Information'",
+		 #"CREATE TABLE IF NOT EXISTS `slave_relay_log_info` (
+  `Number_of_lines` int(10) unsigned NOT NULL COMMENT 'Number of lines in the file or rows in the table. Used to version table definitions.',
+  `Relay_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT 'The name of the current relay log file.',
+  `Relay_log_pos` bigint(20) unsigned NOT NULL COMMENT 'The relay log position of the last executed event.',
+  `Master_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT 'The name of the master binary log file from which the events in the relay log file were read.',
+  `Master_log_pos` bigint(20) unsigned NOT NULL COMMENT 'The master log position of the last executed event.',
+  `Sql_delay` int(11) NOT NULL COMMENT 'The number of seconds that the slave must lag behind the master.',
+  `Number_of_workers` int(10) unsigned NOT NULL,
+  `Id` int(10) unsigned NOT NULL COMMENT 'Internal Id that uniquely identifies this record.',
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 STATS_PERSISTENT=0 COMMENT='Relay Log Information'",
+		 #"CREATE TABLE IF NOT EXISTS `slave_worker_info` (
+  `Id` int(10) unsigned NOT NULL,
+  `Relay_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `Relay_log_pos` bigint(20) unsigned NOT NULL,
+  `Master_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `Master_log_pos` bigint(20) unsigned NOT NULL,
+  `Checkpoint_relay_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `Checkpoint_relay_log_pos` bigint(20) unsigned NOT NULL,
+  `Checkpoint_master_log_name` text CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `Checkpoint_master_log_pos` bigint(20) unsigned NOT NULL,
+  `Checkpoint_seqno` int(10) unsigned NOT NULL,
+  `Checkpoint_group_size` int(10) unsigned NOT NULL,
+  `Checkpoint_group_bitmap` blob NOT NULL,
+  PRIMARY KEY (`Id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 STATS_PERSISTENT=0 COMMENT='Worker Information'",
+	      }), string table_def) {
+	mixed err = catch {
+	    db->query(table_def);
+	  };
+	if (err) {
+	  string table_name = (table_def/"`")[1];
+	  werror("DBManager: Failed to add table mysql.%s: %s\n",
+		 table_name, describe_error(err));
+	}
+      }
     }
 
     multiset(string) missing_privs = (<
@@ -400,11 +569,43 @@ private
 		  "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
       }
     }
+
+    if (db_version != mysql_version) {
+      // Make sure no table is broken after the upgrade.
+      foreach(db->list_dbs(), string dbname) {
+	if (lower_case(dbname) == "information_schema") {
+	  // This is a virtual read-only db containing metadata
+	  // about the other tables, etc. Attempting to repair
+	  // any tables in it will cause errors to be thrown.
+	  continue;
+	}
+	if (lower_case(dbname) == "performance_schema") {
+	  // This is a virtual read-only db containing metadata
+	  // about the other tables, etc. Attempting to repair
+	  // any tables in it will cause errors to be thrown.
+	  continue;
+	}
+	werror("DBManager: Repairing tables in the local db %O...\n", dbname);
+	Sql.Sql sql = connect_to_my_mysql(0, dbname);
+	foreach(sql->list_tables(), string table) {
+	  // NB: Any errors from the repair other than access
+	  //     permission errors are in the return value.
+	  //
+	  // We ignore them for now.
+	  sql->query("REPAIR TABLE `" + table + "`");
+	}
+      }
+      werror("DBManager: MySQL upgrade done.\n");
+    }
   }
 
   void synch_mysql_perms()
   {
     Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    // Force proper privs for the low-level users.
+    set_perms_in_user_table(db, "localhost", "rw", WRITE);
+    set_perms_in_user_table(db, "localhost", "ro", READ);
 
     mapping(string:int(1..1)) old_perms = ([]);
 
@@ -865,7 +1066,7 @@ int is_mysql( string db )
   return !(db = db_url( db )) || has_prefix( db, "mysql://" );
 }
 
-static mapping(string:mixed) convert_obj_to_mapping(object|mapping o)
+protected mapping(string:mixed) convert_obj_to_mapping(object|mapping o)
 {
   if (mappingp(o)) return o;
   return mkmapping(indices(o), values(o));
@@ -1534,17 +1735,50 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     return ({});
   }
 
+  // Old-style BACKUP format.
   array q =
     tables ||
     query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
 	   dbname, directory )->tbl;
 
+  string db_dir =
+    roxenp()->query_configuration_dir() + "/_mysql/" + dbname;
+
+  int(0..1) use_restore = (normalized_server_version <= "005.005");
+  if (!use_restore) {
+    report_warning("Restoring an old-style backup by hand...\n");
+
+    if (!Stdio.is_dir(db_dir + "/.")) {
+      error("Failed to find database directory for db %O.\n"
+	    "Tried: %O\n",
+	    dbname, db_dir);
+    }
+  }
+
   array res = ({});
   foreach( q, string table )
   {
     db->query( "DROP TABLE IF EXISTS "+table);
-    directory = combine_path( getcwd(), directory );
-    res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+    if (use_restore) {
+      directory = combine_path( getcwd(), directory );
+      res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+    } else {
+      // Copy the files.
+      foreach(({ ".frm", ".MYD", ".MYI" }), string ext) {
+	if (Stdio.is_file(directory + "/" + table + ext)) {
+	  if (!Stdio.cp(directory + "/" + table + ext,
+			db_dir + "/" + table + ext)) {
+	    error("Failed to copy %O to %O.\n",
+		  directory + "/" + table + ext,
+		  db_dir + "/" + table + ext);
+	  }
+	} else if (ext != ".MYI") {
+	  error("Backup file %O is missing!\n",
+		directory + "/" + table + ext);
+	}
+      }
+      res += db->query("REPAIR TABLE "+table+" USE_FRM");
+    }
   }
   return res;
 }
@@ -1650,7 +1884,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 
   string db_url = db_url_info->path;
 
-  if (db_url_info->local) {
+  if ((int)db_url_info->local) {
     db_url = replace(roxenloader->my_mysql_path, ({ "%user%", "%db%" }),
 		     ({ "ro", dbname || "mysql" }));
   }
@@ -1690,7 +1924,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--all",
+  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
 			 "--complete-insert", "--compress",
 			 "--extended-insert", "--hex-blob",
 			 "--quick", "--quote-names" });
@@ -1799,6 +2033,9 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 //! @note
 //!   Currently this function only works for internal databases.
 //!
+//! @note
+//!   This method is not supported in MySQL 5.5 and later.
+//!
 //! @seealso
 //!   @[dump()]
 {
@@ -1813,6 +2050,9 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 
   if( is_internal( dbname ) )
   {
+    if (normalized_server_version >= "005.005") {
+      error("Old-style MySQL BACKUP files are no longer supported!\n");
+    }
     mkdirhier( directory+"/" );
     array tables = db_tables( dbname );
     array res = ({});
@@ -1880,6 +2120,13 @@ void timed_backup(int schedule_id)
 				sprintf("T%02d-%02d", lt->hour, lt->min));
 
 	switch(backup_info[0]->method) {
+	case "backup":
+	  // This method is not supported in MySQL 5.5 and later.
+	  if (normalized_server_version < "005.005") {
+	    backup(db, dir, "timed_backup");
+	    break;
+	  }
+	  // FALL_THROUGH
 	default:
 	  report_error("Unsupported database backup method: %O for DB %O\n"
 		       "Falling back to the default \"mysqldump\" method.\n",
@@ -1887,9 +2134,6 @@ void timed_backup(int schedule_id)
 	  // FALL_THROUGH
 	case "mysqldump":
 	  dump(db, dir, "timed_backup");
-	  break;
-	case "backup":
-	  backup(db, dir, "timed_backup");
 	  break;
 	}
 	int generations = (int)backup_info[0]->generations;
@@ -2360,6 +2604,13 @@ void is_module_db( RoxenModule module, string db, string|void comment )
 
 protected void create()
 {
+  Sql.Sql db = connect_to_my_mysql(0, "mysql");
+  // Typically a string like "mysql/5.5.30-log" or "mysql/5.5.39-MariaDB-log".
+  normalized_server_version = map(((db->server_info()/"/")[1]/"-")[0]/".",
+				  lambda(string d) {
+				    return ("000" + d)[<2..];
+				  }) * ".";
+
   mixed err = 
   catch {
     query("CREATE TABLE IF NOT EXISTS db_backups ("

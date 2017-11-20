@@ -587,19 +587,25 @@ inherit "emit_object";
 class SqlEmitResponse {
   inherit EmitObject;
   Sql.sql_result sqlres;
-  private Locale.Charset.Decoder decoder;
+  private Charset.Decoder decoder;
   private array(string) cols;
   private array(int(0..1)) charset_decode_col;
   private int fetched;
 
-  mapping(string:mixed) really_get_row() {
+  mapping(string:mixed) really_get_row(int|void inhibit_next_result) {
     array val;
-    if(sqlres && (val = sqlres->fetch_row()))
-      fetched++;
-    else {
-      sqlres = 0;
-      return 0;
+    while (sqlres) {
+      if (val = sqlres->fetch_row()) {
+	fetched++;
+	break;
+      }
+      // Try the next set of results.
+      sqlres = (!inhibit_next_result && sqlres->next_result &&
+		sqlres->next_result());
+      // FIXME: Add result set counter.
     }
+    if (!sqlres)
+      return 0;
 
     if (compat_level > 4.5) {
       if (!decoder) {
@@ -669,7 +675,7 @@ class SqlEmitResponse {
       cols = sqlres->fetch_fields()->name;
 
       if (charset) {
-	if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+	if (mixed err = catch (decoder = Charset.decoder (charset))) {
 #if defined (DEBUG) || defined (MODULE_DEBUG)
 	  werror ("Error getting decoder for charset %O: %s",
 		  charset, describe_error (err));
@@ -696,9 +702,9 @@ class SqlEmitResponse {
 #define GET_CHARSET_AND_ENCODE_QUERY(args, recode_charset) do {		\
     if (!recode_charset) recode_charset = default_recode_charset;	\
     if (!(<0, "none", "unicode", "broken-unicode">)[recode_charset]) {	\
-      Locale.Charset.Encoder encoder;					\
+      Charset.Encoder encoder;					\
       if (mixed err = catch {						\
-	  encoder = Locale.Charset.encoder (recode_charset);		\
+	  encoder = Charset.encoder (recode_charset);		\
 	}) {								\
 	DO_IF_DEBUG (							\
 	  werror ("Error getting encoder for charset %O: %s",		\
@@ -819,11 +825,16 @@ class TagSQLTable {
       Sql.sql_result res = [object(Sql.sql_result)] do_sql_query(args, id, 1);
 
       int ascii=!!args->ascii;
-      string ret="";
 
-      if (res) {
-	res = SqlEmitResponse (res, recode_charset, 0);
+      if (!res) {
+	id->misc->defines[" _ok"] = 0;
+	return 0;
+      }
 
+      res = SqlEmitResponse (res, recode_charset, 0);
+
+      do {
+	string ret="";
 	string nullvalue=args->nullvalue||"";
 
 	array(string) cols = res->sqlres->fetch_fields()->name;
@@ -835,7 +846,7 @@ class TagSQLTable {
 	  ret += "</tr>\n";
 	}
 
-	while (mapping(string:mixed) entry = res->really_get_row()) {
+	while (mapping(string:mixed) entry = res->really_get_row(1)) {
 	  array row = rows (entry, cols);
 	  if (ascii)
 	    ret += map(row, lambda(mixed in) {
@@ -860,12 +871,14 @@ class TagSQLTable {
 					  "charset": ""]), ret);
 
 	id->misc->defines[" _ok"] = 1;
-	result=ret;
-	return 0;
-      }
+	if (result)
+	  result += ret;
+	else
+	  result = ret;
 
-      id->misc->defines[" _ok"] = 0;
-      return 0;
+	// Check if there where any more results.
+      } while (res->sqlres && res->sqlres->next_result &&
+	       res->sqlres->next_result());
     }
   }
 }

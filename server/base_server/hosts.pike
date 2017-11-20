@@ -115,6 +115,8 @@ string quick_ip_to_host(string ipnumber)
 
 string quick_host_to_ip(string h)
 {
+  if (!stringp (h) || !sizeof (h)) return h;
+
   if(h[-1] == '.') h=h[..strlen(h)-2];
   ISIP(h,return h);
   mapping cache_ctx = ([]);

@@ -49,7 +49,7 @@ class TagServeStaticResources
       string tag_name = p->tag_name();
       string attr_name = process_tags[tag_name];
       string link = args[attr_name];
-      if(link && link[0] == '/') {
+      if(link && sizeof (link) && link[0] == '/') {
 	array(int)|Stdio.Stat st =
 	  id->conf->try_stat_file(link, id);
 

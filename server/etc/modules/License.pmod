@@ -169,16 +169,14 @@ class Key
     return Gmp.mpz(d);
   }
 
-  // NB: The sha_sign() and sha_verify() functions
-  //     have been deprecated in Pike 8.0.
-#pragma no_deprecation_warnings
   protected string encrypt(string msg)
   {
     Crypto.RSA rsa = Crypto.RSA()->
 		     set_public_key(@read_public_key())->
 		     set_private_key(read_private_key());
-    string sign = rsa->sha_sign(msg);
-    return sprintf("%d:%s%s", sizeof(sign), msg, sign);
+    // Emulate Crypto.RSA.sha_sign from earlier Pikes.
+    string(8bit) digest = sprintf("%c%s%1H", 4, "sha1", Crypto.SHA1->hash(msg));
+    return rsa->raw_sign(digest)->digits(256);
   }
   
   protected string decrypt(string gibberish)
@@ -193,9 +191,10 @@ class Key
     string sign = s[sizeof(msg)..];
 
     Crypto.RSA rsa = Crypto.RSA()->set_public_key(@read_public_key());
-    return rsa->sha_verify(msg, sign) && msg;
+    // Emulate Crypto.RSA.sha_verify from earlier Pikes.
+    string(8bit) digest = sprintf("%c%s%1H", 4, "sha1", Crypto.SHA1->hash(msg));
+    return rsa->raw_verify(digest, Gmp.mpz (sign, 256)) && msg;
   }
-#pragma deprecation_warnings
 
   int write()
   {

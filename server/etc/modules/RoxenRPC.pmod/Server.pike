@@ -179,9 +179,6 @@ class Connection
     if(!to && thread)
       error("Cannot change from threaded operation to non-threaded.\n");
     if(to)
-#if !efun(thread_create)
-      error("Cannot use threads, there are none in pike\n");
-#else
     {
       client->set_nonblocking();
       client->set_read_callback(0);
@@ -189,7 +186,6 @@ class Connection
       client->set_close_callback(0);
       thread=thread_create(handler_thread);
     }
-#endif
     else
       client->set_nonblocking(got_data, write_data, done_data);
 

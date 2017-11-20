@@ -959,19 +959,15 @@ class ServletChainingWrapper
 }
 
 
-#if constant(thread_create)
 //  Servlet loading mutex
 Thread.Mutex load_mutex = Thread.Mutex();
-#endif
 
 
 int load_servlet(mapping(string:string|mapping|Servlet.servlet|int) servlet)
 {
-#if constant(thread_create)
   //  Serialize initializations so concurrent threads won't init the same
   //  servlet several times.
   Thread.MutexKey key = load_mutex->lock();
-#endif
   
   string classname = servlet["servlet-class"];
 

@@ -127,7 +127,7 @@ string get_processed_dict_path(string extra_dict)
 {
   //  Hash the external path and return a corresponding item in $VARDIR
   string ed_hash =
-    lower_case(String.string2hex(Crypto.MD5()->hash(extra_dict)));
+    lower_case(String.string2hex(Crypto.MD5.hash(extra_dict)));
   return
     combine_path(getcwd(),
 		 roxen_path("$VARDIR/check_spelling/" + ed_hash + ".dict"));
@@ -224,7 +224,7 @@ int process_extra_dict(string ed_path, string pd_path)
     //  Skip BOM bytes and recode to UTF-8 if currently in a different format
     in_data = in_data[bom_data[1]..];
     if (bom_data[0] != "utf-8") {
-      if (object dec = Locale.Charset.decoder(bom_data[0]))
+      if (Charset.Decoder dec = Charset.decoder(bom_data[0]))
 	in_data = string_to_utf8(dec->feed(in_data)->drain());
     }
   }
@@ -478,7 +478,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
   if (use_utf8)
     text = string_to_utf8(text);
   else
-    text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
+    text = Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
   
   Stdio.sendfile(({ text }), 0, 0, -1, 0, file1,
                  lambda(int bytes) { file1->close(); });

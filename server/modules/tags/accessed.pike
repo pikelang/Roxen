@@ -276,6 +276,8 @@ class FileCounter {
 
   Stdio.File database, names_file;
 
+  // NB: The parse_accessed_database() efun is deprecated.
+#pragma no_deprecation_warnings
   void create() {
     if(olf != module::query("Accesslog"))
     {
@@ -291,6 +293,7 @@ class FileCounter {
       }
     }
   }
+#pragma deprecation_warnings
 
   protected string olf; // Used to avoid reparsing of the accessed index file...
   protected mixed names_file_callout_id;

@@ -1176,11 +1176,6 @@ class ProtocolCacheKey
 //  Kludge for resolver problems
 protected function _charset_decoder_func;
 
-string browser_supports_vary(string ignored, RequestID id)
-{
-  return (string)!has_value(id->client||"", "MSIE");
-}
-
 // This is a somewhat simplistic regexp that doesn't handle
 // quoted-string parameter values correctly. It's only used on content
 // types so we know wide strings aren't a problem.
@@ -1382,6 +1377,10 @@ class RequestID
   //!     Originating @[RequestID] for recursive requests.
   //!   @member int "port"
   //!     Port number from the canonicalized host header.
+  //!
+  //!     Note that this may differ from the actual port number
+  //!     (available in @[port_obj->port]) if eg the server is
+  //!     found behind a load balancing proxy. cf [bug 7385].
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
   //!   @member mapping(string:array(string)) "post_variables"
@@ -1491,16 +1490,7 @@ class RequestID
       if (supports && zero_type(eaten[cookie])) {
 	VARY_WERROR("Looking at cookie %O from %s\n",
 		   cookie, describe_backtrace(({backtrace()[-2]})));
-	/* Workaround for MSIE 6's refusal to cache anything with
-	 * a Vary:Cookie header.
-	 */
-	register_vary_callback("user-agent", browser_supports_vary);
-	if (supports->vary) {
-	  register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
-	} else {
-	  register_vary_callback("user-agent",
-				 Roxen->get_cookie_callback(cookie));
-	}
+	register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
       }
       return real_cookies[cookie];
     }
@@ -2750,7 +2740,7 @@ class RequestID
 #ifdef DEBUG
     if (stringp (to))
       // This will throw an error if the charset is invalid.
-      Locale.Charset.encoder (to);
+      Charset.encoder (to);
 #endif
 
     if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
@@ -2818,8 +2808,7 @@ class RequestID
       _charset_decoder_func =
 	_charset_decoder_func || Roxen->_charset_decoder;
       return
-	_charset_decoder_func(Locale.Charset.encoder((string) what, "",
-						     fallback_func))
+	_charset_decoder_func(Charset.encoder((string) what, "", fallback_func))
 	->decode;
     }
   }
@@ -2890,7 +2879,7 @@ class RequestID
     } else
       return ({
 	0,
-	Locale.Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
+	Charset.encoder((force_charset / "=")[-1])->feed(what)->drain()
       });
   }
 
@@ -3159,10 +3148,18 @@ class RequestID
 	type += "; charset=" + charset;
     }
 
-    heads["Content-Type"] = type;
-
-    if (stringp (file->data))
+    if (stringp (file->data)) {
+      if (String.width(file->data) > 8) {
+	// Invalid charset header!
+	// DWIM!
+	eval_status["bad-charset"] = 1;
+	file->data = string_to_utf8(file->data);
+	type = (type/";")[0] + "; charset=utf-8";
+      }
       file->len = sizeof (file->data);
+    }
+
+    heads["Content-Type"] = type;
 
 #ifndef DISABLE_BYTE_RANGES
     heads["Accept-Ranges"] = "bytes";

@@ -112,7 +112,7 @@ class Data( string data )
 
   Parser.HTML summary_parser;
 
-  static mapping md;
+  protected mapping md;
 
   string parse_summary_tr(Parser.HTML x, mapping m, string content)
   {

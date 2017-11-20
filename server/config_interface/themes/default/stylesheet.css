@@ -23,6 +23,15 @@ hr {
    border-right:   none;
 }
 
+img, input {
+   /* Avoid blurry UI elements on Hi-DPI screens due to interpolation. */
+   image-rendering: -webkit-crisp-edges;
+   image-rendering: -moz-crisp-edges;
+   image-rendering: -o-crisp-edges;
+   image-rendering: crisp-edges;
+   -ms-interpolation-mode: nearest-neighbor;
+}
+
 li
 {
 	/*margin-left: -1em;*/
@@ -73,6 +82,12 @@ td.selected-indicator
 div.bottom-div
 {
 	padding-right: 10px;
+}
+
+table.logitems td:first-child {
+    vertical-align: top;
+    width: 20px;
+    padding-top: 4px;
 }
 
 ul.module-list

@@ -248,19 +248,25 @@ void set_up_ssl_variables( Protocol o )
 
   // 112 bits is the maximum strength to still retain the
   // DES-3 suites, which are required in the TLS standards.
+  //
+  // FIXME: The cipher strength list ought to be generated dynamically
+  //        from SSL.Constants.CIPHER_effective_keylengths.
   defvar("ssl_key_bits",
 	 Variable.Int(112, 0,
-		      LOCALE(0, "Cipher suite minimum key strength"),
+		      LOCALE(0, "Cipher suite minimum effective key strength"),
 		      LOCALE(0,
 			     "<p>The minimum number of bits to secure "
 			     "connections.</p>\n"
 			     "<p>Common ciphers (subject to availability) "
-			     "in order of bits:\n"
+			     "in order of effective key bits:\n"
 			     "<dl>\n"
-			     "<dt>40</dt>\n"
-			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>24</dt>\n"
 			     "<dd>Export RC4 (aka RC4-40)</dd>\n"
-			     "<dt>56</dt>\n"
+			     "<dt>32</dt>\n"
+			     "<dd>Export DES (aka DES-40)</dd>\n"
+			     "<dt>38</dt>\n"
+			     "<dd>RC4</dd>\n"
+			     "<dt>40</dt>\n"
 			     "<dd>DES</dd>\n"
 			     "<dt>112</dt>\n"
 			     "<dd>3-DES (Note that this cipher is the "
@@ -269,10 +275,10 @@ void set_up_ssl_variables( Protocol o )
 			     "<dt>128</dt>\n"
 			     "<dd>AES-128</dd>\n"
 			     "<dd>Camellia-128</dd>\n"
-			     "<dd>RC4</dd>\n"
 			     "<dt>256</dt>\n"
 			     "<dd>AES-256</dd>\n"
 			     "<dd>Camellia-256</dd>\n"
+			     "<dd>ChaCha20</dd>\n"
 			     "</dl>\n"
 			     "</p>\n")))->set_range(0, Variable.no_limit);
 
@@ -321,25 +327,28 @@ void set_up_ssl_variables( Protocol o )
 				   "<p>Note: For full Suite B compliance a "
 				   "suitable certificate must also be "
 				   "used.</p>")));
-
+#endif /* SSL.ServerConnection */
+#if constant(SSL.Constants.PROTOCOL_TLS_MAX)
   defvar("ssl_min_version",
-	 Variable.IntChoice(SSL.Constants.PROTOCOL_SSL_3_0,
+	 Variable.IntChoice(SSL.Constants.PROTOCOL_TLS_1_0,
 			    ([
 			      SSL.Constants.PROTOCOL_SSL_3_0:
 			      "SSL 3.0",
 			      SSL.Constants.PROTOCOL_TLS_1_0:
 			      "TLS 1.0 (aka SSL 3.1)",
+#if constant(SSL.Constants.PROTOCOL_TLS_1_2)
 			      SSL.Constants.PROTOCOL_TLS_1_1:
 			      "TLS 1.1",
 			      SSL.Constants.PROTOCOL_TLS_1_2:
 			      "TLS 1.2",
+#endif
 			    ]),
 			    0,
 			    LOCALE(0, "Minimum supported version of SSL/TLS"),
 			    LOCALE(0, "<p>Reject clients that want to use a "
 				   "version of SSL/TLS lower than the selected "
 				   "version.</p>\n")));
-#endif /* SSL.ServerConnection */
+#endif /* SSL.Constants.PROTOCOL_TLS_MAX */
 }
 
 
@@ -641,8 +650,8 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", roxenloader.default_roxen_module_path,
-	 LOCALE(132, "Module directories"), 
+  defvar("ModuleDirs", ({ "$LOCALDIR/modules/", "modules/" }),
+	 LOCALE(132, "Module directories"),
 	 TYPE_DIR_LIST,
 	 LOCALE(133, "This is a list of directories where Roxen should look "
 		"for modules. Can be relative paths, from the "

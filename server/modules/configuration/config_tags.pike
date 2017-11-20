@@ -633,11 +633,6 @@ array get_variable_sections( object mod, mapping m, RequestID id )
                        lambda( mapping q ) {
                          return !w[ q->section ]++;
                        });
-  if (mod == roxen && mod->register_fsgarb) {
-    variables += ({
-      low_variable_section(LOCALE(0, "Filesystem GC:"), mod, id),
-    });
-  }
   sort( variables->section, variables );
   return variables;
 }

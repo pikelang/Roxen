@@ -114,33 +114,27 @@ mixed page_4(object id, object mc)
 
   array name = ({ });
   if (attrs->countryName)
-    name += ({(["countryName": asn1_printable_string (attrs->countryName)])});
+    name += ({([ "countryName": PrintableString(attrs->countryName) ])});
   foreach( ({ "stateOrProvinceName",
 	      "localityName", "organizationName",
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (attrs[attr])
-      /* UTF8String is the recommended type. But it seems that
-       * netscape can't handle that. So when PrintableString doesn't
-       * suffice, we use latin1 but call it TeletexString (since at
-       * least netscape expects things that way). */
-      name += ({ ([ attr : (asn1_printable_valid (attrs[attr]) ?
-			    asn1_printable_string :
-			    asn1_broken_teletex_string) (attrs[attr]) ]) });
+      name += ({ ([ attr : UTF8String(attrs[attr]) ]) });
   }
 
   mapping csr_attrs = ([]);
   foreach( ({ "challengePassword" }), attr)
   {
     if (attrs[attr])
-      csr_attrs[attr] = ({ asn1_printable_string(attrs[attr]) });
+      csr_attrs[attr] = ({ PrintableString(attrs[attr]) });
   }
 
   mapping cert_attrs = ([ ]);
   foreach( ({ "emailAddress" }), attr)
   {
     if (attrs[attr])
-      cert_attrs[attr] = ({ asn1_IA5_string(attrs[attr]) });
+      cert_attrs[attr] = ({ IA5String(attrs[attr]) });
   }
 
   /* Not all CA:s support extendedCertificateAttributes */
@@ -150,7 +144,7 @@ mixed page_4(object id, object mc)
 				cert_attrs) });
 
   object csr = CSR.build_csr(rsa,
-			     Certificate.build_distinguished_name(@name),
+			     Certificate.build_distinguished_name(name),
 			     csr_attrs);
 
   string re;

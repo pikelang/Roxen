@@ -646,6 +646,7 @@ array(mapping) parse_groupfile( string f )
   mapping u2g = ([]);
   mapping groups = ([]);
   int gid = 10000;
+  f = replace(f, "\r", "\n");
   foreach( f / "\n", string r )
   {
     array(string) q = r/":";
@@ -687,6 +688,7 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
   if( !f )  return ([]);
   mapping users = ([]);
   int uid = 10000;
+  f = replace(f, "\r", "\n");
   foreach( f/ "\n", string r )
   {
     array q = r/":";

@@ -1046,8 +1046,8 @@ proc: {
     // already is known.
 
     if (charset) {
-      Locale.Charset.Decoder decoder;
-      if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+      Charset.Decoder decoder;
+      if (mixed err = catch (decoder = Charset.decoder (charset))) {
 	err_msg = sprintf ("Unrecognized charset %q.\n", charset);
 	break proc;
       }
@@ -1375,7 +1375,23 @@ string make_absolute_url (string url, RequestID|void id,
   // Add protocol and host to local absolute URLs.
   if (has_prefix (url, "/")) {
     if(id) {
-      url = id->url_base() + url[1..];
+      Standards.URI uri = Standards.URI(id->url_base());
+
+      // Handle proxies
+      string xf_proto = id->request_headers["x-forwarded-proto"];
+      string xf_host = id->request_headers["x-forwarded-host"];
+
+      if (xf_proto && xf_host) {
+	uri = Standards.URI(xf_proto + "://" + xf_host + uri->path);
+      }
+      else if (xf_host) {
+	uri = Standards.URI(uri->scheme + "://" + xf_host + uri->path);
+      }
+      else if (xf_proto) {
+	uri = Standards.URI(xf_proto + "://" + uri->host + ":" + uri->port + uri->path);
+      }
+
+      url = (string)uri + url[1..];
       if (!prestates) prestates = id->prestate;
     }
     else {
@@ -1435,7 +1451,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
   HTTP_WERR("Redirect -> "+url);
 
   return http_status( http_code || Protocols.HTTP.HTTP_FOUND,
-		      "Redirect to " + url)
+		      "Redirect to " + html_encode_string(url))
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
@@ -1758,6 +1774,16 @@ mapping build_env_vars(string f, RequestID id, string path_info)
   new["SERVER_PORT"] = id->my_fd?
     ((id->my_fd->query_address(1)||"foo unknown")/" ")[1]: "Internal";
 
+  // Protect against execution of arbitrary code in broken bash.
+  foreach(new; string e; string v) {
+    if (has_prefix(v, "() {")) {
+      report_warning("ENV: Function definition in environment variable:\n"
+		     "ENV: %O=%O\n",
+		     e, v);
+      new[e] = " " + v;
+    }
+  }
+
   return new;
 }
 
@@ -1850,6 +1876,17 @@ mapping build_roxen_env_vars(RequestID id)
     else
       new["SUPPORTS"] = tmp;
   }
+
+  // Protect against execution of arbitrary code in broken bash.
+  foreach(new; string e; string v) {
+    if (has_prefix(v, "() {")) {
+      report_warning("ENV: Function definition in environment variable:\n"
+		     "ENV: %O=%O\n",
+		     e, v);
+      new[e] = " " + v;
+    }
+  }
+
   return new;
 }
 
@@ -2565,14 +2602,24 @@ string strftime(string fmt, int t,
   mapping(string:string) m = (["type":"string"]);
   
   foreach(a[1..], string key) {
+    m_delete (m, "case");
     int(0..1) prefix = 1;
     int(0..1) alternative_numbers = 0;
     int(0..1) alternative_form = 0;
     while (sizeof(key)) {
       switch(key[0]) {
 	// Flags.
-      case '!':	// Inhibit numerical padding (Pike).
+      case '!':	// Inhibit numerical padding (Roxen specific).
+      case '-':	// Inhibit numerical padding (glibc-style).
 	prefix = 0;
+	key = key[1..];
+	continue;
+      case '^':	// Upper-case (glibc-style).
+	m->case = "upper";
+	key = key[1..];
+	continue;
+      case '~':	// Capitalize (Roxen specific).
+	m->case = "capitalize";
 	key = key[1..];
 	continue;
       case 'E':	// Locale-dependent alternative form.
@@ -2813,7 +2860,7 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-static constant xml_invalid_mappings = ([
+protected constant xml_invalid_mappings = ([
   "\0":"\22000",  "\1":"\22001",
   "\2":"\22002",  "\3":"\22003",
   "\4":"\22004",  "\5":"\22005",
@@ -2862,10 +2909,10 @@ protected string low_roxen_encode(string val, string encoding)
 
    case "utf16":
    case "utf16be":
-     return Locale.Charset.encoder("utf16be")->feed(val)->drain();
+     return Charset.encoder("utf16be")->feed(val)->drain();
 
    case "utf16le":
-     return Locale.Charset.encoder("utf16le")->feed(val)->drain();
+     return Charset.encoder("utf16le")->feed(val)->drain();
 
   case "hex":
     if(String.width(val) > 8)
@@ -3047,11 +3094,11 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //!   @value "utf16"
 //!   @value "utf16be"
-//!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     (Big endian) UTF-16 encoding. C.f. @[Charset], encoder
 //!     @expr{"utf16be"@}.
 //!
 //!   @value "utf16le"
-//!     Little endian UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     Little endian UTF-16 encoding. C.f. @[Charset], encoder
 //!     @expr{"utf16le"@}.
 //!
 //!   @value "hex"
@@ -3216,7 +3263,7 @@ string fix_relative( string file, RequestID|void id )
 //! is simplified to not contain any @expr{"."@} or @expr{".."@}
 //! segments.
 {
-  Standards.URI uri = Standards.URI("://");
+  Standards.URI uri = Standards.URI(":///");
   if (id) {
     uri = Standards.URI(id->not_query, uri);
   }
@@ -3371,9 +3418,10 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
      case "http":
        return http_date (t);
 
+#pragma no_deprecation_warnings
      case "discordian":
 #if constant (spider.discdate)
-      array(string) not=spider.discdate(t);
+       array(string) not=spider.discdate(t);
       res=not[0];
       if(m->year)
 	res += " in the YOLD of "+not[1];
@@ -3422,6 +3470,7 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
 #endif
   return res;
 }
+#pragma deprecation_warnings
 
 int time_dequantifier(mapping m, void|int t )
   //! Calculates an integer with how many seconds a mapping
@@ -3530,24 +3579,24 @@ class _charset_decoder(object cs)
 
 protected class CharsetDecoderWrapper
 {
-  protected object decoder;
+  protected Charset.Decoder decoder;
   string charset;
 
   protected void create (string cs)
   {
     // Would be nice if it was possible to get the canonical charset
-    // name back from Locale.Charset so we could use that instead in
-    // the client_charset_decoders cache mapping.
-    decoder = Locale.Charset.decoder (charset = cs);
+    // name back from Charset so we could use that instead in the
+    // client_charset_decoders cache mapping.
+    decoder = Charset.decoder (charset = cs);
   }
 
   string decode (string what)
   {
-    object d = decoder;
+    Charset.Decoder d = decoder;
     // Relying on the interpreter lock here.
     decoder = 0;
     if (d) d->clear();
-    else d = Locale.Charset.decoder (charset);
+    else d = Charset.decoder (charset);
     string res = d->feed (what)->drain();
     decoder = d;
     return res;
@@ -3776,14 +3825,9 @@ string make_http_headers(mapping(string:string|array(string)) heads,
 
 class QuotaDB
 {
-#if constant(thread_create)
   object(Thread.Mutex) lock = Thread.Mutex();
 #define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
-#else /* !constant(thread_create) */
-#define LOCK()
-#define UNLOCK()
-#endif /* constant(thread_create) */
 
   constant READ_BUF_SIZE = 256;
   constant CACHE_SIZE_LIMIT = 512;
@@ -5164,7 +5208,7 @@ string get_server_url(Configuration c)
 }
 
 #ifndef NO_DNS
-static private array(string) local_addrs;
+private array(string) local_addrs;
 #endif
 
 string get_world(array(string) urls) {
@@ -5253,6 +5297,14 @@ string get_world(array(string) urls) {
       local_addrs = Array.uniq(local_addrs);
     }
     foreach(local_addrs, string addr) {
+      //  Shortcut some known aliases to avoid lengthy waits if DNS cannot
+      //  resolve them.
+      if (addr == "127.0.0.1" || addr == "::1" || addr == "fe80::1") {
+	if (addr != "fe80::1")
+	  hosts += ({ "localhost" });
+	break;
+      }
+      
       if ((dns = Protocols.DNS.gethostbyaddr(addr)) && sizeof(dns)) {
 	if (dns[0]) {
 	  hosts += ({ dns[0] });
@@ -5862,7 +5914,7 @@ string generate_self_signed_certificate(string common_name,
 
   if (!key) {
     key = Crypto.RSA();
-    key->generate_key(key_size, Crypto.Random.random_string);
+    key->generate_key(key_size);
   }
 
   string key_type = key->name();
@@ -5982,18 +6034,9 @@ class LogPipe
     roxen->name_thread(this_thread(), 0);
   }
 
-  protected void create (Stdio.File read_end, Stdio.File write_end,
-			 int use_read_thread)
+  protected void create (Stdio.File read_end, Stdio.File write_end)
   {
-#if constant(thread_create)
-    if (use_read_thread)
-      thread_create (log_pipe_read_thread, read_end);
-    else
-#endif
-    {
-      read_end->set_nonblocking (read_cb, 0, close_cb);
-      read_end->set_id (read_end);
-    }
+    thread_create (log_pipe_read_thread, read_end);
     assign (write_end);
   }
 
@@ -6024,25 +6067,20 @@ LogPipe get_log_pipe()
 {
   Stdio.File read_end = Stdio.File();
   Stdio.File write_end;
-  int use_read_thread;
   if (catch (write_end =
 	     read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK))) {
     // Some OS'es (notably Windows) can't create a nonblocking
     // interprocess pipe.
     read_end = Stdio.File();
     write_end = read_end->pipe (Stdio.PROP_IPC);
-    use_read_thread = 1;
-#if 0
-    report_debug ("Using read thread with a blocking pipe for logging.\n");
-#endif
   }
   if (!write_end) error ("Failed to create pipe: %s\n",
 			 strerror (read_end->errno()));
-  return LogPipe (read_end, write_end, use_read_thread);
+  return LogPipe (read_end, write_end);
 }
 
-constant DecodeError = Locale.Charset.DecodeError;
-constant EncodeError = Locale.Charset.EncodeError;
+constant DecodeError = Charset.DecodeError;
+constant EncodeError = Charset.EncodeError;
 
 mapping(string:int) get_memusage()
 //! Returns a mapping of the memory used by the Roxen process.
@@ -6131,9 +6169,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! thing with that charset.
 //!
 //! If @[charset] is given then it's assumed to be a charset accepted
-//! by @[Locale.Charset]. If there are charset conversion errors in
-//! @[path] or in the file system then those paths are treated as
-//! nonexisting.
+//! by @[Charset]. If there are charset conversion errors in @[path]
+//! or in the file system then those paths are treated as nonexisting.
 //!
 //! @note
 //! Existing paths are cached without any time limit, but the cached
@@ -6157,8 +6194,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       cache_name += ":utf8";
       break;
     default:
-      Locale.Charset.Encoder enc = Locale.Charset.encoder (charset);
-      Locale.Charset.Decoder dec = Locale.Charset.decoder (charset);
+      Charset.Encoder enc = Charset.encoder (charset);
+      Charset.Decoder dec = Charset.decoder (charset);
       encode = lambda (string in) {return enc->feed (in)->drain();};
       decode = lambda (string in) {return dec->feed (in)->drain();};
       cache_name += ":" + enc->charset;
@@ -6220,7 +6257,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	    dec_ent = enc_ent;
 	  else if (mixed err = catch (dec_ent = decode (enc_ent))) {
 	    if (decode != utf8_to_string)
-	      // utf8_to_string doesn't throw Locale.Charset.DecodeErrors.
+	      // utf8_to_string doesn't throw Charset.DecodeErrors.
 	      if (!objectp (err) || !err->is_charset_decode_error)
 		throw (err);
 	    // Ignore file system paths that we cannot decode.

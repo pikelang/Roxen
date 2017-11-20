@@ -90,7 +90,7 @@ class TTFWrapper
   inherit Font;
   protected int size, rsize;
   protected object real;
-  protected object encoder;
+  protected Charset.Encoder encoder;
   protected function(string ...:Image.image) real_write;
   protected int fake_bold, fake_italic;
 
@@ -202,7 +202,7 @@ class TTFWrapper
                               }]));
 
     if(encoding)
-      encoder = Locale.Charset.encoder(encoding, "");
+      encoder = Charset.encoder(encoding, "");
 
     real_write = (encoder? write_encoded : real->write);
   }

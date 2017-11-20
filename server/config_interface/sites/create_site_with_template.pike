@@ -45,7 +45,7 @@ string|mapping parse( RequestID id )
 
   if (!id->variables->site_template ||
       search(id->variables->site_template, "site_templates")!=-1 ) {
-    foreach( glob( SITE_TEMPLATES "*.x",
+    foreach( glob("*" SITE_TEMPLATES "*.x",
 		   indices(id->variables) ), string t )
     {
       t = t[..sizeof(t)-3];
@@ -107,18 +107,23 @@ string|mapping parse( RequestID id )
   master()->set_inhibit_compile_errors( e );
   string res = "";
   array sts = ({});
-  foreach( glob( "*.pike", get_dir( SITE_TEMPLATES ) |
-		           (get_dir( "../local/"+SITE_TEMPLATES )||({}))),
-	   string st )
-  {
-    st = SITE_TEMPLATES+st;
+  array(string) templates = ({});
+  foreach(({ "." }) + roxenloader->package_directories,
+	  string pkg_dir) {
+    string template_dir = combine_path(pkg_dir, SITE_TEMPLATES);
+    array(string) sts = get_dir(template_dir);
+    if (!sts) continue;
+    templates += map(glob( "*.pike", sts),
+		     lambda(string st, string template_dir) {
+		       return template_dir + st;
+		     }, template_dir);
+  }
+
+  foreach( templates, string st ) {
     mixed err = catch {
       program p;
       object q;
-      if (file_stat("../local/"+st))
-	p = (program)("../local/"+st);
-      else
-	p = (program)(st);
+      p = (program)(st);
       if(!p) {
 	report_error("Template \""+st+"\" failed to compile.\n");
 	continue;

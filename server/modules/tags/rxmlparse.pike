@@ -141,7 +141,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = (Locale.Charset.decoder( [string]id->misc->input_charset )
+     data = (Charset.decoder( [string]id->misc->input_charset )
 	     ->feed( data )
 	     ->drain());
      break;

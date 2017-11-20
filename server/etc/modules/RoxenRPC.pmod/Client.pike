@@ -81,18 +81,7 @@ string myclass;
 object server = Stdio.File();
 
 int nolock = 0;
-#if efun(thread_create)
 object lock = Thread.Mutex();
-#else
-class fake_mutex
-{
-  mixed lock()
-  {
-    return 0;
-  }
-};
-object lock = fake_mutex();
-#endif
 
 mixed `->(string id)
 {
