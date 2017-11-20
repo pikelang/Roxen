@@ -3977,37 +3977,39 @@ class FTPSession
 					   }))*"\n")/"\n"),
 	@(FTP2_XTRA_HELP),
       }));
-    } else if ((args/" ")[0] == "SITE") {
-      array(string) a = (upper_case(args)/" ")-({""});
-      if (sizeof(a) == 1) {
-	send(214, ({ "The following SITE commands are recognized:",
-		     @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
-	}));
-      } else if (site_help[a[1]]) {
-	send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
-      } else {
-	send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
-      }
-    } else if ((args/" ")[0] == "OPTS") {
-      array(string) a = (upper_case(args)/" ")-({""});
-      if (sizeof(a) == 1) {
-	send(214, ({ "The following OPTS commands are recognized:",
-		     @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
-	}));
-      } else if (opts_help[a[1]]) {
-	send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
-      } else {
-	send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
-      }
     } else {
       args = upper_case(args);
-      if (cmd_help[args]) {
-	send(214, ({ sprintf("Syntax: %s %s%s", args,
-			     cmd_help[args],
-			     (this_object()["ftp_"+args]?
-			      "":"; unimplemented")) }));
+      if ((args/" ")[0] == "SITE") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following SITE commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
+	       }));
+	} else if (site_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
+	}
+      } else if ((args/" ")[0] == "OPTS") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following OPTS commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
+	       }));
+	} else if (opts_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
+	}
       } else {
-	send(504, ({ sprintf("Unknown command %s.", args) }));
+	if (cmd_help[args]) {
+	  send(214, ({ sprintf("Syntax: %s %s%s", args,
+			       cmd_help[args],
+			       (this_object()["ftp_"+args]?
+				"":"; unimplemented")) }));
+	} else {
+	  send(504, ({ sprintf("Unknown command %s.", args) }));
+	}
       }
     }
   }
