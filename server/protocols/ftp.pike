@@ -1494,6 +1494,9 @@ class FTPSession
     "PRESTATE":"<sp> prestate",
   ]);
 
+  private constant opts_help = ([
+  ]);
+
   private constant modes = ([
     "A":"ASCII",
     "E":"EBCDIC",
@@ -3694,6 +3697,30 @@ class FTPSession
     }
   }
 
+  void ftp_OPTS(string args)
+  {
+    if ((< 0, "" >)[args]) {
+      ftp_HELP("OPTS");
+      return;
+    }
+
+    array a = (args/" ") - ({ "" });
+
+    if (!sizeof(a)) {
+      ftp_HELP("OPTS");
+      return;
+    }
+    a[0] = upper_case(a[0]);
+    if (!opts_help[a[0]]) {
+      send(502, ({ sprintf("Bad OPTS command: '%s'", a[0]) }));
+    } else if (this_object()["ftp_OPTS_"+a[0]]) {
+      this_object()["ftp_OPTS_"+a[0]](a[1..]);
+    } else {
+      send(502, ({ sprintf("OPTS command '%s' is not currently supported.",
+			   a[0]) }));
+    }
+  }
+
   void ftp_DELE(string args)
   {
     if (!expect_argument("DELE", args)) {
@@ -3960,6 +3987,17 @@ class FTPSession
 	send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
       } else {
 	send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
+      }
+    } else if ((args/" ")[0] == "OPTS") {
+      array(string) a = (upper_case(args)/" ")-({""});
+      if (sizeof(a) == 1) {
+	send(214, ({ "The following OPTS commands are recognized:",
+		     @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
+	}));
+      } else if (opts_help[a[1]]) {
+	send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
+      } else {
+	send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
       }
     } else {
       args = upper_case(args);
