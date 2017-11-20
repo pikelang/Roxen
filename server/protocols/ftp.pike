@@ -1493,6 +1493,10 @@ class FTPSession
     "PRESTATE":"<sp> prestate",
   ]);
 
+  private constant opts_help = ([
+    "MLST":"<sp> <fact-list>",
+  ]);
+
   private constant modes = ([
     "A":"ASCII",
     "E":"EBCDIC",
@@ -2666,6 +2670,31 @@ class FTPSession
    * Listings for Machine Processing
    */
 
+  constant supported_mlst_facts = (<
+    "size", "type", "modify", "charset", "media-type",
+    "unix.mode", "unix.atime", "unix.ctime", "unix.uid", "unix.gid",
+  >);
+
+  multiset(string) current_mlst_facts = (<
+    "size", "type", "modify", "unix.mode", "unix.uid", "unix.gid",
+  >);
+
+  protected string format_factlist(multiset(string) all,
+				   multiset(string)|void selected)
+  {
+    if (!selected) selected = (<>);
+
+    string ret = "";
+    foreach(sort(indices(all)), string fact) {
+      ret += fact;
+      if (selected[fact]) {
+	ret += "*";
+      }
+      ret += ";";
+    }
+    return ret;
+  }
+
   string make_MDTM(int t)
   {
     mapping lt = gmtime(t);
@@ -2682,29 +2711,50 @@ class FTPSession
 
     // Construct the facts here.
 
-    facts["UNIX.mode"] = st[0];
-
     if (st[1] >= 0) {
       facts->size = (string)st[1];
-      facts->type = "File";
-      string|array(string) ct = session->conf->type_from_filename(f);
-      if (arrayp(ct)) {
-	ct = (sizeof(ct) > 1) && ct[1];
+      facts->type = "file";
+      if (current_mlst_facts["media-type"]) {
+	string|array(string) ct = session->conf->type_from_filename(f);
+	if (arrayp(ct)) {
+	  ct = (sizeof(ct) > 1) && ct[1];
+	}
+	facts["media-type"] = ct || "application/octet-stream";
       }
-      facts["media-type"] = ct || "application/octet-stream";
     } else {
       facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
 
-    facts->modify = make_MDTM(st[3]);
+    facts->modify = make_MDTM(st[3]);		/* mtime */
 
     facts->charset = "8bit";
 
-    // Construct and return the answer.
+    // FIXME: Consider adding support for the "unique" fact.
+    //        Typically based on dev-no + inode-no.
 
-    return(Array.map(indices(facts), lambda(string s, mapping f) {
-				       return s + "=" + f[s];
-				     }, facts) * ";" + " " + f);
+    // FIXME: Consider adding support for the "perm" fact.
+
+    // Facts from
+    // https://www.iana.org/assignments/os-specific-parameters/os-specific-parameters.xml
+    facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
+    facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
+
+    // FIXME: Consider adding support for "unix.ownername" and
+    //        "unix.groupname".
+
+    // Defacto standard facts here.
+    // Cf eg https://github.com/giampaolo/pyftpdlib
+    facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
+    facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
+    facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+
+    // Construct, filter and return the answer.
+
+    return((Array.map(indices(facts),
+		      lambda(string s, mapping f, multiset(string) current) {
+			if (!current[s]) return "";
+			return s + "=" + f[s] + ";";
+		      }, facts, current_mlst_facts) - ({ "" })) * "" + " " + f);
   }
 
   void send_MLSD_response(mapping(string:array) dir, object session)
@@ -3677,6 +3727,50 @@ class FTPSession
     }
   }
 
+  void ftp_OPTS(string args)
+  {
+    if ((< 0, "" >)[args]) {
+      ftp_HELP("OPTS");
+      return;
+    }
+
+    array a = (args/" ") - ({ "" });
+
+    if (!sizeof(a)) {
+      ftp_HELP("OPTS");
+      return;
+    }
+    a[0] = upper_case(a[0]);
+    if (!opts_help[a[0]]) {
+      send(502, ({ sprintf("Bad OPTS command: '%s'", a[0]) }));
+    } else if (this_object()["ftp_OPTS_"+a[0]]) {
+      this_object()["ftp_OPTS_"+a[0]](a[1..]);
+    } else {
+      send(502, ({ sprintf("OPTS command '%s' is not currently supported.",
+			   a[0]) }));
+    }
+  }
+
+  void ftp_OPTS_MLST(array(string) args)
+  {
+    if (sizeof(args) != 1) {
+      send(501, ({ sprintf("'OPTS MLST %s': incorrect arguments",
+			   args*" ") }));
+      return;
+    }
+
+    multiset(string) new_mlst_facts = (<>);
+    foreach(args[0]/";", string fact) {
+      fact = lower_case(fact);
+      if (!supported_mlst_facts[fact]) continue;
+      new_mlst_facts[fact] = 1;
+    }
+    current_mlst_facts = new_mlst_facts;
+
+    send(200, ({ sprintf("MLST OPTS %s",
+			 format_factlist(new_mlst_facts)) }));
+  }
+
   void ftp_DELE(string args)
   {
     if (!expect_argument("DELE", args)) {
@@ -3799,7 +3893,9 @@ class FTPSession
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
-			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
+			      "MLST":sprintf("MLST %s",
+					     format_factlist(supported_mlst_facts,
+							     current_mlst_facts)),
 			      "MLSD":"",
 			      "AUTH":"AUTH TLS",
 		    ])[s] || s);
@@ -3931,26 +4027,39 @@ class FTPSession
 					   }))*"\n")/"\n"),
 	@(FTP2_XTRA_HELP),
       }));
-    } else if ((args/" ")[0] == "SITE") {
-      array(string) a = (upper_case(args)/" ")-({""});
-      if (sizeof(a) == 1) {
-	send(214, ({ "The following SITE commands are recognized:",
-		     @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
-	}));
-      } else if (site_help[a[1]]) {
-	send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
-      } else {
-	send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
-      }
     } else {
       args = upper_case(args);
-      if (cmd_help[args]) {
-	send(214, ({ sprintf("Syntax: %s %s%s", args,
-			     cmd_help[args],
-			     (this_object()["ftp_"+args]?
-			      "":"; unimplemented")) }));
+      if ((args/" ")[0] == "SITE") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following SITE commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
+	       }));
+	} else if (site_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
+	}
+      } else if ((args/" ")[0] == "OPTS") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following OPTS commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
+	       }));
+	} else if (opts_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
+	}
       } else {
-	send(504, ({ sprintf("Unknown command %s.", args) }));
+	if (cmd_help[args]) {
+	  send(214, ({ sprintf("Syntax: %s %s%s", args,
+			       cmd_help[args],
+			       (this_object()["ftp_"+args]?
+				"":"; unimplemented")) }));
+	} else {
+	  send(504, ({ sprintf("Unknown command %s.", args) }));
+	}
       }
     }
   }
