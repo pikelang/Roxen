@@ -2711,8 +2711,6 @@ class FTPSession
 
     // Construct the facts here.
 
-    facts["UNIX.mode"] = st[0];
-
     if (st[1] >= 0) {
       facts->size = (string)st[1];
       facts->type = "File";
@@ -2729,7 +2727,9 @@ class FTPSession
 
     facts->charset = "8bit";
 
-    // Construct and return the answer.
+    // Defacto standard facts here.
+    // Cf eg https://github.com/giampaolo/pyftpdlib
+    facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
 
     // Construct, filter and return the answer.
 
