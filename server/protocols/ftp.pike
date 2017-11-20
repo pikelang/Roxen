@@ -2667,6 +2667,30 @@ class FTPSession
    * Listings for Machine Processing
    */
 
+  constant supported_mlst_facts = (<
+    "unix.mode", "size", "type", "modify", "charset", "media-type",
+  >);
+
+  multiset(string) current_mlst_facts = (<
+    "unix.mode", "size", "type", "modify", "charset", "media-type",
+  >);
+
+  protected string format_factlist(multiset(string) all,
+				   multiset(string)|void selected)
+  {
+    if (!selected) selected = (<>);
+
+    string ret = "";
+    foreach(sort(indices(all)), string fact) {
+      ret += fact;
+      if (selected[fact]) {
+	ret += "*";
+      }
+      ret += ";";
+    }
+    return ret;
+  }
+
   string make_MDTM(int t)
   {
     mapping lt = gmtime(t);
@@ -3792,7 +3816,9 @@ class FTPSession
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
-			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
+			      "MLST":sprintf("MLST %s",
+					     format_factlist(supported_mlst_facts,
+							     current_mlst_facts)),
 			      "MLSD":"",
 			      "AUTH":"AUTH TLS",
 		    ])[s] || s);
