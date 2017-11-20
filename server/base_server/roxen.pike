@@ -6279,8 +6279,17 @@ void scan_certs(int|void force)
 	rdirs = map(roxenloader.package_directories, roxen_path);
       }
       foreach(rdirs, string rdir) {
-        foreach(glob(base, get_dir(combine_path(rdir, dir)) || ({})),
-		string fname) {
+	array(string) paths = get_dir(combine_path(rdir, dir));
+	if (!paths) {
+#ifdef SSL3_DEBUG
+	  if (errno() != System.ENOENT) {
+	    werror("Reading PEM dir %O failed: %s\n",
+		   combine_path(rdir, dir), strerror(errno()));
+	  }
+#endif
+	  continue;
+	}
+	foreach(glob(base, paths), string fname) {
 #ifdef SSL3_DEBUG
 	  werror("Found PEM file %O, matching %O.\n",
 		 Stdio.append_path(dir, fname), glob_pattern);
