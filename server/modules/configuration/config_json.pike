@@ -3,8 +3,6 @@
 
 inherit "module";
 
-//#define USE_OLD 1
-
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y) _DEF_LOCALE("roxen_config",X,Y)
 
@@ -75,7 +73,7 @@ Configuration get_configuration(string name) {
 
 string module_endpoint(RoxenModule mod) {
   return query("location") +
-         "configurations/" +
+         "v2/configurations/" +
          Roxen.http_encode_url(mod->my_configuration()->name) +
          "/modules/" +
          encode_mod_name(mod->module_local_id());
@@ -355,7 +353,6 @@ RouterResponse handle_get_variable(string method, mapping(string:string) params,
 }
 
 RouterResponse handle_put_variable(string method, mapping(string:string) params,mixed data, RequestID id) {
-  //FIXME: _all
   mapping stuff = get_configuration_module_variable(params);
   if(stuff->error)
     return stuff->error;
@@ -372,7 +369,6 @@ RouterResponse handle_put_variable(string method, mapping(string:string) params,
 }
 
 RouterResponse handle_put_action(string method, mapping(string:string) params, mixed data, RequestID id) {
-  //FIXME: _all
   mapping stuff = get_configuration_module_variable(params);
   if(stuff->error)
     return stuff->error;
@@ -439,20 +435,17 @@ protected void create()
   });
 #endif
 
-  //router->get("databasegroups/:group/databases/:database", getDatabase);
-  router->get("databasegroups/:group/databases", getDatabases);
+  //router->get("v2/databasegroups/:group/databases/:database", getDatabase);
+  router->get("v2/databasegroups/:group/databases", getDatabases);
 
-  router->post("databasegroups/:group/databases/", postDatabase);
+  router->post("v2/databasegroups/:group/databases/", postDatabase);
 
-  router->get("databasegroups/:group", getDatabasegroup);
+  router->get("v2/databasegroups/:group", getDatabasegroup);
 
-  router->post("databasegroups", postDatabasegroups);
-  router->get("databasegroups", getDatabasegroups);
+  router->post("v2/databasegroups", postDatabasegroups);
+  router->get("v2/databasegroups", getDatabasegroups);
 
-#ifndef USE_OLD
-
-  router->get("configurations/:configuration/modules/:module/actions",lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
-    //FIXME: _all
+  router->get("v2/configurations/:configuration/modules/:module/actions",lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -461,20 +454,19 @@ protected void create()
     return RouterResponse(Protocols.HTTP.HTTP_OK,  ({ "Reload" }) + sort(indices(mod_buttons)) );
   });
 
-  router->put("configurations/:configuration/modules/:module/actions/:action", handle_put_action);
+  router->put("v2/configurations/:configuration/modules/:module/actions/:action", handle_put_action);
 
-  router->put("configurations/:configuration/modules/:module/variables/:variable", handle_put_variable);
-  router->get("configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
+  router->put("v2/configurations/:configuration/modules/:module/variables/:variable", handle_put_variable);
+  router->get("v2/configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
 
-  router->get("configurations/:configuration/modules/:module/variables",lambda(string method,  mapping(string:string) params) {
-    //FIXME: _all
+  router->get("v2/configurations/:configuration/modules/:module/variables",lambda(string method,  mapping(string:string) params) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
     return RouterResponse(Protocols.HTTP.HTTP_OK,sort(indices(stuff->module->query())) );
   });
 
-  router->post("configurations/:configuration/modules/:new_module",lambda(string method,  mapping(string:string) params) {
+  router->post("v2/configurations/:configuration/modules/:new_module",lambda(string method,  mapping(string:string) params) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -491,7 +483,7 @@ protected void create()
     return res;
   });
 
-  router->delete("configurations/:configuration/modules/:module",lambda(string method,  mapping(string:string) params) {
+  router->delete("v2/configurations/:configuration/modules/:module",lambda(string method,  mapping(string:string) params) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -502,11 +494,10 @@ protected void create()
     return res;
   });
 
-  router->put("configurations/:configuration/variables/:variable", handle_put_variable);
-  router->get("configurations/:configuration/variables/:variable", handle_get_variable);
+  router->put("v2/configurations/:configuration/variables/:variable", handle_put_variable);
+  router->get("v2/configurations/:configuration/variables/:variable", handle_get_variable);
 
-  router->get("configurations/:configuration/variables",lambda(string method,  mapping(string:string) params) {
-    //FIXME: _all
+  router->get("v2/configurations/:configuration/variables",lambda(string method,  mapping(string:string) params) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -514,30 +505,28 @@ protected void create()
     return RouterResponse(Protocols.HTTP.HTTP_OK, sort(vars) + ({ "_all"}) );
   });
 
-  router->get("configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
-    //FIXME: _all
+  router->get("v2/configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
     array mods = map (indices (stuff->configuration->enabled_modules), encode_mod_name);
-    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(mods) + ({ "_all"}) );
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(mods) );
   });
 
-  router->get("configurations",lambda() {
-    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(roxen.configurations->name) + ({ "_all"}) );
+  router->get("v2/configurations",lambda() {
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(roxen.configurations->name) );
   });
 
-  router->put("variables/:variable", handle_put_variable);
-  router->get("variables/:variable", handle_get_variable);
+  router->put("v2/variables/:variable", handle_put_variable);
+  router->get("v2/variables/:variable", handle_get_variable);
 
-  router->get("variables",lambda() {
-    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(indices(roxen->query())) + ({ "_all"}) );
+  router->get("v2/variables",lambda() {
+    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(indices(roxen->query())) );
   });
 
-  router->get("",lambda() {
+  router->get("v2",lambda() {
     return RouterResponse(Protocols.HTTP.HTTP_OK,({ "variables", "configurations", "databasegroups" }));
   });
-#endif
 }
 
 typedef object RESTObj;
@@ -909,11 +898,7 @@ class RESTConfigurations
   }
 }
 
-#ifdef USE_OLD
 array top_level_resources = ({ RESTConfigurations(), RESTVariables() });
-#else
-array top_level_resources = ({ });
-#endif
 mapping(string:object) top_level_map = mkmapping (top_level_resources->name,
 						  top_level_resources);
 
