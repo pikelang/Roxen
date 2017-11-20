@@ -2672,11 +2672,12 @@ class FTPSession
    */
 
   constant supported_mlst_facts = (<
-    "unix.mode", "size", "type", "modify", "charset", "media-type",
+    "size", "type", "modify", "charset", "media-type",
+    "unix.mode", "unix.uid", "unix.gid",
   >);
 
   multiset(string) current_mlst_facts = (<
-    "unix.mode", "size", "type", "modify", "charset", "media-type",
+    "size", "type", "modify", "unix.mode", "unix.uid", "unix.gid",
   >);
 
   protected string format_factlist(multiset(string) all,
@@ -2730,6 +2731,8 @@ class FTPSession
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
     facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
+    facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
+    facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
 
     // Construct, filter and return the answer.
 
