@@ -2688,8 +2688,11 @@ class FTPSession
     if (st[1] >= 0) {
       facts->size = (string)st[1];
       facts->type = "File";
-      facts["media-type"] = session->conf->type_from_filename(f) ||
-	"application/octet-stream";
+      string|array(string) ct = session->conf->type_from_filename(f);
+      if (arrayp(ct)) {
+	ct = (sizeof(ct) > 1) && ct[1];
+      }
+      facts["media-type"] = ct || "application/octet-stream";
     } else {
       facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
