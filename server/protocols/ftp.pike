@@ -2704,8 +2704,8 @@ class FTPSession
     // Construct and return the answer.
 
     return(Array.map(indices(facts), lambda(string s, mapping f) {
-				       return s + "=" + f[s];
-				     }, facts) * ";" + " " + f);
+				       return s + "=" + f[s] + ";";
+				     }, facts) * "" + " " + f);
   }
 
   void send_MLSD_response(mapping(string:array) dir, object session)
