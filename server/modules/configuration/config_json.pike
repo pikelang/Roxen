@@ -249,6 +249,8 @@ mapping list_dbs() {
   mapping dbs = ([ ]);
 
   foreach( sort(indices(q)), string db ) {
+    if(db == "roxen" || db == "mysql")
+      continue;
     string db_group = DBManager.db_group(db);
     string db_url = DBManager.db_url( db );
     dbs[db] = ([ "name":db, "group":db_group,"url":db_url]);
