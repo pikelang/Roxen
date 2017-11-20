@@ -2673,7 +2673,7 @@ class FTPSession
 
   constant supported_mlst_facts = (<
     "size", "type", "modify", "charset", "media-type",
-    "unix.mode", "unix.uid", "unix.gid",
+    "unix.mode", "unix.atime", "unix.ctime", "unix.uid", "unix.gid",
   >);
 
   multiset(string) current_mlst_facts = (<
@@ -2727,6 +2727,11 @@ class FTPSession
     facts->modify = make_MDTM(st[3]);
 
     facts->charset = "8bit";
+
+    // Facts from
+    // https://www.iana.org/assignments/os-specific-parameters/os-specific-parameters.xml
+    facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
+    facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
 
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
