@@ -1116,9 +1116,9 @@ class TelnetSession {
 
   private mapping cb;
   private mixed id;
-  private function(mixed|void:string) write_cb;
-  private function(mixed, string:void) read_cb;
-  private function(mixed|void:void) close_cb;
+  protected function(mixed|void:string) write_cb;
+  protected function(mixed, string:void) read_cb;
+  protected function(mixed|void:void) close_cb;
 
   private constant TelnetCodes = ([
     236:"EOF",		// End Of File
@@ -4393,6 +4393,11 @@ class FTPSession
       fd->set_close_callback(0);
       fd->set_read_callback(0);
     }
+
+    // Make sure that the TelnetSession level doesn't restore
+    // the above callbacks.
+    read_cb = 0;
+    close_cb = 0;
 
     send(0, 0);		// EOF marker.
 
