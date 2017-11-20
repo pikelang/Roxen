@@ -2726,14 +2726,22 @@ class FTPSession
       facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
 
-    facts->modify = make_MDTM(st[3]);
+    facts->modify = make_MDTM(st[3]);		/* mtime */
 
     facts->charset = "8bit";
+
+    // FIXME: Consider adding support for the "unique" fact.
+    //        Typically based on dev-no + inode-no.
+
+    // FIXME: Consider adding support for the "perm" fact.
 
     // Facts from
     // https://www.iana.org/assignments/os-specific-parameters/os-specific-parameters.xml
     facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
     facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
+
+    // FIXME: Consider adding support for "unix.ownername" and
+    //        "unix.groupname".
 
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
