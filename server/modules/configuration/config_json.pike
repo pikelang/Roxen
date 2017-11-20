@@ -259,7 +259,31 @@ mapping list_dbs() {
   return dbs;
 }
 
-RouterResponse postDatabase(string method, mapping(string:string) params, mixed data, RequestID id) {
+mapping filter_db_data(mapping db) {
+  mapping res = ([
+          "group": db->group,
+          "url": db->url || ""
+          ]);
+  return res;
+}
+
+mapping get_databases(string group) {
+  mapping dbs = list_dbs();
+  if(group != "_all") {
+    dbs = filter(dbs, lambda(mapping db) { return db.group == group;});
+  }
+  return dbs;
+}
+
+RouterResponse handle_get_database(string method, mapping(string:string) params,mixed data, RequestID id) {
+  mapping dbs = get_databases(params->group);
+  mapping res = dbs[params->database];
+  if(res)
+    return RouterResponse(Protocols.HTTP.HTTP_OK, filter_db_data(res) );
+  return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+}
+
+RouterResponse handle_post_databases(string method, mapping(string:string) params, mixed data, RequestID id) {
   string url;
   string name;
   if(mappingp(data)) {
@@ -284,19 +308,13 @@ RouterResponse postDatabase(string method, mapping(string:string) params, mixed 
   return RouterResponse(Protocols.HTTP.HTTP_CREATED, result_data );
 }
 
-RouterResponse getDatabases(string method, mapping(string:string) params,mixed data, RequestID id) {
-  mapping dbs = list_dbs();
-  array res = ({ });
-
-  foreach (values(dbs), mapping db ) {
-    if(db->group == params->group) {
-      res += ({ db->name });
-    }
-  }
+RouterResponse handle_get_databases(string method, mapping(string:string) params,mixed data, RequestID id) {
+  mapping res = get_databases(params->group);
+  res = map(res, filter_db_data);
   return RouterResponse(Protocols.HTTP.HTTP_OK, res );
 }
 
-RouterResponse postDatabasegroups(string method, mapping(string:string) params, mixed data, RequestID id) {
+RouterResponse handle_post_databasegroups(string method, mapping(string:string) params, mixed data, RequestID id) {
   string name;
   string comment;
   string long_name;
@@ -322,16 +340,22 @@ RouterResponse postDatabasegroups(string method, mapping(string:string) params, 
 
 
 
-RouterResponse getDatabasegroup(string method, mapping(string:string) params, mixed data, RequestID id) {
+RouterResponse handle_get_databasegroup(string method, mapping(string:string) params, mixed data, RequestID id) {
   //FIXME: "_all"
-  mapping group_data = DBManager.get_group( params->group );
-  if(!group_data)
-    return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
-  mapping result_data = ([ "long_name": group_data->lname, "comment": group_data->comment]);
+  mapping result_data = ([ ]);
+  if(params->group != "_all") {
+    mapping group_data = DBManager.get_group( params->group );
+    if(!group_data)
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    result_data->long_name = group_data->lname;
+    result_data->comment = group_data->comment;
+  }
+  mapping dbs = get_databases(params->group);
+  result_data->databases = map(dbs, filter_db_data);
   return RouterResponse(Protocols.HTTP.HTTP_OK, result_data );
 }
 
-RouterResponse getDatabasegroups(string method, mapping(string:string) params,mixed data, RequestID id) {
+RouterResponse handle_get_databasegroups(string method, mapping(string:string) params,mixed data, RequestID id) {
   return RouterResponse(Protocols.HTTP.HTTP_OK, DBManager.list_groups() + ({ "_all" }) );
 }
 
@@ -435,15 +459,29 @@ protected void create()
   });
 #endif
 
-  //router->get("v2/databasegroups/:group/databases/:database", getDatabase);
-  router->get("v2/databasegroups/:group/databases", getDatabases);
+  //FIXME
+  //router->patch("v2/databasegroups/:group/databases/:database", getDatabase);
+  //router->delete("v2/databasegroups/:group/databases/:database", getDatabase);
+  router->get("v2/databasegroups/:group/databases/:database", handle_get_database);
+  router->get("v2/databasegroups/:group/databases", handle_get_databases);
 
-  router->post("v2/databasegroups/:group/databases/", postDatabase);
+  router->post("v2/databasegroups/:group/databases/", handle_post_databases);
 
-  router->get("v2/databasegroups/:group", getDatabasegroup);
+  //FIXME
+  //router->patch("v2/databasegroups/:group", handle_patch_databasegroup);
+  router->delete("v2/databasegroups/:group", lambda(string method, mapping(string:string) params,mixed data, RequestID id) {
+    if(!DBManager.get_group( params->group ))
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
 
-  router->post("v2/databasegroups", postDatabasegroups);
-  router->get("v2/databasegroups", getDatabasegroups);
+   if( !DBManager.delete_group( params->group )) // probably fails because it has databases
+     return RouterResponse(Protocols.HTTP.HTTP_CONFLICT);
+
+   return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+  });
+  router->get("v2/databasegroups/:group", handle_get_databasegroup);
+
+  router->post("v2/databasegroups", handle_post_databasegroups);
+  router->get("v2/databasegroups", handle_get_databasegroups);
 
   router->get("v2/configurations/:configuration/modules/:module/actions",lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     mapping stuff = get_configuration_module_variable(params);
