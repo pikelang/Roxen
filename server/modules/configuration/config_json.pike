@@ -367,7 +367,7 @@ RouterResponse handle_put_variable(string method, mapping(string:string) params,
   }
 
   if (stuff->variable->set (mangled_value))
-    (stuff->module || roxen)->save();
+    (stuff->module || stuff->configuration || roxen)->save();
   return RouterResponse(Protocols.HTTP.HTTP_OK, mangled_value );
 }
 
@@ -502,6 +502,7 @@ protected void create()
     return res;
   });
 
+  router->put("configurations/:configuration/variables/:variable", handle_put_variable);
   router->get("configurations/:configuration/variables/:variable", handle_get_variable);
 
   router->get("configurations/:configuration/variables",lambda(string method,  mapping(string:string) params) {
