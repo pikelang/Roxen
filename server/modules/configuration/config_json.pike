@@ -333,17 +333,20 @@ RouterResponse getDatabasegroups(string method, mapping(string:string) params,mi
   return RouterResponse(Protocols.HTTP.HTTP_OK, DBManager.list_groups() + ({ "_all" }) );
 }
 
+mixed get_variable_value(Variable.Variable variable, Configuration configuration) {
+  mixed res = variable->query();
+  if (objectp (res)) {
+    // ModuleChoice. Return module identifier.
+    res = configuration->otomod[res];
+  }
+  return res;
+}
+
 RouterResponse handle_get_variable(string method, mapping(string:string) params,mixed data, RequestID id) {
-  //FIXME: _all
   mapping stuff = get_configuration_module_variable(params);
   if(stuff->error)
     return stuff->error;
-  mixed res = stuff->variable->query();
-  if (objectp (res)) {
-    // ModuleChoice. Return module identifier.
-    res = stuff->configuration->otomod[res];
-  }
-
+  mixed res = get_variable_value(stuff->variable, stuff->configuration);
   return RouterResponse(Protocols.HTTP.HTTP_OK, res );
 }
 
@@ -458,7 +461,8 @@ protected void create()
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
-    return RouterResponse(Protocols.HTTP.HTTP_OK,sort(indices(stuff->module->query())) );
+    return RouterResponse(Protocols.HTTP.HTTP_OK,
+                          map(stuff->module->query(),get_variable_value, stuff->configuration) );
   });
 
   router->post("v2/configurations/:configuration/modules/:new_module",lambda(string method,  mapping(string:string) params) {
@@ -496,8 +500,8 @@ protected void create()
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
-    array vars = sort (indices (stuff->configuration->query()));
-    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(vars) + ({ "_all"}) );
+    return RouterResponse(Protocols.HTTP.HTTP_OK,
+                          map(stuff->configuration->query(),get_variable_value, stuff->configuration) );
   });
 
   router->get("v2/configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
@@ -516,7 +520,9 @@ protected void create()
   router->get("v2/variables/:variable", handle_get_variable);
 
   router->get("v2/variables",lambda() {
-    return RouterResponse(Protocols.HTTP.HTTP_OK, sort(indices(roxen->query())) );
+    return RouterResponse(Protocols.HTTP.HTTP_OK,
+                          map(roxen->query(),get_variable_value) );
+
   });
 
   router->get("v2",lambda() {
