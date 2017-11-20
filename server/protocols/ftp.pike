@@ -1495,6 +1495,7 @@ class FTPSession
   ]);
 
   private constant opts_help = ([
+    "MLST":"<sp> <fact-list>",
   ]);
 
   private constant modes = ([
@@ -2730,9 +2731,13 @@ class FTPSession
 
     // Construct and return the answer.
 
-    return(Array.map(indices(facts), lambda(string s, mapping f) {
-				       return s + "=" + f[s] + ";";
-				     }, facts) * "" + " " + f);
+    // Construct, filter and return the answer.
+
+    return((Array.map(indices(facts),
+		      lambda(string s, mapping f, multiset(string) current) {
+			if (!current[s]) return "";
+			return s + "=" + f[s] + ";";
+		      }, facts, current_mlst_facts) - ({ "" })) * "" + " " + f);
   }
 
   void send_MLSD_response(mapping(string:array) dir, object session)
@@ -3719,6 +3724,26 @@ class FTPSession
       send(502, ({ sprintf("OPTS command '%s' is not currently supported.",
 			   a[0]) }));
     }
+  }
+
+  void ftp_OPTS_MLST(array(string) args)
+  {
+    if (sizeof(args) != 1) {
+      send(501, ({ sprintf("'OPTS MLST %s': incorrect arguments",
+			   args*" ") }));
+      return;
+    }
+
+    multiset(string) new_mlst_facts = (<>);
+    foreach(args[0]/";", string fact) {
+      fact = lower_case(fact);
+      if (!supported_mlst_facts[fact]) continue;
+      new_mlst_facts[fact] = 1;
+    }
+    current_mlst_facts = new_mlst_facts;
+
+    send(200, ({ sprintf("MLST OPTS %s",
+			 format_factlist(new_mlst_facts)) }));
   }
 
   void ftp_DELE(string args)
