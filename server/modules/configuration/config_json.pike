@@ -331,17 +331,28 @@ RouterResponse handle_post_databasegroups(string method, mapping(string:string) 
    return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":"name missing."]) );
   }
 
+  if(DBManager.get_group( name ))
+    return RouterResponse(Protocols.HTTP.HTTP_CONFLICT, (["error":"Group already exists."]) );
+
+  // create group has int declared as return typ, but returns void
+  // also updates definition if the group already exists :/
   DBManager.create_group( name, long_name || name, comment || "", "");
 
-  //FIXME: return created info + location header
-  mapping result_data = ([ ]);
-  return RouterResponse(Protocols.HTTP.HTTP_CREATED, result_data );
+  RouterResponse get_resp = handle_get_databasegroup("GET", (["group":name]),0,id);
+  if(get_resp->status_code / 100 != 2) {
+     // probably very unlikely to happen
+     return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+  }
+  RouterResponse res = RouterResponse(Protocols.HTTP.HTTP_CREATED, get_resp->data );
+  res->location = query("location") +
+                  "v2/databasegroups/" +
+                  Roxen.http_encode_url(name);
+  return res;
 }
 
 
 
 RouterResponse handle_get_databasegroup(string method, mapping(string:string) params, mixed data, RequestID id) {
-  //FIXME: "_all"
   mapping result_data = ([ ]);
   if(params->group != "_all") {
     mapping group_data = DBManager.get_group( params->group );
