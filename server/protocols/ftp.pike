@@ -919,16 +919,17 @@ class LSFile
 	stat_cache[combine_path(long, f)] = dir[f];
       }
 
-      if ((flags & LS_FLAG_a) &&
-	  (long != "/")) {
-	if (dir) {
+      dir = dir || ([]);
+
+      if (flags & LS_FLAG_a) {
+	if (long != "/") {
 	  dir[".."] = stat_file(combine_path(long,"../"));
-	} else {
-	  dir = ([ "..":stat_file(combine_path(long,"../")) ]);
 	}
+	dir["."] = stat_file(combine_path(long));
       }
+
       string listing = "";
-      if (dir && sizeof(dir)) {
+      if (sizeof(dir)) {
 	if (!(flags & LS_FLAG_A)) {
 	  foreach(indices(dir), string f) {
 	    if (sizeof(f) && (f[0] == '.')) {
