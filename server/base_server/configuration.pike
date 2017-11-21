@@ -1280,8 +1280,10 @@ array(string) userlist(RequestID|void id)
 //! databases require it (such as the htaccess database)
 {
   array(string) list = ({});
-  foreach( user_databases(), UserDB m )
+  foreach( user_databases(), UserDB m ) {
+    if (!m->list_users) continue;
     list |= m->list_users(id);
+  }
   return list;
 }
 
