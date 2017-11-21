@@ -3722,7 +3722,15 @@ class FTPSession
 
       session->file = ([]);
       session->file->full_path = args;
-      send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+
+      mapping(string:array(mixed)) dir =
+	session->conf->find_dir_stat(args, session) || ([]);
+      if (args != "/") {
+	dir[".."] = stat_file(combine_path(args,"../"));
+      }
+      dir["."] = stat_file(combine_path(args));
+
+      send_MLSD_response(dir, session);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
