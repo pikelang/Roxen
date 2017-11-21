@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.435 2001/06/13 13:45:23 per Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -800,8 +800,10 @@ array(string) userlist(RequestID|void id)
 //! databases require it (such as the htaccess database)
 {
   array(string) list = ({});
-  foreach( user_databases(), UserDB m )
+  foreach( user_databases(), UserDB m ) {
+    if (!m->list_users) continue;
     list |= m->list_users(id);
+  }
   return list;
 }
 
