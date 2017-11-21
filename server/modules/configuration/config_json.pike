@@ -486,7 +486,13 @@ protected void create()
 
   //FIXME
   //router->patch("v2/databasegroups/:group/databases/:database", getDatabase);
-  //router->delete("v2/databasegroups/:group/databases/:database", getDatabase);
+  router->delete("v2/databasegroups/:group/databases/:database", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
+    //FIXME: should we also check if the user is adressing the correct group here?
+    if(!DBManager.get(params->database))
+      return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+    DBManager.drop_db(params->database);
+    return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+  });
   router->get("v2/databasegroups/:group/databases/:database", handle_get_database);
   router->get("v2/databasegroups/:group/databases", handle_get_databases);
 
