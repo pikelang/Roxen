@@ -299,15 +299,27 @@ RouterResponse handle_post_databases(string method, mapping(string:string) param
    return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":"name missing."]) );
   }
 
+  if(DBManager.get(name)) {
+    return RouterResponse(Protocols.HTTP.HTTP_CONFLICT, ([ "error":"The database already exists"]));
+  }
+
   DBManager.create_db( name,
                        url,
                        url ? 0 : 1,
                        params->group );
 
-
-  //FIXME: return created info + location header
-  mapping result_data = ([ ]);
-  return RouterResponse(Protocols.HTTP.HTTP_CREATED, result_data );
+  RouterResponse get_resp = handle_get_database("GET", (["group":params->group, "database":name]),0,id);
+  if(get_resp->status_code / 100 != 2) {
+    // probably very unlikely to happen
+    return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+  }
+  RouterResponse res = RouterResponse(Protocols.HTTP.HTTP_CREATED, get_resp->data );
+  res->location = query("location") +
+                  "v2/databasegroups/" +
+                  Roxen.http_encode_url(params->group) +
+                  "/databases/" +
+                  Roxen.http_encode_url(name);
+  return res;
 }
 
 RouterResponse handle_get_databases(string method, mapping(string:string) params,mixed data, RequestID id) {
