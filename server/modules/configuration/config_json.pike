@@ -148,6 +148,8 @@ class Route(PathMatcher matcher, RouterCallback callback) {}
 
 class RouterResponse(int status_code, void|mixed data) {
   void|string location;
+
+  string _sprintf() { return sprintf("RouterResponse(%O,%O)", status_code,data);}
 }
 
 class PathMatcher {
