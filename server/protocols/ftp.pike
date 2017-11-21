@@ -35,9 +35,7 @@
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  * RFC 2228	FTP Security Extensions
  * RFC 2428	FTP Extensions for IPv6 and NATs
- *
- * IETF draft 12 Extended Directory Listing, TVFS,
- *		 and Restart Mechanism for FTP
+ * RFC 3659	Extensions to FTP
  *
  * RFC's with recomendations and discussions:
  *
@@ -62,7 +60,7 @@
  * RFC 458	Mail retrieval via FTP
  * RFC 463	FTP comments and response to RFC 430
  * RFC 468	FTP data compression
- * *RFC 475	FTP and network mail system
+ * RFC 475	FTP and network mail system
  * RFC 478	FTP server-server interaction - II
  * RFC 479	Use of FTP by the NIC Journal
  * RFC 480	Host-dependent FTP parameters
@@ -79,7 +77,7 @@
  * RFC 751	SURVEY OF FTP MAIL AND MLFL
  * RFC 754	Out-of-Net Host Addresses for Mail
  *
- * (RFC's marked with * are not available from http://rfc.roxen.com/)
+ * (RFCs are available from http://pike.lysator.liu.se/docs/ietf/rfc/).
  */
 
 
@@ -919,16 +917,17 @@ class LSFile
 	stat_cache[combine_path(long, f)] = dir[f];
       }
 
-      if ((flags & LS_FLAG_a) &&
-	  (long != "/")) {
-	if (dir) {
+      dir = dir || ([]);
+
+      if (flags & LS_FLAG_a) {
+	if (long != "/") {
 	  dir[".."] = stat_file(combine_path(long,"../"));
-	} else {
-	  dir = ([ "..":stat_file(combine_path(long,"../")) ]);
 	}
+	dir["."] = stat_file(combine_path(long));
       }
+
       string listing = "";
-      if (dir && sizeof(dir)) {
+      if (sizeof(dir)) {
 	if (!(flags & LS_FLAG_A)) {
 	  foreach(indices(dir), string f) {
 	    if (sizeof(f) && (f[0] == '.')) {
@@ -1482,6 +1481,23 @@ class FTPSession
     "BYE":"(Logout)",
     "BYTE":"<sp> <bits> (Byte size)",
     "SOCK":"<sp> host-socket (Data socket)",
+
+#if 0
+    // These are in RFC 475
+    "MLTO":"<sp> <recipient name> (Initiate mail to user)",
+    "FROM":"<sp> <sender name> (Mail from)",
+    "MTYP":"<sp> [ U | O | L ] (Mail type)",
+    "RECO":"[<sp> <mail unique id>] (Mail record)",
+#if 0
+    // NB: Conflicts with AUTH from RFC 2228 above.
+    "AUTH":"<sp> <author id> (Mail author)",
+#endif
+    "TITL":"<sp> <title> (Mail title/subject)",
+    "ACKN":"(Mail acknowledge)",
+    "TEXT":"(Mail text)",
+    "FILE":"<sp> <filename> (Mail file)",
+    "CITA":"<sp> <file name> (Mail citation)",
+#endif
 
     // This one is referenced in a lot of old RFCs
     "MLFL":"(Mail file)",
@@ -3680,18 +3696,18 @@ class FTPSession
 
   void ftp_MLST(string args)
   {
-    args = fix_path(args || ".");
+    string long = fix_path(args || ".");
 
     RequestID session = RequestID2(master_session);
 
     session->method = "DIR";
 
-    array|object st = stat_file(args, session);
+    array|object st = stat_file(long, session);
 
     if (st) {
       session->file = ([]);
-      session->file->full_path = args;
-      send_MLST_response(([ args:st ]), session);
+      session->file->full_path = long;
+      send_MLST_response(([ args||".": st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
@@ -3715,7 +3731,15 @@ class FTPSession
 
       session->file = ([]);
       session->file->full_path = args;
-      send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+
+      mapping(string:array(mixed)) dir =
+	session->conf->find_dir_stat(args, session) || ([]);
+      if (args != "/") {
+	dir[".."] = stat_file(combine_path(args,"../"));
+      }
+      dir["."] = stat_file(combine_path(args));
+
+      send_MLSD_response(dir, session);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
