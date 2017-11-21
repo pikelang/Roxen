@@ -3687,18 +3687,18 @@ class FTPSession
 
   void ftp_MLST(string args)
   {
-    args = fix_path(args || ".");
+    string long = fix_path(args || ".");
 
     RequestID session = RequestID2(master_session);
 
     session->method = "DIR";
 
-    array|object st = stat_file(args, session);
+    array|object st = stat_file(long, session);
 
     if (st) {
       session->file = ([]);
-      session->file->full_path = args;
-      send_MLST_response(([ args:st ]), session);
+      session->file->full_path = long;
+      send_MLST_response(([ args||".": st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
