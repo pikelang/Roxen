@@ -2767,8 +2767,12 @@ class FTPSession
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
     facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
-    facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
-    facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+    if (intp(st[5])) {
+      facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
+    }
+    if (intp(st[6])) {
+      facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+    }
 
     // Construct, filter and return the answer.
 
