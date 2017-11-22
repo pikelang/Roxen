@@ -2727,7 +2727,8 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec);
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir, object session)
+  string make_MLSD_fact(string f, mapping(string:array) dir,
+			object session, string cwd)
   {
     array st = dir[f];
 
@@ -2746,7 +2747,7 @@ class FTPSession
 	facts["media-type"] = ct || "application/octet-stream";
       }
     } else {
-      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      facts->type = ([ "..":"pdir", ".":"cdir", cwd:"cdir" ])[f] || "dir";
     }
 
     facts->modify = make_MDTM(st[3]);		/* mtime */
@@ -2796,25 +2797,25 @@ class FTPSession
 		      }, facts, current_mlst_facts) - ({ "" })) * "" + " " + f);
   }
 
-  void send_MLSD_response(mapping(string:array) dir, object session)
+  void send_MLSD_response(mapping(string:array) dir, object session, string cwd)
   {
     dir = dir || ([]);
 
     array f = indices(dir);
 
     session->file->data = sizeof(f) ?
-      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
+      (Array.map(f, make_MLSD_fact, dir, session, cwd) * "\r\n") + "\r\n" :
       "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
   }
 
-  void send_MLST_response(mapping(string:array) dir, object session)
+  void send_MLST_response(mapping(string:array) dir, object session, string cwd)
   {
     dir = dir || ([]);
     send(250,({ "OK" }) + 
-	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
+	 Array.map(indices(dir), make_MLSD_fact, dir, session, cwd) +
 	 ({ "OK" }) );
   }
 
@@ -3730,7 +3731,7 @@ class FTPSession
     if (st) {
       session->file = ([]);
       session->file->full_path = long;
-      send_MLST_response(([ args||".": st ]), session);
+      send_MLST_response(([ long: st ]), session, long);
     } else {
       send_error("MLST", args, session->file, session);
     }
@@ -3762,7 +3763,7 @@ class FTPSession
       }
       dir["."] = stat_file(combine_path(args));
 
-      send_MLSD_response(dir, session);
+      send_MLSD_response(dir, session, args);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
@@ -3937,6 +3938,7 @@ class FTPSession
       // ftps.
       a -= ({ "CCC" });
     }
+    a += ({ "TVFS" });
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
