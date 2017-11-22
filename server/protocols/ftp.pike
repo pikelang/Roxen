@@ -3707,7 +3707,9 @@ class FTPSession
 
   void ftp_LIST(string args)
   {
-    // ftp_MLSD(args); return;
+#ifdef FTP2_MLSD_KLUDGE
+    ftp_MLSD(args); return;
+#endif
 
     ftp_NLST("-l " + (args||""));
   }
