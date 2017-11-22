@@ -2695,10 +2695,12 @@ class FTPSession
   constant supported_mlst_facts = (<
     "size", "type", "modify", "charset", "media-type",
     "unix.mode", "unix.atime", "unix.ctime", "unix.uid", "unix.gid",
+    "unix.ownername", "unix.groupname",
   >);
 
   multiset(string) current_mlst_facts = (<
-    "size", "type", "modify", "unix.mode", "unix.uid", "unix.gid",
+    "size", "type", "modify", "unix.mode",
+    "unix.ownername", "unix.groupname",
   >);
 
   protected string format_factlist(multiset(string) all,
@@ -2761,8 +2763,19 @@ class FTPSession
     facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
     facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
 
-    // FIXME: Consider adding support for "unix.ownername" and
-    //        "unix.groupname".
+    // NOTE: SiteBuilder may set st[5] and st[6] to strings.
+    if (stringp(st[5])) {
+      facts["unix.ownername"] = st[5];
+    } else {
+      facts["unix.ownername"] = name_from_uid(master_session, st[5]);
+    }
+    if (stringp(st[6])) {
+      facts["unix.groupname"] = st[6];
+    } else if (!st[6]) {
+      facts["unix.groupname"] = "wheel";
+    } else {
+      facts["unix.groupname"] = (string)st[6];
+    }
 
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
