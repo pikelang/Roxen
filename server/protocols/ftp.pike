@@ -581,6 +581,28 @@ class PutFileWrapper
 }
 
 
+protected string name_from_uid(RequestID master_session, int uid)
+{
+  string res;
+  // NB: find_user_from_uid() can be quite slow(!), so we
+  //     cache the result for the duration of the connection.
+  if (!master_session->misc->username_from_uid) {
+    master_session->misc->username_from_uid = ([]);
+  } else if (res = master_session->misc->username_from_uid[uid]) {
+    return res;
+  }
+  User user;
+  foreach(master_session->conf->user_databases(), UserDB user_db) {
+    if (user = user_db->find_user_from_uid(uid)) {
+      master_session->misc->username_from_uid[uid] = res = user->name();
+      return res;
+    }
+  }
+  master_session->misc->username_from_uid[uid] = res =
+    (uid?((string)uid):"root");
+  return res;
+}
+
 // Simulated /usr/bin/ls pipe
 
 #define LS_FLAG_A       0x00001
@@ -628,28 +650,6 @@ class LS_L(protected RequestID master_session,
   protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  protected string name_from_uid(int uid)
-  {
-    string res;
-    // NB: find_user_from_uid() can be quite slow(!), so we
-    //     cache the result for the duration of the connection.
-    if (!master_session->misc->username_from_uid) {
-      master_session->misc->username_from_uid = ([]);
-    } else if (res = master_session->misc->username_from_uid[uid]) {
-      return res;
-    }
-    User user;
-    foreach(master_session->conf->user_databases(), UserDB user_db) {
-      if (user = user_db->find_user_from_uid(uid)) {
-	master_session->misc->username_from_uid[uid] = res = user->name();
-	return res;
-      }
-    }
-    master_session->misc->username_from_uid[uid] = res =
-      (uid?((string)uid):"root");
-    return res;
-  }
-
   string ls_l(string file, array st)
   {
     DWRITE("ls_l(\"%s\")\n", file);
@@ -675,7 +675,7 @@ class LS_L(protected RequestID master_session,
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
-	user = name_from_uid(st[5]);
+	user = name_from_uid(master_session, st[5]);
       }
 
       if (!stringp(st[6])) {
@@ -2689,10 +2689,12 @@ class FTPSession
   constant supported_mlst_facts = (<
     "size", "type", "modify", "charset", "media-type",
     "unix.mode", "unix.atime", "unix.ctime", "unix.uid", "unix.gid",
+    "unix.ownername", "unix.groupname",
   >);
 
   multiset(string) current_mlst_facts = (<
-    "size", "type", "modify", "unix.mode", "unix.uid", "unix.gid",
+    "size", "type", "modify", "unix.mode",
+    "unix.ownername", "unix.groupname",
   >);
 
   protected string format_factlist(multiset(string) all,
@@ -2719,7 +2721,8 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec);
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir, object session)
+  string make_MLSD_fact(string f, mapping(string:array) dir,
+			object session, string cwd)
   {
     array st = dir[f];
 
@@ -2738,7 +2741,7 @@ class FTPSession
 	facts["media-type"] = ct || "application/octet-stream";
       }
     } else {
-      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      facts->type = ([ "..":"pdir", ".":"cdir", cwd:"cdir" ])[f] || "dir";
     }
 
     facts->modify = make_MDTM(st[3]);		/* mtime */
@@ -2755,14 +2758,29 @@ class FTPSession
     facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
     facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
 
-    // FIXME: Consider adding support for "unix.ownername" and
-    //        "unix.groupname".
+    // NOTE: SiteBuilder may set st[5] and st[6] to strings.
+    if (stringp(st[5])) {
+      facts["unix.ownername"] = st[5];
+    } else {
+      facts["unix.ownername"] = name_from_uid(master_session, st[5]);
+    }
+    if (stringp(st[6])) {
+      facts["unix.groupname"] = st[6];
+    } else if (!st[6]) {
+      facts["unix.groupname"] = "wheel";
+    } else {
+      facts["unix.groupname"] = (string)st[6];
+    }
 
     // Defacto standard facts here.
     // Cf eg https://github.com/giampaolo/pyftpdlib
     facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
-    facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
-    facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+    if (intp(st[5])) {
+      facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
+    }
+    if (intp(st[6])) {
+      facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+    }
 
     // Construct, filter and return the answer.
 
@@ -2773,25 +2791,25 @@ class FTPSession
 		      }, facts, current_mlst_facts) - ({ "" })) * "" + " " + f);
   }
 
-  void send_MLSD_response(mapping(string:array) dir, object session)
+  void send_MLSD_response(mapping(string:array) dir, object session, string cwd)
   {
     dir = dir || ([]);
 
     array f = indices(dir);
 
     session->file->data = sizeof(f) ?
-      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
+      (Array.map(f, make_MLSD_fact, dir, session, cwd) * "\r\n") + "\r\n" :
       "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
   }
 
-  void send_MLST_response(mapping(string:array) dir, object session)
+  void send_MLST_response(mapping(string:array) dir, object session, string cwd)
   {
     dir = dir || ([]);
     send(250,({ "OK" }) + 
-	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
+	 Array.map(indices(dir), make_MLSD_fact, dir, session, cwd) +
 	 ({ "OK" }) );
   }
 
@@ -3707,7 +3725,7 @@ class FTPSession
     if (st) {
       session->file = ([]);
       session->file->full_path = long;
-      send_MLST_response(([ args||".": st ]), session);
+      send_MLST_response(([ long: st ]), session, long);
     } else {
       send_error("MLST", args, session->file, session);
     }
@@ -3739,7 +3757,7 @@ class FTPSession
       }
       dir["."] = stat_file(combine_path(args));
 
-      send_MLSD_response(dir, session);
+      send_MLSD_response(dir, session, args);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
@@ -3914,6 +3932,7 @@ class FTPSession
       // ftps.
       a -= ({ "CCC" });
     }
+    a += ({ "TVFS" });
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
