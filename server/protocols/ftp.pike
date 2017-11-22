@@ -581,6 +581,28 @@ class PutFileWrapper
 }
 
 
+protected string name_from_uid(RequestID master_session, int uid)
+{
+  string res;
+  // NB: find_user_from_uid() can be quite slow(!), so we
+  //     cache the result for the duration of the connection.
+  if (!master_session->misc->username_from_uid) {
+    master_session->misc->username_from_uid = ([]);
+  } else if (res = master_session->misc->username_from_uid[uid]) {
+    return res;
+  }
+  User user;
+  foreach(master_session->conf->user_databases(), UserDB user_db) {
+    if (user = user_db->find_user_from_uid(uid)) {
+      master_session->misc->username_from_uid[uid] = res = user->name();
+      return res;
+    }
+  }
+  master_session->misc->username_from_uid[uid] = res =
+    (uid?((string)uid):"root");
+  return res;
+}
+
 // Simulated /usr/bin/ls pipe
 
 #define LS_FLAG_A       0x00001
@@ -628,28 +650,6 @@ class LS_L(protected RequestID master_session,
   protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  protected string name_from_uid(int uid)
-  {
-    string res;
-    // NB: find_user_from_uid() can be quite slow(!), so we
-    //     cache the result for the duration of the connection.
-    if (!master_session->misc->username_from_uid) {
-      master_session->misc->username_from_uid = ([]);
-    } else if (res = master_session->misc->username_from_uid[uid]) {
-      return res;
-    }
-    User user;
-    foreach(master_session->conf->user_databases(), UserDB user_db) {
-      if (user = user_db->find_user_from_uid(uid)) {
-	master_session->misc->username_from_uid[uid] = res = user->name();
-	return res;
-      }
-    }
-    master_session->misc->username_from_uid[uid] = res =
-      (uid?((string)uid):"root");
-    return res;
-  }
-
   string ls_l(string file, array st)
   {
     DWRITE("ls_l(\"%s\")\n", file);
@@ -675,7 +675,7 @@ class LS_L(protected RequestID master_session,
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
-	user = name_from_uid(st[5]);
+	user = name_from_uid(master_session, st[5]);
       }
 
       if (!stringp(st[6])) {
