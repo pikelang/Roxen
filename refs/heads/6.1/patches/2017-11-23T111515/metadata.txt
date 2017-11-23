@@ -1,0 +1,22 @@
+subject: Roxen 6.1: FSGC fixes
+from: 4cb541375b9f18ec244c92213507d0a551d97a60
+to: 9155d224f3831f660b6e02050fd8583fbe422b62
+originator: Marcus Wellhardh
+depends: 2017-11-13T090841
+restart: true
+
+• FSGC: Avoid using DefaultMonitor implementation [EP-329]
+
+• FSGC: Fixed some typos.
+
+• FSGC [DEBUG]: Don't claim that the root directory is getting deleted.
+
+• FSGC: Pedantic threshold fix.
+
+• FSGC: Restore stable change notification after override.
+
+Fixes [EP-329] Comment #1.
+
+• FSGC: Override accelerated stable change notification [EP-327]
+
+• FSGC: Override accelerated stable change notification [EP-327]
