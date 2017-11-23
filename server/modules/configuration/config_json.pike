@@ -230,7 +230,7 @@ class Router {
 
     //FIXME: content-type: return HTTP_BAD etc
     mixed client_data;
-    if ((id->method == "PUT" || id->method == "POST") && sizeof (id->data)) {
+    if ((<"PUT","PATCH","POST">)[method] && sizeof (id->data)) {
         client_data = Standards.JSON.decode (id->data);
     }
 
