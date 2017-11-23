@@ -1813,6 +1813,7 @@ class FTPSession
     //        until the socket has been connected.
 
     object privs;
+#ifndef FTP2_USE_ANY_SOURCE_PORT
     if(local_port-1 < 1024 && geteuid())
       privs = Privs("FTP: Opening the data connection on " + local_addr +
 		    ":" + (local_port-1) + ".");
@@ -1823,6 +1824,7 @@ class FTPSession
       DWRITE("FTP: socket(%d, %O) failed. Trying with any port.\n",
 	     local_port-1, local_addr);
 
+#endif
       if(!f->open_socket(0, local_addr))
       {
 	DWRITE("FTP: socket(0, %O) failed. "
@@ -1834,8 +1836,10 @@ class FTPSession
 	  return;
 	}
       }
+#ifndef FTP2_USE_ANY_SOURCE_PORT
     }
     privs = 0;
+#endif
 
     Stdio.File raw_connection = f;
 
