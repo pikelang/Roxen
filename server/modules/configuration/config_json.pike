@@ -277,6 +277,36 @@ mapping get_databases(string group) {
   return dbs;
 }
 
+RouterResponse handle_patch_database(string method, mapping(string:string) params, mixed data, RequestID id) {
+  if(!data || !mappingp(data))
+    return RouterResponse(Protocols.HTTP.HTTP_BAD);
+
+  mapping dbs = get_databases(params->group);
+  mapping db;
+  if(!(db = dbs[params->database]))
+    return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+
+  mapping valid_data = ([ "url": stringp ]);
+
+  foreach (data; string key; mixed value) {
+    function validator = valid_data[key];
+    if(!validator || !validator(value))
+      return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error": sprintf("Bad data %O\n",key) ]));
+  }
+
+  if(data->url) {
+    if(db->url == "" && data->url != "") {
+      return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error": sprintf("Can't set url on internal db.\n") ]));
+    }
+    DBManager.set_url(params->database, data->url, 0);
+  }
+  //FIXME: patch "group" to move to groups
+
+  //FIXME: how to handle atomicity for PATCH?
+
+  return handle_get_database("GET", params, 0 , id);
+}
+
 RouterResponse handle_get_database(string method, mapping(string:string) params,mixed data, RequestID id) {
   mapping dbs = get_databases(params->group);
   mapping res = dbs[params->database];
@@ -484,8 +514,7 @@ protected void create()
   });
 #endif
 
-  //FIXME
-  //router->patch("v2/databasegroups/:group/databases/:database", getDatabase);
+  router->patch("v2/databasegroups/:group/databases/:database", handle_patch_database);
   router->delete("v2/databasegroups/:group/databases/:database", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     //FIXME: should we also check if the user is adressing the correct group here?
     if(!DBManager.get(params->database))
