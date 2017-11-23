@@ -285,6 +285,43 @@ mapping get_databases(string group) {
   return dbs;
 }
 
+
+RouterResponse handle_patch_database_permissions(string method, mapping(string:string) params, mixed data, RequestID id) {
+  mapping dbs = get_databases(params->group);
+  mapping db = dbs[params->database];
+
+  if(!db)
+    return RouterResponse(Protocols.HTTP.HTTP_NOT_FOUND);
+
+  if(!mappingp(data))
+    return RouterResponse(Protocols.HTTP.HTTP_BAD);
+
+  array(array) todos = ({ });
+  mapping perm_string_to_perm = ([ "none": DBManager.NONE,
+                                   "write": DBManager.WRITE,
+                                   "read": DBManager.READ
+                                ]);
+
+
+  foreach (data; string key; mixed value) {
+    Configuration conf = roxen.find_configuration(key);
+    if(!conf)
+      return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":sprintf("Unknown configuration %O.", key) ]));
+    if( !(<"none","read","write">)[value] )
+      return RouterResponse(Protocols.HTTP.HTTP_BAD, ([ "error":sprintf("Unknown permission %O.", value) ]));
+    todos += ({  ({ conf, perm_string_to_perm[value] }) });
+  }
+
+
+  foreach (todos, array todo) {
+    // set_permission could fail if db is missing
+    // but it's highly inlikely since we just checked
+    DBManager.set_permission(params->database, todo[0],todo[1]);
+  }
+
+  return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
+}
+
 RouterResponse handle_patch_database(string method, mapping(string:string) params, mixed data, RequestID id) {
   if(!data || !mappingp(data))
     return RouterResponse(Protocols.HTTP.HTTP_BAD);
@@ -522,6 +559,7 @@ protected void create()
   });
 #endif
 
+  router->patch("v2/databasegroups/:group/databases/:database/permissions", handle_patch_database_permissions);
   router->get("v2/databasegroups/:group/databases/:database/permissions", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
      RouterResponse res = handle_get_database("GET",params,data,id);
      if(res->status_code == Protocols.HTTP.HTTP_OK) {
