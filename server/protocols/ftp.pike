@@ -2727,8 +2727,8 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec);
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir,
-			object session, string cwd)
+  mapping(string:string) make_MLSD_facts(string f, mapping(string:array) dir,
+					object session)
   {
     array st = dir[f];
 
@@ -2747,7 +2747,7 @@ class FTPSession
 	facts["media-type"] = ct || "application/octet-stream";
       }
     } else {
-      facts->type = ([ "..":"pdir", ".":"cdir", cwd:"cdir" ])[f] || "dir";
+      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
     }
 
     facts->modify = make_MDTM(st[3]);		/* mtime */
@@ -2788,34 +2788,45 @@ class FTPSession
       facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
     }
 
-    // Construct, filter and return the answer.
+    // filter and return the answer.
 
-    return((Array.map(indices(facts),
-		      lambda(string s, mapping f, multiset(string) current) {
-			if (!current[s]) return "";
-			return s + "=" + f[s] + ";";
-		      }, facts, current_mlst_facts) - ({ "" })) * "" + " " + f);
+    return facts & current_mlst_facts;
   }
 
-  void send_MLSD_response(mapping(string:array) dir, object session, string cwd)
+  string format_MLSD_facts(mapping(string:string) facts)
+  {
+    return map(sort(indices(facts)),
+	       lambda(string s, mapping f) {
+		 return s + "=" + f[s] + ";";
+	       }, facts) * "";
+  }
+
+  string make_MLSD_fact(string f, mapping(string:array) dir,
+			object session)
+  {
+    string facts = format_MLSD_facts(make_MLSD_facts(f, dir, session));
+    return facts + " " + f;
+  }
+
+  void send_MLSD_response(mapping(string:array) dir, object session)
   {
     dir = dir || ([]);
 
     array f = indices(dir);
 
     session->file->data = sizeof(f) ?
-      (Array.map(f, make_MLSD_fact, dir, session, cwd) * "\r\n") + "\r\n" :
+      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
       "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
   }
 
-  void send_MLST_response(mapping(string:array) dir, object session, string cwd)
+  void send_MLST_response(mapping(string:array) dir, object session)
   {
     dir = dir || ([]);
-    send(250,({ "OK" }) + 
-	 Array.map(indices(dir), make_MLSD_fact, dir, session, cwd) +
+    send(250,({ "OK" }) +
+	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
 	 ({ "OK" }) );
   }
 
@@ -3733,7 +3744,7 @@ class FTPSession
     if (st) {
       session->file = ([]);
       session->file->full_path = long;
-      send_MLST_response(([ long: st ]), session, long);
+      send_MLST_response(([ long: st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
@@ -3765,7 +3776,7 @@ class FTPSession
       }
       dir["."] = stat_file(combine_path(args));
 
-      send_MLSD_response(dir, session, args);
+      send_MLSD_response(dir, session);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
