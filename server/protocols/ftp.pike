@@ -2747,7 +2747,29 @@ class FTPSession
 	facts["media-type"] = ct || "application/octet-stream";
       }
     } else {
-      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      if (!current_mlst_facts->type) {
+	if ((< "..", "." >)[f]) {
+	  // RFC 3659 7.5.1.2:
+	  //
+	  // The type=cdir fact indicates the listed entry contains a
+	  // pathname of the directory whose contents are listed. An
+	  // entry of this type will only be returned as a part of the
+	  // result of an MLSD command when the type fact is included,
+	  // and provides a name for the listed directory, and facts
+	  // about that directory. In a sense, it can be viewed as
+	  // representing the title of the listing, in a machine
+	  // friendly format. It may appear at any point of the
+	  // listing, it is not restricted to appearing at the start,
+	  // though frequently may do so, and may occur multiple
+	  // times. It MUST NOT be included if the type fact is not
+	  // included, or there would be no way for the user-PI to
+	  // distinguish the name of the directory from an entry in
+	  // the directory.
+	  return 0;
+	}
+      } else {
+	facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      }
     }
 
     facts->modify = make_MDTM(st[3]);		/* mtime */
@@ -2795,6 +2817,7 @@ class FTPSession
 
   string format_MLSD_facts(mapping(string:string) facts)
   {
+    if (!facts) return 0;
     return map(sort(indices(facts)),
 	       lambda(string s, mapping f) {
 		 return s + "=" + f[s] + ";";
@@ -2805,6 +2828,7 @@ class FTPSession
 			object session)
   {
     string facts = format_MLSD_facts(make_MLSD_facts(f, dir, session));
+    if (!facts) return 0;
     return facts + " " + f;
   }
 
@@ -2812,11 +2836,10 @@ class FTPSession
   {
     dir = dir || ([]);
 
-    array f = indices(dir);
+    array(string) entries =
+      Array.map(indices(dir), make_MLSD_fact, dir, session) - ({ 0 });
 
-    session->file->data = sizeof(f) ?
-      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
-      "" ;
+    session->file->data = sizeof(entries) ? entries * "\r\n" + "\r\n" : "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
@@ -2825,6 +2848,8 @@ class FTPSession
   void send_MLST_response(mapping(string:array) dir, object session)
   {
     dir = dir || ([]);
+    // NB: MLST expands "." and "..", so make_MLSD_fact() won't
+    //     return zero here.
     send(250,({ "OK" }) +
 	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
 	 ({ "OK" }) );
