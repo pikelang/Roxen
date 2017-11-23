@@ -522,6 +522,13 @@ protected void create()
   });
 #endif
 
+  router->get("v2/databasegroups/:group/databases/:database/permissions", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
+     RouterResponse res = handle_get_database("GET",params,data,id);
+     if(res->status_code == Protocols.HTTP.HTTP_OK) {
+       return RouterResponse(Protocols.HTTP.HTTP_OK, res->data->permissions);
+     }
+     return res;
+  });
   router->patch("v2/databasegroups/:group/databases/:database", handle_patch_database);
   router->delete("v2/databasegroups/:group/databases/:database", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
     //FIXME: should we also check if the user is adressing the correct group here?
