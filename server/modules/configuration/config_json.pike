@@ -255,7 +255,7 @@ mapping list_dbs() {
       continue;
     string db_group = DBManager.db_group(db);
     string db_url = DBManager.db_url( db );
-    dbs[db] = ([ "name":db, "group":db_group,"url":db_url]);
+    dbs[db] = ([ "name":db, "group":db_group,"url":db_url, "permissions":q[db] ]);
   }
 
   return dbs;
@@ -264,7 +264,15 @@ mapping list_dbs() {
 mapping filter_db_data(mapping db) {
   mapping res = ([
           "group": db->group,
-          "url": db->url || ""
+          "url": db->url || "",
+          "permissions": map(db->permissions,
+                             lambda(mixed perm) {
+                               if(perm == DBManager.WRITE)
+                                 return "write";
+                               if(perm == DBManager.READ)
+                                 return "read";
+                               return "none";
+                             })
           ]);
   return res;
 }
