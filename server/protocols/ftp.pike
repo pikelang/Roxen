@@ -35,9 +35,7 @@
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  * RFC 2228	FTP Security Extensions
  * RFC 2428	FTP Extensions for IPv6 and NATs
- *
- * IETF draft 12 Extended Directory Listing, TVFS,
- *		 and Restart Mechanism for FTP
+ * RFC 3659	Extensions to FTP
  *
  * RFC's with recomendations and discussions:
  *
@@ -62,7 +60,7 @@
  * RFC 458	Mail retrieval via FTP
  * RFC 463	FTP comments and response to RFC 430
  * RFC 468	FTP data compression
- * *RFC 475	FTP and network mail system
+ * RFC 475	FTP and network mail system
  * RFC 478	FTP server-server interaction - II
  * RFC 479	Use of FTP by the NIC Journal
  * RFC 480	Host-dependent FTP parameters
@@ -79,7 +77,7 @@
  * RFC 751	SURVEY OF FTP MAIL AND MLFL
  * RFC 754	Out-of-Net Host Addresses for Mail
  *
- * (RFC's marked with * are not available from http://rfc.roxen.com/)
+ * (RFCs are available from http://pike.lysator.liu.se/docs/ietf/rfc/).
  */
 
 
@@ -583,6 +581,28 @@ class PutFileWrapper
 }
 
 
+protected string name_from_uid(RequestID master_session, int uid)
+{
+  string res;
+  // NB: find_user_from_uid() can be quite slow(!), so we
+  //     cache the result for the duration of the connection.
+  if (!master_session->misc->username_from_uid) {
+    master_session->misc->username_from_uid = ([]);
+  } else if (res = master_session->misc->username_from_uid[uid]) {
+    return res;
+  }
+  User user;
+  foreach(master_session->conf->user_databases(), UserDB user_db) {
+    if (user = user_db->find_user_from_uid(uid)) {
+      master_session->misc->username_from_uid[uid] = res = user->name();
+      return res;
+    }
+  }
+  master_session->misc->username_from_uid[uid] = res =
+    (uid?((string)uid):"root");
+  return res;
+}
+
 // Simulated /usr/bin/ls pipe
 
 #define LS_FLAG_A       0x00001
@@ -630,28 +650,6 @@ class LS_L(protected RequestID master_session,
   protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  protected string name_from_uid(int uid)
-  {
-    string res;
-    // NB: find_user_from_uid() can be quite slow(!), so we
-    //     cache the result for the duration of the connection.
-    if (!master_session->misc->username_from_uid) {
-      master_session->misc->username_from_uid = ([]);
-    } else if (res = master_session->misc->username_from_uid[uid]) {
-      return res;
-    }
-    User user;
-    foreach(master_session->conf->user_databases(), UserDB user_db) {
-      if (user = user_db->find_user_from_uid(uid)) {
-	master_session->misc->username_from_uid[uid] = res = user->name();
-	return res;
-      }
-    }
-    master_session->misc->username_from_uid[uid] = res =
-      (uid?((string)uid):"root");
-    return res;
-  }
-
   string ls_l(string file, array st)
   {
     DWRITE("ls_l(\"%s\")\n", file);
@@ -677,7 +675,7 @@ class LS_L(protected RequestID master_session,
     if (!(flags & LS_FLAG_n)) {
       // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
-	user = name_from_uid(st[5]);
+	user = name_from_uid(master_session, st[5]);
       }
 
       if (!stringp(st[6])) {
@@ -919,16 +917,17 @@ class LSFile
 	stat_cache[combine_path(long, f)] = dir[f];
       }
 
-      if ((flags & LS_FLAG_a) &&
-	  (long != "/")) {
-	if (dir) {
+      dir = dir || ([]);
+
+      if (flags & LS_FLAG_a) {
+	if (long != "/") {
 	  dir[".."] = stat_file(combine_path(long,"../"));
-	} else {
-	  dir = ([ "..":stat_file(combine_path(long,"../")) ]);
 	}
+	dir["."] = stat_file(combine_path(long));
       }
+
       string listing = "";
-      if (dir && sizeof(dir)) {
+      if (sizeof(dir)) {
 	if (!(flags & LS_FLAG_A)) {
 	  foreach(indices(dir), string f) {
 	    if (sizeof(f) && (f[0] == '.')) {
@@ -1116,9 +1115,9 @@ class TelnetSession {
 
   private mapping cb;
   private mixed id;
-  private function(mixed|void:string) write_cb;
-  private function(mixed, string:void) read_cb;
-  private function(mixed|void:void) close_cb;
+  protected function(mixed|void:string) write_cb;
+  protected function(mixed, string:void) read_cb;
+  protected function(mixed|void:void) close_cb;
 
   private constant TelnetCodes = ([
     236:"EOF",		// End Of File
@@ -1483,6 +1482,23 @@ class FTPSession
     "BYTE":"<sp> <bits> (Byte size)",
     "SOCK":"<sp> host-socket (Data socket)",
 
+#if 0
+    // These are in RFC 475
+    "MLTO":"<sp> <recipient name> (Initiate mail to user)",
+    "FROM":"<sp> <sender name> (Mail from)",
+    "MTYP":"<sp> [ U | O | L ] (Mail type)",
+    "RECO":"[<sp> <mail unique id>] (Mail record)",
+#if 0
+    // NB: Conflicts with AUTH from RFC 2228 above.
+    "AUTH":"<sp> <author id> (Mail author)",
+#endif
+    "TITL":"<sp> <title> (Mail title/subject)",
+    "ACKN":"(Mail acknowledge)",
+    "TEXT":"(Mail text)",
+    "FILE":"<sp> <filename> (Mail file)",
+    "CITA":"<sp> <file name> (Mail citation)",
+#endif
+
     // This one is referenced in a lot of old RFCs
     "MLFL":"(Mail file)",
   ]);
@@ -1491,6 +1507,10 @@ class FTPSession
     "CHMOD":"<sp> mode <sp> file",
     "UMASK":"<sp> mode",
     "PRESTATE":"<sp> prestate",
+  ]);
+
+  private constant opts_help = ([
+    "MLST":"<sp> <fact-list>",
   ]);
 
   private constant modes = ([
@@ -1791,6 +1811,7 @@ class FTPSession
     //        until the socket has been connected.
 
     object privs;
+#ifndef FTP2_USE_ANY_SOURCE_PORT
     if(local_port-1 < 1024 && geteuid())
       privs = Privs("FTP: Opening the data connection on " + local_addr +
 		    ":" + (local_port-1) + ".");
@@ -1801,6 +1822,7 @@ class FTPSession
       DWRITE("FTP: socket(%d, %O) failed. Trying with any port.\n",
 	     local_port-1, local_addr);
 
+#endif
       if(!f->open_socket(0, local_addr))
       {
 	DWRITE("FTP: socket(0, %O) failed. "
@@ -1812,8 +1834,10 @@ class FTPSession
 	  return;
 	}
       }
+#ifndef FTP2_USE_ANY_SOURCE_PORT
     }
     privs = 0;
+#endif
 
     Stdio.File raw_connection = f;
 
@@ -2666,6 +2690,33 @@ class FTPSession
    * Listings for Machine Processing
    */
 
+  constant supported_mlst_facts = (<
+    "size", "type", "modify", "charset", "media-type",
+    "unix.mode", "unix.atime", "unix.ctime", "unix.uid", "unix.gid",
+    "unix.ownername", "unix.groupname",
+  >);
+
+  multiset(string) current_mlst_facts = (<
+    "size", "type", "modify", "unix.mode",
+    "unix.ownername", "unix.groupname",
+  >);
+
+  protected string format_factlist(multiset(string) all,
+				   multiset(string)|void selected)
+  {
+    if (!selected) selected = (<>);
+
+    string ret = "";
+    foreach(sort(indices(all)), string fact) {
+      ret += fact;
+      if (selected[fact]) {
+	ret += "*";
+      }
+      ret += ";";
+    }
+    return ret;
+  }
+
   string make_MDTM(int t)
   {
     mapping lt = gmtime(t);
@@ -2674,7 +2725,8 @@ class FTPSession
 		   lt->hour, lt->min, lt->sec);
   }
 
-  string make_MLSD_fact(string f, mapping(string:array) dir, object session)
+  mapping(string:string) make_MLSD_facts(string f, mapping(string:array) dir,
+					object session)
   {
     array st = dir[f];
 
@@ -2682,40 +2734,110 @@ class FTPSession
 
     // Construct the facts here.
 
-    facts["UNIX.mode"] = st[0];
-
     if (st[1] >= 0) {
       facts->size = (string)st[1];
-      facts->type = "File";
-      string|array(string) ct = session->conf->type_from_filename(f);
-      if (arrayp(ct)) {
-	ct = (sizeof(ct) > 1) && ct[1];
+      facts->type = "file";
+      if (current_mlst_facts["media-type"]) {
+	string|array(string) ct = session->conf->type_from_filename(f);
+	if (arrayp(ct)) {
+	  ct = (sizeof(ct) > 1) && ct[1];
+	}
+	facts["media-type"] = ct || "application/octet-stream";
       }
-      facts["media-type"] = ct || "application/octet-stream";
     } else {
-      facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      if (!current_mlst_facts->type) {
+	if ((< "..", "." >)[f]) {
+	  // RFC 3659 7.5.1.2:
+	  //
+	  // The type=cdir fact indicates the listed entry contains a
+	  // pathname of the directory whose contents are listed. An
+	  // entry of this type will only be returned as a part of the
+	  // result of an MLSD command when the type fact is included,
+	  // and provides a name for the listed directory, and facts
+	  // about that directory. In a sense, it can be viewed as
+	  // representing the title of the listing, in a machine
+	  // friendly format. It may appear at any point of the
+	  // listing, it is not restricted to appearing at the start,
+	  // though frequently may do so, and may occur multiple
+	  // times. It MUST NOT be included if the type fact is not
+	  // included, or there would be no way for the user-PI to
+	  // distinguish the name of the directory from an entry in
+	  // the directory.
+	  return 0;
+	}
+      } else {
+	facts->type = ([ "..":"pdir", ".":"cdir" ])[f] || "dir";
+      }
     }
 
-    facts->modify = make_MDTM(st[3]);
+    facts->modify = make_MDTM(st[3]);		/* mtime */
 
     facts->charset = "8bit";
 
-    // Construct and return the answer.
+    // FIXME: Consider adding support for the "unique" fact.
+    //        Typically based on dev-no + inode-no.
 
-    return(Array.map(indices(facts), lambda(string s, mapping f) {
-				       return s + "=" + f[s];
-				     }, facts) * ";" + " " + f);
+    // FIXME: Consider adding support for the "perm" fact.
+
+    // Facts from
+    // https://www.iana.org/assignments/os-specific-parameters/os-specific-parameters.xml
+    facts["unix.atime"] = make_MDTM(st[2]);	/* atime */
+    facts["unix.ctime"] = make_MDTM(st[4]);	/* ctime */
+
+    // NOTE: SiteBuilder may set st[5] and st[6] to strings.
+    if (stringp(st[5])) {
+      facts["unix.ownername"] = st[5];
+    } else {
+      facts["unix.ownername"] = name_from_uid(master_session, st[5]);
+    }
+    if (stringp(st[6])) {
+      facts["unix.groupname"] = st[6];
+    } else if (!st[6]) {
+      facts["unix.groupname"] = "wheel";
+    } else {
+      facts["unix.groupname"] = (string)st[6];
+    }
+
+    // Defacto standard facts here.
+    // Cf eg https://github.com/giampaolo/pyftpdlib
+    facts["unix.mode"] = sprintf("0%o", st[0]);	/* mode */
+    if (intp(st[5])) {
+      facts["unix.uid"] = sprintf("%d", st[5]);	/* uid */
+    }
+    if (intp(st[6])) {
+      facts["unix.gid"] = sprintf("%d", st[6]);	/* gid */
+    }
+
+    // filter and return the answer.
+
+    return facts & current_mlst_facts;
+  }
+
+  string format_MLSD_facts(mapping(string:string) facts)
+  {
+    if (!facts) return 0;
+    return map(sort(indices(facts)),
+	       lambda(string s, mapping f) {
+		 return s + "=" + f[s] + ";";
+	       }, facts) * "";
+  }
+
+  string make_MLSD_fact(string f, mapping(string:array) dir,
+			object session)
+  {
+    string facts = format_MLSD_facts(make_MLSD_facts(f, dir, session));
+    if (!facts) return 0;
+    return facts + " " + f;
   }
 
   void send_MLSD_response(mapping(string:array) dir, object session)
   {
     dir = dir || ([]);
 
-    array f = indices(dir);
+    array(string) entries =
+      Array.map(indices(dir), make_MLSD_fact, dir, session) - ({ 0 });
 
-    session->file->data = sizeof(f) ?
-      (Array.map(f, make_MLSD_fact, dir, session) * "\r\n") + "\r\n" :
-      "" ;
+    session->file->data = sizeof(entries) ? entries * "\r\n" + "\r\n" : "" ;
 
     session->file->mode = "I";
     connect_and_send(session->file, session);
@@ -2724,7 +2846,9 @@ class FTPSession
   void send_MLST_response(mapping(string:array) dir, object session)
   {
     dir = dir || ([]);
-    send(250,({ "OK" }) + 
+    // NB: MLST expands "." and "..", so make_MLSD_fact() won't
+    //     return zero here.
+    send(250,({ "OK" }) +
 	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
 	 ({ "OK" }) );
   }
@@ -3623,25 +3747,27 @@ class FTPSession
 
   void ftp_LIST(string args)
   {
-    // ftp_MLSD(args); return;
+#ifdef FTP2_MLSD_KLUDGE
+    ftp_MLSD(args); return;
+#endif
 
     ftp_NLST("-l " + (args||""));
   }
 
   void ftp_MLST(string args)
   {
-    args = fix_path(args || ".");
+    string long = fix_path(args || ".");
 
     RequestID session = RequestID2(master_session);
 
     session->method = "DIR";
 
-    array|object st = stat_file(args, session);
+    array|object st = stat_file(long, session);
 
     if (st) {
       session->file = ([]);
-      session->file->full_path = args;
-      send_MLST_response(([ args:st ]), session);
+      session->file->full_path = long;
+      send_MLST_response(([ long: st ]), session);
     } else {
       send_error("MLST", args, session->file, session);
     }
@@ -3665,7 +3791,15 @@ class FTPSession
 
       session->file = ([]);
       session->file->full_path = args;
-      send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+
+      mapping(string:array(mixed)) dir =
+	session->conf->find_dir_stat(args, session) || ([]);
+      if (args != "/") {
+	dir[".."] = stat_file(combine_path(args,"../"));
+      }
+      dir["."] = stat_file(combine_path(args));
+
+      send_MLSD_response(dir, session);
       // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
@@ -3675,6 +3809,50 @@ class FTPSession
       discard_data_connection();
       destruct(session);
     }
+  }
+
+  void ftp_OPTS(string args)
+  {
+    if ((< 0, "" >)[args]) {
+      ftp_HELP("OPTS");
+      return;
+    }
+
+    array a = (args/" ") - ({ "" });
+
+    if (!sizeof(a)) {
+      ftp_HELP("OPTS");
+      return;
+    }
+    a[0] = upper_case(a[0]);
+    if (!opts_help[a[0]]) {
+      send(502, ({ sprintf("Bad OPTS command: '%s'", a[0]) }));
+    } else if (this_object()["ftp_OPTS_"+a[0]]) {
+      this_object()["ftp_OPTS_"+a[0]](a[1..]);
+    } else {
+      send(502, ({ sprintf("OPTS command '%s' is not currently supported.",
+			   a[0]) }));
+    }
+  }
+
+  void ftp_OPTS_MLST(array(string) args)
+  {
+    if (sizeof(args) != 1) {
+      send(501, ({ sprintf("'OPTS MLST %s': incorrect arguments",
+			   args*" ") }));
+      return;
+    }
+
+    multiset(string) new_mlst_facts = (<>);
+    foreach(args[0]/";", string fact) {
+      fact = lower_case(fact);
+      if (!supported_mlst_facts[fact]) continue;
+      new_mlst_facts[fact] = 1;
+    }
+    current_mlst_facts = new_mlst_facts;
+
+    send(200, ({ sprintf("MLST OPTS %s",
+			 format_factlist(new_mlst_facts)) }));
   }
 
   void ftp_DELE(string args)
@@ -3796,10 +3974,13 @@ class FTPSession
       // ftps.
       a -= ({ "CCC" });
     }
+    a += ({ "TVFS" });
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
-			      "MLST":"MLST UNIX.mode;size;type;modify;charset;media-type",
+			      "MLST":sprintf("MLST %s",
+					     format_factlist(supported_mlst_facts,
+							     current_mlst_facts)),
 			      "MLSD":"",
 			      "AUTH":"AUTH TLS",
 		    ])[s] || s);
@@ -3931,26 +4112,39 @@ class FTPSession
 					   }))*"\n")/"\n"),
 	@(FTP2_XTRA_HELP),
       }));
-    } else if ((args/" ")[0] == "SITE") {
-      array(string) a = (upper_case(args)/" ")-({""});
-      if (sizeof(a) == 1) {
-	send(214, ({ "The following SITE commands are recognized:",
-		     @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
-	}));
-      } else if (site_help[a[1]]) {
-	send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
-      } else {
-	send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
-      }
     } else {
       args = upper_case(args);
-      if (cmd_help[args]) {
-	send(214, ({ sprintf("Syntax: %s %s%s", args,
-			     cmd_help[args],
-			     (this_object()["ftp_"+args]?
-			      "":"; unimplemented")) }));
+      if ((args/" ")[0] == "SITE") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following SITE commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
+	       }));
+	} else if (site_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
+	}
+      } else if ((args/" ")[0] == "OPTS") {
+	array(string) a = (args/" ")-({""});
+	if (sizeof(a) == 1) {
+	  send(214, ({ "The following OPTS commands are recognized:",
+		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
+	       }));
+	} else if (opts_help[a[1]]) {
+	  send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
+	} else {
+	  send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
+	}
       } else {
-	send(504, ({ sprintf("Unknown command %s.", args) }));
+	if (cmd_help[args]) {
+	  send(214, ({ sprintf("Syntax: %s %s%s", args,
+			       cmd_help[args],
+			       (this_object()["ftp_"+args]?
+				"":"; unimplemented")) }));
+	} else {
+	  send(504, ({ sprintf("Unknown command %s.", args) }));
+	}
       }
     }
   }
@@ -4284,6 +4478,11 @@ class FTPSession
       fd->set_close_callback(0);
       fd->set_read_callback(0);
     }
+
+    // Make sure that the TelnetSession level doesn't restore
+    // the above callbacks.
+    read_cb = 0;
+    close_cb = 0;
 
     send(0, 0);		// EOF marker.
 
