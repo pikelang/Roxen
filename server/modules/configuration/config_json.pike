@@ -544,20 +544,6 @@ protected void create()
           LOCALE(1124, "Where the REST API is mounted."));
   roxen.add_permission (perm_name, LOCALE(1122, "REST API"));
 
-#if 0
-  router->get("test3", lambda(string method, mapping(string:string) params,mixed data, RequestID id) {
-    return RouterResponse(Protocols.HTTP.HTTP_NO_CONTENT);
-  });
-  router->get("test2", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
-    return RouterResponse(Protocols.HTTP.HTTP_OK,(["foo":1,"bar":2]));
-  });
-  router->patch("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
-    return RouterResponse(Protocols.HTTP.HTTP_OK,"patch test");
-  });
-  router->get("test", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
-    return RouterResponse(Protocols.HTTP.HTTP_OK,1);
-  });
-#endif
 
   router->patch("v2/databasegroups/:group/databases/:database/permissions", handle_patch_database_permissions);
   router->get("v2/databasegroups/:group/databases/:database/permissions", lambda(string method,  mapping(string:string) params,mixed data, RequestID id) {
