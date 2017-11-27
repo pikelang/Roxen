@@ -1,0 +1,116 @@
+subject: Roxen 6.1: FTP Improvements, configuration REST API v2
+from: 9155d224f3831f660b6e02050fd8583fbe422b62
+to: f81761ad48d88d023252314d2f754e0bcf9f9a4f
+originator: Jonas Lonnberg
+depends: 2017-11-23T111515
+restart: true
+
+• Configuration REST API v2
+
+Next version of the configuration REST API. Will probably be tweaked and expendad before documented and official.
+
+• FTP2_USE_ANY_SOURCE_PORT define to aid debugging
+
+• FTP: Filter "." and ".." from MLSD if no type fact.
+
+This is required by RFC 3659 7.5.1.2.
+
+• FTP: Cleaned up MLSD fact handling a bit.
+
+Fixes [WS-107] comment #1, where type=cdir was set erroneously.
+
+• FTP: Added hook to simplify testing of MLSD.
+
+-DFTP2_MLSD_KLUDGE now causes the FTP LIST command to become
+an alias for MLSD. This simplifies testing of MLSD with old
+FTP clients.
+
+• FTP: Claim TVFS support.
+
+• FTP: Added MLSx facts UNIX.ownername and UNIX.groupname.
+
+These superceed the defacto facts UNIX.uid and UNIX.gid as
+they actually have a proper definition.
+
+Cf https://www.iana.org/assignments/os-specific-parameters/os-specific-parameters.xml
+
+• FTP: Break out name_from_uid() from LS_L.
+
+This function is useful from other places in the code.
+
+• FTP: Improve MLSx compat with Sitebuilder.
+
+Fixes [WS-104] comment #1.
+
+• FTP: Update some references to RFCs.
+
+• FTP: Don't expand the argument to MLST.
+
+This makes MLST on "." and ".." generate type "cdir" and "pdir" entries.
+
+• FTP: Let MLSD list "." and "..".
+
+Potential work around for [WS-94], where an ftp client got confused
+by an empty result from MLSD.
+
+Fixes [WS-106].
+
+• FTP: List "." in ls -a mode.
+
+The directory identity entry (".") is now listed in ls -a mode.
+
+Also some related code cleanup.
+
+• FTP: Avoid multiple close callbacks.
+
+Under some circumstances TelnetSession could apparently restore
+the close callback after it had been removed, causing it to be
+called multiple (sometimes on the order of 1000s) times before
+the connection actually gets shut down.
+
+Potential fix for [WS-99].
+
+• Merge commit '8468d07e63a61e80c5a7916ab61c0f25135ac2fc' into patches/ftp
+
+Synch with Roxen 6.0/6.1 split.
+
+* commit '8468d07e63a61e80c5a7916ab61c0f25135ac2fc': (428 commits)
+
+• FTP: Added some comments.
+
+• FTP: Don't look up the content-type if not required.
+
+• FTP: Consistent case for the "type" fact.
+
+• FTP: Added facts UNIX.atime and UNIX.ctime.
+
+• FTP: Support the defacto facts UNIX.uid and UNIX.gid.
+
+Also adjusts the default set of facts returned by MLST and MLSD.
+
+• FTP: The UNIX.mode defacto fact should be in octal.
+
+• FTP: Implement OPTS MLST.
+
+It is now possibly to specify what facts that MLST and MLSD should return.
+
+Fixes [WS-101].
+
+• FTP: Fixed case-sensitivity bug in HELP.
+
+The detailed help for the SITE and OPTS commands needed the
+command names "SITE" and "OPTS" to be speicified in upper case.
+
+• FTP: Implemented support for the OPTS command.
+
+• FTP: Fixed output from FEAT MLST.
+
+The default set of facts was not marked with asterisks ('*').
+
+Prepare for supporting OPTS MLST.
+
+• FTP: Fixed syntax error in fact list output from MLST/MLSD.
+
+The terminating ';' was missing.
+
+• Censor FTP password when sent to roxen.handle().
