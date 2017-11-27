@@ -1,0 +1,3 @@
+Modified files:
+  modules/configuration/config_json.pike
+  protocols/ftp.pike
