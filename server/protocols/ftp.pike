@@ -4366,6 +4366,12 @@ class FTPSession
     if (busy || !sizeof(cmd_queue)) return;
     busy = 1;
 
+    if (!conf) {
+      // Configuration deleted during session.
+      terminate_connection();
+      return;
+    }
+
     array(string|array(string)) cmd_entry = cmd_queue->get();
     if (!cmd_entry) {
       // Race?
