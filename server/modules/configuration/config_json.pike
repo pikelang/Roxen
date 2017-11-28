@@ -212,7 +212,7 @@ class Router {
   }
   private function make_route_function(string method) {
      return lambda(string pattern, RouterCallback callback) {
-        return add_route(method, PathMatcher(pattern), callback);
+        add_route(method, PathMatcher(pattern), callback);
      };
   }
 
