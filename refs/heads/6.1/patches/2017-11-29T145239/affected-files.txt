@@ -1,0 +1,5 @@
+Modified files:
+  etc/include/version.h
+  etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml
+  modules/configuration/config_json.pike
+  protocols/ftp.pike
