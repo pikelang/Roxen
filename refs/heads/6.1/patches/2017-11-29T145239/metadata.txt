@@ -1,0 +1,18 @@
+subject: Roxen 6.1: FTP, configuration-rest-api-v2
+from: f81761ad48d88d023252314d2f754e0bcf9f9a4f
+to: c3f853301d2e26c35ba5fe176f89785571915bed
+originator: Marcus Wellhardh
+depends: 2017-11-27T105643
+restart: true
+
+• FTP: Handle removed configurations gracefully.
+
+Fixes [WS-114] where the configuration was renamed during the session.
+
+• 🐛 Was returning a void expression
+
+• Testsuite [html_wash]: Adjust tests for quoting change.
+
+The quotes for the generated href attributes have been changed from ' to ".
+
+Fixes [WS-62].
