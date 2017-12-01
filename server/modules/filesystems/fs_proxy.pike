@@ -4,6 +4,8 @@ inherit "module";
 
 constant module_type = MODULE_LOCATION;
 
+constant module_unique = 0;
+
 //<locale-token project="mod_fs_proxy">LOCALE</locale-token>
 //<locale-token project="mod_fs_proxy">DLOCALE</locale-token>
 #define LOCALE(X,Y)     _STR_LOCALE("mod_fs_proxy",X,Y)

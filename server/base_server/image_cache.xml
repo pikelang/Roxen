@@ -1,6 +1,6 @@
 <h2>Image cache attributes</h2>
 
-<attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|xbm|xpm' default='gif'><p>
+<attr name='format' value='gif|jpeg|png|avs|bmp|hrz|ilbm|pcx|pnm|ps|pvr|tga|tiff|wbf|webp|xbm|xpm' default='png'><p>
  The format to encode the image to. The formats available are:</p>
 <xtable>
 <row><h>Acronym</h><h>Acronym interpretation</h></row>
@@ -9,7 +9,6 @@
 <row><c><p>png</p></c><c><p>Portable Networks Graphics</p></c></row>
 <row><c><p>avs</p></c><c><p>Advanced Visual Systems Inc. image format</p></c></row>
 <row><c><p>bmp</p></c><c><p>Windows BitMaP file</p></c></row>
-<row><c><p>gd</p></c><c><p>Internal format used by libgd</p></c></row>
 <row><c><p>hrz</p></c><c><p>HRZ is (was?) used for amatuer radio slow-scan TV.</p></c></row>
 <row><c><p>ilbm</p></c><c><p>Interchangeable File Format: interleaved bitmap</p></c></row>
 <row><c><p>pcx</p></c><c><p>Zsoft PCX file format (PC / DOS)</p></c></row>
@@ -19,6 +18,7 @@
 <row><c><p>tga</p></c><c><p>TrueVision Targa (PC / DOS)</p></c></row>
 <row><c><p>tiff</p></c><c><p>Tag Image File Format</p></c></row>
 <row><c><p>wbf</p></c><c><p>WAP Bitmap File</p></c></row>
+<row><c><p>webp</p></c><c><p>WebP image format currently developed by Google.</p></c></row>
 <row><c><p>xbm</p></c><c><p>XWindows Bitmap File</p></c></row>
 <row><c><p>xpm</p></c><c><p>XWindows Pixmap File</p></c></row>
 </xtable>

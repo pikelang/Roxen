@@ -149,13 +149,13 @@ mixed verify_3(object id, object mc)
 
 mixed wizard_done(object id, object mc)
 {
-  return http_string_answer(
-        sprintf("<p class='notify ok inline'>"
-                 +LOCALE(131,"Wrote %d bytes to %s.")+
-  	        "</p>\n<p><cf-ok/></p>\n",
-  	        strlen(id->variables->certificate),
-	        combine_path(getcwd(), "../local/",
-		             id->variables->cert_file)) );
+  roxen.background_run(0, roxen.scan_certs);
+  return http_string_answer( sprintf("<p class='notify ok inline'>"+
+                                     LOCALE(131,"Wrote %d bytes to %s.")+
+				     "</p>\n<p><cf-ok/></p>\n",
+				     strlen(id->variables->certificate),
+				     combine_path(getcwd(), "../local/",
+						  id->variables->cert_file)) );
 }
 
 

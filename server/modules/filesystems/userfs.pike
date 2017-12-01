@@ -37,8 +37,11 @@ _(2,"A file system that gives access to files in the users' home\n"
 "Anne a web site of her own at <tt>http://anne.domain.com/</tt>.\n");
 constant module_unique = 0;
 
+// NB: MySQL 4.1 and later prefix hashes from their internal
+//     password hashing function with a single "*". cf [bug 7834].
 #define BAD_PASSWORD(us)	(query("only_password") && \
-                                 ((us[1] == "") || (us[1][0] == '*')))
+                                 ((us[1] == "") || \
+				  ((us[1][0] == '*') && (us[1][-1] == '*'))))
 
 int uid_was_zero()
 {

@@ -46,9 +46,11 @@ Thread.Thread backend_thread;
 
 //<locale-token project="roxen_start">   LOC_S </locale-token>
 //<locale-token project="roxen_message"> LOC_M </locale-token>
-#define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
-#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
-#define CALL_M(X,Y)	_LOCALE_FUN("roxen_message",X,Y)
+//<locale-token project="roxen_config">  LOC_C </locale-token>
+#define LOC_S(X,Y)      _STR_LOCALE("roxen_start",X,Y)
+#define LOC_M(X,Y)      _STR_LOCALE("roxen_message",X,Y)
+#define LOC_C(X,Y)      _STR_LOCALE("roxen_config",X,Y)
+#define CALL_M(X,Y)     _LOCALE_FUN("roxen_message",X,Y)
 
 // --- Debug defines ---
 
@@ -282,6 +284,7 @@ private void low_shutdown(int exit_code, int|void apply_patches)
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
+    stop_scan_certs();
     stop_hourly_maintenance();
 #ifdef THREADS
 #if constant(Filesystem.Monitor.basic)
@@ -2338,171 +2341,65 @@ class StartTLSProtocol
 #endif
   }
 
-#if constant(Standards.X509)
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
     cert_failure = 0;
 
-    array(string) certificates = ({});
-    array(object) decoded_certs = ({});
-    array(object) decoded_keys = ({});
+    Variable.Variable Keys = getvar("ssl_keys");
 
-    void handle_pem_file(string pem_file, Variable.Variable conf_var)
-    {
-      string raw_cert;
-      SSL3_WERR (sprintf ("Reading PEM file %O\n", pem_file));
-      if( catch{ raw_cert = lopen(pem_file, "r")->read(); } )
-      {
-	CERT_WARNING (conf_var,
-		      LOC_M(66, "Reading PEM file %O failed: %s\n"),
-		      pem_file, strerror (errno()));
+    array(int) keypairs = Keys->query();
+    if (!sizeof(keypairs)) {
+      // No new-style certificates configured.
+
+      // Check if there are old-style certificates; in case of which
+      // this is probably an upgrade.
+      Variable.Variable Certificates = getvar("ssl_cert_file");
+      Variable.Variable KeyFile = getvar("ssl_key_file");
+
+      keypairs =
+	CertDB.register_pem_files(Certificates->query() + ({ KeyFile->query() }),
+				  query("ssl_password"));
+
+      if (!sizeof(keypairs)) {
+	// No Old-style certificate configuration found.
+	// Fall back to using all known certs.
+	keypairs = Keys->get_choice_list();
+      }
+
+      if (sizeof(keypairs)) {
+	// Certificates found.
+	Keys->set(keypairs);
+
+	save();
+      } else {
+	// No certs known to the server.
+	// Not reached except in very special circumstances.
+	// FIXME: Use anonymous suites?
+	report_error ("TLS port %s: %s", get_url(),
+		      LOC_M(63,"No certificates found.\n"));
+	cert_err_unbind();
+	cert_failure = 1;
 	return;
       }
-
-      Standards.PEM.Messages msgs = Standards.PEM.Messages(raw_cert);
-
-      foreach(msgs->fragments, string|Standards.PEM.Message msg) {
-	if (stringp(msg)) {
-	  if (String.trim_all_whites(msg) != "") {
-	    CERT_WARNING(conf_var,
-			 LOC_M(67, "Invalid PEM in %O.\n"),
-			 pem_file);
-	  }
-	  continue;
-	}
-	string body = msg->body;
-	if (msg->headers["dek-info"]) {
-	  mixed err = catch {
-	      body = Standards.PEM.decrypt_body(msg->headers["dek-info"],
-						body, query("ssl_password"));
-	    };
-	  if (err) {
-	    CERT_WARNING(conf_var,
-			 LOC_M(68, "Invalid decryption password for %O.\n"),
-			 pem_file);
-	  }
-	}
-	switch(msg->pre) {
-	case "CERTIFICATE":
-	case "X509 CERTIFICATE":
-	  Standards.X509.TBSCertificate tbs =
-	    Standards.X509.decode_certificate(body);
-	  if (!tbs) {
-	    CERT_WARNING (conf_var,
-			  LOC_M(13, "Certificate not valid (DER).\n"));
-	    return;
-	  }
-	  certificates += ({ body });
-	  decoded_certs += ({ Standards.X509.decode_certificate(body) });
-	  break;
-	case "PRIVATE KEY":
-	case "RSA PRIVATE KEY":
-	case "DSA PRIVATE KEY":
-	case "ECDSA PRIVATE KEY":
-	  Crypto.Sign key = Standards.X509.parse_private_key(body);
-	  if (!key) {
-	    CERT_ERROR (conf_var,
-			LOC_M(69,"Private key not valid")+" (DER).\n");
-	    return;
-	  }
-	  decoded_keys += ({ key });
-	  break;
-	}
-      }
-    };
-
-    Variable.Variable Certificates = getvar("ssl_cert_file");
-    Variable.Variable KeyFile = getvar("ssl_key_file");
-
-    object privs = Privs("Reading cert file");
-
-    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
-      if (cert_file == "") continue;
-      handle_pem_file(cert_file, Certificates);
-    }
-
-    string key_file = String.trim_whites(KeyFile->query());
-    if (key_file != "") {
-      handle_pem_file(key_file, KeyFile);
-    } else {
-      KeyFile = Certificates;
-    }
-
-    privs = 0;
-
-    if (!sizeof(decoded_certs)) {
-      CERT_ERROR(Certificates, LOC_M(63,"No certificates found.\n"));
-      report_error ("TLS port %s: %s", get_url(),
-		    LOC_M(63,"No certificates found.\n"));
-      cert_err_unbind();
-      cert_failure = 1;
-      return;
-    }
-
-    if (!sizeof(decoded_keys)) {
-      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
-      report_error ("TLS port %s: %s", get_url(),
-		    LOC_M (17,"No private key found.\n"));
-      cert_err_unbind();
-      cert_failure = 1;
-      return;
     }
 
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
+    // NB: Race condition here where the new SSLContext is
+    //     live before it has been configured completely.
     ctx = SSLContext();
     set_version();
     filter_preferred_suites();
 
-    mapping(string:array(int)) cert_lookup = ([]);
-    foreach(decoded_certs; int no; Standards.X509.TBSCertificate tbs) {
-      cert_lookup[tbs->subject->get_der()] += ({ no });
-    }
+    foreach(keypairs, int keypair_id) {
+      array(Crypto.Sign.State|array(string)) keypair =
+	CertDB.get_keypair(keypair_id);
+      if (!keypair) continue;
 
-    foreach(decoded_keys, Crypto.Sign key) {
-      // NB: We need to support multiple certificates with the same key.
-      int found;
-      Standards.X509.TBSCertificate tbs;
-      foreach(decoded_certs; int no; tbs) {
-	if (!tbs->public_key->pkc->public_key_equal(key))
-	  continue;
-
-	array(int) cert_nos = ({ no });
-
-	// Build the certificate chain.
-	Standards.X509.TBSCertificate issuer;
-	do {
-	  string issuer_der = tbs->issuer->get_der();
-	  array(int) issuer_nos = cert_lookup[issuer_der];
-	  if (!issuer_nos) break;
-
-	  issuer = decoded_certs[issuer_nos[0]];
-
-	  // FIXME: Verify that the issuer has signed the cert.
-
-	  if (issuer != tbs) {
-	    cert_nos += ({ issuer_nos[0] });
-	  } else {
-	    // Self-signed.
-	    issuer = UNDEFINED;
-	    break;
-	  }
-	} while ((tbs = issuer));
-
-	report_notice("Adding %s certificate (%d certs) for %s\n",
-		      key->name(), sizeof(cert_nos), get_url());
-	// FIXME: Ought to only add "*" for the certificate chains
-	//        belonging to the default server.
-	ctx->add_cert(key, rows(certificates, cert_nos), ({ name, "*" }));
-	found = 1;
-      }
-      if (!found) {
-	CERT_ERROR (KeyFile,
-		    LOC_M(70, "Private key without matching certificate.\n"));
-	continue;
-      }
+      [Crypto.Sign.State private_key, array(string) certs] = keypair;
+      ctx->add_cert(private_key, certs, ({ name, "*" }));
     }
 
 #if 0
@@ -2526,190 +2423,245 @@ class StartTLSProtocol
 	report_notice("Failed to bind port %s.\n", get_url());
     }
   }
-#else
-  // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
-#pragma no_deprecation_warnings
-  void certificates_changed(Variable.Variable|void ignored,
-			    void|int ignore_eaddrinuse)
+
+  class CertificateKeyChoiceVariable
   {
-    int old_cert_failure = cert_failure;
-    cert_failure = 0;
+    inherit Variable.IntChoice;
 
-    string raw_keydata;
-    array(string) certificates = ({});
-    array(object) decoded_certs = ({});
-    Variable.Variable Certificates = getvar("ssl_cert_file");
+    mapping(int:string) get_translation_table()
+    {
+      array(mapping(string:int|string)) keypairs = CertDB.list_keypairs();
+      return mkmapping(keypairs->id, keypairs->name);
+    }
 
-    object privs = Privs("Reading cert file");
+    array(int) get_choice_list()
+    {
+      return CertDB.list_keypairs()->id;
+    }
 
-    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
-      string raw_cert;
-      SSL3_WERR (sprintf ("Reading cert file %O", cert_file));
-      if( catch{ raw_cert = lopen(cert_file, "r")->read(); } )
+    array(string|mixed) verify_set(array(int) new_value)
+    {
+      if (!sizeof(new_value)) {
+	// The list of certificates should never be empty.
+	return ({ "Selection reset to all selected.", get_choice_list() });
+      }
+      return ::verify_set(new_value);
+    }
+
+    protected mapping(Standards.ASN1.Types.Identifier:string)
+      parse_dn(Standards.ASN1.Types.Sequence dn)
+    {
+      mapping(Standards.ASN1.Types.Identifier:string) ids = ([]);
+      foreach(dn->elements, Standards.ASN1.Types.Compound pair)
       {
-	CERT_WARNING (Certificates,
-		      LOC_M(8, "Reading certificate file %O failed: %s\n"),
-		      cert_file, strerror (errno()));
-	continue;
+	if(pair->type_name!="SET" || !sizeof(pair)) continue;
+	pair = pair[0];
+	if(pair->type_name!="SEQUENCE" || sizeof(pair)!=2)
+	  continue;
+	if(pair[0]->type_name=="OBJECT IDENTIFIER" &&
+	   pair[1]->value && !ids[pair[0]])
+	  ids[pair[0]] = pair[1]->value;
       }
+      return ids;
+    }
 
-      object msg = Tools.PEM.pem_msg()->init( raw_cert );
-      object part = msg->parts["CERTIFICATE"] ||
-	msg->parts["X509 CERTIFICATE"];
-      string cert;
-
-      if (msg->parts["RSA PRIVATE KEY"] ||
-	  msg->parts["DSA PRIVATE KEY"]) {
-	raw_keydata = raw_cert;
+    protected array(string) render_element(int keypair_id)
+    {
+      array(Crypto.Sign.State|array(string)) keypair =
+	CertDB.get_keypair(keypair_id);
+      if (!keypair) {
+        return ({ "<td colspan='2'>" +
+                  LOC_C(0, "Lost certificate") +
+                  "</td>" });
       }
+      [Crypto.Sign.State private_key, array(string) certs] = keypair;
 
-      if (!part || !(cert = part->decoded_body())) 
-      {
-	CERT_WARNING (Certificates,
-		      LOC_M(10, "No certificate found in %O.\n"),
-		      cert_file);
-	continue;
-      }
-      certificates += ({ cert });
+      Standards.X509.TBSCertificate tbs =
+	Standards.X509.decode_certificate(certs[0]);
 
-      // FIXME: Support PKCS7
-      object tbs = Tools.X509.decode_certificate (cert);
+      array(string) res = ({});
+
       if (!tbs) {
-	CERT_WARNING (Certificates,
-		      LOC_M(13, "Certificate not valid (DER).\n"));
-	continue;
-      }
-      decoded_certs += ({tbs});
-    }
+        res += ({ "<td colspan='2'><b>" +
+                  LOC_C(0, "Invalid certificate") +
+                  ".</b>" });
+      } else {
+	mapping(Standards.ASN1.Types.Identifier:string) dn =
+	  parse_dn(tbs->subject);
 
-    if (!sizeof(decoded_certs)) {
-      report_error ("TLS port %s: %s", get_url(),
-		    LOC_M(63,"No certificates found.\n"));
-      cert_err_unbind();
-      cert_failure = 1;
-      return;
-    }
+	string tmp;
+	if ((tmp = dn[Standards.PKCS.Identifiers.at_ids.commonName])) {
+	  res += ({
+            sprintf("<td style='white-space:nowrap'>%s</td>"
+                    "<td><b><tt>%s</tt></b>",
+                    LOC_C(0, "Common Name"),
+                    Roxen.html_encode_string(tmp)),
+	  });
+	} else {
+	  res += ({ "<td colspan='2'>" });
+	}
 
-    Variable.Variable KeyFile = getvar("ssl_key_file");
+	res[-1] += sprintf(" (%s, " + LOC_C(0, "%d bits") + ")</td>",
+			   Roxen.html_encode_string(private_key->name()),
+			   private_key->key_size());
 
-    if( strlen(KeyFile->query())) {
-      SSL3_WERR (sprintf ("Reading key file %O", KeyFile->query()));
-      if (catch{ raw_keydata = lopen(KeyFile->query(), "r")->read(); } )
-	CERT_ERROR (KeyFile,
-		    LOC_M(9, "Reading key file %O failed: %s\n"),
-		    KeyFile->query(), strerror (errno()));
-    }
-    else
-      KeyFile = Certificates;
+	if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationName]) {
+	  if (dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	    tmp += "/" +
+	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
+	  }
+	  res += ({
+            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+                    LOC_C(0, "Issued To"),
+                    Roxen.html_encode_string(tmp)),
+	  });
+	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	  res += ({
+            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+                    LOC_C(0, "Issued To"),
+                    Roxen.html_encode_string(tmp)),
+	  });
+	}
 
-    privs = 0;
-
-    if (!raw_keydata)
-      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
-
-    object msg = Tools.PEM.pem_msg()->init( raw_keydata );
-
-    SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
-
-    object part;
-    if (part = msg->parts["RSA PRIVATE KEY"])
-    {
-      string key;
-
-      if (!(key = part->decoded_body()))
-	CERT_ERROR (KeyFile,
-		    LOC_M(11,"Private rsa key not valid")+" (PEM).\n");
-
-      object rsa = Standards.PKCS.RSA.parse_private_key(key);
-      if (!rsa)
-	CERT_ERROR (KeyFile,
-		    LOC_M(11,"Private rsa key not valid")+" (DER).\n");
-
-      ctx->rsa = rsa;
-
-      SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
-
-      if (rsa->rsa_size() > 512)
-      {
-	/* Too large for export */
-	ctx->short_rsa = Crypto.RSA()->generate_key(512, ctx->random);
-
-	// ctx->long_rsa = Crypto.RSA()->generate_key(rsa->rsa_size(), ctx->random);
-      }
-      ctx->rsa_mode();
-      filter_preferred_suites();
-
-      array(int) key_matches =
-	map(decoded_certs,
-	    lambda (object tbs) {
-	      return tbs->public_key->rsa->public_key_equal (rsa);
+	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
+          res += ({
+            sprintf("<td style='white-space:nowrap'>" +
+                    LOC_C(0, "Issued By") +
+                    "</td><td>%s</td>",
+                    LOC_C(0, "Self-signed"))
+          });
+	} else {
+	  dn = parse_dn(tbs->issuer);
+	  tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationName];
+	  if (dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
+	    tmp = (tmp?(tmp + "/"):"") +
+	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
+	  }
+	  string tmp2 = dn[Standards.PKCS.Identifiers.at_ids.commonName];
+	  if (tmp2) {
+	    if (tmp) {
+	      tmp = tmp2 + " (" + tmp + ")";
+	    } else {
+	      tmp = tmp2;
+	    }
+	  }
+	  if (tmp) {
+	    res += ({
+              sprintf("<td style='white-space:nowrap;vertical-align:top'>" +
+                      LOC_C(0, "Issued By") +
+                      "</td><td>%s</td>",
+                      Roxen.html_encode_string(tmp)),
 	    });
-      
-      int num_key_matches;
-      // DWIM: Make sure the main cert comes first.
-      array(string) new_certificates = allocate(sizeof(certificates));
-      int i,j;
-      for (i=0; i < sizeof(certificates); i++) {
-	if (key_matches[i]) {
-	  new_certificates[j++] = certificates[i];
-	  num_key_matches++;
+	  }
 	}
-      }
-      for (i=0; i < sizeof(certificates); i++) {
-	if (!key_matches[i]) {
-	  new_certificates[j++] = certificates[i];
+
+	tmp = Roxen.html_encode_string(Calendar.Second(tbs->not_after)->
+				       format_time());
+	if (tbs->not_after < time(1)) {
+	  // Already expired.
+	  res += ({
+            sprintf("<td>%s</td>"
+                    "<td><font color='&usr.warncolor;'>%s</font>\n"
+                    "<img src='&usr.err-3;' /></td>",
+                    LOC_C(0, "Expired"),
+                    tmp),
+	  });
+	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
+	  // Expires within 30 days.
+	  res += ({
+            sprintf("<td>%s</td>"
+                    "<td><font color='&usr.warncolor;'>%s</font>\n"
+                    "<img src='&usr.err-2;' /></td>",
+                    LOC_C(0, "Expires"),
+                    tmp),
+	  });
+	} else {
+	  res += ({
+	    sprintf("<td>%s</td><td>%s</td>", LOC_C(0, "Expires"), tmp),
+	  });
 	}
+
+        mapping keypair_metadata = CertDB.get_keypair_metadata(keypair_id);
+
+        array(string) paths =
+          keypair_metadata->certs->pem_path +
+          ({ keypair_metadata->key->pem_path });
+        paths = Array.uniq(paths);
+        paths = replace(paths, 0, "__LOST__");
+        paths = map(paths, lfile_path);
+        res += ({
+          sprintf("<td style='vertical-align:top'>%s</td><td>%s</td>",
+                  LOC_C(0, "Path(s)"),
+                  map(paths, lambda(string p) {
+                    if (p)
+                      return "<tt>" + Roxen.html_encode_string(p) + "</tt>";
+                    else
+                      return
+                        "<font color='&usr.warncolor;'>" +
+                        LOC_C(0, "Lost file") +
+                        "</font>";
+                  }) * "<br/>")
+        });
       }
-      if( !num_key_matches )
-	CERT_ERROR (KeyFile,
-		    LOC_M(14, "Certificate and private key do not match.\n"));
-      ctx->certificates = new_certificates;
+
+      return res;
     }
-    else if (part = msg->parts["DSA PRIVATE KEY"])
+
+    string render_form(RequestID id, void|mapping additional_args) {
+      array(string) current = map(query(), _name);
+      string res = "<table width='100%'>\n";
+      foreach( get_choice_list(); int i; mixed elem ) {
+        if (i != 0) {
+          res += "<tr><td colspan='3'><hr/></td></tr>\n";
+        }
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": _name(elem),
+        ]);
+        if(has_value(current, m->value)) {
+          m->checked="checked";
+          current -= ({ m->value });
+        }
+        array(string) el_rows = render_element(elem);
+        res += sprintf("<tr><td rowspan='%d'>%s</td>"
+                       "%s"
+                       "</tr>\n",
+                       sizeof(el_rows),
+                       Roxen.make_tag( "input", m),
+                       el_rows[0]);
+        foreach(el_rows[1..], string row) {
+          res += sprintf("<tr>%s</tr>", row);
+        }
+      }
+      // Make an entry for the current values if they're not in the list,
+      // to ensure that the value doesn't change as a side-effect by
+      // another change.
+      foreach(current, string value) {
+        mapping m = ([
+          "type": "checkbox",
+          "name": path(),
+          "value": value,
+          "checked": "checked",
+        ]);
+        string title = sprintf(LOC_C(1121,"(stale value %s)"), value);
+        res += sprintf("<tr><td>%s</td><td>%s</td></tr>\n",
+                       Roxen.make_tag( "input", m),
+                       Roxen.html_encode_string(title));
+      }
+      return res + "</table>";
+    }
+
+    protected void create( void|int _flags, void|LocaleString std_name,
+			   void|LocaleString std_doc )
     {
-      string key;
-
-      if (!(key = part->decoded_body()))
-	CERT_ERROR (KeyFile,
-		    LOC_M(15,"Private dsa key not valid")+" (PEM).\n");
-
-      object dsa = Standards.PKCS.DSA.parse_private_key(key);
-      if (!dsa)
-	CERT_ERROR (KeyFile,
-		    LOC_M(15,"Private dsa key not valid")+" (DER).\n");
-
-      SSL3_WERR(sprintf("Using DSA key."));
-
-      //dsa->use_random(ctx->random);
-      ctx->dsa = dsa;
-      /* Use default DH parameters */
-#if constant(SSL.cipher)
-      ctx->dh_params = SSL.cipher()->dh_parameters();
-#endif
-
-      ctx->dhe_dss_mode();
-      filter_preferred_suites();
-
-      // FIXME: Add cert <-> private key check.
-
-      ctx->certificates = certificates;
-    }
-    else
-      CERT_ERROR (KeyFile, LOC_M(17,"No private key found.\n"));
-
-#if EXPORT
-    ctx->export_mode();
-#endif
-
-    if (!bound) {
-      bind (ignore_eaddrinuse);
-      if (old_cert_failure && bound)
-	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
+      ::create(({}), UNDEFINED, _flags, std_name, std_doc);
     }
   }
-#pragma deprecation_warnings
-#endif /* Tools.X509 */
 
+#if 1
+  // Old-style SSL Certificate variables.
+  // FIXME: Keep these around for at least a few major versions (10 years?).
   class CertificateListVariable
   {
     inherit Variable.FileList;
@@ -2733,6 +2685,7 @@ class StartTLSProtocol
 		     getcwd());
     }
   }
+#endif
 
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
@@ -2758,6 +2711,7 @@ class StartTLSProtocol
     //        changed callback is called. Currently you can get warnings
     //        that the files don't match if you update both variables
     //        at the same time.
+    getvar ("ssl_keys")->set_changed_callback(certificates_changed);
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
 
@@ -3817,13 +3771,7 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("draw args: %O\n", args );
 #endif
-    mixed reply;
-    if (mixed err = catch {
-	reply = draw_function( @copy_value(args), id );
-      }) {
-      master()->handle_error(err);
-      return;
-    }
+    mixed reply = draw_function( @copy_value(args), id );
 
     if( !reply ) {
 #ifdef ARG_CACHE_DEBUG
@@ -4245,6 +4193,12 @@ class ImageCache
 
       switch(format)
       {
+#if constant(Image.WebP) && constant(Image.WebP.encode)
+        case "webp":
+          // Only mixed case module
+          data = Image.WebP.encode( reply, enc_args );
+          break;
+#endif
 	case "wbf":
 	  format = "wbmp";
 	case "wbmp":
@@ -4654,6 +4608,10 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
+#ifdef ARG_CACHE_DEBUG
+	werror("draw() failed with error: %s\n",
+	       describe_backtrace(err));
+#endif
 	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
 	  // If we get an rxml error and there's no rxml context then
 	  // we're called from a direct request to the image cache.
@@ -4679,6 +4637,9 @@ class ImageCache
 	    return 0;
 	  }
 	}
+#ifdef ARG_CACHE_DEBUG
+	werror("Rethrowing error...\n");
+#endif
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
@@ -4846,6 +4807,9 @@ class ImageCache
 	    ")" );
     }
 
+    // Inhibit backups of this table.
+    master()->resolv("DBManager.inhibit_backups")("local", name);
+
     // Create index in old databases. Index is used when flushing old
     // entries. Column 'id' is included in index in order to avoid
     // reading data file.
@@ -4997,6 +4961,10 @@ class ArgCache
 	    "          INDEX(sync_time)"
 	    ")");
     }
+
+    // Inhibit backups of the arguments2 table.
+    master()->resolv("DBManager.inhibit_backups")
+      ("local", name + "2");
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
     {
@@ -5542,7 +5510,7 @@ void create()
 //report_debug( "[Configuration: %.2fms] ", (gethrtime()-s)/1000.0);
 }
 
-mixed get_locale( )
+string get_locale( )
 {
   return locale->get();
 }
@@ -6283,6 +6251,74 @@ void show_timers()
 }
 #endif
 
+void scan_certs(int|void force)
+{
+  foreach(query("CertGlobs"), string glob_pattern) {
+    glob_pattern = String.trim_all_whites(glob_pattern);
+    if (glob_pattern == "") continue;
+    if (!has_value(glob_pattern, "*") && !has_value(glob_pattern, "?")) {
+      CertDB.register_pem_file(glob_pattern);
+      continue;
+    }
+    string dir = dirname(glob_pattern);
+    string base = basename(glob_pattern);
+    array(string) dirs = ({});
+    if (has_value(dir, "*") || has_value(dir, "?")) {
+      // FIXME: Complicated case; expand the globbed dir.
+      dirs = ({ dir });
+    } else {
+      dirs = ({ dir });
+    }
+    foreach(dirs, dir) {
+      array(string) rdirs;
+      if (has_prefix(dir, "/")) {
+	// Absolute path.
+	rdirs = ({ "/" });
+      } else {
+	// lopen path
+	rdirs = map(roxenloader.package_directories, roxen_path);
+      }
+      foreach(rdirs, string rdir) {
+	array(string) paths = get_dir(combine_path(rdir, dir));
+	if (!paths) {
+#ifdef SSL3_DEBUG
+	  if (errno() != System.ENOENT) {
+	    werror("Reading PEM dir %O failed: %s\n",
+		   combine_path(rdir, dir), strerror(errno()));
+	  }
+#endif
+	  continue;
+	}
+	foreach(glob(base, paths), string fname) {
+#ifdef SSL3_DEBUG
+	  werror("Found PEM file %O, matching %O.\n",
+		 Stdio.append_path(dir, fname), glob_pattern);
+#endif
+	  CertDB.register_pem_file(Stdio.append_path(dir, fname));
+	}
+      }
+    }
+  }
+  CertDB.refresh_all_pem_files(force);
+}
+
+protected BackgroundProcess scan_certs_process;
+
+// Start a background process that scan for new certs every 10 minutes.
+protected void start_scan_certs()
+{
+  if (scan_certs_process) return;
+
+  scan_certs_process = BackgroundProcess(600, scan_certs);
+}
+
+protected void stop_scan_certs()
+{
+  if (scan_certs_process) {
+    scan_certs_process->stop();
+    scan_certs_process = UNDEFINED;
+  }
+}
 
 protected class GCTimestamp
 {
@@ -6454,7 +6490,9 @@ int main(int argc, array tmp)
   master()->resolv( "DBManager.is_module_table" )
     ( 0, "local", "compiled_formats",
       "Compiled and cached log and security pattern code. ");
-  
+  master()->resolv( "DBManager.inhibit_backups" )
+    ( "local", "compiled_formats", );
+
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
   dump( "etc/modules/DBManager.pmod" );
@@ -6475,6 +6513,103 @@ int main(int argc, array tmp)
 #if constant(SSL.File)
   add_constant( "StartTLSProtocol", StartTLSProtocol );
   add_constant( "SSLProtocol", SSLProtocol );
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_pem_files ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // lopen()-compatible path to the PEM file.
+	  "  path    VARCHAR(2047)  NOT NULL, "
+	  // Password to decode the PEM data (if any).
+	  "  pass    VARCHAR(255)       NULL, "
+	  // mtime for the PEM file at last scan.
+	  // NULL if not valid.
+	  "  mtime   INT                NULL, "
+	  // time at which the PEM file was last imported.
+	  // NULL if not imported yet.
+	  "  itime   INT                NULL, "
+	  // Hash (currently SHA256) of PEM file data at last scan.
+	  // NULL if not imported.
+	  "  hash    VARBINARY(64)      NULL, "
+	  // Index used when (un-)registering PEM files.
+	  "  INDEX   path           (path), "
+	  // Index used when rescanning PEM files.
+	  "  INDEX   itime          (itime)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "certs", "Registry of known PEM files.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS certs ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Distinguished Name for the certified subject.
+	  "  subject VARBINARY(255) NOT NULL, "
+	  // DN for the issuer of this certificate.
+	  "  issuer  VARBINARY(255) NOT NULL, "
+	  // Id for the cert that this cert is issued by.
+	  // NULL for self-signed or well known.
+	  "  parent  INT                NULL, "
+	  // Id of the source PEM file.
+	  // NULL if stale.
+	  "  pem_id  INT                NULL, "
+	  // Message number in the PEM file.
+	  // NULL if stale or refresh in progress.
+	  "  msg_no  INT DEFAULT 0      NULL, "
+	  // Expiry timestamp for the certificate.
+	  "  expires INT            NOT NULL, "
+	  // Data contained in the PEM.
+	  "  data    BLOB           NOT NULL, "
+	  // Public key hash.
+	  "  keyhash VARBINARY(64)  NOT NULL, "
+	  // Index used when refreshing a PEM file.
+	  "  INDEX                  (pem_id, msg_no), "
+	  // Index used when searching for certs matching a key.
+	  "  INDEX   keyhash        (keyhash), "
+	  // Index used when searching for issuers and refreshing the cert.
+	  "  INDEX   subject        (subject),"
+	  // Index used when searching for signed entities when
+	  // refreshing the cert.
+	  "  INDEX   issuer         (issuer)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "certs", "SSL/TLS Certificates.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_keys ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id of the source PEM file.
+	  // NULL if stale.
+	  "  pem_id  INT                NULL, "
+	  // Message number in the PEM file.
+	  // NULL if stale or refresh in progress.
+	  "  msg_no  INT DEFAULT 0      NULL, "
+	  // Public key hash.
+	  // NULL if PEM decryption unsuccessful.
+	  "  keyhash VARBINARY(64)      NULL, "
+	  // Encrypted private key ASN.1.
+	  // Encrypted with AES.CCM keyed with SHA256(cert_secret + keyhash).
+	  // NULL if PEM decryption unsuccessful.
+	  "  data    BLOB               NULL, "
+	  // Index used when refreshing a PEM file.
+	  "  INDEX                  (pem_id, msg_no), "
+	  // Index used when searching for keys matching a cert.
+	  "  INDEX   keyhash        (keyhash)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "cert_keys", "SSL/TLS Private Keys.");
+
+  dbm_cached_get("roxen")->
+    query("CREATE TABLE IF NOT EXISTS cert_keypairs ("
+	  "  id      INT            NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	  // Id for the cert.
+	  "  cert_id INT            NOT NULL, "
+	  // Id for the corresponding key.
+	  "  key_id  INT            NOT NULL, "
+	  // Display name for the keypair.
+	  "  name    VARCHAR(255)   NOT NULL DEFAULT '', "
+	  "  INDEX                  (cert_id, key_id)"
+	  ")");
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "roxen", "cert_keys", "SSL/TLS Key and Certificate matching.");
 #endif
 
   dump( "etc/modules/Variable.pmod/module.pmod" );
@@ -6582,6 +6717,7 @@ int main(int argc, array tmp)
 
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
     if (!sizeof(roxenloader.package_directories)) break;
+    CertDB.register_pem_file(file_name);
     string cert;
     if (lfile_path(file_name) == file_name) {
       file_name = roxen_path (roxenloader.package_directories[0] + "/" +
@@ -6678,6 +6814,10 @@ int main(int argc, array tmp)
     }
   }
 
+  // Update the certificate registry before opening any ports.
+  // NB: Force all certificate files to be reread and reparsed.
+  scan_certs(1);
+
   enable_configurations();
 
   string pid_file = Getopt.find_option(argv, "p", "pid-file");
@@ -6707,6 +6847,7 @@ int main(int argc, array tmp)
 #endif
 #endif /* THREADS */
 
+  start_scan_certs();
   start_hourly_maintenance();
 
 #ifdef TEST_EUID_CHANGE

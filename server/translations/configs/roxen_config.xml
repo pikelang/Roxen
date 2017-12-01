@@ -11,6 +11,7 @@
   <file>../base_server/configuration.pike</file>
   <file>../base_server/global_variables.pike</file>
   <file>../base_server/module_support.pike</file>
+  <file>../base_server/roxen.pike</file>
   <file>../config_interface/actions/fsgarb.pike</file>
   <file>../config_interface/actions/index.html</file>
   <file>../config_interface/boxes/Box.pmod</file>

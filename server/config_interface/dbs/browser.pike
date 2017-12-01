@@ -966,23 +966,49 @@ mapping|string parse( RequestID id )
 
   array(mapping) lis = ({});
 
-  if (id->variables->db == "local") {
-    ADD_LI(_(546, "Internal data that cannot be shared between servers."), 0);
+// <<<<<<< HEAD
+//   if (id->variables->db == "local") {
+//     ADD_LI(_(546, "Internal data that cannot be shared between servers."), 0);
+//     res += "<li>" +
+//       _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
+//   }
+//   else if (id->variables->db == "shared") {
+//     ADD_LI(_(547, "Internal data that may be shared between servers."), 0);
+//     res += "<li>" +
+//       _(547, "Internal data that may be shared between servers.") + "</li>\n";
+//   }
+//   else if( !url ) {
+//     ADD_LI("Internal database.", 0);
+//     res += "<li>Internal database.</li>\n";
+//   }
+//   else {
+//     ADD_LI("Database URL: " + Roxen.html_encode_string(url), 0);
+//     res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+// =======
+  switch(id->variables->db) {
+  case "local":
     res += "<li>" +
       _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
-  }
-  else if (id->variables->db == "shared") {
-    ADD_LI(_(547, "Internal data that may be shared between servers."), 0);
+    break;
+  case "shared":
     res += "<li>" +
       _(547, "Internal data that may be shared between servers.") + "</li>\n";
-  }
-  else if( !url ) {
-    ADD_LI("Internal database.", 0);
-    res += "<li>Internal database.</li>\n";
-  }
-  else {
-    ADD_LI("Database URL: " + Roxen.html_encode_string(url), 0);
-    res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+  case "mysql":
+    res += "<li>" +
+      _(0, "MySQL/MariaDB-internal database.") + "</li>\n";
+    break;
+  case "roxen":
+    res += "<li>" +
+      _(0, "Roxen-internal database.") + "</li>\n";
+    break;
+  default:
+    if( !url )
+      res += "<li>Internal database.</li>\n";
+    else
+      res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
+    break;
+// >>>>>>> devel
   }
 
   mapping(string:string) db_info =
@@ -995,28 +1021,28 @@ mapping|string parse( RequestID id )
   if (string c = db_info->comment) {
     c = String.trim_all_whites (c);
     if (c != "") {
-      ADD_LI(c, 0);
+      // ADD_LI(c, 0);
       res += "<li>" + Roxen.html_encode_string (c) + "</li>\n";
     }
   }
 
   string default_charset = DBManager.get_db_default_charset(id->variables->db);
   if (default_charset) {
-    ADD_LI(_(548,"Default charset:") + default_charset, 0);
+    // ADD_LI(_(548,"Default charset:") + default_charset, 0);
     res += "<li>" + _(548,"Default charset:") +
       Roxen.html_encode_string(default_charset) + "</li>";
   }
 
-  ADD_LI(sprintf(
-      (string)
-      _(506,"Member of the %s database group."),
-      "<a href='edit_group.pike?group="+
-      Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
-      "&amp;&usr.set-wiz-id;'>" +
-      DBManager.get_group( DBManager.db_group( id->variables->db ) )
-      ->lname +
-      "</a>"
-  ), 0);
+  // ADD_LI(sprintf(
+  //     (string)
+  //     _(506,"Member of the %s database group."),
+  //     "<a href='edit_group.pike?group="+
+  //     Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
+  //     "&amp;&usr.set-wiz-id;'>" +
+  //     DBManager.get_group( DBManager.db_group( id->variables->db ) )
+  //     ->lname +
+  //     "</a>"
+  // ), 0);
 
   res +="<li>" +
     sprintf( (string)
@@ -1031,10 +1057,10 @@ mapping|string parse( RequestID id )
 
   string schedule = DBManager.db_schedule(id->variables->db);
   if (schedule) {
-    ADD_LI(sprintf(
-      (string)_(1114, "Backuped via the %s backup schedule."),
-      "<a href='schedules.html'>" + (schedule) +"</a>"
-    ), 0);
+    // ADD_LI(sprintf(
+    //   (string)_(1114, "Backuped via the %s backup schedule."),
+    //   "<a href='schedules.html'>" + (schedule) +"</a>"
+    // ), 0);
     res += "<li>" +
       sprintf( (string)_(1114, "Backuped via the %s backup schedule."),
                "<a href='schedules.html'>" +
@@ -1042,7 +1068,7 @@ mapping|string parse( RequestID id )
                "</a>") +
       "</li>";
   } else {
-    ADD_LI(_(1115, "Not a member of any backup schedule."), 1);
+    // ADD_LI(_(1115, "Not a member of any backup schedule."), 1);
     res += "<li><b>" +
       _(1115, "Not a member of any backup schedule.") +
       "</b></li>";
@@ -1131,8 +1157,19 @@ mapping|string parse( RequestID id )
 
       int deep_info = id->variables->table == table;
 
+      array(string) extra_css = ({});
+
+      if (deep_info) {
+        extra_css += ({ "tbl-open" });
+      }
+
+      if (tbl_info->inhibit_backups) {
+        extra_css += ({ "inhibit-backups" });
+      }
+
+// <<<<<<< HEAD
       string res = "<tr id='tbl-" + Roxen.http_encode_url(table) + "'" +
-        (deep_info ? " class='tbl-open'" : "") +
+        (sizeof(extra_css) ? sprintf(" class='%s'", extra_css*" ") : "") +
         ">"
         "<td class='nowrap'>"
         "<a href='browser.pike?sort=&form.sort:http;&amp;"
@@ -1148,19 +1185,49 @@ mapping|string parse( RequestID id )
          sprintf ("%d KiB",
                   ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
         "</td>";
+// =======
+//       string res =
+// 	"<tr" +
+// 	(tbl_info->inhibit_backups == "yes"?
+// 	 " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
+// 	">"
+// 	"<td style='white-space: nowrap'>"
+// 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
+// 	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
+// 	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
+// 	"<cimg style='vertical-align: -2px' border='0' format='gif'"
+// 	" src='&usr.table-small;' alt='' max-height='12'/> " +
+// 	table+"</a></td>"
+// 	"<td class='num'>"+
+// 	(!tbi || zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
+// 	"<td class='num'>" +
+// 	(!tbi || zero_type (tbi->data_length) ? "" :
+// 	 sprintf ("%d KiB",
+// 		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
+// 	"</td>";
+// >>>>>>> devel
 
       string owner;
       if ((db_info->conf || "") != (tbl_info->conf || ""))
         owner = format_table_owner (tbl_info, 0);
       else if ((db_info->module || "") != (tbl_info->module || ""))
+// <<<<<<< HEAD
         owner = format_table_owner (tbl_info, 1);
       if (owner) {
         res += "<td>" + String.capitalize (owner) + "</td>";
         got_owner_column = 1;
+// =======
+// 	owner = format_table_owner (tbl_info, 1);
+//       res += "<td>";
+//       if (owner) {
+// 	res += owner;
+// 	got_owner_column = 1;
+// >>>>>>> devel
       }
-      else res += "<td></td>";
+      res += "</td>";
 
       if (deep_info) {
+// <<<<<<< HEAD
         res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
 
         if (tbl_info->comment)
@@ -1191,7 +1258,42 @@ mapping|string parse( RequestID id )
           }
         }
 
+        if (tbl_info->inhibit_backups == "yes") {
+          res += _(0, "The table is not included in backups of this database.") +
+            "<br />\n";
+        }
+
         res += deep_table_info (table) + "</td></tr>\n";
+// =======
+// 	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
+
+// 	if (tbl_info->comment)
+// 	  sscanf( tbl_info->comment, "%s\0%s",
+// 		  tbl_info->tbl, tbl_info->comment );
+
+// 	if( tbl_info->tbl && tbl_info->tbl != table)
+// 	  if( tbl_info->tbl != (string)0 )
+// 	    res +=
+// 	      sprintf((string) _(429,"The table is known as %O "
+// 				 "in the module."), tbl_info->tbl ) + "<br/>\n";
+// 	  else
+// 	    res +=
+// 	      sprintf((string) _(430,"The table is an anonymous table defined "
+// 				 "by the module."), tbl_info->tbl ) + "<br/>\n";
+
+// 	if (string c = tbl_info->comment) {
+// 	  c = String.trim_all_whites (c);
+// 	  if (c != "" && c != "0")
+// 	    res += Roxen.html_encode_string (c) + "<br/>\n";
+// 	}
+
+// 	if (tbl_info->inhibit_backups == "yes") {
+// 	  res += _(0, "The table is not included in backups of this database.") +
+// 	    "<br />\n";
+// 	}
+
+// 	res += deep_table_info (table) + "</td></tr>\n";
+// >>>>>>> devel
       }
       else
         res += "</tr>\n";

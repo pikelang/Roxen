@@ -3568,7 +3568,7 @@ private int|array internal_tag_select(string t, mapping m, string c,
   parser->ignore_unknown (1);
   parser->case_insensitive_tag (1);
   string res = parser->finish(c)->read() + finish_tag();
-
+  parser = 0; // Avoid trampoline garbage through callback functions.
   return ({ RXML.t_xml->format_tag (t, m, res) });
 }
 

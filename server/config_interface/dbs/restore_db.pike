@@ -26,29 +26,55 @@ mapping|string parse( RequestID id )
 
   if( !id->variables->db)
   {
+// <<<<<<< HEAD
     if (!sizeof(bks)) {
       return "<div class='notify'>" + res + "</div>";
     }
     res += "<table class='nice'>\n"
       "<thead><tr><th>" + _(463, "Database") +
       "</th><th>"+_(405,"Directory")+
-      "</th><th>"+_(459,"Date")+"</th></tr></thead>\n";
+      "</th><th>&nbsp;</th><th>"+_(459,"Date")+"</th></tr></thead>\n";
+// =======
+//     res += "<style type='text/css'>\n"
+//       ".dbrestore { border-spacing: 0; }\n"
+//       ".dbrestore td, .dbrestore th { padding: 2px 4px 2px 0; }\n"
+//       ".dbrestore td:last-child, .dbrestore th:last-child { padding-right: 0; }\n"
+//       ".dbrestore th { border-bottom: 1px solid black; }\n"
+//       ".dbrestore .flag { font-size: smaller; }\n"
+//       ".dbrestore .date { font-size: smaller; white-space: nowrap; }\n"
+//       "</style>\n"
+//       "<table width='100%' class='dbrestore'>\n"
+//       "<tr><th colspan='2' align='left'>" + _(463, "Database") +
+//       "</th><th align='left'>"+_(405,"Directory")+
+//       "</th><th>&nbsp;</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
+// >>>>>>> devel
     foreach( sort( indices( bks ) ), string bk )
     {
-#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      string extra = "";
       // Hide the Roxen-internal databases.
-      if ((<"roxen", "mysql">)[bk]) continue;
+      if ((<"roxen", "mysql">)[bk]) {
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+	continue;
+#else
+	extra = " " + _(0, "(Roxen-internal database)");
 #endif
+      }
       mapping done = ([ ]);
-      res += "<tr class='column-hdr'><td colspan='3'>" +
-	Roxen.html_encode_string(bk) + "</td></tr>\n";
+// <<<<<<< HEAD
+      res += "<tr class='column-hdr'><td colspan='4'>" +
+	Roxen.html_encode_string(bk + extra) + "</td></tr>\n";
+// =======
+//       res += "<tr><td colspan='4'>" +
+//         Roxen.html_encode_string(bk + extra) +
+//         "</td></tr>\n";
+// >>>>>>> devel
 
       foreach( bks[bk], mapping b )
       {
 	if( !done[b->directory] )
 	{
 	  done[b->directory] = ({
-	    b->whn, b->directory,
+	    (int)b->whn, b->directory,
 	    ({ b->tbl }),
 	    "<link-gbutton href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&amp;dir="+Roxen.html_encode_string( b->directory )+
@@ -64,12 +90,26 @@ mapping|string parse( RequestID id )
 	  done[b->directory][2] += ({ b->tbl });
       }
 
-      foreach( sort( values( done ) ), array r )
+      foreach(sort(indices(done)), string dir)
       {
+	[int when, string d, array(string) tables, string buttons] = done[dir];
 	res += "<tr>";
-	res += "  <td>"+r[3]+"</td>\n";
-	res += "  <td>"+r[1]+"</td>\n";
-	res += "  <td>"+isodate((int)r[0])+"</td>\n";
+// <<<<<<< HEAD
+// 	res += "  <td>"+r[3]+"</td>\n";
+// 	res += "  <td>"+r[1]+"</td>\n";
+// 	res += "  <td>"+isodate((int)r[0])+"</td>\n";
+// =======
+	res += "  <td>&nbsp;</td>\n";
+	res += "  <td>" + buttons + "</td>\n";
+	res += "  <td><tt>" + d + "</tt></td>";
+	if (has_value(tables, "")) {
+	  // In progress marker.
+	  res += "<td class='flag'><em>" + _(0, "Incomplete") + "<em></td>";
+	} else {
+	  res += "<td>&nbsp;</td>\n";
+	}
+	res += "  <td class='date'>" + isodate(when) + "</td>\n";
+// >>>>>>> devel
 	res += "</tr>\n";
       }
     }
@@ -97,7 +137,7 @@ mapping|string parse( RequestID id )
     {
       array possible = ({});
       foreach( bks[ id->variables->db ], mapping bk )
-	if( bk->directory == id->variables->dir )
+	if( bk->directory == id->variables->dir && sizeof(bk->tbl) )
 	  possible += ({ bk->tbl });
 
       res += "<h3>"+
