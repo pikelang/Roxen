@@ -1,0 +1,20 @@
+subject: Roxen 6.0: Fixes to https fetching.
+from: 86da97a28e601fa51b92755bb5cece019c3b94ed
+to: 972b4e6cd75d3529fe3121a01d973459ffd70599
+originator: Erik Allemann
+depends: 2017-10-30T132438
+restart: true
+
+• FSGC: Avoid using DefaultMonitor implementation [EP-329]
+
+• FSGC: Fixed some typos.
+
+• FSGC [DEBUG]: Don't claim that the root directory is getting deleted.
+
+• FSGC: Pedantic threshold fix.
+
+• FSGC: Restore stable change notification after override.
+
+Fixes [EP-329] Comment #1.
+
+• FSGC: Override accelerated stable change notification [EP-327]
