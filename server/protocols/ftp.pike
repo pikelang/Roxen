@@ -833,6 +833,7 @@ class LSFile
 		    ({ "\\n", "\\r", "\\\\", "\\\"", "\\\'", "\\020" })) +
 	    "\"";
 	}
+	short = string_to_utf8(short);
 	if (flags & LS_FLAG_F) {
 	  if (st[1] < 0) {
 	    // Directory
@@ -1642,10 +1643,10 @@ class FTPSession
 
     if (sizeof(s)) {
       if (to_send->is_empty()) {
-	to_send->put(s);
+	to_send->put(string_to_utf8(s));
 	::set_write_callback(write_cb);
       } else {
-	to_send->put(s);
+	to_send->put(string_to_utf8(s));
       }
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
@@ -1735,6 +1736,7 @@ class FTPSession
 
   private string fix_path(string s)
   {
+    mixed err = catch { s = utf8_to_string(s); };
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
 	return(cwd);
@@ -3992,6 +3994,7 @@ class FTPSession
       a -= ({ "CCC" });
     }
     a += ({ "TVFS" });	// RFC 3659
+    a += ({ "UTF8" });	// RFC 2640
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
