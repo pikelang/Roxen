@@ -34,8 +34,12 @@
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  * RFC 2228	FTP Security Extensions
+ * RFC 2389	Feature negotiation mechanism for the FTP
  * RFC 2428	FTP Extensions for IPv6 and NATs
+ * RFC 2640	Internationalization of the FTP
  * RFC 3659	Extensions to FTP
+ * RFC 5797	FTP Command and Extension Registry
+ * RFC 7151	FTP HOST Command for Virtual Hosts
  *
  * RFC's with recomendations and discussions:
  *
@@ -51,6 +55,7 @@
  * RFC's describing gateways and proxies:
  *
  * RFC 1415	FTP-FTAM Gateway Specification
+ * RFC 6384	FTP Application Layer Gateway (ALG) for IPv4-to-IPv6 Translation
  *
  * More or less obsolete RFC's:
  *
@@ -1380,19 +1385,25 @@ class FTPSession
     "CLNT":"<sp> <client-name> <sp> <client-version> "
     "[<sp> <optional platform info>] (Set client name)",
 
-    // The following are in
-    // "Extended Directory Listing, TVFS, and Restart Mechanism for FTP"
-    // IETF draft 4.
-    "FEAT":"(Feature list)",
+    // These are from RFC 7151
+    "HOST":"<sp> hostname (Host name)",
+
+    // These are from RFC 3659
     "MDTM":"<sp> path-name (Modification time)",
     "SIZE":"<sp> path-name (Size)",
     "MLST":"<sp> path-name (Machine Processing List File)",
     "MLSD":"<sp> path-name (Machine Processing List Directory)",
-    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
+
+    // These are from RFC 2640
+    "LANG":"<sp> lang-tag (Change Interface Language)",
 
     // These are from RFC 2428
     "EPRT":"<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)",
     "EPSV":"[<sp> net-prt|ALL] (Extended Address Passive Mode)",
+
+    // These are from RFC 2389
+    "FEAT":"(Feature list)",
+    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
 
     // These are from RFC 2228 (FTP Security Extensions)
     "AUTH":"security-mechanism (Authentication/Security Mechanism)",
@@ -3980,7 +3991,7 @@ class FTPSession
       // ftps.
       a -= ({ "CCC" });
     }
-    a += ({ "TVFS" });
+    a += ({ "TVFS" });	// RFC 3659
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
