@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>prot_ftp</project>
+<language>eng</language>
+<file>../protocols/ftp.pike</file>
+<file>../protocols/ftp.pike.new</file>
+
+
+<str id="1">
+<o>&lt;sp&gt; &lt;client-name&gt; &lt;sp&gt; &lt;client-version&gt; [&lt;sp&gt; &lt;optional platform info&gt;] (Set client name)</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>&lt;sp&gt; hostname (Host name)</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>&lt;sp&gt; path-name (Modification time)</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>&lt;sp&gt; path-name (Size)</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>&lt;sp&gt; path-name (Machine Processing List File)</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>&lt;sp&gt; path-name (Machine Processing List Directory)</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>&lt;sp&gt; lang-tag (Change Interface Language)</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>&lt;sp&gt; &lt;d&gt;net-prt&lt;d&gt;net-addr&lt;d&gt;tcp-port&lt;d&gt; (Extended Address Port)</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>[&lt;sp&gt; net-prt|ALL] (Extended Address Passive Mode)</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>(Feature list)</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>&lt;sp&gt; command &lt;sp&gt; options (Set Command-specific Options)</o>
+<t></t>
+</str>
+
+<str id="12">
+<o>security-mechanism (Authentication/Security Mechanism)</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>security-data (Authentication/Security Data)</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>&lt;sp&gt; size (Protection Buffer SiZe)</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>&lt;sp&gt; [ C | S | E | P ] (Data Channel Protection Level)</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>(Clear Command Channel)</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>command (Integrity Protected Command)</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>command (Confidentiality Protected Command)</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>command (Privacy Protected Command)</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>&lt;sp&gt; &lt;long-host-port&gt; (Long Port)</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>(Long Passive)</o>
+<t></t>
+</str>
+
+<str id="22">
+<o>&lt;sp&gt; username (Change user)</o>
+<t></t>
+</str>
+
+<str id="23">
+<o>&lt;sp&gt; password (Change password)</o>
+<t></t>
+</str>
+
+<str id="24">
+<o>&lt;sp&gt; &lt;account-information&gt; (Account)</o>
+<t></t>
+</str>
+
+<str id="25">
+<o>[ &lt;sp&gt; directory-name ] (Change working directory)</o>
+<t></t>
+</str>
+
+<str id="26">
+<o>(Change to parent directory)</o>
+<t></t>
+</str>
+
+<str id="27">
+<o>&lt;sp&gt; &lt;pathname&gt; (Structure mount)</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>(Reinitialize)</o>
+<t></t>
+</str>
+
+<str id="29">
+<o>(Terminate service)</o>
+<t></t>
+</str>
+
+<str id="30">
+<o>&lt;sp&gt; b0, b1, b2, b3, b4 (Set port IP and number)</o>
+<t></t>
+</str>
+
+<str id="31">
+<o>(Set server in passive mode)</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>&lt;sp&gt; [ A | E | I | L ] (Ascii, Ebcdic, Image, Local)</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>&lt;sp&gt; &lt;structure-code&gt; (File structure)</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>&lt;sp&gt; &lt;mode-code&gt; (Transfer mode)</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>&lt;sp&gt; &lt;decimal-integer&gt; [&lt;sp&gt; R &lt;sp&gt; &lt;decimal-integer&gt;] (Allocate space for file)</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>&lt;sp&gt; marker (Set restart marker)</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>&lt;sp&gt; file-name (Store file)</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>(Store file with unique name)</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>&lt;sp&gt; file-name (Retreive file)</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>[ &lt;sp&gt; &lt;pathname&gt; ] (List directory)</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>&lt;sp&gt; &lt;pathname&gt; (Append file)</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>&lt;sp&gt; &lt;pathname&gt; (Rename from)</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>&lt;sp&gt; &lt;pathname&gt; (Rename to)</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>&lt;sp&gt; file-name (Delete file)</o>
+<t></t>
+</str>
+
+<str id="45">
+<o>&lt;sp&gt; &lt;pathname&gt; (Remove directory)</o>
+<t></t>
+</str>
+
+<str id="46">
+<o>&lt;sp&gt; &lt;pathname&gt; (Make directory)</o>
+<t></t>
+</str>
+
+<str id="47">
+<o>(Return current directory)</o>
+<t></t>
+</str>
+
+<str id="48">
+<o>(Abort current transmission)</o>
+<t></t>
+</str>
+
+<str id="49">
+<o>(Get type of operating system)</o>
+<t></t>
+</str>
+
+<str id="50">
+<o>[ &lt;sp&gt; &lt;pathname&gt; ] (Status for server/file)</o>
+<t></t>
+</str>
+
+<str id="51">
+<o>[ &lt;sp&gt; &lt;string&gt; ] (Give help)</o>
+<t></t>
+</str>
+
+<str id="52">
+<o>&lt;sp&gt; &lt;string&gt; (Site parameters)</o>
+<t></t>
+</str>
+
+<str id="53">
+<o>(No operation)</o>
+<t></t>
+</str>
+
+<str id="54">
+<o>&lt;sp&gt; path-name (Make directory)</o>
+<t></t>
+</str>
+
+<str id="55">
+<o>&lt;sp&gt; path-name (Remove directory)</o>
+<t></t>
+</str>
+
+<str id="56">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Mail to user)</o>
+<t></t>
+</str>
+
+<str id="57">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Mail send to terminal)</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Mail send to terminal or mailbox)</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Mail send to terminal and mailbox)</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>[&lt;sp&gt; &lt;scheme&gt;] (Mail recipient scheme question)</o>
+<t></t>
+</str>
+
+<str id="61">
+<o>&lt;sp&gt; &lt;recipient name&gt; (Mail recipient)</o>
+<t></t>
+</str>
+
+<str id="62">
+<o>[&lt;sp&gt; &lt;scheme&gt;] (Scheme selection)</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>&lt;sp&gt; &lt;recipient name&gt; (Recipient specification)</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Send to terminal)</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Send, mail if can't)</o>
+<t></t>
+</str>
+
+<str id="66">
+<o>[&lt;sp&gt; &lt;recipient name&gt;] (Mail and send)</o>
+<t></t>
+</str>
+
+<str id="67">
+<o>(Logout)</o>
+<t></t>
+</str>
+
+<str id="68">
+<o>&lt;sp&gt; &lt;bits&gt; (Byte size)</o>
+<t></t>
+</str>
+
+<str id="69">
+<o>&lt;sp&gt; host-socket (Data socket)</o>
+<t></t>
+</str>
+
+<str id="70">
+<o>&lt;sp&gt; &lt;recipient name&gt; (Initiate mail to user)</o>
+<t></t>
+</str>
+
+<str id="71">
+<o>&lt;sp&gt; &lt;sender name&gt; (Mail from)</o>
+<t></t>
+</str>
+
+<str id="72">
+<o>&lt;sp&gt; [ U | O | L ] (Mail type)</o>
+<t></t>
+</str>
+
+<str id="73">
+<o>[&lt;sp&gt; &lt;mail unique id&gt;] (Mail record)</o>
+<t></t>
+</str>
+
+<str id="74">
+<o>&lt;sp&gt; &lt;author id&gt; (Mail author)</o>
+<t></t>
+</str>
+
+<str id="75">
+<o>&lt;sp&gt; &lt;title&gt; (Mail title/subject)</o>
+<t></t>
+</str>
+
+<str id="76">
+<o>(Mail acknowledge)</o>
+<t></t>
+</str>
+
+<str id="77">
+<o>(Mail text)</o>
+<t></t>
+</str>
+
+<str id="78">
+<o>&lt;sp&gt; &lt;filename&gt; (Mail file)</o>
+<t></t>
+</str>
+
+<str id="79">
+<o>&lt;sp&gt; &lt;file name&gt; (Mail citation)</o>
+<t></t>
+</str>
+
+<str id="80">
+<o>(Mail file)</o>
+<t></t>
+</str>
+
+<str id="81">
+<o>&lt;sp&gt; mode &lt;sp&gt; file</o>
+<t></t>
+</str>
+
+<str id="82">
+<o>&lt;sp&gt; mode</o>
+<t></t>
+</str>
+
+<str id="83">
+<o>&lt;sp&gt; prestate</o>
+<t></t>
+</str>
+
+<str id="84">
+<o>&lt;sp&gt; &lt;fact-list&gt;</o>
+<t></t>
+</str>
+
+<str id="85">
+<o>Transfer complete.</o>
+<t></t>
+</str>
+
+<str id="86">
+<o>Syntax: %s %s</o>
+<t></t>
+</str>
+
+<str id="87">
+<o>'%s': %s: Redirect to %O.</o>
+<t></t>
+</str>
+
+<str id="88">
+<o>'%s': %s: Redirect.</o>
+<t></t>
+</str>
+
+<str id="89">
+<o>'%s': %s: Access denied.</o>
+<t></t>
+</str>
+
+<str id="90">
+<o>'%s': %s: Forbidden.</o>
+<t></t>
+</str>
+
+<str id="91">
+<o>'%s': %s: Method not allowed.</o>
+<t></t>
+</str>
+
+<str id="92">
+<o>'%s': %s: File already exists.</o>
+<t></t>
+</str>
+
+<str id="93">
+<o>'%s': Requested action aborted: local error in processing.</o>
+<t></t>
+</str>
+
+<str id="94">
+<o>'%s': %s: No such file or directory.</o>
+<t></t>
+</str>
+
+<str id="95">
+<o>%s: not a plain file.</o>
+<t></t>
+</str>
+
+<str id="96">
+<o>%s: Error, can't open file.</o>
+<t></t>
+</str>
+
+<str id="97">
+<o>Opening %s data connection for %s (%d bytes).</o>
+<t></t>
+</str>
+
+<str id="98">
+<o>Opening %s mode data connection for %s</o>
+<t></t>
+</str>
+
+<str id="99">
+<o>Can't build data connect: Connection refused.</o>
+<t></t>
+</str>
+
+<str id="100">
+<o>Opening %s mode data connection for %s.</o>
+<t></t>
+</str>
+
+<str id="101">
+<o>%s: Need account for storing files.</o>
+<t></t>
+</str>
+
+<str id="102">
+<o>%s: Quota exceeded.</o>
+<t></t>
+</str>
+
+<str id="103">
+<o>%s: Command not implemented.</o>
+<t></t>
+</str>
+
+<str id="104">
+<o>%s: Error opening file.</o>
+<t></t>
+</str>
+
+<str id="105">
+<o>OK</o>
+<t></t>
+</str>
+
+<str id="106">
+<o>Server ready for new user.</o>
+<t></t>
+</str>
+
+<str id="107">
+<o>Unknown authentication mechanism.</o>
+<t></t>
+</str>
+
+<str id="108">
+<o>TLS not configured.</o>
+<t></t>
+</str>
+
+<str id="109">
+<o>TLS enabled.</o>
+<t></t>
+</str>
+
+<str id="110">
+<o>Command connection not protected.</o>
+<t></t>
+</str>
+
+<str id="111">
+<o>Not allowed for ftps.</o>
+<t></t>
+</str>
+
+<str id="112">
+<o>TLS disabled.</o>
+<t></t>
+</str>
+
+<str id="113">
+<o>Anonymous ftp, at your service</o>
+<t></t>
+</str>
+
+<str id="114">
+<o>Anonymous ftp accepted, send your complete e-mail address as password.</o>
+<t></t>
+</str>
+
+<str id="115">
+<o>Too many anonymous users (%d).</o>
+<t></t>
+</str>
+
+<str id="116">
+<o>Anonymous ftp disabled</o>
+<t></t>
+</str>
+
+<str id="117">
+<o>You need to AUTH TLS first.</o>
+<t></t>
+</str>
+
+<str id="118">
+<o>Password required for %s.</o>
+<t></t>
+</str>
+
+<str id="119">
+<o>Concurrent session limit (%d) exceeded for user "%s".</o>
+<t></t>
+</str>
+
+<str id="120">
+<o>Guest login ok, access restrictions apply.</o>
+<t></t>
+</str>
+
+<str id="121">
+<o>Login with USER first.</o>
+<t></t>
+</str>
+
+<str id="122">
+<o>User %s access denied.</o>
+<t></t>
+</str>
+
+<str id="123">
+<o>Guest user %s logged in.</o>
+<t></t>
+</str>
+
+<str id="124">
+<o>Too many anonymous/guest users (%d).</o>
+<t></t>
+</str>
+
+<str id="125">
+<o>You are not allowed to use named-ftp.</o>
+<t></t>
+</str>
+
+<str id="126">
+<o>Try using anonymous, or check /etc/shells</o>
+<t></t>
+</str>
+
+<str id="127">
+<o>Too many concurrent sessions (limit is %d).</o>
+<t></t>
+</str>
+
+<str id="128">
+<o>User %s logged in.</o>
+<t></t>
+</str>
+
+<str id="129">
+<o>%s: No such file or directory, or access denied.</o>
+<t></t>
+</str>
+
+<str id="130">
+<o>%s: Not a directory.</o>
+<t></t>
+</str>
+
+<str id="131">
+<o>Current directory is now %s.</o>
+<t></t>
+</str>
+
+<str id="132">
+<o>Please read the file %s.</o>
+<t></t>
+</str>
+
+<str id="133">
+<o>It was last modified %s - %d days ago.</o>
+<t></t>
+</str>
+
+<str id="134">
+<o>Bye! It was nice talking to you!</o>
+<t></t>
+</str>
+
+<str id="135">
+<o>Only allowed for authenticated command connections.</o>
+<t></t>
+</str>
+
+<str id="136">
+<o>Unknown protection level: %s</o>
+<t></t>
+</str>
+
+<str id="137">
+<o>Only supported over TLS.</o>
+<t></t>
+</str>
+
+<str id="138">
+<o>'PORT': Method not allowed in EPSV ALL mode.</o>
+<t></t>
+</str>
+
+<str id="139">
+<o>I don't understand your parameters.</o>
+<t></t>
+</str>
+
+<str id="140">
+<o>PORT command ok (%s port %d)</o>
+<t></t>
+</str>
+
+<str id="141">
+<o>'EPRT': Method not allowed in EPSV ALL mode.</o>
+<t></t>
+</str>
+
+<str id="142">
+<o>Invalid delimiter.</o>
+<t></t>
+</str>
+
+<str id="143">
+<o>Network protocol not supported, use (1 or 2)</o>
+<t></t>
+</str>
+
+<str id="144">
+<o>Bad IPv4 address: '%s'</o>
+<t></t>
+</str>
+
+<str id="145">
+<o>Bad IPv6 address: '%s'</o>
+<t></t>
+</str>
+
+<str id="146">
+<o>Bad port number: '%s'</o>
+<t></t>
+</str>
+
+<str id="147">
+<o>EPRT command ok (%d port %d)</o>
+<t></t>
+</str>
+
+<str id="148">
+<o>'PASV': Method not allowed in EPSV ALL mode.</o>
+<t></t>
+</str>
+
+<str id="149">
+<o>'PASV': Method not allowed on IPv6 connections.</o>
+<t></t>
+</str>
+
+<str id="150">
+<o>Requested action aborted: Out of ports.</o>
+<t></t>
+</str>
+
+<str id="151">
+<o>Entering Passive Mode.</o>
+<t></t>
+</str>
+
+<str id="152">
+<o>Entering EPSV ALL mode.</o>
+<t></t>
+</str>
+
+<str id="153">
+<o>Network protocol not supported, use %s.</o>
+<t></t>
+</str>
+
+<str id="154">
+<o>Entering Extended Passive Mode</o>
+<t></t>
+</str>
+
+<str id="155">
+<o>'TYPE': Unknown type: %s</o>
+<t></t>
+</str>
+
+<str id="156">
+<o>Using %s mode for transferring files.</o>
+<t></t>
+</str>
+
+<str id="157">
+<o>'RETR': Error restoring restart point.</o>
+<t></t>
+</str>
+
+<str id="158">
+<o>'REST' ok</o>
+<t></t>
+</str>
+
+<str id="159">
+<o>Data transmission terminated.</o>
+<t></t>
+</str>
+
+<str id="160">
+<o>'ABOR' Completed.</o>
+<t></t>
+</str>
+
+<str id="161">
+<o>"%s" is current directory.</o>
+<t></t>
+</str>
+
+<str id="162">
+<o>%s ok, waiting for destination name.</o>
+<t></t>
+</str>
+
+<str id="163">
+<o>%s: no such file or permission denied.</o>
+<t></t>
+</str>
+
+<str id="164">
+<o>RNFR needed before RNTO.</o>
+<t></t>
+</str>
+
+<str id="165">
+<o>%s moved to %s.</o>
+<t></t>
+</str>
+
+<str id="166">
+<o>Bad OPTS command: '%s'</o>
+<t></t>
+</str>
+
+<str id="167">
+<o>OPTS command '%s' is not currently supported.</o>
+<t></t>
+</str>
+
+<str id="168">
+<o>'OPTS MLST %s': incorrect arguments</o>
+<t></t>
+</str>
+
+<str id="169">
+<o>%s deleted.</o>
+<t></t>
+</str>
+
+<str id="170">
+<o>%s is a module mountpoint.</o>
+<t></t>
+</str>
+
+<str id="171">
+<o>%s is not a directory.</o>
+<t></t>
+</str>
+
+<str id="172">
+<o>"%s" created.</o>
+<t></t>
+</str>
+
+<str id="173">
+<o>Unsupported language: %s</o>
+<t></t>
+</str>
+
+<str id="174">
+<o>Language set to %s</o>
+<t></t>
+</str>
+
+<str id="175">
+<o>Ok, gottcha!</o>
+<t></t>
+</str>
+
+<str id="176">
+<o>The following features are supported:</o>
+<t></t>
+</str>
+
+<str id="177">
+<o>%s FTP server status:
+Version %s
+Listening on %s
+Connected to %s
+Logged in %s
+TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s
+End of status</o>
+<t></t>
+</str>
+
+<str id="178">
+<o>Status of "%s".</o>
+<t></t>
+</str>
+
+<str id="179">
+<o>Nothing done ok</o>
+<t></t>
+</str>
+
+<str id="180">
+<o>The following commands are recognized (* =&gt;'s unimplemented):</o>
+<t></t>
+</str>
+
+<str id="181">
+<o>The following SITE commands are recognized:</o>
+<t></t>
+</str>
+
+<str id="182">
+<o>Syntax: SITE %s %s</o>
+<t></t>
+</str>
+
+<str id="183">
+<o>Unknown SITE command %s.</o>
+<t></t>
+</str>
+
+<str id="184">
+<o>The following OPTS commands are recognized:</o>
+<t></t>
+</str>
+
+<str id="185">
+<o>Syntax: OPTS %s %s</o>
+<t></t>
+</str>
+
+<str id="186">
+<o>Unknown OPTS command %s.</o>
+<t></t>
+</str>
+
+<str id="187">
+<o>Syntax: %s %s%s</o>
+<t></t>
+</str>
+
+<str id="188">
+<o>Unknown command %s.</o>
+<t></t>
+</str>
+
+<str id="189">
+<o>Bad SITE command: '%s'</o>
+<t></t>
+</str>
+
+<str id="190">
+<o>SITE command '%s' is not currently supported.</o>
+<t></t>
+</str>
+
+<str id="191">
+<o>'SITE CHMOD %s': incorrect arguments</o>
+<t></t>
+</str>
+
+<str id="192">
+<o>SITE CHMOD: mode should be between 0 and 0777</o>
+<t></t>
+</str>
+
+<str id="193">
+<o>Changed permissions of %s to 0%o.</o>
+<t></t>
+</str>
+
+<str id="194">
+<o>'SITE UMASK %s': incorrect arguments</o>
+<t></t>
+</str>
+
+<str id="195">
+<o>SITE UMASK: mode should be between 0 and 0777</o>
+<t></t>
+</str>
+
+<str id="196">
+<o>Umask set to 0%o.</o>
+<t></t>
+</str>
+
+<str id="197">
+<o>Prestate cleared</o>
+<t></t>
+</str>
+
+<str id="198">
+<o>Prestate set</o>
+<t></t>
+</str>
+
+<str id="199">
+<o>Connection timed out.</o>
+<t></t>
+</str>
+
+<str id="200">
+<o>You need to login first.</o>
+<t></t>
+</str>
+
+<str id="201">
+<o>support for '%s' is disabled.</o>
+<t></t>
+</str>
+
+<str id="202">
+<o>'%s' is not currently supported.</o>
+<t></t>
+</str>
+
+<str id="203">
+<o>Unknown command '%s'.</o>
+<t></t>
+</str>

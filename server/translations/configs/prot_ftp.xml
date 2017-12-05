@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project name="prot_ftp">
+<baselang>eng</baselang>
+<xmlpath>../translations/%L/prot_ftp.xml</xmlpath>
+
+  <file>../protocols/ftp.pike.new</file>
+  <file>../protocols/ftp.pike</file>
+</project>
