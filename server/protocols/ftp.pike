@@ -86,7 +86,7 @@
  */
 
 
-#include <config.h>
+#include <roxen.h>
 #include <module.h>
 #include <stat.h>
 
@@ -106,6 +106,11 @@
 #else
 # define DWRITE(X ...)
 #endif
+
+//<locale-token project="prot_ftp">LOCALE</locale-token>
+#define LOCALE(X,Y)     _DEF_LOCALE("prot_ftp",X,Y)
+// end of the locale related stuff
+
 
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
 
@@ -1701,6 +1706,40 @@ class FTPSession
   roxen.Protocol port_obj;
 
   /*
+   * Locale & Language handling
+   */
+
+  protected string format_langlist()
+  {
+    array(string) langs = Locale.list_languages("prot_ftp") + ({});
+    string current = roxen.get_locale();
+
+    foreach(langs; int i; string lang) {
+      if (lang == current) {
+	langs[i] = current + "*";
+	current = 0;
+	break;
+      }
+    }
+
+    if (current) {
+      langs += ({ current + "*" });
+    }
+
+    return sort(langs) * ";";
+  }
+
+  protected void restore_locale()
+  {
+    string lang = master_session->misc["accept-language"];
+    if (lang) {
+      roxen.set_locale(lang);
+    } else {
+      roxen.set_locale();
+    }
+  }
+
+  /*
    * Misc
    */
 
@@ -2101,6 +2140,8 @@ class FTPSession
 
     touch_me();
 
+    restore_locale();
+
     if(!file->len)
       file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
@@ -2233,6 +2274,8 @@ class FTPSession
     DWRITE("FTP: connected_to_receive(X, %O, %O)\n", data, args);
 
     touch_me();
+
+    restore_locale();
 
     if (fd) {
       send(150, ({ sprintf("Opening %s mode data connection for %s.",
@@ -3972,6 +4015,24 @@ class FTPSession
     ftp_MKD(args);
   }
 
+  void ftp_LANG(string args)
+  {
+    args = lower_case(String.trim_all_whites(args || ""));
+    if (sizeof(args)) {
+      if (!roxen.set_locale(args)) {
+	send(504, ({ sprintf("Unsupported language: %s", args) }));
+	return;
+      }
+      master_session->misc->pref_languages->languages = ({ args });
+      master_session->misc["accept-language"] = args;
+    } else {
+      roxen.set_locale();
+      master_session->misc->pref_languages->languages = ({});
+      m_delete(master_session->misc, "accept-language");
+    }
+    send(200, ({ sprintf("Language set to %s", roxen.get_locale()) }));
+  }
+
   void ftp_SYST(string args)
   {
     send(215, ({ "UNIX Type: L8: Roxen Information Server"}));
@@ -4010,6 +4071,7 @@ class FTPSession
 							     current_mlst_facts)),
 			      "MLSD":"",
 			      "AUTH":"AUTH TLS",
+			      "LANG":sprintf("LANG %s", format_langlist()),
 		    ])[s] || s);
 		  }) - ({ "" });
 
@@ -4410,6 +4472,8 @@ class FTPSession
       return;
     }
 
+    restore_locale();
+
 #if 0
     if (!conf->extra_statistics) {
       conf->extra_statistics = ([ "ftp": (["commands":([ cmd:1 ])])]);
@@ -4454,6 +4518,8 @@ class FTPSession
 			string args_copy = args;
 			if (cmd == "PASS")
 			  args = "CENSORED";
+
+			restore_locale();
 
 			mixed err;
 			if (err = catch {
@@ -4569,6 +4635,7 @@ class FTPSession
     master_session->port_obj = c;
     master_session->my_fd = fd;
     master_session->misc->defaulted = 1;
+    master_session->misc->pref_languages = PrefLanguages();
     ::create(fd, got_command, 0, con_closed, ([]));
 
     array a = fd->query_address(1)/" ";
