@@ -2044,7 +2044,6 @@ class FTPSession
     case 405:
       send(550, ({ sprintf(LOCALE(91, "'%s': %s: Method not allowed."),
 			   cmd, f) }));
-			   cmd, f) }));
       break;
     case 500:
       send(451, ({ sprintf(LOCALE(93, "'%s': Requested action aborted: "
