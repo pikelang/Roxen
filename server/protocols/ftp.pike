@@ -2991,6 +2991,9 @@ class FTPSession
     curr_pipe = 0;
     restart_point = 0;
     logged_in = 0;
+    roxen.set_locale();
+    m_delete(master_session->misc, "accept-language");
+    master_session->misc->pref_languages->languages = ({});
     if (pasv_port) {
       destruct(pasv_port);
       pasv_port = 0;
