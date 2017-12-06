@@ -77,13 +77,13 @@ inherit "roxenlib";
 #endif
 
 // CFIF17: This is here while the new Admin IF is created. When and if this
-//         branch is merged into devel this should be removed
+//         branch is merged into devel this can be removed
 #ifdef ADMIN_IF_DEBUG
 # define CFIF_WERR(X...)werror("%s:%d: %s",basename(__FILE__),__LINE__,sprintf(X))
 # define CFIF_THROW(X...)error("CFIF17: " + sprintf(X))
 #else
 # define CFIF_WERR(X...)
-# define CFIF_THROW(X...)
+# define CFIF_THROW(X...)werror("__notice__:%s:%d: %s",basename(__FILE__),__LINE__,sprintf(X))
 #endif
 
 string loc_encode(string val, void|mapping args, void|string def)
@@ -97,7 +97,10 @@ string loc_encode(string val, void|mapping args, void|string def)
   return val;
 }
 
-
+// CFIF17: Some switch cases here should be fixed. Some of them might not be
+//         used in the admin IF, but might be used in the Sitebuilder
+//         content editor. Verify if this method is overridden in the
+//         content editor or not, and fix the type cases accordingly.
 string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 {
   RequestID id;
@@ -1317,6 +1320,9 @@ string act_describe_submenues(array menues, string base,string sel)
 }
 
 string focused_wizard_menu;
+// CFIF17: This only seems to be referenced from content_editor.pike in
+//         Sitebuilder. Since Sitebuilder isn't part of the UI revamping
+//         this can probably be left as-is for now.
 mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
@@ -1405,6 +1411,8 @@ string format_numeric(string s, string|void sep)
   return (({reverse(t)})+as[1..])*" ";
 }
 
+// CFIF17: This only seems to referenced from Sitebuilder so it can be left
+//         as-is for now
 string html_table(array(string) subtitles, array(array(string)) table,
                   mapping|void opt)
 {
@@ -1525,6 +1533,8 @@ string html_error(string notice, RequestID id)
   return "<div class='notify error'>" + notice + "</div>";
 }
 
+// CFIF17: Can't find any references to this one.
+__deprecated__
 string html_border(string what, int|void width, int|void ww,
                    string|void bgcolor, string|void bdcolor)
 {

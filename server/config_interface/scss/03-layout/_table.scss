@@ -252,7 +252,13 @@ table {
           .description {
             padding: $spacing-unit/2 0;
             font-style: italic;
-            border-bottom: 1px solid $topmenu-bg;
+            position: relative;
+            // border-bottom: 1px solid $topmenu-bg;
+
+            & + .description {
+              padding-top: 0;
+              margin-top: -($spacing-unit/2);
+            }
           }
         }
       }
@@ -516,6 +522,13 @@ table {
     &:before {
       content: '\f146';
     }
+  }
+}
+
+.inhibit-backups {
+  .icon {
+    // opacity: .6;
+    color: $notify-warn-bg-color;
   }
 }
 

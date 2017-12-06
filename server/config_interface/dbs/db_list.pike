@@ -113,7 +113,7 @@ string|mapping parse( RequestID id )
     string db_url = DBManager.db_url( db );
 
     string res =
-      "<tr><td class='db'>" +
+      "<tr><td class='db nowrap'>" +
       (view_mode ? ""
                  : "<a href='browser.pike?db="+db+"&amp;&usr.set-wiz-id;'"
                    " class='icon db'>") +

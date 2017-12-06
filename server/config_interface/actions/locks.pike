@@ -150,17 +150,5 @@ string parse( RequestID id )
 
 
   return data + out + "<p><cf-ok /></p>";
-  // return data +
-  //     html_table( ({
-  //       LOCALE(17, "Module"), LOCALE(18, "File"), LOCALE(19, "Locked"),
-  //       LOCALE(20, "Unlocked") }), rows,
-  //                 ([ "titlebgcolor":"&usr.obox-titlebg;",
-  //                    "bordercolor":"&usr.obox-border;",
-  //                    "titlecolor":"&usr.obox-titlefg;",
-  //                    "oddbgcolor":"&usr.obox-bodybg;",
-  //                    "evenbgcolor":"&usr.fade1;",
-  //                 ])
-  //                 ) +
-  //     "<p><cf-ok/></p>";
 }
 #endif /* THREADS */

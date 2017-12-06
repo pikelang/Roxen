@@ -280,14 +280,14 @@ mixed move_db( string db, RequestID id )
     if( !internal )
     {
       if( !strlen(id->variables->url) )
-        warning= "<font color='&usr.warncolor;'>"
+        warning= "<span class='notify warn inline'>"
           +_(406,"Please specify an URL to define an external database")+
-          "</font>";
+          "</span>";
       else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
-        warning = sprintf("<font color='&usr.warncolor;'>"+
+        warning = sprintf("<span class='notify warn inline'>"+
                           _(407,"It is not possible to connect to %s.")+
                           "<br /> (%s)"
-                          "</font>",
+                          "</span>",
                           id->variables->url,
                           describe_error(err));
     }
@@ -295,29 +295,29 @@ mixed move_db( string db, RequestID id )
       switch( id->variables->name )
       {
        case "":
-         warning =  "<font color='&usr.warncolor;'>"+
+         warning =  "<span class='notify warn inline'>"+
            _(408,"Please specify a name for the database")+
-           "</font>";
+           "</span>";
          break;
        case "mysql":
        case "roxen":
-         warning = sprintf("<font color='&usr.warncolor;'>"+
+         warning = sprintf("<span class='notify warn inline'>"+
                          _(409,"%s is an internal database, used by Roxen. "
                            "Please select another name.")+
-                         "</font>", id->variables->name );
+                         "</span>", id->variables->name );
          break;
         default:
          if( Roxen.is_mysql_keyword( id->variables->name ) )
-           warning = sprintf("<font color='&usr.warncolor;'>"+
+           warning = sprintf("<span class='notify warn inline'>"+
                              _(410,"%s is a MySQL keyword, used by MySQL. "
                                "Please select another name.")+
-                             "</font>", id->variables->name );
+                             "</span>", id->variables->name );
          catch {
            if( DBManager.cached_get( id->variables->name ) &&
                db != id->variables->name )
-             warning = sprintf("<font color='&usr.warncolor;'>"+
+             warning = sprintf("<span class='notify warn inline'>"+
                                _(529,"the database %s does already exist")+
-                               "</font>", id->variables->name );
+                               "</span>", id->variables->name );
            // FIXME: Also check if the name is a valid db name.
          };
          break;
@@ -751,12 +751,12 @@ mapping|string parse( RequestID id )
 
       int h = gethrtime();
       if (mixed err = catch (big_q = db->big_query( q ))) {
-        qres += "<p><font color='&usr.warncolor;'>"+
+        qres += "<p><span class='notify inline warn'>"+
           sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
                   replace (Roxen.html_encode_string (
                              String.trim_all_whites (describe_error(err))),
                            "\n", "<br/>\n"))+
-          "</font></p>\n";
+          "</span></p>\n";
         continue;
       }
       float qtime = (gethrtime()-h)/1000000.0;
@@ -858,7 +858,7 @@ mapping|string parse( RequestID id )
                 //  Check for excessive amount of formatted data
                 if (formatted_total_size[i] > MAX_TOTAL_FORMATTED_SIZE) {
                   qres +=
-                    "<span class='warn_exp'>" +
+                    "<span class='notify inline warn'>" +
                     "Total formatted data length exceeded &ndash; limit your query."
                     "</span>";
                   got_result = 1;
@@ -872,7 +872,7 @@ mapping|string parse( RequestID id )
                       (id->variables->exp_fields == "auto")) {
                     //  This field alone is too big to display
                     qres +=
-                      "<span class='warn_exp'>" +
+                      "<span class='notify inline warn'>" +
                       "Skipping " + (formatted_len / 1024) + "K formatted data."
                       "</span>";
                     got_result = 1;
@@ -966,25 +966,6 @@ mapping|string parse( RequestID id )
 
   array(mapping) lis = ({});
 
-// <<<<<<< HEAD
-//   if (id->variables->db == "local") {
-//     ADD_LI(_(546, "Internal data that cannot be shared between servers."), 0);
-//     res += "<li>" +
-//       _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
-//   }
-//   else if (id->variables->db == "shared") {
-//     ADD_LI(_(547, "Internal data that may be shared between servers."), 0);
-//     res += "<li>" +
-//       _(547, "Internal data that may be shared between servers.") + "</li>\n";
-//   }
-//   else if( !url ) {
-//     ADD_LI("Internal database.", 0);
-//     res += "<li>Internal database.</li>\n";
-//   }
-//   else {
-//     ADD_LI("Database URL: " + Roxen.html_encode_string(url), 0);
-//     res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
-// =======
   switch(id->variables->db) {
   case "local":
     res += "<li>" +
@@ -1008,7 +989,6 @@ mapping|string parse( RequestID id )
     else
       res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
     break;
-// >>>>>>> devel
   }
 
   mapping(string:string) db_info =
@@ -1167,7 +1147,6 @@ mapping|string parse( RequestID id )
         extra_css += ({ "inhibit-backups" });
       }
 
-// <<<<<<< HEAD
       string res = "<tr id='tbl-" + Roxen.http_encode_url(table) + "'" +
         (sizeof(extra_css) ? sprintf(" class='%s'", extra_css*" ") : "") +
         ">"
@@ -1185,50 +1164,26 @@ mapping|string parse( RequestID id )
          sprintf ("%d KiB",
                   ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
         "</td>";
-// =======
-//       string res =
-// 	"<tr" +
-// 	(tbl_info->inhibit_backups == "yes"?
-// 	 " bgcolor='&usr.fade1;' fgcolor='&usr.top-fgcolor;'":"") +
-// 	">"
-// 	"<td style='white-space: nowrap'>"
-// 	"<a href='browser.pike?sort=&form.sort:http;&amp;"
-// 	"db=&form.db:http;&amp;&usr.set-wiz-id;" +
-// 	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
-// 	"<cimg style='vertical-align: -2px' border='0' format='gif'"
-// 	" src='&usr.table-small;' alt='' max-height='12'/> " +
-// 	table+"</a></td>"
-// 	"<td class='num'>"+
-// 	(!tbi || zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
-// 	"<td class='num'>" +
-// 	(!tbi || zero_type (tbi->data_length) ? "" :
-// 	 sprintf ("%d KiB",
-// 		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
-// 	"</td>";
-// >>>>>>> devel
+
 
       string owner;
       if ((db_info->conf || "") != (tbl_info->conf || ""))
         owner = format_table_owner (tbl_info, 0);
       else if ((db_info->module || "") != (tbl_info->module || ""))
-// <<<<<<< HEAD
         owner = format_table_owner (tbl_info, 1);
+
+      res += "<td>";
       if (owner) {
-        res += "<td>" + String.capitalize (owner) + "</td>";
+        res += String.capitalize (owner);
         got_owner_column = 1;
-// =======
-// 	owner = format_table_owner (tbl_info, 1);
-//       res += "<td>";
-//       if (owner) {
-// 	res += owner;
-// 	got_owner_column = 1;
-// >>>>>>> devel
+      }
+      else {
+        res += "&nbsp;";
       }
       res += "</td>";
 
       if (deep_info) {
-// <<<<<<< HEAD
-        res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
+        res += "</tr>\n<tr class='tbl-details'><td colspan='4'>";
 
         if (tbl_info->comment)
           sscanf( tbl_info->comment, "%s\0%s",
@@ -1237,15 +1192,17 @@ mapping|string parse( RequestID id )
         if( tbl_info->tbl && tbl_info->tbl != table)
           if( tbl_info->tbl != (string)0 ) {
             res +=
-              "<div class='notify warn description'>" +
+              "<div class='description'><div class='notify warn inline'>" +
               sprintf((string) _(429,"The table is known as %O "
-                                 "in the module."), tbl_info->tbl ) + "</div>\n";
+                                 "in the module."), tbl_info->tbl ) +
+              "</div></div>\n";
           }
           else {
             res +=
-              "<div class='notify warn description'>" +
+              "<div class='description'><div class='inline notify warn'>" +
               sprintf((string) _(430,"The table is an anonymous table defined "
-                                 "by the module."), tbl_info->tbl ) + "</div>\n";
+                                 "by the module."), tbl_info->tbl ) +
+              "</div></div>\n";
           }
 
         if (string c = tbl_info->comment) {
@@ -1259,41 +1216,13 @@ mapping|string parse( RequestID id )
         }
 
         if (tbl_info->inhibit_backups == "yes") {
-          res += _(0, "The table is not included in backups of this database.") +
-            "<br />\n";
+          res +=
+            "<div class='description'><div class='notify inline warn'>" +
+            _(0, "The table is not included in backups of this database.") +
+            "</div></div>";
         }
 
         res += deep_table_info (table) + "</td></tr>\n";
-// =======
-// 	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
-
-// 	if (tbl_info->comment)
-// 	  sscanf( tbl_info->comment, "%s\0%s",
-// 		  tbl_info->tbl, tbl_info->comment );
-
-// 	if( tbl_info->tbl && tbl_info->tbl != table)
-// 	  if( tbl_info->tbl != (string)0 )
-// 	    res +=
-// 	      sprintf((string) _(429,"The table is known as %O "
-// 				 "in the module."), tbl_info->tbl ) + "<br/>\n";
-// 	  else
-// 	    res +=
-// 	      sprintf((string) _(430,"The table is an anonymous table defined "
-// 				 "by the module."), tbl_info->tbl ) + "<br/>\n";
-
-// 	if (string c = tbl_info->comment) {
-// 	  c = String.trim_all_whites (c);
-// 	  if (c != "" && c != "0")
-// 	    res += Roxen.html_encode_string (c) + "<br/>\n";
-// 	}
-
-// 	if (tbl_info->inhibit_backups == "yes") {
-// 	  res += _(0, "The table is not included in backups of this database.") +
-// 	    "<br />\n";
-// 	}
-
-// 	res += deep_table_info (table) + "</td></tr>\n";
-// >>>>>>> devel
       }
       else
         res += "</tr>\n";

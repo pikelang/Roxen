@@ -35,33 +35,34 @@ string fix_port(string p)
   return a * ":";
 }
 
-string parse( RequestID id )
+array(mapping) collect_fds()
 {
-  return
-    ("<cf-title>" +LOCALE(23, "Active filedescriptors")+ "</cf-title>"
-     "<hr class='section'>"+
-     sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
-	     "fd", "type", "mode", "details")+
+  mapping(string:string) types = ([
+    "reg":"File",
+    "dir":"Dir",
+    "lnk":"Link",
+    "chr":"Special",
+    "blk":"Device",
+    "fifo":"FIFO",
+    "sock":"Socket",
+    "unknown":"Unknown",
+  ]);
 
-     (Array.map(Stdio.get_all_active_fd(),
+  return Array.map(Stdio.get_all_active_fd(),
 	  lambda(int fd)
 	  {
 	    object f = Stdio.File(fd);
 	    object stat = f->stat();
-	    if (!stat)
-	      return sprintf("%-5s  %-9s  %-10s   %-12s",
-			     (string) fd, "Unknown", "?", "(error " + f->errno() + ")");
+	    if (!stat) {
+	      return ([
+	        "fd"      : (string) fd,
+	        "type"    : "Unknown",
+	        "mode"    : "?",
+	        "details" : "(error " + f->errno() + ")"
+	      ]);
+	    }
 
-	    string type = ([
-	      "reg":"File",
-	      "dir":"Dir",
-	      "lnk":"Link",
-	      "chr":"Special",
-	      "blk":"Device",
-	      "fifo":"FIFO",
-	      "sock":"Socket",
-	      "unknown":"Unknown",
-	    ])[stat->type] || "Unknown";
+	    string type = types[stat->type] || "Unknown";
 
 	    // Doors aren't standardized yet...
 	    if ((type == "Unknown") &&
@@ -120,11 +121,58 @@ string parse( RequestID id )
 	      }
 	    }
 
-	    return sprintf("%-5s  %-9s  %-10s   %-12s",
-			   (string)fd,
-			   type,
-			   stat->mode_string,
-			   details);
-	  })*"\n")+
-     "</pre><p><cf-ok/></p>");
+	    return ([
+              "fd"      : (string) fd,
+              "type"    : type,
+              "mode"    : stat->mode_string,
+              "details" : details,
+    	    ]);
+	  });
+}
+
+string parse( RequestID id )
+{
+  mapping ctx = ([
+    "headers" : ({
+      ([ "fd"      : "Fd",
+         "type"    : "Type",
+         "mode"    : "Mode",
+         "details" : "Details" ])
+    }),
+    "data" : collect_fds() || ({})
+  ]);
+
+  string tmpl = #"
+    <table class='nice'>
+      <thead>
+        <tr>
+        {{ #headers }}
+          <th class='text-right'>{{ fd }}</th>
+          <th>{{ type }}</th>
+          <th>{{ mode }}</th>
+          <th>{{ details }}</th>
+        {{ /headers }}
+        </tr>
+      </thead>
+      <tbody>
+        {{ #data }}
+        <tr>
+          <td class='text-right'>{{ fd }}</td>
+          <td>{{ type }}</td>
+          <td><code>{{ mode }}</code></td>
+          <td>{{ &details }}</td>
+        </tr>
+        {{ /data }}
+      </tbody>
+    </table>";
+
+  Mustache stash = Mustache();
+  string out =
+    "<cf-title>" +LOCALE(23, "Active filedescriptors")+ "</cf-title>"
+    "<hr class='section'>" +
+    stash->render(tmpl, ctx);
+
+  destruct(stash);
+
+  return out;
 }

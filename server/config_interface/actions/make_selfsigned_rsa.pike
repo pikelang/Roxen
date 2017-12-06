@@ -107,7 +107,7 @@ mixed page_3(object id, object mc)
     (rsa, 24 * 3600 * (int) id->variables->ttl, name);
 
   string res=("<p class='large'>"+LOCALE(133,"This is your Certificate.")+
-	      "</span>"
+	      "</p>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
 
   res += Tools.PEM.simple_build_pem("CERTIFICATE", cert);

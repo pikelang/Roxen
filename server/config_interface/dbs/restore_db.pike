@@ -26,28 +26,17 @@ mapping|string parse( RequestID id )
 
   if( !id->variables->db)
   {
-// <<<<<<< HEAD
     if (!sizeof(bks)) {
       return "<div class='notify'>" + res + "</div>";
     }
     res += "<table class='nice'>\n"
-      "<thead><tr><th>" + _(463, "Database") +
-      "</th><th>"+_(405,"Directory")+
-      "</th><th>&nbsp;</th><th>"+_(459,"Date")+"</th></tr></thead>\n";
-// =======
-//     res += "<style type='text/css'>\n"
-//       ".dbrestore { border-spacing: 0; }\n"
-//       ".dbrestore td, .dbrestore th { padding: 2px 4px 2px 0; }\n"
-//       ".dbrestore td:last-child, .dbrestore th:last-child { padding-right: 0; }\n"
-//       ".dbrestore th { border-bottom: 1px solid black; }\n"
-//       ".dbrestore .flag { font-size: smaller; }\n"
-//       ".dbrestore .date { font-size: smaller; white-space: nowrap; }\n"
-//       "</style>\n"
-//       "<table width='100%' class='dbrestore'>\n"
-//       "<tr><th colspan='2' align='left'>" + _(463, "Database") +
-//       "</th><th align='left'>"+_(405,"Directory")+
-//       "</th><th>&nbsp;</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
-// >>>>>>> devel
+      "<thead><tr>"
+        "<th colspan='2'>" + _(463, "Database") + "</th>"
+        "<th>" + _(405,"Directory") + "</th>"
+        "<th>&nbsp;</th>"
+        "<th>" + _(459,"Date")      + "</th>"
+      "</tr></thead>\n";
+
     foreach( sort( indices( bks ) ), string bk )
     {
       string extra = "";
@@ -60,14 +49,8 @@ mapping|string parse( RequestID id )
 #endif
       }
       mapping done = ([ ]);
-// <<<<<<< HEAD
-      res += "<tr class='column-hdr'><td colspan='4'>" +
+      res += "<tr class='column-hdr'><td colspan='5'>" +
 	Roxen.html_encode_string(bk + extra) + "</td></tr>\n";
-// =======
-//       res += "<tr><td colspan='4'>" +
-//         Roxen.html_encode_string(bk + extra) +
-//         "</td></tr>\n";
-// >>>>>>> devel
 
       foreach( bks[bk], mapping b )
       {
@@ -94,13 +77,8 @@ mapping|string parse( RequestID id )
       {
 	[int when, string d, array(string) tables, string buttons] = done[dir];
 	res += "<tr>";
-// <<<<<<< HEAD
-// 	res += "  <td>"+r[3]+"</td>\n";
-// 	res += "  <td>"+r[1]+"</td>\n";
-// 	res += "  <td>"+isodate((int)r[0])+"</td>\n";
-// =======
 	res += "  <td>&nbsp;</td>\n";
-	res += "  <td>" + buttons + "</td>\n";
+	res += "  <td class='nowrap'>" + buttons + "</td>\n";
 	res += "  <td><tt>" + d + "</tt></td>";
 	if (has_value(tables, "")) {
 	  // In progress marker.
@@ -108,8 +86,7 @@ mapping|string parse( RequestID id )
 	} else {
 	  res += "<td>&nbsp;</td>\n";
 	}
-	res += "  <td class='date'>" + isodate(when) + "</td>\n";
-// >>>>>>> devel
+	res += "  <td>" + isodate(when) + "</td>\n";
 	res += "</tr>\n";
       }
     }
