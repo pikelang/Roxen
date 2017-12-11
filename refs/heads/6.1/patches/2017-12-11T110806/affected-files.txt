@@ -1,0 +1,5 @@
+Added files:
+  config_interface/themes/plain/roxen-small.png
+Modified files:
+  config_interface/themes/22/theme
+  config_interface/themes/plain/theme
