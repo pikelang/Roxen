@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Admin IF: Restored old logo for 1.4 and 2.2 themes 
+from: c3f853301d2e26c35ba5fe176f89785571915bed
+to: 7ce96a6bf458f326fbb94dba828e2a3c37b441d4
+originator: Jonas Lonnberg
+depends: 2017-11-29T145239
+restart: true
+
+• Admin IF: Restored old logo for 1.4 and 2.2 themes [WS-9]
