@@ -4,6 +4,7 @@
 <language>swe</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/roxenloader.pike</file>
 <file>../modules/configuration/update.pike</file>
 
 

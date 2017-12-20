@@ -4,6 +4,7 @@
 <language>deu</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/roxenloader.pike</file>
 <file>../base_server/wizard.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
@@ -45,59 +46,21 @@ und dass die Gruppen-Datenbank korrekt ist.
 <t>Fehlschlag bei bind() auf %s://%s:%d/ (%s)</t>
 </str>
 
-<str id="8">
-<changed from="SSL3: Reading cert-file failed!"/>
-<o>Reading certificate file %O failed: %s
-</o>
-<t>SSL3: Zertifikat-Datei kann nicht gelesen werden!</t>
-</str>
 
-<str id="9">
-<changed from="SSL3: Reading key-file failed!"/>
-<o>Reading key file %O failed: %s
-</o>
-<t>SSL3: Schlüssel-Datei kann nicht gelesen werden!</t>
-</str>
 
-<str id="10">
-<changed from="SSL3: No certificate found."/>
-<o>No certificate found in %O.
-</o>
-<t>SSL3: Kein Zertifikat gefunden.</t>
-</str>
 
-<str id="11">
-<changed from="SSL3: Private rsa key not valid"/>
-<o>Private rsa key not valid</o>
-<t>SSL3: Privater RSA-Schlüssel ungültig</t>
-</str>
 
-<str id="13">
-<changed from="SSL3: Certificate not valid (DER)."/>
-<o>Certificate not valid (DER).
-</o>
-<t>SSL3: Zertifikat ungültig (DER).</t>
-</str>
 
-<str id="14">
-<changed from="SSL3: Certificate and private key do not match."/>
-<o>Certificate and private key do not match.
-</o>
-<t>SSL3: Zertifikat und privater Schlüssel passen nicht zusammen.</t>
-</str>
 
-<str id="15">
-<changed from="SSL3: Private dsa key not valid"/>
-<o>Private dsa key not valid</o>
-<t>SSL3: Privater dsa-Schlüssel ungültig</t>
-</str>
 
-<str id="17">
-<changed from="SSL3: No private key found."/>
-<o>No private key found.
-</o>
-<t>SSL3: Privater Schlüssel nicht gefunden.</t>
-</str>
+
+
+
+
+
+
+
+
 
 <str id="19">
 <changed from="Bad URL '%s' for server `%s'"/>
@@ -380,39 +343,15 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t></t>
 </str>
 
-<str id="66">
-<new/>
-<o>Reading PEM file %O failed: %s
-</o>
-<t></t>
-</str>
 
-<str id="67">
-<new/>
-<o>Invalid PEM in %O.
-</o>
-<t></t>
-</str>
 
-<str id="68">
-<new/>
-<o>Invalid decryption password for %O.
-</o>
-<t></t>
-</str>
 
-<str id="69">
-<new/>
-<o>Private key not valid</o>
-<t></t>
-</str>
 
-<str id="70">
-<new/>
-<o>Private key without matching certificate.
-</o>
-<t></t>
-</str>
+
+
+
+
+
 
 <str id="71">
 <new/>

@@ -2716,7 +2716,7 @@ class StartTLSProtocol
 	CertDB.get_keypair(keypair_id);
       if (!keypair) {
         return ({ "<td colspan='2'>" +
-                  LOC_C(0, "Lost certificate") +
+                  LOC_C(1129, "Lost certificate") +
                   "</td>" });
       }
       [Crypto.Sign.State private_key, array(string) certs] = keypair;
@@ -2728,7 +2728,7 @@ class StartTLSProtocol
 
       if (!tbs) {
         res += ({ "<td colspan='2'><b>" +
-                  LOC_C(0, "Invalid certificate") +
+                  LOC_C(1130, "Invalid certificate") +
                   ".</b>" });
       } else {
 	mapping(Standards.ASN1.Types.Identifier:string) dn =
@@ -2739,14 +2739,14 @@ class StartTLSProtocol
 	  res += ({
             sprintf("<td style='white-space:nowrap'>%s</td>"
                     "<td><b><tt>%s</tt></b>",
-                    LOC_C(0, "Common Name"),
+                    LOC_C(1131, "Common Name"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else {
 	  res += ({ "<td colspan='2'>" });
 	}
 
-	res[-1] += sprintf(" (%s, " + LOC_C(0, "%d bits") + ")</td>",
+	res[-1] += sprintf(" (%s, " + LOC_C(1132, "%d bits") + ")</td>",
 			   Roxen.html_encode_string(private_key->name()),
 			   private_key->key_size());
 
@@ -2757,13 +2757,13 @@ class StartTLSProtocol
 	  }
 	  res += ({
             sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued To"),
+                    LOC_C(1133, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
 	  res += ({
             sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued To"),
+                    LOC_C(1133, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	}
@@ -2771,9 +2771,9 @@ class StartTLSProtocol
 	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
           res += ({
             sprintf("<td style='white-space:nowrap'>" +
-                    LOC_C(0, "Issued By") +
+                    LOC_C(1134, "Issued By") +
                     "</td><td>%s</td>",
-                    LOC_C(0, "Self-signed"))
+                    LOC_C(1135, "Self-signed"))
           });
 	} else {
 	  dn = parse_dn(tbs->issuer);
@@ -2793,7 +2793,7 @@ class StartTLSProtocol
 	  if (tmp) {
 	    res += ({
               sprintf("<td style='white-space:nowrap;vertical-align:top'>" +
-                      LOC_C(0, "Issued By") +
+                      LOC_C(1134, "Issued By") +
                       "</td><td>%s</td>",
                       Roxen.html_encode_string(tmp)),
 	    });
@@ -2808,7 +2808,7 @@ class StartTLSProtocol
             sprintf("<td>%s</td>"
                     "<td><font color='&usr.warncolor;'>%s</font>\n"
                     "<img src='&usr.err-3;' /></td>",
-                    LOC_C(0, "Expired"),
+                    LOC_C(1136, "Expired"),
                     tmp),
 	  });
 	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
@@ -2817,12 +2817,12 @@ class StartTLSProtocol
             sprintf("<td>%s</td>"
                     "<td><font color='&usr.warncolor;'>%s</font>\n"
                     "<img src='&usr.err-2;' /></td>",
-                    LOC_C(0, "Expires"),
+                    LOC_C(1137, "Expires"),
                     tmp),
 	  });
 	} else {
 	  res += ({
-	    sprintf("<td>%s</td><td>%s</td>", LOC_C(0, "Expires"), tmp),
+	    sprintf("<td>%s</td><td>%s</td>", LOC_C(1137, "Expires"), tmp),
 	  });
 	}
 
@@ -2836,14 +2836,14 @@ class StartTLSProtocol
         paths = map(paths, lfile_path);
         res += ({
           sprintf("<td style='vertical-align:top'>%s</td><td>%s</td>",
-                  LOC_C(0, "Path(s)"),
+                  LOC_C(1138, "Path(s)"),
                   map(paths, lambda(string p) {
                     if (p)
                       return "<tt>" + Roxen.html_encode_string(p) + "</tt>";
                     else
                       return
                         "<font color='&usr.warncolor;'>" +
-                        LOC_C(0, "Lost file") +
+                        LOC_C(1139, "Lost file") +
                         "</font>";
                   }) * "<br/>")
         });

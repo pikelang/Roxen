@@ -24,6 +24,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
   <file>../base_server/configuration.pike</file>
   <file>../base_server/roxen.pike</file>
+  <file>../base_server/roxenloader.pike</file>
   <file>../base_server/wizard.pike</file>
   <file>../protocols/prot_hilfe.pike</file>
 </project>

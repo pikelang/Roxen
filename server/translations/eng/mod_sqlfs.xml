@@ -40,7 +40,7 @@
 </str>
 
 <str id="62">
-<o>The table that cotains the files. The table should contain at least the columns 'name' and 'contents'. Optionally you can also have the fields 'mtime', 'uid' and 'gid'.</o>
+<o>The table that contains the files. The table should contain at least the columns 'name' and 'contents'. Optionally you can also have the fields 'mtime', 'uid' and 'gid'.</o>
 <t></t>
 </str>
 
