@@ -3731,3 +3731,28 @@ count: %d&lt;/title&gt;
 <o>Filesystem GC:</o>
 <t></t>
 </str>
+
+<str id="1140">
+<o>MySQL/MariaDB-internal database.</o>
+<t></t>
+</str>
+
+<str id="1141">
+<o>Roxen-internal database.</o>
+<t></t>
+</str>
+
+<str id="1142">
+<o>The table is not included in backups of this database.</o>
+<t></t>
+</str>
+
+<str id="1143">
+<o>(Roxen-internal database)</o>
+<t></t>
+</str>
+
+<str id="1144">
+<o>Incomplete</o>
+<t></t>
+</str>
