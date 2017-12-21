@@ -328,52 +328,66 @@ mixed configure_ext_db_con( string db, RequestID id )
       {
        case "":
 	 warning =  "<font color='&usr.warncolor;'>"+
-	   _(408,"Please specify a name for the database")+
+	   _(408,"Please specify an alias for the database")+
 	   "</font>";
          break;
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
-                         _(409,"%s is an internal database, used by Roxen. "
-			   "Please select another name.")+
+                         _(409,"<tt>%s</tt> is an internal database, used by Roxen. "
+			   "Please select another alias.")+
                          "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(410,"%s is a MySQL keyword, used by MySQL. "
-			       "Please select another name.")+
+			     _(410,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
+			       "Please select another alias.")+
 			     "</font>", id->variables->name );
 	 catch {
-           if( db != id->variables->name &&
-               DBManager.get_db_url_info(id->variables->name) )
-	     warning = sprintf("<font color='&usr.warncolor;'>"+
-			       _(529,"the database %s does already exist")+
-			       "</font>", id->variables->name );
-	   // FIXME: Also check if the name is a valid db name.
+           // Check name first since DBManager.get_db_url_info() ignores
+           // trailing spaces in db name.
+           if( !(DBManager.valid_db_name( id->variables->name )) )
+           {
+             warning = sprintf("<font color='&usr.warncolor;'>"+
+                               _(529,"<span style=\"white-space: pre;\">"
+                                 "'<tt>%s</tt>'</span> "
+                                 "is not a valid database alias. "
+                                 "Please select another alias.")+
+                               "</font>", id->variables->name );
+           }
+           else if( db != id->variables->name &&
+               DBManager.get_db_url_info( id->variables->name ) )
+           {
+             warning = sprintf("<font color='&usr.warncolor;'>"+
+                               _(529,"A database or alias with name <tt>%s</tt> "
+                                 "already exists. Please select another alias.")+
+                               "</font>", id->variables->name );
+           }
 	 };
 	 break;
       }
     if( !strlen( warning ) )
     {
-      if( db != id->variables->name ) {
-        DBManager.create_db(id->variables->name,
-                            id->variables->url,
-                            0,
-                            id->variables->group);
+      if( db != id->variables->name )
+      {
+        DBManager.create_db( id->variables->name,
+                             id->variables->url,
+                             0,
+                             id->variables->group );
         DBManager.copy_db_md( db, id->variables->name );
         DBManager.drop_db( db );
       }
       else if( id->variables->url != DBManager.db_url( db ) )
       {
         // Only url has changed.
-        DBManager.set_url(db, id->variables->url, 0);
+        DBManager.set_url( db, id->variables->url, 0 );
       }
       // else nothing has changed...
       return Roxen.http_redirect( "/dbs/", id );
     }
   }
-  if(!id->variables->name)
+  if( !id->variables->name )
     id->variables->name = db;
 
   if( !id->variables->url )
@@ -391,9 +405,9 @@ mixed configure_ext_db_con( string db, RequestID id )
     
     "  <tr>\n"
     "    <td valign=top colspan='2'>\n"
-    "      <i>"+_(530,"The new alias for the database. To make it easy on "
-		  "your users, use all lowercaps characters, and avoid hard to type "
-		  "characters.")+"</i>\n"
+    "      <i>"+_(530,"The alias for the database. It is recommended to "
+                      "use only lowercase letters <tt>[a-z]</tt>, numbers "
+                      "and <tt>-</tt> (dash).")+"</i>\n"
     "    </td>\n"
     "  </tr>\n"+
     
