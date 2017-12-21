@@ -6,7 +6,8 @@
 
 mapping actions = ([
   // name         title                      function   must be internal
-  "move":   ({  _(401,"Copy or rename database"),move_db,   0 }),
+  "configure_ext_db_con": ({  _(0,"Configure database connection"),
+                               configure_ext_db_con, 0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
   "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
@@ -301,25 +302,26 @@ today's date in <tt>$VARDIR/backup</tt> (%s)."),
     "</td>\n</table>\n";
 }
 
-mixed move_db( string db, RequestID id )
+mixed configure_ext_db_con( string db, RequestID id )
 {
+  if( DBManager.is_internal( db ) ) {
+    error("Configure external database connection not possible for internal "
+          "databases.");
+  }
   string warning="";
-  int internal = DBManager.is_internal( db );
   if( id->variables["ok.x"] )
   {
-    if( !internal )
-    {
-      if( !strlen(id->variables->url) )
-        warning= "<font color='&usr.warncolor;'>"
-	  +_(406,"Please specify an URL to define an external database")+
-	  "</font>";
-      else if( mixed err = catch( Sql.Sql( id->variables->url ) ) )
-        warning = sprintf("<font color='&usr.warncolor;'>"+
-			  _(407,"It is not possible to connect to %s.")+
-			  "<br /> (%s)"
-			  "</font>",
-			  id->variables->url,
-			  describe_error(err));
+    if( !strlen(id->variables->url) ) {
+      warning= "<font color='&usr.warncolor;'>"
+        +_(406,"Please specify an URL to define an external database")+
+        "</font>";
+    } else if( mixed err = catch( Sql.Sql( id->variables->url ) ) ) {
+      warning = sprintf("<font color='&usr.warncolor;'>"+
+        _(407,"It is not possible to connect to %s.")+
+        "<br /> (%s)"
+        "</font>",
+      id->variables->url,
+      describe_error(err));
     }
     if( !strlen( warning ) )
       switch( id->variables->name )
@@ -343,8 +345,8 @@ mixed move_db( string db, RequestID id )
 			       "Please select another name.")+
 			     "</font>", id->variables->name );
 	 catch {
-	   if( DBManager.cached_get( id->variables->name ) &&
-	       db != id->variables->name )
+           if( db != id->variables->name &&
+               DBManager.get_db_url_info(id->variables->name) )
 	     warning = sprintf("<font color='&usr.warncolor;'>"+
 			       _(529,"the database %s does already exist")+
 			       "</font>", id->variables->name );
@@ -354,48 +356,20 @@ mixed move_db( string db, RequestID id )
       }
     if( !strlen( warning ) )
     {
-      // In all cases, create the new db.
-      if(!(DBManager.get_db_url_info(id->variables->name))) {
-	DBManager.create_db(id->variables->name, id->variables->url,
-			    internal, id->variables->group);
-      } else {
-	DBManager.set_url(id->variables->name,
-			  id->variables->url,
-			  internal);
+      if( db != id->variables->name ) {
+        DBManager.create_db(id->variables->name,
+                            id->variables->url,
+                            0,
+                            id->variables->group);
+        DBManager.copy_db_md( db, id->variables->name );
+        DBManager.drop_db( db );
       }
-      
-      // Intern
-      //   Copy if name has changed.
-      // Extern
-      //   Just copy the meta information.
-      if(internal)
+      else if( id->variables->url != DBManager.db_url( db ) )
       {
-	// Internal db, use the backup thingies to copy the data
-	if( db != id->variables->name )
-	{
-	  DBManager.backup( db, "/tmp/tmpdb" );
-	  DBManager.restore( db, "/tmp/tmpdb", id->variables->name );
-	  DBManager.delete_backup( db, "/tmp/tmpdb" );
-	}
+        // Only url has changed.
+        DBManager.set_url(db, id->variables->url, 0);
       }
-      switch( id->variables->what )
-      {
-	case "copy": // copy, no delete
-	  if( db != id->variables->name )
-	    DBManager.copy_db_md( db, id->variables->name );
-	  // Done.
-	  break;
-
-	case "move": // move & delete
-	  // Delete the old data.
-	  if( db != id->variables->name )
-	  {
-	    DBManager.copy_db_md( db, id->variables->name );
-	    if( !strlen(warning) )
-	      DBManager.drop_db( db );
-	  }
-	  break;
-      }
+      // else nothing has changed...
       return Roxen.http_redirect( "/dbs/", id );
     }
   }
@@ -405,47 +379,28 @@ mixed move_db( string db, RequestID id )
   if( !id->variables->url )
     id->variables->url  = DBManager.db_url( db ) || "";
 
-  if(!id->variables->what)
-    id->variables->what = "move";
-
   return
-    "<gtext scale=0.6>"+_(414,"Copy or rename this database")+"</gtext><br />\n"
+    "<gtext scale=0.6>"+_(414,"Configure external database connection")+"</gtext><br />\n"
     +warning+
     "<table>\n"
     
     "  <tr>\n"
-    "    <td><b>"+_(415,"Action")+":</b></td>\n"
-    "    <td><default variable='form.what'>\n"
-    "      <select name='what'>\n"
-    "        <option value='copy'>"+_(416,"Copy the data to a new database")+"</option>\n"
-    "        <option value='move'>"+_(417,"Rename database")+"</option>\n"
-    "      </select></default>\n"
-    "    </td>\n"
-    "  </tr>\n"
-    "  <tr>\n"
-    "    <td><b>"+_(418,"New name")+":</b></td>\n"
+    "    <td><b>"+_(418,"Alias")+":</b></td>\n"
     "    <td><input name='name' value='&form.name;'/></td>\n"
     "  </tr>\n"
     
     "  <tr>\n"
     "    <td valign=top colspan='2'>\n"
-    "      <i>"+_(530,"The new name of the database. To make it easy on "
+    "      <i>"+_(530,"The new alias for the database. To make it easy on "
 		  "your users, use all lowercaps characters, and avoid hard to type "
 		  "characters.")+"</i>\n"
     "    </td>\n"
     "  </tr>\n"+
     
-    (internal?"":
-     " <tr>\n"
-     "   <td><nbsp><b>URL:</b></nbsp></td>\n"
-     "   <td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
-     " </tr>\n"
-     " <tr>"
-     "   <td colspan='4'><i>\n"+
-     "     "+_(422,"This URL is only used for </i>External<i> databases, it is "
-	       "totally ignored for databases defined internally in Roxen. ")+"\n</i>\n"
-     "   </td>"
-     " </tr>\n")+
+    " <tr>\n"
+    "   <td><nbsp><b>URL:</b></nbsp></td>\n"
+    "   <td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
+    " </tr>\n"+
     
     "</table>\n"+
     "<table width='100%'><tr><td>"
@@ -1391,12 +1346,16 @@ mapping|string parse( RequestID id )
   switch( id->variables->db )
   {
     case "local":
-      foreach( ({ "move","backup","optimize","repair","schedule" }), string x )
+      foreach( ({ "backup","optimize","repair","schedule" }), string x )
 	ADD_ACTION( x );
       break;
       
     default:
-      foreach( sort(indices( actions )), string x )
+      array(string) action_ids = sort( indices( actions ) );
+      if (DBManager.is_internal( id->variables->db )) {
+        action_ids -= ({ "configure_ext_db_con" });
+      }
+      foreach( action_ids, string x )
 	ADD_ACTION( x );
       break;
   }
