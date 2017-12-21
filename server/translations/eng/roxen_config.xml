@@ -2345,10 +2345,7 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="401">
-<o>Copy or rename database</o>
-<t></t>
-</str>
+
 
 <str id="402">
 <o>Delete this database</o>
@@ -2396,27 +2393,18 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="414">
-<o>Copy or rename this database</o>
+<o>Configure external database connection</o>
 <t></t>
 </str>
 
-<str id="415">
-<o>Action</o>
-<t></t>
-</str>
 
-<str id="416">
-<o>Copy the data to a new database</o>
-<t></t>
-</str>
 
-<str id="417">
-<o>Rename database</o>
-<t></t>
-</str>
+
+
+
 
 <str id="418">
-<o>New name</o>
+<o>Alias</o>
 <t></t>
 </str>
 
@@ -2425,10 +2413,7 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="422">
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
-<t></t>
-</str>
+
 
 <str id="424">
 <o>The database %s was deleted by %s</o>
@@ -3111,7 +3096,7 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 </str>
 
 <str id="530">
-<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<o>The new alias for the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
 <t></t>
 </str>
 
@@ -4175,5 +4160,10 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 
 <str id="1144">
 <o>Incomplete</o>
+<t></t>
+</str>
+
+<str id="1145">
+<o>Configure database connection</o>
 <t></t>
 </str>

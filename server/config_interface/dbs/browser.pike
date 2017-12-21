@@ -6,7 +6,7 @@
 
 mapping actions = ([
   // name         title                      function   must be internal
-  "configure_ext_db_con": ({  _(0,"Configure database connection"),
+  "configure_ext_db_con": ({  _(1145,"Configure database connection"),
                                configure_ext_db_con, 0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
   "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
