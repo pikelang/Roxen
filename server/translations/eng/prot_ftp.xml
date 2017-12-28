@@ -3,7 +3,6 @@
 <project>prot_ftp</project>
 <language>eng</language>
 <file>../protocols/ftp.pike</file>
-<file>../protocols/ftp.pike.new</file>
 
 
 <str id="1">
@@ -461,10 +460,7 @@
 <t></t>
 </str>
 
-<str id="92">
-<o>'%s': %s: File already exists.</o>
-<t></t>
-</str>
+
 
 <str id="93">
 <o>'%s': Requested action aborted: local error in processing.</o>

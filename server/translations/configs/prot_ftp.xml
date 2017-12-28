@@ -4,6 +4,5 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/prot_ftp.xml</xmlpath>
 
-  <file>../protocols/ftp.pike.new</file>
   <file>../protocols/ftp.pike</file>
 </project>
