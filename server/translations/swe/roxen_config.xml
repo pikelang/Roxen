@@ -6,6 +6,7 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
+<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/fsgarb.pike</file>
 <file>../config_interface/actions/index.html</file>
 <file>../config_interface/boxes/Box.pmod</file>
@@ -4462,5 +4463,101 @@ datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
 <str id="1124">
 <new/>
 <o>Where the REST API is mounted.</o>
+<t></t>
+</str>
+
+<str id="1125">
+<new/>
+<o>SSL/TLS Certificate(s)</o>
+<t></t>
+</str>
+
+<str id="1126">
+<new/>
+<o>&lt;p&gt;The TLS certificate(s) to use.&lt;/p&gt;
+&lt;p&gt;Certificate and key files matching the &lt;b&gt;Global Variables/Settings/Certificate and Private Key Globs&lt;/b&gt; setting are automatically imported and valid combinations are listed above.&lt;/p&gt;
+&lt;p&gt;At least one certificate must be selected.&lt;/p&gt;
+&lt;p&gt;The Server Name Indication (SNI) extension sent by the TLS client will be used to choose a specific certificate for the connection from the set selected here.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1127">
+<new/>
+<o>Certificate and Private Key Globs</o>
+<t></t>
+</str>
+
+<str id="1128">
+<new/>
+<o>&lt;p&gt;This is a list of globs for which corresponding files will automatically be imported into the certificate database on server start.&lt;/p&gt;
+&lt;p&gt;It may be left empty, in which case any certificates to use will need to be added by hand.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1129">
+<new/>
+<o>Lost certificate</o>
+<t></t>
+</str>
+
+<str id="1130">
+<new/>
+<o>Invalid certificate</o>
+<t></t>
+</str>
+
+<str id="1131">
+<new/>
+<o>Common Name</o>
+<t></t>
+</str>
+
+<str id="1132">
+<new/>
+<o>%d bits</o>
+<t></t>
+</str>
+
+<str id="1133">
+<new/>
+<o>Issued To</o>
+<t></t>
+</str>
+
+<str id="1134">
+<new/>
+<o>Issued By</o>
+<t></t>
+</str>
+
+<str id="1135">
+<new/>
+<o>Self-signed</o>
+<t></t>
+</str>
+
+<str id="1136">
+<new/>
+<o>Expired</o>
+<t></t>
+</str>
+
+<str id="1137">
+<new/>
+<o>Expires</o>
+<t></t>
+</str>
+
+<str id="1138">
+<new/>
+<o>Path(s)</o>
+<t></t>
+</str>
+
+<str id="1139">
+<new/>
+<o>Lost file</o>
 <t></t>
 </str>
