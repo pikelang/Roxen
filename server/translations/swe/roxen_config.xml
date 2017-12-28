@@ -4561,3 +4561,33 @@ datum i &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</t>
 <o>Lost file</o>
 <t></t>
 </str>
+
+<str id="1140">
+<new/>
+<o>MySQL/MariaDB-internal database.</o>
+<t></t>
+</str>
+
+<str id="1141">
+<new/>
+<o>Roxen-internal database.</o>
+<t></t>
+</str>
+
+<str id="1142">
+<new/>
+<o>The table is not included in backups of this database.</o>
+<t></t>
+</str>
+
+<str id="1143">
+<new/>
+<o>(Roxen-internal database)</o>
+<t></t>
+</str>
+
+<str id="1144">
+<new/>
+<o>Incomplete</o>
+<t></t>
+</str>

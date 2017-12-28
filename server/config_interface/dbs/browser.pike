@@ -1067,11 +1067,11 @@ mapping|string parse( RequestID id )
     break;
   case "mysql":
     res += "<li>" +
-      _(0, "MySQL/MariaDB-internal database.") + "</li>\n";
+      _(1140, "MySQL/MariaDB-internal database.") + "</li>\n";
     break;
   case "roxen":
     res += "<li>" +
-      _(0, "Roxen-internal database.") + "</li>\n";
+      _(1141, "Roxen-internal database.") + "</li>\n";
     break;
   default:
     if( !url )
@@ -1257,7 +1257,7 @@ mapping|string parse( RequestID id )
 	}
 
 	if (tbl_info->inhibit_backups == "yes") {
-	  res += _(0, "The table is not included in backups of this database.") +
+	  res += _(1142, "The table is not included in backups of this database.") +
 	    "<br />\n";
 	}
 
