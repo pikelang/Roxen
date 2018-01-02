@@ -2688,12 +2688,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="401">
-<new/>
-<o>Copy or rename database</o>
-<t></t>
-</str>
-
 <str id="402">
 <new/>
 <o>Delete this database</o>
@@ -2750,43 +2744,21 @@ modules.&lt;/p&gt;
 
 <str id="414">
 <new/>
-<o>Copy or rename this database</o>
+<o>Configure external database connection</o>
 <t></t>
 </str>
 
-<str id="415">
-<new/>
-<o>Action</o>
-<t></t>
-</str>
 
-<str id="416">
-<new/>
-<o>Copy the data to a new database</o>
-<t></t>
-</str>
-
-<str id="417">
-<new/>
-<o>Rename database</o>
-<t></t>
-</str>
 
 <str id="418">
 <new/>
-<o>New name</o>
+<o>Alias</o>
 <t></t>
 </str>
 
 <str id="419">
 <new/>
 <o>Type</o>
-<t></t>
-</str>
-
-<str id="422">
-<new/>
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
 <t></t>
 </str>
 
@@ -3597,13 +3569,13 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 
 <str id="529">
 <new/>
-<o>the database %s does already exist</o>
+<o>A database or alias with name &lt;tt&gt;%s&lt;/tt&gt; already exists. Please select another alias.</o>
 <t></t>
 </str>
 
 <str id="530">
 <new/>
-<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<o>The alias for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
 <t></t>
 </str>
 
@@ -4840,5 +4812,35 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1144">
 <new/>
 <o>Incomplete</o>
+<t></t>
+</str>
+
+<str id="1145">
+<new/>
+<o>Configure database connection</o>
+<t></t>
+</str>
+
+<str id="1146">
+<new/>
+<o>Please specify an alias for the database</o>
+<t></t>
+</str>
+
+<str id="1147">
+<new/>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is an internal database, used by Roxen. Please select another alias.</o>
+<t></t>
+</str>
+
+<str id="1148">
+<new/>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is a MySQL keyword, used by MySQL. Please select another alias.</o>
+<t></t>
+</str>
+
+<str id="1149">
+<new/>
+<o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database alias. Please select another alias.</o>
 <t></t>
 </str>

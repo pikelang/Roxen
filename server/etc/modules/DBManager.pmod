@@ -2589,6 +2589,12 @@ void set_db_group( string db, string group )
 	db, group );
 }
 
+bool valid_db_name( string name ) {
+  return sizeof( (array)name & ({ '@', ' ', '-', '&', '%', '\t',
+                                  '\n', '\r', '\\', '/', '\'', '"',
+                                  '(', ')', '*', '+', }) ) ? false : true;
+}
+
 void create_db( string name, string path, int is_internal,
 		string|void group, string|void default_charset )
 //! Create a new symbolic database alias.
@@ -2603,9 +2609,7 @@ void create_db( string name, string path, int is_internal,
 {
   if( get( name ) )
     error("The database "+name+" already exists\n");
-  if( sizeof((array)name & ({ '@', ' ', '-', '&', '%', '\t',
-			      '\n', '\r', '\\', '/', '\'', '"',
-			      '(', ')', '*', '+', }) ) )
+  if( !(valid_db_name(name)) )
     error("Please do not use any of the characters @, -, &, /, \\ "
 	  "or %% in database names.\nAlso avoid whitespace characters\n");
   if( has_value( name, "-" ) )

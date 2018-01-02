@@ -42,22 +42,6 @@ Check that your password database is correct for user %s(%d),
 <t></t>
 </str>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <str id="19">
 <o>Bad URL %O for server %O.</o>
 <t></t>
@@ -325,16 +309,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t></t>
 </str>
-
-
-
-
-
-
-
-
-
-
 
 <str id="71">
 <o>No matching keys and certificates found.
