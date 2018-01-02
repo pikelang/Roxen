@@ -3512,13 +3512,13 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 
 <str id="529">
 <new/>
-<o>the database %s does already exist</o>
+<o>A database or alias with name &lt;tt&gt;%s&lt;/tt&gt; already exists. Please select another alias.</o>
 <t></t>
 </str>
 
 <str id="530">
 <new/>
-<o>The new alias for the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<o>The alias for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
 <t></t>
 </str>
 
@@ -4761,5 +4761,29 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1145">
 <new/>
 <o>Configure database connection</o>
+<t></t>
+</str>
+
+<str id="1146">
+<new/>
+<o>Please specify an alias for the database</o>
+<t></t>
+</str>
+
+<str id="1147">
+<new/>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is an internal database, used by Roxen. Please select another alias.</o>
+<t></t>
+</str>
+
+<str id="1148">
+<new/>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is a MySQL keyword, used by MySQL. Please select another alias.</o>
+<t></t>
+</str>
+
+<str id="1149">
+<new/>
+<o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database alias. Please select another alias.</o>
 <t></t>
 </str>

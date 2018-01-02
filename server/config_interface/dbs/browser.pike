@@ -328,20 +328,20 @@ mixed configure_ext_db_con( string db, RequestID id )
       {
        case "":
 	 warning =  "<font color='&usr.warncolor;'>"+
-	   _(0,"Please specify an alias for the database")+
+	   _(1146,"Please specify an alias for the database")+
 	   "</font>";
          break;
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
-                         _(0,"<tt>%s</tt> is an internal database, used by Roxen. "
+                         _(1147,"<tt>%s</tt> is an internal database, used by Roxen. "
 			   "Please select another alias.")+
                          "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(0,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
+			     _(1148,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
 			       "Please select another alias.")+
 			     "</font>", id->variables->name );
 	 catch {
@@ -350,7 +350,7 @@ mixed configure_ext_db_con( string db, RequestID id )
            if( !(DBManager.valid_db_name( id->variables->name )) )
            {
              warning = sprintf("<font color='&usr.warncolor;'>"+
-                               _(0,"<span style=\"white-space: pre;\">"
+                               _(1149,"<span style=\"white-space: pre;\">"
                                  "'<tt>%s</tt>'</span> "
                                  "is not a valid database alias. "
                                  "Please select another alias.")+
