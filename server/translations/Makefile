@@ -1,5 +1,5 @@
 # configurable stuff
-PIKE=../bin/pike
+PIKE=../bin/roxen
 
 LANG=C
 
