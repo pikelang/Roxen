@@ -2562,8 +2562,6 @@ noggrant efteråt. Hela serverkonfigurationen behöver laddas om vid en
 <t>Dagens serie från MegaTokyo</t>
 </str>
 
-
-
 <str id="402">
 <o>Delete this database</o>
 <t>Radera denna databas</t>
@@ -2617,10 +2615,6 @@ noggrant efteråt. Hela serverkonfigurationen behöver laddas om vid en
 
 
 
-
-
-
-
 <str id="418">
 <changed from="New name"/>
 <o>Alias</o>
@@ -2631,8 +2625,6 @@ noggrant efteråt. Hela serverkonfigurationen behöver laddas om vid en
 <o>Type</o>
 <t>Typ</t>
 </str>
-
-
 
 <str id="424">
 <o>The database %s was deleted by %s</o>

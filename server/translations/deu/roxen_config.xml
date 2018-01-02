@@ -2667,8 +2667,6 @@ modules.&lt;/p&gt;
 <t>MegaTokyo-Comic von heute</t>
 </str>
 
-
-
 <str id="402">
 <o>Delete this database</o>
 <t>Diese Datenbank löschen</t>
@@ -2725,10 +2723,6 @@ modules.&lt;/p&gt;
 
 
 
-
-
-
-
 <str id="418">
 <changed from="New name"/>
 <o>Alias</o>
@@ -2739,8 +2733,6 @@ modules.&lt;/p&gt;
 <o>Type</o>
 <t>Typ</t>
 </str>
-
-
 
 <str id="424">
 <o>The database %s was deleted by %s</o>

@@ -46,14 +46,6 @@ und dass die Gruppen-Datenbank korrekt ist.
 <t>Fehlschlag bei bind() auf %s://%s:%d/ (%s)</t>
 </str>
 
-
-
-
-
-
-
-
-
 <str id="19">
 <changed from="Bad URL '%s' for server `%s'"/>
 <o>Bad URL %O for server %O.</o>
@@ -334,10 +326,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t></t>
 </str>
-
-
-
-
 
 <str id="71">
 <new/>

@@ -2345,8 +2345,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-
-
 <str id="402">
 <o>Delete this database</o>
 <t></t>
@@ -2399,10 +2397,6 @@ modules.&lt;/p&gt;
 
 
 
-
-
-
-
 <str id="418">
 <o>Alias</o>
 <t></t>
@@ -2412,8 +2406,6 @@ modules.&lt;/p&gt;
 <o>Type</o>
 <t></t>
 </str>
-
-
 
 <str id="424">
 <o>The database %s was deleted by %s</o>

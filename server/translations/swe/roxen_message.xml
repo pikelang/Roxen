@@ -43,14 +43,6 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 <t>Misslyckades med att binda %s (%s)</t>
 </str>
 
-
-
-
-
-
-
-
-
 <str id="19">
 <o>Bad URL %O for server %O.</o>
 <t>Felaktig URL %O för server %O.</t>
@@ -327,10 +319,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t>TLS-port %s öppnad.
 </t>
 </str>
-
-
-
-
 
 <str id="71">
 <new/>
