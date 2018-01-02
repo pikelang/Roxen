@@ -350,7 +350,7 @@ mixed configure_ext_db_con( string db, RequestID id )
            if( !(DBManager.valid_db_name( id->variables->name )) )
            {
              warning = sprintf("<font color='&usr.warncolor;'>"+
-                               _(529,"<span style=\"white-space: pre;\">"
+                               _(0,"<span style=\"white-space: pre;\">"
                                  "'<tt>%s</tt>'</span> "
                                  "is not a valid database alias. "
                                  "Please select another alias.")+
