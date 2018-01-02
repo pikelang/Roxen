@@ -4,7 +4,7 @@ PIKE=../bin/pike
 LANG=C
 
 # do not alter
-all: modules xmls translations
+all: translations
 
 modules:
 	@echo "1. Finding modules"
@@ -29,14 +29,14 @@ modules:
 	  fi ; \
         done
 
-xmls:
+xmls: modules
 	@echo "2. Rebuilding .xml config files"
 	@for a in configs/*.xml ; do  \
 		pkg=`echo $$a | sed -e s',\.xml,,' -e s',.*/,,'`; \
 		./scripts/make_config $$pkg configs/$$pkg.xml ; \
 	done
 
-translations:
+translations: xmls
 	@echo "3. Rebuilding translation files"
 	@for a in configs/*.xml ; do  \
 		pkg=`echo $$a | sed -e s',\.xml,,' -e s',.*/,,'`; \
