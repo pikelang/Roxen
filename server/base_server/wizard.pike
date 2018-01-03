@@ -917,9 +917,13 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 
   string wizard_id = id->cookies["RoxenWizardId"];
   if (!sizeof(wizard_id || "")) {
+    // Create a new cookie.
     wizard_id = (string)random(0x7fffffff);
-    id->add_response_header("Set-Cookie",
-			    sprintf("RoxenWizardId=%s; path=/", wizard_id));
+    // Set the secure flag on the cookie if accessed over https [WS-135].
+    // NB: The cookie is used from Javascript, so it can't have
+    //     httponly set.
+    Roxen.set_cookie(id, "RoxenWizardId", wizard_id, 0, 0, "/",
+		     id->client_prot && id->client_prot() == "https", 0);
     id->cookies["RoxenWizardId"] = wizard_id;
     DEBUGMSG(sprintf("Wizard: Generated new wizard_id: %s\n", wizard_id));
   }
