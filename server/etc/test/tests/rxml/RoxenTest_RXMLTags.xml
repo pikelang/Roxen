@@ -633,6 +633,27 @@ e</result>
 <result><select><option selected="selected" value=a></option></select></result>
 </test>
 
+<test>				<!-- [bug 6425] -->
+  <rxml type="string">
+    <define tag="form001">
+      <set variable="var.ro" value="write"/>
+      <for from="1" to="2" variable="var.ix">
+	<maketag name="input" type="tag">
+	  <if variable="var.ro">
+	    <attrib name="readonly">READONLY</attrib>
+	  </if>
+	</maketag>
+	<unset variable="var.ro" />
+      </for>
+    </define>
+    <form001/>
+  </rxml>
+  <result>
+    <input readonly='READONLY'/>
+    <input/>
+  </result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Append</comment>
@@ -1242,7 +1263,7 @@ e</result>
   <rxml><replace from="x" to="y"><br/>&lt;br/&gt;&amp;
 &#33;&#34;&#35;&#36;&#37;&#38;&#39;&#59;&#60;&#61;&#62;</replace></rxml>
   <result><br/>&lt;br/&gt;&amp;
-!"#$%&#38;';&#60;=&#62;</result>
+!&#34;#$%&#38;&#39;;&#60;=&#62;</result>
 </test>
 
 
@@ -3839,4 +3860,30 @@ e</random></rxml>
     <elements variable="var.foo"/>
   </rxml>
   <result>2</result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>sscanf</comment>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <sscanf variables="var.d,var.m,var.y"
+	    format="%s-%s-%s">&var.contents;</sscanf>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.contents" value="13-12-1972"/>
+    <nooutput>
+      <sscanf variables="var.d,var.m,var.y"
+	      format="%s-%s-%s">&var.contents;</sscanf>
+    </nooutput>
+    &var.y;-&var.m;-&var.d;
+  </rxml>
+  <result>1972-12-13</result>
 </test>

@@ -41,7 +41,7 @@ server external databases will be created in.</p>
 
 <p>If a group has a URL set, it will be used to select the database
 server in which the database will be created. Please note that it
-server must be a MySQL server.</p>")+#"<p>
+must be a MySQL server.</p>")+#"<p>
 <font size=+1><b>ERROR</b></font>
 <table>
   <tr>

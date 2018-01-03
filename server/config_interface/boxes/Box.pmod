@@ -74,7 +74,6 @@ class RDF
 
 class Fetcher
 {
-  Protocols.HTTP.Query query;
   function cb;
   string h, q;
   int p;
@@ -84,21 +83,29 @@ class Fetcher
     cache[h+p+q] = ({qu->data()});
     if( cb )
       cb( qu->data() );
+    destruct(qu);
   }
   
+  void connected( Protocols.HTTP.Query qu )
+  {
+    qu->timed_async_fetch(done, fail);
+  }
+
   void fail( Protocols.HTTP.Query qu )
   {
     cache[h+p+q] = ({"Failed to connect to server"});
     if( cb )
       cb(  "Failed to connect to server" );
     call_out( start, 30 );
+    destruct(qu);
   }
 
   void start( )
   {
     remove_call_out( start );
     call_out( start, 3600 );
-    query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
+    Protocols.HTTP.Query query = Protocols.HTTP.Query( )->
+      set_callbacks( connected, fail );
     query->async_request( h, p, q,
 			  ([ "Host":h+":"+p,
 			     "User-Agent": (roxen.query("default_ident") ?
@@ -138,10 +145,10 @@ class Fetcher
 string get_http_data( string host, int port, string query,
 		      function|void cb )
 {
-  mixed data;
 #ifdef OFFLINE
   return "The server is offline.";
 #else
+  mixed data;
   if( data = cache[host+port+query] )
   {
     return data[0];

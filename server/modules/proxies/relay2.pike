@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.42 2010/07/12 20:46:56 mast Exp $";
+constant cvs_version = "$Id$";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -32,12 +32,66 @@ class Relay
 
   mapping make_headers( RequestID from, int trim )
   {
-    mapping res = ([
+    string remoteaddr = from->remoteaddr;
+    if (has_value(remoteaddr, ":")) {
+      // IPv6.
+      remoteaddr = "[" + remoteaddr + "]";
+    }
+
+    string myip = from->port_obj->ip;
+    if (has_value(myip, ":")) {
+      // IPv6.
+      myip = "[" + myip + "]";
+    }
+    if (from->prot_obj->port != from->prot_obj->default_port) {
+      myip += ":" + from->prot_obj->port;
+    }
+
+    array(array(string|int)) forwarded = from->misc->forwarded || ({});
+
+    if (from->request_headers->host) {
+      forwarded += ({ ({
+			"by", '=', myip, ';',
+			"for", '=', remoteaddr, ';',
+			"host", '=', from->request_headers->host, ';',
+			"proto", '=', from->port_obj->prot_name,
+		      }) });
+    } else {
+      forwarded += ({ ({
+			"by", '=', myip, ';',
+			"for", '=', remoteaddr, ';',
+			"proto", '=', from->port_obj->prot_name,
+		      }) });
+    }
+
+    mapping res = ([]);
+    if( !trim ) {
+      foreach( from->request_headers; string i; string|array(string) v)
+      {
+	switch( i )
+	{
+	case "accept-encoding":
+	  // We need to support the stuff we pass on in the proxy
+	  // otherwise we might end up with things like double
+	  // gzipped data.
+	  break;
+	case "connection": /* We do not support keep-alive yet. */
+	  res->Connection = "close";
+	  break;
+	default:
+	  res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
+	  break;
+	}
+      }
+    }
+
+    res += ([
       "Proxy-Software":roxen->version(),
-      // These are set by Apaches mod_proxy and are more or less
-      // defacto standard.
-      "X-Forwarded-For": from->remoteaddr,
-      "X-Forwarded-Host": from->request_headers->host,
+
+      // RFC 7239
+      "Forwarded": map(forwarded, MIME.quote),
+
+      "Host": host + ":" + port,
     ]);
 
     // Also try to model X-Forwarded-Server after Apaches mod_proxy.
@@ -50,37 +104,27 @@ class Relay
     }
     else
       server_host = my_configuration()->get_host();
-    if (server_host)
-      res["X-Forwarded-Server"] = server_host;
 
-    if( trim ) return res;
-    foreach( from->request_headers; string i; string v)
-    {
-      switch( i )
-      {
-       case "connection": /* We do not support keep-alive yet. */
-	 res->Connection = "close";
-         break;
-       case "host":
-         res->Host = host+":"+port;
-	 break;
-       case "x-forwarded-for":
-	 res["X-Forwarded-For"] = v + "," + res["X-Forwarded-For"];
-	 break;
-       case "x-forwarded-host":
-	 res["X-Forwarded-Host"] = v + "," + res["X-Forwarded-Host"];
-	 break;
-       case "x-forwarded-server":
-	 if (server_host)
-	   res["X-Forwarded-Server"] = v + "," + server_host;
-	 else
-	   res["X-Forwarded-Server"] = v;
-	 break;
-       default:
-	 res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
-         break;
+    // These are set by Apaches mod_proxy and are more or less
+    // defacto standard.
+    foreach(([ "X-Forwarded-For": remoteaddr,
+	       "X-Forwarded-Host": from->request_headers->host,
+	       "X-Forwarded-Proto": from->port_obj->prot_name,
+	       "X-Forwarded-Server": server_host,
+
+	       // RFC 7230 5.7.1
+	       "Via": from->clientprot + " " + server_host,
+	    ]); string field; string|array(string) value) {
+      if (!value) continue;
+      array(string)|string old_val = res[lower_case(field)];
+      if (arrayp(old_val)) {
+	value = old_val + ({ value });
+      } else if (stringp(old_val)) {
+	value = ({ old_val, value });
       }
+      res[field] = value;
     }
+
     return res;
   }
 
@@ -143,19 +187,36 @@ class Relay
     string do_rewrite( string what )
     {
       Parser.HTML p = Parser.HTML();
+      p->xml_tag_syntax(1);
 
-      function rewrite_what( string elem )
-      {
-	return lambda( string t, mapping a ) {
-		 if( a[elem] )
-		   a[elem] = rewrite( a[elem] );
-		 return ({Roxen.make_tag( p->tag_name(), a, 1 )});
-	       };
-      };
-       p->add_tag( "a", rewrite_what("href") );
-       p->add_tag( "img", rewrite_what("src") );
-       p->add_tag( "form", rewrite_what("action") );
-       return p->finish( what )->read();
+      p->_set_tag_callback( lambda(object p, string s) {
+			      string tag_name = p->tag_name();
+			      string rewrite_arg = 0;
+			      switch(tag_name) {
+			      case "a":
+				rewrite_arg = "href";
+				break;
+			      case "img":
+				rewrite_arg = "src";
+				break;
+			      case "form":
+				rewrite_arg = "action";
+				break;
+			      }
+			      if(rewrite_arg) {
+				mapping args = p->tag_args();
+				if(string val = args[rewrite_arg]) {
+				  string new_val = rewrite(val);
+				  if( val != new_val) {
+				    int is_closed = has_suffix(s,"/>");
+				    args[rewrite_arg] = new_val;
+				    return ({ Roxen.make_tag(tag_name, args, is_closed) });
+				  }
+				}
+			      }
+			    });
+
+      return p->finish( what )->read();
     };
 
 

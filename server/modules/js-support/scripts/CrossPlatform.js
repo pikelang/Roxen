@@ -418,6 +418,12 @@ function getFirstNode(n1, n2)
 //  Selects all text in the first text input field in the current page
 function selectFirstInputField(focus_only)
 {
+  // Check if the user already has interacted with the page and
+  // focused something.
+  if(document.activeElement && document.activeElement !== document.body) {
+    return;
+  }
+
   if (document.getElementsByTagName) {
     //  Locate all <input type="text"> elements and pick the first one
     var inputs = document.getElementsByTagName("input");

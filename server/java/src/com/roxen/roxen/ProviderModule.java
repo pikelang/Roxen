@@ -1,5 +1,5 @@
 /*
- * $Id: ProviderModule.java,v 1.2 2000/02/21 18:30:46 marcus Exp $
+ * $Id$
  *
  */
 

@@ -42,6 +42,7 @@ class TagServeStaticResources
   {
     mapping process_tags = query("process_tags");
     Parser.HTML parser = Parser.HTML();
+    parser->xml_tag_syntax(0);
 
     function process_tag = lambda(Parser.HTML p, mapping args)
     {
@@ -60,15 +61,19 @@ class TagServeStaticResources
 
 	  args[attr_name] =
 	    Roxen.add_pre_state(link, (< "cache-forever", varystr >));
-	  return ({ Roxen.make_tag(tag_name, args, 1, 1) });
+	  return ({ Roxen.make_tag(tag_name, args, has_suffix (tag_name, "/"),
+				   1) });
 	}
       }
       return 0;
     };
 
-    foreach(process_tags; string tag_name; string attr_name)
+    foreach(process_tags; string tag_name; string attr_name) {
       parser->add_tag(tag_name, process_tag);
+      parser->add_tag(tag_name + "/", process_tag);
+    }
 
+    parser->ignore_unknown (1);
     string res = parser->finish(s)->read();
     parser = 0;
     process_tag = 0;

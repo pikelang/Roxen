@@ -355,7 +355,4 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t></t>
 </str>
 
-<str id="66">
-<o>Uncaught error in background process:</o>
-<t></t>
-</str>
+

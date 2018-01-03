@@ -1,25 +1,30 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.13 2009/11/19 18:51:59 mast Exp $
+// $Id$
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
 //! class for tracking:
 //!
 //! @example
-//! RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this_object());
+//! RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 
 mapping(string:int) object_markers = ([]);
 mapping(string:string) object_create_places = ([]);
 
-int log_create_destruct = 1;
+int log_create_destruct = 0;
+
+enum ObjectMarkerFlags {
+  LOG_CREATE_DESTRUCT = 1,
+  LOG_DESTRUCT_BT = 2,
+}
 
 //!
 class ObjectMarker
 {
   int count = ++all_constants()->__object_marker_count;
   string id;
-  int flags;
+  ObjectMarkerFlags flags;
 
   protected void debug_msg (array bt, int ignore_frames,
 			    string msg, mixed... args)
@@ -48,14 +53,17 @@ class ObjectMarker
 
     if (file) {
       string cwd = getcwd() + "/";
-      if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
+      if (has_prefix (file, cwd))
+	file = file[sizeof (cwd)..];
+      else if (has_prefix (file, roxenloader.server_dir))
+	file = file[sizeof (roxenloader.server_dir)..];
       werror ("%s:%d: %s", file, bt[i][1], msg);
     }
     else werror (msg);
   }
 
   //!
-  void create (void|string|object obj, void|int _flags)
+  void create (void|string|object obj, void|ObjectMarkerFlags _flags)
   {
     flags = _flags;
     if (obj) {
@@ -65,7 +73,7 @@ class ObjectMarker
 
       if (id) {
 	if (new_id == id) return;
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  if (object_markers[id] > 0)
 	    debug_msg (backtrace(), 1, "rename %s -> %s\n", id, new_id);
 	  else
@@ -76,20 +84,28 @@ class ObjectMarker
 	}
       }
       else
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  debug_msg (backtrace(), 1, "create %s\n", new_id);
 
       id = new_id;
       object_markers[id]++;
-      object_create_places[id] = describe_backtrace (backtrace());
+      // Use master()->describe_backtrace to sidestep the background
+      // failure wrapper that's active in RUN_SELF_TEST.
+      object_create_places[id] = master()->describe_backtrace (backtrace());
     }
   }
 
-  void destroy()
+  string create_place_bt()
+  //!
+  {
+    return object_create_places[id] || "-";
+  }
+
+  protected void destroy()
   {
     if (global::this) {
       if (id) {
-	if (log_create_destruct)
+	if (flags & LOG_CREATE_DESTRUCT || log_create_destruct)
 	  if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
 	  else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
 	if (--object_markers[id] <= 0) {
@@ -97,9 +113,9 @@ class ObjectMarker
 	  m_delete (object_create_places, id);
 	}
       }
-      if (flags && log_create_destruct) {
+      if (flags & LOG_DESTRUCT_BT) {
 	werror("destructing...\n"
-	       "%s\n", describe_backtrace(backtrace()));
+	       "%s\n", master()->describe_backtrace(backtrace()));
       }
     }
   }

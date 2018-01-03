@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.44 2011/02/28 13:29:43 anders Exp $
+ * $Id$
  *
  * Create an initial administration interface server.
  */
@@ -75,6 +75,12 @@ string read_string(Readline rl, string prompt, string|void def,
     res = def;
   return res;
 }
+
+#if constant(Crypto.Password)
+constant hash_password = Crypto.Password.hash;
+#else
+constant hash_password = Crypto.make_crypt_md5;
+#endif
 
 int main(int argc, array argv)
 {
@@ -340,7 +346,7 @@ string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Administrator</str>
-  <str>password</str>    : <str>" + crypt(password) + #"</str>
+  <str>password</str>    : <str>" + hash_password(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
   write("\n   Administrator user \"" + user + "\" created.\n");

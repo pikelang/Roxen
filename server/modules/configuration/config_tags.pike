@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.206 2011/03/07 13:01:49 grubba Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -496,12 +496,11 @@ object get_conf( object mod )
   return mod;
 }
 
-mapping get_variable_section( string s, object mod, RequestID id )
+mapping low_variable_section(string|object localized_name,
+			     object mod, RequestID id)
 {
-  Variable.Variable var = mod->getvar( s );
   string section = RXML.get_var( "section", "form" );
-  LocaleString localized_name = var->name();
-  s = (string)localized_name;
+  string s = (string)localized_name;
   if( sscanf( s, "%s:%*s", s ) ) {
     string s2 = s;
     string old_loc;
@@ -526,6 +525,13 @@ mapping get_variable_section( string s, object mod, RequestID id )
       ((section=="Settings" || !section)?"selected":""),
     ]);
   return 0;
+}
+
+mapping get_variable_section( string s, object mod, RequestID id )
+{
+  Variable.Variable var = mod->getvar( s );
+  LocaleString localized_name = var->name();
+  return low_variable_section(localized_name, mod, id);
 }
 
 array get_variable_maps( object mod, 
@@ -627,6 +633,11 @@ array get_variable_sections( object mod, mapping m, RequestID id )
                        lambda( mapping q ) {
                          return !w[ q->section ]++;
                        });
+  if (mod == roxen && mod->register_fsgarb) {
+    variables += ({
+      low_variable_section(LOCALE(0, "Filesystem GC:"), mod, id),
+    });
+  }
   sort( variables->section, variables );
   return variables;
 }
@@ -815,6 +826,11 @@ class TagConfigPortsplugin
 
   array get_dataset(mapping m, RequestID id)
   {
+    if (m->port) {
+      Protocol p = roxen->find_port(m->port);
+      if (p) return ({ get_port_map(p) });
+      return ({});
+    }
     array pos = roxen->all_ports();
     sort( pos->get_key(), pos );
     pos = map( pos, get_port_map );
@@ -992,6 +1008,7 @@ class TagCFHeadline
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
+      result_type = RXML.t_text;
       return ({ roxen->query("config_header_string") });
     }
   }

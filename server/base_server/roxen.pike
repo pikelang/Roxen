@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1080 2011/02/15 13:51:39 marty Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -33,6 +33,7 @@ inherit "smtprelay";
 #endif
 inherit "hosts";
 inherit "disk_cache";
+inherit "fsgc";
 // inherit "language";
 inherit "supports";
 inherit "module_support";
@@ -114,6 +115,8 @@ array(string|int) filename_2 (program|object o)
   string cwd = getcwd() + "/";
   if (has_prefix (fname, cwd))
     fname = fname[sizeof (cwd)..];
+  else if (has_prefix (fname, roxenloader.server_dir))
+    fname = fname[sizeof (roxenloader.server_dir)..];
 
   return ({fname, line});
 }
@@ -137,17 +140,21 @@ array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
-string thread_name( object thread )
+string thread_name( object thread, int|void skip_auto_name )
 {
   string tn;
-  if( thread_names[ tn=sprintf("%O",thread) ] )
+  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
     return thread_names[tn];
   return tn;
 }
 
 void name_thread( object thread, string name )
 {
-  thread_names[ sprintf( "%O", thread ) ] = name;
+  string th_key = sprintf("%O", thread);
+  if (name)
+    thread_names[th_key] = name;
+  else
+    m_delete(thread_names, th_key);
 }
 
 // This mutex is used by Privs
@@ -215,7 +222,7 @@ protected class Privs
 #ifdef THREADS
     if (euid_egid_lock) {
       if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
     threads_disabled = _disable_threads();
 #endif /* THREADS */
@@ -276,11 +283,11 @@ protected class Privs
     if (u[2]) {
 #if efun(cleargroups)
       if (mixed err = catch { cleargroups(); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif /* cleargroups */
 #if efun(initgroups)
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif
     }
     gid = gid || getgid();
@@ -373,7 +380,7 @@ protected class Privs
 			      "from backend")+"\n", saved_uid, saved_gid);
 	}
 	})
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
 
 #ifdef PRIVS_DEBUG
@@ -395,11 +402,11 @@ protected class Privs
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
     if (mixed err = catch { cleargroups(); })
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
 #endif /* cleargroups */
     if(u && (sizeof(u) > 3)) {
       if (mixed err = catch { initgroups(u[0], u[3]); })
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
     }
     setegid(saved_gid);
     seteuid(saved_uid);
@@ -477,7 +484,7 @@ private void really_low_shutdown(int exit_code)
 	  Sql.Sql db = connect_to_my_mysql(0, "mysql");
 	  db->shutdown();
 	})
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
   }
   // Zap some of the remaining caches.
   destruct (argcache);
@@ -492,7 +499,7 @@ private void really_low_shutdown(int exit_code)
       else
 	report_notice("Shutting down Roxen.\n");
     })
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 #endif
   roxenloader.real_exit( exit_code ); // Now we die...
 }
@@ -509,13 +516,16 @@ private void low_shutdown(int exit_code)
     if (mixed err =
 	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
 	catch (stop_all_configurations()))
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
     // Zap some of the remaining caches.
     destruct(argcache);
     destruct(cache);
 #ifdef THREADS
+#if constant(Filesystem.Monitor.basic)
+    stop_fsgarb();
+#endif
     if (mixed err = catch (stop_handler_threads()))
-      werror (describe_backtrace (err));
+      master()->handle_error (err);
 #endif /* THREADS */
     roxenloader.real_exit(exit_code);
   }
@@ -527,7 +537,7 @@ private void low_shutdown(int exit_code)
 #endif
 
   if (mixed err = catch(stop_all_configurations()))
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 
 #ifdef SNMP_AGENT
   if(objectp(snmpagent)) {
@@ -579,7 +589,7 @@ int is_shutting_down()
 #ifdef THREADS
 // function handle = threaded_handle;
 
-Thread do_thread_create(string id, function f, mixed ... args)
+Thread.Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
   name_thread( t, id );
@@ -631,7 +641,7 @@ class Queue
     return tmp;
   }
 
-  mixed tryread()
+  mixed try_read()
   {
     if (!(w_ptr - r_ptr)) return ([])[0];
     mixed tmp = buffer[r_ptr];
@@ -665,8 +675,10 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
   // my_monitor is just a safeguard to ensure we don't get multiple
   // monitor threads.
+  name_thread(this_thread(), "Slow request monitor");
   while (slow_req_monitor == my_monitor)
-    slow_req_monitor (3600);
+    slow_req_monitor (3600.0);
+  name_thread(this_thread(), 0);
 }
 
 protected mixed slow_be_call_out;
@@ -684,6 +696,8 @@ protected void slow_be_before_cb()
 
 protected void slow_be_after_cb()
 {
+  // FIXME: This should try to compensate for delays due to the pike
+  // gc, because it just causes noise here.
 #ifdef DEBUG
   if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
 #endif
@@ -829,8 +843,16 @@ protected string debug_format_queue_task (array(function|array) task)
 	   sprintf ("%O", task[0])) +
 	  "(" +
 	  map (task[1], lambda (mixed arg)
-			  {return sprintf ("%O", arg);}) * ", " +
+			  {return RXML.utils.format_short (arg, 200);}) * ", " +
 	  ")");
+}
+
+protected mapping(Thread.Thread:int) thread_task_start_times = ([]);
+
+mapping(Thread.Thread:int) get_thread_task_start_times()
+{
+  //  Also needed in Admin interface's thread wizard
+  return thread_task_start_times + ([ ]);
 }
 
 local protected void handler_thread(int id)
@@ -872,6 +894,7 @@ local protected void handler_thread(int id)
 	  handler_num_runs++;
 
 	  int start_hrtime = gethrtime();
+	  thread_task_start_times[this_thread()] = start_hrtime;
 	  float handler_vtime = gauge {
 #ifndef NO_SLOW_REQ_BT
 	      if (h[0] != bg_process_queue &&
@@ -890,6 +913,7 @@ local protected void handler_thread(int id)
 		}
 	    };
 	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
+	  thread_task_start_times[this_thread()] = 0;
 
 	  h=0;
 	  busy_threads--;
@@ -940,9 +964,7 @@ local protected void handler_thread(int id)
       if (call_out) monitor->remove_call_out (call_out);
 #endif
       if (h = catch {
-	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
-		       "Client will not get any response from Roxen.\n"),*/
-		     describe_backtrace(q));
+	master()->handle_error (q);
 	if (q = catch {h = 0;}) {
 	  report_error(LOC_M(5, "Uncaught error in handler thread: %sClient "
 			     "will not get any response from Roxen.")+"\n",
@@ -1046,7 +1068,7 @@ void release_handler_threads (int numthreads)
   if (Thread.Condition cond = hold_wakeup_cond) {
     // Flush out any remaining hold messages from the queue.
     for (int i = handle_queue->size(); i && num_hold_messages; i--) {
-      mixed task = handle_queue->tryread();
+      mixed task = handle_queue->try_read();
       if (task == 1) num_hold_messages--;
       else handle_queue->write (task);
     }
@@ -1079,17 +1101,23 @@ void release_handler_threads (int numthreads)
   }
 }
 
+//!
+int handler_threads_on_hold() {return !!hold_wakeup_cond;}
+
 protected Thread.MutexKey backend_block_lock;
 
 void stop_handler_threads()
 //! Stop all the handler threads and the backend, but give up if it
 //! takes too long.
 {
-  int timeout=10;
+  int timeout=15;		// Timeout if the bg queue doesn't get shorter.
+  int background_run_timeout = 100; // Hard timeout that cuts off the bg queue.
 #if constant(_reset_dmalloc)
   // DMALLOC slows stuff down a bit...
   timeout *= 10;
+  background_run_timeout *= 3;
 #endif /* constant(_reset_dmalloc) */
+
   report_debug("Stopping all request handler threads.\n");
 
   // Wake up any handler threads on hold, and ensure none gets on hold
@@ -1118,11 +1146,23 @@ void stop_handler_threads()
 	      }, 0);
   }
 
-  while(thread_reap_cnt) {
+  int prev_bg_len = bg_queue_length();
+
+  while (thread_reap_cnt) {
     sleep(0.1);
-    if(--timeout<=0) {
+
+    if (--timeout <= 0) {
+      int cur_bg_len = bg_queue_length();
+      if (prev_bg_len < cur_bg_len)
+	// Allow more time if the background queue is being worked off.
+	timeout = 10;
+      prev_bg_len = cur_bg_len;
+    }
+
+    if(--background_run_timeout <= 0 || timeout <= 0) {
       report_debug("Giving up waiting on threads; "
-		   "%d threads blocked.\n", thread_reap_cnt);
+		   "%d threads blocked, %d jobs in the background queue.\n",
+		   thread_reap_cnt, bg_queue_length());
 #ifdef DEBUG
       describe_all_threads();
 #endif
@@ -1216,7 +1256,7 @@ function async_sig_start( function f, int really )
 
 #ifdef THREADS
 protected Thread.Queue bg_queue = Thread.Queue();
-protected int bg_process_running;
+protected Thread.Thread bg_process_thread;
 
 // Use a time buffer to strike a balance if the server is busy and
 // always have at least one busy thread: The maximum waiting time in
@@ -1245,9 +1285,9 @@ int bg_queue_length()
 
 protected void bg_process_queue()
 {
-  if (bg_process_running) return;
+  if (bg_process_thread) return;
   // Relying on the interpreter lock here.
-  bg_process_running = 1;
+  bg_process_thread = this_thread();
 
   int maxbeats =
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.01);
@@ -1264,8 +1304,12 @@ protected void bg_process_queue()
     // If jobs are enqueued while running another background job,
     // bg_process_queue is put on the handler queue again at the very
     // end of this function.
+    //
+    // However, during shutdown we continue until the queue is really
+    // empty. background_run won't queue new jobs then, and if this
+    // takes too long, stop_handler_threads will exit anyway.
     int jobs_to_process = bg_queue->size();
-    while (jobs_to_process-- && !shutdown_started) {
+    while (hold_wakeup_cond ? jobs_to_process-- : bg_queue->size()) {
       // Not a race here since only one thread is reading the queue.
       array task = bg_queue->read();
 
@@ -1291,25 +1335,29 @@ protected void bg_process_queue()
       if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
 	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
 				      this_thread(), slow_req_timeout);
-	int start_hrtime = gethrtime (1);
+	int start_hrtime = gethrtime();
+	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0]) // Ignore things that have become destructed.
 	      // Note: BackgroundProcess.repeat assumes that there are
 	      // exactly two refs to task[0] during the call below.
 	      task[0] (@task[1]);
 	  };
-	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	task_rtime = (gethrtime() - start_hrtime) / 1e6;
+	thread_task_start_times[this_thread()] = 0;
 	monitor->remove_call_out (call_out);
       }
       else
 #endif
       {
-	int start_hrtime = gethrtime (1);
+	int start_hrtime = gethrtime();
+	thread_task_start_times[this_thread()] = start_hrtime;
 	task_vtime = gauge {
 	    if (task[0])
 	      task[0] (@task[1]);
 	  };
-	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+	task_rtime = (gethrtime() - start_hrtime) / 1e6;
+	thread_task_start_times[this_thread()] = 0;
       }
 
       if (task_rtime >  0.01) bg_num_runs_001s++;
@@ -1355,11 +1403,11 @@ protected void bg_process_queue()
 #ifndef NO_SLOW_REQ_BT
     if (call_out) monitor->remove_call_out (call_out);
 #endif
-    bg_process_running = 0;
+    bg_process_thread = 0;
     handle (bg_process_queue);
     throw (err);
   }
-  bg_process_running = 0;
+  bg_process_thread = 0;
   if (bg_queue->size()) {
     handle (bg_process_queue);
     // Sleep a short while to encourage a thread switch. This is a
@@ -1369,6 +1417,20 @@ protected void bg_process_queue()
   }
 }
 #endif
+
+Thread.Thread background_run_thread()
+//! Returns the thread currently executing the background_run queue,
+//! or 0 if it isn't being processed.
+{
+#ifdef THREADS
+  return bg_process_thread;
+#else
+  // FIXME: This is not correct. Should return something nonzero when
+  // called from the call out. But noone is running without threads
+  // nowadays anyway.
+  return 0;
+#endif
+}
 
 mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
@@ -1414,9 +1476,13 @@ mixed background_run (int|float delay, function func, mixed... args)
 #endif
 
 #ifdef THREADS
-  if (!hold_wakeup_cond)
+  if (!hold_wakeup_cond) {
     // stop_handler_threads is running; ignore more work.
+#ifdef DEBUG
+    report_debug ("Ignoring background job queued during shutdown: %O\n", func);
+#endif
     return 0;
+  }
 
   class enqueue(function func, mixed ... args)
   {
@@ -1426,7 +1492,7 @@ mixed background_run (int|float delay, function func, mixed... args)
     mixed `()()
     {
       bg_queue->write (({func, args}));
-      if (!bg_process_running)
+      if (!bg_process_thread)
 	handle (bg_process_queue);
     }
   };
@@ -1475,12 +1541,8 @@ class BackgroundProcess
     mixed err = catch {
 	func (@args);
       };
-    if (err) {
-      catch {
-	report_error(LOC_M(66, "Uncaught error in background process:") +
-		     "%s\n", describe_backtrace(err));
-      };
-    }
+    if (err)
+      master()->handle_error (err);
     background_run (period, repeat, func, args);
   }
 
@@ -1808,7 +1870,10 @@ class Protocol
   //! Maps the configuration objects to the data mappings in @[urls].
 
   void ref(string name, mapping(string:mixed) data)
-  //! Add a ref for the URL 'name' with the data 'data'
+  //! Add a ref for the URL @[name] with the data @[data].
+  //!
+  //! See @[urls] for documentation about the supported
+  //! fields in @[data].
   {
     if(urls[name])
     {
@@ -2064,9 +2129,11 @@ class Protocol
   string get_key()
   //! Return the key used for this port (protocol:ip:portno)
   {
+#if 0
     if (ip == "::")
       return name + ":0:" + port;
     else
+#endif
       return name+":"+ip+":"+port;
   }
 
@@ -2263,7 +2330,10 @@ class SSLProtocol
 #ifndef ALLOW_WEAK_SSL
     // Filter weak and really weak cipher suites.
     ctx->preferred_suites -= ({
+      SSL.Constants.SSL_rsa_with_des_cbc_sha,
+      SSL.Constants.SSL_dhe_dss_with_des_cbc_sha,
       SSL.Constants.SSL_rsa_export_with_rc4_40_md5,
+      SSL.Constants.TLS_rsa_with_null_sha256,
       SSL.Constants.SSL_rsa_with_null_sha,
       SSL.Constants.SSL_rsa_with_null_md5,
       SSL.Constants.SSL_dhe_dss_export_with_des40_cbc_sha,
@@ -2272,6 +2342,8 @@ class SSLProtocol
 #endif
   }
 
+  // NB: The TBS Tools.X509 API has been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
@@ -2451,6 +2523,7 @@ class SSLProtocol
 	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
     }
   }
+#pragma deprecation_warnings
 
   class CertificateListVariable
   {
@@ -2600,17 +2673,66 @@ mapping(string:program/*(Protocol)*/) build_protocols_mapping()
 
 mapping(string:program/*(Protocol)*/) protocols;
 
-// prot:ip:port ==> Protocol.
+//! Lookup from protocol, IP number and port to
+//! the corresponding open @[Protocol] port.
+//!
+//! @mapping
+//!   @member mapping(string:mapping(int:Protocol)) protocol_name
+//!     @mapping
+//!       @member mapping(int:Protocol) ip_number
+//!         @mapping
+//!           @member Protocol port_number
+//!             @[Protocol] object that holds this ip_number and port open.
+//!         @endmapping
+//!     @endmapping
+//! @endmapping
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
-// url:"port" ==> Protocol.
-mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)))
+//! Lookup from URL string to the corresponding open @[Protocol] ports.
+//!
+//! Note that there are two classes of URL strings used as indices in
+//! this mapping:
+//! @dl
+//!   @item "prot://host_glob:port/path/"
+//!     A normalized URL string as returned by @[normalize_url()].
+//!
+//!     @[Protocol()->ref()] in the contained ports as been called
+//!     with the url.
+//!
+//!   @item "port://host_glob:port/path/#opt1=val1;opt2=val2"
+//!     An URL string containing options as stored in the @tt{"URLs"@}
+//!     configuration variable, and expected as argument by
+//!     @[register_url()] and @[unregister_url()]. Also known
+//!     as an ourl.
+//! @enddl
+//!
+//! In both cases the same set of data is stored:
+//! @mapping
+//!   @member mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)) url
+//!     @mapping
+//!       @member Protocol "port"
+//!         Representative open port for this URL.
+//!       @member array(Protocol) "ports"
+//!         Array of all open ports for this URL.
+//!       @member Configuration "conf"
+//!         Configuration that has registered the URL.
+//!       @member string "path"
+//!         Path segment of the URL.
+//!       @member string "host"
+//!         Hostname segment of the URL.
+//!       @member array(string) "skipped"
+//!         List of IP numbers not bound due to a corresponding
+//!         ANY port already being open.
+//!     @endmapping
+//! @endmapping
+mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)|array(string)))
   urls = ([]);
+
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
 {
-  if( what == "*" || lower_case(what) == "any" )
+  if( what == "*" || lower_case(what) == "any" || has_value(what, "*") )
     return ({
 #if constant(__ROXEN_SUPPORTS_IPV6__)
 	      "::",
@@ -2652,6 +2774,9 @@ string normalize_url(string url, void|int port_match_form)
 //! If @[port_match_form] is set, it normalizes to the form that is
 //! used for port matching, i.e. what
 //! @[roxen.Protocol.find_configuration_for_url] expects.
+//!
+//! @note
+//!   Returns @expr{""@} for @[url]s that are incomplete.
 {
   if (!sizeof (url - " " - "\t")) return "";
 
@@ -2705,27 +2830,60 @@ string normalize_url(string url, void|int port_match_form)
   }
 }
 
+//! Unregister an URL from a configuration.
+//!
+//! @seealso
+//!   @[register_url()]
 void unregister_url(string url, Configuration conf)
 {
   string ourl = url;
+  mapping(string:mixed) data = m_delete(urls, ourl);
+  if (!data) return;	// URL not registered.
   if (!sizeof(url = normalize_url(url, 1))) return;
 
   report_debug ("Unregister %s%s.\n", normalize_url (ourl),
 		conf ? sprintf (" for %O", conf->query_name()) : "");
 
-  if (urls[url] && (!conf || !urls[url]->conf || (urls[url]->conf == conf)) &&
-      urls[url]->port)
-  {
-    urls[ url ]->port->unref(url);
-    m_delete( urls, url );
-    m_delete( urls, ourl );
-    sort_urls();
+  mapping(string:mixed) shared_data = urls[url];
+  if (!shared_data) return;	// Strange case, but URL not registered.
+
+  int was_any_ip;
+  if (!data->skipped && data->port) {
+    if (!data->port->ip || (data->port->ip == "::")) {
+      was_any_ip = data->port->port;
+      report_debug("Unregistering ANY port: %O:%d\n",
+		   data->port->ip, data->port->port);
+    }
+  }
+
+  foreach(data->ports || ({}), Protocol port) {
+    shared_data->ports -= ({ port });
+    port->unref(url);
+    m_delete(shared_data, "port");
+  }
+  if (!sizeof(shared_data->ports || ({}))) {
+    m_delete(urls, url);
+  } else if (!shared_data->port) {
+    shared_data->port = shared_data->ports[0];
+  }
+  sort_urls();
+
+  if (was_any_ip) {
+    foreach(urls; string url; mapping(string:mixed) url_info) {
+      if (!url_info->skipped || !url_info->conf ||
+	  (url_info->port && (url_info->port->port != was_any_ip))) {
+	continue;
+      }
+      // Re-register the ports that may have bound to the removed ANY port.
+      register_url(url, url_info->conf);
+    }
   }
 }
 
 array all_ports( )
 {
-  return Array.uniq( values( urls )->port )-({0});
+  // FIXME: Consider using open_ports instead.
+  return Array.uniq( (values( urls )->ports - ({0})) * ({}) )-({0});
 }
 
 Protocol find_port( string name )
@@ -2741,6 +2899,10 @@ void sort_urls()
   sort( map( map( sorted_urls, strlen ), `-), sorted_urls );
 }
 
+//! Register an URL for a configuration.
+//!
+//! @seealso
+//!   @[unregister_url()]
 int register_url( string url, Configuration conf )
 {
   string ourl = url;
@@ -2765,6 +2927,7 @@ int register_url( string url, Configuration conf )
 
   string display_url = normalize_url (url, 0);
   url = normalize_url (url, 1);
+  if (url == "") return 1;
   ui = Standards.URI (url);
 
   string protocol = ui->scheme;
@@ -2795,8 +2958,8 @@ int register_url( string url, Configuration conf )
 		     display_url, urls[ url ]->conf->name);
 	return 0;
       }
+      // FIXME: Is this correct?
       urls[ url ]->port->ref(url, urls[url]);
-      return 1;
     }
     else
       urls[ url ]->port->unref( url );
@@ -2812,9 +2975,12 @@ int register_url( string url, Configuration conf )
     return 0;
   }
 
-  urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
-  urls[ ourl ] = urls[url] + ([]);
-  sorted_urls += ({ url });
+  // FIXME: Do we need to unref the old ports first in case of a reregister?
+  urls[ ourl ] = ([ "conf":conf, "path":path, "hostname": host ]);
+  if (!urls[url]) {
+    urls[ url ] = urls[ourl] + ([]);
+    sorted_urls += ({ url });	// FIXME: Not exactly sorted...
+  }
 
   array(string)|int(-1..0) required_hosts;
 
@@ -2842,18 +3008,22 @@ int register_url( string url, Configuration conf )
   if (prot->supports_ipless ) {
     // Check if the ANY port is already open for this port, since this
     // protocol supports IP-less virtual hosting, there is no need to
-    // open yet another port if it is, since that would mosts probably
+    // open yet another port if it is, since that would most probably
     // only conflict with the ANY port anyway. (this is true on most
     // OSes, it works on Solaris, but fails on linux)
     array(string) ipv6 = filter(required_hosts - ({ 0 }), has_value, ":");
     array(string) ipv4 = required_hosts - ipv6;
     if (m[0][port] && sizeof(ipv4 - ({ 0 }))) {
       // We have a non-ANY IPv4 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped = ipv4;
       ipv4 = ({ 0 });
     }
 #if constant(__ROXEN_SUPPORTS_IPV6__)
     if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
       // We have a non-ANY IPv6 IP number.
+      // Keep track of the ips in case the ANY port is removed.
+      urls[ourl]->skipped += ipv6;
       ipv6 = ({ "::" });
     }
     required_hosts = ipv6 + ipv4;
@@ -2881,6 +3051,11 @@ int register_url( string url, Configuration conf )
       m[required_host][port]->ref(url, urls[url]);
 
       urls[url]->port = m[required_host][port];
+      if (urls[url]->ports) {
+	urls[url]->ports += ({ m[required_host][port] });
+      } else {
+	urls[url]->ports = ({ m[required_host][port] });
+      }
       urls[ourl]->port = m[required_host][port];
       if (urls[ourl]->ports) {
 	urls[ourl]->ports += ({ m[required_host][port] });
@@ -2900,7 +3075,7 @@ int register_url( string url, Configuration conf )
 	  prot( port, required_host,
 		// Don't complain if binding IPv4 ANY fails with
 		// EADDRINUSE after we've bound IPv6 ANY. 
-		// Most systems seems to bind booth IPv4 ANY and
+		// Most systems seems to bind both IPv4 ANY and
 		// IPv6 ANY for "::"
 		!required_host && opened_ipv6_any_port);
       }) {
@@ -2936,6 +3111,11 @@ int register_url( string url, Configuration conf )
     }
 
     urls[ url ]->port = prot_obj;
+    if (urls[url]->ports) {
+      urls[url]->ports += ({ prot_obj });
+    } else {
+      urls[url]->ports = ({ prot_obj });
+    }
     urls[ ourl ]->port = prot_obj;
     if (urls[ourl]->ports) {
       urls[ourl]->ports += ({ prot_obj });
@@ -3169,9 +3349,16 @@ protected void engage_abs(int n)
   // Paranoia exit in case describe_all_threads below hangs.
   signal(signum("SIGALRM"), low_engage_abs);
   int t = alarm(20);
-#ifdef THREADS
-  report_debug("Handler queue:\n");
+  report_debug("\nTrying to dump backlog: \n");
   if (mixed err = catch {
+      // Catch for paranoia reasons.
+      describe_all_threads();
+    })
+    master()->handle_error (err);
+#ifdef THREADS
+  report_debug("\nHandler queue:\n");
+  if (mixed err = catch {
+    t = alarm(20);	// Restart the timeout timer.
     array(mixed) queue = handle_queue->buffer[handle_queue->r_ptr..];
     foreach(queue, mixed v) {
       if (!v) continue;
@@ -3182,14 +3369,17 @@ protected void engage_abs(int n)
       }
     }
     })
-    werror (describe_backtrace (err));
+    master()->handle_error (err);
 #endif
-  report_debug("Trying to dump backlog: \n");
+  report_debug("\nPending call_outs:\n");
   if (mixed err = catch {
-      // Catch for paranoia reasons.
-      describe_all_threads();
+      t = alarm(20);	// Restart the timeout timer.
+      foreach(call_out_info(), array info) {
+	report_debug("  %4d seconds: %O(%{%O, %})\n",
+		     info[0], info[2], info[3]);
+      }
     })
-    werror (describe_backtrace (err));
+    master()->handle_error(err);
   low_engage_abs();
 }
 
@@ -3232,6 +3422,10 @@ void restart_if_stuck (int force)
 #endif
 
 function(string:Sql.Sql) dbm_cached_get;
+
+// Threshold in seconds for updating atime records Currently set to
+// one day.
+#define ATIME_THRESHOLD 60*60*24
 
 class ImageCache
 //! The image cache handles the behind-the-scenes caching and
@@ -3848,7 +4042,8 @@ class ImageCache
     werror("restore meta %O\n", id );
 #endif
     array(mapping(string:string)) q =
-      QUERY("SELECT meta FROM "+name+" WHERE id=%s", id );
+      QUERY("SELECT meta, UNIX_TIMESTAMP() - atime as atime_diff "
+	    "FROM "+name+" WHERE id=%s", id );
 
     string s;
     if(!sizeof(q) || !strlen(s = q[0]->meta))
@@ -3862,19 +4057,25 @@ class ImageCache
       return 0;
     }
 
-    QUERY("UPDATE "+name+" SET atime=UNIX_TIMESTAMP() WHERE id=%s",id );
+    // Update atime only if older than threshold.
+    if((int)q[0]->atime_diff > ATIME_THRESHOLD) {
+      QUERY("UPDATE LOW_PRIORITY "+name+" "
+	    "   SET atime = UNIX_TIMESTAMP() "
+	    " WHERE id = %s ", id);
+    }
     return meta_cache_insert( id, m );
   }
 
   protected void sync_meta()
   {
+    mapping tmp = meta_cache;
+    meta_cache = ([]);
     // Sync cached atimes.
-    foreach(meta_cache; string id; array value) {
+    foreach(tmp; string id; array value) {
       if (value[1])
 	QUERY("UPDATE "+name+" SET atime=%d WHERE id=%s",
 	      value[1], id);
     }
-    meta_cache = ([]);
   }
 
   void flush(int|void age)
@@ -3883,7 +4084,7 @@ class ImageCache
   //! that time are flushed.
   {
     int num;
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
     int t = gethrtime();
     report_debug("Cleaning "+name+" image cache ... ");
 #endif
@@ -3892,7 +4093,7 @@ class ImageCache
     rst_cache  = ([]);
     if( !age )
     {
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
       report_debug("cleared\n");
 #endif
       QUERY( "DELETE FROM "+name );
@@ -3909,7 +4110,7 @@ class ImageCache
     while(q<sizeof(ids)) {
       string list = map(ids[q..q+99], get_db()->quote) * "','";
       q+=100;
-      QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
+      QUERY( "DELETE LOW_PRIORITY FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
 #if 0
@@ -3924,14 +4125,14 @@ class ImageCache
 	// Old versions of Mysql lacks OPTIMIZE. Not that we support
 	// them, really, but it might be nice not to throw an error, at
 	// least.
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
 	report_debug("Optimizing database ... ", name);
 #endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(IMG_CACHE_DEBUG)
     report_debug("%s removed (%dms)\n",
 		 (num==-1?"all":num?(string)num:"none"),
 		 (gethrtime()-t)/1000);
@@ -4073,31 +4274,32 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
-	// File not found.
-	
-	if(arrayp(err) && sizeof(err) && stringp(err[0]))
-	{
+	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
+	  // If we get an rxml error and there's no rxml context then
+	  // we're called from a direct request to the image cache.
+	  // The error ought to have been reported in the page that
+	  // generated the link to the image cache, but since it's too
+	  // late for that now, we just log it as a (brief) server
+	  // error with the referring page.
+	  string errmsg = "Error in " + name + " image generation: " +
+	    err->msg;
+	  if (sizeof (id->referer))
+	    errmsg += "  Referrer: " + id->referer[0];
+	  report_error (errmsg + "\n");
+	  return 0;
+	} else if (arrayp(err) && sizeof(err) && stringp(err[0])) {
 	  if (sscanf(err[0], "Requesting unknown key %s\n",
 		     string message) == 1)
 	  {
+	    // File not found.
 	    report_debug("Requesting unknown key %s %O from %O\n",
 			 message,
 			 id->not_query,
 			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
 	    return 0;
 	  }
-	  if (sscanf(err[0], "Failed to load specified image [\"%s\"]\n",
-		     string message) == 1)
-	  {
-	    report_debug("Failed to load specified image %O from %O - referrer %O\n",
-			 message,
-			 id->not_query,
-			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
-	    return 0;
-	  }
 	}
-	report_debug("Error in draw: %s\n", describe_backtrace(err));
-	return 0;
+	throw (err);
       }
       if( !(res = restore( na,id )) ) {
 	error("Draw callback %O did not generate any data.\n"
@@ -4201,11 +4403,18 @@ class ImageCache
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY("INSERT INTO "+name+" "
-		      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-		      ci, user||"")) )
-	QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
-	       user||"", ci );
+      // Make sure to only update the entry if it does not already
+      // exists or has wrong uid. Allways updating the table will
+      // casue mysql to lock the table and cause a potential gobal
+      // ImageCache stall.
+      string uid = user || "";
+      array q = QUERY("SELECT uid from "+name+" where id=%s", ci);
+      if(!sizeof(q) || (sizeof(q) && q[0]->uid != uid)) {
+	QUERY("INSERT INTO "+name+" "
+	      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP()) "
+	      "ON DUPLICATE KEY UPDATE uid=%s",
+	      ci, uid, uid);
+      }
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
@@ -4250,8 +4459,25 @@ class ImageCache
 	    "atime  INT      UNSIGNED NOT NULL DEFAULT 0,"
 	    "meta MEDIUMBLOB NOT NULL DEFAULT '',"
 	    "data MEDIUMBLOB NOT NULL DEFAULT '',"
-	    "INDEX atime (atime)"
+	    "INDEX atime_id (atime, id)"
 	    ")" );
+    }
+
+    // Create index in old databases. Index is used when flushing old
+    // entries. Column 'id' is included in index in order to avoid
+    // reading data file.
+    array(mapping(string:mixed)) res = QUERY("SHOW INDEX FROM " + name);
+    if(search(res->Key_name, "atime_id") < 0) {
+      report_debug("Updating " + name + " image cache: "
+		   "Adding index atime_id on %s... ", name);
+      int start_time = gethrtime();
+      QUERY("CREATE INDEX atime_id ON " + name + " (atime, id)");
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
+      report_debug("Updating " + name + " image cache: "
+		   "Dropping index atime on %s... ", name);
+      start_time = gethrtime();
+      QUERY("DROP INDEX atime ON " + name);
+      report_debug("complete. [%f s]\n", (gethrtime() - start_time)/1000000.0);
     }
   }
 
@@ -4291,6 +4517,16 @@ class ImageCache
   //! may take any arguments you want, depending on the first argument
   //! you give the <ref>store()</ref> method, but its final argument
   //! will be the RequestID object.
+  //!
+  //! @note
+  //! Use @[RXML.run_error] or @[RXML.parse_error] within the draw
+  //! function to throw user level drawing errors, e.g. invalid or
+  //! missing images or argument errors. If it's called within a
+  //! graphics tag then the error is thrown directly and reported
+  //! properly by the rxml evaluator. If it's called later, i.e. in a
+  //! direct request to the image cache, then it is catched by the
+  //! @[ImageCache] functions and reported in as good way as possible,
+  //! i.e. currently briefly in the debug log.
   {
     name = id;
     draw_function = draw_func;
@@ -4308,7 +4544,7 @@ class ImageCache
       report_warning("Failed to sync cached atimes for "+name+"\n");
 #if 0
 #ifdef DEBUG
-      report_debug (describe_backtrace (err));
+      master()->handle_error (err);
 #endif
 #endif
     }
@@ -4321,16 +4557,13 @@ class ArgCache
 //! refetched later by a short string key. This being a cache, your
 //! data may be thrown away at random when the cache is full.
 {
+#define GET_DB()				\
+  Sql.Sql db = dbm_cached_get("local")
 #undef QUERY
 #define QUERY(X,Y...) db->query(X,Y)
-  Sql.Sql db;
   string name;
 
 #define CACHE_SIZE  900
-
-  Thread.Mutex mutex = Thread.Mutex();
-  // Allow recursive locks, since it's normal here.
-# define LOCK() mixed __ = mutex->lock (2)
 
 #ifdef ARGCACHE_DEBUG
 #define dwerror(ARGS...) werror(ARGS)
@@ -4350,6 +4583,8 @@ class ArgCache
 
   protected void setup_table()
   {
+    GET_DB();
+
     // New style argument2 table.
     if(catch(QUERY("SELECT id FROM "+name+"2 LIMIT 0")))
     {
@@ -4363,9 +4598,12 @@ class ArgCache
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
 	    "rep_time  DATETIME NOT NULL, "
+	    "sync_time INT NULL, "
 	    "timeout   INT NULL, "
 	    "contents  MEDIUMBLOB NOT NULL, "
-	    "          INDEX(timeout))");
+	    "          INDEX(timeout),"
+	    "          INDEX(sync_time)"
+	    ")");
     }
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
@@ -4386,6 +4624,16 @@ class ArgCache
 	     "  ADD INDEX(timeout)");
     }
 
+    if (catch (QUERY ("SELECT sync_time FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without sync_time.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD sync_time INT NULL"
+	     " AFTER rep_time");
+      QUERY ("ALTER TABLE " + name + "2 "
+	     "  ADD INDEX(sync_time)");
+    }
+
     catch {
       array(mapping(string:mixed)) res = 
 	QUERY("DESCRIBE "+name+"2 contents");
@@ -4399,6 +4647,7 @@ class ArgCache
 
   protected void do_cleanup()
   {
+    GET_DB();
     QUERY("DELETE LOW_PRIORITY FROM " + name + "2 "
 	  " WHERE timeout IS NOT NULL "
 	  "   AND timeout < %d", time());
@@ -4423,7 +4672,6 @@ class ArgCache
     // compiled.
     cache = ([]);
     no_expiry = ([]);
-    db = dbm_cached_get("local");
     setup_table( );
 
     // Cleanup exprired entries on start.
@@ -4442,7 +4690,7 @@ class ArgCache
 
   protected string read_encoded_args( string id, int dont_update_atime )
   {
-    LOCK();
+    GET_DB();
     array res = QUERY("SELECT contents FROM "+name+"2 "
 		      " WHERE id = %s", id);
     if(!sizeof(res))
@@ -4458,47 +4706,59 @@ class ArgCache
   void create_key( string id, string encoded_args, int|void timeout )
   {
     if (!zero_type(timeout) && (timeout < time(1))) return; // Expired.
-    LOCK();
+    GET_DB();
     array(mapping) rows =
-      QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
+      QUERY("SELECT id, contents, timeout, "
+	    "UNIX_TIMESTAMP() - UNIX_TIMESTAMP(atime) as atime_diff "
+	    "FROM "+name+"2 "
+	    "WHERE id = %s", id );
+
     foreach( rows, mapping row )
       if( row->contents != encoded_args ) {
-      	report_error("ArgCache.create_key(): "
-		     "Duplicate key found! Please report this to support@roxen.com: "
-		     "id: %O, old data: %O, new data: %O\n",
+      	report_error("ArgCache.create_key(): Duplicate key found! "
+		     "Please report this to support@roxen.com:\n"
+		     "  id: %O\n"
+		     "  old data: %O\n"
+		     "  new data: %O\n"
+		     "  Updating local database with new value.\n",
 		     id, row->contents, encoded_args);
-	error("ArgCache.create_key() Duplicate key found!\n");
+
+	// Remove the old entry (probably corrupt). No need to update
+	// the database since the query below uses REPLACE INTO.
+	rows = ({});
       }
 
     if(sizeof(rows)) {
-      if (zero_type(timeout)) {
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET atime = NOW(), timeout = NULL "
-              " WHERE id = %s", id);
-      } else {
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET atime = NOW() "
-              " WHERE id = %s", id);
-        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-              "   SET timeout = %d "
-              " WHERE id = %s "
-              "   AND timeout IS NOT NULL "
-              "   AND timeout < %d",
-              timeout, id, timeout);
+      // Update atime only if older than threshold.
+      if((int)rows[0]->atime_diff > ATIME_THRESHOLD) {
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET atime = NOW() "
+	      " WHERE id = %s", id);
+      }
+
+      // Increase timeout when needed.
+      if (rows[0]->timeout) {
+	if (zero_type(timeout)) {
+	  // No timeout, i.e. infinite timeout.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = NULL "
+		" WHERE id = %s", id);
+	} else if (timeout > (int)rows[0]->timeout) {
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = %d "
+		" WHERE id = %s", timeout, id);
+	}
       }
       return;
     }
 
-    QUERY( "INSERT INTO "+name+"2 "
-	   "(id, contents, ctime, atime) VALUES "
-	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW())", id, encoded_args );
-
-    if (!zero_type(timeout)) {
-      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	    "   SET timeout = %d "
-	    " WHERE id = %s",
-	    timeout, id);
-    }
+    string timeout_sql = zero_type(timeout) ? "NULL" : (string)timeout;
+    // Use REPLACE INTO to cope with entries created by other threads
+    // as well as corrupted entries that should be overwritten.
+    QUERY( "REPLACE INTO "+name+"2 "
+	   "(id, contents, ctime, atime, timeout) VALUES "
+	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW(), "+timeout_sql+")",
+	   id, encoded_args );
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -4543,6 +4803,7 @@ class ArgCache
     if( cache[ id ] ) {
       if (!no_expiry[id]) {
 	// The cache id may have a timeout.
+	GET_DB();
 	if (zero_type(timeout)) {
 	  // No timeout now, but there may have been one earlier.
 	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
@@ -4600,7 +4861,7 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key @[id].
   {
-    LOCK();
+    GET_DB();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
@@ -4639,6 +4900,7 @@ class ArgCache
     // setup with a shared database.
     if( !has_value((plugins->is_functional-({0}))(), 1) )
     {
+      GET_DB();
       int cursor;
       array(string) ids;
       do {
@@ -4755,6 +5017,7 @@ class ArgCache
   //! Indicate that the entry @[id] needs to be included in the next
   //! @[write_dump]. @[id] must be an existing entry.
   {
+    GET_DB();
     QUERY("UPDATE "+name+"2 SET rep_time=NOW() WHERE id = %s", id);
   }
 }
@@ -4838,6 +5101,12 @@ void create()
   dump( "etc/modules/RXML.pmod/module.pmod" );
   master()->add_dump_constant ("RXML.empty_tag_set",
 			       master()->resolv ("RXML.empty_tag_set"));
+
+  // Replace Val objects with versions extended for the rxml type system.
+  Val->true = Roxen.true;
+  Val->false = Roxen.false;
+  Val->null = Roxen->sql_null = Roxen.null;
+
   // Already loaded. No delayed dump possible.
   dump( "etc/roxen_master.pike" );
   dump( "etc/modules/Roxen.pmod" );
@@ -4977,7 +5246,7 @@ int set_u_and_gid (void|int from_handler_thread)
 	// If this is necessary from every handler thread, these
 	// things are thread local and thus are no locks necessary.
 	if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
 	threads_disabled = _disable_threads();
       }
 #endif
@@ -4991,7 +5260,7 @@ int set_u_and_gid (void|int from_handler_thread)
 	  initgroups(pw[0], gid);
 	  // Doesn't always work - David.
 	})
-	werror (describe_backtrace (err));
+	master()->handle_error (err);
 #endif
 
       if (query("permanent_uid")) {
@@ -5274,7 +5543,7 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
 	if (mixed err = catch {
 	    data = Protocols.HTTP.get_url_data( f, 0, hd );
 	  })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
       }
 #endif
       if( !data )
@@ -5306,7 +5575,7 @@ array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 	if (mixed err = catch {
 	    data = Protocols.HTTP.get_url_data( f, 0, hd );
 	  })
-	  werror (describe_backtrace (err));
+	  master()->handle_error (err);
       }
 #endif
       if( !data )
@@ -5360,7 +5629,34 @@ void create_pid_file(string where)
   object privs = Privs("Deleting old pid file.");
   r_rm(where);
   privs = 0;
-  if(mixed err = catch {
+
+  mixed err;
+
+  // Note: The server lock file is often created by the start script, but
+  //       there is a race, so this code is here for paranoia reasons.
+  if (!Stdio.exist(sprintf("/var/run/roxen-server.%d.pid", getpid())) &&
+      !Stdio.exist(sprintf("/tmp/roxen-server.%d.pid", getpid()))) {
+    // NB: The following won't work if there's a wrapper process
+    //     for Roxen (eg started via gdb, truss or valgrind),
+    //     but that shouldn't matter much, since the pid lock file
+    //     won't be used in that case anyway.
+    privs = Privs("Creating pid lock.");
+    if (catch {
+	// Try /var/run/ first.
+	hardlink(sprintf("/var/run/roxen-start.%d.pid", getppid()),
+		 sprintf("/var/run/roxen-server.%d.pid", getpid()));
+      } && (err = catch {
+	  // And then /tmp/.
+	  hardlink(sprintf("/tmp/roxen-start.%d.pid", getppid()),
+		   sprintf("/tmp/roxen-server.%d.pid", getpid()));
+	})) {
+      report_debug("Cannot create the pid lock file %O: %s",
+		   sprintf("/tmp/roxen-server.%d.pid", getpid()),
+		   describe_error(err));
+    }
+    privs = 0;
+  }
+  if(err = catch {
       Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()));
     })
     report_debug("Cannot create the pid file %O: %s",
@@ -5420,19 +5716,29 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
 	return a->id_number() > b->id_number();
     });
 
-  int i;
-  for(i=0; i < sizeof(threads); i++) {
+  int hrnow = gethrtime();
+  foreach (threads, Thread.Thread thread) {
+    string thread_descr = "";
+    if (string th_name = thread_name(thread, 1))
+      thread_descr += " - " + th_name;
+    if (int start_hrtime = thread_task_start_times[thread])
+      thread_descr += sprintf (" - busy for %.3fs",
+			       (hrnow - start_hrtime) / 1e6);
     report_debug(">> ### Thread 0x%x%s:\n",
-		 threads[i]->id_number(),
-		 threads[i] == backend_thread ? " (backend thread)" : ""
-		);
+		 thread->id_number(),
+		 thread_descr);
+    // Use master()->describe_backtrace to sidestep the background
+    // failure wrapper that's active in RUN_SELF_TEST.
     report_debug(">> " +
-		 replace (describe_backtrace (threads[i]->backtrace()),
+		 replace (master()->describe_backtrace (thread->backtrace()),
 			  "\n", "\n>> ") +
 		 "\n");
   }
 
   array(array) queue = handle_queue->peek_array();
+
+  // Ignore the handle thread shutdown marker, if any.
+  queue -= ({0});
 
   if (!sizeof (queue))
     report_debug ("###### No entries in the handler queue\n");
@@ -5482,6 +5788,7 @@ int cdt_next_seq_dump;
 
 void cdt_poll_file()
 {
+  name_thread(this_thread(), "Dump thread file monitor");
   while (this && query ("dump_threads_by_file")) {
     if (array(string) dir = r_get_dir (cdt_directory)) {
       if (has_value (dir, cdt_filename)) {
@@ -5505,6 +5812,7 @@ void cdt_poll_file()
     }
     sleep (cdt_poll_interval);
   }
+  name_thread(this_thread(), 0);
   cdt_thread = 0;
 }
 
@@ -5567,6 +5875,9 @@ protected class GCTimestamp
   }
 }
 
+protected int gc_start;
+
+protected mapping(string:int) gc_histogram = ([]);
 
 array argv;
 int main(int argc, array tmp)
@@ -5585,7 +5896,37 @@ int main(int argc, array tmp)
 #endif
 
 #ifdef LOG_GC_TIMESTAMPS
-  GCTimestamp();
+  Pike.gc_parameters(([ "pre_cb": lambda() {
+				    gc_start = gethrtime();
+				    werror("GC runs at %s", ctime(time()));
+				  },
+			"post_cb":lambda() {
+				    werror("GC done after %dus\n",
+					   gethrtime() - gc_start);
+				  },
+			"destruct_cb":lambda(object o) {
+					gc_histogram[sprintf("%O", object_program(o))]++;
+					werror("GC cyclic reference in %O.\n",
+					       o);
+				      },
+			"done_cb":lambda(int n) {
+				    if (!n) return;
+				    werror("GC zapped %d things.\n", n);
+				    mapping h = gc_histogram + ([]);
+				    if (!sizeof(h)) return;
+				    array i = indices(h);
+				    array v = values(h);
+				    sort(v, i);
+				    werror("GC histogram (accumulative):\n");
+				    foreach(reverse(i)[..9], string p) {
+				      werror("GC:  %s: %d\n", p, h[p]);
+				    }
+				  },
+		     ]));
+  if (!Pike.gc_parameters()->pre_cb) {
+    // GC callbacks not available.
+    GCTimestamp();
+  }
 #endif
 
   // For RBF
@@ -5731,18 +6072,21 @@ int main(int argc, array tmp)
   foreach(({ "testca.pem", "demo_certificate.pem" }), string file_name) {
     if (sizeof(roxenloader.package_directories) &&
 	(lfile_path(file_name) == file_name)) {
-      file_name = roxenloader.package_directories[-1] + "/" + file_name;
-      report_notice("Generating a new certificate: %O...\n", file_name);
+      file_name = roxen_path (roxenloader.package_directories[-1] + "/" +
+			      file_name);
+      report_notice("Generating a new certificate %s...\n", file_name);
       string cert = Roxen.generate_self_signed_certificate("*");
 
       // Note: set_u_and_gid() hasn't been called yet,
       //       so there's no need for Privs.
       Stdio.File file = Stdio.File();
       if (!file->open(file_name, "wxc", 0600)) {
-	report_error("Couldn't create certificate file %O.\n", file_name);
+	report_error("Couldn't create certificate file %s: %s\n", file_name,
+		     strerror (file->errno()));
       } else if (file->write(cert) != sizeof(cert)) {
 	rm(cert);
-	report_error("Couldn't write certificate file %O.\n", file_name);
+	report_error("Couldn't write certificate file %s: %s\n", file_name,
+		     strerror (file->errno()));
       }
     }
   }
@@ -5771,6 +6115,9 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
+#if constant(Filesystem.Monitor.basic)
+  start_fsgarb();
+#endif
 #endif /* THREADS */
 
 #ifdef TEST_EUID_CHANGE
@@ -5917,8 +6264,10 @@ string check_variable(string name, mixed value)
     if (value)
       // Make sure restart_if_stuck is called from the backend thread.
       call_out(restart_if_stuck, 0, 1);
-    else
+    else {
       remove_call_out(restart_if_stuck);
+      alarm(0);
+    }
     break;
   case "abs_timeout":
     if (value < 0) {
@@ -6097,6 +6446,16 @@ class LogFormat			// Note: Dumping won't work if protected.
     return tmp[0];      // username only, no password
   }
 
+  protected string get_forwarded_field(RequestID id, string field)
+  {
+    foreach(id->misc->forwarded || ({}), array(string|int) segment) {
+      if (!arrayp(segment) || sizeof(segment) < 3) continue;
+      if (segment[0] != field || segment[1] != '=') continue;
+      return MIME.quote(segment[2..]);
+    }
+    return "-";
+  }
+
   void log_access( function do_write, RequestID id, mapping file );
 
   void log_event (function do_write, string facility, string action,
@@ -6195,6 +6554,9 @@ protected constant formats = ([
 				 "         \"-\")"),
 			  "%s" , "url_encode (resource)", 0}),
   "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
+  "scheme":             ({"%s", "(string)((request_id->port_obj && "
+			  "request_id->port_obj->prot_name) || \"-\")",
+			  1, "\"-\"", 0 }),
   "response":		({"%d", "(int)(file->error || 200)", 1, "\"-\"", 0}),
   "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
   "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
@@ -6264,12 +6626,11 @@ protected constant formats = ([
 			  1, "\"-\"", 0}),
   "protcache-cost":	({"%d", "request_id->misc->protcache_cost",
 			  1, "\"-\"", 0}),
-  "xff":		({"%s", ("arrayp(request_id->request_headers["
-				 "\"x-forwarded-for\"]) ? "
-				 "(request_id->request_headers["
-				 "\"x-forwarded-for\"][-1] / \",\")[0] :"
-				 "((request_id->request_headers["
-				 "\"x-forwarded-for\"] || \"-\") / \",\")[0]"),
+  "forwarded":		({"%s", ("request_id->misc->forwarded ? "
+				 "MIME.quote(request_id->misc->forwarded *"
+				 "           ({ ',' })) : \"-\""),
+			  1, "\"-\"", 0 }),
+  "xff":		({"%s", "get_forwarded_field(request_id, \"for\")",
 			  1, "\"-\"", 0 }),
 
   // Used for event logging
@@ -6296,6 +6657,8 @@ protected LogFormat compile_log_format( string fmt )
 {
   add_constant( "___LogFormat", LogFormat );
 
+  // Note similar code in compile_security_pattern.
+
   string kmd5 = md5( fmt );
 
   object con = dbm_cached_get("local");
@@ -6310,10 +6673,10 @@ protected LogFormat compile_log_format( string fmt )
       if (mixed err = catch {
 	  lf = decode_value( tmp[0]->enc, master()->Decoder() )();
 	}) {
-// #ifdef DEBUG
-	report_error("Decoding of dumped log format failed:\n%s",
-		     describe_backtrace(err));
-// #endif
+	if (describe_error (err) !=
+	    "Cannot decode programs encoded with other pike version.\n")
+	  report_warning ("Decoding of dumped log format failed "
+			  "(will recompile): %s", describe_backtrace(err));
       }
 
       if (lf && lf->log_access) {
@@ -6720,6 +7083,9 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   // mostly coded it as a proof-of-concept, and because it was more
   // fun that trying to find the bug in the image-cache at the moment.
 
+  // Note similar code in compile_log_format.
+  if (pattern == "")
+    return 0;
   string kmd5 = md5( pattern );
 
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
@@ -6733,8 +7099,10 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
       return decode_value( tmp[0]->enc, master()->Decoder() )()->f;
     };
 // #ifdef DEBUG
-    report_error("Decoding of dumped log format failed:\n%s",
-		 describe_backtrace(err));
+    if (describe_error (err) !=
+	"Cannot decode programs encoded with other pike version.\n")
+      report_warning ("Decoding of dumped security pattern failed "
+		      "(will recompile):\n%s", describe_backtrace(err));
 // #endif
   }
 #endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
@@ -7091,8 +7459,8 @@ class LogFile(string fname, string|void compressor_program)
        if(!stat || time(1) < stat->mtime + 1200)
          continue; // Wait at least 20 minutes before compressing log file...
        werror("Compressing log file %O\n", compress_file);
-       compressor_process = Process.create_process(({ compressor_program,
-                                                      compress_file }));
+       compressor_process = Process.Process(({ compressor_program,
+					       compress_file }));
        return;
       }
     }
@@ -7101,9 +7469,7 @@ class LogFile(string fname, string|void compressor_program)
   private void do_open_co() { handle(do_open); }
   private void do_open(void|object mutex_key)
   {
-    if (!this_object()) return; // We've been destructed, return
     if (!mutex_key) mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     mixed parent;
     if (catch { parent = function_object(object_program(this_object())); } ||
@@ -7148,50 +7514,49 @@ class LogFile(string fname, string|void compressor_program)
     call_out(do_close_co, 10.0);
   }
 
-  private void do_close_co() { handle(do_close); }
-  private void do_close()
+  private void do_close_co() { handle(close); }
+
+  void close()
   {
-    if (!this_object()) return; // We've been destructed, return
     object mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     destruct( fd );
     opened = 0;
   }
 
   private array(string) write_buf = ({});
-  private void do_the_write_co() { handle(do_the_write); }
   private void do_the_write()
   {
-    if (!this_object()) return; // We've been destructed, return
     object mutex_key = lock->lock();
-    if (!this_object()) return; // We've been destructed, return
 
     if (!opened) do_open(mutex_key);
     if (!opened) return;
-    mixed err = catch (fd->write(write_buf));
+    if (!sizeof (write_buf)) return;
+
+    array(string) buf = write_buf;
+    // Relying on the interpreter lock here.
+    write_buf = ({});
+
+    mixed err = catch (fd->write(buf));
     if (err)
       catch {
 	foreach (write_buf, string str)
 	  if (String.width (str) > 8)
 	    werror ("Got wide string in log output: %O\n", str);
       };
-    write_buf = ({});
+
     remove_call_out(do_close_co);
     call_out(do_close_co, 10.0);
+
     if (err)
       throw (err);
   }
 
   int write( string what )
   {
-    if (!this_object()) return 0; // We've been destructed, return
-    object mutex_key = lock->lock();
-    if (!this_object()) return 0; // We've been destructed, return
-
-    if (!sizeof(write_buf))
-      call_out(do_the_write_co, 1);
     write_buf += ({ what });
+    if (sizeof (write_buf) == 1)
+      background_run (1, do_the_write);
     return strlen(what); 
   }
 }

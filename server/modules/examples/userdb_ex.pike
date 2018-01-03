@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.9 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version="$Id$";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 

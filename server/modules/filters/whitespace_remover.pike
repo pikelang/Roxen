@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.8 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Remover";
@@ -59,12 +59,22 @@ mapping filter(mapping result, RequestID id)
   string|array(string) type = result->type;
   if (arrayp(type))
     type = type[0];
-  if(!has_prefix(type||"", "text/html")
-  || (id->misc->moreheads && id->misc->moreheads["Content-Type"] &&
-      id->misc->moreheads["Content-Type"] != "text/html")
-  || !stringp(result->data)
-  || id->prestate->keepws
-  || id->misc->ws_filtered++)
+  if (!type ||
+      !has_prefix(type, "text/html") &&
+      !has_prefix(type, "text/xml") &&
+      !has_prefix(type, "application/xml") &&
+      !has_suffix(type, "+xml"))
+    return 0;
+  type = (id->misc->moreheads && id->misc->moreheads["Content-Type"]);
+  if (type &&
+      !has_prefix(type, "text/html") &&
+      !has_prefix(type, "text/xml") &&
+      !has_prefix(type, "application/xml") &&
+      !has_suffix(type, "+xml"))
+    return 0;
+  if (!stringp(result->data) ||
+      id->prestate->keepws ||
+      id->misc->ws_filtered++)
     return 0;
 
   Parser.HTML parser = Parser.HTML();

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.242 2011/03/21 00:17:43 mast Exp $
+# $Id$
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -122,6 +122,12 @@ roxendir="`pwd`"
 # No debug by default.
 debug=-1
 
+# Don't attempt to stop a running server by default.
+stop=""
+
+# Attempt to start the server by default.
+start=1
+
 # Locate Pike binary.
 find_pike
 
@@ -178,6 +184,40 @@ remove_old_dot_o_files () {
 ## GNU-style, long options only, except for -D, simply passed on.
 ARGS=""
 
+#
+# Descriptions of some of the state variables set during argument processing.
+#
+#   Variable	Default
+# 	Value	Description
+#   -----------------------------------------------------------------
+#   debug	-1
+#	-1	No debug.
+#	0	Module debug (Pike warnings + -DMODULE_DEBUG).
+#	1	Full debug (Pike warnings + -DDEBUG -DMODULE_DEBUG).
+#   keep_mysql	""
+#	""	Shut down mysqld between restarts.
+#	1	Do not touch mysqld on restart.
+#   once	""
+#	""	Loop the program until it exits with success (0).
+#	1	Verbose --once mode.
+#	2	Quiet --once mode.
+#   pass	""
+#	-	Arguments to pass to the Pike program.
+#   passhelp	""
+#	""	Roxen is being started.
+#	1	A custom program has been specified with --program.
+#   pidfile	"$DIR/_roxen_pid"/""
+#		Defaults to "" if Roxen is not being started.
+#	""	Do not generate a pid file or associated lock files.
+#	other	Create a pid file and associated lock files.
+#   program	"base_server/roxen_loader.pike"
+#	-	The Pike program to start.
+#   verbose	1
+#	0	Quiet mode.
+#	1	Default verbosity.
+#	2	Verbose mode.
+#
+
 setup_for_tests() {
     # Kill roxen mysql if it's running...
     if [ -f "$VARDIR/test_config/_mysql/mysql_pid" ] ; then
@@ -188,7 +228,7 @@ setup_for_tests() {
     rm -rf "$VARDIR/test_config"*
     DIR="$VARDIR/test_config"
     if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then
-      $PIKE $DEFINES "$SELF_TEST_DIR/scripts/setup.pike" "$SELF_TEST_DIR" "$VARDIR"
+      eval "\"$pike\" $PIKEARGS $DEFINES \"$SELF_TEST_DIR/scripts/setup.pike\" \"$SELF_TEST_DIR\" \"$VARDIR\""
     fi
     once=${once:-1}
     debug=1
@@ -304,7 +344,17 @@ parse_args() {
      remove_dumped=1;
   ;;
   '--stop')
-     stop=1;
+     stop="TERM";
+     start="";
+  ;;
+  '--restart')
+     stop="TERM";
+     start=1;
+  ;;
+  '--signal')
+     stop="$2"
+     shift
+     start="";
   ;;
 
   '--once')
@@ -475,6 +525,11 @@ the default arguments.
 				  --module-debug.
 
       .B--stopB.:                     Stop the server.
+
+      .B--restartB.:                  Stop the server, and then restart it.
+
+      .B--signalB.:                   Send the specified signal to the running
+                                  Roxen process.
 
       .B--keep-mysqlB.:               Do not shut down MySQL process when exiting
 				  the start script. Useful during development
@@ -654,6 +709,16 @@ if [ "x$PIKE_NO_DEFAULT_PATHS" = "x" ]; then
     # so no need to do it here.
     DEFINES="$DEFINES \"-m$PIKE_MASTER\""
   fi
+
+  # Kludge to add pike modules required by base_server to the
+  # module path. Remove when the package system comes in use.
+  for d in modules/feedimport; do
+    for pm in pike_modules pike-modules; do
+      if [ -d "$roxendir/$d/$pm/." ]; then
+	DEFINES="$DEFINES \"-M$roxendir/$d/$pm\""
+      fi
+    done
+  done
 fi
 
 # Extra module-path
@@ -740,21 +805,125 @@ fi
 
 ####### END MySQL
 
+# Canonical configuration directory identifier (the inode number).
+canonicalconf=`ls -Lid "$DIR/." | awk '{ print $1; }'`
+
+if [ $verbose -gt 1 -a "$passhelp" = "" ]; then
+  dp "Canonical Roxen configuration identifier: $canonicalconf."
+fi
+
+start_pid="$$"
+
 #
 # Some useful functions
 #
 
-cleanup_pid_file() {
-  [ -z "$pidfile" ] || rm $pidfile
+# Check whether there's a valid pid lock on pid $1
+# of process type $2 for configuration $3.
+check_pid_file_lock() {
+  # Check that there's a lock-file.
+  #
+  # Primary check is in /var/run/ which often is restricted to root.
+  # Secondary check is in /tmp/ to allow for normal users running
+  # the script unmodified.
+  if [ "$verbose" -gt 1 ]; then
+    dp "Checking pid-file lock roxen-$2.$1.pid for configuration $3."
+  fi
+  if [ -f "/var/run/roxen-$2.$1.pid" -o -f "/tmp/roxen-$2.$1.pid" ]; then
+    # Check that the pid file belongs to our configuration.
+    if [ "x$3" = "x" -o "x`cat /var/run/roxen-$2.$1.pid 2>/dev/null || cat /tmp/roxen-$2.$1.pid 2>/dev/null`" = "x$3" ]; then
+      return 0
+    fi
+  fi
+  return 1
+}
+
+# Remove the lock on pid $1 of process type $2 for configuration $3
+# (if any).
+cleanup_pid_file_lock() {
+  if [ -z "$pidfile" ]; then return 0; fi
+  if check_pid_file_lock "$1" "$2" "$3"; then
+    if [ $verbose -gt 1 ]; then
+      dp "Releasing pid-file lock roxen-$2.$1.pid."
+    fi
+    rm -f "/tmp/roxen-$2.$1.pid" 2>/dev/null
+    rm -f "/var/run/roxen-$2.$1.pid" 2>/dev/null
+  fi
+}
+
+# Cleanup after the start-script.
+cleanup_start_pid_file() {
+  cleanup_pid_file_lock "$start_pid" "start" "$canonicalconf"
+  [ -z "$pidfile" ] || rm -f $pidfile
+}
+
+# Cleanup after Roxen.
+cleanup_roxen_pid_file() {
+  if [ -z "$pidfile" ]; then return 0; fi
+  read roxenpid <"$pidfile"
+  if [ "x$roxenpid" = "xx" ]; then :; else
+    if check_pid_file_lock "$roxenpid" "server" "$canonicalconf"; then
+      # There's a valid pid file lock for the server for this configuration.
+      # Delete it.
+      cleanup_pid_file_lock "$roxenpid" "server" "$canonicalconf"
+    fi
+    # Remove the stale pid from the pid-file.
+    if [ $verbose -gt 1 ]; then
+      dp "Removing stale pids from $pidfile."
+    fi
+    { echo "x"; echo "$start_pid"; } >"$pidfile"
+  fi
+}
+
+# Check if the PID in $1 is an active process.
+processp() {
+  if kill -0 "$1"; then return 0; fi;
+
+  # Check that the cause for the failure is that the process doesn't exist.
+  eval "\"$pike\" $PIKEARGS $DEFINES -e 'return !kill('\"$1\"', 0) && (errno() == System.ESRCH);'";
+  return;
+}
+
+# Check if the PID in $1 is an active process and has
+# a $2 {start,server} lock-file associated with the
+# configuration $3.
+roxenp() {
+  if check_pid_file_lock "$1" "$2" "$3"; then
+    # Check that the process exists as well.
+    if processp "$1"; then return 0; fi
+    # Cleanup the lock, since it is stale.
+    cleanup_pid_file_lock "$1" "$2" ""
+  fi
+  return 1;
+}
+
+# Create a roxen lock-file for PID $1 of type $2
+# associated with configuration $3.
+lock_pid_file() {
+  if [ -z "$pidfile" ]; then return 0; fi
+  # Create a lock-file.
+  if [ $verbose -gt 1 ]; then
+    dp "Creating lockfile roxen-$2.$1.pid for configuration $3."
+  fi
+  # NB: The subshell is needed to avoid script termination on
+  #     permission error (this occurs with /bin/sh on Solaris).
+  ( echo "$3" >"/var/run/roxen-$2.$1.pid"; ) 2>/dev/null || \
+      echo "$3" >"/tmp/roxen-$2.$1.pid" 2>/dev/null
 }
 
 # NOTE: The following function needs to be reentrant.
 signal_exit() {
   test "x$once" != x2 && dp "Start script terminating."
   trap "" 2 15
-  if [ "x$ROXEN_PID" != "x" ] && \
-     kill -0 $ROXEN_PID 2>/dev/null; then
-    kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
+  if [ "x$ROXEN_PID" != "x" ]; then
+    if processp $ROXEN_PID 2>/dev/null; then
+      kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
+    fi
+    # Zap the pid lock file if it is still around.
+    # NB: We don't need to clean the pid-file, since
+    #     we will zap it later.
+    cleanup_pid_file_lock "$ROXEN_PID" "server" ""
+    ROXEN_PID=""
     dp "Roxen WebServer shutdown."
     # FIXME: Consider exiting here.
   fi
@@ -772,7 +941,7 @@ signal_exit() {
       timer=""
       while [ -f "$mysql_pidfile" -a \
 	      "$timer" != "mmmmm" ] && \
-	    kill -0 "$mysql_pid" 2>/dev/null; do
+	    processp "$mysql_pid" 2>/dev/null; do
 	sleep 2
 	timer=`echo "x$timer" | sed -e 's/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/m/'`
 	if [ "x$SILENT_START" != "xy" ]; then
@@ -784,7 +953,7 @@ signal_exit() {
       if [ "x$SILENT_START" != "xy" ]; then
 	echo >&2
       fi
-      if kill -0 "$mysql_pid" 2>/dev/null; then
+      if processp "$mysql_pid" 2>/dev/null; then
         dp "Shutting down MySQL the hard way."
         kill -9 "$mysql_pid" 2>/dev/null
       fi
@@ -794,6 +963,7 @@ signal_exit() {
       fi
     fi
   fi
+  cleanup_start_pid_file
   test "x$once" != x2 && dp "Start script terminated."
   exit 0
 }
@@ -816,6 +986,19 @@ fork_roxen() {
   ROXEN_PID=$!
 }
 
+# Start Roxen
+#
+# Entry/exit invariants:
+#
+#   The pid-file does not contain an entry for the roxen process.
+#
+#   The server pid lock file is nonexistant.
+#
+# During running (NB: updated by the Roxen process):
+#
+#   The pid-file contains the Roxen server process pid as the first entry.
+#
+#   The corresponding server pid lock file exists.
 start_roxen() {
   check_owner
   raise_limit
@@ -831,6 +1014,7 @@ start_roxen() {
   if [ x"$cd_to" != x ] ; then
     cd "$cd_to"
   fi
+  exitcode="0"
   if [ "x$gdb" = "xno" -a "x$valgrind" = "x" ]; then
     if [ "x$once" = "x" ]; then
       if [ $verbose -gt 0 ]; then
@@ -838,6 +1022,7 @@ start_roxen() {
       fi
       eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "Roxen WebServer server pid $ROXEN_PID."
+      lock_pid_file "$ROXEN_PID" "server" "$canonicalconf"
       wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
       ROXEN_PID=""
@@ -855,6 +1040,7 @@ start_roxen() {
       else
         trap exit_fail 1
 	eval "(eval \"$truss \\\"$pike\\\" $args\" || kill -1 $$) 2>&1  $do_pipe"
+	cleanup_roxen_pid_file
         exit $exitcode
       fi
     fi
@@ -893,8 +1079,27 @@ start_roxen() {
       valgrind `expr "$valgrind" : '--valgrind=\(.*\)'` "$pike"
     fi
   fi
+  cleanup_roxen_pid_file
 }
 
+# <pid> <signal> <type> <canonicalconf> <description>
+stop_roxen()
+{
+  if roxenp "$1" "$3" "$4"; then
+    if [ "$2" = "TERM" ]; then
+      dp "Shutting down the $5..."
+      kill "$1" || exit 1
+      while processp "$1" 2>/dev/null; do
+	echo "Waiting for $5 $1 to die." >&2
+	sleep 1
+      done
+    else
+      kill "-$2" "$1" || exit 1
+    fi
+    return 0
+  fi
+  return 1
+}
 
 #
 # Now do the stuff
@@ -908,38 +1113,88 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
   # Check for stop.
-  if [ "$stop"x != x ] && [ -f "$pidfile" ]
+  if [ "$stop"x != x ]
   then
-      pids=`cat "$pidfile"`
-      echo "$pids" | xargs kill
-      while kill -0 $pids 2>/dev/null
-      do
-	sleep 1
-      done
-      exit
+    if [ -f "$pidfile" ]; then
+      if read roxenpid && read scriptpid; then
+	problems=""
+	# NB: No need to shut down the start-script
+        #     if we're going to do a restart.
+	if [ "$start"x = x -a "$stop" = "TERM" ]; then
+	  if stop_roxen "$scriptpid" "TERM" "start" "$canonicalconf" "start script"; then
+	    :
+	  else
+	    problems="nostart"
+	  fi
+	fi
+	# NB: At this point the original start script has
+	#     often already shut down the server, but...
+	if stop_roxen "$roxenpid" "$stop" "server" "$canonicalconf" "Roxen server"; then
+	  :
+	else
+	  problems="$problems:noserver"
+	fi
+	if [ "$problems" = "nostart:noserver" ]; then
+	  dp "There is a pid file $pidfile,"
+	  dp "but the corresponding processes do not exist,"
+	  dp "or are not associated with this configuration."
+	  dp "Stale pid file? Deleting the pid file."
+	  rm "$pidfile"
+	  :
+	fi
+	if [ "$problems:$start" = "nostart:1" ]; then
+	  dp "The listed start script was dead. Starting a new one."
+	  :
+	fi
+      else
+	dp "There is a pid file $pidfile,"
+	dp "but it seems to be truncated."
+	exit 1
+      fi < "$pidfile"
+    else
+      dp "The pid file $pidfile does not exist."
+      dp "The server is probably not running."
+      if [ "$stop" != "TERM" ]; then
+	exit 1
+      fi
+    fi
+    if [ "$start"x = x ]; then
+      exit 0
+    fi
   fi
   # Avoid duplicate start scripts if we got a pid file.
-  mypid=$$
-  test -f "$pidfile" && {
-    if read roxenpid && read scriptpid; then
-      if kill -0 $scriptpid 2>/dev/null; then
-	dp "According to the pid file $pidfile,"
-	dp "there is already a start script running with pid $scriptpid. Specify "
-	dp "another pid file with --pid-file if this is a different server."
-	dp "Server not started."
-	:
-      elif kill -0 $roxenpid 2>/dev/null; then
-	dp "According to the pid file $pidfile,"
-	dp "there is already a server running with pid $roxenpid, but its start "
-	dp "script seems to have died. You should shut it down and restart "
-	dp "it, since it won't restart automatically. Server not started."
-	:
-      else false; fi
-    else false; fi
-  } < "$pidfile" && exit 1
+  if [ -f "$pidfile" ]; then
+    {
+      if read roxenpid && read scriptpid; then
+        if roxenp "$scriptpid" "start" "$canonicalconf" 2>/dev/null ; then
+	  if [ "$stop"x = x ]; then
+	    dp "According to the pid file $pidfile,"
+	    dp "there is already a start script running with pid $scriptpid. Specify "
+	    dp "another pid file with --pid-file if this is a different server."
+	    dp "Server not started."
+	    exit 1
+	  fi
+	  dp "The old start script (pid $scriptpid) should now restart the server."
+	  exit 2
+	elif roxenp "$roxenpid" "server" "$canonicalconf" 2>/dev/null ; then
+	  dp "According to the pid file $pidfile,"
+	  dp "there is already a server running with pid $roxenpid, but its start "
+	  dp "script seems to have died. You should shut it down and restart "
+	  dp "it, since it won't restart automatically. Server not started."
+	  exit 1
+	fi
+      fi
+    } < "$pidfile" || {
+      # NB: The exits above just exit the subshell used for the
+      #     redirect. Adjust the exit codes and exit for real.
+      [ "$?" = "2" ];
+      exit;
+    }
+  fi
   # Minor race here.
-  { echo "x" && echo $mypid; } > "$pidfile"
-  trap cleanup_pid_file 0
+  lock_pid_file $start_pid "start" "$canonicalconf"
+  { echo "x" && echo $start_pid; } > "$pidfile"
+  trap cleanup_start_pid_file 0
 fi
 
 PIKEVERSION="`\"$pike\" --version 2>&1|head -1`"
@@ -974,6 +1229,7 @@ if [ -z "$once" ] ; then
   if [ ! -d "$DEBUGDIR" ] ; then
     if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
       dp "Failed to create log directory $DEBUGDIR."
+      cleanup_start_pid_file
       exit 1
     fi
   fi
@@ -990,10 +1246,24 @@ if [ -z "$once" ] ; then
   if (
     (
       # Minor race here wrt pid file cleanup.
+
+      # Note: We can't use $$ here since it is the pid of the master shell.
+      #       We can't use $(exec sh -c 'echo $PPID') (the POSIX way), for
+      #       multiple reasons, most of them pertaining to /bin/sh on
+      #       Solaris which supports neither $PPID nor $().
+      old_start_pid="$start_pid"
+      start_pid="`\"$pike\" $PIKEARGS -e 'return (string)getppid();'`"
+      lock_pid_file "$start_pid" "start" "$canonicalconf"
+      [ -z "$pidfile" ] || { echo "x" && echo $start_pid; } > "$pidfile"
+      if [ "x$old_start_pid" = "x$start_pid" ]; then :; else
+        # Get rid of the tentative pid file lock.
+	cleanup_pid_file_lock "$old_start_pid" "start" "$canonicalconf"
+      fi
+
       exec 3>&-
       trap signal_exit 2 15
       trap "" 1
-      trap cleanup_pid_file 0
+      trap cleanup_start_pid_file 0
 
       while : ; do
 	if test -d "$DEBUGDIR/."; then :; else
@@ -1001,6 +1271,7 @@ if [ -z "$once" ] ; then
 	  # Thanks to Emils Klotins <emils@dot.lv> for reporting it.
 	  if ./mkdir -p "$DEBUGDIR" 2>/dev/null; then :; else
 	    dp "Failed to create log directory $DEBUGDIR."
+	    cleanup_start_pid_file
 	    exit 1
 	  fi
 	fi
@@ -1025,7 +1296,7 @@ if [ -z "$once" ] ; then
          100)
            dp "Changing Roxen WebServer version. Restarting."
 	   # We need to clean up the pid file, since we're mentioned in it...
-	   cleanup_pid_file
+	   cleanup_start_pid_file
            cd .. && exec ./start "$@"
            dp 'Failed to spawn start script. -- Permission problem?'
            exit 1
@@ -1052,16 +1323,16 @@ if [ -z "$once" ] ; then
       done
     ) &
     # Minor race here wrt pid file contents.
-    pid=$!
+    start_pid=$!
     trap "" 0
-    [ -z "$pidfile" ] || { echo "x" && echo $pid; } > "$pidfile"
-    dp "Forked start script, pid $pid." 2>&3
-    dp "Start script pid $pid."
+    dp "Forked start script, pid $start_pid." 2>&3
+    dp "Start script pid $start_pid."
   ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
   else
     dp 'Failed to spawn subshell. -- Permission problem?'
+    cleanup_start_pid_file
     exit 1
   fi
 

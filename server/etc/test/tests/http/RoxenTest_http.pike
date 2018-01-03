@@ -19,12 +19,15 @@ string simple_check( )
 		 ]) );
 }
 
-function run( string script, string file, int len, string ... ma  )
+function run( string script, string file, int|string ... ma  )
 {
   return lambda() {
-	   run_pikescript( script, file, (string)len, @ma );
+	   run_pikescript( script, file, @((array(string))ma) );
 	 };
 }
+
+#define rtest( COMMENT, SCRIPT, FILE, LEN, ARGS...) \
+  atest(COMMENT, run(SCRIPT, FILE, LEN, ARGS), simple_check)
 
 #define _test( X,Y,Z,Å,Ä,Ö) atest(X+Ä, run(Y,Z,Å,Ö), simple_check )
 
@@ -153,4 +156,21 @@ void setup( )
   //  stest4( "HTTP/1.1 /10k.raw", "http/http11.pike", "/10k.raw", 1024*10 );
   //  stest4( "HTTP/1.1 /",        "http/http11.pike", "/",        0 );
   //  stest4( "HTTP/1.1 /nofile",  "http/http11.pike", "/nofile",  0 );
+
+  rtest( "REDIRECT (Host)",  "http/http_redirect.pike",
+	 "/redirect.html", "http://test.example.com/", "Host:test.example.com"  );
+  rtest( "REDIRECT (Forwarded)",  "http/http_redirect.pike",
+	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+	 "Forwarded: host=\"test.example.com\";proto=https");
+  rtest( "REDIRECT (Multi Forwarded)",  "http/http_redirect.pike",
+	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+	 "Forwarded: host=\"test.example.com\"",
+	 "Forwarded: host=\"test3.example.com\"",
+	 "Forwarded: host=\"test4.example.com\";proto=https");
+  rtest( "REDIRECT (Simgle Multi Forwarded)",  "http/http_redirect.pike",
+	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+	 "Forwarded: host=\"test.example.com\",host=\"test3.example.com\",host=\"test4.example.com\";proto=https");
+  rtest( "REDIRECT (X-Forwarded)",  "http/http_redirect.pike",
+	 "/redirect.html", "https://test.example.com/", "Host:test2.example.com",
+	 "X-Forwarded-Host: test.example.com", "X-Forwarded-Proto: https");
 }

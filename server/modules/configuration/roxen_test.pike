@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.88 2011/03/29 12:45:53 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -58,8 +58,11 @@ void background_failure()
   // describe_backtrace() (roxenloader.pike), in self test mode. We
   // need to check whether it's for us or not by checking if we're
   // running currently.
-  if (is_running())
+  if (is_running()) {
+    // Log something to make these easier to locate in the noisy test logs.
+    report_error ("################ Background failure\n");
     bkgr_fails++;
+  }
 }
 
 void schedule_tests (int|float delay, function func, mixed... args)
@@ -76,6 +79,20 @@ void schedule_tests (int|float delay, function func, mixed... args)
 	      roxen->busy_threads++;
 	      if (err) throw (err);
 	    }, func, args);
+}
+
+void schedule_tests_single_thread (int|float delay,
+				   function func, mixed... args)
+{
+  // The opposite of schedule_tests, i.e. tries to ensure no other
+  // jobs gets executed in parallel by either background_run or a
+  // roxen.handle.
+  call_out (lambda (function func, array args) {
+	      roxen->hold_handler_threads();
+	      mixed err = catch (func (@args));
+	      roxen->release_handler_threads (0);
+	      if (err) throw (err);
+	    }, delay, func, args);
 }
 
 int do_continue(int _tests, int _fails)
@@ -218,12 +235,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
-    report_debug (indent (2, sprintf ("Error at line %d:",
+    report_error (indent (2, sprintf ("################ Error at line %d:",
 				      file_parser->at_line())));
     if( strlen( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
-    report_debug( indent(2, message ) );
+    report_error( indent(2, message ) );
   };
 
   string test_ok(  )
@@ -301,7 +318,11 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 				    !objectp (err) || !err->is_RXML_Backtrace ||
 				    err->type != m["ignore-errors"]))
 			 {
-			   test_error("Failed (backtrace): %s",describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error("Failed (backtrace): %s",
+				      master()->describe_backtrace(err));
 			   throw(1);
 			 }
 
@@ -434,8 +455,12 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			   int i;
 			   c = map(c/"\n", lambda(string in) {
 					     return sprintf("%3d: %s", ++i, in); }) * "\n";
-			   werror("Error while compiling test\n%s\n\nBacktrace\n%s\n",
-				  c, describe_backtrace(err));
+			   // Use master()->describe_backtrace() to bypass
+			   // background_failure() and avoid counting this
+			   // error twice.
+			   test_error ("Error while compiling test\n%s\n\n"
+				       "Backtrace:\n%s\n",
+				       c, master()->describe_backtrace(err));
 			   throw(1);
 			 }
 			 string r = test->test(res);
@@ -452,6 +477,7 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			       default:
 				 test_error("Could not <add> %O; "
 					    "unknown variable.\n", m->what);
+				 throw (1);
 				 break;
 			       case "prestate":
 				 id->prestate[m->name] = 1;
@@ -498,14 +524,17 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 		   "login" : lambda(Parser.HTML p, mapping m) {
 			       id->realauth = m->user + ":" + m->password;
 			       id->request_headers->authorization =
-				 "Basic " + MIME.encode_base64 (id->realauth);
+				 "Basic " + MIME.encode_base64 (id->realauth, 1);
 			       conf->authenticate(id);
 			     },
     ]) );
 
   if( mixed error = catch(parser->finish(c)) ) {
     if (error != 1)
-      test_error ("Failed to parse test: " + describe_backtrace (error));
+      // Use master()->describe_backtrace() to bypass background_failure() and
+      // avoid counting this error twice.
+      test_error ("Failed to parse test: " +
+		  master()->describe_backtrace (error));
     fails++;
     lfails++;
   }
@@ -648,7 +677,19 @@ void continue_run_tests( )
 
     if (has_suffix (file, ".xml"))
     {
-      schedule_tests (0, run_xml_tests, Stdio.read_file(file));
+      string data = Stdio.read_file(file);
+      int single_thread;
+      // If the file contains a pi <?single-thread?> then it's run with the
+      // handler threads disabled (see the single_thread constant in
+      // pike_test_common.pike).
+      Roxen.get_xml_parser()->add_quote_tag ("?single-thread",
+					     lambda() {single_thread = 1;},
+					     "?")
+			    ->finish (data);
+      if (single_thread)
+	schedule_tests_single_thread (0, run_xml_tests, data);
+      else
+	schedule_tests (0, run_xml_tests, data);
       return;
     }
     else			// Pike test.
@@ -657,13 +698,18 @@ void continue_run_tests( )
       mixed error;
       tests++;
       if( error=catch( test=compile_file(file)( verbose ) ) ) {
-	report_error("Failed to compile %s:\n%s", file,
-		     describe_backtrace(error));
+	// Use master()->describe_backtrace() to bypass background_failure()
+	// and avoid counting this error twice.
+	report_error("################ Failed to compile %s:\n%s", file,
+		     master()->describe_backtrace(error));
 	fails++;
       }
       else
       {
-	schedule_tests (0, run_pike_tests,test,file);
+	if (test->single_thread)
+	  schedule_tests_single_thread (0, run_pike_tests, test, file);
+	else
+	  schedule_tests (0, run_pike_tests,test,file);
 	return;
       }
     }
@@ -823,7 +869,9 @@ class TagEmitTESTER {
 		(["data":RXML.nil]),
 		(["data":TestNull()]),
 		(["data":RXML.empty]),
-		(["data":EntityDyn()]) });
+		(["data":EntityDyn()]),
+		(["data": Val.null]),
+	     });
 
     case "2":
       return map( "aa,a,aa,a,bb,b,cc,c,aa,a,dd,d,ee,e,aa,a,a,a,aa"/",",

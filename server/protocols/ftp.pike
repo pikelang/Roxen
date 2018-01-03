@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.142 2010/08/09 09:12:17 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -633,13 +633,24 @@ class LS_L(protected RequestID master_session,
 
   protected string name_from_uid(int uid)
   {
+    string res;
+    // NB: find_user_from_uid() can be quite slow(!), so we
+    //     cache the result for the duration of the connection.
+    if (!master_session->misc->username_from_uid) {
+      master_session->misc->username_from_uid = ([]);
+    } else if (res = master_session->misc->username_from_uid[uid]) {
+      return res;
+    }
     User user;
     foreach(master_session->conf->user_databases(), UserDB user_db) {
       if (user = user_db->find_user_from_uid(uid)) {
-	return user->name();
+	master_session->misc->username_from_uid[uid] = res = user->name();
+	return res;
       }
     }
-    return (uid?((string)uid):"root");
+    master_session->misc->username_from_uid[uid] = res =
+      (uid?((string)uid):"root");
+    return res;
   }
 
   string ls_l(string file, array st)

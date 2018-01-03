@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.15 2011/01/24 17:16:56 mast Exp $
+ * $Id$
  */
 inherit "wizard";
 

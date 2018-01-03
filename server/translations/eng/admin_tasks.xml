@@ -286,10 +286,7 @@
 <t></t>
 </str>
 
-<str id="38">
-<o>backend thread</o>
-<t></t>
-</str>
+
 
 <str id="39">
 <o>Thread</o>
@@ -446,16 +443,6 @@
 <t></t>
 </str>
 
-<str id="293">
-<o>Hits</o>
-<t></t>
-</str>
-
-<str id="294">
-<o>Misses</o>
-<t></t>
-</str>
-
 <str id="63">
 <o>Extended process status</o>
 <t></t>
@@ -552,7 +539,7 @@
 </str>
 
 <str id="95">
-<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
+<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 2048 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
 <t></t>
 </str>
 
@@ -1169,10 +1156,7 @@ change the currently running version.</o>
 <t></t>
 </str>
 
-<str id="341">
-<o>Platform</o>
-<t></t>
-</str>
+
 
 <str id="342">
 <o>Target version:</o>
@@ -1486,5 +1470,25 @@ the Pike interpreter.</o>
 
 <str id="402">
 <o>Cache</o>
+<t></t>
+</str>
+
+<str id="403">
+<o>References</o>
+<t></t>
+</str>
+
+<str id="404">
+<o>Import</o>
+<t></t>
+</str>
+
+<str id="405">
+<o>You can also use the bin/rxnpatch command-line tool to manage patches, e.g. to import many patches at once.</o>
+<t></t>
+</str>
+
+<str id="406">
+<o>Repeated action request ignored &amp;ndash; server process ID is different.</o>
 <t></t>
 </str>

@@ -368,6 +368,21 @@
 </test>
 
 <test>
+  <rxml type="string">
+    <sqlquery db="local" query="TRUNCATE TABLE __test"/>
+    <sqlquery db="local" query="INSERT INTO __test (a) VALUES (NULL), ('')"/>
+    <emit source="sql" db="local" query="SELECT NULL as v">
+      <emit source="sql" db="local"
+	    query="SELECT id FROM __test WHERE a&lt;=>:value"
+	    bindings="value=_.v">
+	[&_.id;]
+      </emit>
+    </emit>
+  </rxml>
+  <result>[1]</result>
+</test>
+
+<test>
   <rxml>
     <sqlquery db="local" query="DROP TABLE __test"/>
     &page.last-true;

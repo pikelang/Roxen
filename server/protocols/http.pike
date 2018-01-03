@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.638 2011/03/06 14:48:54 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -242,7 +242,8 @@ void send(string|object what, int|void len,
   if(!pipe) setup_pipe();
   if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
-    if (connection_debug_verbose
+    if (sizeof (what) < 2000 ||
+	connection_debug_verbose
 #if TOSTR(CONNECTION_DEBUG) != "1"
 	// CONNECTION_DEBUG may be defined to something like "text/"
 	// to see the response content for all content types with that
@@ -753,7 +754,6 @@ private int got_chunk_fragment(string fragment)
 	// avoid having to realloc.
 	data_buffer = String.Buffer(sizeof(data) + misc->chunk_len + 16384);
 	data_buffer->add(data);
-	data_buffer->add(str);
 	data = "";
       }
       if (data_buffer) {
@@ -969,9 +969,16 @@ private int parse_got( string new_data )
     }
 
     TIMER_START(parse_got_2_parse_headers);
+    array(int|string) new_forwarded_header = ({});
     foreach (request_headers; string linename; array|string contents)
     {
-      if( arrayp(contents) ) contents = contents[0];
+      array(string) acontents;
+      if( arrayp(contents) ) {
+	acontents = contents;
+	contents = contents[0];
+      } else {
+	acontents = ({ contents });
+      }
       switch (linename) 
       {
        case "cache-control":	// Opera sends "no-cache" here.
@@ -1055,8 +1062,14 @@ private int parse_got( string new_data )
 	 misc->content_type_type = lower_case (ct_type + "/" + ct_subtype);
 	 break;
        case "destination":
+	 // FIXME: This silently strips away the server if the
+	 // destination is an absolute URI, and it can be a different
+	 // one according to RFC 4918, section 10.3. If we cannot use
+	 // it as destination (which is probably the case), then the
+	 // request MUST NOT succeed.
 	 if (mixed err = catch {
-	     contents = http_decode_string (Standards.URI(contents)->path);
+	     contents = http_decode_string (Standards.URI(contents,
+							  "dummy:")->path);
 	   }) {
 #ifdef DEBUG
 	   report_debug(sprintf("Destination header contained a bad URI: %O\n"
@@ -1087,7 +1100,62 @@ private int parse_got( string new_data )
 	   return 2;
 	 }
 	 break;
+
+       case "forwarded":
+	 // RFC 7239
+	 misc->forwarded = map(map(acontents, MIME.tokenize), `/, ({ ',' })) * ({});
+	 break;
+
+	 // The X-Forwarded-* headers have been obsoleted by RFC 7239.
+	 // Convert them to the corresponding forwarded header as per
+	 // RFC 7239 7.4. But only if it hasn't already been done.
+       case "x-forwarded-for":
+	 if (request_headers->forwarded) break;
+	 foreach(acontents, string line) {
+	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
+	     string ip;
+	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
+	       ip = segment[0];
+	     } else {
+	       ip = MIME.quote(segment);
+	     }
+	     if (has_value(ip, ":") && !has_value(ip, ".") &&
+		 !has_prefix(ip, "[")) {
+	       // DWIM IPv6
+	       ip = "[" + ip + "]";
+	     }
+	     if (sizeof(new_forwarded_header)) {
+	       new_forwarded_header += ({ ',' });
+	     }
+	     new_forwarded_header += ({ "for", '=', ip });
+	   }
+	 }
+	 break;
+       case "x-forwarded-by":
+       case "x-forwarded-host":
+       case "x-forwarded-proto":
+	 if (request_headers->forwarded) break;
+	 string field = linename[sizeof("x-forwarded-")..];
+	 foreach(acontents, string line) {
+	   foreach(MIME.tokenize(line) / ({ ',' }), array(string|int) segment) {
+	     string value;
+	     if ((sizeof(segment) == 1) && stringp(segment[0])) {
+	       value = segment[0];
+	     } else {
+	       value = MIME.quote(segment);
+	     }
+	     if (sizeof(new_forwarded_header)) {
+	       new_forwarded_header += ({ ',' });
+	     }
+	     new_forwarded_header += ({ field, '=', value });
+	   }
+	 }
+	 break;
       }
+    }
+    if (sizeof(new_forwarded_header)) {
+      request_headers->forwarded = MIME.quote(new_forwarded_header);
+      misc->forwarded = new_forwarded_header / ({ ',' });
     }
     TIMER_END(parse_got_2_parse_headers);
   }
@@ -1440,6 +1508,7 @@ protected void do_timeout()
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
   {
+    // FIXME: Hardcoded timeout of 30 seconds above.
 #ifdef CONNECTION_DEBUG
     werror ("HTTP[%s]: Connection timed out. Closing.\n", DEBUG_GET_FD);
 #endif
@@ -1451,6 +1520,12 @@ protected void do_timeout()
 			 my_fd->query_write_callback(),
 			 my_fd->query_close_callback()));
     MARK_FD("HTTP timeout");
+    if (my_fd && my_fd->linger) {
+      // We don't care if there's still data in the buffers
+      // (there probably is), just terminate the connection
+      // as soon as possible.
+      my_fd->linger(0);
+    }
     end();
   } else {
 #ifdef DEBUG
@@ -1689,8 +1764,10 @@ int store_error(mixed _err)
       int line;
       if (arrayp (ent)) {
 	if (sizeof (ent) && stringp (ent[0]))
-	  if (ent[0][..sizeof (cwd) - 1] == cwd)
+	  if (has_prefix (ent[0], cwd))
 	    file = ent[0] = ent[0][sizeof (cwd)..];
+	  else if (has_prefix (ent[0], roxenloader.server_dir))
+	    file = ent[0] = ent[0][sizeof (roxenloader.server_dir)..];
 	  else
 	    file = ent[0];
 	if (sizeof (ent) >= 2) line = ent[1];
@@ -2613,10 +2690,11 @@ void send_result(mapping|void result)
 	// If we got no body then put the message there to make it
 	// more visible.
 	file->data = "<html><body>" +
-	  replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
+	  replace (Roxen.html_encode_string (string_to_utf8(head_status)),
+		   "\n", "<br />\n") +
 	  "</body></html>";
 	file->len = sizeof (file->data);
-	file->type = "text/html";
+	file->type = "text/html; charset=utf-8";
       }
       if (has_value (head_status, "\n"))
 	// Fold lines nicely.
@@ -2965,13 +3043,12 @@ void send_result(mapping|void result)
 }
 
 // Execute the request. This is called from a handler thread.
-void handle_request( )
+protected void handle_request_from_queue( )
 {
   if (mixed err = catch {
 
-  REQUEST_WERR("HTTP: handle_request()");
-  TIMER_START(handle_request);
-  
+  REQUEST_WERR("HTTP: handle_request_from_queue()");
+
   int now = gethrtime();
   queue_time = now - queue_time;
 
@@ -2979,6 +3056,8 @@ void handle_request( )
   // "503 - server too busy" response..
   int queue_timeout = conf->handler_queue_timeout;
   if (queue_timeout && queue_time/1E6 > queue_timeout) {
+    REQUEST_WERR (sprintf ("HTTP: Too long in queue (%d ms) - returning 503\n",
+			   queue_time));
     file = Roxen.http_rxml_answer (conf->query ("503-message"),
 				   this, 0, "text/html");
     file->error = Protocols.HTTP.HTTP_UNAVAIL;
@@ -2990,6 +3069,21 @@ void handle_request( )
     return;
   }
 
+  handle_request();
+
+  }) {
+    call_out (disconnect, 0);
+    report_error("Internal server error: " + describe_backtrace(err));
+  }
+}
+
+void handle_request()
+{
+  if (mixed err = catch {
+
+  REQUEST_WERR("HTTP: handle_request()");
+  TIMER_START(handle_request);
+  
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
   {
@@ -3026,7 +3120,7 @@ void handle_request( )
 
   MARK_FD("HTTP handling request");
 
-  handle_time = now;
+  handle_time = gethrtime();
 #if constant(System.CPU_TIME_IS_THREAD_LOCAL)
   handle_vtime = gethrvtime();
 #endif
@@ -3084,8 +3178,12 @@ void got_data(mixed fooid, string s, void|int chained)
   if (mixed err = catch {
 
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP[%s]: Request ----------------------------------------------\n"
-	  "%O\n", DEBUG_GET_FD, s);
+  if (wanted_data < 2000)
+    werror ("HTTP[%s]: Request ----------------------------------------------\n"
+	    "%O\n", DEBUG_GET_FD, s);
+  else
+    werror ("HTTP[%s]: Request ----------------------------------------------\n"
+	    "Length %d\n", DEBUG_GET_FD, sizeof (s));
 #else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
 #endif
@@ -3615,7 +3713,7 @@ void got_data(mixed fooid, string s, void|int chained)
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
     queue_length = roxen.handle_queue_length();
-    roxen.handle(handle_request);
+    roxen.handle(handle_request_from_queue);
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
@@ -3692,8 +3790,11 @@ void clean()
 {
   if(!(my_fd && objectp(my_fd)))
     end();
-  else if((predef::time(1) - time) > 4800)
+  else if((predef::time(1) - time) > 4800) {
+    // FIXME: Hardcoded timeout of 80 minutes above.
+    if (my_fd->linger) my_fd->linger(0);
     end();
+  }
 }
 
 protected void create(object f, object c, object cc)

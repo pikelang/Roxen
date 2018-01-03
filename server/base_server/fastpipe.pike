@@ -4,7 +4,7 @@
 // Pipe using sendfile, if possible.
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.11 2009/05/07 14:15:52 mast Exp $";
+constant cvs_version="$Id$";
 
 private array(string) headers=({});
 private Stdio.File file;

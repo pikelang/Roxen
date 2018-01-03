@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.7 2009/04/24 08:56:53 jonasw Exp $
+// $Id$
 
 #include <module.h>
 inherit "module";
@@ -65,7 +65,7 @@ class TagEmitExec {
 
   class ExecProcess (int timeout, array(string) command_args)
   {
-    Process.create_process p;
+    Process.Process p;
     string res = "";
     int done, ret_value;
 
@@ -96,9 +96,9 @@ class TagEmitExec {
       mixed err = catch {
 	  dwerror("emit#exec: Starting application [\"%s\"]\n",
 		  command_args*"\", \"");
-	  p = Process.create_process(command_args, ([
-				       "stdout": stdout->pipe(),
-				     ]));
+	  p = Process.Process(command_args, ([
+				"stdout": stdout->pipe(),
+			      ]));
 	};
       if(err)
 	RXML.run_error(describe_error(err));

@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.100 2011/05/23 11:29:41 mast Exp $
+// $Id$
 
 //! Manages database aliases and permissions
 
@@ -332,14 +332,40 @@ private
 
     mapping(string:string) mysql_location = roxenloader->parse_mysql_location();
     string update_mysql;
-    if ((mysql_location->basedir) && 
-	(update_mysql =
-	 (Stdio.read_bytes(combine_path(mysql_location->basedir,
-					"share/mysql",
-					"mysql_fix_privilege_tables.sql")) ||
-	  Stdio.read_bytes(combine_path(mysql_location->basedir,
-					"share",
-					"mysql_fix_privilege_tables.sql"))))) {
+
+    string mysql_version = db->server_info();
+    // Typically a string like "mysql/5.5.30-log".
+    if (has_value(mysql_version, "/")) mysql_version = (mysql_version/"/")[1];
+    mysql_version = (mysql_version/"-")[0];
+
+    string db_version;
+    // Catch in case mysql_upgrade_info is a directory (unlikely, but...).
+    catch {
+      db_version =
+	Stdio.read_bytes(combine_path(roxenloader.query_mysql_data_dir(),
+				      "mysql_upgrade_info"));
+      // Typically a string like "5.5.30".
+    };
+    db_version = db_version && (db_version - "\n");
+
+    if (db_version == mysql_version) {
+      // Already up-to-date.
+    } else if (mysql_location->mysql_upgrade) {
+      // Upgrade method in MySQL 5.0.19 and later (UNIX),
+      // MySQL 5.0.25 and later (NT).
+      Process.Process(({ mysql_location->mysql_upgrade,
+			 "-S", roxenloader.query_mysql_socket(),
+			 "--user=rw",
+			 // "--verbose",
+		      }))->wait();
+    } else if ((mysql_location->basedir) &&
+	       (update_mysql =
+		(Stdio.read_bytes(combine_path(mysql_location->basedir,
+					       "share/mysql",
+					       "mysql_fix_privilege_tables.sql")) ||
+		 Stdio.read_bytes(combine_path(mysql_location->basedir,
+					       "share",
+					       "mysql_fix_privilege_tables.sql"))))) {
       // Don't complain about failures, they're expected...
       execute_sql_script(db, update_mysql, 1);
     } else {
@@ -616,6 +642,50 @@ mapping(string:mixed) get_db_url_info(string db)
   return d;
 }
 
+#ifdef MODULE_DEBUG
+private class SqlSqlStaleChecker (protected Sql.Sql sql)
+{
+  // Wrapper to check that connections aren't held on to by modules
+  // for too long, in MODULE_DEBUG mode. Modules should fetch
+  // connections via the DBManager to make sure timeouts are handled
+  // correctly.
+
+  int _our_last_ping = time (1);
+  constant _our_timeout = 10;
+
+  protected void _check_ping()
+  {
+    if (time(1)-_our_last_ping > _our_timeout)
+      werror ("Query attempted on connection with latest activity more than %d"
+	      " seconds ago. Something is probably holding on to Sql.Sql "
+	      "connections longer than it should. Backtrace: \n%s\n",
+	      _our_timeout,
+	      describe_backtrace(backtrace()));
+    _our_last_ping = time (1); // Reset timestamp when running queries.
+  }
+
+  protected mixed `[]( string i )
+  {
+    switch (i) {
+    case "ping":
+      _our_last_ping = time (1);
+      break;
+    case "query":
+    case "typed_query":
+    case "big_query":
+    case "big_typed_query":
+    case "streaming_query":
+      _check_ping();
+      break;
+    }
+    return sql[i];
+  }
+  protected mixed `->( string i )
+  {
+    return `[](i);
+  }
+}
+#endif
 
 Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
 		 void|string charset)
@@ -639,20 +709,30 @@ Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
   mapping(string:mixed) d = get_db_url_info(db);
   if( !d ) return 0;
 
-  if( (int)d->local )
-    return connect_to_my_mysql( user, db, reuse_in_thread,
-				charset || d->default_charset );
+  Sql.Sql res;
 
-  // Otherwise it's a tad more complex...  
-  if( has_suffix (user, "_ro") )
+  if( (int)d->local ) {
+    res = connect_to_my_mysql( user, db, reuse_in_thread,
+			       charset || d->default_charset );
+  }
+  // Otherwise it's a tad more complex...
+  else if( has_suffix (user, "_ro") ) {
     // The ROWrapper object really has all member functions Sql.Sql
     // has, but they are hidden behind an overloaded index operator.
     // Thus, we have to fool the typechecker.
-    return [object(Sql.Sql)](object)
+    res = [object(Sql.Sql)](object)
       ROWrapper( sql_cache_get( d->path, reuse_in_thread,
 				charset || d->default_charset) );
-  return sql_cache_get( d->path, reuse_in_thread,
-			charset || d->default_charset);
+  } else {
+    res = sql_cache_get( d->path, reuse_in_thread,
+			 charset || d->default_charset);
+  }
+
+#ifdef MODULE_DEBUG
+  return [object(Sql.Sql)](object)SqlSqlStaleChecker (res);
+#else
+  return res;
+#endif
 }
 
 Sql.Sql get_sql_handler(string db_url)
@@ -661,7 +741,7 @@ Sql.Sql get_sql_handler(string db_url)
   if(has_prefix(db_url, "oracle:"))
     return ExtSQL.sql(db_url);
 #endif
-  return Sql.Sql(db_url);
+  return Sql.Sql(db_url, ([ "reconnect":0 ]));
 }
 
 Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
@@ -1432,17 +1512,17 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     Stdio.File cooked = raw;
     if (has_suffix(fname, ".bz2")) {
       cooked = Stdio.File();
-      Process.create_process(({ "bzip2", "-cd" }),
-			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
-				"stdin":raw,
-			     ]));
+      Process.Process(({ "bzip2", "-cd" }),
+		      ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+			 "stdin":raw,
+		      ]));
       raw->close();
     } else if (has_suffix(fname, ".gz")) {
       cooked = Stdio.File();
-      Process.create_process(({ "gzip", "-cd" }),
-			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
-				"stdin":raw,
-			     ]));
+      Process.Process(({ "gzip", "-cd" }),
+		      ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+			 "stdin":raw,
+		      ]));
       raw->close();
     }
     report_notice("Restoring backup file %s to database %s...\n",
@@ -1643,7 +1723,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   werror("Backing up database %s to %s/dump.sql...\n", dbname, directory);
   // werror("Starting mysqldump command: %O...\n", cmd);
 
-  if (Process.create_process(cmd)->wait()) {
+  if (Process.Process(cmd)->wait()) {
     error("Mysql dump command failed for DB %s.\n", dbname);
   }
 
@@ -1657,9 +1737,9 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 	   dbname, table, directory, time(), tag );
   }
 
-  if (Process.create_process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
+  if (Process.Process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
       wait() &&
-      Process.create_process(({ "gzip", "-f9", directory + "/dump.sql" }))->
+      Process.Process(({ "gzip", "-f9", directory + "/dump.sql" }))->
       wait()) {
     werror("Failed to compress the database dump.\n");
   }
@@ -2196,10 +2276,12 @@ mapping(string:string) module_table_info( string db, string table )
   if( sizeof(td=query("SELECT * FROM module_tables WHERE db=%s AND tbl=%s",
 		      db, table ) ) ) {
     res1 = td[0];
-    if (table != "" ||
-	(res1->conf && sizeof (res1->conf) &&
-	 res1->module && sizeof (res1->module)))
-      return res1;
+    foreach (td, mapping(string:mixed) row) {
+      if (table != "" ||
+	  (row->conf && sizeof (row->conf) &&
+	   row->module && sizeof (row->module)))
+	return row;
+    }
   }
   else
     res1 = ([]);

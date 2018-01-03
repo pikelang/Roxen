@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.36 2010/09/06 13:32:45 mast Exp $
+//! $Id$
 
 #define RXML_CONTEXT (_cur_rxml_context->get())
 

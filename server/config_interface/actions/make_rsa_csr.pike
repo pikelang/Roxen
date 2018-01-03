@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.11 2008/08/15 12:33:54 mast Exp $
+ * $Id$
  */
 
 #if constant (Nettle)

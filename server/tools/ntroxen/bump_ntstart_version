@@ -17,7 +17,10 @@ fail()
 
 version_fixup()
 {
-    #cd server/etc/include
+    if [ -f ntstart/ntstart.cpp -a -f version.h ]; then :; else
+	echo "Invalid current directory for bumping ntstart."
+	fail
+    fi
 
     echo "Bumping ntstart version..."
 
@@ -40,12 +43,13 @@ version_fixup()
     major=`sed <version.h -e'/NTSTART_MAJOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
     minor=`sed <version.h -e'/NTSTART_MINOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
     version=$major.$minor
-    #echo cvs ci -m "Version bumped to $version.$newbuild by buildsystem." version.h \
+
     if [ "x$nocvs" = "x" ]
     then
-	echo cvs ci -m "Version bumped to $version.$newbuild by distmaker." version.h
-	cvs ci -m "Version bumped to $version.$newbuild by distmaker." version.h \
+	echo git commit -m "Version bumped to $version.$newbuild by distmaker." version.h
+	git commit -m "Version bumped to $version.$newbuild by distmaker." version.h \
 	|| fail
+	git push || fail
     fi
 
     echo "$version.$newbuild" > VERSION
@@ -53,12 +57,12 @@ version_fixup()
     VERSION="$version.$newbuild"
     export VERSION
 
-    #cd ../../..
     if [ "x$nocvs" = "x" ]
     then
         echo Tagging...
-	echo cvs tag `echo "ntstart_$VERSION" | tr . _`
-        cvs tag `echo "ntstart_$VERSION" | tr . _` || fail
+	echo git tag "ntstart_$VERSION"
+        git tag "ntstart_$VERSION" || fail
+	git push origin "refs/tags/ntstart_$VERSION" || fail
     else
         echo No tagging!
     fi

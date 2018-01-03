@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.128 2011/04/21 13:43:05 jonasw Exp $ -->
+<!-- $Id$ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -162,10 +162,15 @@
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
 
-<define container="tmpl">
+<define container="tmpl"><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
   <trans-reg project="roxen_config" />
 <html><head>
-<title>&roxen.version; <translate id="204">Administration Interface</translate><eval>&_.title:none;</eval></title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>
+  <set variable="var.cf-headline"><cf-headline/></set>
+  <if variable="var.cf-headline = ?*">&var.cf-headline; - </if>
+  &roxen.product-name;/&roxen.dist-version; <translate id="204">Administration Interface</translate> - <eval>&_.title:none;</eval>
+</title>
 <link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico" />
 <if exists="/themes/&usr.theme;/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />

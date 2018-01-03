@@ -5,7 +5,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: chinese.pike,v 1.2 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "zh", "chinese", "\x4e2d\x6587" });
 constant _aliases = ({ "zh", "chi", "zho", "chinese", "\x4e2d\x6587" });
 

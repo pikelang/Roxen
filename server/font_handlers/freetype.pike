@@ -39,6 +39,7 @@ protected void build_font_names_cache( )
   mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
+    dir = roxen_path (dir);
     foreach(r_get_dir( dir )||({}), string fname)
     {
       string path=combine_path(dir+"/",fname);
@@ -62,6 +63,19 @@ protected void build_font_names_cache( )
             new_ttf_font_names_cache[f] = ([]);
           new_ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
                                    = combine_path(dir+"/",fname);
+	  if (n->ps_name && n->ps_name != f)
+	  {
+	    // Insert an alias name based on the ps_name
+	    // attribute for compatibility with Roxen 4.5
+	    // which used an older version of FreeType (2.1.9)
+	    // where the ps_name was used as family_name.
+	    string family_alias = lower_case(n->ps_name);
+	    string style_alias = translate_ttf_style("Regular");
+	    if (!new_ttf_font_names_cache[family_alias])
+	      new_ttf_font_names_cache[family_alias] = ([]);
+	    new_ttf_font_names_cache[family_alias][style_alias]
+	                           = combine_path(dir+"/",fname);
+	  }
         }
       }
     }
@@ -206,10 +220,16 @@ class FTFont
     if(stringp(what))
       what = ({ what });
     int oversampling = _oversampling || (roxen->query("font_oversampling") ? 2 : 1);
-    if( oversampling != 1 )
-      face->set_size( 0, size * oversampling );
-    else
-      face->set_size( 0, size );
+    if (mixed err = catch {
+	if( oversampling != 1 )
+	  face->set_size( 0, size * oversampling );
+	else
+	  face->set_size( 0, size );
+      }) {
+      // set_size can fail like this for bitmap fonts.
+      if (describe_error (err) != "Failed to set size: invalid pixel size\n")
+	throw (err);
+    }
     if( !sizeof( what ) )
       return ([ "img" : Image.Image( 1,height() ) ]);
 
@@ -273,7 +293,11 @@ class FTFont
   }
 
   string _sprintf() {
-    return "Freetype";
+    if (face)
+      if (mapping(string:mixed) info = face->info())
+	return sprintf ("FTFont(%s, %s)",
+			info->family || "?", info->style_name || "?");
+    return "FTFont()";
   }
 
   protected void create(object r, int s, string fn, int fb, int fi)

@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.19 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -48,6 +48,7 @@ protected void build_font_names_cache( )
   mapping new_ttf_font_names_cache=([]);
   void traverse_font_dir( string dir ) 
   {
+    dir = roxen_path (dir);
     foreach(r_get_dir( dir )||({}), string fname)
     {
       string path=combine_path(dir+"/",fname);

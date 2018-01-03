@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: demo.pike,v 1.22 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id$";
 
 void create()
 {

@@ -619,6 +619,7 @@ constant tagdoc = ([
 
 <p>The returned records will contain all known fields as well as a special
    <tt>_id</tt> field with the record ID.</p>
+</desc>
 
 <attr name='db' value='string' required='required'>
   <p>Name of XML-DB database to use. This corresponds to the <tt>name</tt>
@@ -654,7 +655,8 @@ constant tagdoc = ([
   <p>When enabled the search will match substrings and allow for <tt>*</tt>
      and <tt>?</tt> wildcards.</p>
 </attr>
-"
+",
+  ([ ])
   })
 ]);
 #endif

@@ -1,4 +1,4 @@
-// $Id: ClientMessages.pmod,v 1.1 2011/02/16 12:45:48 grubba Exp $
+// $Id$
 
 //
 // ClientMessages.pmod

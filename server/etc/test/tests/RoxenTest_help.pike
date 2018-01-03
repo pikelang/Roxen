@@ -1,6 +1,13 @@
 inherit "pike_test_common.pike";
 inherit "rxmlhelp";
 
+constant single_thread = 1;
+// In this test we don't want background jobs to start running in
+// parallel since there are many modules that don't handle the race
+// with the module instance getting destructed while their background
+// jobs run. Ideally they should, but it's simply not worth the effort
+// to plug those holes, so we just avoid that case instead.
+
 array(string) new = ({});
 #include <module_constants.h>
 

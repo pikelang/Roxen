@@ -1,13 +1,23 @@
 #!/bin/sh
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
-# $Id: init.d_roxen,v 1.31 2009/01/29 10:08:49 wellhard Exp $
+# $Id$
 #############
+### BEGIN INIT INFO
+# Provides:		roxen
+# Required-Start:	$local_fs $syslog $named $network $time
+# Required-Stop:	$local_fs $syslog $named $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Description:		Roxen Webserver
+### END INIT INFO
 
 # Configurations collection directory. If available, it overrides
 # roxenhome below.
 #
-roxenconfdirs=/etc/roxen
+roxenconfdir=/etc/roxen
 
 # The server directory where the 'start' script is located, if available.
 #
@@ -45,6 +55,35 @@ umask 022
 # chkconfig: - 90 20
 # description:  Roxen
 
+errexit=1
+okexit=0
+
+if [ -f /lib/svc/share/smf_include.sh -a "x$SMF_FMRI" != x ]; then
+
+    # Looks like we've been called from the Solaris svc system.
+
+    . /lib/svc/share/smf_include.sh
+
+    errexit="$SMF_EXIT_ERR_CONFIG"
+    okexit="$SMF_EXIT_OK"
+
+    # roxen/dir ==> roxenhome
+    if svcprop -q -p roxen/dir ${SMF_FMRI}; then
+	val=`svcprop -p roxen/dir ${SMF_FMRI}`
+	if [ "$val" != "\"\"" ] ; then
+	    roxenhome="$val"
+	fi
+    fi
+
+    # roxen/confdir ==> roxenconfdir
+    if svcprop -q -p roxen/confdir ${SMF_FMRI}; then
+	val=`svcprop -p roxen/confdir ${SMF_FMRI}`
+	if [ "$val" != "\"\"" ] ; then
+	    roxenconfdir="$val"
+	fi
+    fi
+fi
+
 find_server_dir()
 {
   (
@@ -67,128 +106,80 @@ run_server()
 {
     test x"$pidfile" = x && pidfile="$configdir"/_roxen_pid
     flags="$flags --pid-file=$pidfile"
+
+    if [ -x "$roxenhome/start" ]; then :; else
+      echo "Cannot find a Roxen installation in $roxenhome."
+      exit $errexit
+    fi
     
  case $1 in
   'start_msg')
     echo "Start Roxen in $roxenhome."
-    exit 0
+    exit $okexit
   ;;
   'stop_msg')
     echo "Stop Roxen in $roxenhome."
-    exit 0
+    exit $okexit
   ;;
 
   'start')
     echo "Starting Roxen in $roxenhome..."
     cd $roxenhome && {
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-	  echo "Roxen is already running (start script pid $pid)."
-	  :
-	else false; fi
-      } < $pidfile && exit 0
-      if [ -x $roxenhome/start ]; then
-	./start $flags 2>/dev/null
+      ./start $flags 2>/dev/null && {
 	echo "Roxen started."
-	exit 0
-      fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+	exit $okexit
+      }
+      echo "Failed to start Roxen. Already running?"
     }
   ;;
 
   'reload')
     echo "Reloading configurations in Roxen in $roxenhome..."
     cd $roxenhome && {
-      if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGHUP to Roxen process $pid."
-	kill -1 $pid && exit 0
-      fi
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-	  echo "The start script is currently forking a new server - nothing to do."
-	  :
-	else false; fi
-      } < $pidfile && exit 0
+      echo "Sending SIGHUP to Roxen process."
+      ./start --signal 1 $flags 2>/dev/null && exit $okexit
       echo "Roxen doesn't seem to be running."
-      exit 1
     }
   ;;
 
   'restart')
     echo "Restarting Roxen in $roxenhome..."
     cd $roxenhome && {
-      if test -f "$pidfile" && read pid < $pidfile && test "$pid" != x; then
-	echo "Sending SIGTERM to Roxen process $pid."
-	kill $pid && exit 0
-      fi
-      test -f "$pidfile" && {
-	if read pid && read pid && kill -0 $pid 2>/dev/null; then
-	  echo "The start script is currently forking a new server - nothing to do."
-	  :
-	else false; fi
-      } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
-      echo "Starting Roxen in $roxenhome."
-      if [ -x $roxenhome/start ]; then
-	./start $flags 2>/dev/null
+      ./start --restart $flags 2>/dev/null && {
 	echo "Roxen started."
-	exit 0
-      fi
-      echo "Cannot find a Roxen installation in $roxenhome."
+	exit $okexit
+      }
+      echo "Failed to restart Roxen."
     }
   ;;
 
   'stop')
     echo "Stopping Roxen in $roxenhome..."
-    cd $roxenhome && {
-      test -f "$pidfile" && {
-	if read pid && read pid; then
-	  echo "Sending SIGTERM to start script process $pid."
-	  if kill "$pid"; then
-	    while kill -0 $pid 2>/dev/null; do
-	      sleep 1
-	    done
-	    echo "Roxen stopped."
-	    # Get all the CGI scripts... :-)
-	    if [ x$killallwww = xyes ] ; then
-	      echo "Killing all programs running as the $wwwuser user."
-	      su $wwwuser -c "kill -9 -1"
-	    fi
-	    :
-	  else false; fi
-	else false; fi
-      } < $pidfile && exit 0
-      echo "Roxen doesn't seem to be running."
+    cd "$roxenhome" && {
+      ./start --stop $flags 2>/dev/null && {
+	echo "Roxen stopped."
+	exit $okexit
+      }
+      echo "Failed to stop Roxen."
     }
   ;;
 
   'status')
     cd "$roxenhome" && {
-	test -f "$pidfile" && {
-	    if read pid && read pid && ps -p "$pid" >/dev/null
-	    then
-		echo "Roxen is running (start script pid $pid)."
-		:
-	    else 
-		false
-	    fi
-	} < "$pidfile" && status=0 && return 
-	echo "Roxen is not running."
-	exit 1
+      if ./start --signal 0 $flags 2>/dev/null; then
+	echo "Roxen is running."
+	status=0
+	return 0
+      fi
+      echo "Roxen is not running."
     }
   ;;
 
   'debug')
-    echo "Sending Roxen SIGQUIT..."
-    cd $roxenhome && {
-      test -f "$pidfile" && {
-        if read pid && kill -QUIT "$pid" 2>/dev/null; then
-          echo "Roxen process found. Consult debug log for output."
-          :
-        else echo "pid $pid"; fi
-      } < $pidfile && exit 0
+    cd "$roxenhome" && {
+      echo "Sending SIGQUIT to Roxen process $pid."
+      ./start --signal QUIT $flags 2>/dev/null && exit $okexit
       echo "Roxen doesn't seem to be running."
-      exit 1
     }
   ;;
 
@@ -196,7 +187,7 @@ run_server()
     echo "Usage: $0 [start|stop|status|start_msg|stop_msg|restart|reload|debug]"
   ;;
  esac
- exit 1
+ exit $errexit
 }
 
 get_variables()
@@ -215,7 +206,7 @@ get_variables()
 	if [ -d "$roxenhome" ]
 	then
 		echo "Fatal: No Roxen dir found, exiting!" >&2
-		exit 1
+		exit $errexit
 	fi
 	echo "Warning: $oldroxenhome does not exist, trying $roxenhome instead." >&2
     fi
@@ -233,24 +224,24 @@ get_variables()
     fi
 }
 
-if [ -d "$roxenconfdirs" ]
+if [ -d "$roxenconfdir" ]
 then
     if [ -z "$1" ]
     then
 	echo "Usage: $0 [start|stop|status|start_msg|stop_msg|restart|reload|debug] <instance name>"
-	exit 1
+	exit $errexit
     fi
     if [ -z "$2" ]
     then
 	flagsorig="$flags"
-	for f in "$roxenconfdirs"/*
+	for f in "$roxenconfdir"/*
 	do
 	    flags="$flagsorig"
 	    get_variables "$f"
 	    run_server "$1"
 	done
     else
-	get_variables "$roxenconfdirs"/"$2"
+	get_variables "$roxenconfdir"/"$2"
 	run_server "$1"
     fi
 else

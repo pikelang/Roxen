@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.9 2001/11/12 17:51:55 mast Exp $
+ * $Id$
  */
 
 inherit "wizard";

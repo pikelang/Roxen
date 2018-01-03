@@ -1,9 +1,6 @@
 #include <config_interface.h>
 
-constant base = #"
-<use file='/template'/>
-<tmpl>
-<topmenu base='../' selected='sites'/>
+constant base = #"<use file='/template'/><tmpl><topmenu base='../' selected='sites'/>
 <content><cv-split><subtablist><st-page>
  <input type='hidden' name='name' value='&form.name;' />
  <table border='0' cellspacing='0' cellpadding='10'>

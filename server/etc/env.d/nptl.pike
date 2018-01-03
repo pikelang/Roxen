@@ -1,4 +1,4 @@
-// $Id: nptl.pike,v 1.3 2009/07/23 09:22:20 grubba Exp $
+// $Id$
 //
 // Detection and workaround for Redhat 9's New Posix Thread Library.
 //
@@ -23,14 +23,14 @@ void run(object env)
     object out = Stdio.File();
     object err = Stdio.File();
     Process.Process p =
-      Process.create_process(({ "sed", "-ed" }), ([
-			       "stdin": in->pipe(Stdio.PROP_REVERSE),
-			       "stdout": out->pipe(),
-			       "stderr": err->pipe(),
-			       "env":getenv() + ([
-				 "LD_ASSUME_KERNEL":"2.4.1",
-			       ])
-			     ]));
+      Process.Process(({ "sed", "-ed" }), ([
+			"stdin": in->pipe(Stdio.PROP_REVERSE),
+			"stdout": out->pipe(),
+			"stderr": err->pipe(),
+			"env":getenv() + ([
+			  "LD_ASSUME_KERNEL":"2.4.1",
+			])
+		      ]));
     in->close();
     out->close();
     err->read();

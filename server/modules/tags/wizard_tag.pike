@@ -2,7 +2,7 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.34 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";

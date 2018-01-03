@@ -85,4 +85,4 @@ HOWTO:
   6)  To update the translation files, simply rerun the command in step 4.
       Strings that need to be translated will be marked with <new/>.
 
-$Id: README,v 1.3 2005/03/23 12:34:48 grubba Exp $
+$Id$

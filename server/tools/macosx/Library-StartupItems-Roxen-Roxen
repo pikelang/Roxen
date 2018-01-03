@@ -94,15 +94,12 @@ StartService()
     if [ "${ROXEN:=-NO-}" = "-YES-" ]; then
 	ConsoleMessage "Starting Roxen in $roxenhome..."
 	cd $roxenhome && {
-	    test -f "$pidfile" && {
-		if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-		    ConsoleMessage "Roxen is already running (start script pid $pid)."
-		    :
-		else false; fi
-	    } < $pidfile && return
 	    if [ -x $roxenhome/start ]; then
-		./start $flags 2>/dev/null
-		ConsoleMessage "Roxen started."
+		./start $flags 2>/dev/null && {
+		    ConsoleMessage "Roxen started."
+		    return
+		}
+		ConsoleMessage "Failed to start Roxen. Already running?"
 	    else
 		ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
 	    fi
@@ -116,19 +113,13 @@ StopService()
 {
     ConsoleMessage "Stopping Roxen in $roxenhome..."
     cd $roxenhome && {
-      test -f "$pidfile" && {
-	  if read pid && read pid; then
-	      ConsoleMessage "Sending SIGTERM to Roxen process $pid."
-	      if kill "$pid"; then
-		  while kill -0 $pid 2>/dev/null; do
-		      sleep 1
-		  done
-		  ConsoleMessage "Roxen stopped."
-		  :
-	      else false; fi
-	  else false; fi
-      } < $pidfile && return
-      ConsoleMessage "Roxen doesn't seem to be running."
+	if [ -x $roxenhome/start ]; then
+	    ConsoleMessage "Sending SIGTERM to Roxen process."
+	    ./start --stop $flags 2>/dev/null
+	    ConsoleMessage "Roxen stopped."
+	else
+	    ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
+	fi
     }
 }
 
@@ -136,19 +127,13 @@ RestartService()
 {
     ConsoleMessage "Restarting Roxen in $roxenhome..."
     cd $roxenhome && {
-	test -f "$pidfile" && {
-	    if read pid && read pid; then
-		ConsoleMessage "Sending SIGTERM to Roxen process $pid."
-		if kill "$pid"; then
-		    while kill -0 $pid 2>/dev/null; do
-			sleep 1
-		    done
-		    ConsoleMessage "Roxen stopped."
-		    StartService
-		else false; fi
-	    else false; fi
-	} < $pidfile && return
-	ConsoleMessage "Roxen doesn't seem to be running."
+	if [ -x $roxenhome/start ]; then
+	    ConsoleMessage "Sending SIGTERM to Roxen process."
+	    ./start --restart $flags 2>/dev/null
+	    ConsoleMessage "Roxen restarted."
+	else
+	    ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
+	fi
     }
 }
 
@@ -156,13 +141,16 @@ status()
 {
     ConsoleMessage "Status of Roxen in $roxenhome..."
     cd $roxenhome && {
-	test -f "$pidfile" && {
-	    if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
-		ConsoleMessage "Roxen is running (start script pid $pid)."
-		:
-	    else false; fi
-	} < $pidfile && status=0 && return 
-	ConsoleMessage "Roxen is not running."
+	if [ -x $roxenhome/start ]; then
+	    if ./start --signal 0 $flags 2>/dev/null; then
+		ConsoleMessage "Roxen is running."
+		status=0
+		return 0;
+	    fi
+	    ConsoleMessage "Roxen is not running."
+	else
+	    ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
+	fi
     }
 }
 
@@ -170,13 +158,15 @@ debug()
 {
     ConsoleMessage "Debugging Roxen in $roxenhome..."
     cd $roxenhome && {
-      test -f "$pidfile" && {
-        if read pid && kill -QUIT "$pid" 2>/dev/null; then
-          ConsoleMessage "Roxen process found. Consult debug log for output."
-          :
-        else ConsoleMessage "pid $pid"; fi
-      } < $pidfile && return
-      ConsoleMessage "Roxen doesn't seem to be running."
+	if [ -x $roxenhome/start ]; then
+	    if ./start --signal QUIT $flags 2>/dev/null; then
+		ConsoleMessage "Roxen process found. Consult debug log for output."
+		return 0;
+	    fi
+	    ConsoleMessage "Roxen doesn't seem to be running."
+	else
+	    ConsoleMessage "Cannot find a Roxen installation in $roxenhome."
+	fi
     }
 }
 

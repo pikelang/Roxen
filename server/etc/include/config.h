@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.36 2007/09/06 12:37:37 grubba Exp $
+ * $Id$
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  

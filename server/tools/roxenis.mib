@@ -7,7 +7,7 @@
 --
 -- Creator: Honza Petrous (hop@roxen.com)
 --
--- $Id: roxenis.mib,v 1.5 2009/05/26 14:26:15 mast Exp $
+-- $Id$
 
 
 ROXENIS-MIB DEFINITIONS ::= 

@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.16 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -72,7 +72,10 @@ void input (Stdio.File what, int len) {
     file_len = len;
   }
   fd_in = what;
-  fd_in->set_nonblocking();
+
+  if (fd_in->set_nonblocking) // doesn't exist for some virtual file types
+    fd_in->set_nonblocking();
+
 //   tosend+=what->read(len);
 }
 

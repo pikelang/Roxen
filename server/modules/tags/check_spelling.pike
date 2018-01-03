@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.37 2010/10/27 15:32:22 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -18,6 +18,14 @@ array(string) query_provides()
 {
   return ({ "spellchecker" });
 }
+
+
+mapping(string:function) query_action_buttons()
+{
+  return ([ "Rebuild Custom Dictionaries" :
+	    lambda() { sync_extra_dicts(1); } ]);
+}
+
 
 mapping find_internal(string f, RequestID id)
 {
@@ -54,6 +62,21 @@ void create() {
          "The default dictionary used, when not specified in the "
 	 "&lt;spell&gt; tag.");
 
+  defvar("extra_dicts", ({ }), "Custom dictionaries",
+	 TYPE_FILE_LIST,
+	 "Paths to custom dictionary files. These should be plain-text "
+	 "files with one word on each line. NOTE: Filenames must include "
+	 "a valid language code before the file suffix, e.g. "
+	 "<tt>mywords.en.txt</tt> or <tt>mywords.en_US.txt</tt>. "
+	 "The plain-text files must also use UTF-8 encoding if you enable "
+	 "the UTF-8 support in the setting below.");
+
+  defvar("run_together_langs", "sv", "Languages with run-together words",
+	 TYPE_STRING,
+	 "A comma-separated list of language codes where run-together words "
+	 "are considered valid. This behavior is useful in languages such as "
+	 "Swedish but not appropriate for English.");
+  
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
          "The default report type used, when not specified in the "
 	 "&lt;spell&gt; tag.",
@@ -69,6 +92,187 @@ void create() {
 	 "Aspell version 0.60 or later.");
 
 }
+
+
+string status()
+{
+  //  Sync dictionaries and list status
+  sync_extra_dicts();
+  array(string) ed_res = ({ });
+  foreach (get_extra_dicts(); string ed_path; string pd_path) {
+    ed_res +=
+      ({ "<li>" + Roxen.html_encode_string(ed_path) +
+	 " <span style='color: #888'>&ndash;</span> " +
+	 (pd_path ?
+	  "<span style='color: green'>OK</span>" :
+	  "<span style='color: red'>Error</span>") +
+	 "</li>" });
+  }
+  if (sizeof(ed_res)) {
+    return
+      "<p><b>Custom dictionaries</b></p>"
+      "<ul>" + (sort(ed_res) * "\n") + "</ul>";
+  }
+  return "";
+}
+
+
+void start(int when, Configuration conf)
+{
+  sync_extra_dicts();
+}
+
+
+string get_processed_dict_path(string extra_dict)
+{
+  //  Hash the external path and return a corresponding item in $VARDIR
+  string ed_hash =
+    lower_case(String.string2hex(Crypto.MD5()->hash(extra_dict)));
+  return
+    combine_path(getcwd(),
+		 roxen_path("$VARDIR/check_spelling/" + ed_hash + ".dict"));
+}
+
+string|void get_extra_dict_language(string ed_path)
+{
+  //  Only accept filenames structured as mywords.en.txt. We require
+  //  at least two "." and a non-empty language code.
+  string ed_name = basename(ed_path);
+  array(string) ed_segments = ed_name / ".";
+  return
+    (sizeof(ed_segments) > 2) && sizeof(ed_segments[-2]) && ed_segments[-2];
+}
+
+
+mapping(string:string) get_extra_dicts(void|int(0..1) include_empty)
+{
+  mapping(string:string) res = ([ ]);
+  foreach (query("extra_dicts"), string ed_path) {
+    //  Only accept files that follow required naming convention
+    res[ed_path] = 0;
+    if (!get_extra_dict_language(ed_path))
+      continue;
+    
+    if (file_stat(ed_path)) {
+      //  Processed dictionary
+      string pd_path = get_processed_dict_path(ed_path);
+      if (Stdio.Stat pd_stat = file_stat(pd_path)) {
+	//  Don't include zero-byte placeholders that we only keep to
+	//  avoid re-converting broken source files unless caller wants
+	//  them.
+	if (pd_stat->size || include_empty)
+	  res[ed_path] = pd_path;
+      } else if (include_empty) {
+	//  Not yet processed but a valid candidate
+	res[ed_path] = pd_path;
+      }
+    }
+  }
+  return res;
+}
+
+
+//  Returns tuple < encoding, chars to skip > if the given data string
+//  starts with a BOM, and zero otherwise.
+array(string|int) get_encoding_from_bom(string data)
+{
+  //  We only care about UTF-8 and UTF-16 BE/LE:
+  //
+  //    EF BB BF   - UTF-8
+  //    FE FF      - UTF-16 big-endian
+  //    FF FE      - UTF-16 little-endian
+  if (sizeof(data) >= 3) {
+    if (data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+      return ({ "utf-8", 3 });
+  }
+  if (sizeof(data) >= 2) {
+    if (data[0] == 0xFE && data[1] == 0xFF)
+      return ({ "utf-16", 2 });
+    if (data[0] == 0xFF && data[1] == 0xFE)
+      return ({ "utf-16le", 2 });
+  }
+  return 0;
+}
+
+
+int process_extra_dict(string ed_path, string pd_path)
+{
+  //  Make sure destination directory exists
+  mkdirhier(dirname(pd_path) + "/");
+  
+  //  Convert the extra_dict source file (plain-text file) in ed_path
+  //  and write it to the processed dictionary at pd_path.
+  string aspell_binary = query("spellchecker");
+  if (!Stdio.exist(aspell_binary))
+    return -1;
+  
+  int use_utf8 = query("use_utf8");
+  array(string) args =
+    ({ aspell_binary, "--lang", get_extra_dict_language(ed_path) }) +
+    (use_utf8 ? ({ "--encoding", "utf-8" }) : ({ }) ) +
+    ({ "create", "master", pd_path });
+  report_notice("Spell Checker: Converting dictionary %s... ", ed_path);
+
+  //  Aspell doesn't like MS-DOS line endings so write a clean temp file.
+  //  We also heed any BOM that we find.
+  string in_data = Stdio.read_bytes(ed_path);
+  if (!in_data) {
+    report_notice("Error reading dictionary: %s\n", ed_path);
+    return -1;
+  }
+  if (array bom_data = get_encoding_from_bom(in_data)) {
+    //  Skip BOM bytes and recode to UTF-8 if currently in a different format
+    in_data = in_data[bom_data[1]..];
+    if (bom_data[0] != "utf-8") {
+      if (object dec = Locale.Charset.decoder(bom_data[0]))
+	in_data = string_to_utf8(dec->feed(in_data)->drain());
+    }
+  }
+  in_data = replace(in_data, ({ "\r\n", "\r" }), ({ "\n", "\n" }) );
+  string ed_cleaned_path = ed_path + ".tmp";
+  if (mixed err = catch {
+      Stdio.write_file(ed_cleaned_path, in_data);
+    }) {
+    report_notice("Error writing temp file: %s\n", ed_cleaned_path);
+    return -1;
+  }
+  
+  Stdio.File in_file = Stdio.File(ed_cleaned_path);
+  Process.Process p = Process.Process(args, ([ "stdin": in_file ]) );
+  in_file->close();
+  int err = p->wait();
+  rm(ed_cleaned_path);
+  report_notice((err ? "Error" : "OK") + "\n");
+  return err;
+}
+
+
+void sync_extra_dicts(void|int force_rebuild)
+{
+  //  Stat each of the configured extra dictionaries and check whether our
+  //  compressed versions are out-of-date.
+  foreach (get_extra_dicts(1); string ed_path; string pd_path) {
+    //  Skip invalid filenames
+    if (!pd_path)
+      continue;
+    
+    if (Stdio.Stat ed_stat = file_stat(ed_path)) {
+      //  Compare to stat of our derived file
+      Stdio.Stat pd_stat = file_stat(pd_path);
+      if (force_rebuild || !pd_stat || (ed_stat->mtime >= pd_stat->mtime)) {
+	int err = process_extra_dict(ed_path, pd_path);
+	if (err) {
+	  //  Write a zero-byte file in case of failed conversion. This
+	  //  means we can avoid re-converting it but still skip it when
+	  //  we gather all extra dictionaries.
+	  rm(pd_path);
+	  Stdio.write_file(pd_path, "");
+	}
+      }
+    }
+  }
+}
+
 
 string render_table(array spellreport) {
   string ret="<table bgcolor=\"#000000\" border=\"0\" cellspacing=\"0\" cellpadding=\"1\">\n"
@@ -226,6 +430,21 @@ class TagSpell {
 string run_spellcheck(string|array(string) words, void|string dict)
 // Returns 0 on failure.
 {
+  //  Sync any custom dictionaries in case they have been edited, and
+  //  fetch a list of valid ones to add in this run.
+  sync_extra_dicts();
+  mapping(string:string) extra_dicts = get_extra_dicts();
+  array(string) ed_args = ({ });
+  foreach (extra_dicts; string ed_path; string pd_path) {
+    if (pd_path)
+      ed_args += ({ "--add-extra-dicts", pd_path });
+  }
+  
+  //  Should run-together words be considered?
+  array(string) run_together_langs =
+    map(query("run_together_langs") / ",", String.trim_all_whites);
+  int use_run_together = dict && has_value(run_together_langs, dict);
+  
   object file1=Stdio.File();
   object file2=file1->pipe();
   object file3=Stdio.File();
@@ -241,11 +460,13 @@ string run_spellcheck(string|array(string) words, void|string dict)
     return 0;
   }
   Process.Process p =
-    Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
-			   (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
-                           (stringp(words) ? ({ "-H" })         : ({ }) ) +
-                           (dict           ? ({ "-d", dict })   : ({ }) ),
-                           ([ "stdin":file2,"stdout":file4 ]));
+    Process.Process(({ query("spellchecker"), "-a" }) +
+		    (use_run_together ? ({ "-C" })       : ({ }) ) +
+		    (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
+		    (stringp(words) ? ({ "-H" })         : ({ }) ) +
+		    (dict           ? ({ "-d", dict })   : ({ }) ) +
+		    ed_args,
+		    ([ "stdin":file2,"stdout":file4 ]));
 
   string text = stringp(words) ?
                " "+words /* Extra space to ignore aspell commands

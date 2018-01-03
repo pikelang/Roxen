@@ -9,7 +9,7 @@ function callPike()
 		return;
 	}
 	
-	document.getElementById("result").innerHTML = "<table cellspacing='0' cellpadding='2'><tr><td><img src=\"/img/ajax_progress.gif\"/></td><td class='df_text'><b>Executing...</b></td></tr></table>";
+	document.getElementById("result").innerHTML = "<table cellspacing='0' cellpadding='2'><tr><td><img src=\"/internal-roxen-spinner-white\" width=\"17\" height=\"17\"/></td><td class='df_text'><b>Executing...</b></td></tr></table>";
 	
 	var url = "/dbs/db_repairall_ajax.pike";
 	xmlHttp.onreadystatechange = stateChanged;

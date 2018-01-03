@@ -5,7 +5,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: danish.pike,v 1.1 2010/02/24 16:56:16 grubba Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "dk", "danish", "dansk" });
 constant _aliases = ({ "dk", "da", "dan", "dnk", "dansk", "danish" });
 

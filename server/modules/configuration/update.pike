@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.43 2011/01/21 19:02:20 mast Exp $
+ * $Id$
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2009, Roxen IS.
@@ -683,7 +683,7 @@ mapping get_headers()
 		 "user-agent": roxen->real_version ]);
 
   if(sizeof(query("userpassword")))
-    m->authorization="Basic "+MIME.encode_base64(query("userpassword"));
+    m->authorization="Basic "+MIME.encode_base64(query("userpassword"), 1);
   return m;
 }
 

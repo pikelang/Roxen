@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.46 2011/02/08 08:46:26 marty Exp $
+ * $Id$
  */
 #include <stat.h>
 #include <roxen.h>
@@ -18,6 +18,87 @@ int creation_date = time();
 int no_reload()
 {
   return creation_date > file_stat( __FILE__ )[ST_MTIME];
+}
+
+string render_table(mapping last_usage, mapping mem_usage)
+{
+  string res = "";
+  string first="";
+  mem_usage->total_usage = 0;
+  mem_usage->num_total = 0;
+  array ind = sort(indices(mem_usage));
+  string f;
+  int row=0;
+
+  array table = ({});
+
+  foreach(ind, f)
+    if(!search(f, "num_"))
+    {
+      int factor = 1;
+      if (has_prefix(f, "num_free_")) {
+	factor = -1;
+      }
+      if(f!="num_total")
+	mem_usage->num_total += mem_usage[f];
+
+      string bn = f[4..sizeof(f)-2]+"_bytes";
+      mem_usage->total_bytes += factor*mem_usage[ bn ];
+
+      string col ="&usr.warncolor;";
+
+      int diff = (mem_usage[bn]-last_usage[bn])*factor;
+      int cmp = factor*mem_usage[bn]/60;
+
+      if (!diff) {
+	// Look at the count diff instead.
+	diff = mem_usage[f]-last_usage[f];
+	cmp = mem_usage[f]/60;
+      }
+
+      if(diff < cmp)
+	col="&usr.warncolor;";
+      if(diff == 0)
+	col="&usr.fgcolor;";
+      if(diff < 0)
+	col="&usr.fade4;";
+
+      if( bn == "tota_bytes" )
+        bn = "total_bytes";
+      table += ({ ({
+	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
+        sprintf( "%.1f",mem_usage[bn]/1024.0),
+        sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
+      }) });
+    }
+  roxen->set_var("__memory_usage", mem_usage);
+
+#define HCELL(thargs, color, text)					\
+  ("<th " + thargs + ">"						\
+   "&nbsp;<font color='" + color + "'><b>" + text + "</b></font>&nbsp;"	\
+   "</th>")
+#define TCELL(tdargs, color, text)					\
+  ("<td " + tdargs + ">"						\
+   "&nbsp;<font color='" + color + "'>" + text + "</font>&nbsp;"	\
+   "</td>")
+
+  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
+    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+    "</tr>\n";
+  foreach (table, array entry)
+    res += "<tr>" +
+      TCELL ("align='left' ", entry[0], entry[1]) +
+      TCELL ("align='right'", entry[0], entry[2]) +
+      TCELL ("align='right'", entry[0], entry[3]) +
+      TCELL ("align='right'", entry[0], entry[4]) +
+      TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
+  res += "</table></p>\n";
+
+  return res;
 }
 
 mixed page_0( object id )
@@ -122,66 +203,18 @@ mixed page_0( object id )
     res += "<p><font color='&usr.warncolor;'>" + LOCALE(173, "Internal inconsistency") +
       ":</font> " + LOCALE(174, "Object(s) missing in object link list.") + "</p>\n";
 
-  string first="";
-  mem_usage->total_usage = 0;
-  mem_usage->num_total = 0;
-  array ind = sort(indices(mem_usage));
-  string f;
-  int row=0;
+  mapping last_low_usage =
+    ([ "num_malloc_blocks":0, "malloc_block_bytes":0,
+       "num_free_blocks":0, "free_block_bytes":0 ]) & last_usage;
+  mapping low_usage =
+    ([ "num_malloc_blocks":0, "malloc_block_bytes":0,
+       "num_free_blocks":0, "free_block_bytes":0 ]) & mem_usage;
 
-  array table = ({});
+  if (sizeof(low_usage)) {
+    res += render_table(last_low_usage, low_usage);
+  }
 
-  foreach(ind, f)
-    if(!search(f, "num_"))
-    {
-      if(f!="num_total")
-	mem_usage->num_total += mem_usage[f];
-
-      string col
-           ="&usr.warncolor;";
-      if((mem_usage[f]-last_usage[f]) < mem_usage[f]/60)
-	col="&usr.warncolor;";
-      if((mem_usage[f]-last_usage[f]) == 0)
-	col="&usr.fgcolor;";
-      if((mem_usage[f]-last_usage[f]) < 0)
-	col="&usr.fade4;";
-
-      string bn = f[4..sizeof(f)-2]+"_bytes";
-      mem_usage->total_bytes += mem_usage[ bn ];
-      if( bn == "tota_bytes" )
-        bn = "total_bytes";
-      table += ({ ({
-	col, f[4..], mem_usage[f], mem_usage[f]-last_usage[f],
-        sprintf( "%.1f",mem_usage[bn]/1024.0),
-        sprintf( "%.1f",(mem_usage[bn]-last_usage[bn])/1024.0 ),
-      }) });
-    }
-  roxen->set_var("__memory_usage", mem_usage);
-
-#define HCELL(thargs, color, text)					\
-  ("<th " + thargs + ">"						\
-   "&nbsp;<font color='" + color + "'><b>" + text + "</b></font>&nbsp;"	\
-   "</th>")
-#define TCELL(tdargs, color, text)					\
-  ("<td " + tdargs + ">"						\
-   "&nbsp;<font color='" + color + "'>" + text + "</font>&nbsp;"	\
-   "</td>")
-
-  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    "</tr>\n";
-  foreach (table, array entry)
-    res += "<tr>" +
-      TCELL ("align='left' ", entry[0], entry[1]) +
-      TCELL ("align='right'", entry[0], entry[2]) +
-      TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) +
-      TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
-  res += "</table></p>\n";
+  res += render_table(last_usage - last_low_usage, mem_usage - low_usage);
 
   if (walked_objects != mem_usage->num_objects) {
     res += "<p><font color='&usr.warncolor;'>" + LOCALE(175, "Warning") + ":</font> ";
@@ -205,7 +238,7 @@ mixed page_0( object id )
     numobjs["    "] = destructed_objs;
   }
 
-  table = (array) allobj;
+  array table = (array) allobj;
 
   string cwd = getcwd() + "/";
   constant inc_color  = "&usr.warncolor;";
@@ -235,6 +268,8 @@ mixed page_0( object id )
       if (stringp (prog)) {
 	if (has_prefix (prog, cwd))
 	  progstr = prog[sizeof (cwd)..];
+	else if (has_prefix (prog, roxenloader.server_dir))
+	  progstr = prog[sizeof (roxenloader.server_dir)..];
 	else
 	  progstr = prog;
       }
@@ -285,7 +320,7 @@ mixed page_0( object id )
   res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"References")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
     "</tr>\n";

@@ -1,3 +1,5 @@
+// $Id$
+
 #include <roxen.h>
 
 import RoxenPatch;
@@ -77,22 +79,188 @@ Write_back wb = class Write_back
 		  }
                 } ();
 
+mapping get_patch_stats(Patcher po) {
+	array a_imported = po->file_list_imported();
+	array a_installed = po->file_list_installed();
+
+	return ([
+		"imported_count": sizeof(a_imported),
+		"installed_count": sizeof(a_installed),
+	]);
+}
+
+array(string) get_missing_binaries() {
+#ifdef __NT__
+  array(string) bins = ({ "tar.exe", "patch.exe" });
+#else
+  array(string) bins = ({ "tar", "patch" });
+#endif
+
+  array(string) r = ({ });
+  foreach (bins, string a) {
+    if (!search_path(a)) r += ({ a });
+  }
+  return r;
+}
+
+array(array(string)) describe_metadata(Patcher po,
+				       array(mapping(string:string)) md,
+				       LocaleString singular,
+				       LocaleString plural,
+				       string|void patch_path)
+{
+  if (!md || !sizeof(md)) return ({});
+
+  mapping(string:multiset(string)) files = ([]);
+  foreach(md, mapping(string:string) item) {
+    array(string) file_list = ({});
+    if (item->destination) {
+      file_list = ({ item->destination });
+    } else if (item->source) {
+      file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
+							  item->source)));
+    }
+    foreach(file_list, string file) {
+      if (!files[file]) files[file] = (<>);
+      files[file][item->platform] = 1;
+    }
+  }
+
+  string res = "";
+  foreach(sort(indices(files)), string file) {
+    multiset(string) platforms = files[file];
+    array(string) post = ({});
+    if (!platforms[0] && !platforms[po->server_platform]) {
+      res += "<span style='fgcolor:grey'>" + file + "</span>";
+    } else {
+      res += file;
+    }
+    if ((sizeof(platforms) > 1) || !platforms[0]) {
+      res += "&nbsp;[";
+      if (platforms[0]) {
+	res += "<b>ALL</b>";
+      }
+      foreach(sort(indices(platforms)); int i; string platform) {
+	if (!platform) continue;
+	if (i || !platforms[0]) {
+	  res += ", ";
+	}
+	if (platform == po->server_platform) {
+	  res += "<b>" + platform + "</b>";
+	} else {
+	  res += platform;
+	}
+      }
+      res += "]";
+    }
+    res += "<br />\n";
+  }
+  if (sizeof(files) == 1) return ({ ({ singular, res }) });
+  return ({ ({ plural, res }) });
+}
+
+protected string format_description(string desc)
+{
+  if (!has_value(desc, "\n")) {
+    // Old-style description.
+    return Roxen.html_encode_string(desc);
+  }
+
+  // plain-text formatted description.
+  //
+  // Split into paragraphs, identify indentation levels,
+  // and create list items.
+
+  // Normalize empty lines.
+  desc = map(desc/"\n",
+	     lambda(string line) {
+	       if (String.trim_all_whites(line) == "") return "";
+	       return line;
+	     }) * "\n";
+
+  array(array(int|string)) paragraphs = ({});
+  multiset(int) indents = (<>);
+  foreach(desc/"\n\n", string paragraph) {
+    if (String.trim_all_whites(paragraph) == "") continue;
+    string indent = "";
+    string bullet = "";
+    sscanf(paragraph, "%[ ]%[-*o+ ]%s", indent, bullet, paragraph);
+    if (sizeof(bullet) && has_suffix(bullet, " ")) {
+      // Looks like we have a bullet.
+      indent += bullet;
+    } else {
+      // Not a bullet. Restore the prefix.
+      paragraph = bullet + paragraph;
+      bullet = "";
+    }
+
+    paragraphs += ({ ({ sizeof(indent), !!sizeof(bullet), paragraph }) });
+    indents[sizeof(indent)] = 1;
+  }
+
+  array(int) tabstops = sort(indices(indents));
+  String.Buffer buf = String.Buffer();
+  int tab = 0;
+  int is_open = 1;
+  foreach(paragraphs, [int indent, int is_bullet, string paragraph]) {
+    while (indent > tabstops[tab]) {
+      if (!is_open) {
+	buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+      }
+      buf->add("<ul>\n");
+      is_open = 0;
+      tab++;
+    }
+    while (indent < tabstops[tab]) {
+      if (is_open) {
+	buf->add("</li>\n");
+      }
+      buf->add("</ul>\n");
+      is_open = 1;
+      tab--;
+    }
+    paragraph = Roxen.html_encode_string(paragraph);
+    if (!is_open) {
+      if (is_bullet) {
+	buf->add("<li>\n");
+      } else {
+	buf->add("<li style='list-style-type:none;list-style-image:none;'>\n");
+      }
+      buf->add("<p>", paragraph, "</p>\n");
+      is_open = 1;
+    } else if (is_bullet) {
+      buf->add("</li>\n"
+	       "<li><p>", paragraph, "</p>\n");
+    } else {
+      buf->add("<p>", paragraph, "</p>\n");
+    }
+  }
+  while (tab) {
+    if (is_open) {
+      buf->add("</li>\n");
+    }
+    buf->add("</ul>\n");
+    is_open = 1;
+    tab--;
+  }
+
+  return buf->get();
+}
+
 string list_patches(RequestID id, Patcher po, string which_list)
 {
   string self_url = "?class=maintenance&action=patcher.pike";
   string res = "";
 
   array(mapping) list;
-  int colspan;
+  int colspan = 5;
   if (which_list == "installed")
   {
     list = po->file_list_installed();
-    colspan = 5;
   }
   else if (which_list == "imported")
   {
     list = po->file_list_imported();
-    colspan = 4;
   }
   else
     // This should never happen.
@@ -101,6 +269,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
   string table_bgcolor = "&usr.fade1;";
   if (list && sizeof(list))
   {
+    multiset(string) extra_deps = (<>);
     foreach(list; int i; mapping item)
     {
       if (table_bgcolor == "&usr.content-bg;")
@@ -132,61 +301,75 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       // Calculate dependencies of other patches
       string deps = "";
-      foreach(po->get_dependencies(item->metadata->id) || ({ }); 
-	      int i; 
-	      string s)
-      {
-	if (i > 0)
-	  deps += ", ";
+      if (which_list != "installed") {
+	// NB: There's no need to calculate forward dependencies
+	//     for uninstallation...
+	foreach(po->get_dependencies(item->metadata->id) || ({ });
+		int i;
+		string s)
+	{
+	  foreach(s/"|", string d) {
+	    if (has_value(d, "/") && po->is_installed(d, 1)) {
+	      extra_deps[d] = 1;
+	    }
+	  }
+	  if (i > 0)
+	    deps += ", ";
 
-	deps += s; 
+	  deps += s;
+	}
       }
 
       // Make sure that only patches for the right platform and version are
       // installable
       int is_right_version = 1;
       int is_right_platform = 1;
-      if (which_list == "imported" &&
-	  item->metadata->version)
-	is_right_version = !!sizeof(filter(item->metadata->version,
-					   po->check_server_version));
+      if (which_list == "imported") {
+	if (sizeof(item->metadata->version || ({})))
+	  is_right_version = !!sizeof(filter(item->metadata->version,
+					     po->check_server_version));
 
-      if (which_list == "imported" &&
-	  item->metadata->platform)
-	is_right_platform = !!sizeof(filter(item->metadata->platform,
-					    po->check_platform));
+	if (sizeof(item->metadata->platform || ({})))
+	  is_right_platform = !!sizeof(filter(item->metadata->platform,
+					      po->check_platform));
 
-      if (!(is_right_version &&
-	    is_right_platform))
-	deps += "not_installable";
+	if (!(is_right_version && is_right_platform))
+	  deps += "not_installable";
+      }
       
 
       res += sprintf("      <tr style='background-color: %s' >\n"
+		     "        <td style='width:20px;text-align:right'>\n"
+		     "          <input type='checkbox' id='%s'"
+		     " name='%s' value='%[1]s' dependencies='%s'" +
+		     " onclick='toggle_%[2]s(%s)' />\n"
+		     "        </td>\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
 		     " onmouseover='this.style.cursor=\"pointer\"'"
-		     " onclick='expand(\"%[1]s\")' />&nbsp;</td>\n"
-		     "        <td onclick='expand(\"%[1]s\");'"
-		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
-		     "        <td onclick='expand(\"%[1]s\");'"
+		     " onclick='expand(\"%[5]s\")' />&nbsp;</td>\n"
+		     "        <td onclick='expand(\"%[5]s\");'"
+		     " onmouseover='this.style.cursor=\"pointer\"'>%[1]s</td>\n"
+		     "        <td onclick='expand(\"%[5]s\");'"
 		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
 		     "%s"
-		     "        <td style='width:20px;text-align:right'>\n"
-		     "          <input type='checkbox' id='%[2]s'"
-		     " name='%s' value='%[2]s' dependencies='%s'" +
-		     " onclick='toggle_%[5]s(%s)' />"
-		     "</td>\n"
+		     + (which_list == "imported" ? 
+			"<td style='text-align:right'>"
+			"<link-gbutton href='?action=patcher.pike&class=maintenance&remove-patch-id=%[1]s'>remove"
+			"</link-gbutton>"
+			"</td>"
+			: "") + 
 		     "      </tr>\n",
 		     table_bgcolor,
-		     replace(item->metadata->id, "-", ""),
 		     item->metadata->id,
-		     Roxen.html_encode_string(item->metadata->name),
-		     installed_date,
 		     (which_list == "imported") ? "install" : "uninstall",
 		     deps,
 		     (which_list == "installed") ? 
-		                         "\"" + item->metadata->id + "\"" : "");
-	
+		     "\"" + item->metadata->id + "\"" : "",
+		     replace(item->metadata->id, "-", ""),
+		     Roxen.html_encode_string(item->metadata->name),
+		     installed_date);
+
       array md = ({ });
       if (which_list == "installed")
       {
@@ -229,8 +412,9 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
       md += ({
         ({ LOCALE(333, "Description:")	, 
-	   Roxen.html_encode_string(item->metadata->description) }),
-	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
+	   format_description(item->metadata->description) }),
+	({ LOCALE(334, "Originator:")	, item->metadata->originator  }),
+	({ LOCALE(0, "RXP Version:")    , item->metadata->rxp_version }),
       });
       
 
@@ -250,7 +434,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       }
       md += ({ ({ LOCALE(337, "Flags:"), active_flags + "        </table>\n"}) });
  
-      if (!item->metadata->platform)
+      if (!sizeof(item->metadata->platform || ({})))
       {
 	md += ({
 	  ({ LOCALE(338, "Platforms:"), LOCALE(339, "All platforms") })
@@ -271,13 +455,13 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	md += ({
 	  ({ is_right_platform ? 
 	     LOCALE(338, "Platforms:") :
-	     "<b style='color:red'>" + LOCALE(341, "Platform") + "</b>", 
+	     "<b style='color:red'>" + LOCALE(338, "Platforms:") + "</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->platform) })
 	});
       }
       
-      if (item->metadata->version)
+      if (sizeof(item->metadata->version || ({})))
       {
 	md += ({
 	  ({ is_right_version ? 
@@ -294,27 +478,33 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	});
       }
       
-      if (item->metadata->depends)
+      if (sizeof(item->metadata->depends || ({})))
       {
 	string dep_list = "";
-	foreach (item->metadata->depends, string dep_id)
+	foreach (item->metadata->depends, string dep)
 	{
-	  string dep_stat;
-	  switch(po->patch_status(dep_id)->status)
-	  {
-	    case "installed":
+	  foreach(dep/"|"; int i; string dep_id) {
+	    string dep_stat =
+	      "<b style='color:red'>" + LOCALE(346, "unavailable") + "</b>";
+	    if (!has_value(dep_id, "/")) {
+	      switch(po->patch_status(dep_id)->status)
+	      {
+	      case "installed":
+		dep_stat = LOCALE(344, "installed");
+		break;
+	      case "uninstalled":
+	      case "imported":
+		dep_stat = LOCALE(345, "imported");
+		break;
+	      }
+	    } else if (po->is_installed(dep_id,
+					item->metadata->rxp_version > "1.0")) {
 	      dep_stat = LOCALE(344, "installed");
-	      break;
-	    case "uninstalled":
-	    case "imported":
-	      dep_stat = LOCALE(345, "imported");
-	      break;
-	    default:
-	      dep_stat = "<b style='color:red'>" + LOCALE(346, "unavailable") + 
-		         "</b>";
-	      break;
+	    }
+	    if (i) dep_list += " or ";
+	    dep_list += sprintf("%s (%s)", dep_id, dep_stat);
 	  }
-	  dep_list += sprintf("%s (%s)<br />", dep_id, dep_stat);
+	  dep_list += "<br />\n";
 	}
 	md += ({
 	  ({ LOCALE(347, "Dependencies:"), dep_list })
@@ -326,88 +516,34 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	  ({ LOCALE(347, "Dependencies:"), LOCALE(348, "None") }),
 	});
       }
-      
-      if (item->metadata->new && sizeof(item->metadata->new) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(349, "New file:"), sprintf("%s", 
-				  item->metadata->new[0]->destination) }) 
-	});
-      }
-      else if (item->metadata->new)
-      {
-	md += ({ 
-	  ({ LOCALE(350, "New files:"), sprintf("%{%s<br />\n%}", 
-				   item->metadata->new->destination) })
-	});
-      }
-      
-      if (item->metadata->replace && sizeof(item->metadata->replace) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(351, "Replaced file:"),  
-	     sprintf("%s", item->metadata->replace[0]->destination) })
-	});
-      }
-      else if (item->metadata->replace)
-      {
-	md += ({ 
-	  ({ LOCALE(352, "Replaced files:"), 
-	     sprintf("%{%s<br />\n%}", item->metadata->replace->destination) })
-	});
-      }
-      
-      if (item->metadata->delete && sizeof(item->metadata->delete) == 1)
-      {
-	md += ({ 
-	  ({ LOCALE(353, "Deleted file:"), 
-	     sprintf("%s", item->metadata->delete[0]) })
-	});
-      }
-      else if (item->metadata->delete)
-      {
-	md += ({
-	  ({ LOCALE(354, "Deleted files:"), 
-	     sprintf("%{%s<br />\n%}", item->metadata->delete) })
-	});
-      }
 
-      if (item->metadata->patch)
-      {
-	string patch_data = "";
-	string patch_path = "";
-	if (which_list == "imported")
-	  patch_path = combine_path(po->get_import_dir(),
-				    item->metadata->id);
-	else
-	  patch_path = combine_path(po->get_installed_dir(),
-				    item->metadata->id);
-	foreach(item->metadata->patch, string patch_file)
-	{
-	  patch_data += Stdio.read_file(combine_path(patch_path,
-						     patch_file));
-	}
-	
-	array(string) patched_files_list = po->lsdiff(patch_data);
-	if (sizeof(patched_files_list) == 1)
-	{
-	  md += ({
-	    ({ LOCALE(355, "Patched file:"),
-	       sprintf("%s\n", patched_files_list[0]) })
-	  });
-	}
-	else
-	{
-	  md += ({
-	    ({ LOCALE(356, "Patched files:"),
-	       sprintf("%{%s<br />\n%}", patched_files_list) })
-	  });
-	  }
-      }      
+      md += describe_metadata(po, item->metadata->new,
+			      LOCALE(349, "New file:"),
+			      LOCALE(350, "New files:"));
+      md += describe_metadata(po, item->metadata->replace,
+			      LOCALE(351, "Replaced file:"),
+			      LOCALE(352, "Replaced files:"));
+      md += describe_metadata(po, item->metadata->delete,
+			      LOCALE(353, "Deleted file:"),
+			      LOCALE(354, "Deleted files:"));
+
+      if (which_list == "imported") {
+	md += describe_metadata(po, item->metadata->patch,
+				LOCALE(355, "Patched file:"),
+				LOCALE(356, "Patched files:"),
+				combine_path(po->get_import_dir(),
+					     item->metadata->id));
+      } else {
+	md += describe_metadata(po, item->metadata->patch,
+				LOCALE(355, "Patched file:"),
+				LOCALE(356, "Patched files:"),
+				combine_path(po->get_installed_dir(),
+					     item->metadata->id));
+      }
 
       res += sprintf("      <tr id='id%s' bgcolor='%s' "
 		     " style='display: none'>\n"
-		     "        <td>&nbsp;</td>\n"
+		     "        <td colspan='2'>&nbsp;</td>\n"
 		     "        <td colspan='%d'>\n"
  		     "          <table class='module-sub-list'"
   		     " cellspacing='0' cellpadding='3' border='0'>\n"
@@ -416,13 +552,28 @@ string list_patches(RequestID id, Patcher po, string which_list)
   		     "              <td>\n%s</td>\n"
   		     "            </tr>\n%}"
   		     "          </table>\n"
-		     "          <td>\n"
 		     "        </td>\n"
 		     "      </tr>\n",
 		     replace(item->metadata->id, "-", ""),
 		     table_bgcolor,
 		     colspan - 2,
- 		     md);
+ 		     md);      
+    }
+    foreach(sort(indices(extra_deps)), string dep) {
+      // Add uninstall checkbox markers for all valid version dependencies,
+      // so that the toggle_dep_install() javascript can know about them.
+      //
+      // Note that the value 'on' will cause the value to
+      // be ignored when it is submitted.
+      res +=
+	sprintf("      <tr style='display:none'>\n"
+		"        <td style='width:20px;text-align:right'>\n"
+		"          <input type='checkbox' id='%s' name='uninstall'"
+		" value='on' dependencies=''/>\n"
+		"        </td>\n"
+		"        <td colspan='4'>&nbsp;</td>\n"
+		"      </tr>\n",
+		dep);
     }
   }
   else
@@ -438,16 +589,15 @@ string list_patches(RequestID id, Patcher po, string which_list)
   
   res += sprintf("      <tr>\n"
 		 "        <td bgcolor='&usr.fade2;' colspan='%d'"
-		 " align='right'>\n"
+		 " align='left'>\n"
 		 "          <submit-gbutton2"
 		 " name='%s-button'>%s</submit-gbutton2>\n"
 		 "        </td>\n"
 		 "      </tr>\n",
 		 colspan,
 		 (which_list == "installed") ? "uninstall" : "install",
-		 (which_list == "installed") ? 
-		 LOCALE(358, "Uninstall selected patches") : 
-		 LOCALE(359, "Install selected patches"));
+		 (which_list == "installed") ? LOCALE(358, "Uninstall selected patches") : 
+		                               LOCALE(359, "Install selected patches"));
 
   return res; //+ sprintf("<td>&nbsp;</td>"
 // 		       "<td>&nbsp;</td>"
@@ -503,6 +653,17 @@ mixed parse(RequestID id)
         background: &usr.obox-bodybg;;
         border:     2px solid &usr.obox-border;;        
       }
+
+      input#patchupload {
+        background: #f8f8f8;;
+        border:	    1px solid #ddd;
+        padding:    5px;
+        margin:     0 4px 0 0;
+      }
+
+      table.module-sub-list p {
+	margin-top: 0px;
+      }
     </style>
     <script type='text/javascript'>
       // <![CDATA[
@@ -525,40 +686,109 @@ mixed parse(RequestID id)
       // ]]> 
     </script>";
 
-  if (id->real_variables["OK.x"] &&
-      id->real_variables["fixedfilename"] &&
-      sizeof(id->real_variables["fixedfilename"][0]) &&
-      id->real_variables["file"] &&
-      sizeof(id->real_variables["file"][0]))
-  {
-    //  With Windows browsers the submitted filename may contain a full path
-    //  with drive letter etc. When the Patcher processes it later it will
-    //  convert slashes etc, but for our file to be accessible in that layer
-    //  we must perform the same cleanup in the naming of our temp file.
-    string patch_name =
-      basename(RoxenPatch.unixify_path(id->real_variables["fixedfilename"][0]));
-    string temp_file = 
-      Stdio.append_path(plib->get_temp_dir(), patch_name);
+  array(string) mbins = get_missing_binaries();
+  if (sizeof(mbins)) {
+    res += "<font size='+1' style='color: #d22;' ><b>" + LOCALE(0, "Warning: Missing tools") + "</b></font><br/><br/>";
+    res += "Roxen can't find one or more tools required for the patch management to work properly.<br/>";
+    res += "Before importing or installing any patches, please make sure you have the following executable(s) available on your system:<br/>";
 
-    plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
-    string patch_id = plib->import_file(temp_file);
-    plib->clean_up(temp_file);
+    res += "<ul>";
+    foreach (mbins, string a) res += "<li>" + a + "</li>";
+    res += "</ul>";
+    res += "<br/>";
+  }
 
-    if (patch_id)
-      res += sprintf("<font size='+1' ><b>"
-		     + LOCALE(360, "Importing") +" %s</b></font><br /><br />\n"
-		     "<p><b style='color: green'>"
-		     + LOCALE(361, "Patch successfully imported.") + "</b></p>",
-		     patch_id);
-    else
-      res += "<font size='+1' ><b>"
-	     + LOCALE(360, "Importing") + " &form.fixedfilename;</b></font>"
-	     "<br /><br />\n"
-	     "<p><b style='color: red'>"
-	     + LOCALE(362, "Could not import patch.") + "</b></p>";
-    
-    
-    
+  
+  if (id->real_variables["auto-import-button.x"] ||
+      (id->real_variables["OK.x"] &&
+       id->real_variables["fixedfilename"] &&
+       sizeof(id->real_variables["fixedfilename"][0]) &&
+       id->real_variables["file"] &&
+       sizeof(id->real_variables["file"][0]))) 
+  {    
+    array(int|string) patch_ids;
+
+    if (id->real_variables["auto-import-button.x"]) {
+      // The Patcher will download the latest rxp cluster from www.roxen.com
+      // and import the patches.
+      patch_ids = plib->import_file_http();
+
+      if (!patch_ids) {
+	report_error("Patch manager: RXP cluster import over HTTP failed.\n");
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "RXP cluster import over HTTP failed..") + 
+		       "  </b>"
+		       "</p>");       
+	  res += sprintf("<p><span id='log_img' class='unfolded'"
+			 " onmouseover='this.style.cursor=\"pointer\"'"
+			 " onclick='expand(\"log\")'>log</span>"
+			 "<div  id='idlog'>%s</div></p>\n"
+			 "<br clear='all' /><br />\n"
+			 "<cf-ok-button href='?action=patcher.pike&"
+			 "class=maintenance' />",
+			 wb->get_all_messages());
+	return res;
+      }
+
+    } else {
+      //  With Windows browsers the submitted filename may contain a full path
+      //  with drive letter etc. When the Patcher processes it later it will
+      //  convert slashes etc, but for our file to be accessible in that layer
+      //  we must perform the same cleanup in the naming of our temp file.
+      string patch_name = 
+	basename(RoxenPatch.unixify_path(id->real_variables["fixedfilename"][0]));
+      string file_data = id->real_variables["file"][0];
+
+      string temp_dir =
+	Stdio.append_path(plib->get_temp_dir(), patch_name);
+      
+      // Extra directory level to get rid of the sticky bit normally
+      // present on /tmp/ that would require Privs for clean_up to work.
+      mkdir(temp_dir);
+      string temp_file = Stdio.append_path(temp_dir, patch_name);
+      
+      plib->write_file_to_disk(temp_file, file_data);
+      patch_ids = plib->import_file(temp_file);
+      plib->clean_up(temp_dir);
+    }
+
+    int failed_patches, num_patches = sizeof(patch_ids);
+    foreach(patch_ids, int|string patch_id) {
+      if (patch_id == 0) 
+	failed_patches++;
+    }
+      
+    res += sprintf("<font size='+1' >"
+		   "  <b>" 
+		   + LOCALE(360, "Importing") +
+		   "  </b>"
+		   "</font>"
+		   "<br/><br/>\n");
+
+    if (failed_patches) {
+      if (failed_patches == sizeof(patch_ids)) {
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "The patch import failed:") + 
+		       "  </b>"
+		       "</p>");	
+      } else {
+	res += sprintf("<p>"
+		       "  <b style='color: red'>"
+		       + LOCALE(0, "All patches were not imported:") +
+		       "  </b>"
+		       "</p>");
+      }
+
+    } else {
+      res += sprintf("<p>"
+		     "  <b style='color: green'>"
+		     + LOCALE(0, "Patch import done.") +
+		     "  </b>"
+		     "</p>");
+    }
+
     res += sprintf("<p><span id='log_img' class='%s'"
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
@@ -566,8 +796,8 @@ mixed parse(RequestID id)
 		   "<br clear='all' /><br />\n"
 		   "<cf-ok-button href='?action=patcher.pike&"
 		   "class=maintenance' />",
-		   patch_id ? "folded" : "unfolded",
-		   patch_id ? "display: none" : "",
+		   failed_patches ? "unfolded" : "folded",
+		   failed_patches ? "" : "display: none",
 		   wb->get_all_messages());
     wb->clear_all();
     return res;
@@ -621,12 +851,13 @@ mixed parse(RequestID id)
     // Do we need to restart?
     if (flags->restart)
     {
+      string pid = (string)getpid();
       res += "<blockquote><br />\n"
 	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-             width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
+    <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" +
+	pid + #"' width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") +
 #" </gbutton>
   </cf-perm>
 
@@ -699,12 +930,13 @@ mixed parse(RequestID id)
     // Do we need to restart?
     if (flags->restart)
     {
+      string pid = (string)getpid();
       res += "<blockquote><br />\n"
 	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
     " + LOCALE(369, "Would you like to do  that now?") + #"<br />
-    <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-             width=250 icon_src=&usr.err-2;> " +
+    <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" +
+	pid + #"' width=250 icon_src=&usr.err-2;> " +
       LOCALE(197,"Restart") + #" </gbutton>
   </cf-perm>
 
@@ -727,21 +959,68 @@ mixed parse(RequestID id)
     wb->clear_all();
     return Roxen.http_string_answer(res);
   }
+  
+ removepatch:
+  if (id->real_variables["remove-patch-id"] &&
+      sizeof(id->real_variables["remove-patch-id"])) { 
+
+    wb->clear_all();
+    string patch_id = id->real_variables["remove-patch-id"][0];
+
+    if (plib->remove_patch(patch_id, current_user)) {
+      report_notice_for(0, "Patch manager: Removed %s from disk.\n", patch_id);
+      break removepatch;
+    } 
+
+    report_error_for(0, "Patch manager: Failed to remove %s from disk.\n", patch_id);
+
+    res += "<p>" +
+      LOCALE(0, "Failed to remove the patch. See the log below for "
+	     "details") + 
+      "</p>\n";
+
+    res += sprintf("<p>"
+		   "  <span id='log_img' class='unfolded'"
+		   "        onmouseover='this.style.cursor=\"pointer\"'"
+		   "        onclick='expand(\"log\")'>log</span>"
+		   "  <div id='idlog'>%s</div>"
+		   "</p>\n"
+		   "<cf-ok-button href='?action=patcher.pike&class=maintenance' />",
+		   wb->get_all_messages());
+
+    return Roxen.http_string_answer(res);
+  }
+
+  mapping patch_stats = get_patch_stats(plib);
 
   res += #" 
-    <font size='+1'><b>" + LOCALE(373, "Import a New Patch") + #"</b></font>
-    <p>\n" + LOCALE(374,"Select local file to upload:") + #"<br />
-        <input type='file' name='file' size='40'/>
+    <font size='+1'><b>" + LOCALE(0, "Import New Patches") + #"</b></font>
+
+    <p style='margin-bottom: 5px'>" + 
+      LOCALE(0, "Fetch and import the latest patches from www.roxen.com") + 
+    #":</p>
+
+    <submit-gbutton2 name='auto-import-button' width='75' align='center'>" + 
+      LOCALE(0, "Import from Roxen") + 
+    #"</submit-gbutton2>
+
+    <p>\n" + LOCALE(0,"Or manually select a local file to upload:") + #"</p>
+        <input id='patchupload' type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
-        <submit-gbutton name='ok' width='75' align='center'
-      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
-      <br /><br />
-    </p>
-    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
+        <submit-gbutton2 name='OK' width='75' align='center'
+      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(0, "Import file") + #"</submit-gbutton2>
+    <p>" 
+    + LOCALE(0, "You can upload either a single rxp file or a tar/tar.gz/tgz "
+	     "file containing multiple rxp files.")
+    + LOCALE(0, "There is also a <tt>bin/rxnpatch</tt> command-line tool to "
+	     "manage patches, if you prefer a terminal over a web interface.") +
+   #"</p>
+    <br />
+    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + " (" + patch_stats->imported_count + ")" + #"</b></font>
     <p>" +
     LOCALE(376, "These are patches that are not currently installed; "
-		"they are imported but not applied. It should be safe to "
-		"remove them from disk. They can be found in local/patches/.") +
+		"they are imported but not applied. They can be found in "
+	   "local/patches/.") +
    "</p>\n    <p>" +
     LOCALE(377, "Click on a patch for more information.") +
   #"</p>
@@ -750,15 +1029,16 @@ mixed parse(RequestID id)
       <table class='module-list' cellspacing='0' cellpadding='3' border='0' 
              width='100%' style='table-layout: fixed'>
 	<tr bgcolor='&usr.obox-titlebg;' >
-          <th style='width:20px'>&nbsp;</th>
-	  <th style='width:12em; text-align:left;'>Id</th>
-	  <th style='width: auto; text-align:left'>Patch Name</th>
-	  <th style='width:20px;text-align:right'>
+	  <th style='width:20px;text-align:left'>
             <input type='checkbox' 
                    name='install'
                    id='install_all'
                    onclick='check_all(\"install\")'/>
           </th>
+          <th style='width:20px'>&nbsp;</th>
+	  <th style='width:11em; text-align:left;'>Id</th>
+	  <th style='width: auto; text-align:left'>Patch Name</th>
+          <th style='width: 70px;text-align:right'></th>
 	</tr>
 ";
   res += list_patches(id, plib, "imported");
@@ -769,7 +1049,7 @@ mixed parse(RequestID id)
     <br clear='all' />
     <br />
 
-    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + " (" + patch_stats->installed_count + ")" + #"</b></font>
     <p>" +
     LOCALE(379, "Click on a Patch for more information.") +
   #"</p>
@@ -779,16 +1059,16 @@ mixed parse(RequestID id)
       <table class='module-list' cellspacing='0' cellpadding='3' border='0' 
              width='100%' style='table-layout: fixed'>\n
 	<tr bgcolor='&usr.obox-titlebg;' >
-          <th style='width:20px'>&nbsp;</th>
-	  <th style='width:10em; text-align:left;'>Id</th>
-	  <th style='width:auto; text-align:left'>Patch Name</th>
-	  <th style='width:16em; text-align:left'>Time of Installation</th>
-	  <th style='width:20px; text-align:right'>
+	  <th style='width:20px; text-align:left'>
             <input type='checkbox'
                    name='uninstall'
                    id='uninstall_all'
                    onclick='check_all(\"uninstall\")'/>
           </th>
+          <th style='width:20px'>&nbsp;</th>
+	  <th style='width:11em; text-align:left;'>Id</th>
+	  <th style='width:auto; text-align:left'>Patch Name</th>
+	  <th style='width:14em; text-align:left'>Time of Installation</th>
 	</tr>
 ";
   res += list_patches(id, plib, "installed");
@@ -807,17 +1087,33 @@ mixed parse(RequestID id)
       {
         var i;
         var reference = document.getElementById(name + '_all');
-        var elements = document.getElementsByName(name)
+        var elements = document.getElementsByName(name);
+        var found = false;
         for (i = 0; i < elements.length; i++)
         {
+	  if (elements[i].value == 'on') continue;
+
+	  // Default to the value from the 'all'-checkbox.
 	  elements[i].checked = reference.checked;
 	  if (name == 'install')
 	  {
+	    // FIXME: Why call it so many times?
 	    toggle_install();
 	  }
-	  else if (name == 'uninstall' && i > 1)
+	  else if (name == 'uninstall')
 	  {
-	    elements[i].disabled = !elements[i].checked;
+	    if (found)
+	    {
+	      // Disable unchecked uninstall checkboxes
+	      // after the first unchecked one.
+	      elements[i].disabled = !elements[i].checked;
+	    }
+	    else
+	    {
+	      // Found the first non-magic uninstall checkbox.
+	      found = true;
+	      elements[i].disabled = false;
+	    }
 	  }
         }
       }
@@ -834,6 +1130,7 @@ mixed parse(RequestID id)
 
       function toggle_uninstall(id)
       {
+        var toggleAllElement = document.getElementById('uninstall_all');
 	var currentElement = document.getElementById(id);
 	var allElements = document.getElementsByName('uninstall');
 	var currentNo = 0;
@@ -850,13 +1147,17 @@ mixed parse(RequestID id)
 	    
 	    if ((i+1) < allElements.length)
 	    {
-	      allElements[0].checked = false;
+	      // There are some checkboxes left to check.
+	      toggleAllElement.checked = false;
+
+	      // Make the next one available.
 	      allElements[i+1].checked = false;
 	      allElements[i+1].disabled = !currentElement.checked;
 	    }
 	    else
 	    {
-	      allElements[0].checked = currentElement.checked;
+	      // Checked the last checkbox ==> All are checked.
+	      toggleAllElement.checked = currentElement.checked;
 	    }
 	  }
 	}
@@ -867,18 +1168,31 @@ mixed parse(RequestID id)
 	var deps = checkBox.getAttribute('dependencies');
         if (deps && deps.length > 0)
         { 
+	  var deps_ok = true;
 	  deps = deps.split(', ');
           for (var i = 0; i < deps.length; i++)
           {
-            var dep_element = document.getElementById(deps[i]);
-            if (!dep_element || (dep_element &&
-				 !(dep_element.name == 'uninstall' ||
-				   dep_element.checked == true)))
-            {
-              checkBox.checked  = false;
-              checkBox.disabled = true;
+            deps_ok = false;
+            var alts = deps[i].split('|');
+            for (var j = 0; j < alts.length; j++) {
+              var alt = alts[j];
+              var dep_element = document.getElementById(alt);
+              if (dep_element && (dep_element.name == 'uninstall' ||
+				  dep_element.checked == true)) {
+		// One of the dependencies in the set is satisfied.
+                deps_ok = true;
+		break;
+	      }
             }
+	    if (!deps_ok) {
+	      // One of the dependencies is not satisfied.
+	      break;
+	    }
           }
+	  checkBox.disabled = !deps_ok;
+	  if (checkBox.disabled) {
+            checkBox.checked = false;
+	  }
         }
 	else
 	  checkBox.disabled = false;
@@ -892,4 +1206,46 @@ mixed parse(RequestID id)
       // ]]> 
     </script>";
   return res;
+}
+
+// Non-caching version of Process.search_path()
+string search_path(string command) {
+  array(string) search_path_entries=0;
+  if (command=="" || command[0]=='/') return command;
+
+  if (!search_path_entries) {
+#ifdef __NT__
+    array(string) e=replace(getenv("PATH")||"", "\\", "/")/";"-({""});
+#elif defined(__amigaos__)
+    array(string) e=(getenv("PATH")||"")/";"-({""});
+#else
+    array(string) e=(getenv("PATH")||"")/":"-({""});
+#endif
+
+    multiset(string) filter=(<>);
+    search_path_entries=({});
+    foreach (e,string s) {
+      string t;
+      if (s[0]=='~') {  // some shells allow ~-expansion in PATH
+	if (s[0..1]=="~/" && (t=[string]getenv("HOME")))
+	  s=t+s[1..];
+	else {
+	  // expand user?
+	}
+      }
+
+      if (!filter[s] /* && directory exist */ ) {
+	search_path_entries+=({s});
+	filter[s]=1;
+      }
+    }
+  }
+
+  foreach (search_path_entries, string path) {
+    string p=combine_path(path,command);
+    Stdio.Stat s=file_stat(p);
+    if (s && s->mode&0111) return p;
+  }
+
+  return 0;
 }

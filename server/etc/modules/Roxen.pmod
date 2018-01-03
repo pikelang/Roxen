@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.308 2011/02/28 13:58:33 grubba Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -216,9 +216,9 @@ string http_roxen_config_cookie(string from)
     +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
-string http_roxen_id_cookie()
+string http_roxen_id_cookie(void|string unique_id)
 {
-  return "RoxenUserID=" + roxen->create_unique_id() + "; expires=" +
+  return "RoxenUserID=" + (unique_id || roxen->create_unique_id()) + "; expires=" +
     http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
@@ -896,9 +896,6 @@ string parse_http_response (string response,
 //! @returns
 //! Returns the body of the response message, with charset decoded if
 //! applicable.
-//!
-//! @note
-//! Does not currently support the Content-Encoding header.
 {
   array parsed = Roxen.HeaderParser()->feed (response);
   if (!parsed) {
@@ -924,12 +921,17 @@ string parse_http_response (string response,
 string low_parse_http_response (mapping(string:string) headers,
 				string body,
 				void|mapping(string:mixed) response_map,
-				void|int|string on_error)
+				void|int|string on_error,
+				void|int(0..1) ignore_unknown_ce)
 //! Similar to @[parse_http_response], but takes a http response
 //! message that has been split into headers in @[headers] and the
 //! message body in @[body].
 //!
 //! The indices in @[headers] are assumed to be in lower case.
+//!
+//! @param ignore_unknown_ce
+//!   If set, unknown Content-Encoding headers will be ignored and
+//!   parsing will continue on the verbatim body data.
 {
   string err_msg;
 
@@ -958,8 +960,23 @@ proc: {
     }
 
     if (string ce = headers["content-encoding"]) {
-      err_msg = "Content-Encoding header not supported.\n";
-      break proc;
+      switch(lower_case(ce)) {
+      case "gzip":
+	{
+	  Stdio.FakeFile f = Stdio.FakeFile(body, "rb");
+	  Gz.File gz = Gz.File(f, "rb");
+	  body = gz->read();
+	}
+	break;
+      case "deflate":
+	body = Gz.inflate(-15)->inflate(body);
+	break;
+      default:
+	if (!ignore_unknown_ce) {
+	  err_msg = sprintf("Content-Encoding %O not supported.\n", ce);
+	  break proc;
+	}
+      }
     }
 
     if (!charset) {
@@ -1024,6 +1041,9 @@ proc: {
 	}
       }
     }
+
+    // FIXME: Parse away BOM in xml documents also when the charset
+    // already is known.
 
     if (charset) {
       Locale.Charset.Decoder decoder;
@@ -1355,7 +1375,7 @@ string make_absolute_url (string url, RequestID|void id,
   // Add protocol and host to local absolute URLs.
   if (has_prefix (url, "/")) {
     if(id) {
-      url = id->url_base() + url[1..];
+      url = (string)Standards.URI(url, id->url_base());
       if (!prestates) prestates = id->prestate;
     }
     else {
@@ -2545,138 +2565,199 @@ string strftime(string fmt, int t,
   mapping(string:string) m = (["type":"string"]);
   
   foreach(a[1..], string key) {
-    if(key=="") continue;
     int(0..1) prefix = 1;
-    if(key[0] == '!' && sizeof(key) > 1) {
-      prefix = 0;
-      key = key[1..];
-    }
-    switch(key[0]) {
-    case 'a':	// Abbreviated weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"short_day",id));
-      else
-	res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
-      break;
-    case 'A':	// Weekday name
-      if (language)
-	res += number2string(lt->wday+1,m,language(lang,"day",id));
-      else
-	res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
-		  "Thursday", "Friday", "Saturday" })[lt->wday];
-      break;
-    case 'b':	// Abbreviated month name
-    case 'h':	// Abbreviated month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"short_month",id));
-      else
-	res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-		  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
-      break;
-    case 'B':	// Month name
-      if (language)
-	res += number2string(lt->mon+1,m,language(lang,"month",id));
-      else
-	res += ({ "January", "February", "March", "April", "May", "June",
-		  "July", "August", "September", "October", "November", "December" })[lt->mon];
-      break;
-    case 'c':	// Date and time
-      res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-			      lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
-      break;
-    case 'C':	// Century number; 0-prefix
-      res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
-      break;
-    case 'd':	// Day of month [1,31]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->mday);
-      break;
-    case 'D':	// Date as %m/%d/%y
-      res += strftime("%m/%d/%y", t);
-      break;
-    case 'e':	// Day of month [1,31]; space-prefix
-      res += my_sprintf(prefix, "%2d", lt->mday);
-      break;
-    case 'E':
-    case 'O':
-      key = key[1..]; // No support for E or O extension.
-      break;
-    case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->hour);
-      break;
-    case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
-      res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
-      break;
-    case 'j':	// Day number of year [1,366]; 0-prefix
-      res += my_sprintf(prefix, "%03d", lt->yday);
-      break;
-    case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
-      res += my_sprintf(prefix, "%2d", lt->hour);
-      break;
-    case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
-      res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
-      break;
-    case 'm':	// Month number [1,12]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->mon + 1);
-      break;
-    case 'M':	// Minute [00,59]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->min);
-      break;
-    case 'n':	// Newline
-      res += "\n";
-      break;
-    case 'p':	// a.m. or p.m.
-      res += lt->hour<12 ? "a.m." : "p.m.";
-      break;
-    case 'P':	// am or pm
-      res += lt->hour<12 ? "am" : "pm";
-      break;
-    case 'r':	// Time in 12-hour clock format with %p
-      res += strftime("%l:%M %p", t);
-      break;
-    case 'R':	// Time as %H:%M
-      res += sprintf("%02d:%02d", lt->hour, lt->min);
-      break;
-    case 'S':	// Seconds [00,61]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->sec);
-      break;
-    case 't':	// Tab
-      res += "\t";
-      break;
-    case 'T':	// Time as %H:%M:%S
-    case 'X':
-      res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
-      break;
-    case 'u':	// Weekday as a decimal number [1,7], Sunday == 1
-      res += my_sprintf(prefix, "%d", lt->wday + 1);
-      break;
-    case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
-      res += my_sprintf(prefix, "%d", lt->wday);
-      break;
-    case 'x':	// Date
-      res += strftime("%a %b %d %Y", t);
-      break;
-    case 'y':	// Year [00,99]; 0-prefix
-      res += my_sprintf(prefix, "%02d", lt->year % 100);
-      break;
-    case 'Y':	// Year [0000.9999]; 0-prefix
-      res += my_sprintf(prefix, "%04d", 1900 + lt->year);
-      break;
+    int(0..1) alternative_numbers = 0;
+    int(0..1) alternative_form = 0;
+    while (sizeof(key)) {
+      switch(key[0]) {
+	// Flags.
+      case '!':	// Inhibit numerical padding (Pike).
+	prefix = 0;
+	key = key[1..];
+	continue;
+      case 'E':	// Locale-dependent alternative form.
+	alternative_form = 1;
+	key = key[1..];
+	continue;
+      case 'O':	// Locale-dependent alternative numeric representation.
+	alternative_numbers = 1;
+	key = key[1..];
+	continue;
 
-    case 'U':	// Week number of year as a decimal number [00,53],
-		// with Sunday as the first day of week 1; 0-prefix
-      res += my_sprintf(prefix, "%02d", ((lt->yday-1+lt->wday)/7));
-      break;
-    case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
-      res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
-      break;
-    case 'W':	// Week number of year as a decimal number [00,53],
+	// Formats.
+      case 'a':	// Abbreviated weekday name
+	if (language)
+	  res += number2string(lt->wday+1,m,language(lang,"short_day",id));
+	else
+	  res += ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" })[lt->wday];
+	break;
+      case 'A':	// Weekday name
+	if (language)
+	  res += number2string(lt->wday+1,m,language(lang,"day",id));
+	else
+	  res += ({ "Sunday", "Monday", "Tuesday", "Wednesday",
+		    "Thursday", "Friday", "Saturday" })[lt->wday];
+	break;
+      case 'b':	// Abbreviated month name
+      case 'h':	// Abbreviated month name
+	if (language)
+	  res += number2string(lt->mon+1,m,language(lang,"short_month",id));
+	else
+	  res += ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" })[lt->mon];
+	break;
+      case 'B':	// Month name
+	if (language) {
+	  if (alternative_form) {
+	    res += number2string(lt->mon+1,m,language(lang,"numbered_month",id));
+	  } else {
+	    res += number2string(lt->mon+1,m,language(lang,"month",id));
+	  }
+	} else
+	  res += ({ "January", "February", "March", "April", "May", "June",
+		    "July", "August", "September", "October", "November", "December" })[lt->mon];
+	break;
+      case 'c':	// Date and time
+	// FIXME: Should be preferred date and time for the locale.
+	res += strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
+				lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
+	break;
+      case 'C':	// Century number; 0-prefix
+	res += my_sprintf(prefix, "%02d", 19 + lt->year/100);
+	break;
+      case 'd':	// Day of month [1,31]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->mday);
+	break;
+      case 'D':	// Date as %m/%d/%y
+	res += strftime("%m/%d/%y", t);
+	break;
+      case 'e':	// Day of month [1,31]; space-prefix
+	res += my_sprintf(prefix, "%2d", lt->mday);
+	break;
+      case 'F':	// ISO 8601 date %Y-%m-%d
+	res += sprintf("%04d-%02d-%02d",
+		       1900 + lt->year, lt->mon + 1, lt->mday);
+	break;
+      case 'G':	// Year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%04d", 1899 + lt->year);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%04d", 1901 + lt->year);
+	  } else {
+	    res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	  }
+	}
+	break;
+      case 'g':	// Short year for the ISO 8601 week containing the day.
+	{
+	  int wday = (lt->wday + 1)%7;	// ISO 8601 weekday number.
+	  if ((wday - lt->yday) >= 4) {
+	    // The day belongs to the last week of the previous year.
+	    res += my_sprintf(prefix, "%02d", (99 + lt->year) % 100);
+	  } else if ((lt->mon == 11) && ((lt->mday - wday) >= 29)) {
+	    // The day belongs to the first week of the next year.
+	    res += my_sprintf(prefix, "%02d", (1 + lt->year) % 100);
+	  } else {
+	    res += my_sprintf(prefix, "%02d", (lt->year) % 100);
+	  }
+	}
+	break;
+      case 'H':	// Hour (24-hour clock) [0,23]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->hour);
+	break;
+      case 'I':	// Hour (12-hour clock) [1,12]; 0-prefix
+	res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
+	break;
+      case 'j':	// Day number of year [1,366]; 0-prefix
+	res += my_sprintf(prefix, "%03d", lt->yday);
+	break;
+      case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
+	res += my_sprintf(prefix, "%2d", lt->hour);
+	break;
+      case 'l':	// Hour (12-hour clock) [1,12]; space-prefix
+	res += my_sprintf(prefix, "%2d", 1 + (lt->hour + 11)%12);
+	break;
+      case 'm':	// Month number [1,12]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->mon + 1);
+	break;
+      case 'M':	// Minute [00,59]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->min);
+	break;
+      case 'n':	// Newline
+	res += "\n";
+	break;
+      case 'p':	// a.m. or p.m.
+	res += lt->hour<12 ? "a.m." : "p.m.";
+	break;
+      case 'P':	// am or pm
+	res += lt->hour<12 ? "am" : "pm";
+	break;
+      case 'r':	// Time in 12-hour clock format with %p
+	res += strftime("%I:%M:%S %p", t);
+	break;
+      case 'R':	// Time as %H:%M
+	res += sprintf("%02d:%02d", lt->hour, lt->min);
+	break;
+      case 's':	// Seconds since epoch.
+	res += my_sprintf(prefix, "%d", t);
+	break;
+      case 'S':	// Seconds [00,61]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->sec);
+	break;
+      case 't':	// Tab
+	res += "\t";
+	break;
+      case 'T':	// Time as %H:%M:%S
+      case 'X':	// FIXME: Time in locale preferred format.
+	res += sprintf("%02d:%02d:%02d", lt->hour, lt->min, lt->sec);
+	break;
+      case 'u':	// Weekday as a decimal number [1,7], Monday == 1
+	res += my_sprintf(prefix, "%d", 1 + ((lt->wday + 6) % 7));
+	break;
+      case 'U':	// Week number of current year [00,53]; 0-prefix
+		// Sunday is first day of week.
+	res += my_sprintf(prefix, "%02d", 1 + (lt->yday - lt->wday)/ 7);
+	break;
+      case 'V':	// ISO week number of the year as a decimal number [01,53]; 0-prefix
+	res += my_sprintf(prefix, "%02d", Calendar.ISO.Second(t)->week_no());
+	break;
+      case 'w':	// Weekday as a decimal number [0,6], Sunday == 0
+	res += my_sprintf(prefix, "%d", lt->wday);
+	break;
+      case 'W':	// Week number of year as a decimal number [00,53],
 		// with Monday as the first day of week 1; 0-prefix
-      res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
-      break;
-    case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
+	res += my_sprintf(prefix, "%02d", ((lt->yday+(5+lt->wday)%7)/7));
+	break;
+      case 'x':	// Date
+		// FIXME: Locale preferred date format.
+	res += strftime("%a %b %d %Y", t);
+	break;
+      case 'y':	// Year [00,99]; 0-prefix
+	res += my_sprintf(prefix, "%02d", lt->year % 100);
+	break;
+      case 'Y':	// Year [0000.9999]; 0-prefix
+	res += my_sprintf(prefix, "%04d", 1900 + lt->year);
+	break;
+      case 'z':	// Time zone as hour offset from UTC.
+		// Needed for RFC822 dates.
+	{
+	  int minutes = lt->timezone/60;
+	  int hours = minutes/60;
+	  minutes -= hours * 60;
+	  res += my_sprintf(prefix, "%+05d%", hours*100 + minutes);
+	}
+	break;
+      case 'Z':	// FIXME: Time zone name or abbreviation, or no bytes if
 		// no time zone information exists
+	break;
+      }
+      res+=key[1..];
+      break;
     }
-    res+=key[1..];
   }
   return replace(res, "\0", "%");
 }
@@ -2772,6 +2853,13 @@ protected string low_roxen_encode(string val, string encoding)
    case "utf-8":
      return string_to_utf8(val);
 
+   case "-utf8":
+   case "-utf-8":
+    if( catch {
+	return utf8_to_string(val);
+      })
+      RXML.run_error("Cannot decode utf-8 string. Bad data.\n");
+
    case "utf16":
    case "utf16be":
      return Locale.Charset.encoder("utf16be")->feed(val)->drain();
@@ -2784,11 +2872,33 @@ protected string low_roxen_encode(string val, string encoding)
       RXML.run_error(  "Cannot hex encode wide characters.\n" );
     return String.string2hex(val);
 
+  case "-hex":
+    if( catch {
+	return String.hex2string(val);
+      })
+      RXML.run_error("Cannot decode hex string. Bad data.\n");
+
    case "base64":
    case "base-64":
    case "b64":
      return MIME.encode_base64(val);
 
+   case "-base64":
+   case "-base-64":
+   case "-b64":
+     if( catch {
+	 return MIME.decode_base64(val);
+       })
+       RXML.run_error("Cannot decode base64 string. Bad data.\n");
+
+   
+  case "md5":
+  case "sha1":
+  case "sha256":
+    if (String.width(val) > 8)
+      RXML.run_error("Cannot hash wide characters.\n");
+    return Crypto[upper_case(encoding)]->hash(val);
+    
    case "quotedprintable":
    case "quoted-printable":
    case "qp":
@@ -2814,6 +2924,10 @@ protected string low_roxen_encode(string val, string encoding)
 
    case "html":
      return html_encode_string (val);
+   case "-html":
+     //  Can't use html_decode_string() which doesn't understand numerical
+     //  entities.
+     return RXML.TXml()->decode_charrefs(val);
 
    case "invalids":
    case "xmlinvalids":
@@ -2836,12 +2950,31 @@ protected string low_roxen_encode(string val, string encoding)
 		    ({ "\"", "\\", "\n" }),
 		    ({ "\\\"", "\\\\", "\\n" }));
 
+   case "json":
+#if constant (Standards.JSON.escape_string)
+     return Standards.JSON.escape_string (val);
+#else
+     // Simpler variant for compat with older pikes.
+     return replace(val,
+		   ({ "\"",   "\\",   "/",   "\b",
+		      "\f",   "\n",   "\r",  "\t",
+		      "\u2028",       "\u2029", }),
+		   ({ "\\\"", "\\\\", "\\/", "\\b",
+		      "\\f",  "\\n",  "\\r", "\\t",
+		      "\\u2028",      "\\u2029", }));
+#endif
+
    case "js":
    case "javascript":
      return replace (val,
-		    ({ "\b", "\014", "\n", "\r", "\t", "\\", "'", "\"" }),
+		    ({ "\b", "\014", "\n", "\r", "\t", "\\",
+		       "'", "\"",
+		       "\u2028", "\u2029",
+		       "</", "<!--"}),
 		    ({ "\\b", "\\f", "\\n", "\\r", "\\t", "\\\\",
-		       "\\'", "\\\"" }));
+		       "\\'", "\\\"",
+		       "\\u2028", "\\u2029",
+		       "<\\/", "<\\!--" }));
 
    case "mysql":
      // Note: Quotes the single-quote (') in traditional sql-style,
@@ -2908,6 +3041,10 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "utf-8"
 //!     UTF-8 encoding. C.f. @[string_to_utf8].
 //!
+//!   @value "-utf8"
+//!   @value "-utf-8"
+//!     UTF-8 decoding. C.f. @[utf8_to_string].
+//!
 //!   @value "utf16"
 //!   @value "utf16be"
 //!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
@@ -2922,11 +3059,31 @@ protected string low_roxen_encode(string val, string encoding)
 //!     @expr{"666f6f"@}. Requires octet (i.e. non-wide) strings.
 //!     C.f. @[String.string2hex].
 //!
+//!   @value "-hex"
+//!     Hexadecimal decoding, e.g. @expr{"666f6f"@} is decoded to
+//!     @expr{"foo"@}.
+//!     C.f. @[String.hex2string].
+//!
 //!   @value "base64"
 //!   @value "base-64"
 //!   @value "b64"
 //!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
 //!     C.f. @[MIME.encode_base64].
+//!
+//!   @value "-base64"
+//!   @value "-base-64"
+//!   @value "-b64"
+//!     Base-64 MIME decoding.
+//!     C.f. @[MIME.decode_base64].
+//!
+//!   @value "md5"
+//!   @value "sha1"
+//!   @value "sha256"
+//!     Message digest using supplied hash algorithm. Requires octet
+//!     (i.e. non-wide) strings. Note that the result is a binary string
+//!     so apply e.g. hex encoding afterward to get a printable value.
+//!     C.f. @[Crypto.MD5.hash], @[Crypto.SHA1.hash] and
+//!     @[Crypto.SHA256.hash].
 //!
 //!   @value "quotedprintable"
 //!   @value "quoted-printable"
@@ -2961,6 +3118,10 @@ protected string low_roxen_encode(string val, string encoding)
 //!     encoding chars like @expr{<@}, @expr{&@}, and quotes using
 //!     character reference entities.
 //!
+//!   @value "-html"
+//!     HTML decoding of entities (literals and decimal/hexadecimal
+//!     representations).
+//!
 //!   @value "wml"
 //!     HTML encoding, and doubling of any @tt{$@}'s.
 //!
@@ -2974,10 +3135,29 @@ protected string low_roxen_encode(string val, string encoding)
 //!     tag. This means backslash escapes for chars that cannot occur
 //!     verbatim in Pike string literals.
 //!
+//!   @value "json"
+//!     JSON string quoting. Similar to the @expr{"js"@} quoting,
+//!     but keeps strictly to RFC 4627.
+//!
 //!   @value "js"
 //!   @value "javascript"
 //!     Javascript string quoting, i.e. using backslash escapes for
 //!     @expr{"@}, @expr{\@}, and more.
+//!
+//!     For safe use inside @tt{<script>@} elements, it quotes some
+//!     additional character sequences:
+//!
+//!     @ul
+//!     @item
+//!       @tt{</@} is quoted as @tt{<\/@} according to appendix B.3.2
+//!       in the HTML 4.01 spec.
+//!     @item
+//!       @tt{<!--@} is quoted as @tt{<\!--@} according to 4.3.1.2 in
+//!       the HTML 5 spec.
+//!     @endul
+//!
+//!     Both are harmless in Javascript string literals in other
+//!     contexts.
 //!
 //!   @value "mysql"
 //!     MySQL quoting. This also means backslash escapes, except the
@@ -3359,7 +3539,6 @@ protected class CharsetDecoderWrapper
     // name back from Locale.Charset so we could use that instead in
     // the client_charset_decoders cache mapping.
     decoder = Locale.Charset.decoder (charset = cs);
-    werror ("created %O from %O\n", decoder, cs);
   }
 
   string decode (string what)
@@ -4156,8 +4335,11 @@ class EScope(string scope)
 
   protected mixed `[]( string what )
   {
-    RXML.Context ctx = RXML.get_context( );  
-    return ctx->get_var( what, scope );
+    // NB: This function may be called by eg master()->describe_object()
+    //     with symbols such as "is_resolv_dirnode", in contexts where
+    //     the scope doesn't exist. cf [bug 6451].
+    RXML.Context ctx = RXML.get_context( );
+    return ctx->scopes[scope || "_"] && ctx->get_var( what, scope );
   }
 
   protected mixed `->( string what )
@@ -4429,6 +4611,16 @@ class ScopeRoxen {
       return ENCODE_RXML_TEXT("magic_roxen_automatic_charset_variable", type);
     case "auto-charset-value":
       return ENCODE_RXML_TEXT(magic_charset_variable_value, type);
+
+    case "null":
+      // Note that we don't need to check compat_level < 5.2 and
+      // return compat_5_1_null here, since this constant didn't exist
+      // prior to 5.2.
+      return Val->null;
+    case "true":
+      return Val->true;
+    case "false":
+      return Val->false;
     }
     
     return RXML.nil;
@@ -4882,7 +5074,9 @@ void set_cookie( RequestID id,
                  string value, 
                  int|void expire_time_delta, 
                  string|void domain, 
-                 int(1..1)|string|void path )
+                 int(1..1)|string|void path,
+                 string|void secure,
+                 string|void httponly)
 //! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
 //! header in the response that will be made from @[id].
 //!
@@ -4910,6 +5104,8 @@ void set_cookie( RequestID id,
 
   if( domain ) cookie += "; domain="+http_encode_cookie( domain );
   if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
+  if( secure ) cookie += "; secure";
+  if( httponly ) cookie += "; HttpOnly";
   id->add_response_header ("Set-Cookie", cookie);
 }
 
@@ -4967,7 +5163,9 @@ string get_server_url(Configuration c)
   return c->get_url();
 }
 
+#ifndef NO_DNS
 static private array(string) local_addrs;
+#endif
 
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
@@ -4995,9 +5193,10 @@ string get_world(array(string) urls) {
   // The host part of the URL is a glob.
   // Lets find some suitable hostnames and IPs to match it against.
 
-  array hosts=({ gethostname() }), dns;
+  array hosts=({ gethostname() });
 
 #ifndef NO_DNS
+  array dns;
   catch(dns=roxen->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2]+dns[1];
@@ -5300,43 +5499,115 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
     });
 }
 
-// FIXME: Having a Roxen.sql_null that is different from but `== equal
-// to pikes Sql.NULL isn't good. We should remove this class, but then
-// a lot of type conversion functions in RXML.pmod need special cases
-// for Sql.NULL.
-
-class SqlNull
-//! The class for @[Roxen.sql_null]. Avoid creating more instances of
-//! this.
+class True
+//! Type for @[Roxen.true]. Do not create more instances of this.
 {
-  inherit RXML.Nil;
-  constant is_RXML_encodable = 1;
+  // Val.true is replaced by this by create() in roxen.pike.
+  inherit Val.True;
 
-#if constant(Sql.Null)
-  inherit Sql.Null;
-#else
-  constant is_sql_null = 1;
-  //! Nonzero recognition constant.
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (1);
+    // Don't try type->encode(this) since we've inherited a cast
+    // function that we don't wish the rxml parser to use - it should
+    // be an error if this object is used in non-numeric contexts.
+    if (type != RXML.t_any)
+      RXML.parse_error ("Cannot convert %O to type %s.\n", this, type->name);
+    return this;
+  }
 
-  // Treat these objects as indistinguishable from each other. We
-  // ought to ensure that there's only one in the pike process
-  // instead, but that's tricky to solve in the PCode codec.
-  int `== (mixed other)
-    {return objectp (other) && other->is_sql_null;}
-  int __hash() {return 17;}
-
-  string _sprintf (int flag) {return flag == 'O' && "sql_null";}
-#endif
-
-  int _encode() {return 0;}
-  void _decode (int dummy) {}
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.true";}
 }
 
-SqlNull sql_null = SqlNull();
-//! Used primarily by emit#sql to represent the SQL NULL value in
-//! RXML. Similar to @[RXML.nil], except that it is a valid value for
-//! an RXML variable. Like @[RXML.nil], it is false in a boolean
-//! context (i.e. @[`!] returns true).
+True true = True();
+//! Roxen replacement for @[Val.true] that adds rxml type conversions:
+//! It's true in boolean tests and yields 1 or 1.0, as appropriate, in
+//! a numeric context.
+
+class False
+//! Type for @[Roxen.false]. Do not create more instances of this.
+{
+  // Val.false is replaced by this by create() in roxen.pike.
+  inherit Val.False;
+
+  constant is_rxml_null_value = 1;
+
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (0);
+    // Don't try type->encode(this) since we've inherited a cast
+    // function that we don't wish the rxml parser to use - it should
+    // be an error if this object is used in non-numeric contexts.
+    if (type != RXML.t_any)
+      RXML.parse_error ("Cannot convert %O to type %s.\n", this, type->name);
+    return this;
+  }
+
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.false";}
+}
+
+False false = False();
+//! Roxen replacement for @[Val.false] that adds rxml type
+//! conversions: It's false in boolean tests, and yields 0 or 0.0, as
+//! appropriate, in a numeric context.
+
+class Null
+{
+  // Val.null is replaced by this by create() in roxen.pike.
+  inherit Val.Null;
+
+  constant is_rxml_null_value = 1;
+
+  mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+		       void|RXML.Type type)
+  {
+    if (!type)
+      return this;
+    if (type->string_type)
+      // A bit inconsistent with the true/false values, but compatible
+      // with the old sql_null value and how sql NULLs behaved prior
+      // to it when they produced UNDEFINED.
+      return "";
+    if (type->subtype_of (RXML.t_num))
+      return type->encode (0);
+    return type->encode (this);
+  }
+
+  protected string _sprintf (int flag) {return flag == 'O' && "Roxen.null";}
+}
+
+Null null = Null();
+//! Roxen replacement for @[Val.null] that adds rxml type conversions:
+//! It's false in boolean tests, yields "" in a string context and 0
+//! or 0.0, as appropriate, in a numeric context.
+
+constant SqlNull = Null;
+Val.Null sql_null;
+// Compat aliases. sql_null is initialized in create() in roxen.pike.
+
+class Compat51Null
+// Null object for compat_level < 5.2. Also inherits RXML.Nil, which
+// among other things allows casting to empty values of various types.
+{
+  inherit Null;
+  inherit RXML.Nil;
+
+  protected string _sprintf (int flag)
+  {
+    return flag == 'O' && "Roxen.compat_5_1_null";
+  }
+}
+
+Compat51Null compat_5_1_null = Compat51Null();
+
 
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,
@@ -5582,6 +5853,10 @@ void pop_color (string tagname, RequestID id)
   }
 }
 
+// NB: Several of the Tools.PEM and Tools.X509 APIs below
+//     have been deprecated in Pike 8.0.
+#pragma no_deprecation_warnings
+
 string generate_self_signed_certificate(string common_name)
 {
   int key_size = 4096;	// Ought to be safe for a few years.
@@ -5616,6 +5891,8 @@ string generate_self_signed_certificate(string common_name)
   return Tools.PEM.simple_build_pem("CERTIFICATE", cert) + key;
 }
 
+#pragma deprecation_warnings
+
 class LogPipe
 //! The write end of a pipe that will log to the debug log. Use
 //! @[get_log_pipe] to create an instance.
@@ -5645,12 +5922,14 @@ class LogPipe
 
   protected void log_pipe_read_thread (Stdio.File read_end)
   {
+    roxen->name_thread(this_thread(), "Log pipe");
     while (1) {
       string data = read_end->read (1024, 1);
       if (!data || data == "") break;
       read_cb (read_end, data);
     }
     close_cb (read_end);
+    roxen->name_thread(this_thread(), 0);
   }
 
   protected void create (Stdio.File read_end, Stdio.File write_end,
@@ -5678,14 +5957,14 @@ class LogPipe
 
 LogPipe get_log_pipe()
 //! Returns a pipe suitable to bind to @expr{"stdout"@} and
-//! @expr{"stderr"@} in a @[Process.create_process] call to get the
+//! @expr{"stderr"@} in a @[Process.Process] call to get the
 //! output from the created process into the debug log. The log data
 //! is line buffered to avoid mixing output from different processes
 //! on the same line.
 //!
 //! @note
 //! Don't forget to close the returned pipe after the call to
-//! @[Process.create_process]. Otherwise the pipe will remain intact
+//! @[Process.Process]. Otherwise the pipe will remain intact
 //! after the process has exited and you'll get an fd leak.
 //!
 //! @note
@@ -5775,7 +6054,8 @@ mapping(string:int) get_memusage()
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
 }
 
-string lookup_real_path_case_insens (string path, void|int no_warn)
+string lookup_real_path_case_insens (string path, void|int no_warn,
+				     void|string charset)
 //! Looks up the given path case insensitively to a path in the real
 //! file system. I.e. all segments in @[path] that exist in the file
 //! system when matched case insensitively are converted to the same
@@ -5787,9 +6067,25 @@ string lookup_real_path_case_insens (string path, void|int no_warn)
 //! is also logged in this case, unless @[no_warn] is nonzero.
 //!
 //! The given path is assumed to be absolute, and it is normalized
-//! with @[combine_path] before being checked. If there's a trailing
-//! slash then it's kept intact.
+//! with @[combine_path] before being checked. The returned paths
+//! always have "/" as directory separators. If there is a trailing
+//! slash then it is kept intact.
 //!
+//! If @[charset] is set then charset conversion is done: @[path] is
+//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! taken as the charset used in the file system. The returned path is
+//! a unicode string as well. If @[charset] isn't specified then no
+//! charset conversion is done anywhere, which means that @[path] must
+//! have the same charset as the file system, and the case insensitive
+//! comparisons only work in as far as @[lower_case] does the right
+//! thing with that charset.
+//!
+//! If @[charset] is given then it's assumed to be a charset accepted
+//! by @[Locale.Charset]. If there are charset conversion errors in
+//! @[path] or in the file system then those paths are treated as
+//! nonexisting.
+//!
+//! @note
 //! Existing paths are cached without any time limit, but the cached
 //! paths are always verified to still exist before being reused. Thus
 //! the only overcaching effect that can occur is if the underlying
@@ -5798,50 +6094,131 @@ string lookup_real_path_case_insens (string path, void|int no_warn)
 {
   ASSERT_IF_DEBUG (is_absolute_path (path));
 
-  string recur (string path)
+  string cache_name = "case_insens_paths";
+
+  function(string:string) encode, decode;
+  switch (charset) {
+    case 0:
+      break;
+    case "utf8":
+    case "utf-8":
+      encode = string_to_utf8;
+      decode = utf8_to_string;
+      cache_name += ":utf8";
+      break;
+    default:
+      Locale.Charset.Encoder enc = Locale.Charset.encoder (charset);
+      Locale.Charset.Decoder dec = Locale.Charset.decoder (charset);
+      encode = lambda (string in) {return enc->feed (in)->drain();};
+      decode = lambda (string in) {return dec->feed (in)->drain();};
+      cache_name += ":" + enc->charset;
+      break;
+  }
+
+  string dec_path, enc_path;
+  int nonexist;
+
+  void recur (string path)
   {
     string lc_path = lower_case (path);
-    if (string cached = cache_lookup ("case_insens_paths", lc_path)) {
-      if (Stdio.exist (cached)) {
-	// werror ("path %q -> %q (cached)\n", path, cached);
-	return cached;
-      }
-      cache_remove ("case_insens_paths", lc_path);
-    }
 
-    string dir = dirname (path);
-    if (dir != "" && dir != path) dir = recur (dir);
-
-  search_dir:
-    if (array(string) dir_list = get_dir (dir)) {
-      string lc_name = basename (lc_path);
-      string real_name;
-      foreach (dir_list, string ent)
-	if (lower_case (ent) == lc_name) {
-	  if (real_name) {
-	    if (!no_warn)
-	      report_warning ("Ambiguous path %q matches both %q and %q "
-			      "in %q.\n", path, real_name, ent, dir);
-	    break search_dir;
-	  }
-	  real_name = ent;
+    dec_path = cache_lookup (cache_name, lc_path);
+    if (dec_path) {
+    check_cached: {
+	if (!encode)
+	  enc_path = dec_path;
+	else if (mixed err = catch (enc_path = encode (dec_path))) {
+	  if (!objectp (err) || !err->is_charset_encode_error)
+	    throw (err);
+	  break check_cached;
 	}
-      if (real_name) {
-	string real_path = combine_path (dir, real_name);
-	// werror ("path %q -> %q\n", path, real_path);
-	cache_set ("case_insens_paths", lc_path, real_path);
-	return real_path;
+	if (Stdio.exist (enc_path)) {
+	  //werror ("path %O -> %O (cached)\n", path, dec_path);
+	  return;
+	}
       }
+      cache_remove (cache_name, lc_path);
     }
 
-    // Nonexisting file or dir - keep the case in that part.
-    // werror ("path %q -> %q (nonexisting)\n", path, combine_path (dir, basename (path)));
-    return combine_path (dir, basename (path));
+    dec_path = dirname (path);
+    if (dec_path == "" || dec_path == path) { // At root.
+      if (!encode)
+	enc_path = dec_path;
+      else if (mixed err = catch (enc_path = encode (dec_path))) {
+	if (!objectp (err) || !err->is_charset_encode_error)
+	  throw (err);
+      }
+      return;
+    }
+    recur (dec_path);
+
+    if (!nonexist) {
+      // FIXME: Note that get_dir on windows accepts and returns
+      // unicode paths, so the following isn't correct there. The
+      // charset handling in the file system interface on windows is
+      // inconsistent however, since most other functions do not
+      // accept neither wide strings nor strings encoded with any
+      // charset. This applies at least up to pike 7.8.589.
+    search_dir:
+      if (array(string) dir_list = get_dir (enc_path)) {
+	string lc_name = basename (lc_path);
+	string dec_name, enc_name;
+
+	foreach (dir_list, string enc_ent) {
+	  string dec_ent;
+	  if (!decode)
+	    dec_ent = enc_ent;
+	  else if (mixed err = catch (dec_ent = decode (enc_ent))) {
+	    if (decode != utf8_to_string)
+	      // utf8_to_string doesn't throw Locale.Charset.DecodeErrors.
+	      if (!objectp (err) || !err->is_charset_decode_error)
+		throw (err);
+	    // Ignore file system paths that we cannot decode.
+	    //werror ("path ignore in %O: %O\n", enc_path, enc_ent);
+	    continue;
+	  }
+
+	  if (lower_case (dec_ent) == lc_name) {
+	    if (dec_name) {
+	      if (!no_warn)
+		report_warning ("Ambiguous path %q matches both %q and %q "
+				"in %q.\n", path, dec_name, dec_ent, dec_path);
+	      break search_dir;
+	    }
+	    dec_name = dec_ent;
+	    enc_name = enc_ent;
+	  }
+	}
+
+	if (dec_name) {
+	  dec_path = combine_path_unix (dec_path, dec_name);
+	  enc_path = combine_path (enc_path, enc_name);
+	  //werror ("path %O -> %O/%O\n", path, dec_path, enc_path);
+	  cache_set (cache_name, lc_path, dec_path);
+	  return;
+	}
+      }
+
+      nonexist = 1;
+    }
+
+    // Nonexisting file or dir - keep the case in that part. enc_path
+    // won't be used anymore when nonexist gets set, so no need to
+    // update it.
+    dec_path = combine_path_unix (dec_path, basename (path));
+    //werror ("path %O -> %O (nonexisting)\n", path, dec_path);
+    return;
   };
 
   path = combine_path (path);
-  if (has_suffix (path, "/"))
-    return recur (path[..<1]) + "/";
+  if (has_suffix (path, "/") || has_suffix (path, "\\")) {
+    recur (path[..<1]);
+    dec_path += "/";
+  }
   else
-    return recur (path);
+    recur (path);
+
+  encode = decode = 0;		// Avoid garbage.
+
+  return dec_path;
 }

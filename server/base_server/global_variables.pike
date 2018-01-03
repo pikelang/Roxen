@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.125 2011/04/28 09:14:37 liin Exp $
+// $Id$
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -232,28 +232,22 @@ void set_up_ssl_variables( Protocol o )
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
-  string t, s;
+  string s = "nowhere";
+  string t;
 
   // FIXME: NT support.
 
   t = Stdio.read_bytes("/etc/resolv.conf");
-  if(t)
-  {
-    if(!sscanf(t, "domain %s\n", s))
-      if(!sscanf(t, "search %s%*[ \t\n]", s))
-        s="nowhere";
-  } else {
-    s="nowhere";
+  if (!t) return s;
+
+  if (!sscanf(t, "domain %s\n", s) && !sscanf(t, "search %s%*[ \t\n]", s)) {
+    return s;
   }
-  s = "host."+s;
-  sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown";
-  }
+
+  if (has_prefix(s, ".")) s = s[1..];
+  if (has_suffix(s, ".")) s = s[..sizeof(s)-2];
+  if (!sizeof(s)) return "unknown";
+
   return s;
 }
 
@@ -968,22 +962,22 @@ the Roxen instance of the MySQL server).</p>"));
 
 #ifdef ENABLE_OUTGOING_PROXY
   defvar("use_proxy", 0,
-	 LOCALE(0, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
-	 LOCALE(0, "Use proxy for outgoing requests. E.g. when browsing "
+	 LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
+	 LOCALE(1053, "Use proxy for outgoing requests. E.g. when browsing "
 		"external web sites through the Linkbrowser or when Insert "
 		"cached-href fetches data from an external location."));
   
   defvar("proxy_url", "",
-	 LOCALE(0, "Proxy: Proxy URL"), TYPE_STRING,
-	 LOCALE(0, "The URL of the proxy to use for outgoing requests."));
+	 LOCALE(1054, "Proxy: Proxy URL"), TYPE_STRING,
+	 LOCALE(1055, "The URL of the proxy to use for outgoing requests."));
   
   defvar("proxy_username", "",
-         LOCALE(0, "Proxy: Proxy username"), TYPE_STRING,
-         LOCALE(0, "Username for proxy authorization."));
+         LOCALE(1056, "Proxy: Proxy username"), TYPE_STRING,
+         LOCALE(1057, "Username for proxy authorization."));
   
   defvar("proxy_password", "",
-         LOCALE(0, "Proxy: Proxy password"), TYPE_STRING,
-         LOCALE(0, "Password for proxy authorization."));
+         LOCALE(1058, "Proxy: Proxy password"), TYPE_STRING,
+         LOCALE(1059, "Password for proxy authorization."));
 #endif
 }
 

@@ -112,23 +112,29 @@ mixed parse( RequestID id )
      </script>" +
     "<font size='+1'><b>" + name + "</b></font>\n"
     "<p><cf-refresh/></p>\n";
+
+  int hrnow = gethrtime();
+  mapping(Thread.Thread:int) thread_task_start_times =
+    roxen->get_thread_task_start_times() || ([ ]);
   int div_num = 1;
   for (int i = 0; i < sizeof (threads); i++) {
     string open_state = (threads[i] == this_thread()) ? "closed" : "open";
+    string busy_time = "";
+    if (int start_hrtime = thread_task_start_times[threads[i]])
+      busy_time = sprintf(" &ndash; busy for %.3fs",
+			  (hrnow - start_hrtime) / 1e6);
+    string th_name =
+      roxen.thread_name(threads[i], 1) || 
+      sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
     res +=
       sprintf ("<h3 class='%s' "
 	       " onclick='toggle_vis(\"%s\", this); return false;'>"
-	       "%s 0x%x%s</h3>\n"
+	       "%s%s</h3>\n"
 	       "<ol class='%s' id='%s'> %s</ol>\n",
 	       open_state,
 	       "bt_" + div_num,
-	       LOCALE(39,"Thread"), threads[i]->id_number(),
-#ifdef THREADS
-	       (threads[i] == roxen->backend_thread ?
-		" (" + LOCALE(38,"backend thread")+ ")" : ""),
-#else
-	       "",
-#endif
+	       th_name,
+	       busy_time,
 	       open_state,
 	       "bt_" + div_num,
 	       format_backtrace(describe_backtrace(threads[i]->backtrace())/

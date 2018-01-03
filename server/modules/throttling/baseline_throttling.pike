@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: baseline_throttling.pike,v 1.9 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version="$Id$";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

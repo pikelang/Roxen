@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: disk_cache.pike,v 1.64 2009/05/07 14:15:52 mast Exp $
+// $Id$
 
 #include <config.h>
 #include <module_constants.h>
@@ -269,12 +269,12 @@ class Cache
     mixed err;
     Process.Process proc;
     if( catch {
-      proc = Process.create_process(({
+      proc = Process.Process(({
         "./start", "--once", "--program", "bin/garbagecollector.pike"
       }), (["stdin":lcs, "nice":19, "uid":0, "gid":0, ]));
     } )
       err = catch {
-        proc = Process.create_process(({
+        proc = Process.Process(({
           "./start", "--once", "--program", "bin/garbagecollector.pike"
         }), (["stdin":lcs,"nice":19, ]));
       };

@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.7 2008/08/15 12:33:54 mast Exp $
+ * $Id$
  */
 
 #if constant (Nettle)

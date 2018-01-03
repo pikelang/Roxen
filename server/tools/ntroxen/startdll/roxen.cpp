@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.20 2008/12/08 13:30:26 mast Exp $
+// $Id$
 //
 //////////////////////////////////////////////////////////////////////
 

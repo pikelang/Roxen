@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.10 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version= "$Id$";
 
 #include <module.h>
 #include <roxen.h>

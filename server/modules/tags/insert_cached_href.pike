@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.32 2011/04/28 09:17:06 liin Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -306,11 +306,12 @@ class HrefDatabase {
   private constant request_table_def = "url VARCHAR(255) NOT NULL,"
 				       "fetch_interval INT UNSIGNED NOT NULL,"
 				       "fresh_time INT UNSIGNED NOT NULL,"
-				       "ttl INT UNSIGNED NOT NULL,"
+				       "ttl INT UNSIGNED NOT NULL,"                                       
 				       "timeout INT UNSIGNED NOT NULL,"
 				       "time_of_day INT UNSIGNED NOT NULL,"
 				       "next_fetch INT UNSIGNED,"
 				       "latest_request INT UNSIGNED,"
+                                       "out_of_date INT UNSIGNED,"
 				       "PRIMARY KEY (url, fetch_interval, "
 				       "fresh_time, ttl, timeout, time_of_day)";
   
@@ -323,9 +324,17 @@ class HrefDatabase {
   private string data_table;
   
   public void create() {
-    //  Failure to create tables will lead to zero return values
+    //  Failure to create tables will lead to zero return values.
     request_table = get_my_table("request", ({request_table_def}));
     data_table = get_my_table("data", ({data_table_def}));
+    
+    // If request_table exists but not the column out_of_date, create
+    // indexed column out_of_date and populate it with the sum of
+    // latest_request and ttl to optimize the remove_old_entrys.
+    if(request_table && !sizeof(sql_query("DESCRIBE " + request_table + " out_of_date"))) {
+      sql_query("ALTER TABLE " + request_table + " ADD COLUMN out_of_date INT UNSIGNED;");
+      sql_query("ALTER TABLE " + request_table + " ADD INDEX " + request_table + "(out_of_date);");
+    }
   }
 
   public void empty_db() {
@@ -388,7 +397,7 @@ class HrefDatabase {
  
     DWRITE("----------------- Leaving update_db() ------------------------");
   }
-    
+      
   public string get_data(mapping args, mapping header) {
     int next_fetch = 0;
     array(mapping(string:mixed)) result;
@@ -416,7 +425,8 @@ class HrefDatabase {
     
     string url = args["cached-href"];
     sql_query("UPDATE " + request_table +
-	      "   SET latest_request = " + now +
+	      "   SET latest_request = " + now + ", "
+	      "       out_of_date = NULL "
 	      " WHERE url = %s "
 	      "   AND fetch_interval = %d "
 	      "   AND fresh_time = %d "
@@ -425,12 +435,14 @@ class HrefDatabase {
 	      "   AND time_of_day = %d",
 	      url, args["fetch-interval"], args["fresh-time"], args["ttl"],
 	      args["timeout"], args["time-of-day"]);
+
     
     sql_query("INSERT IGNORE INTO " + request_table +
-	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d)",
+	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d, %d)",
 	      url,
-	      args["fetch-interval"], args["fresh-time"], args["ttl"],	
-	      args["timeout"], args["time-of-day"], next_fetch, now);
+	      args["fetch-interval"], args["fresh-time"], args["ttl"],
+	      args["timeout"], args["time-of-day"], next_fetch, now, 
+	      (args["ttl"] + now));
     
     sql_query("INSERT IGNORE INTO " + data_table +
 	      " VALUES (%s, '', 0)", 
@@ -484,8 +496,14 @@ class HrefDatabase {
   }
   
   private void remove_old_entrys() {
+    
+    sql_query("UPDATE " + request_table + 
+	      " SET out_of_date = (latest_request + ttl)" + 
+	      " WHERE out_of_date IS NULL" + 
+	      " AND latest_request IS NOT NULL;");
+    
     sql_query("DELETE FROM " + request_table +
-	      "      WHERE " + time() + " - latest_request > ttl");
+	      "      WHERE " + time() + " > out_of_date");
     
     sql_query("    DELETE " + data_table +
 	      "      FROM " + data_table +
@@ -751,8 +769,9 @@ class HTTPClient {
       request_headers = ([]);
 
     string host_header;
-    if (url->scheme == "http" && url->port == 80)
-      host_header = sprintf("%s", url->host);
+    if ((url->scheme == "http" && url->port == 80) ||
+	(url->scheme == "https" && url->port == 443))
+      host_header = sprintf("%s", url->host); // Omit ports when standard
     else
       host_header = sprintf("%s:%d", url->host, url->port);
 
@@ -763,7 +782,7 @@ class HTTPClient {
     if(url->user)
       default_headers->authorization = "Basic "
 	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""));
+			     (url->password || ""), 1);
 
     request_headers = default_headers | request_headers;
     query=url->query;

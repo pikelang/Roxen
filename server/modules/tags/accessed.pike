@@ -5,12 +5,15 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.61 2010/02/18 17:30:16 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
+
+int fail_count = 0, fail_count_report_next = 0;
+int fail_last_report = 0;
 
 string status()
 {
@@ -19,7 +22,11 @@ string status()
  
   if (backend == "SQL database")
     res += "<b>Database:</b> " + query("db") + "<br />\n";
-  
+
+  if (fail_count > 0)
+    res += "<b>Count failures to due database connection failure:</b> " +
+      fail_count + "<br />\n";
+
   int entries;
   if ( mixed err = catch {
       entries = counter->size();
@@ -471,14 +478,37 @@ class SQLCounter {
   void add(string file, int count)
   {
     create_entry(file);
-    sql_query("UPDATE &hits; SET hits=hits+"+(count||1)+" WHERE path=%s",
-	      fix_file( file ) );
+    if (catch
+      {
+	sql_query("UPDATE &hits; SET hits=hits+"+(count||1)+" WHERE path=%s",
+		  fix_file( file ) );
+      })
+    {
+      fail_count += count || 1;
+      if (fail_count > fail_count_report_next)
+      {
+	fail_count_report_next = 100 + (5 * fail_count) / 4;
+	werror("ACCESS LOGGING FAILED, FAIL COUNT: %d\n", fail_count);
+      }
+    }
   }
 
   int query(string file)
   {
-    array x=sql_query("SELECT hits FROM &hits; WHERE path=%s",
+    array x;
+    if (catch
+      {
+	x = sql_query("SELECT hits FROM &hits; WHERE path=%s",
 		      fix_file( file ) );
+      })
+    {
+      if (fail_last_report+30 < time())
+      {
+	fail_last_report = time();
+	werror("ACCESS LOG QUERY FAILED.\n");
+      }
+      return 0;
+    }
     return x && sizeof(x) && (int)(x[0]->hits);
   }
 

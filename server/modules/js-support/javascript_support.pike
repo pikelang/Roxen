@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.73 2010/11/02 15:20:09 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 #include <module.h>
 #include <request_trace.h>
@@ -470,8 +470,8 @@ mapping filter(mapping response, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this_object(), "Filtering %O", id->not_query);
 
-  if(!response) {
-    SIMPLE_TRACE_LEAVE ("No response to filter");
+  if(!mappingp (response)) {
+    SIMPLE_TRACE_LEAVE ("No response mapping to filter");
     return 0;
   }
   if (!response->type) {

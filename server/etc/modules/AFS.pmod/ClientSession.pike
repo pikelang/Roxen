@@ -1,4 +1,4 @@
-// $Id: ClientSession.pike,v 1.1 2011/02/16 12:45:48 grubba Exp $
+// $Id$
 
 //!
 //! Represents a client session
@@ -429,6 +429,7 @@ int(0..1) is_subscribed_to(AFS.Types.ClientMessage cmt)
 //! is set up.
 typedef string SubscriptionID;
 
+//! A subscription.
 class Subscription
 (
  //! The ClientMessage type this subscription represents.

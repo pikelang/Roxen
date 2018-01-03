@@ -6,11 +6,14 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.55 2011/04/28 09:16:17 liin Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
+
+//  Cached copy of conf->query("compat_level").
+float compat_level = (float) my_configuration()->query("compat_level");
 
 void create() {
   defvar("insert_href",
@@ -119,7 +122,7 @@ class AsyncHTTPClient {
     if(url->user)
       default_headers->authorization = "Basic "
 	+ MIME.encode_base64(url->user + ":" +
-			     (url->password || ""));
+			     (url->password || ""), 1);
     request_headers = default_headers | request_headers;
     
     query=url->query;
@@ -199,24 +202,22 @@ class AsyncHTTPClient {
     status = con->status;
     queue->read();
   }
+  
+  void destroy()
+  {
+    if(con)
+      destruct(con);
+  }
 
-  void create(string method, mapping args, mapping|void headers) {
+  void create(string method, mapping args,
+	      mapping|void headers, string|mapping|void data)
+  {
     if(method == "POST") {
-      mapping vars = ([ ]);
-      string data;
-#if constant(roxen)
-      data = args["post-data"];
-      foreach( (args["post-variables"] || "") / ",", string var) {
-	array a = var / "=";
-	if(sizeof(a) == 2)
-	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
+      if (mappingp(data)) {
+	do_method(method, args->href, data, headers, 0, UNDEFINED);
+      } else {
+	do_method(method, args->href, UNDEFINED, headers, 0, data);
       }
-      if(data && sizeof(data) && sizeof(vars))
-	RXML.run_error("The 'post-variables' and the 'post-data' arguments "
-		       "are mutually exclusive.");
-#endif
-      do_method("POST", args->href, sizeof(vars) && vars, headers,
-		0, data);
     }
     else
       do_method("GET", args->href, 0, headers);
@@ -242,8 +243,22 @@ class TagInsertHref {
   inherit RXML.Tag;
   constant name = "insert";
   constant plugin_name = "href";
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
 
-  string get_data(string var, mapping args, RequestID id) {
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "method": RXML.t_text(RXML.PEnt),
+    "soap-action": RXML.t_text(RXML.PEnt),
+  ]);
+
+  array do_enter(mapping args, RequestID id, RXML.Frame frame)
+  {
+    if (args["soap-action"]) {
+      frame->flags &= ~RXML.FLAG_EMPTY_ELEMENT;
+    }
+  }
+
+  string get_data(string var, mapping args, RequestID id, RXML.Frame frame)
+  {
     if(!query("insert_href")) RXML.run_error("Insert href is not allowed.\n");
 
     int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
@@ -262,36 +277,56 @@ class TagInsertHref {
     string method = "GET";
     if(args->method && lower_case(args->method) == "post")
       method = "POST";
+    if (args["soap-action"]) method = "POST";
 
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
     mapping(string:string) headers = ([ "X-Roxen-Recursion-Depth":
 					(string)recursion_depth ]);
-    if (args["request-headers"])
-      foreach (args["request-headers"] / ",", string header)
+    if (args["request-headers"]) {
+      string delim = args["header-delimiter"] || ",";
+      foreach (args["request-headers"] / delim, string header)
 	if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
 	  headers[name] = val;
+    }
+
+    string|mapping data;
+    if (method == "POST")
+    {
+      int set;
+      data = args["post-data"];
+      if (data) set++;
+      if(args["soap-action"]) {
+	headers["SOAPACTION"] = args["soap-action"];
+	headers["content-type"] = "text/xml; charset=utf-8";
+	// NB: frame->content has been RXML parsed.
+	data = String.trim_all_whites(string_to_utf8(frame->content));
+	set++;
+      }
+      if (args["post-variables"]) {
+	data = ([]);
+	foreach(args["post-variables"] / ",", string var) {
+	  array a = var / "=";
+	  if(sizeof(a) == 2)
+	    data[String.trim_whites(a[0])] =
+	      RXML.user_get_var(String.trim_whites(a[1]));
+	}
+	set++;
+      }
+      if (set > 1) {
+	RXML.run_error("The 'post-variables', 'post-data' and 'soap-action' "
+		       "attributes are mutually exclusive.");
+      }
+    }
 
 #ifdef THREADS
-    q = AsyncHTTPClient(method, args, headers);
+    q = AsyncHTTPClient(method, args, headers, data);
     q->run();
 #else
-    mixed err;
-    if(method == "POST") {
-      mapping vars = ([ ]);
-      foreach( (args["post-variables"] || "") / ",", string var) {
-	array a = var / "=";
-	if(sizeof(a) == 2)
-	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
-      }
-      err = catch {
-	  q = Protocols.HTTP.post_url(args->href, vars, headers);
-	};
-    }
-    else
-      err = catch {
-	  q = Protocols.HTTP.get_url(args->href, 0, headers);
-	};
+    mixed err = catch {
+	q = Protocols.HTTP.post_url(args->href, data, headers);
+      };
+
     if (err) {
       string msg = describe_error (err);
       if (has_prefix (msg, "Standards.URI:"))
@@ -303,15 +338,30 @@ class TagInsertHref {
     
     if(args["status-variable"] && q && q->status)
       RXML.user_set_var(args["status-variable"],q->status);
-    
+
+    string errmsg;
     if(q && q->status>0 && q->status<400) {
-      return Roxen.low_parse_http_response (q->con->headers, q->data(), 0, 1);
+      mapping headers = q->con->headers;
+      string data = q->data();
+      // Explicitly destruct the connection object to avoid garbage
+      // and CLOSE_WAIT sockets. Reported in [RT 18335].
+      destruct(q);
+
+      if (data) {
+	return Roxen.low_parse_http_response (headers, data, 0, 1,
+					      (int)args["ignore-unknown-ce"]);
+      }
+    } else {
+      errmsg = q && q->status_desc;
     }
 
     _ok = 0;
 
     if(!args->silent)
-      RXML.run_error((q && q->status_desc) || "No server response");
+      RXML.run_error(errmsg || "No server response");
+    // Explicitly destruct the connection object to avoid garbage
+    // and CLOSE_WAIT sockets. Reported in [RT 18335].
+    destruct(q);
     return "";
   }
 }
@@ -666,17 +716,28 @@ class TagSprintf {
 class TagSscanf {
   inherit RXML.Tag;
   constant name = "sscanf";
-  mapping(string:RXML.Type) req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
-					       "format"    : RXML.t_text(RXML.PEnt)
-  ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "return"    : RXML.t_text(RXML.PEnt),
-					       "scope"     : RXML.t_text(RXML.PEnt)
-  ]);
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types =
+    compat_level < 5.2 ? ::result_types : ({RXML.t_nil}); // No result.
+
+  mapping(string:RXML.Type)
+    req_arg_types = ([ "variables" : RXML.t_text(RXML.PEnt),
+		       "format"    : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type)
+    opt_arg_types = ([ "variable"  : RXML.t_text(RXML.PEnt),
+		       "return"    : RXML.t_text(RXML.PEnt),
+		       "scope"     : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
 
     string do_return(RequestID id) {
+      if (string content_var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (content_var)))
+	  parse_error ("Variable %q does not exist.\n", content_var);
+      }
+      
       array(string) vars=args->variables/",";
       vars=map(vars, String.trim_all_whites);
       array(string) vals;
@@ -831,14 +892,8 @@ class TagFormatNumber
   class Frame {
     inherit RXML.Frame;
 
-    string do_return(RequestID req_id) {
-      //constant PERCENT   = 0x01;
-      //constant PER_MILLE = 0x02;
-      constant TRUE      = 0x01;
-      constant FALSE     = 0x00;
-      constant FRAC_PART = 1;
-      constant INT_PART  = 0;
-      
+    string do_return(RequestID req_id)
+    {
       string grp_sep     = ",";
       string dec_sep     = "."; 
       if (args["group-separator"])
@@ -850,147 +905,128 @@ class TagFormatNumber
 	dec_sep = args["decimal-separator"];
       }
 
+      // Get rid of white-space.
+      content = replace(content,
+			({ " ", "\t", "\r", "\n" }),
+			({ "", "", "", "" }));
+
       // Parse the number.
-      array(string) value = ({"", ""});
-      int int_part = 0, frac_part = 0;
-      if (sscanf(content, "%*s%d.%d", int_part, frac_part) == 3)
-      {
-	value[INT_PART]  = (string) int_part;
-	value[FRAC_PART] = (string) frac_part;
-      }
-      else if (sscanf(content, "%*s-.%d", frac_part) == 2)
-      {
-	value[INT_PART]  = "-0";
-	value[FRAC_PART] = (string) frac_part; 
-      }
-      else if (sscanf(content, "%*s.%d", frac_part) == 2)
-      {
-	value[INT_PART]  = "0";
-	value[FRAC_PART] = (string) frac_part;
-      }
-      else if (sscanf(content, "%*s%d", int_part) == 2)
-      {
-	value[INT_PART]  = (string) int_part;
-	value[FRAC_PART] = "";
-      }
-      else
-      {
+      string sgn = "", int_part = "", frac_part = "", rest = "";
+      if (sscanf(content, "%[-+]%[0-9]%s", sgn, int_part, rest) <= 1) {
 	RXML.parse_error("No number to be formatted was given.");
       }
+      sscanf(rest, ".%[0-9]%s", frac_part, rest);
 
+      if (has_prefix(rest, "e") || has_prefix(rest, "E")) {
+	// Exponent notation.
+	int exponent = 0;
+	sscanf(rest[1..], "%d%s", exponent, rest);
+	if (exponent > 0) {
+	  if (exponent < sizeof(frac_part)) {
+	    int_part += frac_part[..exponent-1];
+	    frac_part = frac_part[exponent..];
+	  } else {
+	    exponent -= sizeof(frac_part);
+	    int_part += frac_part + "0" * exponent;
+	    frac_part = "";
+	  }
+	} else if (exponent < 0) {
+	  exponent = -exponent;
+	  if (exponent < sizeof(int_part)) {
+	    int off = sizeof(int_part) - exponent;
+	    frac_part = int_part[off..] + frac_part;
+	    int_part = int_part[..off-1];
+	  } else {
+	    exponent -= sizeof(int_part);
+	    frac_part = "0" * exponent + int_part + frac_part;
+	    int_part = "";
+	  }
+	}
+      }
+
+      if (!(sizeof(sgn/"-") & 1)) sgn = "-";
+      else sgn = "";
+
+      // FIXME: Consider checking whether rest contains junk.
 
       /* We need to break down the pattern, first by ";" and make sure that ";"
-         is not an escaped character. */
-      array(string) temp_pattern = args->pattern / ";";
-      array(string) pattern = ({ "", "" });
-      int is_pos = TRUE;
-      for (int i = 0; i < sizeof(temp_pattern); i++)
-      {
-	pattern[is_pos] += temp_pattern[i];
-	if (sizeof(pattern[is_pos]) > 0 &&
-	    pattern[is_pos][sizeof(pattern[is_pos]) - 1] == "'"[0])
-	{
-	  pattern[is_pos][sizeof(pattern[is_pos]) - 1] = ";"[0];
+       * is not an escaped character.
+       */
+      string pattern = "";
+      int neg_pattern;
+      foreach(args->pattern/";"; int i; string seg) {
+	if (i) {
+	  if (!has_suffix(pattern, "'")) {
+	    if (sgn == "") break;
+	    // Start of negative pattern.
+	    pattern = "";
+	    neg_pattern = 1;
+	  } else {
+	    // Escaped.
+	    pattern = pattern[..sizeof(pattern)-2] + ";";
+	  }
 	}
-	else if (is_pos)
-	{
-	    is_pos = FALSE;
-	}
+	pattern += seg;
       }
 
-      /* Now that we have extracted the patterns for positive and negative 
-         numbers, we can reuse the is_pos flag to reflect which pattern we
-	 should use. */
-      if ((((int)value[INT_PART]) < 0 || value[INT_PART][0..0] == "-") && 
-	  sizeof(pattern[0]) > 0)
-      {
-	is_pos = FALSE;
-	// Trim away the minus sign.
-	sscanf(value[0], "%*[ ]-%s", value[0]) ;
-      }
-      else if (sizeof(pattern[1]) > 0)
-      {
-	is_pos = TRUE;
-      }
-      else
-      {
-	RXML.parse_error("The value was positive but no pattern " +
-			 "for positive values was defined.\n");
-      }
-      
       // Now do the same thing as above to find the fraction delimiter.
-      temp_pattern = pattern[is_pos] / ".";
-      pattern = ({"", ""});
-      int is_frac = FALSE;
-
-      pattern[INT_PART] = temp_pattern[0];
-      if (sizeof(pattern[INT_PART]) > 0 &&
-	  pattern[INT_PART][-1] == "'"[0])
-      {
-	pattern[INT_PART][sizeof(pattern[INT_PART]) - 1] = "."[0];
-      }
-      else
-      {
-	is_frac = TRUE;
-      }
-
-      if (sizeof(temp_pattern) > 1)
-      {
-	for (int i = 1; i < sizeof(temp_pattern); i++)
-	{
-	  pattern[is_frac] += temp_pattern[i];
-	  if (sizeof(pattern[is_frac]) > 0 &&
-	      pattern[is_frac][-1] == "'"[0])
-	  {
-	    pattern[is_frac][-1] = "."[0];
+      string int_pattern = "";
+      string frac_pattern;
+      foreach(pattern/"."; int i; string seg) {
+	if (i) {
+	  if (frac_pattern) {
+	    if (has_suffix(frac_pattern, "'")) {
+	      frac_pattern = frac_pattern[..sizeof(frac_pattern)-2];
+	    }
+	    frac_pattern += "." + seg;
+	  } else if (has_suffix(int_pattern, "'")) {
+	    int_pattern = int_pattern[..sizeof(int_pattern)-2] + "." + seg;
+	  } else {
+	    frac_pattern = seg;
 	  }
-	  else if (!is_frac)
-	  {
-	    is_frac = TRUE;
-	  }
-	  else if (i < (sizeof(temp_pattern) - 1))
-	  {
-	    pattern[is_frac] += ".";
-	  }
+	} else {
+	  int_pattern = seg;
 	}
       }
+      if (!frac_pattern) frac_pattern = "";
 
       // Handle percent and per-mille
       int log_ten = 0;
-      if (search(pattern[FRAC_PART], "%") >= 0 ||
-	  search(pattern[INT_PART], "%") >= 0)
+      if (has_value(pattern, "%"))
       {
 	log_ten = 2;
       }
-      else if (search(pattern[FRAC_PART], "\x2030") >= 0 ||
-	       search(pattern[INT_PART], "\x2030") >= 0)
+      else if (has_value(pattern, "\x2030"))
       {
 	log_ten = 3;
       }
 
       for (int i = log_ten; i > 0; i--)
       {
-	if (strlen(value[FRAC_PART]) > 0)
+	if (frac_part != "")
 	{
-	  value[INT_PART] += value[FRAC_PART][0..0];
-	  value[FRAC_PART] = value[FRAC_PART][1..];
+	  int_part += frac_part[0..0];
+	  frac_part = frac_part[1..];
 	}
         else 
 	{
-	  value[INT_PART] += "0";
+	  int_part += "0";
 	}
       }
 
       // Trim away leading zeros
-      value[INT_PART] = (string)(int)value[INT_PART][0..];
+      sscanf(int_part, "%*[0]%s", int_part);
+      if (int_part == "") int_part = "0";
+
+      // Keep track of any digits in case we truncate/round to zero.
+      int digit_bits = 0;
 
       // Start with the fractional part.
-      int val_length     = strlen(value[FRAC_PART]);
-      int ptn_length     = strlen(pattern[FRAC_PART]);
+      int val_length     = strlen(frac_part);
+      int ptn_length     = strlen(frac_pattern);
       int vi             = 0;
       string frac_result = "";
-      
-      foreach(pattern[FRAC_PART]/1, string s)
+      foreach(frac_pattern/1, string s)
       {
 	switch(s)
 	{
@@ -999,14 +1035,16 @@ class TagFormatNumber
 	  case "#":
 	    if (vi < val_length)
 	    {
-	      frac_result += value[FRAC_PART][vi..vi];
+	      digit_bits |= frac_part[vi];
+	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    }
 	    break;
 	  case "0":
 	    if (vi < val_length)
 	    {
-	      frac_result += value[FRAC_PART][vi..vi];
+	      digit_bits |= frac_part[vi];
+	      frac_result += frac_part[vi..vi];
 	      vi++;
 	    } 
 	    else
@@ -1020,29 +1058,36 @@ class TagFormatNumber
       }
 
       // Round the last digit.    
-      if (vi < val_length &&
-	  ((int)value[FRAC_PART][vi..vi] > 5 ||
-	  ((int)value[FRAC_PART][vi..vi] == 5 && is_pos)))
+      if (vi < val_length && (frac_part[vi] > '5' ||
+			      (frac_part[vi] == '5' && (sgn == ""))))
       {
-	if (strlen(frac_result) == 0)
-	{
-	  value[INT_PART] = (string)(((int)value[INT_PART]) + 1);  
+	digit_bits = 0;
+	vi = sizeof(frac_result);
+	while(vi > 0) {
+	  if (frac_result[vi-1] == '9') {
+	    // Carry.
+	    vi--;
+	    frac_result[vi] = '0';
+	    continue;
+	  }
+	  frac_result[vi-1] += 1;
+	  digit_bits |= frac_part[vi-1];
+	  break;
 	}
-	else
+	if (!vi)
 	{
-	  frac_result[-1] = frac_result[-1] + 1;  
+	  int_part = (string)(((int)int_part) + 1);
 	}
       }
       
       // Now for the integral part. We traverse it in reverse.
-      val_length        = strlen(value[INT_PART]);
-      ptn_length        = strlen(pattern[INT_PART]);
+      val_length        = strlen(int_part);
+      ptn_length        = strlen(int_pattern);
       vi                = 0;
       int num_wid       = 0; 
-      string rev_val    = reverse(value[INT_PART]);
+      string rev_val    = reverse(int_part);
       string int_result = "";
-      string minus_sign = "";
-      foreach(reverse(pattern[INT_PART])/1, string s)
+      foreach(reverse(int_pattern)/1, string s)
       {
 	switch(s)
 	{
@@ -1051,6 +1096,7 @@ class TagFormatNumber
 	  case "#":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= rev_val[vi];
 	      int_result += rev_val[vi..vi];
 	      vi++;
 	    }
@@ -1062,6 +1108,7 @@ class TagFormatNumber
 	  case "0":
 	    if (vi < val_length)
 	    {
+	      digit_bits |= rev_val[vi];
 	      int_result += rev_val[vi..vi];
 	      vi++;
 	    } 
@@ -1084,16 +1131,6 @@ class TagFormatNumber
 	      int_result += grp_sep;
 	    }
 	    break;
-	  case "-":
-	    if (is_pos)
-	    {
-	      int_result += s;
-	    }
-	    else if (minus_sign = "")
-	    {
-	      minus_sign = "-";
-	    }
-	    break;
 	  case "%":
 	  case "\x2030":
 	    frac_result = s;
@@ -1103,7 +1140,7 @@ class TagFormatNumber
 	}
       }
       for (;vi < val_length;vi++)
-	{
+      {
 	  if (num_wid > 0 && vi%num_wid == 0)
 	  {
 	    int_result += grp_sep;
@@ -1111,18 +1148,44 @@ class TagFormatNumber
 	  int_result += rev_val[vi..vi];
       }
 
+      // Insert the sign.
+      if ((sgn == "-") && !(digit_bits & 0x0f)) {
+	// Negative zero.
+	sgn = "";
+      }
+      foreach(int_result/1; int i; string s) {
+	if (s == "-") {
+	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
+	} else if (s == "+") {
+	  if (sgn == "") {
+	    sgn = "+";
+	  }
+	  int_result = int_result[..i-1] + sgn + int_result[i+1..];
+	} else
+	  continue;
+	sgn = "";
+	break;
+      }
+      if ((sgn != "") && !neg_pattern) {
+	// No sign in generic pattern.
+	if (has_suffix(int_result, "0")) {
+	  int_result = int_result[..sizeof(int_result)-2];
+	}
+	int_result += sgn;
+      }
+
       if (strlen(frac_result) == 0)
       {
-	result += minus_sign + reverse(int_result);
+	result += reverse(int_result);
       }
       else if (frac_result[0..0] == "%" ||
 	       frac_result[0..0] == "\x2030")
       {
-	result += minus_sign + reverse(int_result) + frac_result[0..0];
+	result += reverse(int_result) + frac_result[0..0];
       }
       else 
       {
-	result += minus_sign + reverse(int_result) + dec_sep + frac_result;
+	result += reverse(int_result) + dec_sep + frac_result;
       }
     }
   } 
@@ -1187,7 +1250,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='post-variables' value='\"variable=rxml variable[,variable2=rxml variable2,...]\"'><p>
- Comma separated list of variables to send in a POST request.</p>
+ Comma-separated list of variables to send in a POST request.</p>
 <ex-box>
 <insert href='http://www.somesite.com/news/' 
          method='POST' post-variables='action=var.action,data=form.data' />
@@ -1203,7 +1266,19 @@ constant tagdoc=([
 </attr>
 
 <attr name='request-headers' value='\"header=value[,header2=value2,...]\"'><p>
- Comma separated list of extra headers to send in the request.</p>
+ List of extra headers to send in the request. Headers are separated by comma by default, but the delimiter can be changed using the 'header-delimiter' attribute.</p>
+</attr>
+
+<attr name='header-delimiter' value='string'><p>
+ Delimiter to use with 'request-headers', defaults to comma (\",\").</p>
+</attr>
+
+<attr name='ignore-unknown-ce' value='int'><p>
+  If set, unknown Content-Encoding headers in the response will be ignored. Some
+servers specify the character set (e.g. 'UTF-8') in the Content-Encoding header
+in addition to the Content-Type header. (The real purpose of the 
+Content-Encoding header is described here: 
+http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)</p>
 </attr>
 ",
 
@@ -1287,13 +1362,19 @@ constant tagdoc=([
  description.</p>
 </desc>
 
+<attr name='variable'><p>
+Name of the variable holding the input data. If not provided the tag oeprates
+on the contents of the <tag>sscanf</tag> element.
+</p>
+</attr>
+
 <attr name='format' value='pattern' required='required'><p>
 The sscanf pattern.
 </p>
 </attr>
 
 <attr name='variables' value='list' required='required'><p>
- A comma separated list with the name of the variables that should be set.</p>
+ A comma-separated list with the name of the variables that should be set.</p>
 <ex>
 <sscanf variables='form.year,var.month,var.day'
 format='%4d%2d%2d'>19771003</sscanf>

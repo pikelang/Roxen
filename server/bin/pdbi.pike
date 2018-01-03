@@ -1,6 +1,6 @@
 #!/usr/local/bin/pike
 /*
- * $Id: pdbi.pike,v 1.4 1999/06/21 03:14:41 peter Exp $
+ * $Id$
  *
  * name = "PDB Inspector";
  * doc = "This is a tool to inspect PDB databases.";

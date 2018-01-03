@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.67 2010/04/22 09:55:48 grubba Exp $
+# $Id$
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to
@@ -10,7 +10,7 @@
 #
 # Last synchronized with IANA media types list: 2000-09-20
 
-# Some mime-types from RFC 3023 have been added.
+# Some mime-types from RFC 3023 and RFC 3236 have been added.
 
 # -------------------- Audio ---------------------
 
@@ -49,14 +49,17 @@ gsm	audio/gsm
 la      audio/x-nspaudio
 lma     audio/x-nspaudio
 m3u	audio/x-mpegurl
+m4a	audio/mp4
 mid	audio/midi
 midi	audio/midi
 mod	audio/x-mod
 mp2	audio/mpeg
 mp3	audio/mpeg
 mp3url	audio/x-mpegurl
+mp4	audio/mp4
 ##mpa	audio/mpeg
 mpega	audio/mpeg
+ogg	audio/ogg
 pls	audio/x-mpegurl
 psid	audio/x-psid
 ra	audio/x-pn-realaudio
@@ -313,6 +316,7 @@ hqx	application/mac-binhex40
 # application/news-transmission
 wpd	application/wordperfect5.1
 wp6	application/wordperfect5.1
+xhtml	application/xhtml+xml
 pdf	application/pdf
 zip	application/zip
 # application/macwriteii

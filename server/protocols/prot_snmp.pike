@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.20 2011/02/18 15:35:34 wellhard Exp $
+ * $Id$
  *
  * SNMP protocol support.
  *
@@ -82,7 +82,7 @@ class SNMP_Port {
       }
     }; 
     //# error ...
-    udp_errno = errno();
+    udp_errno = ::errno();
     DWRITE("protocol.create: can't bind to the socket.\n");
   }
 
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.20 $"/" ")[1],
+			   ("$Revision: 2.21 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -959,15 +959,14 @@ protected void bind(void|int ignore_eaddrinuse)
     error("Invalid address " + ip);
   }
 #endif /* System.EAFNOSUPPORT */
-#if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
-  if (
 #if constant(System.EADDRINUSE)
-      (port_obj->errno() == System.EADDRINUSE)
-#else /* !constant(System.EADDRINUSE) */
-      (port_obj->errno() == system.EADDRINUSE)
-#endif /* constant(System.EADDRINUSE) */
-      ) {
-    if (!ignore_eaddrinuse && (retries++ < 10)) {
+  if (port_obj->errno() == System.EADDRINUSE) {
+    if (ignore_eaddrinuse) {
+      // Told to ignore the bind problem.
+      bound = -1;
+      return;
+    }
+    if (retries++ < 10) {
       // We may get spurious failures on rebinding ports on some OS'es
       // (eg Linux, WIN32). See [bug 3031].
       report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
@@ -978,7 +977,7 @@ protected void bind(void|int ignore_eaddrinuse)
     }
   }
   else
-#endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+#endif /* constant(System.EADDRINUSE) */
   {
     report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
 		 get_url(), strerror(port_obj->errno()));

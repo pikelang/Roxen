@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.17 2009/06/25 16:03:26 mathias Exp $";
+constant cvs_string = "$Id$";
 
 import RoxenPatch;
 
@@ -34,6 +34,7 @@ int main(int argc, array(string) argv)
                                                 "--nocolor", "--nocolour" }) }),
     ({ "recursive",       Getopt.NO_ARG,       ({ "-r", "--recursive"     }) }),
     ({ "silent",	  Getopt.NO_ARG,       ({ "-s", "--silent"        }) }),
+    ({ "http",	          Getopt.NO_ARG,       ({ "-e", "--http"          }) }),
     ({ "help",	    	  Getopt.NO_ARG,       ({ "-h", "--help"	  }) }),
   });
 
@@ -53,6 +54,7 @@ int main(int argc, array(string) argv)
   int(0..1) recursive	= 0;
   int(0..1) silent      = 0;
 
+  int rxp_minor = 0;
 
   // If we have the command 'help' normal rules don't apply.
   int h = search(argv, "help");
@@ -155,7 +157,7 @@ int main(int argc, array(string) argv)
     write_err = lambda(string s) { werror(wash_output(s)); };
   }
 
-  // Again treat "help" differently. We don't want to insantiate the Patcher
+  // Again treat "help" differently. We don't want to instantiate the Patcher
   // class if we're only going to show help
   if (sizeof(cmd_n_files) < 2)
   {
@@ -207,9 +209,10 @@ int main(int argc, array(string) argv)
   // Handle the different commands.
   if (cmd_n_files[1] == "create")
   {
-    PatchObject ptc_obj = ([ ]);
+    PatchObject ptc_obj = PatchObject();
     string target_dir;
-    int(0..1) metadata, cfcl;
+    int(0..1) metadata, cfcl, any_platform;
+    string current_platform = UNDEFINED;
     foreach(switches, array argument)
     {
       switch (argument[0])
@@ -318,10 +321,14 @@ int main(int argc, array(string) argv)
 	  break;
 	case "platform":
 	  array platform = plib->parse_platform(argument[1]);
-	  if (platform && sizeof(platform))
+	  if (platform && sizeof(platform)) {
+	    current_platform = platform[0];
 	    ptc_obj->platform += platform;
-	  else
-	  {
+	  } else if ((argument[1] == "") ||
+		     (lower_case(argument[1]) == "all")) {
+	    current_platform = UNDEFINED;
+	    any_platform = 1;
+	  } else {
 	    plib->write_err("Unkown platform: %s. Quitting.\n", argument[1]);
 	    return 0;
 	  }
@@ -346,7 +353,12 @@ int main(int argc, array(string) argv)
 	    write_mess("Reading patch data from stdin...");
 	    stdin = 1;
 	    string s = Stdio.stdin->read();
-	    ptc_obj->udiff = s;
+	    ptc_obj->udiff += ({ ([ "patch": s ]) });
+	    if (current_platform) {
+	      ptc_obj->udiff[-1]->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    write_mess("Done!\n");
 	  }
 	  else if (argument[1] == 1)
@@ -358,34 +370,64 @@ int main(int argc, array(string) argv)
 	  else
 	  // Assume file name.
 	  {
-	    ptc_obj->patch += ({ argument[1] });
+	    if (current_platform) {
+	      ptc_obj->patch += ({ ([ "platform":current_platform,
+				      "source": argument[1] ]) });
+	    } else {
+	      ptc_obj->patch += ({ ([ "source": argument[1] ]) });
+	      any_platform = 1;
+	    }
 	  }
 	  break;
 	case "new_file":
 	  array new_file = plib->parse_src_dest_path(argument[1]);
-	  if (new_file && sizeof(new_file))
+	  if (new_file && sizeof(new_file)) {
+	    if (current_platform) {
+	      new_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->new += new_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "replace_file":
 	  array replace_file = plib->parse_src_dest_path(argument[1]); 
-	  if (replace_file && sizeof(replace_file))
+	  if (replace_file && sizeof(replace_file)) {
+	    if (current_platform) {
+	      replace_file->platform = current_platform;
+	    } else {
+	      any_platform = 1;
+	    }
 	    ptc_obj->replace += replace_file;
-	  else
+	  } else
 	    return 0;
 	  break;
 	case "delete_file":
-	  ptc_obj->delete += ({ argument[1] });
+	  if (current_platform) {
+	    ptc_obj->delete += ({ ([ "platform": current_platform,
+				     "destination": argument[1] ]) });
+	  } else {
+	    ptc_obj->delete += ({ ([ "destination": argument[1] ]) });
+	    any_platform = 1;
+	  }
 	  break;
 	case "depends_on":
-	  if (plib->verify_patch_id(argument[1]))
-	    ptc_obj->depends += ({ argument[1] });
-	  else
-	  {
-	    write_err(err_patch_id);
-	    return 0;
+	  array(string) alternatives = argument[1]/"|";
+	  if (sizeof(alternatives) > 1) {
+	    rxp_minor = 1;
 	  }
+	  foreach(alternatives, string dep_id) {
+	    if (!plib->verify_patch_id(dep_id, rxp_minor)) {
+	      if (!rxp_minor && plib->verify_patch_id(dep_id, 1)) {
+		rxp_minor = 1;
+	      } else {
+		write_err(err_patch_id);
+		return 0;
+	      }
+	    }
+	  }
+	  ptc_obj->depends += ({ argument[1] });
 	  break;
 	case "flags":
 	  ptc_obj->flags += (< argument[1] >);
@@ -401,8 +443,11 @@ int main(int argc, array(string) argv)
       }
     }
 
-    ptc_obj->rxp_version = rxp_version;
+    ptc_obj->rxp_version = rxp_minor?"1.1":"1.0";
     ptc_obj->originator = current_user;
+    if (any_platform) {
+      ptc_obj->platform = UNDEFINED;
+    }
 
     // If we don't have an id then create one.
     if(!ptc_obj->id)
@@ -418,7 +463,14 @@ int main(int argc, array(string) argv)
   }
   
   if (cmd_n_files[1] == "import")
-  {
+  {  
+    foreach(switches, array argument) {
+      if (argument[0] == "http") {
+	plib->import_file_http();
+	return 0;
+      }
+    }
+
     if(sizeof(cmd_n_files) < 3)
     // Assume we're going to read from stdin.
     // This is not implemented so we'll write out a help message instead.
@@ -426,7 +478,7 @@ int main(int argc, array(string) argv)
       display_help(write_mess, "import");
       return 0;
     }
-    
+
     array list = ({ });
 
     // Check if the argument contains globs and sort out unwanted arguments.
@@ -441,14 +493,10 @@ int main(int argc, array(string) argv)
 
     // Sort the list with the oldest first.
     list = Array.sort_array(list);
-    foreach(list, string file)
-    {
-      string id = plib->import_file(file, dryrun);
-      if(id)
-	plib->write_mess("%s is successfully imported!\n", id);
-      else
-	plib->write_err("Couldn't import %s.\n", file);
+    foreach(list, string file) {
+      plib->import_file(file);
     }
+
     return 0;
   }
 
@@ -472,7 +520,7 @@ int main(int argc, array(string) argv)
       // files that has that glob.
       if (cmd_n_files[i] == "*")
       {
-	foreach(plib->file_list_imported(), PatchObject po)
+	foreach(plib->file_list_imported(), mapping(string:PatchObject) po)
 	{
 	  ins_list += ({ po->metadata->id });
 	}
@@ -500,11 +548,11 @@ int main(int argc, array(string) argv)
     imp_list = Array.sort_array(imp_list);
     foreach(imp_list, string file)
     {
-      string id = plib->import_file(file);
-      if(id)
-	ins_list += ({ id });
-      else
-	plib->write_err("Couldn't install %s.\n", file);
+      array(int|string) patch_ids = plib->import_file(file);
+      foreach(patch_ids, int|string patch_id) {	
+	if (patch_id && patch_id != -1) 
+	  ins_list += ({ patch_id });
+      }
     }
   
     // Install everything.
@@ -597,10 +645,36 @@ int main(int argc, array(string) argv)
 	  break;
       }
     }
-    if (imp || !ins)
-      write_list(plib, "imported", 1, color);
-    if (ins || !imp)
-      write_list(plib, "installed", 1, color);
+    if ((sizeof(cmd_n_files) == 2) && !imp && !ins) {
+      imp = ins = 1;
+    }
+    if (imp)
+      write_list(plib, plib->file_list_imported(),
+		 "List of imported patches", 1, color);
+    if (ins)
+      write_list(plib, plib->file_list_installed(),
+		 "list of installed patches", 1, color);
+    if (sizeof(cmd_n_files) > 2) {
+      array(mapping) patch_files =
+	map(cmd_n_files[2..],
+	    lambda(string path) {
+	      string id = plib->extract_id_from_filename(path);
+	      if (id) {
+		mapping res = plib->describe_installed_patch(id) ||
+		  plib->describe_imported_patch(id);
+		if (res) return res;
+	      }
+	      return ([
+		"status": "Not imported",
+		"installed": 0,
+		"user": 0,
+		"metadata":
+		plib->extract_patch(path, "/tmp/rxnpatch-" + getpid(), 1),
+	      ]);
+	    });
+      write_list(plib, patch_files,
+		 "list of patch files", 1, color);
+    }
     return 0;
   }
 
@@ -644,20 +718,45 @@ int main(int argc, array(string) argv)
       return 0;
     }
 
+    array(mapping) list = ({});
     foreach(cmd_n_files[2..], string id)
     {
-      if (plib->verify_patch_id(id))
-	write_list(plib, id);
+      if (plib->verify_patch_id(id)) {
+	mapping m = plib->patch_status(id);
+	list += ({ m });
+      } else {
+	string rxp_path = id;
+	if (!(id = plib->extract_id_from_filename(basename(rxp_path))) ||
+	    !Stdio.is_file(rxp_path)) {
+	  werror("\n%s is not a valid rxp filename.\n\n", rxp_path);
+	  continue;
+	}
+	string mdblock =
+	  Filesystem.Tar(rxp_path, UNDEFINED,
+			 Gz.File(Stdio.File(rxp_path, "rb"), "rb"))->
+	  open(id + "/metadata", "r")->read();
+	PatchObject po = plib->parse_metadata(mdblock, id);
+	list += ({
+	  ([
+	    "status": "Not imported",
+	    "metadata": po,
+	  ])
+	});
+      }
     }
+    write_list(plib, list, UNDEFINED, UNDEFINED, color);
     return 0;
   }
 
   if (cmd_n_files[1] == "version")
   {
     sscanf(cvs_string, "$""Id: %s""$", string cvs_version);
-    write("CVS Version ... %s\nRXP Version ... %s\n",
+    write("CVS Version ... %s\n"
+	  "RXP Version ... %s\n"
+	  "RXP File Format Version ... %s\n",
 	  cvs_version || "n/a",
-	  plib->current_version());
+	  plib->current_version(),
+	  rxp_version);
 	  
     return 0;
   }
@@ -676,57 +775,138 @@ private string combine_and_check_path(string path)
   return combined;
 }
 
+array(array(string)) describe_metadata(Patcher po,
+				       array(mapping(string:string)) md,
+				       string singular, string plural,
+				       void|int(0..1) color,
+				       string|void patch_path)
+{
+  if (!md || !sizeof(md)) return ({});
+
+  mapping(string:multiset(string)) files = ([]);
+  foreach(md, mapping(string:string|array(string)) item) {
+    array(string) file_list = ({});
+    if (item->destination) {
+      file_list = ({ item->destination });
+    } else if (item->file_list) {
+      file_list = item->file_list;
+    } else if (item->source) {
+      file_list = po->lsdiff(Stdio.read_file(combine_path(patch_path,
+							  item->source)));
+    }
+    foreach(file_list, string file) {
+      if (!files[file]) files[file] = (<>);
+      files[file][item->platform] = 1;
+    }
+  }
+
+  string res = "";
+  foreach(sort(indices(files)), string file) {
+    multiset(string) platforms = files[file];
+    array(string) post = ({});
+    if (!platforms[0] && !platforms[po->server_platform]) {
+      res += "(" + file + ")";
+    } else {
+      res += file;
+    }
+    if ((sizeof(platforms) > 1) || !platforms[0]) {
+      res += " [";
+      if (platforms[0]) {
+	if (color) {
+	  res += "\e[1mALL\e[0m";
+	} else {
+	  res += "ALL";
+	}
+      }
+      foreach(sort(indices(platforms)); int i; string platform) {
+	if (!platform) continue;
+	if (i || !platforms[0]) {
+	  res += ", ";
+	}
+	if (platform == po->server_platform) {
+	  if (color) {
+	    res += "\e[1m" + platform + "\e[0m";
+	  } else {
+	    res += platform;
+	  }
+	} else {
+	  res += platform;
+	}
+      }
+      res += "]";
+    }
+    res += "\n";
+  }
+  if (sizeof(files) == 1) return ({ ({ singular, res }) });
+  return ({ ({ plural, res }) });
+}
+
+protected string format_description(string desc)
+{
+  if (!has_value(desc, "\n")) return desc;
+
+  // plain-text formatted description.
+  //
+  // Split into paragraphs, and format them to a max line length of 60.
+
+  // Normalize empty lines.
+  desc = map(desc/"\n",
+	     lambda(string line) {
+	       if (String.trim_all_whites(line) == "") return "";
+	       return line;
+	     }) * "\n";
+
+  String.Buffer buf = String.Buffer();
+  foreach(desc/"\n\n", string paragraph) {
+    if (String.trim_all_whites(paragraph) == "") continue;
+    string indent = "";
+    string bullet = "";
+    sscanf(paragraph, "%[ ]%[-*o+ ]%s", indent, bullet, paragraph);
+    if (sizeof(bullet) && has_suffix(bullet, " ")) {
+      // Looks like we have a bullet.
+      indent += bullet;
+    } else {
+      // Not a bullet. Restore the prefix.
+      paragraph = bullet + paragraph;
+    }
+
+    paragraph = map(paragraph/"\n", String.trim_all_whites) * " ";
+    buf->add(sprintf("%/*s%-=*s\n\n",
+		     sizeof(indent), indent, 59 - sizeof(indent), paragraph));
+  }
+  return buf->get();
+}
+
 private void write_list(Patcher plib,
-			string  list_name,
+			array(mapping) list,
+			string|void list_heading,
 			void|int(0..1) extended_info,
 			void|int(0..1) color)
 {
+  string color_h1 = "";
+  string color_th = "";
+  string color_tr = "";
+  string color_end = "";
+  string color_bold_hr = "="*79 + "\n";
+  string color_hr = "-"*79 + "\n";
 
-  array(mapping) list;
+  if (color) {
+    color_h1 = "\e[1;30;43m";
+    color_th = "\e[1;37;40m";
+    color_tr = "\e[1m";
+    color_end = "\e[0m";
+    color_bold_hr = "";
+    color_hr = "";
+  }
 
-  if (list_name == "installed")
-  {
-    list = plib->file_list_installed();
-    if (color)
-    {
-      write("\n\n\e[1;30;43m %|80s\e[0m\n", "List of installed patches");
-      write("\e[1;37;40m %|15s %|64s\e[0m\n", "ID", "NAME");
-    }
-    else if (list_name == "installed")
-    {
-      write("\n\nList of installed patches:\n\n");
-      write(" %|15s %|64s\n%s\n", "ID", "NAME", "=" * 80);
-    }
+  if (list_heading) {
+    write("\n\n%s %|78s%s\n",
+	  color_h1, list_heading, color_end);
   }
-  else if (list_name == "imported")
-  {
-    list = plib->file_list_imported();
-    if (color)
-    {
-      write("\n\n\e[1;30;43m %|80s\e[0m\n", "List of imported patches");
-      write("\e[1;37;40m %|15s %|64s\e[0m\n", "ID", "NAME");
-    }
-    else
-    {
-      write("\n\nList of imported patches:\n\n");
-      write(" %|15s %|64s\n%s\n", "ID", "NAME", "=" * 80);
-    }
-  }
-  else if (plib->verify_patch_id(list_name))
-  {
-    list = ({ plib->patch_status(list_name) });
-
-    // Check: is status "unknown"?
-    if (list[0]->status == "unknown")
-    {
-      write("%-15s\n%s\n%/15s %-=64s\n%s\n",
-	    list_name,
-	    "-" * 80,
-	    "Status:", "unknown",
-	    "=" * 80);
-      return;
-    }	     
-  }
+  write("%s %|16s %-61s%s\n"
+	"%s",
+	color_th, "ID", "NAME", color_end,
+	color_bold_hr);
 
   if (sizeof(list))
   {
@@ -737,24 +917,25 @@ private void write_list(Patcher plib,
 			    );
     foreach(list, mapping obj)
     {
-      if (color)
-	write("\e[1m%-15s %-64s\e[0m\n", 
-	      obj->metadata->id, 
-	      obj->metadata->name);
-      else
-	write("%-15s %-64s\n%s\n", 
-	      obj->metadata->id, 
-	      obj->metadata->name, "-" * 80);
+      write("%s%-17s %-60s%s\n"
+	    "%s",
+	    color_tr, obj->metadata->id, obj->metadata->name || "", color_end,
+	    color_hr);
       if(extended_info || obj->status)
       {
 	array md = ({ });
-	if (obj->status)
+	if (obj->status) {
 	  md += ({ ({ "Status:"	, obj->status }) });
+	  if (obj->status == "unknown") {
+	    write("%s\n", color_bold_hr);
+	    continue;
+	  }
+	}
 	if (obj->installed)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
+				(obj->installed->year < 1900) ?
+				obj->installed->year + 1900 :
 				obj->installed->year,
 				obj->installed->mon,
 				obj->installed->mday,
@@ -765,105 +946,56 @@ private void write_list(Patcher plib,
 	    ({ "Installed by:"	, obj->user || "Unknown" }),
 	  });
 	}
-	else if (list_name == "installed")
-	{
-	  md += ({
-	    ({ "Installed:"	, "Information not available." }),
-	    ({ "Installed by:"	, obj->user || "Unknown" }),
-	  });
-	}
 
 	if (obj->uninstalled)
 	{
 	  string date = sprintf("%4d-%02d-%02d %02d:%02d",
-				(obj->year < 1900) ? 
-				obj->installed->year + 1900 : 
-				obj->installed->year,
-				obj->installed->mon,
-				obj->installed->mday,
-				obj->installed->hour,
-				obj->installed->min);
+				(obj->uninstalled->year < 1900) ?
+				obj->uninstalled->year + 1900 :
+				obj->uninstalled->year,
+				obj->uninstalled->mon,
+				obj->uninstalled->mday,
+				obj->uninstalled->hour,
+				obj->uninstalled->min);
 	  md += ({
 	    ({ "Uninstalled:"	 , date }),
 	    ({ "Uninstalled by:" , obj->uninstall_user || "Unknown" }),
 	  });
 	}
 
-	md += ({	  
-	  ({ "Description:"    , obj->metadata->description }),
+	md += ({
+	  ({ "Description:"    ,
+	     format_description(obj->metadata->description)
+	  }),
 	  ({ "Originator:"     , obj->metadata->originator  }),
-	  ({ "Platform(s):"    , (obj->metadata->platform) ? 
+	  ({ "RXP Version:"    , obj->metadata->rxp_version }),
+	  ({ "Platform(s):"    , sizeof(obj->metadata->platform || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->platform) :
 	                         "All platforms" }),
-	  ({ "Target version:" , (obj->metadata->version) ? 
+	  ({ "Target version:" , sizeof(obj->metadata->version || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->version) :
 	                         "All versions" }),
-	  ({ "Dependencies:"   , (obj->metadata->depends) ? 
+	  ({ "Dependencies:"   , sizeof(obj->metadata->depends || ({})) ?
 	                         sprintf("%{%s\n%}", obj->metadata->depends) :
 	                         "(none)"
 	  }),
 	});
 
-	if (obj->metadata->new && sizeof(obj->metadata->new) == 1)
-	  md += ({ 
-	    ({ "New file:", sprintf("%s", 
-				    obj->metadata->new[0]->destination) }) 
-	  });
-	else if (obj->metadata->new)
-	  md += ({ 
-	    ({ "New files:", sprintf("%{%s\n%}", 
-				     obj->metadata->new->destination) })
-	  });
-	
-	if (obj->metadata->replace && sizeof(obj->metadata->replace) == 1)
-	{
-	  md += ({ 
-	    ({ "Replaced file:",  
-	       sprintf("%s", obj->metadata->replace[0]->destination) })
-	  });
-	}
-	else if (obj->metadata->replace)
-	  md += ({ 
-	    ({ "Replaced files:", 
-	       sprintf("%{%s\n%}", obj->metadata->replace->destination) })
-	  });
-	
-	if (obj->delete && sizeof(obj->metadata->delete) == 1)
-	  md += ({ 
-	    ({ "Deleted file:", 
-	       sprintf("%s", obj->metadata->delete[0]) })
-	  });
-	else if (obj->metadata->delete)
-	  md += ({
-	    ({ "Deleted files:", 
-	       sprintf("%{%s\n%}", obj->metadata->delete) })
-	  });
-	
-	if (obj->metadata->patch)
-	{
-	  string patch_data = "";
-	  string patch_path = plib->id_to_filepath(obj->metadata->id);
-	  foreach(obj->metadata->patch, string patch_file)
-	  {
-	    patch_data += Stdio.read_file(combine_path(patch_path,
-						       patch_file));
-	  }
-	  
-	  array(string) patched_files_list = plib->lsdiff(patch_data);
-	  if (sizeof(patched_files_list) == 1)
-	    md += ({
-	      ({ "Patched file:",
-		 sprintf("%s\n", patched_files_list[0]) })
-	    });
-	  else
-	    md += ({
-	      ({ "Patched files:",
-		 sprintf("%{%s\n%}", patched_files_list) })
-	    });
+	if (obj->status != "Not imported") {
+	  md += describe_metadata(plib, obj->metadata->new,
+				  "New file:", "New files:", color);
+	  md += describe_metadata(plib, obj->metadata->replace,
+				  "Replaced file:", "Replaced files:", color);
+	  md += describe_metadata(plib, obj->metadata->delete,
+				  "Deleted file:", "Deleted files:", color);
+
+	  md += describe_metadata(plib, obj->metadata->patch,
+				  "Patched file:", "Patched files:", color,
+				  plib->id_to_filepath(obj->metadata->id));
 	}
 	
 	string active_flags = "";
-	string yes = (color) ? "\e[1mYes\e[0m" : "YES";
+	string yes = (color) ? (color_tr + "Yes" + color_end) : "YES";
 	foreach(known_flags; string index; string long_reading)
 	{
 	  active_flags += sprintf("%-40s %3s\n",
@@ -876,12 +1008,9 @@ private void write_list(Patcher plib,
 
 	foreach(md, array mdfield)
 	{
-	  write("%/15s %-=64s\n", mdfield[0], mdfield[1]);
+	  write("%/17s %-=60s\n", mdfield[0], mdfield[1]);
 	}
-	if (color)
-	  write("\n");
-	else
-	  write("=" * 80 + "\n");
+	write("%s\n", color_bold_hr);
       }
     }
   }
@@ -916,7 +1045,7 @@ private string launch_external_editor(Patcher aux)
 
   // Start the process.
   array args = ({ editor, tempfile });
-  Process.create_process p = Process.create_process(args);
+  Process.Process p = Process.Process(args);
 
   if (p->wait())
      return 0;
@@ -1076,7 +1205,7 @@ constant help_flags = ([
 			"<b>--version=</b><u>VERSION</u>..." }),
 	  "hlptxt" : ({ "Specifies which versions the patch should work on.",
 			"If omitted it is presumed that the patch is intended",
-			"for all platforms. May not be used in combination with",
+			"for all versions. May not be used in combination with",
 			"<b>-m</b>" }),
 	  "scope"  : ({ "create" }) ]),
   "p": ([ "syntax" : ({ "<b>-p</b>[<u>FILE</u>]...",
@@ -1130,7 +1259,18 @@ constant help_flags = ([
   "d": ([ "syntax" : ({ "<b>-d</b> <u>ID</u>...",
 			"<b>--depends=</b><u>ID</u>..." }),
 	  "hlptxt" : ({ "<u>ID</u> is the id of a patch which is required to be",
-			"installed in order for this patch to be installed." }),
+			"installed in order for this patch to be installed.",
+			"",
+			"It may also be a submodule with version, ",
+			"eg \"sitebuilder/5.2.200\", in which case that ",
+			"specific version of the submodule will be required.",
+			"",
+			"Multiple alternative <u>ID</u>'s may be listed ",
+			"separated with \"|\" (vertical bar).",
+			"",
+			"Specifying either of the latter syntaxen ",
+			"will force the version of the resulting ",
+			"RXP-file to be at least 1.1." }),
 	  "scope"  : ({ "create" }) ]),
   "F": ([ "syntax" : ({ "<b>-F</b> <u>FLAG</u>",
 			"<b>--flag=</b><u>FLAG</u>" }),
@@ -1184,6 +1324,13 @@ constant help_flags = ([
 			" messages will be", 
 			"displayed if this flag is set." }),
 	  "scope"  : ({ "global" }) ]),
+  "e": ([ "syntax" : ({ "<b>-e</b>",
+			"<b>--http</b>" }),
+	  "hlptxt" : ({ "Import over HTTP. The latest patch cluster will be ",
+			"fetched from www.roxen.com and imported. The correct ",
+			"cluster file will be returned based on dist version, ",
+			"platform and product type." }),
+	  "scope"  : ({ "import" }) ])
 ]);
 
 constant flag_map = ([
@@ -1214,6 +1361,7 @@ constant flag_map = ([
   "nocolour"		: "nc",
   "no-color"		: "nc",
   "no-colour"		: "nc",
+  "http"                : "e"
 ]);
 
 void help_write_flag(function write_out, mapping flag_desc)

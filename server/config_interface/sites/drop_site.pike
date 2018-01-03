@@ -90,18 +90,15 @@ string|mapping parse( RequestID id )
   var check_all_toggle = 0;
   function checkAll() {
     var checkboxes = document.getElementById ('checkbox_list').
-      getElementsByTagName ('input');
+      getElementsByTagName ('INPUT');
     for (var i = 0; i < checkboxes.length; i++) {
-      if (check_all_toggle)
-	checkboxes[i].setAttribute ('checked', 'checked');
-      else
-	checkboxes[i].removeAttribute ('checked');
+      checkboxes[i].checked = check_all_toggle;
     }
     check_all_toggle = !check_all_toggle;
   }
 </script>
 <p><a id='check_all_button' onClick='checkAll()'><gbutton>" +
-	  LOCALE(0, "Uncheck/check all") +
+	  LOCALE(1065, "Uncheck/Check All") +
 	  "</gbutton></a></p>\n";
       }
       res += "<ul id='checkbox_list'>";

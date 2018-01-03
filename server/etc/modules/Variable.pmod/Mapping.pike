@@ -48,7 +48,7 @@ int(0..1) set_from_form(RequestID id)
   if( vl[".new.x"] )
   {
     do_goto = 1;
-    m_delete( id->variables, path()+".new.x" );
+    m_delete( id->real_variables, path()+".new.x" );
     new[""] = transform_from_form( "",vl );
   }
 

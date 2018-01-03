@@ -1,5 +1,5 @@
 /*
- * $Id: SimpleTagCaller.java,v 1.6 2000/11/13 19:37:44 marcus Exp $
+ * $Id$
  *
  */
 

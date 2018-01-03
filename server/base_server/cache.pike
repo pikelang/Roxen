@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.147 2011/05/03 21:20:51 mast Exp $
+// $Id$
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -68,8 +68,8 @@ void set_total_size_limit (int size)
   update_cache_size_balance();
 }
 
-class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
+class CacheEntry (mixed key, mixed data)
 {
   // FIXME: Consider unifying this with CacheKey. But in that case we
   // need to ensure "interpreter lock" atomicity below.
@@ -502,6 +502,7 @@ class CM_GreedyDual
   inherit CacheManager;
 
   class CacheEntry
+  //!
   {
     inherit global::CacheEntry;
 
@@ -1409,11 +1410,25 @@ void cache_expire (void|string cache_name)
   // doesn't have to be quick.
   foreach (cache_name ? ({cache_name}) : indices (caches), string cn) {
     CACHE_WERR ("Emptying cache %O.\n", cn);
-    if (CacheManager mgr = caches[cn]) {
-      mgr->evict (0);
-      mgr->update_size_limit();
-    }
+    if (CacheManager mgr = caches[cn])
+      if (mapping(mixed:CacheEntry) lm = mgr->lookup[cn]) {
+	if (sizeof (mgr->lookup) == 1 || !cache_name) {
+	  // Only one cache in this manager, or zapping all caches.
+	  mgr->evict (0);
+	  mgr->update_size_limit();
+	}
+	else
+	  foreach (lm;; CacheEntry entry) {
+	    MORE_CACHE_WERR ("cache_expire: Removing %O\n", entry);
+	    mgr->remove_entry (cn, entry);
+	  }
+      }
   }
+}
+
+void cache_expire_by_prefix(string cache_name_prefix)
+{
+  map(filter(indices(caches), has_prefix, cache_name_prefix), cache_expire);
 }
 
 void flush_memory_cache (void|string cache_name) {cache_expire (cache_name);}
@@ -1547,10 +1562,11 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
 		   "collect_stats": 1,
 		   "collect_direct_externals": 1,
+		   "block_strings": -1
 		 ]);
   float t = gauge {
 #else
-#define opts 0
+      mapping opts = (["block_strings": -1]);
 #endif
 
       if (function(int|mapping:int) cm_cb =

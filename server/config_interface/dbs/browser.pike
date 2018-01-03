@@ -235,7 +235,7 @@ mixed backup_db( string db, RequestID id )
   }
   return
     "<b>"+_(405,"Directory")+":</b> <input name='dir' size='60' value='auto' /><br />"
-    "<i>" + sprintf (_(0, #"\
+    "<i>" + sprintf (_(1061, #"\
 The directory the backup will be saved in. If you chose auto, Roxen
 will generate a directory name that includes the database name and
 today's date in <tt>$VARDIR/backup</tt> (%s)."),
@@ -604,7 +604,13 @@ mapping|string parse( RequestID id )
     return Roxen.http_redirect( "/dbs/", id );
 
   string res =
-    "<style type='text/css'>"
+    "<set variable='var.form-anchor' value='#dbquery'/>"
+    "<use file='/template'/><tmpl>"
+    "<topmenu base='../' selected='dbs'/>"
+    "<content><cv-split><subtablist width='100%'><st-tabs>"
+    "<insert file='subtabs.pike'/></st-tabs><st-page>"
+    "<input type='hidden' name='sort' value='&form.sort:http;' />\n"
+    "<style type='text/css'>\n"
     ".num {"
     " text-align: right;"
     " white-space: nowrap;"
@@ -662,14 +668,8 @@ mapping|string parse( RequestID id )
     " font-weight: bold;"
     " background-color: &usr.matrix12;;"
     "}\n"
-    "</style>"
-    "<set variable='var.form-anchor' value='#dbquery'/>"
-    "<use file='/template'/><tmpl>"
-    "<topmenu base='../' selected='dbs'/>"
-    "<content><cv-split><subtablist width='100%'><st-tabs>"
-    "<insert file='subtabs.pike'/></st-tabs><st-page>"
-    "<input type='hidden' name='sort' value='&form.sort:http;' />\n";
-
+    "</style>\n";
+  
   if( id->variables->action && actions[ id->variables->action ])
   {
     res += "<input type='hidden' name='db' value='&form.db:http;' />\n";
@@ -787,11 +787,11 @@ mapping|string parse( RequestID id )
       int h = gethrtime();
       if (mixed err = catch (big_q = db->big_query( q ))) {
 	qres += "<p><font color='&usr.warncolor;'>"+
-	  sprintf((string)_(0,"Error running query %d: %s"), i + 1,
+	  sprintf((string)_(1062,"Error running query %d: %s"), i + 1,
 		  replace (Roxen.html_encode_string (
 			     String.trim_all_whites (describe_error(err))),
 			   "\n", "<br/>\n"))+
-	  "</p>\n";
+	  "</font></p>\n";
 	continue;
       }
       float qtime = (gethrtime()-h)/1000000.0;
@@ -807,6 +807,7 @@ mapping|string parse( RequestID id )
       int column;
 
       array(string) col_types = ({});
+      array(string) col_names = ({});
 
       foreach( big_q->fetch_fields(), mapping field )
       {
@@ -839,9 +840,24 @@ mapping|string parse( RequestID id )
 	  col_types += ({"string"});
 	}
 	qres += Roxen.html_encode_string (field->name) + "</th>\n";
+	col_names += ({ field->name });
 	column++;
       }
       qres += "</tr>";
+
+      mapping(string:string) mod_info =
+	DBManager.module_table_info (id->variables->db, "");
+
+      Configuration c = !(<0, "">)[mod_info->conf] &&
+	roxen.find_configuration (mod_info->conf);
+      RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+	c->find_module (mod_info->module);
+
+      // Find any column formatter callback in the DB's owner
+      // module. See function prototype in base_server/module.pike.
+      function(string,string,string,array(string),array(string),array(string),
+	       RequestID:string) format_col_cb =
+	m && m->format_db_browser_value;
 
       while( array q = big_q->fetch_row() )
       {
@@ -860,22 +876,43 @@ mapping|string parse( RequestID id )
 	      "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
 	  else {
 	    mixed tmp = q[i];
-	    if (is_deflated (q[i])) {
-	      // is_deflated _may_ give false positives, hence the catch.
-	      catch {
-		tmp = Gz.inflate()->inflate (q[i]);
-	      };
+	    int got_result;
+	    if (format_col_cb) {
+	      if (mixed formatted =
+		  format_col_cb (id->variables->db, id->variables->table,
+				 col_names[i], col_names, col_types, q, id)) {
+		qres += formatted;
+		got_result = 1;
+	      }
 	    }
 
-	    if( is_encode_value( tmp ) )
-	      qres += format_decode_value(tmp);
-#if 0
-	    else if (String.width (tmp) > 8)
-	      qres += Roxen.html_encode_string(
-		utf8_to_string (sprintf("%q", string_to_utf8 (tmp))[1..<1]));
-#endif
-	    else
-	      qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
+	    if (!got_result) {
+	      if (is_deflated (tmp)) {
+		// is_deflated _may_ give false positives, hence the catch.
+		catch {
+		  tmp = Gz.inflate()->inflate (tmp);
+		};
+	      }
+
+	      if( is_encode_value( tmp ) )
+		qres += format_decode_value(tmp);
+	      else if (String.width (tmp) > 8) {
+		// Let wide chars skip past the %q quoting, because
+		// it'll quote them to \u escapes otherwise.
+		string q = "";
+		int s;
+		foreach (tmp; int i; int c)
+		  if (c >= 256) {
+		    if (s < i) q += sprintf ("%q", tmp[s..i - 1])[1..<1];
+		    q += sprintf ("%c", c);
+		    s = i + 1;
+		  }
+		q += sprintf ("%q", tmp[s..])[1..<1];
+		qres += Roxen.html_encode_string (q);
+	      }
+	      else
+		qres += Roxen.html_encode_string(sprintf("%q", tmp)[1..<1]);
+	    }
 	  }
 	  qres += "</td>";
 	}
@@ -903,7 +940,7 @@ mapping|string parse( RequestID id )
 
   if (db_connect_error)
     res += "<p><font color='red'>" +
-      _(0, "Error connecting to database: ") +
+      _(1063, "Error connecting to database: ") +
       Roxen.html_encode_string (describe_error (db_connect_error)) +
       "</font></p>\n";
 
@@ -1148,7 +1185,7 @@ mapping|string parse( RequestID id )
     // Query widget.
 
     res +=
-      "<a name='dbquery'/><p>"
+      "<a name='dbquery'></a><p>"
       "<textarea rows='12' cols='90' wrap='soft' name='query' "
       " style='font-size: 90%'>" +
       Roxen.html_encode_string (id->variables->query) + "</textarea><br />"
@@ -1157,7 +1194,7 @@ mapping|string parse( RequestID id )
       "</td><td>"
       "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
       "</td><td style='font-size: smaller; padding-left: 10px'>" +
-      _(0, "Tip: Put '--' on a line to ignore everything below it.") +
+      _(1064, "Tip: Put '--' on a line to ignore everything below it.") +
       "</td></tr></table></p>";
 
     // Query result.

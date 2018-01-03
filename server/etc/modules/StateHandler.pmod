@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.14 2009/05/07 14:15:53 mast Exp $
+// $Id$
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")

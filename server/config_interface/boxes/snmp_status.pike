@@ -7,8 +7,8 @@
 constant box      = "large";
 constant box_initial = 1;
 
-LocaleString box_name = _(0,"SNMP status");
-LocaleString box_doc  = _(0,"Global SNMP server statistics");
+LocaleString box_name = _(1066,"SNMP status");
+LocaleString box_doc  = _(1067,"Global SNMP server statistics");
 
 string add_row( string item, string value ) {
   return "<tr><td>" + item + ":</td><td>" + value + "</td></tr>";

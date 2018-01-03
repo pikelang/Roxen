@@ -54,13 +54,15 @@
       //  http://james.padolsey.com/javascript/deep-copying-of-objects-and-arrays/
       //
       //  FIXME: Replace with clone() in YUI3?
+      var out, i, len;
       if (Object.prototype.toString.call(obj) === "[object Array]") {
-	var out = [ ], i = 0, len = obj.length;
-	for ( ; i < len; i++)
+	out = [ ];
+	len = obj.length;
+	for (i = 0 ; i < len; i++)
 	  out[i] = arguments.callee(obj[i]);
 	return out;
       } else if (typeof obj === "object") {
-	var out = { }, i;
+	out = { };
 	for (i in obj)
 	  out[i] = arguments.callee(obj[i]);
 	return out;
@@ -546,10 +548,13 @@
       * Return a short readable date and time string similar to
       * Sitebuilder.mtime_to_str().
       * @method shortDateTime
-      * @param unixtime {Int} 
+      * @param timestamp {Int or Date}
       */
-    shortDateTime: function (unixtime, force_include_time) {
-      var tm = new Date(unixtime*1000);
+    shortDateTime: function (timestamp, force_include_time, am_pm) {
+      var tm;
+      if (typeof (timestamp) === "number") tm = new Date(timestamp*1000);
+      else tm = timestamp;
+
       var today = new Date();
       var fmt = "";
       // YUI date formats:
@@ -557,9 +562,15 @@
       // FIXME - Use user setting
       var locale = "en-US";
       var date_fmt = "%b %e, %Y";
-      var time_fmt = "%l:%M %P";
-      var tm_yday = (tm.getMonth() + 1) * tm.getDate();
-      var today_yday = (today.getMonth() + 1) * today.getDate();
+      var time_fmt = am_pm ? "%l:%M %P" : "%H:%M";
+
+      // The following simplistic calculation is bogus, but the only
+      // effect is that we'll return a date instead of "yesterday" if
+      // today is the first day of a month where the preceding month
+      // was shorter than 31 days.
+      var tm_yday = (tm.getMonth() + 1) * 31 + tm.getDate();
+      var today_yday = (today.getMonth() + 1) * 31 + today.getDate();
+
       if (tm.getYear() != today.getYear()) {
         //  Feb 23, 2010
 	fmt = date_fmt;

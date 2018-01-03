@@ -38,8 +38,8 @@ Stdio.File recode( Stdio.File fd, int bitrate )
   if( args )
   {
     Stdio.File in = Stdio.File(), in2 = in->pipe();
-    Process.create_process( args,  ([ "stdin":fd, "stdout":in2,
-				      "stderr":devnull, ]) );
+    Process.Process( args,  ([ "stdin":fd, "stdout":in2,
+			       "stderr":devnull, ]) );
     destruct( in2 );
     destruct( fd );
     fd = in;
@@ -66,8 +66,8 @@ Stdio.File recode( Stdio.File fd, int bitrate )
   if( args )
   {
     Stdio.File out = Stdio.File(), out2 = out->pipe();
-    Process.create_process( args ,(["stdin":fd,"stdout":out2,
-				    "stderr":devnull, ]));
+    Process.Process( args ,(["stdin":fd,"stdout":out2,
+			     "stderr":devnull, ]));
     destruct( out2 );
     destruct( fd );
     fd = out;

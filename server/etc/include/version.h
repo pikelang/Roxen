@@ -1,13 +1,13 @@
 // Version information
-// $Id: version.h,v 1.1610 2011/05/26 16:21:09 dist Exp $
 // 
 // Note that version information (major and minor) is also
-// present in module.h.
-constant roxen_ver = "5.2";
-constant roxen_build = "14";
+// present in module.h and in the roxen.version test in
+// ../test/tests/rxml/RoxenTest_BaseRXML.xml .
+constant roxen_ver = "5.4";
+constant roxen_build = "11";
 
 #if !constant(roxen_release)
-constant roxen_release = "-cvs";
+constant roxen_release = "-git";
 #endif /* !constant(roxen_release) */
 
 #ifdef __NT__

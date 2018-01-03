@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: roxenlib.pike,v 1.226 2010/03/15 15:48:30 mast Exp $
+// $Id$
 
 //#pragma strict_types
 
@@ -197,7 +197,7 @@ string program_filename()
 string program_directory()
 {
   array(string) p = program_filename()/"/";
-  return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
+  return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : roxenloader.server_dir);
 }
 
 //! Creates an HTTP response string from the internal

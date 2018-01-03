@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.314 2011/01/20 23:49:17 jonasw Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "module";
@@ -439,7 +439,7 @@ Add this number of seconds to the time this entry is valid.</p>
 constant tagdoc=([
 "anfang":#"<desc type='cont'><p><short>
  Creates an anfang in the beginning of a text.</short> This tag takes
- the same attributes as <xref href='gtext.tag' />.</p>
+ the same attributes as <xref href='gtext.tag' />. </p>
 
  <ex>
  <anfang crop=\"\">This is a beginning<br />
@@ -596,7 +596,7 @@ function alter_image(label)
 </attr>"+gtextargs,
 
 "gtext-js":#"<desc tag='tag'><p><short>
- Inserts javascript funcations that are used by gtext when using
+ Inserts javascript functions that are used by gtext when using
  the magic attributes.</short>
  This is normally inserted at the first instance of a gtext, but it may
  be necessary to insert the gtext using this tag if the first gtext in a page
@@ -750,8 +750,8 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
   }
 
   if (!font)
-    error("gtext: No font (tried "+
-          (args->afont||args->font||args->nfont)+ ")!\n");
+    RXML.parse_error("gtext: No font (tried "+
+		     (args->afont||args->font||args->nfont)+ ")!\n");
 
   // Fonts and such are now initialized.
   array|mapping make_res = GText.make_text_image(args, font, text, id);

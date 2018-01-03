@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.15 2004/02/03 12:04:31 anders Exp $
+ * $Id$
  */
 
 #include <config_interface.h>
@@ -16,11 +16,27 @@ constant doc = "";
 
 mixed parse( RequestID id )
 {
+  string pid = (string) getpid();
+  
   string res = "<font size='+1'><b>" +
     LOCALE(34, "Restart or shutdown") + "</b></font>"
     "<p />";
-  switch( id->variables->what )
-  {
+  
+  //  Verify pid for possibly repeated request (browser restart etc)
+  string what = id->variables->what;
+  string ignore_msg = "";
+  if (string form_pid = id->variables->pid)
+    if (form_pid != pid) {
+      ignore_msg =
+	"<br />"
+	"<p><font color='&usr.warncolor;'>" +
+	LOCALE(406, "Repeated action request ignored &ndash; "
+	       "server process ID is different.") +
+	"</font></p>";
+      what = 0;
+    }
+  
+  switch (what) {
   case "restart":
      if( config_perm( "Restart" ) )
      {
@@ -57,7 +73,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
-   <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
+   <gbutton href='?what=restart&action=restart.pike&class=maintenance&pid=" + pid + #"' 
             width=250 icon_src=&usr.err-2;> "+
        LOCALE(197,"Restart")+#" </gbutton>
  </cf-perm>
@@ -70,7 +86,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 <br/><br/>
 
 <cf-perm perm='Shutdown'>
-  <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' 
+  <gbutton href='?what=shutdown&action=restart.pike&class=maintenance&pid=" + pid + #"' 
            width=250  icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
 </cf-perm>
@@ -78,7 +94,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 <cf-perm not perm='Shutdown'>
   <gbutton dim width=250 icon_src=&usr.err-3;> "+
        LOCALE(198,"Shutdown")+#" </gbutton>
-</cf-perm>
+</cf-perm>" + ignore_msg + #"
 
 </blockquote>
 

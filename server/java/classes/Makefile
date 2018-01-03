@@ -8,6 +8,7 @@ JAVAC = javac
 SRCDIR = ../src
 
 MODULEDIR = ../../modules
+LOCALMODULEDIR = ../../../local/modules
 
 all : roxen_module.jar roxen_servlet.jar compile_modules
 
@@ -25,6 +26,10 @@ module_classes : $(SRCDIR)/com/roxen/roxen/*.java
 
 compile_modules: roxen_module.jar 
 	CLASSPATH=roxen_module.jar find $(MODULEDIR) -name '*.java' \
+		-exec $(JAVAC) $(JAVAFLAGS) {} \;
+	@test ! -d $(LOCALMODULEDIR) || \
+		CLASSPATH=roxen_module.jar \
+		find $(LOCALMODULEDIR) -name '*.java' \
 		-exec $(JAVAC) $(JAVAFLAGS) {} \;
 
 clean:

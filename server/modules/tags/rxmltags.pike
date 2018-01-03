@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.648 2011/05/26 09:40:13 grubba Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -78,7 +78,7 @@ private object sexpr_funcs = class SExprFunctions
 
     mixed search (mixed a, mixed b)
     {
-      return search (a, b) + 1;	// RXML uses base 1.
+      return predef::search (a, b) + 1;	// RXML uses base 1.
     }
 
     int INT (void|mixed x)
@@ -105,6 +105,35 @@ private object sexpr_funcs = class SExprFunctions
     {
       return RXML_CONTEXT->get_var (rxml_var_ref, scope);
     }
+
+    array regexp_split (string regexp, string data)
+    {
+      Regexp.PCRE.Plain re;
+      if (mixed err = catch (re = Regexp.PCRE.Widestring (regexp)))
+	RXML.parse_error (describe_error (err));
+      return re->split2 (data) || Val.false;
+    }
+    
+    float log(void|mixed x)
+    {
+      return predef::log(intp(x) ? (float) x : x);
+    }
+    
+    int floor(void|mixed x)
+    {
+      return (int) predef::floor(intp(x) ? (float) x : x);
+    }
+
+    int ceil(void|mixed x)
+    {
+      return (int) predef::ceil(intp(x) ? (float) x : x);
+    }
+
+    int round(void|mixed x)
+    {
+      return (int) predef::round(intp(x) ? (float) x : x);
+    }
+    
   }();
 
 private mapping(string:mixed) sexpr_constants = ([
@@ -135,12 +164,17 @@ private mapping(string:mixed) sexpr_constants = ([
   "equal": equal,
   "sizeof": sizeof,
   "pow":pow,
+  "log": sexpr_funcs->log,
   "abs": abs,
   "max": max,
   "min": min,
+  "round": sexpr_funcs->round,
+  "floor": sexpr_funcs->floor,
+  "ceil": sexpr_funcs->ceil,
   "search": sexpr_funcs->search,
   "reverse": reverse,
   "uniq": Array.uniq,
+  "regexp_split": sexpr_funcs->regexp_split,
 
   "INT": sexpr_funcs->INT,
   "FLOAT": sexpr_funcs->FLOAT,
@@ -456,7 +490,7 @@ class TagAppend {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags = RXML.FLAG_DONT_RECOVER;
+  int flags = RXML.FLAG_DONT_RECOVER | RXML.FLAG_CUSTOM_TRACE;
 
   class Frame {
     inherit RXML.Frame;
@@ -466,6 +500,8 @@ class TagAppend {
 
     array do_enter (RequestID id)
     {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
+      
       if (args->value || args->from || args->expr)
 	flags |= RXML.FLAG_EMPTY_ELEMENT;
 
@@ -514,9 +550,11 @@ class TagAppend {
 	else if (string expr = args->expr)
 	  content = sexpr_eval (expr);
 	else {
-	  if (objectp (content) && content->is_rxml_empty_value)
+	  if (objectp (content) && content->is_rxml_empty_value) {
 	    // No value to concatenate with.
+	    TAG_TRACE_LEAVE("");
 	    return 0;
+	  }
 	  break get_content_from_args; // The content already got content_type.
 	}
 
@@ -535,6 +573,7 @@ class TagAppend {
 	}
 	else {
 	  RXML.user_set_var(args->variable, content, args->scope);
+	  TAG_TRACE_LEAVE("");
 	  return 0;
 	}
       }
@@ -547,6 +586,7 @@ class TagAppend {
 			     content_type->sequential ?
 			     content : ({content}),
 			     args->scope);
+	  TAG_TRACE_LEAVE("");
 	  return 0;
 	}
 
@@ -561,6 +601,7 @@ class TagAppend {
 		   err->msg || describe_error (err));
 
       RXML.user_set_var(args->variable, val, args->scope);
+      TAG_TRACE_LEAVE("");
     }
   }
 }
@@ -636,15 +677,22 @@ class TagExpireTime {
 class TagHeader {
   inherit RXML.Tag;
   constant name = "header";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
-					       "value": RXML.t_text(RXML.PEnt) ]);
-  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+  constant flags = RXML.FLAG_NONE;
+  mapping(string:RXML.Type) opt_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
+					       "value": RXML.t_narrowtext(RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_any}); // Variable result.
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      if (!args->name || !args->value) {
+	// HTML 5.0 header tag.
+	// FIXME: return ({ propagate_tag(args, content) });
+	return ({
+	  result_type->format_tag("header", args, content, UNDEFINED)
+	});
+      }
       string name = Roxen.canonicalize_http_header (args->name) || args->name;
 
       if(name == "WWW-Authenticate") {
@@ -774,19 +822,22 @@ class TagGuessContentType
 class TagUnset {
   inherit RXML.Tag;
   constant name = "unset";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_CUSTOM_TRACE;
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if(!args->variable && !args->scope)
 	parse_error("Neither variable nor scope specified.\n");
       if(!args->variable && args->scope!="roxen") {
 	RXML_CONTEXT->add_scope(args->scope, ([]) );
+	TAG_TRACE_LEAVE("");
 	return 0;
       }
       RXML_CONTEXT->user_delete_var(args->variable, args->scope);
+      TAG_TRACE_LEAVE("");
       return 0;
     }
   }
@@ -799,13 +850,14 @@ class TagSet {
   mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags = RXML.FLAG_DONT_RECOVER;
+  int flags = RXML.FLAG_DONT_RECOVER | RXML.FLAG_CUSTOM_TRACE;
 
   class Frame {
     inherit RXML.Frame;
 
     array do_enter (RequestID id)
     {
+      TAG_TRACE_ENTER("variable \"%s\"", args->variable);
       if (args->value || args->from || args->expr)
 	flags |= RXML.FLAG_EMPTY_ELEMENT;
       if (RXML.Type t = args->type)
@@ -823,6 +875,7 @@ class TagSet {
 	    parse_error ("From variable %q does not exist.\n", var);
 	  if (compat_level < 5.0) {
 	    RXML.user_set_var(args->variable, content, args->scope);
+	    TAG_TRACE_LEAVE("");
 	    return 0;
 	  }
 	}
@@ -831,6 +884,7 @@ class TagSet {
 	  content = sexpr_eval (expr);
 	  if (compat_level < 5.0) {
 	    RXML.user_set_var(args->variable, content, args->scope);
+	    TAG_TRACE_LEAVE("");
 	    return 0;
 	  }
 	}
@@ -874,6 +928,7 @@ class TagSet {
       else
 	RXML.user_set_var(args->variable, content, args->scope);
 
+      TAG_TRACE_LEAVE("");
       return 0;
     }
   }
@@ -998,7 +1053,8 @@ class TagImgs {
 	
 	if(file) {
 	  array(int) xysize;
-	  if(xysize=Dims.dims()->get(file)) {
+	  mixed err = catch { xysize = Dims.dims()->get(file); };
+	  if (!err && xysize) {
 	    args->width=(string)xysize[0];
 	    args->height=(string)xysize[1];
 	  }
@@ -1038,7 +1094,9 @@ class TagEmitImgs {
     if (string|object file =
 	id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
 	id->conf->try_get_file(args->src, id)) {
-      if (array(int) xysize = Dims.dims()->get(file)) {
+      array(int) xysize;
+      mixed err = catch { xysize = Dims.dims()->get(file); };
+      if (!err && xysize) {
 	return ({ ([ "xsize" : xysize[0],
 		     "ysize" : xysize[1],
 		     "type"  : xysize[2] ]) });
@@ -1091,6 +1149,8 @@ class TagDebug {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      RXML.Context ctx = RXML_CONTEXT;
+
       if (string var = args->showvar) {
 	TAG_TRACE_ENTER("");
 	mixed val = RXML.user_get_var (var, args->scope);
@@ -1098,6 +1158,28 @@ class TagDebug {
 	  (zero_type (val) ? "UNDEFINED" :
 	   Roxen.html_encode_string (sprintf ("%O", val))) +
 	  "</pre>";
+	TAG_TRACE_LEAVE("");
+	return 0;
+      }
+
+      if (string scope_name = args->showscope) {
+	TAG_TRACE_ENTER("");
+	mixed scope = ctx->get_scope (scope_name);
+	if (!scope)
+	  RXML.run_error ("No scope %O.\n", scope_name);
+	result = "<pre>";
+	if (objectp (scope)) {
+	  result += sprintf ("[object scope %O]\n", scope);
+	  if (array(string) vars = ctx->list_vars (scope_name, 1)) {
+	    mapping scope_map = ([]);
+	    foreach (vars, string var)
+	      scope_map[var] = ctx->get_var (var, scope_name);
+	    scope = scope_map;
+	  }
+	}
+	if (mappingp (scope))
+	  result += Roxen.html_encode_string (sprintf ("%O", scope));
+	result += "</pre>";
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
@@ -1147,9 +1229,6 @@ class TagDebug {
 	RXML_CONTEXT->set_id_misc ("debug", !id->misc->debug);
       else if (args->on)
 	RXML_CONTEXT->set_id_misc ("debug", 1);
-
-      if (result_type->subtype_of (RXML.t_any_text))
-	result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
 
       TAG_TRACE_LEAVE ("");
       return 0;
@@ -1435,7 +1514,7 @@ class TagDate {
 class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
+  constant flags = RXML.FLAG_SOCKET_TAG;
 
   array(RXML.Type) result_types = ({RXML.t_any});
 
@@ -1443,6 +1522,18 @@ class TagInsert {
 
   class Frame {
     inherit RXML.Frame;
+
+    array do_enter(RequestID id)
+    {
+      // Default to being an empty element tag, but
+      // allow the plugins to have content if needed.
+      flags |= RXML.FLAG_EMPTY_ELEMENT;
+
+      RXML.Tag plugin = get_plugins()[args->source];
+      if (plugin && plugin->do_enter) {
+	return plugin->do_enter(args, id, this);
+      }
+    }
 
     void do_insert(RXML.Tag plugin, string name, RequestID id) {
       result=plugin->get_data(args[name], args, id, this);
@@ -1745,7 +1836,8 @@ class TagSetCookie {
       int t;
       if(args->persistent) t=-1; else t=Roxen.time_dequantifier(args);
       Roxen.set_cookie( id,  args->name, (args->value||""), t, 
-                        args->domain, args->path );
+                        args->domain, args->path,
+                        args->secure, args->httponly );
       return 0;
     }
   }
@@ -1929,13 +2021,25 @@ class TagCharset
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
-      if( args->in && catch {
-	content=Locale.Charset.decoder( args->in )->feed( content || "" )->drain();
-      })
-	RXML.run_error("Invalid charset, or unable to decode data: %s\n",
-		       args->in );
-      if( args->out && id->set_output_charset)
+      if (string charset = args->in) {
+	Locale.Charset.Decoder dec;
+	if (catch (dec = Locale.Charset.decoder (charset)))
+	  RXML.parse_error ("Invalid charset %q\n", charset);
+	if (mixed err = catch (content = dec->feed (content || "")->drain())) {
+	  if (objectp (err) && err->is_charset_decode_error)
+	    RXML.run_error (describe_error (err));
+	  else
+	    throw (err);
+	}
+      }
+      if (args->out && id->set_output_charset) {
+	//  Verify that encoder exists since we'll get internal errors
+	//  later if it's invalid. (The same test also happens in
+	//  id->set_output_charset() but only in debug mode.)
+	if (catch { Locale.Charset.encoder(args->out); })
+	  RXML.parse_error("Invalid charset %q\n", args->out);
 	id->set_output_charset( args->out );
+      }
       result_type = result_type (RXML.PXml);
       result="";
       return ({content});
@@ -1962,17 +2066,26 @@ class TagRecode
       switch(args->from)
       {
 	case "safe-utf8":
-	  catch {
-	    content = Locale.Charset.decoder("utf8")->feed(content)->drain();
-	  };
+	  catch (content = utf8_to_string (content));
 	  break;
 
 	default:
-	  if(args->from && catch {
-	      content = Locale.Charset.decoder(args->from)->
-			feed(content)->drain(); })
-	    RXML.run_error("Invalid charset, or unable to decode data: %s\n",
-			   args->from);
+	  if (string charset = args->from) {
+	    if (String.width (content) > 8)
+	      // If it's wide it's already decoded by necessity. Some of
+	      // the decoders also throw an error on this that isn't
+	      // typed as a DecodeError.
+	      RXML.run_error ("Cannot charset decode a wide string.\n");
+	    Locale.Charset.Decoder dec;
+	    if (catch (dec = Locale.Charset.decoder (charset)))
+	      RXML.parse_error ("Invalid charset %q\n", charset);
+	    if (mixed err = catch (content = dec->feed (content)->drain())) {
+	      if (objectp (err) && err->is_charset_decode_error)
+		RXML.run_error (describe_error (err));
+	      else
+		throw (err);
+	    }
+	  }
       }
       
       if (args->to) {
@@ -1981,14 +2094,19 @@ class TagRecode
 	int use_entity_fallback =
 	  lower_case(args["entity-fallback"] || "no") != "no";
 	string str_fallback = args["string-fallback"];
-	if (catch {
-	    content = Locale.Charset.encoder(args->to, str_fallback,
-					     use_entity_fallback &&
-					     lambda(string ch) {
-					       return "&#" + ch[0] + ";";
-					     })->feed(content)->drain(); })
-	  RXML.run_error("Invalid charset, or unable to encode data: %s\n",
-			 args->to);
+	Locale.Charset.Encoder enc;
+	if (catch (enc = Locale.Charset.encoder (args->to, str_fallback,
+						 use_entity_fallback &&
+						 lambda(string ch) {
+						   return "&#" + ch[0] + ";";
+						 })))
+	  RXML.parse_error ("Invalid charset %q\n", args->to);
+	if (mixed err = catch (content = enc->feed (content)->drain())) {
+	  if (objectp (err) && err->is_charset_encode_error)
+	    RXML.run_error (describe_error (err));
+	  else
+	    throw (err);
+	}
       }
       
       return ({ content });
@@ -2050,6 +2168,14 @@ array(string) container_catch( string tag, mapping m, string c, RequestID id )
   return ({r});
 }
 
+//  Caches may request synchronization on a shared mutex to serialize
+//  expensive computations. It's flagged as weak so only locked mutexes
+//  are retained.
+mapping(string:Thread.Mutex) cache_mutexes =
+  set_weak_flag( ([ ]), Pike.WEAK_VALUES);
+mapping(string:int) cache_mutex_concurrency = ([ ]);
+
+
 class TagCache {
   inherit RXML.Tag;
   constant name = "cache";
@@ -2107,9 +2233,19 @@ class TagCache {
 
     int do_iterate;
     mapping(string|int:mixed) keymap, overridden_keymap;
-    string key;
+    string key, key_level2;
+    array(string) level2_keys;
     RXML.PCode evaled_content;
-    int timeout, persistent_cache = 0;
+    int timeout, persistent_cache;
+
+    //  Mutex state to restrict concurrent generation of same cache entry.
+    //  This is enabled only if RXML code specifies a "mutex" attribute.
+    //  We store the mutex in a module-global table (with weak values)
+    //  indexed on the user-provided name together with the keymap; locking
+    //  the mutex will maintain a reference. Extra book-keeping is needed
+    //  to clean up mutexes after concurrent access completes.
+    Thread.MutexKey mutex_key;
+    string mutex_id;
 
     // The following are retained for frame reuse.
 
@@ -2134,7 +2270,7 @@ class TagCache {
     // (ought to have a canonic_nameof callback in the codec). This
     // should cover most cases with object values, at least (e.g.
     // RXML.nil should never occur by definition).
-#define ADD_VARIABLE_TO_KEYMAP(ctx, var) do {				\
+#define ADD_VARIABLE_TO_KEYMAP(ctx, var, is_level2) do {		\
       array splitted = ctx->parse_user_var (var, 1);			\
       if (intp (splitted[0])) { /* Depend on the whole scope. */	\
 	mapping|RXML.Scope scope = ctx->get_scope (var);		\
@@ -2157,6 +2293,11 @@ class TagCache {
 	if (!zero_type (val))						\
 	  keymap[var] = (val == RXML.empty ? rxml_empty_replacement : val); \
       }									\
+      if (is_level2) {							\
+	if (!level2_keys)						\
+	  level2_keys = ({ });						\
+	level2_keys += ({ var });					\
+      }									\
     } while (0)
 
     protected void add_subvariables_to_keymap()
@@ -2164,7 +2305,7 @@ class TagCache {
       RXML.Context ctx = RXML_CONTEXT;
       foreach (subvariables, string var)
 	// Note: Shouldn't get an invalid variable spec here.
-	ADD_VARIABLE_TO_KEYMAP (ctx, var);
+	ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
     }
 
     protected void make_key_from_keymap (RequestID id, int timeout)
@@ -2198,15 +2339,32 @@ class TagCache {
       else if (timeout)
 	id->lower_max_cache (timeout);
 
-      key = encode_value_canonic (keymap);
-      if (!args["disable-key-hash"])
+      //  For two-level keys the level 1 variables are placed in "key" and
+      //  the level 2 variables in "key_level2". There is no overlap since
+      //  we'll compare both during lookup.
+      if (level2_keys) {
+	key = encode_value_canonic(keymap - level2_keys);
+	key_level2 = encode_value_canonic(keymap & level2_keys);
+      } else {
+	key = encode_value_canonic (keymap);
+	key_level2 = 0;
+      }
+      if (!args["disable-key-hash"]) {
 	// Initialize with a 32 char string to make sure MD5 goes
 	// through all the rounds even if the key is very short.
 	// Otherwise the risk for coincidental equal keys gets much
 	// bigger.
-	key = Crypto.MD5()->update ("................................")
-			  ->update (key)
-			  ->digest();
+	key =
+	  Crypto.MD5()->update ("................................")
+		       ->update (key)
+		       ->digest();
+	if (key_level2) {
+	  key_level2 =
+	    Crypto.MD5()->update ("................................")
+		        ->update (key_level2)
+		        ->digest();
+	}
+      }
     }
 
     array do_enter (RequestID id)
@@ -2214,6 +2372,7 @@ class TagCache {
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
+	key_level2 = 0;
 	TAG_TRACE_ENTER ("no cache due to %s",
 			 args->nocache ? "nocache argument" : "POST method");
 	id->cache_status->cachetag = 0;
@@ -2232,15 +2391,25 @@ class TagCache {
 	keymap = ctx->misc->cache_key = ([]);
       }
 
-      if (args->variable) {
-	if (args->variable != "")
-	  foreach (args->variable / ",", string var) {
-	    var = String.trim_all_whites (var);
-	    ADD_VARIABLE_TO_KEYMAP (ctx, var);
-	  }
+      if (string var_list = args->variable) {
+	if (var_list != "") {
+	  var_list = replace(String.normalize_space(var_list), " ", "");
+	  foreach (var_list / ",", string var)
+	    ADD_VARIABLE_TO_KEYMAP (ctx, var, 0);
+	}
 	default_key = 0;
       }
-
+      
+      if (string uniq_var_list = args["generation-variable"]) {
+	if (uniq_var_list != "") {
+	  uniq_var_list =
+	    replace(String.normalize_space(uniq_var_list), " ", "");
+	  foreach (uniq_var_list / ",", string uniq_var)
+	    ADD_VARIABLE_TO_KEYMAP (ctx, uniq_var, 1);
+	}
+	default_key = 0;
+      }
+      
       if (args->profile) {
 	if (mapping avail_profiles = id->misc->rxml_cache_cur_profile)
 	  foreach (args->profile / ",", string profile) {
@@ -2263,7 +2432,7 @@ class TagCache {
 	do_iterate = 1;
 	TAG_TRACE_ENTER ("propagating key, is now %s",
 			 RXML.utils.format_short (keymap, 200));
-	key = keymap = 0;
+	key = key_level2 = keymap = 0;
 	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
 	return 0;
       }
@@ -2308,52 +2477,147 @@ class TagCache {
       make_key_from_keymap (id, timeout);
 
       // Now we have the cache key.
-
-      object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
-	cache_lookup (cache_tag_eval_loc, key) :
-	alternatives && alternatives[key];
-
-      int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
-
-      if (entry) {
-      check_entry_valid: {
-	  if (arrayp (entry)) {
-	    if (entry[0] < time (1)) {
-	      removed = 2;
-	      break check_entry_valid;
+      int removed;
+      object(RXML.PCode)|array(int|RXML.PCode|string) entry;
+      int retry_lookup;
+      
+      do {
+	retry_lookup = 0;
+	entry = args->shared ?
+	  cache_lookup (cache_tag_eval_loc, key) :
+	  alternatives && alternatives[key];
+	removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
+	
+      got_entry:
+	if (entry) {
+	check_entry_valid: {
+	    if (arrayp (entry)) {
+	      //  If this represents a two-level entry the second key must
+	      //  match as well for the entry to be considered a hit. A miss
+	      //  in that comparison is however not necessarily a sign that
+	      //  the entry is stale so we treat it as a regular miss.
+	      //
+	      //  Finding an entry with a two-level keymap when none was
+	      //  requested means whatever entry we got satisfies the
+	      //  lookup.
+	      if (key_level2 && (sizeof(entry) > 2) &&
+		  (entry[2] != key_level2)) {
+		entry = 0;
+		break got_entry;
+	      }
+	      
+	      if (entry[0] && (entry[0] < time (1))) {
+		removed = 2;
+		break check_entry_valid;
+	      }
+	      
+	      evaled_content = entry[1];
+	    } else {
+	      if (key_level2) {
+		//  Inconsistent use of cache variables since at least one
+		//  generation variable was expected but none found. We'll
+		//  consider it a miss and regenerate the entry so it gets
+		//  stored with a proper two-level keymap.
+		entry = 0;
+		break got_entry;
+	      }
+	      
+	      evaled_content = entry;
 	    }
-	    else evaled_content = entry[1];
+	    if (evaled_content->is_stale())
+	      removed = 1;
+	    else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
+	      removed = 3;
 	  }
-	  else evaled_content = entry;
-	  if (evaled_content->is_stale())
-	    removed = 1;
-	  else if (id->pragma["no-cache"] && args["flush-on-no-cache"])
-	    removed = 3;
+	  
+	  if (removed) {
+	    if (args->shared)
+	      cache_remove (cache_tag_eval_loc, key);
+	    else
+	      if (alternatives) m_delete (alternatives, key);
+	  }
+	  
+	  else {
+	    do_iterate = -1;
+	    TAG_TRACE_ENTER ("cache hit%s for key %s",
+			     args->shared ?
+			     (timeout ?
+			      " (shared " + timeout + "s timeout cache)" :
+			      " (shared cache)") :
+			     (timeout ? " (" + timeout + "s timeout cache)" : ""),
+			     RXML.utils.format_short (keymap, 200));
+	    key = key_level2 = keymap = 0;
+	    if (mutex_key) {
+	      destruct(mutex_key);
+	      
+	      //  vvv Relying on interpreter lock
+	      if (!--cache_mutex_concurrency[mutex_id])
+		m_delete(cache_mutexes, mutex_id);
+	      //  ^^^ and here vvv
+	      if (!cache_mutex_concurrency[mutex_id])
+		m_delete(cache_mutex_concurrency, mutex_id);
+	      //  ^^^
+	    }
+	    return ({evaled_content});
+	  }
 	}
+	
+	//  Check for mutex synchronization during shared entry generation
+	if (!mutex_key && args->shared) {
+	  if (args->mutex) {
+	    //  We use the serialized keymap as the mutex ID so that
+	    //  generation of unrelated entries in the same cache won't
+	    //  block each other. Note that cache_id is already incorporated
+	    //  into key.
+	    mutex_id = key;
+	    
+	    //  Signal that we're about to enter mutex handling. This will
+	    //  prevent any other thread from deallocating the same mutex
+	    //  prematurely.
+	    //
+	    //  vvv Relying on interpreter lock
+	    cache_mutex_concurrency[mutex_id]++;
+	    //  ^^^
+	    
+	    //  Find existing mutex or allocate a new one
+	    Thread.Mutex mtx = cache_mutexes[mutex_id];
+	  lock_mutex:
+	    {
+	      if (!mtx) {
+		//  Prepare a new mutex and lock it before registering it so
+		//  the weak mapping will retain it. We'll swap in the mutex
+		//  atomically to avoid a race, and if we lose the race we
+		//  can discard it and continue with the old one.
+		Thread.Mutex new_mtx = Thread.Mutex();
+		Thread.MutexKey new_key = new_mtx->lock();
+		
+		//  vvv Relying on interpreter lock here
+		if (!(mtx = cache_mutexes[mutex_id])) {
+		  //  We're first so store our new mutex
+		  cache_mutexes[mutex_id] = new_mtx;
+		  //  ^^^
+		  mutex_key = new_key;
+		  break lock_mutex;
+		} else {
+		  //  Someone created it first so dispose of our prepared mutex
+		  //  and carry on with the existing one.
+		  destruct(new_key);
+		  new_mtx = 0;
+		}
+	      }
+	      mutex_key = mtx->lock();
+	    }
 
-	if (removed) {
-	  if (args->shared)
-	    cache_remove (cache_tag_eval_loc, key);
-	  else
-	    if (alternatives) m_delete (alternatives, key);
+	    id->add_threadbound_session_object (mutex_key);
+	    
+	    retry_lookup = 1;
+	  }
 	}
-
-	else {
-	  do_iterate = -1;
-	  TAG_TRACE_ENTER ("cache hit%s for key %s",
-			   args->shared ?
-			   (timeout ?
-			    " (shared " + timeout + "s timeout cache)" :
-			    " (shared cache)") :
-			   (timeout ? " (" + timeout + "s timeout cache)" : ""),
-			   RXML.utils.format_short (keymap, 200));
-	  key = keymap = 0;
-	  return ({evaled_content});
-	}
-      }
+      } while (retry_lookup);
 
       keymap += ([]);
       do_iterate = 1;
+      persistent_cache = 0;
       TAG_TRACE_ENTER ("cache miss%s for key %s, %s",
 		       args->shared ?
 		       (timeout ?
@@ -2390,7 +2654,12 @@ class TagCache {
 	    comp->compile();
 	    evaled_content->p_code_comp = 0;
 	  }
-	  cache_set (cache_tag_eval_loc, key, evaled_content, timeout);
+	  
+	  object(RXML.PCode)|array(int|RXML.PCode|string) new_entry =
+	    level2_keys ?
+	    ({ 0, evaled_content, key_level2 }) :
+	    evaled_content;
+	  cache_set (cache_tag_eval_loc, key, new_entry, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
 			   timeout ? " timeout" : "",
 			   RXML.utils.format_short (keymap, 200));
@@ -2402,11 +2671,12 @@ class TagCache {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
 	    }
-	    if (!alternatives) {
+	    if (!alternatives || key_level2) {
 	      alternatives = ([]);
 	      if (!persistent_cache) add_timeout_cache (alternatives);
 	    }
-	    alternatives[key] = ({time() + timeout, evaled_content});
+	    alternatives[key] =
+	      ({ time() + timeout, evaled_content, key_level2 });
 	    if (cache_id) {
 	      // A persistent <cache> frame with a nonpersistent
 	      // cache. We need to ensure the cache exists in the
@@ -2419,7 +2689,7 @@ class TagCache {
 #endif
 	      // Avoid extra refs that mess up the size calculation in
 	      // cache_set.
-	      evaled_content = key = 0;
+	      evaled_content = key = key_level2 = 0;
 	      cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
 	    }
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
@@ -2429,7 +2699,7 @@ class TagCache {
 	  }
 
 	  else {
-	    if (!alternatives) {
+	    if (!alternatives || key_level2) {
 	      alternatives = ([]);
 	      if (cache_id) {
 		// A persistent <cache> frame with a nonpersistent
@@ -2444,7 +2714,10 @@ class TagCache {
 		cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
 	      }
 	    }
-	    alternatives[key] = evaled_content;
+	    alternatives[key] =
+	      key_level2 ?
+	      ({ 0, evaled_content, key_level2 }) :
+	      evaled_content;
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
 	      RXML_CONTEXT->state_update();
@@ -2464,6 +2737,21 @@ class TagCache {
       }
 
       result += content;
+      if (mutex_key) {
+	destruct(mutex_key);
+	
+	//  Decrease parallel count for shared mutex. If we reach zero we
+	//  know no other thread depends on the same mutex so drop it from
+	//  global table.
+	//
+	//  vvv Relying on interpreter lock
+	if (!--cache_mutex_concurrency[mutex_id])
+	  m_delete(cache_mutexes, mutex_id);
+	//  ^^^ and here vvv
+	if (!cache_mutex_concurrency[mutex_id])
+	  m_delete(cache_mutex_concurrency, mutex_id);
+	//  ^^^
+      }
       return 0;
     }
 
@@ -2558,11 +2846,37 @@ class TagCrypt {
 
     array do_return(RequestID id) {
       if(args->compare) {
-	_ok=crypt(content,args->compare);
+	_ok = verify_password(content,args->compare);
 	return 0;
       }
-      result=crypt(content);
+      result = crypt_password(content);
       return 0;
+    }
+  }
+}
+
+class TagHashHMAC
+{
+  inherit RXML.Tag;
+  constant name = "hash-hmac";
+
+  mapping(string:RXML.Type) req_arg_types = ([
+    "hash"     : RXML.t_string(RXML.PEnt),
+    "password" : RXML.t_string(RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    void do_return(RequestID id) {
+      string password = args->password;
+      args->password = "";
+      object hash;
+      hash = Crypto[upper_case(args->hash)] || Crypto[lower_case(args->hash)];
+      if (!hash)
+	RXML.parse_error ("Unknown hash algorithm %O.", args->hash);
+
+      result = String.string2hex(Crypto.HMAC(hash)(password)(content));
     }
   }
 }
@@ -2705,7 +3019,12 @@ class TagMaketag {
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal;
-    mapping(string:mixed) makeargs = ([]);
+    mapping(string:mixed) makeargs;
+
+    array do_enter (RequestID id)
+    {
+      makeargs = ([]);
+    }
 
     array do_return(RequestID id) {
       if (!content) content = "";
@@ -4141,6 +4460,83 @@ class TagValue
   }
 }
 
+class TagJsonFormat
+{
+  inherit RXML.Tag;
+  constant name = "json-format";
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "variable": RXML.t_text (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return (RequestID id)
+    {
+      int encode_flags;
+
+      if (args["ascii-only"])
+	encode_flags |= Standards.JSON.ASCII_ONLY;
+      if (args["human-readable"])
+	encode_flags |= Standards.JSON.HUMAN_READABLE;
+      if (string canon = args["canonical"]) {
+	if (canon != "pike")
+	  RXML.parse_error ("Unknown canonical form %q requested.\n", canon);
+	encode_flags |= Standards.JSON.PIKE_CANONICAL;
+      }
+
+      if (args->value)
+	content = args->value;
+      else if (string var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (var)))
+	  parse_error ("Variable %q does not exist.\n", var);
+      }
+
+      if (mixed err =
+	  catch (result = Standards.JSON.encode (content, encode_flags)))
+	RXML.run_error (describe_error (err));
+
+      if (!args["no-xml-quote"])
+	result = replace (result, ([
+			    "&": "\\u0026",
+			    "<": "\\u003c",
+			    ">": "\\u003e",
+			  ]));
+    }
+  }
+}
+
+class TagJsonParse
+{
+  inherit RXML.Tag;
+  constant name = "json-parse";
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return (RequestID id)
+    {
+      if (args->value)
+	content = args->value;
+      else if (string var = args->variable) {
+	if (zero_type (content = RXML.user_get_var (var)))
+	  parse_error ("Variable %q does not exist.\n", var);
+      }
+
+      if (mixed err = catch (result = Standards.JSON.decode (content)))
+	RXML.run_error (describe_error (err));
+    }
+  }
+}
+
 class TagCSet {
   inherit RXML.Tag;
   constant name = "cset";
@@ -4447,8 +4843,20 @@ class TagUse {
        mapping(string:mixed)|RXML.Scope formvars,
        mapping(string:mixed)|RXML.Scope varvars] = res;
       foreach (newdefs; string defname; mixed def) {
-	ctx->misc[defname] = def;
-	if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+	if (defname == "scope_roxen" || defname == "scope_page") {
+	  // The user override mappings for the "roxen" and "page"
+	  // scopes. Merge with existing mappings.
+	  mapping(string:mixed) tgt_map = ctx->misc[defname];
+	  if (!tgt_map)		// Shouldn't happen.
+	    ctx->misc[defname] = def + ([]);
+	  else
+	    foreach (def; string var; mixed val)
+	      tgt_map[var] = val;
+	}
+	else {
+	  ctx->misc[defname] = def;
+	  if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
+	}
       }
       ctx->extend_scope ("form", formvars);
       ctx->extend_scope ("var", varvars);
@@ -4918,8 +5326,10 @@ class UserTag {
 
     constant is_user_tag = 1;
     constant is_contents_nest_tag = 1;
+
     string content_text;
     RXML.PCode compiled_content;
+
     mixed content_result;
     int got_content_result;
     mapping(string:mixed) saved_scopes;
@@ -6458,11 +6868,6 @@ class IfIs
     mixed var;
     if (sizeof (arr) < 2) {
       var = source (id, arr[0], 1);
-      // Compatibility kludge: Empty arrays are considered false. This
-      // is probably the result of that multiple values are
-      // represented by arrays. We don't want to escalate that to
-      // other types, though (empty strings are already considered
-      // true).
       if (!arrayp (var) && !mappingp (var) && !multisetp (var))
 	return !!var;
     }
@@ -6766,7 +7171,7 @@ class TagIfUser {
 
   private int match_passwd(string try, string org) {
     if(!strlen(org)) return 1;
-    if(crypt(try, org)) return 1;
+    if(verify_password(try, org)) return 1;
   }
 
   private string simple_parse_users_file(string file, string u) {
@@ -7683,6 +8088,31 @@ constant tagdoc=([
  Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
+"&roxen.true;":#"<desc type='entity'><p>
+ The value is true in boolean tests and yields 1 or 1.0, as appropriate, in
+ a numeric context.</p>
+
+ <p>This is used for the special 'true' value in JSON (see
+ <tag>json-parse</tag> and <tag>json-format</tag>).
+</p></desc>",
+
+"&roxen.false;":#"<desc type='entity'><p>
+ The value is false in boolean tests, and yields 0 or 0.0, as
+ appropriate, in a numeric context.</p>
+
+ <p>This is used for the special 'false' value in JSON (see
+ <tag>json-parse</tag> and <tag>json-format</tag>).
+</p></desc>",
+
+"&roxen.null;":#"<desc type='entity'><p>
+ NULL value. It's false in boolean tests, yields \"\" in a string
+ context and 0 or 0.0, as appropriate, in a numeric context.</p>
+
+ <p>This is used for SQL NULL in the SQL tags, and also for the
+ special 'null' value in JSON (see <tag>json-parse</tag> and
+ <tag>json-format</tag>).
+</p></desc>",
+
 "&roxen.time;":#"<desc type='entity'><p>
  The current posix time. An example output: \"244742740\".
 </p></desc>",
@@ -8181,7 +8611,7 @@ constant tagdoc=([
 </attr>
 
 <attr name='drop' value='string'>
- <p>The prestate or prestates that should be dropped, in a comma separated
+ <p>The prestate or prestates that should be dropped, in a comma-separated
  list.</p>
 </attr>
 
@@ -8382,6 +8812,21 @@ using the pre tag.
  of possible values, or else the cache should have a timeout.</p>
 </attr>
 
+<attr name='generation-variable' value='string'>
+ <p>Similar to the \"variable\" attribute with the difference that the
+ cache only keeps the most recently stored value for the combination of
+ all referenced generation variables. This is particularly suitable for
+ generation counters where old entries become garbage once a counter is
+ bumped (though there is no requirement that variable values are numeric).
+ </p>
+
+ <p>In the current implementation a cache entry associated with at least
+ one generation variable can be returned in lookups specifying zero
+ generation variables if all other variables match. The inverse is however
+ not true; a lookup including generation variables will never return entries
+ stored without the same \"generation-variable\" attribute.</p>
+</attr>
+
 <attr name='key' value='string'>
  <p>Use the value of this attribute directly in the key. This
  attribute mainly exist for compatibility; it's better to use the
@@ -8465,6 +8910,20 @@ using the pre tag.
  account by those caches. You can use <xref href='set-max-cache.tag'/>
  to set a timeout for the protocol cache and for the client-side
  caching.</p>
+</attr>
+
+<attr name='mutex'>
+ <p>For use in shared caches only. Following a cache miss for a shared
+ entry, prevent reundant generation of a new result in concurrent threads.
+ Only the first request will compute the value and all other threads will
+ wait for this to complete, thereby saving CPU resources.<p>
+
+ <p>The mutex protecting a particular <tag>cache</tag> tag depends on
+ the variables given as cache key. This ensures unrestricted execution
+ for entries where keys differ. Different <tag>cache</tag> instances will
+ be protected by independent mutexes unless they 1) are given identical
+ cache keys, and 2) have identical tag bodies (or uses the \"nohash\"
+ attribute).</p>
 </attr>
 
 <attr name='years' value='number'>
@@ -8617,7 +9076,9 @@ using the pre tag.
 
 "configimage":#"<desc type='tag'><p><short>
  Returns one of the internal Roxen configuration images.</short> The
- src attribute is required.
+ src attribute is required. It is possible to pass attributes, such as 
+ the title attribute, to the resulting tag by including them in the 
+ configimage tag.
 </p></desc>
 
 <attr name='src' value='string'>
@@ -8672,6 +9133,9 @@ using the pre tag.
  clear-text password from being stored anywhere. When a login attempt
  is made, the password supplied is also encrypted and then compared to
  the stored encrypted password.</p>
+
+ <p>Depending on the version of Roxen and Pike this tag supports
+    several different encryption schemes.</p>
 </desc>
 
 <attr name='compare' value='string'>
@@ -8685,6 +9149,25 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
+"hash-hmac":#"<desc type='cont'><p><short>
+ Keyed-Hashing for Message Authentication (HMAC) tag.</short></p>
+
+<ex-box><hash-hmac hash='md5' password='key'>The quick brown fox jumps over the lazy dog</hash-hmac>
+  Result: 80070713463e7749b90c2dc24911e275
+</ex-box>
+</desc>
+
+<attr name='hash' value='string'>
+ <p>The hash algorithm to use (e.g. MD5, SHA1, SHA256 etc.) All hash algorithms
+supported by Pike can be used.</p>
+</attr>
+
+<attr name='password' value='string'>
+ <p>The password to use.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
 "date":#"<desc type='tag'><p><short>
  Inserts the time and date.</short> Does not require attributes.
 </p>
@@ -8693,13 +9176,11 @@ using the pre tag.
 </desc>
 
 <attr name='unix-time' value='number of seconds'>
- <p>Display this time instead of the current. This attribute uses the
- specified Unix 'time_t' time as the starting time (which is
- <i>01:00, January the 1st, 1970</i>), instead of the current time.
- This is mostly useful when the <tag>date</tag> tag is used from a
- Pike-script or Roxen module.</p>
+ <p>Display this time instead of the current. The time is taken as a
+ unix timestamp (i.e. the number of seconds since 00:00:00 Jan 1 1970
+ UTC).</p>
 
-<ex><date unix-time='120'/></ex>
+<ex><date unix-time='946684800'/></ex>
 </attr>
 
 <attr name='http-time' value='http time stamp'>
@@ -8978,6 +9459,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  that works regardless of the type.</p>
 </attr>
 
+<attr name='showscope' value='scope'>
+ <p>Shows all the variables in the given scope in a generic debug
+ format.</p>
+</attr>
+
 <attr name='showlog'>
  <p>Shows the debug log.</p>
 </attr>
@@ -9219,7 +9705,13 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  Adds an HTTP header to the page sent back to the client.</short> For
  more information about HTTP headers please steer your browser to
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
-</p></desc>
+</p>
+
+<note><p>If not both name and value attributes are present, the tag is
+passed on to the output HTML assuming the intention is to make the HTML5
+header tag.</p></note>
+
+</desc>
 
 <attr name='name' value='string' required='required'>
  <p>The name of the header.</p>
@@ -9243,13 +9735,14 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 "imgs":#"<desc type='tag'><p><short>
  Generates an image tag with the correct dimensions in the width and height
- attributes. These dimensions are read from the image itself, so the image
- must exist when the tag is generated. The image must also be in GIF,
- JPEG/JFIF, PNG, PSD or TIFF format. Note that the image content is not
- converted.</p>
+ attributes.</short> These dimensions are read from the image itself, so the
+ image must exist when the tag is generated. The image must also be in GIF,
+ JPEG/JFIF, PNG, PSD or TIFF format. It is possible to pass attributes, such 
+ as the alt attribute, to the resulting tag by including them in the imgs tag. 
+ Note that the image content is not converted.</p>
 
  <p>See also the <tag>emit source=\"imgs\"</tag> for retrieving
- the same image information without generating the output tag.</short>
+ the same image information without generating the output tag.
 </p></desc>
 
 <attr name='src' value='string' required='required'>
@@ -9581,12 +10074,12 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 </attr>
 
 <attr name='add' value='string'>
- <p>The prestate or prestates that should be added, in a comma separated
+ <p>The prestate or prestates that should be added, in a comma-separated
  list.</p>
 </attr>
 
 <attr name='drop' value='string'>
- <p>The prestate or prestates that should be dropped, in a comma separated
+ <p>The prestate or prestates that should be dropped, in a comma-separated
  list.</p>
 </attr>
 
@@ -9999,7 +10492,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  </list>
 
  <p>Positive positions count from the start of the input array,
- beginning with 1. Negative positions counts from the end.</p>
+ beginning with 1. Negative positions count from the end.</p>
 
  <p>It is not an error if a position count goes past the array limit
  (in either direction). The position gets capped by the start or end
@@ -10124,6 +10617,68 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 <attr name='expr' value='string'>
  <p>An expression that gets evaluated to produce the value. The
  content must be empty if this is used.</p>
+</attr>",
+
+"json-parse": #"<desc type='cont'>
+ <p><short>Parses a JSON-formatted string.</short> This returns a
+ value of the same type as the top level JSON object, typically an
+ array or a mapping.</p>
+ </desc>
+
+<attr name='value' value='string'>
+ <p>The JSON-formatted value to parse.</p>
+</attr>
+
+<attr name='variable' value='string'>
+ <p>Get the JSON-formatted value to parse from this variable, unless
+ <tt>value</tt> is provided. If neither is specified the content of
+ the container is used.</p>
+</attr>",
+
+"json-format": #"<desc type='cont'>
+ <p><short>Formats a JSON string.</short> The input value may be a
+ number, string, array, mapping, or one of the special values
+ <ent>roxen.true</ent>, <ent>roxen.false</ent>, or
+ <ent>roxen.null</ent>.</p>
+
+ <p>Note: In some cases it may be easier to write the JSON answer as a
+ plain string and substitute some values into it. In that case, the
+ \"json\" encoding is more useful:</p>
+
+ <ex-box>
+{\"user\": \"&var.username:json;\",
+ \"name\": \"&var.fullname:json;\"}
+</ex-box>
+</desc>
+
+<attr name='value' value='string'>
+ <p>The value to format.</p>
+</attr>
+
+<attr name='variable' value='string'>
+ <p>Get the value to format from this variable, unless <tt>value</tt> has been
+ provided. If neither is specified the content of the container is used.</p>
+</attr>
+
+<attr name='ascii-only'>
+ <p>Set to generate JSON output where all non-ASCII characters are escaped.
+    If not set only required characters are escaped.</p>
+</attr>
+
+<attr name='human-readable'>
+ <p>Set to generate JSON output with extra whitespace for easier reading.</p>
+</attr>
+
+<attr name='canonical' value='pike'>
+ <p>Use <tt>canonical=\"pike\"</tt> to generate JSON output where the same
+    input always gives consistent output with regards to e.g. mapping
+    sorting. If not provided the order is undefined.</p>
+</attr>
+
+<attr name='no-xml-quote'>
+ <p>Set to skip escaping of XML markup characters (<tt>&amp;</tt>,
+    <tt>&lt;</tt> and <tt>&gt;</tt>). The standard behavior is to escape
+    these characters using \\uXXXX encoding.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -10383,8 +10938,29 @@ After: &var.language;<br /></ex>
      <i>expr2</i>.</p></c></row>
 
    <row valign='top'>
+     <c><p><tt>log(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the natural logarithm of the value <i>expr</i>. To get
+        the logarithm in another base, divide the result with
+        <tt>log(<i>base</i>)</tt>.</p></c></row>
+
+   <row valign='top'>
      <c><p><tt>abs(<i>expr</i>)</tt></p></c>
      <c><p>Returns the absolute value of <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>floor(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value less than or equal to the
+        value <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>ceil(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value greater than or equal to the
+        value <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>round(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the closest integer value to the value <i>expr</i>.
+        </p></c></row>
 
    <row valign='top'>
      <c><p><tt>max(<i>expr</i>, ...)</tt></p></c>
@@ -10436,6 +11012,15 @@ After: &var.language;<br /></ex>
    <row valign='top'>
      <c><p><tt>reverse(<i>expr</i>)</tt></p></c>
      <c><p>Returns the reverse of <i>expr</i>.</p></c></row>
+
+   <row valign='top'>
+     <c><p><tt>regexp_split(<i>regexp</i>, <i>expr</i>)</tt></p></c>
+     <c><p>Matches <i>regexp</i> against the string <i>expr</i>. If it
+     matches then an array is returned that has the full match in the
+     first element, followed by what the corresponding submatches (if
+     any) match. Returns <ent>roxen.false</ent> if the regexp doesn't
+     match. The regexp follows
+     <a href='http://www.pcre.org/'>PCRE</a> syntax.</p></c></row>
  </xtable>
 
  <p>Expressions for array operands:</p>
@@ -10645,6 +11230,17 @@ After: &var.language;<br /></ex>
 
 <attr name='path' value='string' default=\"\"><p>
  The path in which the cookie should be available.</p>
+</attr>
+
+<attr name='secure'>
+  <p>If this attribute is present the cookie will be set with the Secure
+  attribute. The Secure flag instructs the user agent to use only
+  (unspecified) secure means to contact the origin server whenever it
+  sends back the cookie. If the browser supports the secure flag, it will not send the cookie when the request is going to an HTTP page.</p>
+</attr>
+
+<attr name='httponly'>
+  <p>If this attribute is present the cookie will be set with the HttpOnly attribute. If the browser supports the HttpOnly flag, the cookie will be secured from being accessed by a client side script.</p>
 </attr>
 ",
 
@@ -11684,6 +12280,37 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='defined' value='define' required='required'><p>
  Choose what define to test.</p>
+ <p>The define should be provided as
+    <i>type</i>&amp;#0;<i>name-of-define</i>, i.e. the type
+    and the name separated by a NUL (ASCII 0) character. Currently there
+    are two alternatives:</p>
+ <list type='ul'>
+   <item><p>tag&amp;#0;<i>name-of-define</i></p></item>
+   <item><p>if&amp;#0;<i>name-of-define</i></p></item>
+ </list>
+ <ex>
+   <define tag=\"hello-world\">Hello world</define>
+   <define container=\"say-hello\">Hello, <contents/></define>
+   <define if=\"person\">Matt</define>
+
+   <if defined=\"tag&#0;hello-world\">
+     <div><hello-world/>!!</div>
+   </if>
+
+   <if defined=\"tag&#0;say-hello\">
+     <div><say-hello>Matt</say-hello></div>
+   </if>
+
+   <if defined=\"if&#0;person\">
+     <div>
+       <if person=\"Matt\">Yes, it's Matt!</if>
+       <else>No Matt</else>
+    </div>
+   </if>
+
+   <if defined=\"tag&#0;non-defined-thing\"><non-defined-thing/></if>
+   <else><div>&lt;non-defined-thing/&gt; is not defined</div></else>
+ </ex>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -12313,24 +12940,25 @@ Specify scope to test for existence.</p>
 <attr name='advanced' value='lines|words|csv|chars'><p>
  If the value is a string it can be split into multiple fields
  by using this attribute:</p>
- <dl>
-  <dh><tt>lines</tt></dh>
-  <dd>The input is split on individual line-feed and carriage-return
-      characters and in combination. Note that the separator characters
-      are not kept in the output values.</dd>
-  <dh><tt>words</tt></dh>
-  <dd>The input is split on the common white-space characters (line-feed,
-      carriage-return, space and tab). White-space is not retained in
-      the fields. Note that if a field ends with one of the punctuation
-      marks <tt>'.'</tt>, <tt>','</tt>, <tt>':'</tt>, <tt>';'</tt>,
-      <tt>'!'</tt> or <tt>'?'</tt>, the punctuation mark will be removed.</dd>
-  <dh><tt>chars</tt> (Characters)</dh>
-  <dd>The input is split into individual characters.</dd>
-  <dh><tt>csv</tt> (Comma-separated values)</dh>
-  <dd>This input is first split into lines, and the lines then split
-      into fields on <tt>','</tt> and <tt>';'</tt> according to CSV
-      quoting rules. Note that this results in a two-dimensional result.</dd>
- </dl>
+ <list type='dl'>
+  <item name='lines'>
+    <p>The input is split on individual line-feed and carriage-return
+    characters and in combination. Note that the separator characters
+    are not kept in the output values.</p></item>
+  <item name='words'>
+    <p>The input is split on the common white-space characters (line-feed,
+    carriage-return, space and tab). White-space is not retained in
+    the fields. Note that if a field ends with one of the punctuation
+    marks <tt>'.'</tt>, <tt>','</tt>, <tt>':'</tt>, <tt>';'</tt>,
+    <tt>'!'</tt> or <tt>'?'</tt>, the punctuation mark will be removed.</p></item>
+  <item name='chars'>
+    <p>(Characters) The input is split into individual characters.</p></item>
+  <item name='csv'>
+    <p>(Comma-separated values) This input is first split into lines,
+    and the lines then split into fields on
+    <tt>','</tt> and <tt>';'</tt> according to CSV quoting rules.
+    Note that this results in a two-dimensional result.</p></item>
+ </list>
 </attr>
 
 <attr name='case' value='upper|lower'><p>
@@ -12372,7 +13000,6 @@ Specify scope to test for existence.</p>
 //----------------------------------------------------------------------
 
 "emit":({ #"<desc type='cont'><p><short hide='hide'>
-
  Provides data, fetched from different sources, as entities. </short>
 
  <tag>emit</tag> is a generic tag used to fetch data from a

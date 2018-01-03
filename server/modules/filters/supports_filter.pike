@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: supports_filter.pike,v 1.8 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant module_name = "Supports filter";
 constant module_type = MODULE_FILTER;
 constant thread_safe = 1;

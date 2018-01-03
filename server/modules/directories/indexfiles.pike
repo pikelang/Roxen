@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.24 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 inherit "module";

@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.125 2011/01/20 23:49:17 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -357,8 +357,8 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     
     if (mappingp(tmp)) {
       if (tmp->error != 401)
-	report_debug("GButton: Failed to load frame image: %O (error: %O)\n",
-		     args->border_image, tmp->error);
+	RXML.parse_error("Failed to load frame image: %O (error: %O)\n",
+			 args->border_image, tmp->error);
       return tmp;
     }
     set_image( tmp );
@@ -1016,8 +1016,7 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href"    : args->href,
-			     "onfocus" : "this.blur();" ]);
+	mapping a_attrs = ([ "href"    : args->href ]);
 
 	foreach(indices(args), string arg)
 	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"

@@ -373,6 +373,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "              cursor:   pointer;"
        "              z-index:  2'>"
        "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
+       "         class='roxen-color-selector'"
        "         style='border-top:    1px solid #888888;"
        "                border-left:   1px solid #888888;"
        "                border-bottom: 2px solid #888888;"
@@ -391,9 +392,11 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "    </tr><tr>"
        "      <td colspan='2' style='border-top: 1px solid #888888'"
        "        ><img src='/internal-roxen-pixel-000000'"
+       "              class='black'"
        "              width='76' height='10' style='cursor: pointer'"
        "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
        "        /><img src='/internal-roxen-pixel-ffffff'"
+       "               class='white'"
        "               width='76' height='10' style='cursor: pointer'"
        "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
        "        /></td>"
@@ -713,6 +716,10 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   string method = this_object()->wizard_method || "method=\"get\"";
 
 #ifdef USE_WIZARD_COOKIE
+  // FIXME: If this is enabled there may be trouble with the state
+  // getting mixed up between wizards when one wizard initiates
+  // another. The state should be extended with a wizard identifier
+  // then.
   string state_form = "";
   id->add_response_header("Set-Cookie",
 			  sprintf("WizardState=%s; path=/",
@@ -836,6 +843,10 @@ mapping(string:array) wizard_get_state (RequestID id)
       // doesn't use a stack, so if we're coming here from another
       // wizard return then we ignore the referrer so that the
       // ordinary "cancel" url is used instead.
+      //
+      // Note that this only works with the assumption that the
+      // referring wizard (or other page) doesn't retain the _wiz_ret
+      // variable in later links.
       string referrer = id->referer[0];
       if (!has_value (referrer, "&_wiz_ret=") &&
 	  !has_value (referrer, "?_wiz_ret=")) {
@@ -847,7 +858,7 @@ mapping(string:array) wizard_get_state (RequestID id)
   }
 
   mapping(string:array) vars = id->real_variables;
-  foreach(vars; string q; array var)
+  foreach(s; string q; array var)
     if (!vars[q])
       vars[q] = var;
 

@@ -1390,6 +1390,19 @@ a&auml; &amp; b  &gt;
   <equal>17</equal>
 </test>
 
+<test>
+  <rxml type="array">
+    <set variable="var.foo" type="mapping"/>
+    <set variable="var.foo.a" value="1"/>
+    <set variable="var.bar" type="mapping"/>
+    <set variable="var.bar.c" value="3"/>
+    &var.foo;
+    &var.bar;
+    <value type="mapping"/>
+  </rxml>
+  <equal>({(["a": "1"]), (["c": "3"]), ([])})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>String number test</comment>
@@ -2716,7 +2729,9 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3" sort="data"><set variable="x">1</set>&_.data;:</emit></rxml>
-<result>:::0:a:</result>
+<!-- Note: Many of the values in this set have no well defined sort
+     order at all. This test should perhaps be removed. -->
+<result>:::0::a:</result>
 </test>
 
 <test>
@@ -2932,22 +2947,22 @@ b</strlen></rxml>
 
 <test>
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="TESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test>
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test><!-- make sure the emit source is resetted -->
 <rxml><emit source="OTESTER" test="3"><set variable="x">1</set>&_.data;&_.data;,</emit></rxml>
-<result>aa,,,,01,</result>
+<result>aa,,,,01,,</result>
 </test>
 
 <test>
@@ -3888,7 +3903,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>Roxen/5\.2\.[0-9]+</regexp>
+<regexp>Roxen/5\.4\.[0-9]+</regexp>
 </test>
 
 <test>

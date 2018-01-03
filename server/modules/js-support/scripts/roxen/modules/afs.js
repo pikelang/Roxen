@@ -110,7 +110,7 @@ ROXEN.AFS = function () {
       }
 
     if (got_json_args)
-      query.push ("__afs=" + YAHOO.lang.JSON.stringify (json_args));
+      query.push ("__afs=" + ROXEN.escapeURIComponent(YAHOO.lang.JSON.stringify (json_args)));
 
     return query.join ("&");
   }
@@ -120,7 +120,7 @@ ROXEN.AFS = function () {
     ROXEN.log("ROXEN.AFS: connection error: " +
 	      resp.status + " " + resp.statusText + "\n");
 
-    for (var i = 0; i < error_callbacks.length; j++) {
+    for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
 	ROXEN.log ("  AFS calling error callback: " + cb.name + "\n");
@@ -144,7 +144,7 @@ ROXEN.AFS = function () {
   {
     ROXEN.log("ROXEN.AFS: JSON parse error: " + err + "\n");
 
-    for (var i = 0; i < error_callbacks.length; j++) {
+    for (var i = 0; i < error_callbacks.length; i++) {
       var cb = error_callbacks[i];
       if (debug_log > 2)
 	ROXEN.log ("  AFS calling error callback: " + cb.name + "\n");
@@ -167,7 +167,7 @@ ROXEN.AFS = function () {
 
   function request_success (resp)
   {
-    var msgs;
+    var msgs, cb;
     try {
       msgs = YAHOO.lang.JSON.parse(resp.responseText);
     }
@@ -186,7 +186,7 @@ ROXEN.AFS = function () {
 	  ROXEN.log ("AFS response: " + msg.msg_type + ", tag " + tag + "\n");
 
         var ent = tagged_callbacks[tag];
-	var cb = ent && ent[0];
+	cb = ent && ent[0];
 	if (ent === undefined)
 	  ROXEN.log ("ROXEN.AFS: Warning: Got AFS response with " +
 		     "unknown tag: " + msg.msg_type + "\n");
@@ -215,7 +215,7 @@ ROXEN.AFS = function () {
       }
 
       for (var j = 0; j < global_callbacks.length; j++) {
-	var cb = global_callbacks[j];
+	cb = global_callbacks[j];
 	if (debug_log > 2)
 	  ROXEN.log ("  AFS calling global callback: " + cb.name + "\n");
 	cb (msg);
@@ -424,7 +424,7 @@ ROXEN.AFS = function () {
       if (debug_log > 2)
 	ROXEN.log ("AFS poll delay " + delay + " ms\n");
       poll_delay_timeout_id =
-	setTimeout (function () {
+	window.setTimeout (function () {
 	  poll_delay_timeout_id = undefined;
 	  call ("poll",
 		{timeout  : poll_timeout,

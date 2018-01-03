@@ -18,12 +18,11 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.124 2011/01/21 11:12:22 mast Exp $";
+  "$Id$";
 
 constant path = "config_interface/";
 
 object charset_decoder;
-Sql.Sql docs;
 
 // NOTE: If we ever want to support more than one template, this
 // optimization has to be removed, or at least changed to index on the
@@ -74,7 +73,7 @@ string real_file( mixed f, mixed id )
 
   if (f == "")
     return path;
-  if( docs && sscanf( f, "docs/%s", f ) )
+  if( sscanf( f, "docs/%s", f ) )
     return 0;
   array(string|array) stat_info = low_stat_file(f, id);
   return stat_info && stat_info[0];
@@ -86,8 +85,10 @@ mapping get_docfile( string f )
   if( f=="" || f[-1] == '/' )
     return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
 
-  if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
-                              "/"+f )) )
+  Sql.Sql docs = DBManager.get( "docs", my_configuration());
+
+  if( docs && sizeof(q = docs->query( "SELECT * FROM docs WHERE name=%s",
+				      "/"+f )) )
     return q[0];
 }
 
@@ -98,7 +99,7 @@ array(int)|Stat stat_file( string f, object id )
   if (f == "")
     return file_stat(path);
 
-  if( docs && sscanf( f, "docs/%s", f ) )
+  if( sscanf( f, "docs/%s", f ) )
     if( mapping rf = get_docfile( f ) )
       return ({ 0555, strlen(rf->contents), time(), 0, 0, 0, 0 });
 
@@ -284,7 +285,7 @@ mixed find_file( string f, RequestID id )
       id->set_output_charset( encoding );
   }
 
-  if( docs && (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
+  if( (sscanf( f, "docs/%s", f ) ) || (f=="docs"))
   {
     if( f == "docs" )
       return Roxen.http_redirect( id->not_query+"/", id );
@@ -424,6 +425,7 @@ void start(int n, Configuration cfg)
     mixed err;
     array(mapping(string:string)) old_version;
     int ver;
+    Sql.Sql docs;
     if( !(docs = DBManager.get( "docs", cfg ) ) ||
 	(err = catch( old_version = DBManager.get( "docs", cfg )
 		      ->query("SELECT contents FROM docs where name='_version'") )) ||
@@ -459,7 +461,6 @@ void start(int n, Configuration cfg)
       else
       {
 	report_warning( "There is no documentation available\n");
-	docs = 0;
       }
     }
     string am = query( "auth_method" );
