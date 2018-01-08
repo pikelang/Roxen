@@ -220,9 +220,7 @@ mixed find_file( string f, RequestID id )
 
     string wizard_id = id->cookies["RoxenWizardId"];
     if (!sizeof(wizard_id || "")) {
-      wizard_id = (string)random(0x7fffffff);
-      id->add_response_header("Set-Cookie",
-			      sprintf("RoxenWizardId=%s; path=/", wizard_id));
+      wizard_id = Roxen.set_wizard_id_cookie(id);
       id->cookies["RoxenWizardId"] = wizard_id;
     }
     if (sizeof(id->real_variables["_roxen_wizard_id"] || ({})) > 1) {
