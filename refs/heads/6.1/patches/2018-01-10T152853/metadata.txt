@@ -1,0 +1,12 @@
+subject: Roxen 6.1:  Roxen: add support for -DLOG_GC_CYCLES
+from: 7ce96a6bf458f326fbb94dba828e2a3c37b441d4
+to: 9d0bd06dd71d62d2c59bd2300f89d7a721a25632
+originator: Marcus Wellhardh
+depends: 2017-12-11T110806
+restart: true
+
+• Roxen: add support for -DLOG_GC_CYCLES.
+
+Also allow runtime config of GC log modes.
+
+• Sync build number with other packages.
