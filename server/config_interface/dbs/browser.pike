@@ -328,21 +328,21 @@ mixed configure_ext_db_con( string db, RequestID id )
       {
        case "":
 	 warning =  "<font color='&usr.warncolor;'>"+
-	   _(1146,"Please specify an alias for the database")+
+	   _(1146,"Please specify a name for the database connection.")+
 	   "</font>";
          break;
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
                          _(1147,"<tt>%s</tt> is an internal database, used by Roxen. "
-			   "Please select another alias.")+
+			   "Please select another name.")+
                          "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
 			     _(1148,"<tt>%s</tt> is a MySQL keyword, used by MySQL. "
-			       "Please select another alias.")+
+			       "Please select another name.")+
 			     "</font>", id->variables->name );
 	 catch {
            // Check name first since DBManager.get_db_url_info() ignores
@@ -352,16 +352,16 @@ mixed configure_ext_db_con( string db, RequestID id )
              warning = sprintf("<font color='&usr.warncolor;'>"+
                                _(1149,"<span style=\"white-space: pre;\">"
                                  "'<tt>%s</tt>'</span> "
-                                 "is not a valid database alias. "
-                                 "Please select another alias.")+
+                                 "is not a valid database name. "
+                                 "Please select another name.")+
                                "</font>", id->variables->name );
            }
            else if( db != id->variables->name &&
                DBManager.get_db_url_info( id->variables->name ) )
            {
              warning = sprintf("<font color='&usr.warncolor;'>"+
-                               _(529,"A database or alias with name <tt>%s</tt> "
-                                 "already exists. Please select another alias.")+
+                               _(529,"A database with name <tt>%s</tt> "
+                                 "already exists. Please select another name.")+
                                "</font>", id->variables->name );
            }
 	 };
@@ -399,13 +399,13 @@ mixed configure_ext_db_con( string db, RequestID id )
     "<table>\n"
     
     "  <tr>\n"
-    "    <td><b>"+_(418,"Alias")+":</b></td>\n"
+    "    <td><b>"+_(418,"Name")+":</b></td>\n"
     "    <td><input name='name' value='&form.name;'/></td>\n"
     "  </tr>\n"
     
     "  <tr>\n"
     "    <td valign=top colspan='2'>\n"
-    "      <i>"+_(530,"The alias for the database. It is recommended to "
+    "      <i>"+_(530,"The name for the database. It is recommended to "
                       "use only lowercase letters <tt>[a-z]</tt>, numbers "
                       "and <tt>-</tt> (dash).")+"</i>\n"
     "    </td>\n"
