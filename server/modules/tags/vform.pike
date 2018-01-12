@@ -517,10 +517,8 @@ class TagVForm {
 
       string wizard_id = id->cookies["RoxenWizardId"];
       if (!sizeof(wizard_id || "")) {
-	wizard_id = (string)random(0x7fffffff);
-	id->add_response_header("Set-Cookie",
-				sprintf("RoxenWizardId=%s; path=/", wizard_id));
-	id->cookies["RoxenWizardId"] = wizard_id;
+        wizard_id = Roxen.set_wizard_id_cookie(id);
+        id->cookies["RoxenWizardId"] = wizard_id;
       }
       if (wizard_id != id->variables["_roxen_wizard_id"]) {
 	m_delete(id->real_variables, "__state");
