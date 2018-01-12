@@ -2395,10 +2395,8 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-
-
 <str id="418">
-<o>Alias</o>
+<o>Name</o>
 <t></t>
 </str>
 
@@ -3083,12 +3081,12 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 </str>
 
 <str id="529">
-<o>A database or alias with name &lt;tt&gt;%s&lt;/tt&gt; already exists. Please select another alias.</o>
+<o>A database with name &lt;tt&gt;%s&lt;/tt&gt; already exists. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="530">
-<o>The alias for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
+<o>The name for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
 <t></t>
 </str>
 
@@ -4161,21 +4159,21 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 </str>
 
 <str id="1146">
-<o>Please specify an alias for the database</o>
+<o>Please specify a name for the database connection.</o>
 <t></t>
 </str>
 
 <str id="1147">
-<o>&lt;tt&gt;%s&lt;/tt&gt; is an internal database, used by Roxen. Please select another alias.</o>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is an internal database, used by Roxen. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="1148">
-<o>&lt;tt&gt;%s&lt;/tt&gt; is a MySQL keyword, used by MySQL. Please select another alias.</o>
+<o>&lt;tt&gt;%s&lt;/tt&gt; is a MySQL keyword, used by MySQL. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="1149">
-<o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database alias. Please select another alias.</o>
+<o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database name. Please select another name.</o>
 <t></t>
 </str>
