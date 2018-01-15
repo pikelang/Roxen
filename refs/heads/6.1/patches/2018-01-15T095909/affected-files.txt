@@ -1,0 +1,6 @@
+Modified files:
+  base_server/wizard.pike
+  etc/modules/Roxen.pmod
+  modules/configuration/config_filesystem.pike
+  modules/configuration/config_tags.pike
+  modules/tags/vform.pike
