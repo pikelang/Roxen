@@ -1,0 +1,20 @@
+subject: Roxen 6.1:  Wizards: Set the secure flag on RoxenWizardId cookie if https. Roxen: Improved type for set_cookie(). 
+from: 9d0bd06dd71d62d2c59bd2300f89d7a721a25632
+to: 64e4c03ba6ae7486a205e76ad7436e79dc9ac9a4
+originator: Jonas Lonnberg
+depends: 2018-01-10T152853
+restart: true
+
+• Wizards: Set the secure flag on RoxenWizardId cookie if https (QA rework).
+
+[WS-135]
+
+• Documentation [Roxen.set_cookie]: Document all args.
+
+• Wizards: Set the secure flag on RoxenWizardId cookie if https.
+
+Fixes [WS-135].
+
+• Roxen: Improved type for set_cookie().
+
+Using strings for flags is a bit exotic...
