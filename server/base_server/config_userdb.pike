@@ -557,51 +557,57 @@ class AdminUser
   string password;
   multiset permissions = (<>);
   ConfigurationSettings settings;
-  // Mustache stash;
 
   string tmpl = #"
     {{ #error }}
       <div class='notify error'>{{ error }}</div>
     {{ /error }}
-    <table>
-      <tr class='valign-top'><td style='width:15%'>
-        <table>
-          <tr>
-            <td class='text-right'><nobr>Real name:</nobr></td>
-            <td><input name='PPPreal_name' value='{{ user.realname }}'></td>
-          </tr>
-          <tr>
-            <td class='text-right'>Password:</td>
-            <td><input type='password' name='PPPpassword' value=''></td>
-          </tr>
-          <tr>
-            <td class='text-right'>Again:</td>
-            <td><input type='password' name='PPPpassword2' value=''></td>
-          </tr>
-          <tr>
-            <td class='text-right'>Crypted:</td>
-            <td><input name='PPPc_password' value='{{ user.password }}'></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>
-              <button data-submit='' class='save icon fill' value=' Set '>{{ save_label }}</button>
-            </td>
-          </tr>
-        </table>
-      </td>
-      <td>
-        {{ #user.perms }}
+
+    <div class='form-table'>
+      <div class='form-row'>
+        <div class='form-cell'>
+          <div class='control-group'>
+            <label>Real name</label>
+            <input type='text' name='PPPreal_name' value='{{ user.realname }}'>
+          </div>
+        </div>
+        <div class='form-cell'>
+          <div class='control-group'>
+            <label>Password</label>
+            <input type='password' name='PPPpassword' value=''>
+          </div>
+        </div>
+        <div class='form-cell'>
+          <div class='control-group'>
+            <label>Password again</label>
+            <input type='password' name='PPPpassword2' value=''>
+          </div>
+        </div>
+        <div class='form-cell'>
+          <div class='control-group'>
+            <label>Crypted password</label>
+            <input type='text' name='PPPc_password' value='{{ user.password }}'>
+          </div>
+        </div>
+        <div class='form-cell'>
+          <div class='control-group'>
+            <label>&nbsp;</label>
+            <button data-submit='' class='save icon fill text-center' value=' Set '>{{ save_label }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='user-perms'>
+      {{ #user.perms }}<div class='col'>
           <button
             {{ ^noclick }} data-submit=''{{ /noclick }}
             {{ #disabled }} disabled=''{{ /disabled }}
             name='{{ name }}{{ perm }}'
             class='perm{{ #check }} checked{{ /check }}{{ #dim }} dimmed{{ /dim }}'
           >{{ label }}</button>
-        {{ /user.perms }}
-      </td>
-      </tr>
-    </table>";
+        </div>{{ /user.perms }}
+    </div>";
 
   string form( RequestID id )
   {
