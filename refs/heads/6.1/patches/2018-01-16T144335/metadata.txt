@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Improved reporting for GC_LOG_CYCLES.
+from: 64e4c03ba6ae7486a205e76ad7436e79dc9ac9a4
+to: b109d11c066c8f31b8ca979b2847d742ad1efecf
+originator: Jonas Lonnberg
+depends: 2018-01-15T095909
+restart: true
+
+• GC: Improved reporting for GC_LOG_CYCLES.
+
+Attempt to identify the indices that the cycle consists of.
