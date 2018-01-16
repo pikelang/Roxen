@@ -2492,10 +2492,10 @@ class StartTLSProtocol
 	string tmp;
 	if ((tmp = dn[Standards.PKCS.Identifiers.at_ids.commonName])) {
 	  res += ({
-            sprintf("<td style='white-space:nowrap'>%s</td>"
-                    "<td><b><tt>%s</tt></b>",
-                    LOC_C(0, "Common Name"),
-                    Roxen.html_encode_string(tmp)),
+	    sprintf("<td class='prewrap'>%s</td>"
+		    "<td><b><tt>%s</tt></b>",
+		    LOC_C(0, "Common Name"),
+		    Roxen.html_encode_string(tmp)),
 	  });
 	} else {
 	  res += ({ "<td colspan='2'>" });
@@ -2511,21 +2511,21 @@ class StartTLSProtocol
 	      dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName];
 	  }
 	  res += ({
-            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+	    sprintf("<td class='prewrap'>%s</td><td>%s</td>",
                     LOC_C(0, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
 	  res += ({
-            sprintf("<td style='white-space:nowrap'>%s</td><td>%s</td>",
+	    sprintf("<td class='prewrap'>%s</td><td>%s</td>",
                     LOC_C(0, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	}
 
 	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
-          res += ({
-            sprintf("<td style='white-space:nowrap'>" +
+	  res += ({
+	    sprintf("<td class='prewrap'>" +
                     LOC_C(0, "Issued By") +
                     "</td><td>%s</td>",
                     LOC_C(0, "Self-signed"))
@@ -2547,7 +2547,7 @@ class StartTLSProtocol
 	  }
 	  if (tmp) {
 	    res += ({
-              sprintf("<td style='white-space:nowrap;vertical-align:top'>" +
+	      sprintf("<td class='valign-top prewrap'>" +
                       LOC_C(0, "Issued By") +
                       "</td><td>%s</td>",
                       Roxen.html_encode_string(tmp)),
@@ -2560,9 +2560,8 @@ class StartTLSProtocol
 	if (tbs->not_after < time(1)) {
 	  // Already expired.
 	  res += ({
-            sprintf("<td>%s</td>"
-                    "<td><font color='&usr.warncolor;'>%s</font>\n"
-                    "<img src='&usr.err-3;' /></td>",
+	    sprintf("<td>%s</td>"
+	            "<td><span class='notify error inline'>%s</span></td>",
                     LOC_C(0, "Expired"),
                     tmp),
 	  });
@@ -2570,8 +2569,7 @@ class StartTLSProtocol
 	  // Expires within 30 days.
 	  res += ({
             sprintf("<td>%s</td>"
-                    "<td><font color='&usr.warncolor;'>%s</font>\n"
-                    "<img src='&usr.err-2;' /></td>",
+	            "<td><span class='notify warn inline'>%s</span></td>",
                     LOC_C(0, "Expires"),
                     tmp),
 	  });
@@ -2590,26 +2588,33 @@ class StartTLSProtocol
         paths = replace(paths, 0, "__LOST__");
         paths = map(paths, lfile_path);
         res += ({
-          sprintf("<td style='vertical-align:top'>%s</td><td>%s</td>",
+          sprintf("<td class='valign-top'>%s</td><td>%s</td>",
                   LOC_C(0, "Path(s)"),
                   map(paths, lambda(string p) {
                     if (p)
                       return "<tt>" + Roxen.html_encode_string(p) + "</tt>";
                     else
                       return
-                        "<font color='&usr.warncolor;'>" +
+                        "<span class='notify warn inline'>" +
                         LOC_C(0, "Lost file") +
-                        "</font>";
+                        "</span>";
                   }) * "<br/>")
         });
       }
 
-      return res;
+      int n;
+      return map(res, lambda (string row) {
+                        if (n++ > 0) {
+                          return "<td></td>" + row;
+                        }
+
+                        return row;
+                      });
     }
 
     string render_form(RequestID id, void|mapping additional_args) {
       array(string) current = map(query(), _name);
-      string res = "<table width='100%'>\n";
+      string res = "<table>\n";
       foreach( get_choice_list(); int i; mixed elem ) {
         if (i != 0) {
           res += "<tr><td colspan='3'><hr/></td></tr>\n";
@@ -2624,10 +2629,10 @@ class StartTLSProtocol
           current -= ({ m->value });
         }
         array(string) el_rows = render_element(elem);
-        res += sprintf("<tr><td rowspan='%d'>%s</td>"
+        res += sprintf("<tr><td class='valign-top'>%s</td>"
                        "%s"
                        "</tr>\n",
-                       sizeof(el_rows),
+                       // sizeof(el_rows),
                        Roxen.make_tag( "input", m),
                        el_rows[0]);
         foreach(el_rows[1..], string row) {
