@@ -337,6 +337,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "</table>\n");
 
    case "color-js":
+     //  Note: This is executed fex when:
+     //        <xsl:param ... rxml:type="color" />
      CFIF_THROW("Can't we use the same color picker as in SiteBuilder?\n");
      //  Note: This code requires ColorSelector.js
      if (string color_input = id->variables[m->name])
