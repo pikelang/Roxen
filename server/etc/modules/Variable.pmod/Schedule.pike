@@ -167,7 +167,7 @@ string render_form( RequestID id, void|mapping additional_args )
 {
   string res, inp1, inp2, inp3;
 
-  res = "<table>"
+  res = "<table id='" + path() + #"'>"
     "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
     checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
 

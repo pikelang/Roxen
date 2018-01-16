@@ -43,3 +43,11 @@ void may_be_empty(int(0..1) state)
 {
   _may_be_empty = state;
 }
+
+string render_form( RequestID id, void|mapping additional_args )
+{
+  additional_args = additional_args || ([]);
+  if (!additional_args->type)
+    additional_args->type="date";
+  return ::render_form(id, additional_args);
+}

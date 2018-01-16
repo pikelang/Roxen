@@ -131,10 +131,10 @@ class Diff
       {
         case '&': r += "<tt>"+row+"</tt><br>\n";
           break;
-        case '+': r += "<font color='darkgreen'><tt>"+row+"</tt></font><br>\n";
+        case '+': r += "<span color='darkgreen'><tt>"+row+"</tt></span><br>\n";
           added++;
           break;
-        case '-': r += "<font color='darkred'><tt>"+row+"</tt></font><br>\n";
+        case '-': r += "<span color='darkred'><tt>"+row+"</tt></span><br>\n";
           deleted++;
           break;
         case 'L': r += "<i>"+row+"</i><br>\n";
@@ -870,7 +870,10 @@ class Float
 
     additional_args = additional_args || ([]);
     if (!additional_args->type)
-      additional_args->type="text";
+      additional_args->type="number";
+    if (!additional_args->step) {
+      additional_args->step = "any";
+    }
 
     return input(path(), value, size, additional_args);
   }
@@ -972,7 +975,10 @@ class Int
 
     additional_args = additional_args || ([]);
     if (!additional_args->type)
-      additional_args->type="text";
+      additional_args->type="number";
+    if (!additional_args->step) {
+      additional_args->step = "1";
+    }
 
     return input(path(), value, size, additional_args);
   }
@@ -1288,6 +1294,17 @@ class URL
   array verify_set_from_form( string new_value )
   {
     return verify_port( new_value );
+  }
+
+  string render_form( RequestID id, void|mapping additional_args )
+  {
+    additional_args = additional_args || ([]);
+
+    if (!additional_args->type) {
+      additional_args->type = "url";
+    }
+
+    return ::render_form(id, additional_args);
   }
 }
 
@@ -2100,8 +2117,8 @@ class List
     string prefix = path()+".";
     int i;
 
-    string res = "<a name='"+path()+"'>\n</a><table class='auto rxn-var-list'>\n"
-    "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
+    string res =
+    "<table id='" + path() + "' class='auto rxn-var-list'>";
 
     foreach( map(query(), transform_to_form), mixed val )
     {
@@ -2124,14 +2141,15 @@ class List
         res += "\n<td class='rxn-btn-td'>"+DIMBUTTON("/internal-roxen-down")+"</td>";
       res += "\n<td class='rxn-btn-td'>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
-          +"</td>";
+          +"</td>"
           "</tr>";
       i++;
     }
     res +=
-        "\n<tr><td colspan='4' class='rxn-new-row'>"+
-        BUTTON(prefix+"new", LOCALE(297, "New row") )+
-        "</td></tr></table>\n\n";
+      "<tr><td colspan='4' class='rxn-new-row'>"+
+      BUTTON(prefix+"new", LOCALE(297, "New row") )+
+      "</td></tr></table>\n"
+      "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
     return res;
   }
@@ -2247,7 +2265,8 @@ class PortList
 
     Standards.URI split = Standards.URI( val );
 
-    res += "<div class='rxn-port'><div class='port-url'><select name='"+prefix+"prot'>";
+    res += "<div class='rxn-port'><div class='form-table'><div class='port-url'>"
+           "<span class='select-wrapper'><select class='rxn-port-scheme' name='"+prefix+"prot'>";
     int default_port;
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
@@ -2258,15 +2277,17 @@ class PortList
       else
 	res += "<option>"+p+"</option>";
     }
-    res += "</select>";
-
-    res += "://<input type=text name='"+prefix+"host' value='"+
-           Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type=text size=5 name='"+prefix+"port' value='"+
-      (split->port == default_port ? "" : split->port) +"' />";
-
-    res += "/<input type=text name='"+prefix+"path' value='"+
-      Roxen.html_encode_string(split->path[1..])+"' /></div>";
+    res += "</select></span>";
+    res += "<span class='rxn-port-text'>://</span>";
+    res += "<input type=text name='"+prefix+"host' value='"+
+           Roxen.html_encode_string(split->host)+"' class='rxn-port-host' />";
+    res += "<span class='rxn-port-text'>:</span>";
+    res += "<input type=number size=5 name='"+prefix+"port' value='"+
+      (split->port == default_port ? "" : split->port) +"' class='rxn-port-port' />";
+    res += "<span class='rxn-port-text'>/</span>";
+    res += "<input type=text name='"+prefix+"path' value='"+
+      Roxen.html_encode_string(split->path[1..]) +
+      "' class='rxn-port-path' /></div></div>";
     mapping opts = ([]);
     string a,b;
     foreach( (split->fragment||"")/";", string x )
@@ -2277,7 +2298,7 @@ class PortList
     res += "<div class='port-ip'>IP#: <input size=15 type=text name='"+prefix+"ip' value='"+
       Roxen.html_encode_string(opts->ip||"")+"' /> ";
     res += LOCALE(510,"Bind this port: ");
-    res += "<select name='"+prefix+"nobind'>";
+    res += "<span class='select-wrapper'><select name='"+prefix+"nobind'>";
     if( (int)opts->nobind )
     {
       res +=
@@ -2290,7 +2311,7 @@ class PortList
 	("<option selected='t' value='0'>"+LOCALE("yes","Yes")+"</option>"
 	 "<option value='1'>"+LOCALE("no","No")+"</option>");
     }
-    res += "</select></div></div>";
+    res += "</select></span></div></div>";
     return res;
   }
 

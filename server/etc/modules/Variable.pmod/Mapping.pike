@@ -156,7 +156,7 @@ string render_form( RequestID id, void|mapping additional_args )
   int i;
 
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
-  string res = "<a name='"+path()+"'>\n</a><table>\n"
+  string res = "<table id='" + path() + #"'>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
   mapping val = query();
