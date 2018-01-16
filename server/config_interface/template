@@ -168,7 +168,6 @@
   <if variable='_.width'>
     <set variable='var.extra' value='style="width:&_.width;"' />
   </if>
-  <!-- disabled-gbutton -->
   <button class="rxn-admin-btn&_.type;" ::="&var.extra;" disabled="">&_.contents;</button>
 </define>
 
@@ -179,7 +178,6 @@
   <if variable='_.width'>
     <set variable='var.extra' value='style="width:&_.width;"' />
   </if>
-  <!-- submit-gbutton -->
   <button class="rxn-admin-btn submit&_.type;" data-submit='' ::="&var.extra;" name="&_.contents;">&_.contents;</button>
 </define>
 
@@ -188,7 +186,7 @@
   <set variable="_.type"> <resolve-button-type type='&_.type;' icon='&_.icon-src;' name='&_.name;'/></set>
   <set variable="var.onclick-confirm" value=""/>
   <if variable="_.onclick = ?*">
-    <set variable="var.onclick-confirm" value='onclick="&_.onclick;"'/>
+    <set variable="var.onclick-confirm" value="onclick='&_.onclick;'"/>
   </if>
   <set variable="var.extra" value="" />
   <if variable='_.width'>
@@ -207,7 +205,6 @@
   <cf-data-attr-from-rest-args setvar="var.data-attr" />
 
   <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
-  <!-- submit-gbutton2 -->
   <button class='rxn-admin-btn&_.type;'
           data-submit=''
           name='&_.name;'
