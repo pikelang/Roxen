@@ -6311,13 +6311,6 @@ string format_cycle (array(mixed) cycle)
 {
   array(string) string_parts = ({});
   foreach (cycle; int pos; mixed val) {
-    /* Idea: identify mapping/array index of the next element in the cycle.
-    mixed next_val;
-    if (pos < sizeof (cycle) - 1) {
-      next_val = cycle[pos + 1];
-    }
-    */
-
     string formatted;
 
     if (arrayp (val)) {
@@ -6329,10 +6322,48 @@ string format_cycle (array(mixed) cycle)
     } else {
       formatted = sprintf ("%O", val);
     }
+
+    /* Identify object/mapping/array index of the next element in the cycle. */
+    mixed next_val;
+    if (pos < sizeof (cycle) - 1) {
+      next_val = cycle[pos + 1];
+    } else {
+      next_val = cycle[0];
+    }
+
+    if (multisetp(val)) {
+      formatted += "[[index]]";
+    } else {
+      array(mixed) inds = indices(val);
+      array(mixed) vals = values(val);
+      int i = search(vals, next_val);
+      if (i >= 0) {
+	// Found.
+	if (intp(inds[i])) {
+	  formatted += sprintf("[%d]", inds[i]);
+	} else if (stringp(inds[i])) {
+	  if (sizeof(inds[i]) < 100) {
+	    formatted += sprintf("[%O]", inds[i]);
+	  } else {
+	    formatted += sprintf("[string(%d characters)]", sizeof(inds[i]));
+	  }
+	} else {
+	  formatted += sprintf("[%t]", inds[i]);
+	}
+      } else {
+	i = search(inds, next_val);
+	if (i >= 0) {
+	  formatted += "[[index]]";
+	} else if (objectp(val)) {
+	  formatted += "->protected";
+	}
+      }
+    }
+
     string_parts += ({ formatted });
   }
 
-  return string_parts * " -> ";
+  return string_parts * " ==> ";
 }
 
 void reinstall_gc_callbacks()
