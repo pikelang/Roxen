@@ -1,24 +1,59 @@
+@mixin default-input {
+  border: 1px solid $input-border-color;
+  background: lighten($input-border-color, 10%);
+  color: $body-color;
+  border-radius: $border-radius;
+  line-height: $input-lineheight;
+  vertical-align: middle;
+
+  &:focus {
+    outline: 1px solid $grey;
+  }
+}
+
+@mixin default-input-padding {
+  padding-left:   $spacing-unit/1.5;
+  padding-right:  $spacing-unit/1.5;
+  padding-top:    $spacing-unit/1.5;
+  padding-bottom: $spacing-unit/1.5;
+}
+
+@mixin default-disabled-input {
+  &:disabled,
+  &[disabled] {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+}
+
+form {
+  position: relative;
+  padding: 0;
+}
 
 button,
 input[type='button'],
 input[type='reset'],
 input[type='submit'],
 .rxn-admin-btn {
-  text-decoration: none;
+  text-decoration:    none;
   -webkit-appearance: button;
-  @include text-size(sm);
-  border-radius: $border-radius;
-  background: $button-bg;
-  background-image: linear-gradient(lighten($button-bg, 2%), darken($button-bg, 2%));
-  padding: $spacing-unit/2 $spacing-unit;
-  color: $button-color;
-  border-left: 1px solid lighten($button-bg, 10%);
-  border-top:  1px solid lighten($button-bg, 10%);
-  border-right: 1px solid darken($button-bg, 10%);
-  border-bottom: 1px solid darken($button-bg, 10%);
-  vertical-align: middle;
+  -moz-appearance:    button;
+  appearance:         button;
+  background:         $button-bg;
+  background-image:   linear-gradient(lighten($button-bg, 2%), darken($button-bg, 2%));
+  color:              $button-color;
+  border-left:        1px solid lighten($button-bg, 10%);
+  border-top:         1px solid lighten($button-bg, 10%);
+  border-right:       1px solid darken($button-bg, 10%);
+  border-bottom:      1px solid darken($button-bg, 10%);
+  vertical-align:     middle;
+  border-radius:      $border-radius;
+  padding-left:       $spacing-unit;
+  padding-right:      $spacing-unit;
+  line-height:        $input-lineheight;
 
-  &:hover {
+  &:hover:not([disabled]) {
     color: lighten($button-color, 10%);
   }
 
@@ -39,13 +74,6 @@ input[type='submit'],
     min-width: 100px;
   }
 
-  &:disabled,
-  &[disabled] {
-    opacity: .5;
-    cursor: not-allowed;
-  }
-
-
   &.right.icon {
     @extend .__icon-after;
   }
@@ -57,21 +85,12 @@ input[type='submit'],
 
 input,
 textarea,
-select {
+select,
+button,
+.rxn-admin-button {
   @include text-size(sm);
-  line-height: 1;
-}
-
-.__input {
-  border: 1px solid $black;
-  background: lighten($black, 10%);
-  padding: $spacing-unit/2;
-  color: $body-color;
-  border-radius: $border-radius;
-
-  &:focus {
-    outline: 1px solid $grey;
-  }
+  @include default-disabled-input;
+  line-height: $input-lineheight;
 }
 
 input {
@@ -82,18 +101,16 @@ input {
                "[type='button']",
                "[type='image']")
   {
-    @extend .__input;
+    @include default-input;
 
     &:not([size]) {
       width: 100%;
-      max-width: 550px;
     }
   }
 
   &[size='60'],
   &[size='40'] {
     width: 100%;
-    max-width: 550px;
   }
 
   &[type='number'] {
@@ -103,30 +120,100 @@ input {
   }
 }
 
-.port-url {
-  input {
-    @include not("[type='checkbox']",
-                 "[type='radio']",
-                 "[type='submit']",
-                 "[type='reset']",
-                 "[type='button']",
-                 "[type='image']")
-    {
-      &:not([size]) {
-        width: auto;
+input {
+  @include not("[type='checkbox']", "[type='radio']") {
+    @include default-input-padding;
+  }
+}
+
+select,
+button,
+textarea,
+.rxn-admin-button {
+  @include default-input-padding;
+}
+
+.rxn-port {
+  .port-ip {
+    margin-top: $spacing-unit/2;
+  }
+
+  .port-url {
+    display: table-row;
+    max-width: 100%;
+
+    .rxn-port-text,
+    .select-wrapper {
+      display: table-cell;
+    }
+
+    .select-wrapper {
+      &:before,
+      &:after {
+        background: transparent;
+        content: none;
+      }
+
+      select {
+        padding-left: 3px;
+        padding-right: 0;
+        border: 0;
+        border-bottom: 1px dashed $input-border-color;
+        background: transparent;
+        min-width: 20px;
+      }
+    }
+
+    .rxn-port-text {
+      width: 2px;
+      opacity: .6;
+    }
+
+    input {
+      @include not("[type='checkbox']",
+                   "[type='radio']",
+                   "[type='submit']",
+                   "[type='reset']",
+                   "[type='button']",
+                   "[type='image']")
+      {
+        &:not([size]) {
+          width: auto;
+        }
+
+        border-radius: 0;
+        display: table-cell;
+        padding-left: 3px;
+        padding-right: 3px;
+        border: 0;
+        border-bottom: 1px dashed $input-border-color;
+        background: transparent;
+
+        &.rxn-port-port {
+          width: 80px;
+        }
+
+        &.rxn-port-host {
+          width: auto;
+        }
+
+        &.rxn-port-path {
+          width: auto;
+        }
       }
     }
   }
 }
 
 textarea {
-  @extend .__input;
+  @include default-input;
+  @include default-input-padding;
   width: 100%;
   line-height: 1.4;
 }
 
 select {
-  @extend .__input;
+  @include default-input;
   min-width: 60px;
 
   &.add-module-select {
@@ -134,20 +221,106 @@ select {
   }
 }
 
-.input-row {
-  // display: table-row;
+.select-wrapper {
+  display: inline-block;
+  position: relative;
 
-  input,
-  textarea,
-  select,
-  button {
-    // display: table-cell;
-    // width: initial !important;
+  select {
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: $spacing-unit*3;
+  }
+
+  &.tight {
+    select {
+      padding-top: $spacing-unit/3;
+      padding-bottom: $spacing-unit/3;
+    }
+
+  }
+
+  &.fill {
+    width: 100%;
+
+    select {
+      width: 100%;
+    }
+  }
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "\25BC";
+    height: 1em;
+    font-size: .625em;
+    line-height: 1;
+    right: 1.15em;
+    top: 50%;
+    margin-top: -.5em;
+  }
+
+  &::before {
+    width: 2em;
+    right: 2px;
+    top: 2px;
+    bottom: 2px;
+    border-radius: 0 3px 3px 0;
+    background-color: rgba(0,0,0,.2);
+  }
+
+}
+
+.form-table {
+  display: table;
+  width: 100%;
+}
+
+.form-row {
+  display: table-row;
+  width: 100%;
+
+  // &.fill {
+  //   width: 100%;
+  // }
+
+  .form-cell {
+    display: table-cell;
+    width: auto;
+
+    &.fill {
+      width: 100%;
+    }
+
+    &.r6 {
+      width: 50%;
+    }
+
+    & + .form-cell {
+      padding-left: $spacing-unit / 2;
+    }
+
+    input {
+      max-width: initial;
+    }
+
+    button {
+      display: inline-block;
+    }
   }
 }
 
 .control-group {
   margin-bottom: $spacing-unit;
+
+  label {
+    display: block;
+  }
 }
 
 .table {
@@ -163,7 +336,6 @@ select {
       display: table-cell;
       width: 15%;
       font-weight: bold;
-      padding-bottom: $spacing-unit;
       text-align: right;
       padding-right: $spacing-unit;
 
@@ -181,22 +353,7 @@ select {
     .cell {
       display: table-cell;
       width: auto;
-    }
-
-    input[type='text'],
-    input[type='password'] {
-      width: 100%;
-    }
-
-    &.auth {
-      input {
-        display: table-cell;
-        width: 49%;
-
-        &:first-of-type {
-          margin-right: 2%;
-        }
-      }
+      padding-bottom: $spacing-unit / 2;
     }
   }
 }

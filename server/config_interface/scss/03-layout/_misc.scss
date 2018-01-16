@@ -179,15 +179,15 @@
   font-family: monospace;
 }
 
-.diff {
+div.diff {
   background: $main-column-bg;
   padding: $site-padding;
 
-  font[color='darkred'] {
+  [color='darkred'] {
     color: $diff-red-color;
   }
 
-  font[color='darkgreen'] {
+  [color='darkgreen'] {
     color: $diff-green-color;
   }
 }
@@ -450,5 +450,15 @@ section {
     *:last-child {
       margin-bottom: 0;
     }
+  }
+}
+
+.user-perms {
+  margin-left: -($spacing-unit/2);
+  .col {
+    display: inline-block;
+    width: 16.66667%;
+    padding-left: $spacing-unit/2;
+    margin-bottom: $spacing-unit/2;
   }
 }

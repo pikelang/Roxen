@@ -238,12 +238,20 @@ string parse( RequestID id )
             <input type='text' name='path' value='&form.path;' id='path'>
           </div>
         </div>
-        <div class='control-group auth'>
+        <div class='control-group'>
           <label>{{ auth_label }}</label>
           <div class='cell'>
-            <input type='text' name='user' value='&form.user;' placeholder='{{ user_label }}'
-            ><input type='password' name='password' value='&form.password;'
-              placeholder='{{ password_label }}'>
+            <div class='table'>
+              <div class='form-row'>
+                <div class='form-cell r6'>
+                  <input type='text' name='user' value='&form.user;' placeholder='{{ user_label }}'>
+                </div>
+                <div class='form-cell r6'>
+                  <input type='password' name='password' value='&form.password;'
+                    placeholder='{{ password_label }}'>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div class='control-group'>

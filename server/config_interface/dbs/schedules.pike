@@ -94,7 +94,7 @@ mapping|string parse( RequestID id )
 	res +=
       "<td><default name='period-" + schedule->id + "' value='" +
       (schedule->period?(schedule->period + ":" + (day*86400)):"") +
-      "'><select name='period-" + schedule->id + "'>\n"
+      "'><span class='select-wrapper'><select name='period-" + schedule->id + "'>\n"
       "<option value=''>" + _(482, "Never") + "</option>\n";
     foreach(_(1032, "Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,"
 	      "Fridays,Saturdays")/","; int dayno; string day) {
@@ -108,19 +108,19 @@ mapping|string parse( RequestID id )
 #endif
     res +=
       "<option value='86400:0'>" + _(1034, "Every Day") + "</option>\n"
-      "</select></default></td>\n"
-      "<td>" + _(1035, "At") +
+      "</select></span></default></td>\n"
+      "<td><span class='nobr'>" + _(1035, "At") +
       " <default name='time-" + schedule->id + "' value='" +
       hour*3600 + "'>"
-      "<select name='time-" + schedule->id + "'>\n";
+      "<span class='select-wrapper'><select name='time-" + schedule->id + "'>\n";
     int i;
     for (i = 0; i < 24; i++) {
       res += sprintf("<option value='%d'>%02d:00</option>\n", i*3600, i);
     }
-    res += "</select></default></td>\n"
+    res += "</select></span></default></span></td>\n"
       "<td><default name='generations-" + schedule->id + "' "
       "value='" + schedule->generations +
-      "'><select name='generations-" + schedule->id + "'>\n"
+      "'><span class='select-wrapper'><select name='generations-" + schedule->id + "'>\n"
       "<option value='0'>" + _(1036, "Unlimited") + "</option>\n"
       "<option value='1'>1</option>\n"
       "<option value='2'>2</option>\n"
@@ -128,13 +128,13 @@ mapping|string parse( RequestID id )
       "<option value='4'>4</option>\n"
       "<option value='5'>5</option>\n"
       "<option value='10'>10</option>\n"
-      "</select></default></td>\n"
+      "</select></span></default></td>\n"
       "<td><default name='method-" + schedule->id +
       "' value='" + schedule->method + "'>"
-      "<select name='method-" + schedule->id + "'>\n"
+      "<span class='select-wrapper'><select name='method-" + schedule->id + "'>\n"
       "<option value='mysqldump'>" + _(1037, "MySQLDump (recommended)") + "</option>\n"
       "<option value='backup'>" + _(1038, "Backup (internal databases only)") + "</option>\n"
-      "</select></default></td>\n"
+      "</select></span></default></td>\n"
       "</tr>\n"
       "<tr><td>&nbsp;</td><td colspan='4'>" +
       "<input size='75%' name='directory-" + schedule->id +

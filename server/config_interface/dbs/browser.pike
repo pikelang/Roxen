@@ -559,13 +559,14 @@ string db_switcher( RequestID id )
     }
   }
   </script>
+  <span class='select-wrapper'>
   <select name='db' onchange='switch_db(this)'>
     <option value=''>Switch to other DB</option>\n";
   foreach( sort(indices(q)), string d ) {
     res += sprintf( "<option value='%s'%s>%s</option>\n", d,
                     (d == id->variables->db)? "selected='selected'": "", d);
   }
-  return res + "</select><noscript><input type='submit' value='Switch db'/></noscript>\n";
+  return res + "</select></span><noscript><input type='submit' value='Switch db'/></noscript>\n";
 }
 
 string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
@@ -1358,7 +1359,8 @@ mapping|string parse( RequestID id )
   switch( id->variables->db )
   {
     case "local":
-      res += "<hr><select data-goto=''><option>Select action...</option>";
+      res += "<hr><span class='select-wrapper'>"
+             "<select data-goto=''><option>Select action...</option>";
 
       foreach( ({ "move","backup","optimize","repair","schedule" }), string x ) {
         ADD_ACTION2( x );
@@ -1366,11 +1368,13 @@ mapping|string parse( RequestID id )
 
       res +=
         "</select>"
+        "</span>"
         "<link-gbutton href='./' type='cancel'>Cancel</link-gbutton>";
       break;
 
     default:
-      res += "<hr><select data-goto=''><option>Select action...</option>";
+      res += "<hr><span class='select-wrapper'>"
+             "<select data-goto=''><option>Select action...</option>";
 
       foreach( sort(indices( actions )), string x ) {
         ADD_ACTION2( x );
@@ -1378,6 +1382,7 @@ mapping|string parse( RequestID id )
 
       res +=
         "</select>"
+        "</span>"
         "<link-gbutton href='./' type='cancel'>Cancel</link-gbutton>";
       break;
   }

@@ -730,8 +730,6 @@ private string render_ports(Configuration conf, string path, RequestID id)
 
   ret += (map(ports, low_port_for, 1)*"");
 
-  // TRACE("ports: %s\n", ret);
-
   return ret + "<cf-save/>";
 }
 
@@ -976,11 +974,13 @@ string module_priorities_page( RequestID id, Configuration c)
     <input type=hidden name='section' value='ModulePriorities' />
     <cf-save />
     <h1 class='section'>Module priorities for site {{ sitename }}</h1>
-    <select name='maxprichange'>
-      {{ #prios }}
-      <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>{{ value }}</option>
-      {{ /prios }}
-    </select> is highest and 0 is lowest.
+    <span class='select-wrapper'>
+      <select name='maxprichange'>
+        {{ #prios }}
+        <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>{{ value }}</option>
+        {{ /prios }}
+      </select>
+    </span> is highest and 0 is lowest.
 
     {{ #sections }}
       <h2 class='section no-margin-bottom'>{{ title }}</h2>
@@ -995,13 +995,15 @@ string module_priorities_page( RequestID id, Configuration c)
           <td><em>{{ location }}</em></td>
           <td class='text-right'>Priority:
             {{ ^numeric }}
-              <select name='prichange_{{ id }}'>
-              {{ #prios }}
-              <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>
-                {{ value }}
-              </option>
-              {{ /prios }}
-              </select>
+              <span class='select-wrapper tight'>
+                <select name='prichange_{{ id }}'>
+                {{ #prios }}
+                <option value='{{ value }}'{{ #checked }} selected{{ /checked }}>
+                  {{ value }}
+                </option>
+                {{ /prios }}
+                </select>
+              </span>
             {{ /numeric }}
             {{ #numeric }}
               <input type='number' class='prio' name='prichange_{{ id }}'

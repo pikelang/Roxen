@@ -453,7 +453,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
         md += ({
           ({ is_right_platform ?
              LOCALE(338, "Platforms:") :
-             "<b class='notify error inline'" + LOCALE(338, "Platforms:") + "</b>",
+             "<b class='notify error inline'>" + LOCALE(338, "Platforms:") + "</b>",
              sprintf("%{%s<br />\n%}",
                      item->metadata->platform) })
         });
@@ -995,10 +995,17 @@ mixed parse(RequestID id)
   }
   res += #"
     <p>\n" + LOCALE(418,"Or manually select a local file to upload:") + #"</p>
-        <input id='patchupload' type='file' name='file' size='40'/>
-        <input type='hidden' name='fixedfilename' value='' />
-        <submit-gbutton2 name='OK' type='upload'
-      onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" + LOCALE(419, "Import file") + #"</submit-gbutton2>
+      <input type='hidden' name='fixedfilename' value='' />
+      <div class='form-row'>
+        <span class='form-cell fill'>
+          <input id='patchupload' type='file' name='file' />
+        </span>
+        <span class='form-cell fill'>
+          <submit-gbutton2 name='OK' type='upload'
+            onclick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">" +
+            LOCALE(419, "Import file") + #"</submit-gbutton2>
+        </span>
+      </div>
     <p>"
     + LOCALE(420, "You can upload either a single rxp file or a tar/tar.gz/tgz "
              "file containing multiple rxp files.")

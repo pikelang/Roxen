@@ -26,9 +26,13 @@
     <translate id="224" variable="var.create_txt">Create User</translate>
     <translate id="225" variable="var.id_txt">User ID</translate>
     <!-- <label for="user-input">&var.id_txt;</label> -->
-    <div class="input-row">
-      <input name="create_user_name" id="user-input" placeholder='&var.id_txt;' />
-      <submit-gbutton2 type="create-user">&var.create_txt;</submit-gbutton2>
+    <div class="form-row">
+      <span class='form-cell'>
+        <input name="create_user_name" id="user-input" placeholder='&var.id_txt;' />
+      </span>
+      <span class="form-cell">
+        <submit-gbutton2 type="create-user">&var.create_txt;</submit-gbutton2>
+      </span>
     </div>
     <p>
       <cf-cancel href="users.html"/>

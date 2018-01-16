@@ -23,15 +23,17 @@
                     <input type='hidden' name='unfolded' value='&form.unfolded;'>
                   </if>
                   <div class='control-group inline'>
-                    <default variable='form.method' value='{{ method }}'>
-                      <select name='method' id='list-type'
-                        data-auto-submit='' data-add-variable='reload=1' title='List Type'>
-                        <option value='normal'>{{ list_types.normal }}</option>
-                        <option value='faster'>{{ list_types.faster }}</option>
-                        <option value='compact'>{{ list_types.compact }}</option>
-                        <option value='really_compact'>{{ list_types.rcompact }}</option>
-                      </select>
-                    </default>
+                    <div class='select-wrapper'>
+                      <default variable='form.method' value='{{ method }}'>
+                        <select name='method' id='list-type'
+                          data-auto-submit='' data-add-variable='reload=1' title='List Type'>
+                          <option value='normal'>{{ list_types.normal }}</option>
+                          <option value='faster'>{{ list_types.faster }}</option>
+                          <option value='compact'>{{ list_types.compact }}</option>
+                          <option value='really_compact'>{{ list_types.rcompact }}</option>
+                        </select>
+                      </default>
+                    </div>
                     <default variable="form.deprecated" value='&form.deprecated;'>
                       <label for='deprecated_'>
                         <input type='checkbox' name='deprecated' value='1'

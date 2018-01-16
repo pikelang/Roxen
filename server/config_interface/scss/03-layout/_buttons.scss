@@ -20,9 +20,8 @@ button {
 
   &.perm {
     @extend .__icon;
-    width: 185px;
+    width: 100%;
     text-overflow: ellipsis;
-    margin-bottom: 4px;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
@@ -36,7 +35,7 @@ button {
       color: $ok-color;
 
       &:before {
-        content: '\f00c';
+        content: '\f00c'; // fa-check
       }
     }
   }

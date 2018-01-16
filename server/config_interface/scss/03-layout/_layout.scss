@@ -111,22 +111,28 @@ header {
 main {
   margin: 0;
   padding: $spacing-unit;
+  position: relative;
 }
 
 .main-column {
+  position: relative;
   background: $main-column-bg;
   height: 100%;
   width: 100%;
+  max-width: 100%;
 
   .contents {
+    position: relative;
     padding: $site-padding;
   }
 }
 
 .page-contents {
+  position: relative;
   padding-bottom: $spacing-unit*4;
 
   .left-content {
+    position: relative;
     width: 25%;
     padding-right: $site-padding;
 
