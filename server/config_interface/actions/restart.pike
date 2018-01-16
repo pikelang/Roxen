@@ -18,8 +18,8 @@ mixed parse( RequestID id )
 {
   string pid = (string) getpid();
 
-  string res = "<h2 class='no-margin-top'>" +
-    LOCALE(34, "Restart or shutdown") + "</h2>";
+  string res = "<cf-title>" +
+    LOCALE(34, "Restart or shutdown") + "</cf-title>";
 
   //  Verify pid for possibly repeated request (browser restart etc)
   string what = id->variables->what;
@@ -41,9 +41,9 @@ mixed parse( RequestID id )
        roxen->restart(0.5, UNDEFINED, -1);
        return res +
 "<input type=hidden name=action value=restart.pike>"
-"<font color='&usr.warncolor;'><h1>"+LOCALE(197,"Restart")+"</h1></font>"+
+"<h3>"+LOCALE(197,"Restart")+"</h3><p class='notify info inline'>"+
  LOCALE(233, "Roxen will restart automatically.")+
-"\n\n<p><i>"+
+"</p>\n\n<p><i>"+
 LOCALE(234, "You might see the old process for a while in the process table "
        "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
        "while for all connections to finish, the process will go away after "
@@ -56,9 +56,9 @@ LOCALE(234, "You might see the old process for a while in the process table "
      {
        roxen->shutdown(0.5, -1);
        return res +
-"<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
+"<h3>"+LOCALE(198,"Shutdown")+"</h3><p class='notify inline warn'>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+
-"\n\n<p><i>"+
+"</p>\n\n<p><i>"+
 LOCALE(234, "You might see the old process for a while in the process table "
        "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
        "while for all connections to finish, the process will go away after "
@@ -78,8 +78,9 @@ LOCALE(234, "You might see the old process for a while in the process table "
  </cf-perm>
 
 <cf-perm not perm='Restart'>
-  <gbutton dim width=250 icon_src=&usr.err-2;> "+
-       LOCALE(197,"Restart")+#" </gbutton>
+  <disabled-gbutton type='reload fixed-width'>" +
+        LOCALE(197,"Restart") +
+ #"</disabled-gbutton>
 </cf-perm>
 
 <p></p>
@@ -91,8 +92,8 @@ LOCALE(234, "You might see the old process for a while in the process table "
 </cf-perm>
 
 <cf-perm not perm='Shutdown'>
-  <gbutton dim width=250 icon_src=&usr.err-3;> "+
-       LOCALE(198,"Shutdown")+#" </gbutton>
+  <disabled-gbutton type='error fixed-width'>" +
+       LOCALE(198,"Shutdown")+#" </disabled-gbutton>
 </cf-perm>" + ignore_msg + #"
 
 </blockquote>
