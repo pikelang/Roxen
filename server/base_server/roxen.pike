@@ -6362,29 +6362,36 @@ string format_cycle (array(mixed) cycle)
     if (multisetp(val)) {
       formatted += "[[index]]";
     } else {
-      array(mixed) inds = indices(val);
-      array(mixed) vals = values(val);
-      int i = search(vals, next_val);
-      if (i >= 0) {
-	// Found.
-	if (intp(inds[i])) {
-	  formatted += sprintf("[%d]", inds[i]);
-	} else if (stringp(inds[i])) {
-	  if (sizeof(inds[i]) < 100) {
-	    formatted += sprintf("[%O]", inds[i]);
+      // NB: This catch is to handle the case where val is an object
+      //     that implements lfun::_indices() and/or lfun::_values()
+      //     that throw errors.
+      if (catch {
+	  array(mixed) inds = indices(val);
+	  array(mixed) vals = values(val);
+	  int i = search(vals, next_val);
+	  if (i >= 0) {
+	    // Found.
+	    if (intp(inds[i])) {
+	      formatted += sprintf("[%d]", inds[i]);
+	    } else if (stringp(inds[i])) {
+	      if (sizeof(inds[i]) < 100) {
+		formatted += sprintf("[%O]", inds[i]);
+	      } else {
+		formatted += sprintf("[string(len: %d)]", sizeof(inds[i]));
+	      }
+	    } else {
+	      formatted += sprintf("[%t]", inds[i]);
+	    }
 	  } else {
-	    formatted += sprintf("[string(%d characters)]", sizeof(inds[i]));
+	    i = search(inds, next_val);
+	    if (i >= 0) {
+	      formatted += "[[index]]";
+	    } else if (objectp(val)) {
+	      formatted += "->protected";
+	    }
 	  }
-	} else {
-	  formatted += sprintf("[%t]", inds[i]);
-	}
-      } else {
-	i = search(inds, next_val);
-	if (i >= 0) {
-	  formatted += "[[index]]";
-	} else if (objectp(val)) {
-	  formatted += "->protected";
-	}
+	}) {
+	formatted += "[[broken]]";
       }
     }
 
