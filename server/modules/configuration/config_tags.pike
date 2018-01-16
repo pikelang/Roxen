@@ -114,6 +114,9 @@ class Scope_usr
 
     object c1;
 
+    // CFIF17: Perhaps clean this stuff up a bit. But verify this isn't used in
+    //         the Content Editor.
+
     switch( var )
     {
       string q, res;
@@ -598,6 +601,8 @@ array get_variable_maps( object mod,
                          return !search( q->rname, (m->section+":") );
                        } );
   }
+
+  // CFIF17: There's been requests raised to scrap this setting.
 
   switch(  config_setting("sortorder") )
   {
@@ -1167,16 +1172,18 @@ string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
 
 string simpletag_rli( string t, mapping m, string c, RequestID id )
 {
+  CFIF_THROW("simpletag_rli\n");
   return "<tr>"
-         "<td valign='top'>[simpletag_rli]<img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
+         "<td valign='top'><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
          ";' /></td><td valign='top'>"+c+"</td></tr>\n";
 }
 
 string simpletag_rul( string t, mapping m, string c, RequestID id )
 {
+  CFIF_THROW("simpletag_rul\n");
   id->misc->_rul_cnt = -1;
   return #"<!-- simpletag_rul -->
-  <table>[simpletag_rul]"+c+"</table>";
+  <table>"+c+"</table>";
 }
 
 string simpletag_roxen_wizard_id_variable(string t, mapping m, string c,
@@ -1226,12 +1233,13 @@ class TagCfPerm
 
 string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
 {
+  CFIF_THROW("simpletag_cf_obox\n");
   return
 #"<!-- cf-obox -->
 <table cellpadding='1' cellspacing='0' border='0'
          width='"+m->width+"' align='center' bgcolor='"+
     config_setting2("obox-border")+#"'>
- <tr><td>[simpletag_cf_obox]
+ <tr><td>
   <table cellpadding='"+(m->padding?m->padding:"2")+#"'
          cellspacing='0' border='0'
          width='"+m->iwidth+#"' align='center'>
@@ -1251,6 +1259,8 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
 }
 string simpletag_box_frame( string t, mapping m, string c, RequestID id )
 {
+  CFIF_THROW("simpletag_box_frame\n");
+
   if (!m["box-frame"]) return c;
   string bodybg = m->bodybg || config_setting2("obox-bodybg");
   return
@@ -1258,7 +1268,7 @@ string simpletag_box_frame( string t, mapping m, string c, RequestID id )
 <table cellpadding='1' cellspacing='0' border='0'
          width='"+m->width+"' align='left' bgcolor='"+
     config_setting2("obox-border")+#"'>
- <tr><td>[simpletag_box_frame]
+ <tr><td>
   <table cellpadding='"+(m->padding?m->padding:"2")+#"'
          cellspacing='0' border='0'
          width='"+m->iwidth+#"' align='center'>
@@ -1285,13 +1295,7 @@ class TagCfRenderVariable
       <dl class='config-var'>
         <dt class='name'>{{ field.name }}</dt>
         <dd class='value{{ #changed }} changed{{ /changed }}'>
-          {{ &field.form }}
-          {{ #changed }}
-            <submit-gbutton2 type='reset' name='{{field_name}}'
-              onclick='return confirm(\"{{ confirm_text }}\")'
-            >{{ label }} {{ &diff_text }}</submit-gbutton2>
-            {{ #diff }}{{ &diff }}{{ /diff }}
-          {{ /changed }}
+          {{> render_form }}
         </dd>
         {{ #field.doc }}
         <dd class='doc'>{{ &field.doc }}</dd>
@@ -1302,15 +1306,11 @@ class TagCfRenderVariable
   {
     inherit RXML.Frame;
 
-    // void create()
-    // {
-    //   my_stash->parse(tmpl);
-    // }
-
     array do_return(RequestID id)
     {
       mapping mctx = ([
-        "changed" : UNDEFINED
+        "changed" : UNDEFINED,
+        "render-cell" : true,
       ]);
 
       int is_changed;
@@ -1324,8 +1324,6 @@ class TagCfRenderVariable
           "diff_text"     : _("diff-txt"),
           "diff"          : _("diff")
         ]);
-
-        // TRACE("Diff changed: %O\n", mctx);
       }
 
       mctx->field = ([
@@ -1359,9 +1357,61 @@ class TagCfRenderVariable
           break;
       }
 
-      // TRACE("ctx: %O\n", mctx);
+      string type;
+
+      if (mctx->field?->form) {
+        if (sscanf (mctx->field->form, "<%[0-9a-zA-Z]", type) == 1) {
+          type = lower_case(type);
+        }
+
+        if (type && (< "table", "textarea" >)[lower_case(type)]) {
+          m_delete(mctx, "render-cell");
+        }
+
+        mctx->type = type && lower_case(type) || "";
+      }
+
+      // TRACE("cf-render-variable#ctx: %O\n", mctx);
       Mustache my_stache = Mustache();
-      result = my_stache->render(tmpl, mctx);
+      result = my_stache->render(tmpl, mctx, ([
+        "render_form" : lambda () {
+          if (!(< "table", "textarea">)[type]) {
+            return #"
+              <!-- [type: " + type + #"] -->
+              <div class='form-table'>
+                <div class='form-row'>
+                  <div class='form-cell fill'>" +
+                    (type == "select" ? "<div class='select-wrapper'>" : "") +
+                    "{{ &field.form }}" +
+                    (type == "select" ? "</div>" : "") +
+                  #"</div>
+                  {{ #changed }}
+                    <div class='form-cell rxn-changed-var-buttons'>
+                      {{> render_buttons }}
+                    </div>
+                  {{ /changed }}
+                </div>
+              </div>";
+          }
+
+          return #"
+            {{ &field.form }}
+            {{ #changed }}
+              <div class='nocell rxn-changed-var-buttons'>
+                {{> render_buttons }}
+              </div>
+            {{ /changed }}";
+        },
+
+        "render_buttons" : lambda () {
+          return #"
+            <submit-gbutton2 type='reset' name='{{field_name}}'
+                             onclick='return confirm(\"{{ confirm_text }}\")'
+            >{{ label }} {{ &diff_text }}</submit-gbutton2>
+            {{ #diff }}{{ &diff }}{{ /diff }}";
+        }
+      ]));
+
       destruct(my_stache);
 
       return 0;
