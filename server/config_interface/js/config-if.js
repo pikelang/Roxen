@@ -62,7 +62,6 @@
 
         mainA.addEventListener('click', function(e) {
           e.preventDefault();
-          // e.stopPropagation();
 
           if (current && current !== child) {
             current.classList.remove('open');
@@ -115,7 +114,7 @@
   var handleToggleCheckboxes = function(src, e) {
     e.preventDefault();
     var t = document.getElementById(src.dataset.toggleCheckboxes);
-    // var cb = t.querySelectorAll('input[type=checkbox]');
+
     R.every(t, 'input[type=checkbox]', function(i, el) {
       el.checked = !el.checked;
     });
