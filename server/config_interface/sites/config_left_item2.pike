@@ -4,7 +4,6 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)     _STR_LOCALE("roxen_config",X,Y)
 
-private Mustache stache;
 private string stache_tmpl;
 
 string noendslash(string what)
@@ -136,8 +135,6 @@ string selected_item(string q, Configuration c, RequestID id,
   }
 
   foreach (module_groups, array gd) {
-    // TRACE("@@@: %O\n", RXML.get_var("unfolded", "usr"));
-
     bool fold = !(unfolded || RXML.get_var("unfolded", "usr"));
     string name = gd[0];
     string r_module_group = module_group;
@@ -181,9 +178,6 @@ string selected_item(string q, Configuration c, RequestID id,
     }
 
     m_state->module_groups += ({ mod_section });
-
-    // TRACE("mod_section: %O\n", mod_section);
-    // TRACE("> module: %O\n", module);
   }
 
 
@@ -211,8 +205,6 @@ string selected_item(string q, Configuration c, RequestID id,
 
   if (!stache_tmpl) {
     stache_tmpl = Stdio.read_file(combine_path(__DIR__, "site_modules.mu"));
-    // stache = Mustache();
-    // stache->parse(stache_tmpl);
   }
 
   Mustache my_stache = Mustache();
