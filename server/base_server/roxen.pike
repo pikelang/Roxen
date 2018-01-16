@@ -95,7 +95,7 @@ string md5( string what )
 {
   return Gmp.mpz(Crypto.MD5.hash( what ),256)->digits(32);
 }
-  
+
 string query_configuration_dir()
 {
   return configuration_dir;
@@ -194,7 +194,7 @@ protected Privs PRIVS(string r, int|string|void u, int|string|void g)
 Thread.Local current_configuration = Thread.Local();
 
 // font cache and loading.
-// 
+//
 // This will be changed to a list of server global modules, to make it
 // easier to implement new types of fonts (such as PPM color fonts, as
 // an example)
@@ -387,7 +387,7 @@ constant Queue = Thread.Queue;
 #else
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
-class Queue 
+class Queue
 //! Thread.Queue lookalike, which uses some archaic and less
 //! known features of the preempting algorithm in pike to optimize the
 //! read function.
@@ -406,12 +406,12 @@ class Queue
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
   int r_ptr, w_ptr;
-  
-  int size() 
-  { 
-    return w_ptr - r_ptr;  
+
+  int size()
+  {
+    return w_ptr - r_ptr;
   }
-  
+
   mixed read()
   {
     while(!(w_ptr - r_ptr)) {
@@ -848,7 +848,7 @@ void start_handler_threads()
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
     report_warning (LOC_S(1, "Starting one thread to handle requests.")+"\n");
-  } else { 
+  } else {
     report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
 		   query("numthreads") );
   }
@@ -1075,8 +1075,8 @@ function async_sig_start( function f, int really )
   // /  noring
   //
   // Apparantly it already did that. :-)
-  // 
-  // I also fixed SIGHUP to be somewhat more asynchronous.  
+  //
+  // I also fixed SIGHUP to be somewhat more asynchronous.
   //
   // I also added a rather small amount of magic so that it is called
   // asynchronously the first time it is received, but repeated
@@ -1467,7 +1467,7 @@ int(0..1) host_is_local(string hostname)
 {
   int(0..1) res;
   if (!zero_type(res = host_is_local_cache[hostname])) return res;
-  
+
   // Look up the IP.
   string ip = blocking_host_to_ip(hostname);
 
@@ -1815,7 +1815,7 @@ class Protocol
       Configuration c;
       if( refs < 2 )
       {
-        if(!mu) 
+        if(!mu)
         {
 	  mu = get_iterator(urls)->value();
 	  if(!(c=mu->conf)->inited ) {
@@ -1872,7 +1872,7 @@ class Protocol
 	return urls[in];
       }
     }
-    
+
     if( no_default ) {
       URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
@@ -1895,14 +1895,14 @@ class Protocol
 	}
 	return u;
       }
-    
+
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
     mapping(Configuration:int(1..1)) choices = ([]);
     foreach( configurations, Configuration c )
       if( c->query( "default_server" ) )
 	choices[c] = 1;
-    
+
     if( sizeof( choices ) )
     {
       // Pick a default server bound to this port
@@ -1920,8 +1920,8 @@ class Protocol
 
   Configuration find_configuration_for_url( string url, RequestID id )
   //! Given a url and requestid, try to locate a suitable configuration
-  //! (virtual site) for the request. 
-  //! This interface is not at all set in stone, and might change at 
+  //! (virtual site) for the request.
+  //! This interface is not at all set in stone, and might change at
   //! any time.
   {
     mapping(string:mixed) url_data = find_url_data_for_url (url, 0, id);
@@ -1961,7 +1961,7 @@ class Protocol
   }
 
   mixed query_option( string x )
-  //! Query the port-option 'x' for this port. 
+  //! Query the port-option 'x' for this port.
   {
     return query( x );
   }
@@ -2938,7 +2938,7 @@ array(string) find_ips_for( string what )
     //   a) replace every colon ":" with a "-"
     //   b) append ".ipv6" to the end.
     return ({ replace(what[..sizeof(what)-6], "-", ":") });
-  } 
+  }
   array res = gethostbyname( what );
   if( res && sizeof( res[1] ) )
     return Array.uniq(res[1]);
@@ -3183,7 +3183,7 @@ int register_url( string url, Configuration conf )
     // There is now no need to check for both open_ports[prot][0] and
     // open_ports[prot][0][port], we can go directly to the latter
     // test.
-    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]); 
+    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]);
 
   if (prot->supports_ipless ) {
     // Check if the ANY port is already open for this port, since this
@@ -3254,7 +3254,7 @@ int register_url( string url, Configuration conf )
 	prot_obj = m[ required_host ][ port ] =
 	  prot( port, required_host,
 		// Don't complain if binding IPv4 ANY fails with
-		// EADDRINUSE after we've bound IPv6 ANY. 
+		// EADDRINUSE after we've bound IPv6 ANY.
 		// Most systems seems to bind both IPv4 ANY and
 		// IPv6 ANY for "::"
 		!required_host && opened_ipv6_any_port);
@@ -3303,11 +3303,11 @@ int register_url( string url, Configuration conf )
       urls[ourl]->ports = ({ prot_obj });
     }
     prot_obj->ref(url, urls[url]);
- 
+
     if( !prot_obj->bound )
       failures++;
   }
-  if (failures == sizeof(required_hosts)) 
+  if (failures == sizeof(required_hosts))
   {
     report_error(LOC_M(23, "Failed to register URL %s for %O.")+"\n",
 		 display_url, conf->query_name());
@@ -3780,7 +3780,7 @@ class ImageCache
 #endif
       return;
     }
-    
+
     if( arrayp( args ) )
       args = args[0];
 
@@ -3892,7 +3892,7 @@ class ImageCache
 	  sort( xguides ); sort( yguides );
 	}
       };
-	
+
       if( args->crop )
       {
 	int gx=1, gy=1, gx2, gy2;
@@ -3953,7 +3953,7 @@ class ImageCache
 					    int|float w,  int|float h,
 					    int type )
       {
-	if( (type & CROP) && x1 && y1 
+	if( (type & CROP) && x1 && y1
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
 		|| x0 ||  y0 ) )
 	{
@@ -4034,7 +4034,7 @@ class ImageCache
 	    alpha = alpha->scale( w,h );
 	}
       };
-      
+
       if( sizeof((string) (args->scale || "")) )
       {
         int x, y;
@@ -4092,7 +4092,7 @@ class ImageCache
 	  y1 = -((height - reply->ysize()) / 2);
 	  y2 = y1 + height - 1;
 	}
-	
+
 	if( width && height )
 	{
 	  reply = reply->copy(x1,y1,x2,y2,(bgcolor?bgcolor->rgb():0));
@@ -4169,13 +4169,13 @@ class ImageCache
         ct = Image.Colortable( reply, ncols );
         if( dither )
         {
-          if( dither == "random" ) 
+          if( dither == "random" )
             dither = "random_grey";
           if( ct[ dither ] )
             ct[ dither ]();
           else
             ct->ordered();
-        
+
         }
       }
 
@@ -4202,7 +4202,7 @@ class ImageCache
 	case "wbf":
 	  format = "wbmp";
 	case "wbmp":
-	  Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
+	  Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }),
 						   ({ 255,255,255 }) }) );
 	  bw->floyd_steinberg();
 	  data = Image.WBF.encode( bw->map( reply ), enc_args );
@@ -4211,7 +4211,7 @@ class ImageCache
 #if constant(Image.GIF) && constant(Image.GIF.encode)
          if( alpha && true_alpha )
          {
-           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
+           Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }),
                                                     ({ 255,255,255 }) }) );
            bw->floyd_steinberg();
            alpha = bw->map( alpha );
@@ -4566,7 +4566,7 @@ class ImageCache
 	    " (id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
 	    id, uid );
     }
-    
+
     return 0;
   }
 
@@ -4663,7 +4663,7 @@ class ImageCache
     //  allow authenticated images in the protocol cache. At this point
     //  http.pike will have cleared it so re-enable explicitly.
     PROTO_CACHE();
-    
+
     return res;
   }
 
@@ -4728,7 +4728,7 @@ class ImageCache
 	// generate a unique key.
 	a["\0u"] = user = id->misc->authenticated_user->name();
     };
-    
+
     if( mappingp( data ) )
     {
       update_args( data );
@@ -4795,7 +4795,7 @@ class ImageCache
 
       master()->resolv("DBManager.is_module_table")
 	( 0,"local",name,"Image cache for "+name);
-      
+
       QUERY("CREATE TABLE "+name+" ("
 	    "id     CHAR(64) NOT NULL PRIMARY KEY, "
 	    "size   INT      UNSIGNED NOT NULL DEFAULT 0, "
@@ -4863,7 +4863,7 @@ class ImageCache
     //  Remove items older than one week
     flush(now - 7 * 3600 * 24);
   }
-  
+
   void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
@@ -4925,7 +4925,7 @@ class ArgCache
 #define dwerror(ARGS...) werror(ARGS)
 #else
 #define dwerror(ARGS...) 0
-#endif    
+#endif
 
   //! Cache of the latest entries requested or stored.
   //! Limited to @[CACHE_SIZE] (currently @expr{900@}) entries.
@@ -4995,9 +4995,9 @@ class ArgCache
     }
 
     catch {
-      array(mapping(string:mixed)) res = 
+      array(mapping(string:mixed)) res =
 	QUERY("DESCRIBE "+name+"2 contents");
-      
+
       if(res[0]->Type == "blob") {
 	QUERY("ALTER TABLE "+name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
 	werror("ArgCache: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", name);
@@ -5025,7 +5025,7 @@ class ArgCache
 
     do_cleanup();
   }
-  
+
   protected void init_db()
   {
     // Delay DBManager resolving to before the 'roxen' object is
@@ -5124,7 +5124,7 @@ class ArgCache
 
     (plugins->create_key-({0}))( id, encoded_args );
   }
-  
+
   protected array plugins;
   protected void get_plugins()
   {
@@ -5199,7 +5199,7 @@ class ArgCache
 
 
   mapping lookup( string id )
-  //! Recall a mapping stored in the cache. 
+  //! Recall a mapping stored in the cache.
   {
     if( cache[id] )
       return cache[id] + ([]);
@@ -5224,7 +5224,7 @@ class ArgCache
     GET_DB();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
-    
+
     QUERY( "DELETE FROM "+name+"2 WHERE id = %s", id );
   }
 
@@ -5238,7 +5238,7 @@ class ArgCache
   }
 
 #define SECRET_TAG "££"
-  
+
   int write_dump(Stdio.File file, int from_time)
   //! Dumps all entries that have been @[refresh_arg]'ed at or after
   //! @[from_time] to @[file]. All existing entries are dumped if
@@ -5254,7 +5254,7 @@ class ArgCache
   {
     constant FETCH_ROWS = 10000;
     int entry_count = 0;
-    
+
     // The server does only need to use file based argcache
     // replication if the server don't participate in a replicate
     // setup with a shared database.
@@ -5275,20 +5275,20 @@ class ArgCache
 	array(mapping(string:string)) entries;
 	if(from_time)
 	  // Only replicate entries accessed during the prefetch crawling.
-	  entries = 
+	  entries =
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " WHERE rep_time >= FROM_UNIXTIME(%d) "
 		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS);
 	else
 	  // Make sure _every_ entry is replicated when a dump is created.
-	  entries = 
+	  entries =
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " LIMIT %d, %d", cursor, FETCH_ROWS);
 
 	ids = entries->id;
 	array(string) timeouts = entries->timeout;
 	cursor += FETCH_ROWS;
-	
+
 	foreach(ids; int i; string id) {
 	  dwerror("ArgCache.write_dump(): %O\n", id);
 
@@ -5307,12 +5307,12 @@ class ArgCache
 	      // Expired entry. Don't replicate.
 	      continue;
 	    }
-	    s = 
+	    s =
 	      MIME.encode_base64(encode_value(({ id, encoded_args, timeout })),
 				 1)+"\n";
 	  } else {
 	    // No timeout. Backward-compatible format.
-	    s = 
+	    s =
 	      MIME.encode_base64(encode_value(({ id, encoded_args })),
 				 1)+"\n";
 	  }
@@ -5436,7 +5436,7 @@ void create()
   add_constant ("NewLDAP", Protocols.LDAP);
 
   add_constant( "CFUserDBModule",config_userdb_module );
-  
+
   //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
@@ -5444,7 +5444,7 @@ void create()
     error("Duplicate Roxen object!\n");
   }
 
-  // simplify dumped strings.  
+  // simplify dumped strings.
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
@@ -5630,8 +5630,8 @@ int set_u_and_gid (void|int from_handler_thread)
 #  endif
 	}
 	setuid(uid);
-	if (getuid() != uid) { 
-	  report_error(LOC_M(27, "Failed to set uid.")+"\n"); 
+	if (getuid() != uid) {
+	  report_error(LOC_M(27, "Failed to set uid.")+"\n");
 	  u = 0;
 	}
 	if (u && !from_handler_thread)
@@ -5698,7 +5698,7 @@ void reload_all_configurations()
   int modified;
 
   setvars(retrieve("Variables", 0));
-  
+
   foreach(list_all_configurations(), string config)
   {
     mixed err;
@@ -6077,7 +6077,7 @@ void describe_thread (Thread.Thread thread)
       th_bt = bt_segs * bt_separator;
     }
   }
-  
+
   report_debug(">> " + replace (th_bt, "\n", "\n>> ") + "\n");
 }
 
@@ -6477,7 +6477,7 @@ int main(int argc, array tmp)
 
   // For RBF
   catch(mkdir(getenv("VARDIR") || "../var"));
-  
+
   dbm_cached_get = master()->resolv( "DBManager.cached_get" );
 
   dbm_cached_get( "local" )->
@@ -6619,7 +6619,7 @@ int main(int argc, array tmp)
   foreach( glob("*.pike", get_dir( "etc/modules/Variable.pmod/"))
 	   -({"Language.pike", "Schedule.pike"}), string f )
     DDUMP( "etc/modules/Variable.pmod/"+f );
-  
+
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
   DDUMP(  "base_server/wizard.pike" );
@@ -6680,7 +6680,7 @@ int main(int argc, array tmp)
   init_configuserdb();
   cache.init_session_cache();
 
-  protocols = build_protocols_mapping();  
+  protocols = build_protocols_mapping();
 
   int t = gethrtime();
   report_debug("Searching for pike-modules directories ... \b");
@@ -7125,7 +7125,7 @@ class LogFormat			// Note: Dumping won't work if protected.
     return(sprintf("%04d-%02d-%02d",
 		   1900+ct->year,ct->mon+1, ct->mday));
   }
- 
+
   protected string std_time(mapping(string:int) ct) {
     return(sprintf("%02d:%02d:%02d",
 		   ct->hour, ct->min, ct->sec));
@@ -7164,7 +7164,7 @@ class LogFormat			// Note: Dumping won't work if protected.
 
     return c;
   }
-  
+
   protected string host_ip_to_int(string s)
   {
     int a, b, c, d;
@@ -7198,7 +7198,7 @@ class LogFormat			// Note: Dumping won't work if protected.
   protected void do_async_write( string host, string data,
 				 string ip, function c )
   {
-    if( c ) 
+    if( c )
       c( replace( data, "\4711", (host||ip) ) );
   }
 }
@@ -7545,7 +7545,7 @@ protected LogFormat compile_log_format( string fmt )
   e_func += sprintf(#"
       string data = sprintf( %O%{,
 	%s%} );", e_format, e_args );
- 
+
   if (log_flags & LOG_ASYNC_HOST)
   {
     a_func += #"
@@ -7638,7 +7638,7 @@ protected LogFormat compile_log_format( string fmt )
 //!       @value "luck"
 //!     @endstring
 //! @endarray
-//! 
+//!
 //! @note
 //!   It's up to the security checks in this file to ensure that
 //!   nothing is overcached. All patterns that perform checks using
@@ -7784,24 +7784,24 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //! will do the checks required by the format.
 //!
 //! The syntax is:
-//! 
+//!
 //!  userdb userdatabase module
 //!  authmethod authentication module
 //!  realm realm name
 //!
 //!  Below, CMD is one of 'allow' and 'deny'
-//! 
+//!
 //!  CMD ip=ip/bits[,ip/bits]  [return]
 //!  CMD ip=ip:mask[,ip:mask]  [return]
 //!  CMD ip=pattern            [return]
-//! 
+//!
 //!  CMD user=name[,name,...]  [return]
 //!  CMD group=name[,name,...] [return]
-//! 
+//!
 //!  CMD dns=pattern           [return]
 //!
 //!  CMD day=pattern           [return]
-//! 
+//!
 //!  CMD time=<start>-<stop>   [return]
 //!       times in HH:mm format
 //!
@@ -7818,7 +7818,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //!
 //!  return means that reaching this command results in immediate
 //!  return, only useful for 'allow'.
-//! 
+//!
 //! 'deny' always implies a return, no futher testing is done if a
 //! 'deny' match.
 {
@@ -7895,7 +7895,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	  sprintf("    userdb_module = id->conf->find_user_database( %O );\n",
 		  line);
       continue;
-    } 
+    }
     else if( sscanf( line, "authmethod %s", line ) )
     {
       line = String.trim_all_whites( line );
@@ -7964,7 +7964,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
     foreach(security_checks, array(string|int|array) check)
     {
-      array args;      
+      array args;
       if (sizeof(args = array_sscanf(line, check[0])) == check[1])
       {
 	// Got a match for this security check.
@@ -8151,7 +8151,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       code/"\n"));
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
   mixed res = compile_string( code );
-   
+
 #if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
   dbm_cached_get( "local" )
     ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
@@ -8239,10 +8239,10 @@ class LogFile(string fname, string|void compressor_program)
     compress_logs(fname, ff);
     mkdirhier( ff );
     fd = open( ff, "wac" );
-    if(!fd) 
+    if(!fd)
     {
       remove_call_out(do_open_co);
-      call_out(do_open_co, 120); 
+      call_out(do_open_co, 120);
       report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
@@ -8252,7 +8252,7 @@ class LogFile(string fname, string|void compressor_program)
     }
     opened = 1;
     remove_call_out(do_open_co);
-    call_out(do_open_co, 900); 
+    call_out(do_open_co, 900);
     remove_call_out(do_close_co);
     call_out(do_close_co, 10.0);
   }
@@ -8300,6 +8300,6 @@ class LogFile(string fname, string|void compressor_program)
     write_buf += ({ what });
     if (sizeof (write_buf) == 1)
       background_run (1, do_the_write);
-    return strlen(what); 
+    return strlen(what);
   }
 }
