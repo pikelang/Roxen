@@ -15,21 +15,31 @@
         </if>
 
         <li class='margin-top'>
-          <select name='goto_site' data-toggle-submit=''>
-            <option value=''><translate id="509">Select site</translate></option>
-            <emit source='configurations'>
-              <cf-perm perm="Site:&_.sname;">
-                <option value='&_.sname;'>&_.name;</option>
-              </cf-perm>
-            </emit>
-          </select>
-          <input type="submit" value="Go" class="rxn-admin-btn" />
+          <div class='form-table'>
+            <div class='form-row'>
+              <div class='form-cell fill'>
+                <span class='select-wrapper fill'>
+                  <select name='goto_site' data-toggle-submit=''>
+                    <option value=''><translate id="509">Select site</translate></option>
+                    <emit source='configurations'>
+                      <cf-perm perm="Site:&_.sname;">
+                        <option value='&_.sname;'>&_.name;</option>
+                      </cf-perm>
+                    </emit>
+                  </select>
+                </span>
+              </div>
+              <div class='form-cell fill'>
+                <input type="submit" value="Go" class="rxn-admin-btn" />
+              </div>
+            </div>
+          </div>
         </li>
       </if>
 
       <else>
        <emit source='configurations'
-         ><cf-perm perm="Site:&_.name;">
+         ><cf-perm perm="Site:&_.sname;">
           <li>
             <a href="site.html/&_.sname;/">&_.name;</a>
           </li>
