@@ -5247,22 +5247,55 @@ void set_cookie( RequestID id,
                  int|void expire_time_delta,
                  string|void domain,
                  int(0..1)|string|void path,
-                 int(0..1)|string|void secure,
-                 int(0..1)|string|void httponly)
+                 int(0..1)|__deprecated__(string)|void secure,
+                 int(0..1)|__deprecated__(string)|void httponly)
 //! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
 //! header in the response that will be made from @[id].
 //!
+//! @param id
+//!   @[RequestID] for which to set the cookie.
+//!
+//! @param name
+//!   Name of the cookie.
+//!
+//! @param value
+//!   Value of the cookie.
+//!
 //! @param expire_time_delta
-//! If the expire_time_delta variable is -1, the cookie is set to
-//! expire five years in the future. -2 will set the expiration time to
-//! posix time 1 and add the argument Max-Age, set to 0. If expire_time_delta
-//! is 0 or ommited, no expire information is sent to the client. This
-//! usualy results in the cookie being kept until the browser is exited.
+//!   @int
+//!     @value 1..
+//!       Number of seconds in the future that the cookie will expire.
+//!     @value 0
+//!     @value UNDEFINED
+//!       If @[expire_time_delta] is @expr{0@} or ommited, no expire
+//!       information is sent to the client. This usually results in
+//!       the cookie being kept until the browser is exited.
+//!     @value -1
+//!       Expire five years in the future.
+//!     @value -2
+//!       Set the expiration time to POSIX time @expr{1@}, and set
+//!       the cookie Max-Age to @expr{0@}. Ie immediate expiry.
+//!   @endint
+//!
+//! @param domain
+//!   Extend the scope of the cookie to this domain.
 //!
 //! @param path
 //! A path argument will always be added to the Set-Cookie header unless
-//! @[path] is 1. It will otherwise be set to the provided string, or ""
-//! if no string is provided.
+//! @[path] is @expr{1@}. It will otherwise be set to the provided string,
+//! or @expr{""@} if no string is provided.
+//!
+//! @param secure
+//!   Instruct the client to only provide the cookie over https connections.
+//!
+//! @param httponly
+//!   Instruct the client to not make the cookie available to client-side
+//!   scripting (ie Javascript).
+//!
+//! @note
+//!   The @[value] of the cookie will be passed through
+//!   @[http_encode_cookie()] before being sent to the client
+//!   this may affect client-side use of the cookie value.
 {
   if( expire_time_delta == -1 )
     expire_time_delta = (3600*(24*365*5));
@@ -5279,6 +5312,36 @@ void set_cookie( RequestID id,
   if( secure ) cookie += "; secure";
   if( httponly ) cookie += "; HttpOnly";
   id->add_response_header ("Set-Cookie", cookie);
+}
+
+string set_wizard_id_cookie(RequestID id)
+//! Sets the RoxenWizardId cookie and returns the value of the cookie.
+//!
+//! @param id
+//!   @[RequestID] for which to set the cookie.
+//!
+//! @returns
+//!   The value of the cookie.
+{
+  // Set the secure flag on the cookie if accessed over https [WS-135].
+  // NB: The cookie is used from Javascript, so it can't have
+  //     httponly set.
+  string name = "RoxenWizardId";
+  string value = (string)random(0x7fffffff);
+  int expire_time_delta = 0;
+  string domain = 0;
+  string path = "/";
+  int(0..1) secure = id->client_scheme && id->client_scheme() == "https";
+  int(0..1) httponly = 0;
+  Roxen.set_cookie(id,
+                   name,
+                   value,
+                   expire_time_delta,
+                   domain,
+                   path,
+                   secure,
+                   httponly);
+  return value;
 }
 
 void remove_cookie( RequestID id,

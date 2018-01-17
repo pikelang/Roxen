@@ -4,6 +4,7 @@
 <language>swe</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/roxenloader.pike</file>
 <file>../base_server/wizard.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
@@ -40,58 +41,6 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 <str id="6">
 <o>Failed to bind %s (%s)</o>
 <t>Misslyckades med att binda %s (%s)</t>
-</str>
-
-<str id="8">
-<o>Reading certificate file %O failed: %s
-</o>
-<t>Kunde ej läsa certifikatfilen %O: %s
-</t>
-</str>
-
-<str id="9">
-<o>Reading key file %O failed: %s
-</o>
-<t>Kunde ej läsa nyckelfilen %O: %s
-</t>
-</str>
-
-<str id="10">
-<o>No certificate found in %O.
-</o>
-<t>Hittade inget certifikat i %O.
-</t>
-</str>
-
-<str id="11">
-<o>Private rsa key not valid</o>
-<t>Privat rsa-nyckel ej giltig</t>
-</str>
-
-<str id="13">
-<o>Certificate not valid (DER).
-</o>
-<t>Certifikatet ogiltigt (DER).
-</t>
-</str>
-
-<str id="14">
-<o>Certificate and private key do not match.
-</o>
-<t>Certifikat och nyckel stämmer inte överrens.
-</t>
-</str>
-
-<str id="15">
-<o>Private dsa key not valid</o>
-<t>Privat dsa-nyckel ogiltig</t>
-</str>
-
-<str id="17">
-<o>No private key found.
-</o>
-<t>Hittade ingen privat nyckel.
-</t>
 </str>
 
 <str id="19">
@@ -369,40 +318,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t>TLS-port %s öppnad.
 </t>
-</str>
-
-<str id="66">
-<new/>
-<o>Reading PEM file %O failed: %s
-</o>
-<t></t>
-</str>
-
-<str id="67">
-<new/>
-<o>Invalid PEM in %O.
-</o>
-<t></t>
-</str>
-
-<str id="68">
-<new/>
-<o>Invalid decryption password for %O.
-</o>
-<t></t>
-</str>
-
-<str id="69">
-<new/>
-<o>Private key not valid</o>
-<t></t>
-</str>
-
-<str id="70">
-<new/>
-<o>Private key without matching certificate.
-</o>
-<t></t>
 </str>
 
 <str id="71">

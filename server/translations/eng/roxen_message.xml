@@ -4,6 +4,7 @@
 <language>eng</language>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
+<file>../base_server/roxenloader.pike</file>
 <file>../base_server/wizard.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
@@ -38,52 +39,6 @@ Check that your password database is correct for user %s(%d),
 
 <str id="6">
 <o>Failed to bind %s (%s)</o>
-<t></t>
-</str>
-
-<str id="8">
-<o>Reading certificate file %O failed: %s
-</o>
-<t></t>
-</str>
-
-<str id="9">
-<o>Reading key file %O failed: %s
-</o>
-<t></t>
-</str>
-
-<str id="10">
-<o>No certificate found in %O.
-</o>
-<t></t>
-</str>
-
-<str id="11">
-<o>Private rsa key not valid</o>
-<t></t>
-</str>
-
-<str id="13">
-<o>Certificate not valid (DER).
-</o>
-<t></t>
-</str>
-
-<str id="14">
-<o>Certificate and private key do not match.
-</o>
-<t></t>
-</str>
-
-<str id="15">
-<o>Private dsa key not valid</o>
-<t></t>
-</str>
-
-<str id="17">
-<o>No private key found.
-</o>
 <t></t>
 </str>
 
@@ -351,35 +306,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="64">
 <o>TLS port %s opened.
-</o>
-<t></t>
-</str>
-
-<str id="66">
-<o>Reading PEM file %O failed: %s
-</o>
-<t></t>
-</str>
-
-<str id="67">
-<o>Invalid PEM in %O.
-</o>
-<t></t>
-</str>
-
-<str id="68">
-<o>Invalid decryption password for %O.
-</o>
-<t></t>
-</str>
-
-<str id="69">
-<o>Private key not valid</o>
-<t></t>
-</str>
-
-<str id="70">
-<o>Private key without matching certificate.
 </o>
 <t></t>
 </str>

@@ -34,8 +34,12 @@
  * RFC 949	FTP unique-named store command
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  * RFC 2228	FTP Security Extensions
+ * RFC 2389	Feature negotiation mechanism for the FTP
  * RFC 2428	FTP Extensions for IPv6 and NATs
+ * RFC 2640	Internationalization of the FTP
  * RFC 3659	Extensions to FTP
+ * RFC 5797	FTP Command and Extension Registry
+ * RFC 7151	FTP HOST Command for Virtual Hosts
  *
  * RFC's with recomendations and discussions:
  *
@@ -51,6 +55,7 @@
  * RFC's describing gateways and proxies:
  *
  * RFC 1415	FTP-FTAM Gateway Specification
+ * RFC 6384	FTP Application Layer Gateway (ALG) for IPv4-to-IPv6 Translation
  *
  * More or less obsolete RFC's:
  *
@@ -81,7 +86,7 @@
  */
 
 
-#include <config.h>
+#include <roxen.h>
 #include <module.h>
 #include <stat.h>
 
@@ -101,6 +106,11 @@
 #else
 # define DWRITE(X ...)
 #endif
+
+//<locale-token project="prot_ftp">LOCALE</locale-token>
+#define LOCALE(X,Y)     _DEF_LOCALE("prot_ftp",X,Y)
+// end of the locale related stuff
+
 
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); call_out(FD->close, 0); FD = 0; } while(0)
 
@@ -828,6 +838,7 @@ class LSFile
 		    ({ "\\n", "\\r", "\\\\", "\\\"", "\\\'", "\\020" })) +
 	    "\"";
 	}
+	short = string_to_utf8(short);
 	if (flags & LS_FLAG_F) {
 	  if (st[1] < 0) {
 	    // Directory
@@ -1373,144 +1384,150 @@ class FTPSession
 
   inherit "roxenlib";
 
-  private constant cmd_help = ([
+  private mapping(string:string|Locale.DeferredLocale) cmd_help = ([
     // FTP commands in reverse RFC order.
 
     // The following is a command suggested by the author of ncftp.
-    "CLNT":"<sp> <client-name> <sp> <client-version> "
-    "[<sp> <optional platform info>] (Set client name)",
+    "CLNT":LOCALE(1, "<sp> <client-name> <sp> <client-version> "
+		  "[<sp> <optional platform info>] (Set client name)"),
 
-    // The following are in
-    // "Extended Directory Listing, TVFS, and Restart Mechanism for FTP"
-    // IETF draft 4.
-    "FEAT":"(Feature list)",
-    "MDTM":"<sp> path-name (Modification time)",
-    "SIZE":"<sp> path-name (Size)",
-    "MLST":"<sp> path-name (Machine Processing List File)",
-    "MLSD":"<sp> path-name (Machine Processing List Directory)",
-    "OPTS":"<sp> command <sp> options (Set Command-specific Options)",
+    // These are from RFC 7151
+    "HOST":LOCALE(2, "<sp> hostname (Host name)"),
+
+    // These are from RFC 3659
+    "MDTM":LOCALE(3, "<sp> path-name (Modification time)"),
+    "SIZE":LOCALE(4, "<sp> path-name (Size)"),
+    "MLST":LOCALE(5, "<sp> path-name (Machine Processing List File)"),
+    "MLSD":LOCALE(6, "<sp> path-name (Machine Processing List Directory)"),
+
+    // These are from RFC 2640
+    "LANG":LOCALE(7, "<sp> lang-tag (Change Interface Language)"),
 
     // These are from RFC 2428
-    "EPRT":"<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)",
-    "EPSV":"[<sp> net-prt|ALL] (Extended Address Passive Mode)",
+    "EPRT":LOCALE(8, "<sp> <d>net-prt<d>net-addr<d>tcp-port<d> (Extended Address Port)"),
+    "EPSV":LOCALE(9, "[<sp> net-prt|ALL] (Extended Address Passive Mode)"),
+
+    // These are from RFC 2389
+    "FEAT":LOCALE(10, "(Feature list)"),
+    "OPTS":LOCALE(11, "<sp> command <sp> options (Set Command-specific Options)"),
 
     // These are from RFC 2228 (FTP Security Extensions)
-    "AUTH":"security-mechanism (Authentication/Security Mechanism)",
-    "ADAT":"security-data (Authentication/Security Data)",
-    "PBSZ":"<sp> size (Protection Buffer SiZe)",
-    "PROT":"<sp> [ C | S | E | P ] (Data Channel Protection Level)",
-    "CCC":"(Clear Command Channel)",
-    "MIC":"command (Integrity Protected Command)",
-    "CONF":"command (Confidentiality Protected Command)",
-    "ENC":"command (Privacy Protected Command)",
+    "AUTH":LOCALE(12, "security-mechanism (Authentication/Security Mechanism)"),
+    "ADAT":LOCALE(13, "security-data (Authentication/Security Data)"),
+    "PBSZ":LOCALE(14, "<sp> size (Protection Buffer SiZe)"),
+    "PROT":LOCALE(15, "<sp> [ C | S | E | P ] (Data Channel Protection Level)"),
+    "CCC":LOCALE(16, "(Clear Command Channel)"),
+    "MIC":LOCALE(17, "command (Integrity Protected Command)"),
+    "CONF":LOCALE(18, "command (Confidentiality Protected Command)"),
+    "ENC":LOCALE(19, "command (Privacy Protected Command)"),
 
     // These are in RFC 1639
-    "LPRT":"<sp> <long-host-port> (Long Port)",
-    "LPSV":"(Long Passive)",
+    "LPRT":LOCALE(20, "<sp> <long-host-port> (Long Port)"),
+    "LPSV":LOCALE(21, "(Long Passive)"),
 
     // Commands in the order from RFC 959
 
     // Login
-    "USER":"<sp> username (Change user)",
-    "PASS":"<sp> password (Change password)",
-    "ACCT":"<sp> <account-information> (Account)",
-    "CWD":"[ <sp> directory-name ] (Change working directory)",
-    "CDUP":"(Change to parent directory)",
-    "SMNT":"<sp> <pathname> (Structure mount)",
+    "USER":LOCALE(22, "<sp> username (Change user)"),
+    "PASS":LOCALE(23, "<sp> password (Change password)"),
+    "ACCT":LOCALE(24, "<sp> <account-information> (Account)"),
+    "CWD":LOCALE(25, "[ <sp> directory-name ] (Change working directory)"),
+    "CDUP":LOCALE(26, "(Change to parent directory)"),
+    "SMNT":LOCALE(27, "<sp> <pathname> (Structure mount)"),
     // Logout
-    "REIN":"(Reinitialize)",
-    "QUIT":"(Terminate service)",
+    "REIN":LOCALE(28, "(Reinitialize)"),
+    "QUIT":LOCALE(29, "(Terminate service)"),
     // Transfer parameters
-    "PORT":"<sp> b0, b1, b2, b3, b4 (Set port IP and number)",
-    "PASV":"(Set server in passive mode)",
-    "TYPE":"<sp> [ A | E | I | L ] (Ascii, Ebcdic, Image, Local)",
-    "STRU":"<sp> <structure-code> (File structure)",
-    "MODE":"<sp> <mode-code> (Transfer mode)",
+    "PORT":LOCALE(30, "<sp> b0, b1, b2, b3, b4 (Set port IP and number)"),
+    "PASV":LOCALE(31, "(Set server in passive mode)"),
+    "TYPE":LOCALE(32, "<sp> [ A | E | I | L ] (Ascii, Ebcdic, Image, Local)"),
+    "STRU":LOCALE(33, "<sp> <structure-code> (File structure)"),
+    "MODE":LOCALE(34, "<sp> <mode-code> (Transfer mode)"),
     // File action commands
-    "ALLO":"<sp> <decimal-integer> [<sp> R <sp> <decimal-integer>]"
-    " (Allocate space for file)",
-    "REST":"<sp> marker (Set restart marker)",
-    "STOR":"<sp> file-name (Store file)",
-    "STOU":"(Store file with unique name)",
-    "RETR":"<sp> file-name (Retreive file)",
-    "LIST":"[ <sp> <pathname> ] (List directory)",
-    "NLST":"[ <sp> <pathname> ] (List directory)",
-    "APPE":"<sp> <pathname> (Append file)",
-    "RNFR":"<sp> <pathname> (Rename from)",
-    "RNTO":"<sp> <pathname> (Rename to)",
-    "DELE":"<sp> file-name (Delete file)",
-    "RMD":"<sp> <pathname> (Remove directory)",
-    "MKD":"<sp> <pathname> (Make directory)",
-    "PWD":"(Return current directory)",
-    "ABOR":"(Abort current transmission)",
+    "ALLO":LOCALE(35, "<sp> <decimal-integer> [<sp> R <sp> <decimal-integer>]"
+		  " (Allocate space for file)"),
+    "REST":LOCALE(36, "<sp> marker (Set restart marker)"),
+    "STOR":LOCALE(37, "<sp> file-name (Store file)"),
+    "STOU":LOCALE(38, "(Store file with unique name)"),
+    "RETR":LOCALE(39, "<sp> file-name (Retreive file)"),
+    "LIST":LOCALE(40, "[ <sp> <pathname> ] (List directory)"),
+    "NLST":LOCALE(40, "[ <sp> <pathname> ] (List directory)"),
+    "APPE":LOCALE(41, "<sp> <pathname> (Append file)"),
+    "RNFR":LOCALE(42, "<sp> <pathname> (Rename from)"),
+    "RNTO":LOCALE(43, "<sp> <pathname> (Rename to)"),
+    "DELE":LOCALE(44, "<sp> file-name (Delete file)"),
+    "RMD":LOCALE(45, "<sp> <pathname> (Remove directory)"),
+    "MKD":LOCALE(46, "<sp> <pathname> (Make directory)"),
+    "PWD":LOCALE(47, "(Return current directory)"),
+    "ABOR":LOCALE(48, "(Abort current transmission)"),
     // Informational commands
-    "SYST":"(Get type of operating system)",
-    "STAT":"[ <sp> <pathname> ] (Status for server/file)",
-    "HELP":"[ <sp> <string> ] (Give help)",
+    "SYST":LOCALE(49, "(Get type of operating system)"),
+    "STAT":LOCALE(50, "[ <sp> <pathname> ] (Status for server/file)"),
+    "HELP":LOCALE(51, "[ <sp> <string> ] (Give help)"),
     // Miscellaneous commands
-    "SITE":"<sp> <string> (Site parameters)",	// Has separate help
-    "NOOP":"(No operation)",
+    "SITE":LOCALE(52, "<sp> <string> (Site parameters)"),// Has separate help
+    "NOOP":LOCALE(53, "(No operation)"),
 
     // Old "Experimental commands"
     // These are in RFC 775
     // Required by RFC 1123 4.1.3.1
-    "XMKD":"<sp> path-name (Make directory)",
-    "XRMD":"<sp> path-name (Remove directory)",
-    "XPWD":"(Return current directory)",
-    "XCWD":"[ <sp> directory-name ] (Change working directory)",
-    "XCUP":"(Change to parent directory)",
+    "XMKD":LOCALE(54, "<sp> path-name (Make directory)"),
+    "XRMD":LOCALE(55, "<sp> path-name (Remove directory)"),
+    "XPWD":LOCALE(47, "(Return current directory)"),
+    "XCWD":LOCALE(25, "[ <sp> directory-name ] (Change working directory)"),
+    "XCUP":LOCALE(26, "(Change to parent directory)"),
 
     // These are in RFC 765 but not in RFC 959
-    "MAIL":"[<sp> <recipient name>] (Mail to user)",
-    "MSND":"[<sp> <recipient name>] (Mail send to terminal)",
-    "MSOM":"[<sp> <recipient name>] (Mail send to terminal or mailbox)",
-    "MSAM":"[<sp> <recipient name>] (Mail send to terminal and mailbox)",
-    "MRSQ":"[<sp> <scheme>] (Mail recipient scheme question)",
-    "MRCP":"<sp> <recipient name> (Mail recipient)",
+    "MAIL":LOCALE(56, "[<sp> <recipient name>] (Mail to user)"),
+    "MSND":LOCALE(57, "[<sp> <recipient name>] (Mail send to terminal)"),
+    "MSOM":LOCALE(58, "[<sp> <recipient name>] (Mail send to terminal or mailbox)"),
+    "MSAM":LOCALE(59, "[<sp> <recipient name>] (Mail send to terminal and mailbox)"),
+    "MRSQ":LOCALE(60, "[<sp> <scheme>] (Mail recipient scheme question)"),
+    "MRCP":LOCALE(61, "<sp> <recipient name> (Mail recipient)"),
 
     // These are in RFC 743
-    "XRSQ":"[<sp> <scheme>] (Scheme selection)",
-    "XRCP":"<sp> <recipient name> (Recipient specification)",
+    "XRSQ":LOCALE(62, "[<sp> <scheme>] (Scheme selection)"),
+    "XRCP":LOCALE(63, "<sp> <recipient name> (Recipient specification)"),
 
     // These are in RFC 737
-    "XSEN":"[<sp> <recipient name>] (Send to terminal)",
-    "XSEM":"[<sp> <recipient name>] (Send, mail if can\'t)",
-    "XMAS":"[<sp> <recipient name>] (Mail and send)",
+    "XSEN":LOCALE(64, "[<sp> <recipient name>] (Send to terminal)"),
+    "XSEM":LOCALE(65, "[<sp> <recipient name>] (Send, mail if can\'t)"),
+    "XMAS":LOCALE(66, "[<sp> <recipient name>] (Mail and send)"),
 
     // These are in RFC 542
-    "BYE":"(Logout)",
-    "BYTE":"<sp> <bits> (Byte size)",
-    "SOCK":"<sp> host-socket (Data socket)",
+    "BYE":LOCALE(67, "(Logout)"),
+    "BYTE":LOCALE(68, "<sp> <bits> (Byte size)"),
+    "SOCK":LOCALE(69, "<sp> host-socket (Data socket)"),
 
 #if 0
     // These are in RFC 475
-    "MLTO":"<sp> <recipient name> (Initiate mail to user)",
-    "FROM":"<sp> <sender name> (Mail from)",
-    "MTYP":"<sp> [ U | O | L ] (Mail type)",
-    "RECO":"[<sp> <mail unique id>] (Mail record)",
+    "MLTO":LOCALE(70, "<sp> <recipient name> (Initiate mail to user)"),
+    "FROM":LOCALE(71, "<sp> <sender name> (Mail from)"),
+    "MTYP":LOCALE(72, "<sp> [ U | O | L ] (Mail type)"),
+    "RECO":LOCALE(73, "[<sp> <mail unique id>] (Mail record)"),
 #if 0
     // NB: Conflicts with AUTH from RFC 2228 above.
-    "AUTH":"<sp> <author id> (Mail author)",
+    "AUTH":LOCALE(74, "<sp> <author id> (Mail author)"),
 #endif
-    "TITL":"<sp> <title> (Mail title/subject)",
-    "ACKN":"(Mail acknowledge)",
-    "TEXT":"(Mail text)",
-    "FILE":"<sp> <filename> (Mail file)",
-    "CITA":"<sp> <file name> (Mail citation)",
+    "TITL":LOCALE(75, "<sp> <title> (Mail title/subject)"),
+    "ACKN":LOCALE(76, "(Mail acknowledge)"),
+    "TEXT":LOCALE(77, "(Mail text)"),
+    "FILE":LOCALE(78, "<sp> <filename> (Mail file)"),
+    "CITA":LOCALE(79, "<sp> <file name> (Mail citation)"),
 #endif
 
     // This one is referenced in a lot of old RFCs
-    "MLFL":"(Mail file)",
+    "MLFL":LOCALE(80, "(Mail file)"),
   ]);
 
-  private constant site_help = ([
-    "CHMOD":"<sp> mode <sp> file",
-    "UMASK":"<sp> mode",
-    "PRESTATE":"<sp> prestate",
+  private mapping(string:string|Locale.DeferredLocale) site_help = ([
+    "CHMOD":LOCALE(81, "<sp> mode <sp> file"),
+    "UMASK":LOCALE(82, "<sp> mode"),
+    "PRESTATE":LOCALE(83, "<sp> prestate"),
   ]);
 
-  private constant opts_help = ([
-    "MLST":"<sp> <fact-list>",
+  private mapping(string:string|Locale.DeferredLocale) opts_help = ([
+    "MLST":LOCALE(84, "<sp> <fact-list>"),
   ]);
 
   private constant modes = ([
@@ -1629,10 +1646,10 @@ class FTPSession
 
     if (sizeof(s)) {
       if (to_send->is_empty()) {
-	to_send->put(s);
+	to_send->put(string_to_utf8(s));
 	::set_write_callback(write_cb);
       } else {
-	to_send->put(s);
+	to_send->put(string_to_utf8(s));
       }
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
@@ -1685,6 +1702,40 @@ class FTPSession
   roxen.Protocol port_obj;
 
   /*
+   * Locale & Language handling
+   */
+
+  protected string format_langlist()
+  {
+    array(string) langs = Locale.list_languages("prot_ftp") + ({});
+    string current = roxen.get_locale();
+
+    foreach(langs; int i; string lang) {
+      if (lang == current) {
+	langs[i] = current + "*";
+	current = 0;
+	break;
+      }
+    }
+
+    if (current) {
+      langs += ({ current + "*" });
+    }
+
+    return sort(langs) * ";";
+  }
+
+  protected void restore_locale()
+  {
+    string lang = master_session->misc["accept-language"];
+    if (lang) {
+      roxen.set_locale(lang);
+    } else {
+      roxen.set_locale();
+    }
+  }
+
+  /*
    * Misc
    */
 
@@ -1722,6 +1773,7 @@ class FTPSession
 
   private string fix_path(string s)
   {
+    mixed err = catch { s = utf8_to_string(s); };
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
 	return(cwd);
@@ -1933,7 +1985,7 @@ class FTPSession
       session->file = 0;
     }
     destruct(session);
-    send(226, ({ "Transfer complete." }));
+    send(226, ({ LOCALE(85, "Transfer complete.") }));
   }
 
   private mapping|array|object stat_file(string fname,
@@ -1962,7 +2014,7 @@ class FTPSession
   private int expect_argument(string cmd, string args)
   {
     if ((< "", 0 >)[args]) {
-      send(504, ({ sprintf("Syntax: %s %s", cmd, cmd_help[cmd]) }));
+      send(504, ({ sprintf(LOCALE(86, "Syntax: %s %s"), cmd, cmd_help[cmd]) }));
       return 0;
     }
     return 1;
@@ -1975,33 +2027,33 @@ class FTPSession
     case 301:
     case 302:
       if (file->extra_heads && file->extra_heads->Location) {
-	send(504, ({ sprintf("'%s': %s: Redirect to %O.",
+	send(504, ({ sprintf(LOCALE(87, "'%s': %s: Redirect to %O."),
 			     cmd, f, file->extra_heads->Location) }));
       } else {
-	send(504, ({ sprintf("'%s': %s: Redirect.", cmd, f) }));
+	send(504, ({ sprintf(LOCALE(88, "'%s': %s: Redirect."), cmd, f) }));
       }
       break;
     case 401:
-      send(530, ({ sprintf("'%s': %s: Access denied.",
+      send(530, ({ sprintf(LOCALE(89, "'%s': %s: Access denied."),
 			   cmd, f) }));
       break;
     case 403:
-      send(451, ({ sprintf("'%s': %s: Forbidden.",
+      send(451, ({ sprintf(LOCALE(90, "'%s': %s: Forbidden."),
 			   cmd, f) }));
       break;
     case 405:
-      send(550, ({ sprintf("'%s': %s: Method not allowed.",
+      send(550, ({ sprintf(LOCALE(91, "'%s': %s: Method not allowed."),
 			   cmd, f) }));
       break;
     case 500:
-      send(451, ({ sprintf("'%s': Requested action aborted: "
-			   "local error in processing.", cmd) }));
+      send(451, ({ sprintf(LOCALE(93, "'%s': Requested action aborted: "
+				  "local error in processing."), cmd) }));
       break;
     default:
       if (!file) {
 	file = ([ "error":404 ]);
       }
-      send(550, ({ sprintf("'%s': %s: No such file or directory.",
+      send(550, ({ sprintf(LOCALE(94, "'%s': %s: No such file or directory."),
 			   cmd, f) }));
       break;
     }
@@ -2022,14 +2074,14 @@ class FTPSession
       array|object st = file;
       file = 0;
       if (st && (st[1] < 0) && !((<"RMD", "XRMD", "CHMOD">)[cmd])) {
-	send(550, ({ sprintf("%s: not a plain file.", fname) }));
+	send(550, ({ sprintf(LOCALE(95, "%s: not a plain file."), fname) }));
 	return 0;
       }
       mixed err;
       if ((err = catch(file = conf->get_file(session)))) {
 	report_error("FTP: Error opening file \"%s\"\n"
 		     "%s\n", fname, describe_backtrace(err));
-	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
+	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
 	return 0;
       }
     } else if ((< "STOR", "APPE", "MKD", "XMKD", "MOVE" >)[cmd]) {
@@ -2037,7 +2089,7 @@ class FTPSession
       if ((err = catch(file = conf->get_file(session)))) {
 	report_error("FTP: Error opening file \"%s\"\n"
 		     "%s\n", fname, describe_backtrace(err));
-	send(550, ({ sprintf("%s: Error, can't open file.", fname) }));
+	send(550, ({ sprintf(LOCALE(96, "%s: Error, can't open file."), fname) }));
 	return 0;
       }
     }
@@ -2079,6 +2131,8 @@ class FTPSession
 
     touch_me();
 
+    restore_locale();
+
     if(!file->len)
       file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
 
@@ -2089,10 +2143,10 @@ class FTPSession
     if(fd)
     {
       if (file->len) {
-	send(150, ({ sprintf("Opening %s data connection for %s (%d bytes).",
+	send(150, ({ sprintf(LOCALE(97, "Opening %s data connection for %s (%d bytes)."),
 			     modes[file->mode], file->full_path, file->len) }));
       } else {
-	send(150, ({ sprintf("Opening %s mode data connection for %s",
+	send(150, ({ sprintf(LOCALE(98, "Opening %s mode data connection for %s"),
 			     modes[file->mode], file->full_path) }));
       }
 
@@ -2119,7 +2173,7 @@ class FTPSession
     }
     else
     {
-      send(425, ({ "Can't build data connect: Connection refused." }));
+      send(425, ({ LOCALE(99, "Can't build data connect: Connection refused.") }));
       destruct(session);
       return;
     }
@@ -2210,8 +2264,10 @@ class FTPSession
 
     touch_me();
 
+    restore_locale();
+
     if (fd) {
-      send(150, ({ sprintf("Opening %s mode data connection for %s.",
+      send(150, ({ sprintf(LOCALE(100, "Opening %s mode data connection for %s."),
 			   modes[mode], args) }));
 
       SSLMode ssl_mask = SSL_ACTIVE;
@@ -2227,7 +2283,7 @@ class FTPSession
       }
 #endif
     } else {
-      send(425, ({ "Can't build data connect: Connection refused." }));
+      send(425, ({ LOCALE(99, "Can't build data connect: Connection refused.") }));
       return;
     }
 
@@ -2259,16 +2315,16 @@ class FTPSession
 	}
 	switch(file->error) {
 	case 401:
-	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
+	  send(530, ({ sprintf(LOCALE(101, "%s: Need account for storing files."), args)}));
 	  break;
 	case 413:
-	  send(550, ({ sprintf("%s: Quota exceeded.", args) }));
+	  send(550, ({ sprintf(LOCALE(102, "%s: Quota exceeded."), args) }));
 	  break;
 	case 501:
-	  send(502, ({ sprintf("%s: Command not implemented.", args) }));
+	  send(502, ({ sprintf(LOCALE(103, "%s: Command not implemented."), args) }));
 	  break;
 	default:
-	  send(550, ({ sprintf("%s: Error opening file.", args) }));
+	  send(550, ({ sprintf(LOCALE(104, "%s: Error opening file."), args) }));
 	  break;
 	}
 	session->conf->log(file, session);
@@ -2848,9 +2904,9 @@ class FTPSession
     dir = dir || ([]);
     // NB: MLST expands "." and "..", so make_MLSD_fact() won't
     //     return zero here.
-    send(250,({ "OK" }) +
+    send(250,({ LOCALE(105, "OK") }) +
 	 Array.map(indices(dir), make_MLSD_fact, dir, session) +
-	 ({ "OK" }) );
+	 ({ LOCALE(105, "OK") }) );
   }
 
   /*
@@ -2935,13 +2991,16 @@ class FTPSession
     curr_pipe = 0;
     restart_point = 0;
     logged_in = 0;
+    roxen.set_locale();
+    m_delete(master_session->misc, "accept-language");
+    master_session->misc->pref_languages->languages = ({});
     if (pasv_port) {
       destruct(pasv_port);
       pasv_port = 0;
     }
     if (args != 1) {
       // Not called by QUIT or AUTH.
-      low_send(220, ({ "Server ready for new user." }));
+      low_send(220, ({ LOCALE(106, "Server ready for new user.") }));
 
       // RFC 4217 13:
       //   When this command is processed by the server, the TLS
@@ -2971,7 +3030,7 @@ class FTPSession
       // RFC 2228 AUTH:
       // If the server does not understand the named security mechanism, it
       // should respond with reply code 504.
-      send(504, ({ "Unknown authentication mechanism." }));
+      send(504, ({ LOCALE(107, "Unknown authentication mechanism.") }));
       return;
     }
     if ((port_obj->query_option("require_starttls") < 0) ||
@@ -2979,7 +3038,7 @@ class FTPSession
       // RFC 2228 AUTH:
       // If the server is not willing to accept the named security
       // mechanism, it should respond with reply code 534.
-      send(534, ({ "TLS not configured." }));
+      send(534, ({ LOCALE(108, "TLS not configured.") }));
       return;
     }
     // RFC 2228 AUTH:
@@ -2993,7 +3052,7 @@ class FTPSession
     ftp_REIN(1);
 
     // Inform the client that we agree to switch to TLS.
-    low_send(234, ({ "TLS enabled." }));
+    low_send(234, ({ LOCALE(109, "TLS enabled.") }));
 
     // Make sure not to read any more from the fd before
     // the TLS handshaking is done.
@@ -3030,16 +3089,16 @@ class FTPSession
   {
     if (!fd->renegotiate) {
       // Not AUTH TLS
-      send(533, ({ "Command connection not protected." }));
+      send(533, ({ LOCALE(110, "Command connection not protected.") }));
       return;
     }
     if (master_session->my_fd->renegotiate) {
       // ftps
-      send(534, ({ "Not allowed for ftps." }));
+      send(534, ({ LOCALE(111, "Not allowed for ftps.") }));
       return;
     }
 
-    low_send(200, ({ "TLS disabled." }));
+    low_send(200, ({ LOCALE(112, "TLS disabled.") }));
     to_send->put(2);	// Disable TLS marker.
 
     busy = 0;
@@ -3062,40 +3121,41 @@ class FTPSession
       if (port_obj->query_option("anonymous_ftp")) {
 	if (check_login()) {
 #if 0
-	  send(200, ({ "Anonymous ftp, at your service" }));
+	  send(200, ({ LOCALE(113, "Anonymous ftp, at your service") }));
 #else /* !0 */
 	  // ncftp doesn't like the above answer -- stupid program!
-	  send(331, ({ "Anonymous ftp accepted, send "
-		       "your complete e-mail address as password." }));
+	  send(331, ({ LOCALE(114, "Anonymous ftp accepted, send "
+			      "your complete e-mail address as password.") }));
 #endif /* 0 */
 	  conf->log(([ "error":200 ]), master_session);
 	} else {
 	  send(530, ({
-	    sprintf("Too many anonymous users (%d).",
-		    port_obj->query_option("ftp_user_session_limit"))
+		 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
+			 port_obj->query_option("ftp_user_session_limit"))
 	  }));
 	  conf->log(([ "error":403 ]), master_session);
 	}
       } else {
-	send(530, ({ "Anonymous ftp disabled" }));
+	send(530, ({ LOCALE(116, "Anonymous ftp disabled") }));
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
       if (port_obj->ctx && !fd->renegotiate &&
 	  (port_obj->query_option("require_starttls") == 1)) {
 	conf->log(([ "error":403 ]), master_session);
-	send(530, ({ "You need to AUTH TLS first." }));
+	send(530, ({ LOCALE(117, "You need to AUTH TLS first.") }));
 
 	return;
       }
       if (check_login()) {
-	send(331, ({ sprintf("Password required for %s.", user) }));
+	send(331, ({ sprintf(LOCALE(118, "Password required for %s."), user) }));
 	master_session->not_query = user;
 	conf->log(([ "error":407 ]), master_session);
       } else {
 	// Session limit exceeded.
 	send(530, ({
-	  sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
+	  sprintf(LOCALE(119, "Concurrent session limit (%d) exceeded "
+			 "for user \"%s\"."),
 		  port_obj->query_option("ftp_user_session_limit"), user)
 	}));
 	conf->log(([ "error":403 ]), master_session);
@@ -3110,20 +3170,20 @@ class FTPSession
     if (!user) {
       if (port_obj->query_option("anonymous_ftp")) {
 	if (login()) {
-	  send(230, ({ "Guest login ok, access restrictions apply." }));
+	  send(230, ({ LOCALE(120, "Guest login ok, access restrictions apply.") }));
 	  master_session->method = "LOGIN";
 	  master_session->not_query = "Anonymous User:"+args;
 	  conf->log(([ "error":200 ]), master_session);
 	  logged_in = -1;
 	} else {
 	  send(530, ({
-	    sprintf("Too many anonymous users (%d).",
-		    port_obj->query_option("ftp_user_session_limit"))
+		 sprintf(LOCALE(115, "Too many anonymous users (%d)."),
+			 port_obj->query_option("ftp_user_session_limit"))
 	  }));
 	  conf->log(([ "error":403 ]), master_session);
 	}
       } else {
-	send(503, ({ "Login with USER first." }));
+	send(503, ({ LOCALE(121, "Login with USER first.") }));
       }
       return;
     }
@@ -3134,7 +3194,7 @@ class FTPSession
       //
       //     AUTH TLS, USER, PASS, CCC, PASS
       conf->log(([ "error":403 ]), master_session);
-      send(530, ({ "You need to AUTH TLS first." }));
+      send(530, ({ LOCALE(117, "You need to AUTH TLS first.") }));
 
       return;
     }
@@ -3159,21 +3219,21 @@ class FTPSession
 
     if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
-	send(530, ({ sprintf("User %s access denied.", user) }));
+	send(530, ({ sprintf(LOCALE(122, "User %s access denied."), user) }));
 	conf->log(([ "error":401 ]), session);
       } else {
 	// Guest user.
 	string u = user;
 	user = 0;
 	if (login()) {
-	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
+	  send(230, ({ sprintf(LOCALE(123, "Guest user %s logged in."), u) }));
 	  logged_in = -1;
 	  conf->log(([ "error":200 ]), session);
 	  DWRITE("FTP: Guest-user: %O\n", session->realauth);
 	} else {
 	  send(530, ({
-	    sprintf("Too many anonymous/guest users (%d).",
-		    port_obj->query_option("ftp_user_session_limit"))
+		 sprintf(LOCALE(124, "Too many anonymous/guest users (%d)."),
+			 port_obj->query_option("ftp_user_session_limit"))
 	  }));
 	  conf->log(([ "error":403 ]), session);
 	}
@@ -3206,8 +3266,8 @@ class FTPSession
 
     if (!port_obj->query_option("named_ftp") ||
 	!check_shell(auth_user->shell())) {
-      send(530, ({ "You are not allowed to use named-ftp.",
-		   "Try using anonymous, or check /etc/shells" }));
+      send(530, ({ LOCALE(125, "You are not allowed to use named-ftp."),
+		   LOCALE(126, "Try using anonymous, or check /etc/shells") }));
       conf->log(([ "error":402 ]), session);
       auth_user = 0;
       destruct (session);
@@ -3216,7 +3276,7 @@ class FTPSession
 
     if (!login()) {
       send(530, ({
-	sprintf("Too many concurrent sessions (limit is %d).",
+	     sprintf(LOCALE(127, "Too many concurrent sessions (limit is %d)."),
 		port_obj->query_option("ftp_user_session_limit"))
       }));
       conf->log(([ "error":403 ]), session);
@@ -3245,7 +3305,7 @@ class FTPSession
     }
 
     logged_in = 1;
-    send(230, ({ sprintf("User %s logged in.", user) }));
+    send(230, ({ sprintf(LOCALE(128, "User %s logged in."), user) }));
     conf->log(([ "error":202 ]), session);
     destruct (session);
   }
@@ -3269,7 +3329,7 @@ class FTPSession
     array|object st = conf->stat_file(ncwd, session);
     ncwd = session->not_query; // Makes internal redirects to work.
     if (!st) {
-      send(550, ({ sprintf("%s: No such file or directory, or access denied.",
+      send(550, ({ sprintf(LOCALE(129, "%s: No such file or directory, or access denied."),
 			   ncwd) }));
       session->conf->log(session->file || ([ "error":404 ]), session);
       destruct(session);
@@ -3277,7 +3337,7 @@ class FTPSession
     }
 
     if (!(< -2, -3 >)[st[1]]) {
-      send(504, ({ sprintf("%s: Not a directory.", ncwd) }));
+      send(504, ({ sprintf(LOCALE(130, "%s: Not a directory."), ncwd) }));
       session->conf->log(([ "error":400 ]), session);
       destruct(session);
       return;
@@ -3286,7 +3346,7 @@ class FTPSession
     // CWD Successfull
     cwd = ncwd;
 
-    array(string) reply = ({ sprintf("Current directory is now %s.", cwd) });
+    array(string) reply = ({ sprintf(LOCALE(131, "Current directory is now %s."), cwd) });
 
     // Check for .messages etc
     session->method = "GET";	// Important
@@ -3301,8 +3361,8 @@ class FTPSession
 					  session);
 
 	if (st && (st[1] >= 0)) {
-	  reply = ({ sprintf("Please read the file %s.", f),
-		     sprintf("It was last modified %s - %d days ago.",
+	  reply = ({ sprintf(LOCALE(132, "Please read the file %s."), f),
+		     sprintf(LOCALE(133, "It was last modified %s - %d days ago."),
 			     ctime(st[3]) - "\n",
 			     (time(1) - st[3])/86400),
 		     "" }) + reply;
@@ -3340,7 +3400,7 @@ class FTPSession
 
   void ftp_QUIT(string args)
   {
-    send(221, ({ "Bye! It was nice talking to you!" }));
+    send(221, ({ LOCALE(134, "Bye! It was nice talking to you!") }));
     send(0, 0);		// EOF marker.
 
     master_session->method = "QUIT";
@@ -3361,7 +3421,7 @@ class FTPSession
     if (!expect_argument("PBSZ", args)) return;
 
     if (!fd->renegotiate) {
-      send(536, ({ "Only allowed for authenticated command connections." }));
+      send(536, ({ LOCALE(135, "Only allowed for authenticated command connections.") }));
       return;
     }
 
@@ -3385,30 +3445,30 @@ class FTPSession
       wanted = SSL_ALL;
       break;
     default:
-      send(504, ({ sprintf("Unknown protection level: %s", args) }));
+      send(504, ({ sprintf(LOCALE(136, "Unknown protection level: %s"), args) }));
       return;
     }
 
     if (!fd->renegotiate) {
-      send(536, ({ sprintf("Only supported over TLS.") }));
+      send(536, ({ LOCALE(137, "Only supported over TLS.") }));
       return;
     }
 
     use_ssl = wanted;
-    send(200, ({ "OK" }));
+    send(200, ({ LOCALE(105, "OK") }));
   }
 
   void ftp_PORT(string args)
   {
     if (epsv_only) {
-      send(530, ({ "'PORT': Method not allowed in EPSV ALL mode." }));
+      send(530, ({ LOCALE(138, "'PORT': Method not allowed in EPSV ALL mode.") }));
       return;
     }
 
     int a, b, c, d, e, f;
 
     if (sscanf(args||"", "%d,%d,%d,%d,%d,%d", a, b, c, d, e, f)<6)
-      send(501, ({ "I don't understand your parameters." }));
+      send(501, ({ LOCALE(139, "I don't understand your parameters.") }));
     else {
       dataport_addr = sprintf("%d.%d.%d.%d", a, b, c, d);
       dataport_port = e*256 + f;
@@ -3416,8 +3476,8 @@ class FTPSession
       if (pasv_port) {
 	destruct(pasv_port);
       }
-      send(200, ({ "PORT command ok ("+dataport_addr+
-		   " port "+dataport_port+")" }));
+      send(200, ({ sprintf(LOCALE(140, "PORT command ok (%s port %d)"),
+			   dataport_addr, dataport_port) }));
     }
   }
 
@@ -3426,34 +3486,34 @@ class FTPSession
     // Specified by RFC 2428:
     // Extensions for IPv6 and NATs.
     if (epsv_only) {
-      send(530, ({ "'EPRT': Method not allowed in EPSV ALL mode." }));
+      send(530, ({ LOCALE(141, "'EPRT': Method not allowed in EPSV ALL mode.") }));
       return;
     }
 
     if (sizeof(args) < 3) {
-      send(501, ({ "I don't understand your parameters." }));
+      send(501, ({ LOCALE(139, "I don't understand your parameters.") }));
       return;
     }
 
     string delimiter = args[0..0];
     if ((delimiter[0] <= 32) || (delimiter[0] >= 127)) {
-      send(501, ({ "Invalid delimiter." }));
+      send(501, ({ LOCALE(142, "Invalid delimiter.") }));
     }
     array(string) segments = args/delimiter;
 
     if (sizeof(segments) != 5) {
-      send(501, ({ "I don't understand your parameters." }));
+      send(501, ({ LOCALE(139, "I don't understand your parameters.") }));
       return;
     }
     if (!(<"1","2">)[segments[1]]) {
-      send(522, ({ "Network protocol not supported, use (1 or 2)" }));
+      send(522, ({ LOCALE(143, "Network protocol not supported, use (1 or 2)") }));
       return;
     }
     if (segments[1] == "1") {
       // IPv4.
       if ((sizeof(segments[2]/".") != 4) ||
 	  sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
-	send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
+	send(501, ({ sprintf(LOCALE(144, "Bad IPv4 address: '%s'"), segments[2]) }));
 	return;
       }
     } else {
@@ -3461,12 +3521,12 @@ class FTPSession
       // FIXME: Improve the validation?
       if (sizeof(replace(lower_case(segments[2]), ".:0123456789abcdef"/"",
 			 allocate(18, "")))) {
-	send(501, ({ sprintf("Bad IPv6 address: '%s'", segments[2]) }));
+	send(501, ({ sprintf(LOCALE(145, "Bad IPv6 address: '%s'"), segments[2]) }));
 	return;
       }
     }
     if ((((int)segments[3]) <= 0) || (((int)segments[3]) > 65535)) {
-      send(501, ({ sprintf("Bad port number: '%s'", segments[3]) }));
+      send(501, ({ sprintf(LOCALE(146, "Bad port number: '%s'"), segments[3]) }));
       return;
     }
     dataport_addr = segments[2];
@@ -3475,8 +3535,8 @@ class FTPSession
     if (pasv_port) {
       destruct(pasv_port);
     }
-    send(200, ({ "EPRT command ok ("+dataport_addr+
-		 " port "+dataport_port+")" }));
+    send(200, ({ sprintf(LOCALE(147, "EPRT command ok (%d port %d)"),
+			 dataport_addr, dataport_port) }));
   }
 
   void ftp_PASV(string args)
@@ -3486,12 +3546,12 @@ class FTPSession
     int max;
 
     if (epsv_only) {
-      send(530, ({ "'PASV': Method not allowed in EPSV ALL mode." }));
+      send(530, ({ LOCALE(148, "'PASV': Method not allowed in EPSV ALL mode.") }));
       return;
     }
 
     if (e_mode != "1") {
-      send(530, ({ "'PASV': Method not allowed on IPv6 connections." }));
+      send(530, ({ LOCALE(149, "'PASV': Method not allowed on IPv6 connections.") }));
       return;
     }
 
@@ -3517,11 +3577,12 @@ class FTPSession
       if (port > max) {
 	destruct(pasv_port);
 	pasv_port = 0;
-	send(452, ({ "Requested action aborted: Out of ports." }));
+	send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
 	return;
       }
     }
-    send(227, ({ sprintf("Entering Passive Mode. (%s,%d,%d)",
+    send(227, ({ LOCALE(151, "Entering Passive Mode.") +
+		 sprintf(" (%s,%d,%d)",
 			 replace(local_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
   }
@@ -3536,9 +3597,10 @@ class FTPSession
     if (!(< 0, e_mode >)[args]) {
       if (lower_case(args) == "all") {
 	epsv_only = 1;
-	send(200, ({ "Entering EPSV ALL mode." }));
+	send(200, ({ LOCALE(152, "Entering EPSV ALL mode.") }));
       } else {
-	send(522, ({ "Network protocol not supported, use " + e_mode + "." }));
+	send(522, ({ sprintf(LOCALE(153, "Network protocol not supported, use %s."),
+			     e_mode) }));
       }
       return;
     }
@@ -3564,12 +3626,12 @@ class FTPSession
       if (port > max) {
 	destruct(pasv_port);
 	pasv_port = 0;
-	send(452, ({ "Requested action aborted: Out of ports." }));
+	send(452, ({ LOCALE(150, "Requested action aborted: Out of ports.") }));
 	return;
       }
     }
-    send(229, ({ sprintf("Entering Extended Passive Mode (|||%d|)",
-			 /* "1", local_addr,*/ port) }));
+    send(229, ({ LOCALE(154, "Entering Extended Passive Mode") +
+		 sprintf(" (|||%d|)", /* "1", local_addr,*/ port) }));
   }
 
   void ftp_TYPE(string args)
@@ -3594,11 +3656,11 @@ class FTPSession
       mode = "E";
       break;
     default:
-      send(504, ({ "'TYPE': Unknown type:"+args }));
+      send(504, ({ sprintf(LOCALE(155, "'TYPE': Unknown type: %s"), args) }));
       return;
     }
 
-    send(200, ({ sprintf("Using %s mode for transferring files.",
+    send(200, ({ sprintf(LOCALE(156, "Using %s mode for transferring files."),
 			 modes[mode]) }));
   }
 
@@ -3631,7 +3693,7 @@ class FTPSession
 	  if (!(file->file && file->file->seek &&
 		(file->file->seek(restart_point) != -1))) {
 	    restart_point = 0;
-	    send(550, ({ "'RETR': Error restoring restart point." }));
+	    send(550, ({ LOCALE(157, "'RETR': Error restoring restart point.") }));
 	    discard_data_connection();
 	    destruct(session);
 	    return;
@@ -3665,7 +3727,7 @@ class FTPSession
       return;
     }
     restart_point = (int)args;
-    send(350, ({ "'REST' ok" }));
+    send(350, ({ LOCALE(158, "'REST' ok") }));
   }
 
   void ftp_ABOR(string args)
@@ -3675,14 +3737,14 @@ class FTPSession
 	destruct(curr_pipe);
       };
       curr_pipe = 0;
-      send(426, ({ "Data transmission terminated." }));
+      send(426, ({ LOCALE(159, "Data transmission terminated.") }));
     }
-    send(226, ({ "'ABOR' Completed." }));
+    send(226, ({ LOCALE(160, "'ABOR' Completed.") }));
   }
 
   void ftp_PWD(string args)
   {
-    send(257, ({ sprintf("\"%s\" is current directory.", cwd) }));
+    send(257, ({ sprintf(LOCALE(161, "\"%s\" is current directory."), cwd) }));
   }
 
   void ftp_XPWD(string args)
@@ -3704,17 +3766,17 @@ class FTPSession
     args = fix_path(args);
 
     if (stat_file(args)) {
-      send(350, ({ sprintf("%s ok, waiting for destination name.", args) }) );
+      send(350, ({ sprintf(LOCALE(162, "%s ok, waiting for destination name."), args) }) );
       rename_from = args;
     } else {
-      send(550, ({ sprintf("%s: no such file or permission denied.",args) }) );
+      send(550, ({ sprintf(LOCALE(163, "%s: no such file or permission denied."),args) }) );
     }
   }
 
   void ftp_RNTO(string args)
   {
     if(!rename_from) {
-      send(503, ({ "RNFR needed before RNTO." }));
+      send(503, ({ LOCALE(164, "RNFR needed before RNTO.") }));
       return;
     }
     if (!expect_argument("RNTO", args)) {
@@ -3728,7 +3790,7 @@ class FTPSession
     session->misc->move_from = rename_from;
     session->not_query = args;
     if (open_file(args, session, "MOVE")) {
-      send(250, ({ sprintf("%s moved to %s.", rename_from, args) }));
+      send(250, ({ sprintf(LOCALE(165, "%s moved to %s."), rename_from, args) }));
       session->conf->log(([ "error":200 ]), session);
     }
     rename_from = 0;
@@ -3826,11 +3888,11 @@ class FTPSession
     }
     a[0] = upper_case(a[0]);
     if (!opts_help[a[0]]) {
-      send(502, ({ sprintf("Bad OPTS command: '%s'", a[0]) }));
+      send(502, ({ sprintf(LOCALE(166, "Bad OPTS command: '%s'"), a[0]) }));
     } else if (this_object()["ftp_OPTS_"+a[0]]) {
       this_object()["ftp_OPTS_"+a[0]](a[1..]);
     } else {
-      send(502, ({ sprintf("OPTS command '%s' is not currently supported.",
+      send(502, ({ sprintf(LOCALE(167, "OPTS command '%s' is not currently supported."),
 			   a[0]) }));
     }
   }
@@ -3838,7 +3900,7 @@ class FTPSession
   void ftp_OPTS_MLST(array(string) args)
   {
     if (sizeof(args) != 1) {
-      send(501, ({ sprintf("'OPTS MLST %s': incorrect arguments",
+      send(501, ({ sprintf(LOCALE(168, "'OPTS MLST %s': incorrect arguments"),
 			   args*" ") }));
       return;
     }
@@ -3870,7 +3932,7 @@ class FTPSession
     session->method = "DELETE";
 
     if (open_file(args, session, "DELE")) {
-      send(250, ({ sprintf("%s deleted.", args) }));
+      send(250, ({ sprintf(LOCALE(169, "%s deleted."), args) }));
       session->conf->log(([ "error":200 ]), session);
     }
     destruct(session);
@@ -3898,10 +3960,10 @@ class FTPSession
       return;
     } else if (st[1] != -2) {
       if (st[1] == -3) {
-	send(504, ({ sprintf("%s is a module mountpoint.", args) }));
+	send(504, ({ sprintf(LOCALE(170, "%s is a module mountpoint."), args) }));
 	session->conf->log(([ "error":405 ]), session);
       } else {
-	send(504, ({ sprintf("%s is not a directory.", args) }));
+	send(504, ({ sprintf(LOCALE(171, "%s is not a directory."), args) }));
 	session->conf->log(([ "error":405 ]), session);
       }
       destruct(session);
@@ -3909,7 +3971,7 @@ class FTPSession
     }
 
     if (open_file(args, session, "RMD")) {
-      send(250, ({ sprintf("%s deleted.", args) }));
+      send(250, ({ sprintf(LOCALE(169, "%s deleted."), args) }));
       session->conf->log(([ "error":200 ]), session);
     }
     destruct(session);
@@ -3935,7 +3997,7 @@ class FTPSession
     session->misc->len = 0;
 
     if (open_file(args, session, "MKD")) {
-      send(257, ({ sprintf("\"%s\" created.", args) }));
+      send(257, ({ sprintf(LOCALE(172, "\"%s\" created."), args) }));
       session->conf->log(([ "error":200 ]), session);
     }
     destruct(session);
@@ -3944,6 +4006,24 @@ class FTPSession
   void ftp_XMKD(string args)
   {
     ftp_MKD(args);
+  }
+
+  void ftp_LANG(string args)
+  {
+    args = lower_case(String.trim_all_whites(args || ""));
+    if (sizeof(args)) {
+      if (!roxen.set_locale(args)) {
+	send(504, ({ sprintf(LOCALE(173, "Unsupported language: %s"), args) }));
+	return;
+      }
+      master_session->misc->pref_languages->languages = ({ args });
+      master_session->misc["accept-language"] = args;
+    } else {
+      roxen.set_locale();
+      master_session->misc->pref_languages->languages = ({});
+      m_delete(master_session->misc, "accept-language");
+    }
+    send(200, ({ sprintf(LOCALE(174, "Language set to %s"), roxen.get_locale()) }));
   }
 
   void ftp_SYST(string args)
@@ -3957,7 +4037,7 @@ class FTPSession
       return;
     }
 
-    send(200, ({ "Ok, gottcha!"}));
+    send(200, ({ LOCALE(175, "Ok, gottcha!")}));
     master_session->client = args/" " - ({ "" });
   }
 
@@ -3974,7 +4054,8 @@ class FTPSession
       // ftps.
       a -= ({ "CCC" });
     }
-    a += ({ "TVFS" });
+    a += ({ "TVFS" });	// RFC 3659
+    a += ({ "UTF8" });	// RFC 2640
     a = Array.map(a,
 		  lambda(string s) {
 		    return(([ "REST":"REST STREAM",
@@ -3983,10 +4064,11 @@ class FTPSession
 							     current_mlst_facts)),
 			      "MLSD":"",
 			      "AUTH":"AUTH TLS",
+			      "LANG":sprintf("LANG %s", format_langlist()),
 		    ])[s] || s);
 		  }) - ({ "" });
 
-    send(211, ({ "The following features are supported:" }) + a +
+    send(211, ({ LOCALE(176, "The following features are supported:") }) + a +
 	 ({ "END" }));
   }
 
@@ -4060,13 +4142,13 @@ class FTPSession
 	remote_addr = replace(remote_addr, " ", ":");
       }
       send(211,
-	   sprintf("%s FTP server status:\n"
-		   "Version %s\n"
-		   "Listening on %s\n"
-		   "Connected to %s\n"
-		   "Logged in %s\n"
-		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
-		   "End of status",
+	   sprintf(LOCALE(177, "%s FTP server status:\n"
+			  "Version %s\n"
+			  "Listening on %s\n"
+			  "Connected to %s\n"
+			  "Logged in %s\n"
+			  "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
+			  "End of status"),
 		   local_addr,
 		   roxen.version(),
 		   port_obj->sorted_urls * "\nListening on ",
@@ -4088,22 +4170,24 @@ class FTPSession
     } else {
       string s = LS_L(master_session)->ls_l(args, st);
 
-      send(213, sprintf("status of \"%s\":\n"
-			"%s"
-			"End of Status", args, s)/"\n");
+      send(213, ({
+	    sprintf(LOCALE(178, "Status of \"%s\"."), args),
+	    @((s/"\n") - ({""})),
+	    "End of Status",
+	   }));
     }
   }
 
   void ftp_NOOP(string args)
   {
-    send(200, ({ "Nothing done ok" }));
+    send(200, ({ LOCALE(179, "Nothing done ok") }));
   }
 
   void ftp_HELP(string args)
   {
     if ((< "", 0 >)[args]) {
       send(214, ({
-	"The following commands are recognized (* =>'s unimplemented):",
+	     LOCALE(180, "The following commands are recognized (* =>'s unimplemented):"),
 	@(sprintf(" %#70s", sort(Array.map(indices(cmd_help),
 					   lambda(string s) {
 					     return(upper_case(s)+
@@ -4117,33 +4201,35 @@ class FTPSession
       if ((args/" ")[0] == "SITE") {
 	array(string) a = (args/" ")-({""});
 	if (sizeof(a) == 1) {
-	  send(214, ({ "The following SITE commands are recognized:",
+	  send(214, ({ LOCALE(181, "The following SITE commands are recognized:"),
 		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
 	       }));
 	} else if (site_help[a[1]]) {
-	  send(214, ({ sprintf("Syntax: SITE %s %s", a[1], site_help[a[1]]) }));
+	  send(214, ({ sprintf(LOCALE(182, "Syntax: SITE %s %s"),
+			       a[1], site_help[a[1]]) }));
 	} else {
-	  send(504, ({ sprintf("Unknown SITE command %s.", a[1]) }));
+	  send(504, ({ sprintf(LOCALE(183, "Unknown SITE command %s."), a[1]) }));
 	}
       } else if ((args/" ")[0] == "OPTS") {
 	array(string) a = (args/" ")-({""});
 	if (sizeof(a) == 1) {
-	  send(214, ({ "The following OPTS commands are recognized:",
+	  send(214, ({ LOCALE(184, "The following OPTS commands are recognized:"),
 		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
 	       }));
 	} else if (opts_help[a[1]]) {
-	  send(214, ({ sprintf("Syntax: OPTS %s %s", a[1], opts_help[a[1]]) }));
+	  send(214, ({ sprintf(LOCALE(185, "Syntax: OPTS %s %s"),
+			       a[1], opts_help[a[1]]) }));
 	} else {
-	  send(504, ({ sprintf("Unknown OPTS command %s.", a[1]) }));
+	  send(504, ({ sprintf(LOCALE(186, "Unknown OPTS command %s."), a[1]) }));
 	}
       } else {
 	if (cmd_help[args]) {
-	  send(214, ({ sprintf("Syntax: %s %s%s", args,
+	  send(214, ({ sprintf(LOCALE(187, "Syntax: %s %s%s"), args,
 			       cmd_help[args],
 			       (this_object()["ftp_"+args]?
 				"":"; unimplemented")) }));
 	} else {
-	  send(504, ({ sprintf("Unknown command %s.", args) }));
+	  send(504, ({ sprintf(LOCALE(188, "Unknown command %s."), args) }));
 	}
       }
     }
@@ -4168,11 +4254,11 @@ class FTPSession
     }
     a[0] = upper_case(a[0]);
     if (!site_help[a[0]]) {
-      send(502, ({ sprintf("Bad SITE command: '%s'", a[0]) }));
+      send(502, ({ sprintf(LOCALE(189, "Bad SITE command: '%s'"), a[0]) }));
     } else if (this_object()["ftp_SITE_"+a[0]]) {
       this_object()["ftp_SITE_"+a[0]](a[1..]);
     } else {
-      send(502, ({ sprintf("SITE command '%s' is not currently supported.",
+      send(502, ({ sprintf(LOCALE(190, "SITE command '%s' is not currently supported."),
 			   a[0]) }));
     }
   }
@@ -4180,7 +4266,7 @@ class FTPSession
   void ftp_SITE_CHMOD(array(string) args)
   {
     if (sizeof(args) < 2) {
-      send(501, ({ sprintf("'SITE CHMOD %s': incorrect arguments",
+      send(501, ({ sprintf(LOCALE(191, "'SITE CHMOD %s': incorrect arguments"),
 			   args*" ") }));
       return;
     }
@@ -4201,7 +4287,7 @@ class FTPSession
     }
     if(mode == -1 || mode > 0777)
     {
-      send(501, ({ "SITE CHMOD: mode should be between 0 and 0777" }));
+      send(501, ({ LOCALE(192, "SITE CHMOD: mode should be between 0 and 0777") }));
       return;
     }
 
@@ -4212,7 +4298,7 @@ class FTPSession
     session->misc->mode = mode;
     session->not_query = fname;
     if (open_file(fname, session, "CHMOD")) {
-      send(250, ({ sprintf("Changed permissions of %s to 0%o.",
+      send(250, ({ sprintf(LOCALE(193, "Changed permissions of %s to 0%o."),
 			   fname, mode) }));
       session->conf->log(([ "error":200 ]), session);
     }
@@ -4222,7 +4308,7 @@ class FTPSession
   void ftp_SITE_UMASK(array(string) args)
   {
     if (sizeof(args) < 1) {
-      send(501, ({ sprintf("'SITE UMASK %s': incorrect arguments",
+      send(501, ({ sprintf(LOCALE(194, "'SITE UMASK %s': incorrect arguments"),
 			   args*" ") }));
       return;
     }
@@ -4243,22 +4329,22 @@ class FTPSession
     }
     if(mode == -1 || mode > 0777)
     {
-      send(501, ({ "SITE UMASK: mode should be between 0 and 0777" }));
+      send(501, ({ LOCALE(195, "SITE UMASK: mode should be between 0 and 0777") }));
       return;
     }
 
     master_session->misc->umask = mode;
-    send(250, ({ sprintf("Umask set to 0%o.", mode) }));
+    send(250, ({ sprintf(LOCALE(196, "Umask set to 0%o."), mode) }));
   }
 
   void ftp_SITE_PRESTATE(array(string) args)
   {
     if (!sizeof(args)) {
       master_session->prestate = (<>);
-      send(200, ({ "Prestate cleared" }));
+      send(200, ({ LOCALE(197, "Prestate cleared") }));
     } else {
       master_session->prestate = aggregate_multiset(@((args*" ")/","-({""})));
-      send(200, ({ "Prestate set" }));
+      send(200, ({ LOCALE(198, "Prestate set") }));
     }
   }
 
@@ -4268,7 +4354,7 @@ class FTPSession
       int t = (time() - time_touch);
       if (t > FTP2_TIMEOUT) {
 	// Recomended by RFC 1123 4.1.3.2
-	send(421, ({ "Connection timed out." }));
+	send(421, ({ LOCALE(199, "Connection timed out.") }));
 	send(0,0);
 	if (master_session->file) {
 	  if (objectp(master_session->file->file)) {
@@ -4383,6 +4469,8 @@ class FTPSession
       return;
     }
 
+    restore_locale();
+
 #if 0
     if (!conf->extra_statistics) {
       conf->extra_statistics = ([ "ftp": (["commands":([ cmd:1 ])])]);
@@ -4399,14 +4487,14 @@ class FTPSession
       if (!logged_in) {
 	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
 		"ACCT", "QUIT", "ABOR", "HELP", "FEAT" >)[cmd]) {
-	  send(530, ({ "You need to login first." }));
+	  send(530, ({ LOCALE(200, "You need to login first.") }));
 
 	  return;
 	}
       }
       if (!port_obj->query_option("rfc2428_support") &&
 	  (< "EPRT", "EPSV" >)[cmd]) {
-	send(502, ({ sprintf("support for '%s' is disabled.", cmd) }));
+	send(502, ({ sprintf(LOCALE(201, "support for '%s' is disabled."), cmd) }));
 	return;
       }
       if (this_object()["ftp_"+cmd]) {
@@ -4428,6 +4516,8 @@ class FTPSession
 			if (cmd == "PASS")
 			  args = "CENSORED";
 
+			restore_locale();
+
 			mixed err;
 			if (err = catch {
 			  f(args_copy);
@@ -4439,10 +4529,10 @@ class FTPSession
 		      }, this_object()["ftp_"+cmd], cmd, args, line);
 #endif
       } else {
-	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
+	send(502, ({ sprintf(LOCALE(202, "'%s' is not currently supported."), cmd) }));
       }
     } else {
-      send(502, ({ sprintf("Unknown command '%s'.", cmd) }));
+      send(502, ({ sprintf(LOCALE(203, "Unknown command '%s'."), cmd) }));
     }
 
     touch_me();
@@ -4542,6 +4632,7 @@ class FTPSession
     master_session->port_obj = c;
     master_session->my_fd = fd;
     master_session->misc->defaulted = 1;
+    master_session->misc->pref_languages = PrefLanguages();
     ::create(fd, got_command, 0, con_closed, ([]));
 
     array a = fd->query_address(1)/" ";

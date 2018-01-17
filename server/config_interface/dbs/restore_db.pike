@@ -45,7 +45,7 @@ mapping|string parse( RequestID id )
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
 	continue;
 #else
-	extra = " " + _(0, "(Roxen-internal database)");
+	extra = " " + _(1143, "(Roxen-internal database)");
 #endif
       }
       mapping done = ([ ]);
@@ -82,7 +82,7 @@ mapping|string parse( RequestID id )
 	res += "  <td><tt>" + d + "</tt></td>";
 	if (has_value(tables, "")) {
 	  // In progress marker.
-	  res += "<td class='flag'><em>" + _(0, "Incomplete") + "<em></td>";
+	  res += "<td class='flag'><em>" + _(1144, "Incomplete") + "<em></td>";
 	} else {
 	  res += "<td>&nbsp;</td>\n";
 	}

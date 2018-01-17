@@ -225,8 +225,8 @@ void set_up_ssl_variables( Protocol o )
 
   defvar( "ssl_keys", o->CertificateKeyChoiceVariable
 	  (VAR_NO_DEFAULT,
-	   LOCALE(0, "SSL/TLS Certificate(s)"),
-	   LOCALE(0, "<p>The TLS certificate(s) to use.</p>\n"
+	   LOCALE(1125, "SSL/TLS Certificate(s)"),
+	   LOCALE(1126, "<p>The TLS certificate(s) to use.</p>\n"
 		  "<p>Certificate and key files matching the "
 		  "<b>Global Variables/Settings/Certificate and "
 		  "Private Key Globs</b> setting "
@@ -702,9 +702,9 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"The directories are searched in order for modules."));
 
   defvar("CertGlobs", ({ "*.pem", "certs/*.pem" }),
-	 LOCALE(0, "Certificate and Private Key Globs"),
+	 LOCALE(1127, "Certificate and Private Key Globs"),
 	 TYPE_STRING_LIST,
-	 LOCALE(0, "<p>This is a list of globs for which corresponding files "
+	 LOCALE(1128, "<p>This is a list of globs for which corresponding files "
 		"will automatically be imported into the certificate "
 		"database on server start.</p>\n"
 		"<p>It may be left empty, in which case any certificates "

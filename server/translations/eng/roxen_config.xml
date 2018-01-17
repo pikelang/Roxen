@@ -6,6 +6,7 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
+<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/fsgarb.pike</file>
 <file>../config_interface/actions/index.html</file>
 <file>../config_interface/boxes/Box.pmod</file>
@@ -2344,11 +2345,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="401">
-<o>Copy or rename database</o>
-<t></t>
-</str>
-
 <str id="402">
 <o>Delete this database</o>
 <t></t>
@@ -2395,37 +2391,17 @@ modules.&lt;/p&gt;
 </str>
 
 <str id="414">
-<o>Copy or rename this database</o>
-<t></t>
-</str>
-
-<str id="415">
-<o>Action</o>
-<t></t>
-</str>
-
-<str id="416">
-<o>Copy the data to a new database</o>
-<t></t>
-</str>
-
-<str id="417">
-<o>Rename database</o>
+<o>Configure external database connection</o>
 <t></t>
 </str>
 
 <str id="418">
-<o>New name</o>
+<o>Name</o>
 <t></t>
 </str>
 
 <str id="419">
 <o>Type</o>
-<t></t>
-</str>
-
-<str id="422">
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
 <t></t>
 </str>
 
@@ -3105,12 +3081,12 @@ the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set thi
 </str>
 
 <str id="529">
-<o>the database %s does already exist</o>
+<o>A database with name &lt;tt&gt;%s&lt;/tt&gt; already exists. Please select another name.</o>
 <t></t>
 </str>
 
 <str id="530">
-<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<o>The name for the database. It is recommended to use only lowercase letters &lt;tt&gt;[a-z]&lt;/tt&gt;, numbers and &lt;tt&gt;-&lt;/tt&gt; (dash).</o>
 <t></t>
 </str>
 
@@ -4068,5 +4044,136 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 
 <str id="1124">
 <o>Where the REST API is mounted.</o>
+<t></t>
+</str>
+
+<str id="1125">
+<o>SSL/TLS Certificate(s)</o>
+<t></t>
+</str>
+
+<str id="1126">
+<o>&lt;p&gt;The TLS certificate(s) to use.&lt;/p&gt;
+&lt;p&gt;Certificate and key files matching the &lt;b&gt;Global Variables/Settings/Certificate and Private Key Globs&lt;/b&gt; setting are automatically imported and valid combinations are listed above.&lt;/p&gt;
+&lt;p&gt;At least one certificate must be selected.&lt;/p&gt;
+&lt;p&gt;The Server Name Indication (SNI) extension sent by the TLS client will be used to choose a specific certificate for the connection from the set selected here.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1127">
+<o>Certificate and Private Key Globs</o>
+<t></t>
+</str>
+
+<str id="1128">
+<o>&lt;p&gt;This is a list of globs for which corresponding files will automatically be imported into the certificate database on server start.&lt;/p&gt;
+&lt;p&gt;It may be left empty, in which case any certificates to use will need to be added by hand.&lt;/p&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1129">
+<o>Lost certificate</o>
+<t></t>
+</str>
+
+<str id="1130">
+<o>Invalid certificate</o>
+<t></t>
+</str>
+
+<str id="1131">
+<o>Common Name</o>
+<t></t>
+</str>
+
+<str id="1132">
+<o>%d bits</o>
+<t></t>
+</str>
+
+<str id="1133">
+<o>Issued To</o>
+<t></t>
+</str>
+
+<str id="1134">
+<o>Issued By</o>
+<t></t>
+</str>
+
+<str id="1135">
+<o>Self-signed</o>
+<t></t>
+</str>
+
+<str id="1136">
+<o>Expired</o>
+<t></t>
+</str>
+
+<str id="1137">
+<o>Expires</o>
+<t></t>
+</str>
+
+<str id="1138">
+<o>Path(s)</o>
+<t></t>
+</str>
+
+<str id="1139">
+<o>Lost file</o>
+<t></t>
+</str>
+
+<str id="1140">
+<o>MySQL/MariaDB-internal database.</o>
+<t></t>
+</str>
+
+<str id="1141">
+<o>Roxen-internal database.</o>
+<t></t>
+</str>
+
+<str id="1142">
+<o>The table is not included in backups of this database.</o>
+<t></t>
+</str>
+
+<str id="1143">
+<o>(Roxen-internal database)</o>
+<t></t>
+</str>
+
+<str id="1144">
+<o>Incomplete</o>
+<t></t>
+</str>
+
+<str id="1145">
+<o>Configure database connection</o>
+<t></t>
+</str>
+
+<str id="1146">
+<o>Please specify a name for the database connection.</o>
+<t></t>
+</str>
+
+<str id="1147">
+<o>&lt;tt&gt;%s&lt;/tt&gt; is an internal database, used by Roxen. Please select another name.</o>
+<t></t>
+</str>
+
+<str id="1148">
+<o>&lt;tt&gt;%s&lt;/tt&gt; is a MySQL keyword, used by MySQL. Please select another name.</o>
+<t></t>
+</str>
+
+<str id="1149">
+<o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database name. Please select another name.</o>
 <t></t>
 </str>

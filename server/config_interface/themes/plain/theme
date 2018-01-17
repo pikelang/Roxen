@@ -1,0 +1,7 @@
+<theme-set what='can-change-colors' to='1' int=''/>
+
+<theme-set what='logo' to='roxen-small.png' themefile/>
+
+<theme-set what='logo-html' to='<img hspace="15" border="0" src="&usr.logo;" alt="" />'/>
+<theme-set what="tab-frame-image" to="/internal-roxen-tabframe"/>
+<theme-set what="gbutton-frame-image" to="/internal-roxen-gbutton"/>

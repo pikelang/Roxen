@@ -2471,7 +2471,7 @@ class StartTLSProtocol
 	CertDB.get_keypair(keypair_id);
       if (!keypair) {
         return ({ "<td colspan='2'>" +
-                  LOC_C(0, "Lost certificate") +
+                  LOC_C(1129, "Lost certificate") +
                   "</td>" });
       }
       [Crypto.Sign.State private_key, array(string) certs] = keypair;
@@ -2483,7 +2483,7 @@ class StartTLSProtocol
 
       if (!tbs) {
         res += ({ "<td colspan='2'><b>" +
-                  LOC_C(0, "Invalid certificate") +
+                  LOC_C(1130, "Invalid certificate") +
                   ".</b>" });
       } else {
 	mapping(Standards.ASN1.Types.Identifier:string) dn =
@@ -2494,14 +2494,14 @@ class StartTLSProtocol
 	  res += ({
 	    sprintf("<td class='prewrap'>%s</td>"
 		    "<td><b><tt>%s</tt></b>",
-		    LOC_C(0, "Common Name"),
+		    LOC_C(1131, "Common Name"),
 		    Roxen.html_encode_string(tmp)),
 	  });
 	} else {
 	  res += ({ "<td colspan='2'>" });
 	}
 
-	res[-1] += sprintf(" (%s, " + LOC_C(0, "%d bits") + ")</td>",
+	res[-1] += sprintf(" (%s, " + LOC_C(1132, "%d bits") + ")</td>",
 			   Roxen.html_encode_string(private_key->name()),
 			   private_key->key_size());
 
@@ -2512,13 +2512,13 @@ class StartTLSProtocol
 	  }
 	  res += ({
 	    sprintf("<td class='prewrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued To"),
+                    LOC_C(1133, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	} else if (tmp = dn[Standards.PKCS.Identifiers.at_ids.organizationUnitName]) {
 	  res += ({
 	    sprintf("<td class='prewrap'>%s</td><td>%s</td>",
-                    LOC_C(0, "Issued To"),
+                    LOC_C(1133, "Issued To"),
                     Roxen.html_encode_string(tmp)),
 	  });
 	}
@@ -2526,9 +2526,9 @@ class StartTLSProtocol
 	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
 	  res += ({
 	    sprintf("<td class='prewrap'>" +
-                    LOC_C(0, "Issued By") +
+                    LOC_C(1134, "Issued By") +
                     "</td><td>%s</td>",
-                    LOC_C(0, "Self-signed"))
+                    LOC_C(1135, "Self-signed"))
           });
 	} else {
 	  dn = parse_dn(tbs->issuer);
@@ -2548,7 +2548,7 @@ class StartTLSProtocol
 	  if (tmp) {
 	    res += ({
 	      sprintf("<td class='valign-top prewrap'>" +
-                      LOC_C(0, "Issued By") +
+                      LOC_C(1134, "Issued By") +
                       "</td><td>%s</td>",
                       Roxen.html_encode_string(tmp)),
 	    });
@@ -2562,7 +2562,7 @@ class StartTLSProtocol
 	  res += ({
 	    sprintf("<td>%s</td>"
 	            "<td><span class='notify error inline'>%s</span></td>",
-                    LOC_C(0, "Expired"),
+                    LOC_C(1136, "Expired"),
                     tmp),
 	  });
 	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
@@ -2570,12 +2570,12 @@ class StartTLSProtocol
 	  res += ({
             sprintf("<td>%s</td>"
 	            "<td><span class='notify warn inline'>%s</span></td>",
-                    LOC_C(0, "Expires"),
+                    LOC_C(1137, "Expires"),
                     tmp),
 	  });
 	} else {
 	  res += ({
-	    sprintf("<td>%s</td><td>%s</td>", LOC_C(0, "Expires"), tmp),
+	    sprintf("<td>%s</td><td>%s</td>", LOC_C(1137, "Expires"), tmp),
 	  });
 	}
 
@@ -2589,14 +2589,14 @@ class StartTLSProtocol
         paths = map(paths, lfile_path);
         res += ({
           sprintf("<td class='valign-top'>%s</td><td>%s</td>",
-                  LOC_C(0, "Path(s)"),
+                  LOC_C(1138, "Path(s)"),
                   map(paths, lambda(string p) {
                     if (p)
                       return "<tt>" + Roxen.html_encode_string(p) + "</tt>";
                     else
                       return
                         "<span class='notify warn inline'>" +
-                        LOC_C(0, "Lost file") +
+                        LOC_C(1139, "Lost file") +
                         "</span>";
                   }) * "<br/>")
         });
@@ -6344,13 +6344,6 @@ string format_cycle (array(mixed) cycle)
 {
   array(string) string_parts = ({});
   foreach (cycle; int pos; mixed val) {
-    /* Idea: identify mapping/array index of the next element in the cycle.
-    mixed next_val;
-    if (pos < sizeof (cycle) - 1) {
-      next_val = cycle[pos + 1];
-    }
-    */
-
     string formatted;
 
     if (arrayp (val)) {
@@ -6362,10 +6355,48 @@ string format_cycle (array(mixed) cycle)
     } else {
       formatted = sprintf ("%O", val);
     }
+
+    /* Identify object/mapping/array index of the next element in the cycle. */
+    mixed next_val;
+    if (pos < sizeof (cycle) - 1) {
+      next_val = cycle[pos + 1];
+    } else {
+      next_val = cycle[0];
+    }
+
+    if (multisetp(val)) {
+      formatted += "[[index]]";
+    } else {
+      array(mixed) inds = indices(val);
+      array(mixed) vals = values(val);
+      int i = search(vals, next_val);
+      if (i >= 0) {
+	// Found.
+	if (intp(inds[i])) {
+	  formatted += sprintf("[%d]", inds[i]);
+	} else if (stringp(inds[i])) {
+	  if (sizeof(inds[i]) < 100) {
+	    formatted += sprintf("[%O]", inds[i]);
+	  } else {
+	    formatted += sprintf("[string(%d characters)]", sizeof(inds[i]));
+	  }
+	} else {
+	  formatted += sprintf("[%t]", inds[i]);
+	}
+      } else {
+	i = search(inds, next_val);
+	if (i >= 0) {
+	  formatted += "[[index]]";
+	} else if (objectp(val)) {
+	  formatted += "->protected";
+	}
+      }
+    }
+
     string_parts += ({ formatted });
   }
 
-  return string_parts * " -> ";
+  return string_parts * " ==> ";
 }
 
 void reinstall_gc_callbacks()
