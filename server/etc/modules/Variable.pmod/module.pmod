@@ -2010,7 +2010,7 @@ class List
       query +=
 	(section ? ("section=" + section + "&") : "") +
 	"random=" + random(4949494);
-      query += "&_roxen_wizard_id=" + id->cookies["RoxenWizardId"];
+      query += "&_roxen_wizard_id=" + Roxen.get_wizard_id_cookie(id);
 
       string url =
 	Roxen.http_encode_invalids (nid->not_query +

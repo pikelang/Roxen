@@ -103,7 +103,7 @@ int(0..1) set_from_form(RequestID id)
     query +=
       (section ? ("section=" + section + "&") : "") +
       "random=" + random(4949494);
-    query += "&_roxen_wizard_id=" + id->cookies["RoxenWizardId"];
+    query += "&_roxen_wizard_id=" + Roxen.get_wizard_id_cookie(id);
     
     nid->misc->moreheads =
       ([

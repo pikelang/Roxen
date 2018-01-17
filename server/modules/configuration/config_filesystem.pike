@@ -218,10 +218,9 @@ mixed find_file( string f, RequestID id )
 					   roxen.config_userdb_module );
     }
 
-    string wizard_id = id->cookies["RoxenWizardId"];
+    string wizard_id = Roxen.get_wizard_id_cookie(id);
     if (!sizeof(wizard_id || "")) {
-      wizard_id = Roxen.set_wizard_id_cookie(id);
-      id->cookies["RoxenWizardId"] = wizard_id;
+      wizard_id = Roxen.set_wizard_id_cookie(id, true);
     }
     if (sizeof(id->real_variables["_roxen_wizard_id"] || ({})) > 1) {
       // Multi submit.
@@ -424,8 +423,8 @@ mixed find_file( string f, RequestID id )
       url+="?rv="+random(471187)->digits(32);
       if( id->real_variables->section )
 	url += "&section="+id->real_variables->section[0];
-      if (id->cookies["RoxenWizardId"]) {
-	url += "&_roxen_wizard_id=" + id->cookies["RoxenWizardId"];
+      if (string wizard_id_cookie = Roxen.get_wizard_id_cookie(id)) {
+	url += "&_roxen_wizard_id=" + wizard_id_cookie;
       }
       retval = Roxen.http_redirect( url, id );
     }
