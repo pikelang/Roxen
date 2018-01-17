@@ -218,7 +218,7 @@ class Scope_usr
     case "set-wiz-id":
       // Used in links with form variables.
       return sprintf("_roxen_wizard_id=%s",
-		     Roxen.html_encode_string(id->cookies["RoxenWizardId"]||""));
+		     Roxen.html_encode_string(Roxen.get_wizard_id_cookie(id) || ""));
 
       /* standalone, nothing is based on these. */
      case "warncolor":            return ENCODE_RXML_TEXT("darkred", type);
@@ -1120,10 +1120,9 @@ string simpletag_rul( string t, mapping m, string c, RequestID id )
 string simpletag_roxen_wizard_id_variable(string t, mapping m, string c,
 					  RequestID id)
 {
-  string wizard_id = id->cookies["RoxenWizardId"];
+  string wizard_id = Roxen.get_wizard_id_cookie(id);
   if (!sizeof(wizard_id || "")) {
-    wizard_id = Roxen.set_wizard_id_cookie(id);
-    id->cookies["RoxenWizardId"] = wizard_id;
+    wizard_id = Roxen.set_wizard_id_cookie(id, true);
   }
   if (wizard_id != id->variables["_roxen_wizard_id"]) {
     foreach(id->real_variables; string var;) {
