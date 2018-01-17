@@ -210,17 +210,17 @@ class Router {
   private void add_route(string method, PathMatcher matcher, RouterCallback callback) {
      method_callbacks[method] += ({ Route(matcher, callback) });
   }
-  private function make_route_function(string method) {
-     return lambda(string pattern, RouterCallback callback) {
-        add_route(method, PathMatcher(pattern), callback);
-     };
+
+#define MAKE_ROUTER_FUNCTION(NAME, METHOD)		\
+  void NAME(string pattern, RouterCallback callback) {	\
+    add_route(METHOD, PathMatcher(pattern), callback);	\
   }
 
-  function get = make_route_function("GET");
-  function post = make_route_function("POST");
-  function put = make_route_function("PUT");
-  function patch = make_route_function("PATCH");
-  function delete = make_route_function("DELETE");
+  MAKE_ROUTER_FUNCTION(get, "GET")
+  MAKE_ROUTER_FUNCTION(post, "POST")
+  MAKE_ROUTER_FUNCTION(put, "PUT")
+  MAKE_ROUTER_FUNCTION(patch, "PATCH")
+  MAKE_ROUTER_FUNCTION(delete, "DELETE")
 
   void|RouterResponse handle_request(string path, RequestID id) {
     string method = id->method;
