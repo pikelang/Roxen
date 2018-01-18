@@ -1,0 +1,13 @@
+subject: Roxen 6.1: LOG_GC_CYCLES fixes, documentation for date tag
+from: b109d11c066c8f31b8ca979b2847d742ad1efecf
+to: efbc6b0d8a5a05a570aad120054356e141684407
+originator: Marcus Wellhardh
+depends: 2018-01-16T144335
+restart: true
+
+• Clarify documentation for "%r" option in strftime.
+
+• GC: Suvive broken lfun::_indices() et al in LOG_GC_CYCLES.
+
+Some objects have _indices() and/or _values() that may throw errors.
+Make sure that the cycle formatter survives such objects.
