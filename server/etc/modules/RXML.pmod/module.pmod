@@ -8315,15 +8315,48 @@ protected class PikeCompile
   protected inherit Thread.Mutex: mutex;
 
   // These are covered by the mutex.
+
+  //! Buffer where the generated code is collected.
   protected inherit String.Buffer: code;
+
+  //! Mapping where the indices are symbols that are
+  //! declared in @[code]. These will be migrated to
+  //! @[bindings] by @[compile()].
   protected mapping(string:int) cur_ids = ([]);
+
+  //! Mapping from indexable object to symbol.
+  //!
+  //! When added to the mapping @expr{obj[sym]@} is a string
+  //! that is the name of the corresponding symbol in @[bindings].
+  //!
+  //! When the symbol is resolved @expr{obj[sym]@} will be set
+  //! to @expr{bindings[obj[sym]]@}.
+  //!
+  //! @seealso
+  //!   @[delayed_resolve()]
   protected mapping(mixed:mixed) delayed_resolve_places = ([]);
 
+  //! Mapping from symbol name to resolved value.
+  //!
+  //! @seealso
+  //!   @[bind()]
   protected mapping(string:mixed) bindings = ([
     // Prepopulate with standard things we need access to.
     "set_nil_arg": set_nil_arg,
   ]);
 
+  //! Bind the value to a symbol.
+  //!
+  //! @param val
+  //!   Value to bind.
+  //!
+  //! Generates a new unique symbol name, and binds it to @[val].
+  //!
+  //! @returns
+  //!   Returns the generated symbol name.
+  //!
+  //! @seealso
+  //!   @[bindings]
   string bind (mixed val)
   {
     string id =
@@ -8336,6 +8369,26 @@ protected class PikeCompile
     return id;
   }
 
+  //! Generate a function definition.
+  //!
+  //! @param rettype
+  //!   Return type for the function.
+  //!
+  //! @param arglist
+  //!   Argument list for the function, not including the
+  //!   outer parenthesis.
+  //!
+  //! @param def
+  //!   Body of the function, not including the outer braces.
+  //!
+  //! Generates a new unique function name, and adds it to @[cur_ids].
+  //! Adds a corresponding function declaration to @[code].
+  //!
+  //! @returns
+  //!   Returns the name of the function.
+  //!
+  //! @note
+  //!   May run the compiler synchronously.
   string add_func (string rettype, string arglist, string def)
   {
     string id =
@@ -8362,6 +8415,14 @@ protected class PikeCompile
     return id;
   }
 
+  //! Resolve an identifier @[id].
+  //!
+  //! @note
+  //!   May trigger compilation.
+  //!
+  //! @note
+  //!   In @tt{DEBUG@} mode errors will be thrown on attempting
+  //!   to resolve unknown identifiers.
   mixed resolve (string id)
   {
     COMP_MSG ("%O resolve %O\n", this_object(), id);
@@ -8378,6 +8439,28 @@ protected class PikeCompile
     return bindings[id];
   }
 
+  //! Register a variable for later resolution.
+  //!
+  //! @param what
+  //!   Object (or similar) that contains the variable to update.
+  //!
+  //! @param index
+  //!   Index in @[what] to update at some later time.
+  //!
+  //! On entry the value @expr{what[index]@} should be a string
+  //! being a symbol name of the value to resolve. At resolution
+  //! this string will be replaced with the resolved value.
+  //!
+  //! @note
+  //!   If the symbol to resolve is already present in @[bindings]
+  //!   the resolution will be performed directly.
+  //!
+  //! @note
+  //!   Only a single delayed resolution may be registered
+  //!   for each @[what].
+  //!
+  //! @seealso
+  //!   @[delayed_resolve_places]
   void delayed_resolve (mixed what, mixed index)
   {
     Thread.MutexKey lock = mutex::lock();
@@ -8400,6 +8483,10 @@ protected class PikeCompile
     }
   }
 
+  //! Resolver class used to find stuff in @[bindings].
+  //!
+  //! @seealso
+  //!   @[CompilationHandler]
   protected class Resolver (object master)
   // Can't keep the instantiated Resolver object around since that'd
   // introduce a cyclic reference.
@@ -8410,6 +8497,7 @@ protected class PikeCompile
     void compile_warning (string file, int line, string err)
       {master->compile_warning (file, line, err);}
 
+    //! Resolve symbols from @[bindings].
     mixed resolv (string id, void|string file)
     {
       mixed val;
@@ -8418,6 +8506,12 @@ protected class PikeCompile
     }
   }
 
+  //! Compile the code buffered so far in @[code].
+  //!
+  //! Updates @[bindings] with symbols from @[cur_ids] and
+  //! values from the newly compiled code.
+  //!
+  //! Performs delayed resolution.
   void compile()
   {
     Thread.MutexKey lock = mutex::lock();
@@ -8494,6 +8588,7 @@ protected class PikeCompile
     return;
   }
 
+  //! Destruction callback.
   protected void destroy()
   {
     compile();			// To clean up delayed_resolve_places.
