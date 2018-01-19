@@ -220,7 +220,7 @@ mixed find_file( string f, RequestID id )
 
     string wizard_id = Roxen.get_wizard_id_cookie(id);
     if (!sizeof(wizard_id || "")) {
-      wizard_id = Roxen.set_wizard_id_cookie(id, true);
+      wizard_id = Roxen.set_wizard_id_cookie(id);
     }
     if (sizeof(id->real_variables["_roxen_wizard_id"] || ({})) > 1) {
       // Multi submit.
