@@ -517,7 +517,7 @@ class TagVForm {
 
       string wizard_id = Roxen.get_wizard_id_cookie(id);
       if (!sizeof(wizard_id || "")) {
-        wizard_id = Roxen.set_wizard_id_cookie(id, true);
+        wizard_id = Roxen.set_wizard_id_cookie(id);
       }
       if (wizard_id != id->variables["_roxen_wizard_id"]) {
 	m_delete(id->real_variables, "__state");
