@@ -1,0 +1,10 @@
+Modified files:
+  base_server/cache.pike
+  base_server/wizard.pike
+  config_interface/sites/find_module.js
+  etc/modules/Roxen.pmod
+  etc/modules/Variable.pmod/Mapping.pike
+  etc/modules/Variable.pmod/module.pmod
+  modules/configuration/config_filesystem.pike
+  modules/configuration/config_tags.pike
+  modules/tags/vform.pike
