@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Secure cookie fixes and RAM cache bugfix
+from: efbc6b0d8a5a05a570aad120054356e141684407
+to: 84df07096220065d03d96e7e99d14297e9a6bb01
+originator: Marcus Agehall
+depends: 2018-01-18T143259
+restart: true
+
+• Secure cookie fixes
+
+• RAM cache: fixes in deferred update_weights processing.
