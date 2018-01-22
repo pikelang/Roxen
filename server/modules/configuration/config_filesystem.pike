@@ -479,7 +479,7 @@ void start(int n, Configuration cfg)
       }
       else
       {
-	report_warning( "There is no documentation available\n");
+	report_warning( "There is no documentation available.\n");
       }
     }
     string am = query( "auth_method" );
@@ -527,7 +527,7 @@ void start(int n, Configuration cfg)
     }
 #ifdef DEBUG
     else 
-      report_warning( "Failed to enable the pikescript module" );
+      report_warning( "Failed to enable the pikescript module.\n" );
 #endif
   }
   call_out( zap_old_modules, 0 );
