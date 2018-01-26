@@ -1,0 +1,11 @@
+subject: Roxen 6.1: RAM cache: revert update_weights scheduling delay to 0.001
+from: 558f799ee0c46bbc436e38ca8d63a0ac0e17dd37
+to: c9f1e7a53cf6e8c7a454b761a4975e6e1eff2de1
+originator: Marcus Wellhardh
+depends: 2018-01-22T143911
+restart: true
+
+• RAM cache: revert update_weights scheduling delay to 0.001.
+
+This fixes a bug where update_weights_handle wasn't set so new calls
+were scheduled unconditionally, leading to a huge background_run queue.
