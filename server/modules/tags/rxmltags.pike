@@ -10421,7 +10421,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
  <row><c><p>%P</p></c><c><p>\"am\" or \"pm\"</p></c></row>
  <row><c><p>%q</p></c><c><p>Quarter number (1-4)</p></c></row>
- <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
+ <row><c><p>%r</p></c><c><p>Time in 12-hour clock format. Equivalent to \"%I:%M:%S %p\".</p></c></row>
  <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
  <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. 60 only occurs in case of a leap second.</p></c></row>
  <row><c><p>%t</p></c><c><p>Tab</p></c></row>

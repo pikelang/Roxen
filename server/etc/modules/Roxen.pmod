@@ -5314,6 +5314,12 @@ void set_cookie( RequestID id,
   id->add_response_header ("Set-Cookie", cookie);
 }
 
+string get_wizard_id_cookie_name(RequestID id)
+{
+  bool secure = id->client_scheme && id->client_scheme() == "https";
+  return secure ? "RoxenHttpsWizardId" : "RoxenHttpWizardId";
+}
+
 string set_wizard_id_cookie(RequestID id)
 //! Sets the RoxenWizardId cookie and returns the value of the cookie.
 //!
@@ -5326,8 +5332,8 @@ string set_wizard_id_cookie(RequestID id)
   // Set the secure flag on the cookie if accessed over https [WS-135].
   // NB: The cookie is used from Javascript, so it can't have
   //     httponly set.
-  string name = "RoxenWizardId";
-  string value = (string)random(0x7fffffff);
+  string name = get_wizard_id_cookie_name(id);
+  string value = sprintf("%08x", random(0x7fffffff));
   int expire_time_delta = 0;
   string domain = 0;
   string path = "/";
@@ -5341,7 +5347,13 @@ string set_wizard_id_cookie(RequestID id)
                    path,
                    secure,
                    httponly);
+  id->cookies[name] = value;
   return value;
+}
+
+string get_wizard_id_cookie(RequestID id)
+{
+  return id->cookies[get_wizard_id_cookie_name(id)];
 }
 
 void remove_cookie( RequestID id,

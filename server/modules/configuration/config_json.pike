@@ -210,17 +210,17 @@ class Router {
   private void add_route(string method, PathMatcher matcher, RouterCallback callback) {
      method_callbacks[method] += ({ Route(matcher, callback) });
   }
-  private function make_route_function(string method) {
-     return lambda(string pattern, RouterCallback callback) {
-        add_route(method, PathMatcher(pattern), callback);
-     };
+
+#define MAKE_ROUTER_FUNCTION(NAME, METHOD)		\
+  void NAME(string pattern, RouterCallback callback) {	\
+    add_route(METHOD, PathMatcher(pattern), callback);	\
   }
 
-  function get = make_route_function("GET");
-  function post = make_route_function("POST");
-  function put = make_route_function("PUT");
-  function patch = make_route_function("PATCH");
-  function delete = make_route_function("DELETE");
+  MAKE_ROUTER_FUNCTION(get, "GET")
+  MAKE_ROUTER_FUNCTION(post, "POST")
+  MAKE_ROUTER_FUNCTION(put, "PUT")
+  MAKE_ROUTER_FUNCTION(patch, "PATCH")
+  MAKE_ROUTER_FUNCTION(delete, "DELETE")
 
   void|RouterResponse handle_request(string path, RequestID id) {
     string method = id->method;
@@ -596,7 +596,9 @@ protected void create()
   router->put("v2/configurations/:configuration/modules/:module/variables/:variable", handle_put_variable);
   router->get("v2/configurations/:configuration/modules/:module/variables/:variable", handle_get_variable);
 
-  router->get("v2/configurations/:configuration/modules/:module/variables",lambda(string method,  mapping(string:string) params) {
+  router->get("v2/configurations/:configuration/modules/:module/variables",
+	      lambda(string method, mapping(string:string) params,
+		     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -604,7 +606,9 @@ protected void create()
                           map(stuff->module->query(),get_variable_value, stuff->configuration) );
   });
 
-  router->post("v2/configurations/:configuration/modules/:new_module",lambda(string method,  mapping(string:string) params) {
+  router->post("v2/configurations/:configuration/modules/:new_module",
+	       lambda(string method, mapping(string:string) params,
+		      mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -621,7 +625,9 @@ protected void create()
     return res;
   });
 
-  router->delete("v2/configurations/:configuration/modules/:module",lambda(string method,  mapping(string:string) params) {
+  router->delete("v2/configurations/:configuration/modules/:module",
+		 lambda(string method, mapping(string:string) params,
+			mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -635,7 +641,9 @@ protected void create()
   router->put("v2/configurations/:configuration/variables/:variable", handle_put_variable);
   router->get("v2/configurations/:configuration/variables/:variable", handle_get_variable);
 
-  router->get("v2/configurations/:configuration/variables",lambda(string method,  mapping(string:string) params) {
+  router->get("v2/configurations/:configuration/variables",
+	      lambda(string method, mapping(string:string) params,
+		     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;
@@ -643,7 +651,9 @@ protected void create()
                           map(stuff->configuration->query(),get_variable_value, stuff->configuration) );
   });
 
-  router->get("v2/configurations/:configuration/modules",lambda(string method,  mapping(string:string) params) {
+  router->get("v2/configurations/:configuration/modules",
+	      lambda(string method, mapping(string:string) params,
+		     mixed ignored_data, RequestID ignored_id) {
     mapping stuff = get_configuration_module_variable(params);
     if(stuff->error)
       return stuff->error;

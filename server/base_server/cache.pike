@@ -705,6 +705,8 @@ class CM_GreedyDual
     if (!update_weights_handle) {
       // Weird indexing: the roxen constant is not registered when
       // this file is compiled...
+      //
+      // Warning: background_run doesn't return a handle if delay is set to 0.
       update_weights_handle =
         all_constants()->roxen->background_run (0.001, update_weights);
     }
@@ -723,25 +725,41 @@ class CM_GreedyDual
     // assume updates won't be deferred for so long that eviction
     // selection will be severely impacted.
     constant max_run_time = 50000;
-    int start = gethrtime();
     int reschedule;
 
     // Protect against race when rebalancing on setting entry->pval.
     Thread.MutexKey key = priority_mux->lock();
+    int start = gethrtime();
 
     foreach (pending_pval_updates; CacheEntry entry;) {
+      m_delete (pending_pval_updates, entry);
+
+      string cache_name = entry->cache_name;
+      // Check if entry has been evicted already.
+      if (mapping(string:CacheEntry) lm = lookup[cache_name]) {
+        if (lm[entry->key] != entry) {
+          continue;
+        }
+      }
+
       // NB: The priority queue is automatically adjusted on
       //     change of pval.
       entry->pval = calc_pval (entry);
 
-      m_delete (pending_pval_updates, entry);
-
-      if (gethrtime() - start > max_run_time / 2) {
-        // Save some time for the loop below.
+      if (sizeof (pending_pval_updates) < 10000 &&
+          gethrtime() - start > (max_run_time / 2)) {
         reschedule = 1;
         break;
       }
     }
+
+    // Avoid starvation of update_size_queue processing by making sure
+    // it runs for at least (max_run_time / 2) usecs.
+
+    // The whole run may overshoot max_run_time somewhat if the above
+    // loop already overshot (max_run_time / 2), but we'll accept
+    // that.
+    start = gethrtime();
 
     while (CacheEntry entry = update_size_queue->try_read()) {
       string cache_name = entry->cache_name;
@@ -763,7 +781,8 @@ class CM_GreedyDual
         entry->pval = calc_pval (entry);
       }
 
-      if (gethrtime() - start > max_run_time) {
+      if (sizeof (update_size_queue) < 10000 &&
+          gethrtime() - start > (max_run_time / 2)) {
         reschedule = 1;
         break;
       }
