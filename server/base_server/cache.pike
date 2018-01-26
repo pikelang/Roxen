@@ -705,8 +705,10 @@ class CM_GreedyDual
     if (!update_weights_handle) {
       // Weird indexing: the roxen constant is not registered when
       // this file is compiled...
+      //
+      // Warning: background_run doesn't return a handle if delay is set to 0.
       update_weights_handle =
-        all_constants()->roxen->background_run (0, update_weights);
+        all_constants()->roxen->background_run (0.001, update_weights);
     }
   }
 
