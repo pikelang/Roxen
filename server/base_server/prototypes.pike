@@ -43,10 +43,10 @@ protected class Variable
                         int devel_mode,
                         int initial,
                         int|void variable_in_cfif );
-  void set_invisibility_check_callback( function(RequestID,Variable:int) cb );
+  this_program set_invisibility_check_callback( function(RequestID,Variable:int) cb );
   function(Variable:void) get_changed_callback( );
-  void set_changed_callback( function(Variable:void) cb );
-  void add_changed_callback( function(Variable:void) cb );
+  this_program set_changed_callback( function(Variable:void) cb );
+  this_program add_changed_callback( function(Variable:void) cb );
   function(RequestID,Variable:int) get_invisibility_check_callback() ;
   string doc(  );
   string name(  );

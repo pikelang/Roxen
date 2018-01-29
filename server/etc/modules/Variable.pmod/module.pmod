@@ -323,7 +323,7 @@ class Variable
     return 1;
   }
 
-  void set_invisibility_check_callback( function(RequestID,Variable:int) cb )
+  this_program set_invisibility_check_callback( function(RequestID,Variable:int) cb )
     //! If the function passed as argument returns 1, the variable
     //! will not be visible in the configuration interface.
     //!
@@ -333,6 +333,7 @@ class Variable
       invisibility_callbacks[ _id ] = cb;
     else
       m_delete( invisibility_callbacks, _id );
+    return this;
   }
 
   function(Variable:void) get_changed_callback( )
@@ -341,7 +342,7 @@ class Variable
     return changed_callbacks[ _id ];
   }
 
-  void set_changed_callback( function(Variable:void) cb )
+  this_program set_changed_callback( function(Variable:void) cb )
     //! The function passed as an argument will be called 
     //! when the variable value is changed.
     //! 
@@ -351,9 +352,10 @@ class Variable
       changed_callbacks[ _id ] = cb;
     else
       m_delete( changed_callbacks, _id );
+    return this;
   }
 
-  void add_changed_callback( function(Variable:void) cb )
+  this_program add_changed_callback( function(Variable:void) cb )
   //! Add a new callback to be called when the variable is changed.
   //! If set_changed_callback is called, callbacks added with this function
   //! are overridden.
@@ -364,6 +366,7 @@ class Variable
     else
       oc = ({ oc, cb }) - ({ 0 });
     changed_callbacks[ _id ] = oc;
+    return this;
   }
 
   function(RequestID,Variable:int) get_invisibility_check_callback() 
