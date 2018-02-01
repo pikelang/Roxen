@@ -885,6 +885,9 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //!
 //! @param recursive
 //!   If @expr{1@} also return locks anywhere below @[path].
+//!   If @expr{-1} return locks anywhere below @[path], but not
+//!   any above @[path]. (This is appropriate to use to get the
+//!   list of locks that need to be unlocked on DELETE.)
 //!
 //! @param exclude_shared
 //!   If @expr{1@} do not return shared locks that are held by users
@@ -905,7 +908,7 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
 multiset(DAVLock) find_locks(string path,
-			     int(0..1) recursive,
+			     int(-1..1) recursive,
 			     int(0..1) exclude_shared,
 			     RequestID id)
 {
@@ -938,11 +941,13 @@ multiset(DAVLock) find_locks(string path,
     add_locks (file_locks[rsc]);
   }
 
-  foreach(prefix_locks;
-	  string prefix; mapping(mixed:DAVLock) sub_locks) {
-    if (has_prefix(rsc, prefix)) {
-      add_locks (sub_locks);
-      break;
+  if (recursive >= 0) {
+    foreach(prefix_locks;
+	    string prefix; mapping(mixed:DAVLock) sub_locks) {
+      if (has_prefix(rsc, prefix)) {
+	add_locks (sub_locks);
+	break;
+      }
     }
   }
 
@@ -1406,7 +1411,11 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     locked_fail = 1;
   }
 
-  TRACE_LEAVE("Failed.");
+  if (locked_fail) {
+    TRACE_LEAVE("Failed (locked).");
+  } else {
+    TRACE_LEAVE("Precondition failed.");
+  }
   return Roxen.http_status(locked_fail ?
 			   Protocols.HTTP.DAV_LOCKED :
 			   Protocols.HTTP.HTTP_PRECOND_FAILED);
