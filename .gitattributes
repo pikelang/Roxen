@@ -283,7 +283,6 @@ worldmap binary
 /server/modules/misc/randomtext.pike foreign_ident
 /server/modules/misc/robots.txt.pike foreign_ident
 /server/modules/misc/wapadapter.pike foreign_ident
-/server/modules/misc/webdav.pike foreign_ident
 /server/modules/proxies/connect.pike foreign_ident
 /server/modules/proxies/ftpgateway.pike foreign_ident
 /server/modules/proxies/gopher.pike foreign_ident
