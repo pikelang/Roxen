@@ -1325,7 +1325,11 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     locked_fail = 1;
   }
 
-  TRACE_LEAVE("Failed.");
+  if (locked_fail) {
+    TRACE_LEAVE("Failed (locked).");
+  } else {
+    TRACE_LEAVE("Precondition failed.");
+  }
   return Roxen.http_status(locked_fail ?
 			   Protocols.HTTP.DAV_LOCKED :
 			   Protocols.HTTP.HTTP_PRECOND_FAILED);
