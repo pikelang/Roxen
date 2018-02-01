@@ -1513,8 +1513,13 @@ mixed find_file( string f, RequestID id )
     }
 
     if (size < 0) {
-      mapping|int(0..1) res;
-      if (mappingp(res = write_access(combine_path(f, "../"), 1, id)) ||
+      mapping|int(0..1) res = write_access(combine_path(f, "../"), 1, id);
+      if (mappingp(res) && (res->error == Protocols.HTTP.HTTP_PRECOND_FAILED)) {
+	// NB: Preconditions in the If-header don't apply to the directory.
+	// Force a retry at the level below.
+	res = 1;
+      }
+      if (mappingp(res) ||
 	  (res && mappingp(res = write_access(f, 1, id)))) {
 	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
 	return res;
@@ -1550,9 +1555,12 @@ mixed find_file( string f, RequestID id )
 	}
       }
     } else {
-      mapping|int(0..1) res;
-      if ((res = write_access(combine_path(f, "../"), 0, id)) ||
-	  (res = write_access(f, 0, id))) {
+      mapping|int(0..1) res = write_access(combine_path(f, "../"), 0, id);
+      if (mappingp(res) && (res->error == Protocols.HTTP.HTTP_PRECOND_FAILED)) {
+	// NB: Preconditions in the If-header don't apply to the directory.
+	res = 0;
+      }
+      if (res || (res = write_access(f, 0, id))) {
 	SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
 	return res;
       }
