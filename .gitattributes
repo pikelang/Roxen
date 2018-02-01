@@ -62,7 +62,6 @@ worldmap binary
 /server/base_server/__default.pmod foreign_ident
 /server/base_server/basic_defvar.pike foreign_ident
 /server/base_server/cache.pike foreign_ident
-/server/base_server/configuration.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
@@ -72,10 +71,8 @@ worldmap binary
 /server/base_server/html.pike foreign_ident
 /server/base_server/javamodule.pike foreign_ident
 /server/base_server/language.pike foreign_ident
-/server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
-/server/base_server/prototypes.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
