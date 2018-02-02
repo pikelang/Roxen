@@ -497,7 +497,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		       // to MOVE. We thus need to destroy any locks rooted
 		       // on the moved resource.
 		       multiset(DAVLock) sub_locks =
-			 module->find_locks(path, -1, 0, id);
+			 module->find_locks(source, -1, 0, id);
 		       foreach(sub_locks||(<>);DAVLock lock;) {
 			 SIMPLE_TRACE_ENTER(module,
 					    "MOVE: Unlocking %O...", lock);
