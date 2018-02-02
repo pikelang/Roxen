@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.231 2008/02/15 23:37:03 mast Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -2723,6 +2723,7 @@ static mapping(string:function(string:string)) client_charset_decoders = ([
   "html": Parser.parse_html_entities,
   "utf-8": utf8_to_string,
   "utf-16": unicode_to_string,
+  0: `+,	// Identity function for strings.
 ]);
 
 static function(string:string) make_composite_decoder (
