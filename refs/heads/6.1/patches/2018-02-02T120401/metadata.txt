@@ -1,0 +1,32 @@
+subject: Roxen 6.1: WebDAV delete locking improvements
+from: c9f1e7a53cf6e8c7a454b761a4975e6e1eff2de1
+to: 7966f3df28028850765b57202f9569db3a545788
+originator: Marcus Wellhardh
+depends: 2018-01-26T144638
+restart: true
+
+• WebDAV: Support deletion of locked files in unlocked dirs.
+
+check_if_header() fails with HTTP_PRECOND_FAILED if there's no
+lock on a path, but the If-header lists some. This caused DELETE
+of locked files to fail due to checking write access to the
+containing (unlocked) directory while having an If-header.
+
+Fixes some more of [WS-160].
+
+• WebDAV: Improved diagnostics for check_if_header().
+
+• WebDAV: DELETE should also delete corresponding locks.
+
+Comply with RFC 4918 9.6.
+
+Fixes some of [WS-160].
+
+• WebDAV: Extended API for find_locks().
+
+A recursion value of -1 now causes find_locks() to only list
+locks that are rooted at path or below, but not any above.
+This can be used to find the locks to be invalidated if the
+specified path were to be deleted.
+
+Fixes some of [WS-160].
