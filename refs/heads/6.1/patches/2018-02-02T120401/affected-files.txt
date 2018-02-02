@@ -1,0 +1,7 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/module.pike
+  base_server/prototypes.pike
+  etc/include/version.h
+  modules/filesystems/filesystem.pike
+  modules/misc/webdav.pike
