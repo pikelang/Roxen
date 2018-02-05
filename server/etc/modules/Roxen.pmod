@@ -3677,6 +3677,7 @@ protected mapping(string:function(string:string)) client_charset_decoders = ([
   "html": Parser.parse_html_entities,
   "utf-8": utf8_to_string,
   "utf-16": unicode_to_string,
+  0: `+,	// Identity function for strings.
 ]);
 
 protected function(string:string) make_composite_decoder (
