@@ -1,0 +1,19 @@
+subject: Roxen 6.1: redirect, dbmanager, Roxen.get_decoder_for_client_charset
+from: 7966f3df28028850765b57202f9569db3a545788
+to: 0533069f00c0fab9d374a6af7d084738bbffbd00
+originator: Marcus Wellhardh
+depends: 2018-02-02T120401
+restart: true
+
+• Add documentation that <redirect> doesn't clear output.
+
+• DBManager: Fix for non-existing directory when removing backup [WS-79]
+
+• Roxen.get_decoder_for_client_charset: Survive 0 charset.
+
+Return the identity function for strings (aka `+()) from
+Roxen.get:decoder_for_client_charset() if called with 0.
+This may happen if Roxen.get_client_charset_decoder() gets
+called with an already decoded charset detection string.
+
+Fixes [WS-142].
