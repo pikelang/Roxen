@@ -1181,7 +1181,7 @@ protected void unregister_lock (string path, DAVLock lock,
     if (id) {
       removed_lock = m_delete(prefix_locks[path], auth_user);
     } else {
-      foreach(prefix_locks[path]; mixed user; DAVLock l) {
+      foreach(prefix_locks[path]||([]); mixed user; DAVLock l) {
 	if (l == lock) {
 	  removed_lock = m_delete(prefix_locks[path], user);
 	}
@@ -1193,7 +1193,7 @@ protected void unregister_lock (string path, DAVLock lock,
     if (id) {
       removed_lock = m_delete (file_locks[path], auth_user);
     } else {
-      foreach(file_locks[path]; mixed user; DAVLock l) {
+      foreach(file_locks[path]||([]); mixed user; DAVLock l) {
 	if (l == lock) {
 	  removed_lock = m_delete(file_locks[path], user);
 	}
@@ -1201,7 +1201,10 @@ protected void unregister_lock (string path, DAVLock lock,
     }
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
-  ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
+  // NB: The lock may have already been removed in the !id case.
+  ASSERT_IF_DEBUG (!(id || removed_lock) ||
+		   (lock /*%O*/ == removed_lock /*%O*/),
+		   lock, removed_lock);
   TRACE_LEAVE("Ok.");
   return 0;
 }
