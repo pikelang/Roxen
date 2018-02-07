@@ -1051,7 +1051,7 @@ class CM_GDS_Time
 		 pval, format_key(), size, value, cost);
     }
   }
-
+ 
   protected Thread.Local cache_contexts = Thread.Local();
   // A thread local mapping to store the timestamp from got_miss so it
   // can be read from the (presumably) following add_entry.
@@ -1060,8 +1060,22 @@ class CM_GDS_Time
   // cache entries is accumulated. It is used to deduct the time for
   // creating entries in subcaches.
 
+  protected void create(mixed ... args)
+  {
+    ::create();
+    cache_contexts->set( ([]) );
+    werror("TRACE: Creating cache. thread id: %d, Thread: %O\n",
+            Thread.this_thread().id_number(), Thread.this_thread());
+  }
+
   void clear_cache_context()
   {
+    werror("TRACE: Clearing cache. thread id: %d, Thread: %O%s\n",
+           Thread.this_thread().id_number(),
+           Thread.this_thread(),
+           cache_contexts->get() ? "" : " WARNING: Cache was not initialized!");
+    // werror("TRACE: clear_cache_context backtrace: %O\n",
+    //         backtrace());
     cache_contexts->set (([]));
   }
 
@@ -1072,6 +1086,13 @@ class CM_GDS_Time
   protected void save_start_hrtime (string cache_name, mixed key,
 				    mapping cache_context)
   {
+
+if (!cache_contexts->get()) {
+        werror("TRACE: No thread local cache_contexts. thread id: %d, Thread: %O\n",
+                Thread.this_thread().id_number(), Thread.this_thread());
+        cache_contexts->set( ([]) );
+}
+
     if (mapping all_ctx = cache_context || cache_contexts->get()) {
       int start = gettime_func() - all_ctx[0];
 
