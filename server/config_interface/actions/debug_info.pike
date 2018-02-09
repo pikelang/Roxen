@@ -73,29 +73,27 @@ string render_table(mapping last_usage, mapping mem_usage)
     }
   roxen->set_var("__memory_usage", mem_usage);
 
-#define HCELL(thargs, color, text)					\
-  ("<th " + thargs + ">"						\
-   "&nbsp;<font color='" + color + "'><b>" + text + "</b></font>&nbsp;"	\
-   "</th>")
-#define TCELL(tdargs, color, text)					\
-  ("<td " + tdargs + ">"						\
-   "&nbsp;<font color='" + color + "'>" + text + "</font>&nbsp;"	\
-   "</td>")
+#define HCELL(thargs, text)				                \
+  ("<th " + thargs + ">&nbsp;" + text + "&nbsp;</th>")
+#define TCELL(tdargs, color, text)               			\
+  ("<td " + tdargs + " style='color: " + color + "'>&nbsp;" +           \
+   text + "&nbsp;</td>")
 
-  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(3,"Type")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(4,"Number")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", "Kb") +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
+  res += "<p><table border='0' cellpadding='0'>\n"
+    "<tr class='tr-sticky' style='background-color: &usr.bgcolor;'>\n" +
+    HCELL ("class='td-left'",  (string)LOCALE(3,"Type")) +
+    HCELL ("class='td-right'", (string)LOCALE(4,"Number")) +
+    HCELL ("class='td-right'", (string)LOCALE(5,"Change")) +
+    HCELL ("class='td-right'", "Kb") +
+    HCELL ("class='td-right'", (string)LOCALE(5,"Change")) +
     "</tr>\n";
   foreach (table, array entry)
     res += "<tr>" +
-      TCELL ("align='left' ", entry[0], entry[1]) +
-      TCELL ("align='right'", entry[0], entry[2]) +
-      TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) +
-      TCELL ("align='right'", entry[0], entry[5]) + "</tr>\n";
+      TCELL ("class='td-left'",  entry[0], entry[1]) +
+      TCELL ("class='td-right'", entry[0], entry[2]) +
+      TCELL ("class='td-right'", entry[0], entry[3]) +
+      TCELL ("class='td-right'", entry[0], entry[4]) +
+      TCELL ("class='td-right'", entry[0], entry[5]) + "</tr>\n";
   res += "</table></p>\n";
 
   return res;
@@ -319,13 +317,14 @@ mixed page_0( object id )
 
   roxen->set_var("__num_clones", save_numobjs);
 
-  res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
-    HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(403,"References")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
-    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(427,"Bytes")) +
+  res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n"
+    "<tr class='tr-sticky' style='background-color: &usr.bgcolor;'>\n" +
+    HCELL ("class='td-left'",  (string)LOCALE(141,"Source")) +
+    HCELL ("class='td-left'",  (string)LOCALE(142,"Program")) +
+    HCELL ("class='td-right'", (string)LOCALE(403,"References")) +
+    HCELL ("class='td-right'", (string)LOCALE(143,"Clones")) +
+    HCELL ("class='td-right'", (string)LOCALE(5,"Change")) +
+    HCELL ("class='td-right'", (string)LOCALE(427,"Bytes")) +
     "</tr>\n";
   string trim_path( string what )
   {
@@ -335,14 +334,14 @@ mixed page_0( object id )
 
   foreach (table, array entry)
     res += "<tr>" +
-      TCELL ("align='left' ", entry[0],
+      TCELL ("class='td-left'", entry[0],
 	     replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
-      TCELL ("align='left' ", entry[0],
+      TCELL ("class='td-left'", entry[0],
 	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
-      TCELL ("align='right'", entry[0], entry[5]) +
-      TCELL ("align='right'", entry[0], entry[3]) +
-      TCELL ("align='right'", entry[0], entry[4]) +
-      TCELL ("align='right'", entry[0], entry[6]) + "</tr>\n";
+      TCELL ("class='td-right'", entry[0], entry[5]) +
+      TCELL ("class='td-right'", entry[0], entry[3]) +
+      TCELL ("class='td-right'", entry[0], entry[4]) +
+      TCELL ("class='td-right'", entry[0], entry[6]) + "</tr>\n";
   res += "</table></p>\n";
 
   if (gc_status->non_gc_time)
@@ -353,9 +352,9 @@ mixed page_0( object id )
     "<table border='0' cellpadding='0'>\n";
   foreach (sort (indices (gc_status)), string field)
     res += "<tr>" +
-      TCELL ("align='left'", "&usr.fgcolor;",
+      TCELL ("class='td-left'", "&usr.fgcolor;",
 	     Roxen.html_encode_string (field)) +
-      TCELL ("align='left'", "&usr.fgcolor;",
+      TCELL ("class='td-left'", "&usr.fgcolor;",
 	     Roxen.html_encode_string (gc_status[field])) +
       "</tr>\n";
   res += "</table></p>\n"
