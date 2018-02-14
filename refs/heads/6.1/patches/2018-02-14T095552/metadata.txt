@@ -1,0 +1,12 @@
+subject: Roxen 6.1: Month fixes for Dutch.
+from: 0533069f00c0fab9d374a6af7d084738bbffbd00
+to: f328d56f1a5a3a7b3452dc6f18e04efe63d206a6
+originator: Erik Allemann
+depends: 2018-02-05T153340
+restart: true
+
+• Languages [nl]: Fixed abbreviation of month "Maart".
+
+Fixes [roxen.com #30062].
+
+• Add table header stickiness for long tables.
