@@ -457,7 +457,7 @@ class Configuration
   void invalidate_cache();
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
-  multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+  multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
 			       int(0..1) exclude_shared, RequestID id);
   DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
@@ -4051,7 +4051,7 @@ class RoxenModule
   string resource_id (string path, RequestID id);
   string|int authenticated_user_id (string path, RequestID id);
   multiset(DAVLock) find_locks(string path,
-			       int(0..1) recursive,
+			       int(-1..1) recursive,
 			       int(0..1) exclude_shared,
 			       RequestID id);
   DAVLock|LockFlag check_locks(string path,

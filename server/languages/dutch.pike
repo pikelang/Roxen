@@ -17,11 +17,21 @@ constant months = ({
   "juni", "juli", "augustus", "september", "oktober",
   "november", "december" });
 
+constant short_months = ({
+  "jan", "feb", "mrt", "apr", "mei",
+  "jun", "jul", "aug", "sep", "okt",
+  "nov", "dec" });
+
 constant days = ({
   "zondag", "maandag", "dinsdag", "woensdag",
   "donderdag", "vrijdag", "zaterdag" });
 
 constant implode_conjunction = "en";
+
+string short_month(int num)
+{
+  return short_months[ num - 1 ];
+}
 
 string ordered(int i)
 {

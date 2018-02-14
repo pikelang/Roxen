@@ -163,6 +163,26 @@ table.module-sub-list-2
 	font-size: 100%;
 }
 
+table tr.tr-sticky {
+ 	position:  -webkit-sticky;
+ 	position:  -moz-sticky;
+ 	position:  -ms-sticky;
+ 	position:  -o-sticky;
+	position:  sticky;
+        top:       0px;
+}
+
+table th.td-left,
+table td.td-left {
+	text-align: left;
+}
+
+table th.td-right,
+table td.td-right {
+	text-align: right;
+}
+
+
 table.hilite-1stcol > tr > td:first-child,
 table.hilite-1stcol > tbody > tr > td:first-child {
 	font-weight: bold;

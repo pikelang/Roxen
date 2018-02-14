@@ -830,7 +830,7 @@ mapping|string parse( RequestID id )
       do {
 	int qrows;
 	qres += "<p>\n"
-	  "<table id='res'><tr>";
+	  "<table id='res'><tr class='tr-sticky'>";
 	// FIXME: Using id='res' above is wrong, as the tag
 	//        can be generated multiple times in the same
 	//        document. See also similar code further below.
@@ -1279,7 +1279,7 @@ mapping|string parse( RequestID id )
 	// in firefox 2.0, though.
 	res += "<col span='3'/><col style='visiblity: collapse'/>\n";
       res +=
-	"<thead><tr>"
+	"<thead><tr class='tr-sticky'>"
 	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name&amp;&usr.set-wiz-id;'>"+
 	SEL("name", 1) + _(376,"Name")+
 	"</a></th>\n"
