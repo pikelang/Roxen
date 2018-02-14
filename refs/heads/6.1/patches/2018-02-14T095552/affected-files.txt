@@ -1,0 +1,5 @@
+Modified files:
+  config_interface/actions/debug_info.pike
+  config_interface/dbs/browser.pike
+  config_interface/themes/default/stylesheet.css
+  languages/dutch.pike
