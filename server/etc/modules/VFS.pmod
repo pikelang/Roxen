@@ -81,6 +81,9 @@ string|array(int|string) read( string file,
   return res;
 }
 
+protected cache.CacheManagerPrefs extend_entries_cache_prefs =
+  cache.CacheManagerPrefs(1);
+
 array(string) find_above_read( string above,
 			       string name,
 			       RequestID id,
@@ -110,15 +113,18 @@ array(string) find_above_read( string above,
     above = find_above( above, name, id, (cache&&cache+":above") );
     if( !above )
       return 0;
-    if( do_mtime )
-      last_mtime = cache_lookup( (ck=cache+":mtime:"+id->conf->name+
-				  ":"+id->misc->host), above )||-1;
+    if( do_mtime ) {
+      ck = cache+":mtime:"+id->conf->name+":"+id->misc->host;
+      predef::cache.cache_register(ck, UNDEFINED, extend_entries_cache_prefs);
+      last_mtime = cache_lookup( ck, above )||-1;
+    }
 
     if( string|array data = read( above, id, !!cache, last_mtime ) )
     {
       if( arrayp( data ) )
       {
-	cache_set( ck, above, data[0]||-1 );
+	if (do_mtime)
+	  cache_set( ck, above, data[0]||-1 );
 	return ({ above, data[1], data[0] });
       }
       return ({ above, data, 0 });
