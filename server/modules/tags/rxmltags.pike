@@ -70,7 +70,7 @@ private string fix_rxml_vars (string code, RXML.Context ctx)
   return res + code;
 }
 
-private object sexpr_funcs = class SExprFunctions
+private object sexpr_funcs = class
   {
     // A class for the special functions in sexpr_constants. This is
     // to give these function proper names, since those names can
