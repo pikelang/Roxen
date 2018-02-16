@@ -320,6 +320,10 @@ select {
 
   label {
     display: block;
+
+    &.inline {
+      display: inline-block;
+    }
   }
 }
 

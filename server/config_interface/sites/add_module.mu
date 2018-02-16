@@ -35,7 +35,7 @@
                       </default>
                     </div>
                     <default variable="form.deprecated" value='&form.deprecated;'>
-                      <label for='deprecated_'>
+                      <label for='deprecated_' class='inline'>
                         <input type='checkbox' name='deprecated' value='1'
                                id='deprecated_' data-toggle-submit=''
                                data-add-variable='reload=1' />
