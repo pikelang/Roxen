@@ -99,6 +99,11 @@
     }
   };
 
+  lib.getWizardId = function() {
+    var wizinp = document.querySelector('input[name="_roxen_wizard_id"]');
+    return (wizinp && wizinp.value) || lib.getCookie('RoxenWizardId') || '';
+  };
+
   var AJX = function() {
     var client, isPending, _ = this;
 

@@ -13,8 +13,7 @@
       '&deprecated=1' || '';
   };
 
-  var wizinp     = document.querySelector('input[name="_roxen_wizard_id"]');
-  var wizid      = wizinp.value || R.getCookie('RoxenWizardId') || '';
+  var wizid      = R.getWizardId();
   var inp        = document.getElementById('mod-query');
   var spinner    = document.getElementById('mod-spinner');
   var defMods    = document.getElementById('mod_default');
