@@ -22,12 +22,26 @@ mapping(string:string) base_headers;
 
 mapping(string:string) current_locks;
 
+int filesystem_check_exists(string path)
+{
+  string real_path = Stdio.append_path(real_dir, path);
+  return Stdio.is_file(real_path);
+}
+
+string filesystem_read_file(string path)
+{
+  string real_path = Stdio.append_path(real_dir, path);
+  return Stdio.read_bytes(real_path);
+}
 
 int filesystem_check_content(string path, string data)
 {
-  string real_path = Stdio.append_path(real_dir, path);
-  string real_data = Stdio.read_bytes(real_path);
-  return real_data == data;
+  return filesystem_read_file(path) == data;
+}
+
+int filesystem_compare_files(string first_path, string other_path)
+{
+  return filesystem_check_content(other_path, filesystem_read_file(first_path));
 }
 
 
@@ -42,20 +56,38 @@ array(int|mapping(string:string)|string) webdav_request(string method,
     headers += extra_headers;
   }
 
+  array(string) lock_paths = ({ path });
+
+  // Convert the fake header "new-uri" into a proper "destination" header.
+  string new_uri = m_delete(headers, "new-uri");
+  if (new_uri) {
+    if (lower_case(method) == "copy") {
+      // NB: No need to lock the source for a copy operation.
+      lock_paths = ({ new_uri });
+    } else {
+      lock_paths += ({ new_uri });
+    }
+
+    if (has_prefix(new_uri, "/")) new_uri = new_uri[1..];
+    Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
+    // FIXME:
+    headers["destination"] = (string)dest_uri;
+  }
+
   multiset(string) locks = (<>);
   if (current_locks) {
-    string dir = path;
-    while(1) {
-      string lock = current_locks[dir];
-      if (lock) locks[lock] = 1;
-      if (dir == "/") break;
-      dir = dirname(dir);
+    foreach(lock_paths, string dir) {
+      while(1) {
+	string lock = current_locks[dir];
+	if (lock) locks[lock] = 1;
+	if (dir == "/") break;
+	dir = dirname(dir);
+      }
     }
     if (sizeof(locks)) {
       headers->if = "(<" + (indices(locks) * ">), (<") + ">)";
     }
   }
-
   if (has_prefix(path, "/")) path = path[1..];
 
   Standards.URI url = Standards.URI(path, base_uri);
@@ -137,7 +169,37 @@ int webdav_delete(string path, mapping(string:string) locks)
   if (!((res[0] >= 200) && (res[0] < 300))) return 0;
 
   low_recursive_unlock(path, locks);
-  return 1;
+  return !filesystem_check_exists(path);
+}
+
+int webdav_copy(string src_path, string dst_path)
+{
+  array(int|mapping(string:string)|string) res =
+    webdav_request("COPY", src_path, ([
+		     "new-uri": dst_path,
+		   ]));
+
+  if (!((res[0] >= 200) && (res[0] < 300))) return 0;
+
+  return filesystem_compare_files(src_path, dst_path);
+}
+
+int webdav_move(string src_path, string dst_path, mapping(string:string) locks)
+{
+  string expected_content = filesystem_read_file(src_path);
+
+  array(int|mapping(string:string)|string) res =
+    webdav_request("MOVE", src_path, ([
+		     "new-uri": dst_path,
+		   ]));
+
+  if (!((res[0] >= 200) && (res[0] < 300))) return 0;
+
+  low_recursive_unlock(src_path, locks);
+
+  return
+    !filesystem_check_exists(src_path) &&
+    filesystem_check_content(dst_path, expected_content);
 }
 
 int webdav_mkcol(string path)
@@ -213,6 +275,8 @@ void run_tests(Configuration conf)
 	base_uri->password = (basic_auth/":")[1..] * ":";
       }
 
+      report_debug("Webdav testsuite: Base URI: %s\n", (string)base_uri);
+
       base_headers = ([
 	"host": url_uri->host,
 	"user-agent": "Roxen WebDAV Tester",
@@ -258,6 +322,22 @@ void run_tests(Configuration conf)
       test_true(webdav_mkcol, "/test_dir");
       test_true(webdav_mkcol, "/test_dir/sub_dir");
       test_true(webdav_put, "/test_dir/test_file.txt", "TEST FILE\n");
+
+      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
+      test_false(webdav_move, "/test_dir/test_file.txt", "/test_file.txt", locks);
+      test_true(webdav_copy, "/test_dir/test_file.txt", "/test_file.txt");
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_move, "/test_dir/test_file.txt", "/test_file_2.txt", locks);
+      // NB: /test_dir/test_file.txt lock invalidated by the move above.
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      test_true(webdav_unlock, "/test_dir/test_file.txt", locks);
     }
   }
 }
