@@ -448,6 +448,7 @@ mapping parse_and_find_htaccess( RequestID id )
       case "authgroupfile":
 	if(!access->userdb )
 	  access->userdb = "htaccess";
+        rest = combine_path(file, "..", rest);
 	// FALL-THROUGH
 
       case "authname":
