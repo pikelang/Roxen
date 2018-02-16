@@ -275,6 +275,8 @@ void run_tests(Configuration conf)
 	base_uri->password = (basic_auth/":")[1..] * ":";
       }
 
+      report_debug("Webdav testsuite: Base URI: %s\n", (string)base_uri);
+
       base_headers = ([
 	"host": url_uri->host,
 	"user-agent": "Roxen WebDAV Tester",
@@ -320,6 +322,22 @@ void run_tests(Configuration conf)
       test_true(webdav_mkcol, "/test_dir");
       test_true(webdav_mkcol, "/test_dir/sub_dir");
       test_true(webdav_put, "/test_dir/test_file.txt", "TEST FILE\n");
+
+      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
+      test_false(webdav_move, "/test_dir/test_file.txt", "/test_file.txt", locks);
+      test_true(webdav_copy, "/test_dir/test_file.txt", "/test_file.txt");
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_move, "/test_dir/test_file.txt", "/test_file_2.txt", locks);
+      // NB: /test_dir/test_file.txt lock invalidated by the move above.
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
+      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      current_locks = locks + ([]);
+      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
+      test_true(webdav_unlock, "/test_dir/test_file.txt", locks);
     }
   }
 }
