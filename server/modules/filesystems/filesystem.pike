@@ -598,9 +598,9 @@ array(string) list_lock_files() {
   return query("nobrowse");
 }
 
-protected mapping(string:mixed)|int(0..1) write_access(string path,
-						       int(0..1) recursive,
-						       RequestID id)
+protected variant mapping(string:mixed)|int(0..1) write_access(string path,
+							       int(0..1) recursive,
+							       RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, %O)\n", path, recursive, id);
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {
