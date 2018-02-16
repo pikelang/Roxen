@@ -902,8 +902,8 @@ mapping make_collection(string coll, RequestID id)
   }
 
   // Disallow if the name is locked, or if the parent directory is locked.
-  mapping(string:mixed) ret = write_access(coll, 0, id) ||
-    write_access(combine_path(coll, ".."), 0, id);
+  mapping(string:mixed) ret =
+    write_access(({coll, combine_path(coll, "..")}), 0, id);
   if (ret) return ret;
 
   mkdirs++;
@@ -1385,8 +1385,8 @@ mixed find_file( string f, RequestID id )
     }
 
     // FIXME: What about moving of directories containing locked files?
-    if (mapping(string:mixed) ret = write_access(f, 0, id) ||
-	write_access(relative_from, 0, id)) {
+    if (mapping(string:mixed) ret =
+	write_access(({ f, relative_from }), 0, id)) {
       TRACE_LEAVE("MV: Locked");
       return ret;
     }
@@ -1473,9 +1473,9 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    if (mapping(string:mixed) ret =
-	write_access(new_uri, 0, id) ||
-	write_access(f, 0, id)) {
+    mapping(string:mixed) ret =
+      write_access(({ combine_path(f, "../"), f, new_uri }), 0, id);
+    if (ret) {
       TRACE_LEAVE("MOVE: Locked");
       return ret;
     }
@@ -1583,14 +1583,9 @@ mixed find_file( string f, RequestID id )
     }
 
     if (size < 0) {
-      mapping|int(0..1) res = write_access(combine_path(f, "../"), 1, id);
-      if (mappingp(res) && (res->error == Protocols.HTTP.HTTP_PRECOND_FAILED)) {
-	// NB: Preconditions in the If-header don't apply to the directory.
-	// Force a retry at the level below.
-	res = 1;
-      }
-      if (mappingp(res) ||
-	  (res && mappingp(res = write_access(f, 1, id)))) {
+      mapping|int(0..1) res =
+	write_access(({ combine_path(f, "../"), f }), 1, id);
+      if (mappingp(res)) {
 	SIMPLE_TRACE_LEAVE("DELETE: Recursive write access denied.");
 	return res;
       }
@@ -1625,12 +1620,9 @@ mixed find_file( string f, RequestID id )
 	}
       }
     } else {
-      mapping|int(0..1) res = write_access(combine_path(f, "../"), 0, id);
-      if (mappingp(res) && (res->error == Protocols.HTTP.HTTP_PRECOND_FAILED)) {
-	// NB: Preconditions in the If-header don't apply to the directory.
-	res = 0;
-      }
-      if (res || (res = write_access(f, 0, id))) {
+      mapping|int(0..1) res =
+	write_access(({ combine_path(f, "../"), f }), 0, id);
+      if (res) {
 	SIMPLE_TRACE_LEAVE("DELETE: Write access denied.");
 	return res;
       }
@@ -1687,8 +1679,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
     TRACE_LEAVE("COPY: Put not allowed.");
     return Roxen.http_status(405, "Not allowed.");
   }
-  mapping|int(0..1) res = write_access(dest, 0, id) ||
-    write_access(combine_path(dest, "../"), 0, id);
+  mapping|int(0..1) res =
+    write_access(({ dest, combine_path(dest, "../")}) , 0, id);
   if (mappingp(res)) return res;
   string dest_path = path + encode_path(dest);
   dest_path = NORMALIZE_PATH (dest_path);
