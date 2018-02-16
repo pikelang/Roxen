@@ -56,20 +56,38 @@ array(int|mapping(string:string)|string) webdav_request(string method,
     headers += extra_headers;
   }
 
+  array(string) lock_paths = ({ path });
+
+  // Convert the fake header "new-uri" into a proper "destination" header.
+  string new_uri = m_delete(headers, "new-uri");
+  if (new_uri) {
+    if (lower_case(method) == "copy") {
+      // NB: No need to lock the source for a copy operation.
+      lock_paths = ({ new_uri });
+    } else {
+      lock_paths += ({ new_uri });
+    }
+
+    if (has_prefix(new_uri, "/")) new_uri = new_uri[1..];
+    Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
+    // FIXME:
+    headers["destination"] = (string)dest_uri;
+  }
+
   multiset(string) locks = (<>);
   if (current_locks) {
-    string dir = path;
-    while(1) {
-      string lock = current_locks[dir];
-      if (lock) locks[lock] = 1;
-      if (dir == "/") break;
-      dir = dirname(dir);
+    foreach(lock_paths, string dir) {
+      while(1) {
+	string lock = current_locks[dir];
+	if (lock) locks[lock] = 1;
+	if (dir == "/") break;
+	dir = dirname(dir);
+      }
     }
     if (sizeof(locks)) {
       headers->if = "(<" + (indices(locks) * ">), (<") + ">)";
     }
   }
-
   if (has_prefix(path, "/")) path = path[1..];
 
   Standards.URI url = Standards.URI(path, base_uri);
@@ -151,7 +169,37 @@ int webdav_delete(string path, mapping(string:string) locks)
   if (!((res[0] >= 200) && (res[0] < 300))) return 0;
 
   low_recursive_unlock(path, locks);
-  return 1;
+  return !filesystem_check_exists(path);
+}
+
+int webdav_copy(string src_path, string dst_path)
+{
+  array(int|mapping(string:string)|string) res =
+    webdav_request("COPY", src_path, ([
+		     "new-uri": dst_path,
+		   ]));
+
+  if (!((res[0] >= 200) && (res[0] < 300))) return 0;
+
+  return filesystem_compare_files(src_path, dst_path);
+}
+
+int webdav_move(string src_path, string dst_path, mapping(string:string) locks)
+{
+  string expected_content = filesystem_read_file(src_path);
+
+  array(int|mapping(string:string)|string) res =
+    webdav_request("MOVE", src_path, ([
+		     "new-uri": dst_path,
+		   ]));
+
+  if (!((res[0] >= 200) && (res[0] < 300))) return 0;
+
+  low_recursive_unlock(src_path, locks);
+
+  return
+    !filesystem_check_exists(src_path) &&
+    filesystem_check_content(dst_path, expected_content);
 }
 
 int webdav_mkcol(string path)
