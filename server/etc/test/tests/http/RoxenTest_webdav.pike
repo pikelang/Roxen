@@ -22,12 +22,26 @@ mapping(string:string) base_headers;
 
 mapping(string:string) current_locks;
 
+int filesystem_check_exists(string path)
+{
+  string real_path = Stdio.append_path(real_dir, path);
+  return Stdio.is_file(real_path);
+}
+
+string filesystem_read_file(string path)
+{
+  string real_path = Stdio.append_path(real_dir, path);
+  return Stdio.read_bytes(real_path);
+}
 
 int filesystem_check_content(string path, string data)
 {
-  string real_path = Stdio.append_path(real_dir, path);
-  string real_data = Stdio.read_bytes(real_path);
-  return real_data == data;
+  return filesystem_read_file(path) == data;
+}
+
+int filesystem_compare_files(string first_path, string other_path)
+{
+  return filesystem_check_content(other_path, filesystem_read_file(first_path));
 }
 
 
