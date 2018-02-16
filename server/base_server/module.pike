@@ -1435,11 +1435,51 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 //! A filesystem module should typically put all needed write access
 //! checks here and then use this from @[find_file()],
 //! @[delete_file()] etc.
+//!
+//! @returns
+//!   Returns @expr{0@} (zero) on success, a status mapping on
+//!   failure, or @expr{1@} if @[recursive] is set and write access is
+//!   allowed on this level but maybe not somewhere below. The caller
+//!   should in the last case do the operation on this level if
+//!   possible and then handle each member in the directory
+//!   recursively with @[write_access] etc.
 protected mapping(string:mixed)|int(0..1) write_access(string relative_path,
 						       int(0..1) recursive,
 						       RequestID id)
 {
   return check_if_header (relative_path, recursive, id);
+}
+
+//!
+protected variant mapping(string:mixed)|int(0..1) write_access(array(string) paths,
+							       int(0..1) recursive,
+							       RequestID id)
+{
+  mapping(string:mixed)|int(0..1) ret;
+  int got_ok;
+  foreach(paths, string path) {
+    ret = write_access(path, recursive, id);
+    if (!ret) {
+      got_ok = 1;
+      continue;
+    }
+    if (ret == 1) {
+      continue;
+    }
+    if (ret->error == Protocols.HTTP.HTTP_PRECOND_FAILED) {
+      continue;
+    }
+    return ret;
+  }
+
+  if (got_ok) {
+    // The if headers are valid for at least one of the paths,
+    // and none of the other paths are locked.
+    return 0;
+  }
+
+  // HTTP_PRECOND_FAILED for all of the paths.
+  return ret;
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
