@@ -37,6 +37,14 @@ class Relay
     }
 
     string myip = from->port_obj->ip;
+    if (!myip) {
+      // Bound to IPv4 ANY. Resolve the IP that the client sonnected to.
+      //
+      // NB: query_address() shouldn't fail under any normal circumstances,
+      //     and the fall back to 127.0.0.1 is purely for paranoia reasons.
+      catch { myip = from->my_fd->query_address(1); };
+      sscanf(myip || "127.0.0.1", "%s %*s", myip);
+    }
     if (has_value(myip, ":")) {
       // IPv6.
       myip = "[" + myip + "]";
