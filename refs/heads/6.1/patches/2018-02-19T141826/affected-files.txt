@@ -1,0 +1,4 @@
+Modified files:
+  etc/modules/VFS.pmod
+  modules/security/htaccess.pike
+  modules/tags/emit_timerange.pike
