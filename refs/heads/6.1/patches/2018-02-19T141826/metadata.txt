@@ -1,0 +1,26 @@
+subject: Roxen 6.1: VFS.find_above_read, htaccess, fixed type
+from: f328d56f1a5a3a7b3452dc6f18e04efe63d206a6
+to: 2583da9dc37b6ec93f2a3f0bab99fdd9566f7179
+originator: Marcus Wellhardh
+depends: 2018-02-14T095552
+restart: true
+
+• Fixed type of non-constant variable expression.
+
+• htaccess: Improved support for relative paths.
+
+The AuthUserFile and AuthGroupFile directives now support
+relative paths properly.
+
+Fixes [WS-176]/[WS-174].
+
+• VFS.find_above_read: Set the extend_entries option for the cache.
+
+The cache system assumes that entries won't be regenerated if
+there was a cache hit. VFS.find_above_read() refreshes the cache
+entry regardless of whether cache_lookup() had a hit or not.
+
+This fixes warnings from the cache system about calling cache_set()
+without a prior cache_lookup().
+
+Fixes [WS-175]/[WS-174].
