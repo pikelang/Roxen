@@ -511,7 +511,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 
 private mapping(string:Calendar.YMD) cached_calendars = ([]);
 
-private constant uc_cal_lookup =
+private mapping uc_cal_lookup =
   mkmapping (map (calendars, upper_case), calendars);
 
 Calendar.YMD get_calendar(string name)
