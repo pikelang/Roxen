@@ -70,7 +70,6 @@ array(int|mapping(string:string)|string) webdav_request(string method,
 
     if (has_prefix(new_uri, "/")) new_uri = new_uri[1..];
     Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
-    // FIXME:
     headers["destination"] = (string)dest_uri;
   }
 
