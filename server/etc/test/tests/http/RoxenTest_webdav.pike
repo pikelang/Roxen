@@ -1,5 +1,7 @@
 inherit "../pike_test_common";
 
+#include <testsuite.h>
+
 string webdav_mount_point = "webdav/testdir/";
 string filesystem_dir = "$VARDIR/testsuite/webdav/testdir";
 
@@ -222,8 +224,33 @@ int webdav_ls(string path, array(string) expected)
 
   report_debug("Webdav: propfind result: %d\n%O\n", res[0], res[2]);
 
-  // FIXME: Parse the result.
-  return (res[0] >= 200) && (res[0] < 300);
+  TEST_TRUE(res[0] >= 200 && res[0] < 300);
+  if (res[0] < 200 || res[0] > 300) {
+    return 0;
+  }
+
+  Parser.XML.Tree.SimpleRootNode root_node =
+    Parser.XML.Tree.simple_parse_input(res[2]);
+  array(Parser.XML.Tree.AbstractNode) multistatus_nodes =
+    root_node->get_elements("DAV:multistatus", true);
+  TEST_TRUE(sizeof(multistatus_nodes) > 0);
+  array(Parser.XML.Tree.AbstractNode) response_nodes =
+    Array.flatten(multistatus_nodes->get_elements("DAV:response", true));
+  TEST_TRUE(sizeof(response_nodes) > 0);
+  array(Parser.XML.Tree.AbstractNode) href_nodes =
+    Array.flatten(response_nodes->get_elements("DAV:href", true));
+  TEST_TRUE(sizeof(href_nodes) > 0);
+  array(string) hrefs = href_nodes->value_of_node();
+  array(string) actual = Array.flatten(map(hrefs,
+    lambda(string href) {
+      // Remove leading "http://*/webdav/testdir/" from each string.
+      return array_sscanf(href, "%*s"+webdav_mount_point+"%s");
+    }));
+  // Remove empty strings.
+  actual = filter(actual,
+                  lambda(string str) { return sizeof(str) > 0; });
+  TEST_EQUAL(sort(expected), sort(actual));
+  return equal(sort(expected), sort(actual));
 }
 
 
