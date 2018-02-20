@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+// This is a roxen module. Copyright ï¿½ 2000 - 2018, Roxen IS.
 
 #include <module.h>
 constant cvs_version = "$Id$";
@@ -486,7 +486,12 @@ class Relayer
     pattern = p;
     options = o;
     url = u;
-    r = Regexp( pattern );
+    //FIXME: in Roxen7+ change default to PCRE and opt in to simple
+    // using options->simple. See help text for "patterns".
+    if(options->pcre)
+      r = Regexp.PCRE( pattern );
+    else
+      r = Regexp( pattern );
   }
 }
 
@@ -502,7 +507,7 @@ void create( Configuration c )
             "<pre>\n"
             "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
             "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
-            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite] [pcre] [simple]\n"
             "</pre> \\1 to \\9 will be replaced with submatches from the "
 	    "regexp.</p><p>"
 
@@ -514,7 +519,10 @@ void create( Configuration c )
 	    "specified, the request is sent to the remote server exactly as it "
 	    "arrived to Roxen, not even the Host: header is changed.  If "
 	    "<b>utf8</b> is specified the request is utf-8 encoded before it "
-	    "is sent to the remote server.</p><p>"
+	    "is sent to the remote server. If <b>pcre</b> is specified, "
+      "the PCRE Regexp engine will be used for mathing. "
+      "This will be default in the next major release. "
+      "Specify <b>simple</b> to keep using simple Regexps after upgrade.</p><p>"
 
 	    "Cache and stream alter the sending of data to the client. If "
 	    "<b>cache</b> is specified, the data can end up in the roxen "
