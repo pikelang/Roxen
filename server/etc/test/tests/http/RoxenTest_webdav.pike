@@ -70,7 +70,6 @@ array(int|mapping(string:string)|string) webdav_request(string method,
 
     if (has_prefix(new_uri, "/")) new_uri = new_uri[1..];
     Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
-    // FIXME:
     headers["destination"] = (string)dest_uri;
   }
 
@@ -93,8 +92,8 @@ array(int|mapping(string:string)|string) webdav_request(string method,
   Standards.URI url = Standards.URI(path, base_uri);
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
 
-  report_debug("Webdav: %s %O ==> code: %d\n",
-	       method, path, con?con->status:600);
+  report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
+	       method, path, url, con?con->status:600);
 
   if (!con) return ({ 600, ([]), "" });
 
