@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Fixed types of non-constant constants
+from: 2583da9dc37b6ec93f2a3f0bab99fdd9566f7179
+to: ee787805f53ebf1c61654def32c6208012a38ca0
+originator: Marcus Wellhardh
+depends: 2018-02-19T141826
+restart: true
+
+• Fixed types of non-constant constants.
