@@ -92,8 +92,8 @@ array(int|mapping(string:string)|string) webdav_request(string method,
   Standards.URI url = Standards.URI(path, base_uri);
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
 
-  report_debug("Webdav: %s %O ==> code: %d\n",
-	       method, path, con?con->status:600);
+  report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
+	       method, path, url, con?con->status:600);
 
   if (!con) return ({ 600, ([]), "" });
 
@@ -242,9 +242,9 @@ void run_tests(Configuration conf)
 
   // Run the suite once with every http protocol modules in the conf.
   // This allows for testing such things as sub-path mounted sites etc.
-  foreach(conf->registered_urls, string url) {
+  foreach(conf->registered_urls, string full_url) {
     mapping(string:string|Configuration|array(Protocol)) port_info =
-      roxen.urls[url];
+      roxen.urls[full_url];
     if (!test_true(mappingp, port_info)) continue;
     array(Protocol) ports = port_info->ports;
     if (!test_true(arrayp, ports)) continue;
@@ -255,6 +255,9 @@ void run_tests(Configuration conf)
       if (prot->bound != 1) continue;
 
       if (!test_true(mappingp, prot->urls)) continue;
+
+      // Strip the fragment from the full_url.
+      string url = (full_url/"#")[0];
       mapping(string:mixed) url_data = prot->urls[url];
       if (!test_true(mappingp, url_data)) continue;
       report_debug("url data: %O\n", url_data);
@@ -265,7 +268,8 @@ void run_tests(Configuration conf)
 
       Standards.URI url_uri = Standards.URI(url, "http://*/");
       base_uri =
-	Standards.URI((url_data->path || "/") + webdav_mount_point, url_uri);
+	Standards.URI(Stdio.append_path(url_data->path || "/",
+					webdav_mount_point), url_uri);
       base_uri->port = prot->port;
       base_uri->host = prot->ip;
 
