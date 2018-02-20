@@ -364,7 +364,7 @@ constant _tablify_args = ({
   "titlebgcolor",
   "titlecolor",
 });
-constant tablify_args = mkmapping(_tablify_args, _tablify_args);
+mapping tablify_args = mkmapping(_tablify_args, _tablify_args);
 
 
 string encode_url(int col, int state, object stateobj, RequestID id){

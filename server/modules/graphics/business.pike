@@ -446,13 +446,13 @@ constant _diagram_args =
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
    "colortable_cache", "tonedbox", "name","color-scheme" });
-constant diagram_args = mkmapping(_diagram_args,_diagram_args);
+mapping diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args =
 ({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
    "xstart", "xstop", "ystart", "ystop", "colors", "autocolors","xvalues", "yvalues",
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
-constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
+mapping shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
 string container_diagram(string tag, mapping m, string contents,
 		   object id, object f)
