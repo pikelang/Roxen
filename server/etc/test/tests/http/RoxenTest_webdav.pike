@@ -1,8 +1,13 @@
 inherit "etc/test/tests/http/WebdavTestBase.pike";
 
-string filesystem_dir = "$VARDIR/testsuite/webdav/testdir";
+private string testdir = "/testdir/";
+private string filesystem_dir = "$VARDIR/testsuite/webdav";
 // Expanded filesystem_dir.
-string real_dir;
+private string real_dir;
+
+string get_testdir() {
+  return testdir;
+}
 
 int filesystem_check_exists(string path)
 {
@@ -18,9 +23,9 @@ string filesystem_read_file(string path)
 
 void setup()
 {
+  webdav_mount_point = "webdav/";
+  basic_auth = "test:test";
   real_dir = roxen_path(filesystem_dir);
-
   report_debug("Webdav real_dir: %O\n", real_dir);
-
   Stdio.mkdirhier(real_dir);
 }

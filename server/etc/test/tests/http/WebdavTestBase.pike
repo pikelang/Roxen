@@ -3,25 +3,22 @@ inherit "../pike_test_common";
 #include <testsuite.h>
 
 
-string webdav_mount_point = "webdav/testdir/";
+protected string webdav_mount_point;
 
-
-string basic_auth = "test:test";
-
-/* Some globals to avoid having to pass this stuff around explicitly. */
-
+protected string basic_auth;
 
 // Current Base URL to run the test suite for.
 // Note that the hostname is an ip-number.
-Standards.URI base_uri;
+private Standards.URI base_uri;
 
 // Current http client connection.
-Protocols.HTTP.Query con;
+private Protocols.HTTP.Query con;
 
 // Common HTTP headers to send for all HTTP requests.
-mapping(string:string) base_headers;
+private mapping(string:string) base_headers;
 
-mapping(string:string) current_locks;
+/* Some globals to avoid having to pass this stuff around explicitly. */
+protected mapping(string:string) current_locks;
 
 int filesystem_check_exists(string path);
 
@@ -61,7 +58,9 @@ array(int|mapping(string:string)|string) webdav_request(string method,
       lock_paths += ({ new_uri });
     }
 
-    if (has_prefix(new_uri, "/")) new_uri = new_uri[1..];
+    if (has_prefix(new_uri, "/")) {
+      new_uri = new_uri[1..];
+    }
     Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
     headers["destination"] = (string)dest_uri;
   }
@@ -70,17 +69,23 @@ array(int|mapping(string:string)|string) webdav_request(string method,
   if (current_locks) {
     foreach(lock_paths, string dir) {
       while(1) {
-  string lock = current_locks[dir];
-  if (lock) locks[lock] = 1;
-  if (dir == "/") break;
-  dir = dirname(dir);
+        string lock = current_locks[dir];
+        if (lock) {
+          locks[lock] = 1;
+        }
+        if (dir == "/") {
+          break;
+        }
+        dir = dirname(dir);
       }
     }
     if (sizeof(locks)) {
       headers->if = "(<" + (indices(locks) * ">), (<") + ">)";
     }
   }
-  if (has_prefix(path, "/")) path = path[1..];
+  if (has_prefix(path, "/")) {
+    path = path[1..];
+  }
 
   Standards.URI url = Standards.URI(path, base_uri);
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
@@ -88,7 +93,9 @@ array(int|mapping(string:string)|string) webdav_request(string method,
   report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
          method, path, url, con?con->status:600);
 
-  if (!con) return ({ 600, ([]), "" });
+  if (!con) {
+    return ({ 600, ([]), "" });
+  }
 
   return ({ con->status, con->headers, con->data() });
 }
@@ -219,7 +226,6 @@ int webdav_ls(string path, array(string) expected)
   if (res[0] < 200 || res[0] > 300) {
     return 0;
   }
-
   Parser.XML.Tree.SimpleRootNode root_node =
     Parser.XML.Tree.simple_parse_input(res[2]);
   array(Parser.XML.Tree.AbstractNode) multistatus_nodes =
@@ -234,16 +240,22 @@ int webdav_ls(string path, array(string) expected)
   array(string) hrefs = href_nodes->value_of_node();
   array(string) actual = Array.flatten(map(hrefs,
     lambda(string href) {
-      // Remove leading "http://*/webdav/testdir/" from each string.
-      return array_sscanf(href, "%*s"+webdav_mount_point+"%s");
+      // Remove leading "http://*/webdav_mount_pount/" from each string.
+      string webdav_mp = webdav_mount_point;
+      if (!has_suffix(webdav_mp, "/")) {
+        webdav_mp += "/";
+      }
+      return array_sscanf(href, "%*s"+webdav_mp+"%s");
     }));
-  // Remove empty strings.
-  actual = filter(actual,
-                  lambda(string str) { return sizeof(str) > 0; });
-  TEST_EQUAL(sort(expected), sort(actual));
-  return equal(sort(expected), sort(actual));
+  // Remove leading "/"
+  array(string) expected_ = map(expected,
+    lambda(string path) { return has_prefix(path, "/") ? path[1..] : path; });
+  // Remove empty strings if any.
+  actual = filter(actual, lambda(string str) { return sizeof(str) > 0; });
+  expected_ = filter(expected_, lambda(string str) { return sizeof(str) > 0; });
+  TEST_EQUAL(sort(expected_), sort(actual));
+  return equal(sort(expected_), sort(actual));
 }
-
 
 void setup();
 
@@ -271,7 +283,7 @@ void run_tests(Configuration conf)
       string url = (full_url/"#")[0];
       mapping(string:mixed) url_data = prot->urls[url];
       if (!test_true(mappingp, url_data)) continue;
-      
+
       report_debug("url data: %O\n", url_data);
       test_true(`==, url_data->conf, conf);
       test_true(`==, url_data->port, prot);
@@ -279,80 +291,99 @@ void run_tests(Configuration conf)
       test_true(stringp, url_data->path || "/");
 
       Standards.URI url_uri = Standards.URI(url, "http://*/");
-      base_uri =
-  Standards.URI(Stdio.append_path(url_data->path || "/",
-          webdav_mount_point), url_uri);
+      base_uri = Standards.URI(Stdio.append_path(url_data->path || "/",
+                                                 webdav_mount_point),
+                               url_uri);
       base_uri->port = prot->port;
       base_uri->host = prot->ip;
 
       if (basic_auth) {
-  base_uri->user = (basic_auth/":")[0];
-  base_uri->password = (basic_auth/":")[1..] * ":";
+        base_uri->user = (basic_auth/":")[0];
+        base_uri->password = (basic_auth/":")[1..] * ":";
       }
 
       report_debug("Webdav testsuite: Base URI: %s\n", (string)base_uri);
 
       base_headers = ([
-  "host": url_uri->host,
-  "user-agent": "Roxen WebDAV Tester",
+        "host": url_uri->host,
+        "user-agent": "Roxen WebDAV Tester",
       ]);
 
       con = 0;  // Make sure that we get a new connection.
 
-      mapping(string:string) locks = ([]);
-
-      // Clean the test directory.
-      test_true(webdav_delete, "/", locks);
-      test_true(webdav_mkcol, "/");
-
-      test_true(webdav_ls, "/", ({}));
-
-      // Test trivial uploads to existing and non-existing directories.
-      test_true(webdav_put, "/test_file.txt", "TEST FILE\n");
-      //test_false(webdav_put, "/test_dir/test_file.txt", "TEST FILE\n");
-
-      test_true(webdav_ls, "/", ({ "test_file.txt" }));
-
-      // Test locking and upload.
-      test_true(webdav_lock, "/test_file.txt", locks);
-      test_false(webdav_lock, "/test_file.txt", ([]));
-      test_false(webdav_put, "/test_file.txt", "TEST FILE 2\n");
-      test_false(webdav_delete, "/test_file.txt", locks);
-      current_locks = locks + ([]);
-      test_true(webdav_put, "/test_file.txt", "TEST FILE 3\n");
-      test_true(webdav_unlock, "/test_file.txt", locks);
-      test_false(webdav_put, "/test_file.txt", "TEST FILE 4\n");
-      current_locks = locks + ([]);
-      test_true(webdav_put, "/test_file.txt", "TEST FILE 5\n");
-      test_true(webdav_lock, "/test_file.txt", locks);
-      test_false(webdav_delete, "/test_file.txt", locks);
-      current_locks = locks + ([]);
-      test_true(webdav_delete, "/test_file.txt", locks);
-      test_false(webdav_put, "/test_file.txt", "TEST FILE 6\n");
-      current_locks = locks + ([]);
-      test_true(webdav_put, "/test_file.txt", "TEST FILE 7\n");
-      test_true(webdav_delete, "/test_file.txt", locks);
-
-      //test_false(webdav_mkcol, "/test_dir/sub_dir");
-      test_true(webdav_mkcol, "/test_dir");
-      test_true(webdav_mkcol, "/test_dir/sub_dir");
-      test_true(webdav_put, "/test_dir/test_file.txt", "TEST FILE\n");
-
-      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
-      test_false(webdav_move, "/test_dir/test_file.txt", "/test_file.txt", locks);
-      test_true(webdav_copy, "/test_dir/test_file.txt", "/test_file.txt");
-      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
-      current_locks = locks + ([]);
-      test_true(webdav_move, "/test_dir/test_file.txt", "/test_file_2.txt", locks);
-      // NB: /test_dir/test_file.txt lock invalidated by the move above.
-      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
-      current_locks = locks + ([]);
-      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
-      test_true(webdav_lock, "/test_dir/test_file.txt", locks);
-      test_false(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
-      current_locks = locks + ([]);
-      test_true(webdav_copy, "/test_file.txt", "/test_dir/test_file.txt");
-      test_true(webdav_unlock, "/test_dir/test_file.txt", locks);
+      do_run_tests();
     }
   }
+}
+
+string get_testdir();
+
+void do_run_tests() {
+
+  string testdir = get_testdir();
+  if (!has_prefix(testdir, "/")) {
+    testdir = "/" + testdir;
+  }
+  if (!has_suffix(testdir, "/")) {
+    // Saves us from having to use Stdio.append_path like a million times
+    // below...
+    testdir += "/";
+  }
+
+  report_debug("Webdav: testdir is: %O\n", testdir);
+
+  mapping(string:string) locks = ([]);
+
+  // Clean the test directory.
+  test_true(webdav_delete, testdir, locks);
+  test_true(webdav_mkcol, testdir);
+  test_true(webdav_ls, testdir, ({ testdir }));
+
+  // Test trivial uploads to existing and non-existing directories.
+  test_true(webdav_put, testdir+"test_file.txt", "TEST FILE\n");
+  //test_false(webdav_put, "/test_dir/test_file.txt", "TEST FILE\n");
+
+  test_true(webdav_ls, testdir, ({ testdir,
+                                   testdir+"test_file.txt" }));
+
+  // Test locking and upload.
+  test_true(webdav_lock, testdir+"test_file.txt", locks);
+  test_false(webdav_lock, testdir+"test_file.txt", ([]));
+  test_false(webdav_put, testdir+"test_file.txt", "TEST FILE 2\n");
+  test_false(webdav_delete, testdir+"test_file.txt", locks);
+  current_locks = locks + ([]);
+  test_true(webdav_put, testdir+"test_file.txt", "TEST FILE 3\n");
+  test_true(webdav_unlock, testdir+"test_file.txt", locks);
+  test_false(webdav_put, testdir+"test_file.txt", "TEST FILE 4\n");
+  current_locks = locks + ([]);
+  test_true(webdav_put, testdir+"test_file.txt", "TEST FILE 5\n");
+  test_true(webdav_lock, testdir+"test_file.txt", locks);
+  test_false(webdav_delete, testdir+"test_file.txt", locks);
+  current_locks = locks + ([]);
+  test_true(webdav_delete, testdir+"test_file.txt", locks);
+  test_false(webdav_put, testdir+"test_file.txt", "TEST FILE 6\n");
+  current_locks = locks + ([]);
+  test_true(webdav_put, testdir+"test_file.txt", "TEST FILE 7\n");
+  test_true(webdav_delete, testdir+"test_file.txt", locks);
+
+  //test_false(webdav_mkcol, "/test_dir/sub_dir");
+  test_true(webdav_mkcol, testdir+"test_dir");
+  test_true(webdav_mkcol, testdir+"test_dir/sub_dir");
+  test_true(webdav_put, testdir+"test_dir/test_file.txt", "TEST FILE\n");
+
+  test_true(webdav_lock, testdir+"test_dir/test_file.txt", locks);
+  test_false(webdav_move, testdir+"test_dir/test_file.txt", testdir+"test_file.txt", locks);
+  test_true(webdav_copy, testdir+"test_dir/test_file.txt", testdir+"test_file.txt");
+  test_false(webdav_copy, testdir+"test_file.txt", testdir+"test_dir/test_file.txt");
+  current_locks = locks + ([]);
+  test_true(webdav_move, testdir+"test_dir/test_file.txt", testdir+"test_file_2.txt", locks);
+  // NB: /test_dir/test_file.txt lock invalidated by the move above.
+  test_false(webdav_copy, testdir+"test_file.txt", testdir+"test_dir/test_file.txt");
+  current_locks = locks + ([]);
+  test_true(webdav_copy, testdir+"test_file.txt", testdir+"test_dir/test_file.txt");
+  test_true(webdav_lock, testdir+"test_dir/test_file.txt", locks);
+  test_false(webdav_copy, testdir+"test_file.txt", testdir+"test_dir/test_file.txt");
+  current_locks = locks + ([]);
+  test_true(webdav_copy, testdir+"test_file.txt", testdir+"test_dir/test_file.txt");
+  test_true(webdav_unlock, testdir+"test_dir/test_file.txt", locks);
 }
