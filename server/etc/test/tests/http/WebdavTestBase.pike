@@ -24,9 +24,11 @@ int filesystem_check_exists(string path);
 
 string filesystem_read_file(string path);
 
-int filesystem_check_content(string path, string data)
+int filesystem_check_content(string path, string expected_data)
 {
-  return filesystem_read_file(path) == data;
+  string actual_data = filesystem_read_file(path);
+  TEST_EQUAL(actual_data, expected_data);
+  return actual_data == expected_data;
 }
 
 int filesystem_compare_files(string first_path, string other_path)
@@ -195,7 +197,9 @@ int webdav_move(string src_path, string dst_path, mapping(string:string) locks)
   if (!((res[0] >= 200) && (res[0] < 300))) return 0;
 
   low_recursive_unlock(src_path, locks);
-
+  test_false(filesystem_check_exists, src_path);
+  test_true(filesystem_check_exists, dst_path);
+  test_true(filesystem_check_content, dst_path, expected_content);
   return
     !filesystem_check_exists(src_path) &&
     filesystem_check_content(dst_path, expected_content);
