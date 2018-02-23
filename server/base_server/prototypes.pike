@@ -2949,12 +2949,15 @@ class RequestID
   protected function charset_function(function|string what, int allow_entities)
   {
     if (functionp(what)) return what;
-    switch (what) {
+    switch (upper_case(what)) {
     case "ISO-10646-1":
     case "ISO10646-1":
+    case "ISO-10646":
+    case "ISO10646":
       return string_to_unicode;
 
     case "UTF-8":
+    case "UTF8":
       return string_to_utf8;
 
     default:
