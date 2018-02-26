@@ -28,7 +28,7 @@ Charset.Decoder charset_decoder;
 // NOTE: If we ever want to support more than one template, this
 // optimization has to be removed, or at least changed to index on the
 // directory of f.
-string ctmpl; 
+string ctmpl;
 string template_for( string f, object id )
 {
   if( ctmpl ) return ctmpl;
@@ -48,7 +48,7 @@ array(string|Stat) low_stat_file(string f, object id)
     return stat_cache[ f ];
 #ifdef __NT__
   string of = f;
-  while(strlen(f) && f[-1]=='/') 
+  while(strlen(f) && f[-1]=='/')
     f = f[..strlen(f)-2];
 #else
 #define of f
@@ -202,7 +202,7 @@ mixed find_file( string f, RequestID id )
 	roxen.adminrequest_get_context(" no-auth ", host, id);
 	break request_auth;
       }
-      
+
       //  Authenticate in root directory to avoid repeated browser dialogs.
       //  We add an exception for the change_user wizard.
       string mountpt = query("location");
@@ -212,7 +212,7 @@ mixed find_file( string f, RequestID id )
 	string redir = Roxen.http_encode_url(id->raw_url);
 	return Roxen.http_redirect(mountpt + "?auth_redir=" + redir, id);
       }
-      
+
       report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen Administration Interface",
 					   roxen.config_userdb_module );
@@ -242,7 +242,7 @@ mixed find_file( string f, RequestID id )
     else
       charset_decoder = 0;
     id->since = 0;
-    catch 
+    catch
     {
       if( !id->misc->request_charset_decoded && encoding != "iso-8859-1" )
       {
@@ -279,8 +279,8 @@ mixed find_file( string f, RequestID id )
 
   string type="";
   mixed retval;
-  catch( locale = (id->misc->language || config_setting( "locale" )) ); 
-  
+  catch( locale = (id->misc->language || config_setting( "locale" )) );
+
   if( !id->misc->internal_get )
   {
     id->misc->cf_locale = locale;
@@ -294,7 +294,7 @@ mixed find_file( string f, RequestID id )
     else
       type = id->conf->type_from_filename( id->not_query );
 
-    if( locale != "standard" ) 
+    if( locale != "standard" )
       roxen.set_locale( locale );
 
     if (glob("text*", type))
@@ -365,7 +365,7 @@ mixed find_file( string f, RequestID id )
   if( id->variables["content-type"] )
     return Roxen.http_file_answer( retval, id->variables["content-type"] );
 #endif
-  
+
   if( !retval )
     return 0;
 
@@ -376,7 +376,7 @@ mixed find_file( string f, RequestID id )
 
     if( stringp( retval ) )
       data = retval;
-    else 
+    else
       data = retval->read();
 
     if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
@@ -394,14 +394,14 @@ mixed find_file( string f, RequestID id )
     if(!id->misc->defines)
       id->misc->defines = ([]);
     id->misc->defines[" _stat"] = id->misc->stat;
-     
+
     mixed error;
     error = catch( retval = Roxen.http_rxml_answer( data, id ) );
     if( locale != "standard" )
       roxen.set_locale( "standard" );
     if( error )
       throw( error );
-    
+
     if(!is_docs)
     {
       NOCACHE();
@@ -528,7 +528,7 @@ void start(int n, Configuration cfg)
       m->save(); // also forces call to start
     }
 #ifdef DEBUG
-    else 
+    else
       report_warning( "Failed to enable the pikescript module.\n" );
 #endif
   }
