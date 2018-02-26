@@ -462,3 +462,20 @@ section {
     margin-bottom: $spacing-unit/2;
   }
 }
+
+.main-column-bg {
+  background-color: $main-column-bg;
+
+  tr {
+    background-color: $main-column-bg;
+  }
+}
+
+.sticky {
+  position: -webkit-sticky;
+  position: -moz-sticky;
+  position: -ms-sticky;
+  position: -o-sticky;
+  position: sticky;
+  top: 0;
+}

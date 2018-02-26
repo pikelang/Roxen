@@ -24,14 +24,16 @@ string format_hit_rate (int|float hits, int|float misses)
 // Should use external css instead. I'm lazy..
 #define TABLE_ATTRS                                                     \
   "class='nice narrow'"
+#define THEAD_ATTRS                                                     \
+  "class='sticky'"
 #define HDR_TR_ATTRS                                                    \
-  "class='text-right'"
+  ""
 #define BODY_TR_ATTRS(ROW)                                              \
   ""
 #define FTR_TR_ATTRS                                                    \
   "class='text-right'"
 #define FIRST_CELL                                                      \
-  ""
+  "class='text-left'"
 #define REST_CELLS                                                      \
   "class='nowrap text-right'"
 
@@ -71,7 +73,7 @@ them. They will shrink to the configured maximum size as they fill up."),
              "<b>" + Roxen.sizetostring (cache->total_size_limit) + "</b>") +
     "</p>\n"
     "<table " TABLE_ATTRS ">\n"
-    "<thead>"
+    "<thead " THEAD_ATTRS ">"
     "<tr " HDR_TR_ATTRS ">"
     "<th " FIRST_CELL ">" + LOCALE(382, "Cache manager") + "</th>"
     "<th " REST_CELLS ">" + LOCALE(64, "Size") + "</th>"
@@ -99,7 +101,7 @@ them. They will shrink to the configured maximum size as they fill up."),
 
       string table =
         "<table " TABLE_ATTRS ">\n"
-        "<thead>"
+        "<thead " THEAD_ATTRS ">"
         "<tr " HDR_TR_ATTRS ">"
         "<th " FIRST_CELL ">"+LOCALE(402, "Cache")+"</th>"
         "<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"

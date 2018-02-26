@@ -144,7 +144,7 @@ string parse( RequestID id )
 
   string tmpl = #"
     <table class='nice'>
-      <thead>
+      <thead class='sticky'>
         <tr>
         {{ #headers }}
           <th class='text-right'>{{ fd }}</th>

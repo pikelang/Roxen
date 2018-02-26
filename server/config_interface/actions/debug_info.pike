@@ -88,7 +88,7 @@ string render_table(mapping last_usage, mapping mem_usage)
 #define TCELL(tdargs, color, text)                                      \
   ("<td " + tdargs + ">" + text + "</td>")
 
-  res += "<table class='mem'><thead><tr>\n" +
+  res += "<table class='mem'><thead class='sticky main-column-bg'><tr>\n" +
     HCELL ("", "", (string)LOCALE(3,"Type")) +
     HCELL ("class='text-right'", "", (string)LOCALE(4,"Number")) +
     HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
@@ -332,7 +332,8 @@ mixed page_0( object id )
 
   roxen->set_var("__num_clones", save_numobjs);
 
-  res += "<hr class='section'><table class='small mem'><thead><tr>\n" +
+  res += "<hr class='section'><table class='small mem'>"
+    "<thead class='sticky main-column-bg'><tr>\n" +
     HCELL ("", "", (string)LOCALE(141,"Source")) +
     HCELL ("", "", (string)LOCALE(142,"Program")) +
     HCELL ("class='text-right'", "", (string)LOCALE(403,"References")) +
