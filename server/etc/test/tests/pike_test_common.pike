@@ -183,7 +183,9 @@ mixed test_really_generic( function check_return, function(void:mixed) test_fn,
     report_test_failure( err, test_text, test_text_args, st );
     throw( err );
   }
-  if( check_return )
+  if( check_return && throw_error )
+     check_return( result, err, test_text, test_text_args, st, throw_error );
+  else if( check_return )
     check_return( result, err, test_text, test_text_args,st );
   else if( err )
     report_test_failure( err, test_text, test_text_args,st );
@@ -240,12 +242,21 @@ void check_is_configuration( mixed res, mixed err,
 }
 
 void silent_check_true( mixed res, mixed err,
-                        function|string|array cb, array args, int st )
+                        function|string|array cb, array args, int st,
+                        bool|void throw_error )
 {
-  if (err || !res)
+  if( err || !res ) {
     report_test_failure( err, cb, args, st );
-  else
+    if( throw_error ) {
+      if( err ) {
+        throw( err );
+      } else {
+        error( "Condition failed" );
+      }
+    }
+  } else {
     report_test_ok( 0, cb, args, st );
+  }
 }
 
 void check_true( mixed res, mixed err,
@@ -258,16 +269,15 @@ void check_true( mixed res, mixed err,
       throw( err );
     }
   }
-  else
-    if( !res ) {
-      report_test_failure( sprintf ("expected non-zero, got %O", res),
-                           cb, args, st);
-      if( throw_error ) {
-        error( sprintf ("expected non-zero, got %O", res) );
-      }
+  else if( !res ) {
+    report_test_failure( sprintf ("expected non-zero, got %O", res),
+                         cb, args, st);
+    if( throw_error ) {
+      error( sprintf ("expected non-zero, got %O", res) );
     }
-    else
-      report_test_ok( err, cb, args, st );
+  } else {
+    report_test_ok( err, cb, args, st );
+  }
 }
 
 private void assert_result_true( mixed res, mixed err,
