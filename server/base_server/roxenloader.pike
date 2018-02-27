@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.475 2012/02/29 13:13:52 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1380,6 +1380,11 @@ void add_package(string package_dir)
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
   }
+#ifdef RUN_SELF_TEST
+  if (r_is_dir(sub_dir = combine_path(package_dir, "test/modules/"))) {
+    package_module_path += ({ sub_dir });
+  }
+#endif
 }
 
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.243 2012/01/17 10:52:44 grubba Exp $
+# $Id$
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -185,6 +185,7 @@ setup_for_tests() {
     fi
     self_test=y
     DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
+    DEFINES="$DEFINES \"-M$roxendir/etc/test/modules\""
     rm -rf "$VARDIR/test_config"*
     DIR="$VARDIR/test_config"
     if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then
