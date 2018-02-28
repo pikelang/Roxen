@@ -25,7 +25,7 @@
 //!   {{/names}}
 //! </ul>";
 //!
-//! Public.Templates.Mustasche stash = Public.Templates.Mustasche();
+//! Mustache stash = Mustache();
 //!
 //! // Not strictly necessary, but this pre-parses and caches the template
 //! stash->parse(tmpl);
@@ -40,9 +40,9 @@
 //!   })
 //! ]);
 //!
-//! string html = stash.render(tmpl, data,
-//!                            ([ "name_row" :
-//!                               "<li>{{name}} is {{age}} years old</li>"]));
+//! string html = stash->render(tmpl, data,
+//!                             ([ "name_row" :
+//!                                "<li>{{name}} is {{age}} years old</li>"]));
 //! @endcode
 //!
 //! The output of the above would be something like
@@ -64,6 +64,34 @@ import Regexp.PCRE;
 #else
 # define TRACE(X...)0
 #endif
+
+
+//! Parses and caches the given template in the default writer and returns the
+//! array of tokens it contains. Doing this ahead of time avoids the need to
+//! parse templates on the fly as they are rendered.
+//!
+//! @param template
+//!  Mustache template
+//!
+//! @param tags
+//!  Optional tags to use instead of the default @tt{ {{ }} @}
+public array(Token) parse(string template, void|array(string) tags)
+{
+  return parse_template(template, tags);
+}
+
+//! Renders the @[template] with the given @[view] and @[partials].
+public string render(string template, mixed view, void|mixed partials)
+{
+  return render_template(template, view, partials);
+}
+
+//! Clears all cached templates
+public void clear_cache()
+{
+  __cache = ([]);
+}
+
 
 //! @ignore
 //! Internal helper class
@@ -137,7 +165,7 @@ protected mapping entity_map = ([
 ]);
 
 //! HTML escape the string @[s]
-public string escape_html(string s)
+protected string escape_html(string s)
 {
   return _re_escape_html->replace(s, lambda (string a) {
     return entity_map[a] || a;
@@ -306,14 +334,14 @@ protected class Token
 
   string _sprintf(int t)
   {
-    return sprintf("({ %O, %O, %O, %O, %O, %O })",
+    return sprintf("Token({ %O, %O, %O, %O, %O, %O })",
                    type, value, start, end, extra, extra2);
   }
 
 #ifdef MUSTACHE_DEBUG
   protected void destroy()
   {
-    TRACE("Token destroyed!\n");
+    TRACE("Token(%O, ...) destroyed!\n", type);
   }
 #endif
 }
@@ -323,7 +351,8 @@ protected class Token
 //! the opening and closing tags used in the template (e.g.
 //! @tt{[ "<%", "%>" ]@}). Of course, the default is to use mustaches
 //! (i.e. mustache.tags).
-array(Token) parse_template(string|function template, void|array(string) _tags)
+protected array(Token)
+low_parse_template(string|function template, void|array(string) _tags)
 {
   if (functionp(template)) {
     template = (string)template(0);
@@ -341,38 +370,40 @@ array(Token) parse_template(string|function template, void|array(string) _tags)
 
   // Strips all whitespace tokens array for the current line
   // if there was a {{#tag}} on it and otherwise only space.
-  void strip_space() {
-    if (has_tag && !none_space) {
-      while (sizeof(spaces)) {
-        int t = spaces[-1];
-        spaces = spaces[..<1];
-        tokens[t] = 0;
-        tokens -= ({ 0 });
-      }
-    }
-    else {
-      spaces = ({});
-    }
-
-    has_tag = false;
-    none_space = false;
-  };
+#define strip_space() do {        \
+    if (has_tag && !none_space) { \
+      while (sizeof(spaces)) {    \
+        int t = spaces[-1];       \
+        spaces = spaces[..<1];    \
+        tokens[t] = 0;            \
+        tokens -= ({ 0 });        \
+      }                           \
+    }                             \
+    else {                        \
+      spaces = ({});              \
+    }                             \
+                                  \
+    has_tag = false;              \
+    none_space = false;           \
+  } while (0);
 
   Re opening_tag_re, closing_tag_re, closing_curly_re;
 
-  void compile_tags(string|array(string) t) {
-    if (stringp(t)) {
-      t = _re_space->split(t);
-    }
-
-    if (!arrayp(t) || sizeof(t) != 2) {
-      error("Invalid tags: %O\n", t);
-    }
-
-    opening_tag_re   = Re(escape_regexp(t[0]) + "\\s*");
-    closing_tag_re   = Re("\\s*" + escape_regexp(t[1]));
-    closing_curly_re = Re("\\s*" + escape_regexp("}" + t[1]));
-  };
+  // string|array(string) t
+#define compile_tags(T) do {                                     \
+    string|array(string) __t = (T);                              \
+    if (stringp(__t)) {                                          \
+      __t = _re_space->split(__t);                               \
+    }                                                            \
+                                                                 \
+    if (!arrayp(__t) || sizeof(__t) != 2) {                      \
+      error("Invalid tags: %O\n", __t);                          \
+    }                                                            \
+                                                                 \
+    opening_tag_re   = Re(escape_regexp(__t[0]) + "\\s*");       \
+    closing_tag_re   = Re("\\s*" + escape_regexp(__t[1]));       \
+    closing_curly_re = Re("\\s*" + escape_regexp("}" + __t[1])); \
+  } while (0);
 
   compile_tags(_tags || tags);
 
@@ -622,15 +653,6 @@ protected array(Token) nest_tokens(array(Token) tokens)
   }
 
   array(Token) my_toks = (array(object(Token))) nested_tokens;
-
-  // TRACE(">>> nest_tokens leave\n");
-
-  destruct(collector);
-  destruct(sections);
-  destruct(nested_tokens);
-
-  // TRACE("my_toks: %O\n", my_toks);
-
   return my_toks;
 }
 
@@ -731,221 +753,201 @@ protected class Context
 }
 
 
-//! A Writer knows how to take a stream of tokens and render them to a
-//! string, given a context. It also maintains a cache of templates to
-//! avoid the need to parse the same template twice.
-protected class Writer
+//! @ignore
+//! Template cache
+private mapping __cache = set_weak_flag(([]), Pike.WEAK);
+//! @endignore
+
+//! Parses and caches the given @[template] and returns the array of tokens
+//! that is generated from the parse.
+protected array(Token)
+parse_template(string|function template, void|array(string) tags)
 {
-  private mapping __cache = ([]);
+  array(Token) tokens = __cache[template];
 
-  //! Clears all cached templates in this writer.
-  public void clear_cache()
-  {
-    __cache = ([]);
+  if (!tokens) {
+    tokens = __cache[template] = low_parse_template(template, tags);
   }
 
-  //! Parses and caches the given @[template] and returns the array of tokens
-  //! that is generated from the parse.
-  public array(Token) parse(string template, void|array(string) tags)
-  {
-    array(Token) tokens = __cache[template];
+  return tokens;
+}
 
-    if (!tokens) {
-      tokens = __cache[template] = parse_template(template, tags);
+//! High-level method that is used to render the given @[template] with
+//! the given @[view].
+//!
+//! The optional @[partials] argument may be an object/mapping that contains
+//! the names and templates of partials that are used in the template. It may
+//! also be a function that is used to load partial templates on the fly
+//! that takes a single argument: the name of the partial.
+protected string render_template(string template, mixed view,
+                                 void|mixed partials)
+{
+  array(Token) tokens = parse_template(template);
+  Context ctx = objectp(view) && object_program(view) == Context
+                  ? view
+                  : Context(view);
+
+  string res = render_tokens(tokens, ctx, partials, template);
+  return res;
+}
+
+
+//! Low-level method that renders the given array of @[tokens] using
+//! the given @[context] and @[partials].
+//!
+//! Note: The @[template] is only ever used to extract the portion
+//! of the original template that was contained in a higher-order section.
+//! If the template doesn't use higher-order sections, this argument may
+//! be omitted.
+protected string render_tokens(array(Token) tokens, Context ctx,
+                               mixed partials, string template)
+{
+  String.Buffer buf = String.Buffer();
+  function add = buf->add;
+
+  Token token;
+  string symbol;
+  mixed value;
+  int len = sizeof(tokens);
+
+  for (int i; i < len; ++i) {
+    value = UNDEFINED;
+    token = tokens[i];
+    symbol = token[0];
+
+    switch (symbol) {
+      case "#":
+        value = render_section(token, ctx, partials, template);
+        break;
+
+      case "^":
+        value = render_inverted(token, ctx, partials, template);
+        break;
+
+      case ">":
+        value = render_partial(token, ctx, partials);
+        break;
+
+      case "&":
+        value = unescaped_value(token, ctx);
+        break;
+
+      case "name":
+        value = escaped_value(token, ctx);
+        break;
+
+      case "text":
+        value = raw_value(token);
+        break;
     }
-
-    return tokens;
-  }
-
-  //! High-level method that is used to render the given @[template] with
-  //! the given @[view].
-  //!
-  //! The optional @[partials] argument may be an object/mapping that contains
-  //! the names and templates of partials that are used in the template. It may
-  //! also be a function that is used to load partial templates on the fly
-  //! that takes a single argument: the name of the partial.
-  public string render(string template, mixed view,
-                       void|mixed partials)
-  {
-    array(Token) tokens = parse(template);
-    Context ctx = objectp(view) && object_program(view) == Context
-                    ? view
-                    : Context(view);
-
-    string res = render_tokens(tokens, ctx, partials, template);
-    // map(tokens, lambda (Token t) {
-    //   TRACE("Destroy: %O\n", t);
-    //   destruct(t);
-    // });
-    tokens = 0;
-    return res;
-  }
-
-
-  //! Low-level method that renders the given array of @[tokens] using
-  //! the given @[context] and @[partials].
-  //!
-  //! Note: The @[template] is only ever used to extract the portion
-  //! of the original template that was contained in a higher-order section.
-  //! If the template doesn't use higher-order sections, this argument may
-  //! be omitted.
-  protected string render_tokens(array(Token) tokens, Context ctx,
-                                 mixed partials, string template)
-  {
-    String.Buffer buf = String.Buffer();
-    function add = buf->add;
-
-    Token token;
-    string symbol;
-    mixed value;
-    int len = sizeof(tokens);
-
-    for (int i; i < len; ++i) {
-      value = UNDEFINED;
-      token = tokens[i];
-      symbol = token[0];
-
-      switch (symbol) {
-        case "#":
-          value = render_section(token, ctx, partials, template);
-          break;
-
-        case "^":
-          value = render_inverted(token, ctx, partials, template);
-          break;
-
-        case ">":
-          value = render_partial(token, ctx, partials);
-          break;
-
-        case "&":
-          value = unescaped_value(token, ctx);
-          break;
-
-        case "name":
-          value = escaped_value(token, ctx);
-          break;
-
-        case "text":
-          value = raw_value(token);
-          break;
-      }
-
-      if (value != UNDEFINED) {
-        add(value);
-      }
-    }
-
-    return buf->get();
-  }
-
-
-  protected string render_section(Token token, Context ctx, mixed partials,
-                                  string template)
-  {
-    String.Buffer b = String.Buffer();
-    function add = b->add;
-    mixed value = ctx->lookup(token[1]);
-
-    if (!value) {
-      return "";
-    }
-
-    // This function is used to render an arbitrary template
-    // in the current context by higher-order sections.
-    string subrender(string tmpl) {
-      return render(tmpl, ctx, partials);
-    };
-
-    if (multisetp(value)) {
-      value = (array)value;
-    }
-
-    if (arrayp(value)) {
-      int len = sizeof(value);
-
-      for (int j; j < len; ++j) {
-        add(render_tokens(token[4], ctx->push(value[j]), partials, template));
-      }
-    }
-    else if (objectp(value) || mappingp(value)) {
-      add(render_tokens(token[4], ctx->push(value), partials, template));
-    }
-    else if (functionp(value)) {
-      if (!stringp(template)) {
-        error("Cannot use higher-order sections without the original template");
-      }
-
-      value = value(ctx->view, template[token[3]..token[5]-1], subrender);
-
-      if (value && sizeof(value)) {
-        add(value);
-      }
-    }
-    else {
-      add(safe_string(render_tokens(token[4], ctx, partials, template)));
-    }
-
-    return b->get();
-  }
-
-
-  string render_inverted(Token token, Context ctx, mixed partials,
-                         string template)
-  {
-    mixed value = ctx->lookup(token[1]);
-
-    if (falsy(value)) {
-      return render_tokens(token[4], ctx, partials, template);
-    }
-  }
-
-
-  string render_partial(Token token, Context ctx, mixed partials)
-  {
-    if (!partials) {
-      return UNDEFINED;
-    }
-
-    mixed value = callablep(partials) ? partials(token[1]) : partials[token[1]];
-
-    if (value) {
-      return render_tokens(parse(value), ctx, partials, value);
-    }
-  }
-
-
-  string unescaped_value(Token token, Context ctx)
-  {
-    mixed value = ctx->lookup(token[1]);
-
-    if (value) {
-      return (string) value;
-    }
-  }
-
-
-  string escaped_value(Token token, Context ctx)
-  {
-    mixed value = ctx->lookup(token[1]);
 
     if (value != UNDEFINED) {
-      return escape_html((string)value);
+      add(value);
     }
   }
 
+  return buf->get();
+}
 
-  string raw_value(Token token)
-  {
-    return (string) token[1];
+
+protected string render_section(Token token, Context ctx, mixed partials,
+                                string template)
+{
+  String.Buffer b = String.Buffer();
+  function add = b->add;
+  mixed value = ctx->lookup(token[1]);
+
+  if (!value) {
+    return "";
   }
 
-#ifdef MUSTACHE_DEBUG
-  protected void destroy()
-  {
-    TRACE("Writer destroyed!\n");
+  // This function is used to render an arbitrary template
+  // in the current context by higher-order sections.
+  string subrender(string tmpl) {
+    return render_template(tmpl, ctx, partials);
+  };
+
+  if (multisetp(value)) {
+    value = (array)value;
   }
-#endif
+
+  if (arrayp(value)) {
+    int len = sizeof(value);
+
+    for (int j; j < len; ++j) {
+      add(render_tokens(token[4], ctx->push(value[j]), partials, template));
+    }
+  }
+  else if (objectp(value) || mappingp(value)) {
+    add(render_tokens(token[4], ctx->push(value), partials, template));
+  }
+  else if (functionp(value)) {
+    if (!stringp(template)) {
+      error("Cannot use higher-order sections without the original template");
+    }
+
+    value = value(ctx->view, template[token[3]..token[5]-1], subrender);
+
+    if (value && sizeof(value)) {
+      add(value);
+    }
+  }
+  else {
+    add(safe_string(render_tokens(token[4], ctx, partials, template)));
+  }
+
+  return b->get();
+}
+
+
+protected string render_inverted(Token token, Context ctx, mixed partials,
+                       string template)
+{
+  mixed value = ctx->lookup(token[1]);
+
+  if (falsy(value)) {
+    return render_tokens(token[4], ctx, partials, template);
+  }
+}
+
+
+protected string render_partial(Token token, Context ctx, mixed partials)
+{
+  if (!partials) {
+    return UNDEFINED;
+  }
+
+  mixed value = callablep(partials) ? partials(token[1]) : partials[token[1]];
+
+  if (value) {
+    return render_tokens(parse_template(value), ctx, partials, value);
+  }
+}
+
+
+protected string unescaped_value(Token token, Context ctx)
+{
+  mixed value = ctx->lookup(token[1]);
+
+  if (value) {
+    return (string) value;
+  }
+}
+
+
+protected string escaped_value(Token token, Context ctx)
+{
+  mixed value = ctx->lookup(token[1]);
+
+  if (value != UNDEFINED) {
+    return escape_html((string)value);
+  }
+}
+
+
+protected string raw_value(Token token)
+{
+  return (string) token[1];
 }
 
 protected mixed safe_string(mixed i)
@@ -960,30 +962,6 @@ protected mixed safe_string(mixed i)
   };
 
   return i;
-}
-
-protected Writer default_writer = Writer();
-
-
-//! Clears all cached templates in the default writer.
-public void clear_cache()
-{
-  default_writer->clear_cache();
-}
-
-//! Parses and caches the given template in the default writer and returns the
-//! array of tokens it contains. Doing this ahead of time avoids the need to
-//! parse templates on the fly as they are rendered.
-public array(Token) parse(string template, void|array(string) tags)
-{
-  return default_writer->parse(template, tags);
-}
-
-//! Renders the @[template] with the given @[view] and @[partials] using the
-//! default writer.
-public string render(string template, mixed view, void|mixed partials)
-{
-  return default_writer->render(template, view, partials);
 }
 
 //! Is the value @[v] a @tt{falsy@} value or not. It's faly if it's
