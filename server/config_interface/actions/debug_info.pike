@@ -46,7 +46,7 @@ string render_table(mapping last_usage, mapping mem_usage)
       string bn = f[4..sizeof(f)-2]+"_bytes";
       mem_usage->total_bytes += factor*mem_usage[ bn ];
 
-      string col ="&usr.warncolor;";
+      string col ="";
 
       int diff = (mem_usage[bn]-last_usage[bn])*factor;
       int cmp = factor*mem_usage[bn]/60;
@@ -58,18 +58,12 @@ string render_table(mapping last_usage, mapping mem_usage)
       }
 
       if(diff < cmp) {
-        TRACE("Warn\n");
-        // col="&usr.warncolor;";
         col = "more";
       }
       if(diff == 0) {
-        TRACE("Equal\n");
-        // col="&usr.fgcolor;";
         col = "equal";
       }
       if(diff < 0) {
-        TRACE("Less than\n");
-        // col="&usr.fade4;";
         col = "less";
       }
 
