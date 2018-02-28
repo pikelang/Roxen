@@ -34,7 +34,7 @@ string extract_nonfluff(string from)
     return "Error fetching news";
   }
 
-  return Mustache()->render(tmpl, items);
+  return Roxen.render_mustache(tmpl, items);
 }
 
 string parse(RequestID id)

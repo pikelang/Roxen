@@ -166,13 +166,10 @@ string parse( RequestID id )
       </tbody>
     </table>";
 
-  Mustache stash = Mustache();
   string out =
     "<cf-title>" +LOCALE(23, "Active filedescriptors")+ "</cf-title>"
     "<hr class='section'>" +
-    stash->render(tmpl, ctx);
-
-  destruct(stash);
+    Roxen.render_mustache(tmpl, ctx);
 
   return out;
 }

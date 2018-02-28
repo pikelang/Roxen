@@ -685,9 +685,7 @@ string low_port_for(array(Protocol|array(string)) port_info, int settings)
     "cw_and"      : LOCALE("cw","and")
   ]);
 
-  Mustache stache = Mustache();
-  string x = stache->render(tmpl, mctx);
-  destruct(stache);
+  string x = Roxen.render_mustache(tmpl, mctx);
 
   // TRACE("My res: %s\n", x);
 
@@ -1108,9 +1106,7 @@ string module_priorities_page( RequestID id, Configuration c)
   // TRACE("mctx: %O\n", mctx);
 
 
-  Mustache stache = Mustache();
-  string ret = stache->render(tmpl, mctx);
-  destruct(stache);
+  string ret = Roxen.render_mustache(tmpl, mctx);
 
   return ret + "<hr class='section'><cf-save/>";
 }

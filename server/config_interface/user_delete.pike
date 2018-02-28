@@ -46,9 +46,7 @@ mixed parse( RequestID id )
     ]) });
   }
 
-  Mustache stache = Mustache();
-  string ret = stache->render(tmpl, mctx);
-  destruct(stache);
+  string ret = Roxen.render_mustache(tmpl, mctx);
 
   return Roxen.http_string_answer(ret);
 }

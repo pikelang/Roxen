@@ -115,7 +115,7 @@ string page_base(RequestID id, string content, int|void noform,
     ])
   ]);
 
-  return Mustache()->render(tmpl, ctx);
+  return Roxen.render_mustache(tmpl, ctx);
 }
 
 string module_name_from_file( string file )
@@ -461,7 +461,7 @@ function describe_module_normal(void|bool faster)
         "deprecated" : module->deprecated
       ]);
 
-      return Mustache()->render(tmpl, ctx);
+      return Roxen.render_mustache(tmpl, ctx);
     }
 
     return "";

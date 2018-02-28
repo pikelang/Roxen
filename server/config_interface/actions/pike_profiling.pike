@@ -150,9 +150,7 @@ mixed page_0(object id)
     "data"    : rows
   ]);
 
-  Mustache stash = Mustache();
-  string res = stash->render(tmpl, data);
-  destruct(stash);
+  string res = Roxen.render_mustache(tmpl, data);
 
   return res;
 }

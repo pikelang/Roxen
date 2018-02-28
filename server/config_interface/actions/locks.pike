@@ -143,11 +143,7 @@ string parse( RequestID id )
     "rows" : rows
   ]);
 
-  Mustache stache = Mustache();
-  string out = stache->render(tmpl, mctx);
-  destruct(stache);
-  // werror("mctx: %O\n", rows);
-
+  string out = Roxen.render_mustache(tmpl, mctx);
 
   return data + out + "<p><cf-ok /></p>";
 }

@@ -207,9 +207,7 @@ string selected_item(string q, Configuration c, RequestID id,
     stache_tmpl = Stdio.read_file(combine_path(__DIR__, "site_modules.mu"));
   }
 
-  Mustache my_stache = Mustache();
-  string res = my_stache->render(stache_tmpl, m_state);
-  destruct(my_stache);
+  string res = Roxen.render_mustache(stache_tmpl, m_state);
 
   return "<eval>" + res + "</eval>";
 }

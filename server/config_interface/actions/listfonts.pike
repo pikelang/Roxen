@@ -62,10 +62,7 @@ string list_font(string font)
     }
   }
 
-  Mustache m = Mustache();
-  string res = m->render(tmpl, data);
-  destruct(m);
-  return res;
+  return Roxen.render_mustache(tmpl, data);
 }
 
 string font_loaders( )

@@ -126,10 +126,7 @@ string describe_error(string err, array (int) times,
     "message"   : replace(fix_err(err), "\n", "<br />\n")
   ]);
 
-  Mustache stache = Mustache();
-  string out = stache->render(logitem_tmpl, mctx);
-
-  destruct(stache);
+  string out = Roxen.render_mustache(logitem_tmpl, mctx);
 
   return out;
 

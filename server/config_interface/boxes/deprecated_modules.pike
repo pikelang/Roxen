@@ -111,7 +111,7 @@ string parse(RequestID id)
     mod_cache = 0;
     deprecated_info = 0;
 
-    return Mustache()->render(tmpl, ctx);
+    return Roxen.render_mustache(tmpl, ctx);
   }
 
   return "";
