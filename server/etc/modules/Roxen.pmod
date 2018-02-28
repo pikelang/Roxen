@@ -202,6 +202,11 @@ object|array(object) parse_box_xml( string xml_file, string|void ident )
   return parse_xml_tmpl( "template", "box", xml_file, ident );
 }
 
+string render_mustache(string template, mixed view, void|mixed partials)
+{
+  return Mustache()->render(template, view, partials);
+}
+
 int ip_to_int(string ip)
 {
   int res;
