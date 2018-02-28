@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.254 2001/06/11 02:44:54 per Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1003,10 +1003,6 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
-  // For Pike 7.3
-  add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
-
-
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
   configuration_dir =
