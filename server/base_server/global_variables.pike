@@ -236,7 +236,8 @@ void set_up_ssl_variables( Protocol o )
 		  "<p>The Server Name Indication (SNI) extension sent by the "
 		  "TLS client will be used to choose a specific certificate "
 		  "for the connection from the set selected here.</p>\n"
-		  )));
+		  )))
+  ->set_render_full_width(true);
 
 #if 1
   // Old-style SSL Certificate variables.
