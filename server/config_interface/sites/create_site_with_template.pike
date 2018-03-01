@@ -225,7 +225,9 @@ string|mapping parse( RequestID id )
     string name = var->name()+"";
     string ret = "<div class='margin-bottom'><label class='large bold'>"+
       Roxen.html_encode_string(name)+": </label> "
-      ""+var->render_form(id, ([ "autosubmit":1 ]))+" "
+      "<span class='select-wrapper'>" +
+        var->render_form(id, ([ "autosubmit":1 ])) +
+      "</span> "
       "<submit-gbutton2 name='set_license'>Set</submit-gbutton2>"
       "</div>";
       if (sizeof(pre)) {
