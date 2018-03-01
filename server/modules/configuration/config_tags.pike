@@ -498,6 +498,7 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->value = var->query();
     res->type = var->type;
     res->group = var->group && var->group();
+    res->render_full_width = var->get_render_full_width();
   }
   return res;
 }
@@ -1289,7 +1290,7 @@ class TagCfRenderVariable
 #define var(X) RXML.get_var(X, "var")
 
   string tmpl = #"
-      <dl class='config-var'>
+      <dl class='config-var{{ #field.rfw }} render-full-width{{ /field.rfw }}'>
         <dt class='name'>{{ field.name }}</dt>
         <dd class='value{{ #changed }} changed{{ /changed }}'>
           {{> render_form }}
@@ -1326,7 +1327,8 @@ class TagCfRenderVariable
       mctx->field = ([
         "name" : _("name"),
         "form" : _("form"),
-        "doc"  : _("doc")
+        "doc"  : _("doc"),
+        "rfw"  : _("render_full_width")
       ]);
 
       // FIXME: I've currently disabled this option in the
