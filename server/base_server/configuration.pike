@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.668 2009/03/17 16:37:50 jonasw Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2515,6 +2515,12 @@ mapping|int get_file(RequestID id, int|void no_magic, int|void internal_get)
   return res;
 }
 
+protected string combine_combiners(string s)
+{
+  if (String.width(s) <= 8) return s;
+  return Unicode.normalize(s, "NFC");
+}
+
 array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 {
   array dir;
@@ -2562,6 +2568,9 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("");
       if(err)
 	throw(err);
+      if (arrayp(dir)) {
+	return map(dir, combine_combiners);
+      }
       return dir;
     }
     id->not_query=of;
@@ -2592,7 +2601,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 	  if(d->files) {
 	    TRACE_LEAVE("Got exclusive directory.");
 	    TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(d->files)));
-	    return d->files;
+	    return map(d->files, combine_combiners);
 	  } else
 	    TRACE_LEAVE("");
 	} else {
@@ -2627,7 +2636,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
   if(sizeof(dir))
   {
     TRACE_LEAVE(sprintf("Returning list of %d files.", sizeof(dir)));
-    return dir;
+    return map(dir, combine_combiners);
   }
   TRACE_LEAVE("Returning 'No such directory'.");
   return 0;
