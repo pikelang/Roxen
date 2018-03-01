@@ -203,6 +203,9 @@ class Variable
   protected mixed _initial; // default value
   protected string _path = sprintf("v%s",_id);   // used for forms
   protected LocaleString  __name, __doc, __group;
+  // If this is true the @[__name] will be rendered on a row before this
+  // variable instead of in columns.
+  protected bool _render_full_width = false;
 
   string diff( int render )
   //! Generate a html diff of the difference between the current
@@ -445,6 +448,24 @@ class Variable
   {
     __group = group;
     return this;
+  }
+
+  this_program set_render_full_width(bool doit)
+  //! If @[doit] is @tt{true@} the variable name and form field/s will be
+  //! rendered on separate rows instead of columns.
+  //!
+  //! @returns
+  //!  The object being called.
+  {
+    _render_full_width = doit;
+    return this;
+  }
+
+  bool get_render_full_width()
+  //! Returns whether this variable will be rendered in rows rather than
+  //! in columns.
+  {
+    return _render_full_width;
   }
 
   LocaleString type_hint(  )
@@ -2259,14 +2280,18 @@ class PortList
   inherit List;
   constant type="PortList";
 
+  protected bool _render_full_width = true;
+
   string render_row( string prefix, mixed val, int width )
   {
     string res = "<input type=hidden name='"+prefix+"' value='"+prefix+"' />";
 
     Standards.URI split = Standards.URI( val );
 
-    res += "<div class='rxn-port'><div class='form-table'><div class='port-url'>"
-           "<span class='select-wrapper'><select class='rxn-port-scheme' name='"+prefix+"prot'>";
+    res += "<div class='rxn-port'><div class='form-table'>"
+           "<div class='form-row port-url'>"
+           "<span class='form-cell select-wrapper'>"
+           "<select class='rxn-port-scheme' name='"+prefix+"prot'>";
     int default_port;
     foreach( sort(indices( roxenp()->protocols )), string p )
     {
@@ -2278,16 +2303,19 @@ class PortList
 	res += "<option>"+p+"</option>";
     }
     res += "</select></span>";
-    res += "<span class='rxn-port-text'>://</span>";
-    res += "<input type=text name='"+prefix+"host' value='"+
-           Roxen.html_encode_string(split->host)+"' class='rxn-port-host' />";
-    res += "<span class='rxn-port-text'>:</span>";
-    res += "<input type=number size=5 name='"+prefix+"port' value='"+
-      (split->port == default_port ? "" : split->port) +"' class='rxn-port-port' />";
-    res += "<span class='rxn-port-text'>/</span>";
-    res += "<input type=text name='"+prefix+"path' value='"+
+    res += "<span class='form-cell rxn-port-text'>://</span>";
+    res += "<span class='form-cell'><input type=text name='"+prefix+"host' value='"+
+           Roxen.html_encode_string(split->host)+"' class='rxn-port-host' />"
+           "</span>";
+    res += "<span class='form-cell rxn-port-text'>:</span>";
+    res += "<span class='form-cell'><input type=number size=5 name='"+
+            prefix+"port' value='"+
+                (split->port == default_port ? "" : split->port) +
+            "' class='rxn-port-port' /></span>";
+    res += "<span class='form-cell rxn-port-text'>/</span>";
+    res += "<span class='form-cell'><input type=text name='"+prefix+"path' value='"+
       Roxen.html_encode_string(split->path[1..]) +
-      "' class='rxn-port-path' /></div></div>";
+      "' class='rxn-port-path' /></span></div></div>";
     mapping opts = ([]);
     string a,b;
     foreach( (split->fragment||"")/";", string x )
