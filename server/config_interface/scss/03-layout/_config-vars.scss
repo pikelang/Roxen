@@ -16,6 +16,18 @@
     border-bottom: 0;
   }
 
+  &.render-full-width {
+    display: block;
+    grid-gap: initial;
+    grid-template-columns: initial;
+    grid-template-rows: initial;
+    padding-bottom: $spacing-unit*2;
+
+    .name {
+      margin-bottom: $spacing-unit;
+    }
+  }
+
   h3 {
     border-bottom: 1px solid lighten($main-column-bg, 10%);
     margin-top: $spacing-unit*2;
