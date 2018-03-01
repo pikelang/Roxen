@@ -141,10 +141,14 @@ textarea,
   .port-url {
     display: table-row;
     max-width: 100%;
+    width: 100%;
 
-    .rxn-port-text,
-    .select-wrapper {
-      display: table-cell;
+    .form-cell + .form-cell {
+      padding-left: 0;
+    }
+
+    .form-cell:nth-child(3) {
+      width: 100%;
     }
 
     .select-wrapper {
@@ -153,6 +157,8 @@ textarea,
         background: transparent;
         content: none;
       }
+
+      width: 20px;
 
       select {
         padding-left: 3px;
@@ -182,7 +188,7 @@ textarea,
         }
 
         border-radius: 0;
-        display: table-cell;
+        // display: table-cell;
         padding-left: 3px;
         padding-right: 3px;
         border: 0;
@@ -190,15 +196,15 @@ textarea,
         background: transparent;
 
         &.rxn-port-port {
-          width: 80px;
+          width: 70px;
         }
 
         &.rxn-port-host {
-          width: auto;
+          width: 100%;
         }
 
         &.rxn-port-path {
-          width: auto;
+          width: 180px;
         }
       }
     }
