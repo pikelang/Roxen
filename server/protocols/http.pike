@@ -334,7 +334,7 @@ private void really_set_config(array mod_config)
   {
     if(!mod_config) return config;
     foreach(mod_config, string m)
-      if(m[0]=='-')
+      if(sizeof(m) && m[0]=='-')
         config[m[1..]]=0;
       else
         config[m]=1;
