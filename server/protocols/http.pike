@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.641 2011/07/13 11:04:40 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -565,6 +565,11 @@ int things_to_do_when_not_sending_from_cache( )
 	}
 	else
 	  catch (f = utf8_to_string (f));
+	if (String.width(f) > 8) {
+	  // Wide, so it might contain combiners.
+	  // Combine them if they are there.
+	  f = Unicode.normalize(f, "NFC");
+	}
       }
 
       // Now after charset decode we can add the multipart/form-data
@@ -1071,6 +1076,9 @@ private int parse_got( string new_data )
 #endif /* DEBUG */
 	 }
 	 misc["new-uri"] = VFS.normalize_path (contents);
+	 if (String.width(misc["new-uri"]) > 8) {
+	   misc["new-uri"] = Unicode.normalize(misc["new-uri"], "NFC");
+	 }
 	 break;
 
        case "expect":
