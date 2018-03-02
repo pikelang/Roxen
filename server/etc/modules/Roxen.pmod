@@ -5866,11 +5866,9 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! If @[charset] is set then charset conversion is done: @[path] is
 //! assumed to be a (possibly wide) unicode string in NFC, and @[charset] is
 //! taken as the charset used in the file system. The returned path is
-//! a unicode string as well. If @[charset] isn't specified then no
-//! charset conversion is done anywhere, which means that @[path] must
-//! have the same charset as the file system, and the case insensitive
-//! comparisons only work in as far as @[lower_case] does the right
-//! thing with that charset.
+//! a unicode string as well. If @[charset] isn't specified then it
+//! and the filesystem are assumed to be in utf-8, and the result will
+//! be utf-8 encoded.
 //!
 //! If @[charset] is given then it's assumed to be a charset accepted
 //! by @[Locale.Charset]. If there are charset conversion errors in
@@ -5891,6 +5889,10 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   function(string:string) encode, decode;
   switch (charset && lower_case(charset)) {
     case 0:
+      // NB: NT has a filesystem that uses UTF-16.
+#ifndef __NT__
+      return string_to_utf8(this_function(utf8_to_string(path), no_warn, "utf8"));
+#endif
       break;
     case "utf8":
     case "utf-8":
