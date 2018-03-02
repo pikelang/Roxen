@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.323 2011/10/03 19:23:24 mast Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -5864,7 +5864,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! slash then it is kept intact.
 //!
 //! If @[charset] is set then charset conversion is done: @[path] is
-//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! assumed to be a (possibly wide) unicode string in NFC, and @[charset] is
 //! taken as the charset used in the file system. The returned path is
 //! a unicode string as well. If @[charset] isn't specified then no
 //! charset conversion is done anywhere, which means that @[path] must
@@ -5889,7 +5889,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   string cache_name = "case_insens_paths";
 
   function(string:string) encode, decode;
-  switch (charset) {
+  switch (charset && lower_case(charset)) {
     case 0:
       break;
     case "utf8":
@@ -5965,6 +5965,9 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	      throw (err);
 	    // Ignore file system paths that we cannot decode.
 	    continue;
+	  }
+	  if (String.width(dec_ent) > 8) {
+	    dec_ent = Unicode.normalize(dec_ent, "NFC");
 	  }
 
 	  if (lower_case (dec_ent) == lc_name) {
