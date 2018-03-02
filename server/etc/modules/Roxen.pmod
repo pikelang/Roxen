@@ -6364,7 +6364,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! slash then it is kept intact.
 //!
 //! If @[charset] is set then charset conversion is done: @[path] is
-//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! assumed to be a (possibly wide) unicode string in NFC, and @[charset] is
 //! taken as the charset used in the file system. The returned path is
 //! a unicode string as well. If @[charset] isn't specified then no
 //! charset conversion is done anywhere, which means that @[path] must
@@ -6388,7 +6388,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   string cache_name = "case_insens_paths";
 
   function(string:string) encode, decode;
-  switch (charset) {
+  switch (charset && lower_case(charset)) {
     case 0:
       break;
     case "utf8":
@@ -6467,6 +6467,9 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	    // Ignore file system paths that we cannot decode.
 	    //werror ("path ignore in %O: %O\n", enc_path, enc_ent);
 	    continue;
+	  }
+	  if (String.width(dec_ent) > 8) {
+	    dec_ent = Unicode.normalize(dec_ent, "NFC");
 	  }
 
 	  if (lower_case (dec_ent) == lc_name) {
