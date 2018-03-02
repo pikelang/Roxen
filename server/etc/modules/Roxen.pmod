@@ -5951,10 +5951,12 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       // inconsistent however, since most other functions do not
       // accept neither wide strings nor strings encoded with any
       // charset. This applies at least up to pike 7.8.589.
+      string name = basename(path);
     search_dir:
       if (array(string) dir_list = get_dir (enc_path)) {
 	string lc_name = basename (lc_path);
 	string dec_name, enc_name;
+	int fail;
 
 	foreach (dir_list, string enc_ent) {
 	  string dec_ent;
@@ -5975,14 +5977,18 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	      if (!no_warn)
 		report_warning ("Ambiguous path %q matches both %q and %q "
 				"in %q.\n", path, dec_name, dec_ent, dec_path);
-	      break search_dir;
+	      fail = 1;
 	    }
 	    dec_name = dec_ent;
 	    enc_name = enc_ent;
+	    if (enc_ent == name) {
+	      fail = 0;
+	      break;
+	    }
 	  }
 	}
 
-	if (dec_name) {
+	if (dec_name && !fail) {
 	  dec_path = combine_path_unix (dec_path, dec_name);
 	  enc_path = combine_path (enc_path, enc_name);
 	  //werror ("path %O -> %O/%O\n", path, dec_path, enc_path);
