@@ -13,13 +13,13 @@
         <li>
           <button
             data-href='drop_site.pike?site=&_.sname;&amp;&usr.set-wiz-id;'
-            class='icon remove'
-            onclick='return confirm("Are you sure you want to drop the site: &_.name:js;?")'
-          >&_.name;</button>
+            class='icon remove'>&_.name;</button>
         </li>
       </emit>
     </ul>
-    <p><insert file='drop_site_warning.txt' nocache="1"/></p>
+    <div class='notify info'>
+      <p><insert file='drop_site_warning.txt' nocache="1"/></p>
+    </div>
     <hr class='divider'>
     <cf-cancel href="./"/>
   </cf-perm>
