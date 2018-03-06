@@ -1,0 +1,8 @@
+subject: Roxen 6.1: Fix for empty initial empty prestate. 
+from: ee787805f53ebf1c61654def32c6208012a38ca0
+to: ec99e9ec47ae1489975f8eeb2362fb02b7f0e19b
+originator: Erik Allemann
+depends: 2018-02-20T133703
+restart: true
+
+• Fixes bug [WS-172] where an empty initial prestate issued an internal server error.
