@@ -13,12 +13,32 @@
   <translate id="269" variable='var.sitename_txt'>Site name:</translate>
   <input name="name" value="&form.name;" id='site-name'
     placeholder='&var.sitename_txt;' size='60' required=''
-    pattern='[ a-zA-Z0-9]+|(?!CVS)|(?!global variables)' />
+    pattern='[- \w0-9]+|(?!CVS)|(?!global variables)' />
   <p><translate id="270">
 The name of the configuration must contain characters other than space
-and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
-'#', '$', '%', '&amp;', '=', ';', ':', '_', '&lt;', '&gt;', '|', '*',
-and it must not be 'CVS', 'Global Variables' or 'global variables',
+and tab, it must not contain
+<code>?</code>,
+<code>!</code>,
+<code>/</code>,
+<code>\</code>,
+<code>~</code>,
+<code>"</code>,
+<code>'</code>,
+<code>`</code>,
+<code>#</code>,
+<code>$</code>,
+<code>%</code>,
+<code>&amp;</code>,
+<code>=</code>,
+<code>;</code>,
+<code>:</code>,
+<code>_</code>,
+<code>&lt;</code>,
+<code>&gt;</code>,
+<code>|</code>,
+<code>*</code>,
+and it must not be <code>CVS</code>, <code>Global Variables</code> or
+<code>global variables</code>,
 nor the name of an existing configuration. This name will show up in
 the sites menu, a lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well as the name of
