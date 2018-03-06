@@ -41,7 +41,8 @@ input[type='submit'],
   -moz-appearance:    button;
   appearance:         button;
   background:         $button-bg;
-  background-image:   linear-gradient(lighten($button-bg, 2%), darken($button-bg, 2%));
+  background-image:   linear-gradient(lighten($button-bg, 2%),
+                                      darken($button-bg, 2%));
   color:              $button-color;
   border-left:        1px solid lighten($button-bg, 10%);
   border-top:         1px solid lighten($button-bg, 10%);
@@ -136,6 +137,10 @@ textarea,
 .rxn-port {
   .port-ip {
     margin-top: $spacing-unit/2;
+
+    input {
+      min-width: 160px;
+    }
   }
 
   .port-url {

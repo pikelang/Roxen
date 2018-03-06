@@ -82,12 +82,12 @@ string render_table(mapping last_usage, mapping mem_usage)
 #define TCELL(tdargs, color, text)                                      \
   ("<td " + tdargs + ">" + text + "</td>")
 
-  res += "<table class='mem'><thead class='sticky main-column-bg'><tr>\n" +
-    HCELL ("", "", (string)LOCALE(3,"Type")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(4,"Number")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
-    HCELL ("class='text-right'", "", "Kb") +
-    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
+  res += "<table class='mem'><thead class='main-column-bg'><tr>\n" +
+    HCELL ("class='main-column-bg sticky'", "", (string)LOCALE(3,"Type")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(4,"Number")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(5,"Change")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", "Kb") +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(5,"Change")) +
     "</tr></thead>\n";
   foreach (table, array entry) {
     if (entry[1] == "total") {
@@ -327,13 +327,13 @@ mixed page_0( object id )
   roxen->set_var("__num_clones", save_numobjs);
 
   res += "<hr class='section'><table class='small mem'>"
-    "<thead class='sticky main-column-bg'><tr>\n" +
-    HCELL ("", "", (string)LOCALE(141,"Source")) +
-    HCELL ("", "", (string)LOCALE(142,"Program")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(403,"References")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(143,"Clones")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(5,"Change")) +
-    HCELL ("class='text-right'", "", (string)LOCALE(427,"Bytes")) +
+    "<thead class='main-column-bg'><tr>\n" +
+    HCELL ("class='main-column-bg sticky'", "", (string)LOCALE(141,"Source")) +
+    HCELL ("class='main-column-bg sticky'", "", (string)LOCALE(142,"Program")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(403,"References")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(143,"Clones")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(5,"Change")) +
+    HCELL ("class='text-right main-column-bg sticky'", "", (string)LOCALE(427,"Bytes")) +
     "</tr></thead>\n";
   string trim_path( string what )
   {

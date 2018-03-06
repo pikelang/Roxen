@@ -96,7 +96,7 @@ string|mapping parse( RequestID id )
       cats[0][0] + "</a></th>";
     foreach( conf_cols, string conf )
     {
-      res += "<th class='conf'>"
+      res += "<th class='conf sticky'>"
         "<span class='rotated-wrapper'>"
         "<a href='/sites/site.html/" + conf + "/' class='rotated'>" +
 	get_conf_name(conf) + "</a></span>"

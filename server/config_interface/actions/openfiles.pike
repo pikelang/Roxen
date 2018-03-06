@@ -144,13 +144,13 @@ string parse( RequestID id )
 
   string tmpl = #"
     <table class='nice'>
-      <thead class='sticky'>
+      <thead>
         <tr>
         {{ #headers }}
-          <th class='text-right'>{{ fd }}</th>
-          <th>{{ type }}</th>
-          <th>{{ mode }}</th>
-          <th>{{ details }}</th>
+          <th class='text-right sticky'>{{ fd }}</th>
+          <th class='sticky'>{{ type }}</th>
+          <th class='sticky'>{{ mode }}</th>
+          <th class='sticky'>{{ details }}</th>
         {{ /headers }}
         </tr>
       </thead>

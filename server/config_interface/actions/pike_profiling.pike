@@ -109,13 +109,13 @@ mixed page_0(object id)
   string tmpl = #"
     <p>All times are in milliseconds, and real-time. Times include
     time of child functions. No callgraph is available yet.<p>
-    <p>Function glob: <input type=text name=subnode value='{{subnode}}''></p>
+    <p><input type=text name=subnode value='{{subnode}}' placeholder='Function glob'></p>
 
     <table class='mem pike-prof'>
       <thead>
         <tr>
         {{ #header }}
-          <th>{{ . }}</th>
+          <th class='main-column-bg sticky'>{{ . }}</th>
         {{ /header }}
         </tr>
       </thead>

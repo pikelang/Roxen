@@ -291,7 +291,8 @@ hr {
       color: lighten($topmenu-color, 25%);
     }
 
-    &[selected] {
+    &[selected],
+    &.selected {
       background: $main-column-bg;
       color: $topmenu-selected-color;
       border-top-color: $brand-color;
@@ -299,7 +300,8 @@ hr {
   }
 
   &.topmenu {
-    a[selected] {
+    a[selected],
+    a.selected {
       background: $topmenu-selected-bg;
     }
   }

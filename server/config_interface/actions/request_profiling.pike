@@ -30,12 +30,12 @@ mixed page_0(object id)
   <table class='nice'>
     <thead>
       <tr>
-        <th>Path</th>
-        <th>Method</th>
-        <th class='num'>Count</th>
-        <th class='num'>Total(탎)</th>
-        <th class='num'>Max(탎)</th>
-        <th class='num'>Average(탎)</th>
+        <th class='sticky'>Path</th>
+        <th class='sticky'>Method</th>
+        <th class='num sticky'>Count</th>
+        <th class='num sticky'>Total(탎)</th>
+        <th class='num sticky'>Max(탎)</th>
+        <th class='num sticky'>Average(탎)</th>
       </tr>
     </thead>
     <tbody>

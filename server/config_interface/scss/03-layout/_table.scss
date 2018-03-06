@@ -156,6 +156,13 @@ table {
       background: $topmenu-bg;
     }
 
+    thead {
+      th.sticky,
+      td.sticky {
+        background: $topmenu-bg;
+      }
+    }
+
     tbody {
       background: lighten($main-column-bg, 2%);
 
