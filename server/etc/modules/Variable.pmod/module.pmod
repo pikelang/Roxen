@@ -2143,8 +2143,8 @@ class List
 
     foreach( map(query(), transform_to_form), mixed val )
     {
-      res += "<tr>\n<td><span class='small'>"+ render_row(prefix+"set."+i, val, width)
-	+ "</span></td>\n";
+      res += "<tr>\n<td class='small'>"+ render_row(prefix+"set."+i, val, width)
+	+ "</td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
 #define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
