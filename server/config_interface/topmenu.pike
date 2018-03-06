@@ -77,7 +77,7 @@ string parse( RequestID id )
       {
         while( id->misc->orig )
           id = id->misc->orig;
-        a->selected = "selected";
+        a["class"] = "selected";
 	if( id->method == "GET" ) {
 	  string url = id->raw_url;
 	  foreach(suppress_last_seen; Regexp pattern; string replacement) {

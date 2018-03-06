@@ -4,15 +4,15 @@
 <if variable="roxen.product-name == Roxen CMS">
   <theme-set what=logo to="R.svg" themefile />
   <theme-set what=logo-html
-           to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product cms'>CMS</span></div></div>"/>
+           to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;' alt='Logo'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product cms'>CMS</span></div></div>"/>
 </if>
 <elseif variable="roxen.product-name == Roxen EP">
   <theme-set what=logo to="R.svg" themefile />
   <theme-set what=logo-html
-     to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product ep'>Editorial Portal</span></div></div>"/>
+     to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;' alt='Logo'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product ep'>Editorial Portal</span></div></div>"/>
 </elseif>
 <else>
   <theme-set what=logo to="R.svg" themefile />
   <theme-set what=logo-html
-           to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product webserver'>Webserver</span></div></div>"/>
+           to="<div id='roxen-product'><a href='https://roxen.com' class='R'><img src='&usr.logo;' alt='Logo'></a><div class='text'><span class='roxen'>Roxen</span> <span class='product webserver'>Webserver</span></div></div>"/>
 </else>

@@ -24,7 +24,7 @@ string module_page( RequestID id, string conf, string module )
 #"<emit source='module-variables-sections'
   configuration='"+conf+#"'
   module='"+module+#"'>
-   <a ::='&_.selected;'
+   <a class='&_.selected;'
         href='?section=&_.section:http;&amp;&usr.set-wiz-id;'>&_.sectionname;</a>
 </emit>";
 }
