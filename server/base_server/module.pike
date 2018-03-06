@@ -890,6 +890,9 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //!
 //! @param recursive
 //!   If @expr{1@} also return locks anywhere below @[path].
+//!   If @expr{-1} return locks anywhere below @[path], but not
+//!   any above @[path]. (This is appropriate to use to get the
+//!   list of locks that need to be unlocked on DELETE.)
 //!
 //! @param exclude_shared
 //!   If @expr{1@} do not return shared locks that are held by users
@@ -910,7 +913,7 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
 multiset(DAVLock) find_locks(string path,
-			     int(0..1) recursive,
+			     int(-1..1) recursive,
 			     int(0..1) exclude_shared,
 			     RequestID id)
 {
@@ -943,11 +946,13 @@ multiset(DAVLock) find_locks(string path,
     add_locks (file_locks[rsc]);
   }
 
-  foreach(prefix_locks;
-	  string prefix; mapping(mixed:DAVLock) sub_locks) {
-    if (has_prefix(rsc, prefix)) {
-      add_locks (sub_locks);
-      break;
+  if (recursive >= 0) {
+    foreach(prefix_locks;
+	    string prefix; mapping(mixed:DAVLock) sub_locks) {
+      if (has_prefix(rsc, prefix)) {
+	add_locks (sub_locks);
+	break;
+      }
     }
   }
 
@@ -1181,7 +1186,7 @@ protected void unregister_lock (string path, DAVLock lock,
     if (id) {
       removed_lock = m_delete(prefix_locks[path], auth_user);
     } else {
-      foreach(prefix_locks[path]; mixed user; DAVLock l) {
+      foreach(prefix_locks[path]||([]); mixed user; DAVLock l) {
 	if (l == lock) {
 	  removed_lock = m_delete(prefix_locks[path], user);
 	}
@@ -1193,7 +1198,7 @@ protected void unregister_lock (string path, DAVLock lock,
     if (id) {
       removed_lock = m_delete (file_locks[path], auth_user);
     } else {
-      foreach(file_locks[path]; mixed user; DAVLock l) {
+      foreach(file_locks[path]||([]); mixed user; DAVLock l) {
 	if (l == lock) {
 	  removed_lock = m_delete(file_locks[path], user);
 	}
@@ -1201,7 +1206,10 @@ protected void unregister_lock (string path, DAVLock lock,
     }
     if (!sizeof (file_locks[path])) m_delete (file_locks, path);
   }
-  ASSERT_IF_DEBUG (lock /*%O*/ == removed_lock /*%O*/, lock, removed_lock);
+  // NB: The lock may have already been removed in the !id case.
+  ASSERT_IF_DEBUG (!(id || removed_lock) ||
+		   (lock /*%O*/ == removed_lock /*%O*/),
+		   lock, removed_lock);
   TRACE_LEAVE("Ok.");
   return 0;
 }
@@ -1411,7 +1419,11 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     locked_fail = 1;
   }
 
-  TRACE_LEAVE("Failed.");
+  if (locked_fail) {
+    TRACE_LEAVE("Failed (locked).");
+  } else {
+    TRACE_LEAVE("Precondition failed.");
+  }
   return Roxen.http_status(locked_fail ?
 			   Protocols.HTTP.DAV_LOCKED :
 			   Protocols.HTTP.HTTP_PRECOND_FAILED);
@@ -1428,11 +1440,51 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 //! A filesystem module should typically put all needed write access
 //! checks here and then use this from @[find_file()],
 //! @[delete_file()] etc.
+//!
+//! @returns
+//!   Returns @expr{0@} (zero) on success, a status mapping on
+//!   failure, or @expr{1@} if @[recursive] is set and write access is
+//!   allowed on this level but maybe not somewhere below. The caller
+//!   should in the last case do the operation on this level if
+//!   possible and then handle each member in the directory
+//!   recursively with @[write_access] etc.
 protected mapping(string:mixed)|int(0..1) write_access(string relative_path,
 						       int(0..1) recursive,
 						       RequestID id)
 {
   return check_if_header (relative_path, recursive, id);
+}
+
+//!
+protected variant mapping(string:mixed)|int(0..1) write_access(array(string) paths,
+							       int(0..1) recursive,
+							       RequestID id)
+{
+  mapping(string:mixed)|int(0..1) ret;
+  int got_ok;
+  foreach(paths, string path) {
+    ret = write_access(path, recursive, id);
+    if (!ret) {
+      got_ok = 1;
+      continue;
+    }
+    if (ret == 1) {
+      continue;
+    }
+    if (ret->error == Protocols.HTTP.HTTP_PRECOND_FAILED) {
+      continue;
+    }
+    return ret;
+  }
+
+  if (got_ok) {
+    // The if headers are valid for at least one of the paths,
+    // and none of the other paths are locked.
+    return 0;
+  }
+
+  // HTTP_PRECOND_FAILED for all of the paths.
+  return ret;
 }
 
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,

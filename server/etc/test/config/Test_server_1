@@ -5,11 +5,14 @@
   <var name='contenttypes#0'>    <int>1</int> </var>
   <var name='directories#0'>     <int>1</int> </var>
   <var name='filesystem#0'>      <int>1</int> </var>
+  <var name='filesystem#1'>      <int>1</int> </var>
+  <var name='htaccess#0'>        <int>1</int> </var>
   <var name='roxen_test#0'>      <int>1</int> </var>
   <var name='rxmlparse#0'>       <int>1</int> </var>
   <var name='rxmltags#0'>        <int>1</int> </var>
   <var name='additional_rxml#0'> <int>1</int> </var>
   <var name='sqltag#0'>          <int>1</int> </var>
+  <var name='webdav#0'>          <int>1</int> </var>
 </region>
 
 <region name='contenttypes#0'>
@@ -60,6 +63,41 @@
   <var name='searchpath'>        <str>etc/test/filesystem/</str> </var>
   <var name='stat_cache'>        <int>0</int> </var>
   <var name='tilde'>             <int>0</int> </var>
+</region>
+
+<region name='filesystem#1'>
+  <var name='.files'>            <int>0</int> </var>
+  <var name='access_as_user'>    <int>0</int> </var>
+  <var name='access_as_user_db'> <str> all</str> </var>
+  <var name='access_as_user_throw'> <int>0</int> </var>
+  <var name='charset'>           <str>iso-8859-1</str> </var>
+  <var name='check_auth'>        <int>1</int> </var>
+  <var name='delete'>            <int>1</int> </var>
+  <var name='dir'>               <int>1</int> </var>
+  <var name='internal_files'><a>
+    <str>*.inv</str>
+  </a></var>
+  <var name='mountpoint'>        <str>/webdav/</str> </var>
+  <var name='no-parse'>          <int>1</int> </var>
+  <var name='no_symlinks'>       <int>0</int> </var>
+  <var name='nobrowse'><a>
+    <str>.www_not_browsable</str>
+    <str>.nodiraccess</str>
+  </a></var>
+  <var name='path_encoding'>     <str>utf-8</str> </var>
+  <var name='put'>               <int>1</int> </var>
+  <var name='searchpath'>        <str>$VARDIR/testsuite/webdav/</str> </var>
+  <var name='stat_cache'>        <int>0</int> </var>
+  <var name='tilde'>             <int>0</int> </var>
+</region>
+
+<region name='htaccess#0'>
+  <var name='denyhtlist'><a>
+    <str>.htaccess</str>
+    <str>.htpasswd</str>
+    <str>.htgroup</str>
+  </a></var>
+  <var name='file'>              <str>.htaccess</str> </var>
 </region>
 
 <region name='roxen_test#0'>
@@ -160,6 +198,9 @@ page.
   <var name='charset'>           <str></str> </var>
   <var name='db'>                <str> none</str> </var>
   <var name='hostname'>          <str>mysql://localhost/</str> </var>
+</region>
+
+<region name='webdav#0'>
 </region>
 
 </roxen-config>

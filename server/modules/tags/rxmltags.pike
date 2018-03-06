@@ -70,7 +70,7 @@ private string fix_rxml_vars (string code, RXML.Context ctx)
   return res + code;
 }
 
-private object sexpr_funcs = class SExprFunctions
+private object sexpr_funcs = class
   {
     // A class for the special functions in sexpr_constants. This is
     // to give these function proper names, since those names can
@@ -11089,7 +11089,10 @@ header tag.</p></note>
  redirect is local, i.e. within the server, all prestates are preserved.
  E.g. \"/index.html\" and \"index.html\" preserves the prestates, while
  \"http://server.com/index.html\" does not.
-</p></desc>
+</p>
+<note><p>Be aware that RXML code both before and after this tag will
+generate output that is included in the resulting page.</p></note>
+</desc>
 
 <attr name='to' value='URL' required='required'>
  <p>The location to where the client should be sent.</p>

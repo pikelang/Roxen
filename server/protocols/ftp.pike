@@ -1774,6 +1774,11 @@ class FTPSession
   private string fix_path(string s)
   {
     mixed err = catch { s = utf8_to_string(s); };
+    if (String.width(s) > 8) {
+      // Wide, so it might contain combiners.
+      // Combine them if they are there.
+      s = Unicode.normalize(s, "NFC");
+    }
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
 	return(cwd);

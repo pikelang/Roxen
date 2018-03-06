@@ -43,10 +43,10 @@ protected class Variable
                         int devel_mode,
                         int initial,
                         int|void variable_in_cfif );
-  void set_invisibility_check_callback( function(RequestID,Variable:int) cb );
+  this_program set_invisibility_check_callback( function(RequestID,Variable:int) cb );
   function(Variable:void) get_changed_callback( );
-  void set_changed_callback( function(Variable:void) cb );
-  void add_changed_callback( function(Variable:void) cb );
+  this_program set_changed_callback( function(Variable:void) cb );
+  this_program add_changed_callback( function(Variable:void) cb );
   function(RequestID,Variable:int) get_invisibility_check_callback() ;
   string doc(  );
   string name(  );
@@ -457,7 +457,7 @@ class Configuration
   void invalidate_cache();
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
-  multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+  multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
 			       int(0..1) exclude_shared, RequestID id);
   DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
@@ -2949,12 +2949,15 @@ class RequestID
   protected function charset_function(function|string what, int allow_entities)
   {
     if (functionp(what)) return what;
-    switch (what) {
+    switch (upper_case(what)) {
     case "ISO-10646-1":
     case "ISO10646-1":
+    case "ISO-10646":
+    case "ISO10646":
       return string_to_unicode;
 
     case "UTF-8":
+    case "UTF8":
       return string_to_utf8;
 
     default:
@@ -4051,7 +4054,7 @@ class RoxenModule
   string resource_id (string path, RequestID id);
   string|int authenticated_user_id (string path, RequestID id);
   multiset(DAVLock) find_locks(string path,
-			       int(0..1) recursive,
+			       int(-1..1) recursive,
 			       int(0..1) exclude_shared,
 			       RequestID id);
   DAVLock|LockFlag check_locks(string path,

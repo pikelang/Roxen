@@ -3704,6 +3704,7 @@ protected mapping(string:function(string:string)) client_charset_decoders = ([
   "html": Parser.parse_html_entities,
   "utf-8": utf8_to_string,
   "utf-16": unicode_to_string,
+  0: `+,	// Identity function for strings.
 ]);
 
 protected function(string:string) make_composite_decoder (
@@ -6368,13 +6369,11 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! slash then it is kept intact.
 //!
 //! If @[charset] is set then charset conversion is done: @[path] is
-//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! assumed to be a (possibly wide) unicode string in NFC, and @[charset] is
 //! taken as the charset used in the file system. The returned path is
-//! a unicode string as well. If @[charset] isn't specified then no
-//! charset conversion is done anywhere, which means that @[path] must
-//! have the same charset as the file system, and the case insensitive
-//! comparisons only work in as far as @[lower_case] does the right
-//! thing with that charset.
+//! a unicode string as well. If @[charset] isn't specified then it
+//! and the filesystem are assumed to be in utf-8, and the result will
+//! be utf-8 encoded.
 //!
 //! If @[charset] is given then it's assumed to be a charset accepted
 //! by @[Charset]. If there are charset conversion errors in @[path]
@@ -6392,8 +6391,12 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   string cache_name = "case_insens_paths";
 
   function(string:string) encode, decode;
-  switch (charset) {
+  switch (charset && lower_case(charset)) {
     case 0:
+      // NB: NT has a filesystem that uses UTF-16.
+#ifndef __NT__
+      return string_to_utf8(this_function(utf8_to_string(path), no_warn, "utf8"));
+#endif
       break;
     case "utf8":
     case "utf-8":
@@ -6454,10 +6457,12 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       // inconsistent however, since most other functions do not
       // accept neither wide strings nor strings encoded with any
       // charset. This applies at least up to pike 7.8.589.
+      string name = basename(path);
     search_dir:
       if (array(string) dir_list = get_dir (enc_path)) {
 	string lc_name = basename (lc_path);
 	string dec_name, enc_name;
+	int fail;
 
 	foreach (dir_list, string enc_ent) {
 	  string dec_ent;
@@ -6472,20 +6477,27 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 	    //werror ("path ignore in %O: %O\n", enc_path, enc_ent);
 	    continue;
 	  }
+	  if (String.width(dec_ent) > 8) {
+	    dec_ent = Unicode.normalize(dec_ent, "NFC");
+	  }
 
 	  if (lower_case (dec_ent) == lc_name) {
 	    if (dec_name) {
 	      if (!no_warn)
 		report_warning ("Ambiguous path %q matches both %q and %q "
 				"in %q.\n", path, dec_name, dec_ent, dec_path);
-	      break search_dir;
+	      fail = 1;
 	    }
 	    dec_name = dec_ent;
 	    enc_name = enc_ent;
+	    if (enc_ent == name) {
+	      fail = 0;
+	      break;
+	    }
 	  }
 	}
 
-	if (dec_name) {
+	if (dec_name && !fail) {
 	  dec_path = combine_path_unix (dec_path, dec_name);
 	  enc_path = combine_path (enc_path, enc_name);
 	  //werror ("path %O -> %O/%O\n", path, dec_path, enc_path);

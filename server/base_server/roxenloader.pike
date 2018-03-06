@@ -1954,8 +1954,6 @@ void paranoia_throw(mixed err)
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
 {
-  // For Pike 7.3
-  add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
 #if __VERSION__ < 8.0

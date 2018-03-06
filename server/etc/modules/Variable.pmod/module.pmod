@@ -331,8 +331,7 @@ class Variable
     return 1;
   }
 
-  this_program set_invisibility_check_callback(
-        function(RequestID,Variable:int) cb )
+  this_program set_invisibility_check_callback( function(RequestID,Variable:int) cb )
     //! If the function passed as argument returns 1, the variable
     //! will not be visible in the configuration interface.
     //!
