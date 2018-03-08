@@ -2003,7 +2003,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   // Create the new lock.
 
-  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
+  string locktoken = "urn:uuid:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 expiry_delta, owner);
   foreach(location_module_cache||location_modules(),
