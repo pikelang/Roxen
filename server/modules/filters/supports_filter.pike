@@ -4,11 +4,9 @@
 #include <module.h>
 inherit "module";
 
-constant module_deprecated = 1;
-
 constant cvs_version = "$Id$";
 constant module_name = "Supports filter";
-constant module_type = MODULE_FILTER;
+constant module_type = MODULE_FILTER|MODULE_DEPRECATED;
 constant thread_safe = 1;
 constant module_doc =
 #"<p>The supports filter module takes a look at the supports flag at the

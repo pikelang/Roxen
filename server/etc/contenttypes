@@ -8,7 +8,7 @@
     Specifying only the first part of the mime type sets the defaults
     for all types that does not have a specific entry
 -->
-   
+
 
 <type 							icon='unknown'>
 
@@ -45,6 +45,8 @@
 <type mime='text/sgml'          title='SGML source file' />
 <type mime='text/xml'           title='XML source file' />
 <type mime='text/css'           title='CSS style-sheet' />
+<type mime='text/x-scss'        title='Sassy CSS style-sheet' />
+<type mime='text/x-sass'        title='Sass CSS style-sheet' />
 <type mime='text/vnd.wap.wml'   title='WAP WML file' />
 <type mime='text/vnd.wap.wmlscript' title='WAP WML script' />
 <type mime='text/x-c-code'      title='C source code' />

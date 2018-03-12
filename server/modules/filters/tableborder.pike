@@ -4,8 +4,6 @@
 inherit "module";
 #include <request_trace.h>
 
-constant module_deprecated = 1;
-
 #define JS_PRESTATE(P) \
 "javascript:"           \
 "function R(a)"          \
@@ -30,7 +28,7 @@ constant module_deprecated = 1;
 
 constant cvs_version = "$Id$";
 constant thread_safe = 1;
-constant module_type = MODULE_FILTER;
+constant module_type = MODULE_FILTER|MODULE_DEPRECATED;
 constant module_name = "Table/Image Border Unveiler";
 constant module_doc  =
             "<p>"

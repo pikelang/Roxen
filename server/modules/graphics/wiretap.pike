@@ -6,11 +6,9 @@ constant cvs_version="$Id$";
 #include <module.h>
 inherit "module";
 
-constant module_deprecated = 1;
-
 //---------------------- Module Registration --------------------------------
 
-constant module_type   = MODULE_TAG;
+constant module_type   = MODULE_TAG | MODULE_DEPRECATED;
 constant module_name   = "Tags: HTML color wiretap";
 constant module_doc    =
 #"<p>Parses HTML tags for the text and background colors all over the

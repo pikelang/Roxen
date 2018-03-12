@@ -281,6 +281,8 @@ htc	text/x-component
 htt	text/webviewhtml
 pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
+scss	text/x-scss
+sass	text/x-sass
 ##src	text/speech
 ##talk	text/speech
 vcf	text/x-vCard
@@ -872,7 +874,7 @@ svr	x-world/x-svr
 vrt	x-world/x-vrt
 wrz	x-world/x-vrml
 
-##talk	plugin/talker 
+##talk	plugin/talker
 wan	plugin/wanimate
 waf	plugin/wanimate
 

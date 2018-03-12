@@ -19,8 +19,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_obox",X,Y)
 // end locale stuff
 
-constant module_deprecated = true;
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG | MODULE_DEPRECATED_SOFT;
 LocaleString module_name = LOCALE(1,"Tags: Outlined box");
 
 LocaleString module_doc  =

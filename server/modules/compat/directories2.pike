@@ -3,6 +3,7 @@
 
 inherit "module";
 
+constant module_type = MODULE_DEPRECATED;
 constant module_name = "DEPRECATED: Directories 2";
 
 void start(int num, Configuration conf)

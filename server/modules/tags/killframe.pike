@@ -26,7 +26,7 @@ void create()
 	  "definition is taken from the active directory module." );
 }
 
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG | MODULE_DEPRECATED;
 constant module_name = "Tags: Kill frame";
 constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
   "adds some JavaScript that will prevent others "

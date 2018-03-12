@@ -13,8 +13,7 @@ inherit "module";
 constant thread_safe = 1;
 constant cvs_version = "$Id$";
 
-constant module_deprecated = 1;
-constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
+constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG|MODULE_DEPRECATED;
 constant module_name = "WAP Adapter";
 constant module_doc  = "Improves supports flags and variables as well as "
   "doing a better job finding MIME types than the content type module for WAP clients. "
