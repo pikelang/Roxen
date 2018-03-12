@@ -238,6 +238,11 @@ table {
 
       .group-hdr {
         background: $topmenu-bg !important;
+
+        .sticky {
+          background: $topmenu-bg !important;
+        }
+
         th {
           padding-top: $spacing-unit;
           padding-bottom: $spacing-unit;
@@ -247,6 +252,13 @@ table {
         a {
           text-decoration: none;
           color: $light-grey;
+        }
+      }
+
+      .column-hdr {
+        .sticky {
+          top: 53px;
+          background: lighten($body-bg, 2%) !important;
         }
       }
 

@@ -199,24 +199,26 @@ string|mapping parse( RequestID id )
     }
   }
 
+  res += "<tbody>";
+
   foreach( cats[0..0]+sort(cats[1..]); int i; array q ) {
     // TRACE("q: %O\n", q);
-    res += "<tbody>\n"
-      "<tr class='group-hdr'><th colspan='6'>" + (i ? "" : "") +
+    res += //"<tbody>\n"
+      "<tr class='group-hdr'><th class='sticky' colspan='6'>" + (i ? "" : "") +
       "<a href='edit_group.pike?group=" + q[1] + "&amp;&usr.set-wiz-id;'>" + q[0] + "</a>"
       "</th></tr>\n"
       "<tr class='column-hdr'>"
-      "<th>Name</th>"
-      "<th class='num'>Tables</th>"
+      "<th class='sticky'>Name</th>"
+      "<th class='num sticky'>Tables</th>"
       // "<th class='num'>Rows</th>"
-      "<th class='num'>Size</th>"
-      "<th>Type</th>"
-      "<th>Backup Schedule</th>"
-      "<th>Owner/info</th>"
+      "<th class='num sticky'>Size</th>"
+      "<th class='sticky'>Type</th>"
+      "<th class='sticky'>Backup Schedule</th>"
+      "<th class='sticky'>Owner/info</th>"
       "</tr>\n" +
-      rres[ q[1] ] +
-      "</tbody>\n";
+      rres[ q[1] ];/* +
+      "</tbody>\n";*/
   }
 
-  return Roxen.http_string_answer(res+"</table>");
+  return Roxen.http_string_answer(res+"</tbody></table>");
 }
