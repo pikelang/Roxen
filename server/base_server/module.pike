@@ -20,9 +20,6 @@ constant is_module = 1;
 // constant module_doc     = "Undocumented";
 constant module_unique  = 1;
 
-//! If set to non-zero the module won't show up in the module listing
-//! when adding modules.
-constant module_deprecated = 0;
 
 //! Specifies that the module is opaque when it comes WebDAV
 //! requests. Normally, recursive WebDAV requests will iterate through
@@ -171,7 +168,6 @@ array register_module()
     module_unique,
     this_object()->module_locked,
     this_object()->module_counter,
-    this_object()->module_deprecated,
   });
 }
 

@@ -29,4 +29,12 @@ constant MODULE_PROTOCOL         = (1<<28);
 constant MODULE_CONFIG           = (1<<29);
 constant MODULE_SECURITY         = (1<<30);
 constant MODULE_EXPERIMENTAL     = (1<<31);
+
+// Module deprecated type flags
+// Hides the module in the add_module listing and outputs a deprecation
+// warning on the Admin IF start page.
+constant MODULE_DEPRECATED       = (1<<32);
+// Hides the module in the add_module listing but doesn't output a warning
+// on the Admin IF start page.
+constant MODULE_DEPRECATED_SOFT  = (1<<33);
 #endif
