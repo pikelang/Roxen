@@ -98,9 +98,12 @@ string loc_encode(string val, void|mapping args, void|string def)
 }
 
 // CFIF17: Some switch cases here should be fixed. Some of them might not be
-//         used in the admin IF, but might be used in the Sitebuilder
-//         content editor. Verify if this method is overridden in the
-//         content editor or not, and fix the type cases accordingly.
+//         used in the admin IF, but some are used in the Sitebuilder's
+//         content editor.
+//
+//         This method doesn't seem to be heavily used by the Admin IF itself
+//         and seems mostly used by the content editor. Hence I haven't touched
+//         the generated HTML too much here.
 string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 {
   RequestID id;
@@ -339,7 +342,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
    case "color-js":
      //  Note: This is executed fex when:
      //        <xsl:param ... rxml:type="color" />
-     CFIF_THROW("Can't we use the same color picker as in SiteBuilder?\n");
+     CFIF_WERR("Can't we use the same color picker as in SiteBuilder?\n");
      //  Note: This code requires ColorSelector.js
      if (string color_input = id->variables[m->name])
        current = color_input;
@@ -461,7 +464,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      return replace(output, "PREFIX", clean_name);
 
    case "font":
-     CFIF_THROW("Dude, really? It's 2017 (at least)!\n");
+     CFIF_WERR("Dude, really? It's 2017 (at least)!\n");
      m->type = "select";
      m->lines = "20";
      m->choices = roxen.fonts->available_fonts() * ",";
