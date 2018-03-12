@@ -284,7 +284,9 @@ array(string) get_module_list( function describe_module,
   roxenloader.pop_compile_error_handler();
 
   foreach( mods, ModuleInfo m ) {
-    if (m->deprecated && !show_deprecated(id)) {
+    if ((m->type & (MODULE_DEPRECATED | MODULE_DEPRECATED_SOFT)) &&
+        !show_deprecated(id))
+    {
       mods -= ({ m });
     }
     if( module_nomore( m->sname, m, conf ) ) {
@@ -458,7 +460,7 @@ function describe_module_normal(void|bool faster)
         "doc"        : doc,
         "load_path"  : LOCALE(266, "Will be loaded from: ")+module->filename,
         "faster"     : faster,
-        "deprecated" : module->deprecated
+        "deprecated" : (module->type & (MODULE_DEPRECATED | MODULE_DEPRECATED_SOFT))
       ]);
 
       return Roxen.render_mustache(tmpl, ctx);
@@ -707,7 +709,9 @@ string page_really_compact( RequestID id )
   bool deprecated = show_deprecated(id);
 
   mods = filter(mods, lambda (ModuleInfo m) {
-    if (m->deprecated && !deprecated) {
+    if ((m->type & (MODULE_DEPRECATED | MODULE_DEPRECATED_SOFT)) &&
+        !deprecated)
+    {
       return 0;
     }
 

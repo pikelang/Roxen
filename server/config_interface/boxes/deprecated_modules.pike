@@ -29,51 +29,58 @@ string parse(RequestID id)
   mapping(string:ModuleInfo) mod_cache = ([]);
   mapping(string:array(mapping)) deprecated_info = ([]);
 
-  map(roxen->configurations,
-    lambda (Configuration c) {
-      string cname = c->query_name();
-      mapping(string:int(1..1)) mods;
+  foreach (roxen->configurations, Configuration c) {
 
-      if (!c->inited) {
-        mods = roxen.retrieve("EnabledModules", c);
+    #ifndef ADMIN_IF_DEBUG
+      // Don't show deprecated modules for the Admin IF itself
+      if (c == id->conf) {
+        continue;
       }
-      else {
-        mods = c->enabled_modules;
-      }
+    #endif
 
-      foreach (indices(mods), string mname) {
-        array(string) pts = mname/"#";
-        mname = pts[0];
+    string cname = c->query_name();
+    mapping(string:int(1..1)) mods;
 
-        if (!mod_cache[mname]) {
-          ModuleInfo info = roxen->find_module(mname);
+    if (!c->inited) {
+      mods = roxen.retrieve("EnabledModules", c);
+    }
+    else {
+      mods = c->enabled_modules;
+    }
 
-          if (info) {
-            mod_cache[mname] = info;
-          }
-        }
+    foreach (indices(mods), string mname) {
+      array(string) pts = mname/"#";
+      mname = pts[0];
 
-        ModuleInfo mi = mod_cache[mname];
+      if (!mod_cache[mname]) {
+        ModuleInfo info = roxen->find_module(mname);
 
-        if (mi && mi->deprecated) {
-          if (!deprecated_info[cname]) {
-            deprecated_info[cname] = ({});
-          }
-
-          string curl = "/sites/site.html/" +
-                        replace(lower_case(c->name), ([ " " : "-" ])) + "/" +
-                        get_module_group(mi) + "!0/" +
-                        mi->sname + "!" + pts[1] + "/";
-
-          mapping m = ([
-            "name" : mi->get_name(),
-            "url"  : curl
-          ]);
-
-          deprecated_info[cname] += ({ m });
+        if (info) {
+          mod_cache[mname] = info;
         }
       }
-    });
+
+      ModuleInfo mi = mod_cache[mname];
+
+      if (mi && (mi->type & MODULE_DEPRECATED)) {
+        if (!deprecated_info[cname]) {
+          deprecated_info[cname] = ({});
+        }
+
+        string curl = "/sites/site.html/" +
+                      replace(lower_case(c->name), ([ " " : "-" ])) + "/" +
+                      get_module_group(mi) + "!0/" +
+                      mi->sname + "!" + pts[1] + "/";
+
+        mapping m = ([
+          "name" : mi->get_name(),
+          "url"  : curl
+        ]);
+
+        deprecated_info[cname] += ({ m });
+      }
+    }
+  }
 
   if (sizeof(deprecated_info)) {
     mapping ctx = ([

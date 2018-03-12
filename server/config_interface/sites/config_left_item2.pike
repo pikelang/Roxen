@@ -106,7 +106,7 @@ string selected_item(string q, Configuration c, RequestID id,
 
         gg += ({ ([ "sname"      : q+"!"+i,
                     "name"       : name,
-                    "deprecated" : mi->deprecated,
+                    "deprecated" : mi->type & (MODULE_DEPRECATED | MODULE_DEPRECATED_SOFT),
                     "locked"     : mi->config_locked[c] ]) });
       }
     }

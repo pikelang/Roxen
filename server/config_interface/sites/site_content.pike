@@ -493,7 +493,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   string prefix = "", suffix = "";
 
-  if (mi->deprecated) {
+  if (mi->type & (MODULE_DEPRECATED | MODULE_DEPRECATED_SOFT)) {
     prefix = "<div class='site-module module-deprecated'>";
     suffix = "</div>";
   }
