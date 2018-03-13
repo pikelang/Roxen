@@ -3249,6 +3249,36 @@ void low_start_mysql( string datadir,
     }
   }
 
+  if ((normalized_mysql_version > "010.002.003") &&
+      !has_value(normalized_cfg_file, "sql_mode")) {
+    // Since MariaDB 10.2.4, SQL_MODE is by default set to NO_AUTO_CREATE_USER,
+    // NO_ENGINE_SUBSTITUTION, STRICT_TRANS_TABLES, ERROR_FOR_DIVISION_BY_ZERO.
+    // In earlier versions of MariaDB 10.2, and since MariaDB 10.1.7, SQL_MODE
+    // is by default set to NO_ENGINE_SUBSTITUTION, NO_AUTO_CREATE_USER.
+    // For earlier versions of MariaDB 10.1, and MariaDB 10.0 and before, no
+    // default is set.
+    //
+    // This change in 10.2 can cause queries to fail, complaining about
+    // no default values:
+    //
+    //   big_query(): Query failed (Field 'x' doesn't have a default value)
+    //
+    // cf:
+    //   https://www.slickdev.com/2017/09/05/mariadb-10-2-field-xxxxxxx-doesnt-default-value-error/
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding sql_mode entry to %s/my.cfg.\n", datadir);
+      a[1] = "\n"
+	"sql_mode = NO_ENGINE_SUBSTITUTION" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "sql_mode entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
 #ifdef __NT__
   cfg_file = replace(cfg_file, ({ "\r\n", "\n" }), ({ "\r\n", "\r\n" }));
 #endif /* __NT__ */
