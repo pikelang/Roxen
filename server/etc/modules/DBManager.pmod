@@ -101,10 +101,17 @@ private
     }
     else
     {
-      db->query( "REPLACE INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, ''), (%s, %s, '')",
-		 host, short_name + "_rw",
-		 host, short_name + "_ro" );
+      if (normalized_server_version >= "010.002") {
+	db->query( "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY ''",
+		   short_name + "_rw", host);
+	db->query( "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY ''",
+		   short_name + "_ro", host);
+      } else {
+	db->query( "REPLACE INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, ''), (%s, %s, '')",
+		   host, short_name + "_rw",
+		   host, short_name + "_ro" );
+      }
     }
   }
 
