@@ -163,6 +163,13 @@ table {
       }
     }
 
+    .sticky-kids {
+      th {
+        @extend .sticky;
+        background: $topmenu-bg;
+      }
+    }
+
     tbody {
       background: lighten($main-column-bg, 2%);
 

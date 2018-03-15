@@ -25,9 +25,9 @@ string format_hit_rate (int|float hits, int|float misses)
 #define TABLE_ATTRS                                                     \
   "class='nice narrow'"
 #define THEAD_ATTRS                                                     \
-  "class='sticky'"
-#define HDR_TR_ATTRS                                                    \
   ""
+#define HDR_TR_ATTRS                                                    \
+  "class='sticky-kids'"
 #define BODY_TR_ATTRS(ROW)                                              \
   ""
 #define FTR_TR_ATTRS                                                    \
