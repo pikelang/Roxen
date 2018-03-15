@@ -204,7 +204,17 @@ object|array(object) parse_box_xml( string xml_file, string|void ident )
 
 string render_mustache(string template, mixed view, void|mixed partials)
 {
+  // If this is set child-classes in Mustache will not get rit of their
+  // reference to Mustache which can lead to a bunch of Mustache objects
+  // before the GC wipes them out. So lets explicitly destroy.
+#if constant(__pragma_save_parent__)
+  Mustache m = Mustache();
+  string res = m->render(template, view, partials);
+  destruct(m);
+  return res;
+#else
   return Mustache()->render(template, view, partials);
+#endif
 }
 
 int ip_to_int(string ip)
