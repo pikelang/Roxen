@@ -333,17 +333,13 @@ class ConfigurationSettings
     name = _name;
     variables = ([]);
 
-    int theme_can_change_colors( RequestID i, Variable.Variable v )
-    {
-      if( !RXML.get_context() ) return 0;
-      if( config_setting2( "can-change-colors" ) ) return 0;
-      // return 1;
-      return 0;
-    };
-
     int hide_defvar(RequestID i, Variable.Variable v) {
       return 1;
     };
+
+    // CFIF17: Remove all `query(...)`, wherever they may be, that
+    //         queries any of the hidden defvars below. When that's done
+    //         remove the deprecated defvars.
 
     defvar( "left_boxes",
             BoxVariable( LOCALE(285,"Large Content Boxes"),
@@ -374,8 +370,6 @@ class ConfigurationSettings
             ({ -2, -1, 0, 1, 2, }) )
             ->set_invisibility_check_callback( hide_defvar );
 
-
-    mixed listmode_var =
     defvar( "modulelistmode", "uf",
             LOCALE(14,"Module list mode"),
             TYPE_STRING_LIST,
@@ -391,8 +385,8 @@ class ConfigurationSettings
               "js": LOCALE(17,"Folded with JavaScript popup"),
               "fl": LOCALE(122,"Folded"),
               "uf": LOCALE(123,"Unfolded (Old style)"),
-            ]) );
-    listmode_var->set_choice_list( ({ "fl", "js", "uf" }) );
+            ]) )
+            ->set_choice_list( ({ "fl", "js", "uf" }) );
 
     defvar( "moduletab", "Status",
             LOCALE(85,"Default module tab"),
@@ -430,7 +424,6 @@ class ConfigurationSettings
 //            "iso646-se",
             }));
 
-    mixed sort_var =
     defvar( "sortorder", "as defined",
             LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
             LOCALE(237, "The default order variables are sorted in" ),
@@ -439,8 +432,8 @@ class ConfigurationSettings
               "as defined"   : LOCALE(239,"As defined"),
               "changed/alphabetical" : LOCALE(240,"Alphabetical, changed first"),
               "changed/as defined"   : LOCALE(241,"As defined, changed first"),
-            ]) );
-    sort_var->set_choice_list( ({ "as defined",
+            ]) )
+            ->set_choice_list( ({ "as defined",
                                   "changed/as defined",
                                   "alphabetical",
                                   "changed/alphabetical" }) );
@@ -511,7 +504,6 @@ class ConfigurationSettings
                                "type, otherwise all tasks will be listed on "
                                "one page") );
 
-    mixed method_var =
     defvar( "addmodulemethod", "normal",
             LOCALE(189, "Add/Delete module page type"),
             TYPE_STRING_LIST,
@@ -531,9 +523,9 @@ class ConfigurationSettings
                "fast"           : LOCALE(282, "Fast"),
                "faster"         : LOCALE(284, "Faster"),
                "compact"        : LOCALE(286, "Compact"),
-               "really compact" : LOCALE(288, "Really compact")  ]));
-    method_var->set_choice_list( ({ "normal", "fast", "faster",
-                                    "compact", "really compact" }) );
+               "really compact" : LOCALE(288, "Really compact")  ]))
+            ->set_choice_list( ({ "normal", "fast", "faster",
+                                  "compact", "really compact" }) );
 
     restore( );
   }
