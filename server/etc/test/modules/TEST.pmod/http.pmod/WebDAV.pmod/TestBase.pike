@@ -1903,21 +1903,21 @@ public void test_move_destination_locked()
 // letters.
 // -----------------------------------------------------------------------------
 
-// #ifdef WEBDAV_TEST_ASCII_ONLY
-protected constant filenames =
+#ifdef WEBDAV_TEST_ASCII_ONLY
+protected constant FILENAMES =
   ({
     "myFile",          // To compare with
    });
-// #else
-// protected constant filenames =
-//   ({
-//     "myFile",          // To compare with
-//     "åÅäÄöÖæÆüÜñÑ@µ",  // Some Latin 1 chars
-//     "ąĄŁůŮăĂçÇ",       // Some Latin 2 chars
-//     "фщъЂЃЄЉЖ",        // Some Cyrillic chars
-//     "ώψφλξβΩΠΞΔ€",     // Some Greek chars
-//   });
-// #endif
+#else
+protected constant FILENAMES =
+  ({
+    "myFile",          // To compare with
+    "åÅäÄöÖæÆüÜñÑ@",   // Some Latin 1 chars
+    "ąĄŁůŮăĂçÇ",       // Some Latin 2 chars
+    "фщъЂЃЄЉЖ",        // Some Cyrillic chars
+    "ώψφλξβΩΠΞΔ€",     // Some Greek chars
+  });
+#endif
 
 // Create directory and file using one encoding and mixed, lower or upper case.
 // Then do ls for all combinations of (same encoding, other encoding) x
@@ -1926,8 +1926,8 @@ public void test_x_ls()
 {
   int count = 0;
   bool caseSensitive = case_sensitive();
-  int w = sizeof("" + (sizeof(filenames)*2*3) );
-  foreach (filenames, string str) {
+  int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
+  foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
     foreach (({"NFC", "NFD"}), string unicode_method_create) {
       foreach (({"mc", "lc", "uc"}), string case_create) {
@@ -1989,8 +1989,8 @@ public void test_x_special_chars()
   string testdir = this::testcase_dir;
   // If you want to try single chars, just ad them as new strings to the array
   // below.
-  array(string) filenames = ({ " _ [](){}+-*#%&=?|$~ " });
-  foreach (filenames, string file) {
+  array(string) FILENAMES = ({ " _ [](){}+-*#%&=?|$~ " });
+  foreach (FILENAMES, string file) {
     mixed e = catch {
       // This test should only include chars that are the same before and after
       // encoding
@@ -2012,8 +2012,8 @@ public void test_x_put()
 {
   int count = 0;
   bool caseSensitive = case_sensitive();
-  int w = sizeof("" + (sizeof(filenames)*2*3) );
-  foreach (filenames, string str) {
+  int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
+  foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
     foreach (({"NFC", "NFD"}), string unicode_method_put1) {
       foreach (({"mc", "lc", "uc"}), string case_put1) {
@@ -2036,16 +2036,18 @@ public void test_x_put()
             // Try to put again, possibly with different encoding and
             // possible with different case.
             int expected_status_code = STATUS_CREATED;
+            bool filenames_considered_equal;
             if (caseSensitive) {
-              expected_status_code = 
-                (Unicode.normalize(file1, "NFC") ==
-                 Unicode.normalize(file2, "NFC") ?
-                 STATUS_OK : STATUS_CREATED);
+              filenames_considered_equal =
+                Unicode.normalize(utf8_to_string(file1), "NFC") ==
+                Unicode.normalize(utf8_to_string(file2), "NFC");
             } else {
-              expected_status_code =
-                (lower_case(Unicode.normalize(file1, "NFC")) ==
-                 lower_case(Unicode.normalize(file2, "NFC")) ?
-                 STATUS_OK : STATUS_CREATED);
+              filenames_considered_equal =
+                lower_case(Unicode.normalize(utf8_to_string(file1), "NFC")) ==
+                lower_case(Unicode.normalize(utf8_to_string(file2), "NFC"));
+            }
+            if (filenames_considered_equal) {
+              expected_status_code = STATUS_OK;
             }
             webdav_put(file2, "FILE 2" + count, expected_status_code);
             if (case_put1 == case_put2) {
@@ -2072,8 +2074,8 @@ public void test_x_copy_file()
 {
   int count = 0;
   bool caseSensitive = case_sensitive();
-  int w = sizeof("" + (sizeof(filenames)*2*3) );
-  foreach (filenames, string str) {
+  int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
+  foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
     foreach (({"NFC", "NFD"}), string unicode_method_src) {
       foreach (({"mc", "lc", "uc"}), string case_src) {
@@ -2108,8 +2110,8 @@ public void test_x_mkcol()
 {
   int count = 0;
   bool caseSensitive = case_sensitive();
-  int w = sizeof("" + (sizeof(filenames)*2*3) );
-  foreach (filenames, string str) {
+  int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
+  foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
     foreach (({"NFC", "NFD"}), string unicode_method_dir1) {
       foreach (({"mc", "lc", "uc"}), string case_dir1) {
@@ -2143,8 +2145,8 @@ public void test_x_move_file()
 {
   int count = 0;
   bool caseSensitive = case_sensitive();
-  int w = sizeof("" + (sizeof(filenames)*2*3) );
-  foreach (filenames, string str) {
+  int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
+  foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
     foreach (({"NFC", "NFD"}), string unicode_method_src) {
       foreach (({"mc", "lc", "uc"}), string case_src) {
