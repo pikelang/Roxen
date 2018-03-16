@@ -916,9 +916,8 @@ public void test_locks_deleted_when_resource_deleted_2()
   string subdir = Stdio.append_path(dir, "subdir");
   webdav_mkcol(subdir, STATUS_LOCKED);
 
-  current_locks = locks;
+  current_locks = locks + ([]);
   webdav_delete(dir, locks, STATUS_NO_CONTENT);
-  current_locks = ([ ]);
 
   webdav_mkcol(dir, STATUS_CREATED);
   webdav_mkcol(subdir, STATUS_CREATED);
@@ -936,10 +935,9 @@ public void test_locks_deleted_when_resource_deleted_3()
   webdav_lock(file, locks, STATUS_OK);
   webdav_put(file, "New content", STATUS_LOCKED);
 
-  current_locks = locks;
+  current_locks = locks + ([]);
   webdav_delete(dir, locks, STATUS_NO_CONTENT);
   webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
-  current_locks = ([ ]);
 
   webdav_mkcol(dir, STATUS_CREATED);
   webdav_put(file, "New content", STATUS_CREATED);
