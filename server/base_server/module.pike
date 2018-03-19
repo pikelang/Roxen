@@ -1323,7 +1323,8 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
   if (lock && intp(lock)) {
     if (lock & 1) {
       TRACE_LEAVE("Locked by other user.");
-      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+      return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				  "lock-token-submitted");
     }
     else if (recursive)
       // This is set for LOCK_OWN_BELOW too since it might be
@@ -1341,7 +1342,8 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
   if (!if_data || !sizeof(condition = if_data[path] || if_data[0])) {
     if (lock) {
       TRACE_LEAVE("Locked, no if header.");
-      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+      return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				  "lock-token-submitted");
     }
     SIMPLE_TRACE_LEAVE("No lock and no if header - ok%s.",
 		       got_sublocks ? " (this level only)" : "");
@@ -1416,12 +1418,12 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 
   if (locked_fail) {
     TRACE_LEAVE("Failed (locked).");
-  } else {
-    TRACE_LEAVE("Precondition failed.");
+    return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				"lock-token-submitted");
   }
-  return Roxen.http_status(locked_fail ?
-			   Protocols.HTTP.DAV_LOCKED :
-			   Protocols.HTTP.HTTP_PRECOND_FAILED);
+
+  TRACE_LEAVE("Precondition failed.");
+  return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
 
 //! Used by some default implementations to check if we may perform a
