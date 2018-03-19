@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.245 2012/01/23 12:50:52 grubba Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -1258,7 +1258,8 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
   if (lock && intp(lock)) {
     if (lock & 1) {
       TRACE_LEAVE("Locked by other user.");
-      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+      return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				  "lock-token-submitted");
     }
     else if (recursive)
       // This is set for LOCK_OWN_BELOW too since it might be
@@ -1276,7 +1277,8 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
   if (!if_data || !sizeof(condition = if_data[path] || if_data[0])) {
     if (lock) {
       TRACE_LEAVE("Locked, no if header.");
-      return Roxen.http_status(Protocols.HTTP.DAV_LOCKED);
+      return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				  "lock-token-submitted");
     }
     SIMPLE_TRACE_LEAVE("No lock and no if header - ok%s.",
 		       got_sublocks ? " (this level only)" : "");
@@ -1349,10 +1351,14 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     locked_fail = 1;
   }
 
-  TRACE_LEAVE("Failed.");
-  return Roxen.http_status(locked_fail ?
-			   Protocols.HTTP.DAV_LOCKED :
-			   Protocols.HTTP.HTTP_PRECOND_FAILED);
+  if (locked_fail) {
+    TRACE_LEAVE("Failed (locked).");
+    return Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED,
+				"lock-token-submitted");
+  }
+
+  TRACE_LEAVE("Precondition failed.");
+  return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
 }
 
 //! Used by some default implementations to check if we may perform a
