@@ -157,7 +157,6 @@ worldmap binary
 /server/etc/modules/RXML.pmod/PXml.pike foreign_ident
 /server/etc/modules/RXML.pmod/module.pmod foreign_ident
 /server/etc/modules/RXML.pmod/utils.pmod foreign_ident
-/server/etc/modules/Roxen.pmod foreign_ident
 /server/etc/modules/RoxenDebug.pmod foreign_ident
 /server/etc/modules/RoxenPatch.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.329 2012/04/17 09:06:40 erikd Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -607,6 +607,52 @@ mapping(string:mixed) http_status (int status_code,
     HTTP_WERR ("Return status " + status_code);
     return (["error": status_code]);
   }
+}
+
+mapping(string:mixed) http_xml_status(int status_code,
+				      Parser.XML.Tree.SimpleNode message)
+//! Return a response mapping with the specified HTTP @[status_code] and
+//! XML @[message]. As opposed to @[http_status()], the @[message] is XML
+//! which can be included directly into multistatus responses in WebDAV.
+{
+  mapping ret = ([
+    "error": status_code,
+    "xml": message,
+    "type": "application/xml; charset='utf-8'",
+  ]);
+
+  Parser.XML.Tree.SimpleRootNode root = Parser.XML.Tree.SimpleRootNode()->
+    add_child(Parser.XML.Tree.SimpleHeaderNode((["version": "1.0",
+						 "encoding": "utf-8"])))->
+    add_child(message);
+  ret->data = root->render_xml();
+
+  HTTP_WERR("Return XML status " + status_code);
+  return ret;
+}
+
+mapping(string:mixed) http_dav_error(int status_code, string error_type)
+//! Return a response mapping with the specified HTTP @[status_code] and
+//! XML message.
+//!
+//! @param status_code
+//!   HTTP status code, typically one of @expr{409@} (Conflict),
+//!   @expr{423@} (Locked) or @expr{403@} (Forbidden).
+//!
+//! @param error_type
+//!   Name of DAV XML error node to generate. It will be embedded
+//!   as the single element in a @tt{DAV:error@} element.
+//!
+//! This function simplifies some common cases where @[http_xml_status()]
+//! would otherwise be used.
+//!
+//! @seealso
+//!   @[http_xml_status()]
+{
+  Parser.XML.Tree.SimpleNode node =
+    Parser.XML.Tree.SimpleElementNode("DAV:error", ([]))->
+    add_child(Parser.XML.Tree.SimpleElementNode("DAV:" + error_type, ([])));
+  return http_xml_status(status_code, node);
 }
 
 mapping(string:mixed) http_method_not_allowed (
