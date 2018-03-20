@@ -1186,6 +1186,15 @@ mixed find_file( string f, RequestID id )
       return ret;
     }
 
+    if (size == -2) {
+      // RFC 4918 9.7.2:
+      // A PUT request to an existing collection MAY be treated as an
+      // error (405 Method Not Allowed).
+      id->misc->error_code = 405;
+      TRACE_LEAVE("PUT: Is directory.");
+      return 0;
+    }
+
     puts++;
 
     QUOTA_WERR("Checking quota.\n");
