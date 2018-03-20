@@ -52,36 +52,42 @@ private class WebdavTest {
 
   protected int filesystem_check_exists(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return Stdio.exist(real_path);
   }
 
   protected string filesystem_read_file(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return Stdio.read_bytes(real_path);
   }
 
   protected array(string) filesystem_get_dir(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return get_dir(real_path);
   }
 
   protected int filesystem_is_dir(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return Stdio.is_dir(real_path);
   }
 
   protected int filesystem_is_file(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return Stdio.is_file(real_path);
   }
 
   protected int filesystem_recursive_rm(string path)
   {
+    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
     string real_path = Stdio.append_path(real_dir, path);
     return Stdio.recursive_rm(real_path);
 
