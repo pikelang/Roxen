@@ -589,13 +589,14 @@ void recursive_rm(string real_dir, string virt_dir,
     string virt_fname = virt_dir + "/" + decode_path(fname);
 
     Stat stat = file_stat(real_fname);
+    SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
+		       stat?(stat->isdir?"directory":"file"):"missing",
+		       real_fname);
     if (!stat) {
       id->set_status_for_path(virt_fname, 404);
       TRACE_LEAVE("File not found.");
       continue;
     }
-    SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
-		       stat->isdir?"directory":"file", real_fname);
     int(0..1)|mapping sub_status;
     if (check_status_needed &&
 	mappingp(sub_status = write_access(virt_fname, 1, id))) {
@@ -1429,11 +1430,13 @@ mixed find_file( string f, RequestID id )
     if (size != -1) {
       // Destination exists.
 
+      TRACE_ENTER(sprintf("Destination exists: %d\n", size), 0);
       int(0..1) overwrite =
 	!id->request_headers->overwrite ||
 	id->request_headers->overwrite == "T";
       if (!overwrite) {
 	privs = 0;
+	TRACE_LEAVE("");
 	TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
 	return Roxen.http_status(412);
       }
@@ -1441,20 +1444,23 @@ mixed find_file( string f, RequestID id )
       {
 	privs = 0;
 	id->misc->error_code = 405;
+	TRACE_LEAVE("");
 	TRACE_LEAVE("MOVE disallowed (DELE disabled)");
 	return 0;
       }
-      
+      TRACE_LEAVE("Overwrite allowed.");
       if (overwrite || (size > -1)) {
-	mapping(string:mixed) res =
-	  recurse_delete_files(new_uri, id);
+	TRACE_ENTER(sprintf("Deleting destination: %O...\n", new_uri), 0);
+	mapping(string:mixed) res = recurse_delete_files(new_uri, id);
 	if (res && (!sizeof (res) || res->error >= 300)) {
 	  privs = 0;
+	  TRACE_LEAVE("");
 	  TRACE_LEAVE("MOVE: Recursive delete failed.");
 	  if (sizeof (res))
 	    set_status_for_path (new_uri, res->error, res->rettext);
 	  return ([]);
 	}
+	TRACE_LEAVE("Recursive delete ok.");
       } else {
 	privs = 0;
 	TRACE_LEAVE("MOVE: Cannot overwrite directory");
@@ -1462,9 +1468,12 @@ mixed find_file( string f, RequestID id )
       }
     }
 
+    TRACE_ENTER(sprintf("MOVE: mv(%O, %O)...\n", norm_f, moveto), 0);
     code = mv(norm_f, moveto);
     int err_code = errno();
     privs = 0;
+    TRACE_LEAVE(sprintf("==> %d (errno: %d: %s)\n",
+			code, err_code, strerror(err_code)));
 
     TRACE_ENTER("MOVE: Accepted", 0);
 
