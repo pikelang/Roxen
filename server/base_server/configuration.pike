@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.726 2012/05/10 17:48:29 mast Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1743,7 +1743,7 @@ string examine_return_mapping(mapping m)
 }
 
 //! Find all applicable locks for this user on @[path].
-multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
 			     int(0..1) exclude_shared, RequestID id)
 {
   SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
