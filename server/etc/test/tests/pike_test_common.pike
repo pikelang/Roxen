@@ -205,7 +205,7 @@ void check_error( mixed res, mixed err,
   else {
     report_test_failure( "Expected error", cb, args, st ); 
     if( throw_error ) {
-      error( "Expected error but none was thrown." );
+      error( "Expected error but none was thrown.\n" );
     }
   }
 }
@@ -251,7 +251,7 @@ void silent_check_true( mixed res, mixed err,
       if( err ) {
         throw( err );
       } else {
-        error( "Condition failed" );
+        error( "Condition failed.\n" );
       }
     }
   } else {
@@ -273,7 +273,7 @@ void check_true( mixed res, mixed err,
     report_test_failure( sprintf ("expected non-zero, got %O", res),
                          cb, args, st);
     if( throw_error ) {
-      error( sprintf ("expected non-zero, got %O", res) );
+      error( sprintf ("expected non-zero, got %O\n", res) );
     }
   } else {
     report_test_ok( err, cb, args, st );
@@ -302,7 +302,7 @@ void check_false( mixed res, mixed err,
     if( res ) {
       report_test_failure( sprintf("expected zero, got %O",res), cb, args, st);
       if( throw_error ) {
-        error( sprintf("expected zero, got %O",res) );
+        error( sprintf("expected zero, got %O\n", res) );
       }
     }
     else
@@ -348,7 +348,7 @@ function check_equal( mixed m )
           throw( err );
         }
       } else if( !equal( res, m )) {
-        string message = sprintf("Got %O, expected %O", res,m);
+        string message = sprintf("Got %O, expected %O.\n", res,m);
         report_test_failure( message, cb, args, st );
         if( throw_error ) {
           error( message );
@@ -371,7 +371,7 @@ function check_not_equal( mixed m )
           throw( err );
         }
       } else if( equal( res, m )) {
-        string message = sprintf("Got %O, expected different value", res);
+        string message = sprintf("Got %O, expected different value.\n", res);
         report_test_failure( message, cb, args, st );
         if( throw_error ) {
           error( message );
