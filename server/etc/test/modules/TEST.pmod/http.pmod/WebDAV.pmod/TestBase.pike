@@ -1811,7 +1811,7 @@ public void test_move_src_locked()
     webdav_lock(resource_to_lock, locks, STATUS_OK);
     WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_LOCKED);
     verify_lock_token(res);
-    webdav_unlock(resource_to_lock, locks, STATUS_OK);
+    webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
   WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_CREATED);
   webdav_ls(this::testcase_dir,
@@ -1832,7 +1832,7 @@ public void test_move_destination_locked()
   string src_child = Stdio.append_path(src, child_name);
   string dst_parent = Stdio.append_path(this::testcase_dir, "dst_parent");
   string dst = Stdio.append_path(dst_parent, "dst");
-  string dst_child = Stdio.append_path(dst_parent, child_name); // Must be same name as src child!
+  string dst_child = Stdio.append_path(dst, child_name); // Must be same name as src child!
   foreach (({src, dst_parent, dst}), string col) {
     webdav_mkcol(col, STATUS_CREATED);
   }
@@ -1843,11 +1843,13 @@ public void test_move_destination_locked()
     webdav_lock(resource_to_lock, locks, STATUS_OK);
     WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_LOCKED);
     verify_lock_token(res);
-    webdav_unlock(resource_to_lock, locks, STATUS_OK);
+    webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
-  WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_CREATED);
+  WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_NO_CONTENT);
+  filesystem_check_content(dst_child, "src child content");
   webdav_ls(this::testcase_dir,
             ({ this::testcase_dir,
+	       dst_parent,
                dst,
                dst_child }));
 }
