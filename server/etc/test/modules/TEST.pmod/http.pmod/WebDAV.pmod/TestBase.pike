@@ -333,7 +333,7 @@ protected WebDAVResponse webdav_move(string src_path,
     if (is_regular_file) {
       ASSERT_CALL_TRUE(filesystem_check_content, dst_path, expected_content);
     }
-    ASSERT_CALL_EQUAL(!src_equals_dst, filesystem_check_exists, src_path);
+    ASSERT_CALL_EQUAL(src_equals_dst, filesystem_check_exists, src_path);
   }
   return res;
 }
