@@ -53,7 +53,7 @@ private class WebdavTest {
   protected int filesystem_check_exists(string path)
   {
     string real_path = Stdio.append_path(real_dir, path);
-    return Stdio.is_file(real_path);
+    return Stdio.exist(real_path);
   }
 
   protected string filesystem_read_file(string path)
