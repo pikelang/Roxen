@@ -77,7 +77,7 @@ protected class WebDAVResponse(int status,
                                mapping(string:string) headers,
                                string data)
 {
-    mixed `[](mixed index) {
+  mixed `[](mixed index) {
     if (intp(index)) {
       if (index == 0) {
         return status;
@@ -92,6 +92,10 @@ protected class WebDAVResponse(int status,
     return ::`[](index);
   }
 
+  protected string _sprintf(int c)
+  {
+    return sprintf("%O(%O, %O, %O)", this_program, status, headers, data);
+  }
 }
 
 protected WebDAVResponse webdav_request(string method,
@@ -146,11 +150,12 @@ protected WebDAVResponse webdav_request(string method,
     path = path[1..];
   }
 
-  Standards.URI url = Standards.URI(Protocols.HTTP.percent_encode(path), base_uri);
+  path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
+  Standards.URI url = Standards.URI(path, base_uri);
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
 
   report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
-         method, path, url, con?con->status:600);
+	       method, path, url, con?con->status:600);
 
   if (!con) {
     return WebDAVResponse(600, ([]), "" );
