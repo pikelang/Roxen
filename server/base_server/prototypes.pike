@@ -3915,7 +3915,8 @@ class RoxenModule
   mapping(string:mixed) make_collection(string path, RequestID id);
   mapping(string:mixed) recurse_copy_files(string source, string destination,
 					   PropertyBehavior behavior,
-					   Overwrite overwrite, RequestID id);
+					   Overwrite overwrite, RequestID id,
+					   int|void one_level);
   mapping(string:mixed) recurse_move_files(string source, string destination,
 					   PropertyBehavior behavior,
 					   Overwrite overwrite, RequestID id);
