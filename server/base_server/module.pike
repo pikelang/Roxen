@@ -1301,7 +1301,7 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
     SIMPLE_TRACE_ENTER(this,
 		       "Trying condition ( %{%s:%O %})...", sub_cond);
     int negate;
-    DAVLock locked = lock;
+    int|DAVLock locked = lock;
     foreach(sub_cond, array(string) token) {
       switch(token[0]) {
       case "not":
@@ -1333,11 +1333,11 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 	// The user has specified a key, so don't fail with DAV_LOCKED.
 	locked_fail = 0;
 	if (negate) {
-	  if (lock && lock->locktoken == token[1]) {
+	  if (objectp(lock) && lock->locktoken == token[1]) {
 	    TRACE_LEAVE("Matched negated lock.");
 	    continue next_condition;	// Fail.
 	  }
-	} else if (!lock || lock->locktoken != token[1]) {
+	} else if (!objectp(lock) || lock->locktoken != token[1]) {
 	  // Lock mismatch.
 	  TRACE_LEAVE("Lock mismatch.");
 	  continue next_condition;	// Fail.

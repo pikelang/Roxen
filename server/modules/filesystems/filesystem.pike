@@ -1325,9 +1325,9 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    // FIXME: What about moving of directories containing locked files?
+    // NB: Consider the case of moving of directories containing locked files.
     if (mapping(string:mixed) ret =
-	write_access(({ f, relative_from }), 0, id)) {
+	write_access(({ f, relative_from }), 1, id)) {
       TRACE_LEAVE("MV: Locked");
       return ret;
     }
@@ -1414,14 +1414,15 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
+    // NB: Consider the case of moving of directories containing locked files.
     mapping(string:mixed) ret =
-      write_access(({ combine_path(f, "../"), f, new_uri }), 0, id);
+      write_access(({ combine_path(f, "../"), f, new_uri }), 1, id);
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
       return ret;
     }
 
-    size = _file_size(moveto,id);
+    size = _file_size(new_uri, id);
 
     SETUID_TRACE("Moving file", 0);
 
