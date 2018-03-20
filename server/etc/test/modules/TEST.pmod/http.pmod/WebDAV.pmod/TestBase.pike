@@ -1959,9 +1959,8 @@ public void test_x_ls()
             if (case_create == case_ls) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
             } else {
-              webdav_ls(dir_ls, caseSensitive ?
-                                  ({ }) :
-                                  ({ exp_dir[case_ls] }) );
+              webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
+			caseSensitive && STATUS_NOT_FOUND);
             }
             webdav_put(new_dir + "/" + new_file, "FILE " + count, STATUS_CREATED);
             if (case_create == case_ls) {
@@ -2057,17 +2056,18 @@ public void test_x_put()
               expected_status_code = STATUS_OK;
             }
             webdav_put(file2, "FILE 2" + count, expected_status_code);
-            if (case_put1 == case_put2) {
+            if (!caseSensitive) {
               webdav_ls(dir1,
+                        ({ exp_dir, exp_file[case_put1] }) );
+              webdav_ls(dir2,
                         ({ exp_dir, exp_file[case_put1] }) );
             } else {
               webdav_ls(dir1,
-                        caseSensitive ?
-                          ({ exp_dir,
-                             exp_file[case_put1],
-                             exp_file[case_put2] }) :
-                          ({ exp_dir,
-                              exp_file[case_put2] }) );
+                          ({ dir1,
+                             file1 }) );
+              webdav_ls(dir2,
+                          ({ dir2,
+                             file2 }) );
             }
           }
         }
