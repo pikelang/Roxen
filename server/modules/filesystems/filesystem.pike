@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.161 2010/06/29 13:30:31 grubba Exp $";
+constant cvs_version= "$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1079,6 +1079,15 @@ mixed find_file( string f, RequestID id )
     if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
       TRACE_LEAVE("PUT: Locked");
       return ret;
+    }
+
+    if (size == -2) {
+      // RFC 4918 9.7.2:
+      // A PUT request to an existing collection MAY be treated as an
+      // error (405 Method Not Allowed).
+      id->misc->error_code = 405;
+      TRACE_LEAVE("PUT: Is directory.");
+      return 0;
     }
 
     puts++;
