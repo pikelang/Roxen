@@ -1814,6 +1814,9 @@ protected mapping(string:mixed) copy_file(string source, string destination,
 //!   Specifies how to handle the situation if the destination already
 //!   exists. See the @[Overwrite] type for details.
 //!
+//! @param one_level
+//!   Indicates whether recursion is to be inhibited.
+//!
 //! @returns
 //!   Returns a 2xx series status mapping on success (typically 201
 //!   Created if the destination didn't exist before, or 204 No
@@ -1824,7 +1827,8 @@ protected mapping(string:mixed) copy_file(string source, string destination,
 //!   response using the info in @[id->get_multi_status()].
 mapping(string:mixed) recurse_copy_files(string source, string destination,
 					 PropertyBehavior behavior,
-					 Overwrite overwrite, RequestID id)
+					 Overwrite overwrite, RequestID id,
+					 int|void one_level)
 {
   SIMPLE_TRACE_ENTER(this, "Recursive copy from %O to %O (%s)",
 		     source, destination,
@@ -1844,7 +1848,8 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
   MultiStatus.Prefixed result =
     id->get_multi_status()->prefix (id->url_base() + prefix);
 
-  mapping(string:mixed) recurse(string source, string destination) {
+  mapping(string:mixed) recurse(string source, string destination,
+				int|void one_level) {
     // Note: Already got an extra TRACE_ENTER level on entry here.
 
     Stat st = stat_file(source, id);
@@ -1852,7 +1857,8 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
       TRACE_LEAVE("Source not found.");
       return 0;
     }
-    // FIXME: Check destination?
+    // NB: No need to check the destination here, as it is done by
+    //     copy_collection() and copy_file().
     if (st->isdir) {
       mapping(string:mixed) res =
 	copy_collection(source, destination, behavior, overwrite, result, id);
@@ -1861,13 +1867,15 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
 	TRACE_LEAVE("Copy of collection failed.");
 	return res;
       }
-      foreach(find_dir(source, id), string filename) {
-	string subsrc = combine_path_unix(source, filename);
-	string subdst = combine_path_unix(destination, filename);
-	SIMPLE_TRACE_ENTER(this, "Copy from %O to %O\n", subsrc, subdst);
-	mapping(string:mixed) sub_res = recurse(subsrc, subdst);
-	if (sub_res && !(<0, 201, 204>)[sub_res->error]) {
-	  result->add_status(subdst, sub_res->error, sub_res->rettext);
+      if (!one_level) {
+	foreach(find_dir(source, id), string filename) {
+	  string subsrc = combine_path_unix(source, filename);
+	  string subdst = combine_path_unix(destination, filename);
+	  SIMPLE_TRACE_ENTER(this, "Copy from %O to %O\n", subsrc, subdst);
+	  mapping(string:mixed) sub_res = recurse(subsrc, subdst);
+	  if (sub_res && !(<0, 201, 204>)[sub_res->error]) {
+	    result->add_status(subdst, sub_res->error, sub_res->rettext);
+	  }
 	}
       }
       TRACE_LEAVE("");
@@ -1879,7 +1887,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
   };
 
   int start_ms_size = id->multi_status_size();
-  mapping(string:mixed) res = recurse (source, destination);
+  mapping(string:mixed) res = recurse (source, destination, one_level);
   if (res && res->error != 204 && res->error != 201)
     return res;
   else if (id->multi_status_size() != start_ms_size)

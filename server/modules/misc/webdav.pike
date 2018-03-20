@@ -1,4 +1,4 @@
-// Protocol support for RFC 2518
+// Protocol support for RFC 2518 and RFC 4918
 //
 // $Id$
 //
@@ -170,6 +170,44 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       TRACE_LEAVE(sprintf("Bad depth header: %O.",
 			  id->request_headers->depth));
       return Roxen.http_status(400, "Unsupported depth.");
+    }
+    switch(id->method) {
+    case "DELETE":
+    case "MOVE":
+      // RFC 4918 9.6.1:
+      // The DELETE method on a collection MUST act as if a "Depth:
+      // infinity" header was used on it. A client MUST NOT submit a
+      // Depth header with a DELETE on a collection with any value but
+      // infinity.
+      //
+      // RFC 4918 9.9.2:
+      // The MOVE method on a collection MUST act as if a "Depth:
+      // infinity" header was used on it. A client MUST NOT submit a
+      // Depth header on a MOVE on a collection with any value but
+      // "infinity".
+
+      if (depth != 0x7fffffff) {
+	TRACE_LEAVE(sprintf("Bad depth header: %O.",
+			    id->request_headers->depth));
+	return Roxen.http_status(400, "Unsupported depth.");
+      }
+      break;
+
+    case "COPY":
+      // RFC 4918 9.8.3:
+      // The COPY method on a collection without a Depth header MUST
+      // act as if a Depth header with value "infinity" was
+      // included. A client may submit a Depth header on a COPY on a
+      // collection with a value of "0" or "infinity". Servers MUST
+      // support the "0" and "infinity" Depth header behaviors on
+      // WebDAV-compliant resources.
+
+      if (depth == 1) {
+	TRACE_LEAVE(sprintf("Bad depth header: %O.",
+			    id->request_headers->depth));
+	return Roxen.http_status(400, "Unsupported depth.");
+      }
+      break;
     }
   } else if (id->request_headers->depth) {
     // Depth header not supported in this case.
@@ -478,11 +516,15 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   }
 		   // Convert destination to module location relative.
 		   destination = destination[sizeof(loc)..];
-		   mapping(string:mixed) res =
-		     ((id->method == "COPY")?
-		      module->recurse_copy_files:
-		      module->recurse_move_files)
-		     (source, destination, behavior, overwrite, id);
+		   mapping(string:mixed) res;
+		   if (id->method == "MOVE") {
+		     res = module->recurse_move_files(source, destination,
+						      behavior, overwrite, id);
+		   } else {
+		     res = module->recurse_copy_files(source, destination,
+						      behavior, overwrite, id,
+						      !d);
+		   }
 		   if (res && ((res->error == 201) || (res->error == 204))) {
 		     empty_result = res;
 		     if (id->method == "MOVE") {
@@ -710,9 +752,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if (has_prefix(href, loc) || (loc == href+"/")) {
       // href = loc + path.
       path = href[sizeof(loc)..];
-    } else if (d && has_prefix(loc, href_prefix) &&
-	       ((d -= sizeof((loc[sizeof(href_prefix)..])/"/")) >= 0)) {
+    } else if (d && has_prefix(loc, href_prefix)) {
       // loc = href_prefix + ...
+      d -= sizeof((loc[sizeof(href_prefix)..])/"/");
+      if (d < 0) continue;
       // && recursion.
       path = "";
     } else {
