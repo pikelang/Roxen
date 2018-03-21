@@ -1240,8 +1240,8 @@ mapping(string:mixed) unlock_file (string path,
 //! WARNING: This function has some design issues and will very likely
 //! get a different interface. Compatibility is NOT guaranteed.
 //!
-//! @param path
-//!   Path (below the filesystem location) that the lock applies to.
+//! @param relative_path
+//!   Path (below the filesystem location) to check the if header for.
 //!
 //! @param recursive
 //!   If @expr{1@} also check write access recursively under @[path].
