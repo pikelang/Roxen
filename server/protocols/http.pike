@@ -1105,6 +1105,7 @@ private int parse_got( string new_data )
 	 misc->content_type_type = lower_case (ct_type + "/" + ct_subtype);
 	 break;
        case "destination":
+	 MY_TRACE_ENTER(sprintf("Destination header: %O", contents));
 	 // FIXME: This silently strips away the server if the
 	 // destination is an absolute URI, and it can be a different
 	 // one according to RFC 4918, section 10.3. If we cannot use
@@ -1119,10 +1120,12 @@ private int parse_got( string new_data )
 				"%s", contents, describe_error(err)));
 #endif /* DEBUG */
 	 }
+	 catch { contents = utf8_to_string(contents); };
 	 misc["new-uri"] = VFS.normalize_path (contents);
 	 if (String.width(misc["new-uri"]) > 8) {
 	   misc["new-uri"] = Unicode.normalize(misc["new-uri"], "NFC");
 	 }
+	 MY_TRACE_LEAVE(sprintf("misc[\"new-uri\"] = %O", misc["new-uri"]));
 	 break;
 
        case "expect":
