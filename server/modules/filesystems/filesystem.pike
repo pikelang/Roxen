@@ -1402,7 +1402,7 @@ mixed find_file( string f, RequestID id )
       return(0);
     }
     new_uri = new_uri[sizeof(mountpoint)..];
-    string moveto = path + "/" + encode_path(new_uri);
+    string moveto = real_path(new_uri, id);
 
     // Workaround for Linux, Tru64 and FreeBSD.
     if (has_suffix(moveto, "/")) {
@@ -1431,6 +1431,13 @@ mixed find_file( string f, RequestID id )
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
       return ret;
+    }
+
+    if (norm_f == moveto) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MOVE: Source and destination are the same path.");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     size = _file_size(new_uri, id);
