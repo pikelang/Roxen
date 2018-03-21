@@ -1498,7 +1498,7 @@ mapping(string:mixed) recurse_delete_files(string path,
 	    //   in the 207 (Multi-Status). The reason for this prohibition
 	    //   is that 204 (No Content) is the default success code.
 	    if (sizeof (sub_res) && sub_res->error != 204) {
-	      stat->add_status(fname, sub_res->error, sub_res->rettext);
+	      stat->add_status(fname, sub_res);
 	    }
 	    if (!sizeof (sub_res) || sub_res->error >= 300) fail = 1;
 	  }

@@ -3693,6 +3693,17 @@ class MultiStatus
       MultiStatus::add_status (href_prefix + path, status_code, message, @args);
     }
 
+    //! Add a status for a path.
+    //!
+    //! @note
+    //!   Note that the segments of the path will be
+    //!   encoded with @[Roxen.http_encode_url()].
+    variant void add_status (string path, mapping(string:mixed) ret)
+    {
+      path = map(path/"/", Roxen->http_encode_url)*"/";
+      MultiStatus::add_status (href_prefix + path, ret);
+    }
+
     //!
     void add_namespace (string namespace)
     {
