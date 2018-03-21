@@ -124,7 +124,9 @@ protected WebDAVResponse webdav_request(string method,
     if (has_prefix(new_uri, "/")) {
       new_uri = new_uri[1..];
     }
+    new_uri = map((new_uri/"/"), Protocols.HTTP.percent_encode) * "/";
     Standards.URI dest_uri = Standards.URI(new_uri, base_uri);
+    dest_uri->password = dest_uri->password = "";
     headers["destination"] = (string)dest_uri;
   }
 
@@ -140,6 +142,17 @@ protected WebDAVResponse webdav_request(string method,
           break;
         }
         dir = dirname(dir);
+      }
+    }
+    if ((lower_case(method) == "move") ||
+	(lower_case(method) == "copy") ||
+	(lower_case(method) == "delete")) {
+      foreach(indices(current_locks), string path) {
+	foreach(lock_paths, string dir) {
+	  if (has_prefix(path, dir + "/")) {
+	    locks[current_locks[path]] = 1;
+	  }
+	}
       }
     }
     if (sizeof(locks)) {
@@ -425,6 +438,7 @@ private int|WebDAVResponse do_webdav_ls(string path,
   // Remove empty strings if any.
   actual = filter(actual, lambda(string str) { return sizeof(str) > 0; });
   expected_ = filter(expected_, lambda(string str) { return sizeof(str) > 0; });
+  expected_ = map(expected_, Unicode.normalize, "NFC");
   if (new_style) {
     ASSERT_EQUAL(sort(expected_), sort(actual));
     return res;
@@ -1157,8 +1171,9 @@ private void do_test_copy_col(string|void depth)
       Stdio.append_path(A, "X", "x_file.txt"),
       Stdio.append_path(A, "X", "Y", "y_file.txt"),
     });
-  webdav_mkcol(directories[0], STATUS_CREATED);
-  webdav_mkcol(directories[1], STATUS_CREATED);
+  foreach(directories, string dir) {
+    webdav_mkcol(dir, STATUS_CREATED);
+  }
   foreach (files, string file) {
     webdav_put(file, "Some content", STATUS_CREATED);
   }
@@ -1251,10 +1266,13 @@ private void do_test_copy_dir_to_existing_dir(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy dir to dir
-  string dir1 = Stdio.append_path(testcase_dir, "dir1");
+  string dir = Stdio.append_path(testcase_dir,
+				 sprintf("%s_dir_to_dir", lower_case(method)));
+  string dir1 = Stdio.append_path(dir, "dir1");
   string file1 = Stdio.append_path(dir1, "file1.txt");
-  string dir2 = Stdio.append_path(testcase_dir, "dir2");
+  string dir2 = Stdio.append_path(dir, "dir2");
   string file2 = Stdio.append_path(dir2, "file2.txt");
+  webdav_mkcol(dir, STATUS_CREATED);
   webdav_mkcol(dir1, STATUS_CREATED);
   webdav_mkcol(dir2, STATUS_CREATED);
   webdav_put(file1, "Content 1", STATUS_CREATED);
@@ -1270,15 +1288,15 @@ private void do_test_copy_dir_to_existing_dir(string method,
                        ([ "new-uri": dir2 ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
   if (method == "COPY") {
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
+    webdav_ls(dir,
+              ({ dir,
                  dir1,
                  file1,
                  dir2,
                  Stdio.append_path(dir2, "file1.txt") }));
   } else { // method == "MOVE"
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
+    webdav_ls(dir,
+              ({ dir,
                  dir2,
                  Stdio.append_path(dir2, "file1.txt") }));
   }
@@ -1294,8 +1312,11 @@ private void do_test_copy_file_to_existing_file(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy file to file
-  string file1 = Stdio.append_path(testcase_dir, "file1.txt");
-  string file2 = Stdio.append_path(testcase_dir, "file2.txt");
+  string dir = Stdio.append_path(testcase_dir,
+				 sprintf("%s_file_to_file", lower_case(method)));
+  string file1 = Stdio.append_path(dir, "file1.txt");
+  string file2 = Stdio.append_path(dir, "file2.txt");
+  webdav_mkcol(dir, STATUS_CREATED);
   webdav_put(file1, "Content 1", STATUS_CREATED);
   webdav_put(file2, "Content 2", STATUS_CREATED);
   mapping(string:string) locks = ([]);
@@ -1311,13 +1332,13 @@ private void do_test_copy_file_to_existing_file(string method,
   ASSERT_TRUE(filesystem_compare_files, file1, file2);
   ASSERT_TRUE(filesystem_check_content, file2, "Content 1");
   if (method == "COPY") {
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
+    webdav_ls(dir,
+              ({ dir,
                  file1,
                  file2 }));
   } else { // method == "MOVE"
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
+    webdav_ls(dir,
+              ({ dir,
                  file2 }));
   }
 }
@@ -1332,34 +1353,37 @@ private void do_test_copy_file_to_existing_dir(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy file to dir
-  string dir = Stdio.append_path(testcase_dir, "mydir");
-  string file = Stdio.append_path(testcase_dir, "myfile.txt");
+  string dir = Stdio.append_path(testcase_dir,
+				 sprintf("%s_file_to_dir", lower_case(method)));
+  string mydir = Stdio.append_path(dir, "mydir");
+  string file = Stdio.append_path(dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
-  ASSERT_CALL_TRUE(filesystem_is_dir, dir);
-  ASSERT_CALL_FALSE(filesystem_is_file, dir);
+  webdav_mkcol(mydir, STATUS_CREATED);
+  ASSERT_CALL_TRUE(filesystem_is_dir, mydir);
+  ASSERT_CALL_FALSE(filesystem_is_file, mydir);
   webdav_put(file, "My content", STATUS_CREATED);
   mapping(string:string) locks = ([]);
-  webdav_lock(dir, locks, STATUS_OK);
+  webdav_lock(mydir, locks, STATUS_OK);
   WebDAVResponse res = webdav_request(method, file,
-                                      ([ "new-uri": dir ]) + headers);
+                                      ([ "new-uri": mydir ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
   verify_lock_token(res);
   current_locks = locks;
   res = webdav_request(method, file,
-                       ([ "new-uri": dir ]) + headers);
+                       ([ "new-uri": mydir ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
-  ASSERT_CALL_TRUE(filesystem_is_file, dir);
-  ASSERT_CALL_FALSE(filesystem_is_dir, dir);
-  ASSERT_CALL_TRUE(filesystem_check_content, dir, "My content");
+  ASSERT_CALL_TRUE(filesystem_is_file, mydir);
+  ASSERT_CALL_FALSE(filesystem_is_dir, mydir);
+  ASSERT_CALL_TRUE(filesystem_check_content, mydir, "My content");
   if (method == "COPY") {
-    webdav_ls(testcase_dir,
-      ({ testcase_dir,
-         dir,
+    webdav_ls(dir,
+      ({ dir,
+         mydir,
          file }));
   } else { // method == "MOVE"
-    webdav_ls(testcase_dir,
-      ({ testcase_dir,
-         dir }));
+    webdav_ls(dir,
+      ({ dir,
+         mydir }));
   }
 }
 
@@ -1373,32 +1397,35 @@ private void do_test_copy_dir_to_existing_file(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy dir to file
-  string dir = Stdio.append_path(testcase_dir, "mydir");
-  string file = Stdio.append_path(testcase_dir, "myfile.txt");
+  string dir = Stdio.append_path(testcase_dir,
+				 sprintf("%s_dir_to_file", lower_case(method)));
+  string mydir = Stdio.append_path(dir, "mydir");
+  string file = Stdio.append_path(dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
+  webdav_mkcol(mydir, STATUS_CREATED);
+  webdav_put(file, "My content", STATUS_CREATED);
   ASSERT_CALL_TRUE(filesystem_is_file, file);
   ASSERT_CALL_FALSE(filesystem_is_dir, file);
-  webdav_put(file, "My content", STATUS_CREATED);
   mapping(string:string) locks = ([]);
-  ASSERT_CALL(webdav_lock, file, locks);
-  WebDAVResponse res = webdav_request(method, dir,
+  ASSERT_CALL(webdav_lock, file, locks, STATUS_OK);
+  WebDAVResponse res = webdav_request(method, mydir,
                                       ([ "new-uri": file ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
   verify_lock_token(res);
-  current_locks = locks;
-  res = webdav_request(method, dir,
+  current_locks = locks + ([]);
+  res = webdav_request(method, mydir,
                        ([ "new-uri": file ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
   ASSERT_CALL_TRUE(filesystem_is_dir, file);
   ASSERT_CALL_FALSE(filesystem_is_file, file);
   if (method == "COPY") {
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
-                 dir,
+    webdav_ls(dir,
+              ({ dir,
+                 mydir,
                  file }));
   } else { // method = "MOVE"
-    webdav_ls(testcase_dir,
-              ({ testcase_dir,
+    webdav_ls(dir,
+              ({ dir,
                  file }));
   }
 }
@@ -1645,8 +1672,9 @@ private void do_test_move_col(string|void depth)
       Stdio.append_path(A, "X", "x_file.txt"),
       Stdio.append_path(A, "X", "Y", "y_file.txt"),
     });
-  webdav_mkcol(directories[0], STATUS_CREATED);
-  webdav_mkcol(directories[1], STATUS_CREATED);
+  foreach(directories, string dir) {
+    webdav_mkcol(dir, STATUS_CREATED);
+  }
   foreach (files, string file) {
     webdav_put(file, "Some content", STATUS_CREATED);
   }
@@ -2038,6 +2066,12 @@ public void test_x_put()
                                             "NFC", false)[case_put1];
             mapping(string:string) exp_file = make_filenames(exp_dir, filename,
                                                              "NFC", false);
+            webdav_mkcol(dir1, STATUS_CREATED);
+	    if (!caseSensitive || (case_put1 == case_put2)) {
+	      webdav_mkcol(dir2, STATUS_METHOD_NOT_ALLOWED);
+	    } else {
+	      webdav_mkcol(dir2, STATUS_CREATED);
+	    }
             webdav_put(file1, "FILE " + count, STATUS_CREATED);
             // Try to put again, possibly with different encoding and
             // possible with different case.
@@ -2063,11 +2097,9 @@ public void test_x_put()
                         ({ exp_dir, exp_file[case_put1] }) );
             } else {
               webdav_ls(dir1,
-                          ({ dir1,
-                             file1 }) );
+			map(({ dir1, file1 }), utf8_to_string) );
               webdav_ls(dir2,
-                          ({ dir2,
-                             file2 }) );
+			map(({ dir2, file2 }), utf8_to_string) );
             }
           }
         }
@@ -2097,8 +2129,8 @@ public void test_x_copy_file()
                              unicode_method_target, true)[case_target];
             webdav_put(src_file, "FILE " + count, STATUS_CREATED);
             if (case_src == case_target) {
-              // Src and target is equal and same case but may be different
-              //encoded (will be at least once when looping...)
+              // Src and target are equal and same case but may be different
+              // encoded (will be at least once when looping...)
               webdav_copy(src_file, target_file, STATUS_FORBIDDEN);
             } else {
               // Src and target is different case (but the same otherwise).
