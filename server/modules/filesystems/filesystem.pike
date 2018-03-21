@@ -1155,7 +1155,7 @@ mixed find_file( string f, RequestID id )
     SETUID_TRACE("Saving file", 0);
 
     rm(norm_f);
-    mkdirhier(norm_f);
+    // mkdirhier(norm_f);
 
     if (id->misc->quota_obj) {
       QUOTA_WERR("Checking if the file already existed.");
