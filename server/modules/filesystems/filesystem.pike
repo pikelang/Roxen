@@ -1081,7 +1081,12 @@ mixed find_file( string f, RequestID id )
     /* FALL_THROUGH */
   case "MKDIR":
 #if 1
-    return make_collection(f, id);
+    mixed ret = make_collection(f, id);
+    if (ret) return ret;
+    if (id->misc->error_code) {
+      return Roxen.http_status(id->misc->error_code);
+    }
+    return 0;
 #else /* !1 */
     if(!query("put"))
     {
@@ -1217,7 +1222,7 @@ mixed find_file( string f, RequestID id )
     SETUID_TRACE("Saving file", 0);
 
     rm(norm_f);
-    mkdirhier(norm_f);
+    // mkdirhier(norm_f);
 
     if (id->misc->quota_obj) {
       QUOTA_WERR("Checking if the file already existed.");
@@ -1241,7 +1246,12 @@ mixed find_file( string f, RequestID id )
       int err = to->errno();
       privs = 0;
       TRACE_LEAVE("PUT: Open failed");
-      return errno_to_status (err, 1, id);
+      mixed ret = errno_to_status (err, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+	return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
     }
 
     // FIXME: Race-condition.
@@ -1460,7 +1470,7 @@ mixed find_file( string f, RequestID id )
       return(0);
     }
     new_uri = new_uri[sizeof(mountpoint)..];
-    string moveto = path + "/" + encode_path(new_uri);
+    string moveto = real_path(new_uri, id);
 
     // Workaround for Linux, Tru64 and FreeBSD.
     if (has_suffix(moveto, "/")) {
@@ -1489,6 +1499,13 @@ mixed find_file( string f, RequestID id )
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
       return ret;
+    }
+
+    if (norm_f == moveto) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MOVE: Source and destination are the same path.");
+      return Roxen.http_status(403, "Permission denied.");
     }
 
     size = _file_size(new_uri, id);
@@ -1556,7 +1573,12 @@ mixed find_file( string f, RequestID id )
     if(!code)
     {
       SIMPLE_TRACE_LEAVE("MOVE: Move failed (%s)", strerror (err_code));
-      return errno_to_status (err_code, 1, id);
+      mixed ret = errno_to_status (err_code, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+	return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");

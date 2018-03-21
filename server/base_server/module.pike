@@ -1297,8 +1297,8 @@ mapping(string:mixed) unlock_file (string path,
 //! WARNING: This function has some design issues and will very likely
 //! get a different interface. Compatibility is NOT guaranteed.
 //!
-//! @param path
-//!   Path (below the filesystem location) that the lock applies to.
+//! @param relative_path
+//!   Path (below the filesystem location) to check the if header for.
 //!
 //! @param recursive
 //!   If @expr{1@} also check write access recursively under @[path].
@@ -1555,7 +1555,7 @@ mapping(string:mixed) recurse_delete_files(string path,
 	    //   in the 207 (Multi-Status). The reason for this prohibition
 	    //   is that 204 (No Content) is the default success code.
 	    if (sizeof (sub_res) && sub_res->error != 204) {
-	      stat->add_status(fname, sub_res->error, sub_res->rettext);
+	      stat->add_status(fname, sub_res);
 	    }
 	    if (!sizeof (sub_res) || sub_res->error >= 300) fail = 1;
 	  }
@@ -1728,7 +1728,7 @@ protected mapping(string:mixed) copy_collection(
 	// to the client.
 #if 0
 	return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
-#else
+#elif 0
 	if (sizeof (res)) {
 	  // RFC 2518 8.8.3:
 	  //   If an error in executing the COPY method occurs with a
@@ -1741,6 +1741,13 @@ protected mapping(string:mixed) copy_collection(
 	  result->add_status (destination, res->error, res->rettext);
 	}
 	return ([]);
+#else
+	// RFC 4918 9.8.5:
+	//   423 (Locked) - The destination resource, or resource
+	//   within the destination collection, was locked. This
+	//   response SHOULD contain the 'lock-token-submitted'
+	//   precondition element.
+	return res;
 #endif
       }
       TRACE_LEAVE("Deletion ok.");
@@ -1756,14 +1763,21 @@ protected mapping(string:mixed) copy_collection(
 	return copy_properties(source, destination, behavior, id);
       }
       TRACE_LEAVE("Destination exists and is not a directory.");
-      return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+      return Roxen.http_status(Protocols.HTTP.HTTP_CONFLICT);
     }
   }
   // Create the new collection.
   TRACE_LEAVE("Make a new collection.");
   mapping(string:mixed) res = make_collection(destination, id);
   if (res && res->error >= 300) return res;
-  return copy_properties(source, destination, behavior, id) || res;
+  res = copy_properties(source, destination, behavior, id) || res;
+  if (res && st && (res->error == Protocols.HTTP.HTTP_CREATED)) {
+    // RFC 4918 9.8.5:
+    //   204 (No Content) - The source resource was successfully
+    //   copied to a preexisting destination resource.
+    res->error = Protocols.HTTP.HTTP_NO_CONTENT;
+  }
+  return res;
 }
 
 //! Used by the default @[recurse_copy_files] to copy a single file
