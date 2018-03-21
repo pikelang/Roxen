@@ -1014,7 +1014,12 @@ mixed find_file( string f, RequestID id )
     /* FALL_THROUGH */
   case "MKDIR":
 #if 1
-    return make_collection(f, id);
+    mixed ret = make_collection(f, id);
+    if (ret) return ret;
+    if (id->misc->error_code) {
+      return Roxen.http_status(id->misc->error_code);
+    }
+    return 0;
 #else /* !1 */
     if(!query("put"))
     {
@@ -1174,7 +1179,12 @@ mixed find_file( string f, RequestID id )
       int err = to->errno();
       privs = 0;
       TRACE_LEAVE("PUT: Open failed");
-      return errno_to_status (err, 1, id);
+      mixed ret = errno_to_status (err, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+	return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
     }
 
     // FIXME: Race-condition.
@@ -1488,7 +1498,12 @@ mixed find_file( string f, RequestID id )
     if(!code)
     {
       SIMPLE_TRACE_LEAVE("MOVE: Move failed (%s)", strerror (err_code));
-      return errno_to_status (err_code, 1, id);
+      mixed ret = errno_to_status (err_code, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+	return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
