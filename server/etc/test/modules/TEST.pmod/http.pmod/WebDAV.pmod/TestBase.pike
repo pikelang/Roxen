@@ -285,7 +285,7 @@ protected WebDAVResponse webdav_delete(string path,
   WebDAVResponse res =
     webdav_request("DELETE", path);
   ASSERT_EQUAL(res->status, expected_status_code);
-  if ((res[0] >= 200) && (res[0] < 300) ){
+  if ((res[0] >= 200) && (res[0] < 300) && (res[0] != STATUS_MULTI_STATUS) ){
     low_recursive_unlock(path, locks);
     ASSERT_CALL_FALSE(filesystem_check_exists, path);
   }
@@ -1477,7 +1477,7 @@ public void test_copy_dest_exist_overwrite_header_F()
   do_test_copy_dest_exist_overwrite_header_F("COPY");
 }
 
-private void do_test_copy_col_fails_partly(string method)
+private void do_test_copy_col_fails_partly_1(string method)
 {
   ASSERT_TRUE(method == "COPY" || method == "MOVE");
   string src_dir = Stdio.append_path(this::testcase_dir, "A");
@@ -1493,11 +1493,52 @@ private void do_test_copy_col_fails_partly(string method)
   webdav_put(dst_file1, "file1 in dir2", STATUS_CREATED);
   webdav_put(dst_file2, "file2 in dir2", STATUS_CREATED);
   webdav_lock(dst_file2, ([]), STATUS_OK);
-  WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
-                                   STATUS_MULTI_STATUS);
-  verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+  if (method == "COPY") {
+    WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
+				     STATUS_MULTI_STATUS);
+    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+  } else {
+    WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
+				     ([]), STATUS_MULTI_STATUS);
+    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+  }
+  // The destination directory has been wiped, except for dst_file2,
+  // which was locked.
+  // No actual copy or move was performed.
+  webdav_ls(this::testcase_dir,
+	    ({ this::testcase_dir,
+	       src_dir,
+	       src_file1,
+	       src_file2,
+	       dst_dir,
+	       dst_file2 }));
+  ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
+}
+
+private void do_test_copy_col_fails_partly_2(string method)
+{
+  ASSERT_TRUE(method == "COPY" || method == "MOVE");
+  string src_dir = Stdio.append_path(this::testcase_dir, "A");
+  string dst_dir = Stdio.append_path(this::testcase_dir, "B");
+  string src_file1 = Stdio.append_path(src_dir, "file1.txt");
+  string src_file2 = Stdio.append_path(src_dir, "file2.txt");
+  string dst_file1 = Stdio.append_path(dst_dir, "file1.txt");
+  string dst_file2 = Stdio.append_path(dst_dir, "file2.txt");
+  webdav_mkcol(src_dir, STATUS_CREATED);
+  webdav_put(src_file1, "file1 in dir1", STATUS_CREATED);
+  webdav_put(src_file2, "file2 in dir1", STATUS_CREATED);
+  webdav_lock(dst_file2, ([]), STATUS_OK);
+  if (method == "COPY") {
+    WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
+				     STATUS_MULTI_STATUS);
+    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+  } else {
+    WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
+				     ([]), STATUS_MULTI_STATUS);
+    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+  }
   // dst_file1 should have been overwritten by src_file1.
-  // dst_file2 was locked so it should not have been affected.
+  // the path dst_file2 was locked so it should not have been copied.
   // src_file2 with same as dst_file2 should not have been moved if this was a
   // move.
   if (method == "COPY") {
@@ -1507,25 +1548,29 @@ private void do_test_copy_col_fails_partly(string method)
                  src_file1,
                  src_file2,
                  dst_dir,
-                 dst_file1,
-                 dst_file2 }));
+                 dst_file1 }));
   } else { // method == "MOVE"
       webdav_ls(this::testcase_dir,
                 ({ this::testcase_dir,
                    src_dir,
                    src_file2,
                    dst_dir,
-                   dst_file1,
-                   dst_file2 }));
+                   dst_file1 }));
   }
-  ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
+  ASSERT_CALL_FALSE(filesystem_check_exists, dst_file2);
   ASSERT_CALL_TRUE(filesystem_check_content, dst_file1, "file1 in dir1");
 }
 
-public void test_copy_col_fails_partly()
+public void test_copy_col_fails_partly_1()
 {
-  do_test_copy_col_fails_partly("COPY");
+  do_test_copy_col_fails_partly_1("COPY");
 }
+
+public void test_copy_col_fails_partly_2()
+{
+  do_test_copy_col_fails_partly_2("COPY");
+}
+
 // After detecting an error, the COPY operation SHOULD try
 // to finish as much of the original copy operation as possible.
 // If an error in executing the COPY method occurs with a resource other
@@ -1779,9 +1824,14 @@ public void test_move_dest_exist_overwrite_header_F()
 // status response.  For example, if a source resource was locked and
 // could not be moved, then the source resource URL appears with the 423
 // (Locked) status.
-public void test_move_col_fails_partly()
+public void test_move_col_fails_partly_1()
 {
-  do_test_copy_col_fails_partly("MOVE");
+  do_test_copy_col_fails_partly_1("MOVE");
+}
+
+public void test_move_col_fails_partly_2()
+{
+  do_test_copy_col_fails_partly_2("MOVE");
 }
 
 // 403 (Forbidden) - Among many possible reasons for forbidding a MOVE
