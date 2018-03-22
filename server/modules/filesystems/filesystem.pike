@@ -326,7 +326,8 @@ void start()
   stat_cache = query("stat_cache");
   internal_files = map(query("internal_files"), encode_path);
 
-  if (sizeof(path) && !has_suffix(path, "/")) path += "/";
+  // Expand cwd-relative paths, and ensure terminating slash.
+  path = combine_path(getcwd(), path, "./");
 
 #if constant(System.normalize_path)
   if (catch {
