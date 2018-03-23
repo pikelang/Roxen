@@ -966,6 +966,46 @@ multiset(DAVLock) find_locks(string path,
   return sizeof(locks) && locks;
 }
 
+//! Unlock any locks pertaining to @[path] or to anything
+//! under @[path].
+//!
+//! This function is used to unlock locks after files or
+//! directories have been deleted.
+//!
+//! The default implementation just unregisters the locks.
+//!
+//! @seealso
+//!   @[unregister_lock()]
+void unlock_path(string path, RequestID id)
+{
+  // Common case.
+  if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
+
+  TRACE_ENTER(sprintf("unlock_path(%O, %O)", path, id), this);
+
+  string rsc = resource_id(path, id);
+
+  foreach(file_locks; string prefix; mapping(mixed:DAVLock) sub_locks) {
+    if (has_prefix(prefix, rsc)) {
+      TRACE_ENTER(sprintf("Unlocking %d locks for path %O...",
+			  sizeof(sub_locks), prefix), this);
+      m_delete(file_locks, prefix);
+      TRACE_LEAVE("");
+    }
+  }
+
+  foreach(prefix_locks; string prefix; mapping(mixed:DAVLock) sub_locks) {
+    if (has_prefix(prefix, rsc)) {
+      TRACE_ENTER(sprintf("Unlocking %d locks for path %O...",
+			  sizeof(sub_locks), prefix), this);
+      m_delete(prefix_locks, prefix);
+      TRACE_LEAVE("");
+    }
+  }
+
+  TRACE_LEAVE("Done.");
+}
+
 //! Check if there are one or more locks that apply to @[path] for the
 //! user the request is authenticated as.
 //!
