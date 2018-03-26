@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Filesystem [NT]: Perform some more path normalization.
+from: ec99e9ec47ae1489975f8eeb2362fb02b7f0e19b
+to: ef032a34d465641a3cf25e2601b4e9c3f4855832
+originator: Jonas Lonnberg
+depends: 2018-03-06T105813
+restart: true
+
+• Filesystem [NT]: Perform some more path normalization.
+
+Tentative fix for [WS-232].
