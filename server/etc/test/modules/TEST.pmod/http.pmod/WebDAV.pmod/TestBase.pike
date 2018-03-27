@@ -130,13 +130,20 @@ protected WebDAVResponse webdav_request(string method,
     headers["destination"] = (string)dest_uri;
   }
 
+  string if_header = "";
   multiset(string) locks = (<>);
   if (current_locks) {
     foreach(lock_paths, string dir) {
       while(1) {
-        string lock = current_locks[dir];
-        if (lock) {
-          locks[lock] = 1;
+        string lock_token = current_locks[dir];
+        if (lock_token && !locks[lock_token]) {
+	  string path = map((dir/"/"), Protocols.HTTP.percent_encode) * "/";
+	  if (has_prefix(path, "/")) {
+	    path = path[1..];
+	  }
+	  path = Standards.URI(path, base_uri)->path;
+	  if_header += sprintf("<%s>(<%s>)", path, lock_token);
+          locks[lock_token] = 1;
         }
         if (dir == "/") {
           break;
@@ -148,15 +155,22 @@ protected WebDAVResponse webdav_request(string method,
     (lower_case(method) == "copy") ||
     (lower_case(method) == "delete")) {
       foreach(indices(current_locks), string path) {
-    foreach(lock_paths, string dir) {
-      if (has_prefix(path, dir + "/")) {
-        locks[current_locks[path]] = 1;
+	foreach(lock_paths, string dir) {
+	  string lock_token = current_locks[path];
+	  if (has_prefix(path, dir + "/") && !locks[lock_token]) {
+	    if (has_prefix(path, "/")) {
+	      path = path[1..];
+	    }
+	    path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
+	    path = Standards.URI(path, base_uri)->path;
+	    if_header += sprintf("<%s>(<%s>)", path, lock_token);
+	    locks[lock_token] = 1;
+	  }
+	}
       }
     }
-      }
-    }
-    if (sizeof(locks)) {
-      headers->if = "(<" + (indices(locks) * ">), (<") + ">)";
+    if (sizeof(if_header)) {
+      headers->if = if_header;
     }
   }
   if (has_prefix(path, "/")) {
