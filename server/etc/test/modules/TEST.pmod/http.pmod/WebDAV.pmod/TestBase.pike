@@ -145,14 +145,14 @@ protected WebDAVResponse webdav_request(string method,
       }
     }
     if ((lower_case(method) == "move") ||
-	(lower_case(method) == "copy") ||
-	(lower_case(method) == "delete")) {
+        (lower_case(method) == "copy") ||
+        (lower_case(method) == "delete")) {
       foreach(indices(current_locks), string path) {
-	foreach(lock_paths, string dir) {
-	  if (has_prefix(path, dir + "/")) {
-	    locks[current_locks[path]] = 1;
-	  }
-	}
+        foreach(lock_paths, string dir) {
+          if (has_prefix(path, dir + "/")) {
+            locks[current_locks[path]] = 1;
+          }
+        }
       }
     }
     if (sizeof(locks)) {
@@ -168,7 +168,7 @@ protected WebDAVResponse webdav_request(string method,
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
 
   report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
-	       method, path, url, con?con->status:600);
+               method, path, url, con?con->status:600);
 
   if (!con) {
     return WebDAVResponse(600, ([]), "" );
@@ -1267,7 +1267,7 @@ private void do_test_copy_dir_to_existing_dir(string method,
   }
   // Copy dir to dir
   string dir = Stdio.append_path(testcase_dir,
-				 sprintf("%s_dir_to_dir", lower_case(method)));
+                                 sprintf("%s_dir_to_dir", lower_case(method)));
   string dir1 = Stdio.append_path(dir, "dir1");
   string file1 = Stdio.append_path(dir1, "file1.txt");
   string dir2 = Stdio.append_path(dir, "dir2");
@@ -1313,7 +1313,7 @@ private void do_test_copy_file_to_existing_file(string method,
   }
   // Copy file to file
   string dir = Stdio.append_path(testcase_dir,
-				 sprintf("%s_file_to_file", lower_case(method)));
+                                 sprintf("%s_file_to_file", lower_case(method)));
   string file1 = Stdio.append_path(dir, "file1.txt");
   string file2 = Stdio.append_path(dir, "file2.txt");
   webdav_mkcol(dir, STATUS_CREATED);
@@ -1354,7 +1354,7 @@ private void do_test_copy_file_to_existing_dir(string method,
   }
   // Copy file to dir
   string dir = Stdio.append_path(testcase_dir,
-				 sprintf("%s_file_to_dir", lower_case(method)));
+                                 sprintf("%s_file_to_dir", lower_case(method)));
   string mydir = Stdio.append_path(dir, "mydir");
   string file = Stdio.append_path(dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
@@ -1398,7 +1398,7 @@ private void do_test_copy_dir_to_existing_file(string method,
   }
   // Copy dir to file
   string dir = Stdio.append_path(testcase_dir,
-				 sprintf("%s_dir_to_file", lower_case(method)));
+                                 sprintf("%s_dir_to_file", lower_case(method)));
   string mydir = Stdio.append_path(dir, "mydir");
   string file = Stdio.append_path(dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
@@ -1495,23 +1495,23 @@ private void do_test_copy_col_fails_partly_1(string method)
   webdav_lock(dst_file2, ([]), STATUS_OK);
   if (method == "COPY") {
     WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
-				     STATUS_MULTI_STATUS);
+                                     STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   } else {
     WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
-				     ([]), STATUS_MULTI_STATUS);
+                                     ([]), STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   }
   // The destination directory has been wiped, except for dst_file2,
   // which was locked.
   // No actual copy or move was performed.
   webdav_ls(this::testcase_dir,
-	    ({ this::testcase_dir,
-	       src_dir,
-	       src_file1,
-	       src_file2,
-	       dst_dir,
-	       dst_file2 }));
+            ({ this::testcase_dir,
+               src_dir,
+               src_file1,
+               src_file2,
+               dst_dir,
+               dst_file2 }));
   ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
 }
 
@@ -1530,11 +1530,11 @@ private void do_test_copy_col_fails_partly_2(string method)
   webdav_lock(dst_file2, ([]), STATUS_OK);
   if (method == "COPY") {
     WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
-				     STATUS_MULTI_STATUS);
+                                     STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   } else {
     WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
-				     ([]), STATUS_MULTI_STATUS);
+                                     ([]), STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   }
   // dst_file1 should have been overwritten by src_file1.
@@ -1927,7 +1927,7 @@ public void test_move_destination_locked()
   filesystem_check_content(dst_child, "src child content");
   webdav_ls(this::testcase_dir,
             ({ this::testcase_dir,
-	       dst_parent,
+               dst_parent,
                dst,
                dst_child }));
 }
@@ -2038,7 +2038,7 @@ public void test_x_ls()
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
             } else {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
-			caseSensitive && STATUS_NOT_FOUND);
+                        caseSensitive && STATUS_NOT_FOUND);
             }
             webdav_put(new_dir + "/" + new_file, "FILE " + count, STATUS_CREATED);
             if (case_create == case_ls) {
@@ -2117,11 +2117,11 @@ public void test_x_put()
             mapping(string:string) exp_file = make_filenames(exp_dir, filename,
                                                              "NFC", false);
             webdav_mkcol(dir1, STATUS_CREATED);
-	    if (!caseSensitive || (case_put1 == case_put2)) {
-	      webdav_mkcol(dir2, STATUS_METHOD_NOT_ALLOWED);
-	    } else {
-	      webdav_mkcol(dir2, STATUS_CREATED);
-	    }
+            if (!caseSensitive || (case_put1 == case_put2)) {
+              webdav_mkcol(dir2, STATUS_METHOD_NOT_ALLOWED);
+            } else {
+              webdav_mkcol(dir2, STATUS_CREATED);
+            }
             webdav_put(file1, "FILE " + count, STATUS_CREATED);
             // Try to put again, possibly with different encoding and
             // possible with different case.
@@ -2147,9 +2147,9 @@ public void test_x_put()
                         ({ exp_dir, exp_file[case_put1] }) );
             } else {
               webdav_ls(dir1,
-			map(({ dir1, file1 }), utf8_to_string) );
+                        map(({ dir1, file1 }), utf8_to_string) );
               webdav_ls(dir2,
-			map(({ dir2, file2 }), utf8_to_string) );
+                        map(({ dir2, file2 }), utf8_to_string) );
             }
           }
         }
