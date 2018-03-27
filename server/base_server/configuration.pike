@@ -1965,6 +1965,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 expiry_delta, owner);
+  lock->is_file = is_file;
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {

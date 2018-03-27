@@ -245,6 +245,9 @@ class DAVLock
   //! As a special case, if the value is @expr{0@} (zero), the lock
   //! has infinite duration.
 
+  int(0..1) is_file;
+  //! @expr{1@} if @[path] refers to a file.
+
   protected void create(string locktoken, string path, int(0..1) recursive,
 			string|SimpleNode lockscope, string|SimpleNode locktype,
 			int(0..) expiry_delta, array(SimpleNode) owner)
