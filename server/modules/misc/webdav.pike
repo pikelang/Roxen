@@ -514,16 +514,19 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     // The lock-token header is a Coded-URL.
     sscanf(locktoken, "<%s>", locktoken);
-    if (!objectp(lock = id->conf->check_locks(id->not_query, 0, id))) {
+    string path = id->not_query;
+    if (!has_suffix(path, "/")) path += "/";
+    mapping(string:DAVLock) locks = id->conf->find_locks(path, 0, 1, id);
+    if (!(lock = locks[locktoken])) {
       TRACE_LEAVE(sprintf("UNLOCK: Lock-token %O not found.", locktoken));
       return Roxen.http_status(403, "UNLOCK: Lock not found.");
     }
-    if (lock->locktoken != locktoken) {
-      SIMPLE_TRACE_LEAVE("UNLOCK: Locktoken mismatch: %O != %O.\n",
-			 locktoken, lock->locktoken);
+    if (lock->path != path) {
+      SIMPLE_TRACE_LEAVE("UNLOCK: Lock doesn't match path: %O != %O.\n",
+			 path, lock->path);
       return Roxen.http_status(423, "Invalid locktoken.");
     }
-    mapping res = id->conf->unlock_file(id->not_query, lock, id);
+    mapping res = id->conf->unlock_file(path, lock, id);
     if (res) {
       TRACE_LEAVE(sprintf("UNLOCK: Unlocking of %O failed.", locktoken));
       return res;

@@ -475,7 +475,9 @@ class Configuration
   string examine_return_mapping(mapping m);
   mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
 				     int(0..1) exclude_shared, RequestID id);
-  DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
+  mapping(string:mixed)|int(-1..0) check_locks(string path,
+					       int(0..1) recursive,
+					       RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
   int expire_locks(RequestID id);
   void refresh_lock(DAVLock lock);
@@ -3822,16 +3824,6 @@ protected class PropertySet
 					multiset(string)|void filt);
 }
 
-//! See @[RoxenModule.check_locks].
-enum LockFlag {
-  LOCK_NONE		= 0,
-  LOCK_SHARED_BELOW	= 2,
-  LOCK_SHARED_AT	= 3,
-  LOCK_OWN_BELOW	= 4,
-  LOCK_EXCL_BELOW	= 6,
-  LOCK_EXCL_AT		= 7
-};
-
 //! How to handle an existing destination when files or directories
 //! are moved or copied in a filesystem.
 enum Overwrite {
@@ -3980,9 +3972,6 @@ class RoxenModule
 				     int(-1..1) recursive,
 				     int(0..1) exclude_shared,
 				     RequestID id);
-  DAVLock|LockFlag check_locks(string path,
-			       int(0..1) recursive,
-			       RequestID id);
   mapping(string:mixed) lock_file(string path,
 				  DAVLock lock,
 				  RequestID id);

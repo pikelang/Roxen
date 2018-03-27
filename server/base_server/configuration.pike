@@ -1789,44 +1789,81 @@ mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
   return locks;
 }
 
-//! Check if there are any applicable locks for this user on @[path].
-DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
+//! Check that all locks that apply to @[path] for the user the request
+//! is authenticated as have been mentioned in the if-header.
+//!
+//! WARNING: This function has some design issues and will very likely
+//! get a different interface. Compatibility is NOT guaranteed.
+//!
+//! @param path
+//!   Normalized path below the filesystem location.
+//!
+//! @param recursive
+//!   If @expr{1@} also check recursively under @[path] for locks.
+//!
+//! @returns
+//!   Returns one of
+//!   @mixed
+//!     @type int(0..0)
+//!       Zero if not locked, or all locks were mentioned.
+//!     @type mapping(zero:zero)
+//!       An empty mapping if @[recursive] was true and there
+//!       were unmentioned locks on paths with @[path] as a prefix.
+//!       The missing locks are registered in the multistatus for
+//!       the @[id] object.
+//!     @type mapping(string:mixed)
+//!       A @[Protocols.HTTP.DAV_LOCKED] error status in all other cases.
+//!   @endmixed
+//!
+//! @note
+//! @[DAVLock] objects may be created if the filesystem has some
+//! persistent storage of them. The default implementation does not
+//! store locks persistently.
+mapping(string:mixed)|int(-1..0) check_locks(string path,
+					     int(0..1) recursive,
+					     RequestID id)
 {
-  LockFlag state = 0;
-  foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
-  {
-    string subpath;
-    int check_above;
-    if (has_prefix(path, loc)) {
-      // path == loc + subpath.
-      subpath = path[sizeof(loc)..];
-    } else if (recursive && has_prefix(loc, path)) {
-      // loc == path + ignored.
-      subpath = "";
-      check_above = 1;
-    } else {
-      // Does not apply to this location module.
-      continue;
-    }
-    int/*LockFlag*/|DAVLock lock_info =
-      function_object(func)->check_locks(subpath, recursive, id);
-    if (objectp(lock_info)) {
-      if (!check_above) {
-	return lock_info;
-      } else {
-	lock_info = LOCK_OWN_BELOW; // We have a lock on some subpath.
-      }
-    }
-    else
-      if (check_above && (lock_info & 1))
-	// Convert LOCK_*_AT to LOCK_*_BELOW.
-	lock_info &= ~1;
-    if (lock_info > state) state = lock_info;
-    if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
-    if (function_object(func)->webdav_opaque) break;
+  TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
+
+  mapping(string:DAVLock) locks = find_locks(path, recursive, 0, id);
+  // Common case.
+  if (!sizeof(locks)) {
+    TRACE_LEAVE ("Got no locks.");
+    return 0;
   }
-  return state;
+
+  mapping(string:array(array(array(string)))) if_data = id->get_if_data();
+  if (if_data) {
+    foreach(if_data[0], array(array(string)) tokens) {
+      m_delete(locks, tokens[0][1]);
+    }
+
+    if (!sizeof(locks)) {
+      TRACE_LEAVE ("All locks unlocked.");
+      return 0;
+    }
+  }
+
+  // path = id->not_query;
+  if (!has_suffix(path, "/")) path += "/";
+  mapping(string:mixed) ret =
+    Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED, "lock-token-submitted");
+  foreach(locks;;DAVLock lock) {
+    TRACE_ENTER(sprintf("Checking lock %O against %O.", lock, path), 0);
+    if (has_prefix(path, lock->path)) {
+      TRACE_LEAVE("Direct lock.");
+      TRACE_LEAVE("Locked.");
+      return ret;
+    }
+    if (lock->is_file) {
+      id->set_status_for_path(lock->path[..<1], ret);
+    } else {
+      id->set_status_for_path(lock->path, ret);
+    }
+    TRACE_LEAVE("Added to multi status.");
+  }
+  TRACE_LEAVE("Multi status.");
+  return ([]);
 }
 
 protected multiset(DAVLock) active_locks = (<>);
