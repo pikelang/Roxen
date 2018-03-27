@@ -1939,25 +1939,40 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 					array(Parser.XML.Tree.Node) owner,
 					RequestID id)
 {
+  TRACE_ENTER(sprintf("%O(%O, %O, %O, %O, %O, %O, %O)",
+		      this_function, path, recursive, lockscope,
+		      locktype, expiry_delta, owner, id), 0);
+
+  int is_file;
+
   // Canonicalize path.
-  if (!has_suffix(path, "/")) path+="/";
+  if (!has_suffix(path, "/")) {
+    path+="/";
+    is_file = 1;
+  }
 
-  // First check if there's already some lock on path that prevents
+  // FIXME: Race conditions!
+
+  int fail;
+
+  // First check if there's already some lock on the path that prevents
   // us from locking it.
-  int/*LockFlag*/|DAVLock lock_info = check_locks(path, recursive, id);
+  mapping(string:DAVLock) locks = find_locks(path, recursive, 0, id);
 
-  if (!intp(lock_info)) {
-    // We already hold a lock that prevents us.
-    if (id->request_headers->if) {
-      return Roxen.http_status(412, "Precondition Failed");
-    } else {
-      return Roxen.http_status(423, "Locked");
+  foreach(locks; string lock_token; DAVLock lock) {
+    TRACE_ENTER(sprintf("Checking lock %O...\n", lock), 0);
+    if ((lock->lockscope == "DAV:exclusive") ||
+	(lockscope == "DAV:exclusive")) {
+      TRACE_LEAVE("Locked.");
+      id->set_status_for_path(lock->path, 423, "Locked");
+      fail = 1;
     }
-  } else if (lockscope == "DAV:exclusive" ?
-	     lock_info >= LOCK_SHARED_BELOW :
-	     lock_info >= LOCK_OWN_BELOW) {
-    // Some other lock prevents us.
-    return Roxen.http_status(423, "Locked");
+    TRACE_LEAVE("Shared.");
+  }
+
+  if (fail) {
+    TRACE_LEAVE("Fail.");
+    return ([]);
   }
 
   // Create the new lock.
