@@ -2737,6 +2737,30 @@ class RequestID
 				    status_code, message);
   }
 
+  variant void set_status_for_path (string path, mapping(string:mixed) ret)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The status is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param ret
+  //!   Result-mapping for the path.
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..], ret);
+  }
+
   void set_status_for_url (string url, int status_code,
 			   string|void message, mixed... args)
   //! Register a status to be included in the response that applies
@@ -2746,6 +2770,15 @@ class RequestID
   {
     if (sizeof (args)) message = sprintf (message, @args);
     get_multi_status()->add_status (url, status_code, message);
+  }
+
+  variant void set_status_for_url (string url, mapping(string:mixed) ret)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    get_multi_status()->add_status (url, ret);
   }
 
 
