@@ -933,8 +933,10 @@ public void test_locks_deleted_when_resource_deleted_1()
   webdav_lock(path, locks, STATUS_OK);
   webdav_put(path, "New content", STATUS_LOCKED);
 
-  current_locks = locks;
+  current_locks = locks + ([]);
   webdav_delete(path, locks, STATUS_NO_CONTENT);
+
+  webdav_put(path, "New content", STATUS_PRECONDITION_FAILED);
   current_locks = ([ ]);
 
   webdav_put(path, "New content", STATUS_CREATED);
@@ -953,6 +955,9 @@ public void test_locks_deleted_when_resource_deleted_2()
   current_locks = locks + ([]);
   webdav_delete(dir, locks, STATUS_NO_CONTENT);
 
+  webdav_mkcol(dir, STATUS_PRECONDITION_FAILED);
+
+  current_locks = locks + ([]);
   webdav_mkcol(dir, STATUS_CREATED);
   webdav_mkcol(subdir, STATUS_CREATED);
 }
@@ -971,9 +976,15 @@ public void test_locks_deleted_when_resource_deleted_3()
 
   current_locks = locks + ([]);
   webdav_delete(dir, locks, STATUS_NO_CONTENT);
-  webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
 
+  // NB: The PROPFIND and MKCOL don't submit the old lock token,
+  //     as it is on a sub-path, and such locks should
+  //     typically not exist for MKCOL...
+  webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
   webdav_mkcol(dir, STATUS_CREATED);
+
+  webdav_put(file, "New content", STATUS_PRECONDITION_FAILED);
+  current_locks = locks + ([]);
   webdav_put(file, "New content", STATUS_CREATED);
 }
 
