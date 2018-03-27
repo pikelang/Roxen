@@ -1846,7 +1846,19 @@ class RequestID
   //!   the first is one of the strings @expr{"not"@}, @expr{"etag"@},
   //!   or @expr{"key"@}, and the second is the value.
   //!
-  //!   The resource @expr{0@} (zero) represents the default resource.
+  //!   There is an implicit @b{OR@} between sub-conditions
+  //!   (cf @rfc{4918:10.4.6@}), and an implicit @b{AND@}
+  //!   between the elements in a sub-condition.
+  //!
+  //!   The default resource is mapped to @[not_query].
+  //!
+  //!   As @rfc{4918:10.4.1@} states that the mere fact that a state
+  //!   token appears in an If header means that it has been submitted,
+  //!   we as a convenience add all non-negated lock tokens to the
+  //!   @expr{0@} resource.
+  //!
+  //! @seealso
+  //!   @rfc{4918:10.4.2@}
   mapping(string:array(array(array(string)))) get_if_data()
   {
     if (if_data) {
@@ -1874,10 +1886,13 @@ class RequestID
       return 0;
     }
 
-    mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
+    mapping(string:array(array(array(string)))) res = ([
+      0:({}),
+    ]);
 
+    array(string) keys = ({});
     string tmp_resource;
-    string resource;
+    string resource = not_query;
     foreach(decoded_if, array(string|int|array(array(string))) symbol) {
       switch (symbol[0]) {
       case "special":
@@ -1889,9 +1904,17 @@ class RequestID
 	  // Normalize.
 	  // FIXME: Check that the protocol and server parts refer
 	  //        to this server.
+	  // NB: Above invalid according to rfc 4918 8.3.
+	  //
+	  // NB: RFC 4918 8.3 adds support for path-absolute resources.
+	  // NB: The resource reference may have a query section.
+	  //
 	  // FIXME: Support for servers mounted on subpaths.
 	  catch { resource = Standards.URI(resource)->path; };
-	  if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
+	  catch { resource = Protocols.HTTP.percent_decode(resource); };
+	  catch { resource = utf8_to_string(resource); };
+	  resource = Unicode.normalize(resource, "NFC");
+	  if (!sizeof(resource)) resource = "/";
 	  if (!res[resource])
 	    res[resource] = ({});
 	  break;
@@ -1928,6 +1951,9 @@ class RequestID
 		IF_HDR_MSG("No tmp_key.\n");
 		return 0;
 	      }
+	      if (!sizeof(expr) || (expr[-1][0] != "not")) {
+		keys += ({ tmp_key });
+	      }
 	      expr += ({ ({ "key", tmp_key }) });
 	      tmp_key = 0;
 	      break;
@@ -1955,6 +1981,11 @@ class RequestID
 	    }
 	    if (lower_case(sub_expr[i][1]) == "not") {
 	      // Not
+	      if (sizeof(expr) && (expr[-1][0] == "not")) {
+		IF_HDR_MSG("Double negation.");
+		report_debug("Syntax error in if-header: %O\n", raw_header);
+		return 0;
+	      }
 	      expr += ({ ({ "not", 0 }) });
 	      break;
 	    }
@@ -1974,6 +2005,13 @@ class RequestID
 	report_debug("Syntax error in if-header: %O\n", raw_header);
 	return 0;
       }
+    }
+    if (sizeof(keys)) {
+      res[0] = ({
+	map(keys, lambda(string key) {
+		    return ({ "key", key });
+		  }),
+      });
     }
     if (tmp_resource) {
       IF_HDR_MSG("Active tmp_resource: %O\n", tmp_resource);
