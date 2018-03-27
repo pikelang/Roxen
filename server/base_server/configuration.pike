@@ -1748,12 +1748,12 @@ string examine_return_mapping(mapping m)
 }
 
 //! Find all applicable locks for this user on @[path].
-multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
-			     int(0..1) exclude_shared, RequestID id)
+mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
+				   int(0..1) exclude_shared, RequestID id)
 {
   SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
 		     path, recursive, exclude_shared);
-  multiset(DAVLock) locks = (<>);
+  mapping(string:DAVLock) locks = ([]);
 
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
@@ -1774,7 +1774,7 @@ multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
     }
     TRACE_ENTER(sprintf("subpath: %O", subpath),
 		function_object(func)->find_locks);
-    multiset(DAVLock) sub_locks =
+    mapping(string:DAVLock) sub_locks =
       function_object(func)->find_locks(subpath, recursive,
 					exclude_shared, id);
     TRACE_LEAVE("");

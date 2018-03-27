@@ -839,7 +839,7 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //!   current user were to make a shared lock.)
 //!
 //! @returns
-//!   Returns a multiset containing all applicable locks in
+//!   Returns a mapping containing all applicable locks in
 //!   this location module, or @expr{0@} (zero) if there are none.
 //!
 //! @note
@@ -850,10 +850,10 @@ protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 //! @note
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type.
-multiset(DAVLock) find_locks(string path,
-			     int(-1..1) recursive,
-			     int(0..1) exclude_shared,
-			     RequestID id)
+mapping(string:DAVLock) find_locks(string path,
+				   int(-1..1) recursive,
+				   int(0..1) exclude_shared,
+				   RequestID id)
 {
   // Common case.
   if (!sizeof(file_locks) && !sizeof(prefix_locks)) return 0;
@@ -863,7 +863,7 @@ multiset(DAVLock) find_locks(string path,
 
   string rsc = resource_id (path, id);
 
-  multiset(DAVLock) locks = (<>);
+  mapping(string:DAVLock) locks = ([]);
   function(mapping(mixed:DAVLock):void) add_locks;
 
   if (exclude_shared) {
@@ -872,12 +872,13 @@ multiset(DAVLock) find_locks(string path,
 		  foreach (sub_locks; string user; DAVLock lock)
 		    if (user == auth_user ||
 			lock->lockscope == "DAV:exclusive")
-		      locks[lock] = 1;
+		      locks[lock->locktoken] = lock;
 		};
   }
   else
     add_locks = lambda (mapping(mixed:DAVLock) sub_locks) {
-		  locks |= mkmultiset (values (sub_locks));
+		  locks |= mkmapping(values(sub_locks)->locktoken,
+				     values(sub_locks));
 		};
 
   if (file_locks[rsc]) {

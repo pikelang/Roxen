@@ -538,9 +538,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		       // The above seems to imply that RFC 4918 9.6 applies
 		       // to MOVE. We thus need to destroy any locks rooted
 		       // on the moved resource.
-		       multiset(DAVLock) sub_locks =
+		       mapping(string:DAVLock) sub_locks =
 			 module->find_locks(source, -1, 0, id);
-		       foreach(sub_locks||(<>);DAVLock lock;) {
+		       foreach(sub_locks||([]);;DAVLock lock) {
 			 SIMPLE_TRACE_ENTER(module,
 					    "MOVE: Unlocking %O...", lock);
 			 mapping fail =
@@ -573,9 +573,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		     // A server processing a successful DELETE request:
 		     //
 		     //    MUST destroy locks rooted on the deleted resource
-		     multiset(DAVLock) sub_locks =
+		     mapping(string:DAVLock) sub_locks =
 		       module->find_locks(path, -1, 0, id);
-		     foreach(sub_locks||(<>);DAVLock lock;) {
+		     foreach(sub_locks||([]);;DAVLock lock) {
 		       SIMPLE_TRACE_ENTER(module,
 					  "DELETE: Unlocking %O...", lock);
 		       mapping fail =
