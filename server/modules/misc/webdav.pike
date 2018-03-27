@@ -23,6 +23,12 @@ constant module_doc  = "Adds support for various HTTP extensions defined "
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
 
+#ifdef IF_HEADER_DEBUG
+#define IF_HDR_MSG(X...) werror (X)
+#else
+#define IF_HDR_MSG(X...)
+#endif
+
 // Stuff from base_server/configuration.pike:
 #ifdef THREADS
 #define LOCK(X) key=id->conf->_lock(X)
@@ -52,8 +58,110 @@ void start(int q, Configuration c)
   conf = c;
 }
 
+mapping(string:mixed)|int(-1..0) low_check_if_header(string path,
+						     array(array(array(string))) condition,
+						     RequestID id)
+{
+  SIMPLE_TRACE_ENTER(this, "Checking \"If\" header for %O", path);
+
+  string|int(-1..0) etag;
+  mapping(string:DAVLock) locks;
+
+ next_condition:
+  foreach(condition, array(array(string)) sub_cond) {
+    SIMPLE_TRACE_ENTER(this,
+		       "Trying condition ( %{%s:%O %})...", sub_cond);
+    int negate;
+    foreach(sub_cond, array(string) token) {
+      switch(token[0]) {
+      case "not":
+	negate = !negate;
+	break;
+      case "etag":
+	if (!etag) {
+	  // Get the etag for this resource (if any).
+	  // FIXME: We only support straight strings as etag properties.
+	  if (!stringp(etag = id->conf->query_property(path,
+						       "DAV:getetag", id))) {
+	    etag = -1;
+	  }
+	  IF_HDR_MSG("IF: Etag: %O.\n", etag);
+	}
+	if (etag != token[1]) {
+	  // No etag available for this resource, or mismatch.
+	  if (!negate) {
+	    TRACE_LEAVE("Etag mismatch.");
+	    continue next_condition;
+	  }
+	} else if (negate) {
+	  // Etag match with negated expression.
+	  TRACE_LEAVE("Matched negated etag.");
+	  continue next_condition;
+	}
+	negate = 0;
+	break;
+      case "key":
+	if (!locks) {
+	  locks = id->conf->find_locks(path, 0, 0, id);
+	}
+	if (negate) {
+	  if (locks[token[1]]) {
+	    TRACE_LEAVE("Matched negated lock.");
+	    continue next_condition;	// Fail.
+	  }
+	} else if (!locks[token[1]]) {
+	  // Lock mismatch.
+	  SIMPLE_TRACE_LEAVE("Lock mismatch for key %O.", token[1]);
+	  continue next_condition;	// Fail.
+	}
+	negate = 0;
+	break;
+      default:
+	SIMPLE_TRACE_LEAVE("Unsupported condition: %s: %O.",
+			   token[0], token[1]);
+	continue next_condition;	// Fail.
+      }
+    }
+    // Found matching sub-condition.
+    TRACE_LEAVE("Found match.");
+    TRACE_LEAVE("Ok%s.");
+    return 0;
+  }
+
+  TRACE_LEAVE("Precondition failed.");
+  return Roxen.http_status(Protocols.HTTP.HTTP_PRECOND_FAILED);
+}
+
+//! Checks that all preconditions specified by any if-header hold true.
+//!
+//! @returns
+//!   Returns @expr{0@} (zero) if all conditions hold true, and typically
+//!   a @[Protocols.HTTP.HTTP_PRECOND_FAILED] error status if not.
+mapping(string:mixed)|int(-1..0) check_if_header(RequestID id)
+{
+  mapping(string:array(array(array(string)))) if_data =
+    id->get_if_data();
+  if (!if_data) return 0;
+
+  foreach(if_data; string path; array(array(array(string))) condition) {
+    if (!path) continue;
+    mapping(string:mixed)|int(-1..0) res =
+      low_check_if_header(path, condition, id);
+    if (res) return res;
+  }
+
+  return 0;
+}
+
 mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 {
+  if (id->misc->internal_get) return 0;
+
+  mapping(string:mixed)|int(-1..0) res = check_if_header(id);
+  if (res) {
+    return res;
+  }
+
   switch(id->method) {
   case "OPTIONS":
     return ([ "type":"text/html",
