@@ -260,12 +260,12 @@ protected void low_recursive_unlock(string path, mapping(string:string) locks)
 {
   foreach(indices(locks), string lock_path) {
     if (has_prefix(lock_path, path)) {
-      low_unlock(path, locks);
+      low_unlock(lock_path, locks);
     }
   }
   foreach(indices(all_locks), string lock_path) {
     if (has_prefix(lock_path, path)) {
-      low_unlock(path, locks);
+      low_unlock(lock_path, locks);
     }
   }
 }
