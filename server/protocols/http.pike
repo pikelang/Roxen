@@ -2624,8 +2624,13 @@ void send_result(mapping|void result)
 #endif
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-    if (!sizeof (file) && multi_status)
-      file = multi_status->http_answer();
+    if ((sizeof(file) <= 1) && multi_status) {
+      // NB: Configuration::examine_return_mapping() adds an
+      //     empty extra_heads entry to the mapping.
+      if ((sizeof(file) != 1) || file->extra_heads) {
+	file = multi_status->http_answer();
+      }
+    }
 
     if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
       file->len = 0;

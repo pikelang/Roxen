@@ -1710,6 +1710,11 @@ string examine_return_mapping(mapping m)
 	 break;
 
       case 200:
+	 // NB: Note the setting of extra_heads above.
+	 if (sizeof(m) <= 1) {
+	   res = "Returned multi status. ";
+	   break;
+	 }
 	 res = "Returned ok. ";
 	 break;
 
