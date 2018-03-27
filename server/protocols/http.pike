@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.643 2012/01/24 16:15:47 grubba Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -994,6 +994,24 @@ private int parse_got( string new_data )
        case "if-match": break; // Not supported yet.
        case "if-none-match":
 	 none_match = (multiset)((contents-" ")/",");
+	 break;
+
+       case "if":
+#ifdef IF_HEADER_DEBUG
+	 werror("IF: Raw header: %O\n", contents);
+#endif
+	 if (!has_prefix(String.trim_all_whites(contents), "<")) {
+	   // Prefix with the base resource id to make the header
+	   // idempotent with respect to subrequests.
+	   contents =
+	     sprintf("<%s> %s",
+		     replace(raw_url, ({ " ", ">" }), ({ "%20", "%3e" })),
+		     contents);
+	   request_headers->if = contents;
+#ifdef IF_HEADER_DEBUG
+	   werror("IF: Adjusted header: %O\n", contents);
+#endif
+	 }
 	 break;
 
        case "proxy-authorization":
