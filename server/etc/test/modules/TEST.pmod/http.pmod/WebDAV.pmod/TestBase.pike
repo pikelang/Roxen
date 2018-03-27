@@ -1532,13 +1532,14 @@ private void do_test_copy_col_fails_partly_1(string method)
   }
   // The destination directory has been wiped, except for dst_file2,
   // which was locked.
-  // No actual copy or move was performed.
+  // No actual delete, copy or move was performed.
   webdav_ls(this::testcase_dir,
         ({ this::testcase_dir,
            src_dir,
            src_file1,
            src_file2,
            dst_dir,
+	   dst_file1,
            dst_file2 }));
   ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
 }
@@ -1577,16 +1578,15 @@ private void do_test_copy_col_fails_partly_2(string method)
                  src_file2,
                  dst_dir,
                  dst_file1 }));
+    ASSERT_CALL_TRUE(filesystem_check_content, dst_file1, "file1 in dir1");
   } else { // method == "MOVE"
       webdav_ls(this::testcase_dir,
                 ({ this::testcase_dir,
                    src_dir,
-                   src_file2,
-                   dst_dir,
-                   dst_file1 }));
+		   src_file1,
+                   src_file2 }));
   }
   ASSERT_CALL_FALSE(filesystem_check_exists, dst_file2);
-  ASSERT_CALL_TRUE(filesystem_check_content, dst_file1, "file1 in dir1");
 }
 
 public void test_copy_col_fails_partly_1()
