@@ -557,8 +557,10 @@ protected mapping(string:string) make_filenames(string dir,
   });
 }
 
-protected void verify_lock_token(WebDAVResponse res) {
-  ASSERT_EQUAL(res->status, STATUS_LOCKED);
+protected void verify_lock_token(WebDAVResponse res)
+{
+  ASSERT_TRUE((res->status == STATUS_LOCKED) ||
+	      (res->status == STATUS_MULTI_STATUS));
   // TODO: Parse data and verify response contains the
   // 'lock-token-submitted' precondition element and that is looks as expected.
   ASSERT_CALL_TRUE(has_value, res->data, "lock-token-submitted");
@@ -1913,7 +1915,9 @@ public void test_move_src_locked()
   foreach (({src_parent, src, child}), string resource_to_lock) {
     mapping(string:string) locks = ([]);
     webdav_lock(resource_to_lock, locks, STATUS_OK);
-    WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_LOCKED);
+    WebDAVResponse res = webdav_move(src, dst, ([]),
+				     (resource_to_lock == child) ?
+				     STATUS_MULTI_STATUS: STATUS_LOCKED);
     verify_lock_token(res);
     webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
@@ -1945,7 +1949,9 @@ public void test_move_destination_locked()
   foreach (({dst_parent, dst, dst_child}), string resource_to_lock) {
     mapping(string:string) locks = ([]);
     webdav_lock(resource_to_lock, locks, STATUS_OK);
-    WebDAVResponse res = webdav_move(src, dst, ([]), STATUS_LOCKED);
+    WebDAVResponse res = webdav_move(src, dst, ([]),
+				     (resource_to_lock == dst_child) ?
+				     STATUS_MULTI_STATUS:STATUS_LOCKED);
     verify_lock_token(res);
     webdav_unlock(resource_to_lock, locks, STATUS_NO_CONTENT);
   }
