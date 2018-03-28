@@ -3082,7 +3082,11 @@ protected RequestID make_fake_id (string s, RequestID id)
   fake_id->misc->common = id->misc->common;
   fake_id->conf = this_object();
 
-  fake_id->raw_url=s;
+  // HTTP transport encode the path.
+  // NB: This is required to make scan_for_query() happy.
+  s = map(string_to_utf8(s)/"/", Protocols.HTTP.percent_encode) * "/";
+
+  fake_id->raw_url = s;
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
@@ -3092,6 +3096,8 @@ protected RequestID make_fake_id (string s, RequestID id)
     s = fake_id->scan_for_query (s);
 
   s = http_decode_string(s);
+
+  catch { s = utf8_to_string(s); };
 
   s = Roxen.fix_relative (s, id);
 
