@@ -1219,6 +1219,12 @@ mapping(string:mixed) recurse_delete_files(string path,
     return 0;
   }
 
+  mapping(string:mixed) ret = write_access(path, 1, id);
+  if (ret) {
+    SIMPLE_TRACE_LEAVE("Write access denied: %O", ret);
+    return ret;
+  }
+
   mapping(string:mixed) recurse (string path, Stat st)
   {
     // Note: Already got an extra TRACE_ENTER level on entry here.

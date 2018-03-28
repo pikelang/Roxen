@@ -597,9 +597,11 @@ void recursive_rm(string real_dir, string virt_dir,
       TRACE_LEAVE("File not found.");
       continue;
     }
+    if (stat->isdir) {
+      virt_fname += "/";
+    }
     int(0..1)|mapping sub_status;
-    if (check_status_needed &&
-	mappingp(sub_status = write_access(virt_fname, 1, id))) {
+    if (mappingp(sub_status = write_access(virt_fname, 1, id))) {
       id->set_status_for_path(virt_fname, sub_status->error);
       TRACE_LEAVE("Write access denied.");
       continue;
@@ -810,7 +812,7 @@ mapping make_collection(string coll, RequestID id)
 
   // Disallow if the name is locked, or if the parent directory is locked.
   mapping(string:mixed) ret =
-    write_access(({coll, combine_path(coll, "..")}), 0, id);
+    write_access(({coll + "/", combine_path(coll, "../")}), 0, id);
   if (ret) return ret;
 
   mkdirs++;
@@ -1048,7 +1050,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(f + "/", 0, id)) {
       TRACE_LEAVE("MKCOL: Write access denied.");
       return ret;
     }
@@ -1429,10 +1431,14 @@ mixed find_file( string f, RequestID id )
     }
 
     // NB: Consider the case of moving of directories containing locked files.
-    mapping(string:mixed) ret =
-      write_access(({ combine_path(f, "../"), f, new_uri }), 1, id);
+    mapping(string:mixed) ret = write_access(({ f, new_uri }), 1, id);
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
+      return ret;
+    }
+    ret = write_access(combine_path(f, "../"), 0, id);
+    if (ret) {
+      TRACE_LEAVE("MOVE: Parent directory locked");
       return ret;
     }
 
