@@ -1523,7 +1523,7 @@ public void test_copy_dest_exist_overwrite_header_F()
   do_test_copy_dest_exist_overwrite_header_F("COPY");
 }
 
-private void do_test_copy_col_fails_partly_1(string method)
+private void do_test_copy_col_fails_due_to_locked_file(string method)
 {
   ASSERT_TRUE(method == "COPY" || method == "MOVE");
   string src_dir = Stdio.append_path(this::testcase_dir, "A");
@@ -1560,7 +1560,7 @@ private void do_test_copy_col_fails_partly_1(string method)
   ASSERT_CALL_TRUE(filesystem_check_content, dst_file2, "file2 in dir2");
 }
 
-private void do_test_copy_col_fails_partly_2(string method)
+private void do_test_copy_col_fails_due_to_locked_non_existing_file(string method)
 {
   ASSERT_TRUE(method == "COPY" || method == "MOVE");
   string src_dir = Stdio.append_path(this::testcase_dir, "A");
@@ -1603,14 +1603,14 @@ private void do_test_copy_col_fails_partly_2(string method)
   ASSERT_CALL_FALSE(filesystem_check_exists, dst_file2);
 }
 
-public void test_copy_col_fails_partly_1()
+public void test_copy_col_fails_due_to_locked_file()
 {
-  do_test_copy_col_fails_partly_1("COPY");
+  do_test_copy_col_fails_due_to_locked_file("COPY");
 }
 
-public void test_copy_col_fails_partly_2()
+public void test_copy_col_fails_due_to_locked_non_existing_file()
 {
-  do_test_copy_col_fails_partly_2("COPY");
+  do_test_copy_col_fails_due_to_locked_non_existing_file("COPY");
 }
 
 // After detecting an error, the COPY operation SHOULD try
@@ -1898,14 +1898,14 @@ public void test_move_dest_exist_overwrite_header_F()
 // status response.  For example, if a source resource was locked and
 // could not be moved, then the source resource URL appears with the 423
 // (Locked) status.
-public void test_move_col_fails_partly_1()
+public void test_move_col_fails_due_to_locked_file()
 {
-  do_test_copy_col_fails_partly_1("MOVE");
+  do_test_copy_col_fails_due_to_locked_file("MOVE");
 }
 
-public void test_move_col_fails_partly_2()
+public void test_move_col_fails_due_to_locked_non_existing_file()
 {
-  do_test_copy_col_fails_partly_2("MOVE");
+  do_test_copy_col_fails_due_to_locked_non_existing_file("MOVE");
 }
 
 // 403 (Forbidden) - Among many possible reasons for forbidding a MOVE
