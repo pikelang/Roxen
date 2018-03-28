@@ -1692,7 +1692,15 @@ protected mapping(string:mixed) move_collection(
     id->url_base() + query_location()[1..] + destination;
   tmp_id->method = "MOVE";
   mapping(string:mixed) res = find_file(source, tmp_id);
-  if (!res || res->error != 501) return res;
+  if (!res || res->error != 501) {
+    if (res && !sizeof(res)) {
+      foreach(tmp_id->get_multi_status()->get_responses_by_prefix("");
+	      string href; MultiStatusNode status) {
+	id->add_status(href, status);
+      }
+    }
+    return res;
+  }
   // Not implemented. Fall back to COPY + DELETE.
   string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
