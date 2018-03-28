@@ -1348,8 +1348,8 @@ private void do_test_copy_file_to_existing_file(string method,
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
   verify_lock_token(res);
   current_locks = locks;
-  res = ASSERT_CALL(webdav_request, method, file1,
-                    ([ "new-uri": file2 ]) + headers);
+  res = webdav_request(method, file1,
+                       ([ "new-uri": file2 ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
   ASSERT_TRUE(filesystem_compare_files, file1, file2);
   ASSERT_TRUE(filesystem_check_content, file2, "Content 1");
@@ -1423,7 +1423,7 @@ private void do_test_copy_dir_to_existing_file(string method,
   ASSERT_CALL_TRUE(filesystem_is_file, file);
   ASSERT_CALL_FALSE(filesystem_is_dir, file);
   mapping(string:string) locks = ([]);
-  ASSERT_CALL(webdav_lock, file, locks, STATUS_OK);
+  webdav_lock(file, locks, STATUS_OK);
   WebDAVResponse res = webdav_request(method, dir,
                                       ([ "new-uri": file ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
@@ -1542,12 +1542,12 @@ private void do_test_copy_col_fails_partly_1(string method)
   webdav_put(dst_file2, "file2 in dir2", STATUS_CREATED);
   webdav_lock(dst_file2, ([]), STATUS_OK);
   if (method == "COPY") {
-    WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
-                     STATUS_MULTI_STATUS);
+    WebDAVResponse res = webdav_copy(src_dir, dst_dir,
+                                     STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   } else {
-    WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
-                     ([]), STATUS_MULTI_STATUS);
+    WebDAVResponse res = webdav_move(src_dir, dst_dir,
+                                     ([]), STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   }
   // The destination directory has been wiped, except for dst_file2,
@@ -1578,12 +1578,12 @@ private void do_test_copy_col_fails_partly_2(string method)
   webdav_put(src_file2, "file2 in dir1", STATUS_CREATED);
   webdav_lock(dst_file2, ([]), STATUS_OK);
   if (method == "COPY") {
-    WebDAVResponse res = ASSERT_CALL(webdav_copy, src_dir, dst_dir,
-                     STATUS_MULTI_STATUS);
+    WebDAVResponse res = webdav_copy(src_dir, dst_dir,
+                                     STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   } else {
-    WebDAVResponse res = ASSERT_CALL(webdav_move, src_dir, dst_dir,
-                     ([]), STATUS_MULTI_STATUS);
+    WebDAVResponse res = webdav_move(src_dir, dst_dir,
+                                     ([]), STATUS_MULTI_STATUS);
     verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   }
   // dst_file1 should have been overwritten by src_file1.
@@ -2061,9 +2061,6 @@ public void test_move_destination_locked()
   For copy/move test where destination exists and is a directory,
     Test both with an empty destination directory and with a non empty
     destination directory. (We already test at least one of the cases.)
-
-  Hmm, would it be better to remove all use of 'ASSERT_CALL'? Easier to
-  understand errors in log? Or good as is?
 */
 
 
