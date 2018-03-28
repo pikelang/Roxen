@@ -1702,7 +1702,7 @@ protected mapping(string:mixed) move_collection(
     if (res && !sizeof(res)) {
       foreach(tmp_id->get_multi_status()->get_responses_by_prefix("");
 	      string href; MultiStatusNode status) {
-	id->add_status(href, status);
+	id->set_status_for_url(href, status);
       }
     }
     return res;
