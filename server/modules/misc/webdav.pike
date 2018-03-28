@@ -679,24 +679,6 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 		   if (res && res->error < 300) {
 		     // Succeed in deleting some file(s).
 		     empty_result = res;
-
-		     // RFC 4918 9.6:
-		     // A server processing a successful DELETE request:
-		     //
-		     //    MUST destroy locks rooted on the deleted resource
-		     mapping(string:DAVLock) sub_locks =
-		       module->find_locks(path, -1, 0, id);
-		     foreach(sub_locks||([]);;DAVLock lock) {
-		       SIMPLE_TRACE_ENTER(module,
-					  "DELETE: Unlocking %O...", lock);
-		       mapping fail =
-			 id->conf->unlock_file(lock->path, lock, id);
-		       if (fail) {
-			 TRACE_LEAVE("DELETE: Unlock failed.");
-		       } else {
-			 TRACE_LEAVE("DELETE: Unlock ok.");
-		       }
-		     }
 		     return 0;
 		   }
 		   return res;

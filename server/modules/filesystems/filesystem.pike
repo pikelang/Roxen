@@ -629,6 +629,8 @@ void recursive_rm(string real_dir, string virt_dir,
     } else {
       deletes++;
 
+      unlock_path(virt_fname, id);
+
       if (id->misc->quota_obj && stat->isreg()) {
 	id->misc->quota_obj->deallocate(virt_fname,
 					stat->size());
@@ -1591,6 +1593,8 @@ mixed find_file( string f, RequestID id )
 	  TRACE_LEAVE("DELETE: Partial failure.");
 	  return ([]);
 	}
+      } else {
+	unlock_path(f, id);
       }
     } else {
       mapping|int(0..1) res =
@@ -1622,6 +1626,8 @@ mixed find_file( string f, RequestID id )
       }
       privs = 0;
       deletes++;
+
+      unlock_path(f, id);
 
       if (id->misc->quota_obj && (size > 0)) {
 	id->misc->quota_obj->deallocate(URI, size);
@@ -1708,6 +1714,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	    TRACE_LEAVE("");
 	    return ([]);
 	  }
+	} else {
+	  unlock_path(dest, id);
 	}
 	SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
       } else if (source_st->isdir) {
@@ -1725,6 +1733,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
 	} else {
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
+
+	  unlock_path(dest, id);
 	}
       } else {
 	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
