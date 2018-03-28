@@ -245,6 +245,9 @@ class DAVLock
   //! As a special case, if the value is @expr{0@} (zero), the lock
   //! has infinite duration.
 
+  int(0..1) is_file;
+  //! @expr{1@} if @[path] refers to a file.
+
   protected void create(string locktoken, string path, int(0..1) recursive,
 			string|SimpleNode lockscope, string|SimpleNode locktype,
 			int(0..) expiry_delta, array(SimpleNode) owner)
@@ -457,9 +460,11 @@ class Configuration
   void invalidate_cache();
   void clear_memory_caches();
   string examine_return_mapping(mapping m);
-  multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
-			       int(0..1) exclude_shared, RequestID id);
-  DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id);
+  mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
+				     int(0..1) exclude_shared, RequestID id);
+  mapping(string:mixed)|int(-1..0) check_locks(string path,
+					       int(0..1) recursive,
+					       RequestID id);
   mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0) id);
   int expire_locks(RequestID id);
   void refresh_lock(DAVLock lock);
@@ -1951,7 +1956,19 @@ class RequestID
   //!   the first is one of the strings @expr{"not"@}, @expr{"etag"@},
   //!   or @expr{"key"@}, and the second is the value.
   //!
-  //!   The resource @expr{0@} (zero) represents the default resource.
+  //!   There is an implicit @b{OR@} between sub-conditions
+  //!   (cf @rfc{4918:10.4.6@}), and an implicit @b{AND@}
+  //!   between the elements in a sub-condition.
+  //!
+  //!   The default resource is mapped to @[not_query].
+  //!
+  //!   As @rfc{4918:10.4.1@} states that the mere fact that a state
+  //!   token appears in an If header means that it has been submitted,
+  //!   we as a convenience add all non-negated lock tokens to the
+  //!   @expr{0@} resource.
+  //!
+  //! @seealso
+  //!   @rfc{4918:10.4.2@}
   mapping(string:array(array(array(string)))) get_if_data()
   {
     if (if_data) {
@@ -1979,10 +1996,13 @@ class RequestID
       return 0;
     }
 
-    mapping(string:array(array(array(string)))) res = ([ 0: ({}) ]);
+    mapping(string:array(array(array(string)))) res = ([
+      0:({}),
+    ]);
 
+    array(string) keys = ({});
     string tmp_resource;
-    string resource;
+    string resource = not_query;
     foreach(decoded_if, array(string|int|array(array(string))) symbol) {
       switch (symbol[0]) {
       case "special":
@@ -1994,9 +2014,17 @@ class RequestID
 	  // Normalize.
 	  // FIXME: Check that the protocol and server parts refer
 	  //        to this server.
+	  // NB: Above invalid according to rfc 4918 8.3.
+	  //
+	  // NB: RFC 4918 8.3 adds support for path-absolute resources.
+	  // NB: The resource reference may have a query section.
+	  //
 	  // FIXME: Support for servers mounted on subpaths.
 	  catch { resource = Standards.URI(resource)->path; };
-	  if (!sizeof(resource) || (resource[-1] != '/')) resource += "/";
+	  catch { resource = Protocols.HTTP.percent_decode(resource); };
+	  catch { resource = utf8_to_string(resource); };
+	  resource = Unicode.normalize(resource, "NFC");
+	  if (!sizeof(resource)) resource = "/";
 	  if (!res[resource])
 	    res[resource] = ({});
 	  break;
@@ -2033,6 +2061,9 @@ class RequestID
 		IF_HDR_MSG("No tmp_key.\n");
 		return 0;
 	      }
+	      if (!sizeof(expr) || (expr[-1][0] != "not")) {
+		keys += ({ tmp_key });
+	      }
 	      expr += ({ ({ "key", tmp_key }) });
 	      tmp_key = 0;
 	      break;
@@ -2060,6 +2091,11 @@ class RequestID
 	    }
 	    if (lower_case(sub_expr[i][1]) == "not") {
 	      // Not
+	      if (sizeof(expr) && (expr[-1][0] == "not")) {
+		IF_HDR_MSG("Double negation.");
+		report_debug("Syntax error in if-header: %O\n", raw_header);
+		return 0;
+	      }
 	      expr += ({ ({ "not", 0 }) });
 	      break;
 	    }
@@ -2079,6 +2115,13 @@ class RequestID
 	report_debug("Syntax error in if-header: %O\n", raw_header);
 	return 0;
       }
+    }
+    if (sizeof(keys)) {
+      res[0] = ({
+	map(keys, lambda(string key) {
+		    return ({ "key", key });
+		  }),
+      });
     }
     if (tmp_resource) {
       IF_HDR_MSG("Active tmp_resource: %O\n", tmp_resource);
@@ -2879,6 +2922,56 @@ class RequestID
 				    status_code, message);
   }
 
+  variant void set_status_for_path (string path, mapping(string:mixed) ret)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The status is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param ret
+  //!   Result-mapping for the path.
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..], ret);
+  }
+
+  // NB: object below to avoid forward reference with variants...
+  variant void set_status_for_path (string path, object status)
+  //! @decl void set_status_for_path (string path, MultiStatusNode status)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The @[status] is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param status
+  //!   Status object for the @[path].
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..], status);
+  }
+
   void set_status_for_url (string url, int status_code,
 			   string|void message, mixed... args)
   //! Register a status to be included in the response that applies
@@ -2888,6 +2981,26 @@ class RequestID
   {
     if (sizeof (args)) message = sprintf (message, @args);
     get_multi_status()->add_status (url, status_code, message);
+  }
+
+  variant void set_status_for_url (string url, mapping(string:mixed) ret)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    get_multi_status()->add_status (url, ret);
+  }
+
+  // NB: object below to avoid forward reference with variants...
+  variant void set_status_for_url (string url, object status)
+  //! @decl void set_status_for_url (string url, MultiStatusNode status)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    get_multi_status()->add_status (url, status);
   }
 
 
@@ -3809,6 +3922,22 @@ class MultiStatus
     status_set[href] = MultiStatusStatus(ret);
   }
 
+  variant void add_status(string href, MultiStatusNode status_node)
+  //! Add a status for the specified url.
+  //!
+  //! @param href
+  //!   URL that the @[status_node] is for.
+  //!
+  //! @param status_node
+  //!   Status for the @[href]. Typically a @[MultiStatusStatus] or
+  //!   a @[MultiStatusPropStat].
+  //!
+  //! This variant makes it easy to transfer nodes beteen
+  //! @[MultiStatus] objects.
+  {
+    status_set[href] = status_node;
+  }
+
   void add_namespace (string namespace)
   //! Add a namespace to the generated @tt{<multistatus>@} element.
   //! Useful if several properties share a namespace.
@@ -3951,16 +4080,6 @@ protected class PropertySet
 					MultiStatus.Prefixed result,
 					multiset(string)|void filt);
 }
-
-//! See @[RoxenModule.check_locks].
-enum LockFlag {
-  LOCK_NONE		= 0,
-  LOCK_SHARED_BELOW	= 2,
-  LOCK_SHARED_AT	= 3,
-  LOCK_OWN_BELOW	= 4,
-  LOCK_EXCL_BELOW	= 6,
-  LOCK_EXCL_AT		= 7
-};
 
 //! How to handle an existing destination when files or directories
 //! are moved or copied in a filesystem.
@@ -4106,13 +4225,10 @@ class RoxenModule
 
   string resource_id (string path, RequestID id);
   string|int authenticated_user_id (string path, RequestID id);
-  multiset(DAVLock) find_locks(string path,
-			       int(-1..1) recursive,
-			       int(0..1) exclude_shared,
-			       RequestID id);
-  DAVLock|LockFlag check_locks(string path,
-			       int(0..1) recursive,
-			       RequestID id);
+  mapping(string:DAVLock) find_locks(string path,
+				     int(-1..1) recursive,
+				     int(0..1) exclude_shared,
+				     RequestID id);
   mapping(string:mixed) lock_file(string path,
 				  DAVLock lock,
 				  RequestID id);

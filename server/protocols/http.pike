@@ -1046,6 +1046,24 @@ private int parse_got( string new_data )
 	 none_match = (multiset)((contents-" ")/",");
 	 break;
 
+       case "if":
+#ifdef IF_HEADER_DEBUG
+	 werror("IF: Raw header: %O\n", contents);
+#endif
+	 if (!has_prefix(String.trim_all_whites(contents), "<")) {
+	   // Prefix with the base resource id to make the header
+	   // idempotent with respect to subrequests.
+	   contents =
+	     sprintf("<%s> %s",
+		     replace(raw_url, ({ " ", ">" }), ({ "%20", "%3e" })),
+		     contents);
+	   request_headers->if = contents;
+#ifdef IF_HEADER_DEBUG
+	   werror("IF: Adjusted header: %O\n", contents);
+#endif
+	 }
+	 break;
+
        case "proxy-authorization":
 	 array y;
 	 y = contents / " ";
@@ -2752,8 +2770,13 @@ void send_result(mapping|void result)
 #endif
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-    if (!sizeof (file) && multi_status)
-      file = multi_status->http_answer();
+    if ((sizeof(file) <= 1) && multi_status) {
+      // NB: Configuration::examine_return_mapping() adds an
+      //     empty extra_heads entry to the mapping.
+      if ((sizeof(file) != 1) || file->extra_heads) {
+	file = multi_status->http_answer();
+      }
+    }
 
     if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
       file->len = 0;

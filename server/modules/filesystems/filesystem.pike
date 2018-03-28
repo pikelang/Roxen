@@ -693,9 +693,11 @@ void recursive_rm(string real_dir, string virt_dir,
       TRACE_LEAVE("File not found.");
       continue;
     }
+    if (stat->isdir) {
+      virt_fname += "/";
+    }
     int(0..1)|mapping sub_status;
-    if (check_status_needed &&
-	mappingp(sub_status = write_access(virt_fname, 1, id))) {
+    if (mappingp(sub_status = write_access(virt_fname, 1, id))) {
       id->set_status_for_path(virt_fname, sub_status->error);
       TRACE_LEAVE("Write access denied.");
       continue;
@@ -724,6 +726,8 @@ void recursive_rm(string real_dir, string virt_dir,
 #endif
     } else {
       deletes++;
+
+      unlock_path(virt_fname, id);
 
       if (id->misc->quota_obj && stat->isreg()) {
 	id->misc->quota_obj->deallocate(virt_fname,
@@ -905,7 +909,7 @@ mapping make_collection(string coll, RequestID id)
 
   // Disallow if the name is locked, or if the parent directory is locked.
   mapping(string:mixed) ret =
-    write_access(({coll, combine_path(coll, "..")}), 0, id);
+    write_access(({coll + "/", combine_path(coll, "../")}), 0, id);
   if (ret) return ret;
 
   mkdirs++;
@@ -1114,7 +1118,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(f + "/", 0, id)) {
       TRACE_LEAVE("MKCOL: Write access denied.");
       return ret;
     }
@@ -1132,10 +1136,10 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
+    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
+
     code = mkdir(f);
     int err_code = errno();
-
-    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
     if (code) {
       string msg = safe_chmod(f, 0777 & ~(id->misc->umask || 022));
@@ -1152,13 +1156,12 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_string_answer("Ok");
     } else {
       privs = 0;
-      SIMPLE_TRACE_LEAVE("%s: Failed (errcode:%d)", id->method, errcode);
+      SIMPLE_TRACE_LEAVE("%s: Failed (err: %d: %s)",
+			 id->method, err_code, strerror(err_code));
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
 	if (err_code ==
 #if constant(System.ENOENT)
-	    System.ENOENT
-#elif constant(System.ENOENT)
 	    System.ENOENT
 #else
 	    2
@@ -1495,10 +1498,14 @@ mixed find_file( string f, RequestID id )
     }
 
     // NB: Consider the case of moving of directories containing locked files.
-    mapping(string:mixed) ret =
-      write_access(({ combine_path(f, "../"), f, new_uri }), 1, id);
+    mapping(string:mixed) ret = write_access(({ f, new_uri }), 1, id);
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
+      return ret;
+    }
+    ret = write_access(combine_path(f, "../"), 0, id);
+    if (ret) {
+      TRACE_LEAVE("MOVE: Parent directory locked");
       return ret;
     }
 
@@ -1660,6 +1667,8 @@ mixed find_file( string f, RequestID id )
 	  TRACE_LEAVE("DELETE: Partial failure.");
 	  return ([]);
 	}
+      } else {
+	unlock_path(f, id);
       }
     } else {
       mapping|int(0..1) res =
@@ -1691,6 +1700,8 @@ mixed find_file( string f, RequestID id )
       }
       privs = 0;
       deletes++;
+
+      unlock_path(f, id);
 
       if (id->misc->quota_obj && (size > 0)) {
 	id->misc->quota_obj->deallocate(URI, size);
@@ -1777,6 +1788,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	    TRACE_LEAVE("");
 	    return ([]);
 	  }
+	} else {
+	  unlock_path(dest, id);
 	}
 	SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
       } else if (source_st->isdir) {
@@ -1794,6 +1807,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
 	} else {
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
+
+	  unlock_path(dest, id);
 	}
       } else {
 	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
