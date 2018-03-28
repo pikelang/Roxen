@@ -1066,10 +1066,10 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
+    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
+
     code = mkdir(f);
     int err_code = errno();
-
-    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
     if (code) {
       string msg = safe_chmod(f, 0777 & ~(id->misc->umask || 022));
@@ -1086,7 +1086,8 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_string_answer("Ok");
     } else {
       privs = 0;
-      SIMPLE_TRACE_LEAVE("%s: Failed (errcode:%d)", id->method, errcode);
+      SIMPLE_TRACE_LEAVE("%s: Failed (err: %d: %s)",
+			 id->method, err_code, strerror(err_code));
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
 	if (err_code ==

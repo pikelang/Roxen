@@ -2033,6 +2033,8 @@ mapping(string:mixed)|DAVLock lock_file(string path,
       continue;
     }
 
+    TRACE_ENTER(sprintf("Calling %O->lock_file(%O, %O, %O)...",
+			function_object(func), subpath, lock, id), 0);
     mapping(string:mixed) lock_error =
       function_object(func)->lock_file(subpath, lock, id);
     if (lock_error) {
@@ -2053,8 +2055,10 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 	if (func == func2) break;
       }
       // destruct(lock);
+      TRACE_LEAVE(sprintf("Lock error: %O", lock_error));
       return lock_error;
     }
+    TRACE_LEAVE("Ok.");
     if (function_object(func)->webdav_opaque) break;
   }
 
@@ -2071,6 +2075,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   }
 
   // Success.
+  TRACE_LEAVE("Success.");
   return lock;
 }
 
@@ -2675,8 +2680,10 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("");
       if(err)
 	throw(err);
+      TRACE_LEAVE("Returning result from URL module.");
       return dir;
     }
+    TRACE_LEAVE("Returned 'Continue normal processing'.");
     id->not_query=of;
   }
 #endif /* URL_MODULES */
