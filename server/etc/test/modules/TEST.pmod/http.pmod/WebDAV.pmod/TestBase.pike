@@ -486,10 +486,12 @@ protected void prepare_testdir(string testdir)
   testdir = has_suffix(testdir, "/") ? testdir[..<1] : testdir;
   report_debug("Webdav: Test dir is: %O\n", testdir);
 
-  if (filesystem_check_exists(testdir)) {
-    // In case it is not empty.
-    filesystem_recursive_rm(testdir); 
-  }
+  // Consider working directly with the filesystem instead.
+  // filesystem_recursive_rm(testdir);
+
+  // webdav_mkcol may return true even it the dir already existed. Therefor
+  // we always clean.
+  webdav_request("DELETE", testdir); // In case it already exists...
   webdav_request("MKCOL", testdir);
   webdav_ls(testdir+"/", ({ testdir+"/" }));
 }
