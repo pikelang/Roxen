@@ -516,7 +516,6 @@ public void run()
     if (getenv("TEST_CASE")) {
       testcases = ({ getenv("TEST_CASE") });
     }
-    testcases = ({"test_mkcol_dir_already_exist"});
     foreach (testcases, mixed testcase) {
       if (stringp(testcase) &&
           has_prefix((string) testcase, "test_") &&
