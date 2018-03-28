@@ -2021,6 +2021,40 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   return lock;
 }
 
+//! Returns the value of the specified property, or an error code
+//! mapping.
+//!
+//! @note
+//!   Returning a string is shorthand for returning an array
+//!   with a single text node.
+//!
+//! @seealso
+//!   @[query_property_set()]
+string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
+  query_property(string path, string prop_name, RequestID id)
+{
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    if (!has_prefix(path, loc)) {
+      // Does not apply to this location module.
+      continue;
+    }
+
+    // path == loc + subpath.
+    string subpath = path[sizeof(loc)..];
+
+    string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed) res =
+      function_object(func)->query_property(subpath, prop_name, id);
+    if (mappingp(res) && (res->error == 404)) {
+      // Not found in this module; try the next.
+      continue;
+    }
+    return res;
+  }
+  return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND, "No such property.");
+}
+
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All
 //! modules except last and filter type modules are mapped, in order,
