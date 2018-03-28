@@ -516,6 +516,7 @@ public void run()
     if (getenv("TEST_CASE")) {
       testcases = ({ getenv("TEST_CASE") });
     }
+    testcases = ({"test_mkcol_dir_already_exist"});
     foreach (testcases, mixed testcase) {
       if (stringp(testcase) &&
           has_prefix((string) testcase, "test_") &&
@@ -1294,13 +1295,10 @@ private void do_test_copy_dir_to_existing_dir(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy dir to dir
-  string dir = Stdio.append_path(testcase_dir,
-                 sprintf("%s_dir_to_dir", lower_case(method)));
-  string dir1 = Stdio.append_path(dir, "dir1");
+  string dir1 = Stdio.append_path(testcase_dir, "dir1");
   string file1 = Stdio.append_path(dir1, "file1.txt");
-  string dir2 = Stdio.append_path(dir, "dir2");
+  string dir2 = Stdio.append_path(testcase_dir, "dir2");
   string file2 = Stdio.append_path(dir2, "file2.txt");
-  webdav_mkcol(dir, STATUS_CREATED);
   webdav_mkcol(dir1, STATUS_CREATED);
   webdav_mkcol(dir2, STATUS_CREATED);
   webdav_put(file1, "Content 1", STATUS_CREATED);
@@ -1316,15 +1314,15 @@ private void do_test_copy_dir_to_existing_dir(string method,
                        ([ "new-uri": dir2 ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
   if (method == "COPY") {
-    webdav_ls(dir,
-              ({ dir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
                  dir1,
                  file1,
                  dir2,
                  Stdio.append_path(dir2, "file1.txt") }));
   } else { // method == "MOVE"
-    webdav_ls(dir,
-              ({ dir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
                  dir2,
                  Stdio.append_path(dir2, "file1.txt") }));
   }
@@ -1340,11 +1338,8 @@ private void do_test_copy_file_to_existing_file(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy file to file
-  string dir = Stdio.append_path(testcase_dir,
-                 sprintf("%s_file_to_file", lower_case(method)));
-  string file1 = Stdio.append_path(dir, "file1.txt");
-  string file2 = Stdio.append_path(dir, "file2.txt");
-  webdav_mkcol(dir, STATUS_CREATED);
+  string file1 = Stdio.append_path(testcase_dir, "file1.txt");
+  string file2 = Stdio.append_path(testcase_dir, "file2.txt");
   webdav_put(file1, "Content 1", STATUS_CREATED);
   webdav_put(file2, "Content 2", STATUS_CREATED);
   mapping(string:string) locks = ([]);
@@ -1360,13 +1355,13 @@ private void do_test_copy_file_to_existing_file(string method,
   ASSERT_TRUE(filesystem_compare_files, file1, file2);
   ASSERT_TRUE(filesystem_check_content, file2, "Content 1");
   if (method == "COPY") {
-    webdav_ls(dir,
-              ({ dir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
                  file1,
                  file2 }));
   } else { // method == "MOVE"
-    webdav_ls(dir,
-              ({ dir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
                  file2 }));
   }
 }
@@ -1381,37 +1376,34 @@ private void do_test_copy_file_to_existing_dir(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy file to dir
-  string dir = Stdio.append_path(testcase_dir,
-                 sprintf("%s_file_to_dir", lower_case(method)));
-  string mydir = Stdio.append_path(dir, "mydir");
-  string file = Stdio.append_path(dir, "myfile.txt");
+  string dir = Stdio.append_path(testcase_dir, "mydir");
+  string file = Stdio.append_path(testcase_dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
-  webdav_mkcol(mydir, STATUS_CREATED);
-  ASSERT_CALL_TRUE(filesystem_is_dir, mydir);
-  ASSERT_CALL_FALSE(filesystem_is_file, mydir);
+  ASSERT_CALL_TRUE(filesystem_is_dir, dir);
+  ASSERT_CALL_FALSE(filesystem_is_file, dir);
   webdav_put(file, "My content", STATUS_CREATED);
   mapping(string:string) locks = ([]);
-  webdav_lock(mydir, locks, STATUS_OK);
+  webdav_lock(dir, locks, STATUS_OK);
   WebDAVResponse res = webdav_request(method, file,
-                                      ([ "new-uri": mydir ]) + headers);
+                                      ([ "new-uri": dir ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
   verify_lock_token(res);
   current_locks = locks;
   res = webdav_request(method, file,
-                       ([ "new-uri": mydir ]) + headers);
+                       ([ "new-uri": dir ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
-  ASSERT_CALL_TRUE(filesystem_is_file, mydir);
-  ASSERT_CALL_FALSE(filesystem_is_dir, mydir);
-  ASSERT_CALL_TRUE(filesystem_check_content, mydir, "My content");
+  ASSERT_CALL_TRUE(filesystem_is_file, dir);
+  ASSERT_CALL_FALSE(filesystem_is_dir, dir);
+  ASSERT_CALL_TRUE(filesystem_check_content, dir, "My content");
   if (method == "COPY") {
-    webdav_ls(dir,
-      ({ dir,
-         mydir,
+    webdav_ls(testcase_dir,
+      ({ testcase_dir,
+         dir,
          file }));
   } else { // method == "MOVE"
-    webdav_ls(dir,
-      ({ dir,
-         mydir }));
+    webdav_ls(testcase_dir,
+      ({ testcase_dir,
+         dir }));
   }
 }
 
@@ -1425,53 +1417,82 @@ private void do_test_copy_dir_to_existing_file(string method,
     headers = ([ "Overwrite" : overwrite ]);
   }
   // Copy dir to file
-  string dir = Stdio.append_path(testcase_dir,
-                 sprintf("%s_dir_to_file", lower_case(method)));
-  string mydir = Stdio.append_path(dir, "mydir");
-  string file = Stdio.append_path(dir, "myfile.txt");
+  string dir = Stdio.append_path(testcase_dir, "mydir");
+  string file = Stdio.append_path(testcase_dir, "myfile.txt");
   webdav_mkcol(dir, STATUS_CREATED);
-  webdav_mkcol(mydir, STATUS_CREATED);
   webdav_put(file, "My content", STATUS_CREATED);
   ASSERT_CALL_TRUE(filesystem_is_file, file);
   ASSERT_CALL_FALSE(filesystem_is_dir, file);
   mapping(string:string) locks = ([]);
   ASSERT_CALL(webdav_lock, file, locks, STATUS_OK);
-  WebDAVResponse res = webdav_request(method, mydir,
+  WebDAVResponse res = webdav_request(method, dir,
                                       ([ "new-uri": file ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_LOCKED);
   verify_lock_token(res);
   current_locks = locks + ([]);
-  res = webdav_request(method, mydir,
+  res = webdav_request(method, dir,
                        ([ "new-uri": file ]) + headers);
   ASSERT_EQUAL(res->status, STATUS_NO_CONTENT);
   ASSERT_CALL_TRUE(filesystem_is_dir, file);
   ASSERT_CALL_FALSE(filesystem_is_file, file);
   if (method == "COPY") {
-    webdav_ls(dir,
-              ({ dir,
-                 mydir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
+                 dir,
                  file }));
   } else { // method = "MOVE"
-    webdav_ls(dir,
-              ({ dir,
+    webdav_ls(testcase_dir,
+              ({ testcase_dir,
                  file }));
   }
 }
 
-public void test_copy_dest_exist_no_overwrite_header()
+// Without overwrite header.
+public void test_copy_file_to_existing_file_1()
 {
   do_test_copy_file_to_existing_file("COPY", UNDEFINED);
-  do_test_copy_file_to_existing_dir( "COPY", UNDEFINED);
-  do_test_copy_dir_to_existing_file( "COPY", UNDEFINED);
-  do_test_copy_dir_to_existing_dir(  "COPY", UNDEFINED);
 }
 
-public void test_copy_dest_exist_overwrite_header_T()
+// Without overwrite header.
+public void test_copy_file_to_existing_dir_1()
+{
+  do_test_copy_file_to_existing_dir("COPY", UNDEFINED);
+}
+
+// Without overwrite header.
+public void test_copy_dir_to_existing_file_1()
+{
+  do_test_copy_dir_to_existing_file("COPY", UNDEFINED);
+}
+
+// Without overwrite header.
+public void test_copy_dir_to_existing_dir_1()
+{
+  do_test_copy_dir_to_existing_dir("COPY", UNDEFINED);
+}
+
+// With overwrite header T.
+public void test_copy_file_to_existing_file_2()
 {
   do_test_copy_file_to_existing_file("COPY", "T");
-  do_test_copy_file_to_existing_dir( "COPY", "T");
-  do_test_copy_dir_to_existing_file( "COPY", "T");
-  do_test_copy_dir_to_existing_dir(  "COPY", "T");
+}
+
+// With overwrite header T.
+public void test_copy_file_to_existing_dir_2()
+{
+  do_test_copy_file_to_existing_dir("COPY", "T");
+}
+
+// With overwrite header T.
+public void test_copy_dir_to_existing_file_2()
+{
+  do_test_copy_dir_to_existing_file("COPY", "T");
+}
+
+// With overwrite header T.
+public void test_copy_dir_to_existing_dir_2()
+{
+  do_test_copy_dir_to_existing_dir("COPY", "T");
 }
 
 private void do_test_copy_dest_exist_overwrite_header_F(string method)
@@ -1824,19 +1845,51 @@ public void test_move_col_depth_header_infinity()
 // 204 (No Content) - The source resource was successfully moved to a
 // URL that was already mapped.
 
- public void test_move_dest_exist_no_overwrite_header()
+// Without overwrite header.
+public void test_move_dir_to_existing_dir_1()
 {
-  do_test_copy_dir_to_existing_dir(  "MOVE", UNDEFINED);
-  do_test_copy_dir_to_existing_file( "MOVE", UNDEFINED);
-  do_test_copy_file_to_existing_file("MOVE", UNDEFINED);
-  do_test_copy_file_to_existing_dir( "MOVE", UNDEFINED);
+  do_test_copy_dir_to_existing_dir("MOVE", UNDEFINED);
 }
 
-public void test_move_dest_exist_overwrite_header_T()
+// Without overwrite header.
+public void test_move_dir_to_existing_file_1()
 {
-  do_test_copy_dir_to_existing_dir(  "MOVE", "T");
-  do_test_copy_dir_to_existing_file( "MOVE", "T");
+  do_test_copy_dir_to_existing_file( "MOVE", UNDEFINED);
+}
+
+// Without overwrite header.
+public void test_move_file_to_existing_file_1()
+{
+  do_test_copy_file_to_existing_file("MOVE", UNDEFINED);
+}
+
+// Without overwrite header.
+public void test_move_file_to_existing_dir_1()
+{
+  do_test_copy_file_to_existing_dir("MOVE", UNDEFINED);
+}
+
+// With overwrite header T.
+public void test_move_dir_to_existing_dir_2()
+{
+  do_test_copy_dir_to_existing_dir("MOVE", "T");
+}
+
+// With overwrite header T.
+public void test_move_dir_to_existing_file_2()
+{
+  do_test_copy_dir_to_existing_file("MOVE", "T");
+}
+
+// With overwrite header T.
+public void test_move_file_to_existing_file_2()
+{
   do_test_copy_file_to_existing_file("MOVE", "T");
+}
+
+// With overwrite header T.
+public void test_move_file_to_existing_dir_2()
+{
   do_test_copy_file_to_existing_dir( "MOVE", "T");
 }
 
