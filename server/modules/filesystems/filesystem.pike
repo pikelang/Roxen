@@ -1095,8 +1095,6 @@ mixed find_file( string f, RequestID id )
 	if (err_code ==
 #if constant(System.ENOENT)
 	    System.ENOENT
-#elif constant(System.ENOENT)
-	    System.ENOENT
 #else
 	    2
 #endif
