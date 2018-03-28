@@ -1541,15 +1541,13 @@ private void do_test_copy_col_fails_partly_1(string method)
   webdav_put(dst_file1, "file1 in dir2", STATUS_CREATED);
   webdav_put(dst_file2, "file2 in dir2", STATUS_CREATED);
   webdav_lock(dst_file2, ([]), STATUS_OK);
+  WebDAVResponse res;
   if (method == "COPY") {
-    WebDAVResponse res = webdav_copy(src_dir, dst_dir,
-                                     STATUS_MULTI_STATUS);
-    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+    res = webdav_copy(src_dir, dst_dir, STATUS_MULTI_STATUS);
   } else {
-    WebDAVResponse res = webdav_move(src_dir, dst_dir,
-                                     ([]), STATUS_MULTI_STATUS);
-    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+    res = webdav_move(src_dir, dst_dir, ([]), STATUS_MULTI_STATUS);
   }
+  verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   // The destination directory has been wiped, except for dst_file2,
   // which was locked.
   // No actual delete, copy or move was performed.
@@ -1577,15 +1575,13 @@ private void do_test_copy_col_fails_partly_2(string method)
   webdav_put(src_file1, "file1 in dir1", STATUS_CREATED);
   webdav_put(src_file2, "file2 in dir1", STATUS_CREATED);
   webdav_lock(dst_file2, ([]), STATUS_OK);
+  WebDAVResponse res;
   if (method == "COPY") {
-    WebDAVResponse res = webdav_copy(src_dir, dst_dir,
-                                     STATUS_MULTI_STATUS);
-    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+    res = webdav_copy(src_dir, dst_dir, STATUS_MULTI_STATUS);
   } else {
-    WebDAVResponse res = webdav_move(src_dir, dst_dir,
-                                     ([]), STATUS_MULTI_STATUS);
-    verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
+    res = webdav_move(src_dir, dst_dir, ([]), STATUS_MULTI_STATUS);
   }
+  verify_multistatus_response_when_resource_locked(res, ({ dst_file2 }));
   // dst_file1 should have been overwritten by src_file1.
   // the path dst_file2 was locked so it should not have been copied.
   // src_file2 with same as dst_file2 should not have been moved if this was a
