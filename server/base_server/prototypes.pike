@@ -2763,6 +2763,32 @@ class RequestID
     get_multi_status()->add_status (url_base() + path[1..], ret);
   }
 
+  // NB: object below to avoid forward reference with variants...
+  variant void set_status_for_path (string path, object status)
+  //! @decl void set_status_for_path (string path, MultiStatusNode status)
+  //! Register a status to be included in the response that applies
+  //! only for the given path. This is used for recursive operations
+  //! that can yield different results for different encountered files
+  //! or directories.
+  //!
+  //! The @[status] is stored in the @[MultiStatus] object returned by
+  //! @[get_multi_status].
+  //!
+  //! @param path
+  //!   Absolute path in the configuration to which the status
+  //!   applies. Note that filesystem modules need to prepend their
+  //!   location to their internal paths.
+  //!
+  //! @param status
+  //!   Status object for the @[path].
+  //!
+  //! @seealso
+  //! @[Roxen.http_status]
+  {
+    ASSERT_IF_DEBUG (has_prefix (path, "/"));
+    get_multi_status()->add_status (url_base() + path[1..], status);
+  }
+
   void set_status_for_url (string url, int status_code,
 			   string|void message, mixed... args)
   //! Register a status to be included in the response that applies
@@ -2781,6 +2807,17 @@ class RequestID
   //! configuration.
   {
     get_multi_status()->add_status (url, ret);
+  }
+
+  // NB: object below to avoid forward reference with variants...
+  variant void set_status_for_url (string url, object status)
+  //! @decl void set_status_for_url (string url, MultiStatusNode status)
+  //! Register a status to be included in the response that applies
+  //! only for the given URL. Similar to @[set_status_for_path], but
+  //! takes a complete URL instead of an absolute path within the
+  //! configuration.
+  {
+    get_multi_status()->add_status (url, status);
   }
 
 
@@ -3679,6 +3716,22 @@ class MultiStatus
   //!   Result-mapping for the URL.
   {
     status_set[href] = MultiStatusStatus(ret);
+  }
+
+  variant void add_status(string href, MultiStatusNode status_node)
+  //! Add a status for the specified url.
+  //!
+  //! @param href
+  //!   URL that the @[status_node] is for.
+  //!
+  //! @param status_node
+  //!   Status for the @[href]. Typically a @[MultiStatusStatus] or
+  //!   a @[MultiStatusPropStat].
+  //!
+  //! This variant makes it easy to transfer nodes beteen
+  //! @[MultiStatus] objects.
+  {
+    status_set[href] = status_node;
   }
 
   void add_namespace (string namespace)
