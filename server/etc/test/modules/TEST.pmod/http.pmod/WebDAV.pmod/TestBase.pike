@@ -59,7 +59,7 @@ protected int filesystem_check_exists(string path);
 
 protected string filesystem_read_file(string path);
 
-protected int filesystem_recursive_rm(string path);
+// protected int filesystem_recursive_rm(string path);
 
 protected int filesystem_check_content(string path, string expected_data)
 {

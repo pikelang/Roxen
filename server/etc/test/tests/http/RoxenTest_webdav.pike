@@ -85,14 +85,12 @@ private class WebdavTest {
     return Stdio.is_file(real_path);
   }
 
-  protected int filesystem_recursive_rm(string path)
-  {
-    path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
-    string real_path = Stdio.append_path(real_dir, path);
-    return Stdio.recursive_rm(real_path);
-
-
-  }
+  // protected int filesystem_recursive_rm(string path)
+  // {
+  //   path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));
+  //   string real_path = Stdio.append_path(real_dir, path);
+  //   return Stdio.recursive_rm(real_path);
+  // }
 
 }
 
