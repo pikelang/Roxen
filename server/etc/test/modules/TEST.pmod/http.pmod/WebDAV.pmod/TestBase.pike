@@ -335,11 +335,11 @@ protected WebDAVResponse webdav_move(string src_path,
 {
   bool src_equals_dst = false;
   if (case_sensitive()) {
-    src_equals_dst = Unicode.normalize(src_path, "NFC") ==
-                    Unicode.normalize(dst_path, "NFC");
+    src_equals_dst = Unicode.normalize(utf8_to_string(src_path), "NFC") ==
+                    Unicode.normalize(utf8_to_string(dst_path), "NFC");
   } else {
-    src_equals_dst = lower_case(Unicode.normalize(src_path, "NFC")) ==
-                    lower_case(Unicode.normalize(dst_path, "NFC"));
+    src_equals_dst = lower_case(Unicode.normalize(utf8_to_string(src_path), "NFC")) ==
+                    lower_case(Unicode.normalize(utf8_to_string(dst_path), "NFC"));
   }
   string expected_content;
   bool is_regular_file = filesystem_is_file(src_path);
