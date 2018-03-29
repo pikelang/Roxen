@@ -1474,17 +1474,26 @@ mixed find_file( string f, RequestID id )
       }
       TRACE_LEAVE("Overwrite allowed.");
       if (overwrite || (size > -1)) {
-	TRACE_ENTER(sprintf("Deleting destination: %O...\n", new_uri), 0);
-	mapping(string:mixed) res = recurse_delete_files(new_uri, id);
-	if (res && (!sizeof (res) || res->error >= 300)) {
-	  privs = 0;
-	  TRACE_LEAVE("");
-	  TRACE_LEAVE("MOVE: Recursive delete failed.");
-	  if (sizeof (res))
-	    set_status_for_path (new_uri, res->error, res->rettext);
-	  return ([]);
-	}
-	TRACE_LEAVE("Recursive delete ok.");
+        Stdio.Stat src_st = stat_file(f, id);
+        Stdio.Stat dst_st = stat_file(new_uri, id);
+        // Check that src and dst refers to different inodes.
+        // Needed on case insensitive filesystems.
+        if (src_st->mode != dst_st->mode ||
+            src_st->size != dst_st->size ||
+            src_st->ino != dst_st->ino ||
+            src_st->dev != dst_st->dev) {
+          TRACE_ENTER(sprintf("Deleting destination: %O...\n", new_uri), 0);
+          mapping(string:mixed) res = recurse_delete_files(new_uri, id);
+          if (res && (!sizeof (res) || res->error >= 300)) {
+            privs = 0;
+            TRACE_LEAVE("");
+            TRACE_LEAVE("MOVE: Recursive delete failed.");
+            if (sizeof (res))
+              set_status_for_path (new_uri, res->error, res->rettext);
+            return ([]);
+          }
+          TRACE_LEAVE("Recursive delete ok.");
+        }
       } else {
 	privs = 0;
 	TRACE_LEAVE("MOVE: Cannot overwrite directory");
