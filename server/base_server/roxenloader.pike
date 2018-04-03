@@ -1856,6 +1856,11 @@ void add_package(string package_dir)
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path += ({ sub_dir });
   }
+#ifdef RUN_SELF_TEST
+  if (r_is_dir(sub_dir = combine_path(package_dir, "test/modules/"))) {
+    package_module_path += ({ sub_dir });
+  }
+#endif
 }
 
 
