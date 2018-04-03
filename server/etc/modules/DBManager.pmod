@@ -2287,11 +2287,33 @@ protected mapping(int:mixed) backup_cos = ([]);
 //!
 //! @seealso
 //!   @[set_backup_timer()]
-void timed_backup(int schedule_id)
+void timed_backup(int(1..) schedule_id)
 {
   mixed co = m_delete(backup_cos, schedule_id);
   if (co) remove_call_out(co);
 
+  backup_queue->write (schedule_id);
+}
+
+protected Thread.Queue backup_queue = Thread.Queue();
+protected Thread.Thread backup_thread = Thread.Thread(process_backup_queue);
+
+// Process backups in a separate thread to avoid blocking the
+// background_run thread.
+protected void process_backup_queue()
+{
+  while (1) {
+    int(1..) schedule_id = backup_queue->read();
+    if (mixed err = catch {
+        low_timed_backup (schedule_id);
+      }) {
+      master()->handle_error (err);
+    }
+  }
+}
+
+protected void low_timed_backup (int(1..) schedule_id)
+{
   array(mapping(string:string))
     backup_info = query("SELECT schedule, period, offset, dir, "
 			"       generations, method "
