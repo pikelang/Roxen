@@ -2298,18 +2298,29 @@ void timed_backup(int(1..) schedule_id)
 protected Thread.Queue backup_queue = Thread.Queue();
 protected Thread.Thread backup_thread = Thread.Thread(process_backup_queue);
 
+void stop_backup_thread()
+{
+  backup_queue->write (0);
+}
+
 // Process backups in a separate thread to avoid blocking the
 // background_run thread.
 protected void process_backup_queue()
 {
-  while (1) {
-    int(1..) schedule_id = backup_queue->read();
+  // Schedule id is always positive (since schedule_id is an
+  // auto_increment column that starts with 1), but 0 is used to stop
+  // the thread.
+  while (int schedule_id = backup_queue->read()) {
     if (mixed err = catch {
         low_timed_backup (schedule_id);
       }) {
       master()->handle_error (err);
     }
   }
+
+#ifdef DEBUG
+  werror ("DBManager: stopping backup thread.\n");
+#endif
 }
 
 protected void low_timed_backup (int(1..) schedule_id)
