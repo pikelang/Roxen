@@ -124,7 +124,7 @@ mixed parse( RequestID id )
       busy_time = sprintf(" &ndash; busy for %.3fs",
 			  (hrnow - start_hrtime) / 1e6);
     string th_name =
-      roxen.thread_name(threads[i], 1) || 
+      Roxen.thread_name(threads[i], 1) || 
       sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
     res +=
       sprintf ("<h3 class='%s' "

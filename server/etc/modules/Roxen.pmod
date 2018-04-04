@@ -5911,6 +5911,34 @@ class Compat51Null
 Compat51Null compat_5_1_null = Compat51Null();
 
 
+mapping(string:string) thread_names = ([]);
+
+string thread_name_from_addr(string hex_addr)
+{
+  //  Lookup using a key like "Thread.Thread(0x...)" that matches what
+  //  sprint("%O") generates.
+  string th_key = "Thread.Thread(" + hex_addr + ")";
+  return thread_names[th_key];
+}
+
+string thread_name( object thread, int|void skip_auto_name )
+{
+  string tn;
+  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
+    return thread_names[tn];
+  return tn;
+}
+
+void name_thread( object thread, string name )
+{
+  string th_key = sprintf("%O", thread);
+  if (name)
+    thread_names[th_key] = name;
+  else
+    m_delete(thread_names, th_key);
+}
+
+
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,
 			    string|int name_or_time, int enter)
@@ -6274,14 +6302,14 @@ class LogPipe
 
   protected void log_pipe_read_thread (Stdio.File read_end)
   {
-    roxen->name_thread(this_thread(), "Log pipe");
+    name_thread(this_thread(), "Log pipe");
     while (1) {
       string data = read_end->read (1024, 1);
       if (!data || data == "") break;
       read_cb (read_end, data);
     }
     close_cb (read_end);
-    roxen->name_thread(this_thread(), 0);
+    name_thread(this_thread(), 0);
   }
 
   protected void create (Stdio.File read_end, Stdio.File write_end)

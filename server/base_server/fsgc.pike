@@ -495,12 +495,10 @@ FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
   return FSGarbWrapper(id);
 }
 
-void name_thread(object thread, string name);
-
 protected void start_fsgarb()
 {
   meta_fsgc_thread = Thread.Thread(meta_fsgc);
-  name_thread(meta_fsgc_thread, "Filesystem GC");
+  Roxen.name_thread(meta_fsgc_thread, "Filesystem GC");
 }
 
 protected void stop_fsgarb()
@@ -509,7 +507,7 @@ protected void stop_fsgarb()
   if (th) {
     meta_fsgc_thread = UNDEFINED;
     th->wait();
-    name_thread(th, UNDEFINED);
+    Roxen.name_thread(th, UNDEFINED);
   }
 }
 

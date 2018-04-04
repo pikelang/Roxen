@@ -2318,6 +2318,7 @@ protected Thread.Thread backup_thread = Thread.Thread(process_backup_queue);
 // background_run thread.
 protected void process_backup_queue()
 {
+  Roxen.name_thread(this_thread(), "Database Backup");
   while (1) {
     int(1..) schedule_id = backup_queue->read();
     if (mixed err = catch {
@@ -2326,6 +2327,7 @@ protected void process_backup_queue()
       master()->handle_error (err);
     }
   }
+  Roxen.name_thread(this_thread(), 0);
 }
 
 protected void low_timed_backup (int(1..) schedule_id)

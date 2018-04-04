@@ -152,35 +152,24 @@ array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 				"6.0", "6.1",
 });
 
+//  Compat stubs for relocated methods
 #ifdef THREADS
-mapping(string:string) thread_names = ([]);
-
 string thread_name_from_addr(string hex_addr)
 {
-  //  Lookup using a key like "Thread.Thread(0x...)" that matches what
-  //  sprint("%O") generates.
-  string th_key = "Thread.Thread(" + hex_addr + ")";
-  return thread_names[th_key];
+  return Roxen.thread_name_from_addr(hex_addr);
 }
 
-string thread_name( object thread, int|void skip_auto_name )
+string thread_name(object thread, int|void skip_auto_name)
 {
-  string tn;
-  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
-    return thread_names[tn];
-  return tn;
+  return Roxen.thread_name(thread, skip_auto_name);
 }
 
 void name_thread( object thread, string name )
 {
-  string th_key = sprintf("%O", thread);
-  if (name)
-    thread_names[th_key] = name;
-  else
-    m_delete(thread_names, th_key);
+  Roxen.name_thread(thread, name);
 }
+#endif
 
-#endif /* THREADS */
 
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
@@ -378,7 +367,7 @@ int is_shutting_down()
 Thread.Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
-  name_thread( t, id );
+  Roxen.name_thread( t, id );
   return t;
 }
 
@@ -461,10 +450,10 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
   // my_monitor is just a safeguard to ensure we don't get multiple
   // monitor threads.
-  name_thread(this_thread(), "Slow request monitor");
+  Roxen.name_thread(this_thread(), "Slow request monitor");
   while (slow_req_monitor == my_monitor)
     slow_req_monitor (3600.0);
-  name_thread(this_thread(), 0);
+  Roxen.name_thread(this_thread(), 0);
 }
 
 protected mixed slow_be_call_out;
@@ -587,7 +576,7 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
 
   else {
     string th_name =
-      ((thread != backend_thread) && thread_name(thread, 1)) || "";
+      ((thread != backend_thread) && Roxen.thread_name(thread, 1)) || "";
     if (sizeof(th_name))
       th_name = " - " + th_name + " -";
     report_debug ("###### %s 0x%x%s has been busy for more than %g seconds.\n",
@@ -616,7 +605,7 @@ protected void report_slow_thread_finished (Thread.Thread thread,
   }
 
   string th_name =
-    ((thread != backend_thread) && thread_name(thread, 1)) || "";
+    ((thread != backend_thread) && Roxen.thread_name(thread, 1)) || "";
   if (sizeof(th_name))
     th_name = " - " + th_name + " -";
 
@@ -6045,7 +6034,7 @@ void describe_thread (Thread.Thread thread)
 {
   int hrnow = gethrtime();
   string thread_descr = "";
-  if (string th_name = thread_name(thread, 1))
+  if (string th_name = Roxen.thread_name(thread, 1))
     thread_descr += " - " + th_name;
   if (int start_hrtime = thread_task_start_times[thread])
     thread_descr += sprintf (" - busy for %.3fs",
@@ -6067,7 +6056,7 @@ void describe_thread (Thread.Thread thread)
     if (sizeof(bt_segs) > 1) {
       foreach (bt_segs; int idx; string bt_seg) {
 	if (sscanf(bt_seg, "0x%[0-9a-fA-F]*/", string th_hex_addr)) {
-	  if (string th_name = thread_name_from_addr("0x" + th_hex_addr)) {
+	  if (string th_name = Roxen.thread_name_from_addr("0x" + th_hex_addr)) {
 	    bt_segs[idx] =
 	      "0x" + th_hex_addr + " - " + th_name +
 	      bt_seg[sizeof(th_hex_addr) + 2..];
@@ -6175,7 +6164,7 @@ int cdt_next_seq_dump;
 
 void cdt_poll_file()
 {
-  name_thread(this_thread(), "Dump thread file monitor");
+  Roxen.name_thread(this_thread(), "Dump thread file monitor");
   while (this && query ("dump_threads_by_file")) {
     if (array(string) dir = r_get_dir (cdt_directory)) {
       if (has_value (dir, cdt_filename)) {
@@ -6199,7 +6188,7 @@ void cdt_poll_file()
     }
     sleep (cdt_poll_interval);
   }
-  name_thread(this_thread(), 0);
+  Roxen.name_thread(this_thread(), 0);
   cdt_thread = 0;
 }
 
@@ -6746,7 +6735,7 @@ int main(int argc, array tmp)
 
   backend_thread = this_thread();
 #ifdef THREADS
-  name_thread( backend_thread, "Backend" );
+  Roxen.name_thread( backend_thread, "Backend" );
 #else
   report_debug("\n"
 	       "WARNING: Threads not enabled!\n"
