@@ -112,7 +112,7 @@ void stop_sender_thread()
 void sender_loop()
 {
   COLLECTD_WERR("::: sender_loop()\n");
-  Roxen.name_thread(this_thread(), "Collectd sender");
+  Roxen.name_thread(this_thread(), "Collectd Sender");
   while(sender_enabled)
   {
     if (mixed err = catch {

@@ -450,7 +450,7 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
   // my_monitor is just a safeguard to ensure we don't get multiple
   // monitor threads.
-  Roxen.name_thread(this_thread(), "Slow request monitor");
+  Roxen.name_thread(this_thread(), "Slow Request Monitor");
   while (slow_req_monitor == my_monitor)
     slow_req_monitor (3600.0);
   Roxen.name_thread(this_thread(), 0);
@@ -843,7 +843,7 @@ void start_handler_threads()
   }
   array(object) new_threads = ({});
   for(; number_of_threads < query("numthreads"); number_of_threads++)
-    new_threads += ({ do_thread_create( "Handle thread [" +
+    new_threads += ({ do_thread_create( "Handle Thread [" +
 					number_of_threads + "]",
 					handler_thread, number_of_threads ) });
   handler_threads += new_threads;
@@ -916,7 +916,7 @@ void release_handler_threads (int numthreads)
     if (threads_to_create > 0) {
       array(object) new_threads = ({});
       for (int n = 0; n < threads_to_create; number_of_threads++, n++)
-	new_threads += ({ do_thread_create( "Handle thread [" +
+	new_threads += ({ do_thread_create( "Handle Thread [" +
 					    number_of_threads + "]",
 					    handler_thread, number_of_threads ) });
       handler_threads += new_threads;
@@ -6164,7 +6164,7 @@ int cdt_next_seq_dump;
 
 void cdt_poll_file()
 {
-  Roxen.name_thread(this_thread(), "Dump thread file monitor");
+  Roxen.name_thread(this_thread(), "Dump Thread File Monitor");
   while (this && query ("dump_threads_by_file")) {
     if (array(string) dir = r_get_dir (cdt_directory)) {
       if (has_value (dir, cdt_filename)) {
