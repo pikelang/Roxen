@@ -291,6 +291,8 @@ private void low_shutdown(int exit_code, int|void apply_patches)
   slow_be_timeout_changed();
 #endif
 
+  DBManager.stop_backup_thread();
+
   if ((apply_patches || query("patch_on_restart")) > 0) {
     mixed err = catch {
 	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
