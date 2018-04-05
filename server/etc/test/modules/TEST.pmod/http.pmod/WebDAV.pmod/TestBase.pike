@@ -2256,7 +2256,7 @@ public void test_x_copy_file()
             } else {
               // Src and target is different case (but the same otherwise).
               webdav_copy(src_file, target_file,
-                          caseSensitive ? STATUS_CREATED : STATUS_NO_CONTENT);
+                          caseSensitive ? STATUS_CREATED : STATUS_FORBIDDEN);
             }
           }
         }
