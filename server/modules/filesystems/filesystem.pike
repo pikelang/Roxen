@@ -569,7 +569,7 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 			       "<h1>Permission to 'LOCK' files denied</h1>",
 			       id);
   }
-  register_lock(encode_path(path), lock, id);
+  register_lock(path, lock, id);
   return 0;
 }
 
@@ -584,7 +584,7 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0)
 			       "<h1>Permission to 'UNLOCK' files denied</h1>",
 			       id);
   }
-  unregister_lock(encode_path(path), lock, id);
+  unregister_lock(path, lock, id);
   return 0;
 }
 
