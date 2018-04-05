@@ -6112,6 +6112,22 @@ mapping(string:int) get_memusage()
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
 }
 
+protected mapping(string:int) caches_initialized = ([]);
+
+protected void init_cache_prefs(string cache_name)
+{
+  if (caches_initialized[cache_name]) return;
+
+  // NB: We invalidate entries after successful lookup,
+  //     if they don't seem to be valid anymore.
+  function cache_register =
+    all_constants()["cache"]["cache_register"];
+  object extend_entries_cache_prefs =
+    all_constants()["cache"]["extend_entries_cache_prefs"];
+  cache_register(cache_name, UNDEFINED, extend_entries_cache_prefs);
+  caches_initialized[cache_name] = 1;
+}
+
 string lookup_real_path_case_insens (string path, void|int no_warn,
 				     void|string charset)
 //! Looks up the given path case insensitively to a path in the real
@@ -6172,6 +6188,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       cache_name += ":" + enc->charset;
       break;
   }
+
+  init_cache_prefs(cache_name);
 
   string dec_path, enc_path;
   int nonexist;

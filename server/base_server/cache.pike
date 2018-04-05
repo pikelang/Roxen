@@ -219,6 +219,8 @@ class CacheManagerPrefs(int(0..1) extend_entries // Set if a
                                                  // after cache hit.
                         ) {}
 
+CacheManagerPrefs extend_entries_cache_prefs = CacheManagerPrefs(1);
+
 class CacheManager
 //! A cache manager handles one or more caches, applying the same
 //! eviction policy and the same size limit on all of them. I.e. it's
