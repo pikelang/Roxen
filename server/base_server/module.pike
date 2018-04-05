@@ -501,6 +501,8 @@ class DefaultPropertySet
 	  res = ([ "file":res, "type":tmp[0], "encoding":tmp[1] ]);
 	else
 	  res = (["file": res]);
+      } else if (!res) {
+	res = Roxen.http_status(404, "File not found.");
       }
       response_headers = sub_id->make_response_headers (res);
       destruct (sub_id);
