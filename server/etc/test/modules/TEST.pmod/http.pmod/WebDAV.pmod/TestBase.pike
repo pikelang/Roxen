@@ -2220,7 +2220,7 @@ public void test_x_put()
                              exp_file[case_put1],
                              exp_file[case_put2] }) :
                           ({ exp_dir,
-                              exp_file[case_put2] }) );
+                              exp_file[case_put1] }) );
             }
           }
         }
