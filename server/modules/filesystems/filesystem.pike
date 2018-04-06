@@ -1715,6 +1715,11 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
       TRACE_LEAVE("");
       return Roxen.http_status(403, "Permission denied.");
     }
+    if (has_prefix(source, dest)) {
+      TRACE_LEAVE("Destination contains source.");
+      TRACE_LEAVE("");
+      return Roxen.http_status(403, "Permission denied.");
+    }
     switch(overwrite) {
     case NEVER_OVERWRITE:
       TRACE_LEAVE("");
@@ -1799,6 +1804,11 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   }
 
   if (source_st->isdir) {
+    if (has_prefix(dest, source)) {
+      TRACE_LEAVE("Source contains destination.");
+      return Roxen.http_status(403, "Permission denied.");
+    }
+
     mkdirs++;
     object privs;
     SETUID_TRACE("Creating directory/collection", 0);
