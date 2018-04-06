@@ -1172,6 +1172,19 @@ mixed find_file( string f, RequestID id )
 
     TRACE_ENTER("PUT: Accepted", 0);
 
+    if ((size > -1) && (< "Darwin", "Win32" >)[System.uname()->sysname]) {
+      // File exists, and we're on an OS where we assume a
+      // case insensitive filesystem.
+      //
+      // NB: At least MacOS X has the misbehavior of renaming
+      //     preexisting files when opening with "wct".
+      //
+      // Avoid this by looking up the name from the filesystem.
+      TRACE_ENTER(sprintf("Looking up path %O in real filesystem.", norm_f), 0);
+      norm_f = Roxen.lookup_real_path_case_insens(norm_f, 1);
+      TRACE_LEAVE(sprintf("FOund path: %O\n", norm_f));
+    }
+
     /* Clear the stat-cache for this file */
     if (stat_cache) {
       cache_set("stat_cache", norm_f, 0);
