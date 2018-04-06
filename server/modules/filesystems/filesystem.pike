@@ -771,6 +771,19 @@ int contains_symlinks(string root, string path)
   return(0);
 }
 
+//! Return @expr{1@} if both arguments refer to the same inode.
+int is_same_inode(Stdio.Stat a_st, Stdio.Stat b_st)
+{
+  if (a_st == b_st) return 1;
+  if ((a_st->mode == b_st->mode) &&
+      (a_st->size == b_st->size) &&
+      (a_st->ino == b_st->ino) &&
+      (a_st->dev == b_st->dev)) {
+    return 1;
+  }
+  return 0;
+}
+
 //! @[chmod()] that doesn't throw errors.
 string safe_chmod(string path, int mask)
 {
@@ -1491,10 +1504,7 @@ mixed find_file( string f, RequestID id )
         Stdio.Stat dst_st = stat_file(new_uri, id);
         // Check that src and dst refers to different inodes.
         // Needed on case insensitive filesystems.
-        if (src_st->mode != dst_st->mode ||
-            src_st->size != dst_st->size ||
-            src_st->ino != dst_st->ino ||
-            src_st->dev != dst_st->dev) {
+        if (!is_same_inode(src_st, dst_st)) {
           TRACE_ENTER(sprintf("Deleting destination: %O...\n", new_uri), 0);
           mapping(string:mixed) res = recurse_delete_files(new_uri, id);
           if (res && (!sizeof (res) || res->error >= 300)) {
@@ -1700,6 +1710,11 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   Stat dest_st = stat_file(dest, id);
   if (dest_st) {
     SIMPLE_TRACE_ENTER (this, "COPY: Destination exists");
+    if (is_same_inode(source_st, dest_st)) {
+      TRACE_LEAVE("Source and destination are the same inode.");
+      TRACE_LEAVE("");
+      return Roxen.http_status(403, "Permission denied.");
+    }
     switch(overwrite) {
     case NEVER_OVERWRITE:
       TRACE_LEAVE("");
