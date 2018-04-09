@@ -2445,7 +2445,7 @@ public void test_x_lock()
                                                         unicode_method,
                                                         true);
       string resource = resources->mc;
-      string exp_name = make_filenames(this::testcase_dir,
+      string ls_name = make_filenames(this::testcase_dir,
                                        filename,
                                        "NFC",
                                        false)->mc;
@@ -2469,9 +2469,9 @@ public void test_x_lock()
           // Now lets create a the resources (a file) that we have locked.
           webdav_put(resource, "My content", STATUS_CREATED,
                      make_lock_header(locks));
-          webdav_ls(resources[case_], ({ exp_name }));
+          webdav_ls(resources[case_], ({ ls_name }));
 
-          // Try tp write to the locked file. Try to delete the locked file.
+          // Try to write to the locked file. Try to delete the locked file.
           webdav_put(resources[case_], "New content", STATUS_LOCKED);
           webdav_delete(resources[case_], ([]), STATUS_LOCKED);
 
@@ -2480,10 +2480,13 @@ public void test_x_lock()
             make_lock_header(([ resources[case_] : lock_token ]));
           // Put using lock.
           webdav_put(resources[case_], "New content", STATUS_OK, lock_header);
+          // The put above should not have changed the filename
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, ls_name }));
+
           // Delete without the lock.
-          webdav_delete(resource, ([]), STATUS_LOCKED);
+          webdav_delete(resources[case_], ([]), STATUS_LOCKED);
           // Delete using lock.
-          webdav_delete(resource, ([]), STATUS_NO_CONTENT, lock_header);
+          webdav_delete(resources[case_], ([]), STATUS_NO_CONTENT, lock_header);
 
           // Assert testcase dir is empty before next run.
           webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
