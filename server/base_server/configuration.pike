@@ -1850,7 +1850,11 @@ mapping(string:mixed)|int(-1..0) check_locks(string path,
     Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED, "lock-token-submitted");
   foreach(locks;;DAVLock lock) {
     TRACE_ENTER(sprintf("Checking lock %O against %O.", lock, path), 0);
-    if (has_prefix(path, lock->path)) {
+    // NB: We can't perform a string comparison here, as we don't
+    //     know whether the path is case-sensitive or not. But as
+    //     we know that all lock paths are on the path to or through
+    //     `path`, a comparison of the string lengths is sufficient.
+    if (sizeof(lock->path) <= sizeof(path)) {
       TRACE_LEAVE("Direct lock.");
       TRACE_LEAVE("Locked.");
       return ret;
