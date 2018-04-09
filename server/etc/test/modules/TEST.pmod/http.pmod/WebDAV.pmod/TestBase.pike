@@ -2452,7 +2452,7 @@ public void test_x_lock()
           // Now lets create a the resources (a file) that we have locked.
           webdav_put(resource, "My content", STATUS_CREATED,
                      make_lock_header(locks));
-          webdav_ls(resources[case_], ({ ls_name }));
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, ls_name }));
 
           // Try to write to the locked file. Try to delete the locked file.
           webdav_put(resources[case_], "New content", STATUS_LOCKED);
