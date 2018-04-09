@@ -524,7 +524,7 @@ protected variant mapping(string:mixed)|int(0..1) write_access(string path,
 				       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
-  return ::write_access(encode_path(path), recursive, id);
+  return ::write_access(path, recursive, id);
 }
 
 array find_dir( string f, RequestID id )
