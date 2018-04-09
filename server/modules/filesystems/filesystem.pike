@@ -462,6 +462,15 @@ mixed stat_file( string f, RequestID id )
   return fs;
 }
 
+//! Normalize DAVLock path identifier.
+string resource_id(string path, RequestID|int(0..0) id)
+{
+  if ((< "Darwin", "Win32" >)[uname()->sysname]) {
+    return ::resource_id(lower_case(path), id);
+  }
+  return ::resource_id(path, id);
+}
+
 //! Convert to filesystem encoding.
 //!
 //! @note
@@ -614,7 +623,7 @@ protected variant mapping(string:mixed)|int(0..1) write_access(string path,
 				       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
-  return ::write_access(encode_path(path), recursive, id);
+  return ::write_access(path, recursive, id);
 }
 
 array find_dir( string f, RequestID id )
