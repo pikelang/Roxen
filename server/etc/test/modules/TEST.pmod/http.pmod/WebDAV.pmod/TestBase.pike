@@ -2368,6 +2368,59 @@ public void test_x_move_file()
   }
 }
 
+// Runs only on case insensitive systems.
+public void test_x_put_copy_move_delete()
+{
+  if (case_sensitive()) {
+    return;
+  }
+  string mv_dst = Stdio.append_path(this::testcase_dir, "mv_dst");
+  string cp_dst = Stdio.append_path(this::testcase_dir, "cp_dst");
+  foreach (FILENAMES, string filename) {
+    foreach (({"NFC", "NFD"}), string unicode_method_put) {
+      string put_path = make_filenames(this::testcase_dir,
+                                       filename,
+                                       unicode_method_put,
+                                       true)->mc;
+      string ls_name = make_filenames(this::testcase_dir,
+                                       filename,
+                                       "NFC",
+                                       false)->mc;
+      foreach (({"NFC", "NFD"}), string unicode_method_cpmv) {
+        mapping(string:string) path = make_filenames(this::testcase_dir,
+                                                         filename,
+                                                         unicode_method_cpmv,
+                                                         true);
+        foreach (({"lc", "uc"}), string case_) {
+          webdav_put(put_path, "My content", STATUS_CREATED);
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, ls_name }));
+
+          // Put with wrong case should not change filename.
+          webdav_put(path[case_], "My new content", STATUS_OK);
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, ls_name }));
+
+          // Copy/Move with wrong case in path.
+          webdav_copy(path[case_], cp_dst, STATUS_CREATED);
+          webdav_move(path[case_], mv_dst, ([]), STATUS_CREATED);
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, cp_dst, mv_dst }));
+
+          // Cleanup for next round.
+          webdav_delete(cp_dst, ([]), STATUS_NO_CONTENT);
+          webdav_delete(mv_dst, ([]), STATUS_NO_CONTENT);
+
+          // Delete with wrong case in path.
+          webdav_put(put_path, "My content", STATUS_CREATED);
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir, ls_name }));
+          webdav_delete(path[case_], ([]), STATUS_NO_CONTENT);
+
+          // Assert testcase dir is empty.
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
+        }
+      }
+    }
+  }
+}
+
 public void test_x_lock()
 // Test cannot do mkcol on a locked non existing resource without lock.
 // Test cannot put on a locked non existing resource without lock.
