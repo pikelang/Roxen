@@ -6,6 +6,7 @@ inherit "etc/test/tests/pike_test_common.pike" : Parent;
 #charset utf-8
 
 protected constant STATUS_OK = 200;
+protected constant STATUS_CREATED = 201;
 protected constant STATUS_NO_CONTENT = 204;
 protected constant STATUS_MULTI_STATUS = 207;
 protected constant STATUS_BAD_REQUEST = 400;
@@ -14,9 +15,8 @@ protected constant STATUS_NOT_FOUND = 404;
 protected constant STATUS_METHOD_NOT_ALLOWED = 405;
 protected constant STATUS_CONFLICT = 409;
 protected constant STATUS_PRECONDITION_FAILED = 412;
-protected constant STATUS_LOCKED = 423;
-protected constant STATUS_CREATED = 201;
 protected constant STATUS_UNSUPPORTED_MEDIA_TYPE = 415;
+protected constant STATUS_LOCKED = 423;
 
 
 protected string webdav_mount_point;
@@ -64,7 +64,7 @@ protected string filesystem_read_file(string path);
 protected int filesystem_check_content(string path, string expected_data)
 {
   string actual_data = filesystem_read_file(path);
-  TEST_EQUAL(actual_data, expected_data);
+  TEST_EQUAL(actual_data, expected_data); // Needed for the old style test code.
   return actual_data == expected_data;
 }
 
@@ -137,12 +137,12 @@ protected WebDAVResponse webdav_request(string method,
       while(1) {
         string lock_token = current_locks[dir];
         if (lock_token && !locks[lock_token]) {
-	  string path = map((dir/"/"), Protocols.HTTP.percent_encode) * "/";
-	  if (has_prefix(path, "/")) {
-	    path = path[1..];
-	  }
-	  path = Standards.URI(path, base_uri)->path;
-	  if_header += sprintf("<%s>(<%s>)", path, lock_token);
+      	  string path = map((dir/"/"), Protocols.HTTP.percent_encode) * "/";
+      	  if (has_prefix(path, "/")) {
+      	    path = path[1..];
+      	  }
+      	  path = Standards.URI(path, base_uri)->path;
+      	  if_header += sprintf("<%s>(<%s>)", path, lock_token);
           locks[lock_token] = 1;
         }
         if (dir == "/") {
@@ -152,21 +152,21 @@ protected WebDAVResponse webdav_request(string method,
       }
     }
     if ((lower_case(method) == "move") ||
-    (lower_case(method) == "copy") ||
-    (lower_case(method) == "delete")) {
+        (lower_case(method) == "copy") ||
+        (lower_case(method) == "delete")) {
       foreach(indices(current_locks), string path) {
-	foreach(lock_paths, string dir) {
-	  string lock_token = current_locks[path];
-	  if (has_prefix(path, dir + "/") && !locks[lock_token]) {
-	    if (has_prefix(path, "/")) {
-	      path = path[1..];
-	    }
-	    path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
-	    path = Standards.URI(path, base_uri)->path;
-	    if_header += sprintf("<%s>(<%s>)", path, lock_token);
-	    locks[lock_token] = 1;
-	  }
-	}
+      	foreach(lock_paths, string dir) {
+      	  string lock_token = current_locks[path];
+      	  if (has_prefix(path, dir + "/") && !locks[lock_token]) {
+      	    if (has_prefix(path, "/")) {
+      	      path = path[1..];
+      	    }
+      	    path = map((path/"/"), Protocols.HTTP.percent_encode) * "/";
+      	    path = Standards.URI(path, base_uri)->path;
+      	    if_header += sprintf("<%s>(<%s>)", path, lock_token);
+      	    locks[lock_token] = 1;
+      	  }
+      	}
       }
     }
     if (sizeof(if_header)) {
@@ -191,6 +191,20 @@ protected WebDAVResponse webdav_request(string method,
   return WebDAVResponse(con->status, con->headers, con->data());
 }
 
+private mapping(string:string) make_lock_header(mapping(string:string) locks)
+{
+  string if_header = "";
+  foreach(locks; string path; string lock_token) {
+    if (has_prefix(path, "/")) {
+      path = path[1..];
+    }
+    path = map((path / "/"), Protocols.HTTP.percent_encode) * "/";
+    path = Standards.URI(path, base_uri)->path;
+    if_header += sprintf("<%s>(<%s>)", path, lock_token);
+  }
+  return (["if" : if_header]);
+}
+
 private WebDAVResponse do_webdav_get(string method,
                                      string path,
                                      int expected_status_code)
@@ -213,14 +227,13 @@ protected WebDAVResponse webdav_head(string path, int expected_status_code)
   return do_webdav_get("HEAD", path, expected_status_code);
 }
 
-protected  WebDAVResponse webdav_put(string path,
-                                            string data,
-                                            int|void expected_status_code)
+protected WebDAVResponse webdav_put(string path,
+                                    string data,
+                                    int expected_status_code,
+                                    mapping(string:string)|void headers)
 {
-  expected_status_code = expected_status_code ? expected_status_code :
-                                                STATUS_CREATED;
   WebDAVResponse res =
-    webdav_request("PUT", path, UNDEFINED, data);
+    webdav_request("PUT", path, headers, data);
   ASSERT_EQUAL(res->status, expected_status_code);
   if ( (res->status >= 200) && (res->status < 300) ) {
     ASSERT_CALL_TRUE(filesystem_check_content, path, data);
@@ -228,10 +241,9 @@ protected  WebDAVResponse webdav_put(string path,
   return res;
 }
 
-// New style.
-protected variant WebDAVResponse webdav_lock(string path,
-                                             mapping(string:string) locks,
-                                             int expected_status_code)
+protected WebDAVResponse webdav_lock(string path,
+                                     mapping(string:string) locks,
+                                     int expected_status_code)
 {
   string lock_info = #"
 <?xml version='1.0' encoding='utf-8'?>
@@ -294,10 +306,11 @@ protected WebDAVResponse webdav_unlock(string path,
 
 protected WebDAVResponse webdav_delete(string path,
                                        mapping(string:string) locks,
-                                       int expected_status_code)
+                                       int expected_status_code,
+                                       mapping(string:string)|void headers)
 {
   WebDAVResponse res =
-    webdav_request("DELETE", path);
+    webdav_request("DELETE", path, headers);
   ASSERT_EQUAL(res->status, expected_status_code);
   if ((res[0] >= 200) && (res[0] < 300) && (res[0] != STATUS_MULTI_STATUS) ){
     low_recursive_unlock(path, locks);
@@ -306,7 +319,6 @@ protected WebDAVResponse webdav_delete(string path,
   return res;
 }
 
-// New style.
 protected WebDAVResponse webdav_copy(string src_path,
                                      string dst_path,
                                      int expected_status_code)
@@ -323,6 +335,7 @@ protected WebDAVResponse webdav_copy(string src_path,
       // TODO: Verify content of copied files.
     } else {
       error("Probably a bug in the test code.");
+
     }
   }
   return res;
@@ -507,6 +520,8 @@ protected void after_testcase(string testcase)
 {
   webdav_unlock_all(); // Usefull when running tests agains an already running server.
 }
+
+
 
 public void run()
 {
@@ -2286,7 +2301,7 @@ public void test_x_mkcol()
             webdav_mkcol(dir1, STATUS_CREATED);
             if (case_dir1 == case_dir2) {
               // Src and target is equal and same case but may be different
-              //encoded (will be at least once when looping...)
+              // encoded (will be at least once when looping...)
               webdav_mkcol(dir2, STATUS_METHOD_NOT_ALLOWED);
             } else {
               // Src and target is different case (but the same otherwise).
@@ -2322,7 +2337,7 @@ public void test_x_move_file()
             mapping(string:string) locks = ([]);
             if (case_src == case_target) {
               // Src and target is equal and same case but may be different
-              //encoded (will be at least once when looping...)
+              // encoded (will be at least once when looping...)
               webdav_move(src_file, target_file, locks, STATUS_FORBIDDEN);
             } else {
               // Src and target is different case (but the same otherwise).
@@ -2335,3 +2350,76 @@ public void test_x_move_file()
     }
   }
 }
+
+public void test_x_lock()
+// Test cannot do mkcol on a locked non existing resource without lock.
+// Test cannot put on a locked non existing resource without lock.
+// Test cannot put on locked existing resource without lock.
+// Test cannot delete locked existing resource without lock.
+// Test can put on locked existing resource if we have the lock.
+// Test can delete locked existing resource if we have the lock.
+// Test lock handling is case insensitive on case insensitive systems.
+//
+// We satisfy with taking a lock on a resource with mixed case and later
+// creating a file with the same case.
+{
+  bool caseSensitive = case_sensitive();
+  array(string) cases = ({"mc", "lc", "uc"});
+  if (caseSensitive) {
+    cases = ({ "mc" });
+  }
+  foreach (FILENAMES, string filename) {
+    foreach (({"NFC", "NFD"}), string unicode_method) {
+      mapping(string:string) resources = make_filenames(this::testcase_dir,
+                                                        filename,
+                                                        unicode_method,
+                                                        true);
+      string resource = resources->mc;
+      string exp_name = make_filenames(this::testcase_dir,
+                                       filename,
+                                       "NFC",
+                                       false)->mc;
+      foreach (({"NFC", "NFD"}), string unicode_method) {
+        mapping(string:string) resources = make_filenames(this::testcase_dir,
+                                                          filename,
+                                                          unicode_method,
+                                                          true);
+        foreach (cases, string case_) {
+          // Lock the resource (does not exist yet).
+          mapping(string:string) locks = ([]);
+          webdav_lock(resource, locks, STATUS_OK);
+
+          // Verify that we cannot create collection or file without the lock.
+          // Try do delete without lock.
+          webdav_mkcol(resources[case_], STATUS_LOCKED);
+          webdav_put(resources[case_], "My content", STATUS_LOCKED);
+          webdav_ls(resources[case_], ({ }), STATUS_NOT_FOUND);
+          webdav_delete(resources[case_], ([]), STATUS_NOT_FOUND);
+
+          // Now lets create a the resources (a file) that we have locked.
+          webdav_put(resource, "My content", STATUS_CREATED,
+                     make_lock_header(locks));
+          webdav_ls(resources[case_], ({ exp_name }));
+
+          // Try tp write to the locked file. Try to delete the locked file.
+          webdav_put(resources[case_], "New content", STATUS_LOCKED);
+          webdav_delete(resources[case_], ([]), STATUS_LOCKED);
+
+          string lock_token = locks[resource];
+          mapping(string:string) lock_header =
+            make_lock_header(([ resources[case_] : lock_token ]));
+          // Put using lock.
+          webdav_put(resources[case_], "New content", STATUS_OK, lock_header);
+          // Delete without the lock.
+          webdav_delete(resource, ([]), STATUS_LOCKED);
+          // Delete using lock.
+          webdav_delete(resource, ([]), STATUS_NO_CONTENT, lock_header);
+
+          // Assert testcase dir is empty before next run.
+          webdav_ls(this::testcase_dir, ({ this::testcase_dir }));
+        }
+      }
+    }
+  }
+}
+
