@@ -1007,6 +1007,18 @@ mixed find_file( string f, RequestID id )
 
   FILESYSTEM_WERR(sprintf("_file_size(%O, %O) ==> %d\n", f, id, size));
 
+  if(!id->misc->internal_get) {
+    if (!dotfiles && sizeof(filter(f/"/", has_prefix, "."))) {
+      TRACE_LEAVE("Path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE ("Is internal file");
+      return 0;
+    }
+  }
+
   /*
    * FIXME: Should probably move path-info extraction here.
    * 	/grubba 1998-08-26
@@ -1034,22 +1046,6 @@ mixed find_file( string f, RequestID id )
       if( f[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
 	  !norm_f) {		/* Or a file that is not normalizable. */
 	return 0;
-      }
-
-      if(!id->misc->internal_get) 
-      {
-	if (!dotfiles
-	    && sizeof (tmp = (id->not_query/"/")[-1])
-	    && tmp[0] == '.') 
-        {
-	  TRACE_LEAVE("Is .-file");
-	  return 0;
-	}
-	if (FILTER_INTERNAL_FILE (f, id)) 
-        {
-	  TRACE_LEAVE ("Is internal file");
-	  return 0;
-	}
       }
 
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
@@ -1119,13 +1115,6 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
-			  id->method));
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE(sprintf("%s disallowed (since the dir name matches internal file glob)",
 			  id->method));
       return 0;
     }
@@ -1204,12 +1193,6 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("PUT disallowed");
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("PUT of internal file is disallowed");
       return 0;
     }
 
@@ -1332,12 +1315,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("CHMOD of internal file is disallowed");
-      return 0;
-    }
-
     if (mapping(string:mixed) ret = write_access(f, 0, id)) {
       TRACE_LEAVE("CHMOD: Locked");
       return ret;
@@ -1411,10 +1388,13 @@ mixed find_file( string f, RequestID id )
 
     string relative_from = id->misc->move_from[sizeof(mountpoint)..];
 
-    if (FILTER_INTERNAL_FILE (movefrom, id) ||
-	FILTER_INTERNAL_FILE (f, id)) {
+    if (!dotfiles && sizeof(filter(relative_from/"/", has_prefix, "."))) {
+      TRACE_LEAVE("From-path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE(relative_from, id)) {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MV to or from internal file is disallowed");
+      TRACE_LEAVE("MV from internal file is disallowed.");
       return 0;
     }
 
@@ -1499,10 +1479,13 @@ mixed find_file( string f, RequestID id )
       moveto = moveto[..sizeof(moveto)-2];
     }
 
-    if (FILTER_INTERNAL_FILE (f, id) ||
-	FILTER_INTERNAL_FILE (new_uri, id)) {
+    if (!dotfiles && sizeof(filter(new_uri/"/", has_prefix, "."))) {
+      TRACE_LEAVE("Path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE (new_uri, id)) {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MOVE to or from internal file is disallowed");
+      TRACE_LEAVE("MOVE to internal file is disallowed");
       return 0;
     }
 
@@ -1628,12 +1611,6 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE: Disabled");
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("DELETE of internal file is disallowed");
       return 0;
     }
 
