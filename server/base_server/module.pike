@@ -931,6 +931,8 @@ void unlock_path(string path, RequestID id)
 
   string rsc = resource_id(path, id);
 
+  // NB: The following code leaves dead locks in conf->active_locks!
+
   foreach(file_locks; string prefix; mapping(mixed:DAVLock) sub_locks) {
     if (has_prefix(prefix, rsc)) {
       TRACE_ENTER(sprintf("Unlocking %d locks for path %O...",
@@ -1027,7 +1029,9 @@ protected void unregister_lock (string path, DAVLock lock,
 	}
       }
     }
-    if (!sizeof (prefix_locks[path])) m_delete (prefix_locks, path);
+    if (prefix_locks[path] && !sizeof (prefix_locks[path])) {
+      m_delete(prefix_locks, path);
+    }
   }
   else if (file_locks[path]) {
     if (id) {
