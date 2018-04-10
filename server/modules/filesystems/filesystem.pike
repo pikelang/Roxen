@@ -1245,41 +1245,11 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    SETUID_TRACE("Saving file", 0);
-
-    rm(norm_f);
-    // mkdirhier(norm_f);
-
-    if (id->misc->quota_obj) {
-      QUOTA_WERR("Checking if the file already existed.");
-      if (size > 0) {
-	QUOTA_WERR("Deallocating " + size + "bytes.");
-	id->misc->quota_obj->deallocate(URI, size);
-      }
-    }
-
-    object to = Stdio.File();
-
     TRACE_ENTER("PUT: Accepted", 0);
 
-    if ((size > -1) && (< "Darwin", "Win32" >)[System.uname()->sysname]) {
-      // File exists, and we're on an OS where we assume a
-      // case insensitive filesystem.
-      //
-      // NB: At least MacOS X has the misbehavior of renaming
-      //     preexisting files when opening with "wct".
-      //
-      // Avoid this by looking up the name from the filesystem.
-      TRACE_ENTER(sprintf("Looking up path %O in real filesystem.", norm_f), 0);
-      norm_f = Roxen.lookup_real_path_case_insens(norm_f, 1);
-      TRACE_LEAVE(sprintf("FOund path: %O\n", norm_f));
-    }
+    SETUID_TRACE("Saving file", 0);
 
-    /* Clear the stat-cache for this file */
-    if (stat_cache) {
-      cache_set("stat_cache", norm_f, 0);
-    }
-
+    object to = Stdio.File();
     if(!to->open(norm_f, "wct", 0666))
     {
       int err = to->errno();
@@ -1288,9 +1258,22 @@ mixed find_file( string f, RequestID id )
       mixed ret = errno_to_status (err, 1, id);
       if (ret) return ret;
       if (id->misc->error_code) {
-	return Roxen.http_status(id->misc->error_code);
+        return Roxen.http_status(id->misc->error_code);
       }
       return 0;
+    }
+
+    if (id->misc->quota_obj) {
+      QUOTA_WERR("Checking if the file already existed.");
+      if (size > 0) {
+        QUOTA_WERR("Deallocating " + size + "bytes.");
+        id->misc->quota_obj->deallocate(URI, size);
+      }
+    }
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache", norm_f, 0);
     }
 
     // FIXME: Race-condition.
