@@ -1495,7 +1495,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         //remove_dumped=1
         m_saPikeArgs.Add("-DRUN_SELF_TEST");
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
-	m_saPikeArgs.Add(("\\\"-M" + selfTestDirUnx + "/modules\\\"").c_str());
+	m_saPikeArgs.Add(("-M" + selfTestDirUnx + "/modules").c_str());
 
         m_bOnce = TRUE;
         m_iDebug = max(m_iDebug, 1);
