@@ -2,6 +2,12 @@ inherit "etc/test/tests/pike_test_common.pike"; // Necessary for stuff in testsu
 
 #include <testsuite.h>
 
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
+
 array(Standards.URI) get_test_urls(Configuration conf,
                                    string webdav_mount_point,
                                    string|void username,
@@ -29,7 +35,7 @@ array(Standards.URI) get_test_urls(Configuration conf,
       mapping(string:mixed) url_data = prot->urls[url];
       if (!test_true(mappingp, url_data)) continue;
 
-      report_debug("url data: %O\n", url_data);
+      DAV_WERROR("url data: %O\n", url_data);
       test_true(`==, url_data->conf, conf);
       test_true(`==, url_data->port, prot);
       test_true(stringp, url_data->hostname);
