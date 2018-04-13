@@ -1037,7 +1037,7 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--without-threads", NULL, NULL) ||
     Match(*argv, "--disable-threads", NULL, NULL) )
   {
-    m_saPikeDefines.Remove("-DENABLE_THREADS");
+    OutputLine(hOut, "Thread support not optional -- ignoring " + *argv);
     type = eArgPike;
     return 1;
   }
