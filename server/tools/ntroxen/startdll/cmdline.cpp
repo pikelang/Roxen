@@ -1038,7 +1038,7 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--disable-threads", NULL, NULL) )
   {
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-    OutputLine(hOut, "Thread support not optional -- ignoring " + *argv);
+    OutputLineFmt(hOut, "Thread support not optional -- ignoring %s", *argv);
     type = eArgPike;
     return 1;
   }
