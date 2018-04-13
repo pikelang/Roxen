@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.24 2011/01/20 17:23:46 mast Exp $
+// $Id$
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -1510,6 +1510,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         DWORD attr = GetFileAttributes(setupCmd.c_str());
         if (attr != -1 && !(attr & FILE_ATTRIBUTE_DIRECTORY))
         {
+	  setupCmd += stracat(" ", m_saPikeDefines.GetList());
           setupCmd += " " + selfTestDirUnx + " ../var";
           CRoxen::RunPike(setupCmd.c_str());
         }
