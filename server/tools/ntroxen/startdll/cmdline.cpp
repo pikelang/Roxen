@@ -1037,6 +1037,7 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--without-threads", NULL, NULL) ||
     Match(*argv, "--disable-threads", NULL, NULL) )
   {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     OutputLine(hOut, "Thread support not optional -- ignoring " + *argv);
     type = eArgPike;
     return 1;
@@ -1512,7 +1513,17 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         DWORD attr = GetFileAttributes(setupCmd.c_str());
         if (attr != -1 && !(attr & FILE_ATTRIBUTE_DIRECTORY))
         {
-	  setupCmd += stracat(" ", m_saPikeDefines.GetList());
+	  // NB: Same behavior as stracat(), but I don't trust stracat().
+	  //     /grubba 2018-04-13
+	  char **arr = m_saPikeDefines.GetList();
+	  while (*arr) {
+	    if (strchr(*arr, ' ')) {
+	      setupCmd += " \"" + *arr + "\"";
+	    } else {
+	      setupCmd += " " + *arr;
+	    }
+	    arr++;
+	  }
           setupCmd += " " + selfTestDirUnx + " ../var";
           CRoxen::RunPike(setupCmd.c_str());
         }
