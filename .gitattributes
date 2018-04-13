@@ -376,7 +376,6 @@ worldmap binary
 /server/tools/init.d_roxen foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.cpp foreign_ident
 /server/tools/ntroxen/startdll/StdAfx.h foreign_ident
-/server/tools/ntroxen/startdll/cmdline.cpp foreign_ident
 /server/tools/ntroxen/startdll/cmdline.h foreign_ident
 /server/tools/ntroxen/startdll/resource.h foreign_ident
 /server/tools/ntroxen/startdll/roxen.cpp foreign_ident
