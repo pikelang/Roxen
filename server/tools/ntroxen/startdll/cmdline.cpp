@@ -1511,7 +1511,17 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         DWORD attr = GetFileAttributes(setupCmd.c_str());
         if (attr != -1 && !(attr & FILE_ATTRIBUTE_DIRECTORY))
         {
-	  setupCmd += stracat(" ", m_saPikeDefines.GetList());
+	  // NB: Same behavior as stracat(), but I don't trust stracat().
+	  //     /grubba 2018-04-13
+	  char **arr = m_saPikeDefines.GetList();
+	  while (*arr) {
+	    if (strchr(*arr, ' ')) {
+	      setupCmd += " \"" + *arr + "\"";
+	    } else {
+	      setupCmd += " " + *arr;
+	    }
+	    arr++;
+	  }
           setupCmd += " " + selfTestDirUnx + " ../var";
           CRoxen::RunPike(setupCmd.c_str());
         }
