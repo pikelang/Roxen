@@ -1368,7 +1368,7 @@ void CCmdLine::ParseFinish()
       m_saRoxenArgs.AddIfNew("--remove-dumped");
       HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
       if (m_iVerbose >= 1)
-        OutputLine(hOut, "          : Removing old precompiled files (defines or pike version changed)");
+        OutputLine(hOut, "                    : Removing old precompiled files (defines or pike version changed)");
     }
   }
 }
