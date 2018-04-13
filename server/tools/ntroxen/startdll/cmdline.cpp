@@ -1495,7 +1495,7 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         //remove_dumped=1
         m_saPikeArgs.Add("-DRUN_SELF_TEST");
         m_saPikeArgs.Add(("-DSELF_TEST_DIR=\\\"" + selfTestDirUnx + "\\\"").c_str());
-	m_saPikeArgs.Add(("\\\"-M" + selfTestDirUnx + "/modules\\\"").c_str());
+	m_saPikeArgs.Add(("-M" + selfTestDirUnx + "/modules").c_str());
 
         m_bOnce = TRUE;
         m_iDebug = max(m_iDebug, 1);
@@ -1516,17 +1516,19 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 	  // NB: Same behavior as stracat(), but I don't trust stracat().
 	  //     /grubba 2018-04-13
 	  char **arr = m_saPikeDefines.GetList();
+	  std::string defines = "";
 	  while (*arr) {
-	    setupCmd += " ";
 	    if (strchr(*arr, ' ')) {
-	      setupCmd += "\"";
-	      setupCmd += *arr;
-	      setupCmd += "\"";
+	      defines += "\"";
+	      defines += *arr;
+	      defines += "\"";
 	    } else {
-	      setupCmd += *arr;
+	      defines += *arr;
 	    }
+	    defines += " ";
 	    arr++;
 	  }
+	  setupCmd = defines + setupCmd;
           setupCmd += " " + selfTestDirUnx + " ../var";
           CRoxen::RunPike(setupCmd.c_str());
         }
