@@ -4,6 +4,11 @@ inherit "../pike_test_common";
 
 import TEST.http.WebDAV;
 
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
 
 private string filesystem_dir = "$VARDIR/testsuite/webdav";
 // Expanded filesystem_dir.
@@ -19,7 +24,7 @@ void run_tests(Configuration conf)
                                                  password);
   int count = 0;
   foreach (base_uris, Standards.URI base_uri) {
-    report_debug("Webdav testsuite: Base URI: %s\n", (string)base_uri);
+    DAV_WERROR("Webdav testsuite: Base URI: %s\n", (string)base_uri);
     mapping(string:string) base_headers = ([
       "host": base_uri->host,
       "user-agent": "Roxen WebDAV Tester",
@@ -47,7 +52,7 @@ private class WebdavTest {
                         string testdir)
   {
     ::create(webdav_mount_point, base_uri, base_headers, testdir);
-    report_debug("Webdav real_dir: %O\n", real_dir);
+    DAV_WERROR("Webdav real_dir: %O\n", real_dir);
     Stdio.mkdirhier(real_dir);
   }
 

@@ -18,6 +18,11 @@ protected constant STATUS_PRECONDITION_FAILED = 412;
 protected constant STATUS_UNSUPPORTED_MEDIA_TYPE = 415;
 protected constant STATUS_LOCKED = 423;
 
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
 
 protected string webdav_mount_point;
 
@@ -186,7 +191,7 @@ protected WebDAVResponse webdav_request(string method,
   Standards.URI url = Standards.URI(path, base_uri);
   con = Protocols.HTTP.do_method(method, url, UNDEFINED, headers, con, data);
 
-  report_debug("Webdav: %s %O (url: %O) ==> code: %d\n",
+  DAV_WERROR("Webdav: %s %O (url: %O) ==> code: %d\n",
            method, path, url, con?con->status:600);
 
   if (!con) {
@@ -444,7 +449,7 @@ private int|WebDAVResponse do_webdav_ls(string path,
   WebDAVResponse res =
     webdav_request("PROPFIND", path, UNDEFINED, propfind);
 
-  report_debug("Webdav: propfind result: %d\n%O\n", res[0], res[2]);
+  DAV_WERROR("Webdav: propfind result: %d\n%O\n", res[0], res[2]);
 
   if (new_style) {
     ASSERT_EQUAL(res->status, expected_status_code);
@@ -502,7 +507,7 @@ protected bool case_sensitive()
 protected void prepare_testdir(string testdir)
 {
   testdir = has_suffix(testdir, "/") ? testdir[..<1] : testdir;
-  report_debug("Webdav: Test dir is: %O\n", testdir);
+  DAV_WERROR("Webdav: Test dir is: %O\n", testdir);
 
   // Consider working directly with the filesystem instead.
   // filesystem_recursive_rm(testdir);
@@ -544,7 +549,7 @@ public void run()
         mixed e2 = catch {
           ASSERT_CALL(before_testcase, testcase);
           // Only run testcase if before() executed successfully.
-          report_debug("Webdav: Running testcase: %O\n", testcase);
+          DAV_WERROR("Webdav: Running testcase: %O\n", testcase);
           TEST_CALL(this[testcase]);
           ASSERT_CALL(after_testcase, testcase);
         };
@@ -2188,7 +2193,7 @@ public void test_x_special_chars()
       // Test starts here...
       string dir_path = Stdio.append_path("/", testdir, file);
       string file_path = dir_path + "/" + file + ".txt";
-      report_debug("Webdav special chars test: Creating dir: %s.\n", dir_path);
+      DAV_WERROR("Webdav special chars test: Creating dir: %s.\n", dir_path);
       webdav_mkcol(dir_path, STATUS_CREATED);
       webdav_ls(dir_path, ({ dir_path }) );
       webdav_put(file_path, "FILE\n", STATUS_CREATED);

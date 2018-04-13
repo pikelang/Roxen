@@ -2,6 +2,12 @@ inherit "etc/test/tests/pike_test_common.pike"; // Necessary for stuff in testsu
 
 #include <testsuite.h>
 
+#ifdef DAV_DEBUG
+#define DAV_WERROR(X...)	werror(X)
+#else /* !DAV_DEBUG */
+#define DAV_WERROR(X...)
+#endif /* DAV_DEBUG */
+
 array(Standards.URI) get_test_urls(Configuration conf,
                                    string webdav_mount_point,
                                    string|void username,
