@@ -1515,10 +1515,13 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
 	  //     /grubba 2018-04-13
 	  char **arr = m_saPikeDefines.GetList();
 	  while (*arr) {
+	    setupCmd += " ";
 	    if (strchr(*arr, ' ')) {
-	      setupCmd += " \"" + *arr + "\"";
+	      setupCmd += "\"";
+	      setupCmd += *arr;
+	      setupCmd += "\"";
 	    } else {
-	      setupCmd += " " + *arr;
+	      setupCmd += *arr;
 	    }
 	    arr++;
 	  }
