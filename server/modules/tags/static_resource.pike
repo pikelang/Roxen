@@ -50,19 +50,24 @@ class TagServeStaticResources
       string attr_name = process_tags[tag_name];
       string link = args[attr_name];
       if(link && has_prefix (link, "/") && !has_prefix (link, "//")) {
-	array(int)|Stdio.Stat st =
-	  id->conf->try_stat_file(link, id);
+        sscanf(link, "%s%*[?#]", string raw_link);
 
-	if(st) {
-	  if(arrayp(st))
-	    st = Stdio.Stat(st);
+        array(int)|Stdio.Stat st =
+          id->conf->try_stat_file(raw_link, id);
 
-	  string varystr = sprintf("mtime=%d", st->mtime);
+        if(st) {
+          if(arrayp(st))
+            st = Stdio.Stat(st);
 
-	  args[attr_name] =
-	    Roxen.add_pre_state(link, (< "cache-forever", varystr >));
-	  return ({ Roxen.make_tag(tag_name, args, has_suffix (tag_name, "/"),
-				   1) });
+          string varystr = sprintf("mtime=%d", st->mtime);
+
+          args[attr_name] =
+            Roxen.add_pre_state(link, (< "cache-forever", varystr >));
+
+          m_delete(args, "/");
+
+          return ({ Roxen.make_tag(tag_name, args, has_suffix (tag_name, "/"),
+                                   1) });
 	}
       }
       return 0;
