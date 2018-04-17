@@ -394,6 +394,16 @@ mixed stat_file( string f, RequestID id )
   /* No security currently in this function */
   fs = file_stat(norm_f);
   privs = 0;
+  if (fs && !(fs->ino)) {
+    /* NB: NT does not have a way to get a valid ino field before
+     *     Windows Server 2012. Substitute with a hash of the
+     *     normalized path.
+     *
+     * NB: Use %+4c to avoid bignums (which are not supported by
+     *     the ino field).
+     */
+    sscanf(Crypto.SHA256.hash(string_to_utf8(lower_case(f))), "%+4c", fs->ino);
+  }
   if(!stat_cache) return fs;
   cache_set("stat_cache", norm_f, ({fs}));
   return fs;
