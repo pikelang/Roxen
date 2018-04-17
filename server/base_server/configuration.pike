@@ -760,7 +760,7 @@ private class ModuleChangedMonitor
   inherit Filesystem.Monitor.symlinks;
 
   protected constant default_max_dir_check_interval = 0;
-  protected constant default_file_interval_factor = 0;
+  protected constant default_file_interval_factor = 1;
   protected constant default_stable_time = 0;
 
   RoxenModule mod;
@@ -786,27 +786,20 @@ private class ModuleChangedMonitor
   }
 }
 
-void module_hot_reload(RoxenModule mod)
+void register_module_hot_reload(RoxenModule mod)
 //! Hot-reload a module when the source file is changed, e.g. reload the module
 //! automatically without having to click the Reload button in the Admin
 //! Interface.
 //!
-//! This will only have effect if the server is started with --debug or
-//! --module-debug (--once).
-//!
-//! Call this method from RoxenModule::start() like:
-//!
-//! @example
-//! @code
-//! void start() {
-//!   my_configuration()->module_hot_reload(this);
-//! }
-//! @endcode
+//! This will only have effect if the server is started with @tt{--debug@} or
+//! @tt{--module-debug@} (@tt{--once@}). This can also be initalized from the 
+//! command line with @tt{./start --once --module-hot-reload=my-module@}, which
+//! is the preferred way of enabling hot reload. 
 //!
 //! @param mod
 //!  The module to enable hot reloading for
 {
-#if defined(MODULE_DEBUG) || defined(DEBUG)
+#if defined(DEBUG) || defined(MODULE_DEBUG) || defined(MODULE_HOT_RELOAD)
 
   // Already monitored
   if (module_changed_monitors[mod]) {
@@ -820,10 +813,21 @@ void module_hot_reload(RoxenModule mod)
   string path = roxen->filename(mod);
 
   if (!fsw->is_monitored(path)) {
-    fsw->monitor(path, 1);
+    report_debug(" Adding hot reload monitor for %O.\n", mod);
+    fsw->monitor(path);
   }
 
 #endif // defined(...)
+}
+
+void unregister_module_hot_reload(RoxenModule mod)
+//! Unregister the hot reload monitor for module @[mod].
+{
+  if (ModuleChangedMonitor mon = m_delete(module_changed_monitors, mod)) {
+    report_debug("Removing hot reload monitor for %O.\n", mod);
+    mon->clear();
+    destruct(mon);
+  }
 }
 
 #else /* Filesystem.Monitor.symlinks */
@@ -831,6 +835,7 @@ void module_hot_reload(RoxenModule mod)
 //! @ignore
 private class ModuleChangedMonitor {}
 void module_hot_reload(RoxenModule mod){}
+void unregister_module_hot_reload(RoxenModule mod){}
 //! @endignore
 
 #endif /* !Filesystem.Monitor.symlinks */
@@ -842,10 +847,7 @@ private void safe_stop_module (RoxenModule mod, string desc)
 			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
 
-  if (ModuleChangedMonitor mon = m_delete(module_changed_monitors, mod)) {
-    mon->clear();
-    destruct(mon);
-  }
+  unregister_module_hot_reload(mod);
 }
 
 private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
@@ -4849,15 +4851,31 @@ void low_init(void|int modules_already_enabled)
 //      roxenloader.pop_compile_error_handler();
     forcibly_added = ([]);
   }
-    
-  foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
-    if( mod->ready_to_receive_requests )
+
+#ifdef MODULE_HOT_RELOAD
+  array(string) hot_mods = roxen->query_hot_reload_modules();
+#endif
+
+  foreach( ({this_object()})+indices( otomod ), RoxenModule mod ) {
+    if( mod->ready_to_receive_requests ) {
       if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) ) {
         report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
 	got_no_delayed_load = -1;
       }
+    }
+
+#ifdef MODULE_HOT_RELOAD
+    if (has_index(mod, "is_module")) {
+      sscanf (mod->module_local_id(), "%s#", string mod_name);
+
+      if (has_value(hot_mods, mod_name)) {
+        register_module_hot_reload(mod);
+      }
+    }
+#endif
+  }
 
   foreach( after_init_hooks, function q )
     if( mixed w = catch( q(this_object()) ) ) {
