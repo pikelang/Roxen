@@ -382,22 +382,20 @@ mixed stat_file( string f, RequestID id )
   FILESYSTEM_WERR("stat_file for \""+f+"\"" +
 		  (id->misc->internal_get ? " (internal)" : ""));
 
-  f = path + encode_path(f);
-
-  if (FILTER_INTERNAL_FILE (f, id))
-    return 0;
+  string norm_f = real_path(f, id);
+  if (!norm_f) return 0;
 
   if(stat_cache && !id->pragma["no-cache"] &&
-     (fs=cache_lookup("stat_cache",f)))
+     (fs = cache_lookup("stat_cache", norm_f)))
     return fs[0];
   object privs;
   SETUID_NT("Statting file");
 
   /* No security currently in this function */
-  fs = file_stat(f);
+  fs = file_stat(norm_f);
   privs = 0;
   if(!stat_cache) return fs;
-  cache_set("stat_cache", f, ({fs}));
+  cache_set("stat_cache", norm_f, ({fs}));
   return fs;
 }
 
