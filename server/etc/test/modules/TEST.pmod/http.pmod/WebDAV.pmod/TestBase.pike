@@ -2170,7 +2170,14 @@ public void test_x_special_chars()
   string testdir = this::testcase_dir;
   // If you want to try single chars, just ad them as new strings to the array
   // below.
-  array(string) FILENAMES = ({ " _ [](){}+-*#%&=?|$~ " });
+  array(string) FILENAMES = ({
+#ifdef __NT__
+    /* NB: *, ? and | are apparently invalid characters in NTFS. */
+    " _ [](){}+-#%&=$~ ",
+#else /* !__NT__ */
+    " _ [](){}+-*#%&=?|$~ ",
+#endif /* __NT__ */
+  });
   foreach (FILENAMES, string file) {
     mixed e = catch {
       // This test should only include chars that are the same before and after
