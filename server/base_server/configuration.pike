@@ -750,11 +750,102 @@ void unregister_urls()
   registered_urls = ({});
 }
 
+private mapping(RoxenModule:ModuleChangedMonitor)
+  module_changed_monitors = ([]);
+
+#if constant(Filesystem.Monitor.symlinks)
+
+private class ModuleChangedMonitor
+{
+  inherit Filesystem.Monitor.symlinks;
+
+  protected constant default_max_dir_check_interval = 0;
+  protected constant default_file_interval_factor = 0;
+  protected constant default_stable_time = 0;
+
+  RoxenModule mod;
+
+  void create(RoxenModule mod)
+  {
+    ::create();
+    set_nonblocking(1);
+    this::mod = mod;
+  }
+
+  bool is_called = false;
+  void stable_data_change(string p, Stdio.Stat st) {
+    // This will be called on server start, so skip that.
+    if (!is_called) {
+      is_called = true;
+      return;
+    }
+
+    if (mod) {
+      mod = reload_module(mod->module_local_id());
+    }
+  }
+}
+
+void module_hot_reload(RoxenModule mod)
+//! Hot-reload a module when the source file is changed, e.g. reload the module
+//! automatically without having to click the Reload button in the Admin
+//! Interface.
+//!
+//! This will only have effect if the server is started with --debug or
+//! --module-debug (--once).
+//!
+//! Call this method from RoxenModule::start() like:
+//!
+//! @example
+//! @code
+//! void start() {
+//!   my_configuration()->module_hot_reload(this);
+//! }
+//! @endcode
+//!
+//! @param mod
+//!  The module to enable hot reloading for
+{
+#if defined(MODULE_DEBUG) || defined(DEBUG)
+
+  // Already monitored
+  if (module_changed_monitors[mod]) {
+    return;
+  }
+
+  ModuleChangedMonitor fsw;
+  // Is this one of these "relying on the interpret lock"?
+  fsw = module_changed_monitors[mod] = ModuleChangedMonitor(mod);
+
+  string path = roxen->filename(mod);
+
+  if (!fsw->is_monitored(path)) {
+    fsw->monitor(path, 1);
+  }
+
+#endif // defined(...)
+}
+
+#else /* Filesystem.Monitor.symlinks */
+
+//! @ignore
+private class ModuleChangedMonitor {}
+void module_hot_reload(RoxenModule mod){}
+//! @endignore
+
+#endif /* !Filesystem.Monitor.symlinks */
+
+
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop &&
 			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
+
+  if (ModuleChangedMonitor mon = m_delete(module_changed_monitors, mod)) {
+    mon->clear();
+    destruct(mon);
+  }
 }
 
 private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
