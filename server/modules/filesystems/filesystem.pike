@@ -526,6 +526,12 @@ protected string low_real_path(string f, RequestID id)
 {
   string norm_f;
 
+#ifdef __NT__
+  // These characters are apparently invalid in NTFS filenames.
+  if (f != replace(f, "*?|"/"", ({ "", "", "" }))) {
+    return 0;
+  }
+#endif
   if (mixed err = catch {
       /* NOTE: NORMALIZE_PATH() may throw errors. */
       norm_f = NORMALIZE_PATH(path + encode_path(f));
