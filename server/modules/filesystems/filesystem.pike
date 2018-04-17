@@ -462,6 +462,12 @@ string real_path(string f, RequestID id)
 {
   f = normalized_path + encode_path(f);
   if (FILTER_INTERNAL_FILE(f, id)) return 0;
+#ifdef __NT__
+  // These characters are apparently invalid in NTFS filenames.
+  if (f != replace(f, "*?|"/"", ({ "", "", "" }))) {
+    return 0;
+  }
+#endif
   catch {
     f = NORMALIZE_PATH(f);
     if (has_prefix(f, normalized_path) ||
