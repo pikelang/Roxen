@@ -1,0 +1,23 @@
+subject: Roxen 6.1: Static resource server: Added support for URL:s with anchor or query string. DBManager: stop backup thread when Roxen exits. DBManager: perform backups in a dedicated thread.
+from: ef032a34d465641a3cf25e2601b4e9c3f4855832
+to: ca98bf65e9a5df669ae57039cd05c9f51eec92c0
+originator: Jonas Lonnberg
+depends: 2018-03-26T105105
+restart: true
+
+• Static resource server: Added support for URL:s with anchor or query string.
+
+This is necessary if you want to use <server-static-resources> on SVGs with symbols:
+
+  <svg>
+    <use xlink:href="/my/sprite.svg#my-symbol" />
+  </svg>
+
+• DBManager: stop backup thread when Roxen exits.
+
+# Conflicts:
+#	server/etc/modules/DBManager.pmod
+
+• DBManager: perform backups in a dedicated thread.
+
+This avoids blocking the background_run thread. Fixes WS-204.
