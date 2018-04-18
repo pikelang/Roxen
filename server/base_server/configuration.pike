@@ -759,7 +759,7 @@ private class ModuleChangedMonitor
 {
   inherit Filesystem.Monitor.symlinks;
 
-  protected constant default_max_dir_check_interval = 0;
+  protected constant default_max_dir_check_interval = 60;
   protected constant default_file_interval_factor = 1;
   protected constant default_stable_time = 0;
 
