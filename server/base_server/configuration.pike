@@ -834,7 +834,7 @@ void unregister_module_hot_reload(RoxenModule mod)
 
 //! @ignore
 private class ModuleChangedMonitor {}
-void module_hot_reload(RoxenModule mod){}
+void register_module_hot_reload(RoxenModule mod){}
 void unregister_module_hot_reload(RoxenModule mod){}
 //! @endignore
 
@@ -4854,6 +4854,7 @@ void low_init(void|int modules_already_enabled)
 
 #ifdef MODULE_HOT_RELOAD
   array(string) hot_mods = roxen->query_hot_reload_modules();
+  array(string) hot_confs = roxen->query_hot_reload_modules_conf();
 #endif
 
   foreach( ({this_object()})+indices( otomod ), RoxenModule mod ) {
@@ -4867,7 +4868,9 @@ void low_init(void|int modules_already_enabled)
     }
 
 #ifdef MODULE_HOT_RELOAD
-    if (has_index(mod, "is_module")) {
+    if (has_index(mod, "is_module") &&
+        (!hot_confs || has_value(hot_confs, name)))
+    {
       sscanf (mod->module_local_id(), "%s#", string mod_name);
 
       if (has_value(hot_mods, mod_name)) {

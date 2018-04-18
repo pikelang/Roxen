@@ -148,6 +148,7 @@ daemonize=yes
 remove_dumped_passed=no
 
 module_hot_reload=
+module_hot_reload_conf=
 
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
@@ -347,6 +348,10 @@ parse_args() {
     fi
     mod=`echo $1 | sed -e 's/--module-hot-reload=//'`
     module_hot_reload="$mod $module_hot_reload"
+  ;;
+  --module-hot-reload-conf=*)
+    mod=`echo $1 | sed -e 's/--module-hot-reload-conf=//'`
+    module_hot_reload_conf="$mod $module_hot_reload_conf"
   ;;
   '--quiet'|'-q')
     verbose=0
@@ -587,6 +592,11 @@ the default arguments.
                                   environment. This flag can appear more than once.
                                   .B<module-name>B. is the filename minus the extension
                                   of the module.
+
+      .B--module-hot-reload-conf=<conf>B.
+                                  Set for which configuration .B--module-hot-reloadB.
+                                  should be applied. By default all module instances
+                                  in all configurations will be hot-reloaded.
 
       .B--mysql-log-queriesB.:        Instruct the MySQL server to log all
                                   queries so that they end up in the Roxen
@@ -1149,6 +1159,9 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
   if [ "x$module_hot_reload" != "x" ]; then
     pass="$pass --module-hot-reload=\"$module_hot_reload\""
+  fi
+  if [ "x$module_hot_reload_conf" != "x" ]; then
+    pass="$pass --module-hot-reload-conf=\"$module_hot_reload_conf\""
   fi
   # Check for stop.
   if [ "$stop"x != x ]
