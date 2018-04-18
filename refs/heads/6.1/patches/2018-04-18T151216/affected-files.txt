@@ -1,0 +1,5 @@
+Modified files:
+  base_server/roxen.pike
+  etc/include/version.h
+  etc/modules/DBManager.pmod
+  modules/tags/static_resource.pike
