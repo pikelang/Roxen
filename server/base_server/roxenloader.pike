@@ -2082,6 +2082,13 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     mysql_path_is_remote = 1;
   }
 
+#if constant(MIME.set_boundary_prefix)
+  // Set MIME message boundary prefix.
+  string boundary_prefix = Standards.UUID.make_version4()->str();
+  boundary_prefix = (boundary_prefix / "-") * "";
+  MIME.set_boundary_prefix(boundary_prefix);
+#endif
+
   nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
   // Get rid of the _main and main() backtrace elements..
