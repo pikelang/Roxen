@@ -3084,7 +3084,12 @@ protected RequestID make_fake_id (string s, RequestID id)
 
   // HTTP transport encode the path.
   // NB: This is required to make scan_for_query() happy.
-  s = map(string_to_utf8(s)/"/", Protocols.HTTP.percent_encode) * "/";
+  s = string_to_utf8(s);
+  sscanf(s, "%s?%s", string path, string query);
+  s = map((path || s) / "/", Protocols.HTTP.percent_encode) * "/";
+  if (query) {
+    s += "?" + query;
+  }
 
   fake_id->raw_url = s;
 
