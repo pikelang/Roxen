@@ -1110,7 +1110,9 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = roxen.LogFile(logfile, query("LogFileCompressor"))->write;
+      log_function = roxen.LogFile(logfile,
+                                   query("LogFileCompressor"),
+                                   [int] query("DaysToKeepLogFiles"))->write;
   }
 }
 
@@ -5205,6 +5207,14 @@ below.</p>
 		 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
 		 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
 	 0, lambda(){ return !query("Log");});
+
+  defvar("DaysToKeepLogFiles", 0,
+    DLOCALE(0, "Logging: Number of days to keep log files"), TYPE_INT,
+    DLOCALE(0, "Log files in the log directory older than specified number of "
+      "days will automatically be deleted. Set to <tt>0</tt> (<tt>zero</tt>) "
+      "to disable and keep log files forever. Currently active log file will "
+      "never be deleted, nor will files with names not matching the pattern "
+      "specified under <b>Log file</b>."));
   
   defvar("NoLog", ({ }),
 	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
