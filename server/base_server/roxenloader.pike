@@ -1360,7 +1360,6 @@ void add_package(string package_dir)
     report_debug("Adding package %s.\n", package_dir);
   }
   package_directories += ({ package_dir });
-
   string real_pkg_dir = roxen_path (package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
@@ -1369,6 +1368,15 @@ void add_package(string package_dir)
   if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "include/"))) {
     master()->add_include_path(sub_dir);
   }
+#ifdef RUN_SELF_TEST
+  sub_dir = combine_path(real_pkg_dir, "test/pike-modules");
+  if (Stdio.is_dir(sub_dir)) {
+    master()->add_module_path(sub_dir);
+  }
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/include/"))) {
+    master()->add_include_path(sub_dir);
+  }
+#endif
 
   default_roxen_module_path += ({ combine_path(package_dir, "modules/") });
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
