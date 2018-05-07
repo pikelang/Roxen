@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Set MIME message boundary prefix.
+from: 357a54a48e71b4b9bc0f8f194c2c66c362643bbe
+to: 49fdc8b84b2715d18fa62688ea04f985963d2ade
+originator: Erik Allemann
+depends: roxen/6.1.243|2018-04-23T094532
+restart: true
+
+• Set MIME message boundary prefix when starting Roxen. [WS-252]
+
+Hopefully solves WS-252...
