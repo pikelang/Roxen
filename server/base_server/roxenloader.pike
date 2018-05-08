@@ -1839,7 +1839,6 @@ void add_package(string package_dir)
 		 roxen_path (package_dir));
   }
   package_directories += ({ package_dir });
-
   string real_pkg_dir = roxen_path (package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
@@ -1848,6 +1847,15 @@ void add_package(string package_dir)
   if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "include/"))) {
     master()->add_include_path(sub_dir);
   }
+#ifdef RUN_SELF_TEST
+  sub_dir = combine_path(real_pkg_dir, "test/pike-modules");
+  if (Stdio.is_dir(sub_dir)) {
+    master()->add_module_path(sub_dir);
+  }
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/include/"))) {
+    master()->add_include_path(sub_dir);
+  }
+#endif
 
   package_module_path += ({ combine_path(package_dir, "modules/") });
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
@@ -2081,6 +2089,13 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     );
     mysql_path_is_remote = 1;
   }
+
+#if constant(MIME.set_boundary_prefix)
+  // Set MIME message boundary prefix.
+  string boundary_prefix = Standards.UUID.make_version4()->str();
+  boundary_prefix = (boundary_prefix / "-") * "";
+  MIME.set_boundary_prefix(boundary_prefix);
+#endif
 
   nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
