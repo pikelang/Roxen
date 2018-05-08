@@ -5214,7 +5214,8 @@ below.</p>
       "days will automatically be deleted. Set to <tt>0</tt> (<tt>zero</tt>) "
       "to disable and keep log files forever. Currently active log file will "
       "never be deleted, nor will files with names not matching the pattern "
-      "specified under <b>Log file</b>."));
+      "specified under <b>Log file</b>."))
+    ->set_range(0, Variable.no_limit);;
   
   defvar("NoLog", ({ }),
 	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
