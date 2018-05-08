@@ -8073,38 +8073,69 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
 protected string cached_hostname = gethostname();
 
-class LogFile(string fname, string|void compressor_program)
+class LogFile
 {
+  public string fname;              // Was public before...
+  public string compressor_program; // Was public before...
   private Thread.Mutex lock = Thread.Mutex();
   private Stdio.File fd;
   private int opened;
+  private bool compressor_exists;
+  private bool auto_file_removal;
+  private int days_to_keep_files;
+
+  protected void create(string fname,
+                        string|void compressor_program,
+                        int|void days_to_keep_files)
+  {
+    this::fname = fname;
+    this::compressor_program = compressor_program;
+    this::days_to_keep_files = days_to_keep_files;
+    compressor_exists = compressor_program && sizeof(compressor_program);
+    auto_file_removal = days_to_keep_files && days_to_keep_files > 0;
+  }
 
   // FIXME: compress_logs is limited to scanning files with filename
   // substitutions within a fixed directory (e.g.
   // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
   private Process.Process compressor_process;
-  private int last_compressor_scan_time;
+  private int last_scan_time;
+
+  //! Also deletes old files.
+  //!
+  // Will not scan for files if compressor is running. This means we might not
+  // remove an old file because the compressor is running but that does not
+  // matter since this function is ran so often. Sooner or later files will be
+  // compressed (if there is a compressor) and old files will be deleted (if
+  // days_to_keep_files > 0).
   private void compress_logs(string fname, string active_log)
   {
-    if(!compressor_program || !sizeof(compressor_program))
-      return; // No compressor program specified...
+    if(!compressor_exists && !auto_file_removal)
+      // No compressor program specified, nor is auto file removal active...
+      return;
     if(compressor_process && !compressor_process->status())
-      return; // The compressor is already running...
-    if(time(1) - last_compressor_scan_time < 300)
-      return; // Scan for compressable files at most once every 5 minutes...
-    last_compressor_scan_time = time(1);
+      return; // The compressor is running...
+    if(time(1) - last_scan_time < 300)
+      return; // Scan for files at most once every 5 minutes...
+    last_scan_time = time(1);
     fname = roxen_path(fname);
     active_log = roxen_path(active_log);
     string dir = dirname(fname);
+    int min_mtime = time(1) - (days_to_keep_files * 24 * 60 * 60);
+    string pattern = "^"+replace(basename(fname),
+                           ({ "%y", "%m", "%d", "%h", "%H" }),
+                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
+                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }));
+    Regexp regexp = Regexp(pattern);
+    Regexp regexp_non_compressed = Regexp(pattern + "$");
     foreach(sort(get_dir(dir) || ({})), string filename_candidate)
     {
       if(filename_candidate == basename(active_log))
-       continue; // Don't try to compress the active log just yet...
-      if(Regexp("^"+replace(basename(fname),
-                           ({ "%y", "%m", "%d", "%h", "%H" }),
-                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
-                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }))+"$")->
-        match(filename_candidate))
+      {
+        continue; // Don't try to compress the active log just yet...
+      }
+      else if(compressor_exists &&
+              regexp_non_compressed->match(filename_candidate))
       {
        string compress_file = combine_path(dir, filename_candidate);
        Stdio.Stat stat = file_stat(compress_file);
@@ -8114,6 +8145,17 @@ class LogFile(string fname, string|void compressor_program)
        compressor_process = Process.Process(({ compressor_program,
 					       compress_file }));
        return;
+      }
+      else if(auto_file_removal && regexp->match(filename_candidate))
+      {
+        // Wipe the file if it is old.
+        string log_file = combine_path(dir, filename_candidate);
+        Stdio.Stat stat = file_stat(log_file, 1); // 1 means symlinks will not be followed.
+        if(stat->isreg && stat->mtime < min_mtime)
+        {
+          werror("Deleting log file %O due to old age.\n", log_file);
+          rm(log_file);
+        }
       }
     }
   }
