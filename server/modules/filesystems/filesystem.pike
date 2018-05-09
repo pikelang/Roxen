@@ -490,10 +490,11 @@ string encode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
     p = Charset.encoder( path_encoding )->feed( p )->drain();
-#ifndef __NT__
+#if !defined(__NT__) || constant(Stdio.__HAVE_UTF8_FS__)
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
-#else
+#endif
+#ifdef __NT__
   // NB: stat() on NT doesn't like trailing slashes (cf [bug 76]).
   while( strlen(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
@@ -504,7 +505,7 @@ string encode_path( string p )
 //! Convert from filesystem encoding.
 string decode_path(string p)
 {
-#ifdef __NT__
+#if defined(__NT__) && !constant(Stdio.__HAVE_UTF8_FS__)
   // The filesystem on NT uses wide characters.
   return p;
 #else
@@ -519,7 +520,7 @@ string decode_path(string p)
   default:
     return Charset.decoder(path_encoding)->feed(p)->drain();
   }
-#endif /* !__NT__ */
+#endif /* !__NT__ || Stdio.__HAVE_UTF8_FS__ */
 }
 
 protected string low_real_path(string f, RequestID id)
