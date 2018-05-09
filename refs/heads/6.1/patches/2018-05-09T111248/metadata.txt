@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Automatic removal of old access log files
+from: 4cf2754dd6d6f4a1f244076a8337e0e5227ec612
+to: 186c58ae20a0e1addefb87c72f2b1a728f57a133
+originator: Marcus Wellhardh
+depends: roxen/6.1.246|2018-05-09T105957
+restart: true
+
+• Added range check to defvar("DaysToKeepLogFiles").
+
+• Logging: Automatic removal of old log files. [WS-276]
