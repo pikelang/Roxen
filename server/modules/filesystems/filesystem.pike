@@ -1573,7 +1573,7 @@ mixed find_file( string f, RequestID id )
             TRACE_LEAVE("");
             TRACE_LEAVE("MOVE: Recursive delete failed.");
             if (sizeof (res))
-              set_status_for_path (new_uri, res->error, res->rettext);
+              set_status_for_path(new_uri, id, res->error, res->rettext);
             return ([]);
           }
           TRACE_LEAVE("Recursive delete ok.");
