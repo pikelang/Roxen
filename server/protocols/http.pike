@@ -565,11 +565,12 @@ int things_to_do_when_not_sending_from_cache( )
 	}
 	else
 	  catch (f = utf8_to_string (f));
-	if (String.width(f) > 8) {
-	  // Wide, so it might contain combiners.
-	  // Combine them if they are there.
-	  f = Unicode.normalize(f, "NFC");
-	}
+      }
+
+      if (String.width(f) > 8) {
+	// Wide, so it might contain combiners.
+	// Combine them if they are there.
+	f = Unicode.normalize(f, "NFC");
       }
 
       // Now after charset decode we can add the multipart/form-data
