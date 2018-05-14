@@ -75,7 +75,6 @@ worldmap binary
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
-/server/base_server/prototypes.pike foreign_ident
 /server/base_server/proxyauth.pike foreign_ident
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident

@@ -2531,6 +2531,22 @@ protected string combine_combiners(string s)
   return Unicode.normalize(s, "NFC");
 }
 
+//! Get a directory listing for the virtual path @[file].
+//!
+//! @param file
+//!   Path in the virtual filesystem.
+//!
+//! @param id
+//!   @[RequestID] for the request.
+//!
+//! @param verbose
+//!   Also list virtual lock files.
+//!
+//! @returns
+//!   Returns an array with all visible files in the specified
+//!   directory if it exists, and @expr{0@} (zero) otherwise.
+//!   Any filesystem encoding of the filenames has been decoded,
+//!   and they have also been Unicode-NFC normalized.
 array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 {
   array dir;

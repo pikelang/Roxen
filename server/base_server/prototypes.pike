@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.281 2011/02/28 17:45:26 jonasw Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1374,6 +1374,8 @@ class RequestID
   //!     names should follow the capitalization forms used in RFC
   //!     2616 (c.f. @[Roxen.canonicalize_http_header]). See
   //!     @[add_response_header()] for more details.
+  //!   @member string "new-uri"
+  //!     Decoded and Unicode-NFC normalized @expr{"Destination"@}-header.
   //!   @member int(1..1) "no_proto_cache"
   //!     Flag indicating that the result should not be cached in
   //!     the protocol cache.
@@ -1726,6 +1728,7 @@ class RequestID
   //!
   //! The transport encoding has been decoded (i.e. any @expr{%XX@}
   //! escapes and the charset according to @[input_charset]).
+  //! It has also been Unicode-NFC normalized.
 
   string input_charset;
   //! The charset that was used to decode @[prestate], @[config],
