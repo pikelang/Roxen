@@ -1415,6 +1415,8 @@ class RequestID
   //!     names should follow the capitalization forms used in RFC
   //!     2616 (c.f. @[Roxen.canonicalize_http_header]). See
   //!     @[add_response_header()] for more details.
+  //!   @member string "new-uri"
+  //!     Decoded and Unicode-NFC normalized @expr{"Destination"@}-header.
   //!   @member int(1..1) "no_proto_cache"
   //!     Flag indicating that the result should not be cached in
   //!     the protocol cache.
@@ -1780,6 +1782,7 @@ class RequestID
   //!
   //! The transport encoding has been decoded (i.e. any @expr{%XX@}
   //! escapes and the charset according to @[input_charset]).
+  //! It has also been Unicode-NFC normalized.
 
   string input_charset;
   //! The charset that was used to decode @[prestate], @[config],

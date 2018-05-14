@@ -90,6 +90,10 @@ string pw_name(int uid)
 #endif
 }
 
+#if !constant(utf8_string)
+protected typedef __attribute__("utf8", string(8bit))	utf8_string;
+#endif
+
 #if !constant(getppid)
 int getppid() {   return -1; }
 #endif
@@ -1977,6 +1981,11 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
 ---------------------------------------------------------------
 ");
     exit(1);
+#endif
+
+#if !constant(utf8_string)
+  // Not present in Pike 8.0 and earlier.
+  add_constant("utf8_string", utf8_string);
 #endif
 
   // Check if IPv6 support is available.
