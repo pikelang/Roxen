@@ -5890,7 +5890,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   switch (charset && lower_case(charset)) {
     case 0:
       // NB: NT has a filesystem that uses UTF-16.
-#ifndef __NT__
+#if !defined(__NT__) || constant(Stdio.__HAVE_UTF8_FS__)
       return string_to_utf8(this_function(utf8_to_string(path), no_warn, "utf8"));
 #endif
       break;
