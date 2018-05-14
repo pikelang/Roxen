@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.456 2011/09/12 10:54:42 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -77,6 +77,10 @@ string pw_name(int uid)
   return pwn[uid]=([array(string)]getpwuid(uid)||((""+uid)/":"))[0];
 #endif
 }
+
+#if !constant(utf8_string)
+protected typedef __attribute__("utf8", string(8bit))	utf8_string;
+#endif
 
 #if !constant(getppid)
 int getppid() {   return -1; }
@@ -1388,6 +1392,11 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
 ---------------------------------------------------------------
 ");
     exit(1);
+#endif
+
+#if !constant(utf8_string)
+  // Not present in Pike 8.0 and earlier.
+  add_constant("utf8_string", utf8_string);
 #endif
 
   // Check if IPv6 support is available.
