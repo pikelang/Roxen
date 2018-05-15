@@ -47,6 +47,7 @@ int is_last_test_configuration()
 }
 
 int tests, ltests, test_num;
+int lskipped;
 int fails, lfails;
 int pass;
 string tag_test_data;
@@ -543,6 +544,25 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
   return;
 }
 
+mixed xml_testsuite(Parser.HTML file_parser, mapping args, string c,
+                    mapping(int:RXML.PCode) p_code_cache) {
+    if (roxen.is_shutting_down()) {
+      return ({}); // Stop parsing.
+    }
+    string env = args["if-not-env"];
+    if (env && getenv(env)) {
+      if (pass == 1) {
+        report_debug("Skipping tests since env. var %s is defined.\n", env);
+        // Count number of tests we are skipping.
+        Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+                              ->add_tags ((["test": lambda () { lskipped++; }]))
+                              ->finish (c);
+      }
+      return ({}); // Stop parsing.
+    }
+    return c; // Continue to parse content withing this tag.
+}
+
 class TagTestData {
   inherit RXML.Tag;
   constant name = "test-data";
@@ -576,6 +596,7 @@ void run_xml_tests(string data) {
 
   ltests=0;
   lfails=0;
+  lskipped=0;
 
   test_num = 0;
   pass = 1;
@@ -583,6 +604,7 @@ void run_xml_tests(string data) {
     "add-module" : xml_add_module,
     "drop-module" : xml_dummy /* xml_drop_module */,
     "use-module": xml_use_module,
+    "testsuite" : xml_testsuite,
     "test" : xml_test,
     "comment": xml_comment,
   ]) )->
@@ -597,7 +619,7 @@ void run_xml_tests(string data) {
 			->add_tags ((["test": lambda () {test_tags++;}]))
 			->finish (data);
 
-  if(test_tags != ltests)
+  if(test_tags != (ltests + lskipped))
     report_warning("Possibly XML error in testsuite - "
 		   "got %d test tags but did %d tests.\n",
 		   test_tags, ltests);
@@ -608,6 +630,7 @@ void run_xml_tests(string data) {
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_dummy /* xml_add_module */,
     "drop-module" : xml_drop_module,
+    "testsuite" : xml_testsuite,
     "test" : xml_test,
     "comment": xml_comment,
   ]) )->
@@ -619,8 +642,9 @@ void run_xml_tests(string data) {
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d%s.\n", ltests, lfails,
-	      bkgr_fails ?
+  report_debug("Did %d tests, failed on %d, skipped %d%s.\n",
+               ltests, lfails, lskipped,
+	       bkgr_fails ?
 	       ", detected " + bkgr_fails + " background failures" : "");
 
   if (bkgr_fails) {
