@@ -1451,6 +1451,12 @@ mixed find_file( string f, RequestID id )
     // Workaround for Linux, Tru64 and FreeBSD.
     if (has_suffix(moveto, "/")) {
       moveto = moveto[..sizeof(moveto)-2];
+#if constant(System.normalize_path)
+    } else {
+      // normalize_path() may have adjusted the case of
+      // the destination filename, so restore it.
+      moveto = combine_path(moveto, "..", basename(new_uri));
+#endif
     }
 
     if (!dotfiles && sizeof(filter(new_uri/"/", has_prefix, "."))) {
