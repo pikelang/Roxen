@@ -950,6 +950,15 @@ mixed find_file( string f, RequestID id )
 #endif /* constant(System.normalize_path) */
   };
 
+#ifdef __NT__
+  foreach(f/"/", string segment) {
+    if (has_suffix(segment, " ")) {
+      // Path segments on NT may not end with space.
+      return Roxen.http_status(405, "Invalid filesystem path.");
+    }
+  }
+#endif
+
   // NOTE: Sets id->misc->stat.
   size = _file_size( f, id );
 
@@ -1333,6 +1342,15 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+#ifdef __NT__
+    foreach(id->misc->move_from/"/", string segment) {
+      if (has_suffix(segment, " ")) {
+	// Path segments on NT may not end with space.
+        return Roxen.http_status(405, "MV: Invalid filesystem path.");
+      }
+    }
+#endif
+
     string relative_from = id->misc->move_from[sizeof(mountpoint)..];
 
     if (!dotfiles && sizeof(filter(relative_from/"/", has_prefix, "."))) {
@@ -1411,6 +1429,15 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("MOVE: No dest file");
       return 0;
     }
+
+#ifdef __NT__
+    foreach(new_uri/"/", string segment) {
+      if (has_suffix(segment, " ")) {
+	// Path segments on NT may not end with space.
+	return Roxen.http_status(405, "MOVE: Invalid filesystem path.");
+      }
+    }
+#endif
 
     // FIXME: The code below doesn't allow for this module being overloaded.
     if (!has_prefix(new_uri, mountpoint)) {
