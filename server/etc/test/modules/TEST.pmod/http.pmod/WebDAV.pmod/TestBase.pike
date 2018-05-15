@@ -2357,6 +2357,10 @@ public void test_x_move_file()
               webdav_move(src_file, target_file, locks,
                           caseSensitive ? STATUS_CREATED : STATUS_NO_CONTENT);
             }
+	    // Delete the target file, so that we are guaranteed that the
+	    // source file actually gets created with the expected file
+	    // name by the put in the next loop.
+	    webdav_delete(target_file, locks, STATUS_NO_CONTENT);
           }
         }
       }
