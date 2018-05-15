@@ -2153,7 +2153,8 @@ public void test_x_special_chars()
   array(string) FILENAMES = ({
 #ifdef __NT__
     /* NB: *, ? and | are apparently invalid characters in NTFS. */
-    " _ [](){}+-#%&=$~ ",
+    /* NB: Space at the end of path segments is *sometimes* stripped on NTFS. */
+    " _ [](){}+-#%&=$~",
 #else /* !__NT__ */
     " _ [](){}+-*#%&=?|$~ ",
 #endif /* __NT__ */
