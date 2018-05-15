@@ -1525,7 +1525,10 @@ mixed find_file( string f, RequestID id )
     } else {
       // normalize_path() may have adjusted the case of
       // the destination filename, so restore it.
-      moveto = combine_path(moveto, "..", basename(new_uri));
+      moveto = combine_path(moveto, "..", encode_path(basename(new_uri)));
+#ifdef __NT__
+      moveto = replace(moveto, "/", "\\");
+#endif
 #endif
     }
 
