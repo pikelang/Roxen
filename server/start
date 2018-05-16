@@ -147,6 +147,9 @@ daemonize=yes
 
 remove_dumped_passed=no
 
+module_hot_reload=
+module_hot_reload_conf=
+
 remove_old_dot_o_files () {
   dp "Removing old precompiled files ($1)"
   # This really cannot be done from here anymore -- pass on an option
@@ -338,6 +341,17 @@ parse_args() {
       echo "Using default: 5" >&2
       GENERATIONS=5
     fi
+  ;;
+  --module-hot-reload=*)
+    if test "x$module_hot_reload" = "x"; then
+      DEFINES="-DMODULE_HOT_RELOAD $DEFINES"
+    fi
+    mod=`echo $1 | sed -e 's/--module-hot-reload=//'`
+    module_hot_reload="$mod $module_hot_reload"
+  ;;
+  --module-hot-reload-conf=*)
+    mod=`echo $1 | sed -e 's/--module-hot-reload-conf=//'`
+    module_hot_reload_conf="$mod $module_hot_reload_conf"
   ;;
   '--quiet'|'-q')
     verbose=0
@@ -570,6 +584,19 @@ the default arguments.
 
       .B--module-debugB.:             Enable more internal debug checks to
                                   simplify debugging of Roxen modules.
+
+      .B--module-hot-reload=<module-name>B.
+                                  Enable hot reload of .B<module-name>B.. The module
+                                  will be reloaded whenever the file is saved.
+                                  NOTE! This should ONLY be used in a development
+                                  environment. This flag can appear more than once.
+                                  .B<module-name>B. is the filename minus the extension
+                                  of the module.
+
+      .B--module-hot-reload-conf=<conf>B.
+                                  Set for which configuration .B--module-hot-reloadB.
+                                  should be applied. By default all module instances
+                                  in all configurations will be hot-reloaded.
 
       .B--mysql-log-queriesB.:        Instruct the MySQL server to log all
                                   queries so that they end up in the Roxen
@@ -1130,6 +1157,12 @@ if [ "$program" = "base_server/roxenloader.pike" ] ; then
   # Starting a Roxen server. Fix the pid file.
   [ -z "$pidfile" ] && pidfile="${ROXEN_PID_FILE:-$DIR/_roxen_pid}"
   pass="$pass --pid-file='`echo \"$pidfile\" | sed -e \"s/'/'\\\"'\\\"'/g\"`'"
+  if [ "x$module_hot_reload" != "x" ]; then
+    pass="$pass --module-hot-reload=\"$module_hot_reload\""
+  fi
+  if [ "x$module_hot_reload_conf" != "x" ]; then
+    pass="$pass --module-hot-reload-conf=\"$module_hot_reload_conf\""
+  fi
   # Check for stop.
   if [ "$stop"x != x ]
   then

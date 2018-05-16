@@ -101,6 +101,32 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
+//! @ignore
+array(string) query_hot_reload_modules()
+//! Returns an array of modules added for hot reloading via 
+//! @tt{--module-hot-reload=<modname>@}.
+{
+  if (hot_reload_modules) {
+    return map(replace(hot_reload_modules, " ", ",")/",", 
+               String.trim_all_whites) - ({ "" });
+  }
+
+  return ({});
+}
+
+array(string) query_hot_reload_modules_conf()
+//! Returns an array of modules added for hot reloading via 
+//! @tt{--module-hot-reload-conf=<conf>@}.
+{
+  if (hot_reload_modules_conf) {
+    return map(replace(hot_reload_modules_conf, " ", ",")/",", 
+               String.trim_all_whites) - ({ "" });
+  }
+
+  return 0;
+}
+//! @endignore
+
 array(string|int) filename_2 (program|object o)
 {
   if( objectp( o ) )
@@ -138,6 +164,9 @@ string filename( program|object o )
 }
 
 protected int once_mode;
+// String of modules added for hot reloading via --module-hot-reload=<mod>
+protected string hot_reload_modules;
+protected string hot_reload_modules_conf;
 
 // Note that 2.5 is a nonexisting version. It's only used for the
 // cache static optimization for tags such as <if> and <emit> inside
@@ -6661,6 +6690,8 @@ int main(int argc, array tmp)
   mark_fd(2, "Stderr");
 
   once_mode = (int)Getopt.find_option(argv, "o", "once");
+  hot_reload_modules = Getopt.find_option(argv, 0, "module-hot-reload");
+  hot_reload_modules_conf = Getopt.find_option(argv, 0, "module-hot-reload-conf");
 
   configuration_dir =
     Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
