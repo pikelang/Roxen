@@ -324,7 +324,8 @@ mixed configure_ext_db_con( string db, RequestID id )
                                  "'<tt>%s</tt>'</span> "
                                  "is not a valid database name. "
                                  "Please select another name.")+
-                               "</span>", id->variables->name );
+                               "</span>",
+                               Roxen.html_encode_string(id->variables->name));
            }
            else if( db != id->variables->name &&
                DBManager.get_db_url_info( id->variables->name ) )

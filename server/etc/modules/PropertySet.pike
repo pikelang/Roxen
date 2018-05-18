@@ -311,7 +311,7 @@ string|array(SimpleNode)|mapping(string:mixed)
     return get_response_headers()["Last-Modified"];
 
   case "DAV:lockdiscovery":	// RFC2518 13.8
-    return indices(id->conf->find_locks(abs_path, 0, 0, id))->get_xml();
+    return values(id->conf->find_locks(abs_path, 0, 0, id))->get_xml();
 
   case "DAV:resourcetype":	// RFC2518 13.9
     if ((get_stat()||([]))->isdir) {

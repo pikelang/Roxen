@@ -326,7 +326,8 @@ void start()
   stat_cache = query("stat_cache");
   internal_files = map(query("internal_files"), encode_path);
 
-  if (sizeof(path) && !has_suffix(path, "/")) path += "/";
+  // Expand cwd-relative paths, and ensure terminating slash.
+  path = combine_path(getcwd(), path, "./");
 
 #if constant(System.normalize_path)
   if (catch {
@@ -456,9 +457,28 @@ mixed stat_file( string f, RequestID id )
   /* No security currently in this function */
   fs = file_stat(norm_f);
   privs = 0;
+  if (fs && !(fs->ino)) {
+    /* NB: NT does not have a way to get a valid ino field before
+     *     Windows Server 2012. Substitute with a hash of the
+     *     normalized path.
+     *
+     * NB: Use %+4c to avoid bignums (which are not supported by
+     *     the ino field).
+     */
+    sscanf(Crypto.SHA256.hash(string_to_utf8(lower_case(f))), "%+4c", fs->ino);
+  }
   if(!stat_cache) return fs;
   cache_set("stat_cache", norm_f, ({fs}));
   return fs;
+}
+
+//! Normalize DAVLock path identifier.
+string resource_id(string path, RequestID|int(0..0) id)
+{
+  if ((< "Darwin", "Win32" >)[uname()->sysname]) {
+    return ::resource_id(lower_case(path), id);
+  }
+  return ::resource_id(path, id);
 }
 
 //! Convert to filesystem encoding.
@@ -470,10 +490,11 @@ string encode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
     p = Charset.encoder( path_encoding )->feed( p )->drain();
-#ifndef __NT__
+#if !defined(__NT__) || constant(Stdio.__HAVE_UTF8_FS__)
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
-#else
+#endif
+#ifdef __NT__
   // NB: stat() on NT doesn't like trailing slashes (cf [bug 76]).
   while( strlen(p) && p[-1] == '/' )
     p = p[..strlen(p)-2];
@@ -484,7 +505,7 @@ string encode_path( string p )
 //! Convert from filesystem encoding.
 string decode_path(string p)
 {
-#ifdef __NT__
+#if defined(__NT__) && !constant(Stdio.__HAVE_UTF8_FS__)
   // The filesystem on NT uses wide characters.
   return p;
 #else
@@ -499,13 +520,19 @@ string decode_path(string p)
   default:
     return Charset.decoder(path_encoding)->feed(p)->drain();
   }
-#endif /* !__NT__ */
+#endif /* !__NT__ || Stdio.__HAVE_UTF8_FS__ */
 }
 
 protected string low_real_path(string f, RequestID id)
 {
   string norm_f;
 
+#ifdef __NT__
+  // These characters are apparently invalid in NTFS filenames.
+  if (f != replace(f, "*?|"/"", ({ "", "", "" }))) {
+    return 0;
+  }
+#endif
   if (mixed err = catch {
       /* NOTE: NORMALIZE_PATH() may throw errors. */
       norm_f = NORMALIZE_PATH(path + encode_path(f));
@@ -568,7 +595,7 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
 			       "<h1>Permission to 'LOCK' files denied</h1>",
 			       id);
   }
-  register_lock(encode_path(path), lock, id);
+  register_lock(path, lock, id);
   return 0;
 }
 
@@ -583,7 +610,7 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0)
 			       "<h1>Permission to 'UNLOCK' files denied</h1>",
 			       id);
   }
-  unregister_lock(encode_path(path), lock, id);
+  unregister_lock(path, lock, id);
   return 0;
 }
 
@@ -613,7 +640,7 @@ protected variant mapping(string:mixed)|int(0..1) write_access(string path,
 				       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
-  return ::write_access(encode_path(path), recursive, id);
+  return ::write_access(path, recursive, id);
 }
 
 array find_dir( string f, RequestID id )
@@ -684,16 +711,19 @@ void recursive_rm(string real_dir, string virt_dir,
     string virt_fname = virt_dir + "/" + decode_path(fname);
 
     Stat stat = file_stat(real_fname);
+    SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
+		       stat?(stat->isdir?"directory":"file"):"missing",
+		       real_fname);
     if (!stat) {
       id->set_status_for_path(virt_fname, 404);
       TRACE_LEAVE("File not found.");
       continue;
     }
-    SIMPLE_TRACE_ENTER(this, "Deleting %s %O.",
-		       stat->isdir?"directory":"file", real_fname);
+    if (stat->isdir) {
+      virt_fname += "/";
+    }
     int(0..1)|mapping sub_status;
-    if (check_status_needed &&
-	mappingp(sub_status = write_access(virt_fname, 1, id))) {
+    if (mappingp(sub_status = write_access(virt_fname, 1, id))) {
       id->set_status_for_path(virt_fname, sub_status->error);
       TRACE_LEAVE("Write access denied.");
       continue;
@@ -722,6 +752,8 @@ void recursive_rm(string real_dir, string virt_dir,
 #endif
     } else {
       deletes++;
+
+      unlock_path(virt_fname, id);
 
       if (id->misc->quota_obj && stat->isreg()) {
 	id->misc->quota_obj->deallocate(virt_fname,
@@ -862,6 +894,19 @@ int contains_symlinks(string root, string path)
   return(0);
 }
 
+//! Return @expr{1@} if both arguments refer to the same inode.
+int is_same_inode(Stdio.Stat a_st, Stdio.Stat b_st)
+{
+  if (a_st == b_st) return 1;
+  if ((a_st->mode == b_st->mode) &&
+      (a_st->size == b_st->size) &&
+      (a_st->ino == b_st->ino) &&
+      (a_st->dev == b_st->dev)) {
+    return 1;
+  }
+  return 0;
+}
+
 //! @[chmod()] that doesn't throw errors.
 string safe_chmod(string path, int mask)
 {
@@ -903,7 +948,7 @@ mapping make_collection(string coll, RequestID id)
 
   // Disallow if the name is locked, or if the parent directory is locked.
   mapping(string:mixed) ret =
-    write_access(({coll, combine_path(coll, "..")}), 0, id);
+    write_access(({coll + "/", combine_path(coll, "../")}), 0, id);
   if (ret) return ret;
 
   mkdirs++;
@@ -974,10 +1019,31 @@ mixed find_file( string f, RequestID id )
     return Roxen.http_status(403, "Access forbidden by user");
   }
 
+#ifdef __NT__
+  foreach(f/"/", string segment) {
+    if (has_suffix(segment, " ")) {
+      // Path segments on NT may not end with space.
+      return Roxen.http_status(405, "Invalid filesystem path.");
+    }
+  }
+#endif
+
   // NOTE: Sets id->misc->stat.
   size = _file_size( f, id );
 
   FILESYSTEM_WERR(sprintf("_file_size(%O, %O) ==> %d\n", f, id, size));
+
+  if(!id->misc->internal_get) {
+    if (!dotfiles && sizeof(filter(f/"/", has_prefix, "."))) {
+      TRACE_LEAVE("Path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE (f, id)) {
+      id->misc->error_code = 405;
+      TRACE_LEAVE ("Is internal file");
+      return 0;
+    }
+  }
 
   /*
    * FIXME: Should probably move path-info extraction here.
@@ -1006,22 +1072,6 @@ mixed find_file( string f, RequestID id )
       if( f[ -1 ] == '/' ||	/* Trying to access file with '/' appended */
 	  !norm_f) {		/* Or a file that is not normalizable. */
 	return 0;
-      }
-
-      if(!id->misc->internal_get) 
-      {
-	if (!dotfiles
-	    && sizeof (tmp = (id->not_query/"/")[-1])
-	    && tmp[0] == '.') 
-        {
-	  TRACE_LEAVE("Is .-file");
-	  return 0;
-	}
-	if (FILTER_INTERNAL_FILE (f, id)) 
-        {
-	  TRACE_LEAVE ("Is internal file");
-	  return 0;
-	}
       }
 
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
@@ -1080,19 +1130,17 @@ mixed find_file( string f, RequestID id )
     /* FALL_THROUGH */
   case "MKDIR":
 #if 1
-    return make_collection(f, id);
+    mixed ret = make_collection(f, id);
+    if (ret) return ret;
+    if (id->misc->error_code) {
+      return Roxen.http_status(id->misc->error_code);
+    }
+    return 0;
 #else /* !1 */
     if(!query("put"))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE(sprintf("%s disallowed (since PUT is disallowed)",
-			  id->method));
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE(sprintf("%s disallowed (since the dir name matches internal file glob)",
 			  id->method));
       return 0;
     }
@@ -1107,7 +1155,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(f + "/", 0, id)) {
       TRACE_LEAVE("MKCOL: Write access denied.");
       return ret;
     }
@@ -1125,10 +1173,10 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
+    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
+
     code = mkdir(f);
     int err_code = errno();
-
-    TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
     if (code) {
       string msg = safe_chmod(f, 0777 & ~(id->misc->umask || 022));
@@ -1145,13 +1193,12 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_string_answer("Ok");
     } else {
       privs = 0;
-      SIMPLE_TRACE_LEAVE("%s: Failed (errcode:%d)", id->method, errcode);
+      SIMPLE_TRACE_LEAVE("%s: Failed (err: %d: %s)",
+			 id->method, err_code, strerror(err_code));
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
 	if (err_code ==
 #if constant(System.ENOENT)
-	    System.ENOENT
-#elif constant(System.ENOENT)
 	    System.ENOENT
 #else
 	    2
@@ -1175,15 +1222,18 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("PUT of internal file is disallowed");
-      return 0;
-    }
-
     if (mapping(string:mixed) ret = write_access(f, 0, id)) {
       TRACE_LEAVE("PUT: Locked");
       return ret;
+    }
+
+    if (size == -2) {
+      // RFC 4918 9.7.2:
+      // A PUT request to an existing collection MAY be treated as an
+      // error (405 Method Not Allowed).
+      id->misc->error_code = 405;
+      TRACE_LEAVE("PUT: Is directory.");
+      return 0;
     }
 
     puts++;
@@ -1204,34 +1254,35 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    SETUID_TRACE("Saving file", 0);
-
-    rm(norm_f);
-    mkdirhier(norm_f);
-
-    if (id->misc->quota_obj) {
-      QUOTA_WERR("Checking if the file already existed.");
-      if (size > 0) {
-	QUOTA_WERR("Deallocating " + size + "bytes.");
-	id->misc->quota_obj->deallocate(URI, size);
-      }
-    }
-
-    object to = Stdio.File();
-
     TRACE_ENTER("PUT: Accepted", 0);
 
-    /* Clear the stat-cache for this file */
-    if (stat_cache) {
-      cache_set("stat_cache", norm_f, 0);
-    }
+    SETUID_TRACE("Saving file", 0);
 
+    object to = Stdio.File();
     if(!to->open(norm_f, "wct", 0666))
     {
       int err = to->errno();
       privs = 0;
       TRACE_LEAVE("PUT: Open failed");
-      return errno_to_status (err, 1, id);
+      mixed ret = errno_to_status (err, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+        return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
+    }
+
+    if (id->misc->quota_obj) {
+      QUOTA_WERR("Checking if the file already existed.");
+      if (size > 0) {
+        QUOTA_WERR("Deallocating " + size + "bytes.");
+        id->misc->quota_obj->deallocate(URI, size);
+      }
+    }
+
+    /* Clear the stat-cache for this file */
+    if (stat_cache) {
+      cache_set("stat_cache", norm_f, 0);
     }
 
     // FIXME: Race-condition.
@@ -1287,12 +1338,6 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("CHMOD disallowed (since PUT is disallowed)");
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("CHMOD of internal file is disallowed");
       return 0;
     }
 
@@ -1367,12 +1412,24 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+#ifdef __NT__
+    foreach(id->misc->move_from/"/", string segment) {
+      if (has_suffix(segment, " ")) {
+	// Path segments on NT may not end with space.
+        return Roxen.http_status(405, "MV: Invalid filesystem path.");
+      }
+    }
+#endif
+
     string relative_from = id->misc->move_from[sizeof(mountpoint)..];
 
-    if (FILTER_INTERNAL_FILE (movefrom, id) ||
-	FILTER_INTERNAL_FILE (f, id)) {
+    if (!dotfiles && sizeof(filter(relative_from/"/", has_prefix, "."))) {
+      TRACE_LEAVE("From-path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE(relative_from, id)) {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MV to or from internal file is disallowed");
+      TRACE_LEAVE("MV from internal file is disallowed.");
       return 0;
     }
 
@@ -1384,9 +1441,9 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    // FIXME: What about moving of directories containing locked files?
+    // NB: Consider the case of moving of directories containing locked files.
     if (mapping(string:mixed) ret =
-	write_access(({ f, relative_from }), 0, id)) {
+	write_access(({ f, relative_from }), 1, id)) {
       TRACE_LEAVE("MV: Locked");
       return ret;
     }
@@ -1443,6 +1500,15 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+#ifdef __NT__
+    foreach(new_uri/"/", string segment) {
+      if (has_suffix(segment, " ")) {
+	// Path segments on NT may not end with space.
+	return Roxen.http_status(405, "MOVE: Invalid filesystem path.");
+      }
+    }
+#endif
+
     // FIXME: The code below doesn't allow for this module being overloaded.
     if (!has_prefix(new_uri, mountpoint)) {
       id->misc->error_code = 405;
@@ -1450,17 +1516,29 @@ mixed find_file( string f, RequestID id )
       return(0);
     }
     new_uri = new_uri[sizeof(mountpoint)..];
-    string moveto = path + "/" + encode_path(new_uri);
+    string moveto = real_path(new_uri, id);
 
     // Workaround for Linux, Tru64 and FreeBSD.
     if (has_suffix(moveto, "/")) {
       moveto = moveto[..sizeof(moveto)-2];
+#if constant(System.normalize_path)
+    } else {
+      // normalize_path() may have adjusted the case of
+      // the destination filename, so restore it.
+      moveto = combine_path(moveto, "..", encode_path(basename(new_uri)));
+#ifdef __NT__
+      moveto = replace(moveto, "/", "\\");
+#endif
+#endif
     }
 
-    if (FILTER_INTERNAL_FILE (f, id) ||
-	FILTER_INTERNAL_FILE (new_uri, id)) {
+    if (!dotfiles && sizeof(filter(new_uri/"/", has_prefix, "."))) {
+      TRACE_LEAVE("Path contains .-file or .-directory.");
+      return 0;
+    }
+    if (FILTER_INTERNAL_FILE (new_uri, id)) {
       id->misc->error_code = 405;
-      TRACE_LEAVE("MOVE to or from internal file is disallowed");
+      TRACE_LEAVE("MOVE to internal file is disallowed");
       return 0;
     }
 
@@ -1473,25 +1551,39 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    mapping(string:mixed) ret =
-      write_access(({ combine_path(f, "../"), f, new_uri }), 0, id);
+    // NB: Consider the case of moving of directories containing locked files.
+    mapping(string:mixed) ret = write_access(({ f, new_uri }), 1, id);
     if (ret) {
       TRACE_LEAVE("MOVE: Locked");
       return ret;
     }
+    ret = write_access(combine_path(f, "../"), 0, id);
+    if (ret) {
+      TRACE_LEAVE("MOVE: Parent directory locked");
+      return ret;
+    }
 
-    size = _file_size(moveto,id);
+    if (norm_f == moveto) {
+      privs = 0;
+      errors++;
+      TRACE_LEAVE("MOVE: Source and destination are the same path.");
+      return Roxen.http_status(403, "Permission denied.");
+    }
+
+    size = _file_size(new_uri, id);
 
     SETUID_TRACE("Moving file", 0);
 
     if (size != -1) {
       // Destination exists.
 
+      TRACE_ENTER(sprintf("Destination exists: %d\n", size), 0);
       int(0..1) overwrite =
 	!id->request_headers->overwrite ||
 	id->request_headers->overwrite == "T";
       if (!overwrite) {
 	privs = 0;
+	TRACE_LEAVE("");
 	TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
 	return Roxen.http_status(412);
       }
@@ -1499,20 +1591,29 @@ mixed find_file( string f, RequestID id )
       {
 	privs = 0;
 	id->misc->error_code = 405;
+	TRACE_LEAVE("");
 	TRACE_LEAVE("MOVE disallowed (DELE disabled)");
 	return 0;
       }
-      
+      TRACE_LEAVE("Overwrite allowed.");
       if (overwrite || (size > -1)) {
-	mapping(string:mixed) res =
-	  recurse_delete_files(new_uri, id);
-	if (res && (!sizeof (res) || res->error >= 300)) {
-	  privs = 0;
-	  TRACE_LEAVE("MOVE: Recursive delete failed.");
-	  if (sizeof (res))
-	    set_status_for_path (new_uri, res->error, res->rettext);
-	  return ([]);
-	}
+        Stdio.Stat src_st = stat_file(f, id);
+        Stdio.Stat dst_st = stat_file(new_uri, id);
+        // Check that src and dst refers to different inodes.
+        // Needed on case insensitive filesystems.
+        if (!is_same_inode(src_st, dst_st)) {
+          TRACE_ENTER(sprintf("Deleting destination: %O...\n", new_uri), 0);
+          mapping(string:mixed) res = recurse_delete_files(new_uri, id);
+          if (res && (!sizeof (res) || res->error >= 300)) {
+            privs = 0;
+            TRACE_LEAVE("");
+            TRACE_LEAVE("MOVE: Recursive delete failed.");
+            if (sizeof (res))
+              set_status_for_path(new_uri, id, res->error, res->rettext);
+            return ([]);
+          }
+          TRACE_LEAVE("Recursive delete ok.");
+        }
       } else {
 	privs = 0;
 	TRACE_LEAVE("MOVE: Cannot overwrite directory");
@@ -1520,9 +1621,12 @@ mixed find_file( string f, RequestID id )
       }
     }
 
+    TRACE_ENTER(sprintf("MOVE: mv(%O, %O)...\n", norm_f, moveto), 0);
     code = mv(norm_f, moveto);
     int err_code = errno();
     privs = 0;
+    TRACE_LEAVE(sprintf("==> %d (errno: %d: %s)\n",
+			code, err_code, strerror(err_code)));
 
     TRACE_ENTER("MOVE: Accepted", 0);
 
@@ -1537,7 +1641,12 @@ mixed find_file( string f, RequestID id )
     if(!code)
     {
       SIMPLE_TRACE_LEAVE("MOVE: Move failed (%s)", strerror (err_code));
-      return errno_to_status (err_code, 1, id);
+      mixed ret = errno_to_status (err_code, 1, id);
+      if (ret) return ret;
+      if (id->misc->error_code) {
+	return Roxen.http_status(id->misc->error_code);
+      }
+      return 0;
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
@@ -1555,12 +1664,6 @@ mixed find_file( string f, RequestID id )
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("DELETE: Disabled");
-      return 0;
-    }
-
-    if (FILTER_INTERNAL_FILE (f, id)) {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("DELETE of internal file is disallowed");
       return 0;
     }
 
@@ -1618,6 +1721,8 @@ mixed find_file( string f, RequestID id )
 	  TRACE_LEAVE("DELETE: Partial failure.");
 	  return ([]);
 	}
+      } else {
+	unlock_path(f, id);
       }
     } else {
       mapping|int(0..1) res =
@@ -1649,6 +1754,8 @@ mixed find_file( string f, RequestID id )
       }
       privs = 0;
       deletes++;
+
+      unlock_path(f, id);
 
       if (id->misc->quota_obj && (size > 0)) {
 	id->misc->quota_obj->deallocate(URI, size);
@@ -1694,6 +1801,16 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   Stat dest_st = stat_file(dest, id);
   if (dest_st) {
     SIMPLE_TRACE_ENTER (this, "COPY: Destination exists");
+    if (is_same_inode(source_st, dest_st)) {
+      TRACE_LEAVE("Source and destination are the same inode.");
+      TRACE_LEAVE("");
+      return Roxen.http_status(403, "Permission denied.");
+    }
+    if (has_prefix(source, dest)) {
+      TRACE_LEAVE("Destination contains source.");
+      TRACE_LEAVE("");
+      return Roxen.http_status(403, "Permission denied.");
+    }
     switch(overwrite) {
     case NEVER_OVERWRITE:
       TRACE_LEAVE("");
@@ -1735,6 +1852,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	    TRACE_LEAVE("");
 	    return ([]);
 	  }
+	} else {
+	  unlock_path(dest, id);
 	}
 	SIMPLE_TRACE_LEAVE("COPY: Delete ok.");
       } else if (source_st->isdir) {
@@ -1752,6 +1871,8 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion failed (destination disappeared).");
 	} else {
 	  SIMPLE_TRACE_LEAVE("COPY: File deletion ok.");
+
+	  unlock_path(dest, id);
 	}
       } else {
 	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
@@ -1774,6 +1895,11 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
   }
 
   if (source_st->isdir) {
+    if (has_prefix(dest, source)) {
+      TRACE_LEAVE("Source contains destination.");
+      return Roxen.http_status(403, "Permission denied.");
+    }
+
     mkdirs++;
     object privs;
     SETUID_TRACE("Creating directory/collection", 0);

@@ -750,11 +750,104 @@ void unregister_urls()
   registered_urls = ({});
 }
 
+private mapping(RoxenModule:ModuleChangedMonitor)
+  module_changed_monitors = ([]);
+
+#if constant(Filesystem.Monitor.symlinks)
+
+private class ModuleChangedMonitor
+{
+  inherit Filesystem.Monitor.symlinks;
+
+  protected constant default_max_dir_check_interval = 60;
+  protected constant default_file_interval_factor = 1;
+  protected constant default_stable_time = 0;
+
+  RoxenModule mod;
+
+  void create(RoxenModule mod)
+  {
+    ::create();
+    set_nonblocking(1);
+    this::mod = mod;
+  }
+
+  bool is_called = false;
+  void stable_data_change(string p, Stdio.Stat st) {
+    // This will be called on server start, so skip that.
+    if (!is_called) {
+      is_called = true;
+      return;
+    }
+
+    if (mod) {
+      mod = reload_module(mod->module_local_id());
+    }
+  }
+}
+
+void register_module_hot_reload(RoxenModule mod)
+//! Hot-reload a module when the source file is changed, e.g. reload the module
+//! automatically without having to click the Reload button in the Admin
+//! Interface.
+//!
+//! This will only have effect if the server is started with @tt{--debug@} or
+//! @tt{--module-debug@} (@tt{--once@}). This can also be initalized from the 
+//! command line with @tt{./start --once --module-hot-reload=my-module@}, which
+//! is the preferred way of enabling hot reload. 
+//!
+//! @param mod
+//!  The module to enable hot reloading for
+{
+#if defined(DEBUG) || defined(MODULE_DEBUG) || defined(MODULE_HOT_RELOAD)
+
+  // Already monitored
+  if (module_changed_monitors[mod]) {
+    return;
+  }
+
+  ModuleChangedMonitor fsw;
+  // Is this one of these "relying on the interpret lock"?
+  fsw = module_changed_monitors[mod] = ModuleChangedMonitor(mod);
+
+  string path = roxen->filename(mod);
+
+  if (!fsw->is_monitored(path)) {
+    report_debug(" Adding hot reload monitor for %O.\n", mod);
+    fsw->monitor(path);
+  }
+
+#endif // defined(...)
+}
+
+void unregister_module_hot_reload(RoxenModule mod)
+//! Unregister the hot reload monitor for module @[mod].
+{
+  if (ModuleChangedMonitor mon = m_delete(module_changed_monitors, mod)) {
+    report_debug("Removing hot reload monitor for %O.\n", mod);
+    mon->clear();
+    destruct(mon);
+  }
+}
+
+#else /* Filesystem.Monitor.symlinks */
+
+//! @ignore
+private class ModuleChangedMonitor {}
+void register_module_hot_reload(RoxenModule mod){}
+void unregister_module_hot_reload(RoxenModule mod){}
+//! @endignore
+
+#endif /* !Filesystem.Monitor.symlinks */
+
+
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop &&
 			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
+
+  unregister_module_hot_reload(mod);
 }
 
 private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
@@ -1115,7 +1208,9 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = roxen.LogFile(logfile, query("LogFileCompressor"))->write;
+      log_function = roxen.LogFile(logfile,
+                                   query("LogFileCompressor"),
+                                   [int] query("DaysToKeepLogFiles"))->write;
   }
 }
 
@@ -1756,6 +1851,11 @@ string examine_return_mapping(mapping m)
 	 break;
 
       case 200:
+	 // NB: Note the setting of extra_heads above.
+	 if (sizeof(m) <= 1) {
+	   res = "Returned multi status. ";
+	   break;
+	 }
 	 res = "Returned ok. ";
 	 break;
 
@@ -1789,12 +1889,12 @@ string examine_return_mapping(mapping m)
 }
 
 //! Find all applicable locks for this user on @[path].
-multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
-			     int(0..1) exclude_shared, RequestID id)
+mapping(string:DAVLock) find_locks(string path, int(-1..1) recursive,
+				   int(0..1) exclude_shared, RequestID id)
 {
   SIMPLE_TRACE_ENTER(0, "find_locks(%O, %O, %O, X)",
 		     path, recursive, exclude_shared);
-  multiset(DAVLock) locks = (<>);
+  mapping(string:DAVLock) locks = ([]);
 
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
@@ -1815,7 +1915,7 @@ multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
     }
     TRACE_ENTER(sprintf("subpath: %O", subpath),
 		function_object(func)->find_locks);
-    multiset(DAVLock) sub_locks =
+    mapping(string:DAVLock) sub_locks =
       function_object(func)->find_locks(subpath, recursive,
 					exclude_shared, id);
     TRACE_LEAVE("");
@@ -1830,44 +1930,85 @@ multiset(DAVLock) find_locks(string path, int(-1..1) recursive,
   return locks;
 }
 
-//! Check if there are any applicable locks for this user on @[path].
-DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
+//! Check that all locks that apply to @[path] for the user the request
+//! is authenticated as have been mentioned in the if-header.
+//!
+//! WARNING: This function has some design issues and will very likely
+//! get a different interface. Compatibility is NOT guaranteed.
+//!
+//! @param path
+//!   Normalized path below the filesystem location.
+//!
+//! @param recursive
+//!   If @expr{1@} also check recursively under @[path] for locks.
+//!
+//! @returns
+//!   Returns one of
+//!   @mixed
+//!     @type int(0..0)
+//!       Zero if not locked, or all locks were mentioned.
+//!     @type mapping(zero:zero)
+//!       An empty mapping if @[recursive] was true and there
+//!       were unmentioned locks on paths with @[path] as a prefix.
+//!       The missing locks are registered in the multistatus for
+//!       the @[id] object.
+//!     @type mapping(string:mixed)
+//!       A @[Protocols.HTTP.DAV_LOCKED] error status in all other cases.
+//!   @endmixed
+//!
+//! @note
+//! @[DAVLock] objects may be created if the filesystem has some
+//! persistent storage of them. The default implementation does not
+//! store locks persistently.
+mapping(string:mixed)|int(-1..0) check_locks(string path,
+					     int(0..1) recursive,
+					     RequestID id)
 {
-  LockFlag state = 0;
-  foreach(location_module_cache||location_modules(),
-	  [string loc, function func])
-  {
-    string subpath;
-    int check_above;
-    if (has_prefix(path, loc)) {
-      // path == loc + subpath.
-      subpath = path[sizeof(loc)..];
-    } else if (recursive && has_prefix(loc, path)) {
-      // loc == path + ignored.
-      subpath = "";
-      check_above = 1;
-    } else {
-      // Does not apply to this location module.
-      continue;
-    }
-    int/*LockFlag*/|DAVLock lock_info =
-      function_object(func)->check_locks(subpath, recursive, id);
-    if (objectp(lock_info)) {
-      if (!check_above) {
-	return lock_info;
-      } else {
-	lock_info = LOCK_OWN_BELOW; // We have a lock on some subpath.
-      }
-    }
-    else
-      if (check_above && (lock_info & 1))
-	// Convert LOCK_*_AT to LOCK_*_BELOW.
-	lock_info &= ~1;
-    if (lock_info > state) state = lock_info;
-    if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
-    if (function_object(func)->webdav_opaque) break;
+  TRACE_ENTER(sprintf("check_locks(%O, %d, X)", path, recursive), this);
+
+  mapping(string:DAVLock) locks = find_locks(path, recursive, 0, id);
+  // Common case.
+  if (!sizeof(locks)) {
+    TRACE_LEAVE ("Got no locks.");
+    return 0;
   }
-  return state;
+
+  mapping(string:array(array(array(string)))) if_data = id->get_if_data();
+  if (if_data) {
+    foreach(if_data[0], array(array(string)) tokens) {
+      m_delete(locks, tokens[0][1]);
+    }
+
+    if (!sizeof(locks)) {
+      TRACE_LEAVE ("All locks unlocked.");
+      return 0;
+    }
+  }
+
+  // path = id->not_query;
+  if (!has_suffix(path, "/")) path += "/";
+  mapping(string:mixed) ret =
+    Roxen.http_dav_error(Protocols.HTTP.DAV_LOCKED, "lock-token-submitted");
+  foreach(locks;;DAVLock lock) {
+    TRACE_ENTER(sprintf("Checking lock %O against %O.", lock, path), 0);
+    // NB: We can't perform a string comparison here, as we don't
+    //     know whether the path is case-sensitive or not. But as
+    //     we know that all lock paths are on the path to or through
+    //     `path`, a comparison of the string lengths is sufficient.
+    if (sizeof(lock->path) <= sizeof(path)) {
+      TRACE_LEAVE("Direct lock.");
+      TRACE_LEAVE("Locked.");
+      return ret;
+    }
+    if (lock->is_file) {
+      id->set_status_for_path(lock->path[..<1], ret);
+    } else {
+      id->set_status_for_path(lock->path, ret);
+    }
+    TRACE_LEAVE("Added to multi status.");
+  }
+  TRACE_LEAVE("Multi status.");
+  return ([]);
 }
 
 protected multiset(DAVLock) active_locks = (<>);
@@ -1980,32 +2121,48 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 					array(Parser.XML.Tree.Node) owner,
 					RequestID id)
 {
+  TRACE_ENTER(sprintf("%O(%O, %O, %O, %O, %O, %O, %O)",
+		      this_function, path, recursive, lockscope,
+		      locktype, expiry_delta, owner, id), 0);
+
+  int is_file;
+
   // Canonicalize path.
-  if (!has_suffix(path, "/")) path+="/";
+  if (!has_suffix(path, "/")) {
+    path+="/";
+    is_file = 1;
+  }
 
-  // First check if there's already some lock on path that prevents
+  // FIXME: Race conditions!
+
+  int fail;
+
+  // First check if there's already some lock on the path that prevents
   // us from locking it.
-  int/*LockFlag*/|DAVLock lock_info = check_locks(path, recursive, id);
+  mapping(string:DAVLock) locks = find_locks(path, recursive, 0, id);
 
-  if (!intp(lock_info)) {
-    // We already hold a lock that prevents us.
-    if (id->request_headers->if) {
-      return Roxen.http_status(412, "Precondition Failed");
-    } else {
-      return Roxen.http_status(423, "Locked");
+  foreach(locks; string lock_token; DAVLock lock) {
+    TRACE_ENTER(sprintf("Checking lock %O...\n", lock), 0);
+    if ((lock->lockscope == "DAV:exclusive") ||
+	(lockscope == "DAV:exclusive")) {
+      TRACE_LEAVE("Locked.");
+      id->set_status_for_path(lock->path, 423, "Locked");
+      fail = 1;
     }
-  } else if (lockscope == "DAV:exclusive" ?
-	     lock_info >= LOCK_SHARED_BELOW :
-	     lock_info >= LOCK_OWN_BELOW) {
-    // Some other lock prevents us.
-    return Roxen.http_status(423, "Locked");
+    TRACE_LEAVE("Shared.");
+  }
+
+  if (fail) {
+    TRACE_LEAVE("Fail.");
+    return ([]);
   }
 
   // Create the new lock.
 
-  string locktoken = "opaquelocktoken:" + roxen->new_uuid_string();
+  string locktoken = "urn:uuid:" + roxen->new_uuid_string();
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 expiry_delta, owner);
+  lock->is_file = is_file;
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
@@ -2021,6 +2178,8 @@ mapping(string:mixed)|DAVLock lock_file(string path,
       continue;
     }
 
+    TRACE_ENTER(sprintf("Calling %O->lock_file(%O, %O, %O)...",
+			function_object(func), subpath, lock, id), 0);
     mapping(string:mixed) lock_error =
       function_object(func)->lock_file(subpath, lock, id);
     if (lock_error) {
@@ -2041,8 +2200,10 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 	if (func == func2) break;
       }
       // destruct(lock);
+      TRACE_LEAVE(sprintf("Lock error: %O", lock_error));
       return lock_error;
     }
+    TRACE_LEAVE("Ok.");
     if (function_object(func)->webdav_opaque) break;
   }
 
@@ -2059,7 +2220,42 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   }
 
   // Success.
+  TRACE_LEAVE("Success.");
   return lock;
+}
+
+//! Returns the value of the specified property, or an error code
+//! mapping.
+//!
+//! @note
+//!   Returning a string is shorthand for returning an array
+//!   with a single text node.
+//!
+//! @seealso
+//!   @[query_property_set()]
+string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
+  query_property(string path, string prop_name, RequestID id)
+{
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    if (!has_prefix(path, loc)) {
+      // Does not apply to this location module.
+      continue;
+    }
+
+    // path == loc + subpath.
+    string subpath = path[sizeof(loc)..];
+
+    string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed) res =
+      function_object(func)->query_property(subpath, prop_name, id);
+    if (mappingp(res) && (res->error == 404)) {
+      // Not found in this module; try the next.
+      continue;
+    }
+    return res;
+  }
+  return Roxen.http_status(Protocols.HTTP.HTTP_NOT_FOUND, "No such property.");
 }
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
@@ -2600,6 +2796,22 @@ protected string combine_combiners(string s)
   return Unicode.normalize(s, "NFC");
 }
 
+//! Get a directory listing for the virtual path @[file].
+//!
+//! @param file
+//!   Path in the virtual filesystem.
+//!
+//! @param id
+//!   @[RequestID] for the request.
+//!
+//! @param verbose
+//!   Also list virtual lock files.
+//!
+//! @returns
+//!   Returns an array with all visible files in the specified
+//!   directory if it exists, and @expr{0@} (zero) otherwise.
+//!   Any filesystem encoding of the filenames has been decoded,
+//!   and they have also been Unicode-NFC normalized.
 array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
 {
   array dir;
@@ -2647,6 +2859,7 @@ array(string) find_dir(string file, RequestID id, void|int(0..1) verbose)
       TRACE_LEAVE("");
       if(err)
 	throw(err);
+
       if (arrayp(dir)) {
 	return map(dir, combine_combiners);
       }
@@ -3161,7 +3374,16 @@ protected RequestID make_fake_id (string s, RequestID id)
   fake_id->misc->common = id->misc->common;
   fake_id->conf = this_object();
 
-  fake_id->raw_url=s;
+  // HTTP transport encode the path.
+  // NB: This is required to make scan_for_query() happy.
+  s = string_to_utf8(s);
+  sscanf(s, "%s?%s", string path, string query);
+  s = map((path || s) / "/", Protocols.HTTP.percent_encode) * "/";
+  if (query) {
+    s += "?" + query;
+  }
+
+  fake_id->raw_url = s;
 
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
@@ -3171,6 +3393,8 @@ protected RequestID make_fake_id (string s, RequestID id)
     s = fake_id->scan_for_query (s);
 
   s = http_decode_string(s);
+
+  catch { s = utf8_to_string(s); };
 
   s = Roxen.fix_relative (s, id);
 
@@ -4650,15 +4874,34 @@ void low_init(void|int modules_already_enabled)
 //      roxenloader.pop_compile_error_handler();
     forcibly_added = ([]);
   }
-    
-  foreach( ({this_object()})+indices( otomod ), RoxenModule mod )
-    if( mod->ready_to_receive_requests )
+
+#ifdef MODULE_HOT_RELOAD
+  array(string) hot_mods = roxen->query_hot_reload_modules();
+  array(string) hot_confs = roxen->query_hot_reload_modules_conf();
+#endif
+
+  foreach( ({this_object()})+indices( otomod ), RoxenModule mod ) {
+    if( mod->ready_to_receive_requests ) {
       if( mixed q = catch( mod->ready_to_receive_requests( this_object() ) ) ) {
         report_error( "While calling ready_to_receive_requests in "+
                       otomod[mod]+":\n"+
                       describe_backtrace( q ) );
 	got_no_delayed_load = -1;
       }
+    }
+
+#ifdef MODULE_HOT_RELOAD
+    if (has_index(mod, "is_module") &&
+        (!hot_confs || has_value(hot_confs, name)))
+    {
+      sscanf (mod->module_local_id(), "%s#", string mod_name);
+
+      if (has_value(hot_mods, mod_name)) {
+        register_module_hot_reload(mod);
+      }
+    }
+#endif
+  }
 
   foreach( after_init_hooks, function q )
     if( mixed w = catch( q(this_object()) ) ) {
@@ -5221,6 +5464,15 @@ below.</p>
 		 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
 		 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
 	 0, lambda(){ return !query("Log");});
+
+  defvar("DaysToKeepLogFiles", 0,
+    DLOCALE(0, "Logging: Number of days to keep log files"), TYPE_INT,
+    DLOCALE(0, "Log files in the log directory older than specified number of "
+      "days will automatically be deleted. Set to <tt>0</tt> (<tt>zero</tt>) "
+      "to disable and keep log files forever. Currently active log file will "
+      "never be deleted, nor will files with names not matching the pattern "
+      "specified under <b>Log file</b>."))
+    ->set_range(0, Variable.no_limit);;
   
   defvar("NoLog", ({ }),
 	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,

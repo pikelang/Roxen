@@ -626,6 +626,52 @@ mapping(string:mixed) http_status (int status_code,
   }
 }
 
+mapping(string:mixed) http_xml_status(int status_code,
+				      Parser.XML.Tree.SimpleNode message)
+//! Return a response mapping with the specified HTTP @[status_code] and
+//! XML @[message]. As opposed to @[http_status()], the @[message] is XML
+//! which can be included directly into multistatus responses in WebDAV.
+{
+  mapping ret = ([
+    "error": status_code,
+    "xml": message,
+    "type": "application/xml; charset='utf-8'",
+  ]);
+
+  Parser.XML.Tree.SimpleRootNode root = Parser.XML.Tree.SimpleRootNode()->
+    add_child(Parser.XML.Tree.SimpleHeaderNode((["version": "1.0",
+						 "encoding": "utf-8"])))->
+    add_child(message);
+  ret->data = root->render_xml();
+
+  HTTP_WERR("Return XML status " + status_code);
+  return ret;
+}
+
+mapping(string:mixed) http_dav_error(int status_code, string error_type)
+//! Return a response mapping with the specified HTTP @[status_code] and
+//! XML message.
+//!
+//! @param status_code
+//!   HTTP status code, typically one of @expr{409@} (Conflict),
+//!   @expr{423@} (Locked) or @expr{403@} (Forbidden).
+//!
+//! @param error_type
+//!   Name of DAV XML error node to generate. It will be embedded
+//!   as the single element in a @tt{DAV:error@} element.
+//!
+//! This function simplifies some common cases where @[http_xml_status()]
+//! would otherwise be used.
+//!
+//! @seealso
+//!   @[http_xml_status()]
+{
+  Parser.XML.Tree.SimpleNode node =
+    Parser.XML.Tree.SimpleElementNode("DAV:error", ([]))->
+    add_child(Parser.XML.Tree.SimpleElementNode("DAV:" + error_type, ([])));
+  return http_xml_status(status_code, node);
+}
+
 mapping(string:mixed) http_method_not_allowed (
   string allowed_methods, void|string message, mixed... args)
 //! Make a HTTP 405 method not allowed response with the required
@@ -5880,6 +5926,34 @@ class Compat51Null
 Compat51Null compat_5_1_null = Compat51Null();
 
 
+mapping(string:string) thread_names = ([]);
+
+string thread_name_from_addr(string hex_addr)
+{
+  //  Lookup using a key like "Thread.Thread(0x...)" that matches what
+  //  sprint("%O") generates.
+  string th_key = "Thread.Thread(" + hex_addr + ")";
+  return thread_names[th_key];
+}
+
+string thread_name( object thread, int|void skip_auto_name )
+{
+  string tn;
+  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
+    return thread_names[tn];
+  return tn;
+}
+
+void name_thread( object thread, string name )
+{
+  string th_key = sprintf("%O", thread);
+  if (name)
+    thread_names[th_key] = name;
+  else
+    m_delete(thread_names, th_key);
+}
+
+
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,
 			    string|int name_or_time, int enter)
@@ -6243,14 +6317,14 @@ class LogPipe
 
   protected void log_pipe_read_thread (Stdio.File read_end)
   {
-    roxen->name_thread(this_thread(), "Log pipe");
+    name_thread(this_thread(), "Log pipe");
     while (1) {
       string data = read_end->read (1024, 1);
       if (!data || data == "") break;
       read_cb (read_end, data);
     }
     close_cb (read_end);
-    roxen->name_thread(this_thread(), 0);
+    name_thread(this_thread(), 0);
   }
 
   protected void create (Stdio.File read_end, Stdio.File write_end)
@@ -6361,6 +6435,22 @@ mapping(string:int) get_memusage()
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
 }
 
+protected mapping(string:int) caches_initialized = ([]);
+
+protected void init_cache_prefs(string cache_name)
+{
+  if (caches_initialized[cache_name]) return;
+
+  // NB: We invalidate entries after successful lookup,
+  //     if they don't seem to be valid anymore.
+  function cache_register =
+    all_constants()["cache"]["cache_register"];
+  object extend_entries_cache_prefs =
+    all_constants()["cache"]["extend_entries_cache_prefs"];
+  cache_register(cache_name, UNDEFINED, extend_entries_cache_prefs);
+  caches_initialized[cache_name] = 1;
+}
+
 string lookup_real_path_case_insens (string path, void|int no_warn,
 				     void|string charset)
 //! Looks up the given path case insensitively to a path in the real
@@ -6404,7 +6494,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
   switch (charset && lower_case(charset)) {
     case 0:
       // NB: NT has a filesystem that uses UTF-16.
-#ifndef __NT__
+#if !defined(__NT__) || constant(Stdio.__HAVE_UTF8_FS__)
       return string_to_utf8(this_function(utf8_to_string(path), no_warn, "utf8"));
 #endif
       break;
@@ -6422,6 +6512,8 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
       cache_name += ":" + enc->charset;
       break;
   }
+
+  init_cache_prefs(cache_name);
 
   string dec_path, enc_path;
   int nonexist;

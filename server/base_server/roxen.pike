@@ -101,6 +101,32 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
+//! @ignore
+array(string) query_hot_reload_modules()
+//! Returns an array of modules added for hot reloading via 
+//! @tt{--module-hot-reload=<modname>@}.
+{
+  if (hot_reload_modules) {
+    return map(replace(hot_reload_modules, " ", ",")/",", 
+               String.trim_all_whites) - ({ "" });
+  }
+
+  return ({});
+}
+
+array(string) query_hot_reload_modules_conf()
+//! Returns an array of modules added for hot reloading via 
+//! @tt{--module-hot-reload-conf=<conf>@}.
+{
+  if (hot_reload_modules_conf) {
+    return map(replace(hot_reload_modules_conf, " ", ",")/",", 
+               String.trim_all_whites) - ({ "" });
+  }
+
+  return 0;
+}
+//! @endignore
+
 array(string|int) filename_2 (program|object o)
 {
   if( objectp( o ) )
@@ -138,6 +164,9 @@ string filename( program|object o )
 }
 
 protected int once_mode;
+// String of modules added for hot reloading via --module-hot-reload=<mod>
+protected string hot_reload_modules;
+protected string hot_reload_modules_conf;
 
 // Note that 2.5 is a nonexisting version. It's only used for the
 // cache static optimization for tags such as <if> and <emit> inside
@@ -152,35 +181,24 @@ array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 				"6.0", "6.1",
 });
 
+//  Compat stubs for relocated methods
 #ifdef THREADS
-mapping(string:string) thread_names = ([]);
-
 string thread_name_from_addr(string hex_addr)
 {
-  //  Lookup using a key like "Thread.Thread(0x...)" that matches what
-  //  sprint("%O") generates.
-  string th_key = "Thread.Thread(" + hex_addr + ")";
-  return thread_names[th_key];
+  return Roxen.thread_name_from_addr(hex_addr);
 }
 
-string thread_name( object thread, int|void skip_auto_name )
+string thread_name(object thread, int|void skip_auto_name)
 {
-  string tn;
-  if( thread_names[ tn=sprintf("%O",thread) ] || skip_auto_name )
-    return thread_names[tn];
-  return tn;
+  return Roxen.thread_name(thread, skip_auto_name);
 }
 
 void name_thread( object thread, string name )
 {
-  string th_key = sprintf("%O", thread);
-  if (name)
-    thread_names[th_key] = name;
-  else
-    m_delete(thread_names, th_key);
+  Roxen.name_thread(thread, name);
 }
+#endif
 
-#endif /* THREADS */
 
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
@@ -302,6 +320,8 @@ private void low_shutdown(int exit_code, int|void apply_patches)
   slow_be_timeout_changed();
 #endif
 
+  DBManager.stop_backup_thread();
+
   if ((apply_patches || query("patch_on_restart")) > 0) {
     mixed err = catch {
 	foreach(plib->file_list_imported(), mapping(string:mixed) item) {
@@ -378,7 +398,7 @@ int is_shutting_down()
 Thread.Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
-  name_thread( t, id );
+  Roxen.name_thread( t, id );
   return t;
 }
 
@@ -461,10 +481,10 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
   // my_monitor is just a safeguard to ensure we don't get multiple
   // monitor threads.
-  name_thread(this_thread(), "Slow request monitor");
+  Roxen.name_thread(this_thread(), "Slow Request Monitor");
   while (slow_req_monitor == my_monitor)
     slow_req_monitor (3600.0);
-  name_thread(this_thread(), 0);
+  Roxen.name_thread(this_thread(), 0);
 }
 
 protected mixed slow_be_call_out;
@@ -587,7 +607,7 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
 
   else {
     string th_name =
-      ((thread != backend_thread) && thread_name(thread, 1)) || "";
+      ((thread != backend_thread) && Roxen.thread_name(thread, 1)) || "";
     if (sizeof(th_name))
       th_name = " - " + th_name + " -";
     report_debug ("###### %s 0x%x%s has been busy for more than %g seconds.\n",
@@ -616,7 +636,7 @@ protected void report_slow_thread_finished (Thread.Thread thread,
   }
 
   string th_name =
-    ((thread != backend_thread) && thread_name(thread, 1)) || "";
+    ((thread != backend_thread) && Roxen.thread_name(thread, 1)) || "";
   if (sizeof(th_name))
     th_name = " - " + th_name + " -";
 
@@ -854,7 +874,7 @@ void start_handler_threads()
   }
   array(object) new_threads = ({});
   for(; number_of_threads < query("numthreads"); number_of_threads++)
-    new_threads += ({ do_thread_create( "Handle thread [" +
+    new_threads += ({ do_thread_create( "Handle Thread [" +
 					number_of_threads + "]",
 					handler_thread, number_of_threads ) });
   handler_threads += new_threads;
@@ -927,7 +947,7 @@ void release_handler_threads (int numthreads)
     if (threads_to_create > 0) {
       array(object) new_threads = ({});
       for (int n = 0; n < threads_to_create; number_of_threads++, n++)
-	new_threads += ({ do_thread_create( "Handle thread [" +
+	new_threads += ({ do_thread_create( "Handle Thread [" +
 					    number_of_threads + "]",
 					    handler_thread, number_of_threads ) });
       handler_threads += new_threads;
@@ -6050,7 +6070,7 @@ void describe_thread (Thread.Thread thread)
 {
   int hrnow = gethrtime();
   string thread_descr = "";
-  if (string th_name = thread_name(thread, 1))
+  if (string th_name = Roxen.thread_name(thread, 1))
     thread_descr += " - " + th_name;
   if (int start_hrtime = thread_task_start_times[thread])
     thread_descr += sprintf (" - busy for %.3fs",
@@ -6072,7 +6092,7 @@ void describe_thread (Thread.Thread thread)
     if (sizeof(bt_segs) > 1) {
       foreach (bt_segs; int idx; string bt_seg) {
 	if (sscanf(bt_seg, "0x%[0-9a-fA-F]*/", string th_hex_addr)) {
-	  if (string th_name = thread_name_from_addr("0x" + th_hex_addr)) {
+	  if (string th_name = Roxen.thread_name_from_addr("0x" + th_hex_addr)) {
 	    bt_segs[idx] =
 	      "0x" + th_hex_addr + " - " + th_name +
 	      bt_seg[sizeof(th_hex_addr) + 2..];
@@ -6180,7 +6200,7 @@ int cdt_next_seq_dump;
 
 void cdt_poll_file()
 {
-  name_thread(this_thread(), "Dump thread file monitor");
+  Roxen.name_thread(this_thread(), "Dump Thread File Monitor");
   while (this && query ("dump_threads_by_file")) {
     if (array(string) dir = r_get_dir (cdt_directory)) {
       if (has_value (dir, cdt_filename)) {
@@ -6204,7 +6224,7 @@ void cdt_poll_file()
     }
     sleep (cdt_poll_interval);
   }
-  name_thread(this_thread(), 0);
+  Roxen.name_thread(this_thread(), 0);
   cdt_thread = 0;
 }
 
@@ -6675,6 +6695,8 @@ int main(int argc, array tmp)
   mark_fd(2, "Stderr");
 
   once_mode = (int)Getopt.find_option(argv, "o", "once");
+  hot_reload_modules = Getopt.find_option(argv, 0, "module-hot-reload");
+  hot_reload_modules_conf = Getopt.find_option(argv, 0, "module-hot-reload-conf");
 
   configuration_dir =
     Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
@@ -6751,7 +6773,7 @@ int main(int argc, array tmp)
 
   backend_thread = this_thread();
 #ifdef THREADS
-  name_thread( backend_thread, "Backend" );
+  Roxen.name_thread( backend_thread, "Backend" );
 #else
   report_debug("\n"
 	       "WARNING: Threads not enabled!\n"
@@ -8207,38 +8229,69 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
 protected string cached_hostname = gethostname();
 
-class LogFile(string fname, string|void compressor_program)
+class LogFile
 {
+  public string fname;              // Was public before...
+  public string compressor_program; // Was public before...
   private Thread.Mutex lock = Thread.Mutex();
   private Stdio.File fd;
   private int opened;
+  private bool compressor_exists;
+  private bool auto_file_removal;
+  private int days_to_keep_files;
+
+  protected void create(string fname,
+                        string|void compressor_program,
+                        int|void days_to_keep_files)
+  {
+    this::fname = fname;
+    this::compressor_program = compressor_program;
+    this::days_to_keep_files = days_to_keep_files;
+    compressor_exists = compressor_program && sizeof(compressor_program);
+    auto_file_removal = days_to_keep_files && days_to_keep_files > 0;
+  }
 
   // FIXME: compress_logs is limited to scanning files with filename
   // substitutions within a fixed directory (e.g.
   // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
   private Process.Process compressor_process;
-  private int last_compressor_scan_time;
+  private int last_scan_time;
+
+  //! Also deletes old files.
+  //!
+  // Will not scan for files if compressor is running. This means we might not
+  // remove an old file because the compressor is running but that does not
+  // matter since this function is ran so often. Sooner or later files will be
+  // compressed (if there is a compressor) and old files will be deleted (if
+  // days_to_keep_files > 0).
   private void compress_logs(string fname, string active_log)
   {
-    if(!compressor_program || !sizeof(compressor_program))
-      return; // No compressor program specified...
+    if(!compressor_exists && !auto_file_removal)
+      // No compressor program specified, nor is auto file removal active...
+      return;
     if(compressor_process && !compressor_process->status())
-      return; // The compressor is already running...
-    if(time(1) - last_compressor_scan_time < 300)
-      return; // Scan for compressable files at most once every 5 minutes...
-    last_compressor_scan_time = time(1);
+      return; // The compressor is running...
+    if(time(1) - last_scan_time < 300)
+      return; // Scan for files at most once every 5 minutes...
+    last_scan_time = time(1);
     fname = roxen_path(fname);
     active_log = roxen_path(active_log);
     string dir = dirname(fname);
+    int min_mtime = time(1) - (days_to_keep_files * 24 * 60 * 60);
+    string pattern = "^"+replace(basename(fname),
+                           ({ "%y", "%m", "%d", "%h", "%H" }),
+                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
+                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }));
+    Regexp regexp = Regexp(pattern);
+    Regexp regexp_non_compressed = Regexp(pattern + "$");
     foreach(sort(get_dir(dir) || ({})), string filename_candidate)
     {
       if(filename_candidate == basename(active_log))
-       continue; // Don't try to compress the active log just yet...
-      if(Regexp("^"+replace(basename(fname),
-                           ({ "%y", "%m", "%d", "%h", "%H" }),
-                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
-                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }))+"$")->
-        match(filename_candidate))
+      {
+        continue; // Don't try to compress the active log just yet...
+      }
+      else if(compressor_exists &&
+              regexp_non_compressed->match(filename_candidate))
       {
        string compress_file = combine_path(dir, filename_candidate);
        Stdio.Stat stat = file_stat(compress_file);
@@ -8248,6 +8301,17 @@ class LogFile(string fname, string|void compressor_program)
        compressor_process = Process.Process(({ compressor_program,
 					       compress_file }));
        return;
+      }
+      else if(auto_file_removal && regexp->match(filename_candidate))
+      {
+        // Wipe the file if it is old.
+        string log_file = combine_path(dir, filename_candidate);
+        Stdio.Stat stat = file_stat(log_file, 1); // 1 means symlinks will not be followed.
+        if(stat->isreg && stat->mtime < min_mtime)
+        {
+          werror("Deleting log file %O due to old age.\n", log_file);
+          rm(log_file);
+        }
       }
     }
   }

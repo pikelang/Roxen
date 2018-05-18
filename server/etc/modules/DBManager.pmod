@@ -101,10 +101,17 @@ private
     }
     else
     {
-      db->query( "REPLACE INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, ''), (%s, %s, '')",
-		 host, short_name + "_rw",
-		 host, short_name + "_ro" );
+      if (normalized_server_version >= "010.002") {
+	db->query( "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY ''",
+		   short_name + "_rw", host);
+	db->query( "CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY ''",
+		   short_name + "_ro", host);
+      } else {
+	db->query( "REPLACE INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, ''), (%s, %s, '')",
+		   host, short_name + "_rw",
+		   host, short_name + "_ro" );
+      }
     }
   }
 
@@ -2296,11 +2303,48 @@ protected mapping(int:mixed) backup_cos = ([]);
 //!
 //! @seealso
 //!   @[set_backup_timer()]
-void timed_backup(int schedule_id)
+void timed_backup(int(1..) schedule_id)
 {
   mixed co = m_delete(backup_cos, schedule_id);
   if (co) remove_call_out(co);
 
+  backup_queue->write (schedule_id);
+}
+
+protected Thread.Queue backup_queue = Thread.Queue();
+protected Thread.Thread backup_thread = Thread.Thread(process_backup_queue);
+
+void stop_backup_thread()
+{
+  backup_queue->write (0);
+}
+
+// Process backups in a separate thread to avoid blocking the
+// background_run thread.
+protected void process_backup_queue()
+{
+  Roxen.name_thread(this_thread(), "Database Backup");
+
+  // Schedule id is always positive (since schedule_id is an
+  // auto_increment column that starts with 1), but 0 is used to stop
+  // the thread.
+  while (int schedule_id = backup_queue->read()) {
+    if (mixed err = catch {
+        low_timed_backup (schedule_id);
+      }) {
+      master()->handle_error (err);
+    }
+  }
+
+  Roxen.name_thread(this_thread(), 0);
+
+#ifdef DEBUG
+  werror ("DBManager: stopping backup thread.\n");
+#endif
+}
+
+protected void low_timed_backup (int(1..) schedule_id)
+{
   array(mapping(string:string))
     backup_info = query("SELECT schedule, period, offset, dir, "
 			"       generations, method "

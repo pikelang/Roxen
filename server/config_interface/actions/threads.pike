@@ -71,13 +71,19 @@ mixed parse( RequestID id )
   object threads_disabled = _disable_threads();
 
   array(Thread.Thread) threads = all_threads();
+  mapping(Thread.Thread:string) th_names = ([ ]);
+  foreach (threads, Thread.Thread th) {
+    th_names[th] =
+      Roxen.thread_name(th, 1) ||
+      sprintf("%s 0x%x", LOCALE(39, "Thread"), th->id_number());
+  }
 
   threads = Array.sort_array (
     threads,
     lambda (Thread.Thread a, Thread.Thread b) {
       // Backend thread first, our thread last (since
       // it typically only is busy doing this page),
-      // otherwise in id order.
+      // otherwise in display name order.
       if (a == roxen->backend_thread)
 	return 0;
       else if (b == roxen->backend_thread)
@@ -87,7 +93,7 @@ mixed parse( RequestID id )
       else if (b == this_thread())
 	return 0;
       else
-	return a->id_number() > b->id_number();
+	return Array.dwim_sort_func(th_names[a], th_names[b]);
     });
 
   string res =
@@ -105,15 +111,14 @@ mixed parse( RequestID id )
     if (int start_hrtime = thread_task_start_times[threads[i]])
       busy_time = sprintf(" &ndash; busy for %.3fs",
 			  (hrnow - start_hrtime) / 1e6);
-    string th_name =
-      roxen.thread_name(threads[i], 1) ||
-      sprintf("%s 0x%x", LOCALE(39, "Thread"), threads[i]->id_number());
+
     res +=
       sprintf ("<h3 class='icon toggle-%s' data-toggle-next='ol'>"
 	       "%s%s</h3>\n"
 	       "<ol class='backtrace %s'>%s</ol>\n",
 	       open_state,
-	       th_name,
+	       "bt_" + div_num,
+	       th_names[threads[i]],
 	       busy_time,
 	       open_state,
 	       format_backtrace(describe_backtrace(threads[i]->backtrace())/

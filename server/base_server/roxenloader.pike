@@ -90,6 +90,10 @@ string pw_name(int uid)
 #endif
 }
 
+#if !constant(utf8_string)
+protected typedef __attribute__("utf8", string(8bit))	utf8_string;
+#endif
+
 #if !constant(getppid)
 int getppid() {   return -1; }
 #endif
@@ -1839,7 +1843,6 @@ void add_package(string package_dir)
 		 roxen_path (package_dir));
   }
   package_directories += ({ package_dir });
-
   string real_pkg_dir = roxen_path (package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
@@ -1848,6 +1851,15 @@ void add_package(string package_dir)
   if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "include/"))) {
     master()->add_include_path(sub_dir);
   }
+#ifdef RUN_SELF_TEST
+  sub_dir = combine_path(real_pkg_dir, "test/pike-modules");
+  if (Stdio.is_dir(sub_dir)) {
+    master()->add_module_path(sub_dir);
+  }
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/include/"))) {
+    master()->add_include_path(sub_dir);
+  }
+#endif
 
   package_module_path += ({ combine_path(package_dir, "modules/") });
   if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
@@ -1856,6 +1868,11 @@ void add_package(string package_dir)
   if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path += ({ sub_dir });
   }
+#ifdef RUN_SELF_TEST
+  if (r_is_dir(sub_dir = combine_path(package_dir, "test/modules/"))) {
+    package_module_path += ({ sub_dir });
+  }
+#endif
 }
 
 
@@ -1964,6 +1981,11 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
 ---------------------------------------------------------------
 ");
     exit(1);
+#endif
+
+#if !constant(utf8_string)
+  // Not present in Pike 8.0 and earlier.
+  add_constant("utf8_string", utf8_string);
 #endif
 
   // Check if IPv6 support is available.
@@ -2076,6 +2098,13 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     );
     mysql_path_is_remote = 1;
   }
+
+#if constant(MIME.set_boundary_prefix)
+  // Set MIME message boundary prefix.
+  string boundary_prefix = Standards.UUID.make_version4()->str();
+  boundary_prefix = (boundary_prefix / "-") * "";
+  MIME.set_boundary_prefix(boundary_prefix);
+#endif
 
   nwrite = lambda(mixed ... ){};
   call_out( do_main_wrapper, 0, argc, argv );
@@ -3245,6 +3274,36 @@ void low_start_mysql( string datadir,
     } else {
       report_warning("Mysql configuration file %s/my.cfg lacks\n"
 		     "storage engine entry, and automatic repairer failed.\n",
+		     datadir);
+    }
+  }
+
+  if ((normalized_mysql_version > "010.002.003") &&
+      !has_value(normalized_cfg_file, "sql_mode")) {
+    // Since MariaDB 10.2.4, SQL_MODE is by default set to NO_AUTO_CREATE_USER,
+    // NO_ENGINE_SUBSTITUTION, STRICT_TRANS_TABLES, ERROR_FOR_DIVISION_BY_ZERO.
+    // In earlier versions of MariaDB 10.2, and since MariaDB 10.1.7, SQL_MODE
+    // is by default set to NO_ENGINE_SUBSTITUTION, NO_AUTO_CREATE_USER.
+    // For earlier versions of MariaDB 10.1, and MariaDB 10.0 and before, no
+    // default is set.
+    //
+    // This change in 10.2 can cause queries to fail, complaining about
+    // no default values:
+    //
+    //   big_query(): Query failed (Field 'x' doesn't have a default value)
+    //
+    // cf:
+    //   https://www.slickdev.com/2017/09/05/mariadb-10-2-field-xxxxxxx-doesnt-default-value-error/
+    array a = cfg_file/"[mysqld]";
+    if (sizeof(a) > 1) {
+      report_debug("Adding sql_mode entry to %s/my.cfg.\n", datadir);
+      a[1] = "\n"
+	"sql_mode = NO_ENGINE_SUBSTITUTION" + a[1];
+      cfg_file = a * "[mysqld]";
+      force = 1;
+    } else {
+      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+		     "sql_mode entry, and automatic repairer failed.\n",
 		     datadir);
     }
   }

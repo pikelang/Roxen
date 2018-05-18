@@ -591,11 +591,12 @@ int things_to_do_when_not_sending_from_cache( )
 	}
 	else
 	  catch (f = utf8_to_string (f));
-	if (String.width(f) > 8) {
-	  // Wide, so it might contain combiners.
-	  // Combine them if they are there.
-	  f = Unicode.normalize(f, "NFC");
-	}
+      }
+
+      if (String.width(f) > 8) {
+	// Wide, so it might contain combiners.
+	// Combine them if they are there.
+	f = Unicode.normalize(f, "NFC");
       }
 
       // Now after charset decode we can add the multipart/form-data
@@ -1046,6 +1047,24 @@ private int parse_got( string new_data )
 	 none_match = (multiset)((contents-" ")/",");
 	 break;
 
+       case "if":
+#ifdef IF_HEADER_DEBUG
+	 werror("IF: Raw header: %O\n", contents);
+#endif
+	 if (!has_prefix(String.trim_all_whites(contents), "<")) {
+	   // Prefix with the base resource id to make the header
+	   // idempotent with respect to subrequests.
+	   contents =
+	     sprintf("<%s> %s",
+		     replace(raw_url, ({ " ", ">" }), ({ "%20", "%3e" })),
+		     contents);
+	   request_headers->if = contents;
+#ifdef IF_HEADER_DEBUG
+	   werror("IF: Adjusted header: %O\n", contents);
+#endif
+	 }
+	 break;
+
        case "proxy-authorization":
 	 array y;
 	 y = contents / " ";
@@ -1105,6 +1124,7 @@ private int parse_got( string new_data )
 	 misc->content_type_type = lower_case (ct_type + "/" + ct_subtype);
 	 break;
        case "destination":
+	 MY_TRACE_ENTER(sprintf("Destination header: %O", contents));
 	 // FIXME: This silently strips away the server if the
 	 // destination is an absolute URI, and it can be a different
 	 // one according to RFC 4918, section 10.3. If we cannot use
@@ -1119,10 +1139,12 @@ private int parse_got( string new_data )
 				"%s", contents, describe_error(err)));
 #endif /* DEBUG */
 	 }
+	 catch { contents = utf8_to_string(contents); };
 	 misc["new-uri"] = VFS.normalize_path (contents);
 	 if (String.width(misc["new-uri"]) > 8) {
 	   misc["new-uri"] = Unicode.normalize(misc["new-uri"], "NFC");
 	 }
+	 MY_TRACE_LEAVE(sprintf("misc[\"new-uri\"] = %O", misc["new-uri"]));
 	 break;
 
        case "expect":
@@ -2749,8 +2771,13 @@ void send_result(mapping|void result)
 #endif
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-    if (!sizeof (file) && multi_status)
-      file = multi_status->http_answer();
+    if ((sizeof(file) <= 1) && multi_status) {
+      // NB: Configuration::examine_return_mapping() adds an
+      //     empty extra_heads entry to the mapping.
+      if ((sizeof(file) != 1) || file->extra_heads) {
+	file = multi_status->http_answer();
+      }
+    }
 
     if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
       file->len = 0;
