@@ -117,10 +117,9 @@ mixed parse( RequestID id )
 	       "%s%s</h3>\n"
 	       "<ol class='backtrace %s'>%s</ol>\n",
 	       open_state,
-	       "bt_" + div_num,
 	       th_names[threads[i]],
 	       busy_time,
-	       open_state,
+               open_state,
 	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
 				"\n", id));
     div_num++;
