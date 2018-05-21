@@ -333,7 +333,6 @@ worldmap binary
 /server/perl/bin/perlhelper foreign_ident
 /server/perl/bin/perlrun foreign_ident
 /server/protocols/ftp.pike foreign_ident
-/server/protocols/http.pike foreign_ident
 /server/protocols/prot_https.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
 /server/rxml_packages/counter foreign_ident

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.466 2005/01/19 15:21:30 mast Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1081,8 +1081,10 @@ static string error_page(string line1, string title, string body)
         <tr>
           <td><img src='/internal-roxen-roxen-mini.gif' /></td>
           <td class='info'>
-	    &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
-	    <font color='#ffbe00'>|</font> " + roxen_dist_version + #"
+	    &nbsp;&nbsp;" +
+    (roxen.query("default_ident")?
+     ("<b>" + roxen_product_name + #"</b>
+	    <font color='#ffbe00'>|</font> "):"") + roxen.version() + #"
           </td>
         </tr>
       </table>
