@@ -1674,8 +1674,10 @@ protected string error_page(string title, void|string msg,
         <tr>
           <td><img src='/internal-roxen-roxen-mini' /></td>
           <td class='info'>
-	    &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
-	    <font color='#ffbe00'>|</font> " + roxen_dist_version + #"
+	    &nbsp;&nbsp;" +
+    (roxen.query("default_ident")?
+     ("<b>" + roxen_product_name + #"</b>
+	    <font color='#ffbe00'>|</font> "):"") + roxen.version() + #"
           </td>
         </tr>
       </table>
