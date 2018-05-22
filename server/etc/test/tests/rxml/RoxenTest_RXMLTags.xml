@@ -2331,7 +2331,7 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834838' part='date' type='string' case='capitalize'/></rxml>
+<rxml><date unix-time='1022834838' part='date' type='string' case='capitalize' lang='en'/></rxml>
 <result>Thirtyone</result>
 </test>
 
@@ -2351,12 +2351,12 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834838' part='date' type='ordered'/></rxml>
+<rxml><date unix-time='1022834838' part='date' type='ordered' lang='en'/></rxml>
 <result>31st</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834838' part='date' type='string' case='lower'/></rxml>
+<rxml><date unix-time='1022834838' part='date' type='string' case='lower' lang='en'/></rxml>
 <result>thirtyone</result>
 </test>
 
@@ -2381,7 +2381,7 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847' part='day' type='string'/></rxml>
+<rxml><date unix-time='1022834847' part='day' type='string' lang='en'/></rxml>
 <result>Friday</result>
 </test>
 
@@ -2396,7 +2396,7 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847' part='month' type='string'/></rxml>
+<rxml><date unix-time='1022834847' part='month' type='string' lang='en'/></rxml>
 <result>May</result>
 </test>
 
@@ -2443,12 +2443,12 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847' date/></rxml>
+<rxml><date unix-time='1022834847' date lang='en'/></rxml>
 <result>May the 31st in the year of 2002</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847' hours='3' minutes='-4'/></rxml>
+<rxml><date unix-time='1022834847' hours='3' minutes='-4' lang='en'/></rxml>
 <result>13:43, May the 31st, 2002</result>
 </test>
 
@@ -2458,12 +2458,12 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' brief/></rxml>
+<rxml><date unix-time='87654321' brief lang='en'/></rxml>
 <result>October 1972</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847'/></rxml>
+<rxml><date unix-time='1022834847' lang='en'/></rxml>
 <result>10:47, May the 31st, 2002</result>
 </test>
 
@@ -2490,7 +2490,7 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='1022834847' part='date' type='string' case='upper'/></rxml>
+<rxml><date unix-time='1022834847' part='date' type='string' case='upper' lang='en'/></rxml>
 <result>THIRTYONE</result>
 </test>
 
@@ -2507,7 +2507,7 @@ c</result>
 </test>
 
 <test>
-<rxml><date unix-time='87654321' part='year' type='string'/></rxml>
+<rxml><date unix-time='87654321' part='year' type='string' lang='en'/></rxml>
 <result>one thousand nine hundred and seventytwo</result>
 </test>
 
