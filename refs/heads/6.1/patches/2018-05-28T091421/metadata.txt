@@ -1,0 +1,10 @@
+subject: Roxen 6.1: HTTP: Make the version string in 500-errors configurable
+from: 186c58ae20a0e1addefb87c72f2b1a728f57a133
+to: 76d82e4c259a2a3f3e612f6e0859a6ac61ca6059
+originator: Marcus Wellhardh
+depends: 2018-05-09T111248
+restart: true
+
+• HTTP: Make the version string in 500-errors configurable.
+
+Fixes [WS-296].
