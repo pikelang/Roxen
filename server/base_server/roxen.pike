@@ -6740,7 +6740,20 @@ int main(int argc, array tmp)
   init_configuserdb();
   cache.init_session_cache();
 
-  protocols = build_protocols_mapping();  
+  // Report unhandled Promise rejections.
+  Concurrent.on_failure(lambda(mixed err)
+    {
+      string description;
+      if (objectp (err) && functionp(err->describe)) {
+        description = err->describe();
+      } else {
+        description = sprintf ("%O", err);
+      }
+      report_error("Unhandled error in Promise.\n"
+                   "Error: %s\n", description);
+    });
+
+  protocols = build_protocols_mapping();
 
   int t = gethrtime();
   report_debug("Searching for pike-modules directories ... \b");
