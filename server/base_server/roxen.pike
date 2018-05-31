@@ -6746,6 +6746,8 @@ int main(int argc, array tmp)
       string description;
       if (objectp (err) && functionp(err->describe)) {
         description = err->describe();
+      } else if (arrayp (err) && sizeof (err) == 2) {
+        description = describe_backtrace (err);
       } else {
         description = sprintf ("%O", err);
       }
