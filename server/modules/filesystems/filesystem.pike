@@ -1828,7 +1828,6 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 	int start_ms_size = id->multi_status_size();
 	recursive_rm(dest_path, mountpoint + dest, 1, id);
 
-	werror ("dest_path %O\n", dest_path);
 	if (!rm(dest_path) && errno() != System.ENOENT) {
 	  privs = 0;
 	  if (id->multi_status_size() > start_ms_size) {
