@@ -2112,7 +2112,7 @@ protected constant FILENAMES =
 public void test_x_ls()
 {
   int count = 0;
-  bool caseSensitive = non_normalizing_filesystem();
+  bool normalizing = !non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2136,35 +2136,50 @@ public void test_x_ls()
             mapping(string:string) exp_file = make_filenames("", filename,
                                                              "NFC", false);
             ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
-            if (case_create == case_ls) {
+            string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
+
+            if (string_to_utf8 (exp_path) ==
+                Stdio.append_path (new_dir, new_file)) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
             } else {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
-                caseSensitive && STATUS_NOT_FOUND);
+                !normalizing && STATUS_NOT_FOUND);
             }
             string testdata = "FILE " + count;
             ASSERT_EQUAL(filesystem_direct_write(new_dir + "/" + new_file,
                                                  testdata),
                          sizeof(testdata));
-            if (case_create == case_ls &&
-                unicode_method_create == unicode_method_ls) {
+            if (string_to_utf8 (exp_path) ==
+                Stdio.append_path (new_dir, new_file)) {
+              // In this case we should always get a successful listing.
               webdav_ls(dir_ls,
                         ({ exp_dir[case_ls],
                            exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+
+              // When listing a file directly, it will have equivalent case
+              // in the returned list.
               webdav_ls(dir_ls + "/" + file_ls,
-                        ({ exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+                        ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) );
             } else {
+              // In this case the result depends on whether the WebDAV backend
+              // is normalizing or not. For our WebServer tests it depends on
+              // the OS but other WebDAV modules may implement normalization
+              // themselves (then normalizing_filesystem() is typically
+              // overridden by the test subclass.)
               webdav_ls(dir_ls,
-                        caseSensitive ?
-                          ({ }) :
+                        normalizing ?
                           ({ exp_dir[case_ls],
-                             exp_dir[case_ls] + "/" + exp_file[case_create] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
+                             exp_dir[case_ls] + "/" + exp_file[case_create] })
+                             : ({}),
+                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
+
+              // When listing a file directly, it will have equivalent case
+              // in the returned list.
               webdav_ls(dir_ls + "/" + file_ls,
-                        caseSensitive ?
-                          ({ }) :
-                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
+                        normalizing ?
+                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) :
+                          ({ }),
+                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
             }
           }
         }
