@@ -28,6 +28,7 @@ void run_tests(Configuration conf)
     mapping(string:string) base_headers = ([
       "host": base_uri->host,
       "user-agent": "Roxen WebDAV Tester",
+      "connection": "keep-alive",
     ]);
     WebdavTest testsuite =
       WebdavTest(webdav_mount_point, base_uri, base_headers, "testdir"+count++);
