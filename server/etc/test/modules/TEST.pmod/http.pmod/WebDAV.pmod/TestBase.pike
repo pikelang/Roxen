@@ -114,6 +114,11 @@ protected WebDAVResponse webdav_request(string method,
     headers += extra_headers;
   }
 
+  if (upper_case(method) == "HEAD") {
+    // Workaround for bug in Protocols.HTTP.Query.
+    headers["connection"] = "close";
+  }
+
   array(string) lock_paths = ({ path });
 
   // Convert the fake header "new-uri" into a proper "destination" header.
