@@ -47,7 +47,7 @@ array(Standards.URI) get_test_urls(Configuration conf,
                           webdav_mount_point),
                           url_uri);
       base_uri->port = prot->port;
-      base_uri->host = prot->ip;
+      base_uri->host = prot->ip || "0.0.0.0";
 
       if (username) {
         base_uri->user = username;
