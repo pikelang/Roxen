@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1081 2011/06/15 15:11:08 grubba Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -2956,11 +2956,13 @@ int register_url( string url, Configuration conf )
       } else {
 	urls[url]->ports = ({ m[required_host][port] });
       }
-      urls[ourl]->port = m[required_host][port];
-      if (urls[ourl]->ports) {
-	urls[ourl]->ports += ({ m[required_host][port] });
-      } else {
-	urls[ourl]->ports = ({ m[required_host][port] });
+      if (ourl != url) {
+	urls[ourl]->port = m[required_host][port];
+	if (urls[ourl]->ports) {
+	  urls[ourl]->ports += ({ m[required_host][port] });
+	} else {
+	  urls[ourl]->ports = ({ m[required_host][port] });
+	}
       }
       continue;    /* No need to open a new port */
     }
@@ -3016,11 +3018,13 @@ int register_url( string url, Configuration conf )
     } else {
       urls[url]->ports = ({ prot_obj });
     }
-    urls[ ourl ]->port = prot_obj;
-    if (urls[ourl]->ports) {
-      urls[ourl]->ports += ({ prot_obj });
-    } else {
-      urls[ourl]->ports = ({ prot_obj });
+    if (ourl != url) {
+      urls[ ourl ]->port = prot_obj;
+      if (urls[ourl]->ports) {
+	urls[ourl]->ports += ({ prot_obj });
+      } else {
+	urls[ourl]->ports = ({ prot_obj });
+      }
     }
     prot_obj->ref(url, urls[url]);
  
