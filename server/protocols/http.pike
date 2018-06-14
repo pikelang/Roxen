@@ -3008,15 +3008,6 @@ void send_result(mapping|void result)
     }
 #endif
 
-    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-    // content length when using keep-alive. So let's force a
-    // close in that case.
-    if( file->error/100 == 2 && file->len <= 0 )
-    {
-      variant_heads->Connection = "close";
-      misc->connection = "close";
-    }
-
     if (file->error == 200) {
       int conditional;
       if (none_match) {
@@ -3757,14 +3748,6 @@ protected void got_configuration(Configuration conf)
 			   ? Roxen->http_date(predef::time(1)-31557600) :
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
-	    }
-	    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-	    // content length when using keep-alive. So let's force a
-	    // close in that case.
-	    if( file->error/100 == 2 && file->len <= 0 )
-	    {
-	      variant_heads->Connection = "close";
-	      misc->connection = "close";
 	    }
 	    if (misc->range) {
 	      // Handle byte ranges.
