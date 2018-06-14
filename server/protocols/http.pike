@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.507 2006/09/21 14:56:04 grubba Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2032,15 +2032,6 @@ void send_result(mapping|void result)
     }
 #endif
 
-    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-    // content length when using keep-alive. So let's force a
-    // close in that case.
-    if( file->error/100 == 2 && file->len <= 0 )
-    {
-      variant_heads->Connection = "close";
-      misc->connection = "close";
-    }
-
     if (file->error == 200) {
       int conditional;
       if (none_match) {
@@ -2561,14 +2552,6 @@ void got_data(mixed fooid, string s, void|int chained)
 			   Roxen->http_date(predef::time(1)-31557600):
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
-	    }
-	    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-	    // content length when using keep-alive. So let's force a
-	    // close in that case.
-	    if( file->error/100 == 2 && file->len <= 0 )
-	    {
-	      variant_heads->Connection = "close";
-	      misc->connection = "close";
 	    }
 	    if (misc->range) {
 	      // Handle byte ranges.
