@@ -91,6 +91,20 @@ private class WebdavTest {
     return Stdio.is_file(real_path);
   }
 
+  protected int(0..1) filesystem_mkdir_recursive(string(8bit) path)
+  {
+    string real_path = Stdio.append_path (real_dir, path);
+    return Stdio.mkdirhier(real_path);
+  }
+
+  //! Writes a file to @[path], which is used verbatim without any normalization.
+  protected int(0..) filesystem_direct_write(string(8bit) path,
+                                             string(8bit) data)
+  {
+    string real_path = Stdio.append_path (real_dir, path);
+    return Stdio.write_file(real_path, data);
+  }
+
   // protected int filesystem_recursive_rm(string path)
   // {
   //   path = string_to_utf8(Unicode.normalize(utf8_to_string(path), "NFC"));

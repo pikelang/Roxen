@@ -64,6 +64,11 @@ protected int filesystem_check_exists(string path);
 
 protected string filesystem_read_file(string path);
 
+protected int(0..1) filesystem_mkdir_recursive(string(8bit) path);
+
+//! Writes a file to @[path], which is used verbatim without any normalization.
+protected int(0..) filesystem_direct_write(string(8bit) path, string(8bit) data);
+
 // protected int filesystem_recursive_rm(string path);
 
 protected int filesystem_check_content(string path, string expected_data)
@@ -357,7 +362,7 @@ protected WebDAVResponse webdav_move(string src_path,
                                      int expected_status_code)
 {
   bool src_equals_dst = false;
-  if (case_sensitive()) {
+  if (non_normalizing_filesystem()) {
     src_equals_dst = Unicode.normalize(utf8_to_string(src_path), "NFC") ==
                     Unicode.normalize(utf8_to_string(dst_path), "NFC");
   } else {
@@ -492,7 +497,7 @@ protected WebDAVResponse webdav_ls(string path,
     do_webdav_ls(path, expected, true, expected_status_code);
 }
 
-protected bool case_sensitive()
+protected bool non_normalizing_filesystem()
 {
   string sysname = System.uname()->sysname;
   if (sysname == "Darwin") { // OS X
@@ -2112,7 +2117,7 @@ protected constant FILENAMES =
 public void test_x_ls()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool normalizing = !non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2135,32 +2140,51 @@ public void test_x_ls()
               make_filenames(this::testcase_dir, filename, "NFC", false);
             mapping(string:string) exp_file = make_filenames("", filename,
                                                              "NFC", false);
-            webdav_mkcol(new_dir, STATUS_CREATED);
-            if (case_create == case_ls) {
+            ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
+            string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
+
+            if (string_to_utf8 (exp_path) ==
+                Stdio.append_path (new_dir, new_file)) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
             } else {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
-            caseSensitive && STATUS_NOT_FOUND);
+                !normalizing && STATUS_NOT_FOUND);
             }
-            webdav_put(new_dir + "/" + new_file, "FILE " + count, STATUS_CREATED);
-            if (case_create == case_ls) {
+            string testdata = "FILE " + count;
+            ASSERT_EQUAL(filesystem_direct_write(new_dir + "/" + new_file,
+                                                 testdata),
+                         sizeof(testdata));
+            if (string_to_utf8 (exp_path) ==
+                Stdio.append_path (new_dir, new_file)) {
+              // In this case we should always get a successful listing.
               webdav_ls(dir_ls,
                         ({ exp_dir[case_ls],
                            exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+
+              // When listing a file directly, it will have equivalent case
+              // in the returned list.
               webdav_ls(dir_ls + "/" + file_ls,
-                        ({ exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+                        ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) );
             } else {
+              // In this case the result depends on whether the WebDAV backend
+              // is normalizing or not. For our WebServer tests it depends on
+              // the OS but other WebDAV modules may implement normalization
+              // themselves (then normalizing_filesystem() is typically
+              // overridden by the test subclass.)
               webdav_ls(dir_ls,
-                        caseSensitive ?
-                          ({ }) :
+                        normalizing ?
                           ({ exp_dir[case_ls],
-                             exp_dir[case_ls] + "/" + exp_file[case_create] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
+                             exp_dir[case_ls] + "/" + exp_file[case_create] })
+                             : ({}),
+                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
+
+              // When listing a file directly, it will have equivalent case
+              // in the returned list.
               webdav_ls(dir_ls + "/" + file_ls,
-                        caseSensitive ?
-                          ({ }) :
-                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
+                        normalizing ?
+                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) :
+                          ({ }),
+                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
             }
           }
         }
@@ -2205,7 +2229,7 @@ public void test_x_special_chars()
 public void test_x_put()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2266,7 +2290,7 @@ public void test_x_put()
 public void test_x_copy_file()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2302,7 +2326,7 @@ public void test_x_copy_file()
 public void test_x_mkcol()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2337,7 +2361,7 @@ public void test_x_mkcol()
 public void test_x_move_file()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = non_normalizing_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2376,7 +2400,7 @@ public void test_x_move_file()
 // Runs only on case insensitive systems.
 public void test_x_put_copy_move_delete()
 {
-  if (case_sensitive()) {
+  if (non_normalizing_filesystem()) {
     return;
   }
   string mv_dst = Stdio.append_path(this::testcase_dir, "mv_dst");
@@ -2438,7 +2462,7 @@ public void test_x_lock()
 // We satisfy with taking a lock on a resource with mixed case and later
 // creating a file with the same case.
 {
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = non_normalizing_filesystem();
   array(string) cases = ({"mc", "lc", "uc"});
   if (caseSensitive) {
     cases = ({ "mc" });
