@@ -2771,7 +2771,7 @@ void send_result(mapping|void result)
   REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
 		       prot, method, file));
 #endif
-  if(!file->raw && (prot != "HTTP/0.9"))
+  if(!file->raw)
   {
     if ((sizeof(file) <= 1) && multi_status) {
       // NB: Configuration::examine_return_mapping() adds an
@@ -3123,12 +3123,14 @@ void send_result(mapping|void result)
     }
 
     variant_string = Roxen.make_http_headers(variant_heads);
-    full_headers = prot + " " + file->error + head_string + variant_string;
+    if (prot != "HTTP/0.9") {
+      full_headers = prot + " " + file->error + head_string + variant_string;
+    }
 
     low_send_result(full_headers, file->data, file->len, file->file);
   }
   else {
-    // RAW or HTTP/0.9 mode.
+    // RAW mode.
 
     if(!file->type) file->type="text/plain";
 
