@@ -1,0 +1,14 @@
+subject: Roxen 6.1: Handle HTTP/0.9 requests gracefully.
+from: 76d82e4c259a2a3f3e612f6e0859a6ac61ca6059
+to: ee56a36add24c918c1efef6b37062c9218caf192
+originator: Erik Allemann
+depends: 2018-05-28T091421
+restart: true
+
+• HTTP: Use the main code path for HTTP/0.9 requests too.
+
+Perform the same request handling for HTTP/0.9 requests as for
+HTTP/1.0 and later. In particular this includes character set
+encoding. The only difference is that no headers are sent.
+
+Fixes [WS-310].
