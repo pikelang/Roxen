@@ -3,24 +3,24 @@ $breakpoints: (
   small:  414px,
   medium: 768px,
   large:  980px
-);
+) !default;
 
 // Font stuff
-$font-family:    arial, sans-serif;
-$line-height:    1.6;
-$root-font-size: 100%;
+$font-family:    arial, sans-serif !default;
+$line-height:    1.6 !default;
+$root-font-size: 100% !default;
 
 $body-font-size: (
   null:   16px,
   small:  16px,
   medium: 16px,
   large:  16px
-);
+) !default;
 
 $h1-font-size: (
   null:   (28px, 1.1),
   medium: (26px, 1.1)
-);
+) !default;
 
 $txtsize: (
    xs: (12px, 1.1),
@@ -31,7 +31,7 @@ $txtsize: (
    lg: (20px, 1.2),
    xl: (38px, 1.2),
   xxl: (44px, 1.1)
-);
+) !default;
 
 // Widths and paddings
 $site-width:   100% !default;
@@ -40,12 +40,12 @@ $site-padding: $spacing-unit !default;
 $gutter-width: $spacing-unit * 2 !default;
 
 // Roxen colors
-$rxn-red:        #e94c37;
-$rxn-blue:       #1e8ac4;
-$rxn-black:      #1d1d1b;
-$rxn-grey:       #7f91a4;
-$rxn-light-grey: #c5d0da;
-$rxn-dark-red:   #b42339;
+$rxn-red:        #e94c37 !default;
+$rxn-blue:       #1e8ac4 !default;
+$rxn-black:      #1d1d1b !default;
+$rxn-grey:       #7f91a4 !default;
+$rxn-light-grey: #c5d0da !default;
+$rxn-dark-red:   #b42339 !default;
 
 
 // Basic colors
@@ -74,6 +74,7 @@ $link-color:                 $blue !default;
 $button-bg:                  $topmenu-bg !default;
 $button-color:               $grey !default;
 $button-enter-outline-color: orange !default;
+$tablist-border-color:       #000 !default;
 
 
 $input-border-color:         $black !default;

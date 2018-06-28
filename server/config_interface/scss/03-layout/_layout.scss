@@ -273,10 +273,12 @@ hr {
   margin: 0;
   padding: 0;
   background: $topmenu-bg;
+  overflow-x: auto;
+  white-space: nowrap;
 
   li {
     display: inline-block;
-    border-right: 1px solid #000;
+    border-right: 1px solid $tablist-border-color;
   }
 
   a {

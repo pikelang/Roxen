@@ -1,6 +1,6 @@
 // jshint esversion: 5
 
-(function() {
+(function(window, document) {
   'use strict';
 
   var lib = {};
@@ -103,6 +103,35 @@
     var wizinp = document.querySelector('input[name="_roxen_wizard_id"]');
     return (wizinp && wizinp.value) || lib.getCookie('RoxenWizardId') || '';
   };
+
+  lib._loadedResources = {};
+
+  lib.loadResource = function(path, cb, multiple) {
+    if (lib._loadedResources[path] && !multiple) {
+      return;
+    }
+
+    var tag;
+
+    if (path.match(/\.js$/i)) {
+      tag = document.createElement('script');
+      tag.setAttribute('src', path);
+      tag.setAttribute('async', true);
+    }
+    else if (path.match(/\.css$/i)) {
+      tag = document.createElement('link');
+      tag.setAttribute('rel', 'stylesheet');
+      tag.setAttribute('href', path);
+    }
+
+    if (cb) {
+      tag.addEventListener('load', cb, true);
+    }
+
+    document.head.appendChild(tag);
+
+    lib._loadedResources[path] = true;
+  }
 
   var AJX = function() {
     var client, isPending, _ = this;

@@ -788,7 +788,14 @@ array initial_form( RequestID id, Configuration conf, array modules )
         <dl class='config-var'>
           <dt class='name small'>&_.name;</dt>
           <dd class='value'>
-            <eval>&_.form:none;</eval>
+            <if variable='_.form is *<select*'>
+              <div class='select-wrapper'>
+                <eval>&_.form:none;</eval>
+              </div>
+            </if>
+            <else>
+              <eval>&_.form:none;</eval>
+            </else>
           </dd>
           <dd class='doc'>&_.doc:none;</dd>
         </dl>
@@ -800,7 +807,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
     ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
 
-    foreach( indices(moo->query()), string v ) {
+    foreach( indices(moo && moo->query() || ({})), string v ) {
       if( moo->getvar( v )->get_flags() & VAR_INITIAL ) {
         num++;
 

@@ -1,20 +1,47 @@
 @import '../../scss/01-conf/vars';
 
 // Element colors
-$body-bg:                    lighten($black, 80%);
+$body-bg:                    #fff;
 $body-color:                 #444;
 // $header-bg:                  $black !default;
-$topmenu-bg:                 lighten($black, 55%);
-$topmenu-color:              $brand-color;
-$topmenu-selected-bg:        $body-bg;
-$topmenu-selected-color:     $grey;
-$main-column-bg:             lighten($body-bg, 5%);
+// $topmenu-bg:                 lighten($black, 55%);
+$topmenu-bg:                 #d0d9e1;
+$topmenu-color:              #095871;
+$topmenu-selected-bg:        #fff;
+$topmenu-selected-color:     $rxn-red;
+$main-column-bg:             darken($body-bg, 5%);
 $footer-bg:                  $header-bg;
 $footer-color:               $grey;
 $site-message-color:         $rxn-dark-red;
 $link-color:                 $blue;
 $button-bg:                  $topmenu-bg;
 $button-color:               $grey;
+$tablist-border-color:       darken($topmenu-bg, 10%);
 // $button-enter-outline-color: orange !default;
 
 @import '../../scss/style.scss';
+
+h1,
+h2,
+h3,
+h4,
+.config-var .name {
+  color: $grey;
+}
+
+.section,
+.config-var:first-of-type {
+  border-top-color: $light-grey;
+}
+
+.config-var {
+  border-bottom-color: $light-grey;
+}
+
+header .rxn-admin-btn {
+  $local-button-bg: lighten(#1d1d1b, 5%);
+  border-left:   1px solid lighten($local-button-bg, 10%);
+  border-top:    1px solid lighten($local-button-bg, 10%);
+  border-right:  1px solid darken($local-button-bg, 10%);
+  border-bottom: 1px solid darken($local-button-bg, 10%);
+}

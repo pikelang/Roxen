@@ -55,11 +55,7 @@
                     <i class='fa fa-spinner fa-pulse hidden' id='mod-spinner'></i>
                   </form>
                   <script>
-                    var e = document.createElement('script');
-                    e.setAttribute('async', true);
-                    e.setAttribute('src', '/js/find-module.js');
-                    document.getElementsByTagName('script')[0]
-                      .parentNode.appendChild(e);
+                    rxnlib.loadResource('/js/find-module.js')
                   </script>
                 </div>
               {{/search_form}}
