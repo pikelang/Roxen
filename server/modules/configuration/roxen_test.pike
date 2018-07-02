@@ -695,8 +695,9 @@ void run_xml_tests(string data) {
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d, skipped %d%s.\n",
-               ltests, lfails, lskipped,
+  string fail_str = lfails ? ("failed on " + lfails) : "zero failures";
+  report_debug("Did %d tests, %s, skipped %d%s.\n",
+               ltests, fail_str, lskipped,
 	       bkgr_fails ?
 	       ", detected " + bkgr_fails + " background failures" : "");
 
@@ -718,7 +719,8 @@ void run_pike_tests(object test, string path)
     tests+=tsts;
     fails+=fail;
 
-    report_debug("Did %d tests, failed on %d%s.\n", tsts, fail,
+    string fail_str = fail ? ("failed on " + fail) : "zero failures";
+    report_debug("Did %d tests, %s%s.\n", tsts, fail_str,
 		 bkgr_fails ?
 		 ", detected " + bkgr_fails + " background failures" : "");
 
@@ -797,8 +799,9 @@ void continue_run_tests( )
   if(is_last_test_configuration())
   {
     // Note that e.g. the distmaker parses this string.
-    report_debug("\nDid a grand total of %d tests, %d failed.\n\n",
-		 tests, fails);
+    string fail_str = fails ? ("failed on " + fails) : "zero failures";
+    report_debug("\nDid a grand total of %d tests, %s.\n\n",
+		 tests, fail_str);
     roxen.restart(0, fails > 127 ? 127 : fails);
   }
   else
