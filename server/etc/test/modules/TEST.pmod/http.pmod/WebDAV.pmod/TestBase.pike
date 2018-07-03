@@ -357,7 +357,7 @@ protected WebDAVResponse webdav_move(string src_path,
                                      int expected_status_code)
 {
   bool src_equals_dst = false;
-  if (non_normalizing_filesystem()) {
+  if (case_sensitive_filesystem()) {
     src_equals_dst = Unicode.normalize(utf8_to_string(src_path), "NFC") ==
                     Unicode.normalize(utf8_to_string(dst_path), "NFC");
   } else {
@@ -492,16 +492,33 @@ protected WebDAVResponse webdav_ls(string path,
     do_webdav_ls(path, expected, true, expected_status_code);
 }
 
-protected bool non_normalizing_filesystem()
+enum FSBehavior {
+  FS_RAW = 0,
+  FS_CASE_INSENSITIVE = 1,
+  FS_UNICODE_NORMALIZING = 2,
+  FS_BOTH = 3,
+};
+
+protected FSBehavior filesystem_behavior()
 {
   string sysname = System.uname()->sysname;
   if (sysname == "Darwin") { // OS X
-    return false;
+    return FS_BOTH;
   }
   if (has_value(sysname, "Win32")) { // Windows
-    return false;
+    return FS_CASE_INSENSITIVE;
   }
-  return true;
+  return FS_RAW;
+}
+
+protected bool case_sensitive_filesystem()
+{
+  return !(filesystem_behavior() & FS_CASE_INSENSITIVE);
+}
+
+protected bool non_normalizing_filesystem()
+{
+  return !(filesystem_behavior() & FS_UNICODE_NORMALIZING);
 }
 
 protected void prepare_testdir(string testdir)
@@ -2113,6 +2130,7 @@ public void test_x_ls()
 {
   int count = 0;
   bool normalizing = !non_normalizing_filesystem();
+  bool casesensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2164,7 +2182,7 @@ public void test_x_ls()
               // In this case the result depends on whether the WebDAV backend
               // is normalizing or not. For our WebServer tests it depends on
               // the OS but other WebDAV modules may implement normalization
-              // themselves (then normalizing_filesystem() is typically
+              // themselves (then filesystem_behavior() is typically
               // overridden by the test subclass.)
               webdav_ls(dir_ls,
                         normalizing ?
@@ -2224,7 +2242,7 @@ public void test_x_special_chars()
 public void test_x_put()
 {
   int count = 0;
-  bool caseSensitive = non_normalizing_filesystem();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2285,7 +2303,7 @@ public void test_x_put()
 public void test_x_copy_file()
 {
   int count = 0;
-  bool caseSensitive = non_normalizing_filesystem();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2321,7 +2339,7 @@ public void test_x_copy_file()
 public void test_x_mkcol()
 {
   int count = 0;
-  bool caseSensitive = non_normalizing_filesystem();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2356,7 +2374,7 @@ public void test_x_mkcol()
 public void test_x_move_file()
 {
   int count = 0;
-  bool caseSensitive = non_normalizing_filesystem();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2395,7 +2413,7 @@ public void test_x_move_file()
 // Runs only on case insensitive systems.
 public void test_x_put_copy_move_delete()
 {
-  if (non_normalizing_filesystem()) {
+  if (case_sensitive_filesystem()) {
     return;
   }
   string mv_dst = Stdio.append_path(this::testcase_dir, "mv_dst");
@@ -2457,7 +2475,7 @@ public void test_x_lock()
 // We satisfy with taking a lock on a resource with mixed case and later
 // creating a file with the same case.
 {
-  bool caseSensitive = non_normalizing_filesystem();
+  bool caseSensitive = case_sensitive_filesystem();
   array(string) cases = ({"mc", "lc", "uc"});
   if (caseSensitive) {
     cases = ({ "mc" });
