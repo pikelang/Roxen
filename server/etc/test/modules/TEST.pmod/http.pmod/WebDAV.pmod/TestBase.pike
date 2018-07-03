@@ -2219,20 +2219,22 @@ public void test_x_ls()
               // the OS but other WebDAV modules may implement normalization
               // themselves (then filesystem_behavior() is typically
               // overridden by the test subclass.)
-              webdav_ls(dir_ls,
-                        normalizing ?
-                          ({ exp_dir[case_ls],
-                             exp_dir[case_ls] + "/" + exp_file[case_create] })
-                             : ({}),
-                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
+	      if (normalizing ||
+		  (!casesensitive && (unicode_method_create == "NFC"))) {
+		webdav_ls(dir_ls,
+			  ({ exp_dir[case_ls],
+			     exp_dir[case_ls] + "/" + exp_file[case_create] }),
+			  STATUS_MULTI_STATUS);
 
-              // When listing a file directly, it will have equivalent case
-              // in the returned list.
-              webdav_ls(dir_ls + "/" + file_ls,
-                        normalizing ?
-                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) :
-                          ({ }),
-                        normalizing ? STATUS_MULTI_STATUS : STATUS_NOT_FOUND);
+		// When listing a file directly, it will have equivalent case
+		// in the returned list.
+		webdav_ls(dir_ls + "/" + file_ls,
+			  ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }),
+			  STATUS_MULTI_STATUS);
+	      } else {
+		webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
+		webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
+	      }
             }
           }
         }
