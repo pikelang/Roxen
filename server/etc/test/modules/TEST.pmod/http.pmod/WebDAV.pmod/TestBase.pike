@@ -2156,6 +2156,36 @@ public void test_x_ls()
             ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
             string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
 
+#if 0
+	    werror("normalizing: %d\n"
+		   "casesensitive: %d\n"
+		   "str: %O\n"
+		   "umc: %O\n"
+		   "cc: %O\n"
+		   "uml: %O\n"
+		   "cls: %O\n"
+		   "fn: %O\n"
+		   "nd: %O\n"
+		   "nf: %O\n"
+		   "dls: %O\n"
+		   "fls: %O\n"
+		   "ed: %O\n"
+		   "ef: %O\n"
+		   "ep: %O\n"
+		   "--------\n"
+		   "utf8(ep):   %O\n"
+		   "ap(nd, nf): %O\n",
+		   normalizing, casesensitive,
+		   str, unicode_method_create, case_create,
+		   unicode_method_ls, case_ls,
+		   filename,
+		   new_dir, new_file,
+		   dir_ls, file_ls,
+		   exp_dir, exp_file, exp_path,
+		   string_to_utf8(exp_path),
+		   Stdio.append_path(new_dir, new_file));
+#endif
+
             if (string_to_utf8 (exp_path) ==
                 Stdio.append_path (new_dir, new_file)) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
