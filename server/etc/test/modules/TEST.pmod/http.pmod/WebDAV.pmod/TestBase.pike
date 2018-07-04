@@ -2115,16 +2115,16 @@ public void test_move_destination_locked()
 #ifdef WEBDAV_TEST_ASCII_ONLY
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
+    "Ascii-myFile",           // To compare with
    });
 #else
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
-    "åÅäÄöÖæÆüÜñÑ@",   // Some Latin 1 chars
-    "ąĄŁůŮăĂçÇ",       // Some Latin 2 chars
-    "фщъЂЃЄЉЖ",        // Some Cyrillic chars
-    "ώψφλξβΩΠΞΔ€",     // Some Greek chars
+    "Ascii-myFile", // To compare with
+    "Latin1-åÅäÄöÖæÆüÜñÑ@", // Some Latin 1 chars
+    "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
+    "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
+    "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
   });
 #endif
 
@@ -2161,6 +2161,24 @@ public void test_x_ls()
             ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
             string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
 
+	    // NB: In normalizing (which implies !casesensitive) mode
+	    //     the paths should always match.
+	    int exp_match = 1;
+	    if (!normalizing) {
+	      // NB: In casesensitive mode the paths only match if they
+	      //     are coded identically.
+	      exp_match = (string_to_utf8(exp_path) ==
+			   Stdio.append_path(new_dir, new_file));
+	      if (!exp_match && !casesensitive) {
+		// NB: To handle cases where the NFC and NFD normalizations
+		//     are equal (eg ascii or kanji) it is not sufficient
+		//     to just look at whether unicode_method_create is
+		//     "NFC" or "NFD".
+		exp_match = (new_dir ==
+			     make_filenames(this::testcase_dir, filename,
+					    "NFC", true)[case_create]);
+	      }
+	    }
 #if 0
 	    werror("normalizing: %d\n"
 		   "casesensitive: %d\n"
@@ -2177,6 +2195,7 @@ public void test_x_ls()
 		   "ed: %O\n"
 		   "ef: %O\n"
 		   "ep: %O\n"
+		   "em: %O\n"
 		   "--------\n"
 		   "utf8(ep):   %O\n"
 		   "ap(nd, nf): %O\n",
@@ -2186,24 +2205,21 @@ public void test_x_ls()
 		   filename,
 		   new_dir, new_file,
 		   dir_ls, file_ls,
-		   exp_dir, exp_file, exp_path,
+		   exp_dir, exp_file, exp_path, exp_match,
 		   string_to_utf8(exp_path),
 		   Stdio.append_path(new_dir, new_file));
 #endif
 
-            if (string_to_utf8 (exp_path) ==
-                Stdio.append_path (new_dir, new_file)) {
+            if (exp_match) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
-            } else {
-              webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
-                !normalizing && STATUS_NOT_FOUND);
+	    } else {
+              webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
             }
             string testdata = "FILE " + count;
             ASSERT_EQUAL(filesystem_direct_write(new_dir + "/" + new_file,
                                                  testdata),
                          sizeof(testdata));
-            if (string_to_utf8 (exp_path) ==
-                Stdio.append_path (new_dir, new_file)) {
+            if (exp_match) {
               // In this case we should always get a successful listing.
               webdav_ls(dir_ls,
                         ({ exp_dir[case_ls],
@@ -2214,27 +2230,8 @@ public void test_x_ls()
               webdav_ls(dir_ls + "/" + file_ls,
                         ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) );
             } else {
-              // In this case the result depends on whether the WebDAV backend
-              // is normalizing or not. For our WebServer tests it depends on
-              // the OS but other WebDAV modules may implement normalization
-              // themselves (then filesystem_behavior() is typically
-              // overridden by the test subclass.)
-	      if (normalizing ||
-		  (!casesensitive && (unicode_method_create == "NFC"))) {
-		webdav_ls(dir_ls,
-			  ({ exp_dir[case_ls],
-			     exp_dir[case_ls] + "/" + exp_file[case_create] }),
-			  STATUS_MULTI_STATUS);
-
-		// When listing a file directly, it will have equivalent case
-		// in the returned list.
-		webdav_ls(dir_ls + "/" + file_ls,
-			  ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }),
-			  STATUS_MULTI_STATUS);
-	      } else {
-		webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
-		webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
-	      }
+	      webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
+	      webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
             }
           }
         }
