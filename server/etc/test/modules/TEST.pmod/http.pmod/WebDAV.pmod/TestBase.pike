@@ -2110,16 +2110,16 @@ public void test_move_destination_locked()
 #ifdef WEBDAV_TEST_ASCII_ONLY
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
+    "Ascii-myFile",           // To compare with
    });
 #else
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
-    "åÅäÄöÖæÆüÜñÑ@",   // Some Latin 1 chars
-    "ąĄŁůŮăĂçÇ",       // Some Latin 2 chars
-    "фщъЂЃЄЉЖ",        // Some Cyrillic chars
-    "ώψφλξβΩΠΞΔ€",     // Some Greek chars
+    "Ascii-myFile", // To compare with
+    "Latin1-åÅäÄöÖæÆüÜñÑ@", // Some Latin 1 chars
+    "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
+    "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
+    "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
   });
 #endif
 
