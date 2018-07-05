@@ -18,3 +18,4 @@ server/mysql/*
 server/pike
 var
 node_modules
+.vscode/
