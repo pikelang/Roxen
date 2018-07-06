@@ -508,12 +508,22 @@ private
       // "10.0.13-MariaDB".
     };
     db_version = db_version && (db_version - "\n");
+    // MariaDB 10.3 ends the entry with a \0 instead of a \n.
+    db_version = db_version && (db_version - "\0");
 
     if (db_version &&
 	has_suffix(mysql_version, "-log") &&
 	!has_suffix(db_version, "-log")) {
       db_version += "-log";
     }
+
+#if 0
+    werror("db_version:    %O\n"
+	   "mysql_version: %O\n"
+	   "Up to date:    %O\n",
+	   db_version, mysql_version,
+	   db_version && has_value(mysql_version, db_version));
+#endif
 
     // Comparing 5.5.5-10.0.13-MariaDB-log and 10.0.13-MariaDB-log
     if (db_version && has_value(mysql_version, db_version)) {
