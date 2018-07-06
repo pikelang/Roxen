@@ -1356,7 +1356,7 @@ protected string mysql_product_name;
 protected string mysql_version;
 
 protected constant mysql_good_versions = ({ "5.5.*", "5.6.*" });
-protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*", "10.1.*" });
+protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*", "10.1.*", "10.3.*" });
 protected constant mysql_maybe_versions = ({ "5.*", "6.*" });
 protected constant mariadb_maybe_versions = ({ "5.*", "10.*", "11.*" });
 
