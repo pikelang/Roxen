@@ -419,6 +419,8 @@ private
       // "10.0.13-MariaDB".
     };
     db_version = db_version && (db_version - "\n");
+    // MariaDB 10.3 ends the entry with a \0 instead of a \n.
+    db_version = db_version && (db_version - "\0");
 
     if (db_version &&
 	has_suffix(mysql_version, "-log") &&
