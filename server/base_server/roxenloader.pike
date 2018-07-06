@@ -1359,6 +1359,8 @@ protected constant mysql_good_versions = ({ "5.5.*", "5.6.*" });
 protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*", "10.1.*", "10.3.*" });
 protected constant mysql_maybe_versions = ({ "5.*", "6.*" });
 protected constant mariadb_maybe_versions = ({ "5.*", "10.*", "11.*" });
+protected constant mysql_bad_versions = ({});
+protected constant mariadb_bad_versions = ({ "10.2.*" });
 
 string roxen_version()
 //! @appears roxen_version
@@ -2677,30 +2679,40 @@ void low_start_mysql( string datadir,
     } else {
       array(string) good_versions = mysql_good_versions;
       array(string) maybe_versions = mysql_maybe_versions;
+      array(string) bad_versions = mysql_bad_versions;
       mysql_product_name = "MySQL";
       if (has_prefix(trailer, "-mariadb")) {
 	mysql_product_name = "MariaDB";
 	good_versions = mariadb_good_versions;
 	maybe_versions = mariadb_maybe_versions;
+	bad_versions = mariadb_bad_versions;
       }
       //  Determine if version is acceptable
       if (has_value(glob(good_versions[*], mysql_version), 1)) {
 	//  Everything is fine
       } else if (has_value(glob(maybe_versions[*], mysql_version), 1)) {
-	//  Don't allow unless user gives special define
+	if (has_value(glob(bad_versions[*], mysql_version), 1)) {
+	  version_fatal_error =
+	    sprintf("This version of %s (%s) is known to not work "
+		    "with Roxen:\n\n"
+		    "  %s\n",
+		    mysql_product_name, mysql_version, orig_version);
+	} else {
+	  //  Don't allow unless user gives special define
 #ifdef ALLOW_UNSUPPORTED_MYSQL
-	report_debug("\nWARNING: Forcing Roxen to run with unsupported "
-		     "%s version (%s).\n",
-		     mysql_product_name, mysql_version);
+	  report_debug("\nWARNING: Forcing Roxen to run with unsupported "
+		       "%s version (%s).\n",
+		       mysql_product_name, mysql_version);
 #else
-	version_fatal_error =
-	  sprintf("This version of %s (%s) is not officially supported "
-		  "with Roxen.\n"
-		  "If you want to override this restriction, use this "
-		  "option:\n\n"
-		  "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
-		  mysql_product_name, mysql_version);
+	  version_fatal_error =
+	    sprintf("This version of %s (%s) is not officially supported "
+		    "with Roxen.\n"
+		    "If you want to override this restriction, use this "
+		    "option:\n\n"
+		    "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
+		    mysql_product_name, mysql_version);
 #endif
+	}
       } else {
 	//  Version not recognized (maybe too old or too new) so bail out
 	version_fatal_error =
