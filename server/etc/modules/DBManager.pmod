@@ -428,6 +428,14 @@ private
       db_version += "-log";
     }
 
+#if 0
+    werror("db_version:    %O\n"
+	   "mysql_version: %O\n"
+	   "Up to date:    %O\n",
+	   db_version, mysql_version,
+	   db_version && has_value(mysql_version, db_version));
+#endif
+
     // Comparing 5.5.5-10.0.13-MariaDB-log and 10.0.13-MariaDB-log
     if (db_version && has_value(mysql_version, db_version)) {
       // Already up-to-date.
