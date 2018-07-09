@@ -536,6 +536,8 @@ private
 	// Upgrade method in MySQL 5.0.19 and later (UNIX),
 	// MySQL 5.0.25 and later (NT).
 	int err = Process.Process(({ mysql_location->mysql_upgrade,
+				     "--defaults-file=" +
+				     roxenloader.query_mysql_config_file(),
 #ifdef __NT__
 				     "--pipe",
 #endif
@@ -572,6 +574,8 @@ private
 	  werror("Warning: Upgrade failed with code %d; trying once more...\n",
 		 err);
 	  err = Process.Process(({ mysql_location->mysql_upgrade,
+				   "--defaults-file=" +
+				   roxenloader.query_mysql_config_file(),
 #ifdef __NT__
 				   "--pipe",
 #endif
@@ -2087,10 +2091,14 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
-			 "--complete-insert", "--compress",
-			 "--extended-insert", "--hex-blob",
-			 "--quick", "--quote-names" });
+  array(string) cmd = ({
+    mysqldump,
+    "--defaults-file=" + roxenloader.query_mysql_config_file(),
+    "--add-drop-table", "--create-options",
+    "--complete-insert", "--compress",
+    "--extended-insert", "--hex-blob",
+    "--quick", "--quote-names",
+  });
   if ((host == "") || (host == "localhost")) {
     // Socket.
     if (port) {
