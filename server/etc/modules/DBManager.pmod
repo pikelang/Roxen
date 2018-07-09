@@ -1977,10 +1977,13 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
-			 "--complete-insert", "--compress",
-			 "--extended-insert", "--hex-blob",
-			 "--quick", "--quote-names" });
+  array(string) cmd = ({
+    mysqldump,
+    "--add-drop-table", "--create-options",
+    "--complete-insert", "--compress",
+    "--extended-insert", "--hex-blob",
+    "--quick", "--quote-names",
+  });
   if ((host == "") || (host == "localhost")) {
     // Socket.
     if (port) {
