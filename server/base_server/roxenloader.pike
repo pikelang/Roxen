@@ -1980,6 +1980,12 @@ string query_mysql_socket()
 #endif
 }
 
+string query_mysql_config_file(string|void datadir)
+{
+  datadir = datadir || query_mysql_data_dir();
+  return datadir + "/my.cfg";
+}
+
 string  my_mysql_path;
 
 string query_configuration_dir()
