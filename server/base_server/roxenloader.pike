@@ -2630,8 +2630,9 @@ protected void low_check_mysql(string myisamchk, string datadir,
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
-      Process.Process(({ myisamchk }) +
-		      args + sort(files),
+      Process.Process(({ myisamchk,
+			 "--defaults-file=" + query_mysql_config_file(datadir),
+		      }) + args + sort(files),
 		      ([
 			"stdin":devnull,
 			"stdout":errlog,
