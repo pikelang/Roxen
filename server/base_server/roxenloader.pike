@@ -2827,8 +2827,8 @@ void low_start_mysql( string datadir,
   }
 
   // Create the configuration file.
-  int force = !file_stat( datadir+"/my.cfg" );
-  string cfg_file = (Stdio.read_bytes(datadir + "/my.cfg") ||
+  int force = !file_stat( query_mysql_config_file(datadir) );
+  string cfg_file = (Stdio.read_bytes(query_mysql_config_file(datadir)) ||
 		     "[mysqld]\n"
 		     "max_allowed_packet = 128M\n"
 		     "net_buffer_length = 8K\n"
@@ -2853,7 +2853,8 @@ void low_start_mysql( string datadir,
   //     and was deprecated in MySQL 5.5.
   if (has_value(normalized_cfg_file, "set-variable=") ||
       has_value(normalized_cfg_file, "set-variable =")) {
-    report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
+    report_debug("Repairing pre Mysql 4.0.2 syntax in %s.\n",
+		 query_mysql_config_file(datadir));
     cfg_file = replace(cfg_file,
 		       ({ "set-variable=",
 			  "set-variable = ", "set-variable =",
@@ -2873,8 +2874,8 @@ void low_start_mysql( string datadir,
     // cf [bug 7264].
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding innodb-data-file-path to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding innodb-data-file-path to %s.\n",
+		   query_mysql_config_file(datadir));
       int initial = 10;	// 10 MB -- The traditional setting.
       int bytes = Stdio.file_size(datadir + "/ibdata1");
       if (bytes) {
@@ -2890,10 +2891,10 @@ void low_start_mysql( string datadir,
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "InnoDB data file path entry, "
 		     "and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -2906,17 +2907,17 @@ void low_start_mysql( string datadir,
     // otherwise shrink to a third.
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding default character set entries to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding default character set entries to %s.\n",
+		   query_mysql_config_file(datadir));
       a[1] = "\n"
 	"character-set-server=latin1\n"
 	"collation-server=latin1_swedish_ci" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "character set entry, and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -2927,16 +2928,16 @@ void low_start_mysql( string datadir,
     // due to different parameter limits (eg key lengths).
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding default storage engine entry to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding default storage engine entry to %s.\n",
+		   query_mysql_config_file(datadir));
       a[1] = "\n"
 	"default-storage-engine = MYISAM" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "storage engine entry, and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -2945,7 +2946,7 @@ void low_start_mysql( string datadir,
 #endif /* __NT__ */
 
   if(force)
-    catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
+    catch(Stdio.write_file(query_mysql_config_file(datadir), cfg_file));
 
   // Keep mysql's logging to stdout and stderr when running in --once
   // mode, to get it more synchronous.
