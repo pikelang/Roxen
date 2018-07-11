@@ -1659,9 +1659,11 @@ protected string mysql_product_name;
 protected string mysql_version;
 
 protected constant mysql_good_versions = ({ "5.5.*", "5.6.*" });
-protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*", "10.1.*" });
+protected constant mariadb_good_versions = ({ "5.5.*", "10.0.*", "10.1.*", "10.3.*" });
 protected constant mysql_maybe_versions = ({ "5.*", "6.*" });
 protected constant mariadb_maybe_versions = ({ "5.*", "10.*", "11.*" });
+protected constant mysql_bad_versions = ({});
+protected constant mariadb_bad_versions = ({ "10.2.*" });
 
 string roxen_version()
 //! @appears roxen_version
@@ -2303,6 +2305,12 @@ string query_mysql_socket()
 #else
   return combine_path(query_mysql_data_dir(), "socket");
 #endif
+}
+
+string query_mysql_config_file(string|void datadir)
+{
+  datadir = datadir || query_mysql_data_dir();
+  return datadir + "/my.cfg";
 }
 
 string  my_mysql_path;
@@ -2977,8 +2985,9 @@ protected void low_check_mysql(string myisamchk, string datadir,
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
-      Process.Process(({ myisamchk }) +
-		      args + sort(files),
+      Process.Process(({ myisamchk,
+			 "--defaults-file=" + query_mysql_config_file(datadir),
+		      }) + args + sort(files),
 		      ([
 			"stdin":devnull,
 			"stdout":errlog,
@@ -3034,30 +3043,40 @@ void low_start_mysql( string datadir,
     } else {
       array(string) good_versions = mysql_good_versions;
       array(string) maybe_versions = mysql_maybe_versions;
+      array(string) bad_versions = mysql_bad_versions;
       mysql_product_name = "MySQL";
       if (has_prefix(trailer, "-mariadb")) {
 	mysql_product_name = "MariaDB";
 	good_versions = mariadb_good_versions;
 	maybe_versions = mariadb_maybe_versions;
+	bad_versions = mariadb_bad_versions;
       }
       //  Determine if version is acceptable
       if (has_value(glob(good_versions[*], mysql_version), 1)) {
 	//  Everything is fine
       } else if (has_value(glob(maybe_versions[*], mysql_version), 1)) {
-	//  Don't allow unless user gives special define
+	if (has_value(glob(bad_versions[*], mysql_version), 1)) {
+	  version_fatal_error =
+	    sprintf("This version of %s (%s) is known to not work "
+		    "with Roxen:\n\n"
+		    "  %s\n",
+		    mysql_product_name, mysql_version, orig_version);
+	} else {
+	  //  Don't allow unless user gives special define
 #ifdef ALLOW_UNSUPPORTED_MYSQL
-	report_debug("\nWARNING: Forcing Roxen to run with unsupported "
-		     "%s version (%s).\n",
-		     mysql_product_name, mysql_version);
+	  report_debug("\nWARNING: Forcing Roxen to run with unsupported "
+		       "%s version (%s).\n",
+		       mysql_product_name, mysql_version);
 #else
-	version_fatal_error =
-	  sprintf("This version of %s (%s) is not officially supported "
-		  "with Roxen.\n"
-		  "If you want to override this restriction, use this "
-		  "option:\n\n"
-		  "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
-		  mysql_product_name, mysql_version);
+	  version_fatal_error =
+	    sprintf("This version of %s (%s) is not officially supported "
+		    "with Roxen.\n"
+		    "If you want to override this restriction, use this "
+		    "option:\n\n"
+		    "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
+		    mysql_product_name, mysql_version);
 #endif
+	}
       } else {
 	//  Version not recognized (maybe too old or too new) so bail out
 	version_fatal_error =
@@ -3165,8 +3184,8 @@ void low_start_mysql( string datadir,
   }
 
   // Create the configuration file.
-  int force = !file_stat( datadir+"/my.cfg" );
-  string cfg_file = (Stdio.read_bytes(datadir + "/my.cfg") ||
+  int force = !file_stat( query_mysql_config_file(datadir) );
+  string cfg_file = (Stdio.read_bytes(query_mysql_config_file(datadir)) ||
 		     "[mysqld]\n"
 		     "max_allowed_packet = 128M\n"
 		     "net_buffer_length = 8K\n"
@@ -3191,7 +3210,8 @@ void low_start_mysql( string datadir,
   //     and was deprecated in MySQL 5.5.
   if (has_value(normalized_cfg_file, "set-variable=") ||
       has_value(normalized_cfg_file, "set-variable =")) {
-    report_debug("Repairing pre Mysql 4.0.2 syntax in %s/my.cfg.\n", datadir);
+    report_debug("Repairing pre Mysql 4.0.2 syntax in %s.\n",
+		 query_mysql_config_file(datadir));
     cfg_file = replace(cfg_file,
 		       ({ "set-variable=",
 			  "set-variable = ", "set-variable =",
@@ -3211,8 +3231,8 @@ void low_start_mysql( string datadir,
     // cf [bug 7264].
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding innodb-data-file-path to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding innodb-data-file-path to %s.\n",
+		   query_mysql_config_file(datadir));
       int initial = 10;	// 10 MB -- The traditional setting.
       int bytes = Stdio.file_size(datadir + "/ibdata1");
       if (bytes) {
@@ -3228,10 +3248,10 @@ void low_start_mysql( string datadir,
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "InnoDB data file path entry, "
 		     "and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -3244,17 +3264,17 @@ void low_start_mysql( string datadir,
     // otherwise shrink to a third.
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding default character set entries to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding default character set entries to %s.\n",
+		   query_mysql_config_file(datadir));
       a[1] = "\n"
 	"character-set-server=latin1\n"
 	"collation-server=latin1_swedish_ci" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "character set entry, and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -3265,16 +3285,16 @@ void low_start_mysql( string datadir,
     // due to different parameter limits (eg key lengths).
     array a = cfg_file/"[mysqld]";
     if (sizeof(a) > 1) {
-      report_debug("Adding default storage engine entry to %s/my.cfg.\n",
-		   datadir);
+      report_debug("Adding default storage engine entry to %s.\n",
+		   query_mysql_config_file(datadir));
       a[1] = "\n"
 	"default-storage-engine = MYISAM" + a[1];
       cfg_file = a * "[mysqld]";
       force = 1;
     } else {
-      report_warning("Mysql configuration file %s/my.cfg lacks\n"
+      report_warning("Mysql configuration file %s lacks\n"
 		     "storage engine entry, and automatic repairer failed.\n",
-		     datadir);
+		     query_mysql_config_file(datadir));
     }
   }
 
@@ -3313,7 +3333,7 @@ void low_start_mysql( string datadir,
 #endif /* __NT__ */
 
   if(force)
-    catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
+    catch(Stdio.write_file(query_mysql_config_file(datadir), cfg_file));
 
   // Keep mysql's logging to stdout and stderr when running in --once
   // mode, to get it more synchronous.

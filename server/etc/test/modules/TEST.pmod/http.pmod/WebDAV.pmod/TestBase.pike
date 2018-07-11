@@ -64,6 +64,11 @@ protected int filesystem_check_exists(string path);
 
 protected string filesystem_read_file(string path);
 
+protected int(0..1) filesystem_mkdir_recursive(string(8bit) path);
+
+//! Writes a file to @[path], which is used verbatim without any normalization.
+protected int(0..) filesystem_direct_write(string(8bit) path, string(8bit) data);
+
 // protected int filesystem_recursive_rm(string path);
 
 protected int filesystem_check_content(string path, string expected_data)
@@ -112,6 +117,11 @@ protected WebDAVResponse webdav_request(string method,
 
   if (extra_headers) {
     headers += extra_headers;
+  }
+
+  if (upper_case(method) == "HEAD") {
+    // Workaround for bug in Protocols.HTTP.Query.
+    headers["connection"] = "close";
   }
 
   array(string) lock_paths = ({ path });
@@ -352,7 +362,7 @@ protected WebDAVResponse webdav_move(string src_path,
                                      int expected_status_code)
 {
   bool src_equals_dst = false;
-  if (case_sensitive()) {
+  if (case_sensitive_filesystem()) {
     src_equals_dst = Unicode.normalize(utf8_to_string(src_path), "NFC") ==
                     Unicode.normalize(utf8_to_string(dst_path), "NFC");
   } else {
@@ -487,16 +497,33 @@ protected WebDAVResponse webdav_ls(string path,
     do_webdav_ls(path, expected, true, expected_status_code);
 }
 
-protected bool case_sensitive()
+enum FSBehavior {
+  FS_RAW = 0,
+  FS_CASE_INSENSITIVE = 1,
+  FS_UNICODE_NORMALIZING = 2,
+  FS_BOTH = 3,
+};
+
+protected FSBehavior filesystem_behavior()
 {
   string sysname = System.uname()->sysname;
   if (sysname == "Darwin") { // OS X
-    return false;
+    return FS_BOTH;
   }
   if (has_value(sysname, "Win32")) { // Windows
-    return false;
+    return FS_CASE_INSENSITIVE;
   }
-  return true;
+  return FS_RAW;
+}
+
+protected bool case_sensitive_filesystem()
+{
+  return !(filesystem_behavior() & FS_CASE_INSENSITIVE);
+}
+
+protected bool non_normalizing_filesystem()
+{
+  return !(filesystem_behavior() & FS_UNICODE_NORMALIZING);
 }
 
 protected void prepare_testdir(string testdir)
@@ -2085,19 +2112,24 @@ public void test_move_destination_locked()
 // letters.
 // -----------------------------------------------------------------------------
 
+// NB: Some character sets (eg kanji, hangul, etc) only have
+//     a single "case", and make_filenames() requires multiple
+//     cases. Work around this issue by prefixing with some
+//     multi-case ascii characters.
 #ifdef WEBDAV_TEST_ASCII_ONLY
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
+    "Ascii-myFile",           // To compare with
    });
 #else
 protected constant FILENAMES =
   ({
-    "myFile",          // To compare with
-    "åÅäÄöÖæÆüÜñÑ@",   // Some Latin 1 chars
-    "ąĄŁůŮăĂçÇ",       // Some Latin 2 chars
-    "фщъЂЃЄЉЖ",        // Some Cyrillic chars
-    "ώψφλξβΩΠΞΔ€",     // Some Greek chars
+    "Ascii-myFile", // To compare with
+    "Latin1-åÅäÄöÖæÆüÜñÑ@", // Some Latin 1 chars
+    "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
+    "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
+    "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
+    "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
   });
 #endif
 
@@ -2107,7 +2139,8 @@ protected constant FILENAMES =
 public void test_x_ls()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool normalizing = !non_normalizing_filesystem();
+  bool casesensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2130,32 +2163,80 @@ public void test_x_ls()
               make_filenames(this::testcase_dir, filename, "NFC", false);
             mapping(string:string) exp_file = make_filenames("", filename,
                                                              "NFC", false);
-            webdav_mkcol(new_dir, STATUS_CREATED);
-            if (case_create == case_ls) {
+            ASSERT_EQUAL(filesystem_mkdir_recursive(new_dir), 1);
+            string exp_path = exp_dir[case_ls] + "/" + exp_file[case_ls];
+
+	    // NB: In normalizing (which implies !casesensitive) mode
+	    //     the paths should always match.
+	    int exp_match = 1;
+	    if (!normalizing) {
+	      // NB: In casesensitive mode the paths only match if they
+	      //     are coded identically.
+	      exp_match = (string_to_utf8(exp_path) ==
+			   Stdio.append_path(new_dir, new_file));
+	      if (!exp_match && !casesensitive) {
+		// NB: To handle cases where the NFC and NFD normalizations
+		//     are equal (eg ascii or kanji) it is not sufficient
+		//     to just look at whether unicode_method_create is
+		//     "NFC" or "NFD".
+		exp_match = (new_dir ==
+			     make_filenames(this::testcase_dir, filename,
+					    "NFC", true)[case_create]);
+	      }
+	    }
+#if 0
+	    werror("normalizing: %d\n"
+		   "casesensitive: %d\n"
+		   "str: %O\n"
+		   "umc: %O\n"
+		   "cc: %O\n"
+		   "uml: %O\n"
+		   "cls: %O\n"
+		   "fn: %O\n"
+		   "nd: %O\n"
+		   "nf: %O\n"
+		   "dls: %O\n"
+		   "fls: %O\n"
+		   "ed: %O\n"
+		   "ef: %O\n"
+		   "ep: %O\n"
+		   "em: %O\n"
+		   "--------\n"
+		   "utf8(ep):   %O\n"
+		   "ap(nd, nf): %O\n",
+		   normalizing, casesensitive,
+		   str, unicode_method_create, case_create,
+		   unicode_method_ls, case_ls,
+		   filename,
+		   new_dir, new_file,
+		   dir_ls, file_ls,
+		   exp_dir, exp_file, exp_path, exp_match,
+		   string_to_utf8(exp_path),
+		   Stdio.append_path(new_dir, new_file));
+#endif
+
+            if (exp_match) {
               webdav_ls(dir_ls, ({ exp_dir[case_ls] }) );
-            } else {
-              webdav_ls(dir_ls, ({ exp_dir[case_ls] }),
-            caseSensitive && STATUS_NOT_FOUND);
+	    } else {
+              webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
             }
-            webdav_put(new_dir + "/" + new_file, "FILE " + count, STATUS_CREATED);
-            if (case_create == case_ls) {
+            string testdata = "FILE " + count;
+            ASSERT_EQUAL(filesystem_direct_write(new_dir + "/" + new_file,
+                                                 testdata),
+                         sizeof(testdata));
+            if (exp_match) {
+              // In this case we should always get a successful listing.
               webdav_ls(dir_ls,
                         ({ exp_dir[case_ls],
                            exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+
+              // When listing a file directly, it will have equivalent case
+              // in the returned list.
               webdav_ls(dir_ls + "/" + file_ls,
-                        ({ exp_dir[case_ls] + "/" + exp_file[case_create] }) );
+                        ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }) );
             } else {
-              webdav_ls(dir_ls,
-                        caseSensitive ?
-                          ({ }) :
-                          ({ exp_dir[case_ls],
-                             exp_dir[case_ls] + "/" + exp_file[case_create] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
-              webdav_ls(dir_ls + "/" + file_ls,
-                        caseSensitive ?
-                          ({ }) :
-                          ({ exp_dir[case_ls] + "/" + exp_file[case_ls] }),
-                        caseSensitive ? STATUS_NOT_FOUND : STATUS_MULTI_STATUS);
+	      webdav_ls(dir_ls, ({}), STATUS_NOT_FOUND);
+	      webdav_ls(dir_ls + "/" + file_ls, ({ }), STATUS_NOT_FOUND);
             }
           }
         }
@@ -2200,7 +2281,7 @@ public void test_x_special_chars()
 public void test_x_put()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2261,7 +2342,7 @@ public void test_x_put()
 public void test_x_copy_file()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2297,7 +2378,7 @@ public void test_x_copy_file()
 public void test_x_mkcol()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2332,7 +2413,7 @@ public void test_x_mkcol()
 public void test_x_move_file()
 {
   int count = 0;
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = case_sensitive_filesystem();
   int w = sizeof("" + (sizeof(FILENAMES)*2*3) );
   foreach (FILENAMES, string str) {
     // TODO: Skip the following 2 loops and just pick an encoding and a case for the src, or?
@@ -2371,7 +2452,7 @@ public void test_x_move_file()
 // Runs only on case insensitive systems.
 public void test_x_put_copy_move_delete()
 {
-  if (case_sensitive()) {
+  if (case_sensitive_filesystem()) {
     return;
   }
   string mv_dst = Stdio.append_path(this::testcase_dir, "mv_dst");
@@ -2433,7 +2514,7 @@ public void test_x_lock()
 // We satisfy with taking a lock on a resource with mixed case and later
 // creating a file with the same case.
 {
-  bool caseSensitive = case_sensitive();
+  bool caseSensitive = case_sensitive_filesystem();
   array(string) cases = ({"mc", "lc", "uc"});
   if (caseSensitive) {
     cases = ({ "mc" });

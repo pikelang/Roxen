@@ -6451,13 +6451,23 @@ protected void init_cache_prefs(string cache_name)
   caches_initialized[cache_name] = 1;
 }
 
-string lookup_real_path_case_insens (string path, void|int no_warn,
-				     void|string charset)
-//! Looks up the given path case insensitively to a path in the real
-//! file system. I.e. all segments in @[path] that exist in the file
-//! system when matched case insensitively are converted to the same
-//! case they have when listed by @[get_dir]. Segments that don't
-//! exist are kept as-is.
+#ifdef FS_TRACE
+#define FSWERR(X...)	werror(X)
+#else
+#define FSWERR(X...)
+#endif
+
+string(8bit) lookup_real_path_case_insens(string path, void|int no_warn,
+					  void|string charset)
+//! Looks up a given path case insensitively and match it to a path in
+//! the real file system.
+//!
+//! @param path
+//! The path to look up.
+//!
+//! All segments in @[path] that exist in the file system when matched case
+//! insensitively are converted to the same encoding and case as they have
+//! when listed by @[get_dir()]. Segments that don't exist are kept as-is.
 //!
 //! If a segment ambiguously matches several entries in a directory
 //! then it and all remaining segments are returned as-is. A warning
@@ -6468,16 +6478,20 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 //! always have "/" as directory separators. If there is a trailing
 //! slash then it is kept intact.
 //!
-//! If @[charset] is set then charset conversion is done: @[path] is
-//! assumed to be a (possibly wide) unicode string in NFC, and @[charset] is
-//! taken as the charset used in the file system. The returned path is
-//! a unicode string as well. If @[charset] isn't specified then it
-//! and the filesystem are assumed to be in utf-8, and the result will
-//! be utf-8 encoded.
+//! @param charset
 //!
-//! If @[charset] is given then it's assumed to be a charset accepted
-//! by @[Charset]. If there are charset conversion errors in @[path]
+//! If @[charset] is set then charset conversion is done: @[path] is
+//! assumed to be a (possibly wide) unicode string, and @[charset] is
+//! taken as the charset used in the file system.
+//! If @[charset] isn't specified then @[path] and the filesystem are
+//! assumed to be in utf-8.
+//!
+//! If @[charset] is given then it's assumed to be a charset accepted by
+//! @[Charset.encoder()]. If there are charset conversion errors in @[path]
 //! or in the file system then those paths are treated as nonexisting.
+//!
+//! @returns
+//!   Returns a string of bytes suitable for @[Stdio.read_bytes()] et al.
 //!
 //! @note
 //! Existing paths are cached without any time limit, but the cached
@@ -6495,7 +6509,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
     case 0:
       // NB: NT has a filesystem that uses UTF-16.
 #if !defined(__NT__) || constant(Stdio.__HAVE_UTF8_FS__)
-      return string_to_utf8(this_function(utf8_to_string(path), no_warn, "utf8"));
+      return this_function(utf8_to_string(path), no_warn, "utf8");
 #endif
       break;
     case "utf8":
@@ -6515,119 +6529,109 @@ string lookup_real_path_case_insens (string path, void|int no_warn,
 
   init_cache_prefs(cache_name);
 
-  string dec_path, enc_path;
   int nonexist;
 
-  void recur (string path)
+  string(8bit) recur(string(8bit) path, string(8bit) lc_path)
   {
-    string lc_path = lower_case (path);
-
-    dec_path = cache_lookup (cache_name, lc_path);
-    if (dec_path) {
-    check_cached: {
-	if (!encode)
-	  enc_path = dec_path;
-	else if (mixed err = catch (enc_path = encode (dec_path))) {
-	  if (!objectp (err) || !err->is_charset_encode_error)
-	    throw (err);
-	  break check_cached;
-	}
-	if (Stdio.exist (enc_path)) {
-	  //werror ("path %O -> %O (cached)\n", path, dec_path);
-	  return;
-	}
+    FSWERR("  %s(%O, %O)...\n", __func__, path, lc_path);
+    string(8bit) ret = cache_lookup (cache_name, path);
+    if (ret) {
+      FSWERR("  Found %O in cache.\n", ret);
+      if (Stdio.exist(ret)) {
+	//werror ("path %O -> %O (cached)\n", path, dec_path);
+	FSWERR("Valid.\n");
+	return ret;
       }
-      cache_remove (cache_name, lc_path);
+      FSWERR("Invalid.\n");
+      cache_remove (cache_name, path);
     }
 
-    dec_path = dirname (path);
-    if (dec_path == "" || dec_path == path) { // At root.
-      if (!encode)
-	enc_path = dec_path;
-      else if (mixed err = catch (enc_path = encode (dec_path))) {
-	if (!objectp (err) || !err->is_charset_encode_error)
-	  throw (err);
-      }
-      return;
+    ret = dirname (path);
+    if (ret == "" || ret == path) { // At root.
+      FSWERR("  ==> %O\n", ret);
+      return ret;
     }
-    recur (dec_path);
+    ret = recur(ret, dirname(lc_path));
 
+    string name = basename(path);
     if (!nonexist) {
-      // FIXME: Note that get_dir on windows accepts and returns
-      // unicode paths, so the following isn't correct there. The
-      // charset handling in the file system interface on windows is
-      // inconsistent however, since most other functions do not
-      // accept neither wide strings nor strings encoded with any
-      // charset. This applies at least up to pike 7.8.589.
-      string name = basename(path);
-    search_dir:
-      if (array(string) dir_list = get_dir (enc_path)) {
+      if (array(string(8bit)) dir_list = get_dir(ret)) {
 	string lc_name = basename (lc_path);
-	string dec_name, enc_name;
+	FSWERR("    dir: %O name: %O lc_name: %O\n", ret, name, lc_name);
+	string(8bit) ent_name;
 	int fail;
 
-	foreach (dir_list, string enc_ent) {
-	  string dec_ent;
-	  if (!decode)
-	    dec_ent = enc_ent;
-	  else if (mixed err = catch (dec_ent = decode (enc_ent))) {
-	    if (decode != utf8_to_string)
-	      // utf8_to_string doesn't throw Charset.DecodeErrors.
-	      if (!objectp (err) || !err->is_charset_decode_error)
-		throw (err);
-	    // Ignore file system paths that we cannot decode.
-	    //werror ("path ignore in %O: %O\n", enc_path, enc_ent);
-	    continue;
-	  }
-	  if (String.width(dec_ent) > 8) {
-	    dec_ent = Unicode.normalize(dec_ent, "NFC");
+	foreach (dir_list, string(8bit) enc_ent) {
+	  string(8bit) lc_ent = enc_ent;
+	  string wide_ent;
+	  if (!catch (wide_ent = decode(enc_ent))) {
+	    lc_ent = encode(Unicode.normalize(lower_case(wide_ent), "NFC"));
 	  }
 
-	  if (lower_case (dec_ent) == lc_name) {
-	    if (dec_name) {
-	      if (!no_warn)
-		report_warning ("Ambiguous path %q matches both %q and %q "
-				"in %q.\n", path, dec_name, dec_ent, dec_path);
-	      fail = 1;
-	    }
-	    dec_name = dec_ent;
-	    enc_name = enc_ent;
-	    if (enc_ent == name) {
+	  FSWERR("      ent: %O lc_ent: %O\n", enc_ent, lc_ent);
+
+	  if (lc_ent == lc_name) {
+	    if ((enc_ent == name) ||
+		(Unicode.normalize(enc_ent, "NFC") == name)) {
+	      // Found exact match.
 	      fail = 0;
+	      ent_name = enc_ent;
+	      FSWERR("      Exact match ==> ent_name: %O\n", ent_name);
 	      break;
 	    }
+	    if (ent_name) {
+	      if (!no_warn)
+		report_warning("Ambiguous path %q matches both %q and %q "
+			       "in %q.\n", path, ent_name, enc_ent, ret);
+	      fail = 1;
+	    }
+	    FSWERR("      Match ==> ent_name: %O\n", ent_name);
+	    ent_name = enc_ent;
 	  }
 	}
 
-	if (dec_name && !fail) {
-	  dec_path = combine_path_unix (dec_path, dec_name);
-	  enc_path = combine_path (enc_path, enc_name);
-	  //werror ("path %O -> %O/%O\n", path, dec_path, enc_path);
-	  cache_set (cache_name, lc_path, dec_path);
-	  return;
+	if (ent_name && !fail) {
+	  ret = combine_path(ret, ent_name);
+	  cache_set (cache_name, path, ret);
+	  FSWERR("  %O ==> %O\n", path, ret);
+	  return ret;
 	}
       }
 
       nonexist = 1;
+
+      FSWERR("  %O not found!\n", path);
     }
 
     // Nonexisting file or dir - keep the case in that part. enc_path
     // won't be used anymore when nonexist gets set, so no need to
     // update it.
-    dec_path = combine_path_unix (dec_path, basename (path));
-    //werror ("path %O -> %O (nonexisting)\n", path, dec_path);
-    return;
+    ret = combine_path_unix(ret, name);
+    FSWERR("  Fallback: %O ==> %O\n", path, ret);
+    return ret;
   };
 
-  path = combine_path (path);
+  FSWERR("%s(%O, %O, %O)...\n", __func__, path, no_warn, charset);
+
+  string(8bit) dec_path;
+  path = Unicode.normalize(combine_path(path), "NFC");
+  string(8bit) lc_path;
+  if (encode) {
+    lc_path = encode(lower_case(path));
+    path = encode(path);
+  } else {
+    lc_path = lower_case(path);
+  }
+  FSWERR("path: %O\n"
+	 "lc_path: %O\n", path, lc_path);
   if (has_suffix (path, "/") || has_suffix (path, "\\")) {
-    recur (path[..<1]);
-    dec_path += "/";
+    dec_path = recur(path[..<1], lc_path[..<1]) + "/";
   }
   else
-    recur (path);
+    dec_path = recur(path, lc_path);
 
   encode = decode = 0;		// Avoid garbage.
 
+  FSWERR("dec_path: %O\n", dec_path);
   return dec_path;
 }

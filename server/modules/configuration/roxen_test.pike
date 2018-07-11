@@ -52,6 +52,7 @@ int fails, lfails;
 int pass;
 string tag_test_data;
 int bkgr_fails;
+bool testsuite_pass_1_ok;
 
 void background_failure()
 {
@@ -205,6 +206,48 @@ void xml_use_module(Parser.HTML file_parser, mapping m, string c,
   return;
 }
 
+private string indent( int l, string what )
+{
+  array q = what/"\n";
+  //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
+  string i = (" "*l+"|  ");
+  return i+q*("\n"+i)+"\n";
+};
+
+private void test_error( string rxml, int line, string message, mixed ... args )
+{
+  if( sizeof( args ) )
+    message = sprintf( message, @args );
+  message = (pass == 2 ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
+  if( verbose )
+    if( strlen( rxml ) )
+      report_debug("FAIL\n" );
+  report_error (indent (2, sprintf ("################ Error at line %d:",
+                                    line)));
+  if( strlen( rxml ) )
+    report_debug( indent(2, rxml ) );
+  rxml="";
+  report_error( indent(2, message ) );
+}
+
+// Returns true if all modules are available, else false.
+// Calls test_error for every module not found.
+private bool assert_modules(string modules, Parser.HTML file_parser)
+{
+  bool modules_found = true;
+  foreach (modules / ",", string module) {
+    module = String.trim_whites(module);
+    if (conf->find_module(module)) {
+      continue;
+    } else {
+      modules_found = false;
+      test_error("", file_parser->at_line(),
+                 "Required module %O not available.\n", module);
+    }
+  }
+  return modules_found;
+}
+
 void xml_test(Parser.HTML file_parser, mapping args, string c,
 	      mapping(int:RXML.PCode) p_code_cache) {
 
@@ -217,41 +260,28 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
   ltests++;
   tests++;
 
+  if (args->modules && !assert_modules(args->modules, file_parser)) {
+    fails++;
+    lfails++;
+    return;
+  }
+
   string rxml="";
   mixed res;
 
-  string indent( int l, string what )
+  void test_error( string message, mixed ... args )
   {
-    array q = what/"\n";
-    //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
-    string i = (" "*l+"|  ");
-    return i+q*("\n"+i)+"\n";
+    global::test_error(rxml, file_parser->at_line(), message, @args);
   };
 
-  string test_error( string message, mixed ... args )
-  {
-    if( sizeof( args ) )
-      message = sprintf( message, @args );
-    message = (pass == 2 ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
-    if( verbose )
-      if( strlen( rxml ) )
-	report_debug("FAIL\n" );
-    report_error (indent (2, sprintf ("################ Error at line %d:",
-				      file_parser->at_line())));
-    if( strlen( rxml ) )
-      report_debug( indent(2, rxml ) );
-    rxml="";
-    report_error( indent(2, message ) );
-  };
-
-  string test_ok(  )
+  void test_ok(  )
   {
     rxml = "";
     if( verbose )
       report_debug( "PASS\n" );
   };
 
-  string test_test( string test )
+  void test_test( string test )
   {
     if( verbose && strlen( rxml ) )
       test_ok();
@@ -545,22 +575,41 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 }
 
 mixed xml_testsuite(Parser.HTML file_parser, mapping args, string c,
-                    mapping(int:RXML.PCode) p_code_cache) {
-    if (roxen.is_shutting_down()) {
-      return ({}); // Stop parsing.
-    }
-    string env = args["if-not-env"];
-    if (env && getenv(env)) {
-      if (pass == 1) {
-        report_debug("Skipping tests since env. var %s is defined.\n", env);
-        // Count number of tests we are skipping.
-        Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
-                              ->add_tags ((["test": lambda () { lskipped++; }]))
-                              ->finish (c);
-      }
-      return ({}); // Stop parsing.
-    }
-    return c; // Continue to parse content withing this tag.
+                    mapping(int:RXML.PCode) p_code_cache)
+{
+  if (roxen.is_shutting_down()) {
+    return ({}); // Stop parsing.
+  }
+  if (pass == 2 && !testsuite_pass_1_ok) {
+    // If pass 1 failed we should not try again. Stop parsing.
+    return ({});
+  }
+  string forbidden_env = args["if-not-env"];
+  if (forbidden_env && getenv(forbidden_env)) {
+    testsuite_pass_1_ok = false;
+    report_debug("Skipping tests since env. var %s is defined.\n",
+                 forbidden_env);
+    // Count number of tests we are skipping.
+    Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+                          ->add_tags ((["test": lambda () { lskipped++; }]))
+                          ->finish (c);
+    return ({}); // Stop parsing.
+  }
+  if (args->modules && !assert_modules(args->modules, file_parser)) {
+    testsuite_pass_1_ok = false;
+    // Count all tests as failed.
+    Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+                          ->add_tags ((["test": lambda () {
+                            ltests++;
+                            tests++;
+                            fails++;
+                            lfails++;
+                          }]))
+                          ->finish (c);
+    return ({}); // Stop parsing.
+  }
+  testsuite_pass_1_ok = true;
+  return c; // Continue to parse content withing this tag.
 }
 
 class TagTestData {
@@ -597,6 +646,8 @@ void run_xml_tests(string data) {
   ltests=0;
   lfails=0;
   lskipped=0;
+  testsuite_pass_1_ok=true; // true must be default since the testsuite tag is
+                            // optional.
 
   test_num = 0;
   pass = 1;
@@ -624,26 +675,29 @@ void run_xml_tests(string data) {
 		   "got %d test tags but did %d tests.\n",
 		   test_tags, ltests);
 
-  // Go through them again, evaluation from the p-code this time.
-  test_num = 0;
-  pass = 2;
-  Roxen.get_xml_parser()->add_containers( ([
-    "add-module" : xml_dummy /* xml_add_module */,
-    "drop-module" : xml_drop_module,
-    "testsuite" : xml_testsuite,
-    "test" : xml_test,
-    "comment": xml_comment,
-  ]) )->
-    set_extra (p_code_cache, used_modules)->
-    finish(data);
+  if (testsuite_pass_1_ok) {
+    // Go through them again, evaluation from the p-code this time.
+    test_num = 0;
+    pass = 2;
+    Roxen.get_xml_parser()->add_containers( ([
+      "add-module" : xml_dummy /* xml_add_module */,
+      "drop-module" : xml_drop_module,
+      "testsuite" : xml_testsuite,
+      "test" : xml_test,
+      "comment": xml_comment,
+    ]) )->
+      set_extra (p_code_cache, used_modules)->
+      finish(data);
+  }
 
   if (roxen.is_shutting_down()) return;
 
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d, skipped %d%s.\n",
-               ltests, lfails, lskipped,
+  string fail_str = lfails ? ("failed on " + lfails) : "zero failures";
+  report_debug("Did %d tests, %s, skipped %d%s.\n",
+               ltests, fail_str, lskipped,
 	       bkgr_fails ?
 	       ", detected " + bkgr_fails + " background failures" : "");
 
@@ -665,7 +719,8 @@ void run_pike_tests(object test, string path)
     tests+=tsts;
     fails+=fail;
 
-    report_debug("Did %d tests, failed on %d%s.\n", tsts, fail,
+    string fail_str = fail ? ("failed on " + fail) : "zero failures";
+    report_debug("Did %d tests, %s%s.\n", tsts, fail_str,
 		 bkgr_fails ?
 		 ", detected " + bkgr_fails + " background failures" : "");
 
@@ -744,8 +799,9 @@ void continue_run_tests( )
   if(is_last_test_configuration())
   {
     // Note that e.g. the distmaker parses this string.
-    report_debug("\nDid a grand total of %d tests, %d failed.\n\n",
-		 tests, fails);
+    string fail_str = fails ? ("failed on " + fails) : "zero failures";
+    report_debug("\nDid a grand total of %d tests, %s.\n\n",
+		 tests, fail_str);
     roxen.restart(0, fails > 127 ? 127 : fails);
   }
   else

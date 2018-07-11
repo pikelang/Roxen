@@ -19,6 +19,9 @@ array(Standards.URI) get_test_urls(Configuration conf,
   foreach(conf->registered_urls, string full_url) {
     mapping(string:string|Configuration|array(Protocol)) port_info =
       roxen.urls[full_url];
+    DAV_WERROR("full url: %O\n"
+	       "port_info: %O\n",
+	       full_url, port_info);
     if (!test_true(mappingp, port_info)) continue;
     array(Protocol) ports = port_info->ports;
     if (!test_true(arrayp, ports)) continue;
@@ -30,14 +33,17 @@ array(Standards.URI) get_test_urls(Configuration conf,
 
       if (!test_true(mappingp, prot->urls)) continue;
 
+      DAV_WERROR("prot: %O\n"
+		 "prot->urls: %O\n", prot, prot->urls);
+
       // Strip the fragment from the full_url.
       string url = (full_url/"#")[0];
       mapping(string:mixed) url_data = prot->urls[url];
       if (!test_true(mappingp, url_data)) continue;
 
+      // NB: url_data is typically the same mapping as port_info.
       DAV_WERROR("url data: %O\n", url_data);
       test_true(`==, url_data->conf, conf);
-      test_true(`==, url_data->port, prot);
       test_true(stringp, url_data->hostname);
       test_true(stringp, url_data->path || "/");
 
@@ -47,7 +53,7 @@ array(Standards.URI) get_test_urls(Configuration conf,
                           webdav_mount_point),
                           url_uri);
       base_uri->port = prot->port;
-      base_uri->host = prot->ip;
+      base_uri->host = prot->ip || "127.0.0.1";
 
       if (username) {
         base_uri->user = username;

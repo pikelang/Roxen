@@ -1674,8 +1674,10 @@ protected string error_page(string title, void|string msg,
         <tr>
           <td><img src='/internal-roxen-roxen-mini' /></td>
           <td class='info'>
-	    &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
-	    <font color='#ffbe00'>|</font> " + roxen_dist_version + #"
+	    &nbsp;&nbsp;" +
+    (roxen.query("default_ident")?
+     ("<b>" + roxen_product_name + #"</b>
+	    <font color='#ffbe00'>|</font> "):"") + roxen.version() + #"
           </td>
         </tr>
       </table>
@@ -2769,7 +2771,7 @@ void send_result(mapping|void result)
   REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
 		       prot, method, file));
 #endif
-  if(!file->raw && (prot != "HTTP/0.9"))
+  if(!file->raw)
   {
     if ((sizeof(file) <= 1) && multi_status) {
       // NB: Configuration::examine_return_mapping() adds an
@@ -3006,15 +3008,6 @@ void send_result(mapping|void result)
     }
 #endif
 
-    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-    // content length when using keep-alive. So let's force a
-    // close in that case.
-    if( file->error/100 == 2 && file->len <= 0 )
-    {
-      variant_heads->Connection = "close";
-      misc->connection = "close";
-    }
-
     if (file->error == 200) {
       int conditional;
       if (none_match) {
@@ -3130,12 +3123,14 @@ void send_result(mapping|void result)
     }
 
     variant_string = Roxen.make_http_headers(variant_heads);
-    full_headers = prot + " " + file->error + head_string + variant_string;
+    if (prot != "HTTP/0.9") {
+      full_headers = prot + " " + file->error + head_string + variant_string;
+    }
 
     low_send_result(full_headers, file->data, file->len, file->file);
   }
   else {
-    // RAW or HTTP/0.9 mode.
+    // RAW mode.
 
     if(!file->type) file->type="text/plain";
 
@@ -3755,14 +3750,6 @@ protected void got_configuration(Configuration conf)
 			   ? Roxen->http_date(predef::time(1)-31557600) :
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
-	    }
-	    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-	    // content length when using keep-alive. So let's force a
-	    // close in that case.
-	    if( file->error/100 == 2 && file->len <= 0 )
-	    {
-	      variant_heads->Connection = "close";
-	      misc->connection = "close";
 	    }
 	    if (misc->range) {
 	      // Handle byte ranges.

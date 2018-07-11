@@ -1,9 +1,9 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2009, Roxen IS.
+// Copyright ï¿½ 1996 - 2009, Roxen IS.
 //
 // The Roxen WebServer main program.
 //
-// Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
+// Per Hedbor, Henrik Grubbstrï¿½m, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
 constant cvs_version="$Id$";
@@ -103,11 +103,11 @@ string query_configuration_dir()
 
 //! @ignore
 array(string) query_hot_reload_modules()
-//! Returns an array of modules added for hot reloading via 
+//! Returns an array of modules added for hot reloading via
 //! @tt{--module-hot-reload=<modname>@}.
 {
   if (hot_reload_modules) {
-    return map(replace(hot_reload_modules, " ", ",")/",", 
+    return map(replace(hot_reload_modules, " ", ",")/",",
                String.trim_all_whites) - ({ "" });
   }
 
@@ -115,11 +115,11 @@ array(string) query_hot_reload_modules()
 }
 
 array(string) query_hot_reload_modules_conf()
-//! Returns an array of modules added for hot reloading via 
+//! Returns an array of modules added for hot reloading via
 //! @tt{--module-hot-reload-conf=<conf>@}.
 {
   if (hot_reload_modules_conf) {
-    return map(replace(hot_reload_modules_conf, " ", ",")/",", 
+    return map(replace(hot_reload_modules_conf, " ", ",")/",",
                String.trim_all_whites) - ({ "" });
   }
 
@@ -3261,11 +3261,13 @@ int register_url( string url, Configuration conf )
       } else {
 	urls[url]->ports = ({ m[required_host][port] });
       }
-      urls[ourl]->port = m[required_host][port];
-      if (urls[ourl]->ports) {
-	urls[ourl]->ports += ({ m[required_host][port] });
-      } else {
-	urls[ourl]->ports = ({ m[required_host][port] });
+      if (ourl != url) {
+	urls[ourl]->port = m[required_host][port];
+	if (urls[ourl]->ports) {
+	  urls[ourl]->ports += ({ m[required_host][port] });
+	} else {
+	  urls[ourl]->ports = ({ m[required_host][port] });
+	}
       }
       continue;    /* No need to open a new port */
     }
@@ -3321,11 +3323,13 @@ int register_url( string url, Configuration conf )
     } else {
       urls[url]->ports = ({ prot_obj });
     }
-    urls[ ourl ]->port = prot_obj;
-    if (urls[ourl]->ports) {
-      urls[ourl]->ports += ({ prot_obj });
-    } else {
-      urls[ourl]->ports = ({ prot_obj });
+    if (ourl != url) {
+      urls[ ourl ]->port = prot_obj;
+      if (urls[ourl]->ports) {
+	urls[ourl]->ports += ({ prot_obj });
+      } else {
+	urls[ourl]->ports = ({ prot_obj });
+      }
     }
     prot_obj->ref(url, urls[url]);
 
@@ -5262,7 +5266,7 @@ class ArgCache
     return 0;
   }
 
-#define SECRET_TAG "££"
+#define SECRET_TAG "ï¿½ï¿½"
 
   int write_dump(Stdio.File file, int from_time)
   //! Dumps all entries that have been @[refresh_arg]'ed at or after
@@ -6744,6 +6748,21 @@ int main(int argc, array tmp)
   initiate_argcache();
   init_configuserdb();
   cache.init_session_cache();
+
+  // Report unhandled Promise rejections.
+  Concurrent.on_failure(lambda(mixed err)
+    {
+      string description;
+      if (objectp (err) && functionp(err->describe)) {
+        description = err->describe();
+      } else if (arrayp (err) && sizeof (err) == 2) {
+        description = describe_backtrace (err);
+      } else {
+        description = sprintf ("%O", err);
+      }
+      report_error("Unhandled error in Promise.\n"
+                   "Error: %s\n", description);
+    });
 
   protocols = build_protocols_mapping();
 

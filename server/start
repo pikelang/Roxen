@@ -231,6 +231,7 @@ setup_for_tests() {
     self_test=y
     DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
     DEFINES="$DEFINES \"-M$SELF_TEST_DIR/modules\""
+    DEFINES="$DEFINES \"-Metc/test/modules\""
     rm -rf "$VARDIR/test_config"*
     DIR="$VARDIR/test_config"
     if [ -f "$SELF_TEST_DIR/scripts/setup.pike" ] ; then

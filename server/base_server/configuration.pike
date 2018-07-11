@@ -2163,6 +2163,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   DAVLock lock = DAVLock(locktoken, path, recursive, lockscope, locktype,
 			 expiry_delta, owner);
   lock->is_file = is_file;
+  array(array(string|function)) successful_locks = ({});
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
@@ -2183,9 +2184,9 @@ mapping(string:mixed)|DAVLock lock_file(string path,
     mapping(string:mixed) lock_error =
       function_object(func)->lock_file(subpath, lock, id);
     if (lock_error) {
-      // Failure. Unlock the new lock.
-      foreach(location_module_cache||location_modules(),
-	      [string loc2, function func2])
+      // Failure. Unlock the new lock in modules where it was
+      // registered successfully.
+      foreach(reverse(successful_locks), [string loc2, function func2])
       {
 	if (has_prefix(path, loc2)) {
 	  // path == loc2 + subpath.
@@ -2197,12 +2198,14 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 	  mapping(string:mixed) ret =
 	    function_object(func2)->unlock_file("/", lock, id);
 	}
-	if (func == func2) break;
       }
       // destruct(lock);
       TRACE_LEAVE(sprintf("Lock error: %O", lock_error));
       return lock_error;
     }
+
+    successful_locks += ({ ({ loc, func }) });
+
     TRACE_LEAVE("Ok.");
     if (function_object(func)->webdav_opaque) break;
   }
