@@ -4177,3 +4177,13 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <o>&lt;span style="white-space: pre;"&gt;'&lt;tt&gt;%s&lt;/tt&gt;'&lt;/span&gt; is not a valid database name. Please select another name.</o>
 <t></t>
 </str>
+
+<str id="1150">
+<o>Logging: Number of days to keep log files</o>
+<t></t>
+</str>
+
+<str id="1151">
+<o>Log files in the log directory older than specified number of days will automatically be deleted. Set to &lt;tt&gt;0&lt;/tt&gt; (&lt;tt&gt;zero&lt;/tt&gt;) to disable and keep log files forever. Currently active log file will never be deleted, nor will files with names not matching the pattern specified under &lt;b&gt;Log file&lt;/b&gt;.</o>
+<t></t>
+</str>

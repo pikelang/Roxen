@@ -5469,8 +5469,8 @@ below.</p>
 	 0, lambda(){ return !query("Log");});
 
   defvar("DaysToKeepLogFiles", 0,
-    DLOCALE(0, "Logging: Number of days to keep log files"), TYPE_INT,
-    DLOCALE(0, "Log files in the log directory older than specified number of "
+    DLOCALE(1150, "Logging: Number of days to keep log files"), TYPE_INT,
+    DLOCALE(1151, "Log files in the log directory older than specified number of "
       "days will automatically be deleted. Set to <tt>0</tt> (<tt>zero</tt>) "
       "to disable and keep log files forever. Currently active log file will "
       "never be deleted, nor will files with names not matching the pattern "
