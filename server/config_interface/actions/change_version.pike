@@ -14,45 +14,10 @@ class Server(string dir,
 	     string version,
 	     string version_h )
 {
-  int cannot_change_back;
-  string file( string fn )
-  {
-    return Stdio.read_bytes( "../"+dir+"/"+fn );
-  }
-
-  Calendar.Day get_date_from_cvsid( string data )
-  {
-    string q;
-    if (sscanf( data, "%*s$Id: %*s,v %s\n", q ) < 3)
-      return 0;
-    return Calendar.dwim_day( (q/" ")[1] );
-  }
-
   Calendar.Day reldate()
   {
-    return 0;
-
-    Calendar.Day d2, d = get_date_from_cvsid( version_h );
-    if( !d )
-    {
-      d=get_date_from_cvsid( file( "base_server/roxen.pike" )||"" );
-
-      foreach( ({"base_server/roxen.pike",
-		 "base_server/configuration.pike",
-		 "base_server/roxenloader.pike",
-		 "start",
-		 "base_server/module.pike" }),
-	       string f )
-      {
-	string q = file( f )||"";
-	if( f == "start" )
-	  if( search( q, "100)" )==-1 )
-	    cannot_change_back = 1;
-	if( (d2 = get_date_from_cvsid(q )) && d2 > d )
-	  d = d2;
-      }
-    }
-    return d;
+    Stdio.Stat st = file_stat("../" + dir + "/VERSION.DIST");
+    return st && Calendar.Day("unix", st->mtime);
   }
 
   protected string _sprintf()
@@ -104,7 +69,6 @@ string parse( RequestID id )
     "<font size='+1'><b>"+_(46,"Change Roxen version")+"</b></font>\n"
     "<br />\n"
     "<p>";
-  int warn;
 
   if( id->variables->server )
   {
@@ -126,7 +90,6 @@ string parse( RequestID id )
     "<tr bgcolor='&usr.obox-titlebg;'>"
     "<th></th>"
     "<th align='left'>"+_(48,"Version")+"</th>"
-    "<th></th>"
     "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
     "<th align='left'>"+_(85,"Release date")+"</th>"
     "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
@@ -146,11 +109,8 @@ string parse( RequestID id )
     Calendar.Day d = f->reldate();
     Calendar.Day diff = d && d->distance( Calendar.now() );
 
-    warn += f->cannot_change_back;
     res +=
       "<td>"+f->version+"</td>"
-      "<td>"+(f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
-      "</td>"
       "<td></td>"
       "<td>"+(d ? d->set_language( roxen.get_locale()+"_UNICODE" )
 	      ->format_ext_ymd() : "n/a")+
@@ -167,21 +127,6 @@ string parse( RequestID id )
     "<br />\n";
   
 
-  if( warn )
-    res += "<table><tr><td valign='top'>"
-      "<img src='&usr.err-2;' alt='#' /></td>\n"
-      "<td>"+
-      sprintf((string)
-      _(137,"If you change to one these Roxen versions, you will not be "
-	"able to change back from the administration interface, you will "
-	"instead have to edit the file %O manually, shutdown the server, "
-	"and execute %O again"),
-	      combine_path(getcwd(),
-			   roxen.configuration_dir,
-			   "server_version"),
-	      combine_path(getcwd(),"../start") )
-      +"</td></tr></table>";
-	      
   res += "<table><tr><td valign='top'>"
     "<img src='&usr.err-2;' alt='#' /></td>\n"
     "<td>"+
