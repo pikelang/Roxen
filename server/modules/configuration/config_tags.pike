@@ -653,35 +653,71 @@ object(Configuration) find_config_or_error(string config)
   return conf;
 }
 
-string not_bound_warning()
-{
-  return LOCALE(300,"This port was requested, but binding it failed."); 
-}
 mapping get_port_map( object p )
 {
+  mapping ret = ([
+    "port":p->get_key(),
+    "info":"",
+    "warning":"",
+    "error":"",
+  ]);
+
+  if (!p->bound) {
+    ret->warning =
+      LOCALE(300,"This port was requested, but binding it failed.");
+  }
+
   if (!p->ip||!has_value(p->ip, ":")) {
     // IPv4
-    return ([
-      "port":p->get_key(),
-      "warning":(p->bound?"":not_bound_warning()),
-      "name":p->name+"://"+(p->ip||"*")+":"+p->port+"/",
-    ]);
+    ret->name = p->name+"://"+(p->ip||"*")+":"+p->port+"/";
   } else {
     // IPv6
-    return ([
-      "port":p->get_key(),
-      "warning":(p->bound?"":not_bound_warning()),
-      /* RFC 3986 3.2.2. Host
-       *
-       * host       = IP-literal / IPv4address / reg-name
-       * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
-       * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
-       *
-       * IPv6address is as in RFC 3513.
-       */
-      "name":p->name+"://["+p->ip+"]:"+p->port+"/",
-    ]);
+    /* RFC 3986 3.2.2. Host
+     *
+     * host       = IP-literal / IPv4address / reg-name
+     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+     *
+     * IPv6address is as in RFC 3513.
+     */
+    ret->name = p->name+"://["+p->ip+"]:"+p->port+"/";
   }
+
+  array(int) keypair_ids = p->query("ssl_keys", 1);
+  if (arrayp(keypair_ids)) {
+    // SSL/TLS port.
+    int got_valid;
+    foreach(keypair_ids, int keypair_id) {
+      array(Crypto.Sign.State|array(string)) keypair =
+	CertDB.get_keypair(keypair_id);
+      if (!keypair) continue;
+      [Crypto.Sign.State private_key, array(string) certs] = keypair;
+
+      Standards.X509.TBSCertificate tbs =
+	Standards.X509.decode_certificate(certs[0]);
+
+      array(string) res = ({});
+
+      if (!tbs) {
+	ret->warning = LOCALE(1130, "Invalid certificate");
+	continue;
+      }
+
+      if (tbs->issuer->get_der() == tbs->subject->get_der()) {
+	ret->info = LOCALE(0, "Self-signed certificate");
+      }
+
+      if (tbs->not_after < time(1)) {
+	// Already expired.
+	ret->error = LOCALE(0, "Expired certificate");
+      } else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
+	// Expires within 30 days.
+	ret->warning = LOCALE(0, "Certificate expires soon");
+      }
+    }
+  }
+
+  return ret;
 }
 
 mapping get_url_map( string u, mapping ub )
