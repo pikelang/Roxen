@@ -703,15 +703,15 @@ mapping get_port_map( object p )
       }
 
       if (tbs->issuer->get_der() == tbs->subject->get_der()) {
-	ret->info = LOCALE(0, "Self-signed certificate");
+	ret->info = LOCALE(1152, "Self-signed certificate");
       }
 
       if (tbs->not_after < time(1)) {
 	// Already expired.
-	ret->error = LOCALE(0, "Expired certificate");
+	ret->error = LOCALE(1153, "Expired certificate");
       } else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
 	// Expires within 30 days.
-	ret->warning = LOCALE(0, "Certificate expires soon");
+	ret->warning = LOCALE(1154, "Certificate expires soon");
       }
     }
   }

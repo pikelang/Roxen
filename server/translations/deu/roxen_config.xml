@@ -4698,3 +4698,21 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <o>Lost file</o>
 <t></t>
 </str>
+
+<str id="1152">
+<new/>
+<o>Self-signed certificate</o>
+<t></t>
+</str>
+
+<str id="1153">
+<new/>
+<o>Expired certificate</o>
+<t></t>
+</str>
+
+<str id="1154">
+<new/>
+<o>Certificate expires soon</o>
+<t></t>
+</str>
