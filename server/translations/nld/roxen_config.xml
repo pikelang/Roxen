@@ -4885,3 +4885,21 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <o>Log files in the log directory older than specified number of days will automatically be deleted. Set to &lt;tt&gt;0&lt;/tt&gt; (&lt;tt&gt;zero&lt;/tt&gt;) to disable and keep log files forever. Currently active log file will never be deleted, nor will files with names not matching the pattern specified under &lt;b&gt;Log file&lt;/b&gt;.</o>
 <t></t>
 </str>
+
+<str id="1152">
+<new/>
+<o>Self-signed certificate</o>
+<t></t>
+</str>
+
+<str id="1153">
+<new/>
+<o>Expired certificate</o>
+<t></t>
+</str>
+
+<str id="1154">
+<new/>
+<o>Certificate expires soon</o>
+<t></t>
+</str>

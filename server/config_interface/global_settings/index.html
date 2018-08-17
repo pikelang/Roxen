@@ -49,7 +49,11 @@
           <else>&nbsp;</else>
         </td>
       </tr>
-    <if not="1" variable="_.warning is "><tr><td colspan="2"><font color='&usr.warncolor;'><b>&_.warning;</b></font></td></tr></if>
+
+    <if not="1" variable="_.error is "><tr><td colspan="2"><font color='&usr.warncolor;'><img src="&usr.err-3;" />&nbsp;<b>&_.error;</b></font></td></tr></if>
+    <elseif not="1" variable="_.warning is "><tr><td colspan="2"><font color='&usr.warncolor;'><img src="&usr.err-2;" />&nbsp;<b>&_.warning;</b></font></td></tr></elseif>
+    <elseif not="1" variable="_.info is "><tr><td colspan="2"><img src="&usr.err-1;" />&nbsp;<b>&_.info;</b></td></tr></elseif>
+
      </table>
      <table>
       <emit source='port-urls' port="&port.port;">
