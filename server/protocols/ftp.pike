@@ -2060,6 +2060,21 @@ class FTPSession
     session->conf->log(file, session);
   }
 
+  private void send_welcome()
+  {
+    string s = port_obj->query_option("FTPWelcome");
+
+    s = replace(s,
+		({ "$roxen_version", "$roxen_build", "$full_version",
+		   "$pike_version", "$ident",
+		   "$site", }),
+		({ roxen->roxen_ver, roxen->roxen_build,
+		   roxen->real_version, version(), roxen->version(),
+		   conf->query_name(), }));
+
+    send(220, s/"\n", 1);
+  }
+
   private mapping open_file(string fname, object session, string cmd)
   {
     object|array|mapping file;
@@ -4642,15 +4657,7 @@ class FTPSession
 
     call_out(timeout, FTP2_TIMEOUT);
 
-    string s = c->query_option("FTPWelcome");
-
-    s = replace(s,
-		({ "$roxen_version", "$roxen_build", "$full_version",
-		   "$pike_version", "$ident", }),
-		({ roxen->roxen_ver, roxen->roxen_build,
-		   roxen->real_version, version(), roxen->version() }));
-
-    send(220, s/"\n", 1);
+    send_welcome();
   }
 };
 
