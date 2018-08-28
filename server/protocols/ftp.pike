@@ -2980,6 +2980,27 @@ class FTPSession
     return 1;
   }
 
+  Configuration find_conf(string|void hostname)
+  {
+    Configuration conf;
+    foreach(port_obj->sorted_urls, string url) {
+      mapping(string:mixed) port_info = port_obj->urls[url];
+      if (!port_info) continue;
+      if (hostname) {
+	if (glob(lower_case(port_info->hostname) + "*", hostname)) {
+	  return port_info->conf;
+	}
+      } else if (!conf) {
+	conf = port_info->conf;
+      }
+
+      if (port_info->conf->query("default_server")) {
+	conf = port_info->conf;
+      }
+    }
+    return conf;
+  }
+
   /*
    * FTP commands begin here
    */
@@ -4622,8 +4643,7 @@ class FTPSession
   {
     port_obj = c;
 
-    // FIXME: Only supports one configuration!
-    conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
+    conf = find_conf();
 
     // Support delayed loading.
     if (!conf->inited) {
