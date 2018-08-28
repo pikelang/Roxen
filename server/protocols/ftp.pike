@@ -3028,8 +3028,11 @@ class FTPSession
     restart_point = 0;
     logged_in = 0;
     roxen.set_locale();
+    m_delete(master_session->misc, "host");
     m_delete(master_session->misc, "accept-language");
+    master_session->cached_url_base = 0;
     master_session->misc->pref_languages->languages = ({});
+    master_session->conf = conf = find_conf();
     if (pasv_port) {
       destruct(pasv_port);
       pasv_port = 0;
@@ -3048,6 +3051,62 @@ class FTPSession
       busy = 0;
       next_cmd();
     }
+  }
+
+  void ftp_HOST(string args)
+  {
+    if (!expect_argument("HOST", args)) return;
+
+    if (logged_in) {
+      // RFC 7151 3:
+      //    Server-FTP processes MUST treat a situation in which the
+      //    HOST command is issued after the user has been
+      //    authenticated as an erroneous sequence of commands and
+      //    return a 503 reply.
+      send(503, ({ LOCALE(0, "HOST not allowed after login.") }));
+      return;
+    }
+
+    if (args[0] == '[') {
+      // IPv6 literal address.
+      if (args[-1] != ']') {
+	send(501, ({ LOCALE(0, "Invalid HOST syntax.") }));
+	return;
+      }
+    } else if (has_value(args, ":")) {
+      send(501, ({ LOCALE(0, "Invalid HOST syntax.") }));
+      return;
+    }
+
+    // FIXME: For IPv4 and IPv6 literal addresses, validate that
+    //        the address matches our port.
+    //
+    // RFC 7151 3.1:
+    //   That being said, if the IPv4 or IPv6 literal address
+    //   specified by the client does not match the literal address
+    //   for the server, the server MUST respond with a 504 reply to
+    //   indicate that the IPv4 or IPv6 literal address is not valid.
+
+    if (!roxen.is_ip(args)) {
+      args = lower_case(args);
+
+      Configuration new_conf = find_conf(args);
+
+      if (!new_conf) {
+	send(504, ({ LOCALE(0, "Unknown host.") }));
+	return;
+      }
+      master_session->conf = conf = new_conf;
+      master_session->misc->host = args;
+      master_session->cached_url_base = 0;
+
+      // Support delayed loading.
+      if (!conf->inited) {
+	conf->enable_all_modules();
+      }
+    }
+
+    send_welcome();
   }
 
   void ftp_AUTH(string args)
@@ -4522,7 +4581,7 @@ class FTPSession
     if (cmd_help[cmd]) {
       if (!logged_in) {
 	if (!(< "REIN", "USER", "PASS", "SYST", "AUTH",
-		"ACCT", "QUIT", "ABOR", "HELP", "FEAT" >)[cmd]) {
+		"ACCT", "QUIT", "ABOR", "HELP", "FEAT", "HOST" >)[cmd]) {
 	  send(530, ({ LOCALE(200, "You need to login first.") }));
 
 	  return;
