@@ -3540,7 +3540,7 @@ class FTPSession
     if (pasv_port) {
       destruct(pasv_port);
     }
-    send(200, ({ sprintf(LOCALE(147, "EPRT command ok (%d port %d)"),
+    send(200, ({ sprintf(LOCALE(147, "EPRT command ok (%s port %d)"),
 			 dataport_addr, dataport_port) }));
   }
 
