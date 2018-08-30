@@ -686,7 +686,6 @@ mapping get_port_map( object p )
   array(int) keypair_ids = p->query("ssl_keys", 1);
   if (arrayp(keypair_ids)) {
     // SSL/TLS port.
-    int got_valid;
     foreach(keypair_ids, int keypair_id) {
       array(Crypto.Sign.State|array(string)) keypair =
 	CertDB.get_keypair(keypair_id);
