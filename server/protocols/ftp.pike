@@ -2980,25 +2980,56 @@ class FTPSession
     return 1;
   }
 
-  Configuration find_conf(string|void hostname)
+  Configuration find_conf()
+  //! Return the conf for the first default server we find.
+  //! If no default server is found, return the first conf found.
   {
     Configuration conf;
     foreach(port_obj->sorted_urls, string url) {
       mapping(string:mixed) port_info = port_obj->urls[url];
-      if (!port_info) continue;
-      if (hostname) {
-	if (glob(lower_case(port_info->hostname) + "*", hostname)) {
-	  return port_info->conf;
-	}
-      } else if (!conf) {
-	conf = port_info->conf;
+      if (!port_info) {
+        continue;
       }
-
+      if (!conf) {
+        conf = port_info->conf;
+      }
       if (port_info->conf->query("default_server")) {
-	conf = port_info->conf;
+        conf = port_info->conf;
+        return conf;
       }
     }
     return conf;
+  }
+
+  Configuration find_conf_for_host(string hostname)
+  {
+    if (!hostname) {
+      return 0;
+    }
+    hostname = lower_case(hostname);
+    foreach(port_obj->sorted_urls, string url) {
+      mapping(string:mixed) port_info = port_obj->urls[url];
+      if (!port_info) {
+        continue;
+      }
+      if (glob(lower_case(port_info->hostname) + "*", hostname)) {
+        return port_info->conf;
+      }
+    }
+    // Try again different approach.
+    // NB: Don't merge this loop with the one above since we want to try glob()
+    //     on all confiured hostnames (globs or not) before trying with
+    //     has_prefix().
+    foreach(port_obj->sorted_urls, string url) {
+      mapping(string:mixed) port_info = port_obj->urls[url];
+      if (!port_info) {
+        continue;
+      }
+      if (has_prefix(lower_case(port_info->hostname), hostname)) {
+        return port_info->conf;
+      }
+    }
+    return 0;
   }
 
   /*
@@ -3090,7 +3121,7 @@ class FTPSession
     if (!roxen.is_ip(args)) {
       args = lower_case(args);
 
-      Configuration new_conf = find_conf(args);
+      Configuration new_conf = find_conf_for_host(args);
 
       if (!new_conf) {
 	send(504, ({ LOCALE(0, "Unknown host.") }));
