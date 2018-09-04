@@ -3094,18 +3094,18 @@ class FTPSession
       //    HOST command is issued after the user has been
       //    authenticated as an erroneous sequence of commands and
       //    return a 503 reply.
-      send(503, ({ LOCALE(0, "HOST not allowed after login.") }));
+      send(503, ({ LOCALE(204, "HOST not allowed after login.") }));
       return;
     }
 
     if (args[0] == '[') {
       // IPv6 literal address.
       if (args[-1] != ']') {
-	send(501, ({ LOCALE(0, "Invalid HOST syntax.") }));
+	send(501, ({ LOCALE(205, "Invalid HOST syntax.") }));
 	return;
       }
     } else if (has_value(args, ":")) {
-      send(501, ({ LOCALE(0, "Invalid HOST syntax.") }));
+      send(501, ({ LOCALE(205, "Invalid HOST syntax.") }));
       return;
     }
 
@@ -3124,7 +3124,7 @@ class FTPSession
       Configuration new_conf = find_conf_for_host(args);
 
       if (!new_conf) {
-	send(504, ({ LOCALE(0, "Unknown host.") }));
+	send(504, ({ LOCALE(206, "Unknown host.") }));
 	return;
       }
       master_session->conf = conf = new_conf;
