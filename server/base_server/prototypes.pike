@@ -2560,7 +2560,7 @@ class RequestID
     return scheme;
   }
 
-  protected string cached_url_base;
+  string cached_url_base;
 
   string url_base()
   //! Returns the base part of the URL, i.e. what should be added in

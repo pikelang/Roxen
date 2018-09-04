@@ -7,7 +7,7 @@ inherit StartTLSProtocol;
 inherit Protocol;
 #endif
 
-constant supports_ipless = 0;
+constant supports_ipless = 1;
 constant name = "ftp";
 constant prot_name = "ftp";
 constant requesthandlerfile = "protocols/ftp.pike";

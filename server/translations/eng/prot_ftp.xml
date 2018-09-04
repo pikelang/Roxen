@@ -1020,3 +1020,18 @@ End of status</o>
 <o>Unknown command '%s'.</o>
 <t></t>
 </str>
+
+<str id="204">
+<o>HOST not allowed after login.</o>
+<t></t>
+</str>
+
+<str id="205">
+<o>Invalid HOST syntax.</o>
+<t></t>
+</str>
+
+<str id="206">
+<o>Unknown host.</o>
+<t></t>
+</str>
