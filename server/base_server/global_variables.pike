@@ -1020,8 +1020,7 @@ Running it too often causes unnecessary server load.</p>"))
 	      LOCALE(1044, #"\
 <p>Maximum size in MByte for all RAM caches taken together. This limit
 covers the caches visible in the <a
-href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>
-page.</p>
+href='/actions/?action=cachestatus.pike&class=status&_roxen_wizard_id=&form._roxen_wizard_id;'>Cache status</a> page.</p>
 
 <p>Note that there are many more things in the Roxen WebServer that
 take space, including some caches that are not handled by the common
