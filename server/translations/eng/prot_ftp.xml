@@ -731,7 +731,7 @@
 </str>
 
 <str id="147">
-<o>EPRT command ok (%d port %d)</o>
+<o>EPRT command ok (%s port %d)</o>
 <t></t>
 </str>
 
