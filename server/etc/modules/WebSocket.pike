@@ -244,7 +244,7 @@ void upgrade_to_websocket(int masking,
     // "Sec-WebSocket-Protocol" : "chat",
   ]) + extra_headers;
 
-  string key = id->request_headers["Sec-WebSocket-Key"] + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+  string key = id->request_headers["sec-websocket-key"] + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
   key = Crypto.SHA1.hash(key);
   headers["Sec-WebSocket-Accept"] = MIME.encode_base64(key);
 
