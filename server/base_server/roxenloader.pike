@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.462 2011/12/27 17:19:26 mast Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -117,6 +117,17 @@ int getppid() {   return -1; }
 #define  LOG_INFO    (1<<6)
 #define  LOG_DEBUG   (1<<7)
 int use_syslog, loggingfield;
+#endif
+
+#if constant(DefaultCompilerEnvironment)
+#if (__REAL_MAJOR__ == 8) && (__REAL_MINOR__ == 0) && (__REAL_BUILD__ < 694)
+/* Workaround for [PIKE-126]. */
+object _disable_threads()
+{
+  object compiler_lock = DefaultCompilerEnvironment->lock();
+  return predef::_disable_threads();
+}
+#endif
 #endif
 
 //! The path to the server directory, without trailing slash. If
@@ -997,6 +1008,13 @@ void load_roxen()
   // Temporary kludge to get wide string rxml parsing.
   add_constant("parse_html", parse_html);
   add_constant("parse_html_lines", parse_html_lines);
+#endif
+
+#if constant(DefaultCompilerEnvironment)
+#if (__REAL_MAJOR__ == 8) && (__REAL_MINOR__ == 0) && (__REAL_BUILD__ < 694)
+  /* Workaround for [PIKE-126]. */
+  add_constant("_disable_threads", _disable_threads);
+#endif
 #endif
 
   DC( "Roxen" );
