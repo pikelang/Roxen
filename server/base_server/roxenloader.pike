@@ -3725,6 +3725,8 @@ int dump( string file, program|void p )
 
 object(Stdio.Stat)|array(int) da_Stat_type;
 LocaleString da_String_type;
+function orig_predef_describe_bt = predef::describe_backtrace;
+
 void do_main( int argc, array(string) argv )
 {
   array(string) hider = argv;
