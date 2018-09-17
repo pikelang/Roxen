@@ -1,0 +1,12 @@
+subject: Roxen 6.1: Roxen: Added workaround for [PIKE-126], fixes [WS-351]. 
+from: ee56a36add24c918c1efef6b37062c9218caf192
+to: 2f669a0f8611a378624d0a552e6145792a3301ad
+originator: Jonas Lonnberg
+depends: 2018-06-25T082951
+restart: true
+
+• Roxen: Added workaround for [PIKE-126].
+
+Take the pike compiler lock before disabling threads.
+
+Fixes [WS-351].
