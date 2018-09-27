@@ -2,6 +2,8 @@ inherit "http_common";
 
 enum brokeness {
   REQUEST_OK,
+  REQUEST_BAD_PATH,
+  REQUEST_BAD_PATH_SUFFIX,
   REQUEST_HTTP_1_0,
   REQUEST_NO_HDR_CONNECTION,
   REQUEST_BAD_HDR_CONNECTION,
@@ -31,7 +33,9 @@ void main(int argc, array argv)
 
   Standards.URI uri = Standards.URI(argv[1]);
 
+  string http_path = argv[2];
   string http_version = "1.1";
+  int http_status = Protocols.HTTP.HTTP_BAD;
   mapping(string:string) headers = ([
     "User-Agent": sprintf("Roxen WebSocket Testscript %d", broken),
     "Host": uri->host,
@@ -44,6 +48,14 @@ void main(int argc, array argv)
 
   switch(broken) {
   case REQUEST_OK:
+    http_status = Protocols.HTTP.HTTP_SWITCH_PROT;
+    break;
+  case REQUEST_BAD_PATH:
+    http_path = "/";
+    break;
+  case REQUEST_BAD_PATH_SUFFIX:
+    http_path += "invalid";
+    http_status = Protocols.HTTP.HTTP_NOT_FOUND;
     break;
   case REQUEST_HTTP_1_0:
     http_version = "1.0";
@@ -82,7 +94,7 @@ void main(int argc, array argv)
 					Protocols.WebSocket.websocket_id), 1);
 
   string tosend = sprintf("GET %s HTTP/%s\r\n",
-			  argv[2], http_version);
+			  http_path, http_version);
   foreach(sort(indices(headers)), string header) {
     tosend += sprintf("%s: %s\r\n", header, headers[header]);
   }
@@ -101,8 +113,7 @@ void main(int argc, array argv)
     exit( BADHEADERS );
 
   mapping ret_headers =
-    verify_headers( q[0], -1, "HTTP/" + http_version,
-		    broken?400:101, -1);
+    verify_headers(q[0], -1, "HTTP/" + http_version, http_status, -1);
 
   if (!broken) {
     mapping expected_headers = ([
