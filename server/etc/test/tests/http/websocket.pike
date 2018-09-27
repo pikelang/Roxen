@@ -1,5 +1,6 @@
 inherit "http_common";
 
+// NB: Keep in sync with RoxenTest_websockets.pike.
 enum brokeness {
   REQUEST_OK,
   REQUEST_BAD_PATH,
