@@ -87,11 +87,12 @@ mapping verify_headers( string headers, int content_length,
     hd[ lower_case( a ) ] = b;
   }
 
-  if( !hd->date )
+  if( (want_last_modified >= 0) && !hd->date )
     EXIT( NODATE );
-  if( !hd["content-length"] || (int)hd["content-length"]  != content_length )
+  if( (content_length >= 0) &&
+      (!hd["content-length"] || (int)hd["content-length"]  != content_length) )
     EXIT( BADLENGTH );
-  if( want_last_modified && !hd["last-modified"] )
+  if( (want_last_modified > 0) && !hd["last-modified"] )
     EXIT( BADMODIFIED );
 
   return hd;
