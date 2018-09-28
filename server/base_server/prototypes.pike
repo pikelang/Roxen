@@ -4021,6 +4021,32 @@ class RoxenModule
 					   Overwrite overwrite, RequestID id);
 }
 
+//! @appears WebSocketAPI
+//! API used by websockets.
+//!
+//! An object implementing this class is passed to
+//! @[Roxen.upgrade_to_websocket()].
+class WebSocketAPI
+{
+  //! Callback called when the websocket connection has been setup and
+  //! we are ready to send messages across the connection
+  void websocket_ready(Protocols.WebSocket.Connection ws);
+
+  //! Callback called when the websocket connection has been setup and
+  //! Callback for websocket messages coming in on connections that
+  //! matches the location used by this module.
+  mapping(string:mixed)|int(0..0) websocket_message(Protocols.WebSocket.Connection ws,
+						    Protocols.WebSocket.Frame frame);
+
+  //! Called when a websocket connection is being closed. Will be called
+  //! even if the server has ended the connection by calling the
+  //! @[websocket_close] method in the connection.
+  //! Return 0 to stop other websocket modules from receiving this
+  //! notification.
+  int websocket_close(Protocols.WebSocket.Connection ws,
+		      Protocols.WebSocket.CLOSE_STATUS reason);
+}
+
 class PatchPropertyCommand
 {
   constant command = "";

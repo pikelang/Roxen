@@ -2340,33 +2340,3 @@ int|string format_db_browser_value (string db_name, string table_name,
 				    array(string) col_types, array(string) row,
 				    RequestID id);
 
-
-
-//
-// WebSocket API below
-//
-
-//! Callback for websocket messages coming in on connections that
-//! matches the location used by this module.
-mapping(string:mixed)|int(0..0) websocket_message(RequestID id,
-                                                  Protocols.WebSocket.Frame frame);
-
-//! Callback which is called an HTTP(S) request matching the location
-//! the module handles. If this method returns the value returned by
-//! @[Roxen.upgrade_to_websocket], the connection will be upgraded to
-//! websocket.
-//! Returning 0 will cause the request to be passed to the next module
-//! in line to handle WebSocket requests if one is available.
-mapping(string:mixed)|int(0..0) websocket_open(string path, RequestID id);
-
-
-//! Called when a websocket connection is being closed. Will be called
-//! even if the server has ended the connection by calling the
-//! @[websocket_close] method in the connection.
-//! Return 0 to stop other websocket modules from receiving this
-//! notification.
-int websocket_close(RequestID id, Protocols.WebSocket.CLOSE_STATUS reason);
-
-//! Callback called when the websocket connection has been setup and
-//! we are ready to send messages across the connection
-void websocket_ready(RequestID id);
