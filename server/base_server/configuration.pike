@@ -2354,59 +2354,6 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     }
 #endif
 
-    /* Check if a websocket module wants to upgrade this connection */
-    foreach(websocket_module_cache || websocket_modules(), tmp) {
-      loc = tmp[0];
-      if(has_prefix(file, loc))
-      {
-	TRACE_ENTER(sprintf("Websocket module [%s] ", loc), tmp[1]);
-        PROF_ENTER(Roxen.get_owning_module(tmp[1])->module_name,"websocket_open");
-        TRACE_ENTER("Calling websocket_open()...", 0);
-	LOCK(tmp[1]->websocket_open);
-	fid=tmp[1]->websocket_open( file[ strlen(loc) .. ] + id->extra_extension, id);
-	UNLOCK();
-	TRACE_LEAVE("");
-        PROF_LEAVE(Roxen.get_owning_module(tmp[1])->module_name,"websocket_open");
-	if(fid)
-	{
-	  if (id)
-	    id->virtfile = loc;
-
-	  if(mappingp(fid))
-	  {
-            TRACE_LEAVE(""); // Websocket module [...]
-	    TRACE_LEAVE(examine_return_mapping(fid));
-	    TIMER_END(location_modules);
-	    return fid;
-	  }
-	  else
-	  {
-              TRACE_LEAVE("Unknown return value."
-			  );
-	    break;
-	  }
-	} else
-	  TRACE_LEAVE("");
-      } else if(strlen(loc)-1==strlen(file) && file+"/" == loc) {
-	// This one is here to allow accesses to /local, even if
-	// the mountpoint is /local/. It will slow things down, but...
-
-	TRACE_ENTER("Automatic redirect to location_module.", tmp[1]);
-	TRACE_LEAVE("");
-	TRACE_LEAVE("Returning data");
-
-	// Keep query (if any).
-	// FIXME: Should probably keep config <foo>
-	string new_query = Roxen.http_encode_invalids(id->not_query) + "/" +
-	  (id->query?("?"+id->query):"");
-	new_query=Roxen.add_pre_state(new_query, id->prestate);
-
-	TIMER_END(location_modules);
-	return Roxen.http_redirect(new_query, id);
-      }
-    } /* End of websocket processing */
-
-
     TIMER_START(location_modules);
     foreach(location_module_cache||location_modules(), tmp)
     {
