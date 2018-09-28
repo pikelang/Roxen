@@ -27,7 +27,7 @@ function run( string script, string file, int|string ... ma  )
 }
 
 #define rtest( COMMENT, SCRIPT, PATH, ARGS...) \
-  atest(COMMENT, run(SCRIPT, FILE, ARGS), simple_check)
+  atest(COMMENT, run(SCRIPT, PATH, ARGS), simple_check)
 
 // NB: Keep in sync with the brokeness enum in websocket.pike.
 constant descriptions = ({
