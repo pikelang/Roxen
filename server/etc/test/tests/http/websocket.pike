@@ -56,16 +56,18 @@ void main(int argc, array argv)
     break;
   case REQUEST_BAD_PATH_SUFFIX:
     http_path += "invalid";
-    http_status = Protocols.HTTP.HTTP_NOT_FOUND;
     break;
   case REQUEST_HTTP_1_0:
     http_version = "1.0";
+    http_status = Protocols.HTTP.HTTP_NOT_FOUND;
     break;
   case REQUEST_NO_HDR_CONNECTION:
     m_delete(headers, "Connection");
+    http_status = Protocols.HTTP.HTTP_NOT_FOUND;
     break;
   case REQUEST_BAD_HDR_CONNECTION:
     headers["Connection"] = "close";
+    http_status = Protocols.HTTP.HTTP_NOT_FOUND;
     break;
   case REQUEST_NO_HDR_UPGRADE:
     m_delete(headers, "Upgrade");
