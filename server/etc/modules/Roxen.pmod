@@ -566,15 +566,21 @@ string canonicalize_http_header (string header)
   ])[lower_case (header)];
 }
 
-mapping(string:mixed) upgrade_to_websocket(void|int masking)
+mapping(string:mixed) upgrade_to_websocket(WebSocketAPI api, void|int masking)
 //! Returns a mapping that will cause the server to upgrade the
 //! connection to a WebSocket.
-//! Specify @[masking] to enable masking on outgoing frames.
+//!
+//! @param api
+//!   @[WebSocketAPI] object to handle websocket requests.
+//!
+//! @param masking
+//!   Specify @[masking] to enable masking on outgoing frames.
 {
   return ([
     "upgrade_websocket" : 1,
     "masking" : masking,
     "extra_heads" : ([]),
+    "websocket_api" : api,
   ]);
 }
 

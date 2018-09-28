@@ -3256,8 +3256,9 @@ void handle_request()
     if (result && result->upgrade_websocket) {
       REQUEST_WERR("HTTP: handle_request: upgrading to websocket.\n");
 
-      websocket = WebSocket(this);
-      websocket->upgrade_to_websocket(result->masking, result->extra_headers || ([]));
+      websocket = WebSocket(this, result->websocket_api);
+      websocket->upgrade_to_websocket(result->masking,
+				      result->extra_headers || ([]));
 
       REQUEST_WERR("HTTP: handle_request: socket upgraded.\n");
       TIMER_END(handle_request);
