@@ -1040,45 +1040,6 @@ array(AuthModule) auth_modules()
   return auth_module_cache = low_module_lookup(MODULE_AUTH);
 }
 
-array websocket_module_cache = UNDEFINED;
-array websocket_modules() {
-  if(!websocket_module_cache)
-  {
-    array new_websocket_module_cache=({ });
-    int prev_pri = -1;
-    array level_find_files = ({});
-    array(string) level_locations = ({});
-    foreach(low_module_lookup(MODULE_WEBSOCKET), RoxenModule me) {
-      int pri = me->query("_priority");
-      if (pri != prev_pri) {
-	//  Order after longest prefix length
-	sort(map(level_locations,
-		 lambda(string loc) { return -sizeof(loc); }),
-	     level_locations, level_find_files);
-	foreach(level_locations; int i; string path) {
-	  new_websocket_module_cache += ({ ({ path, level_find_files[i] }) });
-	}
-	level_locations = ({});
-	level_find_files = ({});
-      }
-      prev_pri = pri;
-      string location = me->websocket_open && me->query_location();
-      if (!location) continue;
-      level_find_files += ({ me });
-      level_locations += ({ location });
-    }
-
-    sort(map(level_locations,
-	     lambda(string loc) { return -sizeof(loc); }),
-	 level_locations, level_find_files);
-    foreach(level_locations; int i; string path) {
-      new_websocket_module_cache += ({ ({ path, level_find_files[i] }) });
-    }
-    websocket_module_cache = new_websocket_module_cache;
-  }
-  return websocket_module_cache;
-}
-
 array location_modules()
 //! Return an array of all location modules the request should be
 //! mapped through, by order of priority.
@@ -2094,54 +2055,6 @@ mapping(string:mixed)|DAVLock lock_file(string path,
   // Success.
   return lock;
 }
-
-//! This is a generic handler which will be called by the
-//! @[ws_handle_queue()] method in the request object. The purpose of
-//! this method is to sort out which module in the configuration that
-//! should handle the message and call the given callback in that
-//! module.
-void websocket_handle(WebSocket ws, mixed data, string callback) {
-  if (!has_prefix(callback, "websocket_")) {
-    // Invalid callback method
-    werror("INVALID CALLBACK %O\n", callback);
-    return;
-  }
-
-  RequestID id = ws->id;
-
-  ws->id->json_logger->log(([
-                         "event"    : "WEBSOCKET_MESSAGE_BEGIN",
-                         "callback" : callback,
-                       ]));
-
-  object key;
-  foreach(websocket_module_cache || websocket_modules(), array tmp) {
-    mixed ret;
-    string loc = tmp[0];
-    if(has_prefix(ws->id->virtfile, loc) && tmp[1][callback])
-      {
-        TRACE_ENTER(sprintf("Websocket module [%s] ", ws->id->virtfile), tmp[1]);
-        PROF_ENTER(tmp[1]->module_name,"websocket");
-        TRACE_ENTER(sprintf("Calling %s()...", callback), 0);
-        LOCK(tmp[1][callback]);
-        ret = tmp[1][callback](ws, data);
-        UNLOCK();
-        TRACE_LEAVE("");
-        PROF_LEAVE(tmp[1]->module_name,"websocket");
-        TRACE_LEAVE("");
-        if (!ret) {
-          break;
-        }
-      }
-  }
-
-  ws->id->json_logger->log(([
-                         "event"    : "WEBSOCKET_MESSAGE_END",
-                         "callback" : callback,
-                       ]));
-
-}
-
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All

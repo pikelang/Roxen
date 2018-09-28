@@ -19,7 +19,6 @@ constant MODULE_LOGGER            = (1<<12);
 constant MODULE_FILTER            = (1<<13);
 constant MODULE_PROVIDER          = (1<<15);
 constant MODULE_USERDB            = (1<<16);
-constant MODULE_WEBSOCKET         = (1<<17);
 
 // Mask for the above.
 constant MODULE_TYPE_MASK	  = ((1<<28)-1);
