@@ -55,7 +55,7 @@ protected void destroy() {
   }
   id = 0;
 
-  ws_handle_queue = UNDEFINED;
+  ws_msg_queue = UNDEFINED;
 }
 
 //! Called to end a socket instead of destructing it. This method will
