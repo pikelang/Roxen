@@ -1658,7 +1658,7 @@ mixed find_file( string f, RequestID id )
     return Roxen.http_status(204,(norm_f+" DELETED from the server"));
 
   default:
-    id->misc->error_code = 501;
+    id->misc->error_code = id->misc->error_code || 501;
     SIMPLE_TRACE_LEAVE("%s: Not supported", id->method);
     return 0;
   }
