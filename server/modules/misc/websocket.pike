@@ -34,6 +34,32 @@ void start(int q, Configuration c)
   conf = c;
 }
 
+protected int is_connection_upgrade(string path, RequestID id)
+{
+  return has_value(lower_case(id->request_headers->connection||"")/",",
+		   "upgrade");
+}
+
+protected int is_upgrade_websocket(string path, RequestID id)
+{
+  return has_value(lower_case(id->request_headers->upgrade||"")/",",
+		   "websocket");
+}
+
+protected int is_websocket_version_13(string path, RequestID id)
+{
+  return id->request_headers["sec-websocket-version"] == "13";
+}
+
+protected int has_valid_websocket_key(string path, RequestID id)
+{
+  string raw_key = "";
+  catch {
+    raw_key = MIME.decode_base64(id->request_headers["sec-websocket-key"]);
+  };
+  return sizeof(raw_key) >= 16;
+}
+
 // Operation:
 //
 // * For syntactically valid WebSocket requests, the
@@ -67,29 +93,25 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
     return 0;
   }
 
-  if (!has_prefix(id->prot, "HTTP/") ||
-      (id->prot[sizeof("HTTP/")..] < "1.1")) {
-    // HTTP/1.1 or later required.
-    TRACE_LEAVE("No - not HTTP/1.1 or later.");
-    return 0;
-  }
+  id->register_vary_callback("connection", is_connection_upgrade);
 
-  if (!has_value(lower_case(id->request_headers->connection||"")/",",
-		 "upgrade")) {
+  if (!is_connection_upgrade("", id)) {
     TRACE_LEAVE("No - no connection: upgrade.");
     return 0;
   }
 
-  if (!has_value(lower_case(id->request_headers->upgrade||"")/",",
-		 "websocket")) {
+  id->register_vary_callback("connection", is_upgrade_websocket);
+
+  if (!is_upgrade_websocket("", id)) {
     // Unsupported upgrade header.
     id->misc->error_code = id->misc->error_code || Protocols.HTTP.HTTP_BAD;
     TRACE_LEAVE("No - Unsupported or missing upgrade header.");
     return 0;
   }
 
-  if (id->request_headers["sec-websocket-version"] !=
-      (string)13/*Protocols.WebSocket.websocket_version*/) {
+  id->register_vary_callback("sec-websocket-version", is_websocket_version_13);
+
+  if (!is_websocket_version_13("", id)) {
     // Unsupported WebSocket version.
     TRACE_LEAVE("No - Unsupported websocket version.");
     return Roxen.http_status(Protocols.HTTP.HTTP_BAD,
@@ -100,15 +122,22 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
     ]);
   }
 
-  string raw_key = "";
-  catch {
-    raw_key = MIME.decode_base64(id->request_headers["sec-websocket-key"]);
-  };
-  if (sizeof(raw_key) < 16) {
+  id->register_vary_callback("sec-websocket-key", has_valid_websocket_key);
+
+  if (!has_valid_websocket_key("", id)) {
     // Invalid Sec-WebSocet-Key.
     TRACE_LEAVE("No - Invalid Sec-WebSocket-Key.");
     return Roxen.http_status(Protocols.HTTP.HTTP_BAD,
 			     "Invalid Sec-WebSocket-Key.");
+  }
+
+  // FIXME: Fix vary support for http version.
+  if (!has_prefix(id->prot, "HTTP/") ||
+      (id->prot[sizeof("HTTP/")..] < "1.1")) {
+    // HTTP/1.1 or later required.
+    NOCACHE();
+    TRACE_LEAVE("No - not HTTP/1.1 or later.");
+    return 0;
   }
 
   TRACE_LEAVE("Yes.");
