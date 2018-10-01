@@ -48,6 +48,10 @@ constant descriptions = ({
 void setup( )
 {
   foreach(descriptions; int i; string descr) {
-    rtest(descr, "http/websocket.pike", "/websocket_example/", i, descr);
+    rtest(descr, "http/websocket.pike", "/websocket_example/", i);
+    if (i) {
+      // Test for over-caching.
+      rtest(descriptions[0], "http/websocket.pike", "/websocket_example/", 0);
+    }
   }
 }
