@@ -36,13 +36,29 @@ WebSocketAPI api;
 //! Indicate that we should die.
 int is_ended = 0;
 
-protected void create(RequestID id, WebSocketAPI api) {
+protected void create(RequestID id, WebSocketAPI api, string|void data)
+{
   this_program::id = id;
   this_program::api = api;
   ws_msg_queue = Thread.Queue();
   ws_handler_mutex = Thread.Mutex();
   onclose = ws_onclose;
   onmessage = ws_onmessage;
+
+#if constant(Protocols.WebSocket.Extension)
+  ::create(id->my_fd, id->file->parsed_websocket_extensions);
+#else
+  ::create(id->my_fd);
+#endif
+  // Disconnect the fd from the RequestID.
+  id->my_fd = 0;
+
+  if (data) {
+    websocket_in(id, data);
+  }
+
+  // Inform the application that the WebSocket is now ready for use...
+  ws_onopen(this);
 }
 
 protected void destroy() {
@@ -225,71 +241,3 @@ public int websocket_close(void|Protocols.WebSocket.CLOSE_STATUS reason) {
   close(reason);
   return 0;
 }
-
-// Buffer for HTTP response when we are upgrading...
-protected Stdio.Buffer http_data_to_send;
-
-protected void http_write_upgrade_headers(mixed _) {
-  // If the buffer is empty, we should upgrade to an actual WebSocket.
-  if (!sizeof(http_data_to_send)) {
-    // websocket = Protocols.WebSocket.Connection(fd);
-    state = CONNECTING;
-    parser = Protocols.WebSocket.Parser();
-    stream->set_nonblocking(websocket_in, websocket_write, websocket_closed);
-    state = OPEN;
-
-    // Inform the application that the WebSocket is now ready for use...
-    ws_onopen(this);
-    return;
-  }
-
-  int res = http_data_to_send->output_to(stream);
-  if (res == -1) {
-    // We failed to write to the stream...
-    stream->close();
-    destruct(stream);
-    id->end();
-    return;
-  }
-}
-
-protected void http_close(mixed _) {
-  // Remote end closed the connection while we were upgrading.
-  end();
-}
-
-//! This method is responsible for upgrading the connection to a
-//! websocket.
-//! This includes answering the remote endpoint with the proper HTTP
-//! headers and then creating the WebSocket connection object using
-//! the FD we are holding.
-void upgrade_to_websocket(int masking,
-                          mapping(string:string) extra_headers) {
-  stream = id->my_fd;
-  id->my_fd = 0;
-
-  // Let's get rid of all callbacks. We will now take ownership of this thing...
-  stream->set_nonblocking(0,0,0);
-  id->pipe = 0;
-
-  this_program::masking = masking;
-
-  mapping headers = ([
-    "Upgrade" : "websocket",
-    "Connection" : "Upgrade",
-    // "Sec-WebSocket-Protocol" : "chat",
-  ]) + extra_headers;
-
-  string key = id->request_headers["sec-websocket-key"] + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-  key = Crypto.SHA1.hash(key);
-  headers["Sec-WebSocket-Accept"] = MIME.encode_base64(key);
-
-  Stdio.Buffer data = Stdio.Buffer("HTTP/1.1 101 switching protocol\r\n");
-  data->add(Roxen.make_http_headers(headers));
-  http_data_to_send = data;
-
-
-  stream->set_nonblocking(0, http_write_upgrade_headers, http_close);
-  stream->write("");
-}
-

@@ -577,9 +577,9 @@ mapping(string:mixed) upgrade_to_websocket(WebSocketAPI api, void|int masking)
 //!   Specify @[masking] to enable masking on outgoing frames.
 {
   return ([
+    "error" : Protocols.HTTP.HTTP_SWITCH_PROT,
     "upgrade_websocket" : 1,
     "masking" : masking,
-    "extra_heads" : ([]),
     "websocket_api" : api,
   ]);
 }

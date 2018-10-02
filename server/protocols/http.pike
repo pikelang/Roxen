@@ -1477,6 +1477,19 @@ void end(int|void keepit)
      // from the close callback? /mast
      && !catch(my_fd->query_address()) )
   {
+    if (file->upgrade_websocket) {
+#ifdef CONNECTION_DEBUG
+      werror("HTTP[%s]: Transitioning to WebSocket ------------------------\n",
+	     DEBUG_GET_FD);
+#else
+      REQUEST_WERR("HTTP: Transitioning to WebSocket.");
+#endif
+      websocket = WebSocket(this, file->websocket_api, leftovers);
+      websocket->masking = file->masking;
+      my_fd = 0;
+      pipe = 0;
+      return;
+    }
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
@@ -3254,19 +3267,34 @@ void handle_request()
 
   else {
     if (result && result->upgrade_websocket) {
-      REQUEST_WERR("HTTP: handle_request: upgrading to websocket.\n");
+      REQUEST_WERR("HTTP: handle_request: Preparing for upgrade to websocket.\n");
 
-      websocket = WebSocket(this, result->websocket_api);
-      websocket->upgrade_to_websocket(result->masking,
-				      result->extra_headers || ([]));
+      if (method != "WebSocketOpen") {
+	error("Invalid attempt to upgrade to websocket.\n");
+      }
 
-      REQUEST_WERR("HTTP: handle_request: socket upgraded.\n");
-      TIMER_END(handle_request);
-      json_logger->log(([
-                           "event" : "WEBSOCKET_BEGIN",
-			 ]));
-      LOG_HANDLE_END();
-      return;
+      Protocols.WebSocket.Request ws_req = Protocols.WebSocket.Request(0);
+      ws_req->request_headers = request_headers;
+
+      mapping(string:string) ws_headers = ([]);
+#if constant(Protocols.WebSocket.Extension)
+      array ws_extensions = ({});
+      [ws_headers, ws_extensions] =
+	ws_req->low_websocket_accept(result->websocket_protocol,
+				     result->websocket_extensions);
+      result->parsed_websocket_extensions = ws_extensions;
+#else
+      ws_headers = ws_req->low_websocket_accept(result->websocket_protocol);
+#endif
+
+      REQUEST_WERR(sprintf("HTTP: ws_headers: %O\n", ws_headers));
+
+      result->extra_heads += ws_headers;
+      misc->connection = "Upgrade";
+
+      NO_PROTO_CACHE();
+
+      REQUEST_WERR("HTTP: handle_request: socket prepared for upgrade.\n");
     }
 
     if (result && result->pipe) {
