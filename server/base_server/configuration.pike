@@ -2359,6 +2359,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(fid == -1)
   {
+    if (id->method == "WebSocketOpen") {
+      // DWIM.
+      TRACE_LEAVE("Websocket request. Returning 0.");
+      return 0;
+    }
     if(no_magic)
     {
       TRACE_LEAVE("No magic requested. Returning -1.");
