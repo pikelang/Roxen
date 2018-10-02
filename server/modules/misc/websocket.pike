@@ -132,6 +132,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
   }
 
   // FIXME: Fix vary support for http version.
+  // Note also that the varies header was added in HTTP/1.1.
   if (!has_prefix(id->prot, "HTTP/") ||
       (id->prot[sizeof("HTTP/")..] < "1.1")) {
     // HTTP/1.1 or later required.
