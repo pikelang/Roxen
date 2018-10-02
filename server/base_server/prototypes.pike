@@ -4035,16 +4035,14 @@ class WebSocketAPI
   //! Callback called when the websocket connection has been setup and
   //! Callback for websocket messages coming in on connections that
   //! matches the location used by this module.
-  mapping(string:mixed)|int(0..0) websocket_message(Protocols.WebSocket.Connection ws,
-						    Protocols.WebSocket.Frame frame);
+  void websocket_message(Protocols.WebSocket.Connection ws,
+			 Protocols.WebSocket.Frame frame);
 
   //! Called when a websocket connection is being closed. Will be called
   //! even if the server has ended the connection by calling the
   //! @[websocket_close] method in the connection.
-  //! Return 0 to stop other websocket modules from receiving this
-  //! notification.
-  int websocket_close(Protocols.WebSocket.Connection ws,
-		      Protocols.WebSocket.CLOSE_STATUS reason);
+  void websocket_close(Protocols.WebSocket.Connection ws,
+		       Protocols.WebSocket.CLOSE_STATUS reason);
 }
 
 class PatchPropertyCommand

@@ -44,32 +44,30 @@ mapping(string:mixed)|int(0..0) find_file(string path, RequestID id)
 
 inherit WebSocketAPI;
 
-int websocket_ready(WebSocket ws)
+void websocket_ready(WebSocket ws)
 {
   werror("%O ready. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
 }
 
-int websocket_close(WebSocket ws, Protocols.WebSocket.CLOSE_STATUS reason)
+void websocket_close(WebSocket ws, Protocols.WebSocket.CLOSE_STATUS reason)
 {
   werror("%O was closed. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
-  return 0;
 }
 
-mapping(string:mixed)|int(0..0) websocket_message(WebSocket ws,
-						  Protocols.WebSocket.Frame frame)
+void websocket_message(WebSocket ws, Protocols.WebSocket.Frame frame)
 {
   sscanf(frame->text, "%d %d", int ws_id, int cnt);
 
   if (ws->id->misc->ws_id && ws->id->misc->ws_id != ws_id) {
     werror("Wrong WebSocket ID! Expected %d and got %d\n",
 	   ws->id->misc->ws_id, ws_id);
-    return 0;
+    return;
   }
 
   if (ws->id->misc->ws_cnt >= cnt) {
     werror("Messages out of order. Last cnt %d, got %d\n",
 	   ws->id->misc->ws_cnt, cnt);
-    return 0;
+    return;
   }
 
   ws->id->misc->ws_id = ws_id;
