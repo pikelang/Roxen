@@ -14,6 +14,12 @@ constant module_doc =
   "This module provides a dummy WebSocket (RFC 6455) service.";
 constant module_unique = 0;
 
+#ifdef WEBSOCKET_DEBUG
+#define WS_WERR(X...)	werror("WebSocket Example: " + X)
+#else
+#define WS_WERR(X...)
+#endif
+
 protected void create()
 {
   defvar("location", "/websocket_example/", "Mount point",
@@ -36,7 +42,7 @@ string query_name()
 
 mapping(string:mixed)|int(0..0) find_file(string path, RequestID id)
 {
-  werror("find_file(%O, %O) called. Method: %O\n", path, id, id->method);
+  WS_WERR("find_file(%O, %O) called. Method: %O\n", path, id, id->method);
   if (id->method != "WebSocketOpen") return 0;
   if (path != "") return 0;
   return Roxen.upgrade_to_websocket(this, 0);
@@ -46,16 +52,18 @@ inherit WebSocketAPI;
 
 void websocket_ready(WebSocket ws)
 {
-  werror("%O ready. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
+  WS_WERR("%O ready. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
 }
 
 void websocket_close(WebSocket ws, Protocols.WebSocket.CLOSE_STATUS reason)
 {
-  werror("%O was closed. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
+  WS_WERR("%O was closed. Pending: %d\n", ws->id, ws->id->ws_msg_pending);
 }
 
 void websocket_message(WebSocket ws, Protocols.WebSocket.Frame frame)
 {
+  WS_WERR("%O(%O, %O): text: %O\n", this_function, ws, frame, frame->text);
+
   sscanf(frame->text, "%d %d", int ws_id, int cnt);
 
   if (ws->id->misc->ws_id && ws->id->misc->ws_id != ws_id) {
