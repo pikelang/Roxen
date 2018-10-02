@@ -69,17 +69,22 @@ void websocket_message(WebSocket ws, Protocols.WebSocket.Frame frame)
   if (ws->id->misc->ws_id && ws->id->misc->ws_id != ws_id) {
     werror("Wrong WebSocket ID! Expected %d and got %d\n",
 	   ws->id->misc->ws_id, ws_id);
+    ws->close();
     return;
   }
 
   if (ws->id->misc->ws_cnt >= cnt) {
     werror("Messages out of order. Last cnt %d, got %d\n",
 	   ws->id->misc->ws_cnt, cnt);
+    ws->close();
     return;
   }
 
   ws->id->misc->ws_id = ws_id;
   ws->id->misc->ws_cnt = cnt;
+
+  // NB: Reverses the order!
+  ws->send_text(sprintf("%d %d", cnt, ws_id));
 
   if (!random(10)) {
     // Close a random connection
