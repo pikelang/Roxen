@@ -61,7 +61,8 @@ protected void create(RequestID id, WebSocketAPI api, string|void data)
   ws_onopen(this);
 }
 
-protected void destroy() {
+protected void destroy()
+{
   if (ws_keepalive) {
     remove_call_out(ws_keepalive);
   }
@@ -77,7 +78,8 @@ protected void destroy() {
 //! Called to end a socket instead of destructing it. This method will
 //! ensure that there are no outstanding handler requests before
 //! destructing it.
-void end() {
+void end()
+{
   is_ended = 1;
 
   object key = ws_handler_mutex->lock();
@@ -92,7 +94,8 @@ void end() {
 //! Handler that processes the msg queue. This method should only be
 //! executed by one handler at the time (per request object ofc) or
 //! messages may arrive out-of-order to the application.
-protected void ws_handle_queue() {
+protected void ws_handle_queue()
+{
   if (!ws_msg_queue->size()) return;
 
   string|Protocols.WebSocket.Frame msg = ws_msg_queue->read();
@@ -150,7 +153,8 @@ protected void ws_handle_queue() {
 
 //! Reschedule this request object for handling websocket messages in
 //! queue.
-protected void ws_schedule_handling() {
+protected void ws_schedule_handling()
+{
   if (this && !is_ended && !ws_in_handler_queue) {
     object key = ws_handler_mutex->lock();
     if (!ws_in_handler_queue) {
@@ -163,7 +167,8 @@ protected void ws_schedule_handling() {
 
 //! Runs the keep-alive ping over the websocket and reschedules
 //! another one.
-protected void ws_do_keepalive() {
+protected void ws_do_keepalive()
+{
   // Only send the ping iff we have a ws_ping_interval set and a
   // valid, open connection.
   if (ws_ping_interval &&
@@ -175,7 +180,8 @@ protected void ws_do_keepalive() {
 }
 
 //! Reschedule the keep-alive ping for a new time.
-protected void ws_reschedule_keepalive() {
+protected void ws_reschedule_keepalive()
+{
   if (ws_keepalive) {
     remove_call_out(ws_keepalive);
   }
@@ -187,7 +193,8 @@ protected void ws_reschedule_keepalive() {
 }
 
 //! Callback called when we receive a websocket message.
-protected void ws_onmessage(Protocols.WebSocket.Frame frame, mixed id) {
+protected void ws_onmessage(Protocols.WebSocket.Frame frame, mixed id)
+{
   ws_reschedule_keepalive();
   ws_msg_queue->write(frame);
   ws_schedule_handling();
@@ -197,7 +204,8 @@ protected void ws_onmessage(Protocols.WebSocket.Frame frame, mixed id) {
 }
 
 //! Callback called when a CLOSE frame is received.
-protected void ws_onclose(Protocols.WebSocket.CLOSE_STATUS reason, mixed id) {
+protected void ws_onclose(Protocols.WebSocket.CLOSE_STATUS reason, mixed id)
+{
   WS_DEBUG("Connection closed.\n");
   ws_close_reason = reason;
   ws_msg_queue->write(WS_CLOSE_MSG);
@@ -216,7 +224,8 @@ protected void ws_onclose(Protocols.WebSocket.CLOSE_STATUS reason, mixed id) {
 //! after the WebSocket connection object has been set up. This means
 //! that this method will be called in the same handler thread as the
 //! one that returned the upgrade_connection mapping.
-protected void ws_onopen(this_program id) {
+protected void ws_onopen(this_program id)
+{
   WS_DEBUG("WebSocket connection open and ready.\n");
   ws_msg_queue->write(WS_OPEN_MSG);
   this_program::id->json_logger->log(([
@@ -229,7 +238,8 @@ protected void ws_onopen(this_program id) {
 //! the @[websocket_close] callback will be triggered.
 //!
 //! @returns 1 if this isn't an open websocket connection.
-public int websocket_close(void|Protocols.WebSocket.CLOSE_STATUS reason) {
+public int websocket_close(void|Protocols.WebSocket.CLOSE_STATUS reason)
+{
   if (state != Protocols.WebSocket.Connection.OPEN) {
     return 1;
   }
