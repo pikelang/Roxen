@@ -582,6 +582,10 @@ mapping(string:mixed) upgrade_to_websocket(WebSocketAPI api, void|int masking)
 //!
 //! @param masking
 //!   Specify @[masking] to enable masking on outgoing frames.
+//!
+//! @note
+//!   This return value is only valid for http connections that
+//!   have the method set to @[WEBSOCKET_OPEN_METHOD].
 {
   return ([
     "error" : Protocols.HTTP.HTTP_SWITCH_PROT,
