@@ -3269,7 +3269,7 @@ void handle_request()
     if (result && result->upgrade_websocket) {
       REQUEST_WERR("HTTP: handle_request: Preparing for upgrade to websocket.\n");
 
-      if (method != "WebSocketOpen") {
+      if (method != Roxen.WEBSOCKET_OPEN_METHOD) {
 	error("Invalid attempt to upgrade to websocket.\n");
       }
 

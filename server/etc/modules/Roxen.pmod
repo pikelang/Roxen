@@ -18,6 +18,13 @@
 // Tell Pike.count_memory this is global.
 constant pike_cycle_depth = 0;
 
+//! Internal derived method used by the websocket module to
+//! inform of a valid websocket request.
+//!
+//! NB: Contains a space character to ensure that the string
+//!     can't be generated straight from the http conection.
+constant WEBSOCKET_OPEN_METHOD = "WebSocketOpen ";
+
 // Error handling tools
 
 enum OnError {

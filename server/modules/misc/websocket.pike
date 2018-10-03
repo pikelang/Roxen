@@ -62,8 +62,8 @@ protected int has_valid_websocket_key(string path, RequestID id)
 
 // Operation:
 //
-// * For syntactically valid WebSocket requests, the
-//   method field in the RequestID is set to "WebSocketOpen",
+// * For syntactically valid WebSocket requests, the method
+//   field in the RequestID is set to Roxen.WEBSOCKET_OPEN_METHOD,
 //   the default error_code set to HTTP_BAD and zero returned.
 //
 // * For requests that don't seem to be WebSocket requests
@@ -77,8 +77,8 @@ protected int has_valid_websocket_key(string path, RequestID id)
 //   error status is returned.
 //
 // This means that modules implementing support for WebSockets
-// need to check for the method "WebSocketOpen", and then
-// return Roxen.upgrade_to_websocket() if appropriate.
+// need to check for the method Roxen.WEBSOCKET_OPEN_METHOD,
+// and then return Roxen.upgrade_to_websocket() if appropriate.
 
 mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 {
@@ -143,9 +143,7 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 
   TRACE_LEAVE("Yes.");
 
-  // NB: The mixed case in the method ensures that it can't be
-  //     set directly from the http request.
-  id->method = "WebSocketOpen";
+  id->method = Roxen.WEBSOCKET_OPEN_METHOD;
   id->misc->error_code = Protocols.HTTP.HTTP_BAD;
 
   // Continue request processing.

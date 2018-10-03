@@ -43,7 +43,7 @@ string query_name()
 mapping(string:mixed)|int(0..0) find_file(string path, RequestID id)
 {
   WS_WERR("find_file(%O, %O) called. Method: %O\n", path, id, id->method);
-  if (id->method != "WebSocketOpen") return 0;
+  if (id->method != Roxen.WEBSOCKET_OPEN_METHOD) return 0;
   if (path != "") return 0;
   return Roxen.upgrade_to_websocket(this, 0);
 }
