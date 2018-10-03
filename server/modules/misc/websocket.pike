@@ -46,9 +46,10 @@ protected int is_upgrade_websocket(string path, RequestID id)
 		   "websocket");
 }
 
-protected int is_websocket_version_13(string path, RequestID id)
+protected int is_websocket_version_valid(string path, RequestID id)
 {
-  return id->request_headers["sec-websocket-version"] == "13";
+  return id->request_headers["sec-websocket-version"] ==
+    (string)Protocols.WebSocket.websocket_version;
 }
 
 protected int has_valid_websocket_key(string path, RequestID id)
@@ -109,15 +110,16 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
     return 0;
   }
 
-  id->register_vary_callback("sec-websocket-version", is_websocket_version_13);
+  id->register_vary_callback("sec-websocket-version",
+			     is_websocket_version_valid);
 
-  if (!is_websocket_version_13("", id)) {
+  if (!is_websocket_version_valid("", id)) {
     // Unsupported WebSocket version.
     TRACE_LEAVE("No - Unsupported websocket version.");
     return Roxen.http_status(Protocols.HTTP.HTTP_BAD,
 			     "Unsupported WebSocket version.") + ([
       "extra_heads": ([
-	"Sec-WebSocket-Version": (string)13/*Protocols.WebSocket.websocket_version*/,
+	"Sec-WebSocket-Version": (string)Protocols.WebSocket.websocket_version,
       ]),
     ]);
   }
