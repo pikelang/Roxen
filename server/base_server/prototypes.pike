@@ -4028,19 +4028,42 @@ class RoxenModule
 //! @[Roxen.upgrade_to_websocket()].
 class WebSocketAPI
 {
+  //! @decl void websocket_ready(WebSocket ws)
+  //!
   //! Callback called when the websocket connection has been setup and
-  //! we are ready to send messages across the connection
+  //! we are ready to send messages across the connection.
+  //!
+  //! @param ws
+  //!   @[WebSocket] for the new connection.
   void websocket_ready(Protocols.WebSocket.Connection ws);
 
-  //! Callback called when the websocket connection has been setup and
-  //! Callback for websocket messages coming in on connections that
-  //! matches the location used by this module.
+  //! @decl void websocket_message(WebSocket ws, @
+  //!                              Protocols.WebSocket.Frame frame)
+  //!
+  //! Callback called when a webscoket message has arrived.
+  //!
+  //! @param ws
+  //!   @[WebSocket] on which the message arrived.
+  //!
+  //! @param frame
+  //!   Websocket message.
   void websocket_message(Protocols.WebSocket.Connection ws,
 			 Protocols.WebSocket.Frame frame);
 
-  //! Called when a websocket connection is being closed. Will be called
-  //! even if the server has ended the connection by calling the
-  //! @[websocket_close] method in the connection.
+  //! @decl void websocket_close(WebSocket ws, @
+  //!                            Protocols.WebSocket.CLOSE_STATUS reason)
+  //!
+  //! Called when a websocket connection is being closed.
+  //!
+  //! @param ws
+  //!   @[WebSocket] that is being closed.
+  //!
+  //! @param reason
+  //!   Reason code for what has triggered the close.
+  //!
+  //! @note
+  //!   Will be called even when this side has ended the connection
+  //!   by calling @[WebSocket()->websocket_close()] in @[ws].
   void websocket_close(Protocols.WebSocket.Connection ws,
 		       Protocols.WebSocket.CLOSE_STATUS reason);
 }
