@@ -85,9 +85,4 @@ void websocket_message(WebSocket ws, Protocols.WebSocket.Frame frame)
 
   // NB: Reverses the order!
   ws->send_text(sprintf("%d %d", cnt, ws_id));
-
-  if (!random(10)) {
-    // Close a random connection
-    // id->websocket_close();
-  }
 }

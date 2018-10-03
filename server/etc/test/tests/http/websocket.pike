@@ -20,8 +20,8 @@ enum brokeness {
 // websocket.pike <url> <path> <brokeness>
 void main(int argc, array argv)
 {
-  string  sep = "\r\n";
-  int     psize = 100000;
+  int psize = 100000;
+
   if( argc < 4 )
     exit( BADARG );
 

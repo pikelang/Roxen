@@ -1453,20 +1453,6 @@ void end(int|void keepit)
     websocket = 0;
   }
 
-#if 0
-  if (ws_msg_queue) {
-#if DEBUG
-    if (ws_msg_queue->size()) {
-      werror("WARNING: WebSocket connection ended with messages in queue.\n");
-    }
-#endif /* DEBUG */
-    destruct(ws_msg_queue);
-    ws_msg_queue = 0;
-  }
-
-  ws_handler_mutex = 0;
-#endif
-
   cleanup_request_object();
 
   if(keepit
