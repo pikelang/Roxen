@@ -3169,7 +3169,6 @@ public int websocket_send_text(string text) {
   }
 
   websocket->send_text(text);
-  websocket->ws_reschedule_keepalive();
   return 0;
 }
 
@@ -3184,7 +3183,6 @@ public int websocket_send_binary(string data) {
   }
 
   websocket->send_binary(data);
-  websocket->ws_reschedule_keepalive();
   return 0;
 }
 

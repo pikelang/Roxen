@@ -215,6 +215,13 @@ protected void ws_onclose(Protocols.WebSocket.CLOSE_STATUS reason, mixed id)
                                      ]));
 }
 
+//! Overloaded to call @[ws_reschedule_keepalive()].
+void send(Protocols.WebSocket.Frame frame)
+{
+  ws_reschedule_keepalive();
+  ::send(frame);
+}
+
 //! Callback which is called after we've setup the WebSocket
 //! connection to tell the application that the connection is ready
 //! for use.
