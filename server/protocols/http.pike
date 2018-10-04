@@ -24,6 +24,14 @@ inherit RequestID;
 int req_time = HRTIME();
 #endif
 
+#define WEBSOCKET_DEBUG
+
+#ifdef WEBSOCKET_DEBUG
+#define WS_DEBUG werror
+#else
+#define WS_DEBUG(X...)
+#endif /* WEBSOCKET_DEBUG */
+
 #ifdef REQUEST_DEBUG
 int footime, bartime;
 #define REQUEST_WERR(X) do {			\
@@ -1489,6 +1497,11 @@ void end(int|void keepit)
     CHECK_FD_SAFE_USE;
   }
 
+  if (websocket) {
+    websocket->end();
+    websocket = 0;
+  }
+
   cleanup_request_object();
 
   if(keepit
@@ -1499,6 +1512,19 @@ void end(int|void keepit)
      // from the close callback? /mast
      && !catch(my_fd->query_address()) )
   {
+    if (file->upgrade_websocket) {
+#ifdef CONNECTION_DEBUG
+      werror("HTTP[%s]: Transitioning to WebSocket ------------------------\n",
+	     DEBUG_GET_FD);
+#else
+      REQUEST_WERR("HTTP: Transitioning to WebSocket.");
+#endif
+      websocket = WebSocket(this, file->websocket_api, leftovers);
+      websocket->masking = file->masking;
+      my_fd = 0;
+      pipe = 0;
+      return;
+    }
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
@@ -2032,7 +2058,8 @@ void do_log( int|void fsent )
 			 ]));
     }
   }
-  if( !port_obj ) 
+
+  if( !port_obj )
   {
     TIMER_END(do_log);
     MERGE_TIMERS(conf);
@@ -3179,6 +3206,40 @@ protected void handle_request_from_queue( )
   }
 }
 
+//! Set to a @[WebSocket] object if this connection is upgraded to a
+//! websocket.
+object websocket;
+
+//! Call this method to send a text frame across the websocket
+//! connection.
+//!
+//! @returns 1 if this isn't an open websocket connection.
+public int websocket_send_text(string text) {
+  if (!websocket ||
+      websocket->state != Protocols.WebSocket.Connection.OPEN) {
+    return 1;
+  }
+
+  websocket->send_text(text);
+  return 0;
+}
+
+//! Call this method to send a binary frame across the websocket
+//! connection.
+//!
+//! @returns 1 if this isn't an open websocket connection.
+public int websocket_send_binary(string data) {
+  if (!websocket ||
+      websocket->state != Protocols.WebSocket.Connection.OPEN) {
+    return 1;
+  }
+
+  websocket->send_binary(data);
+  return 0;
+}
+
+
+
 void handle_request()
 {
   if (mixed err = catch {
@@ -3194,7 +3255,6 @@ void handle_request()
 #else
 #define LOG_HANDLE_END()
 #endif
-
 
 #ifdef MAGIC_ERROR
   if(prestate->old_error)
@@ -3256,6 +3316,37 @@ void handle_request()
     INTERNAL_ERROR( e );
 
   else {
+    if (result && result->upgrade_websocket) {
+      REQUEST_WERR("HTTP: handle_request: Preparing for upgrade to websocket.\n");
+
+      if (method != Roxen.WEBSOCKET_OPEN_METHOD) {
+	error("Invalid attempt to upgrade to websocket.\n");
+      }
+
+      Protocols.WebSocket.Request ws_req = Protocols.WebSocket.Request(0);
+      ws_req->request_headers = request_headers;
+
+      mapping(string:string) ws_headers = ([]);
+#if constant(Protocols.WebSocket.Extension)
+      array ws_extensions = ({});
+      [ws_headers, ws_extensions] =
+	ws_req->low_websocket_accept(result->websocket_protocol,
+				     result->websocket_extensions);
+      result->parsed_websocket_extensions = ws_extensions;
+#else
+      ws_headers = ws_req->low_websocket_accept(result->websocket_protocol);
+#endif
+
+      REQUEST_WERR(sprintf("HTTP: ws_headers: %O\n", ws_headers));
+
+      result->extra_heads += ws_headers;
+      misc->connection = "Upgrade";
+
+      NO_PROTO_CACHE();
+
+      REQUEST_WERR("HTTP: handle_request: socket prepared for upgrade.\n");
+    }
+
     if (result && result->pipe) {
       REQUEST_WERR("HTTP: handle_request: pipe in progress.");
       TIMER_END(handle_request);
