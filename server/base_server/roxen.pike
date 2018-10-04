@@ -5515,6 +5515,7 @@ void create()
 
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
+  add_constant( "WebSocketAPI", WebSocketAPI);
 
   add_constant( "load",    load);
 

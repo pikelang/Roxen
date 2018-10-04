@@ -18,6 +18,13 @@
 // Tell Pike.count_memory this is global.
 constant pike_cycle_depth = 0;
 
+//! Internal derived method used by the websocket module to
+//! inform of a valid websocket request.
+//!
+//! NB: Contains a space character to ensure that the string
+//!     can't be generated straight from the http conection.
+constant WEBSOCKET_OPEN_METHOD = "WebSocketOpen ";
+
 // Error handling tools
 
 enum OnError {
@@ -566,6 +573,28 @@ string canonicalize_http_header (string header)
     "cookie2":			"Cookie2",
     "set-cookie2":		"Set-Cookie2",
   ])[lower_case (header)];
+}
+
+mapping(string:mixed) upgrade_to_websocket(WebSocketAPI api, void|int masking)
+//! Returns a mapping that will cause the server to upgrade the
+//! connection to a WebSocket.
+//!
+//! @param api
+//!   @[WebSocketAPI] object to handle websocket requests.
+//!
+//! @param masking
+//!   Specify @[masking] to enable masking on outgoing frames.
+//!
+//! @note
+//!   This return value is only valid for http connections that
+//!   have the method set to @[WEBSOCKET_OPEN_METHOD].
+{
+  return ([
+    "error" : Protocols.HTTP.HTTP_SWITCH_PROT,
+    "upgrade_websocket" : 1,
+    "masking" : masking,
+    "websocket_api" : api,
+  ]);
 }
 
 mapping(string:mixed) http_low_answer( int status_code, string data )

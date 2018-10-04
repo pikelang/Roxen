@@ -1879,6 +1879,7 @@ string examine_return_mapping(mapping m)
 
    if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
+   else if (m->upgrade_websocket) res += "(upgrade to websocket)";
 
    if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
@@ -2564,6 +2565,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(fid == -1)
   {
+    if (id->method == Roxen.WEBSOCKET_OPEN_METHOD) {
+      // DWIM.
+      TRACE_LEAVE("Websocket request. Returning 0.");
+      return 0;
+    }
     if(no_magic)
     {
       TRACE_LEAVE("No magic requested. Returning -1.");
