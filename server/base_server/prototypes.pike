@@ -1861,6 +1861,34 @@ class RequestID
   //!   @rfc{4918:10.4.2@}
   mapping(string:array(array(array(string)))) get_if_data()
   {
+    string read_until(Stdio.Buffer buf, int term)
+    {
+      string res = "";
+      while (sizeof(buf) && (buf[0] != term)) {
+	res += buf->read(1);
+      }
+      if (sizeof(buf)) buf->consume(1);
+      return res;
+    };
+
+    string read_quoted_until(Stdio.Buffer buf, int term)
+    {
+      string res = "";
+      while (sizeof(buf) && (buf[0] != term)) {
+	if (buf[0] == '\\') {
+	  // FIXME: Should we keep the escape character or not?
+	  //        Currently this function is only used for reading
+	  //        etags, including the surrounding double quotes,
+	  //        so it seems reasonable to also keep the escapes.
+	  res += buf->read(2);
+	} else {
+	  res += buf->read(1);
+	}
+      }
+      if (sizeof(buf)) buf->consume(1);
+      return res;
+    };
+
     if (if_data) {
       IF_HDR_MSG ("get_if_data(): Returning cached result\n");
       return sizeof(if_data) && if_data;
@@ -1874,33 +1902,24 @@ class RequestID
       return 0;
     }
 
-    array(array(string|int|array(array(string)))) decoded_if =
-      MIME.decode_words_tokenized_labled(raw_header);
-
-#if 0
-    IF_HDR_MSG("get_if_data(): decoded_if: %O\n", decoded_if);
-#endif
-
-    if (!sizeof(decoded_if)) {
-      IF_HDR_MSG("Got only whitespace.\n");
-      return 0;
-    }
-
     mapping(string:array(array(array(string)))) res = ([
       0:({}),
     ]);
 
     array(string) keys = ({});
-    string tmp_resource;
     string resource = not_query;
-    foreach(decoded_if, array(string|int|array(array(string))) symbol) {
-      switch (symbol[0]) {
-      case "special":
-	switch(symbol[1]) {
-	case '<': tmp_resource = ""; break;
-	case '>': 
-	  resource = tmp_resource;
-	  tmp_resource = 0;
+
+    Stdio.Buffer raw = Stdio.Buffer(raw_header);
+    while (sizeof(raw)) {
+      switch(raw[0]) {
+      case ' ': case '\t':	// LWS
+      case '\r': case '\n':
+	raw->consume(1);
+	continue;
+      case '<':			// Resource-Tag
+	{
+	  raw->consume(1);
+	  resource = read_until(raw, '>');
 	  // Normalize.
 	  // FIXME: Check that the protocol and server parts refer
 	  //        to this server.
@@ -1918,68 +1937,39 @@ class RequestID
 	  if (!res[resource])
 	    res[resource] = ({});
 	  break;
-	default:
-	  if (tmp_resource) tmp_resource += sprintf("%c", symbol[1]);
-	  break;
 	}
-	break;
-      case "word":
-      case "domain-literal":
-	// Resource
-	if (!tmp_resource) return 0;
-	tmp_resource += symbol[1];
-	break;
-      case "comment":
+      case '(':
 	// Parenthesis expression.
-	if (tmp_resource) {
-	  // Inside a resource.
-	  tmp_resource += "(" + symbol[1][0][0] + ")";
-	  break;
-	}
-	array(array(string|int|array(array(string)))) sub_expr =
-	  MIME.decode_words_tokenized_labled(symbol[1][0][0]);
-	int i;
+	raw->consume(1);
 	array(array(string)) expr = ({});
-	string tmp_key;
-	for (i = 0; i < sizeof(sub_expr); i++) {
-	  switch(sub_expr[i][0]) {
-	  case "special":
-	    switch(sub_expr[i][1]) {
-	    case '<': tmp_key = ""; break;
-	    case '>':
-	      if (!tmp_key) {
-		IF_HDR_MSG("No tmp_key.\n");
-		return 0;
-	      }
+	while (sizeof(raw)) {
+	  switch(raw[0]) {
+	  case ')':
+	    raw->consume(1);
+	    break;
+	  case ' ': case '\t':	// LWS
+	  case '\r': case '\n':
+	    raw->consume(1);
+	    continue;
+	  case '<':	// State-token
+	    {
+	      raw->consume(1);
+	      string tmp_key = read_until(raw, '>');
 	      if (!sizeof(expr) || (expr[-1][0] != "not")) {
 		keys += ({ tmp_key });
 	      }
 	      expr += ({ ({ "key", tmp_key }) });
-	      tmp_key = 0;
-	      break;
-	    default:
-	      if (tmp_key) tmp_key += sprintf("%c", sub_expr[i][1]);
-	      break;
+	      continue;
 	    }
-	    break;
-	  case "domain-literal":
-	    if (tmp_key) {
-	      tmp_key += sub_expr[i][1];
-	      break;
-	    }
+	  case '[':
 	    // entity-tag.
-	    string etag = sub_expr[i][1];
-	    // etag is usually something like "[\"some etag\"]" here.
-	    sscanf(etag, "[%s]", etag);	// Remove brackets
+	    raw->consume(1);
+	    string etag = read_quoted_until(raw, ']');
 	    expr += ({ ({ "etag", etag }) });
-	    break;
-	  case "word":
-	    // State-token or Not.
-	    if (tmp_key) {
-	      tmp_key += sub_expr[i][1];
-	      break;
-	    }
-	    if (lower_case(sub_expr[i][1]) == "not") {
+	    continue;
+	  default:
+	    string not = raw->read(3);
+	    if (lower_case(not) == "not") {
 	      // Not
 	      if (sizeof(expr) && (expr[-1][0] == "not")) {
 		IF_HDR_MSG("Double negation.");
@@ -1989,34 +1979,31 @@ class RequestID
 	      expr += ({ ({ "not", 0 }) });
 	      break;
 	    }
-	    IF_HDR_MSG("Word outside key: %O\n", sub_expr[i][1]);
+	    IF_HDR_MSG("Word outside key: %O\n", not);
 	    report_debug("Syntax error in if-header: %O\n", raw_header);
 	    return 0;
 	  }
 	}
-	if (tmp_key) {
-	  IF_HDR_MSG("Active tmp_key: %O\n", tmp_key);
-	  report_debug("Syntax error in if-header: %O\n", raw_header);
-	  return 0;
-	}
 	res[resource] += ({ expr });
 	break;
       default:
+	IF_HDR_MSG("Unexpected character: '%c' (raw: %O)\n", raw[0], raw);
 	report_debug("Syntax error in if-header: %O\n", raw_header);
 	return 0;
       }
     }
+
+    if (sizeof(res) <= 1) {
+      IF_HDR_MSG("Got only whitespace.\n");
+      return 0;
+    }
+
     if (sizeof(keys)) {
       res[0] = ({
 	map(keys, lambda(string key) {
 		    return ({ "key", key });
 		  }),
       });
-    }
-    if (tmp_resource) {
-      IF_HDR_MSG("Active tmp_resource: %O\n", tmp_resource);
-      report_debug("Syntax error in if-header: %O\n", raw_header);
-      return 0;
     }
     IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
 	       "%O\n", raw_header, res);
