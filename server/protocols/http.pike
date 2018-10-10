@@ -2032,6 +2032,12 @@ void send_result(mapping|void result)
     }
 #endif
 
+    if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+      // Unknown length ==> Connection: close.
+      variant_heads->Connection = "close";
+      misc->connection = "close";
+    }
+
     if (file->error == 200) {
       int conditional;
       if (none_match) {
@@ -2109,6 +2115,11 @@ void send_result(mapping|void result)
       file->data = "";
       file->file = 0;
     } else {
+      if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+	// Unknown length ==> Connection: close.
+	variant_heads->Connection = "close";
+	misc->connection = "close";
+      }
       if (misc->range) {
 	// Handle byte ranges.
 	int skip;
