@@ -697,7 +697,7 @@ mapping get_port_map( object p )
       array(string) res = ({});
 
       if (!tbs) {
-	ret->warning = LOCALE(1130, "Invalid certificate");
+	ret->error = LOCALE(1130, "Invalid certificate");
 	continue;
       }
 
