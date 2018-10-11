@@ -687,7 +687,7 @@ mapping get_port_map( object p )
     // SSL/TLS port.
     int suite_filter = p->query("ssl_suite_filter", 1);
     if (suite_filter && !(suite_filter & 4)) {
-      ret->warning = LOCALE(0, "RSA-encryption enabled.");
+      ret->warning = LOCALE(1156, "RSA-encryption enabled.");
     }
     foreach(keypair_ids, int keypair_id) {
       array(Crypto.Sign.State|array(string)) keypair =
