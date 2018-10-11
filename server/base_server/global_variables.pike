@@ -223,6 +223,9 @@ protected void update_ssl_suite_filter_default(Variable.Variable var)
 {
   int val = var->query();
   if (!val || (val & 16)) {
+    if (val && !(val & 4)) {
+      var->set_warning(LOCALE(0, "Warning: RSA-encryption enabled."));
+    }
     return;
   }
   val |= 16;		// Upgrade marker.

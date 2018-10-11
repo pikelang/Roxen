@@ -685,6 +685,10 @@ mapping get_port_map( object p )
   array(int) keypair_ids = p->query("ssl_keys", 1);
   if (arrayp(keypair_ids)) {
     // SSL/TLS port.
+    int suite_filter = p->query("ssl_suite_filter", 1);
+    if (suite_filter && !(suite_filter & 4)) {
+      ret->warning = LOCALE(0, "RSA-encryption enabled.");
+    }
     foreach(keypair_ids, int keypair_id) {
       array(Crypto.Sign.State|array(string)) keypair =
 	CertDB.get_keypair(keypair_id);
