@@ -172,43 +172,41 @@ public Result do_safe_method(string http_method,
                               cb, // fail callback
                               args->extra_args || ({}));
 
-  if (!query_has_maxtime()) {
-    TRACE("No maxtime in Protocols.HTTP.Query. Set external max timeout: %O\n",
-          s->maxtime || DEFAULT_MAXTIME);
-    co_maxtime = call_out(lambda () {
-      TRACE("Timeout callback: %O\n", qr);
-
-      res = Failure(([
-        "status"      : 504,
-        "status_desc" : "Gateway timeout",
-        "host"        : qr->con->host,
-        "headers"     : qr->con->headers,
-        "url"         : qr->url_requested
-      ]));
-
-      qr->set_callbacks(0, 0, 0, 0);
-      qr->con->set_callbacks(0, 0, 0);
-      destruct(qr);
-      s = 0;
-
-      q && q->write("@");
-
-      if (async && args->on_failure) {
-        args->on_failure(res);
-      }
-    }, s->maxtime || DEFAULT_MAXTIME);
-  }
-
   if (!async) {
+    if (!query_has_maxtime()) {
+      TRACE("No maxtime in Protocols.HTTP.Query. Set external max timeout: %O\n",
+            s->maxtime || DEFAULT_MAXTIME);
+      co_maxtime = call_out(lambda () {
+        TRACE("Timeout callback: %O\n", qr);
+
+        res = Failure(([
+          "status"      : 504,
+          "status_desc" : "Gateway timeout",
+          "host"        : qr->con->host,
+          "headers"     : qr->con->headers,
+          "url"         : qr->url_requested
+        ]));
+
+        qr->set_callbacks(0, 0, 0, 0);
+        qr->con->set_callbacks(0, 0, 0);
+        destruct(qr);
+        s = 0;
+
+        q && q->write("@");
+
+        if (async && args->on_failure) {
+          args->on_failure(res);
+        }
+      }, s->maxtime || DEFAULT_MAXTIME);
+    }
+
     q->read();
-  }
 
-  if (co_maxtime && co_maxtime[0]) {
-    TRACE("Remove timeout callout\n");
-    remove_call_out(co_maxtime);
-  }
+    if (co_maxtime && co_maxtime[0]) {
+      TRACE("Remove timeout callout\n");
+      remove_call_out(co_maxtime);
+    }
 
-  if (!async) {
     q  = 0;
     qr = 0;
     s  = 0;
