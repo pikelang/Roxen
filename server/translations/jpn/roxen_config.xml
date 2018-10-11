@@ -4383,12 +4383,14 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <new/>
 <o>&lt;p&gt;Selects an additional cipher suite policy.&lt;/p&gt;&lt;p&gt;The supported filter modes are:
 &lt;dl&gt;
-&lt;dt&gt;Default&lt;/dt&gt;
-&lt;dd&gt;Use the default cipher suite selection policy, and allow all cipher suites that have sufficient strength.&lt;/dd&gt;
+&lt;dt&gt;Roxen default policy&lt;/dt&gt;
+&lt;dd&gt;Use the Roxen default cipher suite selection policy. This is currently the same as &lt;b&gt;Ephemeral key exchanges only&lt;/b&gt;, but may differ in other versions of Roxen.&lt;/dd&gt;
+&lt;dt&gt;Allow RSA-encryption&lt;/dt&gt;
+&lt;dd&gt;Allow old cipher suites that use RSA-encryption for the key-exchange. These suites are vulnerable to the &lt;a href='https://robotattack.org/'&gt;ROBOT&lt;/a&gt; vulnerability, and should usually &lt;b&gt;NOT&lt;/b&gt; be allowed.&lt;/dd&gt;
 &lt;dt&gt;Ephemeral key exchanges only&lt;/dt&gt;
 &lt;dd&gt;Only allow cipher suites that use a key exchange with ephemeral keys (aka "Perfect Forward Security"). Ie either ECDHE or DHE.&lt;/dd&gt;
-&lt;dt&gt;Suite B (relaxed)&lt;/dt&gt;
-&lt;dd&gt;Same as &lt;b&gt;Default&lt;/b&gt;, but prefer the suites specified in &lt;b&gt;Suite B&lt;/b&gt;.&lt;/dd&gt;
+&lt;dt&gt;Suite B (allow RSA-encryption)&lt;/dt&gt;
+&lt;dd&gt;Same as &lt;b&gt;Allow RSA-encryption&lt;/b&gt;, but prefer the suites specified in &lt;b&gt;Suite B&lt;/b&gt;. Should usually &lt;b&gt;NOT&lt;/b&gt; be used.&lt;/dd&gt;
 &lt;dt&gt;Suite B (ephemeral only)&lt;/dt&gt;
 &lt;dd&gt;Same as &lt;b&gt;Ephemeral key exchanges only&lt;/b&gt;, but prefer the suites specified in &lt;b&gt;Suite B&lt;/b&gt;.&lt;/dd&gt;
 &lt;dt&gt;Suite B (transitional)&lt;/dt&gt;
@@ -4870,5 +4872,17 @@ today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
 <str id="1154">
 <new/>
 <o>Certificate expires soon</o>
+<t></t>
+</str>
+
+<str id="1155">
+<new/>
+<o>Warning: RSA-encryption enabled.</o>
+<t></t>
+</str>
+
+<str id="1156">
+<new/>
+<o>RSA-encryption enabled.</o>
 <t></t>
 </str>
