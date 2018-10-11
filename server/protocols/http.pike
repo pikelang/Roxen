@@ -3246,6 +3246,12 @@ void handle_request()
   handle_vtime = gethrvtime();
 #endif
 
+  // Protect against asynchronous self desctruction.
+  object json_logger = this::json_logger;
+#ifdef TIMERS
+  mapping(string:int) timers = this::timers;
+#endif
+
   mapping result;
   array e = catch(result = conf->handle_request( this_object() ));
   // Note: Could be destructed here already since handle_request might
@@ -3266,6 +3272,9 @@ void handle_request()
     if (result && result->pipe) {
       REQUEST_WERR("HTTP: handle_request: pipe in progress.");
       TIMER_END(handle_request);
+      // NB: Request may already be completed and we may have been desctructed.
+      //     Local copys of json_logger and timers (see above) saves us from
+      //     suffering from trying to use objects in desctructed object.
       json_logger->log(([
 			   "event" : "PIPE_BEGIN",
 			 ]));
