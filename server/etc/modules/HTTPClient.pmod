@@ -193,13 +193,8 @@ public Result do_safe_method(string http_method,
 
       q && q->write("@");
 
-      if (async) {
-        if (args->on_failure) {
-          args->on_failure(res);
-        }
-
-        qr = 0;
-        s = 0;
+      if (async && args->on_failure) {
+        args->on_failure(res);
       }
     }, s->maxtime || DEFAULT_MAXTIME);
   }
