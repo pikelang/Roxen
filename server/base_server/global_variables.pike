@@ -219,6 +219,19 @@ protected int hide_if_empty(RequestID id, Variable.Variable var)
   return !sizeof(var->query());
 }
 
+protected void update_ssl_suite_filter_default(Variable.Variable var)
+{
+  int val = var->query();
+  if (!val || (val & 16)) {
+    return;
+  }
+  val |= 16;		// Upgrade marker.
+  if (!val & 4) {
+    val |= 4;		// Change default to ephemeral.
+  }
+  var->low_set(val);
+}
+
 void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
@@ -328,12 +341,13 @@ void set_up_ssl_variables( Protocol o )
   defvar("ssl_suite_filter",
 	 Variable.IntChoice(0,
 			    ([
-			      0: "Default",
-			      4: "Ephemeral key exchanges only",
-			      8: "Suite B (relaxed)",
-			      12: "Suite B (ephemeral only)",
-			      14: "Suite B (transitional)",
-			      15: "Suite B (strict)",
+			      0: "Roxen default policy",
+			      16: "Allow RSA-encryption",
+			      20: "Ephemeral key exchanges only",
+			      24: "Suite B (allow RSA-encryption)",
+			      28: "Suite B (ephemeral only)",
+			      30: "Suite B (transitional)",
+			      31: "Suite B (strict)",
 			    ]),
 			    0,
 			    LOCALE(1084, "Additional suite filtering"),
@@ -341,18 +355,29 @@ void set_up_ssl_variables( Protocol o )
 				   "policy.</p>"
 				   "<p>The supported filter modes are:\n"
 				   "<dl>\n"
-				   "<dt>Default</dt>\n"
-				   "<dd>Use the default cipher suite selection "
-				   "policy, and allow all cipher suites that "
-				   "have sufficient strength.</dd>\n"
+				   "<dt>Roxen default policy</dt>\n"
+				   "<dd>Use the Roxen default cipher suite "
+				   "selection policy. This is currently the "
+				   "same as <b>Ephemeral key exchanges "
+				   "only</b>, but may differ in other "
+				   "versions of Roxen.</dd>\n"
+				   "<dt>Allow RSA-encryption</dt>\n"
+				   "<dd>Allow old cipher suites that use RSA-"
+				   "encryption for the key-exchange. "
+				   "These suites are vulnerable to the "
+				   "<a href='https://robotattack.org/'>"
+				   "ROBOT</a> vulnerability, and should "
+				   "usually <b>NOT</b> be allowed.</dd>\n"
 				   "<dt>Ephemeral key exchanges only</dt>\n"
 				   "<dd>Only allow cipher suites that use a "
 				   "key exchange with ephemeral keys (aka "
 				   "\"Perfect Forward Security\"). Ie "
 				   "either ECDHE or DHE.</dd>\n"
-				   "<dt>Suite B (relaxed)</dt>\n"
-				   "<dd>Same as <b>Default</b>, but prefer the "
-				   "suites specified in <b>Suite B</b>.</dd>\n"
+				   "<dt>Suite B (allow RSA-encryption)</dt>\n"
+				   "<dd>Same as <b>Allow RSA-encryption</b>, "
+				   "but prefer the suites specified in "
+				   "<b>Suite B</b>. Should usually <b>NOT</b> "
+				   "be used.</dd>\n"
 				   "<dt>Suite B (ephemeral only)</dt>\n"
 				   "<dd>Same as <b>Ephemeral key exchanges "
 				   "only</b>, but prefer the suites specified "
@@ -369,7 +394,8 @@ void set_up_ssl_variables( Protocol o )
 				   "supported in all configurations.</p>\n"
 				   "<p>Note: For full Suite B compliance a "
 				   "suitable certificate must also be "
-				   "used.</p>")));
+				   "used.</p>")))->
+    set_changed_callback(update_ssl_suite_filter_default);
 #endif /* SSL.ServerConnection */
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
   mapping(SSL.Constants.ProtocolVersion: string) ssl_versions = ([
