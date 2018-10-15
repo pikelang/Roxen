@@ -2032,7 +2032,8 @@ void send_result(mapping|void result)
     }
 #endif
 
-    if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+    if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0)) &&
+	(misc->connection == "keep-alive")) {
       // Unknown length ==> Connection: close.
       variant_heads->Connection = "close";
       misc->connection = "close";
@@ -2115,7 +2116,8 @@ void send_result(mapping|void result)
       file->data = "";
       file->file = 0;
     } else {
-      if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+      if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0)) &&
+	  (misc->connection == "keep-alive")) {
 	// Unknown length ==> Connection: close.
 	variant_heads->Connection = "close";
 	misc->connection = "close";
