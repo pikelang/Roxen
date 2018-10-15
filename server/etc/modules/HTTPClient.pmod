@@ -49,58 +49,74 @@ protected constant DEFAULT_MAXTIME = 60;
 
 
 //! Do a HTTP GET request
-public Result sync_get(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public Result sync_get(Protocols.HTTP.Session.URL uri,
+                       void|Arguments args,
+                       void|Session session)
 {
-  return do_safe_method("GET", uri, args);
+  return do_safe_method("GET", uri, args, false, session);
 }
 
 
 //! Do a HTTP POST request
-public Result sync_post(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public Result sync_post(Protocols.HTTP.Session.URL uri,
+                        void|Arguments args,
+                        void|Session session)
 {
-  return do_safe_method("POST", uri, args);
+  return do_safe_method("POST", uri, args, false, session);
 }
 
 
 //! Do a HTTP PUT request
-public Result sync_put(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public Result sync_put(Protocols.HTTP.Session.URL uri,
+                       void|Arguments args,
+                       void|Session session)
 {
-  return do_safe_method("PUT", uri, args);
+  return do_safe_method("PUT", uri, args, false, session);
 }
 
 
 //! Do a HTTP DELETE request
-public Result sync_delete(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public Result sync_delete(Protocols.HTTP.Session.URL uri,
+                          void|Arguments args,
+                          void|Session session)
 {
-  return do_safe_method("DELETE", uri, args);
+  return do_safe_method("DELETE", uri, args, false, session);
 }
 
 
 //! Do an async HTTP GET request
-public void async_get(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public void async_get(Protocols.HTTP.Session.URL uri,
+                      void|Arguments args,
+                      void|Session session)
 {
-  do_safe_method("GET", uri, args, true);
+  do_safe_method("GET", uri, args, true, session);
 }
 
 
 //! Do an async HTTP POST request
-public void async_post(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public void async_post(Protocols.HTTP.Session.URL uri,
+                       void|Arguments args,
+                       void|Session session)
 {
-  do_safe_method("POST", uri, args, true);
+  do_safe_method("POST", uri, args, true, session);
 }
 
 
 //! Do an async HTTP PUT request
-public void async_put(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public void async_put(Protocols.HTTP.Session.URL uri,
+                      void|Arguments args,
+                      void|Session session)
 {
-  do_safe_method("PUT", uri, args, true);
+  do_safe_method("PUT", uri, args, true, session);
 }
 
 
 //! Do an async HTTP DELETE request
-public void async_delete(Protocols.HTTP.Session.URL uri, void|Arguments args)
+public void async_delete(Protocols.HTTP.Session.URL uri,
+                         void|Arguments args,
+                         void|Session session)
 {
-  do_safe_method("DELETE", uri, args, true);
+  do_safe_method("DELETE", uri, args, true, session);
 }
 
 
@@ -108,14 +124,15 @@ public void async_delete(Protocols.HTTP.Session.URL uri, void|Arguments args)
 public Result do_safe_method(string http_method,
                              Protocols.HTTP.Session.URL uri,
                              void|Arguments args,
-                             void|bool async)
+                             void|bool async,
+                             void|Session session)
 {
   if (!args) {
     args = Arguments();
   }
 
   Result res;
-  Session s = Session();
+  Session s = session || Session();
   if (args && args->follow_redirects > -1) {
     s->follow_redirects = args->follow_redirects;
   }
@@ -172,7 +189,7 @@ public Result do_safe_method(string http_method,
       qr->set_callbacks(0, 0, 0, 0);
       qr->con->set_callbacks(0, 0, 0);
       destruct(qr);
-      destruct(s);
+      s = 0;
 
       q && q->write("@");
 
@@ -412,8 +429,8 @@ class Failure
 }
 
 
-//! Internal class for the actual HTTP requests
-protected class Session
+//! Class for the actual HTTP requests
+public class Session
 {
   inherit Protocols.HTTP.Session : parent;
 
