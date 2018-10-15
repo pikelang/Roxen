@@ -258,7 +258,7 @@ class Arguments
   mapping(string:mixed) variables;
 
   //! POST data
-  void|string|mapping data;
+  void|string|mapping|Stdio.Stream data;
 
   //! Callback to call on successful async request
   function(Result:void) on_success;
@@ -440,7 +440,7 @@ public class Session
   Request async_do_method_url(string method,
                               URL url,
                               void|mapping query_variables,
-                              void|string|mapping data,
+                              void|string|mapping|Stdio.Stream data,
                               void|mapping extra_headers,
                               function callback_headers_ok,
                               function callback_data_ok,
@@ -534,6 +534,12 @@ public class Session
 
     TRACE("Request: %O\n", url);
 
+    // NB: The argument data might be an instance of Stdio.Stream and
+    // Protocols.HTTP.Session->async_do_method_url() does not declare that it
+    // supports that. However, we know (and depend on) that
+    // Protocols.HTTP.Session does not really care about the type. It just
+    // passes the data-argument around. Eventually it ends up in an instance of
+    // our class SessionQuery (see later in this file).
     return ::async_do_method_url(method, url, query_variables, data,
                                  extra_headers, callback_headers_ok,
                                  callback_data_ok, callback_fail,
@@ -663,5 +669,71 @@ public class Session
         this::timeout = Session::timeout;
       }
     }
+
+    // Support for streaming query (data in form of Stdio.Stream). Implemented
+    // here in wait of support in Protocols.HTTP.
+    protected Stdio.Stream source_stream;
+    protected int source_stream_length;
+
+    this_program async_request (string server,
+                                int port,
+                                string query,
+                                void|mapping|string headers,
+                                void|string|Stdio.Stream data)
+    {
+      if (objectp(data)) {
+        set_source_stream(data);
+        data = UNDEFINED;
+      }
+      if (source_stream) {
+        if (data)
+          error ("String data not allowed in streaming mode.\n");
+        if (stringp (headers))
+          error ("String headers not allowed in streaming mode.\n");
+
+        if (!headers)
+          headers = ([]);
+        headers["Content-Length"] = source_stream_length;
+      }
+
+      ::async_request (server, port, query, headers, data);
+    }
+
+    protected void async_write()
+    {
+      ::async_write();
+      if (!con->query_write_callback() && source_stream) {
+        // Headers sent, continue with data.
+        Stdio.sendfile (0, source_stream, 0, source_stream_length, 0, con,
+                        lambda(int bytes_sent) {
+                          source_stream->close(); source_stream = 0;
+                        });
+      }
+    }
+
+    void set_source_stream (Stdio.Stream s)
+    {
+      source_stream = s;
+      source_stream_length = s->stat()->size;
+    }
+
+    this_program sync_request(string server,
+                              int port,
+                              string query,
+                              void|mapping|string http_headers,
+                              void|string|Stdio.Stream data)
+    {
+      if (objectp(data)) {
+        // Did not bother to write a loop in order to be able to read more than
+        // 0x7fffffff bytes from the data argument, since sending so much data
+        // using sync request is a pretty bad idea anyway...
+        string tmp = data->read(0x7fffffff);
+        data->close();
+        data = tmp;
+      }
+      return ::sync_request(server, port, query, http_headers, data);
+    }
+    // End of code "Support for streaming query".
+
   }
 }
