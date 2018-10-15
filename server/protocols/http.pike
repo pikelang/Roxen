@@ -3035,7 +3035,8 @@ void send_result(mapping|void result)
     }
 #endif
 
-    if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+    if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0)) &&
+	(misc->connection == "keep-alive")) {
       // Unknown length ==> Connection: close.
       variant_heads->Connection = "close";
       misc->connection = "close";
@@ -3127,7 +3128,8 @@ void send_result(mapping|void result)
         variant_heads["Content-Encoding"] = file->encoding;
       // Perhaps set some gzip log status if file->encoding == "gzip" here?
 #endif
-      if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0))) {
+      if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0)) &&
+	  (misc->connection == "keep-alive")) {
 	// Unknown length ==> Connection: close.
 	variant_heads->Connection = "close";
 	misc->connection = "close";
