@@ -57,6 +57,7 @@ void run_tests(Configuration c)
     url = (url/"#")[0];
 
     Standards.URI uri = Standards.URI("websocket_example/", url);
+    if (uri->host == "*") uri->host = "127.0.0.1";
 
     Concurrent.Promise p = Concurrent.Promise();
     Connection ws = Connection(p);
