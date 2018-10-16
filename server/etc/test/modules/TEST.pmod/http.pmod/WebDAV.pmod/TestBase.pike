@@ -203,6 +203,9 @@ protected WebDAVResponse webdav_request(string method,
     return WebDAVResponse(600, ([]), "" );
   }
 
+  ASSERT_TRUE((headers->connection == "close") ||
+	      (con->headers->connection != "close"));
+
   return WebDAVResponse(con->status, con->headers, con->data());
 }
 
