@@ -2035,8 +2035,13 @@ void send_result(mapping|void result)
     if ((method != "HEAD") && (undefinedp(file->len) || (file->len < 0)) &&
 	(misc->connection == "keep-alive")) {
       // Unknown length ==> Connection: close.
-      variant_heads->Connection = "close";
-      misc->connection = "close";
+      if (file->file) {
+	variant_heads->Connection = "close";
+	misc->connection = "close";
+      } else if (!file->data) {
+	file->data = "";
+	file->len = 0;
+      }
     }
 
     if (file->error == 200) {
