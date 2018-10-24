@@ -2286,7 +2286,34 @@ class StartTLSProtocol
     int mode = query("ssl_suite_filter");
     int bits = query("ssl_key_bits");
 
+    /* Suite filter encoding:
+     *
+     * Bit	Mask	Meaning
+     *   0	   1	Strict suite B
+     *   1	   2	Transitional suite B
+     *   2	   4	Ephemeral only
+     *   3	   8	Suite B
+     *   4	  16	New (explicit RSA) config.
+     *
+     * Config value	Meaning
+     *    0		Default
+     *    4		OLD Ephemeral key-exchanges only.
+     *    8		OLD Suite B (relaxed)
+     *   12		OLD Suite B (ephemeral only)
+     *   14		OLD Suite B (transitional)
+     *   15		OLD Suite B (strict)
+     *
+     *   16		Allow RSA-encryption
+     *   20		Ephemeral key-exchanges only. (default)
+     *   24		Suite B (allow RSA-encryption)
+     *   28		Suite B (ephemeral only)
+     *   30		Suite B (transitional)
+     *   31		Suite B (strict)
+     */
+
     array(int) suites = ({});
+
+    if (!mode) mode = 20;	// Set the default.
 
     if ((mode & 8) && !ctx->configure_suite_b) {
       // FIXME: Warn: Suite B suites not available.
