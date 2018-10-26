@@ -2115,6 +2115,10 @@ public void test_move_destination_locked()
 // letters.
 // -----------------------------------------------------------------------------
 
+// NB: Some character sets (eg kanji, hangul, etc) only have
+//     a single "case", and make_filenames() requires multiple
+//     cases. Work around this issue by prefixing with some
+//     multi-case ascii characters.
 #ifdef WEBDAV_TEST_ASCII_ONLY
 protected constant FILENAMES =
   ({
@@ -2128,6 +2132,8 @@ protected constant FILENAMES =
     "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
+    "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
+    "Specials-:;)(<*~^[", // Various special characters.
   });
 #endif
 
@@ -2257,6 +2263,9 @@ public void test_x_special_chars()
 #else /* !__NT__ */
     " _ [](){}+-*#%&=?|$~ ",
 #endif /* __NT__ */
+    /* NB: Test mismatching parenthesis. */
+    "])}",
+    "[({",
   });
   foreach (FILENAMES, string file) {
     mixed e = catch {
