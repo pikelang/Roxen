@@ -2133,6 +2133,7 @@ protected constant FILENAMES =
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
     "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
+    "Specials-:;)(<*~^[", // Various special characters.
   });
 #endif
 
@@ -2262,6 +2263,9 @@ public void test_x_special_chars()
 #else /* !__NT__ */
     " _ [](){}+-*#%&=?|$~ ",
 #endif /* __NT__ */
+    /* NB: Test mismatching parenthesis. */
+    "])}",
+    "[({",
   });
   foreach (FILENAMES, string file) {
     mixed e = catch {
