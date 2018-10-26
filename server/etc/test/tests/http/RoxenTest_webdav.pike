@@ -36,6 +36,29 @@ void run_tests(Configuration conf)
     ::current_test += testsuite->current_test;
     ::tests_failed += testsuite->tests_failed;
   }
+
+  // Some low-level tests.
+  RequestID fake_id = RequestID(0, 0, 0);
+
+  fake_id->request_headers = ([
+    "if":"<path(>([W/\"etag)\"] <key(> not <no)key>)",
+  ]);
+
+  test_equal(([
+	       "path(": ({
+		 ({
+		   ({ "etag", "W/\"etag)\"" }),
+		   ({ "key", "key(" }),
+		   ({ "not", 0 }),
+		   ({ "key", "no)key" }),
+		 }),
+	       }),
+	       0: ({
+		 ({
+		   ({ "key", "key(" }),
+		 }),
+	       }),
+	     ]), fake_id->get_if_data);
 }
 
 
