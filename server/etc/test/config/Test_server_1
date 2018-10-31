@@ -13,6 +13,8 @@
   <var name='additional_rxml#0'> <int>1</int> </var>
   <var name='sqltag#0'>          <int>1</int> </var>
   <var name='webdav#0'>          <int>1</int> </var>
+  <var name='websocket#0'>       <int>1</int> </var>
+  <var name='websocket_example#0'> <int>1</int> </var>
 </region>
 
 <region name='contenttypes#0'>

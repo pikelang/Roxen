@@ -1879,6 +1879,7 @@ string examine_return_mapping(mapping m)
 
    if (m->data) res += "(static)";
    else if (m->file) res += "(open file)";
+   else if (m->upgrade_websocket) res += "(upgrade to websocket)";
 
    if (stringp(m->extra_heads["content-type"]) ||
        stringp(m->type)) {
@@ -2564,6 +2565,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 
   if(fid == -1)
   {
+    if (id->method == Roxen.WEBSOCKET_OPEN_METHOD) {
+      // DWIM.
+      TRACE_LEAVE("Websocket request. Returning 0.");
+      return 0;
+    }
     if(no_magic)
     {
       TRACE_LEAVE("No magic requested. Returning -1.");
@@ -5469,8 +5475,8 @@ below.</p>
 	 0, lambda(){ return !query("Log");});
 
   defvar("DaysToKeepLogFiles", 0,
-    DLOCALE(0, "Logging: Number of days to keep log files"), TYPE_INT,
-    DLOCALE(0, "Log files in the log directory older than specified number of "
+    DLOCALE(1150, "Logging: Number of days to keep log files"), TYPE_INT,
+    DLOCALE(1151, "Log files in the log directory older than specified number of "
       "days will automatically be deleted. Set to <tt>0</tt> (<tt>zero</tt>) "
       "to disable and keep log files forever. Currently active log file will "
       "never be deleted, nor will files with names not matching the pattern "

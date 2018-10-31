@@ -203,6 +203,9 @@ protected WebDAVResponse webdav_request(string method,
     return WebDAVResponse(600, ([]), "" );
   }
 
+  ASSERT_TRUE((headers->connection == "close") ||
+	      (con->headers->connection != "close"));
+
   return WebDAVResponse(con->status, con->headers, con->data());
 }
 
@@ -2116,22 +2119,22 @@ public void test_move_destination_locked()
 //     a single "case", and make_filenames() requires multiple
 //     cases. Work around this issue by prefixing with some
 //     multi-case ascii characters.
-#ifdef WEBDAV_TEST_ASCII_ONLY
-protected constant FILENAMES =
-  ({
-    "Ascii-myFile",           // To compare with
-   });
-#else
 protected constant FILENAMES =
   ({
     "Ascii-myFile", // To compare with
+#ifndef WEBDAV_TEST_ASCII_ONLY
     "Latin1-åÅäÄöÖæÆüÜñÑ@", // Some Latin 1 chars
     "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
     "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
-  });
+#ifdef __NT__
+    "Specials-)(~^[", // Various special characters (NT valid).
+#else
+    "Specials-:;)(<*~^[", // Various special characters (POSIX).
 #endif
+#endif
+  });
 
 // Create directory and file using one encoding and mixed, lower or upper case.
 // Then do ls for all combinations of (same encoding, other encoding) x
@@ -2259,6 +2262,9 @@ public void test_x_special_chars()
 #else /* !__NT__ */
     " _ [](){}+-*#%&=?|$~ ",
 #endif /* __NT__ */
+    /* NB: Test mismatching parenthesis. */
+    "])}",
+    "[({",
   });
   foreach (FILENAMES, string file) {
     mixed e = catch {

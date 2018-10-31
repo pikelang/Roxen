@@ -18,6 +18,13 @@
 // Tell Pike.count_memory this is global.
 constant pike_cycle_depth = 0;
 
+//! Internal derived method used by the websocket module to
+//! inform of a valid websocket request.
+//!
+//! NB: Contains a space character to ensure that the string
+//!     can't be generated straight from the http conection.
+constant WEBSOCKET_OPEN_METHOD = "WebSocketOpen ";
+
 // Error handling tools
 
 enum OnError {
@@ -581,6 +588,28 @@ string canonicalize_http_header (string header)
     "cookie2":			"Cookie2",
     "set-cookie2":		"Set-Cookie2",
   ])[lower_case (header)];
+}
+
+mapping(string:mixed) upgrade_to_websocket(WebSocketAPI api, void|int masking)
+//! Returns a mapping that will cause the server to upgrade the
+//! connection to a WebSocket.
+//!
+//! @param api
+//!   @[WebSocketAPI] object to handle websocket requests.
+//!
+//! @param masking
+//!   Specify @[masking] to enable masking on outgoing frames.
+//!
+//! @note
+//!   This return value is only valid for http connections that
+//!   have the method set to @[WEBSOCKET_OPEN_METHOD].
+{
+  return ([
+    "error" : Protocols.HTTP.HTTP_SWITCH_PROT,
+    "upgrade_websocket" : 1,
+    "masking" : masking,
+    "websocket_api" : api,
+  ]);
 }
 
 mapping(string:mixed) http_low_answer( int status_code, string data )
@@ -6473,10 +6502,9 @@ string(8bit) lookup_real_path_case_insens(string path, void|int no_warn,
 //! then it and all remaining segments are returned as-is. A warning
 //! is also logged in this case, unless @[no_warn] is nonzero.
 //!
-//! The given path is assumed to be absolute, and it is normalized
-//! with @[combine_path] before being checked. The returned paths
-//! always have "/" as directory separators. If there is a trailing
-//! slash then it is kept intact.
+//! The given path is normalized with @[combine_path] before being checked.
+//! The returned paths always have "/" as directory separators. If there is
+//! a trailing slash, it is kept intact.
 //!
 //! @param charset
 //!
@@ -6500,8 +6528,6 @@ string(8bit) lookup_real_path_case_insens(string path, void|int no_warn,
 //! file system is case insensitive and some path segment only has
 //! changed in case.
 {
-  ASSERT_IF_DEBUG (is_absolute_path (path));
-
   string cache_name = "case_insens_paths";
 
   function(string:string) encode, decode;
@@ -6547,15 +6573,27 @@ string(8bit) lookup_real_path_case_insens(string path, void|int no_warn,
     }
 
     ret = dirname (path);
-    if (ret == "" || ret == path) { // At root.
+    if (ret == path) { // At root.
       FSWERR("  ==> %O\n", ret);
       return ret;
     }
-    ret = recur(ret, dirname(lc_path));
+    if (ret != "") {
+      ret = recur(ret, dirname(lc_path));
+    }
 
     string name = basename(path);
     if (!nonexist) {
-      if (array(string(8bit)) dir_list = get_dir(ret)) {
+      string dir = (ret == "")? ".": ret;
+      if (name == ".") {
+	cache_set(cache_name, path, ret);
+	FSWERR("  %O ==> %O\n", path, ret);
+	return ret;
+      } else if (name == "..") {
+	ret = combine_path_unix(ret, name);
+	cache_set(cache_name, path, ret);
+	FSWERR("  %O ==> %O\n", path, ret);
+	return ret;
+      } else if (array(string(8bit)) dir_list = get_dir(dir)) {
 	string lc_name = basename (lc_path);
 	FSWERR("    dir: %O name: %O lc_name: %O\n", ret, name, lc_name);
 	string(8bit) ent_name;

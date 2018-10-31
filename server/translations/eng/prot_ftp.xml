@@ -731,7 +731,7 @@
 </str>
 
 <str id="147">
-<o>EPRT command ok (%d port %d)</o>
+<o>EPRT command ok (%s port %d)</o>
 <t></t>
 </str>
 
@@ -1018,5 +1018,20 @@ End of status</o>
 
 <str id="203">
 <o>Unknown command '%s'.</o>
+<t></t>
+</str>
+
+<str id="204">
+<o>HOST not allowed after login.</o>
+<t></t>
+</str>
+
+<str id="205">
+<o>Invalid HOST syntax.</o>
+<t></t>
+</str>
+
+<str id="206">
+<o>Unknown host.</o>
 <t></t>
 </str>
