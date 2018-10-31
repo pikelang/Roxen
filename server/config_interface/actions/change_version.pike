@@ -68,6 +68,7 @@ string parse( RequestID id )
   string res =
     "<h2 class='no-margin-top'>"+_(46,"Change Roxen version")+"</h2>\n"
     "<p>";
+  int warn;
 
   if( id->variables->server )
   {
@@ -106,6 +107,7 @@ string parse( RequestID id )
     Calendar.Day d = f->reldate();
     Calendar.Day diff = d && d->distance( Calendar.now() );
 
+    warn += f->cannot_change_back;
     res +=
       "<td>"+f->version+"</td>"
       "<td>"+(f->cannot_change_back?"<div class='notify warn inline'>&nbsp;</div>":"")+
