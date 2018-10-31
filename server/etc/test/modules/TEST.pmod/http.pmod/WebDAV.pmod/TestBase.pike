@@ -2119,23 +2119,18 @@ public void test_move_destination_locked()
 //     a single "case", and make_filenames() requires multiple
 //     cases. Work around this issue by prefixing with some
 //     multi-case ascii characters.
-#ifdef WEBDAV_TEST_ASCII_ONLY
-protected constant FILENAMES =
-  ({
-    "Ascii-myFile",           // To compare with
-   });
-#else
 protected constant FILENAMES =
   ({
     "Ascii-myFile", // To compare with
+#ifndef WEBDAV_TEST_ASCII_ONLY
     "Latin1-åÅäÄöÖæÆüÜñÑ@", // Some Latin 1 chars
     "Latin2-ąĄŁůŮăĂçÇ", // Some Latin 2 chars
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
     "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
-    "Specials-:;)(<*~^[", // Various special characters.
-  });
+    "Specials-)(<*~^[", // Various special characters.
 #endif
+  });
 
 // Create directory and file using one encoding and mixed, lower or upper case.
 // Then do ls for all combinations of (same encoding, other encoding) x
