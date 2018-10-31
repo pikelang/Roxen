@@ -4,8 +4,7 @@
 }
 
 #roxen-product {  
-  relative;
-  padding: 10px;
+  margin: 10px;
   min-width: 300px;
   vertical-align: middle;
 }
