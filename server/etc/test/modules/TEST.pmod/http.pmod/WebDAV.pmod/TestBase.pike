@@ -2120,7 +2120,7 @@ protected constant FILENAMES =
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
     "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
-    "Specials-)(<*~^[", // Various special characters.
+    "Specials-)(<~^[", // Various special characters.
 #endif
   });
 
