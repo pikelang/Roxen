@@ -2120,7 +2120,11 @@ protected constant FILENAMES =
     "Cyrillic-фщъЂЃЄЉЖ", // Some Cyrillic chars
     "Greek-ώψφλξβΩΠΞΔ€", // Some Greek chars
     "Kanji-日本語ひらがなカタカナ", // Some Kanji, hiragana and katakana.
-    "Specials-)(<~^[", // Various special characters.
+#ifdef __NT__
+    "Specials-)(~^[", // Various special characters (NT valid).
+#else
+    "Specials-:;)(<*~^[", // Various special characters (POSIX).
+#endif
 #endif
   });
 
