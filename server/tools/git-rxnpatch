@@ -1091,6 +1091,8 @@ void init_patch_branch(mapping(string:string|int|array(string)) options,
   }
 
   git("branch", "-f", patch_branch[sizeof("refs/heads/")..], current_patch);
+  git("push", "--set-upstream", "origin",
+      patch_branch[sizeof("refs/heads/")..]);
   write("Created patch branch %s.\n", patch_branch);
 }
 
