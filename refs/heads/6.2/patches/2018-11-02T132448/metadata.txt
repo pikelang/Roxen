@@ -1,0 +1,8 @@
+subject: Roxen 6.2: git-rxnpatch: Set tracking for new patch branches
+from: 399acf7af4d737e1d9399cedc2c0dc5625fb4bf9
+to: a43beb0753b494843c09c19a8f328896cbac22f7
+originator: Marcus Wellhardh
+depends: roxen/6.2.214
+restart: true
+
+• git-rxnpatch: Set tracking for new patch branches.
