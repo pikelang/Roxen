@@ -1293,7 +1293,13 @@ string search_path(string command) {
   foreach (search_path_entries, string path) {
     string p=combine_path(path,command);
     Stdio.Stat s=file_stat(p);
-    if (s && s->mode&0111) return p;
+    if (s
+#ifndef __NT__
+	// Some versions of NT don't set the x-bit on all files...
+	&& (s->mode & 0111)
+#endif
+	)
+      return p;
   }
 
   return 0;
