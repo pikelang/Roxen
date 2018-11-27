@@ -1,0 +1,3 @@
+Modified files:
+  config_interface/actions/patcher.pike
+  etc/include/version.h
