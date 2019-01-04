@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.15 2009/05/07 14:15:55 mast Exp $";
+  "$Id$";
 inherit UserDB;
 inherit "module";
 
@@ -168,6 +168,12 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 #endif
 */
 
+protected string query_ldap_url()
+{
+  // NB: Adjust quoting for the %u% marker. Cf [WS-390].
+  return replace(query("CI_dir_server"), "%u%", "%25u%25");
+}
+
 User find_user( string u )
 {
   mixed key = mt->lock();
@@ -179,8 +185,10 @@ User find_user( string u )
     return 0;
   }
 
+  string ldap_url = query_ldap_url();
+
   if (query("CI_use_cache"))
-    pwent=cache_lookup("ldapuserdb"+query("CI_dir_server"),u);
+    pwent = cache_lookup("ldapuserdb" + ldap_url, u);
     if (pwent) {
       DEBUGLOG("user ("+u+") retrieved from cache.");
       return LDAPUser(this_object(), pwent);
@@ -199,7 +207,7 @@ User find_user( string u )
   }
 
   // finding entry
-  pwent = get_entry_dir(u, dir->parse_url(query("CI_dir_server"))->filter||"");
+  pwent = get_entry_dir(u, dir->parse_url(ldap_url)->filter || "");
 
   // ROAMING access mode
   if(!access_mode_is_roaming()) {
@@ -218,9 +226,9 @@ User find_user( string u )
     dir->set_scope(oscope);
   }
 
-  if(pwent) { 
+  if(pwent) {
     if (query("CI_use_cache"))
-      cache_set("ldapuserdb"+query("CI_dir_server"),u,pwent);
+      cache_set("ldapuserdb" + ldap_url, u, pwent);
     return LDAPUser(this_object(), pwent);
     } else {
     werror ("LDAPuserdb: Returning 'user unknown'.\n");
@@ -242,7 +250,7 @@ array(string)|int get_entry_dir(string u, string filter) {
   // the server connection is successfully opened and binded
   if(!username_parsing_is_positional()) {
     array elems = u / query("CI_username_delimiter");
-    string udn = dir->parse_url(query("CI_dir_server"))->basedn||"";
+    string udn = dir->parse_url(query_ldap_url())->basedn || "";
     for (int i=0; i<sizeof(elems); i++)
       udn = replace(udn, "%"+(string)(i+1)+"%", elems[i]);
     DEBUGLOG(sprintf("pos.parsing: base DN: %O", udn));
@@ -374,7 +382,7 @@ void create()
 		   "ldap://hostname[:port]/base_DN[?[attribute_list][?[scope][?[filter][?extensions]]]]<p>"
 		   "<i>More detailed info at <a href=\"http://community.roxen.com/developers/idocs/rfc/rfc2255.html\"> RFC 2255</a>.</i><br>"
 		   "Notice:<i>"
-		   " %u% will be replaced by username.</i>");
+		   " <tt>%u%</tt> will be replaced by username.</i>");
 
         defvar ("CI_dir_pwd","", "LDAP server password",
 		    TYPE_STRING|VAR_MORE,
@@ -467,7 +475,7 @@ void create()
 void stop() {
 
   if (query("CI_use_cache"))
-    cache_expire("ldapuserdb"+query("CI_dir_server"));
+    cache_expire("ldapuserdb" + query_ldap_url());
   dir && dir->unbind();
   dir = 0;
 }
@@ -488,7 +496,7 @@ void close_dir() {
 int connect_dir() {
 // Attempt to connect to the server
     mixed err;
-    string serverurl = query("CI_dir_server");
+    string serverurl = query_ldap_url();
 
     last_dir_access=time(1);
     dir_accesses++; //I count accesses here, since this is called before each
@@ -523,7 +531,7 @@ int bind_dir(string|void userdn, string|void pass) {
     mapping ldapurl;
     string binddn, bindpwd;
     mixed err;
-    string serverurl = query("CI_dir_server");
+    string serverurl = query_ldap_url();
 
     if(!connect_dir())
       return 0;
