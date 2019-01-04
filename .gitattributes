@@ -267,7 +267,6 @@ worldmap binary
 /server/modules/js-support/scripts/ColorSelector.js foreign_ident
 /server/modules/js-support/yui.pike foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
-/server/modules/ldap/userdb_ldap.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
