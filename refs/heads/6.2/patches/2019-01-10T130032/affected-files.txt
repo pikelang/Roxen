@@ -1,0 +1,2 @@
+Modified files:
+  modules/ldap/userdb_ldap.pike
