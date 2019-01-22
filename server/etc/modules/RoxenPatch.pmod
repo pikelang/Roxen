@@ -1142,6 +1142,51 @@ class Patcher
 	      return 0;
 	    }
 	  }
+
+	  // Backup the .orig file too (if any).
+	  string orig_file = affected_file + ".orig";
+	  if (is_file(append_path(server_path, orig_file)))
+	  {
+	    write_log(0, "<green>ok.</green>\nBacking up %s to %s ... ",
+		      orig_file,
+		      basename(backup_file));
+	    if (add_file_to_tar_archive(orig_file, server_path, backup_file))
+	      write_log(0, "<green>ok.</green>\n");
+	    else
+	    {
+	      write_log(1, "FAILED: Could not append tar file!\n");
+	      error_count++;
+
+	      if (!force)
+	      {
+		undo_changes_and_dump_log_to_file();
+		return 0;
+	      }
+	    }
+
+	    // Currently we only undo Distmaker's alterations of CVS/Root.
+	    if (!has_suffix(orig_file, "/CVS/Root.orig")) {
+	      continue;
+	    }
+
+	    // Restore the original contents so that we can apply the patch.
+	    if (!dry_run) {
+	      if (!mv(append_path(server_path, orig_file),
+		      append_path(server_path, affected_file))) {
+		write_log(1, "FAILED to restore orig file (%d: %s)\n"
+			  "%O ==> %O\n",
+			  errno(), strerror(errno()),
+			  append_path(server_path, orig_file),
+			  append_path(server_path, affected_file));
+		error_count++;
+
+		if (!force) {
+		  undo_changes_and_dump_log_to_file();
+		  return 0;
+		}
+	      }
+	    }
+	  }
 	}
 	privs = 0;
 	
