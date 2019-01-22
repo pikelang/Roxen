@@ -37,6 +37,7 @@ constant features = (<
   "file-modes-2",		// Support patching and restoring of
 				// files with eg the exec bit set.
   "force-new",			// Support new for files that already exist.
+  "save-orig",			// Save .orig-files before patching.
 >);
 
 constant RXP_ACTION_URL = "https://extranet.roxen.com/rxp/action.html";
