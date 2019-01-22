@@ -1,0 +1,12 @@
+subject: Roxen 6.2: RoxenPatch: feature/save-orig, Restore CVS/Root.orig
+from: 826836d2c575d8f6f9a9e7e12510648097d2cdd0
+to: 91ad86f59aba6931d0b00e9b0c53e49d105f0a7b
+originator: Marcus Wellhardh
+depends: 2019-01-10T130032
+restart: true
+
+• RoxenPatch: Added feature/save-orig.
+
+• RoxenPatch: Restore CVS/Root.orig files before applying pataches.
+
+Potential fix for [WS-393].
