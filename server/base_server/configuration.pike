@@ -4873,7 +4873,7 @@ code line.</p>
 
 <p><i>&lt;facility&gt;</i> matches an identifier for the Roxen module
 or subsystem that the event comes from. Facility identifiers always
-starts with a character in <code>[a-zA-Z0-9]</code> and contains only
+start with a character in <code>[a-zA-Z0-9]</code> and contain only
 characters in <code>[-_.#a-zA-Z0-9]</code>. If '<code>*</code>' is
 used instead of <i>&lt;facility&gt;</i> then that line matches all
 facilities that aren't matched by any other line.</p>
@@ -5011,6 +5011,10 @@ hyphens ('-') occur in the specifier names.</p>
     side, including I/O time for receiving the request and sending the
     response. Note that this measures real time - see $handle-time for
     further discussion.</td></tr>
+<tr><td>$protocol-time</td>
+    <td>Time in seconds that the protocol processing took on the server
+    side. This includes both the time spent parsing the request, and
+    the time spent preparing the result for sending.</td></tr>
 <tr><td>$etag</td>
     <td>The entity tag (aka ETag) header of the result.</td></tr>
 <tr><td>$referrer</td>
