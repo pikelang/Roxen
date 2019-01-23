@@ -879,23 +879,26 @@ protected Roxen.HeaderParser hp = Roxen.HeaderParser();
 //!   @endint
 private int parse_got( string new_data )
 {
+  int start_time = gethrtime();
   if (hp) {
     string line;
 
     TIMER_START(parse_got);
     if (!hrtime)
-      hrtime = gethrtime();
+      hrtime = start_time;
     {
       array res;
       if( mixed err = catch( res = hp->feed( new_data ) ) ) {
 #ifdef DEBUG
 	report_debug ("Got bad request, HeaderParser error: " + describe_error (err));
 #endif
+	protocol_time += gethrtime() - start_time;
 	return 1;
       }
       if( !res )
       {
 	TIMER_END(parse_got);
+	protocol_time += gethrtime() - start_time;
 	return 0; // Not enough data
       }
       [data, line, request_headers] = res;
@@ -976,6 +979,7 @@ private int parse_got( string new_data )
 	  my_fd->write("PONG\r\n");
 	  TIMER_END(parse_got_2_parse_line);
 	  TIMER_END(parse_got_2);
+	  protocol_time += gethrtime() - start_time;
 	  return 2;
 	} else if (method != "CONNECT")
 	  method = "GET"; // 0.9 only supports get.
@@ -1009,6 +1013,7 @@ private int parse_got( string new_data )
 	REQUEST_WERR(sprintf ("HTTP: No remote address (error %d).",
 			      my_fd->errno()));
 	TIMER_END(parse_got_2);
+	protocol_time += gethrtime() - start_time;
 	return 2;
       }
     }
@@ -1172,6 +1177,7 @@ private int parse_got( string new_data )
 #else
 	   REQUEST_WERR(sprintf("HTTP: Send %O", res));
 #endif
+	   protocol_time += gethrtime() - start_time;
 	   my_fd->write (res);
 	   return 2;
 	 }
@@ -1244,6 +1250,7 @@ private int parse_got( string new_data )
       ready_to_receive();
       TIMER_END(parse_got_2_more_data);
       TIMER_END(parse_got_2);
+      protocol_time += gethrtime() - start_time;
       return ret;
     }
   } else if(misc->len)
@@ -1258,6 +1265,7 @@ private int parse_got( string new_data )
       ready_to_receive();
       TIMER_END(parse_got_2_more_data);
       TIMER_END(parse_got_2);
+      protocol_time += gethrtime() - start_time;
       return 0;
     }
     leftovers = data[l+2..];
@@ -1454,11 +1462,13 @@ private int parse_got( string new_data )
       // FIXME: my_fd_busy.
       my_fd->write (res);
       TIMER_END(parse_got_2);
+      protocol_time += gethrtime() - start_time;
       return 2;
     }
   }
   TIMER_END(parse_got_2);
 
+  protocol_time += gethrtime() - start_time;
   return 3;	// Done.
 }
 
@@ -2410,6 +2420,8 @@ void low_send_result(string headers, string data, int|void len,
     return;
   }
 
+  int start_time = gethrtime();
+
   // Note: data may be UNDEFINED.
   if (!data) data = "";
 
@@ -2454,6 +2466,7 @@ void low_send_result(string headers, string data, int|void len,
     int s = my_fd->write(({ headers, data }));
     TIMER_END(blocking_write);
     MY_TRACE_LEAVE(sprintf("Blocking write wrote %d bytes", s));
+    protocol_time += gethrtime() - start_time;
     do_log(s);
   } else {
     MY_TRACE_ENTER(sprintf("Sending async %d bytes of headers and "
@@ -2474,6 +2487,7 @@ void low_send_result(string headers, string data, int|void len,
       send(file, len);
     // MY_TRACE_LEAVE before start_sender since it might destruct us.
     MY_TRACE_LEAVE ("Async sender started");
+    protocol_time += gethrtime() - start_time;
     start_sender();
   }
 }
@@ -2702,6 +2716,8 @@ private int(0..1) client_gzip_enabled()
 // Send the result.
 void send_result(mapping|void result)
 {
+  int start_time = gethrtime();
+
   TIMER_START(send_result);
 
   json_logger->log(([
@@ -2773,6 +2789,7 @@ void send_result(mapping|void result)
       TIMER_END(send_result);
       file = 0;
       pipe = 0;
+      protocol_time += gethrtime() - start_time;
       if (do_not_disconnect) return;
       my_fd = 0;
       return;
@@ -3172,12 +3189,15 @@ void send_result(mapping|void result)
       full_headers = prot + " " + file->error + head_string + variant_string;
     }
 
+    protocol_time += gethrtime() - start_time;
     low_send_result(full_headers, file->data, file->len, file->file);
   }
   else {
     // RAW mode.
 
     if(!file->type) file->type="text/plain";
+
+    protocol_time += gethrtime() - start_time;
 
     // No headers!
     low_send_result("", file->data, file->len, file->file);
@@ -3523,6 +3543,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    DEBUG_GET_FD);
 #endif
 
+    int start_time = gethrtime();
+
     if( method == "GET" || method == "HEAD" ) {
       // NOTE: Setting misc->cacheable enables use of the RAM_CACHE.
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
@@ -3593,6 +3615,8 @@ void got_data(mixed fooid, string s, void|int chained)
 
     TIMER_END(find_conf);
 
+    protocol_time += gethrtime() - start_time;
+
     json_logger->log(([
 			 "event"       : "GOT_REQUEST",
 			 "data_length" : strlen(data),
@@ -3620,6 +3644,8 @@ void got_data(mixed fooid, string s, void|int chained)
 
 protected void got_configuration(Configuration conf)
 {
+  int start_time = gethrtime();
+
   if (mixed err = catch {
       REQUEST_WERR(sprintf("HTTP: Got configuration %O", conf));
 
@@ -3630,7 +3656,8 @@ protected void got_configuration(Configuration conf)
     //
     // Use with great care; this is run in the backend thread, and
     // some things in the id object are still not initialized.
-    foreach (conf->get_providers ("http_request_init"), RoxenModule mod)
+    foreach (conf->get_providers ("http_request_init"), RoxenModule mod) {
+      protocol_time += gethrtime() - start_time;
       if (mapping res = mod->http_request_init (this)) {
 	conf->received += raw_bytes - sizeof(leftovers);
 	conf->requests++;
@@ -3639,6 +3666,8 @@ protected void got_configuration(Configuration conf)
 	send_result (res);
 	return;
       }
+      start_time = gethrtime();
+    }
 
     int allow_protocache_lookup = 0;
     if (rawauth)
@@ -3666,9 +3695,12 @@ protected void got_configuration(Configuration conf)
 	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
 	//
 	// FIXME: Obsolete API!
-	if (conf->auth_module)
+	if (conf->auth_module) {
+	  protocol_time += gethrtime() - start_time;
 	  misc->proxyauth
 	    = conf->auth_module->auth(misc->proxyauth,this_object() );
+	  start_time = gethrtime();
+	}
       }
     }
 
@@ -3709,13 +3741,16 @@ protected void got_configuration(Configuration conf)
 	    foreach( file->callbacks, function f ) {
 	      if (!file->key) break;
 	      MY_TRACE_ENTER (sprintf ("Checking with %O", f));
+	      protocol_time += gethrtime() - start_time;
 	      if( !f(this_object(), file->key ) )
 	      {
 		MY_TRACE_LEAVE ("Entry invalid according to callback");
 		MY_TRACE_LEAVE ("");
 		can_cache = 0;
+		start_time = gethrtime();
 		break;
 	      }
+	      start_time = gethrtime();
 	      MY_TRACE_LEAVE ("");
 	    }
 	  } )
@@ -3731,6 +3766,7 @@ protected void got_configuration(Configuration conf)
 	      // Fall back to a standard internal error.
 	      INTERNAL_ERROR( e );
 	      TIMER_END(cache_lookup);
+	      protocol_time += gethrtime() - start_time;
 	      send_result();
 	      return;
 	    }
@@ -3918,6 +3954,7 @@ protected void got_configuration(Configuration conf)
 		real_cookies = cookies = ~cookies;
 	      }
 	      TIMER_END(cache_lookup);
+	      protocol_time += gethrtime() - start_time;
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
 	    }
@@ -3969,10 +4006,13 @@ protected void got_configuration(Configuration conf)
 #endif	// RAM_CACHE
     TIMER_START(parse_request);
     if (mixed err = catch {
+	protocol_time += gethrtime() - start_time;
 	if( things_to_do_when_not_sending_from_cache( ) )
 	  return;
+	start_time = gethrtime();
       }) {
       internal_error(err);
+      protocol_time += gethrtime() - start_time;
       roxen.handle(send_result);
       return;
     }
@@ -3990,6 +4030,7 @@ protected void got_configuration(Configuration conf)
 			 "vars"    : real_variables,
 			 "cookies" : cookies,
 		       ]));
+    protocol_time += gethrtime() - start_time;
     roxen.handle(handle_request_from_queue);
     })
   {

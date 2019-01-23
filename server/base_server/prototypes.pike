@@ -1254,6 +1254,10 @@ class RequestID
   int hrtime;
   //! Time of the start of the request, as returned by @[gethrtime].
 
+  int protocol_time;
+  //! Accumulated time (as accounted by @[gethrtime()]) spent by
+  //! protocol overhead.
+
   string raw_url;
   //! The nonparsed, nontouched, non-* URL requested by the client.
   //! Hence, this path is unlike @[not_query] and @[virtfile] not
