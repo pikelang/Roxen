@@ -187,7 +187,7 @@ mapping parse_directory(RequestID id)
   //
   // It must end with "/" or "/."
 
-  if(f=="" || (f[-1]!='/' && f[-1]!='.'))
+  if (!has_suffix(f, "/") && !has_suffix(f, "/."))
     return Roxen.http_redirect(f+"/", id);
 
   if(f[-1]=='.' && !override)
