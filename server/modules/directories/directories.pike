@@ -187,7 +187,7 @@ mapping parse_directory(RequestID id)
   //
   // It must end with "/" or "/."
 
-  if(f=="" || (f[-1]!='/' && f[-1]!='.'))
+  if (!has_suffix(f, "/") && !has_suffix(f, "/."))
     return Roxen.http_redirect(f+"/", id);
 
   if(f[-1]=='.' && !override)
@@ -200,7 +200,9 @@ mapping parse_directory(RequestID id)
   array dir=id->conf->find_dir(f, id, 1)||({});
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles & dir, string file)
+    // Try index files that are visible in the directory listing first, then
+    // fall back to the others (in case the directory isn't fully browsable).
+    foreach((indexfiles & dir)|indexfiles, string file)
     {
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
