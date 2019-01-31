@@ -200,7 +200,9 @@ mapping parse_directory(RequestID id)
   array dir=id->conf->find_dir(f, id, 1)||({});
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles & dir, string file)
+    // Try index files that are visible in the directory listing first, then
+    // fall back to the others (in case the directory isn't fully browsable).
+    foreach((indexfiles & dir)|indexfiles, string file)
     {
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
