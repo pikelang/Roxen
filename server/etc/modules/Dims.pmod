@@ -14,6 +14,6 @@ class dims {
       }
     }
 
-    return res;
+    return res && res[..1];
   }
 }
