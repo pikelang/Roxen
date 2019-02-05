@@ -1042,7 +1042,18 @@ private class SqlSqlStaleChecker (protected Sql.Sql sql)
       _check_ping();
       break;
     }
-    return sql[i];
+    mixed ret = sql[i];
+    if (functionp(ret)) {
+      return lambda(mixed ... args) {
+	       _check_ping();
+	       mixed val = ([function(mixed...:mixed)]ret)(@args);
+	       // NB: Some operations may take quite a while
+	       //     (eg waiting for table locks).
+	       _our_last_ping = time(1);
+	       return val;
+	     };
+    }
+    return ret;
   }
   protected mixed `->( string i )
   {
