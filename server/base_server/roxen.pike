@@ -7412,6 +7412,9 @@ protected constant formats = ([
 				    "        request_id->hrtime) /"
 				    "1000000.0"),
 			  1, "\"-\"", 0}),
+  "protocol-time":	({"%1.4f",
+			  "(float) request_id->protocol_time / 1000000.0",
+			  1, "\"-\"", 0}),
   "queue-time":		({"%1.4f",
 			  "(float) request_id->queue_time / 1000000.0",
 			  1, "\"-\"", 0}),
