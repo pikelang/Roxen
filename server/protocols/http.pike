@@ -3491,16 +3491,15 @@ protected void got_configuration(Configuration conf)
     // Use with great care; this is run in the backend thread, and
     // some things in the id object are still not initialized.
     foreach (conf->get_providers ("http_request_init"), RoxenModule mod) {
-      protocol_time += gethrtime() - start_time;
       if (mapping res = mod->http_request_init (this)) {
 	conf->received += raw_bytes - sizeof(leftovers);
 	conf->requests++;
 	// RequestID.make_response_headers assumes the supports multiset exists.
 	if (!supports) supports = (<>);
+	protocol_time += gethrtime() - start_time;
 	send_result (res);
 	return;
       }
-      start_time = gethrtime();
     }
 
     int allow_protocache_lookup = 0;
@@ -3866,13 +3865,13 @@ protected void got_configuration(Configuration conf)
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
     queue_length = roxen.handle_queue_length();
+    protocol_time += gethrtime() - start_time;
     json_logger->log(([
 			 "event"   : "ENTER_QUEUE",
 			 "qlen"    : queue_length,
 			 "vars"    : real_variables,
 			 "cookies" : cookies,
 		       ]));
-    protocol_time += gethrtime() - start_time;
     roxen.handle(handle_request_from_queue);
     })
   {
