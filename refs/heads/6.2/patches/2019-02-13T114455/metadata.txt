@@ -1,0 +1,26 @@
+subject: Roxen 6.2: Protocols: Adjusted protocol overhead calculation somewhat.
+from: 297723b2aa95cb5271c0587ccfb56bd9d1748328
+to: 77ef650f5da78814b6f0966ab9f43c259b33aa6a
+originator: Jonas Lonnberg
+depends: 2019-02-07T085239
+restart: true
+
+• Protocols: Adjusted protocol overhead calculation somewhat.
+
+* The time spent in http_request_init() is now included
+  in the protocol_time.
+
+* The time spent in json_logger->log() should not be
+  included in the protocol_time.
+
+• Logging: Added support for logging of $protocol-time.
+
+Also fixes a minor documentation typo.
+
+Fixes remainder of [WS-395].
+
+• Protocols: Keep track of the time spent in protocol overhead.
+
+Adds RequestID()->protocol_time.
+
+Fixes some of [WS-395].
