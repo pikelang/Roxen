@@ -135,6 +135,17 @@ int getppid() {   return -1; }
 int use_syslog, loggingfield;
 #endif
 
+#if constant(DefaultCompilerEnvironment)
+#if (__REAL_MAJOR__ == 8) && (__REAL_MINOR__ == 0) && (__REAL_BUILD__ < 694)
+/* Workaround for [PIKE-126]. */
+object _disable_threads()
+{
+  object compiler_lock = DefaultCompilerEnvironment->lock();
+  return predef::_disable_threads();
+}
+#endif
+#endif
+
 //! The path to the server directory, without trailing slash. If
 //! available, this is the logical path without following symlinks (as
 //! opposed to what @[getcwd] returns).
@@ -1473,6 +1484,13 @@ void load_roxen()
   // Temporary kludge to get wide string rxml parsing.
   add_constant("parse_html", parse_html);
   add_constant("parse_html_lines", parse_html_lines);
+#endif
+
+#if constant(DefaultCompilerEnvironment)
+#if (__REAL_MAJOR__ == 8) && (__REAL_MINOR__ == 0) && (__REAL_BUILD__ < 694)
+  /* Workaround for [PIKE-126]. */
+  add_constant("_disable_threads", _disable_threads);
+#endif
 #endif
 
   DC( "Roxen" );
