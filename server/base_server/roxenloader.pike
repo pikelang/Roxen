@@ -1396,6 +1396,27 @@ protected class Privs
 #endif /* constant(seteuid) */
 }
 
+class RoxenConcurrent
+{
+  inherit Concurrent;
+
+  class Promise
+  {
+    inherit ::this_program;
+
+#ifdef THREADS
+    protected void call_callback(function cb, mixed ... args)
+    {
+      if (roxen) {
+	roxen->handle(cb, @args);
+      } else {
+	call_out(cb, 0, @args);
+      }
+    }
+#endif /* THREADS */
+  }
+}
+
 // Load Roxen for real
 Roxen really_load_roxen()
 {
@@ -1492,6 +1513,8 @@ void load_roxen()
   add_constant("_disable_threads", _disable_threads);
 #endif
 #endif
+
+  add_constant("Concurrent", RoxenConcurrent());
 
   DC( "Roxen" );
 
