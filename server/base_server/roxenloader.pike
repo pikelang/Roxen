@@ -1515,6 +1515,7 @@ void load_roxen()
 #endif
 
   add_constant("Concurrent", RoxenConcurrent());
+  add_constant("PikeConcurrent", Concurrent);
 
   DC( "Roxen" );
 
