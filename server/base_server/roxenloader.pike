@@ -1404,6 +1404,37 @@ class RoxenConcurrent
   {
     inherit ::this_program;
 
+    private string describe_funcall(Pike.BacktraceFrame frame)
+    {
+      string fun;
+      if (stringp(frame[2])) {
+	fun = frame[2];
+      } else {
+	fun = master()->describe_function(frame[2]);
+      }
+      return sprintf("%s(%s)",
+		     fun,
+		     master()->Describer()->
+		     describe_comma_list(frame[3..], 99999));
+    }
+
+    private string describe_initiator()
+    {
+      foreach(reverse(backtrace()), Pike.BacktraceFrame frame) {
+	mixed fun = frame[2];
+	if (callablep(fun)) {
+	  object o = function_object(fun);
+	  if ((o == this_object()) || (object_program(o) == RoxenConcurrent)) {
+	    continue;
+	  }
+	}
+	return describe_funcall(frame);
+      }
+      return UNDEFINED;
+    }
+
+    protected string initiator = describe_initiator();
+
 #ifdef THREADS
     protected void call_callback(function cb, mixed ... args)
     {
@@ -1414,6 +1445,14 @@ class RoxenConcurrent
       }
     }
 #endif /* THREADS */
+
+    protected string _sprintf(int c)
+    {
+      if (c == 'O') {
+	return sprintf("%O(/* %s */)", object_program(this), initiator || "");
+      }
+      return UNDEFINED;
+    }
   }
 }
 
