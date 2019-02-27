@@ -47,11 +47,11 @@ mapping parse_directory(RequestID id)
   {
     if(f[-1]!='/') {
       // Don't expose internal path if the request has been internally
-      // redirected already.
-      string redir_path = (id->misc->redirected_not_query || f) + "/";
-
-      //  Preserve query variables unless this is a POST
-      if ((< "GET", "HEAD" >)[id->method] && sizeof(id->query || ""))
+      // redirected already. Also preserve any initial query variables.
+      string redir_path = id->misc->redirected_not_query || f;
+      if (!has_suffix(redir_path, "/"))
+        redir_path += "/";
+      if (sizeof(id->query || ""))
         redir_path += "?" + id->query;
 
       return Roxen.http_redirect(redir_path, id);
