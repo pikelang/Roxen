@@ -774,6 +774,8 @@ class Patcher
       return 0;
     }
 
+    write_log(0, "Preparing to install patch %s...\n", patch_id);
+
     PatchObject ptchdata = parse_metadata(read_file(mdfile), patch_id);
 
     // Create a log file
@@ -1257,13 +1259,20 @@ class Patcher
 	if (dry_run)
 	  args += ({ "--dry-run" });
 
+	mapping opts = ([
+	  "cwd"   : server_path,
+	  "stdin" : udiff_data,
+	]);
+
+#if constant(System.getrlimit)
+	if (System.getrlimit("nofile")[0] == -1) {
+	  // Workaround for bugs in gnu patch 2.7.4 - 2.7.6.
+	  opts->rlimit = ([ "nofile": ({ 1024, 1024 }) ]);
+	}
+#endif
+
 	Privs privs = Privs(sprintf("RoxenPatch: Spawning %O.", patch_bin));
-	Process.Process p =
-	  Process.Process(args,
-			  ([
-			    "cwd"   : server_path,
-			    "stdin" : udiff_data
-			  ]));
+	Process.Process p = Process.Process(args, opts);
 	privs = 0;
 
 	if (!p || p->wait())
