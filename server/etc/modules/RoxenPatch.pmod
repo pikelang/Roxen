@@ -727,6 +727,8 @@ class Patcher
       return 0;
     }
 
+    write_log(0, "Preparing to install patch %s...\n", patch_id);
+
     PatchObject ptchdata = parse_metadata(read_file(mdfile), patch_id);
 
     // Create a log file
