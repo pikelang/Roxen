@@ -1436,14 +1436,26 @@ class RoxenConcurrent
     protected string initiator = describe_initiator();
 
 #ifdef THREADS
-    protected void call_callback(function cb, mixed ... args)
+    protected class HandlerBackend
     {
-      if (roxen) {
-	roxen->handle(cb, @args);
-      } else {
-	call_out(cb, 0, @args);
+      array call_out(function co, int t, mixed ... args)
+      {
+	if (roxen && !t) {
+	  roxen->handle(co, @args);
+	  return 0;
+	} else {
+	  return predef::call_out(co, 0, @args);
+	}
+      }
+
+      void remove_call_out(function|array co)
+      {
+	if (!co) return;
+	predef::remove_call_out(co);
       }
     }
+
+    protected Pike.Backend backend = HandlerBackend();
 #endif /* THREADS */
 
     protected string _sprintf(int c)
