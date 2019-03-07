@@ -1093,13 +1093,14 @@ class TagImgs {
       if(args->src) {
 	if (!sizeof(args->src))
 	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
-	string|object file =
-	  id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
-	  id->conf->try_get_file(args->src, id);
+
+	array(Stdio.File|mapping) file_info =
+	  id->conf->open_file(Roxen.fix_relative(args->src, id), "rb", id);
+	Stdio.File file = file_info && file_info[0];
 
 	if(file) {
 	  array(int) xysize;
-	  mixed err = catch { xysize = Dims.dims()->get(file); };
+	  mixed err = catch { xysize = Image.Dims.get(file); };
 	  if (!err && xysize) {
 	    args->width=(string)xysize[0];
 	    args->height=(string)xysize[1];
@@ -1137,11 +1138,14 @@ class TagEmitImgs {
   {
     if (!sizeof(args->src))
       RXML.parse_error("Attribute 'src' cannot be empty.");
-    if (string|object file =
-	id->conf->real_file(Roxen.fix_relative(args->src, id), id) ||
-	id->conf->try_get_file(args->src, id)) {
+
+    array(Stdio.File|mapping) file_info =
+      id->conf->open_file(Roxen.fix_relative(args->src, id), "rb", id);
+    Stdio.File file = file_info && file_info[0];
+
+    if (file) {
       array(int) xysize;
-      mixed err = catch { xysize = Dims.dims()->get(file); };
+      mixed err = catch { xysize = Image.Dims.get(file); };
       if (!err && xysize) {
 	return ({ ([ "xsize" : xysize[0],
 		     "ysize" : xysize[1],
