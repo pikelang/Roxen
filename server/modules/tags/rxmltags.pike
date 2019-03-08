@@ -1095,7 +1095,7 @@ class TagImgs {
 	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
 
 	array(Stdio.File|mapping) file_info =
-	  id->conf->open_file(Roxen.fix_relative(args->src, id), "rb", id);
+	  id->conf->open_file(Roxen.fix_relative(args->src, id), "r", id);
 	Stdio.File file = file_info && file_info[0];
 
 	if(file) {
@@ -1140,7 +1140,7 @@ class TagEmitImgs {
       RXML.parse_error("Attribute 'src' cannot be empty.");
 
     array(Stdio.File|mapping) file_info =
-      id->conf->open_file(Roxen.fix_relative(args->src, id), "rb", id);
+      id->conf->open_file(Roxen.fix_relative(args->src, id), "r", id);
     Stdio.File file = file_info && file_info[0];
 
     if (file) {
