@@ -1094,9 +1094,16 @@ class TagImgs {
 	if (!sizeof(args->src))
 	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
 
-	array(Stdio.File|mapping) file_info =
-	  id->conf->open_file(Roxen.fix_relative(args->src, id), "r", id);
-	Stdio.File file = file_info && file_info[0];
+	// NB: try_get_file() uses make_fake_id() which will convert
+	//     args->src into an absolute path.
+	// NB: Use stat_only mode (arg 3) as we're only interested
+	//     in the result mapping.
+	// NB: try_get_file() always sets res_mapping->file on success.
+	mapping res_mapping = ([]);
+	int|string res =
+	  id->conf->try_get_file(args->src, id, 1, UNDEFINED,
+				 UNDEFINED, res_mapping);
+	Stdio.File file = res && res_mapping->file;
 
 	if(file) {
 	  array(int) xysize;
@@ -1139,9 +1146,16 @@ class TagEmitImgs {
     if (!sizeof(args->src))
       RXML.parse_error("Attribute 'src' cannot be empty.");
 
-    array(Stdio.File|mapping) file_info =
-      id->conf->open_file(Roxen.fix_relative(args->src, id), "r", id);
-    Stdio.File file = file_info && file_info[0];
+    // NB: try_get_file() uses make_fake_id() which will convert
+    //     args->src into an absolute path.
+    // NB: Use stat_only mode (arg 3) as we're only interested
+    //     in the result mapping.
+    // NB: try_get_file() always sets res_mapping->file on success.
+    mapping res_mapping = ([]);
+    int|string res =
+      id->conf->try_get_file(args->src, id, 1, UNDEFINED,
+			     UNDEFINED, res_mapping);
+    Stdio.File file = res && res_mapping->file;
 
     if (file) {
       array(int) xysize;
