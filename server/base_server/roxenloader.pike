@@ -1444,7 +1444,7 @@ class RoxenConcurrent
 	  roxen->handle(co, @args);
 	  return 0;
 	} else {
-	  return predef::call_out(co, 0, @args);
+	  return predef::call_out(co, t, @args);
 	}
       }
 
