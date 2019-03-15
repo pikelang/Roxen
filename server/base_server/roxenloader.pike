@@ -1396,6 +1396,78 @@ protected class Privs
 #endif /* constant(seteuid) */
 }
 
+class RoxenConcurrent
+{
+  inherit Concurrent;
+
+  class Promise
+  {
+    inherit ::this_program;
+
+    private string describe_funcall(Pike.BacktraceFrame frame)
+    {
+      string fun;
+      if (stringp(frame[2])) {
+	fun = frame[2];
+      } else {
+	fun = master()->describe_function(frame[2]);
+      }
+      return sprintf("%s(%s)",
+		     fun,
+		     master()->Describer()->
+		     describe_comma_list(frame[3..], 99999));
+    }
+
+    private string describe_initiator()
+    {
+      foreach(reverse(backtrace()), Pike.BacktraceFrame frame) {
+	mixed fun = frame[2];
+	if (callablep(fun)) {
+	  object o = function_object(fun);
+	  if ((o == this_object()) || (object_program(o) == RoxenConcurrent)) {
+	    continue;
+	  }
+	}
+	return describe_funcall(frame);
+      }
+      return UNDEFINED;
+    }
+
+    protected string initiator = describe_initiator();
+
+#ifdef THREADS
+    protected class HandlerBackend
+    {
+      array call_out(function co, int t, mixed ... args)
+      {
+	if (roxen && !t) {
+	  roxen->handle(co, @args);
+	  return 0;
+	} else {
+	  return predef::call_out(co, t, @args);
+	}
+      }
+
+      void remove_call_out(function|array co)
+      {
+	if (!co) return;
+	predef::remove_call_out(co);
+      }
+    }
+
+    protected Pike.Backend backend = HandlerBackend();
+#endif /* THREADS */
+
+    protected string _sprintf(int c)
+    {
+      if (c == 'O') {
+	return sprintf("%O(/* %s */)", object_program(this), initiator || "");
+      }
+      return UNDEFINED;
+    }
+  }
+}
+
 // Load Roxen for real
 Roxen really_load_roxen()
 {
@@ -1492,6 +1564,9 @@ void load_roxen()
   add_constant("_disable_threads", _disable_threads);
 #endif
 #endif
+
+  add_constant("Concurrent", RoxenConcurrent());
+  add_constant("PikeConcurrent", Concurrent);
 
   DC( "Roxen" );
 
