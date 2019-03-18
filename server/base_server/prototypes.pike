@@ -2352,18 +2352,17 @@ class RequestID
     }
   }
 
-  protected variant string find_in_misc_forwarded(string key,
-                                                  bool|void case_insensitive)
-  //! Wrapper for
-  //! find_in_misc_forwarded(multiset(string) keys, bool|void case_insensitive)
+  variant string find_in_misc_forwarded(string key, bool|void case_insensitive)
+  //! Convenence variant for
+  //! @expr{find_in_misc_forwarded((< key >), case_insensitive)[key]@}.
   {
     return find_in_misc_forwarded((<key>), case_insensitive)[key];
   }
 
-  protected variant mapping(string:string)
+  variant mapping(string:string)
     find_in_misc_forwarded(multiset(string) keys, bool|void case_insensitive)
-  //! If @[case_insensitive] is true, indeces in arg @[keys] will be converted
-  //! to lower case. Indeces in returned mapping will also be only in lower
+  //! If @[case_insensitive] is true, indices in arg @[keys] will be converted
+  //! to lower case. Indices in the returned mapping will also be only in lower
   //! case.
   {
     keys += (<>); // Shallow copy is ok since keys are strings.
