@@ -1,0 +1,2 @@
+Modified files:
+  modules/directories/indexfiles.pike
