@@ -534,12 +534,23 @@ class CM_GreedyDual
     //! If the element is a member of @[priority_queue] it will
     //! automatically adjust its position when this value is changed.
 
+    float pval_multiplier = 1.0;
+    //! A pval multiplier that can be dynamic for objects placed in the
+    //! cache by implementing the cache_entry_multiplier() method. This
+    //! multiplier will be queried in add_entry() as well as across all
+    //! objects in after_gc().
+    //!
+    //! It should stay in the range 0..1 since we don't wish to grow pvals
+    //! beyond their normal value range, only reduce them.
+
     int|float `pval()
     {
       return HeapElement::value;
     }
     void `pval=(int|float val)
     {
+      if (val == Element::value)
+        return;
       Element::value = val;
       if (HeapElement::pos != -1) {
 	//  NB: We may get called in a context where the mutex
@@ -604,9 +615,15 @@ class CM_GreedyDual
   local protected int|float calc_pval (CacheEntry entry)
   {
     int|float pval;
+    float pmult = entry->pval_multiplier;
     if (HeapElement lowest = priority_queue->low_peek()) {
       int|float l = lowest->value, v = entry->value;
-      pval = l + v;
+
+      //  Apply multiplier to the current value
+      if (pmult != 1.0)
+        pval = l + v * pmult;
+      else
+        pval = l + v;
 
       if (floatp (v)) {
 	if (v != 0.0 && v < l * (Float.EPSILON * 0x10)) {
@@ -623,9 +640,13 @@ class CM_GreedyDual
       else if (pval > max_used_pval)
 	max_used_pval = pval;
     }
-    else
+    else {
       // Assume entry->value isn't greater than Int.NATIVE_MAX/2 right away.
-      pval = entry->value;
+      if (pmult != 1.0)
+        pval = entry->value * pmult;
+      else
+        pval = entry->value;
+    }
     return pval;
   }
 
@@ -650,6 +671,14 @@ class CM_GreedyDual
       calc_value (cache_name, entry, old_entry, cache_context);
 
     if (!low_add_entry (cache_name, entry)) return 0;
+
+    //  Fetch initial pval multiplier for objects that implement that hook
+    if (function(:float) mult_cb =
+        objectp(entry->data) && entry->data->cache_entry_multiplier) {
+      entry->pval_multiplier = mult_cb();
+      ASSERT_IF_DEBUG(entry->pval_multiplier >= 0 &&
+                      entry->pval_multiplier <= 1.0);
+    }
 
     Thread.MutexKey key = priority_mux->lock();
     entry->pval = calc_pval (entry);
@@ -691,6 +720,26 @@ class CM_GreedyDual
 
   void after_gc()
   {
+    //  Recompute value multipliers for objects that implement this hook
+    int update_weights_count;
+    foreach (lookup; string cache_name; mapping cache_data) {
+      foreach (cache_data; mixed key; CacheEntry entry) {
+        if (function(:float) mult_cb =
+            objectp(entry->data) && entry->data->cache_entry_multiplier) {
+          float old_mult = entry->pval_multiplier;
+          float new_mult = mult_cb();
+          ASSERT_IF_DEBUG(new_mult >= 0 && new_mult <= 1.0);
+          if (old_mult != new_mult) {
+            entry->pval_multiplier = new_mult;
+            pending_pval_updates[entry] = 1;
+            update_weights_count++;
+          }
+        }
+      }
+    }
+    if (update_weights_count)
+      schedule_update_weights();
+
     if (max_used_pval > Int.NATIVE_MAX / 2) {
       int|float pval_base;
       if (HeapElement lowest = priority_queue->low_peek())
