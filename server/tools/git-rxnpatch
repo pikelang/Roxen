@@ -1641,6 +1641,16 @@ void make_patch(mapping(string:string|int|array(string)) options,
   // .distignore
   // NB: We only care about the recent .distignores.
   array(string) distignore_prefixes = ({});
+  // First the branch-global distignore.
+  foreach((git_cat_file("refs/heads/rxnpatch/rxnpatch",
+			"refs/heads/" + branch + "/distignore.txt", 1) || "") /
+	  "\n" - ({""}), string path) {
+    path = (path/"#")[0];
+    if (path == "") continue;
+    if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+    distignore_prefixes += ({ path });
+  }
+  // Then the ones from the repository.
   foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1,
 	      "--", subtree_prefix)/"\0",
 	  string line) {
