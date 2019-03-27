@@ -549,9 +549,9 @@ class CM_GreedyDual
     }
     void `pval=(int|float val)
     {
-      if (val == Element::value)
+      if (val == HeapElement::value)
         return;
-      Element::value = val;
+      HeapElement::value = val;
       if (HeapElement::pos != -1) {
 	//  NB: We may get called in a context where the mutex
 	//      already has been taken.
