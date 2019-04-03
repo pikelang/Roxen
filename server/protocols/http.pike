@@ -713,7 +713,8 @@ int things_to_do_when_not_sending_from_cache( )
 //!     @value 1
 //!       Failure (not used).
 //!     @value 2
-//!       Done and handled (not used).
+//!       Done and handled.
+//!       Returned on running into the request_data_max limit.
 //!     @value 3
 //!       Processing done.
 //!   @endint
@@ -744,6 +745,8 @@ private int got_chunk_fragment(string fragment)
   }
   misc->chunk_buf = "";
 
+  int buf_max = port_obj->query("request_data_max");
+
   while(misc->chunked == 1) {
     int chunk_data_offset;
     string chunk_extras;
@@ -762,6 +765,18 @@ private int got_chunk_fragment(string fragment)
 #endif
 
     // FIXME: Currently we ignore the chunk_extras.
+
+    if (max) {
+      int payload_size =
+	((data_buffer && sizeof(data_buffer)) + misc->chunk_len);
+      if (max < payload_size) {
+#ifdef CONNECTION_DEBUG
+	werror("HTTP[%s]: Got too much chunked data.\n", DEBUG_GET_FD);
+#endif
+	send_size_error(payload_size, max);
+	return 2;
+      }
+    }
 
     if (sizeof(buf) < chunk_data_offset + misc->chunk_len) {
       if (!data_buffer) {
@@ -1258,7 +1273,16 @@ private int parse_got( string new_data )
     int l = misc->len;
     wanted_data=l;
     have_data=strlen(data);
-	
+    int max = port_obj->query("request_data_max");
+    if (max && (max < l)) {
+      REQUEST_WERR(sprintf("HTTP: Request data (%d bytes) larger than configured limit (%d bytes).",
+			   l, max));
+      send_size_error(l, max);
+      TIMER_END(parse_got_2_more_data);
+      TIMER_END(parse_got_2);
+      protocol_time += gethrtime() - start_time;
+      return 2;
+    }
     if(strlen(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
@@ -1482,9 +1506,17 @@ void disconnect()
     CHECK_FD_SAFE_USE;
     if (mixed err = catch (my_fd->close())) {
 #ifdef DEBUG
+      /* A typical cause of this is that peer has closed the
+       * connection while sendfile() is still attempting to
+       * send data on it, and has locked it for closing.
+       */
       report_debug ("Failed to close http(s) connection: " +
 		    describe_backtrace (err));
 #endif
+      /* sendfile() will most likely notice that the peer
+       * has closed the connection if we wait a second.
+       */
+      call_out(my_fd->close, 1);
     }
     my_fd = 0;
   }
@@ -1656,14 +1688,22 @@ string link_to(string file, int line, string fun, int eid, int qq)
 }
 
 protected string error_page(string title, void|string msg,
-			    void|string longmsg, void|string body)
+			    void|string longmsg, void|string body,
+			    int|void error_code)
 {
   if (longmsg && has_suffix (longmsg, "\n"))
     longmsg = longmsg[..sizeof (longmsg) - 2];
-  return #"\
+  error_code = error_code || 500;
+  string error_title =
+    Roxen.http_status_message(error_code) || "Internal Server Error";
+  string ret = #"\
 <html><head>
-  <title>Internal Server Error</title>
+  <title>"+ error_title + #"</title>
   <style>
+    .orange { font-family:  franklin gothic, ubuntu condensed, verdana, helvetica, arial, sans-serif;
+              font-weight:  bold;
+              font-size:    25px;
+              color:        #e94c37 }
     .msg  { font-family:    verdana, helvetica, arial, sans-serif;
             font-size:      12px;
             line-height:    160% }
@@ -1680,14 +1720,24 @@ protected string error_page(string title, void|string msg,
             color:          #404070; }
   </style>
 </head>
-<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' 
-      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' 
+<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1'
+      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee'
       bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>
-<table border='0' cellspacing='30' cellpadding='0' height='99%'>
+<table border='0' cellspacing='30' cellpadding='0' height='99%'>";
+  if (error_code == 500) {
+    ret += #"
   <tr>
-    <td width='1'><img src='/internal-roxen-500' /></td>
+    <td width='1'><img src='/internal-roxen-" + error_code + #"' /></td>
     <td valign='bottom'><img src='/internal-roxen-server-error' /></td>
-  </tr>
+  </tr>";
+  } else {
+    ret += #"
+  <tr>
+    <td width='1'><img src='/internal-roxen-" + error_code + #"' /></td>
+    <td valign='bottom' class='orange'>" + upper_case(error_title) + #"</td>
+  </tr>";
+  }
+  ret += #"
   <tr>
     <td></td>
     <td>
@@ -1721,6 +1771,8 @@ protected string error_page(string title, void|string msg,
   </tr>
 </table>
 </body></html>";
+
+  return ret;
 }
 
 
@@ -1922,6 +1974,23 @@ array get_error(string eid, string md5)
     }
   }
   return 0;
+}
+
+void send_size_error(int got, int max)
+{
+  NO_PROTO_CACHE();
+  misc->client_connection = (< "close" >);
+  misc->connection = "close";
+  supports = (< "vary" >);
+  misc->vary = (< "*" >);
+  file =
+    Roxen.http_low_answer(413,
+			  error_page("Request Entity Too Large",
+				     sprintf("Got %d bytes, maximum is %d.",
+					     got, max),
+				     UNDEFINED, UNDEFINED,
+				     413));
+  send_result();
 }
 
 void send_internal_error (array err)
