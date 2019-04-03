@@ -1582,14 +1582,22 @@ string link_to(string file, int line, string fun, int eid, int qq)
 }
 
 protected string error_page(string title, void|string msg,
-			    void|string longmsg, void|string body)
+			    void|string longmsg, void|string body,
+			    int|void error_code)
 {
   if (longmsg && has_suffix (longmsg, "\n"))
     longmsg = longmsg[..sizeof (longmsg) - 2];
-  return #"\
+  error_code = error_code || 500;
+  string error_title =
+    Roxen.http_status_message(error_code) || "Internal Server Error";
+  string ret = #"\
 <html><head>
-  <title>Internal Server Error</title>
+  <title>"+ error_title + #"</title>
   <style>
+    .orange { font-family:  franklin gothic, ubuntu condensed, verdana, helvetica, arial, sans-serif;
+              font-weight:  bold;
+              font-size:    25px;
+              color:        #e94c37 }
     .msg  { font-family:    verdana, helvetica, arial, sans-serif;
             font-size:      12px;
             line-height:    160% }
@@ -1606,14 +1614,24 @@ protected string error_page(string title, void|string msg,
             color:          #404070; }
   </style>
 </head>
-<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' 
-      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' 
+<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1'
+      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee'
       bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>
-<table border='0' cellspacing='30' cellpadding='0' height='99%'>
+<table border='0' cellspacing='30' cellpadding='0' height='99%'>";
+  if (error_code == 500) {
+    ret += #"
   <tr>
-    <td width='1'><img src='/internal-roxen-500' /></td>
+    <td width='1'><img src='/internal-roxen-" + error_code + #"' /></td>
     <td valign='bottom'><img src='/internal-roxen-server-error' /></td>
-  </tr>
+  </tr>";
+  } else {
+    ret += #"
+  <tr>
+    <td width='1'><img src='/internal-roxen-" + error_code + #"' /></td>
+    <td valign='bottom' class='orange'>" + upper_case(error_title) + #"</td>
+  </tr>";
+  }
+  ret += #"
   <tr>
     <td></td>
     <td>
@@ -1645,6 +1663,8 @@ protected string error_page(string title, void|string msg,
   </tr>
 </table>
 </body></html>";
+
+  return ret;
 }
 
 
