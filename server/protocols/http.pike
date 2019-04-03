@@ -1426,9 +1426,17 @@ void disconnect()
     CHECK_FD_SAFE_USE;
     if (mixed err = catch (my_fd->close())) {
 #ifdef DEBUG
+      /* A typical cause of this is that peer has closed the
+       * connection while sendfile() is still attempting to
+       * send data on it, and has locked it for closing.
+       */
       report_debug ("Failed to close http(s) connection: " +
 		    describe_backtrace (err));
 #endif
+      /* sendfile() will most likely notice that the peer
+       * has closed the connection if we wait a second.
+       */
+      call_out(my_fd->close, 1);
     }
     my_fd = 0;
   }
