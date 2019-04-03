@@ -1868,6 +1868,23 @@ array get_error(string eid, string md5)
   return 0;
 }
 
+void send_size_error(int got, int max)
+{
+  NO_PROTO_CACHE();
+  misc->client_connection = (< "close" >);
+  misc->connection = "close";
+  supports = (< "vary" >);
+  misc->vary = (< "*" >);
+  file =
+    Roxen.http_low_answer(413,
+			  error_page("Request Entity Too Large",
+				     sprintf("Got %d bytes, maximum is %d.",
+					     got, max),
+				     UNDEFINED, UNDEFINED,
+				     413));
+  send_result();
+}
+
 void send_internal_error (array err)
 {
   internal_error (err);
