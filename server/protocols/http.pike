@@ -691,7 +691,8 @@ int things_to_do_when_not_sending_from_cache( )
 //!     @value 1
 //!       Failure (not used).
 //!     @value 2
-//!       Done and handled (not used).
+//!       Done and handled.
+//!       Returned on running into the request_data_max limit.
 //!     @value 3
 //!       Processing done.
 //!   @endint
@@ -722,6 +723,8 @@ private int got_chunk_fragment(string fragment)
   }
   misc->chunk_buf = "";
 
+  int buf_max = port_obj->query("request_data_max");
+
   while(misc->chunked == 1) {
     int chunk_data_offset;
     string chunk_extras;
@@ -740,6 +743,18 @@ private int got_chunk_fragment(string fragment)
 #endif
 
     // FIXME: Currently we ignore the chunk_extras.
+
+    if (max) {
+      int payload_size =
+	((data_buffer && sizeof(data_buffer)) + misc->chunk_len);
+      if (max < payload_size) {
+#ifdef CONNECTION_DEBUG
+	werror("HTTP[%s]: Got too much chunked data.\n", DEBUG_GET_FD);
+#endif
+	send_size_error(payload_size, max);
+	return 2;
+      }
+    }
 
     if (sizeof(buf) < chunk_data_offset + misc->chunk_len) {
       if (!data_buffer) {
@@ -1205,7 +1220,16 @@ private int parse_got( string new_data )
     int l = misc->len;
     wanted_data=l;
     have_data=strlen(data);
-	
+    int max = port_obj->query("request_data_max");
+    if (max && (max < l)) {
+      REQUEST_WERR(sprintf("HTTP: Request data (%d bytes) larger than configured limit (%d bytes).",
+			   l, max));
+      send_size_error(l, max);
+      TIMER_END(parse_got_2_more_data);
+      TIMER_END(parse_got_2);
+      protocol_time += gethrtime() - start_time;
+      return 2;
+    }
     if(strlen(data) < l)
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
