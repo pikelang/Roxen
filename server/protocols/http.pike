@@ -745,7 +745,7 @@ private int got_chunk_fragment(string fragment)
   }
   misc->chunk_buf = "";
 
-  int buf_max = port_obj->query("request_data_max");
+  int buf_max = port_obj->query("request_data_max") * 1024;
 
   while(misc->chunked == 1) {
     int chunk_data_offset;
@@ -1273,7 +1273,7 @@ private int parse_got( string new_data )
     int l = misc->len;
     wanted_data=l;
     have_data=strlen(data);
-    int max = port_obj->query("request_data_max");
+    int max = port_obj->query("request_data_max") * 1024;
     if (max && (max < l)) {
       REQUEST_WERR(sprintf("HTTP: Request data (%d bytes) larger than configured limit (%d bytes).",
 			   l, max));
