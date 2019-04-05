@@ -187,7 +187,7 @@ void set_up_http_variables( Protocol o )
 
   defvar("request_data_max", 0,
 	 LOCALE(0, "Request data size limit"), TYPE_INT,
-	 LOCALE(0, "<p>The maximum amount of data in kilo bytes that a "
+	 LOCALE(0, "<p>The maximum amount of data in kilobytes that a "
 		"request may contain before being rejected.</p>\n"
 		"<p>Set to <tt>0</tt> (zero) to disable.</p>"))
     ->set_range(0, Variable.no_limit);
