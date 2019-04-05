@@ -1301,7 +1301,9 @@ if [ -z "$once" ] ; then
     dp "You can use the administration interface in the server to see debug info."
   else :; fi
 
-  if (
+  if {
+      # NB: In this block both fd 1 and fd 2 go to the start_*.output file.
+      #     Fd 3 is mapped to stderr for the main start script.
     (
       # Minor race here wrt pid file cleanup.
 
@@ -1388,10 +1390,11 @@ if [ -z "$once" ] ; then
 
     if test "x$daemonize" = "xyes"; then :; else
       trap "stop_roxen $start_pid TERM start \"$canonicalconf\" \"start script\"" 2 15
+      dp "Waiting for start script to terminate..." 2>&3
       wait;
       signal_exit
     fi
-  ) 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
+  } 3>&2 </dev/null >"$DEBUGDIR/start_$FILES.output" 2>&1; then
     trap "" 0
     :
   else
