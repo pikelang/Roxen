@@ -1,3 +1,0 @@
-Modified files:
-  base_server/roxenloader.pike
-  etc/include/version.h

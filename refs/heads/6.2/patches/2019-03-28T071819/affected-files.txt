@@ -1,4 +1,0 @@
-Modified files:
-  base_server/cache.pike
-  etc/include/version.h
-  tools/git-rxnpatch

@@ -1,5 +1,0 @@
-Modified files:
-  base_server/configuration.pike
-  base_server/prototypes.pike
-  base_server/roxen.pike
-  protocols/http.pike

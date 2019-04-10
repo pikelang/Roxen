@@ -1,2 +1,0 @@
-Modified files:
-  base_server/prototypes.pike
