@@ -1,0 +1,7 @@
+Added files:
+  roxen-images/413.png
+  roxen-images/414.png
+Modified files:
+  base_server/global_variables.pike
+  protocols/http.pike
+  start
