@@ -1,0 +1,86 @@
+subject: Roxen 6.1: Request data max limit, start --without-daemon, LDAP, Error handling.
+from: c5d057ddc61d45cb0a83c3adae2aa2f66a35e76b
+to: 5aee7f5b5caf9a39c60c5c983b13dcd01e05be0d
+originator: Henrik Grubbström (Grubba) <grubba@grubba.org>
+depends: 2019-04-10T120830
+restart: true
+
+Multiple fixes:
+
+• HTTP: Added request data max limit.
+
+This limit causes the http protocol layer to abort a request with
+a 413 error when the peer is attempting to upload too much data.
+
+Fixes [WS-443].
+
+• HTTP: Increased paranoia regarding errors on close().
+
+• HTTP: Added send_size_error().
+
+This sends a 413 error.
+
+Fixes some of [WS-443].
+
+• HTTP: Make error_page() useful for more errors.
+
+• New error code images.
+
+• Start: Fixed signal handling issue --without-daemon.
+
+When running --without-daemon an extra level of sub-shells
+caused signals to the top-level shell to be lost.
+
+Also adds some internal documentation.
+
+Fixes [WS-438].
+
+• RequestID: Do not hide find_in_misc_forwarded().
+
+This function is useful in modules.
+
+Fixes [WS-437].
+
+• Preserve query variables when redirecting directory paths without trailing
+slash. [WS-411]
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. [roxen.com #28397]
+
+• UserDB [LDAP] [Pike 7.8]: Fixed broken handling of %u%.
+
+Since Pike 7.7.14 all URI-escapes in LDAP-URLs are decoded.
+This broke use of the magic marker '%u%' as it was interpreted
+as a Unicode-escape. We now force the marker to be escaped
+properly before parsing the LDAP-URL.
+
+Also some related code-cleanup.
+
+Fixes [WS-390].
+
+• Roxen: Added workaround for [PIKE-126].
+
+Take the pike compiler lock before disabling threads.
+
+Fixes [WS-351].
+
+• HTTP: Use the main code path for HTTP/0.9 requests too.
+
+Perform the same request handling for HTTP/0.9 requests as for
+HTTP/1.0 and later. In particular this includes character set
+encoding. The only difference is that no headers are sent.
+
+Fixes [WS-310].
+
+• HTTP: Make the version string in 500-errors configurable.
+
+Fixes [WS-296].
+
+• Added range check to defvar("DaysToKeepLogFiles").
+
+• Logging: Automatic removal of old log files. [WS-276]
