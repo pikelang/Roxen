@@ -1235,7 +1235,6 @@ private int parse_got( string new_data )
       send_size_error(l, max);
       TIMER_END(parse_got_2_more_data);
       TIMER_END(parse_got_2);
-      protocol_time += gethrtime() - start_time;
       return 2;
     }
     if(strlen(data) < l)
