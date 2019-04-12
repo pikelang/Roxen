@@ -6921,6 +6921,13 @@ int main(int argc, array tmp)
     }
   }
 
+#ifdef THREADS
+  start_handler_threads();
+#if constant(Filesystem.Monitor.basic)
+  start_fsgarb();
+#endif
+#endif /* THREADS */
+
   // Update the certificate registry before opening any ports.
   // NB: Force all certificate files to be reread and reparsed.
   scan_certs(1);
@@ -6946,13 +6953,6 @@ int main(int argc, array tmp)
       if( c->query( "no_delayed_load" ) )
 	c->enable_all_modules();
 #endif // RUN_SELF_TEST
-
-#ifdef THREADS
-  start_handler_threads();
-#if constant(Filesystem.Monitor.basic)
-  start_fsgarb();
-#endif
-#endif /* THREADS */
 
   start_scan_certs();
   start_hourly_maintenance();
