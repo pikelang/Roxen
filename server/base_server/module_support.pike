@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.80 2000/11/20 13:36:34 per Exp $
+// $Id$
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
@@ -193,7 +193,7 @@ class ModuleInfo( string sname, string filename )
   string get_name()
   {
     if( !mappingp( name ) )
-      return name;
+      return name || (sname + " (failed to load)");
     if( mappingp( name ) )
     {
       string q;
@@ -206,7 +206,7 @@ class ModuleInfo( string sname, string filename )
   string get_description()
   {
     if( !mappingp( description ) )
-      return description;
+      return description || "";
     if( mappingp( description ) )
     {
       string q;
