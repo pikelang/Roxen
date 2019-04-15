@@ -299,7 +299,7 @@ class ModuleInfo( string sname, string filename )
   string get_name()
   {
     if( !mappingp( name ) )
-      return name;
+      return name || (sname + " (failed to load)");
     if( mappingp( name ) )
     {
       string q;
@@ -312,7 +312,7 @@ class ModuleInfo( string sname, string filename )
   string get_description()
   {
     if( !mappingp( description ) )
-      return description;
+      return description || "";
     if( mappingp( description ) )
     {
       string q;
