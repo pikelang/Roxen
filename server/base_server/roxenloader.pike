@@ -1441,10 +1441,10 @@ class RoxenConcurrent
       array call_out(function co, int t, mixed ... args)
       {
 	if (roxen && !t) {
-	  roxen->handle(co, @args);
+	  roxen->low_handle(co, @args);
 	  return 0;
 	} else {
-	  return predef::call_out(co, t, @args);
+	  return predef::call_out(roxen->low_handle, t, co, @args);
 	}
       }
 
