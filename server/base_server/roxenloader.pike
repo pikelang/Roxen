@@ -1438,10 +1438,25 @@ class RoxenConcurrent
 #ifdef THREADS
     protected class HandlerBackend
     {
+      void temp_handler_thread(function co, mixed ...args)
+      {
+        object rxn = master()->resolv("Roxen");
+        rxn->name_thread(this_thread(), "RoxenConcurrent Temp Handler");
+        co(@args);
+        rxn->name_thread(this_thread(), 0);
+      }
+
       array call_out(function co, int t, mixed ... args)
       {
 	if (roxen && !t) {
-	  roxen->handle(co, @args);
+          //  Need handler threads to be running before scheduling execution
+          //  in them. If not availble the callback may be queued indefinitely
+          //  if the caller invokes get() in the backend thread; to avoid
+          //  deadlock in such cases we spawn a temporary thread.
+          if (roxen->handler_threads_available())
+            roxen->handle(co, @args);
+          else
+            Thread.Thread(temp_handler_thread, co, @args);
 	  return 0;
 	} else {
 	  return predef::call_out(co, t, @args);
