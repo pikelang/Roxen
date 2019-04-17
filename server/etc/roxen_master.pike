@@ -716,6 +716,8 @@ program low_findprog(string pname, string ext,
 
   if( (s=master_file_stat( relocate_module(fname) )) && s[1]>=0 )
   {
+    object compiler_lock = DefaultCompilerEnvironment->lock();
+
     if( load_time[ fname ] >= s[ 3 ] )
       if( !zero_type (ret = programs[fname]) )
         return ret;
