@@ -659,9 +659,20 @@ protected void report_slow_thread_finished (Thread.Thread thread,
 // 	   thread_create( f, @args );
 //  };
 // }
+local protected Queue low_handle_queue = Queue();
 local protected Queue handle_queue = Queue();
-//! Queue of things to handle.
-//! An entry consists of an array(function fp, array args)
+//! Queues of things to handle.
+//!
+//! An entry consists of an @expr{array(function fp, array args)@}.
+//!
+//! @[low_handle_queue] is the queue that is used until all
+//! configurations have loaded, when @[handle_queue] starts
+//! getting used.
+//!
+//! Any entries in the @[handle_queue] are then transferred
+//! to the @[low_handle_queue] (to preserve priorities),
+//! and they are set to the same @[Queue] object (ie the
+//! one that started life as @[low_handle_queue].
 
 local protected int thread_reap_cnt;
 //! Number of handler threads in the process of being stopped.
@@ -735,7 +746,7 @@ local protected void handler_thread(int id)
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
 	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if(arrayp(h=handle_queue->read()) && h[0]) {
+	if(arrayp(h = low_handle_queue->read()) && h[0]) {
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %s",
 			      id, debug_format_queue_task (h)));
 	  set_locale();
@@ -844,6 +855,13 @@ local protected void handler_thread(int id)
   }
 }
 
+//! Like @[handle()], but available before all configurations
+//! have been loaded.
+void low_handle(function f, mixed ... args)
+{
+  low_handle_queue->write(({f, args }));
+}
+
 void handle(function f, mixed ... args)
 {
   handle_queue->write(({f, args }));
@@ -851,7 +869,8 @@ void handle(function f, mixed ... args)
 
 int handle_queue_length()
 {
-  return handle_queue->size();
+  return ((handle_queue != low_handle_queue) && low_handle_queue->size()) +
+    handle_queue->size();
 }
 
 int number_of_threads;
@@ -868,7 +887,7 @@ int(0..1) handler_threads_available()
   return sizeof(handler_threads) && 1;
 }
 
-void start_handler_threads()
+protected void start_low_handler_threads()
 {
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
@@ -883,6 +902,33 @@ void start_handler_threads()
 					number_of_threads + "]",
 					handler_thread, number_of_threads ) });
   handler_threads += new_threads;
+}
+
+protected void transfer_handler_queue(Queue from, Queue to, int|void count)
+{
+  int transferred = sizeof(handle_queue);
+
+  while (sizeof(handle_queue)) {
+    array entry = handle_queue->read();
+    if (arrayp(entry)) {
+      low_handle_queue->write(entry);
+    }
+  }
+
+  // Some paranoia with respect to racing handle() vs start_handler_threads().
+  if (!transferred) {
+    if (++count > 2) return;
+  }
+
+  low_handle(transfer_handler_queue, from, to, count);
+}
+
+void start_handler_threads()
+{
+  Queue handle_queue = this_program::handle_queue;
+  this_program::handle_queue = low_handle_queue;
+
+  transfer_handler_queue(handle_queue, low_handle_queue);
 }
 
 protected int num_hold_messages;
@@ -994,7 +1040,7 @@ void stop_handler_threads()
 
   while(number_of_threads>0) {
     number_of_threads--;
-    handle_queue->write(0);
+    low_handle_queue->write(0);
     thread_reap_cnt++;
   }
   handler_threads = ({});
@@ -6172,7 +6218,11 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
   threads = 0;
 
   if (catch {
-      array(array) queue = handle_queue->peek_array();
+      array(array) queue = low_handle_queue->peek_array();
+
+      if (handle_queue != low_handle_queue) {
+	queue += handle_queue->peek_array();
+      }
 
       // Ignore the handle thread shutdown marker, if any.
       queue -= ({0});
@@ -6925,6 +6975,10 @@ int main(int argc, array tmp)
       }
     }
   }
+
+#ifdef THREADS
+  start_low_handler_threads();
+#endif /* THREADS */
 
   // Update the certificate registry before opening any ports.
   // NB: Force all certificate files to be reread and reparsed.
