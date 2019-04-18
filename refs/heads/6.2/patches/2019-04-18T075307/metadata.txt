@@ -1,0 +1,15 @@
+subject: Roxen 6.2: Improved thread-safety.
+from: 96bec73c231290fc433c5c0afed019916c43ed7b
+to: e7f9d2d2854199f51d330ce33526c8098215df8f
+originator: Erik Allemann
+depends: 2019-04-10T120609
+restart: true
+
+• Compiler [master]: Improved thread-safety.
+
+Cast to program and cast to object should now be thread-safe.
+
+Port of Pike commit b2e923e3af6d0fae213d7574dd6d29e96dd6e6ab to
+the Roxen master.
+
+Fixes [bug 7783] and potentially [WS-141].
