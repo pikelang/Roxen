@@ -1438,14 +1438,6 @@ class RoxenConcurrent
 #ifdef THREADS
     protected class HandlerBackend
     {
-      void temp_handler_thread(function co, mixed ...args)
-      {
-        object rxn = master()->resolv("Roxen");
-        rxn->name_thread(this_thread(), "RoxenConcurrent Temp Handler");
-        co(@args);
-        rxn->name_thread(this_thread(), 0);
-      }
-
       array call_out(function co, int t, mixed ... args)
       {
 	if (roxen && !t) {

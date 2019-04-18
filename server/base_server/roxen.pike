@@ -882,11 +882,6 @@ int busy_threads;
 protected array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
 
-int(0..1) handler_threads_available()
-{
-  return sizeof(handler_threads) && 1;
-}
-
 protected void start_low_handler_threads()
 {
   if (query("numthreads") <= 1) {
