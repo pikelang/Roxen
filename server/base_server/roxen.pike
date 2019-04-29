@@ -4496,7 +4496,7 @@ class ImageCache
     flush(now - 7 * 3600 * 24);
   }
   
-  void create( string id, function draw_func )
+  protected void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
   //!
@@ -4526,7 +4526,7 @@ class ImageCache
     background_run( 10, do_cleanup );
   }
 
-  void destroy()
+  protected void destroy()
   {
     if (mixed err = catch(sync_meta())) {
       report_warning("Failed to sync cached atimes for "+name+"\n");
