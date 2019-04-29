@@ -68,6 +68,17 @@ private string checked( int pos, int alt )
   return "";
 }
 
+protected int mktime(mapping m)
+{
+  int t = predef::mktime(m);
+  if (m->timezone) {
+    // Compensate for cases where predef::mktime() is broken.
+    // Cf [WS-469].
+    t += t - predef::mktime(localtime(t));
+  }
+  return t;
+}
+
 private mapping next_or_same_day(mapping from, int day, int hour)
 {
   if(from->wday==day && from->hour<hour)
