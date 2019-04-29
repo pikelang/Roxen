@@ -3969,6 +3969,9 @@ class ImageCache
 #endif
     // Avoid throwing and error if the same image is rendered twice.
     mixed err = catch(store_data( name, data, meta ));
+    if (objectp (err) && err->is_RXML_Backtrace && RXML_CONTEXT) {
+      throw (err);
+    }
 #ifdef ARG_CACHE_DEBUG
     if (err) {
       werror("store_data failed with:\n"
@@ -3983,6 +3986,13 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("store %O (%d bytes)\n", id, strlen(data) );
 #endif
+    // Since 134217728 (2^27) is the largest number we can give as argument to
+    // the SQL-function "SPACE()", we cannot store images larger than 2^27 bytes
+    // even though the size of the data-column allows 4294967295 bytes.
+    if (sizeof(data) > 134217728) { // 134217728 = 2^27
+      RXML.run_error("Generated image data (%f MB) exceeds max limit of "
+                     "128 MB.\n", (float) sizeof(data) / 1024 / 1024 );
+    }
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
 #ifdef ARG_CACHE_DEBUG
@@ -4260,7 +4270,13 @@ class ImageCache
 	werror("draw() failed with error: %s\n",
 	       describe_backtrace(err));
 #endif
-	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
+	if (objectp (err) && err->is_RXML_Backtrace) {
+          if (RXML_CONTEXT) {
+#ifdef ARG_CACHE_DEBUG
+            werror("Rethrowing error...\n");
+#endif
+            throw (err);
+          }
 	  // If we get an rxml error and there's no rxml context then
 	  // we're called from a direct request to the image cache.
 	  // The error ought to have been reported in the page that
