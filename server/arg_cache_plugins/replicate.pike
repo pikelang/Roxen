@@ -41,6 +41,7 @@ Sql.Sql get_db()
 
 protected void resilver_replicate_db()
 {
+  Roxen.name_thread(this_thread(), "Arg-cache Replication");
   werror("Arg-cache replication thread started.\n");
   // Outer loop is for initialization and error recovery.
   while(this_object()) {
@@ -155,6 +156,7 @@ protected void resilver_replicate_db()
     }
   }
   werror("Arg-cache replication thread terminated.\n");
+  Roxen.name_thread(this_thread(), 0);
 }
 
 protected void create( object c )
