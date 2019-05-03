@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Improved error handling in emit#cimg.
+from: 03eb9fd32d3de0f5221fab22d52f347242f0b546
+to: 91805459591cb32c86c8e2941c2633f3b9cb194d
+originator: Erik Allemann
+depends: 2019-04-18T074849
+restart: true
+
+• Image cache: Added access modifier to functions create and destroy.
+
+• Image cache: Throw RXML run error if generated image data is too big. [WS-444]
