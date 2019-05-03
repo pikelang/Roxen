@@ -1,0 +1,17 @@
+subject: Directories: Fix support for index files in unbrowseable dirs.Roxen 6.2: Directories: Improved robustness of test. 
+from: 91ad86f59aba6931d0b00e9b0c53e49d105f0a7b
+to: 5f673c3f944bfb006689b433a418378e45f13db2
+originator: Jonas Lonnberg
+depends: 2019-01-22T154709
+restart: true
+
+• Directories: Improved robustness of test.
+
+• Directories: Fix support for index files in unbrowseable dirs.
+
+The support for index files in directories where directory listings
+were turned off was broken.
+
+Thanks to Marcus Comstedt for the report and analysis.
+
+Fixes [WS-399]/[LysLysKOM 23142461].

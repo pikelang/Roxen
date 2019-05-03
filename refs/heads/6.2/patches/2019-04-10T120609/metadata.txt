@@ -1,0 +1,38 @@
+subject: Roxen 6.2: Start script fixes
+from: c4dd1431124e7ce93c6a51ffd508f6c4372e4cf1
+to: 96bec73c231290fc433c5c0afed019916c43ed7b
+originator: Erik Allemann
+depends: 2019-03-28T071819
+restart: true
+
+• HTTP: Fixed documentation typo.
+
+• HTTP: Changed unit in request data size limit to KB.
+
+• HTTP: Added request data max limit.
+
+This limit causes the http protocol layer to abort a request with
+a 413 error when the peer is attempting to upload too much data.
+
+Fixes [WS-443].
+
+• HTTP: Increased paranoia regarding errors on close().
+
+• HTTP: Added send_sixe_error().
+
+This sends a 413 error.
+
+Fixes some of [WS-443].
+
+• HTTP: Make error_page() useful for more errors.
+
+• New error code images.
+
+• Start: Fixed signal handling issue --without-daemon.
+
+When running --without-daemon an extra level of sub-shells
+caused signals to the top-level shell to be lost.
+
+Also adds some internal documentation.
+
+Fixes [WS-438].

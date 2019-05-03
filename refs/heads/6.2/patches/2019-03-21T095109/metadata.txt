@@ -1,0 +1,18 @@
+subject: Roxen 6.2: Workaround for gnu-patch on solaris [WS-416]
+from: cc3edd386c0cb02ae8135c466daefec2e3436c8a
+to: 4e93acfe22d1319a8d8603ccb9a551b622f3e4cd
+originator: Marcus Wellhardh
+depends: 2019-03-21T094709
+restart: true
+
+• RoxenPatch: Added log message.
+
+• RoxenPatch: Added workaround for bug in gnu-patch 2.7.4 and later.
+
+Gnu-patch attempts to allocate a hash table with a size
+depending on RLIMIT_NOFILE. When the limit is unlimited,
+it runs out of memory...
+
+Cf https://savannah.gnu.org/bugs/index.php?55797
+
+Fixes [WS-416].

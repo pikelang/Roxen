@@ -1,0 +1,17 @@
+subject: Roxen 6.1: Preserve query variables when redirecting directory paths without trailing slash. Fixed mixed use of redirected_raw_url and redirected_not_query. Index files only: Don't redirect to internal path. 
+from: e05c555bba560262abbe0a86bb7924d651a752b5
+to: 5f65cd478f4fb0ed7d7ade3e82f43344b5d5861e
+originator: Jonas Lonnberg
+depends: 2019-01-10T130850
+restart: true
+
+• Preserve query variables when redirecting directory paths without trailing
+slash. [WS-411]
+
+• Fixed mixed use of redirected_raw_url and redirected_not_query
+
+• Index files only: Don't redirect to internal path
+
+If the request has been redirected internally, don't expose the internal
+path to the browser when making the redirect to add a trailing slash to
+the URL. [roxen.com #28397]
