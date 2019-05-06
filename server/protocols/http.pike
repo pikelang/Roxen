@@ -744,14 +744,14 @@ private int got_chunk_fragment(string fragment)
 
     // FIXME: Currently we ignore the chunk_extras.
 
-    if (max) {
+    if (buf_max) {
       int payload_size =
 	((data_buffer && sizeof(data_buffer)) + misc->chunk_len);
-      if (max < payload_size) {
+      if (buf_max < payload_size) {
 #ifdef CONNECTION_DEBUG
 	werror("HTTP[%s]: Got too much chunked data.\n", DEBUG_GET_FD);
 #endif
-	send_size_error(payload_size, max);
+	send_size_error(payload_size, buf_max);
 	return 2;
       }
     }
