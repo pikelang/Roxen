@@ -1,0 +1,12 @@
+subject: Roxen 6.2: Image cache: Added access modifier to functions create and destroy. Throw RXML run error if generated image data is too big. [WS-444]. Name the arg-cache replication thread.
+from: e7f9d2d2854199f51d330ce33526c8098215df8f
+to: c5f00960cd738e4664eafadaf68b6de849511500
+originator: Jonas Lonnberg
+depends: 2019-04-18T075307
+restart: true
+
+• Name the arg-cache replication thread.
+
+• Image cache: Added access modifier to functions create and destroy.
+
+• Image cache: Throw RXML run error if generated image data is too big. [WS-444]
