@@ -1341,7 +1341,8 @@ class MultipleChoice
   int(0..1) set_from_form(RequestID id, void|int(0..1) force)
   {
     if (!multiselect) return ::set_from_form(id);
-    if (!id->real_variables[path()]) return 0;
+    bool save = !!id->variables["save.x"];
+    if (!save && !id->real_variables[path()]) return 0;
     set_warning(0);
     mapping(string:string) m = get_form_vars(id);
     array(mixed) values = ({});
