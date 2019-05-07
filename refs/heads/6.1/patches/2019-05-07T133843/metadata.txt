@@ -1,0 +1,8 @@
+subject: Roxen 6.1: HTTP: Fixed request data max limit check for the chunked case.
+from: 91805459591cb32c86c8e2941c2633f3b9cb194d
+to: f3932a615beb2204d67644b298df4a6ac0f5be05
+originator: Erik Allemann
+depends: 2019-05-03T132105
+restart: true
+
+• HTTP: Fixed request data max limit check for the chunked case.
