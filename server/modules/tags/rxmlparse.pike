@@ -9,7 +9,7 @@
 
 #define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.85 2011/03/01 13:14:03 stewa Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -239,16 +239,8 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 
   NOCACHE();
   ctx->misc[" _ok"]=0;		// Unnecessary unless in < 5.0 compat mode.
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
-      type->subtype_of (RXML.t_text)) {
-    if(query("quietr") && !id->misc->debug)
-      return "";
-    if (type->subtype_of (RXML.t_text))
-      return "\n" + describe_error (err) + "\n";
-    else
-      return "<br clear=\"all\" />\n<pre>" +
-	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  }
+  if(query("quietr") && !id->misc->debug)
+    return "";
   return 0;
 }
 
@@ -280,16 +272,8 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
 #endif
 
   NOCACHE();
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
-      type->subtype_of (RXML.t_text)) {
-    if(query("quietp") && !id->misc->debug)
-      return "";
-    if (type->subtype_of (RXML.t_text))
-      return "\n" + describe_error (err) + "\n";
-    else
-      return "<br clear=\"all\" />\n<pre>" +
-	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
-  }
+  if(query("quietp") && !id->misc->debug)
+    return "";
   return 0;
 }
 

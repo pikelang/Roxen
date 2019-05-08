@@ -331,7 +331,6 @@ worldmap binary
 /server/modules/tags/kerberos.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/obox.pike foreign_ident
-/server/modules/tags/rxmlparse.pike foreign_ident
 /server/modules/tags/rxmltags.pike foreign_ident
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/session_tag.pike foreign_ident
