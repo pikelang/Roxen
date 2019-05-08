@@ -227,8 +227,8 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
     _run_error=0;
 
 #ifdef VERBOSE_RXML_ERRORS
-  report_notice ("Error in %s.\n%s",
-		 id->raw_url || id->not_query || "UNKNOWN",
+  report_notice ("Error in %s (%O).\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN", type,
 		 describe_backtrace (err));
 #else
   if(query("logerrorsr"))
@@ -261,8 +261,8 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
     _parse_error=0;
 
 #ifdef VERBOSE_RXML_ERRORS
-  report_notice ("Error in %s.\n%s",
-		 id->raw_url || id->not_query || "UNKNOWN",
+  report_notice ("Error in %s (%O).\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN", type,
 		 describe_backtrace (err));
 #else
   if(query("logerrorsp"))
