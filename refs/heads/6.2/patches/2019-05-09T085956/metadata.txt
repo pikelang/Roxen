@@ -1,0 +1,10 @@
+subject: Roxen 6.2: mktime() fixes.
+from: e8118e1bc1a460d57c7fd4ff020a6a945e1ffd02
+to: 1fe0c54aad92f0f75e52ccef595227921422b2fc
+originator: Erik Allemann
+depends: 2019-05-06T171407
+restart: true
+
+• Variable.Schedule: Compensate for buggy mktime()s.
+
+Work-around for [WS-469].
