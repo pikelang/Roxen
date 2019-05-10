@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Allow saving emtpy selection.
+from: 1fe0c54aad92f0f75e52ccef595227921422b2fc
+to: 7e0eac8bcdcfd796e60cac3b50677fe80426e3cf
+originator: Erik Allemann
+depends: 2019-05-09T085956
+restart: true
+
+• Variable MultipleChoice: Allow saving emtpy selection. [EP-1288]
