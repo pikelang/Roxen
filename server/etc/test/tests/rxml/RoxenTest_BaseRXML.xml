@@ -209,7 +209,7 @@
 <comment>Define/undefine</comment>
 <test>
 <rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
-<glob>1[Error (parse): *]0</glob>
+<glob>1<br clear='all'><pre>[Error (parse): *]</pre>0</glob>
 </test>
 
 <test no-strip-ws="">
@@ -767,7 +767,7 @@ a&auml; &amp; b  &gt;
 
 <test>
   <rxml><define variable="var.i" preparse=""><contents/></define></rxml>
-  <glob>[Error (parse): *]</glob>
+  <glob><br clear='all'><pre>[Error (parse): *]</pre></glob>
 </test>
 
 <test>
@@ -777,7 +777,7 @@ a&auml; &amp; b  &gt;
     ></define
     ><x
   /></rxml>
-  <glob>[Error (parse): *]</glob>
+  <glob><br clear='all'><pre>[Error (parse): *]</pre></glob>
 </test>
 
 <test>
@@ -1935,7 +1935,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><if q>X</if><else>Y</else></rxml>
-<glob>[Error (parse): *]Y</glob>
+<glob><br clear='all'><pre>[Error (parse): *]</pre>Y</glob>
 </test>
 
 <test>
@@ -3180,12 +3180,12 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><if rxml_test="xyz">1</if><use package="test_rxml_package"/><if rxml_test="xyz">2</if><if rxml_test="a">3</if></rxml>
-<glob>[Error (parse): *]2</glob>
+<glob><br clear='all'><pre>[Error (parse): *]</pre>2</glob>
 </test>
 
 <test>
 <rxml><if rxml_test2="abc">1</if><use package="test_rxml_package"/><if rxml_test2="abc">2</if><if rxml_test2="a">3</if></rxml>
-<glob>[Error (parse): *][Error (parse): *][Error (parse): *]</glob>
+<glob><br clear='all'><pre>[Error (parse): *]</pre><br clear='all'><pre>[Error (parse): *]</pre><br clear='all'><pre>[Error (parse): *]</pre></glob>
 </test>
 
 <test>
@@ -4132,7 +4132,7 @@ def
       </value>
     </set>
   </rxml>
-  <glob>[Error (parse): "index" attribute required in mapping context.]</glob>
+  <glob><br clear='all'><pre>[Error (parse): "index" attribute required in mapping context.]</pre></glob>
 </test>
 
 <test>
@@ -4227,7 +4227,7 @@ def
   <rxml>
     <test-args req-string="" req-int=""/>
   </rxml>
-  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): No value given for nonsequential type int*]</pre></glob>
 </test>
 
 <test>
@@ -4237,7 +4237,7 @@ def
     </set>
     <test-args ::="&var.args;"/>
   </rxml>
-  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): No value given for nonsequential type int*]</pre></glob>
 </test>
 
 <test>
@@ -4253,7 +4253,7 @@ def
   <rxml>
     <test-required-content/>
   </rxml>
-  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): Missing value for nonsequential content*]</pre></glob>
 </test>
 
 <test>
@@ -4261,5 +4261,5 @@ def
     <test-required-content>
     </test-required-content>
   </rxml>
-  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): Missing value for nonsequential content*]</pre></glob>
 </test>

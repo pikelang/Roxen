@@ -246,14 +246,14 @@ e</result>
 
 <test>
 <rxml><set>hej</set></rxml>
-<result>[Error (parse): Required argument variable is missing.]</result>
+<result><br clear='all'><pre>[Error (parse): Required argument variable is missing.]</pre></result>
 </test>
 
 <test>
   <rxml>
     <set variable="var.x" type="int"/>
   </rxml>
-  <glob>[Error (parse): The value is missing for non-sequential type*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): The value is missing for non-sequential type*]</pre></glob>
 </test>
 
 <test>
@@ -307,14 +307,14 @@ e</result>
     <set variable="var.x">q &var.y;</set>
     &var.x;
   </rxml>
-  <glob>[Error (parse): Cannot append another value * to non-sequential type *]</glob>
+  <glob><br clear='all'><pre>[Error (parse): Cannot append another value * to non-sequential type *]</pre></glob>
 </test>
 
 <test>
   <rxml>
     <set variable="var.foo">blah <p>bleh</p></set>
   </rxml>
-  <glob>[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+  <glob><br clear='all'><pre>[Error (parse): *Maybe an attribute type="text/*" is missing.*]</pre></glob>
 </test>
 
 <test>
@@ -1117,7 +1117,7 @@ e</result>
     <append variable="var.foo" value="&var.bar;"/>
     &var.foo;
   </rxml>
-  <glob>[Error (parse): Cannot convert * to text/plain: *]</glob>
+  <glob><br clear='all'><pre>[Error (parse): Cannot convert * to text/plain: *]</pre></glob>
 </test>
 
 <test>
@@ -1130,7 +1130,7 @@ e</result>
     <append variable="var.foo">&var.bar;</append>
     &var.foo;
   </rxml>
-  <glob>[Error (parse): Cannot convert * to string: *]
+  <glob><br clear='all'><pre>[Error (parse): Cannot convert * to string: *]</pre>
     17</glob>
 </test>
 
@@ -1142,7 +1142,7 @@ e</result>
     <append variable="var.foo" from="var.bar"/>
     &var.foo;
   </rxml>
-  <glob>[Error (parse): Cannot convert * to string: *]
+  <glob><br clear='all'><pre>[Error (parse): Cannot convert * to string: *]</pre>
     17</glob>
 </test>
 
@@ -2903,7 +2903,7 @@ hej</result>
     ><cache shared variable="test.pass">a<run-error/>b</cache
     ><cache shared variable="test.pass">a<run-error/>b</cache
   ></rxml>
-  <result>abab</result>
+  <result>a<br clear='all'><pre></pre>ba<br clear='all'><pre></pre>b</result>
 </test>
 
 <test>
@@ -3794,7 +3794,7 @@ e</random></rxml>
     <set variable="var.x" expr='(program) "nasty"'/>
     &var.x;
   </rxml>
-  <result>[Error (parse): Syntax error in expr attribute.]</result>
+  <result><br clear='all'><pre>[Error (parse): Syntax error in expr attribute.]</pre></result>
 </test>
 
 <test>
@@ -3818,7 +3818,7 @@ e</random></rxml>
     <set variable="var.x" expr='"si\"zeof(\\\\"(program)'/>
     &var.x;
   </rxml>
-  <result>[Error (parse): Syntax error in expr attribute.]</result>
+  <result><br clear='all'><pre>[Error (parse): Syntax error in expr attribute.]</pre></result>
 </test>
 
 <test>
@@ -3898,7 +3898,7 @@ e</random></rxml>
     <set variable="var.x" expr='blubb'/>
     &var.x;
   </rxml>
-  <result>[Error (parse): Error in expr attribute: Error resolving 'blubb'.]</result>
+  <result><br clear='all'><pre>[Error (parse): Error in expr attribute: Error resolving 'blubb'.]</pre></result>
 </test>
 
 <test>
@@ -3906,7 +3906,7 @@ e</random></rxml>
     <set variable="var.x" expr='foo'/>
     &var.x;
   </rxml>
-  <result>[Error (parse): Error in expr attribute: Error resolving 'foo'.]</result>
+  <result><br clear='all'><pre>[Error (parse): Error in expr attribute: Error resolving 'foo'.]</pre></result>
 </test>
 
 <test>
