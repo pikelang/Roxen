@@ -5,7 +5,7 @@
 yy"
     </json-parse>
   </rxml>
-  <glob><br clear='all'><pre>[Error (run): Error decoding JSON at position *]*</pre></glob>
+  <glob><br clear='all'/><pre>[Error (run): Error decoding JSON at position *]*</pre></glob>
 </test>
 
 <test>
@@ -63,8 +63,8 @@ yy"
     &roxen.null;
   </rxml>
   <result>
-    <br clear='all'><pre>[Error (parse): Cannot convert Roxen.true to type text/*.]</pre>
-    <br clear='all'><pre>[Error (parse): Cannot convert Roxen.false to type text/*.]</pre>
+    <br clear='all'/><pre>[Error (parse): Cannot convert Roxen.true to type text/*.]</pre>
+    <br clear='all'/><pre>[Error (parse): Cannot convert Roxen.false to type text/*.]</pre>
   </result>
 </test>
 
