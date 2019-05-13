@@ -4132,7 +4132,7 @@ def
       </value>
     </set>
   </rxml>
-  <glob><br clear='all'/><pre>[Error (parse): "index" attribute required in mapping context.]</pre></glob>
+  <glob><br clear='all'/><pre>[Error (parse): &#34;index&#34; attribute required in mapping context.]</pre></glob>
 </test>
 
 <test>
