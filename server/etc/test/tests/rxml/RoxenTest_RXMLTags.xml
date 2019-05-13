@@ -289,7 +289,7 @@ e</result>
   <rxml>
     <set variable="var.foo" type="any">blah <p>bleh</p></set>
   </rxml>
-  <glob not="">[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+  <glob not="">[Error (parse): *Maybe an attribute type=&#34;text/*&#34; is missing.*]</glob>
 </test>
 
 
@@ -1062,8 +1062,7 @@ e</result>
     <append variable="var.foo">&var.bar;</append>
     &var.foo;
   </rxml>
-  <glob><br clear='all'/><pre>[Error (parse): Cannot convert * to string: *]</pre>
-    17</glob>
+  <glob><br clear='all'/><pre>[Error (parse): Cannot convert * to string: *]</pre>17</glob>
 </test>
 
 <test>
@@ -1074,8 +1073,7 @@ e</result>
     <append variable="var.foo" from="var.bar"/>
     &var.foo;
   </rxml>
-  <glob><br clear='all'/><pre>[Error (parse): Cannot convert * to string: *]</pre>
-    17</glob>
+  <glob><br clear='all'/><pre>[Error (parse): Cannot convert * to string: *]</pre>17</glob>
 </test>
 
 <test>
@@ -3801,7 +3799,7 @@ e</random></rxml>
     <set variable="var.x" expr='blubb'/>
     &var.x;
   </rxml>
-  <result><br clear='all'/><pre>[Error (parse): Error in expr attribute: Error resolving 'blubb'.]</pre></result>
+  <result><br clear='all'/><pre>[Error (parse): Error in expr attribute: Error resolving &#39;blubb&#39;.]</pre></result>
 </test>
 
 <test>
@@ -3809,7 +3807,7 @@ e</random></rxml>
     <set variable="var.x" expr='foo'/>
     &var.x;
   </rxml>
-  <result><br clear='all'/><pre>[Error (parse): Error in expr attribute: Error resolving 'foo'.]</pre></result>
+  <result><br clear='all'/><pre>[Error (parse): Error in expr attribute: Error resolving &#39;foo&#39;.]</pre></result>
 </test>
 
 <test>
