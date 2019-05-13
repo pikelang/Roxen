@@ -314,7 +314,7 @@ e</result>
   <rxml>
     <set variable="var.foo">blah <p>bleh</p></set>
   </rxml>
-  <glob><br clear='all'/><pre>[Error (parse): *Maybe an attribute type="text/*" is missing.*]</pre></glob>
+  <glob><br clear='all'/><pre>[Error (parse): *Maybe an attribute type=&#34;text/*&#34; is missing.*]</pre></glob>
 </test>
 
 <test>
