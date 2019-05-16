@@ -1,0 +1,2 @@
+Modified files:
+  etc/modules/Variable.pmod/module.pmod
