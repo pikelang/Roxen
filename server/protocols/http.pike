@@ -759,6 +759,8 @@ private int got_chunk_fragment(string fragment)
       return 0; // More data needed to parse the chunk length.
     }
 
+    misc->len += misc->chunk_len;
+
 #ifdef CONNECTION_DEBUG
     werror("HTTP[%s]: Got chunk with %d bytes of data.\n",
 	   DEBUG_GET_FD, misc->chunk_len);
@@ -1056,11 +1058,15 @@ private int parse_got( string new_data )
        case "cache-control":	// Opera sends "no-cache" here.
        case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
 
-       case "content-length": misc->len = (int)contents;       break;
+       case "content-length":
+	 if (misc->chunked) break;
+	 misc->len = (int)contents;
+	 break;
        case "transfer-encoding":
 	 misc->transfer_encoding =
 	   map(lower_case(contents)/";", String.trim_all_whites);
 	 if (has_value(misc->transfer_encoding, "chunked")) {
+	   misc->len = 0;
 	   misc->chunked = 1;
 	   misc->chunk_buf = "";
 	   new_data = data; // For got_chunk_fragment() below.
