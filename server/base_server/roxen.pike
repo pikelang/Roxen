@@ -7475,6 +7475,18 @@ protected constant formats = ([
   "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
   "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
   "bin-length":		({"%4c", "(int)file->len", 1, "\"\\0\\0\\0\\0\"", 0}),
+  "request-length":	({"%d", ("(int)(request_id->raw_bytes - "
+				 "(sizeof(request_id->leftovers || \"\") + "
+				 "request_id->misc->len))"),
+			  1, "\"-\"", 0 }),
+  "bin-request-length":	({"%4c", ("(int)(request_id->raw_bytes - "
+				 "(sizeof(request_id->leftovers || \"\") + "
+				 "request_id->misc->len))"),
+			  1, "\"\\0\\0\\0\\0\"", 0 }),
+  "request-data-length":	({"%d", "(int)request_id->misc->len",
+			  1, "\"-\"", 0}),
+  "bin-request-data-length":	({"%4c", "(int)request_id->misc->len",
+			  1, "\"\\0\\0\\0\\0\"", 0}),
   "queue-length":	({"%d", "(int) request_id->queue_length",
 			  1, "\"-\"", 0}),
   "request-time":	({"%1.4f", ("(float)(gethrtime() - "

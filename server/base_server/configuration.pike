@@ -5250,6 +5250,14 @@ hyphens ('-') occur in the specifier names.</p>
     <td>The length of the data section of the reply.</td></tr>
 <tr><td>$bin-length</td>
     <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$request-length</td>
+    <td>The length of the header section of the request.</td></tr>
+<tr><td>$bin-request-length</td>
+    <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$request-data-length</td>
+    <td>The length of the data section of the request.</td></tr>
+<tr><td>$bin-request-data-length</td>
+    <td>Same, but as a 32 bit integer in network byte order.</td></tr>
 <tr><td>$queue-length</td>
     <td>Number of jobs waiting to be processed by the handler threads
     at the time this request was added to the queue.</td></tr>
