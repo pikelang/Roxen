@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.138 2009/06/23 13:31:35 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -470,7 +470,7 @@ class PutFileWrapper
       ftpsession->send(response_code, response);
       closed = 1;
       session->conf->received += recvd;
-      session->file->len = recvd;
+      session->misc->len = recvd;
       session->conf->log(session->file, session);
       destruct(session);
     }
