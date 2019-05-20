@@ -497,7 +497,7 @@ class Configuration
   void call_low_start_callbacks( RoxenModule me,
                                  ModuleInfo moduleinfo,
                                  ModuleCopies module );
-  int disable_module( string modname, int|void nodest );
+  int disable_module( string modname, void|RoxenModule new_instance );
   int add_modules( array(string) mods, int|void now );
   RoxenModule find_module(string name);
 #if ROXEN_COMPAT < 2.2
