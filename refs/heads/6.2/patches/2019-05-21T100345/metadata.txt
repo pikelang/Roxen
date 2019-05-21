@@ -1,0 +1,18 @@
+subject: Roxen 6.2: Add log variables for upload data length, fix compilation issue
+from: 9ed4a5190c6403f620ef4327ac1a49611ce84dac
+to: d39e708278a420afa9922722501bf4b48fb67a7d
+originator: Jonas Wallden
+depends: 2019-05-16T170519
+restart: true
+
+• Logging [HTTP]: Keep track of amount of received data in chunked mode.
+
+Fixes [WS-500] some more.
+
+• Logging: Added log patterns $request-length and $request-data-length.
+
+Fixes [WS-500].
+
+• Prototypes: Updated type for Configuration::disable_module().
+
+Seems Mast missed this one.
