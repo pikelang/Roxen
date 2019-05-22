@@ -2351,7 +2351,7 @@ class Context
 	  }
 	  else
 	    msg = err->msg;
-	  if (evaluator->report_error (msg)) {
+	  if (evaluator->report_error(msg, evaluator->type)) {
 	    if (p_code_error) {
 	      CompiledError comp_err = CompiledError (err);
 	      p_code_error->add (RXML_CONTEXT, comp_err, comp_err);
@@ -5784,14 +5784,23 @@ class Parser
   //! data may be given. It should work to call this on an already
   //! finished stream if no argument is given to it.
 
-  optional int report_error (string msg);
-  //! Used to report errors to the end user through the output. This
-  //! is only called when @[type->free_text] is nonzero and
+  optional int report_error (string msg, Type|void type);
+  //! Used to report errors to the end user through the output.
+  //!
+  //! @param msg
+  //!   Error message to report.
+  //!
+  //! @param type
+  //!   Type for the evaluation context where the error was caught.
+  //!
+  //! This is only called when @[type->free_text] is nonzero and
   //! @[recover_errors] is nonzero. @[msg] should be stored in the
   //! output queue to be returned by @[eval]. If the context is bad
   //! for an error message, do nothing and return zero. The parser
   //! will then be aborted and the error will be propagated instead.
-  //! Return nonzero if a message was written.
+  //!
+  //! @returns
+  //!   Return nonzero if a message was written.
 
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
@@ -9464,8 +9473,19 @@ class PCode
       else return sprintf ("RXML.utils.get_non_nil(%s,%s)", typevar, parts * ",");
   }
 
-  int report_error (string msg)
+  int report_error (string msg, Type|void type)
   {
+    if (type && type->subtype_of(t_text)) {
+      // text/plain
+      msg = "\n" + msg + "\n";
+    } else {
+      // Everything else.
+      // HTML/XML-quote everything for paranoia reasons.
+      msg = "<br clear=\"all\" />\n<pre>" +
+	Roxen.html_encode_string(msg) + "</pre>\n";
+    }
+
+    // Store the error message in misc for later retrieval by _eval().
     mapping misc = RXML_CONTEXT->misc;
     if (misc[this_object()]) misc[this_object()] += msg;
     else misc[this_object()] = msg;
