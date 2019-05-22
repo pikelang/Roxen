@@ -24,7 +24,7 @@
       &_.n;
     </emit>
   </rxml>
-  <glob>[Error (parse): *]*0</glob>
+  <glob><br clear='all'/><pre>[Error (parse): *]*</pre>0</glob>
 </test>
 
 <test>
@@ -57,7 +57,7 @@
     <sqlquery db="local" query="INSERT INTO __test (c) VALUES ('foo')"/>
     &page.last-true;
   </rxml>
-  <glob>[Error (run): *]*0</glob>
+  <glob><br clear='all'/><pre>[Error (run): *]</pre>*0</glob>
 </test>
 
 <test>
