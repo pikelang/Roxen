@@ -365,8 +365,17 @@ int output_errors()
   }
 }
 
-int report_error (string msg)
+int report_error (string msg, RXML.Type|void type)
 {
+  if (type && type->subtype_of(RXML.t_text)) {
+    // text/plain
+    msg = "\n" + msg + "\n";
+  } else {
+    // Everything else.
+    // HTML/XML-quote everything for paranoia reasons.
+    msg = "<br clear=\"all\" />\n<pre>" +
+      Roxen.html_encode_string(msg) + "</pre>\n";
+  }
   if (errmsgs) errmsgs += msg;
   else errmsgs = msg;
   if (low_parser::context() != "data")
