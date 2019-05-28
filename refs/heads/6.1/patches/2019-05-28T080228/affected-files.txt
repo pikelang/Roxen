@@ -1,0 +1,9 @@
+Modified files:
+  base_server/prototypes.pike
+  etc/modules/RXML.pmod/PXml.pike
+  etc/modules/RXML.pmod/module.pmod
+  etc/test/tests/rxml/RoxenTest_BaseRXML.xml
+  etc/test/tests/rxml/RoxenTest_RXMLTags.xml
+  etc/test/tests/rxml/RoxenTest_SQLtag.xml
+  etc/test/tests/rxml/RoxenTest_json.xml
+  modules/tags/rxmlparse.pike
