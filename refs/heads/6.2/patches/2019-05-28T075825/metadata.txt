@@ -1,0 +1,47 @@
+subject: Roxen 6.2: Testsuite fixes.
+from: d39e708278a420afa9922722501bf4b48fb67a7d
+to: d2f1b455f4cdaee63f396ec296a13cfaed2b68b5
+originator: Erik Allemann
+depends: 2019-05-21T100345
+restart: true
+
+• Testsuite [RXML]: Adjusted remaining failing test.
+
+Missed this one in previous commit.
+
+Fixes [WS-482].
+
+• Testsuite [RXML]: Adjusted remaining failing test.
+
+Missed this one in previous commit.
+
+Fixes [WS-482].
+
+• Testsuite [RXML]: Adjusted tests some more.
+
+Third go at fixing [WS-482].
+
+• Testsuite [RXML]: Fixed typo in error message pattern.
+
+Second go at fixing [WS-482].
+
+• Testsuite [RXML]: Updated error-handling tests to [WS-475].
+
+Fixes [WS-482].
+
+• RXML: Improved diagnostics in VERBOSE_RXML_ERRORS mode.
+
+• RXML: Simplified rxml_{parse,run}_error().
+
+Formatting of the errors is now done by report_error().
+
+Fixes remainder of [WS-475].
+
+• RXML.Parser: Changed calling convention for report_error().
+
+report_error() for the Parser now assumes responsibility for
+quoting and formatting error messages.
+
+This makes for a more robust handling of quoting of errors.
+
+Fixes some of [WS-475].
