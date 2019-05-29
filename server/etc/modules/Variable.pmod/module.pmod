@@ -1341,7 +1341,8 @@ class MultipleChoice
   int(0..1) set_from_form(RequestID id, void|int(0..1) force)
   {
     if (!multiselect) return ::set_from_form(id);
-    if (!id->real_variables[path()]) return 0;
+    if (!id->real_variables[path()] &&
+        !id->real_variables[path() + ".hidden"]) return 0;
     set_warning(0);
     mapping(string:string) m = get_form_vars(id);
     array(mixed) values = ({});
@@ -1433,7 +1434,12 @@ class MultipleChoice
 		       Roxen.make_tag( "input", m),
 		       Roxen.html_encode_string(title));
       }
-      return res + "</table>";
+      res += "</table>";
+      // Hidden field allows saving of empty selection.
+      res += Roxen.make_tag( "input", ([ "type"  : "hidden",
+                                         "name"  : path() + ".hidden",
+                                         "value" : "hidden" ]));
+      return res;
     } else {
       string current = _name (query());
       int selected = 0;
