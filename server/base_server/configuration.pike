@@ -1076,10 +1076,8 @@ protected mixed strip_fork_information(RequestID id)
     //    foo.txt/..namedfork/data     (same as foo.txt)
     //    foo.txt/..namedfork/rsrc     (resource fork of foo.txt)
     //    foo.txt/rsrc                 (resource fork of foo.txt)
-    //    .DS_Store                    (Finder info file with catalog data)
     if (has_value(id->not_query, "..namedfork/") ||
-	has_suffix(id->not_query, "/rsrc") ||
-	has_value(lower_case(id->not_query), ".ds_store"))
+	has_suffix(id->not_query, "/rsrc"))
       //  Skip elaborate error page since we get these e.g. for WebDAV
       //  mounts in OS X Finder.
       return Roxen.http_status(404, "No such file.");
