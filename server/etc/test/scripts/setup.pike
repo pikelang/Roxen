@@ -5,6 +5,9 @@ void main(int argc, array argv)
   string self_test_dir = argv[1];
   string var_dir = argv[2];
   
+  if (string host = System.gethostname && System.gethostname())
+    werror("+++ Starting self tests on host %s +++\n", host);
+
   recursive_cp(combine_path(self_test_dir, "config"),
 	       combine_path(var_dir, "test_config"));
 	    
