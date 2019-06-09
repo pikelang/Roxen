@@ -1,0 +1,5 @@
+Modified files:
+  base_server/configuration.pike
+  etc/include/version.h
+  etc/modules/Variable.pmod/module.pmod
+  etc/test/scripts/setup.pike
