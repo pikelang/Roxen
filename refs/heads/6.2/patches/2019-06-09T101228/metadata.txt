@@ -1,0 +1,13 @@
+subject: Roxen 6.2: WebDAV fixes for Finder.
+from: d2f1b455f4cdaee63f396ec296a13cfaed2b68b5
+to: 7c87ab1f81c31fd899057dfc0cce1fc7cfd51eda
+originator: Erik Allemann
+depends: 2019-05-28T075825
+restart: true
+
+• Print hostname at start of test.
+
+• Don't special-case for .DS_Store since it causes error alerts during Finder
+file copies over WebDAV.
+
+• Variable MultipleChoice: Allow saving emtpy selection. [WS-489]
