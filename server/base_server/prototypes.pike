@@ -1,6 +1,6 @@
 #include <stat.h>
 #include <config.h>
-constant cvs_version="$Id: prototypes.pike,v 1.1 2001/01/03 06:00:56 per Exp $";
+constant cvs_version="$Id$";
 
 class Variable
 {
@@ -49,10 +49,10 @@ class BasicDefvar
   void set(string var, mixed value);
   int killvar(string var);
   void setvars( mapping (string:mixed) vars );
-  Variable defvar(string var, mixed value, 
-                  mapping|string|void|object name,
-                  int|void type, 
-                  mapping|string|void|object doc_str, 
+  Variable defvar(string var, mixed value,
+                  LocaleString|void name,
+                  int|void type,
+                  LocaleString|void doc_str,
                   mixed|void misc,
                   int|function|void not_in_config,
                   mapping|void option_translations);

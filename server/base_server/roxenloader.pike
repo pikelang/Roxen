@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.223 2001/01/03 06:00:37 per Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
