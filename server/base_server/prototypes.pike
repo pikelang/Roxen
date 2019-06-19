@@ -77,9 +77,9 @@ class BasicDefvar
   int killvar(string var);
   void setvars( mapping (string:mixed) vars );
   Variable defvar(string var, mixed value,
-                  mapping|string|void|object name,
+                  LocaleString|void name,
                   int|void type,
-                  mapping|string|void|object doc_str,
+                  LocaleString|void doc_str,
                   mixed|void misc,
                   int|function|void not_in_config,
                   mapping|void option_translations);
