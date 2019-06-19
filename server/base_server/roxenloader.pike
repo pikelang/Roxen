@@ -21,7 +21,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.215 2000/11/24 16:50:34 per Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -287,10 +287,10 @@ class BasicDefvar
   void set(string var, mixed value);
   int killvar(string var);
   void setvars( mapping (string:mixed) vars );
-  Variable defvar(string var, mixed value, 
-                  mapping|string|void|object name,
-                  int|void type, 
-                  mapping|string|void|object doc_str, 
+  Variable defvar(string var, mixed value,
+                  LocaleString|void name,
+                  int|void type,
+                  LocaleString|void doc_str,
                   mixed|void misc,
                   int|function|void not_in_config,
                   mapping|void option_translations);
