@@ -64,10 +64,17 @@ private constant all_properties_common = (<
   "DAV:displayname",
   "DAV:resourcetype",
   "DAV:supportedlock",
-  "DAV:iscollection",
-  "DAV:isfolder",
   "DAV:lockdiscovery",
   "DAV:supportedlock",
+  // Microsoft extensions from draft-ietf-dasl-protocol-00.txt
+  // Note that these hijack some of the DAV: namespace.
+  // See also https://greenbytes.de/tech/webdav/webdavfaq.html
+  "DAV:iscollection",
+  // Microsoft extensions from draft-hoppmann-collection-props-00.txt
+  // Note that these hijack some of the DAV: namespace.
+  // See also https://greenbytes.de/tech/webdav/webdavfaq.html
+  "DAV:isfolder",
+  "DAV:ishidden",
 >);
 
 private constant all_properties_file = all_properties_common + (<
@@ -363,14 +370,17 @@ string|array(SimpleNode)|mapping(string:mixed)
   case "DAV:defaultdocument":	// draft-hopmann-collection-props-00 1.3
     return "";
 
-    // Absence means not hidden.
-  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
-    return "0";
-
     // Absence means not a structured document.
   case "DAV:isstructureddocument": // draft-hopmann-collection-props-00 1.7
     return "0";
 #endif
+
+  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
+    if ((has_suffix(path, "/") && has_prefix(basename(dirname(path)), ".")) ||
+	has_prefix(basename(path), ".")) {
+      return "1";
+    }
+    return "0";
 
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
