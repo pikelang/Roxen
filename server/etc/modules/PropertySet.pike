@@ -96,34 +96,34 @@ private constant all_properties_dir = all_properties_common;
 //!
 //!   @string
 //!     @value "DAV:creationdate"
-//!	  RFC2518 13.1
+//!	  @rfc{2518:13.1@}
 //!
 //!     @value "DAV:displayname"
-//!	  RFC2518 13.2
+//!	  @rfc{2518:13.2@}
 //!
 //!     @value "DAV:getcontentlanguage"
-//!	  RFC2518 13.3
+//!	  @rfc{2518:13.3@}
 //!
 //!     @value "DAV:getcontentlength"
-//!	  RFC2518 13.4
+//!	  @rfc{2518:13.4@}
 //!
 //!     @value "DAV:getcontenttype"
-//!	  RFC2518 13.5
+//!	  @rfc{2518:13.5@}
 //!
 //!     @value "DAV:getetag"
-//!	  RFC2518 13.6
+//!	  @rfc{2518:13.6@}
 //!
 //!     @value "DAV:getlastmodified"
-//!	  RFC2518 13.7
+//!	  @rfc{2518:13.7@}
 //!
 //!     @value "DAV:lockdiscovery"
-//!       RFC2518 13.8
+//!       @rfc{2518:13.8@}
 //!
 //!     @value "DAV:resourcetype"
-//!	  RFC2518 13.9
+//!	  @rfc{2518:13.9@}
 //!
 //!     @value "DAV:supportedlock"
-//!	  RFC2518 13.11
+//!	  @rfc{2518:13.11@}
 //!
 //!     @value "DAV:defaultdocument"
 //!	  @tt{draft-hopmann-collection-props-00@} 1.3
@@ -273,8 +273,8 @@ multiset(string) query_all_properties()
 //! Returns the value of the specified property, or an error code
 //! mapping.
 //!
-//! The default implementation takes care of the most important RFC
-//! 2518 properties.
+//! The default implementation takes care of the most important
+//! @rfc{2518@} properties.
 //!
 //! @note
 //!   Returning a string is shorthand for returning an array
