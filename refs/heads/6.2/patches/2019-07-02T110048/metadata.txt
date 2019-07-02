@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Loader: Update prototype for defvar().
+from: 7c87ab1f81c31fd899057dfc0cce1fc7cfd51eda
+to: 7ea57f32d2d1e28d2faae42748a1cfc40ded52da
+originator: Jonas Lonnberg
+depends: 2019-06-09T101228
+restart: true
+
+• Loader: Update prototype for defvar().
