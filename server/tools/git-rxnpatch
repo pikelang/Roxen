@@ -1478,6 +1478,7 @@ void check_ident(string block, string path, string commit)
   if (sizeof(subtree_prefix || "")) {
     repo_path = subtree_prefix + repo_path;
   }
+  if (repo_path == "") repo_path = ".";
 
   string tree_info =
     (git("ls-tree", "--full-tree", "-z", commit, "--", repo_path)/"\0")[0];
@@ -1657,7 +1658,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
   }
   // Then the ones from the repository.
   foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1,
-	      "--", subtree_prefix)/"\0",
+	      "--", sizeof(subtree_prefix)?subtree_prefix:".")/"\0",
 	  string line) {
     if (!has_suffix(line, ".distignore")) continue;
     array(string) a = line/"\t";
