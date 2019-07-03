@@ -1639,6 +1639,7 @@ void make_patch(mapping(string:string|int|array(string)) options,
   // .distignore
   // NB: We only care about the recent .distignores.
   array(string) distignore_prefixes = ({});
+  array(string) distignore_glob_prefixes = ({});
   // First the branch-global distignore.
   foreach((git_cat_file("refs/heads/rxnpatch/rxnpatch",
 			"refs/heads/" + branch + "/distignore.txt", 1) || "") /
@@ -1646,6 +1647,10 @@ void make_patch(mapping(string:string|int|array(string)) options,
     path = (path/"#")[0];
     if (path == "") continue;
     if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+    if (has_value(path, "*") || has_value(path, "?")) {
+      distignore_glob_prefixes += ({ path });
+      continue;
+    }
     distignore_prefixes += ({ path });
   }
   // Then the ones from the repository.
@@ -1663,10 +1668,15 @@ void make_patch(mapping(string:string|int|array(string)) options,
       path = (path/"#")[0];
       if (path == "") continue;
       if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
+      if (has_value(path, "*") || has_value(path, "?")) {
+	distignore_glob_prefixes += ({ combine_path(dir, path) });
+	continue;
+      }
       distignore_prefixes += ({ combine_path(dir, path) });
     }
   }
   distignore_prefixes = Array.uniq(distignore_prefixes);
+  distignore_glob_prefixes = Array.uniq(distignore_glob_prefixes);
 
   // Set up suitable diff options, so that we can expand Id-strings.
   if (!git_try("config", "diff.expand-ident.textconv")) {
@@ -1748,6 +1758,12 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	string path = header->b[0];
 	foreach(distignore_prefixes, string prefix) {
 	  if (has_prefix(path, prefix)) {
+	    path = UNDEFINED;
+	    break;
+	  }
+	}
+	foreach(distignore_glob_prefixes, string glob_prefix) {
+	  if (glob(glob_prefix, path)) {
 	    path = UNDEFINED;
 	    break;
 	  }
