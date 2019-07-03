@@ -1762,10 +1762,12 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	    break;
 	  }
 	}
-	foreach(distignore_glob_prefixes, string glob_prefix) {
-	  if (glob(glob_prefix, path)) {
-	    path = UNDEFINED;
-	    break;
+	if (path) {
+	  foreach(distignore_glob_prefixes, string glob_prefix) {
+	    if (glob(glob_prefix, path)) {
+	      path = UNDEFINED;
+	      break;
+	    }
 	  }
 	}
 	// Filter git and distmaker control files as well.
