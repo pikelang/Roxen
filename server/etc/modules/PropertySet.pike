@@ -64,10 +64,19 @@ private constant all_properties_common = (<
   "DAV:displayname",
   "DAV:resourcetype",
   "DAV:supportedlock",
-  "DAV:iscollection",
-  "DAV:isfolder",
   "DAV:lockdiscovery",
   "DAV:supportedlock",
+
+  // Microsoft extension from draft-ietf-dasl-protocol-00.txt
+  // Note that it hijacks some of the DAV: namespace.
+  // See also https://greenbytes.de/tech/webdav/webdavfaq.html
+  "DAV:iscollection",
+
+  // Microsoft extensions from draft-hoppmann-collection-props-00.txt
+  // Note that these hijack some of the DAV: namespace.
+  // See also https://greenbytes.de/tech/webdav/webdavfaq.html
+  "DAV:isfolder",
+  "DAV:ishidden",
 >);
 
 private constant all_properties_file = all_properties_common + (<
@@ -89,34 +98,34 @@ private constant all_properties_dir = all_properties_common;
 //!
 //!   @string
 //!     @value "DAV:creationdate"
-//!	  RFC2518 13.1
+//!	  @rfc{2518:13.1@}
 //!
 //!     @value "DAV:displayname"
-//!	  RFC2518 13.2
+//!	  @rfc{2518:13.2@}
 //!
 //!     @value "DAV:getcontentlanguage"
-//!	  RFC2518 13.3
+//!	  @rfc{2518:13.3@}
 //!
 //!     @value "DAV:getcontentlength"
-//!	  RFC2518 13.4
+//!	  @rfc{2518:13.4@}
 //!
 //!     @value "DAV:getcontenttype"
-//!	  RFC2518 13.5
+//!	  @rfc{2518:13.5@}
 //!
 //!     @value "DAV:getetag"
-//!	  RFC2518 13.6
+//!	  @rfc{2518:13.6@}
 //!
 //!     @value "DAV:getlastmodified"
-//!	  RFC2518 13.7
+//!	  @rfc{2518:13.7@}
 //!
 //!     @value "DAV:lockdiscovery"
-//!       RFC2518 13.8
+//!       @rfc{2518:13.8@}
 //!
 //!     @value "DAV:resourcetype"
-//!	  RFC2518 13.9
+//!	  @rfc{2518:13.9@}
 //!
 //!     @value "DAV:supportedlock"
-//!	  RFC2518 13.11
+//!	  @rfc{2518:13.11@}
 //!
 //!     @value "DAV:defaultdocument"
 //!	  @tt{draft-hopmann-collection-props-00@} 1.3
@@ -266,8 +275,8 @@ multiset(string) query_all_properties()
 //! Returns the value of the specified property, or an error code
 //! mapping.
 //!
-//! The default implementation takes care of the most important RFC
-//! 2518 properties.
+//! The default implementation takes care of the most important
+//! @rfc{2518@} properties.
 //!
 //! @note
 //!   Returning a string is shorthand for returning an array
@@ -363,14 +372,17 @@ string|array(SimpleNode)|mapping(string:mixed)
   case "DAV:defaultdocument":	// draft-hopmann-collection-props-00 1.3
     return "";
 
-    // Absence means not hidden.
-  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
-    return "0";
-
     // Absence means not a structured document.
   case "DAV:isstructureddocument": // draft-hopmann-collection-props-00 1.7
     return "0";
 #endif
+
+  case "DAV:ishidden":	// draft-hopmann-collection-props-00 1.6
+    if ((has_suffix(path, "/") && has_prefix(basename(dirname(path)), ".")) ||
+	has_prefix(basename(path), ".")) {
+      return "1";
+    }
+    return "0";
 
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
