@@ -66,10 +66,12 @@ private constant all_properties_common = (<
   "DAV:supportedlock",
   "DAV:lockdiscovery",
   "DAV:supportedlock",
-  // Microsoft extensions from draft-ietf-dasl-protocol-00.txt
-  // Note that these hijack some of the DAV: namespace.
+
+  // Microsoft extension from draft-ietf-dasl-protocol-00.txt
+  // Note that it hijacks some of the DAV: namespace.
   // See also https://greenbytes.de/tech/webdav/webdavfaq.html
   "DAV:iscollection",
+
   // Microsoft extensions from draft-hoppmann-collection-props-00.txt
   // Note that these hijack some of the DAV: namespace.
   // See also https://greenbytes.de/tech/webdav/webdavfaq.html
