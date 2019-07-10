@@ -1535,6 +1535,8 @@ void make_patch(mapping(string:string|int|array(string)) options,
 			"--dst-prefix=" + path_prefix, "--no-ext-diff",
 			"--no-color", "--textconv", "--no-renames",
 			"--full-index",
+			// NB: Neither "--relative=." nor "--relative=/"
+			//     work for our purposes.
 			"--relative=" + subtree_prefix,
 			tail_sha1 + ".." + head_sha1);
   string diff = "";
