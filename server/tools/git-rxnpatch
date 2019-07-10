@@ -1641,15 +1641,18 @@ void make_patch(mapping(string:string|int|array(string)) options,
 
   // .distignore
   // NB: We only care about the recent .distignores.
-  array(string) distignore_prefixes = ({});
+  array(string) distignore_globs = ({});
   // First the branch-global distignore.
   foreach((git_cat_file("refs/heads/rxnpatch/rxnpatch",
 			"refs/heads/" + branch + "/distignore.txt", 1) || "") /
 	  "\n" - ({""}), string path) {
     path = (path/"#")[0];
     if (path == "") continue;
-    if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
-    distignore_prefixes += ({ path });
+    distignore_globs += ({ path });
+    if (!has_suffix(path, "*")) {
+      // Handle ignoring of directories.
+      distignore_globs += ({ path + "/*" });
+    }
   }
   // Then the ones from the repository.
   foreach(git("ls-tree", "--full-tree", "-r", "-z", head_sha1,
@@ -1665,11 +1668,14 @@ void make_patch(mapping(string:string|int|array(string)) options,
     foreach(distignore/"\n" - ({""}), string path) {
       path = (path/"#")[0];
       if (path == "") continue;
-      if (has_suffix(path, "*")) path = path[..sizeof(path)-2];
-      distignore_prefixes += ({ combine_path(dir, path) });
+      distignore_globs += ({ combine_path(dir, path) });
+      if (!has_suffix(path, "*")) {
+	// Handle ignoring of directories.
+	distignore_globs += ({ combine_path(dir, path + "/*") });
+      }
     }
   }
-  distignore_prefixes = Array.uniq(distignore_prefixes);
+  distignore_globs = Array.uniq(distignore_globs);
 
   // Set up suitable diff options, so that we can expand Id-strings.
   if (!git_try("config", "diff.expand-ident.textconv")) {
@@ -1751,8 +1757,14 @@ void make_patch(mapping(string:string|int|array(string)) options,
 	}
 	// Perform .distignore filtering.
 	string path = header->b[0];
-	foreach(distignore_prefixes, string prefix) {
-	  if (has_prefix(path, prefix)) {
+	foreach(distignore_globs, string glob_prefix) {
+	  // NB: This is NOT at 100% fidelity, as the glob symbols "*"
+	  //     and "?" here will match "/" and the pattern thus will
+	  //     be matched against multiple path segments, while in
+	  //     distignore.pike the pattern is only matched against
+	  //     a single path segment.
+	  //     This is unlikely to cause problems in practise.
+	  if (glob(glob_prefix, path)) {
 	    path = UNDEFINED;
 	    break;
 	  }
