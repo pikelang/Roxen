@@ -320,7 +320,6 @@ worldmap binary
 /server/modules/security/userdb_sql.pike foreign_ident
 /server/modules/security/userdb_system.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
-/server/modules/tags/additional_rxml.pike foreign_ident
 /server/modules/tags/awizard.pike foreign_ident
 /server/modules/tags/captcha.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
@@ -331,7 +330,6 @@ worldmap binary
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
-/server/modules/tags/insert_cached_href.pike foreign_ident
 /server/modules/tags/kerberos.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/obox.pike foreign_ident
