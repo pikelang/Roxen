@@ -16,6 +16,8 @@ LocaleString module_doc  = LOCALE(2, "This module contains the RXML tag \"insert
 				     "cached-href\". Useful when implementing e.g."
 				     " RSS syndication.");
 
+//#define OUTGOING_PROXY_DEBUG
+
 #if DEBUG_INSERT_CACHED_HREF
 #define DWRITE(x)	report_debug("INSERT_CACHED_HREF: " + x + "\n")
 #else
@@ -965,7 +967,11 @@ class HTTPClient {
     start_time = time();
 
 #ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
+    if (roxen.query("use_proxy") && sizeof(roxen.query("proxy_url"))) {
+#ifdef OUTGOING_PROXY_DEBUG
+      werror("Insert cached href: Using proxy: %O to fetch %O...\n",
+	     roxen.query("proxy_url"), url);
+#endif
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
 					     roxen.query("proxy_username"), 
 					     roxen.query("proxy_password"),
