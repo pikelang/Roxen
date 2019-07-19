@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.32 2011/04/28 09:17:06 liin Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -15,6 +15,8 @@ LocaleString module_name = LOCALE(1, "Tags: Insert cached href");
 LocaleString module_doc  = LOCALE(2, "This module contains the RXML tag \"insert "
 				     "cached-href\". Useful when implementing e.g."
 				     " RSS syndication.");
+
+//#define OUTGOING_PROXY_DEBUG
 
 #if DEBUG_INSERT_CACHED_HREF
 #define DWRITE(x)	report_debug("INSERT_CACHED_HREF: " + x + "\n")
@@ -876,7 +878,11 @@ class HTTPClient {
     start_time = time();
 
 #ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
+    if (roxen.query("use_proxy") && sizeof(roxen.query("proxy_url"))) {
+#ifdef OUTGOING_PROXY_DEBUG
+      werror("Insert cached href: Using proxy: %O to fetch %O...\n",
+	     roxen.query("proxy_url"), url);
+#endif
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
 					     roxen.query("proxy_username"), 
 					     roxen.query("proxy_password"),

@@ -6,11 +6,13 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.55 2011/04/28 09:16:17 liin Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
+
+//#define OUTGOING_PROXY_DEBUG
 
 void create() {
   defvar("insert_href",
@@ -178,7 +180,11 @@ class AsyncHTTPClient {
     con->set_callbacks(req_ok, req_fail);
 
 #ifdef ENABLE_OUTGOING_PROXY
-    if (roxen.query("use_proxy")) {
+    if (roxen.query("use_proxy") && sizeof(roxen.query("proxy_url"))) {
+#ifdef OUTGOING_PROXY_DEBUG
+      werror("Insert href: Using proxy: %O to fetch %O...\n",
+	     roxen.query("proxy_url"), url);
+#endif
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
 					     roxen.query("proxy_username"), 
 					     roxen.query("proxy_password"),
