@@ -1,0 +1,4 @@
+Modified files:
+  modules/tags/additional_rxml.pike
+  modules/tags/insert_cached_href.pike
+  tools/git-rxnpatch
