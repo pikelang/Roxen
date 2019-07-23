@@ -1,0 +1,39 @@
+subject: Roxen 6.1: Fixes to rxnpatch and OUTGOING_PROXY
+from: 79fd3759ffbb152fb2cd3ac314507db5a15cb68a
+to: e84747643aab20e69e17ecfe9f399978cf00551e
+originator: Erik Allemann
+depends: 2019-05-28T080228
+restart: true
+
+• Diagnostics: Added OUTGOING_PROXY_DEBUG.
+
+Also added some trivial validation of the proxy url before using it.
+
+Fixes [WS-525].
+
+• git-rxnpatch: Added a note about use of "git diff --relative=".
+
+Fixes QA issue from [WS-522]/[WS-520].
+
+• git-rxnpatch: Always use globs for distignore filtering.
+
+Improves compatibility with distignore.pike.
+
+Fixes QA issue from [WS-518]/[WS-516].
+
+• git-rxnpatch; Use "." to refer to the current directory.
+
+Fixes "fatal: empty string is not a valid pathspec. please
+use . instead if you meant to match all paths".
+
+Fixes [WS-520].
+
+• git-rxnpatch: More distignore fixes.
+
+• git-rxnpatch: Support globs in .distignore files.
+
+Fixes [WS-516].
+
+• git-rxnpatch: Support distignore files outside the repository.
+
+Fixes [WS-433].
