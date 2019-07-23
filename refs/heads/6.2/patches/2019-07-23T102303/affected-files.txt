@@ -1,0 +1,6 @@
+Modified files:
+  etc/include/version.h
+  etc/modules/PropertySet.pike
+  modules/tags/additional_rxml.pike
+  modules/tags/insert_cached_href.pike
+  tools/git-rxnpatch
