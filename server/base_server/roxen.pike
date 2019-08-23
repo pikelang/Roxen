@@ -2680,7 +2680,9 @@ class StartTLSProtocol
           ({ keypair_metadata->key->pem_path });
         paths = Array.uniq(paths);
         paths = replace(paths, 0, "__LOST__");
+	object privs = Privs("Scanning directory for pem files.");
         paths = map(paths, lfile_path);
+	privs = 0;
         res += ({
           sprintf("<td style='vertical-align:top'>%s</td><td>%s</td>",
                   LOC_C(1138, "Path(s)"),
