@@ -1,0 +1,12 @@
+subject: Roxen 6.2: Fixes for finding certificate files.
+from: 575dc7e34581293a3514b12d86e8f135d1d9944f
+to: 1fc3c24aab53ff2e8507ea281b1a5486d42374e9
+originator: Erik Allemann
+depends: 2019-07-23T102303
+restart: true
+
+• CertificateKeyChoiceVariable: Do not lose protected files.
+
+Paths to certificate files in directories where the low-privilege
+user did not have read permission were displayed as "Lost file".
+The privileges are now raised during the path scan.
