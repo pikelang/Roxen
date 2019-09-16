@@ -22,42 +22,39 @@
   lambda () {                                                           \
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);               \
     array args__ = ({len__, #A, 0, len__, #B, 0});                      \
-    cpp_test_true (__FILE__, __LINE__,                                  \
+    return cpp_test_true (__FILE__, __LINE__,                           \
                    lambda() {                                           \
                      return equal (args__[2] = (A), args__[5] = (B));   \
                    },                                                   \
                    "%-*s  (is %O) equals\n"                             \
                    "%-*s  (is %O)?",                                    \
                    args__);                                             \
-    args__ = 0;                                                         \
   }()
 
 #define TEST_NOT_EQUAL(A, B)                                            \
   lambda () {                                                           \
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);               \
     array args__ = ({len__, #A, 0, len__, #B, 0});                      \
-    cpp_test_true (__FILE__, __LINE__,                                  \
+    return cpp_test_true (__FILE__, __LINE__,                           \
                    lambda() {                                           \
                      return !equal (args__[2] = (A), args__[5] = (B));  \
                    },                                                   \
                    "%-*s  (is %O) does not equal\n"                     \
                    "%-*s  (is %O)?",                                    \
                    args__);                                             \
-    args__ = 0;                                                         \
   }()
 
 #define TEST_CMP(A, OP, B)                                              \
   lambda () {                                                           \
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);               \
     array args__ = ({len__, #A, 0, len__, #B, 0});                      \
-    cpp_test_true (__FILE__, __LINE__,                                  \
+    return cpp_test_true (__FILE__, __LINE__,                           \
                    lambda() {                                           \
                      return (args__[2] = (A)) OP (args__[5] = (B));     \
                    },                                                   \
                    "%-*s  (is %O) " #OP "\n"                            \
                    "%-*s  (is %O)?",                                    \
                    args__);                                             \
-    args__ = 0;                                                         \
   }()
 
 #define TEST_ERROR(CODE, ARGS...)                                       \
