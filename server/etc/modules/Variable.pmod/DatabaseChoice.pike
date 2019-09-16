@@ -32,4 +32,3 @@ protected void create(string default_value, void|int flags,
 {
   ::create( default_value, ({}), flags, std_name, std_doc );
 }
-}
