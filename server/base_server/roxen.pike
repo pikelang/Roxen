@@ -4004,9 +4004,12 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("store %O (%d bytes)\n", id, strlen(data) );
 #endif
-    if (sizeof(data) > 134217728) { // 134217728 = 2^27
+    int max_data_size_in_mb = [int] query("image_cache_max_entry_size");
+    int max_data_size = max_data_size_in_mb * 1024 * 1024;
+    if (sizeof(data) > max_data_size) {
       RXML.run_error("Generated image data (%f MB) exceeds max limit of "
-                     "128 MB.\n", (float) sizeof(data) / 1024 / 1024 );
+                     "%d MB.\n", (float) sizeof(data) / 1024 / 1024,
+                     max_data_size_in_mb);
     }
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
