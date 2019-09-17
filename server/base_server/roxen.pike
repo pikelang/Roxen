@@ -4007,9 +4007,17 @@ class ImageCache
     int max_data_size_in_mb = [int] query("image_cache_max_entry_size");
     int max_data_size = max_data_size_in_mb * 1024 * 1024;
     if (sizeof(data) > max_data_size) {
-      RXML.run_error("Generated image data (%f MB) exceeds max limit of "
-                     "%d MB.\n", (float) sizeof(data) / 1024 / 1024,
-                     max_data_size_in_mb);
+      string msg = sprintf("Generated image data (%f MB) exceeds max limit "
+                           "of %d MB.\n", (float) sizeof(data) / 1024 / 1024,
+                           max_data_size_in_mb);
+      if (RXML_CONTEXT) {
+        RXML.run_error(msg);
+      } else {
+        // Unless ARG_CACHE_DEBUG is defined, the error we throw below will be
+        // caught but no message will be logged. Thus we both log and throw.
+        report_error(msg);
+        error(msg);
+      }
     }
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
