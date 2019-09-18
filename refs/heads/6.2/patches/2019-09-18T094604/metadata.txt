@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Testsuite fix.
+from: 1fc3c24aab53ff2e8507ea281b1a5486d42374e9
+to: 0deb52823fbb6513da630e6d89a4ae5e1e07cbfb
+originator: Jonas Lonnberg
+depends: 2019-08-28T112713
+restart: true
+
+• testsuite.h: Added some missing return statements.
