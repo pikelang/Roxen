@@ -1,7 +1,7 @@
 
 inherit .StringChoice;
 constant type = "TableChoice";
-Variable db;
+.Variable db;
 
 array(string) get_choice_list( )
 {
