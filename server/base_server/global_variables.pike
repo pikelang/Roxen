@@ -1091,6 +1091,12 @@ the Roxen instance of the MySQL server).</p>"));
 		"in the configuration files. Only useful if you read or "
 		"edit the config files directly."));
 
+  defvar("image_cache_max_entry_size",
+    Variable.Int(128, 0,
+      LOCALE(0, "Image Cache Max Entry Size (MB)"),
+      LOCALE(0, "Max size in MB per entry in the image cache.")
+    )).set_range(16, 2048);
+
 #ifdef SMTP_RELAY
   // SMTP stuff
 

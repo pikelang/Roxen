@@ -4390,12 +4390,20 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("store %O (%d bytes)\n", id, strlen(data) );
 #endif
-    // Since 134217728 (2^27) is the largest number we can give as argument to
-    // the SQL-function "SPACE()", we cannot store images larger than 2^27 bytes
-    // even though the size of the data-column allows 4294967295 bytes.
-    if (sizeof(data) > 134217728) { // 134217728 = 2^27
-      RXML.run_error("Generated image data (%f MB) exceeds max limit of "
-                     "128 MB.\n", (float) sizeof(data) / 1024 / 1024 );
+    int max_data_size_in_mb = [int] query("image_cache_max_entry_size");
+    int max_data_size = max_data_size_in_mb * 1024 * 1024;
+    if (sizeof(data) > max_data_size) {
+      string msg = sprintf("Generated image data (%f MB) exceeds max limit "
+                           "of %d MB.\n", (float) sizeof(data) / 1024 / 1024,
+                           max_data_size_in_mb);
+      if (RXML_CONTEXT) {
+        RXML.run_error(msg);
+      } else {
+        // Unless ARG_CACHE_DEBUG is defined, the error we throw below will be
+        // caught but no message will be logged. Thus we both log and throw.
+        report_error(msg);
+        error(msg);
+      }
     }
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
@@ -4418,20 +4426,30 @@ class ImageCache
       array(string) a = data/(8.0*1024*1024);
       // NB: We clear the meta field to ensure that the entry
       //     is invalid while we perform the insert.
+      int data_size = sizeof(data);
+      int allocate_max = 16777216; // 16 MB (16*1024*1024)
+      if (data_size > allocate_max) { data_size = allocate_max; }
       QUERY("REPLACE INTO " + name +
 	    " (id,size,atime,meta,data) VALUES"
 	    " (%s,%d,UNIX_TIMESTAMP(),'',SPACE(%d))",
-	    id, strlen(data)+strlen(meta_data), sizeof(data));
+	    id, strlen(data)+strlen(meta_data), data_size);
       int pos;
-      foreach(a, string frag) {
+      for (int i = 0; i < sizeof(a); i++) {
 #ifdef ARG_CACHE_DEBUG
 	werror("Writing fragment at position %d for %s.\n", pos, id);
 #endif
+        string frag = a[i];
+        if (data_size > allocate_max && i < (sizeof(a)-1)) {
+          frag += " "; // Adding empty postion where we can insert at next time
+        }
 	QUERY("UPDATE " + name +
 	      " SET data = INSERT(data, %d, %d, "MYSQL__BINARY "%s)"
 	      " WHERE id = %s",
 	      pos+1, sizeof(frag), frag, id);
 	pos += sizeof(frag);
+        if (data_size > allocate_max) {
+          pos -= 1;
+        }
       }
       /* Set the meta data field to a valid value to enable the entry. */
 #ifdef ARG_CACHE_DEBUG
