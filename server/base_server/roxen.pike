@@ -3987,6 +3987,9 @@ class ImageCache
 #endif
     // Avoid throwing and error if the same image is rendered twice.
     mixed err = catch(store_data( name, data, meta ));
+    if (objectp (err) && err->is_RXML_Backtrace && RXML_CONTEXT) {
+      throw (err);
+    }
 #ifdef ARG_CACHE_DEBUG
     if (err) {
       werror("store_data failed with:\n"
@@ -4001,6 +4004,13 @@ class ImageCache
 #ifdef ARG_CACHE_DEBUG
     werror("store %O (%d bytes)\n", id, strlen(data) );
 #endif
+    // Since 134217728 (2^27) is the largest number we can give as argument to
+    // the SQL-function "SPACE()", we cannot store images larger than 2^27 bytes
+    // even though the size of the data-column allows 4294967295 bytes.
+    if (sizeof(data) > 134217728) { // 134217728 = 2^27
+      RXML.run_error("Generated image data (%f MB) exceeds max limit of "
+                     "128 MB.\n", (float) sizeof(data) / 1024 / 1024 );
+    }
     meta_cache_insert( id, meta );
     string meta_data = encode_value( meta );
 #ifdef ARG_CACHE_DEBUG
@@ -4317,7 +4327,17 @@ class ImageCache
   	if (mapping res = draw( na, id ))
   	  return res;
       })) {
-	if (objectp (err) && err->is_RXML_Backtrace && !RXML_CONTEXT) {
+#ifdef ARG_CACHE_DEBUG
+	werror("draw() failed with error: %s\n",
+	       describe_backtrace(err));
+#endif
+	if (objectp (err) && err->is_RXML_Backtrace) {
+          if (RXML_CONTEXT) {
+#ifdef ARG_CACHE_DEBUG
+            werror("Rethrowing error...\n");
+#endif
+            throw (err);
+          }
 	  // If we get an rxml error and there's no rxml context then
 	  // we're called from a direct request to the image cache.
 	  // The error ought to have been reported in the page that
@@ -4342,13 +4362,17 @@ class ImageCache
 	    return 0;
 	  }
 	}
+#ifdef ARG_CACHE_DEBUG
+	werror("Rethrowing error...\n");
+#endif
 	throw (err);
       }
       if( !(res = restore( na,id )) ) {
-	error("Draw callback %O did not generate any data.\n"
-	      "na: %O\n"
-	      "id: %O\n",
-	      draw_function, na, id);
+	report_error("Draw callback %O did not generate any data.\n"
+		     "na: %O\n"
+		     "id: %O\n",
+		     draw_function, na, id);
+	return 0;
       }
     }
     res->stat = ({ 0, 0, 0, 900000000, 0, 0, 0, 0, 0 });
@@ -4560,7 +4584,7 @@ class ImageCache
     flush(now - 7 * 3600 * 24);
   }
   
-  void create( string id, function draw_func )
+  protected void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
   //!
@@ -4590,7 +4614,7 @@ class ImageCache
     background_run( 10, do_cleanup );
   }
 
-  void destroy()
+  protected void destroy()
   {
     if (mixed err = catch(sync_meta())) {
       report_warning("Failed to sync cached atimes for "+name+"\n");
