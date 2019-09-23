@@ -1,0 +1,12 @@
+subject: Roxen 6.1: Image cache improvement.
+from: e84747643aab20e69e17ecfe9f399978cf00551e
+to: 3fd2ab377b2de6e9e52691ef59cafa6b8e370e65
+originator: Erik Allemann
+depends: 2019-07-23T102548
+restart: true
+
+• Image cache: Log info if generated image data is too big for image cache. [WS-527]
+
+• Image cache: Made max data size configurable. [WS-527]
+
+• Image cache: Support data larger than 16 MB. [WS-527]
