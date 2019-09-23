@@ -1,0 +1,7 @@
+Added files:
+  etc/modules/Variable.pmod/DatabaseChoice.pike
+  etc/modules/Variable.pmod/TableChoice.pike
+Modified files:
+  base_server/global_variables.pike
+  base_server/roxen.pike
+  etc/modules/Variable.pmod/module.pmod
