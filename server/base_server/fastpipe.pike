@@ -25,8 +25,15 @@ private void sendfile_done(int written, array(mixed) args)
   headers=({});
   file=0;
   flen=-1;
-  if( done_callback ) done_callback(@callback_args);
+  // NB: Throwing of errors from sendfile-done callbacks should
+  //     be avoided, due to a bug in the pike backend. [WS-545]
+  mixed err = catch {
+      if( done_callback ) done_callback(@callback_args);
+    };
   done_callback=0; callback_args=0;
+  if (err) {
+    master()->handle_error(err);
+  }
 }
 
 void output (Stdio.File fd)
