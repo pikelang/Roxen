@@ -188,9 +188,14 @@ class AsyncHTTPClient {
       werror("Insert href: Using proxy: %O to fetch %O...\n",
 	     roxen.query("proxy_url"), url);
 #endif
+      string proxy_user = roxen.query("proxy_username");
+      string proxy_pass = roxen.query("proxy_password");
+      // Do not send any Proxy-Authorization header when
+      // empty username and password. [WS-550]
+      if (!sizeof(proxy_user)) proxy_user = UNDEFINED;
+      if (!sizeof(proxy_pass)) proxy_pass = UNDEFINED;
       Protocols.HTTP.do_async_proxied_method(roxen.query("proxy_url"),
-					     roxen.query("proxy_username"), 
-					     roxen.query("proxy_password"),
+					     proxy_user, proxy_pass,
 					     method, url, 0,
 					     request_headers, con,
 					     req_data);
