@@ -2,7 +2,7 @@
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 // Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.6 2000/08/13 13:54:21 per Exp $";
+constant cvs_version="$Id$";
 
 private array(string) headers=({});
 private Stdio.File file;
@@ -23,8 +23,15 @@ private void sendfile_done(int written, function callback, array(mixed) args)
   headers=({});
   file=0;
   flen=-1;
-  if( done_callback ) done_callback(@callback_args);
+  // NB: Throwing of errors from sendfile-done callbacks should
+  //     be avoided, due to a bug in the pike backend. [WS-545]
+  mixed err = catch {
+      if( done_callback ) done_callback(@callback_args);
+    };
   done_callback=0; callback_args=0;
+  if (err) {
+    master()->handle_error(err);
+  }
 }
 
 void output (Stdio.File fd)

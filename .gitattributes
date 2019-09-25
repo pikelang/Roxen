@@ -38,7 +38,6 @@ nn binary
 /server/base_server/cache.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
-/server/base_server/fastpipe.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
 /server/base_server/global_variables.pike foreign_ident
 /server/base_server/highlight_pike.pike foreign_ident
