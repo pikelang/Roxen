@@ -5772,13 +5772,16 @@ low."))->add_changed_callback(lambda(object v)
 #"<nooutput><emit source=values scope=ef variable='modvar.site.404-files'>
    <if not='' variable='ef.value is '>
      <set variable='var.base' value=''/>
-     <emit source='path'>
-       <append variable='var.base' value='/&_.name;'/>
-       <set variable='var.404' value='&var.base;/&ef.value;'/>
-       <if exists='&var.404;'>
-         <set variable='var.errfile' from='var.404'/>
-       </if>
-     </emit>
+     <catch>
+       <emit source='path'>
+         <if not='' exists='/&_.name;'><throw/></if><!-- Break the loop. -->
+         <append variable='var.base' value='/&_.name;'/>
+         <set variable='var.404' value='&var.base;/&ef.value;'/>
+         <if exists='&var.404;'>
+           <set variable='var.errfile' from='var.404'/>
+         </if>
+       </emit>
+     </catch>
    </if>
 </emit>
 </nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
@@ -5866,13 +5869,16 @@ low."))->add_changed_callback(lambda(object v)
 #"<nooutput><emit source=values scope=ef variable='modvar.site.401-files'>
    <if not='' variable='ef.value is '>
      <set variable='var.base' value=''/>
-     <emit source='path'>
-       <append variable='var.base' value='/&_.name;'/>
-       <set variable='var.401' value='&var.base;/&ef.value;'/>
-       <if exists='&var.401;'>
-         <set variable='var.errfile' from='var.401'/>
-       </if>
-     </emit>
+     <catch>
+       <emit source='path' existing-only='yes'>
+         <if not='' exists='/&_.name;'><throw/></if><!-- Break the loop. -->
+         <append variable='var.base' value='/&_.name;'/>
+         <set variable='var.401' value='&var.base;/&ef.value;'/>
+         <if exists='&var.401;'>
+           <set variable='var.errfile' from='var.401'/>
+         </if>
+       </emit>
+     </catch>
    </if>
 </emit>
 </nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
