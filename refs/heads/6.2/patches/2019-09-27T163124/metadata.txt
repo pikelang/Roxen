@@ -1,0 +1,24 @@
+subject: Roxen 6.2: 401/404 directory scan fixes, emit, Fastpipe
+from: 382af620f6819fc239dcbaa7c0c36dbe171ac84a
+to: fb754e6a083ceaf396469413e7040b35a1fd00c3
+originator: Administrator
+depends: 2019-09-23T114746
+restart: true
+
+• HTTP: Break 401/404 directory scan after first missing directory.
+
+Alleviates a denial of service attack.
+
+Fixes [WS-553] and most of [CMS-652].
+
+• RXML: Support throwing of the empty string from <throw/>.
+
+Fixes [WS-554].
+
+• Fastpipe: Avoid throwing errors from sendfile_done().
+
+sendfile_done() is called from a backend callback (not to be confused
+with a call_out), at a point where an error may cause the backend to
+enter an inconsistent state (exec_thread not being reset to NULL).
+
+Fixes [WS-545].
