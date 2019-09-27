@@ -3484,7 +3484,7 @@ string simpletag_trimlines( string tag_name, mapping args,
 
 void container_throw( string t, mapping m, string c, RequestID id)
 {
-  if(c[-1]!='\n') c+="\n";
+  if (sizeof(c) && (c[-1] != '\n')) c += "\n";
   throw( class(string tag_throw) {}( c ) );
 }
 
