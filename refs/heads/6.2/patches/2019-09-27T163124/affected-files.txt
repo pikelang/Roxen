@@ -1,0 +1,4 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/fastpipe.pike
+  modules/tags/rxmltags.pike
