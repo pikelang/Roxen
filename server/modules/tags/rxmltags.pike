@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.596 2009/04/01 14:11:48 jonasw Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2793,7 +2793,7 @@ string simpletag_trimlines( string tag_name, mapping args,
 
 void container_throw( string t, mapping m, string c, RequestID id)
 {
-  if(c[-1]!='\n') c+="\n";
+  if (sizeof(c) && (c[-1] != '\n')) c += "\n";
   throw( class(string tag_throw) {}( c ) );
 }
 
