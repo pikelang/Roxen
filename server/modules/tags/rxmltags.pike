@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.224 2001/04/23 15:55:05 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3611,7 +3611,26 @@ class TagPathplugin
   constant name = "emit";
   constant plugin_name = "path";
 
-  array get_dataset(mapping m, RequestID id)
+  class PathResult(array(string) segments)
+  {
+    protected int pos;
+    protected string val = "";
+
+    protected string really_get_row()
+    {
+      if (pos >= sizeof(segments)) return UNDEFINED;
+      if (has_suffix(val, "/")) {
+	// NB: Typically only for the segment after the root.
+	val += segments[pos];
+      } else {
+	val += "/" + segments[pos];
+      }
+      pos++;
+      return val;
+    }
+  }
+
+  array|EmitObject get_dataset(mapping m, RequestID id)
   {
     string fp = "";
     array res = ({});
@@ -3625,6 +3644,13 @@ class TagPathplugin
       q = q[(int)m->skip..];
     if( m["skip-end"] )
       q = q[..sizeof(q)-((int)m["skip-end"]+1)];
+
+    if ((sizeof(q) > 16) || (sizeof(p) > 1024)) {
+      // Avoid O(n^2) memory consumption,
+      // (and O(n^3) time consumption).
+      return PathResult(q);
+    }
+
     foreach( q, string elem )
     {
       fp += "/" + elem;
