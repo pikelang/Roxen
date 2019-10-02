@@ -7964,8 +7964,30 @@ class TagPathplugin
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "path";
+  inherit "emit_object";
 
-  array get_dataset(mapping m, RequestID id)
+  class PathResult(array(string) segments)
+  {
+    inherit EmitObject;
+
+    protected int pos;
+    protected string val = "";
+
+    protected mapping(string:mixed) really_get_row()
+    {
+      if (pos >= sizeof(segments)) return UNDEFINED;
+      if (has_suffix(val, "/")) {
+	// NB: Typically only for the segment after the root.
+	val += segments[pos];
+      } else {
+	val += "/" + segments[pos];
+      }
+      pos++;
+      return (["name":segments[pos-1], "path":val]);
+    }
+  }
+
+  array|EmitObject get_dataset(mapping m, RequestID id)
   {
     string fp = "";
     array res = ({});
@@ -7979,6 +8001,13 @@ class TagPathplugin
       q = q[(int)m->skip..];
     if( m["skip-end"] )
       q = q[..sizeof(q)-((int)m["skip-end"]+1)];
+
+    if ((sizeof(q) > 16) || (sizeof(p) > 1024)) {
+      // Avoid O(n^2) memory consumption,
+      // (and O(n^3) time consumption).
+      return PathResult(q);
+    }
+
     foreach( q, string elem )
     {
       fp += "/" + elem;
