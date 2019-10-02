@@ -1945,16 +1945,27 @@ mixed get_value_from_file(string path, string index, void|string pre)
 //!   Maximum number of files under the path.
 //!   Zero to disable the limit.
 //!
+//! @param quarantine
+//!   If provided, this should point to a directory where files are moved
+//!   to instead of deleted. Set to zero to disables the quarantine.
+//!
+//! @param cleanup_parent_dirs
+//!   Flag which enables removal of empty parent directories when a file is
+//!   deleted or quarantined. The removal continues up to but not including
+//!   the starting path as defined in @[path].
+//!
 //! @returns
 //!   Returns a roxen.FSGarbWrapper object. The garbage collector
 //!   will be removed when this object is destructed (eg via
 //!   refcount-garb).
 roxen.FSGarbWrapper register_fsgarb(string path, int max_age,
 				    int|void max_size, int|void max_files,
-				    string|void quarantine)
+				    string|void quarantine,
+                                    int(0..1)|void cleanup_parent_dirs)
 {
   return roxen.register_fsgarb(module_identifier(), path, max_age,
-			       max_size, max_files, quarantine);
+			       max_size, max_files, quarantine,
+                               cleanup_parent_dirs);
 }
 #endif
 

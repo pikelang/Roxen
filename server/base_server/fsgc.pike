@@ -50,6 +50,8 @@ class FSGarb
   int max_files;
   int max_size;
 
+  int(0..1) cleanup_parent_dirs;
+
   mapping(string:object) handle_lookup = ([]);
   ADT.Priority_queue pending_gc = ADT.Priority_queue();
 
@@ -58,34 +60,82 @@ class FSGarb
   //! If set to @[root] or @expr{""@} keep the files as is.
   string quarantine;
 
+  Configuration owner_mod_conf;
+
+  protected void log_remove(string path, string op)
+  {
+    if (!owner_mod_conf) {
+      if (RoxenModule mod = Roxen.get_module(modid))
+        owner_mod_conf = mod->my_configuration();
+    }
+    if (owner_mod_conf)
+      owner_mod_conf->log_event("fsgc", op, path, ([ ]) );
+  }
+
+  protected int rm_and_parent_cleanup(string path, int(0..1) is_quarantined)
+  {
+    //  Make path canonic to avoid visit a leaf directory twice
+    path = canonic_path(path);
+
+    //  It's acceptable if the delete fails for a quarantined file that we
+    //  just moved using mv(). We can still perform parent dir cleanup if
+    //  necessary.
+    int res = predef::rm(path);
+    if (res || is_quarantined) {
+      log_remove(path, is_quarantined ? "quarantined-file" : "delete-file");
+
+      if (cleanup_parent_dirs) {
+        while (1) {
+          //  Traverse upward. This gives the parent directory without
+          //  trailing slash. The root it already canonic (i.e. no trailing
+          //  slash) so the prefix check ensures we're still below the root.
+          path = dirname(path);
+          if (!has_prefix(path, root + "/"))
+            break;
+
+          //  Attempt to delete directory and stop if not successful
+          if (!predef::rm(path))
+            break;
+        }
+      }
+    }
+    return res;
+  }
+
   protected int rm(string path)
   {
     GC_WERR("FSGC: Zap %O\n", path);
     if (quarantine) {
       if ((quarantine == root) || (quarantine == "")) return 0;
-      if (!has_prefix(path, root)) return 0;
+      if (!has_prefix(path, root + "/")) return 0;
       string rel = path[sizeof(root)..];
 
       // First try the trivial case.
-      if (mv(path, quarantine + rel)) return 1;
+      if (mv(path, quarantine + rel)) {
+        rm_and_parent_cleanup(path, 1);
+        return 1;
+      }
 
       string dirs = dirname(rel);
       if (sizeof(dirs)) {
 	if (Stdio.mkdirhier(quarantine + dirs)) {
 	  // Try again with the directory existing.
-	  if (mv(path, quarantine + rel)) return 1;
+	  if (mv(path, quarantine + rel)) {
+            rm_and_parent_cleanup(path, 1);
+            return 1;
+          }
 	}
       }
 
       // Different filesystems?
       if (Stdio.cp(path, quarantine + rel)) {
-	return predef::rm(path);
+	return rm_and_parent_cleanup(path, 1);
       }
       werror("FSGC: Failed to copy file %O to %O: %s.\n",
 	     path, quarantine + rel, strerror(errno()));
       return 0;
     } else {
-      return predef::rm(path);
+      return rm_and_parent_cleanup(path, 0);
     }
   }
 
@@ -334,13 +384,15 @@ class FSGarb
 
   protected void create(string modid, string path, int max_age,
 			int|void max_size, int|void max_files,
-			string|void quarantine)
+			string|void quarantine,
+                        int(0..1)|void cleanup_parent_dirs)
   {
     GC_WERR("FSGC: Max age: %d\n", max_age);
     GC_WERR("FSGC: Max size: %d\n", max_size);
     GC_WERR("FSGC: Max files: %d\n", max_files);
 
     this_program::modid = modid;
+    this_program::cleanup_parent_dirs = cleanup_parent_dirs;
 
     this_program::max_age = max_age;
     this_program::max_size = max_size;
@@ -488,12 +540,13 @@ class FSGarbWrapper(string id)
 
 FSGarbWrapper register_fsgarb(string modid, string path, int max_age,
 			      int|void max_size, int|void max_files,
-			      string|void quarantine)
+			      string|void quarantine,
+                              int(0..1)|void cleanup_parent_dirs)
 {
   if ((path == "") || (path == "/") || (max_age <= 0)) return 0;
   string id = modid + "\0" + path + "\0" + gethrtime();
   FSGarb g = FSGarb(modid, path, max_age, max_size, max_files,
-		    quarantine);
+		    quarantine, cleanup_parent_dirs);
   fsgarbs[id] = g;
   GC_WERR("FSGC: Register garb on %O ==> id: %O\n", path, id);
   return FSGarbWrapper(id);
