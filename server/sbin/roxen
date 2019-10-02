@@ -1,0 +1,53 @@
+#!/bin/sh
+#
+# $Id$
+
+ROXEN_DIR=@ROXEN_DIR@
+
+parse_args()
+{
+    while [ ! c"$1" = "c" ]
+    do
+	case "$1" in
+	    --config-dir=*)
+		ROXEN_CONFIGDIR=`echo "$1" | sed -e 's/--config-dir=//'`
+	    ;;
+	esac
+    
+	case "$1" in
+	    --roxen-dir=*)
+		ROXEN_DIR=`echo "$1" | sed -e 's/--roxen-dir=//'`
+	    ;;
+	esac
+    
+	shift
+    done
+}
+
+if [ ! c"$ROXEN_ARGS" = "c" ]
+then
+  parse_args $ROXEN_ARGS
+fi
+
+parse_args "$@"
+
+if [ x"$ROXEN_CONFIGDIR" = x ]
+then
+    ROXEN_DATADIR="`pwd`"
+    ROXEN_LOGDIR="$ROXEN_DATADIR"/logs
+    ROXEN_CONFIGDIR="$ROXEN_DATADIR"/configurations
+    export ROXEN_DATADIR ROXEN_LOGDIR ROXEN_CONFIGDIR
+fi
+
+if [ ! -d "$ROXEN_CONFIGDIR" ]
+then
+    echo "No configuration found. Use --config-dir=<config dir>"
+    exit 1
+fi
+
+if [ -f "$ROXEN_CONFIGDIR"/_environment ]
+then
+    . "$ROXEN_CONFIGDIR"/_environment
+fi
+
+cd "$ROXEN_DIR" && exec ./start "$@"

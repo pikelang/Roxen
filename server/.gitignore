@@ -1,1 +1,8 @@
+/OS
+/RELEASE
+/VERSION
+/VERSION.DIST
 /.purify
+/pike
+/patches
+/mysql-location.txt

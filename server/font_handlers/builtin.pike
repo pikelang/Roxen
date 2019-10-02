@@ -1,10 +1,13 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2009, Roxen IS.
+
 #include <config.h>
 #if constant(Image.FreeType.Face)
 inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.8 2001/02/01 09:43:14 per Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -50,8 +53,9 @@ array has_font( string name, int size )
   switch( replace(lower_case(name)," ","_")-"_" )
   {
    case "pikebuiltin":
-   case "roxenbuiltin":
      return ({ "nn" });
+   case "roxenbuiltin":
+     return ({ "nn", "bn", "bi" });
   }
   return 0;
 }
@@ -65,16 +69,27 @@ Font open( string name, int size, int bold, int italic )
   switch( replace(lower_case(name)," ","_")-"_" )
   {
    case "roxenbuiltin":
+     Configuration conf = roxen->current_configuration->get();
+     License.Key license_key = conf && conf->getvar("license")->get_key();
+     if (license_key && license_key->type() == "personal")
+       return Image.Font();
 #if constant(__rbf) && constant(grbf)
 #ifdef THREADS
      object key = lock->lock();
 #endif
-#if constant(Image.FreeType.Face)
-     if( !roxenbuiltin ) catch(roxenbuiltin = grbf());
-     if( roxenbuiltin )  return FTFont( roxenbuiltin, size, "-" );
+     if( !roxenbuiltin )
+       if( mixed err = catch(roxenbuiltin = grbf()) )
+#ifdef DEBUG
+	 werror("Failed to open builtin font: %s\n",
+		describe_backtrace( err ) );
 #else
-     if( !roxenbuiltin ) catch(roxenbuiltin = grbf());
-     if( roxenbuiltin )  return TTFWrapper( roxenbuiltin(), size, "-" );
+         ;
+#endif
+     if( roxenbuiltin )
+#if constant(Image.FreeType.Face)
+       return FTFont( roxenbuiltin, size,"-", bold, italic );
+#else
+       return TTFWrapper( roxenbuiltin(), size, "-", bold, italic);
 #endif
 #endif
    case "pikebuiltin":

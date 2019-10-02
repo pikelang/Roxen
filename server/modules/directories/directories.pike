@@ -1,4 +1,4 @@
-// This is a Roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a Roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 // Directory listings mark 3
 //
@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.91 2001/01/29 05:41:25 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -164,8 +164,10 @@ void start(int n, Configuration c)
   {
     indexfiles = query("indexfiles")-({""});
     override = query("override");
-    if( query("default-template" ) )
+    if( query("default-template" ) ) {
       template = default_template;
+      module_dependencies(c, ({ "rxmltags" }));
+    }
     else
       template = query("template");
 
@@ -195,16 +197,17 @@ mapping parse_directory(RequestID id)
   // is set, a directory listing should be sent instead of the
   // indexfile.
 
+  array dir=id->conf->find_dir(f, id, 1)||({});
   if(f[-1] == '/') /* Handle indexfiles */
   {
-    foreach(indexfiles, string file)
+    foreach(indexfiles & dir, string file)
     {
       array s;
       if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
       {
 	id->not_query = f + file;
-	mapping got = id->conf->get_file(id);
-	if (got)
+	mixed got = id->conf->handle_request(id);
+	if (got && mappingp(got))
 	  return got;
       }
     }
@@ -212,7 +215,6 @@ mapping parse_directory(RequestID id)
     id->not_query = f;
   }
 
-  array dir=id->conf->find_dir(f, id, 1)||({});
   if(!sizeof(dir) || !dir[0])
     foreach(dir[1..], string file) 
     {

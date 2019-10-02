@@ -14,8 +14,14 @@ string parse(RequestID id)
      return id->variables->reversed?-a[-1]:a[0];
   });
   sort(r2,report);
-  for(int i=0;i<sizeof(report);i++) 
+  for(int i=0;i<min(sizeof(report),1000);i++) 
      report[i] = describe_error(report[i], log[report[i]],
 				id->misc->cf_locale, 1);
-  return (sizeof(report)?(report*""):LOCALE(250, "Empty"));
+
+  if( sizeof( report ) >= 1000 )
+    report[1000] =
+      sprintf(LOCALE(467,"%d entries skipped. Present in log on disk"),
+	      sizeof( report )-999 );
+
+  return (sizeof(report)?(report[..1000]*""):LOCALE(250, "Empty"));
 }

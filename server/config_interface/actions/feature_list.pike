@@ -6,158 +6,69 @@ inherit "wizard";
 constant action = "debug_info";
 
 string name= LOCALE(6, "Pike module list");
-string doc = LOCALE(7,
-		    "Show information about which features and modules are "
+string doc = LOCALE(7,"Show information about which features and modules are "
 		    "available in the Pike this Roxen is using.");
 
-mapping(string:int) modules = ([]);
+constant all_features = ({
+  // only include modules that are sensible to use with Roxen
+  "Bz2",
+  "COM",
+  "GSSAPI",
+  "Gdbm",
+  "Gmp",
+  "Gz",
+  "Image.FreeType",
+  "Image.GIF",
+  "Image.JPEG",
+  "Image.PNG",
+  "Image.TIFF",
+  "Java",
+  "Kerberos",
+  "Mird",
+  "Msql",
+  "Mysql",
+  "Nettle",
+  "Odbc",
+  "Oracle",
+  "PDF",
+  "Postgres",
+  "Regexp.PCRE",
+  "Regexp.PCRE.Widestring",
+  "SANE",
+  "SQLite",
+  "WhiteFish",
+  "double_precision_float",
+  "out-of-band_data",
+  "sybase",
+  "threads",
+});
 
-void find_modules()
+string nice_name( string what )
 {
-  object m = master();
-
-  modules = ([]);
-
-  if(!_static_modules["Regexp"])
-    modules["dynamic_modules"] = 1;
-  else
-    modules["dynamic_modules"] = -1;
-
-#if efun(thread_create)
-  modules["threads"] = 1;
-#else
-  modules["threads"] = -1;
-#endif /* thread_create */
-
-  foreach(m->pike_module_path, string p)
-  {
-    array files;
-    catch { files = get_dir(p); };
-    if (files) {
-      foreach(glob("*.so", files), string f) {
-	string s = (f/".so")[0];
-
-	catch {
-	  mixed val = m->resolv(s);
-	  if (objectp(val)) {
-	    if (sizeof(indices(val))) {
-	      modules[s] = 1;
-	    } else {
-	      modules[s] = -1;
-	    }
-	  } else if (val) {
-	    modules[s] = 1;
-	  }
-	};
-      }
-      foreach(glob("*.pmod", files), string f) {
-	string s = (f/".pmod")[0];
-
-	if (!modules[s]) {
-	  catch {
-	    mixed val = m->resolv(s);
-	    if (objectp(val)) {
-	      if (sizeof(indices(val))) {
-		modules[s] = 1;
-	      } else {
-		modules[s] = -1;
-	      }
-	    } else if (val) {
-	      modules[s] = 1;
-	    }
-	  };
-	}
-      }
-    }
-  }
-  // These modules only add efuns.
-  foreach(({ "call_out", "math", "sprintf", "system" }), string s)
-    if (modules[s])
-      modules[s] = 1;
+  return map(replace(what, ([ "_":" ","-":" " ]) )/" ",capitalize)*" ";
 }
-
-mixed page_0(object id, object mc)
+  
+mixed parse(object id)
 {
-  if (!sizeof(modules)) {
-    find_modules();
-  }
-  string res = "<font size='+1'>"+ LOCALE(238, "Features") +"</font><ul>\n";
-  foreach(({ "dynamic_modules", "threads",
-             "_Crypto",
-             "CommonLog",
-	     "Gmp", "Gz",
-             "MIME",
-             "_Image_TTF", "_Image_JPEG",
-	     "Msql", "Mysql", "Odbc", "Oracle", "Postgres",
-             "Yp" }), string s) {
-    if (modules[s] == 1) {
-      res += " "+fix_module_name(s);
-    }
-  }
-  res += "</ul><br />\n";
-  array disabled = sort(filter(indices(modules),
-			       lambda(string s, mapping m) {
-				 return(m[s] != 1);
-			       }, modules));
-  if (sizeof(disabled)) {
-    res += "<font size='+1'>"+LOCALE("dM", "Disabled modules")+"</font><ul>\n";
-    res += disabled * " ";
-    res += "</ul><br />\n";
-  }
-  return(res);
-}
+  string res;
+  array features = Tools.Install.features();
+  array disabled = all_features - features;
 
-string fix_module_name( string what )
-{
-  switch( what )
-  {
-   case "Gmp":
-     return "bignums";
-   case "_Charset":
-     return "Locale.Charset";
-  }
+  res =
+    "<font size='+1'><b>" + LOCALE(6, "Pike module list") + "</b></font>"
+    "<p />"
+    ""+ LOCALE(238, "Features") +"\n"
+    "<ul>\n"+
+    String.implode_nicely( sort(map(features,nice_name)-({0})),
+			   LOCALE(79,"and"))
+    + "</ul><br />\n";
 
-  if( sscanf( what, "_Image_%s", what ) )
-    return "Image."+what;
-  return what;
-}
+  if (sizeof(disabled))
+    res += ""+LOCALE(140,"Unavailable features")+"\n"
+      "<ul>\n"
+      + String.implode_nicely( sort(map(disabled,nice_name)-({0})),
+			       LOCALE(79,"and"))
+      + "</ul><br />\n";
 
-mapping has;
-int no_double_(string what )
-{
-  if(what == "") return 0;
-  has[what]++;
-  if( what[0] == '_' && has[what[1..]] )
-    return 0;
-  return (what[0] != what[1]) || what[0] != '_';
-}
-
-mixed page_1(object id, object mc)
-{
-  if (!sizeof(modules))
-    find_modules();
-  has = ([]);
-  mapping trans = mkmapping(map(indices(modules),fix_module_name),
-                            indices(modules));
-
-  return("<font size='+1'>"+LOCALE(239,"All modules")+"</font>\n"
-         "<ul><table cellpadding='2' cellspacing='0' border='0'>"
-         "<tr><td><b>" +LOCALE(240,"Name")+" </b></td>"
-         "<td><b>" +LOCALE(241,"State")+" </b></td>"
-         +map(filter(sort(indices(trans)),no_double_),
-             lambda(string s, mapping r) {
-               return
-                 "<tr><td>"+s+"</td><td>"+
-                 ({LOCALE(242,"Disabled"),
-                   LOCALE(243,"N/A"),
-                   "<font color='&usr.fade4;'>"+
-		   LOCALE(244,"Enabled")+
-		   "</font>" })[ r[trans[s]] + 1]+
-                 "</td></tr>\n";
-             }, modules)*"")+"</table></ul>";
-}
-
-mixed parse( RequestID id )
-{
-  return page_0(id,0)+page_1(id,0) + "<p><cf-ok/></p>";
+  return res+ "<p><cf-ok/></p>";
 }

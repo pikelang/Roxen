@@ -224,11 +224,33 @@
  Keep n pixels from the beginning of the Y scale.</p>
 </attr>
 
-<attr name=crop value='x0,y0-x1,y1' default='whole image'><p>
- Crop the image by specifying the pixel coordinates.</p>
+<attr name='crop' value='x1,y1-x2,y2|auto|guides-cross|guides-region'><p>
+ Crops the image by using several differen methods. The simplest is to only
+ specify the area to be cropped with x,y-x,y coordinates. By instead
+ selecting "auto" the image will be cropped so that as many pixels as possible
+ with the same color is removed from around the image.</p>
+
+ <p>A more advanced cropping method can be used by giving the crop argument
+ "guides-cross". The image will then be cropped around the intersection of
+ two guides inside the image. Guides can be added to e.g. Photoshop and
+ GIMP images. If several guides are present, which ones to use can be
+ selected with the guides-index=x,y attribute, where x and y is the number
+ of the guides. Guides cross cropping is usefull together with max-width 
+ and max-height attributes when creating thumb nails.</p>
+
+ <p>A combination of guides cross cropping can be used by giving the crop
+ argument "guides-region". In this cropping mode the area enclosed by
+ two horizontal and two vertical guides are saved. Which guides to use
+ is given by the guides-index=x1,y1-x2,y2 attribute, where the x and y
+ parameters are the number of the guides. Guides can also be specified as
+ guides-index=x,y. Then the saved area will be the one enclosed by the
+ buides x,y and x+1,y+1, counting from left and top. Again, combine max-width
+ and max-height makes a good effect, since scaling is performed after cropping.</p>
+
 <ex type='vert'>
 <### crop='50,28-150,92'/>
 </ex>
+
 </attr>
 
 <h3>Format specific attributes</h3>
@@ -286,7 +308,7 @@
  Resolution, in pixels per inch.</p>
 </attr>
 
-<attr name='pcx-ydpy' value='0-10000000.0' default='75.><p>
+<attr name='pcx-ydpy' value='0-10000000.0' default='75.0'><p>
  Resolution, in pixels per inch.</p>
 </attr>
 

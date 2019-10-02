@@ -1,7 +1,11 @@
 /*
- * $Id: openfiles.pike,v 1.4 2000/08/16 14:48:43 lange Exp $
+ * $Id$
  */
 inherit "wizard";
+
+// This file uses stuff from spider...
+import spider;
+
 #include <stat.h>
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -10,61 +14,116 @@ inherit "wizard";
 
 constant action="debug_info";
 
+
 string name= LOCALE(21, "Open files");
 string doc = LOCALE(22, 
 		    "Show a list of all open files and network connections.");
 
 // Debug functions.  List _all_ open filedescriptors
-array checkfd_fix_line(string l)
+
+string fix_port(string p)
 {
-  array(string) s;
-  s=l/",";
-  if (sizeof(s) > 1) {
-    s[0]=decode_mode((int)("0"+s[0]));
-    if((int)s[1])
-      s[1]=sizetostring((int)s[1]);
-    else
-      s[1]="-";
-    // mode size inode ? ?
-    s[2]=(int)s[3]?s[3]:"-";
-    int m = (int)("0"+s[0]);
-    if(!(S_ISLNK(m)||S_ISREG(m)||S_ISDIR(m)||S_ISCHR(m)||S_ISBLK(m)))
-      s[2]="-";
-    return s[0..2];//*",";
+  array(string) a = p/" ";
+  if (a[0] == "0.0.0.0") {
+    a[0] = "*";
   }
-  return l/",";
+  if (has_value (a[0], ":"))
+    a[0] = "[" + a[0] + "]";
+  if (a[1] == "0") {
+    a[1] = "ANY";
+  }
+  return a * ":";
 }
 
 string parse( RequestID id )
 {
   return
-    ("<h1>" +LOCALE(23, "Active filedescriptors")+ "</h1>\n"+
-     sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s   %s</b>\n\n",
-	     "fd", "type", "mode", "size", "inode")+
+    ("<font size='+1'><b>" +LOCALE(23, "Active filedescriptors")+ "</b></font>\n"+
+     sprintf("<pre><b>%-5s  %-9s  %-10s   %-10s</b>\n\n",
+	     "fd", "type", "mode", "details")+
 
      (Array.map(get_all_active_fd(),
 	  lambda(int fd)
 	  {
-	    string fdc =
-#ifdef FD_DEBUG
-	      mark_fd(fd)||"?";
-#else
-	    "";
+	    object f = Stdio.File(fd);
+	    object stat = f->stat();
+	    if (!stat)
+	      return sprintf("%-5s  %-9s  %-10s   %-12s",
+			     (string) fd, "Unknown", "?", "(error " + f->errno() + ")");
+
+	    string type = ([
+	      "reg":"File",
+	      "dir":"Dir",
+	      "lnk":"Link",
+	      "chr":"Special",
+	      "blk":"Device",
+	      "fifo":"FIFO",
+	      "sock":"Socket",
+	      "unknown":"Unknown",
+	    ])[stat->type] || "Unknown";
+
+	    // Doors aren't standardized yet...
+	    if ((type == "Unknown") &&
+		((stat->mode & 0xf000) == 0xd000))
+	      type = "Door";
+
+	    string details = "-";
+
+	  format_details:
+	    if (stat->isreg) {
+	      if (stat->size == 1) {
+		details = "1 byte";
+	      } else {
+		details = sprintf("%d bytes", stat->size);
+	      }
+	      if (stat->ino) {
+		details += sprintf(", inode: %d", stat->ino);
+	      }
+	    } else if (stat->issock) {
+
+
+	      string local_port = f->query_address(1);
+	      if (local_port)
+		local_port = fix_port (local_port);
+	      else {
+		if ((<System.EBADF, System.ENOTCONN,
+#if constant (System.EAFNOSUPPORT)
+		      System.EAFNOSUPPORT,
 #endif
+		      System.EINVAL>)[f->errno()]) {
+		  // A socket that getsockname(2) doesn't like. Assume
+		  // it's a unix socket if we get these errors. Don't
+		  // know how portable it is - only tested on Linux.
+		  // /mast
+		  type = "Unix";
+		  break format_details;
+		}
 
-	    catch {
-	      array args = checkfd_fix_line(fd_info(fd));
-	      args = (args[0] / ", ") + args[1..];
-	      args[-2] = ( args[-2] / " " - ({""})) * " ";
-	      args[1] = (args[1] - "<tt>") - "</tt>";
-	      //	    werror("%O\n", args);
-	      return sprintf("%-5s  %-9s  %-10s   %-12s  %s",
+		local_port =
+		  "(Cannot get local port: "+ strerror (f->errno()) + ")";
+	      }
+
+	      string remote_port = f->query_address();
+	      if (remote_port)
+		remote_port = fix_port (remote_port);
+	      else if (f->errno() != System.ENOTCONN)
+		remote_port =
+		  "(Cannot get remote port: "+ strerror (f->errno()) + ")";
+
+	      if (!remote_port) {
+		type = "Port";
+		details = local_port + " (listen)";
+	      } else {
+		details = sprintf("%s &lt;=&gt; %s",
+				  local_port, remote_port);
+	      }
+	    }
+
+	    return sprintf("%-5s  %-9s  %-10s   %-12s",
 			   (string)fd,
-			   @args,
-			   fdc);
-	    };
-	    return "Error when making info list...\n";
-
+			   type,
+			   stat->mode_string,
+			   details);
 	  })*"\n")+
      "</pre><p><cf-ok/></p>");
 }

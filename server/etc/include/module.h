@@ -1,9 +1,16 @@
-// $Id: module.h,v 1.49 2001/03/24 01:22:13 nilsson Exp $
+// -*- pike -*-
+//
+// $Id$
+
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
 #include <roxen.h>
 // compat
+//
+// NOTE: This used to be a valid lvalue.
+//       In the few places where it was used as an lvalue,
+//       use set("var", value).
 #define QUERY(var)	query( #var )
 
 // Like query, but for global variables.
@@ -13,12 +20,10 @@
 #define GLOBVAR(x) roxenp()->query(#x)
 #endif /* IN_ROXEN */
 
-#define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
-#define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
-#define ROXEN_MAJOR_VERSION 2
-#define ROXEN_MINOR_VERSION 2
+#define ROXEN_MAJOR_VERSION 5
+#define ROXEN_MINOR_VERSION 4
 
 
 #define TYPE_STRING            1
@@ -47,14 +52,15 @@
 #define VAR_TYPE_MASK        255
 
 
-#define VAR_EXPERT         256
-#define VAR_MORE           512
-#define VAR_DEVELOPER     1024
-#define VAR_INITIAL       2048
-#define VAR_NOT_CFIF      4096
-#define VAR_INVISIBLE     8192
+#define VAR_EXPERT         0x100
+#define VAR_MORE           0x200
+#define VAR_DEVELOPER      0x400
+#define VAR_INITIAL        0x800
+#define VAR_NOT_CFIF      0x1000
+#define VAR_INVISIBLE     0x2000
 
-#define VAR_PUBLIC        8192
+#define VAR_PUBLIC        0x4000
+#define VAR_NO_DEFAULT    0x8000
 
 #define MOD_ALLOW	         1
 #define MOD_USER	         2
@@ -73,4 +79,27 @@
 #define ENCODE_RXML_XML(value, type) \
   ((value) ? (type && type != RXML.t_xml ? type->encode ((value), RXML.t_xml) : (value)) : RXML.nil)
 
+#if constant (thread_create)
+#  define RXML_CONTEXT (_cur_rxml_context->get())
+#else
+#  define RXML_CONTEXT (_cur_rxml_context)
 #endif
+
+// Debug macros.
+
+#ifdef MODULE_DEBUG
+#  define DO_IF_MODULE_DEBUG(code...) code
+#else
+#  define DO_IF_MODULE_DEBUG(code...)
+#endif
+
+#ifdef RXML_VERBOSE
+#  define TAG_DEBUG_TEST(test) 1
+#elif defined (RXML_REQUEST_VERBOSE)
+#  define TAG_DEBUG_TEST(test)						\
+  ((test) || RXML_CONTEXT->id && RXML_CONTEXT->id->misc->rxml_verbose)
+#else
+#  define TAG_DEBUG_TEST(test) (test)
+#endif
+
+#endif	// !ROXEN_MODULE_H

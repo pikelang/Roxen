@@ -1,139 +1,143 @@
-static constant jvm = Java.machine;
+#if constant(Java.machine)
+protected object jvm = Java.machine;
 
-static private inherit "roxenlib";
+private inherit "roxenlib";
 
 #include <module.h>
 
-#define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
+#define FIND_CLASS(X) (jvm && (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0)))
+#define FIND_METHOD(C, M...) ((C) && (C)->get_method (M))
+#define FIND_STATIC_METHOD(C, M...) ((C) && (C)->get_static_method (M))
+#define FIND_FIELD(C, F...) ((C) && (C)->get_field (F))
 
 /* Marshalling */
-static object object_class = FINDCLASS("java/lang/Object");
-static object int_class = FINDCLASS("java/lang/Integer");
-static object map_class = FINDCLASS("java/util/HashMap");
-static object set_class = FINDCLASS("java/util/HashSet");
-static object map_ifc = FINDCLASS("java/util/Map");
-static object map_entry_ifc = FINDCLASS("java/util/Map$Entry");
-static object set_ifc = FINDCLASS("java/util/Set");
-static object int_value = int_class->get_method("intValue", "()I");
-static object int_init = int_class->get_method("<init>", "(I)V");
-static object map_init = map_class->get_method("<init>", "(I)V");
-static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-static object set_init = set_class->get_method("<init>", "(I)V");
-static object set_add = set_class->get_method("add", "(Ljava/lang/Object;)Z");
-static object map_entry_set = map_ifc->get_method("entrySet", "()Ljava/util/Set;");
-static object set_to_array = set_ifc->get_method("toArray", "()[Ljava/lang/Object;");
-static object map_entry_getkey = map_entry_ifc->get_method("getKey", "()Ljava/lang/Object;");
-static object map_entry_getvalue = map_entry_ifc->get_method("getValue", "()Ljava/lang/Object;");
+protected object object_class = FIND_CLASS("java/lang/Object");
+protected object int_class = FIND_CLASS("java/lang/Integer");
+protected object map_class = FIND_CLASS("java/util/HashMap");
+protected object set_class = FIND_CLASS("java/util/HashSet");
+protected object map_ifc = FIND_CLASS("java/util/Map");
+protected object map_entry_ifc = FIND_CLASS("java/util/Map$Entry");
+protected object set_ifc = FIND_CLASS("java/util/Set");
+protected object int_value = FIND_METHOD (int_class, "intValue", "()I");
+protected object int_init = FIND_METHOD (int_class, "<init>", "(I)V");
+protected object map_init = FIND_METHOD (map_class, "<init>", "(I)V");
+protected object map_put = FIND_METHOD (map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+protected object set_init = FIND_METHOD (set_class, "<init>", "(I)V");
+protected object set_add = FIND_METHOD (set_class, "add", "(Ljava/lang/Object;)Z");
+protected object map_entry_set = FIND_METHOD (map_ifc, "entrySet", "()Ljava/util/Set;");
+protected object set_to_array = FIND_METHOD (set_ifc, "toArray", "()[Ljava/lang/Object;");
+protected object map_entry_getkey = FIND_METHOD (map_entry_ifc, "getKey", "()Ljava/lang/Object;");
+protected object map_entry_getvalue = FIND_METHOD (map_entry_ifc, "getValue", "()Ljava/lang/Object;");
 
 /* File I/O */
-static object reader_class = FINDCLASS("java/io/Reader");
-static object string_class = FINDCLASS("java/lang/String");
-static object _read = reader_class->get_method("read", "([C)I");
-static object string_init = string_class->get_method("<init>", "([CII)V");
+protected object reader_class = FIND_CLASS("java/io/Reader");
+protected object string_class = FIND_CLASS("java/lang/String");
+protected object _read = FIND_METHOD (reader_class, "read", "([C)I");
+protected object string_init = FIND_METHOD (string_class, "<init>", "([CII)V");
 
 /* Class loading */
-static object class_class = FINDCLASS("java/lang/Class");
-static object classloader_class = FINDCLASS("java/lang/ClassLoader");
-static object roxenclassloader_class = FINDCLASS("com/roxen/roxen/RoxenClassLoader");
-static object file_class = FINDCLASS("java/io/File");
-static object url_class = FINDCLASS("java/net/URL");
-static object load_class = roxenclassloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = roxenclassloader_class->get_method("<init>", "([Ljava/net/URL;)V");
-static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
-static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
-static object get_module_name = roxenclassloader_class->get_static_method("getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
-static object add_jar = roxenclassloader_class->get_method("addJarFile", "(Ljava/lang/String;)V");
-static object new_instance = class_class->get_method("newInstance", "()Ljava/lang/Object;");
-static object filenotfound_class = FINDCLASS("java/io/FileNotFoundException");
-static object ioexception_class = FINDCLASS("java/io/IOException");
+protected object class_class = FIND_CLASS("java/lang/Class");
+protected object classloader_class = FIND_CLASS("java/lang/ClassLoader");
+protected object roxenclassloader_class = FIND_CLASS("com/roxen/roxen/RoxenClassLoader");
+protected object file_class = FIND_CLASS("java/io/File");
+protected object url_class = FIND_CLASS("java/net/URL");
+protected object load_class = FIND_METHOD (roxenclassloader_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+protected object cl_init = FIND_METHOD (roxenclassloader_class, "<init>", "([Ljava/net/URL;)V");
+protected object file_init = FIND_METHOD (file_class, "<init>", "(Ljava/lang/String;)V");
+protected object file_tourl = FIND_METHOD (file_class, "toURL", "()Ljava/net/URL;");
+protected object get_module_name = FIND_STATIC_METHOD (roxenclassloader_class, "getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
+protected object add_jar = FIND_METHOD (roxenclassloader_class, "addJarFile", "(Ljava/lang/String;)V");
+protected object new_instance = FIND_METHOD (class_class, "newInstance", "()Ljava/lang/Object;");
+protected object filenotfound_class = FIND_CLASS("java/io/FileNotFoundException");
+protected object ioexception_class = FIND_CLASS("java/io/IOException");
 
 /* Error messages */
-static object throwable_class = FINDCLASS("java/lang/Throwable");
-static object stringwriter_class = FINDCLASS("java/io/StringWriter");
-static object printwriter_class = FINDCLASS("java/io/PrintWriter");
-static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
-static object throwable_get_message = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
-static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
-static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
-static object printwriter_flush = printwriter_class->get_method("flush", "()V");
+protected object throwable_class = FIND_CLASS("java/lang/Throwable");
+protected object stringwriter_class = FIND_CLASS("java/io/StringWriter");
+protected object printwriter_class = FIND_CLASS("java/io/PrintWriter");
+protected object throwable_printstacktrace = FIND_METHOD (throwable_class, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+protected object throwable_get_message = FIND_METHOD (throwable_class, "getMessage", "()Ljava/lang/String;");
+protected object stringwriter_init = FIND_METHOD (stringwriter_class, "<init>", "()V");
+protected object printwriter_init = FIND_METHOD (printwriter_class, "<init>", "(Ljava/io/Writer;)V");
+protected object printwriter_flush = FIND_METHOD (printwriter_class, "flush", "()V");
 
 /* Module interface */
-static object reqid_class = FINDCLASS("com/roxen/roxen/RoxenRequest");
-static object conf_class = FINDCLASS("com/roxen/roxen/RoxenConfiguration");
-static object module_class = FINDCLASS("com/roxen/roxen/Module");
-static object defvar_class = FINDCLASS("com/roxen/roxen/Defvar");
-static object location_ifc = FINDCLASS("com/roxen/roxen/LocationModule");
-static object parser_ifc = FINDCLASS("com/roxen/roxen/ParserModule");
-static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
-static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
-static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
-static object lastresort_ifc = FINDCLASS("com/roxen/roxen/LastResortModule");
-static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
-static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
-static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
-static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
-static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object rxml_class = FINDCLASS("com/roxen/roxen/RXML");
-static object backtrace_class = FINDCLASS("com/roxen/roxen/RXML$Backtrace");
-static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-static object conf_init = conf_class->get_method("<init>", "()V");
-static object frame_init = frame_class->get_method("<init>", "()V");
-static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
-static object query_type = module_class->get_method("queryType", "()I");
-static object query_unique = module_class->get_method("queryUnique", "()Z");
-static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
-static object query_desc = module_class->get_method("info", "()Ljava/lang/String;");
-static object _status = module_class->get_method("status", "()Ljava/lang/String;");
-static object _start = module_class->get_method("start", "()V");
-static object _stop = module_class->get_method("stop", "()V");
-static object _query_provides = provider_ifc->get_method("queryProvides", "()Ljava/lang/String;");
-static object _check_variable = module_class->get_method("checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
-static object _getdefvars = module_class->get_method("getDefvars", "()[Lcom/roxen/roxen/Defvar;");
-static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
-static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
-static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
-static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
-static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
-static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
-static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
-static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
-static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
-static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
-static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
-static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
-static object dv_value = defvar_class->get_field("value", "Ljava/lang/Object;");
-static object dv_type = defvar_class->get_field("type", "I");
-static object _errno = response_class->get_field("errno", "I");
-static object _len = response_class->get_field("len", "J");
-static object _type = response_class->get_field("type", "Ljava/lang/String;");
-static object _extra_heads = response_class->get_field("extraHeads", "Ljava/util/Map;");
-static object _data = response2_class->get_field("data", "Ljava/lang/String;");
-static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
-static object bt_get_type = backtrace_class->get_method("getType", "()Ljava/lang/String;");
+protected object reqid_class = FIND_CLASS("com/roxen/roxen/RoxenRequest");
+protected object conf_class = FIND_CLASS("com/roxen/roxen/RoxenConfiguration");
+protected object module_class = FIND_CLASS("com/roxen/roxen/Module");
+protected object defvar_class = FIND_CLASS("com/roxen/roxen/Defvar");
+protected object location_ifc = FIND_CLASS("com/roxen/roxen/LocationModule");
+protected object parser_ifc = FIND_CLASS("com/roxen/roxen/ParserModule");
+protected object fileext_ifc = FIND_CLASS("com/roxen/roxen/FileExtensionModule");
+protected object provider_ifc = FIND_CLASS("com/roxen/roxen/ProviderModule");
+protected object simpletagcaller_ifc = FIND_CLASS("com/roxen/roxen/SimpleTagCaller");
+protected object lastresort_ifc = FIND_CLASS("com/roxen/roxen/LastResortModule");
+protected object frame_class = FIND_CLASS("com/roxen/roxen/Frame");
+protected object response_class = FIND_CLASS("com/roxen/roxen/RoxenResponse");
+protected object response2_class = FIND_CLASS("com/roxen/roxen/RoxenStringResponse");
+protected object response3_class = FIND_CLASS("com/roxen/roxen/RoxenFileResponse");
+protected object response4_class = FIND_CLASS("com/roxen/roxen/RoxenRXMLResponse");
+protected object rxml_class = FIND_CLASS("com/roxen/roxen/RXML");
+protected object backtrace_class = FIND_CLASS("com/roxen/roxen/RXML$Backtrace");
+protected object reqid_init = FIND_METHOD (reqid_class, "<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+protected object conf_init = FIND_METHOD (conf_class, "<init>", "()V");
+protected object frame_init = FIND_METHOD (frame_class, "<init>", "()V");
+protected object _configuration = FIND_FIELD (module_class, "configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
+protected object query_type = FIND_METHOD (module_class, "queryType", "()I");
+protected object query_unique = FIND_METHOD (module_class, "queryUnique", "()Z");
+protected object _query_name = FIND_METHOD (module_class, "queryName", "()Ljava/lang/String;");
+protected object query_desc = FIND_METHOD (module_class, "info", "()Ljava/lang/String;");
+protected object _status = FIND_METHOD (module_class, "status", "()Ljava/lang/String;");
+protected object _start = FIND_METHOD (module_class, "start", "()V");
+protected object _stop = FIND_METHOD (module_class, "stop", "()V");
+protected object _query_provides = FIND_METHOD (provider_ifc, "queryProvides", "()Ljava/lang/String;");
+protected object _check_variable = FIND_METHOD (module_class, "checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
+protected object _getdefvars = FIND_METHOD (module_class, "getDefvars", "()[Lcom/roxen/roxen/Defvar;");
+protected object _find_internal = FIND_METHOD (module_class, "findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+protected object _query_location = FIND_METHOD (location_ifc, "queryLocation", "()Ljava/lang/String;");
+protected object _find_file = FIND_METHOD (location_ifc, "findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+protected object _find_dir = FIND_METHOD (location_ifc, "findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
+protected object _real_file = FIND_METHOD (location_ifc, "realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
+protected object _stat_file = FIND_METHOD (location_ifc, "statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
+protected object _query_file_extensions = FIND_METHOD (fileext_ifc, "queryFileExtensions", "()[Ljava/lang/String;");
+protected object _handle_file_extension = FIND_METHOD (fileext_ifc, "handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+protected object _query_tag_callers = FIND_METHOD (parser_ifc, "querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
+protected object _last_resort = FIND_METHOD (lastresort_ifc, "last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+protected object simpletagcaller_query_name = FIND_METHOD (simpletagcaller_ifc, "queryTagName", "()Ljava/lang/String;");
+protected object simpletagcaller_query_flags = FIND_METHOD (simpletagcaller_ifc, "queryTagFlags", "()I");
+protected object _tag_called = FIND_METHOD (simpletagcaller_ifc, "tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
+protected object dv_var = FIND_FIELD (defvar_class, "var", "Ljava/lang/String;");
+protected object dv_name = FIND_FIELD (defvar_class, "name", "Ljava/lang/String;");
+protected object dv_doc = FIND_FIELD (defvar_class, "doc", "Ljava/lang/String;");
+protected object dv_value = FIND_FIELD (defvar_class, "value", "Ljava/lang/Object;");
+protected object dv_type = FIND_FIELD (defvar_class, "type", "I");
+protected object _errno = FIND_FIELD (response_class, "errno", "I");
+protected object _len = FIND_FIELD (response_class, "len", "J");
+protected object _type = FIND_FIELD (response_class, "type", "Ljava/lang/String;");
+protected object _extra_heads = FIND_FIELD (response_class, "extraHeads", "Ljava/util/Map;");
+protected object _data = FIND_FIELD (response2_class, "data", "Ljava/lang/String;");
+protected object _file = FIND_FIELD (response3_class, "file", "Ljava/io/Reader;");
+protected object bt_get_type = FIND_METHOD (backtrace_class, "getType", "()Ljava/lang/String;");
 
-static object natives_bind1, natives_bind2, natives_bind3,
+protected object natives_bind1, natives_bind2, natives_bind3,
   natives_bind4, natives_bind5;
 
-static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
-static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
-static mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
-static mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
+protected mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
+protected mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
+protected mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
+protected mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
 
 #if constant(thread_create)
 #define LOCK() object _key=mutex->lock()
 #define UNLOCK() destruct(_key)
-static object mutex=Thread.Mutex();
+protected object mutex=Thread.Mutex();
 #else
 #define LOCK() 0
 #define UNLOCK() 0
 #endif
 
 
-static void check_exception(object|void e)
+protected void check_exception(object|void e)
 {
   if(!e) {
     if(!(e = jvm->exception_occurred()))
@@ -159,7 +163,7 @@ static void check_exception(object|void e)
 
 class ClassLoader
 {
-  static private object cl;
+  private object cl;
   object load(string name)
   {
     object c = load_class(cl, name);
@@ -192,12 +196,12 @@ class ClassLoader
   }
 }
 
-static string stringify(object o)
+protected string stringify(object o)
 {
   return o && (string)o;
 }
 
-static mixed objify(mixed v)
+protected mixed objify(mixed v)
 {
   if(!v)
     return v;
@@ -235,7 +239,7 @@ static mixed objify(mixed v)
     return (string)v;
 }
 
-static mixed valify(mixed o)
+protected mixed valify(mixed o)
 {
   if(!objectp(o))
     return o;
@@ -253,7 +257,7 @@ static mixed valify(mixed o)
     return (string)o;
 }
 
-static object make_module(RoxenModule m)
+protected object make_module(RoxenModule m)
 {
   // Should perhaps handle Pike modules as well?
   return functionp(m->_java_object) && m->_java_object();
@@ -261,7 +265,7 @@ static object make_module(RoxenModule m)
 
 class ReaderFile
 {
-  static private object _reader;
+  private object _reader;
 
   string read(int|void n)
   {
@@ -298,7 +302,7 @@ class ModuleWrapper
 
   class JavaSimpleTag
   {
-    static object caller;
+    protected object caller;
 
     string call(string tag, mapping args, string contents, RequestID id,
 		RXML.Frame frame)
@@ -316,14 +320,14 @@ class ModuleWrapper
     }
   }
 
-  static object modobj, confobj;
-  static int modtype;
-  static string modname, moddesc;
-  static int modunique;
+  protected object modobj, confobj;
+  protected int modtype;
+  protected string modname, moddesc;
+  protected int modunique;
 
   object _java_object() { return modobj; }
 
-  static object make_conf(object conf)
+  protected object make_conf(object conf)
   {
     if(!conf)
       return 0;
@@ -344,7 +348,7 @@ class ModuleWrapper
     return ob;
   }
 
-  static object make_reqid(RequestID id)
+  protected object make_reqid(RequestID id)
   {
     object r = reqid_class->alloc();
     reqid_init->call_nonvirtual(r, make_conf(id->conf), id->raw_url, id->prot,
@@ -356,7 +360,7 @@ class ModuleWrapper
     return r;
   }
 
-  static object make_frame(RXML.Frame frame)
+  protected object make_frame(RXML.Frame frame)
   {
     object f = frame_class->alloc();
     frame_init->call_nonvirtual(f);
@@ -364,7 +368,7 @@ class ModuleWrapper
     return f;
   }
 
-  static mapping make_response(object r, RequestID id)
+  protected mapping make_response(object r, RequestID id)
   {
     if(!r)
       return 0;
@@ -560,7 +564,7 @@ class ModuleWrapper
     return ext ? reverse(ext) : "";
   }
 
-  static void load(string filename)
+  protected void load(string filename)
   {
     string path = combine_path(getcwd(), filename);
     array(string) dcomp = path/"/";
@@ -612,7 +616,7 @@ class ModuleWrapper
       jotomod[modobj] = this_object();
   }
 
-  static array(array) getdefvars()
+  protected array(array) getdefvars()
   {
     object a = _getdefvars(modobj);
     check_exception();
@@ -632,7 +636,7 @@ class ModuleWrapper
 			  });
   }
 
-  static void init(object conf)
+  protected void init(object conf)
   {
     if(conf) {
       _configuration->set(modobj, confobj = make_conf(conf));
@@ -649,103 +653,103 @@ class ModuleWrapper
   }
 }
 
-static mixed native_query(object mod, object var)
+protected mixed native_query(object mod, object var)
 {
   mod = jotomod[mod];
   return mod && objify(mod->query((string)var));
 }
 
-static void native_set(object mod, object var, object val)
+protected void native_set(object mod, object var, object val)
 {
   if(mod = jotomod[mod])
     mod->set((string)var, valify(val));
 }
 
-static object native_queryconf(object conf, object var)
+protected object native_queryconf(object conf, object var)
 {
   conf = jotoconf[conf];
   return conf && conf->query((string)var);
 }
 
-static object native_queryconfinternal(object conf, object mod)
+protected object native_queryconfinternal(object conf, object mod)
 {
   conf = jotoconf[conf];
   return conf && conf->query_internal_location(mod && jotomod[mod]);
 }
 
-static string native_do_output_tag(object args, object var_arr,
+protected string native_do_output_tag(object args, object var_arr,
 				   object contents, object id)
 {
   return do_output_tag(valify(args), valify(var_arr),
 		       contents && (string)contents, jotoid[id]);
 }
 
-static string native_parse_rxml(object what, object id)
+protected string native_parse_rxml(object what, object id)
 {
   return parse_rxml( what && (string)what, jotoid[id] );
 }
 
-static object native_get_variables(object id)
+protected object native_get_variables(object id)
 {
   id = jotoid[id];
-  return id && objify(id->variables);
+  return id && objify((mapping)id->variables);
 }
 
-static object native_get_request_headers(object id)
+protected object native_get_request_headers(object id)
 {
   id = jotoid[id];
   return id && objify(id->request_headers);
 }
 
-static object native_get_cookies(object id)
+protected object native_get_cookies(object id)
 {
   id = jotoid[id];
   return id && objify(id->cookies);
 }
 
-static object native_get_supports(object id)
+protected object native_get_supports(object id)
 {
   id = jotoid[id];
   return id && objify(id->supports);
 }
 
-static object native_get_pragma(object id)
+protected object native_get_pragma(object id)
 {
   id = jotoid[id];
   return id && objify(id->pragma);
 }
 
-static object native_get_prestate(object id)
+protected object native_get_prestate(object id)
 {
   id = jotoid[id];
   return id && objify(id->prestate);
 }
 
-static void native_cache(object id, int n)
+protected void native_cache(object id, int n)
 {
   id = jotoid[id];
   CACHE(n);
 }
 
-static string native_real_file(object conf, object filename, object id)
+protected string native_real_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
   return filename && conf && conf->real_file((string)filename, jotoid[id]);
 }
 
-static string native_try_get_file(object conf, object filename, object id)
+protected string native_try_get_file(object conf, object filename, object id)
 {
   conf = jotoconf[conf];
   return filename && conf && conf->try_get_file((string)filename, jotoid[id]);
 }
 
-static string native_type_from_filename(object conf, object filename)
+protected string native_type_from_filename(object conf, object filename)
 {
   conf = jotoconf[conf];
   return filename && conf && conf->type_from_filename((string)filename);
 }
 
-static object native_get_providers(object conf, object provides)
+protected object native_get_providers(object conf, object provides)
 {
   array p;
   conf = jotoconf[conf];
@@ -761,7 +765,32 @@ static object native_get_providers(object conf, object provides)
     return 0;
 }
 
-static object native_user_get_var(object var, object scope)
+protected object native_get_var(object var, object scope)
+{
+  mixed x;
+  if(zero_type(x = RXML.get_var((string)var, scope&&(string)scope)))
+    return 0;
+  else if(intp(x)) {
+    object z = int_class->alloc();
+    int_init->call_nonvirtual(z, x);
+    check_exception();
+    return z;
+  } else
+    return objify(x);
+}
+
+protected object native_set_var(object var, object val, object scope)
+{
+  RXML.set_var((string)var, valify(val), scope&&(string)scope);
+  return val;
+}
+
+protected object native_delete_var(object var, object scope)
+{
+  RXML.delete_var((string)var, scope&&(string)scope);
+}
+
+protected object native_user_get_var(object var, object scope)
 {
   mixed x;
   if(zero_type(x = RXML.user_get_var((string)var, scope&&(string)scope)))
@@ -775,24 +804,29 @@ static object native_user_get_var(object var, object scope)
     return objify(x);
 }
 
-static object native_user_set_var(object var, object val, object scope)
+protected object native_user_set_var(object var, object val, object scope)
 {
   RXML.user_set_var((string)var, valify(val), scope&&(string)scope);
   return val;
 }
 
-static object native_user_delete_var(object var, object scope)
+protected object native_user_delete_var(object var, object scope)
 {
   RXML.user_delete_var((string)var, scope&&(string)scope);
 }
 
-static void native_tag_debug(object msg)
+protected void native_tag_debug(object msg)
 {
   RXML.tag_debug((string)msg);
 }
 
 void create()
 {
+  if (!jvm) return;
+
+  if (!module_class->register_natives)
+    error ("No support for native methods in the Java module.\n");
+
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
     ({"set", "(Ljava/lang/String;Ljava/lang/Object;)V", native_set}),
@@ -805,7 +839,7 @@ void create()
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;", native_type_from_filename}),
     ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
   }));
-  natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
+  natives_bind3 = FIND_CLASS("com/roxen/roxen/RoxenLib")->register_natives(({
     ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
     ({"parseRXML", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
@@ -819,9 +853,13 @@ void create()
     ({"cache", "(I)V", native_cache}),
   }));
   natives_bind5 = rxml_class->register_natives(({
+    ({"getVar", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", native_get_var}),
+    ({"setVar", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", native_set_var}),
+    ({"deleteVar", "(Ljava/lang/String;Ljava/lang/String;)V", native_delete_var}),
     ({"userGetVar", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", native_user_get_var}),
     ({"userSetVar", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", native_user_set_var}),
     ({"userDeleteVar", "(Ljava/lang/String;Ljava/lang/String;)V", native_user_delete_var}),
     ({"tagDebug", "(Ljava/lang/String;)V", native_tag_debug}),
   }));
 }
+#endif

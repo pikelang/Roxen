@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.33 2001/03/23 14:35:07 noring Exp $
+ * $Id$
  *
  * Create an initial administration interface server.
  */
@@ -76,6 +76,12 @@ string read_string(Readline rl, string prompt, string|void def,
   return res;
 }
 
+#if constant(Crypto.Password)
+constant hash_password = Crypto.Password.hash;
+#else
+constant hash_password = Crypto.make_crypt_md5;
+#endif
+
 int main(int argc, array argv)
 {
   Readline rl = Readline();
@@ -83,11 +89,49 @@ int main(int argc, array argv)
   string passwd2;
   mapping(string:string) batch = ([]);
 
-#if constant( SSL3 )
+#if constant( SSL )
   string def_port = "https://*:"+(random(20000)+10000)+"/";
 #else
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
+
+  //werror("Argv: ({%{%O, %}})\n", argv);
+
+  if(has_value(argv, "--help")) {
+    write(#"
+Creates and initializes a Roxen WebServer configuration
+interface. Arguments:
+
+ -d dir   The location of the configuration interface.
+          Defaults to \"../configurations\".
+ -a       Only create a new administration user.
+          Useful when the administration password is
+          lost.
+ --help   Displays this text.
+ --batch  Create a configuration interface in batch mode.
+          The --batch argument should be followed by a
+          list of value pairs, each pair representing the
+          name of a question field and the value to be
+          filled into it. Available fields:
+      server_name    The name of the server. Defaults to
+                     \"Administration Interface\".
+      server_url     The server url, e.g.
+                     \"http://*:1234/\".
+      user           The name of the administrator.
+                     Defaults to \"administrator\".
+      password       The administrator password.
+      ok             Disable user confirmation of the
+                     above information with the value
+                     pair \"ok y\".
+
+Example of a batch installation:
+
+ ./create_configinterface --help server_name Admin server_url
+ http://*:8080/ ok y user admin
+
+");
+    return 0;
+  }
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
@@ -95,9 +139,28 @@ int main(int argc, array argv)
                       "../configurations");
   int admin = has_value(argv, "-a");
 
+//    werror("Admin mode: %O\n"
+//  	 "Argv: ({%{%O, %}})\n", admin, argv);
+
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
     batch = mkmapping(@Array.transpose(argv[batch_args+1..]/2));
+
+  if (batch["__semicolon_separated__"]) {
+    // Used by Win32Installer.vbs:CreateConfigInterface().
+    array(string) sections = batch["__semicolon_separated__"]/";";
+    if (sizeof(sections) < 6) {
+      error("Too few sections in __semicolon_separated__: %O.\n",
+	    batch["__semicolon_separated__"]);
+    }
+    cd(sections[0]);				// SERVERDIR
+    batch->server_name = sections[1];		// SERVER_NAME
+    batch->server_url = sprintf("%s://*:%s/",
+				sections[2],	// SERVER_PROTOCOL
+				sections[3]);	// SERVER_PORT
+    batch->user = sections[4];			// ADM_USER
+    batch->password = sections[5..]*";";	// ADM_PASS1
+  }
 
   foreach( get_dir( configdir )||({}), string cf )
     catch 
@@ -106,6 +169,9 @@ int main(int argc, array argv)
 	  search( Stdio.read_file( configdir+"/"+cf ), 
                   "'config_filesystem#0'" ) != -1 )
       {
+	string server_version = Stdio.read_file("VERSION");
+	if(server_version)
+	  Stdio.write_file(configdir+"/server_version","server-"+server_version);
         werror("   There is already an administration interface present in "
                "this\n   server. A new one will not be created.\n");
         if(!admin++) exit( 0 );
@@ -206,73 +272,20 @@ int main(int argc, array argv)
       else
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
-    write("\n");
   } while( strlen( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
 
   if( !admin )
   {
-    string community_user, community_password, proxy_host="", proxy_port="80";
-    string community_userpassword="";
-    int use_update_system=0;
-  
-    if(!batch->update) {
-      write("\n   Roxen has a built-in update system. If enabled it will periodically\n");
-      write("   contact update servers at Roxen Internet Software over the Internet.\n\n");
-    }
-    if(!(strlen( passwd2 = read_string(rl, "Do you want to enable this [Y/n]?", "", batch->update ) ) && passwd2[0]=='n' ))
-    {
-      use_update_system=1;
-      if(!batch->community_user) {
-	write("\n   If you have a registered user identity at Roxen Community\n");
-	write("   (http://community.roxen.com), you may be able to access additional\n");
-	write("   material through the update system.\n\n");
-	write("   Press enter to skip this.\n\n");
-      }
-      community_user=read_string(rl, "Roxen Community identity (your e-mail):",
-				 0, batch->community_user);
-      if(sizeof(community_user))
-      {
-        do
-        {
-	  if(passwd2 && community_password)
-	    write("\n   Please type a password with one or more characters. "
-		  "You will\n   be asked to type the password twice for "
-		  "verification.\n\n");
-          rl->get_input_controller()->dumb=1;
-          community_password = read_string(rl, "Roxen Community password:", 0,
-					   batch->community_password);
-          passwd2 = read_string(rl, "Roxen Community password (again):", 0,
-				batch->community_password);
-          rl->get_input_controller()->dumb=0;
-	  if(batch->community_password)
-	    m_delete(batch, "community_password");
-	  else
-	    write("\n");
-          community_userpassword=community_user+":"+community_password;
-        } while(!strlen(community_password) || (community_password != passwd2));
-      }
-      
-      if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
-					"server through an HTTP proxy [y/N]?",
-					"", batch->community_proxy))
-	  && lower_case(passwd2[0..0])!="n" ))
-      {
-	proxy_host=read_string(rl, "Proxy host:", 0, batch->proxy_host);
-	if(sizeof(proxy_host))
-	  proxy_port=read_string(rl, "Proxy port:", "80", batch->proxy_port);
-	if(!sizeof(proxy_port))
-	  proxy_port="80";
-      }
-    }
     mkdirhier( configdir );
     string server_version = Stdio.read_file("VERSION");
     if(server_version)
-      Stdio.write_file(configdir+"server_version", "server-"+server_version);
+      Stdio.write_file(configdir+"/server_version", "server-"+server_version);
     Stdio.write_file( configdir+replace( name, " ", "_" ),
                       replace(
 #"
 <!-- -*- html -*- -->
 <?XML version=\"1.0\"?>
+<roxen-config>
 
 <region name='EnabledModules'>
   <var name='config_filesystem#0'> <int>1</int>  </var> <!-- Configration Filesystem -->
@@ -284,13 +297,6 @@ int main(int argc, array argv)
 
 <region name='graphic_text#0'>
   <var name='colorparse'>        <int>1</int> </var>
-</region>
-
-<region name='update#0'>
-  <var name='do_external_updates'> <int>$USE_UPDATE_SYSTEM$</int> </var>
-  <var name='proxyport'>         <int>$PROXY_PORT$</int> </var>
-  <var name='proxyserver'>       <str>$PROXY_HOST</str> </var>
-  <var name='userpassword'>      <str>$COMMUNITY_USERPASSWORD$</str> </var>
 </region>
 
 <region name='contenttypes#0'>
@@ -312,20 +318,23 @@ ent text/html
 <region name='spider#0'>
   <var name='Domain'> <str></str> </var>
   <var name='MyWorldLocation'><str></str></var>
-  <var name='URLs'> <a> <str>$URL$</str></a> </var>
+  <var name='URLs'> <a> <str>$URL$#ip=;nobind=0;</str></a> </var>
 
   <var name='comment'>
     <str>Automatically created by create_configuration</str>
+  </var>
+  <var name='compat_level'>
+    <str>5.4</str>
   </var>
 
   <var name='name'>
     <str>$NAME$</str>
   </var>
-</region>",
- ({ "$NAME$", "$URL$", "$USE_UPDATE_SYSTEM$","$PROXY_PORT$",
-    "$PROXY_HOST", "$COMMUNITY_USERPASSWORD$" }),
- ({ name, port, (string)use_update_system, proxy_port,
-    proxy_host, community_userpassword }) ));
+</region>
+
+</roxen-config>",
+ ({ "$NAME$", "$URL$" }),
+ ({ name, port }) ));
     write("\n   Administration interface created.\n");
   }
 
@@ -336,8 +345,8 @@ ent text/html
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
-  <str>real_name</str>   : <str>Administration Interface Default User</str>
-  <str>password</str>    : <str>" + crypt(password) + #"</str>
+  <str>real_name</str>   : <str>Administrator</str>
+  <str>password</str>    : <str>" + hash_password(password) + #"</str>
   <str>name</str>        : <str>" + user + "</str>\n</map>" ));
 
   write("\n   Administrator user \"" + user + "\" created.\n");

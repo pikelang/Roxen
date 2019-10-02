@@ -1,6 +1,6 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: disk_cache.pike,v 1.60 2001/03/12 14:05:19 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 #include <config.h>
 #include <module_constants.h>
@@ -123,9 +123,8 @@ class CacheStream ( Stdio.File file, string fname, int new )
 
   int load_headers()
   {
-    string head, roxenhead;
+    string head;
     mixed err;
-    int size;
 
      // no initial seek needed if load_headers is called first after open
 
@@ -270,12 +269,12 @@ class Cache
     mixed err;
     Process.Process proc;
     if( catch {
-      proc = Process.create_process(({
+      proc = Process.Process(({
         "./start", "--once", "--program", "bin/garbagecollector.pike"
       }), (["stdin":lcs, "nice":19, "uid":0, "gid":0, ]));
     } )
       err = catch {
-        proc = Process.create_process(({
+        proc = Process.Process(({
           "./start", "--once", "--program", "bin/garbagecollector.pike"
         }), (["stdin":lcs,"nice":19, ]));
       };
@@ -626,7 +625,6 @@ void rmold(string fname)
 void default_check_cache_file(CacheStream stream)
 {
   if (QUERY(cache)) {
-    int s;
     Stat stat = stream->file->stat();
 
     rmold(stream->rfiledone);
@@ -659,7 +657,6 @@ void http_check_cache_file(CacheStream cachef)
 {
   if(!cachef->file) RETURN();
   Stat stat = cachef->file->stat();
-  int i;
   /*  soo..  Lets check if this is a file we want to keep. */
   /*  Initial screening is done in the proxy module. */
   if(stat[ST_SIZE] <= 0) DELETE_AND_RETURN();

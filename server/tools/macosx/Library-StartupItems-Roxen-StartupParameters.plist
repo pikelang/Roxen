@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist SYSTEM "file://localhost/System/Library/DTDs/PropertyList.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Description</key>
+    <string>Roxen</string>
+    <key>Messages</key> 
+    <dict> 
+      <key>start</key> 
+      <string>Starting Roxen server</string> 
+      <key>stop</key> 
+      <string>Stopping Roxen server</string> 
+      <key>restart</key> 
+      <string>Restarting Roxen server</string> 
+    </dict> 
+    <key>OrderPreference</key>
+    <string>None</string>
+    <key>Provides</key>
+    <array>
+      <string>Roxen</string>
+    </array>
+    <key>Requires</key>
+    <array>
+      <string>Disks</string>
+      <string>Resolver</string>
+    </array>
+  </dict>
+</plist>

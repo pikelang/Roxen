@@ -21,7 +21,7 @@ mapping group( array(string) w )
     if( sscanf( (string)i->get_name(), "%s:%s", g, s ) == 2 )
       groups[ g ] += ({ n });
     else
-      groups[ "_misc" ] += ({ n });
+      groups[ "zz_misc" ] += ({ n });
   }
   return groups;
 }
@@ -32,20 +32,50 @@ string selected_item( string q, Configuration c, RequestID id,
   while ( id->misc->orig )
     id = id->misc->orig;
 
-  string pre = 
-         ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
-          "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' icon_src='&usr.selected-indicator;' "
-          "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
-          "<gbutton frame-image='&usr.left-buttonframe;' width='&usr.left-buttonwidth;' "+
-          (module == "" ?
-           "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
-          " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
-          " icon_src='&usr.selected-indicator;' align_icon='left'>"+
-          c->query_name()+"</gbutton><br /><br />");
+  string pre = "";
+  int do_js = config_setting( "modulelistmode" ) == "js";
+  int unfolded = config_setting( "modulelistmode" ) == "uf";
+
+  if( do_js )
+  {
+    RXML.set_var( "js-code", 
+		  "<js-include file='CrossPlatform.js'/>\n"
+		  "<js-include file='Popup.js'/>\n"
+		  "<style><js-insert name='style'/></style>"
+		  "<js-insert name='div'/>",
+		  "var" );
+  }
+  pre +=
+    "<script language='javascript' "
+    "        charset='iso-8859-1' type='text/javascript' >\n"
+    "  function p_on(item)  { item.className = 'module-list-item-hover'; }\n"
+    "  function p_off(item) { item.className = 'module-list-item'; }\n"
+    "  function p_on_sub(item)  { item.className = 'module-sub-list-item-hover'; }\n"
+    "  function p_off_sub(item) { item.className = 'module-sub-list-item'; }\n"
+    "  function p_popup_on(item)"
+    "    { item.className = 'module-popup-list-item-hover'; }\n"
+    "  function p_popup_off(item)"
+    "    { item.className = 'module-popup-list-item'; }\n"
+    "</script>\n";
+
+  pre += 
+    ("<gbutton frame-image='&usr.left-buttonframe;' href='/sites/' "
+     "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
+     "icon_src='&usr.selected-indicator;' "
+     "align_icon='left'>"+LOCALE(213, "Sites")+"</gbutton><br />"
+     "<img src='/internal-roxen-unit' width='1' height='5'/><br />"
+     "<gbutton frame-image='&usr.left-buttonframe;' "
+     "width='&usr.left-buttonwidth;' "+
+     (module == "" ?
+      "bgcolor='&usr.left-selbuttonbg;'" : "bgcolor='&usr.left-buttonbg;'") +
+     " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
+     " icon_src='&usr.selected-indicator;' align_icon='left'>"+
+     c->query_name()+"</gbutton><br />"
+     "<img src='/internal-roxen-unit' width='1' height='2'/><br />");
 
   string url = id->not_query + id->misc->path_info;
   string pre_site_url="";
-  string quoted_url = Roxen.http_encode_string( url );
+  string quoted_url = Roxen.http_encode_invalids( url );
   if( has_value( quoted_url, "!" )  )
     quoted_url += "../"*(sizeof(quoted_url/"!")-1);
 
@@ -84,6 +114,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	    ([
 	      "sname":q+"!"+i,
 	      "name":name,
+	      "locked":mi->config_locked[c]
 	    ]),
 	  });
       }
@@ -92,60 +123,264 @@ string selected_item( string q, Configuration c, RequestID id,
     module_groups += ({ ({gn, gg}) });
   }
 
-  sort( module_groups );
-  pre += "<table cellspacing='0' cellpadding='0'>\n";
+  module_groups = Array.sort_array( module_groups,
+				    lambda(array a, array b) {
+				      return a[0]>b[0]; });
 
+  int list = (RXML.get_var("module-list-style", "usr") == "list");
+
+  pre += "<box-frame width='100%' iwidth='100%' ::='&usr.module-list-frame;'>"+
+    (list ?
+     "<ul class='module-list'>" :
+     "<table width='100%' cellspacing='0' cellpadding='0' class='module-list'>")+
+    "\n";
+
+  if (!sizeof(module_groups))
+    pre += LOCALE(513,"No modules");
+  
   foreach( module_groups, array gd )
   {
     int onlysel,fin;
-    string group_name = gd[0];
-    if( (group_name != "_misc")  )
+    string real_group_name = gd[0];
+    string r_module_group = module_group;
+    string group_name = (real_group_name == "zz_misc" ? LOCALE(525,"Other") :
+			 real_group_name);
+    // Step 1: Is the selected module in this group?
+    //         If so, force-select this group.
+
+    foreach( gd[1], mapping data )
+      if( data->sname == module )
+	r_module_group = real_group_name;
+
+
+    int fold;
+    fold = !!RXML.get_var("unfolded", "usr");
+    string sel;
+    if (fold) sel = "unfolded";
+    else sel = "selected-indicator";
+    string css_class = "selected-indicator";
+    if( real_group_name != r_module_group )
     {
-      fin = 1;
-      if( group_name != module_group )
+      if (fold) sel = "folded";
+      else sel = "item-indicator";
+      css_class = "item-indicator";
+      if (!unfolded)
+        onlysel = 1;
+    }
+    if( onlysel )
+    {
+      if (do_js)
       {
-	if(sizeof( gd[1] ) > 1)
-	  onlysel = 1;
-	pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' alt='' /></td>"
-		"<td><a href=\""+quoted_url+
-		Roxen.http_encode_string(group_name)+
-		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
-		": ...</a><br />\n");
-	pre += "<table cellspacing='0' cellpadding='0'>\n";
+	// Popup content
+	string popup_bg;
+	if (RXML.get_var("module-list-frame", "usr"))
+	  popup_bg = "&usr.obox-bodybg;";
+	else
+	  popup_bg = "&usr.bgcolor;";
+	pre +=
+	  "<js-popup ox=" + (list ? "130" : "130") + " oy=-2 event='onClick' "
+	  "args-variable='popup-args' "
+	  ">\n"
+	  "<table border=0 bgcolor='&usr.obox-border;' cellspacing='0' "
+	  " cellpadding='1'>\n"
+	  "<tr><td>"
+	  "<table border=0 bgcolor='"+popup_bg+"' cellspacing='0' "
+	  "cellpadding='1'>\n"
+	  "<tr><td>\n"
+	  "<table border='0' cellspacing='0' sellpadding='0' "
+	  "       class='module-popup-list'>\n"
+	  ;
+	
+	foreach( gd[1], mapping data ) {
+	  pre +=
+	    "<tr class='module-popup-list-item' "
+	    "    onMouseOver='p_popup_on(this);' "
+	    "    onMouseOut='p_popup_off(this);' "
+	    "    onClick=\"window.location='" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+	     data->sname + "/") + "'\">"
+	    "<td>" +
+	    replace(Roxen.html_encode_string(data->name), " ", "&nbsp;") +
+	    (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	    "</td>\n</tr>\n";
+	}
+	pre +=
+	  "</table>\n</td></tr></table>\n</td>\n</tr>\n</table>\n"
+	  "\n</js-popup>\n";
+      }
+
+      // Folded group
+      if (list) {
+        if (!do_js)
+          pre +=
+	    "<li class='module-list-item' "
+            "    onMouseOver='p_on(this);' "
+	    "    onMouseOut='p_off(this);' "
+            "    onClick=\"window.location='" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+             ((module&&strlen(module)) ? module + "/" : "")) + "';\">";
       }
       else
+        pre +=
+          "<tr>"
+          "<td valign='top' width='0%'>"
+          "<imgs src='&usr." + sel + ";' vspace='1' hspace='4' "
+          "alt='' /></td>"
+          "<td width='100%' "
+	  "    class='module-list-item' "
+          "    onMouseOver='p_on(this);' "
+	  "    onMouseOut='p_off(this);' "
+          +(do_js ? "::='&form.popup-args;'" :
+            "onClick=\"window.location='" +
+	    // Should it be http_encode_url below? I've no idea what
+	    // real_group_name contains. /mast
+	    (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+             ((module&&strlen(module)) ? module + "/" : "")) + "';\"") +
+	  ">";
+      if( !do_js )
+        pre +=
+          "<a href='" +
+	  // Should it be http_encode_url below? I've no idea what
+	  // real_group_name contains. /mast
+	  (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+           ((module&&strlen(module)) ? module + "/" : "")) + "'>" +
+          Roxen.html_encode_string(group_name) + "&nbsp;"
+          "("+sizeof(gd[1])+")</a>";
+      if (list) {
+        if (!do_js)
+          pre += "</li>\n";
+      }
+      else
+        // </tr> ?
+        ;
+    }
+    else
+    {
+      // Unfolded group
+      if (list)
+        pre +=
+          "<li class='"+css_class+"'>" +
+          Roxen.html_encode_string(group_name) +
+          "</li>"
+          "<ul class='module-sub-list'>\n";
+      else
+        pre +=
+          "<tr><td>"
+	  "<img src='/internal-roxen-unit' width=1 height=3 /></td></tr>\n"
+          "<tr><td valign='top' width='0%'>"
+          "<imgs src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
+	  "      vspace='1' hspace='4' alt='' /></td>"
+          "<td width='100%'>" +
+	  Roxen.html_encode_string(group_name) + "\n"
+          "<table cellspacing='0' cellpadding='0' "
+          "       width='100%' class='module-sub-list'>\n";
+      fin = 1;
+    }
+
+    // If the group should be unfolded draw the module entries.
+    if( !onlysel )
+    {
+      foreach( gd[1], mapping data )
       {
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.selected-indicator;\" width='12'"
-		" height='12' alt='' /></td>"
-		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
-	pre += "<table cellspacing='0' cellpadding='0'>\n";
+	if( data->sname != module )
+	{
+	  if (list)
+	    pre +=
+	      "<li class='module-list-item' "
+	      "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
+	      "    onClick=\"window.location='" +
+	      // Should it be http_encode_url below? I've no idea what
+	      // real_group_name contains. /mast
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+	       data->sname + "/") + "'; return false;\">"
+	      "<a href='" +
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+	       data->sname + "/") + "'>" +
+	      Roxen.html_encode_string(data->name) +
+	      "</a>" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</li>\n";
+	  else
+	    pre +=
+	      "<tr>"
+	      "<td valign='top' width='0%'>"
+	      "<imgs src='&usr.item-indicator;' vspace='1' hspace='4' alt=''/>"
+	      "</td>"
+	      "<td width='100%' class='module-sub-list-item' "
+	      "onMouseOver='p_on_sub(this);' onMouseOut='p_off_sub(this);' "
+	      "onClick=\"window.location='" +
+	      // Should it be http_encode_url below? I've no idea what
+	      // real_group_name contains. /mast
+	      (quoted_url + Roxen.http_encode_invalids(real_group_name) + "!0/" +
+	       data->sname+"/") + "'; return false;\">"
+	      "<a href='" +
+	      (quoted_url +
+	       Roxen.http_encode_invalids(group_name) + "!0/"+data->sname +
+	      "/'") + ">" +
+	      Roxen.html_encode_string(data->name) +
+	      "</a>" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</td></tr>\n";
+	}
+	else
+	{
+	  if (list)
+	    pre +=
+	      "<li class='selected-indicator'>"
+	      "" + Roxen.html_encode_string(data->name) + "" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</li>\n";
+	  else
+	    pre +=
+	      "<tr>"
+	      "<td valign='top' width='0%'>"
+	      "<imgs src='&usr.selected-indicator;' vspace='1' hspace='4' "
+	      "      alt='' />"
+	      "</td>"
+	      "<td width='100%' class='selected-indicator'>"
+	      "" + Roxen.html_encode_string(data->name) + "" +
+	      (data->locked ? " <imgs src='&usr.padlock;'/>" : "") +
+	      "</td></tr>\n";
+	}
       }
     }
-    foreach( gd[1], mapping data )
+    else
     {
-      if( onlysel && data->sname != module )
-	continue;
-      if( data->sname != module )
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.item-indicator;\" width='12' "
-		"height='12' alt='' /></td>"
-		"<td><a href=\""+quoted_url+
-		Roxen.http_encode_string(group_name)+"!0/"+data->sname+
-		"/\">"+Roxen.html_encode_string(data->name)+
-		"</a></td></tr>\n");
-      else
-	pre += ("\n<tr><td valign='top'>"
-		"<img src=\"&usr.selected-indicator;\" width='12' "
-		"height='12' alt='' /></td>"
-		"<td><b>" + Roxen.html_encode_string(data->name) +
-		"</b></td></tr>\n");
+      // Folded group, cont.
+      if( do_js )
+      {
+	if (list)
+	  pre +=
+	    "<li class='module-list-item' "
+	    "    onMouseOver='p_on(this);' onMouseOut='p_off(this);' "
+	    "    ::='&form.popup-args;'"
+	    ">";
+	pre +=
+	  "<a>" + Roxen.html_encode_string(group_name) +
+	  "&nbsp;(" + sizeof(gd[1]) + ")</a>";
+	if (list)
+	  pre += "</li>";
+      }
+      if (!list)
+	pre += "</td></tr>\n";
     }
     if( fin )
-      pre += "</table></td></tr>";
+      if (list)
+	pre += "</ul>\n";
+      else
+	pre += "</table></td></tr>";
   }
-  pre += "</table>\n";
-
+  if (list)
+    pre += "</ul>";
+  else
+    pre += "</table>";
+  pre += "</box-frame>"
+    "<br clear='all'/>"
+    "<img src='/internal-roxen-unit' width='1' height='2'/><br />";
 
   // Do not allow easy addition and removal of modules to and
   // from the configuration interface server. Most of the time
@@ -156,30 +391,33 @@ string selected_item( string q, Configuration c, RequestID id,
 #endif
     config_perm( "Add Module" ) )
   {
-    pre+=sprintf("<br />\n<gbutton frame-image='&usr.left-buttonframe;' "
+    pre+=sprintf("<gbutton frame-image='&usr.left-buttonframe;' "
 		 "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
-		 "href='"+pre_site_url+
-		 "add_module.pike?config=%s'> "
-		 +LOCALE(258, "Add module")+" </gbutton>",
-		 Roxen.http_encode_string( c->name ) )+
-      sprintf("<br />\n<gbutton frame-image='&usr.left"
-	      "-buttonframe;' width='&usr.left-buttonwidth;' bgcolor='&usr."
-	      "left-buttonbg;' href='"+pre_site_url+
-	      "drop_module.pike?config=%s'> "
-	      +LOCALE(259, "Drop module")+
-	      " </gbutton><br />\n",
-	      Roxen.http_encode_string( c->name ));
+		 "href='%sadd_module.pike?config=%s'> %s </gbutton>",
+		 pre_site_url,
+		 Roxen.http_encode_url( c->name ),
+		 LOCALE(251, "Add Module"))+
+      sprintf("<br />\n"
+	      "<img src='/internal-roxen-unit' width=1 height=1/><br />"
+	      "<gbutton frame-image='&usr.left-buttonframe;' "
+	      "width='&usr.left-buttonwidth;' "
+	      "bgcolor='&usr.left-buttonbg;' "
+	      "href='%sdrop_module.pike?config=%s'> %s </gbutton><br />\n",
+	      pre_site_url,
+	      Roxen.http_encode_url( c->name ),
+	      LOCALE(252, "Drop Module"));
   }
   return pre;
 }
 
-string parse( RequestID id )
+mapping|string parse( RequestID id )
 {
   string site;
   if( !id->misc->path_info ) id->misc->path_info = "";
   sscanf( id->misc->path_info, "/%[^/]/", site );
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
-  return selected_item( site, roxen.find_configuration( site ), id,
- 			(((sizeof(path)>=2)?path[1]:"")/"!")[0],
-			((sizeof(path)>=3)?path[2]:""));
+  return Roxen.http_string_answer(
+    selected_item( site, roxen.find_configuration( site ), id,
+		   (((sizeof(path)>=2)?path[1]:"")/"!")[0],
+		   ((sizeof(path)>=3)?path[2]:"")));
 }

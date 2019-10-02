@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_webapp</project>
+<language>eng</language>
+<file>../modules/scripting/webapp.pike</file>
+
+<str id="1">
+<o>Java: Java Web Application bridge</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>An interface to Java &lt;a href="http://java.sun.com/products/servlet/index.html"&gt;Servlets&lt;/a&gt;.</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>No Web Application selected</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Servlet: %s
+</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>&lt;pre&gt;%s&lt;/pre&gt;</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>error: 
+%O
+</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Deployment descriptor is corrupt</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>&lt;table border=0&gt;</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>&lt;i&gt;No servlet information available&lt;/i&gt;</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>Java: WAR loaded from %s</o>
+<t></t>
+</str>
+
+<str id="12">
+<o> does not exist
+</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Can't read </o>
+<t></t>
+</str>
+
+<str id="14">
+<o> is not a JAR file
+</o>
+<t></t>
+</str>
+
+<str id="15">
+<o> is not a valid Web Application Directory</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Web Application Archive</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>The archive file (.war) or directory containing the Web Application.</o>
+<t></t>
+</str>
+
+<str id="18">
+<o>Parse RXML in servlet output</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>If this is set, the output from the servlets handled by this module will be RXML parsed. NOTE: No data will be returned to the client until the output is fully parsed.</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Class path</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>Any number of directories and/or JAR files from which to load the support classes.</o>
+<t></t>
+</str>
+
+<str id="22">
+<o>Parameters</o>
+<t></t>
+</str>
+
+<str id="23">
+<o>Parameters for all servlets on the form &lt;tt&gt;&lt;i&gt;name&lt;/i&gt;=&lt;i&gt;value&lt;/i&gt;&lt;/tt&gt;, one per line.</o>
+<t></t>
+</str>
+
+<str id="24">
+<o>Access any servlet</o>
+<t></t>
+</str>
+
+<str id="25">
+<o>Use a servlet mapping that mounts any servlet onto &amp;lt;Mount Point&amp;gt;/servlet/</o>
+<t></t>
+</str>
+
+<str id="26">
+<o>Duplicate entry of %s in web.xml
+</o>
+<t></t>
+</str>
+
+<str id="27">
+<o>&lt;pre&gt;Duplicate entry of %s in web.xml&lt;/pre&gt;</o>
+<t></t>
+</str>
+
+<str id="29">
+<o>&lt;i&gt;Servlet not loaded.&lt;/i&gt;</o>
+<t></t>
+</str>
+
+<str id="30">
+<o>&lt;b&gt;Servlet failed to load!&lt;/b&gt;</o>
+<t></t>
+</str>
+
+<str id="31">
+<o>&lt;i&gt;Servlet not initialized&lt;/i&gt;</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>&lt;b&gt;Servlet failed to initialize!&lt;/b&gt;</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>Java: WAR loaded from %s...%s</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>Preload all servlets</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>Load all servlets at module initialization time even if load-on-startup is not specified in web.xml</o>
+<t></t>
+</str>
+
+<str id="36">
+<o>Path verification of %O failed:
+%O is not a prefix of %O
+</o>
+<t></t>
+</str>
+
+<str id="37">
+<o>RXMLTypes</o>
+<t></t>
+</str>
+
+<str id="38">
+<o>Servlet engine</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>Select the jsp engine that should handle files with the .jsp extension.</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>JSP Debug</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Enable debug output from the JSP engine.</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>Send Errors To Client</o>
+<t></t>
+</str>
+
+<str id="43">
+<o>Return jsp compilation errors to the client.</o>
+<t></t>
+</str>
+
+<str id="44">
+<o>Target name</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Content types that should be passed on to the RXML Parser.</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>Target name to use in the servlet tag to reference this Web Application. Leave empty to exclude from the servlet tag.</o>
+<t></t>
+</str>

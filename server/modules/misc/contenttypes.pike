@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // This module handles all normal extension to content type
 // mapping. Given the file 'foo.html', it will per default
@@ -7,7 +7,7 @@
 inherit "module";
 #include <module.h>
 
-constant cvs_version = "$Id: contenttypes.pike,v 1.22 2000/09/16 20:23:48 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TYPES;
 constant module_name = "Content types";
@@ -29,8 +29,8 @@ follows: <table><tr><th>extension</th><th>type</th><th>encoding</th></tr>
 <tr><td>gif</td><td>image/gif</td></tr>
 <tr><td>gz</td> <td>STRIP</td><td>application/gnuzip</td></tr></table>
 For a list of types, see <a
-href='ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types'
->ftp://ftp.isi.edu/in-notes/iana/assignments/media-types/media-types</a>"));
+href='http://www.iana.org/assignments/media-types'
+>http://www.iana.org/assignments/media-types</a>"));
 
   defvar("default", 
          Variable.String("application/octet-stream", VAR_NOT_CFIF,

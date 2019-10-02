@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# $Id: perlrun,v 1.2 2000/08/17 15:17:46 leif Exp $
+# $Id$
 
 DIR="`dirname $0`"
 if [ ! -f "$DIR/perlhelper" ] ; then
@@ -10,11 +10,15 @@ if [ ! -f "$DIR/perlhelper" ] ; then
   echo >&2 "$0 $$: unable to find 'perlhelper' script"
   exit 1
 fi
-for X in /usr/local/bin /usr/bin /bin
+OLDIFS="$IFS"
+IFS=":"
+for X in $PATH
 do
-  if [ -f $X/perl ] ; then
-     exec $X/perl "$DIR/perlhelper" $*
+  IFS="$OLDIFS"
+  if [ -f "$X/perl" ] ; then
+     exec "$X/perl" "$DIR/perlhelper" "$@"
   fi
 done
-echo >&2 "$0 $$: unable to local Perl interpreter"
+IFS="$OLDIFS"
+echo >&2 "$0 $$: unable to locate Perl interpreter"
 exit 1

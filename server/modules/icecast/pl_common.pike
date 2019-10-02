@@ -1,6 +1,8 @@
 #!NO MODULE
-static array md_callbacks = ({});
-static mapping md; // ID3 etc.
+
+// This file is part of Roxen WebServer. Copyright © 2001 - 2009, Roxen IS.
+protected array md_callbacks = ({});
+protected mapping md; // ID3 etc.
 
 string codec   = "null";
 string decoder = "null";
@@ -36,8 +38,8 @@ Stdio.File recode( Stdio.File fd, int bitrate )
   if( args )
   {
     Stdio.File in = Stdio.File(), in2 = in->pipe();
-    Process.create_process( args,  ([ "stdin":fd, "stdout":in2,
-				      "stderr":devnull, ]) );
+    Process.Process( args,  ([ "stdin":fd, "stdout":in2,
+			       "stderr":devnull, ]) );
     destruct( in2 );
     destruct( fd );
     fd = in;
@@ -64,8 +66,8 @@ Stdio.File recode( Stdio.File fd, int bitrate )
   if( args )
   {
     Stdio.File out = Stdio.File(), out2 = out->pipe();
-    Process.create_process( args ,(["stdin":fd,"stdout":out2,
-				    "stderr":devnull, ]));
+    Process.Process( args ,(["stdin":fd,"stdout":out2,
+			     "stderr":devnull, ]));
     destruct( out2 );
     destruct( fd );
     fd = out;
@@ -103,7 +105,11 @@ void init_codec( function query )
 void codec_vars(function defvar)
 {
   defvar("codec", "null", _(0,"Encoder"), TYPE_STRING_LIST,
-	 _(0,"The codec program to use to encode MPEG"),
+	 _(0,"The codec program to use to encode MPEG. Please note that "
+	  "winamp does not support variable bitrate, thus, if your mpeg "
+	   "files does not all have the correct bitrate, use the encoder "
+	   "and decoders to enforce a bitrate. This will cause slightly lower"
+	   "sound quality."),
 	 ({ "null", "bladeenc" }) );
   defvar("decoder", "null", _(0,"Decoder"), TYPE_STRING_LIST,
 	 _(0,"The decoder program to use to decode MPEG"),

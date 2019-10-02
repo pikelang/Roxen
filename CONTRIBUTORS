@@ -2,13 +2,14 @@
  WebServer. If you ought to be on this list, don't hesitate to contact
  us, and we'll try to fix it.
 
-Roxen people:
+Roxen people (in alphabetical order):
 
- Per Hedbor, Henrik Grubbström, Fredrik Hübinette, Niels Möller, Pontus
- Hagland, Marcus Comstedt, Peter Bortas, Björn Ericsson, David Hedbor,
- Fredrik Noring, Johan Schön, Martin Stjernholm, Johan Sundström,
- Henrik Wallin, Jonas Walldén, Francesco Chemolli, Martin Nilsson,
- Honza Petrous
+ Peter Bortas, Francesco Chemolli, Marcus Comstedt, Erik Dahl, Björn
+ Ericsson, Henrik Grubbström, Pontus Hagland, David Hedbor, Per Hedbor,
+ Fredrik Hübinette, Anders Johansson, Andreas Lange, Niels Möller,
+ Martin Nilsson, Fredrik Noring, David Norlin, Honza Petrous, Johan
+ Schön, Andreas Sigfridsson, Martin Stjernholm, Johan Sundström, Jonas
+ Walldén, Henrik Wallin, Stefan Wallström, Marcus Wellhardh
 
 Other people:
 
@@ -16,9 +17,9 @@ Other people:
  Janne Edelman, Kai Garlipp, Patrick Kremer, Wilhelm Köhler, Eric
  Lammerts, Alistair MacDonald, Klara Makovac, Jordi Murgo, Morten Hol
  Møller, Goran Opacic, Jason Rumney, Celso J. Sawaia, Iztok Umek, Zsolt
- Varga, Bill Welliver
+ Varga, Kai Voigt, Bill Welliver
 
 
  A special thanks to the people at Real and the Roxen Alphatesters for
- valuable bugreports and fixes.
+ valuable bug reports and fixes.
 

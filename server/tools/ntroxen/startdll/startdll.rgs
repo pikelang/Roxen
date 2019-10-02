@@ -1,0 +1,11 @@
+HKCR
+{
+	NoRemove AppID
+	{
+		{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A} = s 'ntstart'
+		'ntstart.EXE'
+		{
+			val AppID = s {EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}
+		}
+	}
+}

@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.14 2001/03/07 13:42:13 kuntri Exp $";
+constant cvs_version = "$Id$";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -11,14 +13,14 @@ inherit "module";
 
 
 constant module_type = MODULE_TAG | MODULE_FILTER;
-LocaleString module_name = _(1,"Page sizer");
+LocaleString module_name = _(1,"Tags: Page sizer");
 
 LocaleString module_doc  =
   _(2,"This module provides the <tt>&lt;page-size&gt;</tt> tag that "
     "calculates the size of a page, including inline images, and gives"
-    " estimates of the time it will take to download the page.");
-
-#include <variables.h>
+    " estimates of the time it will take to download the page.<p>"
+    "You can also use the <i>size</i> prestate to trigger the sizing "
+    "process</p>");
 
 #define NOTE(X) ("<tr><td valign='top'><img src='/internal-roxen-err_1'></td>\n"\
 		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
@@ -40,6 +42,8 @@ class Combo( string file, RequestID id )
     id2->misc->sizer_in_progress++;
     id2->not_query = file;
     res = id->conf->get_file( id2 );
+    if(!res)
+      error("Failed to fetch %s\n", file );
   }
 
   int ok( )
@@ -92,7 +96,8 @@ class Combo( string file, RequestID id )
       heads["Content-Length"] = (string)res->len;
 
     string head_string = sprintf( "%s %d %s\r\n", id2->prot, res->error,
-				  res->rettext||errors[res->error]||"");
+				  res->rettext||
+				  Roxen.http_status_messages[res->error]||"");
 
     if( (res->error/100 == 2) && (res->len <= 0) )
       heads->Connection = "close";
@@ -103,7 +108,9 @@ class Combo( string file, RequestID id )
 
 Combo do_read_file( string file, RequestID id )
 {
-  return Combo( file, id );
+  Combo res = Combo( file, id );
+  res->ok();
+  return res;
 }
 
 array size_file( string page, RequestID id )
@@ -118,9 +125,10 @@ array size_file( string page, RequestID id )
   files = ({ page });
   if( strlen( page ) && page[0] == '/' )
   {
-    Combo res = do_read_file( page, id );
+    Combo res;
+    catch(  res = do_read_file( page, id ) );
 
-    if( !res->ok() )
+    if( !res || !res->ok() )
       messages += ERR("Failed to read '"+Roxen.html_encode_string(page)+"'\n");
 
     function follow( string i ) {
@@ -173,11 +181,13 @@ mixed find_internal( string f, RequestID id )
 
   switch( fmt )
   {
+#if constant(Image.JPEG.encode)
     case "JPEG":
       return Roxen.http_string_answer(
 	Image.JPEG.encode( i->img, ([ "quality":quality ]) ),
 	"image/jpeg" );
       break;
+#endif
     case "GIF":
       break;
   }
@@ -344,6 +354,7 @@ string simpletag_page_size( string name,
 	switch( types[ f ] )
 	{
 	  case "image/jpeg":
+#if constant(Image.JPEG.encode) && constant(Image.JPEG.decode)
 	    if( sizes[f][0] < 300*1024 )
 	    {
 	      Image.Image i=Image.JPEG.decode( do_read_file( f, id )->data() );
@@ -407,8 +418,13 @@ string simpletag_page_size( string name,
 	      res += WARN("The image "+fname(f)+
 			  " is huge. Try making it smaller");
 	    }
+#else /* !constant(Image.JPEG.encode) || !constant(Image.JPEG.decode) */
+	    res += NOTE("Could not decode/encode JPEG image. "
+			"This server lacks JPEG support.");
+#endif /* constant(Image.JPEG.encode) */
 	    break;
 	  case "image/gif":
+#if constant(Image.GIF) && constant(Image.GIF.encode)
 	    mapping _i = Image._decode( do_read_file( f, id )->data() );
 	    Image.Image i = _i->img;
 	    Image.Image a = _i->alpha;
@@ -467,6 +483,10 @@ string simpletag_page_size( string name,
 				    (sizes[f][0]-sz[8])/1024.0 ) );
 	      }
 	    }
+#else // constant(Image.GIF) && constant(Image.GIF.encode)
+	    res += NOTE("Could not decode/encode GIF image. "
+			"This server lacks LZW support.");
+#endif // constant(Image.GIF) && constant(Image.GIF.encode)
 	    break;
 	}
       }
@@ -484,10 +504,10 @@ string simpletag_page_size( string name,
 mapping filter(mapping result, RequestID id)
 {
   if(!result				// nobody had anything to say
-  || !stringp(result->data)		// got a file object
-  || !(id->prestate->size)		// only bother when we're being hailed
-  || !glob("text/html*", result->type)
-  || id->misc->sizer_in_progress	// already sized file?
+     || !stringp(result->data)		// got a file object
+     || !(id->prestate->size)		// only bother when we're being hailed
+     || !glob("text/html*", result->type)
+     || id->misc->sizer_in_progress	// already sized file?
      || id->misc->orig			// not for internal requests
     )
     return 0; // signal that we didn't rewrite the result for good measure
@@ -508,34 +528,53 @@ constant tagdoc=([
  Calculates the size of a page and estimates the
  downloadtime.</short><tag>page-size</tag> calculates the size of a
  page, including inline images, and gives estimates of the time it
- will take to download the page. All information is shown in a box.
-</p>
+ will take to download the page. All information is shown in a box.</p>
 
+<ex-html>
+<table width='400' cellpadding='0' cellspacing='0' border='0' bgcolor='black'><tr><td>
+<table cellpadding='10' cellspacing='1' border='0' width='100%' bgcolor='white'>
+<tr><td>
+<table width='100%' cellpadding='0' cellspacing='0'>
+  <tr><th align='left'><font size='-1' color='black'>File</font></th><th align='right'><font size='-1' color='black'>Size (kb)</font></th><th align='right'><font size='-1' color='black'>&nbsp; Headers (b)</font></th><th align='right'><font size='-1' color='black'>&nbsp; % of page</font></th></tr><tr><td colspan='4'><hr noshade='noshade' size='1' /></td></tr>  <tr><td><font color='black' size='-1'>/index.html</font></td><td align='right'><font color='black' size='-1'>0.5</font></td><td align='right'><font color='black' size='-1'>188</font></td><td align='right'><font color='black' size='-1'>0%</font></td></tr>
+  <tr><td><font color='black' size='-1'>Gtext (\"roxen.com\")</font></td><td align='right'><font color='black' size='-1'>1.5</font></td><td align='right'><font color='black' size='-1'>189</font></td><td align='right'><font color='black' size='-1'>1%</font></td></tr>
+  <tr><td><font color='black' size='-1'>/pic/apples.jpeg</font></td><td align='right'><font color='black' size='-1'>96.6</font></td><td align='right'><font color='black' size='-1'>163</font></td><td align='right'><font color='black' size='-1'>97%</font></td></tr>
+
+<tr><td><font color='black' size='-1'><b>Total size:</b></font></td><td align='right'><font color='black' size='-1'>98.7</font></td><td align='right'><font color='black' size='-1'>540</font></td><td>&nbsp;</td></tr><tr><td colspan='4'><hr noshade='noshade' size='1' /></td></tr></table>
+<b><font size='-1'>Estimated download time:</font></b> (bandwidth in kb/s)
+<table><tr><td align='right'><font color='darkorange' size='-1'><b>28.8</b></font>:</td><td align='right'><font color='darkorange' size='-1'>28s</font></td>
+<td align='right'><font color='darkred' size='-1'><b>56.0</b></font>:</td><td align='right'><font color='darkred' size='-1'>15s</font></td>
+<td align='right'><font color='darkred' size='-1'><b>64.0</b></font>:</td><td align='right'><font color='darkred' size='-1'>13s</font></td>
+</tr>
+<tr><td align='right'><font color='darkgreen' size='-1'><b>256.0</b></font>:</td><td align='right'><font color='darkgreen' size='-1'>3s</font></td>
+<td align='right'><font color='darkgreen' size='-1'><b>384.0</b></font>:</td><td align='right'><font color='darkgreen' size='-1'>2s</font></td>
+<td align='right'><font color='darkgreen' size='-1'><b>1024.0</b></font>:</td><td align='right'><font color='darkgreen' size='-1'>1s</font></td>
+</tr>
+<tr></tr>
+</table><hr noshade='noshade' size='1' /><table></table></td></tr>
+</table>
+</td></tr></table>
+</ex-html>
 </desc>
 
-<attr name=page value=path><p>
- Calculate size and downloadtime for another page than the current. </p>
+<attr name='page' value='path'>
+ <p>Calculate size and downloadtime for another page than the current.</p>
 </attr>
 
-<attr name=include value=summary,details,dltime,suggestions><p>
- What information to present.
+<attr name='include' value='summary,details,dltime,suggestions'>
+ <p>What information to present.</p>
 </attr>
 
-<attr name=speeds value=28.8,56.0,64.0,256.0,384.0,1024.0>
- The time it will take to download a page using the specified speed(s)
- in kb/s.</p>
+<attr name='speeds' value='28.8,56.0,64.0,256.0,384.0,1024.0'>
+ <p>Show the time it will take to download a page using the specified
+ speed(s) in kbit/s.</p>
 </attr>
 
-<ex type='vert'>
+<ex-box>
  <page-size
   page='../'
   include='summary,details,dltime,suggestions'
   speeds='28.8,56.0,64.0,256.0,384.0,1024.0'
  />
-</ex>",
-
-
+</ex-box>",
     ]);
-
 #endif
-

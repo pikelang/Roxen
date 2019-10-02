@@ -1,4 +1,4 @@
-// The translation module. Copyright © 2000, Roxen IS.
+// The translation module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.10 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id$";
 
 
 
@@ -47,6 +47,11 @@ class TagTranslate {
   inherit RXML.Tag;
   constant name = "translate";
 
+  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PXml),
+				     RXML.t_html(RXML.PXml),
+				     RXML.t_text(RXML.PXml),
+				     RXML.t_any(RXML.PXml) });
+
   mapping(string:RXML.Type) opt_arg_types = ([ 
     "id":RXML.t_text(RXML.PEnt),
     "project":RXML.t_text(RXML.PEnt),
@@ -66,9 +71,8 @@ class TagTranslate {
 	RXML.user_set_var(args->variable, trans, args->scope);
 	return 0;
       }
-
-      result = trans;
-      return 0;
+      
+      return ({ trans });
     }
   }
 }

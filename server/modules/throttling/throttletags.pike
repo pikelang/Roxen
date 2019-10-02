@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.11 2001/03/07 13:40:47 kuntri Exp $";
+constant cvs_version="$Id$";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -12,8 +12,6 @@ constant cvs_version="$Id: throttletags.pike,v 1.11 2001/03/07 13:40:47 kuntri E
 #else
 #define THROTTLING_DEBUG(X)
 #endif
-
-#define THROW(X) throw( X+"\n" )
 
 constant module_type = MODULE_TAG;
 constant module_name = "Throttling control tags";
@@ -53,7 +51,7 @@ Divides this requests' bandwidth by 'float'.</p>
 Sets this request's bandwidth to 'value'.</p>
 </attr>
 
-<attr name='final' required><p>
+<attr name='final' required='required'><p>
 No subsequent modifications will be done to this request's bandwidth
 after the current one.</p>
 </attr>",

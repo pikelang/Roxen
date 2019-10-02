@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: robots.txt.pike,v 1.2 2000/12/05 00:41:19 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "robots.txt generator";
@@ -16,7 +16,7 @@ constant module_doc  = "Generates a robots.txt on demand from various informatio
 //   the robots.txt file.
 // - Dependency on the real robots.txt file appears to be broken.
 
-void start() {
+void create() {
 
   defvar("disallow",
 	 Variable.StringList( ({"/cgi-bin/"}), 0,

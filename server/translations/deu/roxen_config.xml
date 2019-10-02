@@ -6,21 +6,46 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
 <file>../base_server/module_support.pike</file>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/index.html</file>
+<file>../config_interface/boxes/Box.pmod</file>
 <file>../config_interface/boxes/articles.pike</file>
 <file>../config_interface/boxes/crunch.pike</file>
 <file>../config_interface/boxes/doclinks.pike</file>
+<file>../config_interface/boxes/megatokyo.pike</file>
 <file>../config_interface/boxes/ris_news.pike</file>
 <file>../config_interface/boxes/server_status.pike</file>
-<file>../config_interface/boxes/slashdot.pike</file>
+<file>../config_interface/boxes/snmp_status.pike</file>
 <file>../config_interface/boxes/welcome.pike</file>
 <file>../config_interface/cv_startpage_tabs.pike</file>
+<file>../config_interface/dbs/backups.html</file>
 <file>../config_interface/dbs/browser.pike</file>
+<file>../config_interface/dbs/create_db.html</file>
+<file>../config_interface/dbs/create_group.html</file>
+<file>../config_interface/dbs/db_list.pike</file>
+<file>../config_interface/dbs/db_maintenance.pike</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
+<file>../config_interface/dbs/db_optimizeall.html</file>
+<file>../config_interface/dbs/db_optimizeall_ajax.pike</file>
+<file>../config_interface/dbs/db_repairall.html</file>
+<file>../config_interface/dbs/db_repairall_ajax.pike</file>
+<file>../config_interface/dbs/edit_group.pike</file>
+<file>../config_interface/dbs/import_dbs.pike</file>
+<file>../config_interface/dbs/index.html</file>
+<file>../config_interface/dbs/maintenance.html</file>
+<file>../config_interface/dbs/new_db.pike</file>
+<file>../config_interface/dbs/new_group.pike</file>
+<file>../config_interface/dbs/permissions.html</file>
+<file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/schedules.html</file>
+<file>../config_interface/dbs/schedules.pike</file>
+<file>../config_interface/dbs/status.html</file>
+<file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
+<file>../config_interface/diff.pike</file>
 <file>../config_interface/event_log/clear_log.pike</file>
 <file>../config_interface/event_log/log.pike</file>
+<file>../config_interface/global_settings/fsgarb.pike</file>
+<file>../config_interface/global_settings/index.html</file>
 <file>../config_interface/logutil.pike</file>
 <file>../config_interface/sites/add_module.pike</file>
 <file>../config_interface/sites/config_left_item.pike</file>
@@ -31,11 +56,12 @@
 <file>../config_interface/sites/index.html</file>
 <file>../config_interface/sites/log.pike</file>
 <file>../config_interface/sites/new_site.html</file>
+<file>../config_interface/sites/site.html</file>
 <file>../config_interface/sites/site_content.pike</file>
 <file>../config_interface/sites/site_header.pike</file>
-<file>../config_interface/sites/site_templates/common.pike</file>
 <file>../config_interface/statusinfo.pike</file>
 <file>../config_interface/template</file>
+<file>../config_interface/template-insert</file>
 <file>../config_interface/topmenu.pike</file>
 <file>../config_interface/user_delete.pike</file>
 <file>../config_interface/user_form.pike</file>
@@ -43,10 +69,14 @@
 <file>../etc/modules/Variable.pmod/Date.pike</file>
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/Image.pike</file>
+<file>../etc/modules/Variable.pmod/Mapping.pike</file>
+<file>../etc/modules/Variable.pmod/Schedule.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
+<file>../site_templates/common.pike</file>
 
 <str id="2">
 <o>Sent data</o>
@@ -64,9 +94,8 @@
 </str>
 
 <str id="6">
-<new/>
 <o>min</o>
-<t></t>
+<t>Min</t>
 </str>
 
 <str id="7">
@@ -90,28 +119,14 @@
 </str>
 
 <str id="13">
-<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
+<changed from="The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order"/>
+<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order.</o>
 <t>Die Priorität des Moduls. 9 ist die Höchste, 0 die Niedrigste. Module mit gleicher Priorität werden in zufälliger Reihenfolge aufgerufen.</t>
-</str>
-
-<str id="14">
-<o>Security: Realm</o>
-<t>Sicherheit: "Realm"</t>
-</str>
-
-<str id="15">
-<o>The realm to use when requesting password from the client. Usually used as an informative message to the user.</o>
-<t>Bereich (engl. realm) für die Gültigkeit von Konto und Kennwort bei der Anmeldung im Webbrowser. Wird üblicherweise im Anmelde-Fenster angezeigt.</t>
 </str>
 
 <str id="16">
 <o>Security: Patterns</o>
 <t>Sicherheit: Muster</t>
-</str>
-
-<str id="17">
-<o>This is the 'security level=value' list.&lt;br /&gt;Each security level can be any or more from this list:&lt;hr noshade="noshade" /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;allow ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;allow user=&lt;i&gt;username&lt;/i&gt;,...&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;/&lt;i&gt;bits&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;IP&lt;/i&gt;:&lt;i&gt;mask&lt;/i&gt;&lt;br /&gt;deny ip=&lt;i&gt;pattern&lt;/i&gt;&lt;br /&gt;&lt;hr noshade="noshade" /&gt;In patterns: * matches one or more characters, and ? matches one character.&lt;p&gt;In username: 'any' stands for any valid account (from .htaccess or an auth module. The default (used when _no_ entries are present) is 'allow ip=*', allowing everyone to access the module.&lt;/p&gt;</o>
-<t>Dies ist die Liste der Sicherheitsmuster.&lt;p&gt;Jede Sicherheitsebene kann aus einem oder mehr der folgenden Einträgen bestehen: &lt;hr noshade&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;IP-Adresse&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;allow ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;allow user=&lt;i&gt;Konto&lt;/i&gt;,...&lt;br&gt;deny ip=&lt;i&gt;IP-Adresse&lt;/i&gt;/&lt;i&gt;Bits&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;IP-nummer&lt;/i&gt;:&lt;i&gt;Netzmaske&lt;/i&gt;&lt;br&gt;deny ip=&lt;i&gt;Muster&lt;/i&gt;&lt;br&gt;&lt;hr noshade&gt;Bei den Mustern trifft '*' auf ein oder mehrere Zeichen zu, '?' auf genau ein Zeichen.&lt;p&gt; Bei den Benutzer-Konten steht 'any' für jedes gültige Konto (aus einer .htaccess-Datei oder jedem anderen Auth-Modul)  Der Standard-Wert (wenn keine Eingaben gemacht wurden), ist 'allow ip=*', d.h. jeder darf auf das Modul zugreifen.</t>
 </str>
 
 <str id="18">
@@ -120,7 +135,8 @@
 </str>
 
 <str id="20">
-<o>Default site</o>
+<changed from="Default site"/>
+<o>Ports: Default site</o>
 <t>Standard-Website</t>
 </str>
 
@@ -162,67 +178,351 @@
 
 Log format is normal characters, or one or more of the variables below:
 
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
+\n \t \r        -- As in C, newline, tab and linefeed
+$char(int)      -- Insert the (1 byte) character specified by the integer.
+$wchar(int)     -- Insert the (2 byte) word specified by the integer.
+$int(int)       -- Insert the (4 byte) word specified by the integer.
+$^              -- Supress newline at the end of the logentry
+$host           -- The remote host name, or ip number.
+$vhost          -- The Host request-header sent by the client, or - if none
+$ip_number      -- The remote ip number.
+$bin-ip_number  -- The remote host id as a binary integer number.
+$cern_date      -- Cern Common Log file format date.
+$bin-date       -- Time, but as an 32 bit integer in network byteorder
+$method         -- Request method
+$resource       -- Resource identifier
+$full_resource  -- Full requested resource, including any query fields
+$protocol       -- The protocol used (normally HTTP/1.0)
+$response       -- The response code sent
+$bin-response   -- The response code sent as a binary short number
+$length         -- The length of the data section of the reply
+$bin-length     -- Same, but as an 32 bit integer in network byteorder
+$request-time   -- The time the request took (seconds)
+$referer        -- The header 'referer' from the request, or '-'.
+$user_agent     -- The header 'User-Agent' from the request, or '-'.
+$user_agent_raw -- Same, but spaces in the name are not encoded to %20.
+$user           -- the name of the auth user used, if any
+$user_id        -- A unique user ID, if cookies are supported,
+                   by the client, otherwise '0'
+$cache-status   -- A comma separated list of words (containing no
+                   whitespace) that describes which cache(s) the page
+                   was delivered from:
+                   protcache -- The low-level cache in the HTTP
+                                protocol module.
+                   xsltcache -- The XSLT cache.
+                   pcoderam  -- RXML parse tree RAM cache.
+                   pcodedisk -- RXML parse tree persistent cache.
+                   cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
+                   nocache   -- No hit in any known cache.
 &lt;/pre&gt;"/>
-<o>What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
+<o>Describes the format to use for access logging. The log file can also
+receive messages for various internal activities.
 
-Log format is normal characters, or one or more of the variables below:
+Empty lines and lines beginning with '&lt;code&gt;#&lt;/code&gt;' are ignored.
+Other lines describes how to log either an access or an internal
+event.
 
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
+&lt;p&gt;A line to format an access logging message is one of:&lt;/p&gt;
 
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
+&lt;pre&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
 
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
+&lt;p&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt; is an HTTP status code. The
+corresponding &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; is used for all responses
+matching that code. It's described in more detail below. If
+'&lt;code&gt;*&lt;/code&gt;' is used instead of a response code then that line
+matches all responses that aren't matched by any specific response
+code line.&lt;/p&gt;
 
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-&lt;/pre&gt;</o>
+&lt;p&gt;A line to format an event logging message is one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; matches an identifier for the Roxen module
+or subsystem that the event comes from. Facility identifiers always
+starts with a character in &lt;code&gt;[a-zA-Z0-9]&lt;/code&gt; and contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. If '&lt;code&gt;*&lt;/code&gt;' is
+used instead of &lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; then that line matches all
+facilities that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; matches an identifier for a specific kind of
+event logged by a facility. An action identifier contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. '&lt;code&gt;*&lt;/code&gt;' may be
+used instead of an &lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; to match all events logged by
+a facility that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; consists of literal characters and the
+special specifiers described below. All specifiers are not applicable
+for all kinds of messages. If an unknown or inapplicable specifier is
+encountered it typically expands to '&lt;code&gt;-&lt;/code&gt;', but in some
+cases it expands to a dummy value that is syntactically compatible
+with what it usually expands to.&lt;/p&gt;
+
+&lt;p&gt;For compatibility, underscores ('_') may be used wherever
+hyphens ('-') occur in the specifier names.&lt;/p&gt;
+
+&lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
+
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
+    &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
+    &lt;td&gt;Insert the (1 byte) character specified by the integer. E.g.
+    '&lt;code&gt;$char(36)&lt;/code&gt;' inserts a literal '&lt;code&gt;$&lt;/code&gt;'
+    character.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$wchar(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 2 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$int(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 4 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$^&lt;/td&gt;
+    &lt;td&gt;Suppress newline at the end of the logentry.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$date&lt;/td&gt;
+    &lt;td&gt;Local date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$time&lt;/td&gt;
+    &lt;td&gt;Local time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cern-date&lt;/td&gt;
+    &lt;td&gt;Local date and time in CERN Common Log file format, i.e.
+    like '&lt;code&gt;17/Jan/2001:13:00:00 +0200&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$utc-date&lt;/td&gt;
+    &lt;td&gt;UTC date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$utc-time&lt;/td&gt;
+    &lt;td&gt;UTC time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-date&lt;/td&gt;
+    &lt;td&gt;Unix time as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
+    &lt;td&gt;Resource identifier. For events, this is either a path to a
+    file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
+    resource identifier (otherwise). It is '-' for events that don't
+    act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
+    &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-cputime&lt;/td&gt;
+    &lt;td&gt;Server cpu (user+system) time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-usertime&lt;/td&gt;
+    &lt;td&gt;Server cpu user time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-systime&lt;/td&gt;
+    &lt;td&gt;Server cpu system time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
+
+&lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
+    &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
+    &lt;td&gt;The Host request-header sent by the client, or '-' if none.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$ip-number&lt;/td&gt;
+    &lt;td&gt;The remote ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-ip-number&lt;/td&gt;
+    &lt;td&gt;The remote host ip as a binary integer number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$xff&lt;/td&gt;
+    &lt;td&gt;The remote host name/ip taken from the X-Forwarded-For header, or
+        '-' if none is provided. If multiple headers or multiple values are
+        given the first value is logged; this should correspond to the
+        originating computer.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$method&lt;/td&gt;
+    &lt;td&gt;Request method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$full-resource&lt;/td&gt;
+    &lt;td&gt;Full requested resource, including any query fields.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$protocol&lt;/td&gt;
+    &lt;td&gt;The protocol used (normally HTTP/1.1).&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$scheme&lt;/td&gt;
+    &lt;td&gt;The URL scheme (e.g. http or https) derived from the port handler
+        module.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$response&lt;/td&gt;
+    &lt;td&gt;The response code sent.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-response&lt;/td&gt;
+    &lt;td&gt;The response code sent as a binary short number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$length&lt;/td&gt;
+    &lt;td&gt;The length of the data section of the reply.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-length&lt;/td&gt;
+    &lt;td&gt;Same, but as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-length&lt;/td&gt;
+    &lt;td&gt;Number of jobs waiting to be processed by the handler threads
+    at the time this request was added to the queue.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds that the request spent in the internal handler
+    queue, waiting to be processed by a handler thread.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds spent processing the request in a handler
+    thread. This measures the server processing time, excluding I/O
+    and time spent in the handler queue. Note however that this
+    measures real time, not virtual process time. I.e. if there are
+    other handler threads or processes using the CPU then this might
+    not accurately show the time that the Roxen server spent on the
+    request. Also note that if a handler thread has to wait for
+    responses from other servers then that wait time is included in
+    this measurement.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-cputime&lt;/td&gt;
+    &lt;td&gt;CPU time in seconds spent processing the request in a handler
+    thread. Similar to $handle-time, but only includes the actual CPU
+    time spent on this request only. Time spent waiting for responses
+    from external server is not included here. Note that this time
+    might have very low accuracy on some platforms. There are also
+    platforms where this measurement isn't available at all, and in
+    that case this fields expands to "-".&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds that the whole request took on the server
+    side, including I/O time for receiving the request and sending the
+    response. Note that this measures real time - see $handle-time for
+    further discussion.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$etag&lt;/td&gt;
+    &lt;td&gt;The entity tag (aka ETag) header of the result.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referrer&lt;/td&gt;
+    &lt;td&gt;The header 'referer' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referer&lt;/td&gt;
+    &lt;td&gt;Same as $referrer. Common misspelling kept for
+    compatibility.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent&lt;/td&gt;
+    &lt;td&gt;The header 'User-Agent' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent-raw&lt;/td&gt;
+    &lt;td&gt;Same, but spaces in the name are not encoded to %20.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user&lt;/td&gt;
+    &lt;td&gt;The name of the user, if any is given using the HTTP basic
+    authentication method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-id&lt;/td&gt;
+    &lt;td&gt;A unique user ID, if cookies are supported, by the client,
+    otherwise '0'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$content-type&lt;/td&gt;
+    &lt;td&gt;Resource MIME type.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cookies&lt;/td&gt;
+    &lt;td&gt;All cookies sent by the browser, separated by ';'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$cache-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes how the request got handled by various caches:
+
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
+	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
+	&lt;td&gt;The page is stored in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;stale&lt;/td&gt;
+	&lt;td&gt;There is a stale entry in the HTTP protocol cache. A
+	refresh is underway in the background and the stale entry is
+	sent in the meantime to avoid a long response time and server
+	congestion.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
+	&lt;td&gt;This is the finishing of the background refresh request
+	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedraw&lt;/td&gt;
+	&lt;td&gt;A server-generated image had to be rendered from scratch.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icacheram&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;icachedisk&lt;/td&gt;
+	&lt;td&gt;A server-generated image was found in the disk cache (i.e. in
+            the server's MySQL database).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
+	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
+	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestore&lt;/td&gt;
+	&lt;td&gt;P-code is added to or updated in the persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodestorefailed&lt;/td&gt;
+	&lt;td&gt;An attempt to add or update p-code in the persistent cache
+        failed (e.g. due to a race with another request).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
+	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
+	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
+	miss.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
+	&lt;td&gt;There is a hit XSLT cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;nocache&lt;/td&gt;
+	&lt;td&gt;No hit in any known cache, and not added to the HTTP
+	protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$eval-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes how the page has been evaluated:
+
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
+	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from source.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlpcode&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from compiled p-code.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$protcache-cost&lt;/td&gt;
+    &lt;td&gt;The lookup depth in the HTTP protocol module low-level cache.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Event logging&lt;/h3&gt;
+
+&lt;p&gt;The known event logging facilities and modules are described
+below.&lt;/p&gt;
+
+&lt;dl&gt;
+&lt;dt&gt;Facility: roxen&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.&lt;/p&gt;
+
+    &lt;p&gt;The known events are:&lt;/p&gt;
+
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
+	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-rebase&lt;/td&gt;
+	&lt;td&gt;Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+
+&lt;dt&gt;Facility: sbfs&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;A SiteBuilder file system.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;commit&lt;/code&gt;, &lt;code&gt;purge&lt;/code&gt;,
+    &lt;code&gt;mkdir&lt;/code&gt;, &lt;code&gt;set-dir-md&lt;/code&gt;, and
+    &lt;code&gt;rmdir&lt;/code&gt; are logged for file system changes except those
+    in edit areas.&lt;/p&gt;
+
+    &lt;p&gt;The action &lt;code&gt;crawl-file&lt;/code&gt; is logged for files that are
+    crawled by the persistent cache crawler.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;file-change&lt;/code&gt; and
+    &lt;code&gt;dir-change-flat&lt;/code&gt; are logged when external file and
+    directory changes are detected (and this feature is enabled).&lt;/p&gt;
+
+    &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
+
+    &lt;table class='hilite-1stcol'&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
+	&lt;td&gt;The ID number of the AC identity whose edit area was used.
+	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$workarea&lt;/td&gt;
+	&lt;td&gt;The unique tag for the work area. Empty for the main work
+	area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$commit-type&lt;/td&gt;
+	&lt;td&gt;The type of file commit, one of &lt;code&gt;create&lt;/code&gt;,
+	&lt;code&gt;edit&lt;/code&gt;, &lt;code&gt;delete&lt;/code&gt;, and
+	&lt;code&gt;undelete&lt;/code&gt;.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$revision&lt;/td&gt;
+	&lt;td&gt;The committed revision number, a dotted decimal.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$comment&lt;/td&gt;
+	&lt;td&gt;The commit message.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+	&lt;td&gt;This is set for the action &lt;code&gt;crawl-file&lt;/code&gt;. It's
+	similar to &lt;code&gt;$request-time&lt;/code&gt; for normal requests,
+	except that it measures the whole time it took for the
+	persistent cache crawler to process the page. That includes
+	all crawled variants and the saving of the entry to the
+	database.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+&lt;/dl&gt;</o>
 <t>Welches Format für die Protokolldateien benutzt werden soll.
 &lt;pre&gt;
 Antwort-Code oder *: Loggingformat für diesen Antwort-Code (z.B 404)
@@ -236,6 +536,7 @@ $wchar(int)    -- Fügt das 16Bit-Zeichen ein, das dem Integerwert entspricht.
 $int(int)      -- Fügt das 32Bit-Word ein, das dem Integerwert entspricht.
 $^             -- Unterdrückt das Newline-Zeichen am Ende des Eintrages.
 $host          -- Hostname oder IP-Adresse des Webbrowsers.
+$vhost         -- Der Host Request-Header vom Webbrowser, oder -
 $ip_number     -- IP-Adresse des Webbrowsers.
 $bin-ip_number -- IP-Adresse des Webbrowsers in 32Bit-Dezimaldarstellung.
 $cern_date     -- Uhrzeit und Datum im CERN-Format.
@@ -253,6 +554,15 @@ $user_agent    -- Die 'user-agent'-Information aus der Anfrage, oder '-'
 $user          -- Der Name des angemeldeten Benutzers, sofern vorhanden
 $user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
                   Browser unterstützt wurden, ansonsten '0'.
+$cache-status  -- Eine Komma-separierte Liste von Worten (ohne
+                  Leerzeichen), die die Caches ausgeben, aus der
+                  die Seite ausgeliefert wurde:
+                  protcache -- Der low-level-Cache des HTTP-Moduls.
+                  xsltcache -- Der XSLT-Cache.
+                  pcoderam  -- RXML Parse-Baum, RAM-Cache.
+                  pcodedisk -- RXML Parse-Baum, persistenter Cache.
+                  cachetag  -- Kein RXML &amp;lt;cache&amp;gt; Tag fehlt.
+                  nocache   -- Kein Cache-Treffer.
 &lt;/pre&gt;</t>
 </str>
 
@@ -278,7 +588,7 @@ $user_id       -- Die eindeutige Benutzerkennung, sofern Cookies vom
 %h    Hour  (e.g. '00')
 %H    Hostname
 &lt;/pre&gt;"/>
-<o>The log file. &lt;pre&gt;%y    Year  (e.g. '1997')
+<o>The log file. A file name. Some substitutions will be done:&lt;pre&gt;%y    Year  (e.g. '1997')
 %m    Month (e.g. '08')
 %d    Date  (e.g. '10' for the tenth)
 %h    Hour  (e.g. '00')
@@ -315,25 +625,30 @@ Standard-URLs und E-Mail-Adressen verwendet.</t>
 </str>
 
 <str id="36">
-<o>Primary Server URL</o>
-<t>Primäre Server-URL</t>
+<o>Ports: Primary Server URL</o>
+<t>Ports: Primäre Server-URL</t>
 </str>
 
 <str id="37">
-<o>This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable.</o>
-<t>Dies ist die URL des primären Servers, auf dem die Startseite abgelegt ist.</t>
+<o>This is the main server URL, where your start page is located. This
+setting is for instance used as fallback to generate absolute URLs to
+the server, but in most circumstances the URLs sent by the clients are
+used. A URL is deduced from the first entry in 'URLs' if this is left
+blank.
+
+&lt;p&gt;Note that setting this doesn't make the server accessible; you must
+also set 'URLs'.</o>
+<t>Dies ist die URL des primären Servers, auf dem die Startseite abgelegt ist.
+Bitte konfigurieren Sie auch die Variable 'URLs'. Diese Einstellung
+ist z.B. als Absicherung, um absolute URLs zu erzeugen.  Meistens werden
+aber die URLs, die der Browser schickt, benutzt.  Eine URL wird abgeleitet
+vom ersten Eintrag in 'URLs', wenn diese Einstellung leer bleibt.
+</t>
 </str>
 
 <str id="38">
-<new/>
-<o>URLs</o>
-<t></t>
-</str>
-
-<str id="39">
-<changed from="Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules), https, ftp, ftps, gopher and tetris."/>
-<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  The possible protocols are http, fhttp (a faster version of the normal HTTP protocol, but not 100% compatible with all modules) https, ftp, ftps, gopher and tetris.</o>
-<t>Binde (horche) auf diese URLs. Hostnamen wie IP-Adressen sind zulässig. Die Meta-Zeichen '*' und '?' können als Joker verwendet werden, um auf alle verfügbaren IP-Adressen einer Maschine zu binden. Mögliche Protokolle sind http, fhttp (eine schenllere version des normalen HTTP protocols, die aber nicht mit allen Modulen 100% kompatibel ist), https, ftps, gopher und tetris.</t>
+<o>Ports: URLs</o>
+<t>Ports: URLs</t>
 </str>
 
 <str id="40">
@@ -433,7 +748,7 @@ virtuellen Server begrenzen.&lt;br&gt;</t>
 
 <str id="58">
 <o>No such file message</o>
-<t>Text für 404-Fehler</t>
+<t>Text für 404-Fehlermeldung</t>
 </str>
 
 <str id="59">
@@ -449,8 +764,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="61">
-<o>The text shown to the user on connect</o>
-<t>Dieser Text wird dem Anwender zu Beginn der Verbindung angezeigt</t>
+<o>The text shown to the user on connect.</o>
+<t>Dieser Text wird dem Anwender zu Beginn der Verbindung angezeigt.</t>
 </str>
 
 <str id="62">
@@ -469,7 +784,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="65">
-<o>If yes, non-anonymous users can connect</o>
+<changed from="If yes, non-anonymous users can connect."/>
+<o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
 <t>Bei Aktivierung können Anwender mit anderen Konten als dem anonymen eine Verbindung herstellen.</t>
 </str>
 
@@ -489,8 +805,7 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="69">
-<changed from="If yes, anonymous users are allowed to connect."/>
-<o>If yes, anonymous users is allowed to connect.</o>
+<o>If yes, anonymous users are allowed to connect.</o>
 <t>Bei Aktivierung werden anonyme FTP-Verbindungen zugelassen.</t>
 </str>
 
@@ -500,7 +815,7 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="71">
-<o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
+<o>If this string is set to anything but the empty string, it should specify a file containing a list of valid shells. Users with shells that are not in this list will not be allowed to log in.</o>
 <t>Unter Unix ist jedem Benutzer-Konto ist eine Shell zugewiesen und diese Shell muss in der angegebenen Datei verzeichnet sein, damit sich der Anwender anmelden kann.. Falls das Feld leer gelassen wird, ist die Funktion inaktiv.</t>
 </str>
 
@@ -515,13 +830,14 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="74">
-<o>Logging: Set unique user id cookies</o>
-<t>Protokollierung: Setze eindeutige User-ID-Cookies?</t>
+<o>Logging: Set unique browser id cookies</o>
+<t>Protokollierung: Setze eindeutige Browser-ID-Cookies</t>
 </str>
 
 <str id="75">
-<o>If set to Yes, all users of your server whose clients support cookies will get a unique 'user-id-cookie', this can then be used in the log and in scripts to track individual users.</o>
-<t>Bei Aktivierung wird allen Besuchern der Website ein eindeutiger sogenannter Benutzer-Cookie gesetzt, sofern deren Browser Cookies annimmt.  Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
+<changed from="If set to Yes, all clients that accepts cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users."/>
+<o>If set to Yes, all clients that accept cookies will get a unique 'user-id-cookie', which can then be used in the log and in scripts to track individual users.</o>
+<t>Bei Aktivierung wird allen Clients, die Cookies unterstützen, ein eindeutiger Cookie 'user-id-cookie' gesetzt. Der Cookie kann in Scripten oder in der Protokolldatei zur Verfolgung einzelner Benutzer verwendet werden.</t>
 </str>
 
 <str id="76">
@@ -530,48 +846,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="77">
-<o>If set to Yes, Roxen will attempt to set unique user ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
-<t>Bei Aktivierung wird dem Anwender nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
-</str>
-
-<str id="78">
-<o>Logging method</o>
-<t>Protokollierungs-Methode</t>
-</str>
-
-<str id="79">
-<o>None - No log&lt;br /&gt;CommonLog - A common log in a file&lt;br /&gt;Compat - Log through Roxen's normal logging format.&lt;br /&gt;&lt;p&gt;Please note that compat limits Roxen to less than 1k requests/second.&lt;/p&gt;</o>
-<t>Keine - Keine Protokolldatei&lt;br /&gt;CommonLog - Protokollierung in eine Datei im CommonLog-Format&lt;br /&gt;Compat - Mit Roxens normalem Format arbeiten.&lt;br /&gt;&lt;p&gt;Hinweis: Die Compat-Methode beschränkt Roxen auf 1000 Zugriffe/Sekunde.</t>
-</str>
-
-<str id="80">
-<o>Log file</o>
-<t>Protokolldatei</t>
-</str>
-
-<str id="81">
-<o>This file is used if logging is done using the CommonLog method.</o>
-<t>Der Name der Datei für die Protokollierungs-Methode CommonLog.</t>
-</str>
-
-<str id="82">
-<o>Ram cache</o>
-<t>RAM-Cache</t>
-</str>
-
-<str id="83">
-<o>The size of the ram cache, in MegaBytes</o>
-<t>Die Grösse des RAM-Caches in Megabyte</t>
-</str>
-
-<str id="84">
-<o>Client timeout</o>
-<t>Client-Zeitschranke</t>
-</str>
-
-<str id="85">
-<o>The maximum time Roxen will wait for a client before giving up, and close the connection, in seconds</o>
-<t>Die maximale Zeit in Sekunden, die Roxen auf die Antwort eines Clients wartet. Nach Ablauf dieser Zeit gibt Roxen auf und schliesst die Verbindung.</t>
+<o>If set to Yes, Roxen will attempt to set unique browser ID cookies only upon receiving the first request (and again after some minutes). Thus, if the user doesn't allow the cookie to be set, she won't be bothered with multiple requests.</o>
+<t>Bei Aktivierung wird dem Client des Besuchers nur beim ersten Kontakt ein eindeutiger User-ID-Cookie geschickt. Sollte der Anwender in seiner Browser-Voreinstellung Cookies ablehnen, dann wird mit dieser Einstellung verhindert, dass der Anwender ständig auf die Cookies hingewiesen wird.</t>
 </str>
 
 <str id="86">
@@ -580,8 +856,9 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="87">
-<o>The SSL certificate file to use. The path is relative to %s</o>
-<t>Der Name der Datei mit dem SSL-Zertifikat im PEM-Format. Der Pfad ist relativ zu %s</t>
+<changed from="The SSL certificate file to use. The path is relative to %s."/>
+<o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
+<t>Der Name der Datei mit dem SSL-Zertifikat im PEM-Format. Der Pfad ist relativ zu %s.</t>
 </str>
 
 <str id="88">
@@ -590,7 +867,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="89">
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
+<changed from="The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only."/>
+<o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
 <t>Der Name der Datei mit dem SSL-Schlüssel. Der Pfad ist relativ zu %s. Der Schlüssel kann auch in der obigen Zertifikats-Datei mit angegeben werden; dann muss dieses Feld leer bleiben.</t>
 </str>
 
@@ -600,8 +878,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="91">
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
-<t>Bei wieder aufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Byte einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Byte überträgt, werden im Logfile die gesamten 1000 Byte verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.</t>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.&lt;/p&gt;</o>
+<t>Bei wieder aufgenommenen Verbindungen werden die übertragenen Daten sowie die bisher verschickten Daten verzeichnet.  Wenn ein Benutzer bereits 100 Byte einer Datei geladen hat, und in einem späteren Download die fehlenden 900 Byte überträgt, werden im Logfile die gesamten 1000 Byte verzeichnet.&lt;p&gt;Dies ist nützlich, um erfolgreiche Downloads zu erkennen.&lt;/p&gt;</t>
 </str>
 
 <str id="92">
@@ -624,6 +902,16 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 <t>Pfadname des Orders mit den Schriftarten.</t>
 </str>
 
+<str id="521">
+<o>Font oversampling</o>
+<t>Schriftarten glätten</t>
+</str>
+
+<str id="522">
+<o>If set to Yes, fonts will be oversampled resulting in higher quality but more fuzz. This will require clearing of various graphics caches like the Graphic text and GButton caches to take full effect.</o>
+<t>Schriftarten werden geglättet, um eine höhere Qualität mit weichen Kanten zu erzielen. Hierzu müssen die Grafik-Caches gelöscht werden, damit die Änderungen aktiv werden.</t>
+</str>
+
 <str id="96">
 <o>Logging: Log directory prefix</o>
 <t>Protokollierung: XXX</t>
@@ -635,9 +923,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="98">
-<new/>
 <o>Cache: Proxy Disk Cache Enabled</o>
-<t></t>
+<t>Cache: Proxy Plattencache aktivieren</t>
 </str>
 
 <str id="99">
@@ -646,9 +933,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="100">
-<new/>
 <o>Cache: Proxy Disk Cache Clean size</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Reinigungsgröße</t>
 </str>
 
 <str id="101">
@@ -657,9 +943,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="102">
-<new/>
 <o>Cache: Proxy Disk Cache Minimum available free space and inodes (in %)</o>
-<t></t>
+<t>Cache: Proxy Plattencache, minimaler freier Platz und Inodes (in %)</t>
 </str>
 
 <str id="103">
@@ -668,9 +953,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="104">
-<new/>
 <o>Cache: Proxy Disk Cache Size</o>
-<t></t>
+<t>Cache: Proxy Plattencache-Größe</t>
 </str>
 
 <str id="105">
@@ -679,53 +963,48 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="106">
-<new/>
 <o>Cache: Proxy Disk Cache Maximum number of files</o>
-<t></t>
+<t>Cache: Proxy Plattencache, maximale Dateienanzahl</t>
 </str>
 
 <str id="107">
-<o>How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check.</o>
+<o>How many cache files (inodes) may be on disk before a garbage collect is done? May be left at zero to disable this check.</o>
 <t>Wie viele Dateien dürfen im Cache sein, bevor eine Reinigung (Garbage Collection) stattfindet. Durch Setzen auf Null wird diese Abfrage ignoriert.</t>
 </str>
 
 <str id="108">
-<new/>
 <o>Cache: Proxy Disk Cache bytes per second</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Bytes pro Sekunde</t>
 </str>
 
 <str id="109">
-<o>How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first.</o>
+<o>How file size should be treated during garbage collect. Each X bytes count as a second, so that larger files will be removed first.</o>
 <t>Wie wichtig ist die Dateigröße beim Reinigen des Caches? Jedes Byte entspricht einem gewissen Dateialter in Sekunden. Größere Dateien werden also eher entfernt.</t>
 </str>
 
 <str id="110">
-<new/>
 <o>Cache: Proxy Disk Cache Base Cache Dir</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Basis-Cache-Verzeichnis</t>
 </str>
 
 <str id="111">
-<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable.</o>
-<t>In diesem Verzeichnis werden die Cache-Dateien abgelegt. Um Pannen zu vermeiden, wird 'roxen_cache' an diesen Wert angehängt.</t>
+<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always appended to this variable.</o>
+<t>In diesem Verzeichnis werden die Cache-Dateien abgelegt. Um Pannen zu vermeiden, wird 'roxen_cache/' vor diesen Wert gesetzt.</t>
 </str>
 
 <str id="112">
-<new/>
 <o>Cache: Proxy Disk Cache Number of hash directories</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Anzahl der Hash-Verzeichnisse</t>
 </str>
 
 <str id="113">
-<o>This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed.</o>
+<o>This is the number of directories to hash the contents of the disk cache into. Changing this value currently invalidates the whole cache, since the cache cannot find the old files. In the future, the cache will be recalculated when this value is changed.</o>
 <t>Dies ist die Anzahl an Verzeichnissen, auf die die Cache-Dateien verteilt werden.  Das Ändern dieses Wertes macht den bisherigen Proxy-Cache ungültig.</t>
 </str>
 
 <str id="114">
-<new/>
 <o>Cache: Proxy Disk Cache Keep without Content-Length</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Ohne Content-Length speichern</t>
 </str>
 
 <str id="115">
@@ -734,9 +1013,8 @@ aufgerufen wird. '$File' wird ersetzt durch den Dateinamen,
 </str>
 
 <str id="116">
-<new/>
 <o>Cache: Proxy Disk Cache Refreshes on Last-Modified</o>
-<t></t>
+<t>Cache: Proxy Plattencache, aktualisieren bei Last-Modified</t>
 </str>
 
 <str id="117">
@@ -747,9 +1025,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="118">
-<new/>
 <o>Cache: Proxy Disk Cache Last resort (in days)</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Verweildauer (in Tagen)</t>
 </str>
 
 <str id="119">
@@ -758,9 +1035,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="120">
-<new/>
 <o>Cache: Proxy Disk Cache Garbage collector logfile</o>
-<t></t>
+<t>Cache: Proxy Plattencache, Garbage Collector Logdatei</t>
 </str>
 
 <str id="121">
@@ -768,24 +1044,9 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 <t>Informationen über Aktivitäten der Garbage Collection: gelöschte und aktualisierte Dateien, Cache- und Festplatten-Status werden vermerkt.</t>
 </str>
 
-<str id="122">
-<new/>
-<o>PID file</o>
-<t></t>
-</str>
-
-<str id="123">
-<changed from="In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
-&lt;br /&gt;Note: It can be overridden by the command line option."/>
-<o>In this file, the server will write out it's PID, and the PID of the start script. $pid will be replaced with the pid, and $uid with the uid of the user running the process.
-&lt;br /&gt;Note: It can be overridden by the command line option.</o>
-<t>In dieser Datei legt der Server seine eigene PID und die des start-Scripts ablegen. $pid wird mit der PID ersetzt und $uid mit der UID des ausführenden Benutzers.</t>
-</str>
-
 <str id="124">
-<new/>
 <o>Identify, Use default identification string</o>
-<t></t>
+<t>Identität, Verwendung der Standard-Identifikation</t>
 </str>
 
 <str id="125">
@@ -794,9 +1055,8 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="126">
-<new/>
 <o>Identify, Identify as</o>
-<t></t>
+<t>Identität, Identifizieren als</t>
 </str>
 
 <str id="127">
@@ -805,24 +1065,36 @@ im Cache, bis sie ihr Alter verdoppelt haben.</t>
 </str>
 
 <str id="128">
-<new/>
 <o>Change uid and gid to</o>
-<t></t>
+<t>uid und gid wechseln auf</t>
 </str>
 
 <str id="129">
-<o>When Roxen is run as root, to be able to open port 80 for listening, change to this user-id and group-id when the port has been opened. If you specify a symbolic username, the default group of that user will be used. The syntax is user[:group].</o>
+<o>When Roxen is run as root, to be able to open port 80 for listening,
+change to this user-id and group-id when the port has been opened. If
+you specify a symbolic username, the default group of that user will
+be used. The syntax is user[:group].
+
+&lt;p&gt;A server restart is necessary for a change of this variable to take
+effect. Note that it also can lead to file permission errors if the
+Roxen process no longer can read files it previously has written.
+The start script attempts to fix this for the standard file locations.&lt;/p&gt;</o>
 <t>Wenn Roxen unter der root-Kennung läuft, um den Port 80 
 öffnen zu können, wird die User-ID und die Group-ID auf diesen Wert
 gesetzt, nachdem der Port geöffnet wurde. Wenn ein Benutzername (z.B. 'www')
 verwendet wird, wird die Standardgruppe dieses Benutzers verwendet.
-Die Syntax ist user[:group].</t>
+Die Syntax ist user[:group].
+
+&lt;p&gt;Ein Neustart des Servers ist notwendig, damit die Änderungen
+an dieser Variablen wirksam werden. Achten Sie darauf, dass dies zu
+Zugriffsproblemen bei Dateien führen kann, die der Roxen-Prozess
+vorher geschrieben hat, und nun nicht mehr lesen kann.  Das start-Script
+versucht jedoch, dies für die Standard-Dateien zu beheben.&lt;/p&gt;</t>
 </str>
 
 <str id="130">
-<new/>
 <o>Change uid and gid permanently</o>
-<t></t>
+<t>uid und gid permanent wechseln</t>
 </str>
 
 <str id="131">
@@ -834,9 +1106,8 @@ erhöht sich so die Sicherheit des Servers.</t>
 </str>
 
 <str id="132">
-<new/>
 <o>Module directories</o>
-<t></t>
+<t>Modul-Verzeichnisse</t>
 </str>
 
 <str id="133">
@@ -848,30 +1119,21 @@ durchsucht.</t>
 </str>
 
 <str id="134">
-<new/>
 <o>Client supports regexps</o>
-<t></t>
+<t>Browser-Unterstützung, reguläre Ausdrücke </t>
 </str>
 
 <str id="135">
-<changed from="What do the different clients support?
-&lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory."/>
 <o>What do the different clients support?
 &lt;br /&gt;The default information is normally fetched from the file server/etc/supports in your Roxen directory.</o>
 <t>Welche unterschiedlichen Möglichkeiten werden durch die verschiedenen
 Webbrowser unterstützt. Die Standard-Informationen werden aus der
-Datei server/etc/supports entnommen, das Format ist:&lt;pre&gt;
-Regulärer Ausdruck    Funktion, Funktion
-Regulärer Ausdruck    Funktion, Funktion
-...
-&lt;/pre&gt;Wenn '-' der Funktion vorangestellt wird, wird es von der Liste
-entfernt.</t>
+Datei server/etc/supports im Roxen-Verzeichnis entnommen.</t>
 </str>
 
 <str id="136">
-<new/>
 <o>Logging: Audit trail</o>
-<t></t>
+<t>Logging: Auditprotokollierung</t>
 </str>
 
 <str id="137">
@@ -881,9 +1143,8 @@ im Ereignis-Log verzeichnet.</t>
 </str>
 
 <str id="138">
-<new/>
 <o>Logging: Debug log method</o>
-<t></t>
+<t>Logging: Debug-Protokollmethode</t>
 </str>
 
 <str id="139">
@@ -893,9 +1154,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="140">
-<new/>
 <o>Logging: Log PID</o>
-<t></t>
+<t>Logging: PID protokollieren</t>
 </str>
 
 <str id="141">
@@ -904,9 +1164,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="142">
-<new/>
 <o>Logging: Log to system console</o>
-<t></t>
+<t>Logging: Auf Systemkonsole protokollieren</t>
 </str>
 
 <str id="143">
@@ -915,9 +1174,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="144">
-<new/>
 <o>Logging: Syslog type</o>
-<t></t>
+<t>Logging: Syslog-Typ</t>
 </str>
 
 <str id="145">
@@ -926,9 +1184,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="146">
-<new/>
 <o>Logging: Log what to syslog</o>
-<t></t>
+<t>Logging: Was an Syslog protokollieren</t>
 </str>
 
 <str id="147">
@@ -942,9 +1199,8 @@ aber Syslog ist ebenfalls möglich.</t>
 </str>
 
 <str id="148">
-<new/>
 <o>Logging: Log as</o>
-<t></t>
+<t>Logging: Protokollieren als</t>
 </str>
 
 <str id="149">
@@ -954,33 +1210,28 @@ Logs angehängt.</t>
 </str>
 
 <str id="150">
-<new/>
 <o>Number of threads to run</o>
-<t></t>
+<t>Anzahl zu startender Threads</t>
 </str>
 
 <str id="151">
-<changed from="The number of simultaneous threads Roxen will use.
-&lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;"/>
 <o>The number of simultaneous threads Roxen will use.
 &lt;p&gt;Please note that even if this is one, Roxen will still be able to serve multiple requests, using a select loop based system.
-&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;</o>
-<t>Die Anzahl an parallelen Threads, mit denen Roxen arbeiten wird.\n
-Hinweis: Auch wenn nur ein Thread eingestellt wird, können mehrere
-Zugriffe gleichzeitig bearbeitet werden.\n
-&lt;i&gt;Dies ist nützlich für Mehrprozessor-Systeme.&lt;/i&gt;</t>
+&lt;i&gt;This is quite useful if you have more than one CPU in your machine, or if you have a lot of slow NFS accesses.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Do not increase this over 20 unless you have a very good reason to do so.&lt;/p&gt;</o>
+<t>Die Anzahl an parallelen Threads, mit denen Roxen arbeiten wird.
+&lt;p&gt;Hinweis: Auch wenn nur ein Thread eingestellt wird, können mehrere
+Zugriffe gleichzeitig bearbeitet werden.
+&lt;i&gt;Dies ist nützlich für Mehrprozessor-Systeme oder Systeme mit langsamen NFS-Zugriffen.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Setzen Sie diesen Wert nicht auf mehr als 20, ausser Sie haben einen sehr guten Grund dazu.&lt;/p&gt;</t>
 </str>
 
 <str id="154">
-<new/>
-<o>ABS: Enable Anti-Block-System</o>
-<t></t>
+<o>Auto Restart: Enable Anti-Block-System</o>
+<t>Auto Restart: Anti-Block-System aktivieren</t>
 </str>
 
 <str id="155">
 <o>If set, the anti-block-system will be enabled. This will restart the server after a configurable number of minutes if it locks up. If you are running in a single threaded environment heavy calculations will also halt the server. In multi-threaded mode bugs such as eternal loops will not cause the server to reboot, since only one thread is blocked. In general there is no harm in having this option enabled. </o>
-<t>Das AntiBlockSystem wird aktiviert, dies startet den Server nach einer
+<t>Das Anti-Block-System wird aktiviert, dies startet den Server nach einer
 einstellbaren Zahl von Minuten neu, wenn ein Thread blockiert ist.  Bei
 mehr als einem Thread wird der gesamte Server nicht komplett angehalten,
 sondern nur der blockierte Thread.  Im allgemeinen hat diese Option keine
@@ -988,9 +1239,8 @@ Nachteile.</t>
 </str>
 
 <str id="156">
-<new/>
-<o>ABS: Timeout</o>
-<t></t>
+<o>Auto Restart: ABS Timeout</o>
+<t>Auto Restart: ABS Timeout</t>
 </str>
 
 <str id="157">
@@ -1002,164 +1252,122 @@ Anfrage eine Weile benötigt.</t>
 </str>
 
 <str id="158">
-<new/>
 <o>Default language</o>
-<t></t>
+<t>Standard-Sprache</t>
 </str>
 
 <str id="159">
-<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<changed from="Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable."/>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the values of the 'LC_MESSAGES' and 'LANG' environment variables.</o>
 <t>Die Sprache, in der alle Roxen-Meldungen ausgeben werden.
 'standard' ist abhängig von der LANG Umgebungsvariable.</t>
 </str>
 
 <str id="160">
-<new/>
 <o>Auto Restart: Enable Automatic Restart</o>
-<t></t>
+<t>Auto Restart: Automatischer Neustart aktivieren</t>
 </str>
 
 <str id="161">
-<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
+<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but may also sometimes be because of memory leaks.</o>
 <t>Wenn gesetzt, wird Roxen automatisch nach einer bestimmten Anzahl von
 Tagen neugestartet. Hin und wieder wächst der Roxen-Prozess im Laufe der
 Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
-<str id="162">
-<new/>
-<o>Auto Restart: Timeout</o>
-<t></t>
-</str>
-
-<str id="163">
-<o>Automatically restart the server after this many days.</o>
-<t>Roxen wird nach soviel Tagen automatisch neugestartet.</t>
-</str>
-
-<str id="170">
-<new/>
-<o>Cache: Memory Cache Garbage Collect Interval</o>
-<t></t>
-</str>
-
-<str id="171">
-<o>The number of seconds between every garbage collect (removal of old content) from the memory cache. The memory cache is used for various tasks like remebering what supports flags matches what client.</o>
-<t>Wieviele Sekunden sollen zwischen zwei Ausführungen einer Garbage Collection im Speicher-Cache liegen? Der Speicher-Cache enthält u.a. die Supports-Daten.</t>
-</str>
-
 <str id="172">
-<new/>
 <o>Commented config files</o>
-<t></t>
+<t>Kommentierte Konfigurationsdateien</t>
 </str>
 
 <str id="173">
-<new/>
 <o>Save the variable documentation strings as comments in the configuration files. Only useful if you read or edit the config files directly.</o>
-<t></t>
+<t>Die Dokumentationsvariablen als Kommentare in die Konfigurationsdateien speichern. Nur nützlich, wenn die Konfigurationsdateien direkt gelesen oder bearbeitet werden.</t>
 </str>
 
 <str id="174">
-<new/>
 <o>Show documentation</o>
-<t></t>
+<t>Zeige Dokumentation</t>
 </str>
 
 <str id="175">
-<new/>
 <o>Show the variable documentation.</o>
-<t></t>
+<t>Zeige Dokumentationsvariablen</t>
 </str>
 
 <str id="176">
-<new/>
 <o>Show advanced configuration options</o>
-<t></t>
+<t>Zeige fortgeschrittenen Konfigurationsoptionen</t>
 </str>
 
 <str id="177">
-<new/>
 <o>Show all possible configuration options, not only the ones that are most often changed.</o>
-<t></t>
+<t>Alle möglichen Konfigurationsoptionen zeigen, nicht nur die am meisten benötigten.</t>
 </str>
 
 <str id="180">
-<new/>
 <o>Show developer options and actions</o>
-<t></t>
+<t>Zeige Entwickleroptionen und -aktionen</t>
 </str>
 
 <str id="181">
-<new/>
 <o>Show settings and actions that are not normaly useful for non-developer users. If you develop your own Roxen modules, this option is for you.</o>
-<t></t>
+<t>Zeige Einstellungen und Aktionen, die normalerweise nicht nützlich sind für nicht-Entwickler. Wenn Sie eigene Roxen-Module entwickeln, ist diese Option richtig für Sie.</t>
 </str>
 
 <str id="182">
-<new/>
 <o>Background color</o>
-<t></t>
+<t>Hintergrundfarbe</t>
 </str>
 
 <str id="183">
-<new/>
 <o>Administration interface background color.</o>
-<t></t>
+<t>Hintergrundfarbe Administrations-Interface.</t>
 </str>
 
 <str id="184">
-<new/>
 <o>Text color</o>
-<t></t>
+<t>Textfarbe</t>
 </str>
 
 <str id="185">
-<new/>
 <o>Administration interface text color.</o>
-<t></t>
+<t>Textfarbe Administrations-Interface.</t>
 </str>
 
 <str id="186">
-<new/>
 <o>Link color</o>
-<t></t>
+<t>Linkfarbe</t>
 </str>
 
 <str id="187">
-<new/>
 <o>Font</o>
-<t></t>
+<t>Schriftart</t>
 </str>
 
 <str id="188">
-<new/>
 <o>Administration interface font.</o>
-<t></t>
+<t>Schriftart Administrations-Interface.</t>
 </str>
 
 <str id="189">
-<new/>
 <o>Add/Delete module page type</o>
-<t></t>
+<t>Seitentyp Modul hinzufügen/löschen</t>
 </str>
 
 <str id="191">
-<new/>
 <o>All Permissions</o>
-<t></t>
+<t>Alle Berechtigungen</t>
 </str>
 
 <str id="192">
-<new/>
 <o>View Settings</o>
-<t></t>
+<t>Einstellungen betrachten</t>
 </str>
 
 <str id="194">
-<new/>
 <o>Edit Global Variables</o>
-<t></t>
+<t>Globale Variablen bearbeiten</t>
 </str>
 
 <str id="196">
@@ -1178,15 +1386,13 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="199">
-<new/>
 <o>Create Sites</o>
-<t></t>
+<t>Site erstellen</t>
 </str>
 
 <str id="200">
-<new/>
 <o>Add Modules</o>
-<t></t>
+<t>Modul hinzufügen</t>
 </str>
 
 <str id="bA">
@@ -1195,7 +1401,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="201">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>OK</t>
 </str>
 
@@ -1215,9 +1422,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="206">
-<new/>
 <o>User</o>
-<t></t>
+<t>Benutzer</t>
 </str>
 
 <str id="cw">
@@ -1251,9 +1457,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="212">
-<new/>
 <o>Admin</o>
-<t></t>
+<t>Administration</t>
 </str>
 
 <str id="213">
@@ -1263,7 +1468,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="214">
 <o>Globals</o>
-<t>Globale Einstellungen</t>
+<t>Globale Variablen</t>
 </str>
 
 <str id="216">
@@ -1272,15 +1477,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="217">
-<new/>
 <o>Docs</o>
-<t></t>
-</str>
-
-<str id="219">
-<new/>
-<o>Update</o>
-<t></t>
+<t>Dokumentation</t>
 </str>
 
 <str id="220">
@@ -1304,9 +1502,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="228">
-<new/>
 <o>Status</o>
-<t></t>
+<t>Status</t>
 </str>
 
 <str id="247">
@@ -1315,9 +1512,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="249">
-<new/>
 <o>Drop old site</o>
-<t></t>
+<t>Alte Site entfernen</t>
 </str>
 
 <str id="250">
@@ -1326,28 +1522,13 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="255">
-<new/>
 <o>Disabling old configuration %s</o>
-<t></t>
+<t>Alte Konfiguration %s deaktivieren</t>
 </str>
 
 <str id="256">
 <o>Settings</o>
 <t>Einstellungen</t>
-</str>
-
-
-
-<str id="258">
-<new/>
-<o>Add module</o>
-<t></t>
-</str>
-
-<str id="259">
-<new/>
-<o>Drop module</o>
-<t></t>
 </str>
 
 <str id="251">
@@ -1357,7 +1538,7 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 
 <str id="252">
 <o>Drop Module</o>
-<t>Modul löschen</t>
+<t>Modul entfernen</t>
 </str>
 
 <str id="253">
@@ -1366,681 +1547,533 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="254">
-<new/>
 <o>Module homepage</o>
-<t></t>
+<t>Modul-Homepage</t>
 </str>
 
 <str id="260">
-<new/>
 <o>Request status</o>
-<t></t>
+<t>Anfragen-Status</t>
 </str>
 
 <str id="261">
-<new/>
 <o>Inherit tree</o>
-<t></t>
+<t>Vererbungsbaum</t>
 </str>
 
 <str id="dt">
-<new/>
 <o>Administrator logged on as %s from %s.</o>
-<t></t>
+<t>Verwalter als %s von %s eingeloggt.</t>
 </str>
 
 <str id="264">
-<new/>
 <o>Mountpoint</o>
-<t></t>
+<t>Mountpunkt</t>
 </str>
 
 <str id="265">
-<new/>
 <o>Usually / is a good idea</o>
-<t></t>
+<t>Normalerweise ist / eine gute Idee</t>
 </str>
 
 <str id="266">
-<new/>
 <o>Will be loaded from: </o>
-<t></t>
+<t>Wird geladen von: </t>
 </str>
 
 <str id="267">
-<new/>
 <o>View</o>
-<t></t>
+<t>Betrachte</t>
 </str>
 
 <str id="272">
-<new/>
-<o>Reload module list</o>
-<t></t>
+<changed from="Reload module list"/>
+<o>Reload Module List</o>
+<t>Modul-Liste neu laden</t>
 </str>
 
 <str id="273">
-<new/>
 <o>Select one or several modules to add.</o>
-<t></t>
+<t>Wählen Sie ein oder mehrere Module aus.</t>
 </str>
 
 <str id="274">
-<new/>
 <o>Cache:Cache size</o>
-<t></t>
+<t>Cache: Cache-Größe</t>
 </str>
 
 <str id="275">
-<new/>
 <o>The size of the data cache used to speed up requests for commonly requested files, in KBytes</o>
-<t></t>
+<t>Die Größe des Daten-Caches, die zur Beschleunigung von Anfragen auf häufig abgerufene Dateien benutzt wird. In KBytes</t>
 </str>
 
 <str id="276">
-<new/>
 <o>Cache:Max file size</o>
-<t></t>
+<t>Cache: maximale Dateigroße</t>
 </str>
 
 <str id="277">
-<new/>
-<o>The maximum size of a file that is to be considered for the cache</o>
-<t></t>
+<changed from="The maximum size of a file that is to be considered for the cache"/>
+<o>The maximum size of a file that is to be considered for the cache, in KBytes.</o>
+<t>Die maximale Dateigröße, die für den Cache verwendet werden soll</t>
 </str>
 
 <str id="278">
-<new/>
 <o>Compact site list</o>
-<t></t>
+<t>Kompakte Site-Liste</t>
 </str>
 
 <str id="279">
-<new/>
-<o>If true, the list list will be presented in a compact format suitable for servers with many sites.</o>
-<t></t>
+<o>If true, the list of sites will be presented in a compact format suitable for servers with many sites.</o>
+<t>Wenn ja, die Site-Liste wird in einem kompakten Format angezeigt, brauchbar für Server mit vielen Sites.</t>
 </str>
 
 <str id="280">
-<new/>
-<o>normal</o>
-<t></t>
+<changed from="normal"/>
+<o>Normal</o>
+<t>normal</t>
 </str>
 
 <str id="282">
-<new/>
-<o>fast</o>
-<t></t>
+<changed from="fast"/>
+<o>Fast</o>
+<t>schnell</t>
 </str>
 
 <str id="284">
-<new/>
-<o>faster</o>
-<t></t>
+<changed from="faster"/>
+<o>Faster</o>
+<t>schneller</t>
 </str>
 
 <str id="286">
-<new/>
-<o>compact</o>
-<t></t>
+<changed from="compact"/>
+<o>Compact</o>
+<t>kompakt</t>
 </str>
 
 <str id="288">
-<new/>
-<o>really compact</o>
-<t></t>
+<changed from="really compact"/>
+<o>Really compact</o>
+<t>sehr kompakt</t>
 </str>
 
 <str id="290">
-<new/>
 <o>Module event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
-</str>
-
-<str id="291">
-<new/>
-<o>handled by</o>
-<t></t>
+<t>Modulereignisprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
 </str>
 
 <str id="292">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Cache-Status</t>
 </str>
 
 <str id="293">
-<new/>
 <o>Hits</o>
-<t></t>
+<t>Zugriffe</t>
 </str>
 
 <str id="294">
-<new/>
 <o>Misses</o>
-<t></t>
+<t>Fehlschlöge</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
+<t>Einträge</t>
 </str>
 
 <str id="297">
-<new/>
 <o>New row</o>
-<t></t>
+<t>Neue Zeile</t>
 </str>
 
 <str id="yes">
-<new/>
 <o>Yes</o>
-<t></t>
-</str>
-
-<str id="no">
-<new/>
-<o>No</o>
-<t></t>
+<t>Ja</t>
 </str>
 
 <str id="298">
-<new/>
 <o>Event log cleared by %s from %s</o>
-<t></t>
-</str>
-
-<str id="299">
-<new/>
-<o>Information</o>
-<t></t>
+<t>Ereignisprotokoll gelöscht durch %s von %s</t>
 </str>
 
 <str id="300">
-<new/>
 <o>This port was requested, but binding it failed.</o>
-<t></t>
-</str>
-
-<str id="301">
-<new/>
-<o>Not open</o>
-<t></t>
+<t>Dieser Port wurde verlangt, aber Bindung schlug fehl.</t>
 </str>
 
 <str id="1">
-<new/>
 <o>Initial variables for </o>
-<t></t>
+<t>Initiale Variablen für</t>
 </str>
 
 <str id="190">
-<new/>
 <o>Initial variables for the site</o>
-<t></t>
+<t>Initiale Variablen für die Site</t>
 </str>
 
 <str id="229">
-<new/>
 <o>Page charset</o>
-<t></t>
+<t>Seiten-Zeichensatz</t>
 </str>
 
 <str id="230">
-<new/>
 <o>The charset to use when rendering configuration interface pages.</o>
-<t></t>
+<t>Der Zeichensatz, der für das Konifgurations-Interface benutzt wird.</t>
 </str>
 
 <str id="234">
-<new/>
 <o>Requests</o>
-<t></t>
+<t>Anfragen</t>
 </str>
 
 <str id="235">
-<new/>
 <o>Are you sure you want to disable the site %s?</o>
-<t></t>
+<t>Sind Sie sicher, dass sie die Site %s deaktivieren wollen?</t>
 </str>
 
 <str id="236">
-<new/>
 <o>Default variable sort order</o>
-<t></t>
+<t>Standard-Sortierreihenfolge für Variablen</t>
 </str>
 
 <str id="237">
-<new/>
 <o>The default order variables are sorted in</o>
-<t></t>
+<t>Die Standard-Sortierreihenfolge für Variablen</t>
 </str>
 
 <str id="238">
-<new/>
-<o>alphabetical</o>
-<t></t>
+<changed from="alphabetical"/>
+<o>Alphabetical</o>
+<t>alphabetisch</t>
 </str>
 
 <str id="239">
-<new/>
-<o>as defined</o>
-<t></t>
+<changed from="as defined"/>
+<o>As defined</o>
+<t>wie definiert</t>
 </str>
 
 <str id="240">
-<new/>
-<o>alphabetical, changed first</o>
-<t></t>
+<changed from="alphabetical, changed first"/>
+<o>Alphabetical, changed first</o>
+<t>alphabetisch, geänderte zuerst</t>
 </str>
 
 <str id="241">
-<new/>
-<o>as defined, changed first</o>
-<t></t>
+<changed from="as defined, changed first"/>
+<o>As defined, changed first</o>
+<t>wie definiert, geänderte zuerst</t>
 </str>
 
 <str id="242">
-<new/>
 <o>Changed variables are highlighted</o>
-<t></t>
+<t>Geänderte Variablen sind hervorgehoben</t>
 </str>
 
 <str id="243">
-<new/>
 <o>How to highlight variables that does not have their default value</o>
-<t></t>
+<t>Wie sollen die Variablen hervorgehoben werden, die nicht ihren Standardwert haben</t>
 </str>
 
 <str id="244">
-<new/>
 <o>Not at all</o>
-<t></t>
+<t>Überhaupt nicht</t>
 </str>
 
 <str id="268">
-<new/>
 <o>Different background color</o>
-<t></t>
+<t>Unterschiedliche Hintergrundfarbe</t>
 </str>
 
 <str id="302">
-<new/>
 <o>Add a header</o>
-<t></t>
+<t>Eine Zeile hinzufügen</t>
 </str>
 
 <str id="303">
-<new/>
 <o>Group Tasks</o>
-<t></t>
+<t>Aufgaben zusammenfassen</t>
 </str>
 
 <str id="304">
-<new/>
 <o>If true, tasks are grouped acording to type, otherwise all tasks will be listed on one page</o>
-<t></t>
+<t>Wenn ja, werden Aufgaben nach Typ in Gruppen zusammengefasst, ansonsten werden alle Aufgaben auf einer Seite aufgelistet</t>
 </str>
 
 <str id="305">
-<new/>
-<o>The modules security level is used to determine if a  request should be handled by the module.
+<changed from="The modules security level is used to determine if a  request should be handled by the module.
 &lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
 &lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
 &lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
-<t></t>
+&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;"/>
+<o>The modules security level is used to determine if a  request should be handled by the module.
+&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
+&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the request will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;, &lt;i&gt;unless&lt;/i&gt; the security         level of the module is 0, which is a special         case and means that no change should be made.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
+&lt;p&gt;On the other hand, a request handled by the the "Filesystem module" could later be handled by the "CGI module".&lt;/p&gt;</o>
+<t>Das Sicherheitslevel-Modul bestimmt, welches Modul eine Anfrage behandelt.
+&lt;p&gt;&lt;h2&gt;Sicherheit contra Vertrauen&lt;/h2&gt; Jedes Modul hat einen einstellbaren &lt;i&gt;Sicherheitslevel&lt;/i&gt;. Jede Anfrage besitzt einen Vertrauenspegel. Höhere &lt;i&gt;Vertrauenspegel&lt;/i&gt; gewähren Zugriffe auf Module mit höhrerem &lt;i&gt;Sicherheitslevel&lt;/i&gt;.
+&lt;p&gt;&lt;h2&gt;Definitionen&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;Der Vertrauenspegel einer Anfrage ist zu Beginn unendlich hoch.&lt;/li&gt; &lt;li&gt; Eine Anfrage wird durch ein Modul nur dann behandelt, wenn sein &lt;i&gt;Vertrauenspegel&lt;/i&gt; höher oder gleich dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls ist.&lt;/li&gt; &lt;li&gt; Bei jeder Behandlung eines Zugriffs durch ein Modul wird der &lt;i&gt;Vertrauenspegel&lt;/i&gt; des Moduls auf den kleineren Wert von &lt;i&gt;Vertrauenspegel&lt;/i&gt; und dem &lt;i&gt;Sicherheitslevel&lt;/i&gt; des Moduls gesetzt, &lt;i&gt;ausser&lt;/i&gt; der Sicherheitslevel des Moduls ist 0, was bedeutet, das keine Änderung vorgenommen werden soll.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;&lt;h2&gt;Beispiele&lt;/h2&gt; Module:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;Sicherheitslevel&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
+&lt;p&gt;Einer Anfrage, die durch das "User filesystem" behandelt wird, wird ein &lt;i&gt;Vertrauenspegel&lt;/i&gt; nach einem der &lt;i&gt;Sicherheitslevel&lt;/i&gt; deses Moduls zugewiesen. Diese Anfrage kann dann nicht mehr durch das "CGI-Modul" behandelt werden, da dieses Modul einen höhreren &lt;i&gt;Sicherheitslevel&lt;/i&gt; als der Vertrauenspegel der Anfrage hat.&lt;/p&gt;
+&lt;p&gt;Ansonsten kann die Anfrage durch das "Dateisystem-Modul" und später durch das "CGI-Modul" behandelt werden.&lt;/p&gt;</t>
 </str>
 
 <str id="306">
-<new/>
 <o>Site</o>
-<t></t>
+<t>Site</t>
 </str>
 
 <str id="307">
-<new/>
 <o>No such file message override files</o>
-<t></t>
+<t>Text für 404-Fehlermeldung anstatt Dateien</t>
 </str>
 
 <str id="308">
-<new/>
+<changed from="If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc."/>
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
-As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
-<t></t>
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.&lt;p&gt;
+The inclusion file can access the form variables form.orig-file and form.orig-url to identify the original page that was requested.</o>
+<t>Wenn keine Datei für eine Anfrage vorliegt, wird in allen übergeordneten Verzeichnissen nach eine dieser Dateien durchsucht.&lt;p&gt;
+Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in dieser Liste steht der Standardwert 404.inc, wird in folgender Reihenfolge gesucht: &lt;/p&gt;&lt;br /&gt; /foo/bar/404.inc, /foo/404.inc und /404.inc.</t>
 </str>
 
 <str id="309">
-<new/>
 <o>Require user with the 'hilfe' permission</o>
-<t></t>
+<t>Benötige Benutzer mit der 'hilfe'-Berechtigung</t>
 </str>
 
 <str id="310">
-<new/>
-<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
-<t></t>
+<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will be allowed, even one with only the view settings permission.</o>
+<t>Wenn ja, wird ein Benutzer mit der 'hilfe'-Berechtigung benötigt. Ansonsten reicht jeder Benutzer, auch solche mit nur-Lese-Berechtigung</t>
 </str>
 
 <str id="311">
-<new/>
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
-</str>
-
-<str id="312">
-<new/>
-<o>Could not interpret the date</o>
-<t></t>
+<t>Eventprotokoll für '%s' gelöscht durch %s (%s) von %s</t>
 </str>
 
 <str id="313">
-<new/>
 <o>An email address must contain "@".</o>
-<t></t>
+<t>Eine Email-Adresse muss "@" enthalten.</t>
 </str>
 
 <str id="314">
-<new/>
 <o>The email address domain contains forbidden characters.</o>
-<t></t>
+<t>Die Domain der Email-Adresse enthält verbotene Zeichen.</t>
 </str>
 
 <str id="315">
-<new/>
 <o>The email address user contains forbidden characters.</o>
-<t></t>
+<t>Der Benutzername der Email-Adresse enthält verbotene Zeichen.</t>
 </str>
 
 <str id="316">
-<new/>
 <o>The email address does not contain a user.</o>
-<t></t>
+<t>Die Email-Adresse enthölt keinen Benutzernamen.</t>
 </str>
 
 <str id="317">
-<new/>
 <o>The email address does not contain a domain.</o>
-<t></t>
+<t>Die Email-Adresse enthält keine Domain.</t>
 </str>
 
 <str id="318">
-<new/>
 <o>The email address begins with an character that is not legal in that position.</o>
-<t></t>
+<t>Die Email-Adresse beginnt mit einem Zeichen, das an dieser Position nicht erlaubt ist.</t>
 </str>
 
 <str id="319">
-<new/>
 <o>The domain %s could not be found.</o>
-<t></t>
+<t>Die Domain %s konnte nicht gefunden werden.</t>
 </str>
 
-
-
 <str id="326">
-<new/>
 <o>unnamed</o>
-<t></t>
+<t>unbenannt</t>
 </str>
 
 <str id="328">
-<new/>
 <o>Value is bigger than %s, adjusted</o>
-<t></t>
+<t>Wert ist größer als %s, angepasst</t>
 </str>
 
 <str id="329">
-<new/>
 <o>Value is less than %s, adjusted</o>
-<t></t>
+<t>Wert ist niedriger als %s, angepasst</t>
 </str>
 
 <str id="330">
-<new/>
 <o>You most likely want an ending '/' on this variable</o>
-<t></t>
+<t>Sie benötigen sicher ein '/' am Ende dieser Variablen</t>
 </str>
 
 <str id="331">
-<new/>
 <o>%s is not a directory</o>
-<t></t>
+<t>%s ist kein Verzeichnis</t>
 </str>
 
 <str id="332">
-<new/>
 <o>(keep stale value %s)</o>
-<t></t>
+<t>(behalte abgelaufenen Wert %s)</t>
 </str>
 
 <str id="333">
-<new/>
 <o>Assuming http://*:%[0]d/ for %[0]d</o>
-<t></t>
+<t>http://*:%[0]d/ für %[0]d angenommen</t>
 </str>
 
 <str id="334">
-<new/>
 <o>Empty URL field</o>
-<t></t>
+<t>Leeres URL-Feld</t>
 </str>
 
 <str id="335">
-<new/>
 <o>%s does not conform to URL syntax</o>
-<t></t>
-</str>
-
-<str id="336">
-<new/>
-<o>Added / to the end of %s</o>
-<t></t>
-</str>
-
-<str id="337">
-<new/>
-<o>Changed %s to http</o>
-<t></t>
+<t>%s entspricht nicht der URL-Syntax</t>
 </str>
 
 <str id="338">
-<new/>
 <o>Changed %s to %s</o>
-<t></t>
+<t>Von %s nach %s geändert</t>
 </str>
 
 <str id="339">
-<new/>
 <o>SSL support not available in this Pike version.</o>
-<t></t>
+<t>SSL-Unterstützung nicht verfügbar in dieser Pike-Version</t>
 </str>
 
 <str id="340">
-<new/>
 <o>Please use %s instead.</o>
-<t></t>
+<t>Bitte %s stattdessen benutzen.</t>
 </str>
 
 <str id="341">
-<new/>
 <o>Removed the default port number (%d) from %s</o>
-<t></t>
+<t>Standard-Portnummer (%d) von %s entfernt</t>
 </str>
 
 <str id="342">
-<new/>
 <o>Warning: The protocol %s is not known by roxen</o>
-<t></t>
+<t>Warnung: Das Protokoll %s wird nicht von Roxen erkannt</t>
 </str>
 
 <str id="344">
-<new/>
 <o>Uploaded file: %s</o>
-<t></t>
+<t>Datei geladen: %s</t>
 </str>
 
 <str id="345">
-<new/>
 <o>Cannot decode this file as an image</o>
-<t></t>
+<t>Kann diese Datei nicht als Bild dekodieren</t>
 </str>
 
 <str id="346">
-<new/>
 <o>Error while decoding image</o>
-<t></t>
+<t>Fehler beim Bild-Dekodieren</t>
 </str>
 
 <str id="347">
-<new/>
 <o>Valid image set (no cimg module available, cannot show it)</o>
-<t></t>
+<t>Gültiges Bild gesetzt (kein cimg-Modul verfügbar, kann nicht angezeigt werden)</t>
 </str>
 
 <str id="348">
-<new/>
 <o>No image set</o>
-<t></t>
+<t>Kein Bild gesetzt</t>
 </str>
 
 <str id="349">
-<new/>
 <o>Update Client</o>
-<t></t>
+<t>Update-Client</t>
 </str>
 
 <str id="350">
-<new/>
 <o>Load of %s (%s) failed</o>
-<t></t>
+<t>Laden von %s (%s) fehlgeschlagen</t>
 </str>
 
 <str id="351">
-<new/>
 <o>The module %s (%s) could not be loaded.</o>
-<t></t>
-</str>
-
-<str id="352">
-<new/>
-<o>Found trailing data after the date. </o>
-<t></t>
-</str>
-
-<str id="353">
-<new/>
-<o>Month must be at least 1. </o>
-<t></t>
-</str>
-
-<str id="354">
-<new/>
-<o>Month must be 12 or less. </o>
-<t></t>
-</str>
-
-<str id="355">
-<new/>
-<o>Day must be at least 1.</o>
-<t></t>
-</str>
-
-<str id="356">
-<new/>
-<o>%s does not appear to be a valid date.</o>
-<t></t>
-</str>
-
-<str id="357">
-<new/>
-<o>Day must be %d or less.</o>
-<t></t>
+<t>Das Modul %s (%s) konnte nicht geladen werden.</t>
 </str>
 
 <str id="5">
-<new/>
 <o>Interface language</o>
-<t></t>
+<t>Interface-Sprache</t>
 </str>
 
 <str id="19">
-<changed from="The modules security level is used to determine if a  request should be handled by the module.
-&lt;p&gt;&lt;h2&gt;Security level vs Trust level&lt;/h2&gt; Each module has a configurable &lt;i&gt;security level&lt;/i&gt;. Each request has an assigned trust level. Higher &lt;i&gt;trust levels&lt;/i&gt; grants access to modules with higher &lt;i&gt;security levels&lt;/i&gt;.
-&lt;p&gt;&lt;h2&gt;Definitions&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;A requests initial Trust level is infinitely high.&lt;/li&gt; &lt;li&gt; A request will only be handled by a module if its     &lt;i&gt;trust level&lt;/i&gt; is higher or equal to the     &lt;i&gt;security level&lt;/i&gt; of the module.&lt;/li&gt; &lt;li&gt; Each time the request is handled by a module the     &lt;i&gt;trust level&lt;/i&gt; of the module will be set to the      lower of its &lt;i&gt;trust level&lt;/i&gt; and the modules     &lt;i&gt;security level&lt;/i&gt;.&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;&lt;h2&gt;Example&lt;/h2&gt; Modules:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;security level&lt;/i&gt; 1&lt;/li&gt; &lt;li&gt;  Filesystem module, &lt;i&gt;security level&lt;/i&gt; 3&lt;/li&gt; &lt;li&gt;  CGI module, &lt;i&gt;security level&lt;/i&gt; 2&lt;/li&gt; &lt;/ul&gt;&lt;/p&gt;
-&lt;p&gt;A request handled by "User filesystem" is assigned a &lt;i&gt;trust level&lt;/i&gt; of one after the &lt;i&gt;security level&lt;/i&gt; of that module. That request can then not be handled by the "CGI module" since that module has a higher &lt;i&gt;security level&lt;/i&gt; than the requests trust level.&lt;/p&gt;
-&lt;p&gt;On the other hand, a request handled by the the "Filsystem module" could later be handled by the "CGI module".&lt;/p&gt;"/>
 <o>Select the Administration interface language.</o>
-<t>Die Sicherheitsebene des Moduls wird verwendet, wenn ein Request vom Modul behandelt werden soll.\n&lt;p&gt;&lt;h2&gt;Sicherheitsebene vs Vertrauensebene&lt;/h2&gt; Jedes Modul hat eine konfigurierbare &lt;i&gt;Sicherheitsebene&lt;/i&gt;.Jeder Request hat eine zugewiesene Vertrauensebene. Höhere &lt;i&gt;Vertrauensebeben&lt;/i&gt; erlauben Zugriff zu Modulen mir höherer &lt;i&gt;Sicherheitsebene&lt;/i&gt;.\n&lt;p&gt;&lt;h2&gt;Definitionen&lt;/h2&gt;&lt;ul&gt; &lt;li&gt;Die ursprüngliche Vertrauensebene eines Requests      ist unendlich hoch. &lt;li&gt; Ein Request wird nur von einem Modul behandelt, wenn      seine &lt;i&gt;Vertrauensebene&lt;/i&gt; mindestens so hoch ist,      wie die &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls. &lt;li&gt; Jedes Mal wenn ein Request von einem Modul       behandelt wird, wird die &lt;i&gt;Vertrauensebene&lt;/i&gt;      des Requests auf den jeweils niedrigeren Wert      von der &lt;i&gt;Vertrauensebene&lt;/i&gt; des Requests und der     &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls, gesetzt. &lt;/ul&gt;\n&lt;p&gt;&lt;h2&gt;Beispiel&lt;/h2&gt; Module:&lt;ul&gt; &lt;li&gt;  User filesystem, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 1 &lt;li&gt;  Filesystem module, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 3 &lt;li&gt;  CGI module, &lt;i&gt;Sicherheitsebene&lt;/i&gt; 2 &lt;/ul&gt;\n&lt;p&gt;Ein Request der vom \"User filesystem\" behandelt wird bekommt eine &lt;i&gt;Vertrauensebene&lt;/i&gt; die der &lt;i&gt;Sicherheitsebene&lt;/i&gt; des Moduls entspricht. Der Request kann dann nicht mehr vom \"CGI module\
-                   "behandelt werden, da dieses eine höhere &lt;i&gt;Sicherheitsebene&lt;/i&gt; hat als die Vertrauensebene des Requests.\n&lt;p&gt;Ein Request der vom \"Filsystem module\" behandelt wurde kann andererseits später vom \"CGI module\
-                   "behandelt werden.</t>
+<t>Wählen Sie die Sprache für das Administrations-Interface aus.</t>
 </str>
 
 <str id="152">
-<new/>
 <o>%O is not an integer</o>
-<t></t>
+<t>%O ist kein Integer</t>
 </str>
 
 <str id="153">
-<new/>
-<o>&lt;dl&gt;
+<changed from="&lt;dl&gt;
 &lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
 &lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
 &lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
 &lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
+&lt;/dl&gt;"/>
+<o>&lt;dl&gt;
+&lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
+&lt;dt&gt;Fast&lt;/dt&gt;&lt;dd&gt;Like Normal, but no type images.&lt;/dd&gt;
+&lt;dt&gt;Faster&lt;/dt&gt;&lt;dd&gt;Like Normal, but allows selecting multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
+&lt;dt&gt;Really compact&lt;/dt&gt;&lt;dd&gt;Like Compact, but no module classes.&lt;/dd&gt;
 &lt;/dl&gt;</o>
-<t></t>
+<t>&lt;dl&gt;
+&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Zeigt Modulnamen und Dokumentation mit Bildern an.&lt;/dd&gt;
+&lt;dt&gt;schnell&lt;/dt&gt;&lt;dd&gt;Wie normal, aber ohne Bilder.&lt;/dd&gt;
+&lt;dt&gt;schneller&lt;/dt&gt;&lt;dd&gt;Wie normal, aber erlaubt mehrfache Auswahl von Modulen auf einmal.&lt;/dd&gt;
+&lt;dt&gt;kompakt&lt;/dt&gt;&lt;dd&gt;Zeigt nur die Modulnamen und gestattet das Hinzufügen und Entfernen von mehreren Modulen gleichzeitig.&lt;/dd&gt;
+&lt;dt&gt;sehr kompakt&lt;/dt&gt;&lt;dd&gt;Wie kompakt, aber ohne Modulklassen.&lt;/dd&gt;
+&lt;/dl&gt;</t>
 </str>
 
 <str id="222">
-<new/>
 <o>Create new user</o>
-<t></t>
+<t>Erzeuge neuen Benutzer</t>
 </str>
 
 <str id="223">
-<new/>
 <o>Delete old user</o>
-<t></t>
+<t>Lösche alten Benutzer</t>
 </str>
 
 <str id="224">
-<new/>
 <o>Create User</o>
-<t></t>
+<t>Erzeuge Benutzer</t>
 </str>
 
 <str id="225">
-<new/>
 <o>User ID</o>
-<t></t>
+<t>User-ID</t>
 </str>
 
-
-
-
-
 <str id="248">
-<new/>
 <o>Create new site</o>
-<t></t>
+<t>Neue Site erstellen</t>
 </str>
 
 <str id="269">
-<new/>
 <o>Site name:</o>
-<t></t>
+<t>Sitename:</t>
 </str>
 
 <str id="270">
-<new/>
-<o>
+<changed from="
 The name of the configuration must contain characters
 other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
@@ -2050,331 +2083,1761 @@ used. This name will show up in the sites menu, a
 lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well
 as the name of its log file directory.
+"/>
+<o>
+The name of the configuration must contain characters other than space
+and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
+'#', '$', '%', '&amp;amp;', '=', ';', ':', '_', '&amp;lt;', '&amp;gt;', '|', '*',
+and it must not be 'CVS', 'Global Variables' or 'global variables',
+nor the name of an existing configuration. This name will show up in
+the sites menu, a lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well as the name of
+its log file directory.
+</o>
+<t>Der Name der Konfiguration darf keine Leerzeichen oder Tabs enthalten, es darf nicht mit ~ enden, und es darf nicht 'CVS', 'Global Variables' oder 'global variables' sein, auch nicht der Name einer bestehenden Konfiguration.  Das Zeichen '/' darf ebenfalls nicht benutzt werden. Der Name erscheint im Site-Menu, ein lowercase dateisystemfreundlicher Name wird der Dateiname der Konfigurationsdatei und des Protokollverzeichnisses.</t>
+</str>
+
+<str id="271">
+<o>with template</o>
+<t>mit Template</t>
+</str>
+
+<str id="296">
+<o>Illegal site name</o>
+<t>Illegaler Sitename</t>
+</str>
+
+<str id="195">
+<o>Community articles</o>
+<t>Community-Artikel</t>
+</str>
+
+<str id="231">
+<o>Most recently published community articles</o>
+<t>Die zuletzt veröffentlichten Community-Artikel</t>
+</str>
+
+<str id="232">
+<o>Crunch activity</o>
+<t>Crunch-Aktivität</t>
+</str>
+
+<str id="262">
+<o>Recently changed Crunch reports</o>
+<t>Kürzlich geänderte Crunch-Reports</t>
+</str>
+
+<str id="263">
+<o>News from www.roxen.com</o>
+<t>News von www.roxen.com</t>
+</str>
+
+<str id="281">
+<o>The news headlines from www.roxen.com</o>
+<t>Die Schlagzeilen von www.roxen.com</t>
+</str>
+
+<str id="283">
+<o>Unknown box %s</o>
+<t>Unbekannte Box %s</t>
+</str>
+
+<str id="285">
+<o>Large Content Boxes</o>
+<t>Grosse Content-Boxen</t>
+</str>
+
+<str id="287">
+<o>Content boxes on the Startpage</o>
+<t>Content-Boxen auf der Startseite</t>
+</str>
+
+<str id="289">
+<o>Small Content Boxes</o>
+<t>Kleine Content-Boxen</t>
+</str>
+
+<str id="327">
+<o>Theme</o>
+<t>Thema</t>
+</str>
+
+<str id="343">
+<o>The theme to use</o>
+<t>Das zu benutzende Thema</t>
+</str>
+
+<str id="358">
+<o>Changed</o>
+<t>Geändert</t>
+</str>
+
+<str id="359">
+<o>Unchanged</o>
+<t>Ungeändert</t>
+</str>
+
+<str id="360">
+<o>Home</o>
+<t>Startseite</t>
+</str>
+
+<str id="363">
+<o>Documentation links</o>
+<t>Dokumentationsverweise</t>
+</str>
+
+<str id="364">
+<o>Links to the inline documentation</o>
+<t>Verweise auf die Inline-Dokumentation</t>
+</str>
+
+<str id="365">
+<o>Welcome message</o>
+<t>Begrüssungsnachricht</t>
+</str>
+
+<str id="366">
+<o>Roxen welcome message and news</o>
+<t>Roxen Begrüssungsnachricht und Neuigkeiten</t>
+</str>
+
+<str id="218">
+<o>DBs</o>
+<t>Datenbanken</t>
+</str>
+
+<str id="367">
+<o>Server status</o>
+<t>Server-Status</t>
+</str>
+
+<str id="368">
+<o>Various global server statistics</o>
+<t>Verschiedene globale Server-Statistiken</t>
+</str>
+
+<str id="369">
+<o>Server started</o>
+<t>Server gestartet</t>
+</str>
+
+<str id="370">
+<o>Server uptime</o>
+<t>Server-Laufzeit</t>
+</str>
+
+<str id="371">
+<o>CPU-time used</o>
+<t>Benutzte CPU-Zeit</t>
+</str>
+
+<str id="372">
+<o>MySQL status</o>
+<t>MySQL-Status</t>
+</str>
+
+<str id="8">
+<o>Server secret</o>
+<t>Server-Geheimnis</t>
+</str>
+
+<str id="9">
+<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced.</o>
+<t>Das Server-Geheimnis ist eine Zeichenkette, die in einigen kryptographischen Funktionen verwendet wird, um u.a. eindeutige und nicht-ratbare Session-Identifikatoren zu erzeugen. Ändern Sie diesen Wert in etwas hart zu erratendes, sofern Sie nicht mit dem bereits zufällig erzeugten Wert zufrieden sind.</t>
+</str>
+
+<str id="164">
+<o>Databases</o>
+<t>Datenbanken</t>
+</str>
+
+<str id="165">
+<o>Configuration Filesystem</o>
+<t>Konfiguration Dateisystem</t>
+</str>
+
+<str id="166">
+<o>This filesystem serves the administration interface</o>
+<t>Dieses Dateisystem bedient das Administrations-Interface</t>
+</str>
+
+<str id="168">
+<o>Hide</o>
+<t>Verstecke</t>
+</str>
+
+<str id="169">
+<o>Login attempt from %s</o>
+<t>Login-Versuch von %s</t>
+</str>
+
+<str id="167">
+<o>Form font size</o>
+<t>Schriftgröße Formulare</t>
+</str>
+
+<str id="178">
+<o>The fontsize of the variables in the configuration interface</o>
+<t>Die Schriftgröße der Variablen im Konfigurations-Interface</t>
+</str>
+
+<str id="179">
+<o>Documentation font size</o>
+<t>Schriftgröße Dokumentation</t>
+</str>
+
+<str id="193">
+<o>The fontsize of the documentation in the configuration interface</o>
+<t>Die Schriftgröße der Dokumentation im Konfigurations-Interface</t>
+</str>
+
+<str id="205">
+<o>Minimum allowed bitrate</o>
+<t>Minimal erlaubte Bitrate</t>
+</str>
+
+<str id="215">
+<o>The minimum allowed bitrate, in bits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14000 is not recommended if you have modem users.</o>
+<t>Die minimal erlaubte Bitrate, in Bits/Sekunde. Wenn der Browser langsamer ist als diese Rate, wird seine Verbindung nach einem Timeout gelöst.  Bei Modem-Benutzern ist es nicht empfohlen, diesen Wert auf 14000 oder höher zu setzen.</t>
+</str>
+
+<str id="233">
+<o>bytecode data</o>
+<t>Bytecode-Daten</t>
+</str>
+
+<str id="374">
+<o>rows</o>
+<t>Zeilen</t>
+</str>
+
+<str id="376">
+<o>Name</o>
+<t>Name</t>
+</str>
+
+<str id="377">
+<o>Size</o>
+<t>Größe</t>
+</str>
+
+<str id="378">
+<changed from="Clear query"/>
+<o>Reset query</o>
+<t>Abfrage löschen</t>
+</str>
+
+<str id="379">
+<o>Run query</o>
+<t>Abfrage ausführen</t>
+</str>
+
+<str id="382">
+<o>Failed to enable %s</o>
+<t>Aktivierung von %s fehlgeschlagen</t>
+</str>
+
+<str id="383">
+<o>Documentation</o>
+<t>Dokumentation</t>
+</str>
+
+<str id="245">
+<changed from="The syntax is:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Select a non-default userdatabase module. The default is to  search all modules. The userdatabase module config_userdb is always  present, and contains the configuration users&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Select a non-default authentication method.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;The realm is used when user authentication info is requested&lt;/dd&gt;&lt;/dl&gt;
+  Below, CMD is one of 'allow' and 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Requires a authenticated user. If the user name 'any' is used, any valid user will be OK. Otherwise, one of the listed users are required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires a authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (monday=1, sunday=7) or a string (monday, thuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern is always a glob pattern (* = any characters, ? = any character).
+&lt;/p&gt;&lt;p&gt;
+  return means that reaching this command results in immediate
+  return, only useful for 'allow'.&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' always implies a return, no futher testing is done if a
+ 'deny' match.&lt;/p&gt;
+"/>
+<o>The syntax is:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Select a non-default userdatabase module. The default is to  search all modules. The userdatabase module config_userdb is always  present, and contains the configuration users&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Select a non-default authentication method.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;The realm is used when user authentication info is requested&lt;/dd&gt;&lt;/dl&gt;
+  Below, CMD is one of 'allow' and 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Match the remote IP-address.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Requires an authenticated user. If the user name 'any' is used, any valid user will be OK; if the user name 'ANY' is used, a valid user is preferred, but not required. Otherwise, one of the listed users is required.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Requires an authenticated user with a group. If the group name  'any' is used, any valid group will be OK. Otherwise, one of the listed groups are required.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Require one of the specified DNS domain-names&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access to the module from the first time to the  second each day. Both times should be specified in 24-hour  HH:mm format.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Only allow access during certain days. Day is either a numerical     value (Monday=1, Sunday=7) or a string (monday, tuesday etc)&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern is always a glob pattern (* = any characters, ? = any character).
+&lt;/p&gt;&lt;p&gt;
+  return means that reaching this command results in immediate
+  return, only useful for 'allow'.&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' always implies a return, no futher testing is done if a
+ 'deny' match.&lt;/p&gt;
+</o>
+<t>Die Syntax ist:
+ 
+&lt;dl&gt;  &lt;dt&gt;&lt;b&gt;userdb&lt;/b&gt; &lt;i&gt;userdatabase module&lt;/i&gt;&lt;/dt&gt;
+  &lt;dd&gt; Wählt ein bestimmtes userdatabase-Modul aus. Das Standardverhalten ist, sämtliche Module zu durchsuchen.  Das userdatabase-Modul des Konfigurations-Interfaces ist immer präsent und enthält die Benutzer des Konfigurations-Interfaces&lt;/dd&gt;
+&lt;dt&gt;&lt;b&gt;authmethod&lt;/b&gt; &lt;i&gt;authentication module&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Wählt eine bestimmte Authentikations-Methode.&lt;/dd&gt;&lt;dt&gt;&lt;b&gt;realm&lt;/b&gt; &lt;i&gt;realm name&lt;/i&gt;&lt;/dt&gt;
+&lt;dd&gt;Der Realm, der bei einer Benutzer-Authentikation verwendet wird&lt;/dd&gt;&lt;/dl&gt;
+  Im Folgenden ist CMD entweder 'allow' oder 'deny'
+ &lt;dl&gt;
+  &lt;dt&gt;CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip/bits&lt;/i&gt;  [return]&lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;ip:mask&lt;/i&gt;  [return] &lt;br /&gt;
+  CMD &lt;b&gt;ip&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;  [return] &lt;br /&gt;&lt;/dt&gt;
+  &lt;dd&gt;Überprüfung auf IP-Adresse des Webbrowsers.&lt;/dd&gt;
+ 
+  &lt;dt&gt;CMD &lt;b&gt;user&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt;  [return]&lt;/dt&gt;
+  &lt;dd&gt;Ein Benutzer wird verlangt. Wird 'any' benutzt, ist jeder Benutzer berechtigt. Ansonsten ist einer der gelisteten Benutzernamen notwendig.&lt;/dd&gt;  &lt;dt&gt;CMD &lt;b&gt;group&lt;/b&gt;=&lt;i&gt;name[,name,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Eine Benutzergruppe wird verlangt.  Wird 'any' benutzt, ist jede Gruppe berechtigt. Ansonsten ist eine der gelisteten Benutzergruppen notwendig.&lt;/dd&gt;
+ 
+&lt;dt&gt;CMD &lt;b&gt;dns&lt;/b&gt;=&lt;i&gt;pattern[,pattern,...]&lt;/i&gt;           [return]&lt;/dt&gt;
+&lt;dd&gt;Einer der angegebenen DNS Domainnamen ist erforderlich&lt;/dd&gt; 
+&lt;dt&gt;CMD &lt;b&gt;time&lt;/b&gt;=&lt;i&gt;HH:mm-HH:mm&lt;/i&gt;   [return]&lt;/dt&gt;
+&lt;dd&gt;Nur Zugriffe innerhalb des angegebenen Zeitintervalls sind zulässig. Beide Zeiten sollten im 24-Stunden Format HH:mm angegeben werden.&lt;/dd&gt;
+&lt;dt&gt;CMD &lt;b&gt;day&lt;/b&gt;=&lt;i&gt;day[,day,...]&lt;/i&gt; [return]&lt;/dt&gt;
+&lt;dd&gt;Nur Zugriffe an bestimmten Tagen sind zulässig. Der Tag wird als Zahl (Montag=1, Sonntag=7) angegeben.&lt;/dd&gt;&lt;/dl&gt;&lt;p&gt;
+  pattern ist immer ein Muster (* = jede Zeichenkette, ? = jedes einzelne Zeichen).
+&lt;/p&gt;&lt;p&gt;
+  return bedeutet, daß bei diesem Kommando sofort das Ergebnis zurückgegeben wird.  Dies ist nur sinnvoll bei 'allow'..&lt;/p&gt;
+ 
+ &lt;p&gt;'deny' bedeutet immer ein sofortige Rückgabe, kein weiteren Überprüfungen finden statt.&lt;/p&gt;
+</t>
+</str>
+
+<str id="246">
+<o>Compatibility level</o>
+<t>Kompatibilitätsstufe</t>
+</str>
+
+<str id="257">
+<o>Passive port minimum</o>
+<t>Passiver Port, Minimum</t>
+</str>
+
+<str id="320">
+<o>Minimum port number to use in the PASV/EPSV response.</o>
+<t>Minimale Portnummer für PASV/EPSV Antworten</t>
+</str>
+
+<str id="321">
+<o>Passive port maximum</o>
+<t>Passiver Port, Maximum</t>
+</str>
+
+<str id="322">
+<o>Maximum port number to use in the PASV/EPSV response.</o>
+<t>Maximale Portnummer für PASV/EPSV Anworten</t>
+</str>
+
+<str id="323">
+<o>Shared with </o>
+<t>Geteilt mit</t>
+</str>
+
+<str id="14">
+<o>Module list mode</o>
+<t>Modulliste Modus</t>
+</str>
+
+<str id="15">
+<changed from="The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;"/>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
+<t>Der Modullisten Modus. Kann sein: &lt;dl&gt;&lt;dt&gt;Zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Module derselben Gruppe sind zusammengefaltet&lt;/dd&gt;&lt;dt&gt;Nicht zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Wie die 'alte' Roxen 2.1 Liste&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Wie Zusammengefaltet, aber ein Menu mit den untergeordneten Modulen erscheint, wenn man mit der Maus drüberfährt&lt;/dd&gt;&lt;/dl&gt;</t>
+</str>
+
+<str id="17">
+<changed from="Folded with javascript popup"/>
+<o>Folded with JavaScript popup</o>
+<t>Zusammengefaltet mit Javascript Popup</t>
+</str>
+
+<str id="122">
+<o>Folded</o>
+<t>Zusammengefaltet</t>
+</str>
+
+<str id="123">
+<changed from="Unfolded (old style)"/>
+<o>Unfolded (Old style)</o>
+<t>Nicht zusammengefaltet (Herkömmliches Verhalten)</t>
+</str>
+
+<str id="219">
+<o>Authentication method</o>
+<t>Authentifizierungsmethode</t>
+</str>
+
+<str id="291">
+<o>The method to use to authenticate configuration interface users.</o>
+<t>Die Methode, mit der Benutzer des Konfigurationinterfaces authentifiziert werden.</t>
+</str>
+
+<str id="301">
+<o>HTTP Basic passwords</o>
+<t>HTTP Basic Passworte</t>
+</str>
+
+<str id="325">
+<o>HTTP Cookies</o>
+<t>HTTP Cookies</t>
+</str>
+
+<str id="384">
+<o>Warning: The theme %s  no longer exists, using default.
+</o>
+<t>Warnung: Das Theme %s existiert nicht mehr, das Default-Theme wird benutzt.</t>
+</str>
+
+<str id="385">
+<o>Reload failed</o>
+<t>Neuladen fehlgeschlagen</t>
+</str>
+
+<str id="386">
+<changed from="&lt;p&gt;The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.&lt;/p&gt;
+
+&lt;p&gt;This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.&lt;/p&gt;
+
+&lt;p&gt;Available compatibility levels:
+&lt;table&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen WebServer 2.4. This version is also
+  commonly known as 3.2 - the version number that applies to the
+  release of Roxen CMS which contains Roxen WebServer 2.4.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to no released version. This compatibility level is
+  only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &amp;lt;cache&amp;gt; tag.&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;&lt;/p&gt;"/>
+<o>&lt;p&gt;The compatibility level is used by different modules to select the
+right behavior to remain compatible with earlier Roxen versions. When
+a server configuration is created, this variable is set to the current
+version. After that it's never changed automatically, thereby ensuring
+that server configurations migrated from earlier Roxen versions is
+kept at the right compatibility level.&lt;/p&gt;
+
+&lt;p&gt;This variable may be changed manually, but it's advisable to test
+the site carefully afterwards. A reload of the whole server
+configuration is required to propagate the change properly to all
+modules.&lt;/p&gt;
+
+&lt;p&gt;Compatibility level notes:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;2.4 also applies to the version commonly known as 3.2. That was
+  the release of Roxen CMS which contained Roxen WebServer 2.4.&lt;/li&gt;
+
+  &lt;li&gt;2.5 corresponds to no released version. This compatibility level
+  is only used to turn on some optimizations that have compatibility
+  issues with 2.4, notably the optimization of cache static tags in
+  the &amp;lt;cache&amp;gt; tag.&lt;/li&gt;
+
+  &lt;li&gt;There are no compatibility differences between 5.0 and 5.1, so
+  those two compatibility levels can be used interchangeably.&lt;/li&gt;
+&lt;/ul&gt;</o>
+<t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
+
+&lt;p&gt;Diese Variable kann manuell geändert werden, die Site sollte danach jedoch ausführlich getestet werden. Ein Neustart der gesamten Server-Konfiguration ist notwendig, um die Änderung ordentlich an alle Module mitzuteilen.&lt;/p&gt;
+
+&lt;p&gt;Verfügbare Kompatibilitäts-Level:
+&lt;table&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.2&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.2.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;2.4&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht Roxen WebServer 2.4. Diese Version ist auch
+  als 3.2 bekannt - die Versionsnummer des Roxen CMS, die den Roxen
+  WebServer 2.4 enthält.&lt;/td&gt;&lt;/tr&gt;&lt;tr valign='top'&gt;&lt;td&gt;2.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Entspricht keiner veröffentlichten Version. Dieser Kompatibilitäts-Level wird nur für einige Optimierungen gegenüber der Version 2.4 benutzt,
+  besonders der Optimierung des &amp;lt;cache&amp;gt;-Tags.&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/p&gt;
+</t>
+</str>
+
+<str id="387">
+<o>Auto Restart: Schedule</o>
+<t>Auto Restart: Ablaufplan</t>
+</str>
+
+<str id="388">
+<o>Automatically restart the server according to this schedule.</o>
+<t>Der Server wird automatisch gemäß des Ablaufplanes neu gestartet.</t>
+</str>
+
+<str id="999">
+<o>SNMP: Enable SNMP agent</o>
+<t>SNMP: Aktiviere SNMP Agent</t>
+</str>
+
+<str id="389">
+<o>Fetching data from %s...</o>
+<t>Beziehe Daten von %s...</t>
+</str>
+
+<str id="396">
+<o>Pike Tutorial</o>
+<t>Pike-Tutorial</t>
+</str>
+
+<str id="397">
+<o>No documentation found at all</o>
+<t>Keine Dokumentation gefunden</t>
+</str>
+
+<str id="398">
+<o>Todays MegaTokyo comic</o>
+<t>MegaTokyo-Comic von heute</t>
+</str>
+
+<str id="399">
+<o>Todays comic from MegaTokyo</o>
+<t>MegaTokyo-Comic von heute</t>
+</str>
+
+<str id="401">
+<changed from="Copy or move database"/>
+<o>Copy or rename database</o>
+<t>Datenbank kopieren oder verschieben</t>
+</str>
+
+<str id="402">
+<o>Delete this database</o>
+<t>Diese Datenbank löschen</t>
+</str>
+
+<str id="403">
+<o>Delete all tables</o>
+<t>Alle Tabellen löschen</t>
+</str>
+
+<str id="404">
+<o>Make a backup</o>
+<t>Backup erstellen</t>
+</str>
+
+<str id="405">
+<o>Directory</o>
+<t>Verzeichnis</t>
+</str>
+
+<str id="406">
+<o>Please specify an URL to define an external database</o>
+<t>Bitte geben Sie eine URL für eine externe Datenbank an</t>
+</str>
+
+<str id="407">
+<changed from="It is not possible to connect to %s"/>
+<o>It is not possible to connect to %s.</o>
+<t>Verbindung zu %s ist nicht möglich</t>
+</str>
+
+<str id="408">
+<o>Please specify a name for the database</o>
+<t>Bitte geben Sie einen Namen für die Datenbank an</t>
+</str>
+
+<str id="409">
+<changed from="%s is an internal database, used by roxen.Please select another name"/>
+<o>%s is an internal database, used by Roxen. Please select another name.</o>
+<t>%s ist eine interne Datenbank, benutzt von Roxen. Bitte einen anderen Namen wählen</t>
+</str>
+
+<str id="410">
+<changed from="%s is a mysql keyword, used by mysql.Please select another name"/>
+<o>%s is a MySQL keyword, used by MySQL. Please select another name.</o>
+<t>%s ist ein mysql-Schlüsselwort. Bitte einen anderen Namen wählen</t>
+</str>
+
+<str id="414">
+<changed from="Move or copy this database"/>
+<o>Copy or rename this database</o>
+<t>Diese Datenbank verschieben oder kopieren</t>
+</str>
+
+<str id="415">
+<o>Action</o>
+<t>Aktion</t>
+</str>
+
+<str id="416">
+<o>Copy the data to a new database</o>
+<t>Diese Daten in eine neue Datenbank kopieren</t>
+</str>
+
+<str id="417">
+<changed from="Move database"/>
+<o>Rename database</o>
+<t>Datenbank verschieben</t>
+</str>
+
+<str id="418">
+<o>New name</o>
+<t>Neuer Name</t>
+</str>
+
+<str id="419">
+<o>Type</o>
+<t>Typ</t>
+</str>
+
+<str id="422">
+<changed from="This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen "/>
+<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
+<t>Diese URL wird nur für lt;/i&gt;Externe&lt;i&gt; Datenbanken benutzt, und wird ignoriert für Datenbanken, die innerhalb von Roxen definiert wurden</t>
+</str>
+
+<str id="424">
+<o>The database %s was deleted by %s</o>
+<t>Die Datenbank %s wurde gelöscht durch %s</t>
+</str>
+
+<str id="425">
+<o>Are you sure you want to delete all tables in %s?</o>
+<t>Sind Sie sicher, dass Sie alle Tabellen in %s löschen wollen?</t>
+</str>
+
+<str id="426">
+<o>Query took %[0].3fs, %[1]d rows in the reply</o>
+<t>Abfrage dauerte %[0].3fs, %[1]d Zeilen in der Antwort</t>
+</str>
+
+<str id="428">
+<changed from="Defined by %s"/>
+<o>Defined by %s.</o>
+<t>Definiert durch %s</t>
+</str>
+
+<str id="429">
+<changed from="The table is known as '%s' in the module"/>
+<o>The table is known as %O in the module.</o>
+<t>Die Tabelle ist bekannt als '%s' in dem Modul</t>
+</str>
+
+<str id="430">
+<changed from="The table is an anymous table defined by the module"/>
+<o>The table is an anonymous table defined by the module.</o>
+<t>Die Tabelle ist eine anonyme Tabelle, die durch dieses Modul definiert wurde</t>
+</str>
+
+<str id="431">
+<o>N</o>
+<t>N</t>
+</str>
+
+<str id="432">
+<o>R</o>
+<t>R</t>
+</str>
+
+<str id="433">
+<o>W</o>
+<t>W</t>
+</str>
+
+<str id="434">
+<o>Databases in the group %s</o>
+<t>Datenbanken in der Gruppe %s</t>
+</str>
+
+<str id="435">
+<o>When the group is created, the checked databases will be imported as well</o>
+<t>Wenn diese Gruppe erstellt wird, werden die markierten Datenbanken ebenfalls importiert</t>
+</str>
+
+<str id="437">
+<o>Create new database</o>
+<t>Neue Datenbank erstellen</t>
+</str>
+
+<str id="438">
+<o>Create new group</o>
+<t>Neue Gruppe erstellen</t>
+</str>
+
+<str id="439">
+<o>Create a new database</o>
+<t>Eine neue Datenbank erstellen</t>
+</str>
+
+<str id="440">
+<o>Internal</o>
+<t>Intern</t>
+</str>
+
+<str id="441">
+<o>External</o>
+<t>Extern</t>
+</str>
+
+<str id="442">
+<changed from="The name of the database. To make it easy on your users, use all lowercaps characters, and avoid 'odd' characters "/>
+<o>The name of the database. To make it easy on your users, please use
+all lowercase characters, and avoid 'odd' characters.</o>
+<t>Der Name der Datenbank. Um es für Benutzer einfacher zu machen, sollten nur Kleinbuchstaben verwendet und auf komplizierte Zeichen verzichtet werden</t>
+</str>
+
+<str id="443">
+<changed from="The database type. Internal means that it will be created in the roxen mysql database, and the permissions of the database will be automatically manged by roxen. External means that the database resides in another database."/>
+<o>The database type. &lt;i&gt;Internal&lt;/i&gt; means that it is created in the
+local Roxen MySQL server, or some other MySQL server specified in the
+URL setting of the chosen group. The permissions of the database are
+manged by Roxen. &lt;i&gt;External&lt;/i&gt; means that the database resides in
+another server, which can be another MySQL instance or something else.</o>
+<t>Der Datenbank-Typ. Intern bedeutet, das die Datenbank in der Roxen MySQL Datenbank erstellt wird und die Rechte der Datenbank automatisch durch Roxen verwaltet werden. Extern bedeutet, dass die Datenbank in einer anderen Datenbank abgelegt wird.</t>
+</str>
+
+<str id="444">
+<o>URL</o>
+<t>URL</t>
+</str>
+
+<str id="446">
+<changed from="This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen"/>
+<o>The URL to the database. It is only used for &lt;i&gt;external&lt;/i&gt;
+databases.</o>
+<t>Diese URL wird nur für lt;/i&gt;Externe&lt;i&gt; Datenbanken benutzt, und wird ignoriert für Datenbanken, die innerhalb von Roxen definiert wurden</t>
+</str>
+
+<str id="447">
+<changed from="This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in"/>
+<o>The group to put the database in. For &lt;i&gt;internal&lt;/i&gt; databases, the
+URL setting in the group also specifies which MySQL server the
+database is created in.</o>
+<t>Diese Gruppe wird benutzt, um die Datenbanken zu gruppieren. Für interne Datenbanken kann diese Gruppe ebenfalls benutzt werden, um den MySQL-Server auszuwählen, in der die Datenbanken erstellt werden sollen</t>
+</str>
+
+<str id="448">
+<o>Comment</o>
+<t>Kommentar</t>
+</str>
+
+<str id="449">
+<o>automatic</o>
+<t>automatisch</t>
+</str>
+
+<str id="450">
+<o>Create a new database group</o>
+<t>Eine neue Datenbank-Gruppe erstellen</t>
+</str>
+
+<str id="451">
+<changed from="The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL server
+internal databases will be created in.
+
+&lt;p&gt; If a group has a URL set, it will be used to select the database
+server in which the database will be created, please note that this
+server must be a MySQL server, nothing else will work.
+"/>
+<o>&lt;p&gt;The groups are used mainly to group the databases in the
+Administration interface, but also to indicate the default MySQL
+server external databases will be created in.&lt;/p&gt;
+
+&lt;p&gt;If a group has a URL set, it will be used to select the database
+server in which the database will be created. Please note that it
+must be a MySQL server.&lt;/p&gt;</o>
+<t>Die Gruppen werden hauptsächlich dazu benutzt, um die
+Datenbank-Gruppen im Administrations-Interface zu gruppieren. Zum anderen,
+um den standardmässigen MySQL-Server anzuzeigen, in der interne
+Datenbanken erstellt werden.
+
+&lt;p&gt; Wenn eine Gruppe eine URL bekommen hat, wird diese benutzt,
+um den Datenbank-Server zu bestimmen, in der die Datenbank erzeugt wird.
+Dies muss ein MySQL-Server sein, keine anderen Datenbank wird funktionieren.
+</t>
+</str>
+
+<str id="452">
+<o>ID</o>
+<t>ID</t>
+</str>
+
+<str id="453">
+<changed from="The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, a ID will be selected automatically."/>
+<o>The identifier of the group. This is used internally in Roxen, and must be unique. If you leave it as automatic, an identifier is selected automatically.</o>
+<t>Der Identifikator der Gruppe. Dieser wird intern in Roxen benutzt, und muss eindeutig sein. Wenn Sie dies auf automatisch setzten, wird die ID automatisch gewählt.</t>
+</str>
+
+<str id="454">
+<changed from="The name of the database group. This is what is shown in the configuration interface"/>
+<o>The name of the database group. This is what is shown in the configuration interface.</o>
+<t>Der Name der Datenbank-gruppe. Dieser wird im Konfigurations-Interface angezeigt.</t>
+</str>
+
+<str id="455">
+<changed from="This URL is only used when &lt;/i&gt;Internal&lt;i&gt; databases is created in this group, and it specified which MySQL server the datbase should be created in. As an example, if you want all databases created in the group to end up in the MySQL running on the host &lt;/i&gt;wyrm&lt;i&gt;, using the account with the username &lt;/i&gt;foo&lt;i&gt; and password &lt;/i&gt;bar&lt;i&gt;, set this URL to &lt;/i&gt;foo:bar@wyrm&lt;i&gt;"/>
+<o>This URL is used for &lt;i&gt;internal&lt;/i&gt; databases created in this group,
+and it specifies which MySQL server they should be created in. As an
+example, if you want all databases created in the group to end up in
+the MySQL running on the host &lt;i&gt;wyrm&lt;/i&gt;, using the account with
+the username &lt;i&gt;foo&lt;/i&gt; and password &lt;i&gt;bar&lt;/i&gt;, set this URL to
+&lt;i&gt;foo:bar@wyrm&lt;/i&gt;.</o>
+<t>Diese URL wird nur benutzt, wenn &lt;/i&gt;interne&lt;i&gt; Datenbanken in dieser Gruppe erstellt werden.  Sie gibt an, in welchem MySQL-Server die Datenbank erstellt werde soll. Als Beispiel: Wenn Sie alle Datenbanken in dieser Gruppe auf dem MySQL-Server auf dem Rechner &lt;/i&gt;wyrm&lt;i&gt; erstellen wollen, mit der Kennung &lt;/i&gt;foo&lt;i&gt; und dem Passwort &lt;/i&gt;bar&lt;i&gt;, setzen Sie diese URL auf &lt;/i&gt;foo:bar@wyrm&lt;i&gt;</t>
+</str>
+
+<str id="456">
+<o>Cannot connect to %s</o>
+<t>Verbindung zu %s nicht möglich</t>
+</str>
+
+<str id="457">
+<o>A database group named %s already exists</o>
+<t>Eine Datenbank-Gruppe mit Namen %s existiert bereits</t>
+</str>
+
+<str id="459">
+<o>Date</o>
+<t>Datum</t>
+</str>
+
+<str id="460">
+<o>Restore</o>
+<t>Wiederherstellen</t>
+</str>
+
+<str id="461">
+<o>Restore the following tables from the backup</o>
+<t>Die folgenden Tabellen aus dem Backup wiederherstellen</t>
+</str>
+
+<str id="462">
+<o>Restore the tables to the following database</o>
+<t>Die Tabellen in die folgenden Datenbanken wiederherstellen</t>
+</str>
+
+<str id="463">
+<o>Database</o>
+<t>Datenbank</t>
+</str>
+
+<str id="464">
+<o>Connections</o>
+<t>verbindungen</t>
+</str>
+
+<str id="465">
+<o>Database Backups</o>
+<t>Datenbank-Backups</t>
+</str>
+
+<str id="466">
+<o>Difference</o>
+<t>Unterschied</t>
+</str>
+
+<str id="467">
+<o>%d entries skipped. Present in log on disk</o>
+<t>%d Einträge übersprungen. Im Log auf Festplatte vorhanden</t>
+</str>
+
+<str id="468">
+<o>This site listens to the following ports:</o>
+<t>Diese Site reagiert auf den folgenden Ports:</t>
+</str>
+
+<str id="469">
+<o>Databases that will no longer be used</o>
+<t>Datenbanken, die nicht länger benutzt werden</t>
+</str>
+
+<str id="470">
+<o>If you do not want to delete this database, uncheck the checkmark in front of it</o>
+<t>Wenn Sie diese Datenbank nicht löschen wollen, die Markierung vor Ihr aufheben</t>
+</str>
+
+<str id="471">
+<changed from="If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep"/>
+<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep.</o>
+<t>Wenn Sie nicht wollen, dass eine oder mehrere dieser Datenbanken gelöscht werden sollen, heben Sie die Markierungen vor denen auf, die Sie bewahren wollen</t>
+</str>
+
+<str id="472">
+<o>%d entries skipped. Present in log on disk.</o>
+<t>d Einträge übersprungen. Im Log auf Festplatte vorhanden.</t>
+</str>
+
+<str id="473">
+<o>Value</o>
+<t>Wert</t>
+</str>
+
+<str id="474">
+<o>Show changes</o>
+<t>Änderungen anzeigen</t>
+</str>
+
+<str id="475">
+<o>Restore default value</o>
+<t>Default-Werte wiederherstellen</t>
+</str>
+
+<str id="476">
+<o>Change in content</o>
+<t>Änderungen am Inhalt</t>
+</str>
+
+<str id="477">
+<o>1 line added.</o>
+<t>1 Zeile hinzugefügt.</t>
+</str>
+
+<str id="478">
+<o>%d lines added.</o>
+<t>%d Zeilen hinzugefügt.</t>
+</str>
+
+<str id="479">
+<o>1 line deleted.</o>
+<t>1 Zeile gelöscht.</t>
+</str>
+
+<str id="480">
+<o>%d lines deleted.</o>
+<t>%d Zeilen gelöscht.</t>
+</str>
+
+<str id="481">
+<o>No difference
+</o>
+<t>Keine Unterschiede</t>
+</str>
+
+<str id="482">
+<o>Never</o>
+<t>Neuer</t>
+</str>
+
+<str id="483">
+<o>Every %s hour(s).</o>
+<t>Alle %s Stunden.</t>
+</str>
+
+<str id="484">
+<o>Day</o>
+<t>Tag</t>
+</str>
+
+<str id="485">
+<o>Sunday</o>
+<t>Sonntag</t>
+</str>
+
+<str id="486">
+<o>Monday</o>
+<t>Montag</t>
+</str>
+
+<str id="487">
+<o>Tuesday</o>
+<t>Dienstag</t>
+</str>
+
+<str id="488">
+<o>Wednesday</o>
+<t>Mittwoch</t>
+</str>
+
+<str id="489">
+<o>Thursday</o>
+<t>Donnerstag</t>
+</str>
+
+<str id="490">
+<o>Friday</o>
+<t>Freitag</t>
+</str>
+
+<str id="491">
+<o>Saturday</o>
+<t>Samstag</t>
+</str>
+
+<str id="492">
+<o>Every %s %s at %s o'clock.</o>
+<t>Jeden %s %s um %s Uhr.</t>
+</str>
+
+<str id="493">
+<o>Every %d hour.</o>
+<t>Alle %d Stunden.</t>
+</str>
+
+<str id="494">
+<o>Every %d %s at %02d:00</o>
+<t>Jeden %d %s um %02d:00</t>
+</str>
+
+<str id="495">
+<o>Error in stored value.</o>
+<t>Fehler im gespeicherten Wert.</t>
+</str>
+
+<str id="496">
+<o>Value %s does not match the regexp %s.</o>
+<t>Wert %s stimmt nicht mit regulärem Ausdruck %s überein.</t>
+</str>
+
+<str id="497">
+<o>Value %s does not match the glob %s.</o>
+<t>Wert %s stimmt nicht mit Muster %s überein.</t>
+</str>
+
+<str id="498">
+<o>Value %s must be at least %d characters long. (%d character short)</o>
+<t>Wert %s muss mindestens %d Zeichen lang sein (um %d Zeichen zu kurz)</t>
+</str>
+
+<str id="499">
+<o>Value %s must not be more than %d characters long. (%d character too long)</o>
+<t>Wert %s darf nicht länger als %d Zeichen lang sein. (um %d Zeichen zu lang)</t>
+</str>
+
+<str id="500">
+<o>Value %s is not uppercased.</o>
+<t>Wert %s besteht nicht nur aus Grossbuchstaben.</t>
+</str>
+
+<str id="501">
+<o>Value %s is not lowercased.</o>
+<t>Wert %s besteht nicht nur aus Kleinbuchstaben.</t>
+</str>
+
+<str id="502">
+<o>Diff</o>
+<t>Unterschied</t>
+</str>
+
+<str id="78">
+<o>All database backups currently available</o>
+<t>Alle Datenbank-Backups derzeit verfügbar</t>
+</str>
+
+<str id="79">
+<o>&lt;p&gt;No backups are currently available. To make a backup of a database, focus on it in the Databases tab, and click on the make backup button. Please note that you can only make backups of databases managed by Roxen.&lt;/p&gt;</o>
+<t>&lt;p&gt;Derzeit sind keine Backups verfügbar. Um ein Backup einer
+Datenbank zu erstellen, klicken Sie den "make backup" Knopf der jeweiligen
+Datenbank.  Es können nur Backups von Datenbanken erzeugt werden, die
+Roxen verwaltet.&lt;/p&gt;</t>
+</str>
+
+<str id="80">
+<o>No data entered.
+</o>
+<t>Keine Daten eingegeben.</t>
+</str>
+
+<str id="81">
+<o>Data is not a float.
+</o>
+<t>Datum ist keine Fliesskommazahl.</t>
+</str>
+
+<str id="82">
+<o>Found the string %O trailing after the float.
+</o>
+<t>Zeichenkette %O am Ende der Fliesskommazahl gefunden.</t>
+</str>
+
+<str id="83">
+<o>Data is not an integer
+</o>
+<t>Datum ist keine ganze Zahl.</t>
+</str>
+
+<str id="84">
+<o>Found the string %O trailing after the integer.
+</o>
+<t>Zeichenkette %O am Ende der ganzen Zahl gefunden.</t>
+</str>
+
+<str id="85">
+<o>Default module tab</o>
+<t>Standard-Modulreiter</t>
+</str>
+
+<str id="162">
+<o>The tab that will be selected by default when you select a module.</o>
+<t>Der Reiter, der ausgewählt wird, wenn ein Modul ausgesucht wird.</t>
+</str>
+
+<str id="163">
+<o>Enable replication system</o>
+<t>Aktiviere Replikationssystem</t>
+</str>
+
+<str id="337">
+<changed from="If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect."/>
+<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that resides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
+<t>Wenn aktiviert, wird Roxen einige Replikationsysteme aktivieren, um mehrere Frontends aufzusetzen. Sie benötigen eine Datenbank namens 'replicate' in einem verteilten Mysql Server. Ferner müssen alle Server diese Option gesetzt haben. Bevor dieser Wert übernommen wird, muss Roxen neu gestartet werden.</t>
+</str>
+
+<str id="361">
+<o>Are you sure you want to delete the database %s and the data?</o>
+<t>Sind Sie sicher, dass Sie die Datenbank %s und die Daten löschen wollen?</t>
+</str>
+
+<str id="362">
+<changed from="Are you sure you want to delete the database %s? No data will be deleted from the remote datbase."/>
+<o>Are you sure you want to delete the database %s? No data will be deleted from the remote database.</o>
+<t>Sind Sie sicher, dass Sie die Datenbank %s löschen wollen? Die Daten werden nicht von der entfernten Datenbank gelöscht.</t>
+</str>
+
+<str id="503">
+<o>Group</o>
+<t>Gruppe</t>
+</str>
+
+<str id="299">
+<o>URLs</o>
+<t>URLs</t>
+</str>
+
+<str id="324">
+<o>Change group for this database</o>
+<t>Die Gruppe für diese Datenbank ändern</t>
+</str>
+
+<str id="423">
+<o>Changing group for %s</o>
+<t>Gruppe für %s ändern</t>
+</str>
+
+<str id="445">
+<o>Old group</o>
+<t>Alte Gruppe</t>
+</str>
+
+<str id="504">
+<o>New group</o>
+<t>Neue Gruppe</t>
+</str>
+
+<str id="505">
+<o>%d bytes</o>
+<t>%d Bytes</t>
+</str>
+
+<str id="506">
+<changed from="Member of the %s database group"/>
+<o>Member of the %s database group.</o>
+<t>Mitglieder der Datenbankgruppe %s</t>
+</str>
+
+<str id="507">
+<o>Cannot list fields in %s databases</o>
+<t>Felder in %s Datenbanken können nicht gelistet werden</t>
+</str>
+
+<str id="373">
+<o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
+<t>Diese URLs binden. Man kann '*' und '?' benutzen, um mehrere IP-Adressen des Rechners zu benutzen. Wenn eine IP Nummer in diesem Feld angegeben wird, hat diese Vorrang vor Hostnamen.</t>
+</str>
+
+<str id="508">
+<o>Ports</o>
+<t>Ports</t>
+</str>
+
+<str id="509">
+<o>Select site</o>
+<t>Site auswählen</t>
+</str>
+
+<str id="510">
+<o>Bind this port: </o>
+<t>Diesen Port binden: </t>
+</str>
+
+<str id="39">
+<o>License file</o>
+<t>Lizenz-Datei</t>
+</str>
+
+<str id="336">
+<o>The license file for this configuration.</o>
+<t>Die Lizenz-Datei für diese Konfiguration.</t>
+</str>
+
+<str id="511">
+<o> The module is locked and not part of the license. To enable this module please select a valid license and restart the server.</o>
+<t> Das Modul ist gesperrt und nicht Bestandteil der Lizenz. Um dieses Modul zu aktivieren, muss eine gültige Lizenz ausgewählt und der Server neu gestartet werden.</t>
+</str>
+
+<str id="514">
+<o>Web Developer</o>
+<t>Web Developer</t>
+</str>
+
+<str id="515">
+<changed from="System Developer"/>
+<o>System Developer (Pike)</o>
+<t>System Developer</t>
+</str>
+
+<str id="516">
+<o>Administrator</o>
+<t>Administrator</t>
+</str>
+
+<str id="517">
+<o>Forms And Response Module</o>
+<t>Forms And Response Module</t>
+</str>
+
+<str id="519">
+<o>Tutorials</o>
+<t>Tutorials</t>
+</str>
+
+<str id="520">
+<o>Refresh</o>
+<t>Refresh</t>
+</str>
+
+<str id="312">
+<o>(none)</o>
+<t>(keine)</t>
+</str>
+
+<str id="352">
+<o>Delete group</o>
+<t>Gruppe löschen</t>
+</str>
+
+<str id="353">
+<o>You can not delete this group because it is not empty.</o>
+<t>Diese Gruppe ist nicht leer, und kann deswegen nicht gelöscht werden.</t>
+</str>
+
+<str id="354">
+<o>Are you sure you want to delete the group %s?</o>
+<t>Soll die Gruppe %s wirklich gelöscht werden?</t>
+</str>
+
+<str id="355">
+<o>Please give a name for the group.</o>
+<t>Bitte einen Namen für die Gruppe angeben.</t>
+</str>
+
+<str id="356">
+<o>Configuration %O not found.</o>
+<t>Konfiguration %O nicht gefunden.</t>
+</str>
+
+<str id="390">
+<new/>
+<o>System Developer (Java)</o>
+<t></t>
+</str>
+
+<str id="523">
+<new/>
+<o>Forum Module</o>
+<t></t>
+</str>
+
+<str id="524">
+<new/>
+<o>Content Editor</o>
+<t></t>
+</str>
+
+<str id="458">
+<new/>
+<o>FAQ</o>
+<t></t>
+</str>
+
+<str id="513">
+<new/>
+<o>No modules</o>
+<t></t>
+</str>
+
+<str id="525">
+<new/>
+<o>Other</o>
+<t></t>
+</str>
+
+<str id="526">
+<new/>
+<o>requests</o>
+<t></t>
+</str>
+
+<str id="527">
+<new/>
+<o>hits</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Select site to drop.</o>
+<t></t>
+</str>
+
+<str id="no">
+<o>No</o>
+<t>Nein</t>
+</str>
+
+<str id="357">
+<new/>
+<o>Load of %s failed: Module not found.</o>
+<t></t>
+</str>
+
+<str id="512">
+<new/>
+<o>This does not look like a valid email address.</o>
+<t></t>
+</str>
+
+<str id="518">
+<new/>
+<o>Support EPRT/EPSV</o>
+<t></t>
+</str>
+
+<str id="528">
+<new/>
+<o>Enable support for the EPRT and EPSV commands (RFC2428).Some firewalls don't handle these commands properly, so depending on your network configuration you may need to disable them. </o>
+<t></t>
+</str>
+
+<str id="529">
+<new/>
+<o>the database %s does already exist</o>
+<t></t>
+</str>
+
+<str id="530">
+<new/>
+<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<t></t>
+</str>
+
+<str id="411">
+<new/>
+<o>Authentication failed message override files</o>
+<t></t>
+</str>
+
+<str id="412">
+<new/>
+<o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
+The file is searched for in parent directories in the same manner as the no such file message override files.</o>
+<t></t>
+</str>
+
+<str id="413">
+<new/>
+<o>Authentication failed message</o>
+<t></t>
+</str>
+
+<str id="420">
+<new/>
+<o>What to return when an authentication attempt failed.</o>
+<t></t>
+</str>
+
+<str id="421">
+<new/>
+<o>List Type</o>
+<t></t>
+</str>
+
+<str id="531">
+<new/>
+<o>Really Compact</o>
+<t></t>
+</str>
+
+<str id="258">
+<new/>
+<o>Logging: Compress log file</o>
+<t></t>
+</str>
+
+<str id="259">
+<new/>
+<o>Path to a program to compress log files, e.g. &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; or &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;. &lt;b&gt;Note&amp;nbsp;1:&lt;/b&gt; The active log file is never compressed. Log rotation needs to be used using the "Log file" filename substitutions (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;). &lt;b&gt;Note&amp;nbsp;2:&lt;/b&gt; Compression is limited to scanning files with filename substitutions within a fixed directory (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;, not &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</o>
+<t></t>
+</str>
+
+<str id="532">
+<new/>
+<o>Show this string in header</o>
+<t></t>
+</str>
+
+<str id="533">
+<new/>
+<o>Enter a identifier that will be displayed in the head of  config interface. This makes it easier to distinguish between different site configurations. </o>
+<t></t>
+</str>
+
+<str id="534">
+<new/>
+<o>Logging: Dump threads by file polling</o>
+<t></t>
+</str>
+
+<str id="535">
+<new/>
+<o>&lt;p&gt;This option can be used to produce dumps of all the threads in the
+debug log in situations where the Administration Interface doesn't
+respond.&lt;/p&gt;
+
+&lt;p&gt;It works by checking for a file called "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads" in the same directory as the debug log.
+&lt;i&gt;&amp;lt;config name&amp;gt;&lt;/i&gt; is the name of the server configuration,
+i.e. the same as the base name of the debug log files (typically
+"default"). If this file exists, a thread dump is generated and the
+file is deleted. If a file on the form "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;", where &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;
+is an integer, exists then &lt;i&gt;n&lt;/i&gt; thread dumps are generated in one
+minute intervals.&lt;/p&gt;
+
+&lt;p&gt;Note that this method normally isn't necessary in unix-like
+environments; there you can just send a SIGQUIT signal to the pike
+process to get a thread dump.&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="536">
+<new/>
+<o>Change default character set</o>
+<t></t>
+</str>
+
+<str id="537">
+<new/>
+<o>Repair all tables</o>
+<t></t>
+</str>
+
+<str id="538">
+<new/>
+<o>Optimize all tables</o>
+<t></t>
+</str>
+
+<str id="539">
+<new/>
+<o>Changing default character set for %s</o>
+<t></t>
+</str>
+
+<str id="540">
+<new/>
+<o>Old default character set</o>
+<t></t>
+</str>
+
+<str id="541">
+<new/>
+<o>New default character set</o>
+<t></t>
+</str>
+
+<str id="542">
+<new/>
+<o>the deleted site %O</o>
+<t></t>
+</str>
+
+<str id="543">
+<new/>
+<o>%s in %s</o>
+<t></t>
+</str>
+
+<str id="544">
+<new/>
+<o>the deleted module %s in %s</o>
+<t></t>
+</str>
+
+<str id="545">
+<new/>
+<o>the deleted module %s</o>
+<t></t>
+</str>
+
+<str id="546">
+<new/>
+<o>Internal data that cannot be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="547">
+<new/>
+<o>Internal data that may be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="548">
+<new/>
+<o>Default charset:</o>
+<t></t>
+</str>
+
+<str id="549">
+<new/>
+<o>No defined databases.
 </o>
 <t></t>
 </str>
 
-<str id="271">
+<str id="550">
 <new/>
-<o>with template</o>
+<o>Site Permissions</o>
 <t></t>
 </str>
 
-<str id="296">
+<str id="551">
 <new/>
-<o>Illegal site name</o>
+<o>Module Priorities</o>
 <t></t>
 </str>
 
-<str id="195">
+<str id="1000">
 <new/>
-<o>Community articles</o>
+<o>Compression: Enable HTTP compression</o>
 <t></t>
 </str>
 
-<str id="231">
+<str id="1001">
 <new/>
-<o>Most recently published community articles</o>
+<o>Whether to enable HTTP protocol compression. Many types of text
+content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
+enabling HTTP compression may improve the visitors' perception of the
+site's performance. It's however a trade-off between server processing
+power and bandwidth. Requests that end up in the protocol cache will
+be served in the compressed form directly from the protocol cache, so
+for such requests the processing power overhead can be held relatively
+low.</o>
 <t></t>
 </str>
 
-<str id="232">
+<str id="1002">
 <new/>
-<o>Crunch activity</o>
+<o>Compression: Enabled MIME-types</o>
 <t></t>
 </str>
 
-<str id="262">
+<str id="1003">
 <new/>
-<o>Recently changed Crunch reports</o>
+<o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype" or "maintype/sub*") is not allowed and such globs will be silently ignored.</o>
 <t></t>
 </str>
 
-<str id="263">
+<str id="1004">
 <new/>
-<o>News from www.roxen.com</o>
+<o>Compression: Minimum content size</o>
 <t></t>
 </str>
 
-<str id="281">
+<str id="1005">
 <new/>
-<o>The news headlines from www.roxen.com</o>
+<o>The minimum file size for which to enable compression. (It might not be worth it to compress a request if it can fit into a single TCP/IP packet anyways.)</o>
 <t></t>
 </str>
 
-<str id="283">
+<str id="1006">
 <new/>
-<o>Unknown box %s</o>
+<o>Compression: Maximum content size</o>
 <t></t>
 </str>
 
-<str id="285">
+<str id="1007">
 <new/>
-<o>Large Content Boxes</o>
+<o>The maximum file size for which to enable compression. Note that the general protocol cache entry size limit applies, so if the compression of dynamic requests is disabled, files larger than the protocol cache maximum file size setting will never be served compressed regardless of this setting.</o>
 <t></t>
 </str>
 
-<str id="287">
+<str id="1008">
 <new/>
-<o>Content boxes on the Startpage</o>
+<o>Compression: Compression level</o>
 <t></t>
 </str>
 
-<str id="289">
+<str id="1009">
 <new/>
-<o>Small Content Boxes</o>
+<o>The compression level to use (integer between 1 and 9). Higher number means more compression at the cost of processing power and vice versa. You may need to restart the server for this setting to take effect.</o>
 <t></t>
 </str>
 
-<str id="327">
+<str id="1010">
 <new/>
-<o>Theme</o>
+<o>Compression: Compress dynamic requests</o>
 <t></t>
 </str>
 
-<str id="343">
+<str id="1011">
 <new/>
-<o>The theme to use</o>
+<o>If enabled, even requests that aren't cacheable in the protocol cache will be compressed. If the site has many lightweight requests that are not protocol cacheable, the processing overhead may become relatively large with this setting turned on.</o>
 <t></t>
 </str>
 
-<str id="358">
+<str id="1012">
 <new/>
-<o>Changed</o>
+<o>SNMP sub-MIB</o>
 <t></t>
 </str>
 
-<str id="359">
+<str id="1013">
 <new/>
-<o>Unchanged</o>
+<o>MIB suffix to 1.3.6.1.4.1.8614.1.1.2 identifying this site.</o>
 <t></t>
 </str>
 
-<str id="360">
+<str id="1014">
 <new/>
-<o>Home</o>
+<o>MySQL table check</o>
 <t></t>
 </str>
 
-<str id="361">
+<str id="1015">
 <new/>
-<o>Slashdot headlines</o>
+<o>Check MySQL tables on server start, and automatically repair if necessary. &lt;b&gt;Fast&lt;/b&gt; checks only tables that haven't been closed properly. &lt;b&gt;Normal&lt;/b&gt; checks for general errors. &lt;b&gt;Medium&lt;/b&gt; catches 99.99 % of all errors. Should be good enough for most cases. &lt;b&gt;Extended&lt;/b&gt; checks the tables VERY throughly.  Only use this in extreme cases as myisamchk should normally be able to find out if the table is OK even without this switch.</o>
 <t></t>
 </str>
 
-<str id="362">
+<str id="1016">
 <new/>
-<o>The headlines from Slashdot: News for nerds, stuff that matters</o>
+<o>Logging: Dump threads for slow requests</o>
 <t></t>
 </str>
 
-<str id="363">
+<str id="1017">
 <new/>
-<o>Documentation links</o>
+<o>&lt;p&gt;This enables a monitor that dumps all the threads in the debug log
+whenever any request, background job or the backend thread has been
+running for more than a set number of seconds, which is configured
+with the "Slow request timeout" and "Slow backend timeout"
+settings.&lt;/p&gt;
+
+&lt;p&gt;This setting is a counter: A positive number stops the monitor
+after that many thread dumps have been made, -1 enables the monitor
+permanently, and zero disables it. Positive numbers aren't persistent,
+so will be reset to zero whenever the server is restarted.&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Warning:&lt;/b&gt; If you set the timeout too low, combined with a
+high or no limit, then the debug log can fill up very quickly and the
+server become very slow due to the amount of logging. If that happens
+and it gets difficult to change back the value then you can force the
+monitor to be disabled from the start by adding the define
+"NO_SLOW_REQ_BT" (i.e. add "-DNO_SLOW_REQ_BT" to the start script
+or in the DEFINES environment variable).&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
 <t></t>
 </str>
 
-<str id="364">
+<str id="1018">
 <new/>
-<o>Links to the inline documentation</o>
+<o>Feature disabled by NO_SLOW_REQ_BT define.</o>
 <t></t>
 </str>
 
-<str id="365">
+<str id="1019">
 <new/>
-<o>Welcome message</o>
+<o>Logging: Slow request timeout</o>
 <t></t>
 </str>
 
-<str id="366">
+<str id="1020">
 <new/>
-<o>Roxen welcome message and news</o>
+<o>&lt;p&gt;The timeout in seconds for requests or background jobs to trig a
+thread dump. Zero disables monitoring of those. See the "Dump threads
+for slow requests" setting for details.&lt;/p&gt;</o>
 <t></t>
 </str>
 
-<str id="218">
+<str id="1021">
 <new/>
-<o>DBs</o>
+<o>Logging: Slow backend timeout</o>
 <t></t>
 </str>
 
-<str id="367">
+<str id="1022">
 <new/>
-<o>Server status</o>
+<o>&lt;p&gt;The timeout in seconds for the backend thread to trig a thread
+dump. Zero disables monitoring of it. See the "Dump threads for slow
+requests" setting for details.&lt;/p&gt;
+
+&lt;p&gt;The backend thread is a special thread that manages most I/O and
+directs the incoming requests to the handler threads. It should never
+be occupied for a significant amount of time since that would make the
+server essentially unresponsive. Therefore this timeout should be
+small.&lt;/p&gt;
+
+&lt;p&gt;Note that a good value for this is very dependent on hardware. The
+default setting here is conservative and probably should be lowered to
+be of real use.&lt;/p&gt;</o>
 <t></t>
 </str>
 
-<str id="368">
+<str id="1023">
 <new/>
-<o>Various global server statistics</o>
-<t></t>
-</str>
-
-<str id="369">
-<new/>
-<o>Server started</o>
-<t></t>
-</str>
-
-<str id="370">
-<new/>
-<o>Server uptime</o>
-<t></t>
-</str>
-
-<str id="371">
-<new/>
-<o>CPU-time used</o>
-<t></t>
-</str>
-
-<str id="372">
-<new/>
-<o>MySQL status</o>
-<t></t>
-</str>
-
-<str id="8">
-<new/>
-<o>Server secret</o>
-<t></t>
-</str>
-
-<str id="9">
-<new/>
-<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
-<t></t>
-</str>
-
-<str id="164">
-<new/>
-<o>Databases</o>
-<t></t>
-</str>
-
-<str id="165">
-<new/>
-<o>Configuration Filesystem</o>
-<t></t>
-</str>
-
-<str id="166">
-<new/>
-<o>This filesystem serves the administration interface</o>
-<t></t>
-</str>
-
-<str id="168">
-<new/>
-<o>Hide</o>
-<t></t>
-</str>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<str id="169">
-<new/>
-<o>Login attempt from %s</o>
-<t></t>
-</str>
-
-<str id="167">
-<new/>
-<o>Form font size</o>
-<t></t>
-</str>
-
-<str id="178">
-<new/>
-<o>The fontsize of the variables in the configuration interface</o>
-<t></t>
-</str>
-
-<str id="179">
-<new/>
-<o>Documentation font size</o>
-<t></t>
-</str>
-
-<str id="193">
-<new/>
-<o>The fontsize of the documentation in the configuration interface</o>
-<t></t>
-</str>
-
-<str id="205">
-<new/>
-<o>Minumum allowed bitrate</o>
-<t></t>
-</str>
-
-<str id="215">
-<new/>
-<o>The minimum allowed bitrate, in Kbits/second. If the  client is slower than this set bitrate, it will be disconnected (after a timeout). Setting this higher than 14 is not recommended if you have modem users.</o>
-<t></t>
-</str>
-
-<str id="233">
-<new/>
-<o>bytecode data</o>
-<t></t>
-</str>
-
-<str id="373">
-<new/>
-<o>Key</o>
-<t></t>
-</str>
-
-<str id="374">
-<new/>
-<o>rows</o>
-<t></t>
-</str>
-
-<str id="375">
-<new/>
-<o>KiB</o>
-<t></t>
-</str>
-
-<str id="376">
-<new/>
-<o>Name</o>
-<t></t>
-</str>
-
-<str id="377">
-<new/>
-<o>Size</o>
-<t></t>
-</str>
-
-<str id="378">
-<new/>
-<o>Clear query</o>
-<t></t>
-</str>
-
-<str id="379">
-<new/>
-<o>Run query</o>
-<t></t>
-</str>
-
-<str id="380">
-<new/>
-<o>While running %s: %s</o>
+<o>Undocumented</o>
 <t></t>
 </str>
 
@@ -2384,14 +3847,362 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-<str id="382">
+<str id="1024">
 <new/>
-<o>Failed to enable %s</o>
+<o>Contains all documentation.</o>
 <t></t>
 </str>
 
-<str id="383">
+<str id="1025">
 <new/>
-<o>Documentation</o>
+<o>Unknown database</o>
+<t></t>
+</str>
+
+<str id="1042">
+<new/>
+<o>
+	    &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
+	    This might take a long time to complete.&lt;br/&gt;
+	    The amount of time this takes depends on how large the tables are.&lt;br/&gt;
+	  </o>
+<t></t>
+</str>
+
+<str id="1026">
+<new/>
+<o>Backup schedules</o>
+<t></t>
+</str>
+
+<str id="1027">
+<new/>
+<o>Schedule</o>
+<t></t>
+</str>
+
+<str id="1028">
+<new/>
+<o>Period</o>
+<t></t>
+</str>
+
+<str id="1029">
+<new/>
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="1030">
+<new/>
+<o>Generations</o>
+<t></t>
+</str>
+
+<str id="1031">
+<new/>
+<o>Method</o>
+<t></t>
+</str>
+
+<str id="1032">
+<new/>
+<o>Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,Fridays,Saturdays</o>
+<t></t>
+</str>
+
+<str id="1033">
+<new/>
+<o>Every Hour</o>
+<t></t>
+</str>
+
+<str id="1034">
+<new/>
+<o>Every Day</o>
+<t></t>
+</str>
+
+<str id="1035">
+<new/>
+<o>At</o>
+<t></t>
+</str>
+
+<str id="1036">
+<new/>
+<o>Unlimited</o>
+<t></t>
+</str>
+
+<str id="1037">
+<new/>
+<o>MySQLDump (recommended)</o>
+<t></t>
+</str>
+
+<str id="1038">
+<new/>
+<o>Backup (internal databases only)</o>
+<t></t>
+</str>
+
+<str id="1039">
+<new/>
+<o>Backup directory</o>
+<t></t>
+</str>
+
+<str id="1040">
+<new/>
+<o>Note: This schedule is also used to schedule backups for Roxen's internal databases.</o>
+<t></t>
+</str>
+
+<str id="1041">
+<new/>
+<o>Are you sure you want to restore the default value?</o>
+<t></t>
+</str>
+
+<str id="1043">
+<new/>
+<o>Cache: Memory cache size</o>
+<t></t>
+</str>
+
+<str id="1044">
+<new/>
+<o>&lt;p&gt;Maximum size in MByte for all RAM caches taken together. This limit
+covers the caches visible in the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cache status&lt;/a&gt;
+page.&lt;/p&gt;
+
+&lt;p&gt;Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1045">
+<new/>
+<o>Cache: Memory cache GC interval</o>
+<t></t>
+</str>
+
+<str id="1046">
+<new/>
+<o>&lt;p&gt;Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.&lt;/p&gt;
+
+&lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1047">
+<new/>
+<o>Module is disabled</o>
+<t></t>
+</str>
+
+<str id="1048">
+<new/>
+<o>Server too busy message</o>
+<t></t>
+</str>
+
+<str id="1049">
+<new/>
+<o>What to return if the server is too busy. See also "Handler queue timeout".</o>
+<t></t>
+</str>
+
+<str id="1050">
+<new/>
+<o>Handler queue timeout</o>
+<t></t>
+</str>
+
+<str id="1051">
+<new/>
+<o>Requests that have been waiting this many seconds on
+the handler queue will not be processed. Instead, a 503 error code and the
+"Server too busy message" will be returned to the client. This may help the
+server to cut down the queue length after spikes of heavy load.</o>
+<t></t>
+</str>
+
+<str id="1052">
+<new/>
+<o>Proxy: Use proxy (experimental)</o>
+<t></t>
+</str>
+
+<str id="1053">
+<new/>
+<o>Use proxy for outgoing requests. E.g. when browsing external web sites through the Linkbrowser or when Insert cached-href fetches data from an external location.</o>
+<t></t>
+</str>
+
+<str id="1054">
+<new/>
+<o>Proxy: Proxy URL</o>
+<t></t>
+</str>
+
+<str id="1055">
+<new/>
+<o>The URL of the proxy to use for outgoing requests.</o>
+<t></t>
+</str>
+
+<str id="1056">
+<new/>
+<o>Proxy: Proxy username</o>
+<t></t>
+</str>
+
+<str id="1057">
+<new/>
+<o>Username for proxy authorization.</o>
+<t></t>
+</str>
+
+<str id="1058">
+<new/>
+<o>Proxy: Proxy password</o>
+<t></t>
+</str>
+
+<str id="1059">
+<new/>
+<o>Password for proxy authorization.</o>
+<t></t>
+</str>
+
+<str id="1060">
+<new/>
+<o>System load</o>
+<t></t>
+</str>
+
+<str id="1061">
+<new/>
+<o>The directory the backup will be saved in. If you chose auto, Roxen
+will generate a directory name that includes the database name and
+today's date in &lt;tt&gt;$VARDIR/backup&lt;/tt&gt; (%s).</o>
+<t></t>
+</str>
+
+<str id="1062">
+<new/>
+<o>Error running query %d: %s</o>
+<t></t>
+</str>
+
+<str id="1063">
+<new/>
+<o>Error connecting to database: </o>
+<t></t>
+</str>
+
+<str id="1064">
+<new/>
+<o>Tip: Put '--' on a line to ignore everything below it.</o>
+<t></t>
+</str>
+
+<str id="1065">
+<new/>
+<o>Uncheck/Check All</o>
+<t></t>
+</str>
+
+<str id="1066">
+<new/>
+<o>SNMP status</o>
+<t></t>
+</str>
+
+<str id="1067">
+<new/>
+<o>Global SNMP server statistics</o>
+<t></t>
+</str>
+
+<str id="1068">
+<new/>
+<o>&lt;rect x='%d' y='%d' width='10' height='%d' style='fill:#808080;'&gt;
+  &lt;title&gt;%s: %d - %d
+count: %d&lt;/title&gt;
+&lt;/rect&gt;
+&lt;rect x='%d' y='0' width='10' height='%d' style='fill:f2f1eb;'/&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1069">
+<new/>
+<o>No filesystem garbage collectors active.</o>
+<t></t>
+</str>
+
+<str id="1070">
+<new/>
+<o>Age</o>
+<t></t>
+</str>
+
+<str id="1071">
+<new/>
+<o>&lt;tr&gt;&lt;th align='left'&gt;Mount point: %s&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;th&gt;&lt;br/&gt;&lt;/th&gt;&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;
+    &lt;table&gt;
+      &lt;tr&gt;
+        &lt;th align='left'&gt;Registered by &lt;br/&gt;%s&lt;/th&gt;
+        &lt;th align='left'&gt;File size distribution&lt;/th&gt;
+        &lt;th align='left'&gt;File age distribution&lt;/th&gt;
+      &lt;/tr&gt;
+      &lt;tr id='tbl'&gt;
+        &lt;td&gt;
+            %d files (max: %d)&lt;br/&gt;
+            %d bytes (max: %d)&lt;br/&gt;
+            Age limit: %d seconds
+        &lt;/td&gt;
+        &lt;td&gt;
+%s&lt;/td&gt;
+        &lt;td&gt;
+%s&lt;/td&gt;
+      &lt;/tr&gt;
+    &lt;/table&gt;
+  &lt;/td&gt;
+&lt;/tr&gt;
+</o>
+<t></t>
+</str>
+
+<str id="1072">
+<new/>
+<o>Not available in this installation of Roxen.</o>
+<t></t>
+</str>
+
+<str id="1073">
+<new/>
+<o>Filesystem GC:</o>
 <t></t>
 </str>

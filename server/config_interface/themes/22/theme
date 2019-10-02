@@ -1,4 +1,12 @@
-<theme-set what=logo                 to=logo.gif themefile />
+<if variable="roxen.product-name == Roxen CMS">
+  <theme-set what=logo                 to="cms-logo.gif" themefile />
+</if>
+<elseif variable="roxen.product-name == Roxen EP">
+  <theme-set what=logo                 to="cms-logo.gif" themefile />
+</elseif>
+<else>
+  <theme-set what=logo                 to=logo.gif themefile />
+</else>
 <theme-set what=top-bgcolor          to=none />
 <theme-set what=toptabs-bgcolor      to=none />
 
@@ -6,7 +14,7 @@
 <theme-set what=subtabs-seltextcolor to="#ff8c00" />
 
 <theme-set what=subtabs-bgcolor      to="white" />
-<theme-set what=subtabs-selcolor      to="white" />
+<theme-set what=subtabs-selcolor      to="#eef2fb" />
 <theme-set what=subtabs-dimcolor     to="white" />
 
 <theme-set what=toptabs-dimtextcolor to="#425a84" />
@@ -16,15 +24,15 @@
 <theme-set what=toptabs-dimcolor     to="white" />
 <theme-set what=toptabs-selcolor     to="white" />
 
-<!--<theme-set what=leftside-padwidth    to=200 />-->
+theme-set what=leftside-padwidth    to=160 />
 <theme-set what=toptabs-padwidth     to=190 />
 
-<theme-set what=fade1   to="white"/>
+<theme-set what=fade1   to="#eef2fb"/>
 
 <theme-set what=fade2     to="#dee2eb"/>
 
-<theme-set what=next     to=next2.gif themefile />
-<theme-set what=selected-indicator     to=sel2.gif themefile />
+<theme-set what=next     to=next.png themefile />
+<theme-set what=selected-indicator    to=sel2.gif themefile />
 
 <theme-set what=left-buttonbg     to='white'/>
 <theme-set what=left-selbuttonbg  to='white'/>
@@ -60,8 +68,13 @@
 
 <theme-set what=obox-titlefg to="black"/>
 
+<theme-set what=content-titlefg to="black"/>
+<theme-set what=content-titlebg to="#e1e1ff"/>
+
 <theme-set what=fade3     to=#ff9c51/>
 <theme-set what=fade4     to=#222222/>
 
 <theme-set what=tab-frame-image     to="tabframe.xcf" themefile />
 <theme-set what=gbutton-frame-image to="gbutton.xcf"  themefile />
+<theme-set what=fold to="fold.gif" themefile/>
+<theme-set what=unfold to="unfold.gif" themefile/>

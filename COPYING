@@ -1,18 +1,7 @@
-This version, 2.2, of Roxen(TM) WebServer is distributed under GNU's
+This version of Roxen(TM) WebServer is distributed under GNU's
 General Public License version 2. You should have received a copy of
 the GPL License in the file "GPL" with your copy of Roxen(TM)
 WebServer.
 
 Neither this file, nor the file "GPL" may be removed from the Roxen(TM)
 WebServer distribution. See GPL for further restrictions.
-
-Sweden has export control laws governing export of cryptographic
-software (SFS 1991:341 with additions, where SFS 1994:2060 is
-particularly important). It is clear that these laws cover physical
-export of software but it is not clear whether these laws also cover
-electronic distribution. 'The Inspection for Strategic Products'
-(Inspektionen för strategiska produkter tel: +46-(0)8-406 31 00) is
-the agency handling export control issues. Please note that these laws
-are currently being revised. We do not advise anyone to bring with
-him, distribute or export this software outside of Sweden, without
-being fully aware of the possible legal consequences.

@@ -2,16 +2,33 @@
 
 echo "  Rebuilding locale stuff for $1"
 
+LIST=/tmp/$$.list
 TMP=/tmp/$$.tmp
-grep -v '<file>' $2 | grep -v '</project>' > $TMP
 
-for a in `grep -cr '"'$1'"' ..|grep -v ':0'|sed -e 's/:.*//'|
-         grep -v /translations/|grep -v '#'|grep -v '~'` ;  do
-  echo "  <file>$a</file>" >> $TMP
+# Find all files that contains the locale project id and
+# dump them into the LIST temp file.
+for a in `grep -cr '"'$1'"'		   \
+  	    ../base_server		   \
+  	    ../bin			   \
+  	    ../config_interface		   \
+  	    ../etc			   \
+  	    ../modules			   \
+  	    ../more_modules		   \
+  	    ../protocols		   \
+  	    ../site_templates		   \
+  	    ../tools			   \
+         |grep -v ':0'|sed -e 's/:.*//'|   \
+         grep -v '#'|grep -v '~'` ;  do
+  echo "  <file>$a</file>" >> $LIST
 done
 
+# Sort the LIST file. Add a header and a footer and
+# create another temp file TMP with the result.
+grep -v '<file>' $2 | grep -v '</project>' > $TMP
+cat $LIST | sort >> $TMP
 echo "</project>" >> $TMP
 
+# Replace the old configuration file.
 if mv $2 $2~ ; then 
   if cp $TMP $2 ; then
     rm $TMP

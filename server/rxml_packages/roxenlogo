@@ -1,18 +1,18 @@
 -*- html -*-
 <info>
-version="$Id: roxenlogo,v 1.1 2000/09/06 02:18:48 nilsson Exp $";
+version="$Id$";
 name="roxenlogo";
 doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 10.";
 help=1;
 </info>
 
 <define tag="x"><attrib name="r">1</attrib><attrib name="c">1</attrib>
-<td colspan="&_.c;" rowspan="&_.r;" ::="&_.rest-args;"><img src="internal-roxen-unit" width="1" height="1" alt="" /></td></define>
+<td colspan="&_.c;" rowspan="&_.r;" ::="&_.rest-args;"><img src="/internal-roxen-unit" width="1" height="1" alt="" /></td></define>
 
 <define tag="u"><attrib name="w">0</attrib><attrib name="h">0</attrib><attrib name="s">1</attrib>
 <set variable="var.w" expr="(int)(&_.w;/10.0*&_.s;)+1"/><set variable="var.h" expr="(int)(&_.h;/10.0*&_.s;)+1"/>
 <if variable="_.h is 0"><td></if><else><td bgcolor="black"></else>
-<img src="internal-roxen-unit" width="&var.w;" height="&var.h;" alt=""/></td></define>
+<img src="/internal-roxen-unit" width="&var.w;" height="&var.h;" alt=""/></td></define>
 
 <define tag="o"><x bgcolor="#ff8c00" ::="&_.args;"/></define>
 <define tag="s"><x bgcolor="black" ::="&_.args;"/></define>

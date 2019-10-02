@@ -23,13 +23,13 @@
 
 
 <if variable="form.install">
-  <redirect to="/standard/update.html?page=install&install=&form.install;" />
+  <redirect to="update.html?page=install&install=&form.install;" />
 </if>
 
 
 <if variable="form.download">
   <update-start-download package="&form.details;" />
-  <redirect to="/standard/update.html?bar" />
+  <redirect to="update.html?bar" />
 </if>
 
 <if variable="form.uninstall_package">
@@ -54,7 +54,7 @@
 <cat-list name="security" title="&var.title;" />
 <translate id="11" variable="var.title">Bug fixes</translate>
 <cat-list name="bugfixes" title="&var.title;" />
-<translate id="12" variable="var.title">Thirs party modules</translate>
+<translate id="12" variable="var.title">Third party modules</translate>
 <cat-list name="3rdpart" title="&var.title;" /> 
 
 

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>roxen_start</project>
+<language>deu</language>
+<file>../base_server/configuration.pike</file>
+<file>../base_server/roxen.pike</file>
+<file>../modules/configuration/update.pike</file>
+
+
+<str id="1">
+<o>Starting one thread to handle requests.</o>
+<t>Starte einen Thread zur Behandlung von Requests.</t>
+</str>
+
+<str id="2">
+<o>Starting %d threads to handle requests.</o>
+<t>Starte %d Threads zur Behandlung von Requests.</t>
+</str>
+
+<str id="3">
+<changed from="Registered %s for %s"/>
+<o>Registered URL %s for %O.</o>
+<t>Registriere %s für %s</t>
+</str>
+
+<str id="4">
+<o>All modules for %s enabled in %3.1f seconds</o>
+<t>Alle Module für %s aktiviert in %3.1f Sekunden</t>
+</str>
+
+<str id="5">
+<o>Update: Found new packages: %s</o>
+<t>Update: %s new Packages gefunden</t>
+</str>
+
+<str id="6">
+<o>Update: No new packages found.</o>
+<t>Update: Keine neuen Packages gefunden.</t>
+</str>

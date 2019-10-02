@@ -33,3 +33,5 @@ to='pagebgcolor="#000000"
 
 <theme-set what=tab-frame-image     to=tabframe.xcf themefile />
 <theme-set what=gbutton-frame-image to=gbutton.xcf  themefile />
+<theme-set what=fold                to="fold.gif" themefile/>
+<theme-set what=unfold              to="unfold.gif" themefile/>

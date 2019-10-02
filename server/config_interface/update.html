@@ -5,7 +5,7 @@
   <img src="internal-roxen-unit" height="26" width="1" alt="" />
   <br />
   <gbutton href="update.html?update_list=1" width="150"
-           bgcolor="&usr.fade1;"><translate id="1">Update List</translate></gbutton>
+           bgcolor="&usr.left-buttonbg;"><translate id="1">Update List</translate></gbutton>
   <br />
 
   <if match="x&form.category;&form.uninstall;x == xx">
@@ -15,12 +15,12 @@
   </if>
   <else>
     <gbutton href="update.html" width="150"
-             bgcolor="&usr.fade1;"><translate id="2">Main</translate></gbutton>
+             bgcolor="&usr.left-buttonbg;"><translate id="2">Main</translate></gbutton>
   </else>
 
   <emit source="update-products">
     <set variable="var.cat_&_.cat;"
-         value="width='150' bgcolor='&usr.fade1;'" />
+         value="width='150' bgcolor='&usr.left-buttonbg;'" />
   </emit>
 
   <set variable="var.cat_&form.category;"
@@ -41,7 +41,7 @@
     </if>
     <else>
       <gbutton href="update.html?uninstall=1" width="150"
-  	       bgcolor="&usr.fade1;">Uninstall Packages</gbutton>
+  	       bgcolor="&usr.left-buttonbg;">Uninstall Packages</gbutton>
     </else>
   </comment>
 </cv-leftside>

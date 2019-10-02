@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_tarfs</project>
+<language>eng</language>
+<file>../modules/filesystems/tarfs.pike</file>
+
+<str id="1">
+<o>File systems: Tar File</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This is a file system module that makes it possible to mount a directory structure from a tar-file directly on the site. gzip compressed tar-files are not supported</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Mount point</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Where the module will be mounted in the site's virtual file system.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Tar file and root path</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>The tarfile, and an optional root path (syntax: /tar/file.tar:/root/dir/)</o>
+<t></t>
+</str>

@@ -1,0 +1,57 @@
+<topmenu base="../" selected="dbs" />
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
+
+<content>
+  <cv-split>
+    <subtablist width="100%">
+      <st-tabs></st-tabs>
+
+      <st-page>
+	<style type='text/css'>
+	  #tbl {
+	    font-size: smaller;
+	    text-align: left;
+	  }
+	  #tbl tr > td {
+	    padding-left: 1em;
+	    border-bottom: 1px solid &usr.matrix22;;
+	  }
+	  #tbl tr > th {
+	    font-weight: bold;
+	    background-color: &usr.matrix12;;
+	    padding-left: 1em;
+	  }
+	  #tbl tr > *:first-child {
+	    padding-left: 0;
+	  }
+	</style>
+
+	<div style="position: absolute; left:0;top:0;display:none;"><img src="/img/ajax_progress.gif"/></div>
+
+	<h3><translate id="537">Repair all tables</translate></h3>
+
+	<if variable="form.c = execute">
+	  <span id="result" class="df_text">Initializing AJAX...</a></span>
+
+	  <script type="text/javascript" src="ajax_repairall.js"></script>
+	  <script type="text/javascript">callPike();</script>
+	  </if><else>
+
+	  <translate id="1042">
+	    <b>Warning!</b><br />
+	    This might take a long time to complete.<br/>
+	    The amount of time this takes depends on how large the tables are.<br/>
+	  </translate>
+
+	  <br />
+
+	  <cf-perm perm="Edit Global Variables">
+	    <a href='index.html'><gbutton>Cancel</gbutton></a>
+	    <set variable="var.submit-btn"><gbutton-url>Repair all tables</gbutton-url></set>
+	    <form id="execform" action="&page.path;" method="post"><input type="hidden" name="c" value="execute" /><input type="image" src="&var.submit-btn;"/></form>
+	  </cf-perm>
+	</else>
+      </st-page>
+    </subtablist>
+  </cv-split>
+</content>

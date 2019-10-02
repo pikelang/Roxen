@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -24,9 +24,9 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.64 2001/01/29 05:54:42 per Exp $";
+constant cvs_version="$Id$";
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"User file system");
+LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
 _(2,"A file system that gives access to files in the users' home\n"
 "directories.  The users and home directories are found through the\n"
@@ -64,7 +64,7 @@ void create()
 	  "file system"),
 	 0, hide_searchpath);
 
-  set("mountpoint", "/home/");
+  set("mountpoint", "/~");
 
   defvar("only_password", 1, _(4,"Password users only"),
 	 TYPE_FLAG|VAR_INITIAL,
@@ -77,7 +77,8 @@ void create()
   defvar("banish_list", ({ "root", "daemon", "bin", "sys", "admin",
 			   "lp", "smtp", "uucp", "nuucp", "listen",
 			   "nobody", "noaccess", "ftp", "news",
-			   "postmaster" }), _(8,"Banish list"),
+			   "postmaster", ".htaccess", "401.inc", "404.inc",
+			   "favicon.ico" }), _(8,"Banish list"),
 	 TYPE_STRING_LIST, 
 	 _(9,"This is a list of users who's home directories will not be "
 	   "mounted."));
@@ -135,12 +136,26 @@ void start()
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
+  normalized_path="";
   banish_list = mkmultiset(query("banish_list"));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
 }
 
-static array(string) find_user(string f, RequestID id)
+protected int on_banish_list (string u)
+{
+  if (banish_list[u]) {
+    if(!banish_reported[u])
+      {
+	banish_reported[u] = 1;
+	USERFS_WERR(sprintf("User %s banished...\n", u));
+      }
+    return 1;
+  }
+  return 0;
+}
+
+protected array(string) find_user(string f, RequestID id)
 {
   string of = f;
   string u;
@@ -198,6 +213,9 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   // FIXME: Use the find_user API instead.
   if(!dude_ok[ u ] || f == "")
   {
+    if (on_banish_list (u))
+      return 0;
+
     us = id->conf->userinfo( u, id );
 
     USERFS_WERR(sprintf("checking out %O: %O", u, us));
@@ -207,11 +225,6 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
       USERFS_WERR(sprintf("Bad password: %O? Banished? %O",
 			  (us?BAD_PASSWORD(us):1),
 			  banish_list[u]));
-      if(!banish_reported[u])
-      {
-	banish_reported[u] = 1;
-	USERFS_WERR(sprintf("User %s banished (%O)...\n", u, us));
-      }
       return 0;
     }
     if((f == "") && (strlen(of) && of[-1] != '/'))
@@ -260,7 +273,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
     if(!stat || (stat[5] != (int)(us[2])))
     {
-      USERFS_WERR(sprintf("File not owned by user.", u));
+      USERFS_WERR(sprintf("File not owned by user %O.", u));
       return 0;
     }
   }
@@ -268,7 +281,7 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
   if(query("useuserid"))
     id->misc->is_user = f;
 
-  USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
+  USERFS_WERR(sprintf("Forwarding request to inherited filesystem."));
   return filesystem::find_file( f, id );
 }
 
@@ -289,6 +302,9 @@ string real_file(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     array(int) fs;
     if(query("homedir"))
     {
@@ -320,7 +336,7 @@ mapping|array find_dir(string f, RequestID id)
 
   array a = find_user(f, id);
 
-  if (!a) {
+  if (!a[0]) {
     if (query("user_listing")) {
       array l;
       l = id->conf->userlist(id);
@@ -335,6 +351,9 @@ mapping|array find_dir(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     if(query("homedir"))
     {
       array(string) us;
@@ -372,6 +391,9 @@ array(int) stat_file(string f, RequestID id)
 
   if(u)
   {
+    if (on_banish_list (u))
+      return 0;
+
     array us, st;
     us = id->conf->userinfo( u, id );
     if(query("homedir"))
@@ -398,20 +420,19 @@ array(int) stat_file(string f, RequestID id)
   return 0;
 }
 
-// string query_name()
-// {
-//   return "Location: <i>" + query("mountpoint") + "</i>, " +
-// 	 (query("homedir")
-// 	  ? "Pubdir: <i>" + query("pdir") +"</i>"
-// 	  : "mounted from: <i>" + query("searchpath") + "</i>");
-// }
+
+string query_name()
+{
+  return "UserFS "+query("mountpoint")+" from "+
+    (query("homedir")?"~*/"+query("pdir"):query("searchpath"));
+}
 
 string status()
 {
   if(sizeof(my_configuration()->user_databases()) == 0)
     return "<font color='&usr.warncolor;'>"+
-      _(20,"You need a user database module in this virtual server to resolve "
-	"your users' homedirectories.")+
+      _(20,"You need at least one user database module in this virtual server "
+	"to resolve your users' homedirectories.")+
       "</font>";
 }
 

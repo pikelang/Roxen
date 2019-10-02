@@ -4,6 +4,7 @@
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+#define CU_AUTH id->misc->config_user->auth
 
 
 string get_conf_name( string c )
@@ -12,9 +13,13 @@ string get_conf_name( string c )
   return cfg->query_name();
 }
 
-string parse( RequestID id )
+string|mapping parse( RequestID id )
 {
-  if( id->variables->db )
+  int view_mode;
+  if ( !(CU_AUTH( "Edit Global Variables" )) )
+    view_mode = 1;
+
+  if( id->variables->db  && !view_mode )
   {
     if( id->variables->set_read )
       DBManager.set_permission( id->variables->db,
@@ -30,152 +35,118 @@ string parse( RequestID id )
                                 DBManager.NONE );
   }
 
-  array colors = ({
-    ({
-      "&usr.matrix11;",
-      "&usr.matrix21;",
-    }),
-    ({
-      "&usr.matrix12;",
-      "&usr.matrix22;",
-    }),
-  });
-  
-  mapping q = DBManager.get_permission_map( );
+  mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
-    return "No defined datbases\n";
-  string res = "<br /><table width='80%' border='0' cellpadding='2' cellspacing='0'>\n";
-  int x, y;
-  int i = 1;
-  int tc = sizeof( roxen->configurations )+2;
-  if( tc < 8 )
-  {
-    foreach( sort(roxen->configurations->name), string conf )
-    {
-      res += "<tr>";
-      for( int j = 0; j<i; j++ )
-      {
-        if( j )
-        {
-          string ct = colors[0][j%sizeof(colors)];
-          res += "<td bgcolor='"+ct+"'>&nbsp;</td>";
-        }
-        else
-          res += "<td></td>";
-      }
-      string ct = colors[0][i%sizeof(colors)];
-      res += "<td bgcolor='"+ct+"' colspan='"+(tc-i)+"'><gtext scale='0.4'>    "+
-          get_conf_name(conf)+"</gtext></td>";
-      res += "</tr>\n";
-      i++;
-    }
-    res += "<tr>";
-    for( int j = 0; j<i; j++ )
-    {
-      if( j )
-      {
-        string ct = colors[0][j%sizeof(colors)];
-        res += "<td bgcolor='"+ct+"'>"
-            "<img src='/internal-roxen-unit' alt='' width='1' height='5' /></td>";
-      }
-      else
-        res += "<td></td>";
-    }
-    res += "</tr>";
-  }
-  else
-  {
-    res += "<tr><td></td>";
-    foreach( sort(roxen->configurations->name), string conf )
-    {
-      x++;
-      string ct = colors[0][x%sizeof(colors)];
-      res += "<td bgcolor='"+ct+"'valign=bottom><gtext scale='0.4' bgcolor='"+ct+"' rotate='90'>"+
-          get_conf_name(conf)+"</gtext></td>";
-    }
-    res += "</tr>\n";
-  }
+    return _(549, "No defined databases.\n");
 
+  array(string) conf_cols = sort (roxen->configurations->name);
+
+  string res = "<style type='text/css'>\n"
+    "#tbl {"
+    " font-size: smaller;"
+    " text-align: left;"
+    " empty-cells: show;"
+    "}\n"
+    "#tbl a {"
+    " color: #0033aa;"
+    " text-decoration: none;"
+    "}\n"
+    "#tbl a:hover {"
+    " color: #0055ff;"
+    " text-decoration: underline;"
+    "}\n"
+    "#tbl td, #tbl th {"	// Cell defaults.
+    " white-space: nowrap;"
+    " border-right: 1px solid &usr.matrix22;;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#tbl .db {"		// The database name cells.
+    " background-color: &usr.matrix12;;"
+    "}\n"
+    "#tbl tr.group-hdr > * {"	// The cells in the database group name rows.
+    " font-weight: bold;"
+    " vertical-align: bottom;"
+    " border-bottom-color: black;"
+    "}\n"
+    "#tbl tr.group-hdr > .conf {" // The cells containing configuration names.
+    " text-align: center;"
+    " background-color: &usr.matrix12;;"
+    "}\n"
+    "</style>\n"
+    "<table id='tbl' border='0' cellpadding='2' cellspacing='0'>\n";
+
+  mapping(string:string) rres = ([]);
+  foreach( DBManager.list_groups(), string g )
+    rres[g]="";
 
   foreach( sort(indices(q)), string db )
   {
-    mapping p = q[db];
-    y++;
-    x=0;
-    string ct = colors[y%sizeof(colors)][0];
-    int ii = DBManager.is_internal( db );
-    res +=
-        "<tr><td bgcolor='"+ct+"'>"
-        "<nobr>"
-        +"<a href='browser.pike?db="+db+"'>"+
-        "<cimg border='0' format='gif'"
-        "      src='&usr.database-small;' alt='' max-height='12'/>"
-        "  <gtext border='0' scale='0.4'>"+db+"</gtext> &nbsp;"
-        +"</a>"+
-        "</nobr>"
-        "</td>";
-    foreach( sort(roxen->configurations->name), string conf )
+    string db_group = DBManager.db_group(db);
+
+    string res =
+      "<tr><td class='db'>" +
+      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
+      "<cimg style='vertical-align: -2px' border='0' format='gif'"
+      " src='&usr.database-small;' alt='' max-height='12'/> " +
+      db +
+      (view_mode ? "" : "</a>") +
+      "</td>";
+
+    mapping(string:int) p = q[db];
+    foreach( conf_cols, string conf )
     {
-      x++;
-      string col = colors[y%sizeof(colors)][x%sizeof(colors[0])];
-      switch( p[conf] )
-      {
-       case DBManager.NONE:
-         res += sprintf("<td bgcolor='"+col+"'>"
-                        "<a href='dbs.html?set_read=%s&db=%s'>"
-                        "<gtext "
-                        "        scale='0.5' verbatim=''>&nbsp; - </gtext>"
-                        "</a>"
-                        "</td>",
-                        Roxen.http_encode_string(conf),
-                        Roxen.http_encode_string(db));
-         break;
-       case DBManager.READ:
-         res += sprintf("<td bgcolor='"+col+"'>"
-                        "<a href='dbs.html?set_write=%s&db=%s'>"
-                        "<gtext  scale=0.5>R</gtext>"
-                        "</a>"
-                        "</td>",
-                        Roxen.http_encode_string(conf),
-                        Roxen.http_encode_string(db));
-         break;
-       case DBManager.WRITE:
-         res += sprintf("<td bgcolor='"+col+"'>"
-                        "<a href='dbs.html?set_none=%s&db=%s'>"
-                        "<gtext fgcolor='&usr.warncolor;' scale=0.5>W</gtext>"
-                        "</a>"
-                        "</td>",
-                        Roxen.http_encode_string(conf),
-                        Roxen.http_encode_string(db));
-         break;
-      }
+#define PERM(P,T,L)							\
+	((view_mode ? "" :						\
+	  "<a href='?set_"+L+"="+					\
+	  Roxen.http_encode_url(conf)+"&db="+Roxen.http_encode_url(db)+"'>") \
+	 + (p[conf] == DBManager.P ? T : "&#x2013;")			\
+	 + (view_mode?"":"</a>"))
+      res += "<td>" +
+	PERM(NONE,_(431,"N"),"none") + " " +
+	PERM(READ,_(432,"R"),"read") + " " +
+	PERM(WRITE,_(433,"W"),"write") + "</td>";
     }
 
-    string format_stats( mapping s, string url )
-    {
-      if( !url )
-        url = "internal";
-      else
-      {
-	if( catch( DBManager.get( db )->query("select 1") ) )
-	  url="<font color='&usr.warncolor;'>"+
-	    _(381,"Failed to connect")+"</font>";
-	else
-	  url = "remote";
-      }
-      if( !s )
-        return url;
-      return sprintf( "%s %.1fMb", url, s->size/1024.0/1024.0 );
-    };
-
-#if 1
-    res += "<td align=right width='100%' >"+
-             format_stats( DBManager.db_stats( db ),
-                           DBManager.db_url( db ) )+"</td>";
-#else
-    res += "<td width='100%'>&nbsp;</td>";
-#endif
-    res += "</tr>\n";
+    rres[db_group] += res + "</tr>\n";
   }
-  return res+"</table>";
+
+  array(array(string)) cats = ({});
+  foreach( indices(rres), string c )
+    if( c != "internal" )
+      cats += ({ ({DBManager.get_group(c)->lname, c}) });
+    else
+      cats = ({ ({DBManager.get_group(c)->lname, c}) }) + cats;
+
+  if (sizeof (cats)) {
+    res += "<thead>\n"
+      "<tr class='group-hdr'><th><br/>"
+      "<a style='font-size: larger'"
+      " href='edit_group.pike?group=" + cats[0][1] + "'>" +
+      cats[0][0] + "</a></th>";
+    foreach( conf_cols, string conf )
+    {
+      res += "<th class='conf'>"
+	"<gtext href='/sites/site.html/" + conf + "/' "
+	"scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" +
+	get_conf_name(conf) + "</gtext>"
+	"</th>";
+    }
+    res += "</tr>\n</thead>\n" +
+      "<tbody>\n" + rres[ cats[0][1] ] + "</tbody>\n";
+
+    foreach( sort(cats[1..]), array q )
+    {
+      res += "<tbody>\n"
+	"<tr class='group-hdr'><th><br/>"
+	"<a style='font-size: larger'"
+	" href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a></th>" +
+	("<td></td>" *
+	 sizeof( roxen->configurations )) +
+	"</tr>\n" +
+	rres[ q[1] ] +
+	"</tbody>\n";
+    }
+  }
+
+  return Roxen.http_string_answer(res+"</table>");
 }

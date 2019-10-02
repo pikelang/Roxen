@@ -1,6 +1,10 @@
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+
 constant cvs_version =
-  "$Id: userdb_system.pike,v 1.6 2001/03/08 14:35:45 per Exp $";
+  "$Id$";
+#ifndef __NT__
 inherit UserDB;
+#endif
 inherit "module";
 
 constant name = "system";
@@ -21,10 +25,10 @@ LocaleString module_doc =
 Thread.Mutex mt = Thread.Mutex();
 
 /* Unix version. Uses the get[gr,pw]ent interface */
-static mapping cached_groups = ([]);
-static array(SysGroup) full_group_list;
+protected mapping cached_groups = ([]);
+protected array(SysGroup) full_group_list;
 
-static array(string) get_cached_groups_for_user( int uid )
+protected array(string) get_cached_groups_for_user( int uid )
 {
   if(cached_groups[ uid ] )
     return cached_groups[ uid ];
@@ -70,7 +74,7 @@ static array(string) get_cached_groups_for_user( int uid )
 class SysUser
 {
   inherit User;
-  static array pwent;
+  protected array pwent;
 
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
@@ -87,7 +91,7 @@ class SysUser
     return /*({  })|*/ get_cached_groups_for_user( uid() );
   }
   
-  static void create( UserDB p, array _pwent )
+  protected void create( UserDB p, array _pwent )
   {
     ::create( p );
     pwent = _pwent;
@@ -102,7 +106,7 @@ class SysGroup
   string name()            { return grent[0]; }
   array(string) members()  { return grent[3]; }
 
-  static void create( UserDB p, array _grent )
+  protected void create( UserDB p, array _grent )
   {
     ::create( p );
     grent = _grent;
@@ -112,14 +116,18 @@ class SysGroup
 User find_user( string s )
 {
   mixed key = mt->lock();
+  object p = Privs("getpwnam");
   array a = getpwnam( s );
+  p = UNDEFINED;
   if( a )  return SysUser( this_object(), a );
 }
 
 User find_user_from_uid( int id )
 {
   mixed key = mt->lock();
+  object p = Privs("getpwuid");
   array a = getpwuid( id );
+  p = UNDEFINED;
   if( a ) return SysUser( this_object(), a );
 }
 
@@ -128,14 +136,16 @@ array(string) list_users( )
   array res = ({});
   array a;
   mixed key = mt->lock();
-  endpwent();
-  while( a = getpwent() )
+  object p = Privs("getpwent");
+  System.setpwent();
+  while( a = System.getpwent() )
     res += ({ a[0] });
-  endpwent();
+//   endpwent();
+  p = UNDEFINED;
   return res;
 }
 
-static mapping(string|int:Group) group_cache = ([]);
+protected mapping(string|int:Group) group_cache = ([]);
 
 Group find_group( string group )
 {
@@ -173,16 +183,16 @@ array(string) list_groups( )
   array res = ({});
   array a;
   mixed key = mt->lock();
-  endgrent();
-  while( a = getgrent() )
+  System.endgrent();
+  while( a = System.getgrent() )
   {
     res += ({ SysGroup( this_object(), a ) });
     group_cache[ res[-1]->name() ] = res[-1];
     group_cache[ res[-1]->gid() ] = res[-1];
   }
-  endgrent();
+  System.endgrent();
   full_group_list = res;
-  call_out( lambda(){ full_group_list = 0; cached_groups=0; }, 60 );
+  call_out( lambda(){ full_group_list = 0; cached_groups=([]); }, 60 );
   return res->name();
 }
 #else

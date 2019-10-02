@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.19 2001/01/29 05:41:26 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 inherit "module";
@@ -33,6 +33,8 @@ void create()
 		"be returned instead of 'no such file'."));
 }
 
+array(string) indexfiles;
+
 // The only important function in this file...
 // Given a request ID, try to find a matching index file.
 // If one is found, return it, if not, simply return "no such file" (0)
@@ -48,13 +50,25 @@ mapping parse_directory(RequestID id)
       return Roxen.http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
   }
 
-  foreach(query("indexfiles"), string file)
+  foreach(indexfiles, string file)
   {
-    mapping result;
-    id->not_query = f+file;
-    if(result=id->conf->get_file(id))
-      return result; // File found, return it.
+    array s;
+    if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
+    {
+      id->not_query = f+file;
+      mixed result = id->conf->handle_request(id);
+      if (result && mappingp(result))
+	return result; // File found, return it.
+    }
   }
   id->not_query = f;
   return 0;
+}
+
+void start(int n, Configuration c)
+{
+  if (c)
+  {
+    indexfiles = query("indexfiles")-({""});
+  }
 }

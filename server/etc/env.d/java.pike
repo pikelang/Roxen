@@ -1,5 +1,5 @@
 
-static int check_jre_dir(string dir)
+protected int check_jre_dir(string dir)
 {
   if(!dir || dir=="" || dir[0]!='/')
     return 0;
@@ -20,7 +20,7 @@ static int check_jre_dir(string dir)
     return 1;
 }
 
-static string findjre()
+protected string findjre()
 {
   string dir = combine_path(combine_path(getcwd(), __FILE__),
 			    "../../../java/jre");
@@ -30,6 +30,12 @@ static string findjre()
   dir =
     (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
 		   "'s:/lib/rt\\.jar.*$::' -e p -e q")||"")-"\n";  
+
+  //  Mac OS X uses a non-standard directory
+  if (has_value(dir, "JavaVM.framework"))
+    return "/System/Library/Frameworks/JavaVM.framework/Versions/"
+           "CurrentJDK/Home/";
+
   if(check_jre_dir(dir))
     return dir;
   foreach(`+(@Array.map(({"/usr/local", "/usr", "/usr/java"}),
@@ -66,17 +72,31 @@ void run(object env)
   }
   write(" JREHOME="+jrehome+"\n");
   env->set("JREHOME", jrehome);
-  arch = (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null")||"")-"\n";
-  if(arch=="unknown")
-    arch = (Process.popen("uname -m | sed -e 's/^i[4-9]86/i386/'")||"")-"\n";
-  if(arch == "")
-    arch = "_";
-  foreach(({arch+"/"+threads_type, arch+"/classic", arch}), string dir) {
-    mixed s = file_stat(jrehome+"/lib/"+dir);
-    if(s && s[1]==-2)
-      env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
+
+  array archs = ({ 
+    (Process.popen("(/usr/bin/uname -p||uname -p) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n",
+    (Process.popen("(/usr/bin/uname -m||uname -m) 2>/dev/null | sed -e 's/^i[4-9]86/i386/'")||"")-"\n"
+  });
+  
+  foreach(Array.uniq(archs), string arch)
+  {
+    if(arch == "")
+      arch = "_";
+    else if(arch == "x86_64")
+      arch = "amd64";
+  
+    foreach(({arch+"/"+threads_type, arch+"/classic", arch+"/server", arch}), string dir) {
+      mixed s = file_stat(jrehome+"/lib/"+dir);
+      if(s && s[1]==-2)
+	env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
+    }
   }
+  
   /* AIX */
   if(file_stat(jrehome+"/bin/libjava.a"))
     env->append("LIBPATH", jrehome+"/bin/:"+jrehome+"/bin/classic/" );
+
+  //  Only add _JAVA_OPTIONS if user hasn't got it already
+  if (!env->get("_JAVA_OPTIONS"))
+    env->set("_JAVA_OPTIONS", "\"-Xmx256m -Xrs\"");
 }

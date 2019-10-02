@@ -19,10 +19,10 @@ constant BADARG     = 100;
 
 void setup_timeout( )
 {
-  void timeout() {  exit( TIMEOUT ); };
 #ifndef __NT__
+  void timeout() {  exit( TIMEOUT ); };
   signal( 14, timeout );
-  alarm( 5 );
+  alarm( 30 );
 #endif
 }
 
@@ -59,21 +59,27 @@ void write_fragmented( Stdio.File to,
   }
 }
 
+#define EXIT(X)  while(1){write("\n\n\nThe offending response header:\n%O\n\n" \
+				"Protocol: %O (%O)\n" \
+				"Return code: %d (%d)\n" \
+				"Response mapping: %O\n", \
+                                headers,prot,expected_prot, \
+				code,expected_code,hd);exit((X));}
 
 void verify_headers( string headers, int content_length,
 		     string expected_prot, int expected_code,
-		     int want_last_modified )
+		     int want_last_modified, )
 {
   array q = headers / "\r\n";
   string prot;
   int code;
   string message;
-  if( sscanf( q[0], "%s %d %s", prot, code, message ) != 3 )exit( BADHEADERS );
-  if( prot != expected_prot )    exit( BADPROT );
-  if( code != expected_code )    exit( BADCODE );
-
-
   mapping hd = ([]);
+
+  if( sscanf( q[0], "%s %d %s", prot, code, message ) != 3 ) EXIT( BADHEADERS );
+  if( prot != expected_prot )    EXIT( BADPROT );
+  if( code != expected_code )    EXIT( BADCODE );
+
   foreach( q[1..], string header )
   {
     string a, b;
@@ -82,10 +88,10 @@ void verify_headers( string headers, int content_length,
   }
 
   if( !hd->date )
-    exit( NODATE );
+    EXIT( NODATE );
   if( !hd["content-length"] || (int)hd["content-length"]  != content_length )
-    exit( BADLENGTH );
+    EXIT( BADLENGTH );
   if( want_last_modified && !hd["last-modified"] )
-    exit( BADMODIFIED );
+    EXIT( BADMODIFIED );
 }
 

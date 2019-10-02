@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: bofh.pike,v 1.3 2000/01/12 04:39:40 nilsson Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 inherit "module";
 

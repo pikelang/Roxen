@@ -5,12 +5,12 @@
 <file>../modules/filesystems/restrictedfs.pike</file>
 
 <str id="1">
-<o>Restricted file system</o>
+<o>File systems: Restricted file system</o>
 <t></t>
 </str>
 
 <str id="2">
-<o>The restricted file system makes a users home directory available to her. Very usable for FTP sites.</o>
+<o>The restricted file system makes a users real home directory available to her. Useful for FTP sites.</o>
 <t></t>
 </str>
 

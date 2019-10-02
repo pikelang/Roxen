@@ -1,4 +1,4 @@
-// Old RXML Compatibility Module Copyright © 2000, Roxen IS.
+// Old RXML Compatibility Module Copyright © 2000 - 2009, Roxen IS.
 //
 
 inherit "module";
@@ -7,7 +7,7 @@ inherit "roxenlib";
 
 #define _stat id->misc->defines[" _stat"]
 #define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
+//#define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
@@ -23,9 +23,19 @@ constant thread_safe=1;
 constant language = roxen->language;
 
 constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
-LocaleString module_name   = LOCALE(3,"Old RXML Compatibility Module");
+LocaleString module_name   = LOCALE(3,"Tags: Old RXML Compatibility Module");
+
+#if ROXEN_COMPAT > 1.3
+LocaleString module_doc    =
+  LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.") + " " +
+  sprintf( LOCALE(1, "In order to function properly the ROXEN_COMPAT define must be "
+		  "set to 1.3 or lower. It is currently set to %1.1f."), ROXEN_COMPAT);
+#else // ROXEN_COMPAT > 1.3
 LocaleString module_doc    =
   LOCALE(4,"Adds support for old (deprecated) RXML tags and attributes.");
+
+// Cached version of the virtual servers compatibility level.
+string compat_level;
 
 void create()
 {
@@ -52,6 +62,8 @@ void create()
 		"decreased performance and disabled error checking. This "
 		"option overrides the 'Enable all tag compatibility' "
 		"setting."));
+
+  compat_level = my_configuration() && my_configuration()->query("compat_level");
 }
 
 constant relevant=(<"rxmltags","graphic_text","tablify","countdown","counter","ssi","obox">);
@@ -95,7 +107,13 @@ string status() {
   ret+="<b>"+LOCALE(12,"RXML Warnings:")+"</b> "+warnings+"<br />\n"
     "<b>"+LOCALE(13,"Support enabled for:")+"</b> "+
     String.implode_nicely(indices(enabled))+"<br />\n";
-  return ret;
+  if(compat_level >= "2.2")
+    ret += "<font color='red'>" + LOCALE(2, "Warning!") + "</font> " +
+      sprintf(LOCALE(39, "This sites compatibility level is set to %s, but it "
+		     "must be set to a value below 2.2. Change the value in the "
+		     "site global settings and restart the server."), compat_level);
+
+return ret;
 }
 
 
@@ -169,12 +187,13 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
   id->prestate = orig_prestate;
 
   if (r->error)
-    _error = r->error;
-  if (r->extra_heads)
+    RXML_CONTEXT->set_misc (" _error", r->error);
+  if (r->extra_heads) {
     foreach(indices(r->extra_heads), string tmp)
-      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+      id->add_response_header(tmp, r->extra_heads[tmp]);
+  }
   if (m->text)
-    _rettext = m->text;
+    RXML_CONTEXT->set_misc (" _rettext", m->text);
 
   return ({""});
 }
@@ -224,6 +243,8 @@ string|array tag_set(string tag, mapping m, RequestID id)
 array tag_pr(string tag, mapping m, RequestID id)
 {
   old_rxml_warning(id,LOCALE(26,"pr tag"),LOCALE(27,"roxen tag"));
+  if(m->color && m->color!="white" && m->color!="black")
+    m->color="black";
   return ({1, "roxen", m});
 }
 
@@ -256,6 +277,12 @@ inline string do_replace(string s, mapping m, RequestID id)
   return replace(s, indices(m), values(m));
   old_rxml_warning(id, LOCALE(30,"replace (A=B) in in insert tag"),
 		   LOCALE(31,"the replace tag"));
+}
+
+protected string compat_broken_http_encode_string(string f)
+{
+  return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
+		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
 }
 
 string|array tag_insert(string tag,mapping m,RequestID id)
@@ -330,12 +357,16 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       m_delete(m, "nocache");
       m_delete(m, "file");
       n=do_replace(n, m, id);
-      return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+      // Should probably be html_encode_string below, but, well..
+      // compat is compat. :P /mast
+      return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
     n=do_replace(n, m-(["file":""]), id);
-    return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+    // Should probably be html_encode_string below, but, well.. compat
+    // is compat. :P /mast
+    return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
   }
 
   if(m->var) {
@@ -394,7 +425,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 		   LOCALE(55,"config items as atomic attributes in aconf tag"),
 		   LOCALE(38,"add and drop"));
 
-  string href,s;
+  string href;
   mapping cookies = ([]);
 
   if(!m->href)
@@ -799,8 +830,32 @@ array container_obox(string t, mapping m, string c, RequestID id) {
   return ({ 1, "obox", m, c });
 }
 
-array container_if(string t, mapping m, string c, RequestID id) {
-  return ({ 1, "if", m, array_sscanf(c, "%s<otherwise>%s") * "</if><if false='1'>" });
+array|string container_if(string t, mapping m, string c, RequestID id) {
+  if(id->misc->compat_if) return ({ 1 });
+  int only_once;
+  string rxml = Parser.HTML()
+    ->add_tag("otherwise", lambda(){
+			     only_once++;
+			     return only_once==1?"</if><if false='1'>":0; })
+    ->finish(c)->read();
+  if(only_once)
+    old_rxml_warning(id, "otherwise "+LOCALE(20,"tag"),
+		     "else "+LOCALE(20,"tag"));
+  else
+    return ({ 1 });
+
+  id->misc->compat_if = 1;
+  string tag = "<if";
+  foreach(indices(m), string attr)
+    if(!has_value(m[attr], "\""))
+      tag += " " + attr + "=\"" + m[attr] + "\"";
+    else if(!has_value(m[attr], "'"))
+      tag += " " + attr + "='" + m[attr] + "'";
+    else
+      tag += " " + attr + "=\"" + replace(m[attr], "\"", "&quot;") + "\"";
+  rxml = parse_rxml( tag+">"+rxml+"</if>", id );
+  m_delete(id->misc, "compat_if");
+  return rxml;
 }
 
 
@@ -891,3 +946,5 @@ class TagIffailed {
     return !id->misc->defines[" _ok"];
   }
 }
+
+#endif // !ROXEN_COMPAT > 1.3

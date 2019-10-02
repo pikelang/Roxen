@@ -1,7 +1,8 @@
+// This file is part of Roxen WebServer.
+// Copyright © 1997 - 2009, Roxen IS.
+//
 // Wizard generator
-// This file generats all the nice wizards
-// Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.132 2001/04/12 17:32:14 nilsson Exp $
+// $Id$
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -117,7 +118,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       m->type = "text";
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"quote");
     return make_tag("input", m);
 
@@ -126,7 +127,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     if(!id->variables[n]) id->variables[n]=current;
 
     m->type = "text";
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
     {
@@ -170,13 +171,14 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     res=make_tag("input",m);
     m->type="hidden";   //  Yes, this hidden var is needed! Cleared boxes may
     m->value="0";       //  otherwise revert to their initial set state.
+    m_delete(m, "id");  //  Can't have the same ID twice
     return res+make_tag("input", m);
 
    case "int":
     m->type = "number";
     m_delete(m,"default");
     m->value = (string)((int)current);
-    if(!m->size)m->size="8,1";
+    if(!m->size)m->size="8";
     return make_tag("input", m);
 
    case "float":
@@ -252,7 +254,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<hr size=\"2\" align=\"left\" noshade=\"noshade\" width=\"70\" />\n"+
       "<font size=\"-1\"><input type=\"string\" name=\""+
       m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"Ok\"></font></td></table>\n");
+      color_name(a)+"\"> <input type=\"submit\" value=\"OK\"></font></td></table>\n");
 
    case "color-small":
      if(id->variables[m->name+".hsv"])
@@ -313,9 +315,130 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<tr><td width=\"110\">\n"
       "<font size=\"-1\"><input type=\"string\" name=\""+
       m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "Ok") + "\"></font>"
+      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "OK") + "\"></font>"
       "</td></tr>\n"
       "</table>\n");
+
+   case "color-js":
+     //  Note: This code requires ColorSelector.js
+     if (string color_input = id->variables[m->name])
+       current = color_input;
+     a = parse_color(current || "black");
+     [h, s, v] = rgb_to_hsv(@a);
+     if(!h && !s && !v)
+       s = 255;
+     current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
+     id->variables[m->name] = current;
+
+     int mark_x_left = 5 + (int) (h / 2);
+     int mark_y_top = 5 + (int) ((255 - v) / 2);
+     int mark_y_small_top = 5 + (int) ((255 - s) / 2);
+     string output =
+       "<script language='javascript'>\n"
+       "  var PREFIX_h = " + h + ";\n"
+       "  var PREFIX_s = " + s + ";\n"
+       "  var PREFIX_v = " + v + ";\n"
+       "  function PREFIX_colsel_click(event, in_bar, in_cross)\n"
+       "  {\n"
+       "    var hsv = colsel_click(event, \"PREFIX_\", PREFIX_h,\n"
+       "                           PREFIX_s, PREFIX_v, in_bar, in_cross);\n"
+       "    PREFIX_h = hsv[0];\n"
+       "    PREFIX_s = hsv[1];\n"
+       "    PREFIX_v = hsv[2];\n"+
+       (m->onChange||"")+
+       "  }\n"
+       "  function PREFIX_colsel_type(value, update_field)\n"
+       "  {\n"
+       "    var hsv = colsel_type(\"PREFIX_\", value, update_field);\n"
+       "    PREFIX_h = hsv[0];\n"
+       "    PREFIX_s = hsv[1];\n"
+       "    PREFIX_v = hsv[2];\n"+
+       (m->onChange||"")+
+       "  }\n"
+       "</script>"
+       "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
+       "  <img src='/internal-roxen-colsel-mark-x' id='PREFIX_mark_x'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"x\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y' id='PREFIX_mark_y'"
+       "       onClick='PREFIX_colsel_click(event, 0, \"y\"); return false;'"
+       "       style='position: absolute;"
+       "              cursor:   crosshair;"
+       "              z-index:  2'>"
+       "  <img src='/internal-roxen-colsel-mark-y-small'"
+       "       id='PREFIX_mark_y_small'"
+       "       style='position: absolute;"
+       "              cursor:   pointer;"
+       "              z-index:  2'>"
+       "  <table border='0' cellspacing='0' cellpadding='4' bgcolor='#ffffff'"
+       "         class='roxen-color-selector'"
+       "         style='border-top:    1px solid #888888;"
+       "                border-left:   1px solid #888888;"
+       "                border-bottom: 2px solid #888888;"
+       "                border-right:  2px solid #888888'>"
+       "    <tr>"
+       "      <td style='border-right: 1px solid #888888'"
+       "        ><img src='/internal-roxen-colsel-small'"
+       "             width='128' height='128' style='cursor: crosshair'"
+       "             onClick='PREFIX_colsel_click(event, 0); return false;'"
+       "        /></td>"
+       "      <td><img id='PREFIX_colorbar' width='16' height='128'"
+       " src='/internal-roxen-colorbar-small:" + h + "," + v + ",-1'"
+       "               style='cursor: pointer'"
+       "               onClick='PREFIX_colsel_click(event, 1); return false;'"
+       "        /></td>"
+       "    </tr><tr>"
+       "      <td colspan='2' style='border-top: 1px solid #888888'"
+       "        ><img src='/internal-roxen-pixel-000000'"
+       "              class='black'"
+       "              width='76' height='10' style='cursor: pointer'"
+       "              onClick='PREFIX_colsel_type(\"#000000\", 1);' "
+       "        /><img src='/internal-roxen-pixel-ffffff'"
+       "               class='white'"
+       "               width='76' height='10' style='cursor: pointer'"
+       "               onClick='PREFIX_colsel_type(\"#FFFFFF\", 1);' "
+       "        /></td>"
+       "    </tr>"
+       "  </table>"
+       "</js-popup>"
+
+       //  These initializations used to be in the style attributes above
+       //  but MSIE 6.0 failed to recognize them so we execute them explicitly
+       //  instead.
+       "<script language='javascript'>"
+       "getObject('PREFIX_mark_x').style.top = '5px';"
+       "getObject('PREFIX_mark_x').style.left = '" + mark_x_left + "px';"
+       "getObject('PREFIX_mark_y').style.top = '" + mark_y_top + "px';"
+       "getObject('PREFIX_mark_y').style.left = '5px';"
+       "getObject('PREFIX_mark_y_small').style.top = '" + mark_y_small_top + "px';"
+       "getObject('PREFIX_mark_y_small').style.left = '143px';"
+       "</script>"
+
+       "<table border='0' cellspacing='0' cellpadding='2'>"
+       "<tr>"
+       "  <td>"
+       "    <input type='text' size='10' value='" + current + "' id='PREFIX_color_input' "
+       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);"+(m->onChange||"")+"' />"
+       "  </td>"
+       "  <td>"
+       "    <table border='0' cellspacing='0' cellpadding='0' bgcolor='#ffffff'>"
+       "      <tr>"
+       "      	<td style='background: " + current + "; border: 1px solid #888888' "
+       "      	    id='PREFIX_preview'"
+       "      	  ><img src='/internal-roxen-colsel-arrow'"
+       "                width='49' height='16' border='0'"
+       "      	        style='border: 4px solid #ffffff; cursor: pointer'"
+       "                ::='&form.__popup;'"
+       "        ></td>"
+       "      </tr>"
+       "    </table>"
+       "  </td>"
+       "</tr>"
+       "</table>";
+     string clean_name = replace(m->name, "-", "_");
+     return replace(output, "PREFIX", clean_name);
 
    case "font":
      m->type = "select";
@@ -324,10 +447,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=\"submit\" value=\"" + LOCALE(47, "Example") + "\"><br />"+
 	      ((current&&strlen(current))?
-	       "<gtext nfont=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
+	       "<gtext font=\""+current+"\">" + LOCALE(48, "Example Text") + "</gtext><br />"
 	       :""));
      m_delete(m, "noexample");
-     return make_tag("var", m)+res;
+     return wizard_tag_var("var", m, id) + res;
 
    case "toggle":
     m_delete(m,"default");
@@ -343,17 +466,77 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(m,"default");
      m_delete(m,"type");
      mapping m2 = copy_value(m);
-     if (m->autosubmit)
-       m2->onChange = "javascript:submit();";
+     if (m->select_override) {
+       if (!m->id) {
+	 m->id = "wizard-select-" + random(65536) + "-" + random(65536);
+       }
+       m_delete(m2, "select_override");
+       m2->id = m->id + "-selector";
+       m2->onchange =
+	 "var field = document.getElementById('" + m->id + "-field');"
+	 "if (field) { ";
+       if (m->select_none) {
+	 m2->onchange +=
+	   "  if (this.value == '" + m2->select_none +"') {"
+	   "    field.setAttribute('disabled', 'yes');"
+	   "    field.disabled = 'disabled';"
+	   "    field.value = '';"
+	   "  } else {"
+	   "    field.disabled = '';"
+	   "    field.removeAttribute('disabled');";
+       }
+       m2->onchange +=
+	 "  if (this.value != '" + m->select_override +"') {"
+	 "    field.value = this.value;"
+	 "  }";
+       if (m->select_none) {
+	 m2->onchange +=
+	   "  }";
+       }
+       m2->onchange +=
+	 "}";
+       if (m->autosubmit) {
+	 m2->onchange += "submit();";
+	 m_delete(m2, "autosubmit");
+       }
+     } else if (m->autosubmit) {
+       m2->onchange = "javascript:submit();";
+       m_delete(m2, "autosubmit");
+     }
      m_delete(m2, "choices");
      m_delete(m2, "options");
      //escape the characters we need for internal purposes..
      m->choices=replace(m->choices,
 			({"\\,", "\\:"}),
 			({"__CoMma__", "__CoLon__"}));
+     string tc = current && replace(current,
+				    ({"\\,", "\\:"}),
+				    ({"__CoMma__", "__CoLon__"}));
 
-     return make_container("select", m2, map(m->choices/",",
-                                             lambda(string s, string c, mapping m) {
+     array(string) choices = m->choices/",";
+
+     foreach(choices, string c) {
+       sscanf(c, "%[^:]", c);
+       if (c == tc) {
+	 tc = 0;
+	 break;
+       }
+     }
+     if (!tc) {
+       tc = current;
+     } else if (m->select_override) {
+       tc = m->select_override;
+     } else {
+       // Unlisted choice selected!
+       if (tc != "")
+	 choices += ({ tc + ":" + tc });
+       tc = current;
+     }
+
+     string selector =
+       make_container("select", m2,
+		      map(choices,
+			  lambda(string s, string c, mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
@@ -362,10 +545,35 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	t=replace(t,({"__CoMma__",
 		      "__CoLon__"}),({",",":"}));
 
-        return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+
-	  loc_encode(t, m, "html")+"</option>\n";
-     },current,m)*"");
+        return "<option value=\"" + s + "\" " +
+	  (s==c ? " selected=\"selected\"":"") + ">" +
+	  loc_encode(t, m, "html") + "</option>\n";
+     }, tc, m)*"");
 
+     if (m->select_override) {
+       m2->id = m->id + "-field";
+       m2->onchange =
+	 "var selector = document.getElementById('" + m->id + "-selector');"
+	 "if (selector) { "
+	 "  selector.value = this.value;"
+	 "  if (selector.value != this.value) {"
+	 "    selector.value = '" + m->select_override + "';"
+	 "  }"
+	 "}";
+       m2->value = "";
+       if (current == m->select_none) {
+	 m2->disabled = "yes";
+       } else if (current != m->select_override) {
+	 m2->value = current;
+       }
+
+       selector +=
+	 "&nbsp;" + make_tag("input", m2) +
+	 "<input type='hidden' name='__select_override_vars' "
+	 "       value='" + m2->name + ":" + m->select_override + "' />";
+     }
+
+     return selector;
 
    case "select_multiple":
      if(!m->choices && m->options)
@@ -381,7 +589,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 		       ({"\\,", "\\:"}),
 		       ({"__CoMma__", "__CoLon__"}));
 
-    return make_container("select", m2, map(m->choices/",",
+    return make_container("select", m2, map(m->choices/"," - ({ "" }),
 				 lambda(string s, array c, mapping m) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
@@ -420,7 +628,11 @@ string compress_state(mapping state)
   state = copy_value(state);
   m_delete(state,"_state");
   m_delete(state,"next_page");
+  m_delete(state,"next_page.x");
+  m_delete(state,"next_page.y");
   m_delete(state,"prev_page");
+  m_delete(state,"prev_page.x");
+  m_delete(state,"prev_page.y");
   m_delete(state,"help");
   m_delete(state,"action");
   m_delete(state,"unique");
@@ -437,7 +649,7 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string|Parser t, mapping m, string contents,
+string parse_wizard_help(string|Parser.HTML t, mapping m, string contents,
 			 RequestID id, void|mapping v)
 {
   if(v)
@@ -503,14 +715,27 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
   //  attributes included.
   string method = this_object()->wizard_method || "method=\"get\"";
 
+#ifdef USE_WIZARD_COOKIE
+  // FIXME: If this is enabled there may be trouble with the state
+  // getting mixed up between wizards when one wizard initiates
+  // another. The state should be extended with a wizard identifier
+  // then.
+  string state_form = "";
+  id->add_response_header("Set-Cookie",
+			  sprintf("WizardState=%s; path=/",
+				  compress_state(id->real_variables) - "\r\n"));
+#else
+  string state_form = "<input type=\"hidden\" name=\"_state\" value=\""+
+		      compress_state(id->real_variables)+"\" />\n";
+#endif
+  
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n" +
 	 (stringp (id->variables->action) ?
 	  "<input type=\"hidden\" name=\"action\" value=\""+id->variables->action+"\" />\n" :
 	  "") +
 	 "<input type=\"hidden\" name=\"_page\" value=\""+page+"\" />\n"
-	 "<input type=\"hidden\" name=\"_state\" value=\""+
-	 compress_state(id->real_variables)+"\" />\n"
+	 +state_form+
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
 	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
 	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
@@ -549,7 +774,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	     LABEL(ok_label, LOCALE(55, "OK"))+" \" />&nbsp;&nbsp;"
 	     :"")+
 	    "\n&nbsp;&nbsp;<input type=\"submit\" name=\"cancel\" value=\" "+
-	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp")
+	    LABEL(cancel_label, LOCALE(56, "Cancel"))+" \" />&nbsp;&nbsp;")
 	  :"\n         <input type=\"submit\" name=\"cancel\" value=\" "+
 	  LABEL(ok_label, LOCALE(55, "OK"))+" \" />")+
 	 "</td><td width=\"33%\" align=\"right\">"+
@@ -568,7 +793,72 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 }
 
 
+mapping|string wizard_cancel_exit (mapping state, string default_return_url,
+				   RequestID id)
+{
+  return http_redirect ((state->cancel_url && state->cancel_url[0]) ||
+			default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
+mapping|string wizard_done_exit (mapping state, string default_return_url,
+				 RequestID id)
+{
+  return http_redirect ((state->done_url && state->done_url[0]) ||
+			default_return_url || id->not_query,
+			// id->conf check is probably just old crud.
+			id->conf && id);
+}
+
 #define PAGE(X)  ((string)(((int)v->_page)+(X)))
+
+mapping(string:array) wizard_get_state (RequestID id)
+//! Decodes the wizard state and incorporates it into
+//! id->real_variables, letting existing variables override those from
+//! the wizard state. Returns the wizard state without overrides.
+{
+  mapping(string:array) s = id->misc->wizard_state;
+  if (s) return s;
+
+  string state_str;
+#ifdef USE_WIZARD_COOKIE
+  state_str = id->real_variables->_page && id->cookies->WizardState;
+#else
+  state_str = id->real_variables->_state && id->real_variables->_state[0];
+#endif
+  if (state_str)
+    s = decompress_state(state_str);
+  else {
+    s = ([]);
+    if (this->return_to_referrer && !id->real_variables->_wiz_ret &&
+	id->referer && sizeof (id->referer)) {
+      // Define return_to_referrer to use the Referer to go back to
+      // the previous place after the wizard is done. This currently
+      // doesn't use a stack, so if we're coming here from another
+      // wizard return then we ignore the referrer so that the
+      // ordinary "cancel" url is used instead.
+      //
+      // Note that this only works with the assumption that the
+      // referring wizard (or other page) doesn't retain the _wiz_ret
+      // variable in later links.
+      string referrer = id->referer[0];
+      if (!has_value (referrer, "&_wiz_ret=") &&
+	  !has_value (referrer, "?_wiz_ret=")) {
+	if (has_value (referrer, "?")) referrer += "&_wiz_ret=";
+	else referrer += "?_wiz_ret=";
+      }
+      s->cancel_url = s->done_url = ({referrer});
+    }
+  }
+
+  mapping(string:array) vars = id->real_variables;
+  foreach(s; string q; array var)
+    if (!vars[q])
+      vars[q] = var;
+
+  return id->misc->wizard_state = s;
+}
 
 mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 {
@@ -576,24 +866,43 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   int offset = 1;
   string wiz_name = "page_";
 
-  mapping s = decompress_state(id->real_variables->_state
-			       && id->real_variables->_state[0]);
+  mapping(string:array) s = wizard_get_state (id);
 
-  if(id->real_variables->cancel)
-     return http_redirect((s->cancel_url&&s->cancel_url[0])
-			  || cancel || id->not_query,
-			  @(id->conf?({id}):({})));
+  if(id->real_variables->cancel || id->real_variables["cancel.x"])
+    return wizard_cancel_exit (s, cancel, id);
 
-  mapping å = id->real_variables;
-  foreach(indices(s), string q)
-     å[q] = å[q]||s[q];
+  //  Handle double posting of variables in select override widgets
+  foreach(Array.uniq(id->real_variables->__select_override_vars || ({ }) ),
+	  string override_combo) {
+    [string override_var, string override_marker] = override_combo / ":";
+    array(string) override_info = id->real_variables[override_var];
+    if (sizeof(override_info) > 1) {
+      string override_value = override_info[0];
+      if (override_value != override_info[1]) {
+	if (override_value == override_marker) {
+	  override_value = override_info[1];
+#if 0
+	} else if (override_info[1] == override_marker) {
+	  /* Already ok. */
+	} else {
+	  /* Ambiguous case. Warn? */
+#endif /* 0 */
+	}
+      }
+      id->real_variables[override_var] = ({ override_value });
+    }
+  }
 
   FakedVariables v=id->variables;
+
+  int current_page = (int) v->_page;
 
   mapping(string:array) automaton = this_object()->wizard_automaton;
   function dispatcher;
   string oldpage, page_name;
-  if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
+  if (automaton && (!v->_page || v->next_page || v["next_page.x"] ||
+		    v->prev_page || v["prev_page.x"] ||
+		    v->ok || v["ok.x"])) {
     if (!v->_page && automaton->start) v->_page = "start";
     oldpage = v->_page;
     if (v->_page) {
@@ -611,14 +920,20 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
 	// Redirect takes precedence over the user choice.
 	m_delete (v, "next_page");
+	m_delete (v, "next_page.x");
+	m_delete (v, "next_page.y");
 	m_delete (v, "prev_page");
+	m_delete (v, "prev_page.x");
+	m_delete (v, "prev_page.y");
 	m_delete (v, "ok");
+	m_delete (v, "ok.x");
+	m_delete (v, "ok.y");
 	v->_page = redirect;
       }
     }
   }
 
-  if(v->next_page)
+  if(v->next_page || v["next_page.x"])
   {
     function c=this_object()["verify_"+v->_page];
     int fail = 0;
@@ -632,13 +947,13 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       DEBUGMSG ("Wizard: Going to next page\n");
     }
   }
-  else if(v->prev_page)
+  else if(v->prev_page || v["prev_page.x"])
   {
     v->_page = automaton ? v->_prev : PAGE(-1);
     DEBUGMSG ("Wizard: Going to previous page\n");
     offset=-1;
   }
-  else if(v->ok)
+  else if(v->ok || v["ok.x"])
   {
     function c=this_object()["verify_"+v->_page];
     int fail = 0;
@@ -657,9 +972,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  res = c(id,@args);
 	}
 	if(res != -1)
-	  return (res
-		  || http_redirect(s->cancel_url||cancel||id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
 	DEBUGMSG ("Wizard: -1 from wizard_done; continuing\n");
       }
   }
@@ -694,9 +1007,8 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			 "Probably infinite redirect loop in automaton.";
 
       if (v->_page == "cancel") {
-	string to = s->cancel_url||cancel||id->not_query;
-	DEBUGMSG ("Wizard: Canceling with redirect to " + to + "\n");
-	return http_redirect(to, @(id->conf?({id}):({})));
+	DEBUGMSG ("Wizard: Canceling\n");
+	return wizard_cancel_exit (s, cancel, id);
       }
 
       if (!v->_page) v->_page = "done", oldpage = 0;
@@ -708,18 +1020,10 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if (page_state && v->_page != oldpage) {
 	redirect = page_state[0];
 	if (functionp (redirect)) {
-	  if (dispatcher == redirect)
-	    // The previous page state had the same dispatcher as this
-	    // one; it's unnecessary to re-run it since it shouldn't
-	    // change its mind. This is also important since most of
-	    // the heavy work is often done there.
-	    dispatcher = redirect = 0;
-	  else {
-	    dispatcher = redirect;
-	    DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			       dispatcher, v->_page));
-	    redirect = dispatcher (id, v->_page, @args);
-	  }
+	  dispatcher = redirect;
+	  DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+			     dispatcher, v->_page));
+	  redirect = dispatcher (id, v->_page, @args);
 	}
 	else dispatcher = 0;
       }
@@ -735,8 +1039,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	  return "Internal error in wizard code: No wizard_done function.";
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	data = donefn (id, @args);
-	if (!data) return http_redirect(cancel||id->not_query,
-					@(id->conf?({id}):({})));
+	if (!data) return wizard_done_exit (s, cancel, id);
 	wiz_name = "done";
 	break;
       }
@@ -775,7 +1078,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       }
     }
   }
-  else
+  else {
     for(; !data; v->_page=PAGE(offset))
     {
       function pg=this_object()[wiz_name+((int)v->_page)];
@@ -784,16 +1087,26 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Running wizard_done\n");
 	mixed res = c(id,@args);
 	if(res != -1)
-	  return (res
-		  || http_redirect(cancel||id->not_query,
-				   @(id->conf?({id}):({}))));
+	  return res || wizard_done_exit (s, cancel, id);
       }
       if(!pg) return "Internal error in wizard code: Invalid page ("+v->_page+")!";
       DEBUGMSG (sprintf ("Wizard: Running page function %O\n", pg));
       if(data = pg(id,@args)) break;
       DEBUGMSG ("Wizard: No data from page function; going to " +
 		(offset > 0 ? "next" : "previous") + " page\n");
+
+      //  If going backwards and we end up on a negative page (e.g. due to
+      //  intermediate pages returning 0) we remain on current page. This is
+      //  done so that wizards which skip pages in the beginning won't result
+      //  in wizard_done() when trying to step into hidden pages.
+      if ((offset < 0) && ((int) v->_page <= 0)) {
+	v->_page = current_page;
+	pg = this_object()[wiz_name + ((int) v->_page)];
+	if (pg && (data = pg(id, @args)))
+	  break;
+      }
     }
+  }
 
   // If it's a mapping we can presume it is an http response, and return
   // it directly.
@@ -824,7 +1137,7 @@ mapping get_actions(RequestID id, string base,string dir, array args)
   //
   //  if(id->pragma["no-cache"]) wizards=([]);
   
-  foreach(get_dir(dir), string act)
+  foreach(get_dir(dir) - ({ ".distignore" }), string act)
   {
     mixed err;
     object e;
@@ -836,12 +1149,16 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
 	sscanf(name, "%s//%s", sm, name);
-	if(!acts[sm]) acts[sm] = ({ ([]) });
+	if(!acts[sm]) acts[sm] = ({ });
 
 	if(id->misc->raw_wizard_actions)
+	{
+	  // This is probably dead code.
+	  if(!sizeof(acts[sm])) acts[sm] += ({ ([]) });
  	  acts[sm][0][name]=
  	    ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
  		  (get_wizard(act,dir,@args)->doc||"") });
+	}
  	else
 	  acts[sm]+=
 	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
@@ -874,7 +1191,7 @@ string focused_wizard_menu;
 mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
 {
   mapping acts;
-  
+
   //  Cannot clear wizard cache since it will trigger massive recompiles of
   //  wizards from inside SiteBuilder. It also breaks wizards which use
   //  persistent storage.
@@ -894,9 +1211,17 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
       if(id->misc->raw_wizard_actions)
 	return acts[id->variables->sm];
       string res;
-      res= ("<table cellpadding=\"3\"><tr><td valign=\"top\" bgcolor=\"#eeeeee\">"+
-	    act_describe_submenues(indices(acts),base,id->variables->sm)+
-	    "</td>\n\n<td valign=\"top\">"+
+      string submenus =
+	act_describe_submenues(indices(acts),base,id->variables->sm);
+      if (sizeof(submenus)) {
+	submenus =
+	  "<td valign='top' bgcolor='#eeeeee'>" +
+	  submenus +
+	  "</td>\n";
+      }
+      res= ("<table cellpadding=\"3\"><tr>" +
+	    submenus +
+	    "<td valign=\"top\">"+
 	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=\"+3\">"+
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
@@ -1060,21 +1385,21 @@ string html_notice(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Notice:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
-        +"err_1.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
+        +"err_1.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
 string html_warning(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Warning:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
-        +"err_2.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
+        +"err_2.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
 string html_error(string notice, RequestID id)
 {
   return ("<table><tr><td valign=\"top\"><img \nalt=\"Error:\" src=\""+
         (id->conf?"/internal-roxen-":"/image/")
-        +"err_3.gif\" /></td><td valign=\"top\">"+notice+"</td></tr></table>");
+        +"err_3.gif\" />&nbsp;&nbsp;</td><td valign=\"top\">"+notice+"</td></tr></table>");
 }
 
 string html_border(string what, int|void width, int|void ww,

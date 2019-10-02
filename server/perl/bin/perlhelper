@@ -2,7 +2,7 @@
 
 # Perl helper script for Roxen Webserver. By Leif Stensson.
 #
-# $Id: perlhelper,v 1.4 2001/03/13 14:18:10 leif Exp $
+# $Id$
 
 package Roxen::Internal;
  
@@ -271,16 +271,15 @@ package Roxen::_helper;
 
 use IO::Handle;
 
-my ($infd, $outfd) = (-1, -1);
 my ($cmdin ) = (new IO::Handle);
 my ($cmdout) = (new IO::Handle);
 
-for(; $ARGV[0] =~ /^-/; shift @ARGV)
-{ if ($ARGV[0] =~ /^--cmdsocket=(\d+)$/)
-   { $infd = $1; $outfd = $1;}
-  else
-   { die "Invalid option: $ARGV[0]\n";}
-}
+#  for(; $ARGV[0] =~ /^-/; shift @ARGV)
+#  { if ($ARGV[0] =~ /^--cmdsocket=(\d+)$/)
+#     { $infd = $1; $outfd = $1;}
+#    else
+#     { die "Invalid option: $ARGV[0]\n";}
+#  }
 
 sub diag
 {
@@ -364,13 +363,17 @@ tie(*STDOUT, 'Roxen::TieStdio');
 
 # Main loop.
 { my ($cmd, $var, $len, $data) = ();
-  my ($starttime, $runcount) = (time, 0);
+  my ($starttime, $runcount)   = (time, 0);
 
-  $cmdin->fdopen($infd, "r") or die "Unable to open command input.\n";
-  $cmdout->fdopen($outfd, "w") or die "Unable to open command output.\n";
+  $cmdin->fdopen(0, "r") or die "Unable to open command input.\n";
+  $cmdout->fdopen(1, "w") or die "Unable to open command output.\n";
   $cmdout->autoflush(1);
 
   $Roxen::Request::req_req = Roxen::Request->new();
+
+  %Roxen::Request::req_config = ( "timeout"     => 180,
+                                  "lifelength"  => 300
+                                );
 
   while (1)
   { $Roxen::Request::req_state = 0;
@@ -397,7 +400,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
     { $var = Getdata(1); $data = Getdata(3);
       if ($var eq "libdir" and $Roxen::Request::req_config{$var} ne $data)
         { push @INC, $data;}
-      if ($var eq "cd")
+      elsif ($var eq "cd")
         { chdir $data;}
       $Roxen::Request::req_config{$var} = $data;
     }
@@ -412,7 +415,11 @@ tie(*STDOUT, 'Roxen::TieStdio');
       $Roxen::Request::req_returncode = 200;
       $data = Getdata(3);
       alarm 180; # 3 minutes.
+      if ($Roxen::Request::req_config{timeout} >=  30 and
+          $Roxen::Request::req_config{timeout} <= 900)
+        { alarm 0+$Roxen::Request::req_config{timeout};}
       $Roxen::Request::req_state = 5423522; # Magic number.
+      $ENV{GATEWAY_INTERFACE} = "CGI-PerlEx"; # Makes CGI.pm happier.
       if ($cmd eq "C")
       { my ($cmdin, $cmdout, $cmd);
         eval $data;
@@ -431,7 +438,8 @@ tie(*STDOUT, 'Roxen::TieStdio');
         { Sendreply(sprintf "RETURNCODE=%d", $Roxen::Request::req_returncode);}
       Senddata($Roxen::Request::req_outbuf);
 
-      last if $starttime+300 < time; # Timeout after 5 minutes.
+      last if $starttime+$Roxen::Request::req_config{lifelength} < time;
+      last if $starttime+1800 < time; # Final timeout after 30 minutes.
 
       $Roxen::Request::req_req = Roxen::Request->new();
     }
@@ -441,7 +449,7 @@ tie(*STDOUT, 'Roxen::TieStdio');
       if ($cmd eq "P")
         { Sendreply(""); }
       elsif ($cmd eq "V")
-        { Sendreply('Roxen Perl Helper: $Id: perlhelper,v 1.4 2001/03/13 14:18:10 leif Exp $'); }
+        { Sendreply('Roxen Perl Helper: $Id$'); }
       else
         { die "perlhelper $$/MLQQ: exiting.\n"; }
     }

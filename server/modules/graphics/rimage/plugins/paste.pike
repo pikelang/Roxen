@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc = "paste the 'image' slot over the current channel at xpos, ypos, using 'alpha' (defaults to solid) as a transparency mask";
 

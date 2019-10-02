@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.5 2000/09/09 03:11:56 lange Exp $
+ * $Id$
  */
 
-#if constant(_Crypto) && constant(Crypto.dsa)
+#if constant (Nettle)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -45,13 +45,13 @@ mixed verify_0(object id, object mc)
       LOCALE(135, "Invalid key size.");
     return 1;
   }
-  object file = Stdio.File();
+  object file;
   object privs = Privs("Storing private DSA key.");
-  if (!file->open(id->variables->key_file, "wct", 0600))
+  if (!(file = lopen(id->variables->key_file, "wct", 0600)))
   {
     id->variables->_error =
       "Could not open file: "
-      + (strerror(file->errno()) || (string) file->errno())
+      + (strerror(errno()) || (string) errno())
       + ".";
     privs = 0;
     return 1;
@@ -59,8 +59,8 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object dsa = Crypto.dsa();
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
+  Crypto.DSA dsa = Crypto.DSA();
+  dsa->use_random(Crypto.Random.random_string);
   dsa->generate_parameters(key_size);
   dsa->generate_key();
 
@@ -77,13 +77,14 @@ mixed verify_0(object id, object mc)
       + ".";
     return 1;
   }
-  destruct(file);
+  file->close();
 
-  if (!file_stat(id->variables->key_file))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     id->variables->_error = "File not found.";
     return 1;
   }
+  file->close();
   return 0;
 }
 
@@ -110,15 +111,15 @@ mixed verify_2(object id, object mc)
 
 mixed page_3(object id, object mc)
 {
-  object file = Stdio.File();
+  object file;
 
   object privs = Privs("Reading private DSA key");
-  if (!file->open(id->variables->key_file, "r"))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     privs = 0;
 
     return "<font color='red'>Could not open key file: "
-      + strerror(file->errno()) + "\n</font>";
+      + strerror(errno()) + "\n</font>";
   }
   privs = 0;
   string s = file->read(0x10000);
@@ -137,7 +138,7 @@ mixed page_3(object id, object mc)
   if (!dsa)
     return "<font color='red'>Invalid key.\n</font>";
 
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
+  dsa->use_random(Crypto.Random.random_string);
 
   mapping attrs = ([]);
   string attr;
@@ -149,7 +150,7 @@ mixed page_3(object id, object mc)
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (id->variables[attr]) {
-      attrs[attr] = String.trim_whites (id->variables[attr]);
+      attrs[attr] = global.String.trim_whites (id->variables[attr]);
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
@@ -192,14 +193,14 @@ mixed verify_3(object id, object mc)
 {
   if (sizeof(id->variables->cert_file))
   {
-    object file = Stdio.File();
-    if (!file->open(id->variables->cert_file, "wct"))
+    object file;
+    if (!(file = lopen(id->variables->cert_file, "wct")))
     {
       /* FIXME: Should we use a verify function, to get
        * better error handling? */
       id->variables->_error =
 	"Could not open certificate file: "
-	+ (strerror(file->errno()) || (string) file->errno())
+	+ (strerror(errno()) || (string) errno())
 	+ ".";
       return 1;
     }
@@ -221,7 +222,7 @@ mixed wizard_done(object id, object mc)
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
 				     "</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->certificate),
-				     combine_path(getcwd(),
+				     combine_path(getcwd(), "../local", 
 						  id->variables->cert_file)) );
 }
 
@@ -229,4 +230,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.dsa) */
+#endif /* constant (Nettle) */

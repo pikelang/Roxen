@@ -1,14 +1,14 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
 inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.19 2001/03/03 07:15:13 per Exp $";
+string cvs_version = "$Id$";
 int thread_safe=1;
 constant module_unique = 0;
 
-static inherit "http";
+protected inherit "http";
 
 object servlet;
 
@@ -29,7 +29,7 @@ void stop()
   }
 }
 
-static mapping(string:string) make_initparam_mapping()
+protected mapping(string:string) make_initparam_mapping()
 {
   mapping(string:string) p = ([]);
   string n, v;
@@ -84,9 +84,9 @@ string query_name()
 
 class RXMLParseWrapper
 {
-  static object _file;
-  static object _id;
-  static string _data;
+  protected object _file;
+  protected object _id;
+  protected string _data;
 
   int write(string data)
   {
@@ -125,10 +125,11 @@ mixed find_file( string f, RequestID id )
     id->my_fd->set_read_callback(0);
     id->my_fd->set_close_callback(0);
     id->my_fd->set_blocking();
+    id->misc->servlet_path = query("location");
     id->misc->path_info = f;
-    id->misc->mountpoint = query("location");
+    id->misc->mountpoint = "";
     if(query("rxml"))
-      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
     servlet->service(id);
   }
 
@@ -149,7 +150,7 @@ mixed handle_file_extension(object o, string e, RequestID id)
     id->misc->path_info = id->not_query;
     id->misc->mountpoint = "/";
     if(query("rxml"))
-      id->my_fd = RXMLParseWrapper(id->my_fd, id);
+      id->my_fd = (object)RXMLParseWrapper(id->my_fd, id);
     servlet->service(id);
   }
 

@@ -1,11 +1,6 @@
-<gtext scale='0.7' font="franklin gothic demi">Welcome to Roxen WebServer &roxen.base-version;</gtext>
-<p>
- If your fonts are way too large (or small, depending on personal
- preferences), please adjust the unicode font size in your
- browser. This administration interface uses UTF-8, and at least
- netscape has a different font size for unicode fonts (defaulting to 18)
- than normal fonts (defaulting to 12).
-</p>
+<gtext scale='0.7' font="franklin gothic demi">Welcome to &roxen.product-name;</gtext>
+<!--
 <p>
 <gtext href="whatsnew.html" scale="0.6" fgcolor="&usr.linkcolor;" font="franklin gothic demi">What's new?</gtext>
 </p>
+-->

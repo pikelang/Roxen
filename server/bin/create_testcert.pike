@@ -35,9 +35,8 @@ int main(int argc, array(string) argv)
 		    (attrs[attr]) ]) });
   }
 
-  object rsa = Crypto.rsa();
-  rsa->generate_key( key_size,
-                     Crypto.randomness.reasonably_random()->read );
+  Crypto.RSA rsa = Crypto.RSA();
+  rsa->generate_key( key_size, Crypto.Random.random_string );
   /* Create a plain X.509 v1 certificate, without any extensions */
   string cert = Tools.X509
     .make_selfsigned_rsa_certificate(rsa, 24 * 3600 * ttl,name);

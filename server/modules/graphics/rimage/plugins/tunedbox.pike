@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc=" corners='col1,col2,col3,col4' xpos= ypos= width= height=";
 void render( mapping args, mapping this, string channel, object id, object m)

@@ -1,9 +1,9 @@
 /*
  * By Francesco Chemolli
- * This is a Roxen module. Copyright © 2000, Roxen IS.
+ * This is a Roxen module. Copyright © 2000 - 2009, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byhostname.pike,v 1.1 2000/05/15 20:00:12 kinkie Exp $";
+constant cvs_version="$Id$";
 
 #include <module.h>
 inherit "throttlelib";

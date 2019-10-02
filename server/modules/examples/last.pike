@@ -1,7 +1,9 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: last.pike,v 1.2 2000/08/19 08:52:40 per Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_LAST;
 constant module_name = "RefDoc for MODULE_LAST";
 constant module_doc = "This module does nothing, but its inlined "

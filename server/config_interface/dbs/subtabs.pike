@@ -4,10 +4,37 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+//! Page definitions.
+//! @array
+//!   @elem array(string) 0..
+//!     Page definition.
+//!     @array
+//!       @elem string 0
+//!         Page identifier.
+//!       @elem string 1
+//!         URL.
+//!       @elem string 2
+//!         Permissions.
+//!       @elem zero 3
+//!         Userwants (disabled).
+//!       @elem string 4
+//!         Title.
+//!     @endarray
+//! @endarray
 array pages =
 ({
-  ({ "dbs", "dbs.html", "Edit Global Variables", 0, LOCALE(164, "Databases") }),
-  ({ "status",      "",   "View Settings",   0,  LOCALE(372, "MySQL status") }),
+  ({ "dbs",         "./", "View Settings", 0, LOCALE(164, "Databases") }),
+  ({ "permissions", "permissions.html", "View Settings", 0,
+     LOCALE(550, "Site Permissions") }),
+  ({ "backups",      "backups.html",   "Edit Global Variables",   0,
+     LOCALE(465, "Database Backups") }),
+  ({ "schedules",    "schedules.html",   "Edit Global Variables",   0,
+     LOCALE(1026, "Backup schedules") }),
+#ifdef MORE_DB_OPTS
+  ({ "maintenance", "maintenance.html", "Edit Global Variables", 0,
+     "MySQL Maintenance" }),
+#endif
+  ({ "status",      "status.html",   "View Settings",   0,  LOCALE(372, "MySQL status") }),
 });
 
 string parse( RequestID id )
@@ -15,10 +42,10 @@ string parse( RequestID id )
   string q="";
   while( id->misc->orig )  id = id->misc->orig;
   q = (id->not_query/"/")[-1];
-  if( q == "index.html" )
-    q = "";
-  if( q == "whatsnew.html" )
-    q = "";
+  if( q == "index.html" || q == "browser.pike" || q == "edit_group.pike" )
+    q = "./";
+  if( q == "restore_db.pike" )
+    q = "backups.html";
   string res="";
   foreach( pages, array page )
   {
@@ -38,7 +65,7 @@ string parse( RequestID id )
     if( page == pages[0] )       ea = "first ";
     if( page == pages[-1] )      ea = "last=30 ";
 
-    res += "<tab "+ea+"href='"+page[1]+"'"+((q!="" && page[1] != "") || (page[1] == q)?" selected='1'":"")+">" +
+    res += "<tab "+ea+"href='"+page[1]+"'"+((page[1] == q)?" selected='1'":"")+">" +
       page[4]+"</tab>" + tpost;
   }
 

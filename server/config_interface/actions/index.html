@@ -1,6 +1,7 @@
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 <translate id="196" variable="var.tasks_title" 
  project="roxen_config">Tasks</translate>
-<left-menu title="&var.tasks_title;"/>
+<!-- <left-menu title="&var.tasks_title;"/> -->
 
 <topmenu base="../" selected="actions"/>
 
@@ -8,7 +9,7 @@
 <cv-split>
 <subtablist width="100%" preparse="" >
   <st-tabs><insert file="tablist.pike" nocache="" /></st-tabs>
-  <st-page><blockquote><br />
+  <st-page>
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if not variable="form.cancel">
       <if variable="form.action">
@@ -23,8 +24,8 @@
 	<contents/></blockquote>
       </define>
       <eval><insert file="list_actions.pike" nocache="" /></eval>
-    </else>
-  </blockquote></st-page>
+    </if>
+  </st-page>
 </subtablist>
 </cv-split>
 </content>

@@ -17,8 +17,8 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.17 2000/12/18 17:10:04 jhs Exp $";
-constant _id = ({ "cs", "czech", "-Bèesky" });-A
+constant cvs_version = "$Id$";
+constant _id = ({ "cs", "czech", "èesky" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 
 constant languages=([
@@ -151,7 +151,7 @@ string number(int num)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

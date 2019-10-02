@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.2 2001/04/08 20:41:35 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";
@@ -37,12 +37,16 @@ string do_highlighting(string txt, RequestID id) {
   return p->finish(txt)->read();
 }
 
-mapping filter(mapping result, RequestID id) {
+mapping|void filter(mapping result, RequestID id) {
+  if (!result) return;
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result                   // If nobody had anything to say, neither do we.
      || !id->variables->highlight // No highlight?
      || id->variables->highlight==""
      || !stringp(result->data)    // Got a file object. Hardly ever happens anyway.
-     || !glob("text/*", result->type) )
+     || !glob("text/*", type) )
     return 0; // Signal that we didn't rewrite the result for good measure.
 
   result->data = do_highlighting(result->data, id);

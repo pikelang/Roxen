@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 //
 
 inherit "module";
@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.22 2001/03/08 14:35:45 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -21,7 +21,7 @@ int nid=1;
 
 string store( mapping what )
 {
-  call_out( m_delete, 3600*1, cache, (string)nid );
+  call_out( m_delete, 60*query("cache_timeout"), cache, (string)nid );
   cache[ (string)nid ] = what;
 //   werror("store -> "+nid+"\n");
   return (string)nid++;
@@ -86,9 +86,10 @@ class Page
     return res;
   }
 
-  string tag_button(string t, mapping m, RequestID id)
+  string tag_wizard_button(string t, mapping m, RequestID id)
   {
-    mapping args = ([]);
+    mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
+			 "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
@@ -134,7 +135,8 @@ class Page
 
   string container_dbutton(string t, mapping m, string c, RequestID id)
   {
-    mapping args = ([]);
+    mapping args = m - (["id": 1, "page": 1, "href": 1, "next": 1, "prev": 1,
+			 "image": 1, "gbutton_title": 1, "title": 1]);
     if(m->page)
       args->name  = "goto_page_"+m->page+"/"+m->id;
     else if(m->href)
@@ -305,6 +307,10 @@ class AWizard
   string internal_tag_page(string t, mapping args, string c, int l,
                            RequestID id)
   {
+    //  Replace conflicting tag name "button" in the content to make it local
+    //  to this element.
+    c = replace(c, ({ "<button", "<rxml:button" }),
+		   ({ "<wizard-button", "<rxml:wizard-button" }) );
     args->num = last_page;
     if(!args->name) args->name = (string)last_page;
     pages += ({ Page( args, c, button_id, button_code ) });
@@ -359,6 +365,7 @@ class AWizard
     object page, last_page;
     int new_page;
     string contents, goto;
+    int cur_page_num = (int) v->_page_num;
 
 
     if( v->_____state)
@@ -439,10 +446,21 @@ class AWizard
 
     if(error)
     {
-      if(error->page && error->page != page->name)
+      if(error->page && error->page != page->name &&
+	 !(id->misc->awizard_in_error_page &&
+	   id->misc->awizard_in_error_page[cur_page_num]))
       {
 	v["goto_page_"+error->page+"/0"]=1;
-	return handle( id );
+	// The following is a safeguard to prevent infinite recursion
+	// if the awizard pages are improperly constructed. This code
+	// doesn't work perfectly if <awizard> tags are nested, but
+	// it's assumed elsewhere that that never happens.
+	if (!id->misc->awizard_in_error_page)
+	  id->misc->awizard_in_error_page = (<>);
+	id->misc->awizard_in_error_page[cur_page_num] = 1;
+	mapping|string res = handle( id );
+	id->misc->awizard_in_error_page[cur_page_num] = 0;
+	return res;
       } else if(error->href) {
 	return http_redirect(fix_relative(error->href,id), id);
       } else if(!error->page)
@@ -463,7 +481,11 @@ class AWizard
 
 void create()
 {
-  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_DEVELOPER, "");
+  defvar("cache_timeout", 60, "Cache timeout", TYPE_INT|VAR_MORE,
+	 "Timeout in minutes for the internal state and data cache.");
+
+  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_MORE,
+	 "Use GET instead of POST in the form, to make debugging easier.");
 }
 
 
@@ -489,7 +511,7 @@ mapping(string:AWizard) wizards = ([]);
 
 PROXY_TAG (goto);
 PROXY_TAG (wizard_buttons);
-PROXY_TAG (button);
+PROXY_TAG (wizard_button);
 PROXY_CONTAINER (dbutton);
 PROXY_CONTAINER (warn);
 PROXY_CONTAINER (notice);
@@ -515,7 +537,7 @@ mixed container_awizard(string tagname, mapping arguments,
                         string contents, RequestID id)
 {
   mixed res;
-
+  
   if(!wizards[id->not_query])
     wizards[ id->not_query ]=AWizard(arguments, contents, id, this_object() );
   else
@@ -538,88 +560,88 @@ mixed container_awizard(string tagname, mapping arguments,
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"awizard":({#"<desc tag>
+"awizard":({#"<desc type='tag'>
 
 </desc>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
 
 </attr>",
 
-(["page":({#"<desc tag>
+(["page":({#"<desc type='tag'>
  Creates a new page in the wizard.
 </desc>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  A name for the page.
 </attr>",
 
-(["verify":#"<desc cont>
+(["verify":#"<desc type='cont'>
  RXML code to be executed when leaving the page.
 </desc>",
 
-"button":#"<desc tag>
+"button":#"<desc type='tag'>
  Creates a button.
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
  Send the user to this page when the button is pressed.
 </attr>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
  Put a name on the button.
 </attr>
 
-<attr name=image value=path>
+<attr name='image' value='path'>
  Put an image on the button.
 </attr>",
 
-"ebutton":#"<desc cont>
- A more advanved button. When pressed the content of this container
+"ebutton":#"<desc type='cont'>
+ A more advanced button. When pressed the content of this container
  will be parsed before the user are allowed to leave the page.
 </desc>
 
-<attr name=href value=URL>
+<attr name='href' value='URL'>
  Send the user to this URL.
 </attr>
 
-<attr name=title value=string>
+<attr name='title' value='string'>
  Put a name on the button.
 </attr>
 
-<attr name=image value=path>
+<attr name='image' value='path'>
  Put an image on the button.
 </attr>",
 
-"come-from-page":#"<desc cont>
+"come-from-page":#"<desc type='cont'>
 
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
 
 </attr>",
 
-"goto":#"<desc tag>
+"goto":#"<desc type='tag'>
 
 </desc>
 
-<attr name=page value=string>
+<attr name='page' value='string'>
 
 </attr>
 
-<attr name=href value=URL>
+<attr name='href' value='URL'>
 
 </attr>",
 
-"warn":#"<desc cont>
+"warn":#"<desc type='cont'>
 
 </desc>",
 
-"notice":#"<desc cont>
+"notice":#"<desc type='cont'>
 
 </desc>",
 
-"error":#"<desc cont>
+"error":#"<desc type='cont'>
 
 </desc>",])
 	 })])

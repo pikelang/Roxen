@@ -1,3 +1,6 @@
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2009, Roxen IS.
+
 #include <config.h>
 inherit "imagedir" : id;
 
@@ -27,7 +30,12 @@ class myFont
   inherit id::myFont;
   object mytar; // don't type, CIF use this file.
 
-  static mapping(string:Image.Image) load_char( string c )
+  string _sprintf()
+  {
+    return sprintf( "FontTar(%O,%d)", path, height() );
+  }
+
+  protected mapping(string:Image.Image) load_char( string c )
   {
 #ifdef THREADS
     object key = lock->lock();
@@ -70,20 +78,21 @@ void update_font_list()
   {
     foreach( get_dir( dir )||({}), string pd )
     {
-      if( file_stat( dir+pd )[ ST_SIZE ] == -2 ) // isdir
-        rec_find_in_dir( dir+pd+"/" );
+      string fpath = combine_path(dir, pd);
+      if( Stdio.is_dir( fpath ) )
+        rec_find_in_dir( fpath );
       else if( glob( "*.tar", pd ) )
       {
-        Filesystem.Tar t = open_tar( dir+pd );
+        Filesystem.Tar t = open_tar( fpath );
         if( Stdio.File f = t->open( "fontinfo", "r" ) )
-          font_list[font_name( f->read() )] = dir+pd;
+          font_list[font_name( f->read() )] = fpath;
         else if( Stdio.File f = t->open( "fontname", "r" ) )
-          font_list[font_name( f->read() )] = dir+pd;
+          font_list[font_name( f->read() )] = fpath;
         else
           destruct( t );
       }
     }
   };
   foreach(roxen->query("font_dirs"), string dir)
-    rec_find_in_dir( dir );
+    rec_find_in_dir( roxen_path (dir) );
 }

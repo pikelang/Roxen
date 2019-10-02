@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.18 2000/09/10 14:07:43 nilsson Exp $";
+constant cvs_version = "$Id$";
 
 #include <module.h>
 inherit "module";
@@ -175,7 +175,7 @@ array parse_cern_map_line(string line)
 array parse_ncsa_map_line(string line)
 {
   string Url;
-  int x, y, x1, y1, r;
+  int x, y, x1, y1;
 
   line = (replace(line, "\t", "")/" " - ({""})) * "";
 
@@ -316,9 +316,6 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
   if(!file_stat(file))
     return 0;
 
-
-  int depth;
-  
   if(!(f=open(file, "r")))
     return 0;
   f->seek(3);
@@ -566,8 +563,8 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
     if(sscanf(" "+map_file_name+" ", "%s$%[a-zA-Z_]%s",pre, varname, rest)==3)
     {
       map_file_name = (pre + 
-		       Roxen.http_encode_string(id->variables[varname]
-					  ||id->state[varname]||"")
+		       Roxen.http_encode_invalids(id->variables[varname]
+						  ||id->state[varname]||"")
 		       + rest) - " ";
     }
     if((strlen(map_file_name)>6 && 
@@ -584,5 +581,3 @@ string status()
 {
   return ("Mapfile requests: "+req+"\n<br />");
 }
-
-

@@ -3,5 +3,5 @@
 #define config_perm(X)    (id->misc->config_user && id->misc->config_user->auth(X))
 #define config_host       id->misc->remote_config_host
 
-#define SITE_TEMPLATES "config_interface/sites/site_templates/"
+#define SITE_TEMPLATES "site_templates/"
 #define ACTIONS        "config_interface/actions/"

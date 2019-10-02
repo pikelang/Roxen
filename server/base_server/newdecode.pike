@@ -1,10 +1,10 @@
-// This file is part of Roxen Webserver.
-// Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.29 2001/01/19 12:41:34 per Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 1996 - 2009, Roxen IS.
+// $Id$
 
 // The magic below is for the 'install' program
 #ifndef roxenp
-# if !efun(roxenp)
+# if !constant(roxenp)
 #  define roxenp this_object
 # endif
 #endif
@@ -17,9 +17,12 @@
 SIMPLE_DECODE(decode_int, (int)s );
 SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
-SIMPLE_DECODE(decode_string, http_decode_string(s));
+SIMPLE_DECODE(decode_string,
+	      ((String.width(s)>8)?
+	       utf8_to_string(http_decode_string(string_to_utf8(s))):
+	       http_decode_string(s)));
 
-constant xml_header = "<?XML version=\"1.0\" encoding=\"UTF-8\"?>";
+constant xml_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
 private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 {
@@ -91,6 +94,12 @@ string trim_comments( string from )
     if( strlen(l) && l[0] == '#' )
       // Just defeat any tags on the line. This won't clobber any
       // variable values, since '<' is always encoded in them.
+      //
+      // NB: The above is probably false - a multiline <str> value can
+      // contain a "#" on the last line which then would be followed
+      // by "</str>" on the same line. That can at least occur in
+      // newer files with xml headers, but this function shouldn't be
+      // used at all then.
       res += replace (l, "<", "") + "\n";
     else
       res += l+"\n";
@@ -102,12 +111,18 @@ mapping decode_config_file(string s)
 {
   mapping res = ([ ]);
   if(sizeof(s) < 10) return res; // Empty file..
-  if( sscanf( s, "%*s" + xml_header + "\n%*s" ) == 2 )
+
+  //  Older Roxen generated invalid XML headers so we have to perform a
+  //  lower-case comparison.
+  if( sscanf( lower_case(s[..100]),
+	      "%*s" + lower_case(xml_header) + "\n%*s" ) == 2 )
     s = utf8_to_string( s );
   else
     s = trim_comments( s );
   Parser.HTML()
     ->add_container ("region", decode_config_region)
+    ->add_tags ( ([ "roxen-config"  : 0,
+		    "/roxen-config" : 0 ]) )
     ->add_quote_tag ("!--", "", "--")
     ->set_extra (res)
     ->finish (s);
@@ -268,7 +283,9 @@ string encode_config_region(mapping m, string reg, Configuration c,
 string encode_regions(mapping r, Configuration c)
 {
   string v;
-  string res = (xml_header + "\n\n");
+  string res =
+    xml_header + "\n"
+    "<roxen-config>\n\n";
   int comments = all_constants()->roxen->query ("config_file_comments");
   foreach(r->EnabledModules ?
 	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
@@ -276,5 +293,6 @@ string encode_regions(mapping r, Configuration c)
     res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c,comments)
            + "</region>\n\n";
+  res += "</roxen-config>\n";
   return string_to_utf8( res );
 }

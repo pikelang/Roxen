@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_writefile</project>
+<language>eng</language>
+<file>../modules/tags/writefile.pike</file>
+
+<str id="1">
+<o>Tags: Writefile</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This module provides the writefile RXML tags.&lt;br&gt;&lt;p&gt;Copyright &amp;copy; 2001-2002, by &lt;a href='mailto:srb@cuci.nl'&gt;Stephen R. van den Berg&lt;/a&gt;, The Netherlands.&lt;/p&gt;&lt;p&gt;See COPYING in the server directory for license information.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Within tree only</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>Setting this will force all specified chroots and filenames to be relative to the directory this tag is located in.  It functions as an enforced dynamic chroot to constrain users in e.g. a user filesystem.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>Last file written: %s</o>
+<t></t>
+</str>

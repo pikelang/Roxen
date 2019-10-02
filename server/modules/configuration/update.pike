@@ -1,11 +1,11 @@
 /*
- * $Id: update.pike,v 1.28 2001/01/13 18:14:49 nilsson Exp $
+ * $Id$
  *
  * The Roxen Update Client
- * Copyright © 2000, Roxen IS.
+ * Copyright © 2000 - 2009, Roxen IS.
  *
  * Author: Johan Schön
- * January-March 2000
+ * January-March 2000, June 2001
  */
 
 #ifdef UPDATE_DEBUG
@@ -46,51 +46,99 @@ constant module_doc = "This is the update client. "
                       "website, feel free to enter your username and password in "
                       "the settings tab.";
 
-object db;
-mixed init_error; // Used to store backtraces from yabu init
+function(void:Sql.Sql) db;
 object updater;
-Yabu.Table pkginfo, misc, installed;
+SqlMapping pkginfo, misc, installed;
 
 mapping(int:GetPackage) package_downloads = ([ ]);
 
 int inited;
+
+class SqlMapping
+{
+  string table;
+  function(void:Sql.Sql) db;
+  void create(function(void:Sql.Sql) _db, string _table)
+  {
+    db=_db;
+    table=_table;
+    DBManager.is_module_table( this_module(), "local", table,
+			       "Information used by the update "
+			       "client system.");
+    catch(db()->query("create table "+table+
+		    " ( name varchar(255) primary key ,"
+		    "  value mediumblob)"));
+  }
+
+  mixed get(string handle)
+  {
+    array a=db()->query("select value from "+table+" where name=%s",handle);
+    if(!sizeof(a))
+      return 0;
+    else
+      return decode_value(a[0]->value);
+  }
+
+  mixed set(string handle, mixed x)
+  {
+    db()->query("replace into "+table+" (name,value) values (%s,%s)",
+	      handle,encode_value(x));
+  }
+
+  void delete(string handle)
+  {
+    db()->query("delete from "+table+" where name=%s",handle);
+  }
+  
+  array list_keys()
+  {
+    return db()->query("select name from "+table)->name;
+  }
+  
+  mixed `[]=(string handle, mixed x){ return set(handle, x); }
+  mixed `[](string handle)          { return get(handle); }
+  array _indices()                  { return list_keys(); }
+  array _values()                   { return map(_indices(), `[]); }
+  void sync()  { }
+}
+
 void post_start()
 {
-  // It is very important that errors from the Yabu database are
-  // reported properly. Events which cause errors include:
-  //
-  //    1. Yabu does not have permission to create/write/read its files.
-  //       Solution: Change permissions on the relevant files.
-  //
-  //    2. Yabu is out locked by another process. This indicates
-  //       that several Roxen servers are running on the same files!
-  //       Solution: Kill the offending Roxen processes.
-  //
-  // Both errors listed above should be corrected by the administrator
-  // of Roxen.
-  //
-  init_error = catch { db=Yabu.db(roxen_path(query("yabudir")),"wcSQ"); };
-  
-  if(init_error)
-    throw(init_error);
+  db=lambda(){ return DBManager.cached_get( "local" ); };
 
-  pkginfo=db["pkginfo"];
-  misc=db["misc"];
-  installed=db["installed"];
+  pkginfo=SqlMapping(db,"update_pkginfo");
+  misc=SqlMapping(db,"update_misc");
+  installed=SqlMapping(db, "update_installed")
+    ;
   mkdirhier(roxen_path(query("pkgdir")+"/foo"));
+#ifndef OFFLINE
   if(query("do_external_updates"))
     updater=UpdateInfoFiles();
+#endif
   UPDATE_NOISES("db == %O", ({ db }));
-
 }
 
 void start(int num, Configuration conf)
 {
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
+    // Don't do anything - config_filesystem will reload us.
+    return;
+
+#ifndef ENABLE_UPDATE_CLIENT
+  // This update system isn't in use, so drop this module.
+  roxen.background_run (0, lambda (Configuration conf) {
+			     conf->disable_module (module_local_id());
+			     conf->save();
+			     conf->save_me();
+			   }, conf);
+  return;
+#endif
+
   if(conf && !inited)
   {
     inited++;
     UPDATE_NOISE("Initializing...");
-#if !constant(thread_create)
+#ifndef THREADS
     call_out( post_start, 1 );
 #else
     thread_create( post_start );
@@ -101,16 +149,13 @@ void start(int num, Configuration conf)
 void stop()
 {
   UPDATE_NOISE("Shutting down...");
-  catch(db->close());
   catch(destruct(updater));
   UPDATE_NOISE("Shutdown complete.");
 }
 
 void create()
 {
-  defvar("yabudir", "$VVARDIR/update_data/", "Database directory",
-	 TYPE_DIR, ""); 
-  defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
+  defvar("pkgdir", "$LOCALDIR/packages/", "Package directory",
 	 TYPE_DIR, "");
   defvar("proxyserver", "", "Proxy host",
 	 TYPE_STRING, "Leave empty to disable the use of a proxy server");
@@ -120,14 +165,14 @@ void create()
 	 TYPE_STRING,
 	 "Format: username@host:password. "
 	 "Will not use auth if left empty.");
-  defvar("do_external_updates",1,"Connect to update.roxen.com for updates",
+  defvar("do_external_updates",0,"Connect to update.roxen.com for updates",
 	 TYPE_FLAG,
          "Turn this off if you're inside a firewall and/or don't want to "
 	 "reveal anything to the outside world.");
   Locale.register_project("update_client", "translations/%L/update_client.xml");
 }
 
-static string describe_time_period( int amnt )
+protected string describe_time_period( int amnt )
 {
   if(amnt < 0) return LOC_U(18,"some time");
   amnt/=60;
@@ -158,27 +203,6 @@ class TagUpdateShowBacktrace {
       else
 	RXML.set_var("last_updated", describe_time_period(time(1)-t), "var");
 
-      if(init_error)
-      {
-	string s="<font color='darkred'><h1>"+
-	  LOC_U(38, "Update client initialization error") + "</h1></font>";
-	if(search(describe_backtrace(init_error), "Out-locked")!=-1)
-	{
-	  s+="<h2>"+ LOC_U(39,"Possible causes:")+"</h2>"
-	    "<ol><li>" + LOC_U(40, "Yabu does not have permission to create/write/read "
-			       "its files.") + "<br />"+
-	    LOC_U(41, "Solution: Change permissions on the relevant files.") + "</li>"
-	    "<li>"+ LOC_U(42, "Yabu is out locked by another process. This indicates "
-			  "that several Roxen servers are running on the same files!") + 
-	    "<br />"+ LOC_U(43, "Solution: Kill the offending Roxen processes.") + 
-	    "</li></ol><br /><br />";
-	}
-    
-	s+="<h2>"+LOC_U(44, "Backtrace:")+"</h2><pre>"+
-	  describe_backtrace(init_error)+"</pre>";
-	id->variables->category="foo";
-	return ({ s });
-      }
       return 0;
     }
   }
@@ -234,8 +258,6 @@ class TagUpdatePackage {
     int counter;
 
     array do_enter(RequestID id) {
-      if(init_error)
-	return 0;
 
       scope_name=args->scope;
 
@@ -421,6 +443,9 @@ class TagUpdateDownloadedPackages {
 string|void unpack_file(Stdio.File from, string to)
 {
   string prefix="../";
+  if(sscanf(to,"/server/%s", to))
+    prefix="";
+  
   if(r_file_stat(prefix+to))
   {
     if(!r_mv(prefix+to,prefix+to+"~"))
@@ -658,7 +683,7 @@ mapping get_headers()
 		 "user-agent": roxen->real_version ]);
 
   if(sizeof(query("userpassword")))
-    m->authorization="Basic "+MIME.encode_base64(query("userpassword"));
+    m->authorization="Basic "+MIME.encode_base64(query("userpassword"), 1);
   return m;
 }
 
@@ -759,12 +784,16 @@ class GetPackage
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+
 		  pkgnum+".tar HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -834,12 +863,16 @@ class GetInfoFile
 
   void create(int pkgnum)
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     num=pkgnum;
     set_callbacks(request_ok, request_fail);
     async_request(get_server(), get_port(),
 		  "GET "+proxyprefix()+"/updateserver/packages/"+pkgnum+
 		  ".info HTTP/1.0",
 		  get_headers());
+#endif
   }
 }
 
@@ -935,7 +968,11 @@ class UpdateInfoFiles
 
   void create()
   {
+#ifdef OFFLINE
+    report_warning("Cannot update files, since Roxen is offline\n");
+#else
     set_callbacks(request_ok, request_fail);
     call_out(do_request,1);
+#endif
   }
 }

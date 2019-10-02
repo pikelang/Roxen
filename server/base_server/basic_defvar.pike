@@ -1,6 +1,8 @@
-// This file is part of Roxen Webserver.
-// Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.27 2001/03/11 20:24:53 nilsson Exp $
+// This file is part of Roxen WebServer.
+// Copyright © 2000 - 2009, Roxen IS.
+// $Id$
+
+//! @appears BasicDefvar
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -38,6 +40,15 @@ void set(string var, mixed value)
     variables[var]->set( value );
 }
 
+void low_set(string var, mixed value)
+//! Set the variable 'var' to the specified value without any checking.
+{
+  if(!variables[var]) 
+    report_error( "Setting undefined variable: "+var+".\n" );
+  else
+    variables[var]->low_set( value );
+}
+
 int killvar(string var)
 //! Undefine the variable 'var'.
 {
@@ -62,10 +73,10 @@ void setvars( mapping (string:mixed) vars )
 
 //! @decl Variable.Variable defvar( string sname, Variable.Variable variable )
 //! Define 'sname' to be 'variable',
-//!
-//! @decl Variable.Variable defvar( string sname, mixed value, string name, @@
-//!                                  int type, string doc, array|void misc, @@
-//!                                  int|function not_in_config  ) @@
+
+//! @decl Variable.Variable defvar( string sname, mixed value, string name, @
+//!                                  int type, string doc, array|void misc, @
+//!                                  int|function not_in_config  )
 //! Define a new variable named sname, with the options specified in the list.
 //! This is a compatibility version of the function, and as such is deprecated.
 //! But it will be supported for the forseeable function.
@@ -240,11 +251,12 @@ mixed query(string|void var, int|void ok)
   return variables;
 }
 
-void definvisvar(string name, mixed value, int type, array|void misc)
+Variable.Variable definvisvar(string name, mixed value, int type,
+			      array|void misc)
 //! Convenience function, define an invisible variable, this variable
 //! will be saved, but it won't be visible in the administration interface.
 {
-  defvar(name, value, "", type, "", misc, lambda(){return 1;} );
+  return defvar(name, value, "", type, "", misc, lambda(){return 1;} );
 }
 
 void save();

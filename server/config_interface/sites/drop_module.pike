@@ -12,9 +12,9 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content )
 {
-  return sprintf( "<use file=/template />\n"
+  return sprintf( "<use file=/template />"
                   "<tmpl title=''>"
-                  "<topmenu base='&cf.num-dotdots;' selected='sites' />\n"
+                  "<topmenu base='&cf.num-dotdots;' selected='sites' />"
                   "<content><cv-split>"
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
@@ -39,12 +39,20 @@ mapping|string parse( RequestID id )
     c->disable_module( replace(id->variables->drop,"!","#") );
     c->save( );
     c->save_me( );
+    c->forcibly_added = ([]);
     return Roxen.http_redirect( site_url( id, id->variables->config ),id );
   }
   string res ="";
   array mods = map( indices( c->otomod )-({0}),
                     lambda(mixed q){ return c->otomod[q]; });
-  foreach( sort(mods), string q )
+
+  array pos = map( mods,
+		   lambda(string q) {
+		     return roxen.find_module( (q/"#")[0] )->get_name()+q;
+		   } );
+
+  sort(pos, mods);
+  foreach( mods, string q )
   {
     RoxenModule m = roxen.find_module( (q/"#")[0] );
     int c = (int)((q/"#")[-1]);

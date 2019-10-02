@@ -1,4 +1,4 @@
-//! A class that enables specification of a physicla location.
+//! A class that enables specification of a physical location.
 
 inherit Variable.Variable;
 
@@ -7,11 +7,11 @@ constant type = "MapLocation";
 roxen.ImageCache cache;
 //! This is the image cache used for the maps.
 
-static int width = 500;
-static int height = 300;
-static function(void:string) internal_location;
-static mapping map_settings;
-static mapping marker_settings;
+protected int width = 500;
+protected int height = 300;
+protected function(void:string) internal_location;
+protected mapping map_settings;
+protected mapping marker_settings;
 
 void set_land_color(int(0..255) r, int(0..255) g, int(0..255) b)
   //! Sets the color of the land areas.
@@ -91,7 +91,7 @@ array(string|mixed) verify_set( mixed new_value )
 }
 
 void set_from_form( RequestID id )
-  //! Set this variable from the form variable in id->Variables,
+  //! Set this variable from the form variable in id->variables,
   //! if any are available. The default implementation simply sets
   //! the variable to the string in the form variables.
   //!
@@ -122,7 +122,7 @@ void set_from_form( RequestID id )
     set( 0 );
 }
 
-static string create_src( RequestID id ) {
+protected string create_src( RequestID id ) {
   mapping state = ([ "width":width,
 		     "height":height ]);
   array coord = query();
@@ -161,14 +161,14 @@ void create(array default_value, function(void:string) _internal_location,
   ::create(default_value, flags, std_name, std_doc);
 }
 
-Image generate_image(mapping state, RequestID id)
+Image.Image generate_image(mapping state, RequestID id)
 {
   if(!state)
     return 0;
 
   Map.Earth m = Map.Earth();
 
-  Image img = m->image(state->width, state->height, state);
+  Image.Image img = m->image(state->width, state->height, state);
 
   return img;
 }

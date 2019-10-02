@@ -7,7 +7,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: spanish.pike,v 1.10 2000/12/15 14:40:57 jhs Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "es", "spanish", "español" });
 constant _aliases = ({ "es", "esp", "spanish" });
 
@@ -17,8 +17,8 @@ constant months = ({
   "Noviembre", "Diciembre" });
 
 constant days = ({
-  "Domingo","Lunes","Martes","Miercoles",
-  "Jueves","Viernes","Sabado" });
+  "Domingo","Lunes","Martes","Miércoles",
+  "Jueves","Viernes","Sábado" });
 
 string ordered(int i)
 {
@@ -118,7 +118,7 @@ string number(int num)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

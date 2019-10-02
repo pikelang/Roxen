@@ -68,13 +68,13 @@
 </str>
 
 <str id="12">
-<o>Thirs party modules</o>
+<o>Third party modules</o>
 <t>Tredjepartsmoduler</t>
 </str>
 
 <str id="13">
 <o>Downloads&amp;nbsp;in&amp;nbsp;progress</o>
-<t>Nedladdning&amp;pågår</t>
+<t>Nedladdning&amp;nbsp;pågår</t>
 </str>
 
 <str id="14">
@@ -195,41 +195,6 @@
 <str id="37">
 <o>infinitely long</o>
 <t>oändligt länge</t>
-</str>
-
-<str id="38">
-<o>Update client initialization error</o>
-<t>Initialiseringsfel i uppdateraren</t>
-</str>
-
-<str id="39">
-<o>Possible causes:</o>
-<t>Troliga orsaker</t>
-</str>
-
-<str id="40">
-<o>Yabu does not have permission to create/write/read its files.</o>
-<t>Yabu har inte behörighet att skapa/skriva/läsa sina filer.</t>
-</str>
-
-<str id="41">
-<o>Solution: Change permissions on the relevant files.</o>
-<t>Lösning: Ändra behörighet på de relevanta filerna.</t>
-</str>
-
-<str id="42">
-<o>Yabu is out locked by another process. This indicates that several Roxen servers are running on the same files!</o>
-<t>Yabu är utelåst av en annan process. Detta indikerar att flera Roxenservrar är igång och använder samma filer!</t>
-</str>
-
-<str id="43">
-<o>Solution: Kill the offending Roxen processes.</o>
-<t>Lösning: Ta ner de blockerande Roxenprocesserna.</t>
-</str>
-
-<str id="44">
-<o>Backtrace:</o>
-<t>Backtrace:</t>
 </str>
 
 <str id="45">

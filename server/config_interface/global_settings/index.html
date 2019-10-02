@@ -1,4 +1,5 @@
 <topmenu base="../" selected='globals' />
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 
 <if not variable='form.section'>
   <set variable='form.section' value='Settings' />
@@ -13,10 +14,10 @@
     <tab href='?section=event_log'><translate id="216">Events</translate></tab>
   </else>
   <if variable='form.section is ports'>
-    <tab selected='t' href='?section=ports'><translate id="215">Ports</translate></tab>
+    <tab selected='t' href='?section=ports'><translate id="508">Ports</translate></tab>
   </if>
   <else>
-    <tab href='?section=ports'><translate id="215">Ports</translate></tab>
+    <tab href='?section=ports'><translate id="508">Ports</translate></tab>
   </else>
   <emit source='global-variables-sections'>
     <tab ::='&_.selected;'
@@ -29,11 +30,10 @@
     <a href="../event_log/clear_log.pike">
       <gbutton preparse="1"> <translate id="247">Clear Log</translate> </gbutton></a>
   </if>
-  <else>
-    <if variable='form.section is ports'>
+  <elseif variable='form.section is ports'>
     <input type="hidden" name="port" value='&form.port;'>
 <!--    <input type="hidden" name="section" value='&form.section;'> -->
-     <emit source='ports' scope='port'>
+   <emit source='ports' scope='port'>
       <table width='100%' bgcolor="&usr.content-titlebg;" border="0" 
              cellpadding="0" cellspacing="0">
         <tr width="100%">
@@ -41,7 +41,12 @@
       <font color="&usr.content-titlefg;"><if variable="form.port is &_.port;"><img src="&usr.selected-indicator;" /></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port:http;&section=&form.section:http;'><b><font size="+2">&_.name;</font></a></font>
        </td>
         <td align="right">
-    <if variable="form.port is &_.port;"><cf-save></if>
+          <if variable="form.port is &_.port;">
+           <colorscope bgcolor='&usr.content-titlebg;' text='&usr.content-titlefg;'>
+            <cf-save/>
+           </colorscope>
+          </if>
+          <else>&nbsp;</else>
         </td>
       </tr>
     <if not="1" variable="_.warning is "><tr><td colspan="2"><font color='&usr.warncolor;'><b>&_.warning;</b></font></td></tr></if>
@@ -55,13 +60,12 @@
        </emit>
       </table>
      <if variable="form.port is &port.port;"><br clear='all'/>
-      <cfg-variables nosave='' source='port-variables' port="&port.port;"/><br clear='all'/>
+      <cfg-variables nosave='' source='port-variables' port="&port.port;"/>
      </if>
    </emit>
-    </if>
-    <else>
-      <cfg-variables nosave='' source='global-variables' section='&form.section;'/>
-    </else>
+  </elseif>
+  <else>
+    <cfg-variables source='global-variables' section='&form.section;'/>
   </else>
  </st-page>
 </subtablist></cv-split></content>

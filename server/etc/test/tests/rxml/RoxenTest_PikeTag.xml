@@ -1,0 +1,77 @@
+<add-module>piketag</add-module>
+
+<test>
+<rxml><pike>
+return "Hello world &lt;";
+</pike></rxml>
+<result>Hello world &lt;</result>
+</test>
+
+<test>
+<rxml><?pike
+write("<roxen/>");
+?></rxml>
+<result><roxen/></result>
+</test>
+
+<test no-strip-ws="">
+<rxml><?pike
+// Hello
+//Obzot
+write("foo");
+//Obzot
+/*Ox
+y*/
+?></rxml>
+<result>bzot
+foobzot
+x
+y
+</result>
+</test>
+
+<test no-strip-ws="">
+<rxml><?pike
+//X<set variable="var.foo">1</set>
+//O&var.foo;
+//X&var.foo;
+?></rxml>
+<result>
+&var.foo;
+1
+</result>
+</test>
+
+<test>
+<rxml><?pike
+//Oabc
+write(reverse(flush())[1..]);
+?></rxml>
+<result>cba</result>
+</test>
+
+<test>
+<rxml><?pike
+write(rxml("<set variable='var.x'>2</set>&var.x;"));
+?></rxml>
+<result>2</result>
+</test>
+
+<test>
+<rxml><?pike
+var.foo = 3;
+?>&var.foo;</rxml>
+<result>3</result>
+</test>
+
+<test>
+<rxml><set variable="var.bar">4</set><?pike
+var.bar = (int)var.bar;
+var.bar++;
+?>&var.bar;</rxml>
+<result>5</result>
+</test>
+
+<!-- Missing tests: #include and #inherit -->
+
+<drop-module>piketag</drop-module>

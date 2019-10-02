@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
+/* This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
  *
  * Draws diagrams pleasing to the eye.
  *
@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.140 2001/03/08 14:35:43 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -34,11 +34,13 @@ int loaded;
 
 
 roxen.ImageCache image_cache;
+function verify_font;
 
 void start(int num, object configuration)
 {
   if (!loaded) loaded = 1; 
   image_cache = roxen.ImageCache( "diagram", draw_callback );
+  verify_font = roxen->fonts->verify_font;
 }
 
 void stop()
@@ -51,6 +53,7 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
 #endif
+  destruct(image_cache);
 }
 
 void create()
@@ -74,21 +77,26 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {
   image_cache->flush();
 }
 
-string itag_xaxis(string tag, mapping m, mapping res)
+string itag_xaxis(string tag, mapping m, mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->xaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
 
-  res->xaxisfont = m->font || m->nfont || res->xaxisfont;
+  if(!m->noparse)
+    foreach(indices(m), string attr)
+      m[attr] = Roxen.parse_rxml( m[attr], id );
+
+  res->xaxisfont = verify_font( m->font || m->nfont || res->xaxisfont,
+				res->labelsize );
 
   if(m->name) res->xname = m->name[..l];
   if(m->start)
@@ -106,14 +114,19 @@ string itag_xaxis(string tag, mapping m, mapping res)
   return "";
 }
 
-string itag_yaxis(string tag, mapping m, mapping res)
+string itag_yaxis(string tag, mapping m, mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->yaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
 
-  res->yaxisfont = m->font || m->nfont || res->yaxisfont;
+  if(!m->noparse)
+    foreach(indices(m), string attr)
+      m[attr] = Roxen.parse_rxml( m[attr], id );
+
+  res->yaxisfont = verify_font( m->font || m->nfont || res->yaxisfont,
+				res->labelsize );
 
   if(m->name) res->yname = m->name[..l];
   if(m->start)
@@ -154,7 +167,8 @@ string itag_names(string tag, mapping m, string contents,
   {
     if(tag=="xnames")
     {
-      res->xnamesfont = m->font || m->nfont || res->xnamesfont;
+      res->xnamesfont = verify_font( m->font || m->nfont || res->xnamesfont,
+				     res->fontsize );
 
       foo=res->xnames = contents/sep;
       if(m->orient)
@@ -167,7 +181,8 @@ string itag_names(string tag, mapping m, string contents,
     {
       foo=res->ynames = contents/sep;
 
-      res->ynamesfont = m->font || m->nfont || res->ynamesfont;
+      res->ynamesfont = verify_font( m->font || m->nfont || res->ynamesfont,
+				     res->fontsize );
     }
   }
   else
@@ -381,7 +396,8 @@ string itag_legendtext(mapping tag, mapping m, string contents,
 
   string sep = m->separator || SEP;
 
-  res->legendfont = m->font || m->nfont || res->legendfont;
+  res->legendfont = verify_font( m->font || m->nfont || res->legendfont,
+				 res->legendfontsize );
 
   res->legend_texts = contents/sep;
 
@@ -412,7 +428,7 @@ int datacounter = 0;
 //FIXME: Put back some hash on the URL. Easily done by putting the hash
 //in the metadata.
 /* Old hashcode:
-  object o=Crypto.sha();
+  object o=Crypto.SHA1();
   string data=encode_value(in);
   o->update(data);
   string out=replace(http_encode_string(MIME.encode_base64(o->digest(),1)),
@@ -420,7 +436,7 @@ int datacounter = 0;
 */
 
 constant _diagram_args =
-({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d",
+({ "xgridspace", "ygridspace", "horgrid", "size", "type", "3d", "do3d",
    "templatefontsize", "fontsize", "tone", "background","colorbg", "subtype",
    "dimensions", "dimensionsdepth", "xsize", "ysize", "fg", "bg",
    "orientation", "xstart", "xstop", "ystart", "ystop", "data", "colors",
@@ -429,12 +445,12 @@ constant _diagram_args =
    "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
-   "colortable_cache"});
+   "colortable_cache", "tonedbox", "name","color-scheme" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args =
 ({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
-   "xstart", "xstop", "ystart", "ystop", "colors", "xvalues", "yvalues",
+   "xstart", "xstop", "ystart", "ystop", "colors", "autocolors","xvalues", "yvalues",
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
 constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
@@ -478,14 +494,17 @@ string container_diagram(string tag, mapping m, string contents,
     if (m->namesize)
       res->namesize=(int)m->namesize;
     res->namecolor=parse_color(m->namecolor||id->misc->defines->fgcolor);
+    if(m->namefont)
+      res->namefont = verify_font( m->namefont, res->namesize );
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
 
-  res->font = m->font || m->nfont;
+  res->fontsize       = (int)m->fontsize || 16;
+  res->legendfontsize = (int)m->legendfontsize || res->fontsize;
+  res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->namefont)
-    res->namefont=m->namefont;
+  res->font = verify_font( m->font || m->nfont, res->fontsize );
 
   if (m->tunedbox)
     m->tonedbox=m->tunedbox;
@@ -538,11 +557,12 @@ string container_diagram(string tag, mapping m, string contents,
      return syntax("\""+res->type+"\" is an FIX unknown type of diagram\n");
   }
 
-  if(m["3d"])
+  if(string val = (m["do3d"] || m["3d"]))
   {
     res->drawtype = "3D";
-    if( lower_case(m["3d"])!="3d" )
-      res->dimensionsdepth = (int)m["3d"];
+    if( (!m["3d"] || lower_case(m["3d"])!="3d") &&
+	(!m["do3d"] || lower_case(m["do3d"])!="do3d") )
+      res->dimensionsdepth = (int)val;
     else
       res->dimensionsdepth = 20;
   }
@@ -565,6 +585,15 @@ string container_diagram(string tag, mapping m, string contents,
   res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
   res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
 
+  switch((string)(m["color-scheme"]||"")) {
+  case "1":
+    res->autocolors = allocate(sizeof(res->data));
+#define NUM_AUTOCOLORS 8
+    for(int i=0; i<sizeof(res->autocolors); i++)
+      res->autocolors[i]=Colors.hsv_to_rgb((int)(256.0/(NUM_AUTOCOLORS+1) * (i%NUM_AUTOCOLORS)) ,255, 255 - (int)(((float)(i/NUM_AUTOCOLORS) / (float)(sizeof(res->autocolors)/NUM_AUTOCOLORS)) * 160) );
+    break;
+  }
+
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
@@ -576,9 +605,6 @@ string container_diagram(string tag, mapping m, string contents,
   res->format         = m->format || "jpg";
 #endif
   res->encoding       = m->encoding || "iso-8859-1";
-  res->fontsize       = (int)m->fontsize || 16;
-  res->legendfontsize = (int)m->legendfontsize || res->fontsize;
-  res->labelsize      = (int)m->labelsize || res->fontsize;
 
   if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || id->misc->defines->fgcolor || "black");
   res->axcolor   = parse_color(m->axcolor || id->misc->defines->fgcolor || "black");
@@ -649,7 +675,6 @@ string container_diagram(string tag, mapping m, string contents,
     if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
   res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
-
   if(res->dimensions) res->drawtype = res->dimensions;
   if(res->dimensionsdepth) res["3Ddepth"] = res->dimensionsdepth;
   if(res->ygridspace)  res->yspace = res->ygridspace;
@@ -660,6 +685,7 @@ string container_diagram(string tag, mapping m, string contents,
   if(res->ystart)  res->yminvalue  = (float)res->ystart;
   if(res->ystop)   res->ymaxvalue  = (float)res->ystop;
   if(res->colors)  res->datacolors = res->colors;
+  else if(res->autocolors)  res->datacolors = res->autocolors;
   if(res->xvalues) res->values_for_xnames = res->xvalues;
   if(res->yvalues) res->values_for_ynames = res->yvalues;
   if((int)res->linewidth) res->graphlinewidth = (float)res->linewidth;
@@ -685,9 +711,12 @@ string container_diagram(string tag, mapping m, string contents,
   string ext = "";
   if(query("ext")) ext="."+res->format;
 
-  m->src = query_absolute_internal_location(id) + image_cache->store( res,id )+ext;
+  int timeout = Roxen.timeout_dequantifier(m);
 
-  if( mapping size = image_cache->metadata( m, id, 1 ) )
+  m->src = query_absolute_internal_location(id) +
+    image_cache->store( res, id, timeout )+ext;
+
+  if( mapping size = image_cache->metadata( m, id, 1, timeout ) )
   {
     // image in cache (1 above prevents generation on-the-fly)
     m->width = size->xsize;
@@ -705,7 +734,7 @@ string container_diagram(string tag, mapping m, string contents,
     return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m, xml));
 #endif
 
-  return Roxen.make_tag("img", m, xml);
+  return Roxen.make_tag("img", m - ({ "format" }), xml);
 }
 
 int|object PPM(string fname, object id)
@@ -737,7 +766,7 @@ mixed draw_callback(mapping args, object id)
     /* Image was not found or broken */
     if(args->image == 1)
     {
-      args->image=get_font(0, 24, 0, 0,"left", 0, 0);
+      args->image=get_font(0, 24, 0, 0,"left", 0.0, 0.0);
       if (!(args->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       args->image=args->image->
@@ -756,6 +785,10 @@ mixed draw_callback(mapping args, object id)
     args->image = Image.Image(args->xsize, args->ysize, @args->colorbg);
   }
 
+  foreach( ({ "font", "namefont", "legendfont", "xaxisfont", "yaxisfont",
+	      "xnamesfont", "ynamesfont" }), string font)
+    if(args[font]) args[font] = get_font(args[font], 32, 0, 0, "left", 0.0, 0.0);
+
   Image.Image img;
   
 #ifdef BG_DEBUG
@@ -770,7 +803,7 @@ mixed draw_callback(mapping args, object id)
      img = Graphics.Graph.bars(args);
      break;
    case "sumbars":
-     img = Graphics.Graph.bars(args);
+     img = Graphics.Graph.sumbars(args);
      break;
    case "norm":
      img = Graphics.Graph.norm(args);
@@ -792,7 +825,7 @@ mixed draw_callback(mapping args, object id)
 	
 #ifdef BG_DEBUG
   if(id->prestate->debug)
-    werror("Timers: %O\n", bg_timers);
+    report_debug("Timers: %O\n", bg_timers);
 #endif
 
   if (!args->notrans)
@@ -817,13 +850,14 @@ mixed draw_callback(mapping args, object id)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"diagram":({ #"<desc cont='cont'><p><short>
+"diagram":({ #"<desc type='cont'><p><short>
  The <tag>diagram</tag> tag is used to draw pie, bar, or line charts
  as well as graphs.</short> It is quite complex with six internal
- tags.</p>
+ tags. It is possible to pass attributes, such as the alt attribute, 
+ to the resulting tag by including them in the diagram tag.</p>
 </desc>
 
-<attr name='3d' value='number'><p>
+<attr name='do3d' value='number'><p>
  Draws a pie-chart on top of a cylinder, takes the height in pixels of the
  cylinder as argument.</p>
  </attr>
@@ -944,14 +978,59 @@ constant tagdoc=([
  </attr>
 
  <p>Regular <tag>img</tag> arguments will be passed on to the generated
- <tag>img</tag> tag.</p>",
+ <tag>img</tag> tag.</p>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
+</attr>",
 
 //-------------------------------------------------------------------------
 
 	     ([
 
 
-"data":#"<desc cont='cont'><p><short>
+"data":#"<desc type='cont'><p><short>
  This tag contains the data the diagram is to visualize </short> It is
  required that the data is presented to the tag in a tabular or
  newline separated form.</p>
@@ -986,7 +1065,7 @@ constant tagdoc=([
 
 //-----------------------------------------------------------------------
 
-	       "colors":#"<desc cont='cont'><p><short>
+	       "colors":#"<desc type='cont'><p><short>
  This tag sets the colors for different pie slices, bars or
  lines.</short> The colors are presented to the tag in a tab separated
  list.</p>
@@ -998,7 +1077,7 @@ constant tagdoc=([
 
 //------------------------------------------------------------------------
 
-	       "legend":#"<desc cont='cont'><p><short>
+	       "legend":#"<desc type='cont'><p><short>
  A separate legend with description of the different pie slices, bars
  or lines.</short>The titles are presented to the tag in a tab
  separated list.</p>
@@ -1043,7 +1122,7 @@ constant tagdoc=([
 
 //------------------------------------------------------------------------
 
-	       "xnames":#"<desc cont='cont'><p><short>
+	       "xnames":#"<desc type='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
@@ -1061,7 +1140,7 @@ constant tagdoc=([
 
 //-------------------------------------------------------------------------
 
-"ynames":#"<desc cont='cont'><p><short>
+"ynames":#"<desc type='cont'><p><short>
  Separate tag that can be used to give names to put along the pie
  slices or under the bars.</short> The datanames are presented to the
  tag as a tab separated list. This tag is useful when the diagram is
@@ -1070,7 +1149,7 @@ constant tagdoc=([
 
 <p>Some examples:</p>
 
- <ex type='vert'>
+ <ex>
   <diagram type='pie' width='200' height='200'  name='Population'
   tonedbox='lightblue,lightblue,white,white'>
     <data separator=','>5305048,5137269,4399993,8865051</data>
@@ -1078,7 +1157,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='bar' width='200' height='250' name='Population'
  horgrid='' tonedbox='lightblue,lightblue,white,white'>
    <data xnamesvert='' xnames='' separator=','>
@@ -1088,7 +1167,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='bar' width='200' height='250'
  name='Age structure' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1105,7 +1184,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='sumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1124,7 +1203,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='normsumbar' width='200' height='250'
  name='Land Use' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>
@@ -1142,7 +1221,7 @@ constant tagdoc=([
  </diagram>
  </ex>
 
- <ex type='vert'>
+ <ex>
  <diagram type='line' width='200' height='250'
  name='Exchange Rates' horgrid=''
  tonedbox='lightblue,lightblue,white,white'>

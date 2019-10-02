@@ -1,8 +1,10 @@
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
+
 #include <module.h>
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: location.pike,v 1.3 2000/08/28 12:28:52 jhs Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_LOCATION;
 constant module_name = "RefDoc for MODULE_LOCATION";
 constant module_doc = "This module does nothing, but its inlined "
@@ -107,7 +109,7 @@ array(int)|Stat stat_file( string path, RequestID id )
 //!
 //! <tt>uid</tt> is an integer containing the user id of this file. It
 //! will be correlated with the information from the current
-//! authentification type module, and used by the CGI executable
+//! authentication type module, and used by the CGI executable
 //! support module to start CGI scripts as the correct user. It is
 //! only necessary for location modules that provide access to a real
 //! file system and that implement the <ref>real_file()</ref> method.

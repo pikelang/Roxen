@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>update_client</project>
+<language>deu</language>
+<file>../config_interface/update.html</file>
+<file>../config_interface/update/category.txt</file>
+<file>../config_interface/update/details.txt</file>
+<file>../config_interface/update/index.txt</file>
+<file>../config_interface/update/install.txt</file>
+<file>../config_interface/update/uninstall.txt</file>
+<file>../modules/configuration/update.pike</file>
+
+<str id="1">
+<o>Update List</o>
+<t>Update-Liste</t>
+</str>
+
+<str id="2">
+<o>Main</o>
+<t>Haupt</t>
+</str>
+
+<str id="3">
+<o>[Details...]</o>
+<t>[Details...]</t>
+</str>
+
+<str id="4">
+<o>Currently no packages in this category.</o>
+<t>Derzeit keine Packate in dieser Kategorie.</t>
+</str>
+
+<str id="5">
+<o>[More..]</o>
+<t>[Mehr..]</t>
+</str>
+
+<str id="6">
+<o>Roxen Update System</o>
+<t>Roxen Update-System</t>
+</str>
+
+<str id="7">
+<o>Launched a package list update request.</o>
+<t>Anfrage nach neuer Paket-Liste gestartet.</t>
+</str>
+
+<str id="8">
+<o>This information was last synchronized with the main server
+ &amp;var.last_updated; ago.</o>
+<t>Diese Information wurde mit dem Hauptserver zuletzt aktualisiert: &amp;var.last_updated;</t>
+</str>
+
+<str id="9">
+<o>Products</o>
+<t>Produkte</t>
+</str>
+
+<str id="10">
+<o>Security fixes</o>
+<t>Sicherheits-Fixes</t>
+</str>
+
+<str id="11">
+<o>Bug fixes</o>
+<t>Bug-Fixes</t>
+</str>
+
+<str id="12">
+<o>Third party modules</o>
+<t>Drittanbieter-Module</t>
+</str>
+
+<str id="13">
+<o>Downloads&amp;nbsp;in&amp;nbsp;progress</o>
+<t>Download&amp;nbsp;im&amp;nbsp;Gange</t>
+</str>
+
+<str id="14">
+<o>Description</o>
+<t>Beschreibung</t>
+</str>
+
+<str id="15">
+<o>Size</o>
+<t>Größe</t>
+</str>
+
+<str id="16">
+<o>Downloaded</o>
+<t>Geladen</t>
+</str>
+
+<str id="17">
+<o>Downloaded&amp;nbsp;packages</o>
+<t>Geladene&amp;nbsp;Packete</t>
+</str>
+
+<str id="19">
+<o>Organization</o>
+<t>Organisation</t>
+</str>
+
+<str id="20">
+<o>Author</o>
+<t>Autor</t>
+</str>
+
+<str id="21">
+<o>License</o>
+<t>Lizenz</t>
+</str>
+
+<str id="22">
+<o>Date</o>
+<t>Datum</t>
+</str>
+
+<str id="23">
+<o>[Return]</o>
+<t>[Zurück]</t>
+</str>
+
+<str id="24">
+<o>Hide package contents</o>
+<t>Verstecke Paket-Inhalt</t>
+</str>
+
+<str id="25">
+<o>The following files will be installed:</o>
+<t>Die folgenden Dateien werden installiert:</t>
+</str>
+
+<str id="26">
+<o>Path</o>
+<t>Pfad</t>
+</str>
+
+<str id="27">
+<o>Show package contents</o>
+<t>Zeige Paket-Inhalt</t>
+</str>
+
+<str id="28">
+<o>Do you really want to install this package?</o>
+<t>Wollen Sie wirklich dieses Paket installieren?</t>
+</str>
+
+<str id="29">
+<o>Yes</o>
+<t>Ja</t>
+</str>
+
+<str id="30">
+<o>No</o>
+<t>Nein</t>
+</str>
+
+<str id="31">
+<o>Installed packages:</o>
+<t>Installierte Pakete:</t>
+</str>
+
+<str id="18">
+<o>some time</o>
+<t>einige Zeit</t>
+</str>
+
+<str id="32">
+<o>%d minutes</o>
+<t>%d Minuten</t>
+</str>
+
+<str id="33">
+<o>%d hours</o>
+<t>%d Stunden</t>
+</str>
+
+<str id="34">
+<o>%d days</o>
+<t>%d Tage</t>
+</str>
+
+<str id="35">
+<o>%d months</o>
+<t>%d Monate</t>
+</str>
+
+<str id="36">
+<o>%d years</o>
+<t>%d Jahre</t>
+</str>
+
+<str id="37">
+<o>infinitely long</o>
+<t>unendlich lange</t>
+</str>
+
+<str id="45">
+<o>Security</o>
+<t>Sicherheit</t>
+</str>
+
+<str id="46">
+<o>Bugfixes</o>
+<t>Bug-Fixes</t>
+</str>
+
+<str id="47">
+<o>Third party</o>
+<t>Drittanbieter</t>
+</str>
+
+<str id="48">
+<o>Package not completely downloaded.</o>
+<t>Paket nicht vollständig geladen.</t>
+</str>
+
+<str id="49">
+<o>Could not install package. Fix the problems above and try again.</o>
+<t>Konnte Paket nicht installieren. Beheben Sie die oben genannten Probleme und versuchen Sie es erneut.</t>
+</str>
+
+<str id="50">
+<o>Package installed completely.</o>
+<t>Paket vollständig installiert.</t>
+</str>
+
+<str id="51">
+<o>No package argument.</o>
+<t>Nein Paket engegeben.</t>
+</str>

@@ -1,0 +1,375 @@
+#!/bin/env pike
+// -*- pike -*-
+
+// $Id$
+
+string roxen_dir = "@ROXEN_DIR@";
+
+class Config
+{
+  constant default_data_dir   = "/var/roxen";
+  constant default_log_dir    = "/var/log/roxen";
+  constant default_pid_file   = "/var/run/roxen";
+
+  string config_dir = "/etc/roxen/default";
+  string data_dir;
+  string log_dir;
+  string pid_file;
+
+  string admin_url = "https://*:"+(random(20000)+10000)+"/";
+  string admin_user = "administrator";
+  string password = "";
+  
+  protected int ask_confirm(Tools.Install.Readline interactive)
+  {
+    string confirm = lower_case
+		     (interactive->
+		      edit("", "Are the settings above correct [Y/n/quit]? "));
+    if(confirm == "quit")
+    {
+      // Maybe clean up?
+      destruct(interactive);
+      exit(0);
+    }
+
+    return confirm == "" || confirm == "y";
+  }
+
+  protected void complete_paths(string config_dir)
+  {
+    string suffix = basename(((config_dir / "/") - ({ "" })) * "/");
+    
+    data_dir = combine_path(default_data_dir, suffix);
+    log_dir = combine_path(default_log_dir, suffix);
+    if(!pid_file)
+      pid_file = combine_path(default_pid_file, suffix, suffix + ".pid");
+  }
+  
+  protected int ask_paths(Tools.Install.Readline interactive)
+  {
+    write("\n");
+
+    for(;;)
+    {
+      config_dir = interactive->edit_directory
+		   (config_dir, "Configuration directory: ");
+
+      int already_exists;
+      foreach(get_dir(config_dir) || ({}), string filename)
+	if(Stdio.is_file(combine_path(config_dir, filename)) &&
+	   has_value(Stdio.read_file(combine_path(config_dir, filename)) || "",
+		     "'config_filesystem#0'"))
+	{
+	  werror("\n   There is already a server configuration present in "
+		 "this\n   directory. Please select another directory.\n\n");
+	  already_exists = 1;
+	}
+
+      if(!already_exists)
+	break;
+    }
+
+    complete_paths(config_dir);
+    
+    data_dir = interactive->edit_directory
+	       (data_dir,     "         Data directory: ");
+    log_dir = interactive->edit_directory
+	      (log_dir,       "          Log directory: ");
+    pid_file = interactive->edit_directory
+	       (pid_file,     "               PID file: ");
+
+    write("\n");
+    return ask_confirm(interactive);
+  }
+  
+  protected int ask_admin(Tools.Install.Readline interactive)
+  {
+    write("\n");
+    admin_url = interactive->edit(admin_url, "Port URL: ");
+
+    for(;;)
+    {
+      admin_user = interactive->edit(admin_user, "Administrator user name: ");
+      if(has_value(admin_user, "/") || has_value(admin_user, "\\"))
+	write("User name may not contain slashes.\n");
+      else
+	break;
+    }
+    
+    write("\n   Please select a password with one or more characters. "
+	  "You will\n   be asked to type the password twice for "
+	  "verification.\n\n");
+    string passwd2 = "";
+    interactive->get_input_controller()->dumb = 1;
+    for(;;)
+    {
+      password = interactive->edit("", "Administrator password: ");
+      passwd2 = interactive->edit("", "Administrator password (again): ");
+      if(sizeof(password) && password == passwd2)
+	break;
+    }
+    interactive->get_input_controller()->dumb = 0;
+    
+    return ask_confirm(interactive);
+  }
+  
+  protected void create(void|string _admin_user, void|string _admin_pass, 
+			void|string _admin_url, void|string _config_dir,
+			void|string _pid_file)
+  {
+    if (_admin_user)
+      admin_user = _admin_user;
+
+    if (_admin_pass)
+      password = _admin_pass;
+
+    if (_admin_url)
+      admin_url = _admin_url;
+
+    if (_config_dir) {
+      config_dir = _config_dir;
+      complete_paths(config_dir);
+    }
+
+    if (_pid_file)
+      pid_file = _pid_file;
+    
+    if (!_admin_user || !_admin_pass || !_admin_url || !_config_dir) {
+      Tools.Install.Readline interactive = Tools.Install.Readline();
+
+      write("   Welcome to the interactive Roxen server installation script.\n"
+	    "\n" +
+	    (interactive->get_input_controller()->dumb ?
+	     "   The script will guide you through the installation process by asking\n"
+	     "   a few questions. You will be able to confirm your settings before\n"
+	     "   the installation begins.\n"
+	     :
+	     "   The script will guide you through the installation process by asking\n"
+	     "   a few questions. Whenever you input a path or a filename, you may use\n"
+	     "   the <tab> key to perform filename completion. You will be able to\n"
+	     "   confirm your settings before the installation begins.\n")
+	    );
+
+      if (!_config_dir)
+	while(!ask_paths(interactive))
+	  ;
+      
+      if (!_admin_user || !_admin_pass || !_admin_url)
+	while(!ask_admin(interactive))
+	  ;
+    }
+  }
+}
+
+Config parse_options(array(string) argv)
+{
+  array(array(string)) opts = Getopt.find_all_options(argv, ({
+    ({ "help",      Getopt.NO_ARG,  ({ "-h, --help" }),  0, 0 }),
+    ({ "roxen-dir", Getopt.HAS_ARG, ({ "--roxen-dir" }), 0, 0 }),
+    ({ "admin-user", Getopt.HAS_ARG, ({ "--admin-user" }), 0, 0 }),
+    ({ "admin-pass", Getopt.HAS_ARG, ({ "--admin-pass" }), 0, 0 }),
+    ({ "admin-url", Getopt.HAS_ARG, ({ "--admin-url" }), 0, 0 }),
+    ({ "config-dir", Getopt.HAS_ARG, ({ "--config-dir" }), 0, 0 }),
+    ({ "pid-file", Getopt.HAS_ARG, ({ "--pid-file" }), 0, 0 }),
+  }));
+
+  string admin_user, admin_pass, admin_url, config_dir, pid_file;
+
+  for(int i = 0; i < sizeof(opts); i++)
+    switch(opts[i][0])
+    {
+      case "help":
+	write(#"Usage: %s [options]...
+
+Options:
+  -h, --help             Display this help
+", argv[0]);
+	exit(0);
+
+      case "roxen-dir":
+	roxen_dir = opts[i][1];
+      break;
+      case "admin-user":
+	admin_user = opts[i][1];
+      break;
+      case "admin-pass":
+	admin_pass = opts[i][1];
+      break;
+      case "admin-url":
+	admin_url = opts[i][1];
+      break;
+      case "config-dir":
+	config_dir = opts[i][1];
+      break;
+      case "pid-file":
+	pid_file = opts[i][1];
+      break;
+    }
+
+  if(!Stdio.is_dir(roxen_dir))
+  {
+    werror("Fatal error: Cannot find Roxen server directory in %O.\n"
+	   "Use --roxen-dir option?\n", roxen_dir);
+    exit(1);
+  }
+
+  return Config(admin_user, admin_pass, admin_url, config_dir, pid_file);
+}
+
+#if constant(Crypto.Password)
+constant hash_password = Crypto.Password.hash;
+#else
+constant hash_password = Crypto.make_crypt_md5;
+#endif
+
+int main(int argc, array argv)
+{
+  Config config =  parse_options(argv);
+
+  if(!Stdio.mkdirhier(config->config_dir))
+  {
+    werror("Failed to create config dir in %s", config->config_dir);
+    exit(1);
+  }
+
+  if(!Stdio.mkdirhier(combine_path(config->config_dir, "_license")))
+  {
+    werror("Failed to create license dir dir in %s", 
+	   combine_path(config->config_dir, "_license"));
+    exit(1);
+  }
+
+  foreach(({ "license", "license_templates" }), string dir)
+    foreach(get_dir(combine_path(roxen_dir, dir)) || ({}), string f)
+      if(glob("*.lic", f) || glob("*.key", f))
+	Stdio.write_file(combine_path(config->config_dir, "_license", f),
+			 Stdio.read_file(combine_path(roxen_dir, 
+						      dir, f)));
+  
+  if(!Stdio.mkdirhier(config->data_dir) ||
+     !Stdio.mkdirhier(combine_path(config->data_dir, "local", "modules")) ||
+     !Stdio.mkdirhier(combine_path(config->data_dir, "local", "fonts")))
+  {
+    werror("Failed to create data dir in %s", config->data_dir);
+    exit(1);
+  }
+
+  if(!Stdio.mkdirhier(config->log_dir))
+  {
+    werror("Failed to create log dir in %s", config->log_dir);
+    exit(1);
+  }
+
+  if(!Stdio.mkdirhier(dirname(config->pid_file)))
+  {
+    werror("Failed to create pid file dir in %s", dirname(config->pid_file));
+    exit(1);
+  }
+
+  write("\n");
+  
+  string admin_config_file =
+#"
+<!-- -*- html -*- -->
+<?XML version=\"1.0\"?>
+
+<region name='EnabledModules'>
+  <var name='config_filesystem#0'> <int>1</int>  </var> <!-- Configration Filesystem -->
+</region>
+
+<region name='pikescript#0'>
+  <var name='trusted'><int>1</int></var>
+</region>
+
+<region name='graphic_text#0'>
+  <var name='colorparse'>        <int>1</int> </var>
+</region>
+
+<region name='contenttypes#0'>
+  <var name='_priority'>         <int>0</int> </var>
+  <var name='default'>           <str>application/octet-stream</str> </var>
+  <var name='exts'><str># This will include the defaults from a file.
+# Feel free to add to this, but do it after the #include line if
+# you want to override any defaults
+
+#include %3cetc/extensions%3e
+tag text/html
+xml text/html
+rad text/html
+ent text/html
+
+</str></var>
+</region>
+
+<region name='spider#0'>
+  <var name='Domain'> <str></str> </var>
+  <var name='MyWorldLocation'><str></str></var>
+  <var name='URLs'> <a> <str>"+config->admin_url+#"#ip=;nobind=0;</str></a> </var>
+
+  <var name='comment'>
+    <str>Automatically created by create_configuration</str>
+  </var>
+
+  <var name='name'>
+    <str>Administration Interface</str>
+  </var>
+</region>";
+
+  if(Stdio.write_file(combine_path(config->config_dir,
+				   "Administration_Interface"),
+		      admin_config_file) != sizeof(admin_config_file))
+  {
+    write("   Failed to write administration interface file.\n");
+    exit(1);
+  }
+  else
+    write("   Administration interface created.\n");
+
+  string env_config_file =
+#"# This file was automatically generated by roxen-create-server
+# Generated on "+replace(ctime(time()),"\n", "")+#"
+
+ROXEN_CONFIGDIR="+config->config_dir+#"
+ROXEN_DATADIR="+config->data_dir+#"
+ROXEN_LOGDIR="+config->log_dir+#"
+ROXEN_PID_FILE="+config->pid_file+#"
+
+export ROXEN_CONFIGDIR ROXEN_DATADIR ROXEN_LOGDIR ROXEN_PID_FILE
+";
+
+  if(Stdio.write_file(combine_path(config->config_dir,
+				   "_environment"),
+		      env_config_file) != sizeof(env_config_file))
+  {
+    write("   Failed to write environment file %s.\n",
+	  combine_path(config->config_dir, "_environment"));
+    exit(1);
+  }
+  else
+    write("   Environment file created.\n");
+
+  string ufile = combine_path(config->config_dir, "_configinterface/settings/"+
+			      config->admin_user + "_uid");
+  if(!Stdio.mkdirhier(dirname(ufile)))
+  {
+    werror("   Failed to create admin user dir %s", dirname(ufile));
+    exit(1);
+  }
+
+  string user_config_file =
+    string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
+<map>
+  <str>permissions</str> : <a> <str>Everything</str> </a>
+  <str>real_name</str>   : <str>Administrator</str>
+  <str>password</str>    : <str>" + hash_password(config->password) + #"</str>
+  <str>name</str>        : <str>" + config->admin_user + "</str>\n</map>");
+  
+  if(Stdio.File(ufile, "wct", 0770)->write(user_config_file) !=
+     sizeof(user_config_file))
+  {
+    werror("   Failed to create admin user file %s", ufile);
+    exit(1);
+  }
+  else
+    write("   Administrator user \"" + config->admin_user + "\" created.\n");
+}

@@ -1,6 +1,10 @@
+// This is a roxen protocol module.
+// Copyright © 2001 - 2009, Roxen IS.
+
 inherit Protocol;
 constant supports_ipless = 1;
 constant name = "http";
+constant prot_name = "http";
 constant requesthandlerfile = "protocols/http.pike";
 constant default_port = 80;
 
@@ -11,7 +15,7 @@ void fix_cvars( Variable.Variable a )
 {
   set_cookie = query( "set_cookie" );
   set_cookie_only_once = query( "set_cookie_only_once" );
-  minimum_byterate = query( "minimum_bitrate" ) * (1024 / 8);
+  minimum_byterate = query( "minimum_bitrate" ) / 8;
 }
 
 void create( mixed ... args )

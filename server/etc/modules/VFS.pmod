@@ -1,7 +1,11 @@
 //! Utility functions for the virtual filesystem in Roxen. Contains
 //! functions that otherwise tend to get reinvented a few times per
 //! module.
-static Stat stat( string file, RequestID id )
+
+
+
+
+protected Stat stat( string file, RequestID id )
 {
   int oi = id->misc->internal_get;
   id->misc->internal_get = 1;
@@ -11,16 +15,38 @@ static Stat stat( string file, RequestID id )
 }
 
 
+string normalize_path( string path )
+//! Normalize the path in 'path'. Does ../ and ./ calculations, if
+//! running on NT or if the start-script is started with
+//! --strip-backslash, \ characters are changed to /.
+{
+  if( strlen( path ) )
+  {
+    int ss = (<'/','\\'>)[ path[0] ];
+    path = combine_path_unix( "/",
+#if defined(__NT__) || defined(STRIP_BSLASH)
+			      replace(path,"\\","/")
+#else
+			      path
+#endif
+			    );
+    if( !ss )
+      return path[1..];
+  }
+  return path;
+}
+
+
 string|array(int|string) read( string file,
 			       RequestID id,
-			       string|void cache,
+			       int|void cache,
 			       int last_mtime )
 //! Read the contents of the specified file, if it exists. If it does
 //! not exist, 0 is returned.
 //!
-//! If @[cache] is specified, the result will be cached under the name
-//! specified. No stat(2) validation is done before returning a value
-//! from the cache unless you also specify the @[last_mtime] argument.
+//! If @[cache] is specified, the result will be cached. No stat(2)
+//! validation is done before returning a value from the cache unless
+//! you also specify the @[last_mtime] argument.
 //!
 //! If last_mtime is specified, ({ mtime, file_contents }) is
 //! returned, otherwise only the contents of the file.
@@ -30,7 +56,7 @@ string|array(int|string) read( string file,
   int mtime;
   if( cache )
   {
-    res = cache_lookup( (ck=cache+":"+c->name+":"+id->misc->host), file );
+    res = cache_lookup( (ck="files:"+c->name+":"+id->misc->host), file );
     if( res && last_mtime )
     {
       Stat s = stat( file, id );
@@ -43,7 +69,7 @@ string|array(int|string) read( string file,
     res = c->try_get_file( file, id );
   if( cache )
     cache_set( ck, file, res );
-  if( last_mtime )
+  if( last_mtime && res )
   {
     if( !mtime )
     {
@@ -59,7 +85,7 @@ array(string) find_above_read( string above,
 			       string name,
 			       RequestID id,
 			       string|void cache,
-			       int do_mtime )
+			       int|void do_mtime )
 //! Operates more or less like a combination of find_above and read. 
 //! The major difference from calling read( find_above( above, name,
 //! id, cache ), id, cache, last_mtime ) is that this function does
@@ -73,6 +99,10 @@ array(string) find_above_read( string above,
 //! The return value is ({ filename, file-contents, mtime||0 })
 //! If no file is found, 0 is returned.
 {
+#ifdef HTACCESS_DEBUG
+  werror("find_above_read(%O, %O, %O, %O, %O)...\n",
+         above, name, id, cache, do_mtime);
+#endif /* HTACCESS_DEBUG */
   while( strlen( above ) )
   {
     int last_mtime;
@@ -84,7 +114,7 @@ array(string) find_above_read( string above,
       last_mtime = cache_lookup( (ck=cache+":mtime:"+id->conf->name+
 				  ":"+id->misc->host), above )||-1;
 
-    if( string|array data = read( above, id, cache, last_mtime ) )
+    if( string|array data = read( above, id, !!cache, last_mtime ) )
     {
       if( arrayp( data ) )
       {
@@ -161,7 +191,8 @@ string find_above( string above,
 
   if( cache )  res = cache_lookup( (ck=cache+":"+
 				    id->conf->name+":"+id->misc->host), above );
-  if( res )    return res;
+
+  if (res) return stringp (res) ? res : 0;
 
   // No luck. Try to locate the file in the VFS.
   array(string) segments = ({""})+(above/"/"-({""}));
@@ -175,7 +206,8 @@ string find_above( string above,
       break;
     }
   }
-  if( res && cache )
-    return cache_set( ck, above, res );
+  if (cache) {
+    cache_set( ck, above, res || -1, res ? 60 : 5);
+  }
   return res;
 }

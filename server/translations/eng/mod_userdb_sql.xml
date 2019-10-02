@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_userdb_sql</project>
+<language>eng</language>
+<file>../modules/security/userdb_sql.pike</file>
+
+<str id="1">
+<o>Authentication: SQL user database</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>This module implements a user database via a SQL server.
+</o>
+<t></t>
+</str>
+
+<str id="3">
+<o>Database</o>
+<t></t>
+</str>
+
+<str id="4">
+<o>This is the database that this module will store it's users in.</o>
+<t></t>
+</str>
+
+<str id="5">
+<o>MySQL Password</o>
+<t></t>
+</str>
+
+<str id="6">
+<o>Unix crypt</o>
+<t></t>
+</str>
+
+<str id="7">
+<o>Clear text</o>
+<t></t>
+</str>
+
+<str id="8">
+<o>MD5 crypt</o>
+<t></t>
+</str>
+
+<str id="9">
+<o>Password type</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>Password hashing method. By changing this variable you can select the meaning of password field. By default the passwords are supposed to be hashed by internal MySQL PASSWORD() function.</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>MySQL OLD_PASSWORD() (4.0 Compat Mode)</o>
+<t></t>
+</str>

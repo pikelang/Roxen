@@ -1,0 +1,88 @@
+Translations for locally installed modules.
+
+HOWTO:
+
+  1)  In your module file add the following code after the #include
+      of <module.h>:
+
+	//<locale-token project="myproject">LOCALE</locale-token>
+	//<locale-token project="myproject">DLOCALE</locale-token>
+	#define LOCALE(X,Y)	_STR_LOCALE("myproject",X,Y)
+	#define DLOCALE(X,Y)	_DEF_LOCALE("myproject",X,Y)
+
+      After the above definitions, you can use
+
+	LOCALE(0, "String to localize")
+
+      for strings that must be immediately translated, and
+
+	DLOCALE(0, "String to localize")
+
+      for strings that may have deferred translation (eg
+      variable documentation).
+
+  2)  Add the following lines to the beginning of create() in your
+      module:
+
+	Locale.register_project("myproject",
+	                        combine_path(__FILE__,
+	                                     "../../translations/%L/myproject.xml"));
+
+      Note: You need to specify the correct number of ../ to get
+            to the translations directory.
+
+  3)  Create a project description xml file in the configs directory
+      specifying the files that are part of your module:
+
+	<?xml version="1.0" encoding="iso-8859-1"?>
+
+	<project name="myproject">
+	  <nocopy />
+	  <baselang>eng</baselang>
+	  <xmlpath>%L/myproject.xml</xmlpath>
+	  <file>../modules/myproject.pike</file>
+	</project>
+
+      Note: The file names are specified relative to the translations
+            directory.
+
+      Note: The path specified in <xmlpath> must correspond to the one
+            in register_project() above in step 2.
+
+      Note: The directory for the language specified in <baselang> must
+            exist before the next step.
+
+  4)  Now you can actually generate the translation template files.
+      On Unix, Linux and MacOS X, you simply run make:
+
+	make
+
+      On NT you will have to invoke the extractor by hand:
+
+        ../../ntstart --silent-start --cd "%PWD%" --program -x extract_locale --config="configs/myproject.xml" --wipe --sync
+
+  5)  To make an initial translation, create an empty translation file
+      for that language or copy the default language file, and rerun
+      the command in step 4.
+      On Unix, Linux and MacOS X:
+
+	mkdir ger
+	touch ger/myproject.xml
+	make
+
+      On NT:
+
+	mkdir ger
+	copy eng/myproject.xml ger
+        ../../ntstart --silent-start --program -x extract_locale --config="%PWD%/myproject.xml" --wipe --sync
+
+      Note: Language catalogs are named according to ISO 639-2/T. To get
+            a list valid of ISO 639-2/T codes you can execute:
+
+	../../start --silent-start --program \
+	  -e 'write("%O", Standards.ISO639_2.list_languages_t());'
+
+  6)  To update the translation files, simply rerun the command in step 4.
+      Strings that need to be translated will be marked with <new/>.
+
+$Id$

@@ -1,4 +1,4 @@
-// This file is part of rimage. Copyright © 1998 - 2000, Roxen IS.
+// This file is part of rimage. Copyright © 1998 - 2009, Roxen IS.
 
 constant doc = "Makes a black-white image. If all red, green, blue channels of a pixel is larger or equal then the given color, the pixel will become white, otherwise black.";
 

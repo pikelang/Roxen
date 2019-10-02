@@ -1,0 +1,22 @@
+// startdll.idl : IDL source for startdll.dll
+//
+// $Id$
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (startdll.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(DBD3DD26-4ABF-426B-9626-2960B3A72777),
+	version(1.0),
+	helpstring("startdll 1.0 Type Library")
+]
+library STARTDLLLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+};

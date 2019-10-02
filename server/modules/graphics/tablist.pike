@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997-2000, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.52 2001/03/08 14:35:44 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,283 +19,229 @@ It requires the <i>GButton</i> module.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablist":({ #"<desc cont='cont'><p><short>
-
-Tablist is used in the Roxen products configurationinterfaces.</short>
-
-</p></desc>
-
-<p>
-tablist använder gbutton.
-
-För en gbutton behöver man två lager:
-
-frame och mask.
-
-Mask ska vara genomskinligt där knappen ska vara genomskinlig.
-'frame' körs alltid i moden Multiply, och maskens grafikinnehåll visas
-aldrig, det är bara masken på den som spelar roll.
-
-Man kan även ha ett lager vid namn 'background', som då hamnar under
-lagret 'frame' och texten. 
-
-
-Så här blir det om man ser det som en hög lager:
-
- frame              mode = multiply
- text               mode = normal, mask = texten
- background         
- button-background  mode = normal, mask = lagret 'mask'
- page-background    mode = normal
-
-
-Man kan även ange i taggen att man vill ha extra lager. De stoppas in
-så här:
-
-*extra-layers
- frame              mode = multiply
-*extra-frame-layers mode = multiply
- text               mode = normal, mask = texten
- background         
-*extra-background-layers
- button-background  mode = normal, mask = lagret ('mask' + *extra-mask-layers)
- page-background    mode = normal
-
-
-Om man anger extra-left-layers och/eller extra-right layers stoppas de
-sedan till vänster och höger om den bild som genereras av koden ovan.
-
- 
-
-För en tablist vill man förutom de två grundläggande lager som anges
-ovan ha några till:
-
-unselected  streck i underkanten
-first left  streck till vänster
-last right  streck till höger
-
-
-Man kan även ha några fler olika lager.
-
-Alla som heter 'first' stoppas bara dit om tabben som ska rendreras är
-först i listan.
-
-Alla som heter 'last' stoppas bara dit om tabben som ska rendreras är
-sist i listan.
-
-Alla som heter 'unselected' stoppas bara dit om tabben inte är vald.
-
-Alla som heter 'selected' stoppas bara dit om tabben är vald.
-
-Alla lager som inte har något annat namn än när det ska stoppas dit
-stoppas dit i 'extra-layers' (se gbutton ovan). Alla som heter
-\"* background\" stoppas dit i extra-background-layers. mask left och
-right stoppas också i dito extra-*-layers.
-
-Alla lager som man kan ha i en gbutton utan att själv ange extra-*- är
-alltså:
-
-
-background
-frame
-mask
-left
-right
-
-first 
-first background
-first frame
-first mask
-first left
-first right
-
-last 
-last background
-last frame
-last mask
-last left
-last right
-
-selected 
-selected background
-selected frame
-selected mask
-selected left
-selected right
-
-unselected 
-unselected background
-unselected frame
-unselected mask
-unselected left
-unselected right
-
-first selected 
-first selected background
-first selected frame
-first selected mask
-first selected left
-first selected right
-
-first unselected 
-first unselected background
-first unselected frame
-first unselected mask
-first unselected left
-first unselected right
-
-last selected 
-last selected background
-last selected frame
-last selected mask
-last selected left
-last selected right
-
-last unselected 
-last unselected background
-last unselected frame
-last unselected mask
-last unselected left
-last unselected right
-
-
-> state={disabled,normal}
-
-state={enabled,disabled} (fast allt som inte är \"disabled\" funkar)
-
-> icon_src=...
-
-icon-src=... (icon_src funkar fortfarande)
-
-> icon_data=...
-
-icon-data=... (icon_data funkar fortfarande)
-
-> align_icon={left,right}
-
-align-icon={left,center-before,center-after,right}
-
-Dessutom finns vertikal justering, men det kräver tre horisontella
-guides i ramfilen. (Allt blir horisontellt centrerat oavsett värdet
-på align-icon.)
-
-valign-icon={above,middle,below}
-
-Förtydligande angående valign-icon: horisontell justering fungerar
-förstås för valign-icon=middle (defaultvärdet), men för above eller
-below så blir det automatiskt centrerat.
-
-Jag hittade en gammal beskrivning:
-
-<gbutton> specific args:
-
-pagebgcolor=...
-bgcolor=...
-textstyle={condensed,normal}
-width=...
-align={left,right,center}
-state={disabled,normal}
-icon_src=...
-icon_data=...
-align_icon={left,right}
-font=...
-extra-layers=...
-extra-left-layers=...
-extra-right-layers=...
-extra-background-layers=...
-extra-mask-layers=...
-extra-frame-layers=...
-
-<tablist> inherits from gbutton, and also have:
-
-selcolor=...
-seltextcolor=...
-textcolor=...
-dimcolor=...
-
-frame-image=...
-
-<tab> inherits from tablist, and also have:
-selected=...
-alt=...
-
-
-
-All 'normal' layers (without extra layer arguments specified:
-
-
-A		B		C
-''		''		''
-'first'		'selected'	'background'
-'last'		'unselected'	'mask'
-				'frame'
-				'left'
-				'right'
-
-All possible combinations of A, B and C are useful as layer names,
-following the pattern \"[A ]B C\" (such as \"selected mask\" or \"first
-selected left\" or \"selected\")
-
-
-B and A specifies when the layer is used.
-
-C specifies the position.
-
-'' (such as 'first' or 'first selected') is inserted above all other
-layers in the picture.
-
-'background' is put below all other layers.
-
-'mask' is used to specify which part of the image is transparent, the
-part of the mask that is transparent is also transparent in the
-finished picture.
-
-'frame' alters the brightness of the picture (while maintaining the
-color).
-
-
-'left' is put to the left of the image, extending it's size
-'right' is put to the right of the image, extending it's size.
-
-
-<attr name='extra-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+constant tagdoc=(["tablist":({ #"
+<desc type='cont'><p><short>
+<tag>tablist</tag> produces graphical navigationtabs.</short> For
+example, the Administration interface for <webserver /> uses tablists
+for easier administration.</p>
+
+<p>The <tag>tablist</tag> tag is by design a wrapper for the <xref
+href='gbutton.tag' /> tag, i.e. it inherits all <tag>gbutton</tag>
+attributes. Also, the <tag>tab</tag> tag is in turn a wrapper for
+<tag>tablist</tag> meaning that all attributes which may be given to
+<tag>tablist</tag> may also be used in <tag>tab</tag>. Those
+attributes given to <tag>tablist</tag> has a global effect on the
+tablist, while the same attributes given to a <tag>tab</tag> only will
+have a local effect, thus overriding the globally given attribute.</p>
+
+<p>All contents inside <tag>tablist</tag> except for the
+<tag>tab</tag> tags will be discarded. <tag>taglist</tag> is used in
+this way to make it possible for tabs to look different when they are
+for instance first or last in the tablisting.</p>
+
+<p>The <xref href='../variable/define.tag' /> tag can be used to
+globally define the tablist <i>fgcolor</i> (foreground color). The
+define, <xref href='../variable/define.tag'>&lt;define
+name=\"fgcolor\"&gt;</xref>, declared prior to the <tag>tablist</tag>
+tag, will be sent as an extra argument to <tag>gbutton</tag>.
+</p>
+
+<ex><tablist>
+<tab selected='selected'>Information</tab>
+<tab>Settings</tab>
+</tablist></ex>
+</desc>
+
+<attr name='frame-image' value='' default='/internal-roxen-tabframe'>
+<p>A layered Photoshop (PSD) or Gimp (XCF) image which portrays the
+tab's appearance. Descriptions of the different layers follows below.
+If a <tag>define
+name=\"frame-image\"</tag>Image_path<tag>/define</tag> definition is
+set that image will be the default value instead of
+<tt>/internal-roxen-tabframe</tt>. </p>
 </attr>
 
-<attr name='extra-left-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+<attr name='selcolor' value='color' default='white'>
+<p>This attribute sets the backgroundcolor for the image. The effect
+of this attribute is only shown when the attribute \"selected\" has
+been set. If a <tag>define
+name=\"selcolor\"</tag>colordefinition<tag>/define</tag> definition is
+set that color will be the default value instead of <tt>white</tt>.</p>
 </attr>
 
-<attr name='extra-right-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+<attr name='seltextcolor' value='color' default='black'>
+<p>This attribute sets the textcolor for the image. The effect of this
+attribute is only shown when the attribute \"selected\" has been set.
+If a <tag>define
+name=\"seltextcolor\"</tag>colordefinition<tag>/define</tag>
+definition is set that color will be the default value instead of
+<tt>black</tt>. If this definition is not present, the attribute
+\"textcolor\", the definition \"textcolor\" and finally the color
+\"black\" will be tested.</p>
 </attr>
 
-<attr name='extra-background-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+<attr name='dimcolor' value='color' default='#003366'>
+<p>This attribute sets the backgroundcolor for the image. The effect
+of this attribute is only shown when the attribute \"selected\" has
+<i>not</i> been set. If a <tag>define
+name=\"dimcolor\"</tag>colordefinition<tag>/define</tag> definition is
+set that color will be the default value instead of <tt>#003366</tt> .
+</p>
 </attr>
 
-<attr name='extra-mask-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+<attr name='textcolor' value='color' default='white'>
+<p>This attribute sets the textcolor for the image. The effect of this
+attribute is only shown when the attribute \"selected\" has <i>not</i>
+been set. If a <tag>define
+name=\"textcolor\"</tag>colordefinition<tag>/define</tag> definition
+is set that color will be the default value instead of <tt>white</tt>
+.</p>
+</attr>",
+
+(["tab":#"<desc type='cont'><p><short>
+
+<tag>tab</tag> defines the layout and function for each and one of the
+tabs in the tablisting.</short> <tag>tab</tag> inherits all attributes
+available to <tag>tablist</tag>, hence all attributes available to
+<xref href='gbutton.tag' /> tag may be used with the <tag>tab</tag>
+tag. For instance, the attribute <i>href</i> is very useful when using
+<tag>tab</tag> and a part of <xref href='gbutton.tag' />. For more
+information about <tag>gbutton</tag> attributes, see its
+documentation.</p>
+
+<p>The contents of the <tag>tab</tag> is the tabs text.</p>
+
+<p>Below follows a listing of the attributes unique to the
+<tag>tab</tag> tag. Also, a listing of how imagelayers may be used is
+presented.</p>
+</desc>
+
+
+<attr name='selected' value=''>
+<p>Using this attribute the layer \"selected\" in the image will be
+shown in the generated image. If this attribute has not been given the
+layer \"unselected\" will be shown in the generated image.</p>
 </attr>
 
-<attr name='extra-frame-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
-<p></p>
+
+<attr name='alt' value='text' default='the tags content'>
+<p>This attribute sets the alt-text for the tab. By default the
+alt-text is fetched from the content between the
+<tag>tab</tag>...<tag>/tab</tag>.</p>
 </attr>
 
-<!-- <table>
-<tr><td>A</td><td>B</td><td>C</td></tr>
-<tr><td>''</td><td>''</td><td>''</td></tr>
-<tr><td>'first'</td><td>'selected'</td><td>'background'</td></tr>
-<tr><td>'last'</td><td>'unselected'</td><td>'mask'</td></tr>
-<tr><td></td><td></td><td>'frame'</td></tr>
-<tr><td></td><td></td><td>'left'</td></tr>
-<tr><td></td><td></td><td>'right'</td></tr>
-</table> -->
+<h1>Image Layers</h1>
 
+<p>These lists shows the function of the different image layers as
+well as how one layer from each group may be combined. </p>
 
-",
-(["tab":#"<desc cont='cont'><p><short>
- Tab</short></p></desc>"]) }) ]);
+<list type=\"dl\">
+<item name=\"Layer Position\">
+ <p>Position layers are the layername prefix.</p>
+ <list type=\"dl\">
+
+  <item name=\"first\"><p>A layer with this prefix is only shown for
+  the <i>first</i> <tag>tab</tag> tag inside the <tag>tablist</tag>
+  tag.</p> </item>
+
+  <item name=\"last\"><p>A layer with this prefix is only shown for
+  the <i>last</i> <tag>tab</tag> tag inside the <tag>tablist</tag>
+  tag.</p> </item>
+ </list>
+</item>
+
+<item name=\"Layer Focus\">
+ <p>Focus layers are the middle part of the layername.</p>
+
+ <list type=\"dl\">
+
+  <item name=\"selected\"><p>This layer is only shown when the
+  attribute <i>selected</i> has been set. </p></item>
+
+  <item name=\"unselected\"><p>This layer is only shown when the
+  attribute <i>selected</i> has <i>not</i> been set. </p></item>
+ </list>
+</item>
+
+<item name=\"Layer Type\">
+ <p>Type layers are the layername suffix.</p>
+
+ <list type=\"dl\">
+
+  <item name='[nothing, i.e. \"\"]'><p>This layer is inserted above
+  all layers in the image, closest to the viewer that is, if lower
+  layers are considered to further in inside the monitor.</p>
+ </item>
+
+ <item name=\"mask\"><p>This layer should be transparent where the tab
+ is supposed to be transparent. The only thing that is retrieved from
+ this layer is the mask; any graphical content here will be thrown
+ away.</p></item>
+
+ <item name=\"frame\"><p>The framelayer contains the various graphical
+ elements fromwhich the frame around the button is built. This layer
+ will always be run in \"Multiply\" mode, regardless of what mode it
+ was previously set to. \"Multiply\" adjusts the framelayers
+ brightness, i.e. Value (\"V\" in HSV), without affecting the
+ colorcomponents, i.e. Hue and Saturation (\"HS\" in HSV).</p></item>
+
+ <item name=\"background\"><p>This layer will be put beneath the
+ <i>frame</i> layer and the printed text.</p></item>
+
+ <item name=\"left\"><p>This layer is put on the left side of the
+ of the generated image, thus increasing the width of the
+ images left side.</p></item>
+
+ <item name=\"right\"><p>This layer is put on the right side of the
+ of the generated image, thus increasing the width of the
+ images right side.</p></item>
+
+ <item name=\"above\"><p>This layer will be shown above the other
+ parts of the generated image, thus increasing the height of the
+ images top.</p></item>
+
+ <item name=\"below\"><p>This layer will be shown below the other
+ parts of the generated image, thus increasing the height of the
+ images base.</p></item>
+
+ </list>
+</item>
+</list>
+
+<h1>Handling layers</h1>
+
+<p>The <i>Position</i>- and <i>Focus</i>-layers give instructions on
+<i>when</i> the layer is used while the <i>Type</i>-layers indicates
+its <i>function</i>.</p>
+
+<xtable>
+<row><h>Position</h><h>Focus</h><h>Type</h></row>
+<row><c><p>\"\"</p></c><c><p>\"\"</p></c><c><p>\"\"</p></c></row>
+<row><c><p>first</p></c><c><p>selected</p></c><c><p>background</p></c></row>
+<row><c><p>last</p></c><c><p>unselected</p></c><c><p>mask</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>frame</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>left</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>right</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>above</p></c></row>
+<row><c><p>&nbsp;</p></c><c><p>&nbsp;</p></c><c><p>below</p></c></row>
+</xtable>
+
+<p>These three layertypes can be combined into all possible
+permutations. The order in the name is always <i>Position Focus
+Type</i>, each type separated by a space. If one or two of the three
+layertypes is left out, the layer will be shown regardless the extra
+criterias that might be choosen. For instance, \"selected frame\" will
+be shown for the \"first\" and \"last\" tabs as well as for the ones
+in between the two, given that the tab has been marked as
+\"selected\".</p>
+
+<p>None of these layers are strictly necessary, as long as there
+exists at least one layer of the type \"background\" or \"frame\". If
+all \"mask\"-layers are left out, the mask will primary be the
+framelayer and secondly the backgroundlayer, if the framelayer is not
+available.</p>" ])
+			    })
+		]);
 
 #endif
 
@@ -382,7 +328,9 @@ class TagTablist {
     }
   }
 
-  RXML.TagSet internal = RXML.TagSet("TagTablist.internal", ({ TagTab() }) );
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal =
+    RXML.TagSet(this_module(), "tablist", ({ TagTab() }) );
 
   class Frame {
     inherit RXML.Frame;

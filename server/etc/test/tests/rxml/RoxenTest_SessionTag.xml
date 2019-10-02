@@ -1,0 +1,40 @@
+<use-module>session_tag</use-module>
+
+<test>
+<rxml><session id="1">1&_.x;<set variable="x" value="y"/>&_.x;</session></rxml>
+<result>1y</result>
+</test>
+
+<test>
+<rxml><session id="2">2&_.x;<set variable="x" value="z"/>&_.x;</session></rxml>
+<result>2z</result>
+</test>
+
+<test>
+<rxml><session id="1">3&_.x;</session></rxml>
+<result>3y</result>
+</test>
+
+<test>
+<rxml><session id="2">4&_.x;</session></rxml>
+<result>4z</result>
+</test>
+
+<test>
+<rxml><clear-session id="1"/><session id="1">5&_.x;</session></rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml><session id="1">6&_.x;</session></rxml>
+<result>6</result>
+</test>
+
+<test>
+<rxml><session id="2">7&_.x;</session></rxml>
+<result>7z</result>
+</test>
+
+<test>
+<rxml><clear-session id="2"/></rxml>
+</test>

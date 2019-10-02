@@ -1,15 +1,12 @@
-// This is a roxen module. Copyright (c) 2000, Roxen IS
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 // Todo:
-//	- checking 'valid' email addresses
-//	- multiple Bcc recipients
 //	- Docs
 //	- more debug coloring :)
-//
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.8 2001/03/12 05:59:41 hop Exp $";
+constant cvs_version = "$Id$";
 
 constant thread_safe=1;
 
@@ -18,49 +15,72 @@ inherit "module";
 
 // ------------------------ Setting the defaults -------------------------
 
-void create()
+void create(Configuration conf)
 {
   set_module_creator("Honza Petrous <hop@roxen.com>");
 
   // Default
-  defvar("CI_server", "localhost", "Default: Mail server",
+  defvar("CI_server", "localhost", "Defaults: Mail server",
          TYPE_STRING | VAR_INITIAL,
          "The default mail server will be used if no '<i>server</i>' "
          "attribute is given to the tag.");
-  defvar("CI_from", "", "Default: Sender name",
+  defvar("CI_from", "", "Defaults: Sender name",
          TYPE_STRING,
          "The default sender name will be used if no '<i>from</i>' "
          "attribute is given to the tag.");
-  defvar("CI_to", "", "Default: Recipient names",
+  defvar("CI_from_envelope", "", "Defaults: SMTP Envelope sender e-mail",
+	 TYPE_STRING, #"\
+The default envelope sender address that will be used if no
+'<i>envelope-from</i>' attribute is given to the tag.
+
+<p>This email will be used for the SMTP envelope. That is extremly
+helpful if you are sending out emails on behalf of a third party. If
+empty and there is no '<i>envelope-from</i>' attribute, the sender
+from the mail's MIME headers will be taken.");
+  defvar("CI_to", "", "Defaults: Recipient names",
          TYPE_TEXT_FIELD,
          "The default recipient names (one name per line) will be "
          "used if no '<i>to</i>' "
          "attribute is given to the tag.");
-  defvar("CI_split", ",", "Default: Recipient name list character separator",
+  defvar("CI_split", ",", "Defaults: Recipient name list character separator",
          TYPE_STRING,
          "The default recipient name list character separator "
          "will be used if no '<i>separator</i>' "
          "attribute is given to the tag.");
-  defvar("CI_charset", "iso-8859-1", "Default: Charset",
+  defvar("CI_charset", "iso-8859-1", "Defaults: Charset",
          TYPE_STRING|VAR_MORE,
          "The default charset will be used if no '<i>charset</i>' "
          "attribute is given to the tag.<br>"
          "Note: Used only if charset is unknown (defined in filesystem module, mostly.");
-  defvar("CI_mimeencoding", "base64", "Default: MIME encoding",
+  defvar("CI_mimeencoding", "base64", "Defaults: MIME encoding",
          TYPE_STRING|VAR_MORE,
-         "The default MIME encoding for attachment will be used if no '<i>mimeencoding</i>' "
+         "The default MIME encoding for attachment will be used "
+	 "for <i>file</i> attachments "
+	 "if no '<i>mimeencoding</i>' "
          "attribute is given to the subtag &lt;attachment /&gt;.<br>"
          "Note: Used only if Content type module isn't loaded.");
-  defvar("CI_nosubject", "[ * No Subject * ]", "Default: Subject line",
+  defvar("CI_nosubject", "[ * No Subject * ]", "Defaults: Subject line",
          TYPE_STRING,
          "The default subject line will be used if no '<i>subject</i>' "
          "attribute is given to the tag.");
-  defvar("CI_headers", "", "Default: Additional headers",
+  defvar("CI_headers", "", "Defaults: Additional headers",
          TYPE_TEXT_FIELD,
          "Additional headers (one header '<i>name=value</i>' pair per line) "
 	 "will be added. "
          "");
 
+  defvar("mbox_file",
+	 conf && combine_path(conf->query("LogFile"), "../email.mbox"),
+	 "Mbox file", TYPE_STRING,
+         "Log e-mail messages to this mbox format file. This is "
+	 "useful to find messages that may have been lost. Undelivered "
+	 "messages may have the header X-Roxen-Email-Error included.");
+  defvar ("mbox_file_errors_only", 1, "Log undelivered messages only",
+	  TYPE_FLAG,
+	  "Log only e-mail messages which the system knows will not be "
+	  "delivered. Beware! All undelivered messages may not always be "
+	  "logged.");
+  
   // etc
   defvar ("CI_qmail_spec",1, "Qmail specials",
          TYPE_FLAG|VAR_MORE,
@@ -85,16 +105,21 @@ void create()
          "Setting this enable more detailed status of processed mails "
 	 "");
 
-
 }
 
 array mails = ({}), errs = ({});
 string msglast = "";
+string revision = ("$Revision: 1.52 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
 
   constant name  = "email";
+
+  RXML.Type content_type =
+    (float) my_configuration()->query ("compat_level") >= 3.4 ?
+    RXML.t_text (RXML.PXml) :
+    RXML.t_xml (RXML.PXml);
 
   // It says that the resulting code has the type "any" and
   // should be parsed once by the XML-parser.
@@ -110,16 +135,24 @@ class TagEmail {
 
       array do_return(RequestID id) {
 
+	string value;
 	if(args->name && args->value)
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)(args->value) ]);
+	  value = args->value;
 	else {
+	  value = (string)content;
 	  // converting bare LFs (QMail specials:)
 	  if(query("CI_qmail_spec")) {
-	    content = replace(content, "\r", "");
-	    content = replace(content, "\n", "");
+	    value = replace(value, "\r", "");
+	    value = replace(value, "\n", "");
 	  }
-	  id->misc["_email_headers_"] += ([ upper_case(args->name) : (string)content ]);
 	}
+	if (!id->misc["_email_headers_"])
+	  id->misc["_email_headers_"] = ([]);
+	string header_name = upper_case(args->name);
+	if (id->misc["_email_headers_"][header_name])
+	  id->misc["_email_headers_"][header_name] += ","+value;
+	else
+	  id->misc["_email_headers_"][header_name] = value;
 
         return 0;
       }
@@ -181,73 +214,87 @@ class TagEmail {
 	mixed error;
 	string aname = args->name, body = content;
 
+	string ftype, fenc, content_type, content_disp, content_id;
+
 	// ------- file=filename type=application/octet-stream
-	if(args->file) {
-	  string ftype;
-	  string fenc;
+	if(args->file)
+	{
 	  array s;
-	  mapping got;
+	  int|string got;
+	  mapping res = ([]);
 
 	  if((s = id->conf->stat_file(args->file, id)) && (s[ST_SIZE] > 0)) {
-	    id->not_query = args->file;
-	    got = id->conf->get_file(id);
-	    if (!got)
-	      RXML.run_error(EMAIL_LABEL+"Attachment:  file "+Roxen.html_encode_string(args->file)+" not exists.");
+	    got = id->conf->try_get_file(args->file, id, 0, 0, 0, res);
+	    if (intp(got))
+	      RXML.run_error(EMAIL_LABEL + "Attachment:  file " +
+			     Roxen.html_encode_string(args->file) +
+			     " not exists.");
 	  } else
-	    RXML.run_error(EMAIL_LABEL+"Attachment:  file "+Roxen.html_encode_string(args->file)+" not exists or is empty.");
+	    RXML.run_error(EMAIL_LABEL + "Attachment:  file " +
+			   Roxen.html_encode_string(args->file) +
+			   " not exists or is empty.");
 
-	  ftype = args->mimetype || got->type;
-	  body = got->file->read();
-	  got->file->close();
+	  ftype = args->mimetype || res->type;
+	  fenc  = args->mimeencoding || guess_file_encoding(aname, ftype);
+	  body  = got;
 
 	  if(!stringp(aname) || !sizeof(aname))
 	    aname=(args->file/"/")[-1];
-
-	  fenc = args->mimeencoding || guess_file_encoding(aname, ftype);
-
-	  error = catch(
-	  m=MIME.Message(body, ([ 
-			       "content-type":(ftype + (sizeof(aname) ? ";name=\"" + aname + "\"": "")),
-			       "content-transfer-encoding":fenc,
-			       "content-disposition":"attachment",
-			       //"content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment"),
-			       "content-id":args->cid||"nocid"
-			     ]))
-	  );
-	  if (error)
-	    RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
-
-	  id->misc["_email_atts_"] += ({ m });
-
-	  return 0;
-	} //file
-
-	if(args->href) { // href=url
-
+	}
+	else if(args->href)
+	{
 	  //Protocols.HTTP.get_url_data( f, 0, hd );
 	  return 0;
+
 	}
+	else
+	{
+	  // We assume container with text (and default type "text/plain")
+	  string|array(string) guess_mimetype =
+	    aname && id->conf->type_from_filename(aname);
+	  if (arrayp(guess_mimetype))
+	    guess_mimetype = guess_mimetype[0];
+	  ftype = args->mimetype     || guess_mimetype || "text/plain";
+	  fenc  = args->mimeencoding || "8bit";
 
-	// ------ we assume container with text (and default type "text/plain")
-	// converting bare LFs (QMail specials:)
-
-	if(query("CI_qmail_spec"))
-	  body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
-
-	aname = sizeof(aname) ? (args->mimetype||"text/plain")+"; name=\"" + aname + "\"": (args->mimetype||"text/plain");
-	error = catch(
-	m=MIME.Message(body, ([ 
-			     //"content-type":(sizeof(aname) ? "text/plain; name=\"" + aname + "\"": "text/plain"),
-			     "content-type":aname,
-			     "content-transfer-encoding":"8bit",
-			     "content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment")
-			   ]))
-	);
+	  // Converting bare LFs (QMail specials:)
+	  if(query("CI_qmail_spec") && ftype == "text/plain")
+	    body = (Array.map(body / "\r\n",
+			      lambda(string el1) {
+				return (replace(el1, "\n", "\r\n"));
+			      })
+		    )*"\r\n";
+	}
+	
+	content_type = ftype + (aname ? "; name=\""+aname+"\"" : "");
+	content_disp = ((args->disposition || "attachment") +
+			(aname ? "; filename=\""+aname+"\"" : ""));
+	
+	//  Use "nocid" for first attachment (backwards compatibility)
+	//  but counter-based strings for subsequent attachments.
+	if (args->cid)
+	  content_id = args->cid;
+	else {
+	  int nocid_counter = id->misc["_email_nocid_"]++;
+	  content_id =
+	    nocid_counter ? sprintf("cid_%05d", nocid_counter) : "nocid";
+	}
+	
+	error = catch {
+	  m = MIME.Message(body,
+			   ([ 
+			     "content-type"              : content_type,
+			     "content-transfer-encoding" : fenc,
+			     "content-disposition"       : content_disp,
+			     "content-id"                : content_id,
+			   ]));
+	    };
 	if (error)
-	  RXML.run_error(EMAIL_LABEL+"Attachment: MIME message processing error: "+Roxen.html_encode_string(error[0]));
+	  RXML.run_error(EMAIL_LABEL +
+			 "Attachment: MIME message processing error: " +
+			 Roxen.html_encode_string(error[0]));
 
 	id->misc["_email_atts_"] += ({ m });
-//werror(sprintf("D: attachms: %O\n", id->misc["_email_atts_"]));
 	
 	return 0;
       }
@@ -257,12 +304,37 @@ class TagEmail {
     }
   } // TagAttachment
 
-  RXML.TagSet internal = RXML.TagSet("TagEmail.internal", ({ TagAttachment(), TagMailheader(), TagSignature() }));
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal = RXML.TagSet(this_module(), "email", ({ TagAttachment(), TagMailheader(), TagSignature() }));
 
   class Frame {
     inherit RXML.Frame;
 
     RXML.TagSet additional_tags = internal;
+
+    string nice_from_h(string fromx) {
+      string from = String.trim_all_whites(fromx);
+      string addr;
+
+      foreach(from/" ", string el)
+        if(search(el, "@") > 0)
+	  addr = el;
+      if(addr && search(addr, "<") == -1) {
+	string name = ((from/" ")-({addr}))*" ";
+	if (sizeof(name-" "))
+	  from = "\""+name+"\" <"+addr+">";
+	else
+	  from = addr;
+      }
+      return from;
+    }
+
+    string only_from_addr(string fromx) {
+      foreach(Array.map(fromx/" ", String.trim_all_whites), string from1)
+        if(search(from1, "@") > 0)
+	  return from1;
+      return String.trim_all_whites(fromx);
+    }
 
     string colorize_parts(string message) {
 
@@ -276,23 +348,67 @@ class TagEmail {
 
       return(rv);
     }
+    
+    void log_message(string from, string message, void|mixed error)
+    {
+      string mbox_file = query("mbox_file");
+      if(mbox_file && sizeof(mbox_file) &&
+	 (!query("mbox_file_errors_only") || error))
+      {
+	string date = Calendar.ISO.Second()->format_smtp();
+	string body = replace(message, "\r\nFrom ", "\r\n>From ");
+	string error_msg;
+	if(error)
+	  catch { error_msg = (string)error; };
+	if(error && !error_msg)
+	  error_msg = sprintf("%O", error);
+	if(stringp(error_msg))
+	  body = "X-Roxen-Email-Error: " +
+		 (replace(error_msg, "\r", "")/"\n" - ({ "" }))*"\n  " +
+		 "\n" + body;
+	Stdio.append_file(roxen_path(mbox_file),
+			  sprintf("From %s %s\n%s\n\n",
+				  from, date,
+				  replace(body, ({ "\r", "\n" }),
+					  ({ "", "\n" }))));
+      }
+    }
 
+    void log_rxml_run_error(string from, mixed message, mixed error)
+    {
+      string m;
+      if(message)
+	catch { m = (string)message; };
+      log_message(from, (m || "\r\n\r\n*** Unknown message ***"), 
+		  EMAIL_LABEL + error);
+      if (sscanf(args["error-variable"] || "", "%s.%s", 
+		 string scope, 
+		 string name) == 2)
+	RXML.user_set_var(name, error, scope);
+      
+      RXML_CONTEXT->misc[" _ok"] = 0;
+      RXML.run_error(EMAIL_LABEL + Roxen.html_encode_string(error));
+    }
+    
     array do_return(RequestID id) {
-
+      
       object m, o;
       string body = content || "";
       string subject;
       string fromx;
       string tox, split = args->separator || query("CI_split");
+      string ccx;
+      string bccx;
       string chs = "";
       mixed error;
       mapping headers = ([]);
 
+      RXML_CONTEXT->misc[" _ok"] = 1;
 
      if(stringp(id->misc->_email_sign_))
-	body += "\n-- \n" + id->misc->_email_sign_;
+	body += "\n-- \n" + m_delete(id->misc, "_email_sign_");
      if(mappingp(id->misc->_email_headers_))
-	headers = id->misc->_email_headers_;
+	headers = m_delete(id->misc, "_email_headers_");
      if(sizeof(query("CI_headers")))
 	foreach(((string)query("CI_headers")/"\r\n"), string line) 
 	  if (stringp(line) && sizeof(line)) {
@@ -321,16 +437,41 @@ class TagEmail {
      
      if(!stringp(split) || !sizeof(split))
 	split = "\0"; //default 
-     tox = args->to || headers->TO || ((replace(query("CI_to"),"\r","")/"\n")*split);
-     if (!tox || sizeof(tox)<1)
-       RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
+     tox = args->to || headers->TO ||
+       ((replace(query("CI_to"),"\r","")/"\n")*split);
+
+     if (args->cc)
+       ccx = args->cc;
+     if (headers->CC)
+       ccx = (ccx?ccx+",":"") + headers->CC;
+     if (ccx) {
+       headers->CC = ccx;
+     }
+     if (args->bcc)
+       bccx = args->bcc;
+     if (headers->BCC)
+       bccx = (bccx?bccx+",":"") + headers->BCC;
+     // Our SMTP.Client should remove any BCC header, but it does not parse
+     // headers at all so we have to do it here.
+     m_delete(headers, "BCC");
 
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
+      string from = only_from_addr(fromx);
+     
+      string env_from = args["envelope-from"];
+      if (!env_from || !sizeof (env_from)) {
+	env_from = query ("CI_from_envelope");
+	if (!sizeof (env_from))
+	  env_from = from;
+      }
 
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
-       body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
+       body = Array.map(body / "\r\n",
+			lambda(string el1) {
+			  return (replace(el1, "\n", "\r\n")); }
+			)*"\r\n";
 
      // charset
      chs = args->charset || id->misc->input_charset || query("CI_charset");
@@ -338,64 +479,133 @@ class TagEmail {
      //	id->misc->input_charset;
 
      // UTF8 -> dest. charset
-     if(sizeof(chs)) {
+     if(sizeof(chs))
+     {
+       object /* Locate.Charset.encoder */ enc;
+       if (mixed err = catch (enc = Locale.Charset.encoder (chs)))
+	 if (has_prefix (describe_error (err), "Unknown character encoding"))
+	   parse_error ("Unknown charset %O.\n", chs);
+	 else
+	   throw (err);
+       
+       // Subject
+       // Only encode the subject if it contains non us-ascii (7-bit) characters.
+       if (String.width(subject) != 8 || string_to_utf8(subject) != subject)
+       {
+	 string s_chs = chs;
+	 if (catch {
+	     subject = enc->feed(subject)->drain();
+	   }) {
+	   s_chs = "utf-8";
+	   subject = string_to_utf8(subject);
+	 }
+	 string subject_b = MIME.encode_word(({subject, s_chs}), "base64");
+	 string subject_qp = MIME.encode_word(({subject, s_chs}), "quoted-printable");
 
-	// Subject
-/*	if(zero_type(args["subject"]))
-	  subject = Locale.Charset.encoder(chs)->clear()->feed(query("CI_nosubject"))->drain();*/
-	subject = Locale.Charset.encoder(chs)->clear()->feed(args->subject||query("CI_nosubject"))->drain();
-	subject = MIME.encode_word(({subject, chs}), "base64" );
+	 // Use quoted printable if it is shorter because it is
+	 // significantly easier to read in clients not supporting
+	 // encoded subjects.
+	 if(sizeof(subject_b) < sizeof(subject_qp))
+	   subject = subject_b;
+	 else
+	   subject = subject_qp;
+       }
 
-	// Body
-	body = Locale.Charset.encoder(chs)->clear()->feed(body)->drain();
-
-	chs = ";charset=\""+chs+"\"";
+       // Body
+       if (catch {
+	   body = enc->clear()->feed(body)->drain();
+	 }) {
+	 chs = "utf-8";
+	 body = string_to_utf8(body);
+       }
+       chs = ";charset=\""+chs+"\"";
      }
 
-     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
-       m=MIME.Message(body, ([ "MIME-Version":"1.0",
-			     "content-type":"text/plain" + chs,
-			     "content-transfer-encoding":"8bit",
-			   ]));
-       error = catch(
-         m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":fromx,
-			     "to":replace(tox, split, ","),
-			     "content-type":"multipart/mixed",
-			     "x-mailer":"Roxen's email, v1.6"
-			   ]) + headers,
-			({ m }) + id->misc->_email_atts_
-         ));
+     string fenc =
+       headers["CONTENT-TRANSFER-ENCODING"] || args->mimeencoding || "8bit";
+
+     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_))
+     {
+       m = MIME.Message(body,
+			([ "MIME-Version" : "1.0",
+			   "content-type" : ( (headers["CONTENT-TYPE"] ||
+					       args->mimetype ||
+					       "text/plain") +
+					      chs ),
+			   "content-transfer-encoding" : fenc,
+			]));
+       error = catch {
+	 m=MIME.Message("",
+			([ "MIME-Version" : "1.0",
+			   "subject"      : subject,
+			   "from"         : nice_from_h(fromx),
+			   "to"           : replace(tox, split, ","),
+			   "date"         : Calendar.ISO.Second()->
+		                              format_smtp(), 
+			   "content-type" : (args["main-mimetype"] ||
+					     "multipart/mixed"),
+			   "x-mailer"     : "Roxen's email, r"+revision
+			]) + headers,
+			({ m }) + id->misc->_email_atts_ );
+       };
+       m_delete(id->misc,"_email_atts_");
      } else
-     error = catch(
-       m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":fromx,
-			     "to":replace(tox, split, ","),
-			     "content-type":"text/plain" + chs,
-			     "content-transfer-encoding":"8bit",
-			     "x-mailer":"Roxen's email, v1.6"
-			   ]) + headers)
-     );
+       error = catch {
+	 m = MIME.Message(body,
+			  ([ "MIME-Version" : "1.0",
+			     "subject"      : subject,
+			     "from"         : nice_from_h(fromx),
+			     "to"           : replace(tox, split, ","),
+			     "date"         : Calendar.ISO.Second()->
+			                        format_smtp(),
+			     "content-type" : ( (headers["CONTENT-TYPE"] ||
+						 args->mimetype ||
+						 "text/plain") +
+						chs ),
+			     "content-transfer-encoding" : fenc,
+			     "x-mailer"     : "Roxen's email, r"+revision
+			  ]) + headers );
+       };
 
      if (error)
-       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, m,
+			  "MIME message processing error: "+
+			  error[0]);
 
-     error = catch(o = Protocols.SMTP.client(query("CI_server_restrict") ? query("CI_server") : (args->server||query("CI_server"))));
+     error = catch {
+       o = Protocols.SMTP.Client(query("CI_server_restrict") ?
+				 query("CI_server") :
+				 (args->server || query("CI_server")));
+     };
      if (error)
-       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, m,
+			  "Couldn't connect to mail server. "+
+			  error[0]);
 
      catch(msglast = (string)m);
 
-//werror(sprintf("D: send_mess: %O\n", (string)m));
-     error = catch(o->send_message(fromx, tox/split, (string)m));
+     array(string) to = tox / split;
+     if (ccx)  to |= ccx / split;
+     if (bccx) to |= bccx / split;
+     string message = (string)m;
+     to -= ({""});
+
+     if (!sizeof(to))
+       log_rxml_run_error(from, message,
+			  "Recipient address is missing!");
+     
+     error = catch(o->send_message(env_from, to, message));
      if (error)
-       RXML.run_error(EMAIL_LABEL+Roxen.html_encode_string(error[0]));
+       log_rxml_run_error(from, message,
+			  error[0]);
 
      o->close();
      o = 0;
 
-     //itterate log
-     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)) ]) });
+     log_message(from, message);
+     
+     //iterate log
+     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)), "date" : Calendar.Second()->format_time() ]) });
 
      if (id->misc->debug)
        //result = ("\n<!-- debug output --><pre>\n"+Roxen.html_encode_string(colorize_parts((string)m))+"\n</pre><!-- end of debug output -->\n");
@@ -420,9 +630,11 @@ string status() {
   if(query("CI_verbose_status") && sizeof(mails)) {
 #if 1 //EMAIL_STATS
     rv += "<table>\n";
-    rv += "<tr ><th>From</th><th>To</th><th>Size</th></tr>\n";
+    rv += "<tr ><th>Date</th><th>From</th><th>To</th><th>Size</th></tr>\n";
     foreach(mails, mapping m)
-      rv += "<tr ><td>"+(m->from||"[N/A]")+"</td><td>"+(m->to||"[default]")+"</td><td>"+m->length+"</td></tr>\n";
+      rv += "<tr><td>"+(m->date||"")+"</td> <td>" +
+	  (replace((m->from||"[N/A]"),",",", ")) +
+	  "</td> <td>"+(m->to||"[default]")+"</td> <td>"+m->length+"</td></tr>\n";
     rv += "</table>\n";
 #else
     ; // xxx
@@ -441,10 +653,10 @@ constant module_doc  = "Adds an extra container tag &lt;email&gt; "
   " mail to mail server by (E)SMTP protocol.";
 
 
-TAGDOCUMENTATION
+TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=(["email":({ #"
-<desc cont='cont'><p><short></short>
+<desc type='cont'><p><short></short>
 
 The <tag>email</tag> sends MIME compliant mail to a mail server
 using the (E)SMTP protocol. The content is sent as raw text
@@ -457,20 +669,41 @@ module's</i> administration interface.</p>
 of the machine that operates the mail server.  </p>
 </attr>
 
-<attr name='subject' default='\"[ * No Subject * ]\"'
+<attr name='subject' default='[ * No Subject * ]'
 value=''><p>
  The subject line.
 </p>
 </attr>
 
-<attr name='from' value='' default='(empty)'><p>
- The email address of sender.
+<attr name='from' value=''><p>
+ The email address of sender. Values on the form <tt>John Doe foo@bar.com</tt>
+ renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
+ If the value contains a '&lt;' the value is left unaltered.
 </p>
 </attr>
 
-<attr name='to' value='' default='(empty)'><p>
+<attr name='envelope-from' value=''><p>
+ The email address of sender to use on the SMTP envelope. Values on the form <tt>John Doe foo@bar.com</tt>
+ renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
+ If the value contains a '&lt;' the value is left unaltered.
+</p>
+</attr>
+
+<attr name='to' value=''><p>
  The list of recipient email address(es). Separator character can be
  defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='cc' value=''><p>
+ The list of carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
+</p>
+</attr>
+
+<attr name='bcc' value=''><p>
+ The list of blind carbon copy recipient email address(es).
+ Separator character can be defined by the 'separator' attribute.
 </p>
 </attr>
 
@@ -479,57 +712,94 @@ value=''><p>
 </p>
 </attr>
 
-<attr name='charset' value='' default='iso-8859-1'><p>
- The charset of the body.
+<attr name='mimetype' value='MIME type'><p>
+ Overrides the MIME type of the body.
 </p>
 </attr>
 
+<attr name='main-mimetype' value='MIME type'><p>
+ Overrides the MIME type of the enclosing message when attachments are
+ used. Default is 'multipart/mixed' but it might be useful to set
+ this to 'multipart/related' when sending HTML mail with inlined
+ images. Note that HTML mails should use either <tt>quoted-printable</tt>
+ or <tt>base64</tt> transfer encoding to ensure that you don't exceed the
+ SMTP line length maximum.
+</p>
+</attr>
 
-<ex type='box'>
+<attr name='mimeencoding' value='MIME encoding'><p>
+ Sets the MIME encoding of the message. Typical values are <tt>8bit</tt>,
+ <tt>quoted-printable</tt> and <tt>base64</tt>.</p>
+</attr>
+
+<attr name='charset' value='' default='iso-8859-1'><p>
+ The charset of the body and subject. The body will be encoded in utf-8
+ if it was not possible to encode the text in the supplied charset. The subject
+ will be unencoded if possible otherwise encoded with the supplied charset
+ or encoded in utf-8 if it was not possible to encode the text in the supplied
+ charset.
+</p>
+</attr>
+
+<attr name='error-variable' value='RXML variable'>
+  <p>
+    An RXML variable to store a potential error message in. 
+  </p>
+</attr>
+
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" 
+error-variable=\"var.error\">
  This is the contents.
 </email>
-</ex>",
+<else>
+  Failed to send email: &var.error;
+</else>
+</ex-box>",
 
 ([
 
-"header":#"<desc tag='tag' cont='cont'><p><short hide='hide'>
+"header":#"<desc type='both'><p><short hide='hide'>
  Adds additional headers to the mail.
 
  </short>This subtag/container is designed for adding additional
  headers to the mail.</p>
+ <p>By default replacing standard headers is not allowed.</p>
 </desc>
 
 <attr name='name' value='string' required='required'><p>
- The name of the header. Standard headers are 'From:', 'To:', 'Cc:',
- 'Bcc:' and 'Subject:'. However, there are no restrictions on how many
+ The name of the header. Standard headers are 'From', 'To', 'Cc',
+ 'Bcc' and 'Subject'. However, there are no restrictions on how many
  headers are sent.</p>
 </attr>
 
 <attr name='value' value=''><p>
  The value of the header. This attribute is only used when using the
  singletag version of the tag. In case of the tag being used as a
- containertag the content will be the value.</p>
+ containertag the content will be the value. The 'Bcc' and
+ 'Cc' headers can contain multiple addresses separated by
+ ',' or the string in the split attribute of <tag>email</tag>.</p>
 </attr>
 
 
-<ex type='box'>
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
+<header name=\"Bcc\">joe@bar.com|jane@foo.com</header>
 <header name=\"X-foo-header\" value=\"one two three\" />
 <header name=\"Importance\">Normal</header>
 <header name=\"X-MSMail-Priority\" value=\"Normal\" />
  This is the contents.
 </email>
-</ex>",
+</ex-box>",
 
-"signature":#"<desc tag='tag'><p><short hide='hide'>Adds a signature to the mail.
+"signature":#"<desc tag='cont'><p><short hide='hide'>Adds a signature to the mail.
  </short>This container is designed for adding a signature to the
  mail.</p></desc>
 
-<ex type='box'>
+<ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
@@ -544,19 +814,18 @@ John Doe
 Roxen Administrator
 </signature>
 </email>
-</ex>",
+</ex-box>",
 
-"attachment":#"<desc tag='tag' cont='cont''><p><short hide='hide'>
+"attachment":#"<desc type='both'><p><short hide='hide'>
  Adds attachments to the mail.</short>This tag/subcontainer is
- designed for adding attachments to the mail. </p>
+ designed for adding attachments to the mail.</p>
 
  <p>There are two different kinds of attachments; file and inline.
  File attachments require the <i>file</i> attribute while inline
  attachments are written inline. Inline attachments can for instance
- be a text or a binary (e.g. output from a database). </p>
+ be a text or a binary (e.g. output from a database).</p>
 
-<ex type='box'>
-<email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
+<ex-box><email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
 separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 
 <header name=\"X-foo-header\" value=\"one two three\" />
@@ -572,8 +841,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
       company2        2.345   ix
       company8        3.4567  az
 </attachment>
-</email>
-</ex>
+</email></ex-box>
 
 </desc>
 
@@ -597,23 +865,33 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
  is required when sending inline text or binary attachments.</p>
 </attr>
 
+<attr name='disposition' value='Content-disposition'><p>
+ The MIME content-disposition to use for the attachment.
+ The default disposition is \"attachment\".
+</p>
+</attr>
+
+<attr name='cid' value='Content-ID'><p>
+ The content-id to use for the attachment.
+ The default id is \"nocid\" for the first attachment without custom
+ content-id (for backwards compatibility), and a counter-based string for
+ subsequent attachments.
+</p>
+</attr>
+
 <attr name='mimetype' value='MIME type'><p>
  Sets the MIME type of the file. Since MIME type is set by the
  <i>Content types</i> module this setting seldom needs to be
- used. Only applicable for <i>file</i> attachments.</p>
+ used.</p>
 </attr>
 
-<attr name='mimeencoding' value='MIME encoding' default='base64'><p>
+<attr name='mimeencoding' value='MIME encoding'><p>
  Sets the MIME encoding of the file. If omitted the <i>E-mail
  module's</i> default setting within the <webserver /> Administration
- interface will be used. Only applicable for <i>file</i>
- attachments.</p>
-</attr>
+ interface might be used if it's a <i>file</i> attachment.</p>
+</attr>"
 
-
-"])
-
-
-			  })
-		]);
+   ])
+ })
+]);
 #endif

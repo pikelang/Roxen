@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.4 2000/08/16 14:49:14 lange Exp $
+ * $Id$
  */
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -14,7 +14,11 @@ string doc = LOCALE(25,
 
 mixed parse( RequestID id )
 {
+  string res = "<font size='+1'><b>" +
+    LOCALE(24, "Reload configurations from disk") + "</b></font>"
+    "<p />";
   roxen->reload_all_configurations();
-  return LOCALE(26, "All configurations reloaded from disk.")+
+  res += LOCALE(26, "All configurations reloaded from disk.") +
     "<p><cf-ok/></p>";
+  return res;
 }

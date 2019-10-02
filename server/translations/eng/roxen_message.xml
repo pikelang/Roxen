@@ -5,7 +5,6 @@
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
 <file>../base_server/wizard.pike</file>
-<file>../protocols/prot_fhttp.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
 <added id="1"/>
 
@@ -33,84 +32,83 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="5">
-<o>Uncaught error in handler thread: %s Clientwill not get any response from Roxen.</o>
+<o>Uncaught error in handler thread: %sClient will not get any response from Roxen.</o>
 <t></t>
 </str>
 
 <str id="6">
-<o>Failed to bind %s://%s:%d/ (%s)</o>
+<o>Failed to bind %s (%s)</o>
 <t></t>
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file failed!</o>
-<t></t>
-</str>
-
-<str id="9">
-<o>SSL3: Reading key-file failed!</o>
-<t></t>
-</str>
-
-<str id="10">
-<o>SSL3: No certificate found.</o>
-<t></t>
-</str>
-
-<str id="11">
-<o>SSL3: Private rsa key not valid</o>
-<t></t>
-</str>
-
-<str id="13">
-<o>SSL3: Certificate not valid (DER).</o>
-<t></t>
-</str>
-
-<str id="14">
-<o>SSL3: Certificate and private key do not match.</o>
-<t></t>
-</str>
-
-<str id="15">
-<o>SSL3: Private dsa key not valid</o>
-<t></t>
-</str>
-
-<str id="17">
-<o>SSL3: No private key found.</o>
-<t></t>
-</str>
-
-<str id="19">
-<o>Bad URL '%s' for server `%s'</o>
-<t></t>
-</str>
-
-<str id="20">
-<o>Cannot register URL %s, already registered by %s!</o>
-<t></t>
-</str>
-
-<str id="21">
-<o>Cannot register URL %s, cannot find the protocol %s!</o>
-<t></t>
-</str>
-
-<str id="22">
-<o>Binding the port on IP %s failed
-   for URL %s!
+<o>Reading certificate file %O failed: %s
 </o>
 <t></t>
 </str>
 
+<str id="9">
+<o>Reading key file %O failed: %s
+</o>
+<t></t>
+</str>
+
+<str id="10">
+<o>No certificate found in %O.
+</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>Private rsa key not valid</o>
+<t></t>
+</str>
+
+<str id="13">
+<o>Certificate not valid (DER).
+</o>
+<t></t>
+</str>
+
+<str id="14">
+<o>Certificate and private key do not match.
+</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Private dsa key not valid</o>
+<t></t>
+</str>
+
+<str id="17">
+<o>No private key found.
+</o>
+<t></t>
+</str>
+
+<str id="19">
+<o>Bad URL %O for server %O.</o>
+<t></t>
+</str>
+
+<str id="20">
+<o>Cannot register URL %s - already registered by %s.</o>
+<t></t>
+</str>
+
+<str id="21">
+<o>Cannot register URL %s - cannot find the protocol %s.</o>
+<t></t>
+</str>
+
 <str id="23">
-<o>Cannot register URL %s!</o>
+<o>Failed to register URL %s for %O.</o>
 <t></t>
 </str>
 
 <str id="24">
-<o>It is only possible to change uid and gid if the server is running as root.</o>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t></t>
 </str>
 
@@ -215,11 +213,9 @@ No module by that name: "%s".
 </str>
 
 <str id="45">
-<o>Failed to enable the module %s. Skipping.
-%s</o>
+<o>Failed to enable the module %s. Skipping.</o>
 <t></t>
 </str>
-
 
 <pike>
 
@@ -240,11 +236,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <t></t>
 </str>
 
-<str id="7">
-<o>The protocol '%s' is not available</o>
-<t></t>
-</str>
-
 <str id="12">
 <o>Hilfe</o>
 <t></t>
@@ -261,7 +252,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="38">
-<o>Ok</o>
+<o>OK</o>
 <t></t>
 </str>
 
@@ -317,5 +308,49 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="57">
 <o>Next -&amp;gt;</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>Syntax error in security patterns: Cannot find the user database '%s'</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>Syntax error in security patterns: Cannot find the auth method '%s'</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>Syntax error in security patterns: Expected 'allow' or 'deny'
+</o>
+<t></t>
+</str>
+
+<str id="61">
+<o>Not binding the port %O - disabled in configuration.</o>
+<t></t>
+</str>
+
+<str id="62">
+<o>Attempt %d. Retrying in 1 minute.</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>Cannot open port %s for URL %s - IPv6 support disabled.
+</o>
+<t></t>
+</str>
+
+<str id="63">
+<o>No certificates found.
+</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>TLS port %s opened.
+</o>
 <t></t>
 </str>

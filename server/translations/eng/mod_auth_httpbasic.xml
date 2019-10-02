@@ -5,7 +5,7 @@
 <file>../modules/security/auth_httpbasic.pike</file>
 
 <str id="1">
-<o>Password authentication</o>
+<o>Authentication: Password</o>
 <t></t>
 </str>
 

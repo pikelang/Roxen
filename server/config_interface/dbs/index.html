@@ -1,14 +1,24 @@
 <topmenu base="../" selected=dbs />
+<trans-reg project="roxen_config" path="translations/%L/roxen_config.xml"/>
 
 <content>
   <cv-split>
     <subtablist width="100%">
       <st-tabs>
-         <!-- <insert file="subtabs.pike"/> -->
+         <insert file="subtabs.pike"/> 
       </st-tabs>
 
       <st-page>
-          <insert file="db_matrix.pike"/>
+	  <eval><insert file="db_list.pike"/></eval>
+
+	 <cf-perm perm="Edit Global Variables">
+	   <p>
+	     <a href='create_db.html'><gbutton><translate id="437">Create new database</translate></gbutton></a>
+	     <a href='create_group.html'><gbutton><translate id="438">Create new group</translate></gbutton></a>
+	     <a href='db_repairall.html'><gbutton><translate id="537">Repair all tables</translate></gbutton></a>
+	     <a href='db_optimizeall.html'><gbutton><translate id="538">Optimize all tables</translate></gbutton></a>
+	   </p>
+	 </cf-perm>
       </st-page>
     </subtablist>
   </cv-split>

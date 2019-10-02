@@ -1,9 +1,22 @@
 #!/bin/sh
 #
-# $Id: start,v 1.1 2001/02/02 12:08:40 noring Exp $
+# $Id$
 
 # Can be set with '--config-dir=DIR'
 DIR=configurations
+
+# Breaks on linux when using symlinks.
+dn="`dirname "$0"`"
+case "$dn" in 
+ ""|".")
+  ;;
+ *)
+  if [ ! "$dn" = "`pwd`" ]
+  then
+    cd "$dn"
+  fi
+  ;;
+esac
 
 parse_args()
 {

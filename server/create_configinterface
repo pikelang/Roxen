@@ -1,2 +1,2 @@
 #!/bin/sh
-./start --silent-start --program bin/create_configif.pike $@
+./start --silent-start --program bin/create_configif.pike "$@"

@@ -1,15 +1,14 @@
-/*
- * Locale stuff.
- * <locale-token project="roxen_config"> _ </locale-token>
- */
+// Locale stuff.
+// <locale-token project="roxen_config"> _ </locale-token>
+
 #include <roxen.h>
 #define _(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
 
 constant box      = "large";
-constant box_initial = 0;
+constant box_initial = 1;
 
-String box_name = _(367,"Server status");
-String box_doc  = _(368,"Various global server statistics");
+LocaleString box_name = _(367,"Server status");
+LocaleString box_doc  = _(368,"Various global server statistics");
 
 string add_row( string item, string value ) {
   return "<tr><td>" + item + ":</td><td>" + value + "</td></tr>";
@@ -24,7 +23,9 @@ string parse( RequestID id )
   contents += add_row( _(370, "Server uptime"),
 		      Roxen.msectos( dt*1000 ));
   array ru;
+#pike 7.4
   if(!catch(ru=rusage())) {
+#pike __REAL_VERSION__
     int tmp;
     if(ru[0])
       tmp = ru[0]/(time() - roxen->start_time+1);
@@ -51,7 +52,12 @@ string parse( RequestID id )
 		       sprintf(" (%.2f/%s)",
 			       (((float)total->requests*60.0)/dt),
 			       _(6,"min")) );
-  contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->sent));
+  contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->received));
+
+#if constant(System.getloadavg)
+  contents += add_row( _(1060, "System load"),
+		       sprintf ("%{%.2f %}", System.getloadavg()));
+#endif
 
   return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
 	  contents+"</table></box>");

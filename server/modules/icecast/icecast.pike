@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.7 2001/04/17 04:34:09 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -66,7 +68,7 @@ class MPEGStream( Playlist playlist )
       }
   }
   
-  static int last_hrtime, base_time;
+  protected int last_hrtime, base_time;
 
   int realtime()
   {
@@ -124,10 +126,10 @@ class MPEGStream( Playlist playlist )
   }
   
   // Low level code.
-  static string buffer;
-  static int    bpos;
+  protected string buffer;
+  protected int    bpos;
 
-  static string|int getbytes( int n, int|void s )
+  protected string|int getbytes( int n, int|void s )
   {
     if( !fd )
       fd = playlist->next_file();
@@ -177,7 +179,7 @@ class MPEGStream( Playlist playlist )
     return res;
   }
 
-  static int rate_of(int r)
+  protected int rate_of(int r)
   {
     switch(r)
     {
@@ -188,14 +190,14 @@ class MPEGStream( Playlist playlist )
     }
   }
 
-  static array(array(int)) bitrates =
+  protected array(array(int)) bitrates =
   ({
     ({0,32,64,96,128,160,192,224,256,288,320,352,384,416,448}),
     ({0,32,48,56,64,80,96,112,128,160,192,224,256,320,384}),
     ({0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}),
   });
 
-  static string get_frame()
+  protected string get_frame()
   {
     string data;
     /* Find header */
@@ -209,7 +211,7 @@ class MPEGStream( Playlist playlist )
       p++;
       if( (patt & 0xfff0) == 0xfff0 )
       {
-	int srate, channels, layer, ID, pad, blen;
+	int srate, layer, ID, pad, blen;
 	int header = ((patt&0xffff)<<16);
 	if( (by = getbytes( 2 )) < 0 )
 	  break;
@@ -309,11 +311,11 @@ class Location( string location,
     string protocol = "ICY";
 
     werror("%O\n", id->request_headers );
-    if( id->request_headers[ "icy-metadata" ] )
+    if( 0 && id->request_headers[ "icy-metadata" ] )
     {
-//       use_metadata = (int)id->request_headers[ "icy-metadata" ];
-//       if( use_metadata )
-// 	metahd = "icy-metaint:"+METAINTERVAL+"\r\n";
+      use_metadata = (int)id->request_headers[ "icy-metadata" ];
+      if( use_metadata )
+	metahd = "icy-metaint:"+METAINTERVAL+"\r\n";
     }
     
     if( id->request_headers[ "x-audiocast-udpport" ] )
@@ -349,7 +351,7 @@ class Location( string location,
       i += initial;
     
     conn += ({ Connection( id->my_fd, i,protocol,use_metadata,
-			   stream,
+			   stream, this_object(),
 			   lambda( Connection c ){
 			     int pt = time()-c->connected;
 			     conn -= ({ c });
@@ -417,10 +419,11 @@ class Connection
 {
   Stdio.File fd;
   MPEGStream stream;
-  int do_meta, last_meta;
+  Location location;
+  int do_meta, meta_cnt;
   string protocol;
   int sent, skipped; // frames.
-  int sent_bytes;
+  int sent_bytes, sent_meta;
   int id = __id++;
   array buffer = ({});
   string current_block;
@@ -440,19 +443,27 @@ class Connection
 		    sent, skipped );
   }
 
+  string old_mdkey;
   string gen_metadata( )
   {
-    if(!current_md )
+    string s = " ";
+    if( !current_md )
       current_md = stream->playlist->metadata();
-    string s = sprintf( " StreamTitle='%s';StreamUrl='%s';",
-			current_md->name || current_md->path,
-			"")+"\0";
-    while( strlen(s) & 15 ) s+= "\0";
-    s[0]=strlen(s);
+    if( (current_md->name||current_md->path)+current_md->url != old_mdkey )
+    {
+      old_mdkey = (current_md->name||current_md->path)+current_md->url;
+      s = sprintf( " StreamTitle='%s';StreamUrl='%s';",
+		   current_md->name || current_md->path,
+		   current_md->url || location->url );
+    }
+    while( strlen(s) & 15 )
+      s+= "\0";
+    s[ 0 ]=strlen(s)/16;
+    werror("%O\n", s );
     return s;
   }
   
-  static void callback( string frame )
+  protected void callback( string frame )
   {
     buffer += ({ frame });
     if( sizeof( buffer ) > 100 )
@@ -469,7 +480,7 @@ class Connection
 
   int headers_done;
   
-  static void send_more()
+  protected void send_more()
   {
     if( !strlen(current_block) )
     {
@@ -480,10 +491,14 @@ class Connection
 
       if( do_meta )
       {
-	if( (strlen( current_block ) + sent_bytes) - last_meta >= METAINTERVAL )
+	meta_cnt += strlen( current_block );
+	if( meta_cnt >= METAINTERVAL )
 	{
-	  last_meta = (strlen( current_block ) + sent_bytes);
-	  current_block += gen_metadata();
+	  string meta;
+	  meta_cnt -= METAINTERVAL;
+	  int rest = strlen(current_block)-meta_cnt-1;
+	  sent_meta += strlen(meta = gen_metadata());
+	  current_block = current_block[..rest]+meta+current_block[rest];
 	}
       }
       buffer = buffer[1..];
@@ -500,12 +515,12 @@ class Connection
       closed();
   }
 
-  static void md_callback( mapping metadata )
+  protected void md_callback( mapping metadata )
   {
     current_md = metadata;
   }
   
-  static void closed( )
+  protected void closed( )
   {
     fd->set_blocking( );
     fd = 0;
@@ -516,10 +531,11 @@ class Connection
 //     destruct( this_object() );
   }
   
-  static void create( Stdio.File _fd, string buffer, 
-		      string prot, int _meta,  MPEGStream _stream,
-		      function _closed )
+  protected void create( Stdio.File _fd, string buffer, 
+			 string prot, int _meta,  MPEGStream _stream,
+			 Location _loc,   function _closed )
   {
+    location = _loc;
     protocol = prot;
     fd = _fd;
     do_meta = _meta;
@@ -602,9 +618,9 @@ class VarStreams
     if( sizeof( a ) > 3 ) m->maxconn =  (int)a[3];
     if( sizeof( a ) > 4 ) m->url = a[4];
     if( sizeof( a ) > 5 ) m->name = a[5];
-    if( !strlen( m->jingle ) ) m_delete( m, "jingle" );
-    if( !strlen( m->url ) )    m_delete( m, "url" );
-    if( !strlen( m->name ) )   m_delete( m, "name" );
+    if( !m->jingle || !strlen( m->jingle ) ) m_delete( m, "jingle" );
+    if( !m->url || !strlen( m->url ) )    m_delete( m, "url" );
+    if( !m->name || !strlen( m->name ) )   m_delete( m, "name" );
     return m;
   }  
   array(mapping) get_streams()

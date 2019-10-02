@@ -26,6 +26,9 @@ string do_describe_error( mixed err )
 
 string common_wait( mapping m )
 {
+  if (!test) {
+    return "Test not started";
+  }
   int err = test->wait();
   if( err == 100 )  return "Illegal arguments";
   if( err == 99 )   return "Timeout";
@@ -41,7 +44,7 @@ void run_pikescript( string p, string ... args  )
   if( !http_url )
     foreach( c->query("URLs"), string url )
       if( has_prefix( url, "http://" ) )
-	http_url = url;
+	http_url = (url/"#")[0];
 
   if( !http_url )
   {
@@ -49,8 +52,8 @@ void run_pikescript( string p, string ... args  )
     return;
   }
 
-  test = Process.create_process( ({
-    "pike",
+  test = Process.Process( ({
+    getenv("PIKE"),
     combine_path( __FILE__, "../"+p ),
     http_url
   })+args );
@@ -66,7 +69,8 @@ void current_test_done()
       {
 	tests_failed++;
 	if( verbose ) report_debug(" FAILED\n");
-	report_debug(do_describe_error(IND("_desc")+" FAILED\n" ));
+	report_debug("################ " +
+		     do_describe_error(IND("_desc")+" FAILED\n" ));
 	report_debug(do_describe_error( fail ));
       }
       else if( verbose )

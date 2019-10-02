@@ -28,9 +28,26 @@ string month(int num)
   return months[ num - 1 ];
 }
 
+// Some languages (eg russian) have a different form
+// of the month name if it's part of a date.
+string numbered_month(int num)
+{
+  return month(num);
+}
+
+string short_month(int num)
+{
+  return months[ num - 1 ][..2];
+}
+
 string day(int num)
 {
   return days[ num - 1 ];
+}
+
+string short_day(int num)
+{
+  return days[ num - 1 ][..2];
 }
 
 array aliases()
@@ -42,7 +59,7 @@ string language(string code)
 {
   if(sizeof(code)==2)
     code=Standards.ISO639_2.map_639_1(code);
-  if(sizeof(code)!=3) return 0;
+  if(sizeof(code || "")!=3) return 0;
   if(languages[code]) return languages[code];
   return Standards.ISO639_2.get_language(code);
 }

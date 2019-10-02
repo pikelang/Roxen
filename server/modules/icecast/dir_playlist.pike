@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.2 2001/04/10 05:13:58 per Exp $";
+constant cvs_version="$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -55,15 +57,14 @@ void start()
 	if( s->isdir )
 	  recursively_add( d+"/"+f );
 	else
-	  switch( (f/".") [-1] )
-	  {
-	    case "mpg":    case "mp3":
-	    case "mp2":    case "mp1":
+	  if(search(query("exts")/"," || ({}), (f/".")[-1]) > -1)
 	      list += ({ combine_path( d+"/",f) });
-	  }
   };
   recursively_add( query("dir") );
-  list = Array.shuffle( list );
+  if(query("mode") == "shuffle")
+    list = Array.shuffle( list );
+  else
+    list = Array.sort( list );
 }
 
 string peek_next()
@@ -84,5 +85,11 @@ void create()
 {
   defvar("dir", "NONE", _(0,"Directory"), TYPE_DIR|VAR_INITIAL,
 	 _(0,"The directory that contains the mpeg-files."));
+  defvar("mode", "shuffle", _(0,"Playing mode"), TYPE_STRING_LIST,
+         _(0,"The mode used to serve mpeg-files."),
+	 ({ "shuffle", "linear" }) );
+  defvar("exts", "mpg,mp1,mp2,mp3", _(0,"File extensions"), TYPE_STRING,
+         _(0,"Comma separated list of file extensions of mpeg-files."));
+
   codec_vars(defvar);
 }

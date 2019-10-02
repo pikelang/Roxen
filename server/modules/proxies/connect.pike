@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.17 2001/03/13 00:28:43 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 
@@ -153,12 +153,12 @@ void connected(object to, object id)
   id->disconnect();
 }
 
-inline private nomask static string find_host(string from)
+inline private string find_host(string from)
 {
   return (from/":")[0];
 }
 
-inline private nomask static int find_port(string from)
+inline private int find_port(string from)
 {
   return (int)(((from/":")+({80}))[1]);
 }

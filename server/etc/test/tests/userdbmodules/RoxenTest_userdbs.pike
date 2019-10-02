@@ -38,9 +38,9 @@ void lookup_threaded( array f, RoxenModule m )
     }
   };
 
-  for( int i = 0; i<sizeof( f ); i++ )
+  for( int i = 0; i<min(sizeof( f ),20); i++ )
     f[i] = thread_create( lookup_and_group, f[i] );
-  f->wait();
+  (f[0..min(sizeof(f),19)])->wait();
   if( failed )
     throw( failed );
 }
@@ -64,7 +64,9 @@ void verify_compat_userinfo( Configuration c, array list )
       throw( sprintf( "Expected array of size 7, got array of size %d\n",
 		      sizeof(ui ) ) );
 
-    if( ui[0] != s )
+    //  Mac OS X 10.5 returns system users with a "_" prefix even if queried
+    //  for the non-prefixed name so we'll look the other way when comparing.
+    if( (ui[0] - "_") != (s - "_") )
       throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
 		    ui[0],s ));
 
@@ -120,6 +122,10 @@ void verify_compat_user_from_uid( Configuration c, array list )
 
 void run_tests( Configuration c )
 {
+#ifdef __NT__
+  return; // This module does not work on NT.
+#endif
+
   RoxenModule m;
 
   test( roxen.enable_configuration, "usertestconfig" );

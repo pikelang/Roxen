@@ -3,3 +3,5 @@
 <theme-set what='logo' to='/internal-roxen-roxen-small'/>
 
 <theme-set what='logo-html' to='<img hspace="15" border="0" src="&usr.logo;" alt="" />'/>
+<theme-set what="tab-frame-image" to="/internal-roxen-tabframe"/>
+<theme-set what="gbutton-frame-image" to="/internal-roxen-gbutton"/>

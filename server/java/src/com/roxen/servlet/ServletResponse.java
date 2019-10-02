@@ -271,6 +271,8 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
 
   public void sendError(int sc) throws IOException
   {
+    reset(); // Throws IllegalStateException if committed
+    outputStream = null;
     setContentType("text/html");
     setContentLength((statusmsg==null? 0:statusmsg.length()));
     setStatus(sc);

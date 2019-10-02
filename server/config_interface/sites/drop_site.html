@@ -3,30 +3,27 @@
 
 <content>
 
-<cv-leftside>
-<img src="internal-roxen-unit" width='1' height="16" alt="" /><br />
-<gbutton frame-image="&usr.left-buttonframe;" width="150" 
- bgcolor="&usr.left-selbuttonbg;" icon_src="&usr.selected-indicator;" 
- icon_align="left" href=''><translate id="213">Sites</translate></gbutton><br /><br />
-
-  <emit source='configurations'>
-    <gbutton frame-image="&usr.left-buttonframe;" bgcolor="&usr.left-buttonbg;" href='site.html/&_.sname;/' width="150">&_.name;</gbutton><br />
-  </emit>
-</cv-leftside>
-
-<br /><p>
 <cv-split>
   <subtablist><st-page>
   <cf-perm perm="Create Site">
-       <h1><translate id="249">Drop old site</translate></h1> 
+    <h1><translate id="249">Drop old site</translate></h1> 
     <blockquote>
-       <emit source="configurations">
-          <gbutton width="300" href='drop_site.pike?site=&_.sname;' icon_src="&usr.next;" align_icon="right" hspace="5" vspace="5"> &_.name; </gbutton><br />
+      <p><translate id="400">Select site to drop.</translate>
+      </p>
+      <emit source="configurations" self="no">
+         <gbutton width="300"
+	          href='drop_site.pike?site=&_.sname;'
+		  icon_src="&usr.next;"
+		  align_icon="right"
+		  hspace="5"
+		  vspace="5"> &_.name; </gbutton><br />
       </emit><p>
-     <insert file='drop_site_warning.txt' nocache="1"/>
+    <insert file='drop_site_warning.txt' nocache="1"/>
+    <br />
+    <br />
+    <cf-cancel href="./"/>
     </blockquote>
   </cf-perm><br />
   </st-page></subtablist>
 </cv-split>
-</p>
 </content>

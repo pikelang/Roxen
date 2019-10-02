@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.39 2001/03/15 23:31:26 per Exp $";
+constant cvs_version = "$Id$";
 
 
 constant module_type = MODULE_TAG;
@@ -51,8 +51,8 @@ class ScopeSSI {
     get_var=_get_var;
   }
 
-  string|int `[] (string var, void|RXML.Context c, void|string scope) {
-    return get_var(var, c->id)||"";
+  string|int `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
+    return ENCODE_RXML_TEXT(get_var(var, c->id), type);
   }
 
   array(string) _indices(void|RXML.Context c) {
@@ -61,6 +61,7 @@ class ScopeSSI {
 		 "last_modified", "server_software", "server_name",
 		 "gateway_interface", "server_protocol", "auth_type",
 		 "http_cookie", "cookie" });
+
     if(c->id) {
       ind += indices(Roxen.build_env_vars(0, c->id, 0));
       if(c->id->misc->ssi_variables) ind += indices(c->id->misc->ssi_variables);
@@ -117,13 +118,13 @@ constant tagdoc=([
 <attr name='var' value='document name'><p>
  Name of the current document (= page). RXML counterpart:
  <ent>page.self</ent>.</p>
- <ex type=vert><!--#echo var=\"document name\" --></ex>
+ <ex><!--#echo var=\"document name\" --></ex>
 </attr>
 
 <attr name='var' value='document uri'><p>
  URI (URL) to the current page. RXML counterpart:
  <ent>page.url</ent>.</p>
- <ex type=vert><!--#echo var=\"document uri\" --></ex>
+ <ex><!--#echo var=\"document uri\" --></ex>
 </attr>
 
 <attr name='var' value='date local'><p>
@@ -178,7 +179,7 @@ constant tagdoc=([
 
 <attr name='var' value='http cookie'><p>
  A list of the set cookies.</p>
- <ex type='box'><!--#echo var=\"http cookie\" --></ex>
+ <ex-box><!--#echo var=\"http cookie\" --></ex-box>
 </attr>
 
 <attr name='var' value='cookie'><p>
@@ -187,7 +188,7 @@ constant tagdoc=([
 
 <attr name='var' value='http accept'><p>
  A list of the http accept formats.</p>
- <ex type='vert'><!--#echo var=\"http accept\" --></ex>
+ <ex><!--#echo var=\"http accept\" --></ex>
 </attr>
 
 <attr name='var' value='http user agent'><p>
@@ -288,7 +289,7 @@ constant tagdoc=([
 <desc tag='tag'><p><short>
  This tag outputs a listing of all existing variables and their
  values.</short> Attributes won't be printed.</p>
- <ex type='box'><pre><!--#printenv --></pre></ex>
+ <ex-box><pre><!--#printenv --></pre></ex-box>
 </desc>",
 
 "!--#set":#"<desc tag='tag'><p><short>
@@ -313,6 +314,7 @@ array(string) simpletag_echo(string tag, mapping m, string c, RequestID id)
 {
   if(!m->var)
   {
+    m_delete(m, "--");
     if(sizeof(m) == 1)
       m->var = m[indices(m)[0]];
     else
@@ -382,8 +384,7 @@ string get_var(string var, RequestID id)
     return "Basic";
 
    case "http_cookie": case "cookie":
-    NOCACHE();
-    return Roxen.html_encode_string(id->misc->cookies || "");
+     return Roxen.html_encode_string(id->misc->cookies || "");
 
    default:
     var = upper_case(var);
@@ -419,11 +420,16 @@ array(string) simpletag_printenv(string t, mapping m, string c, RequestID id) {
 }
 
 string fix_var(string s, RequestID id) {
-  s=replace(s||"",({"\000","\\$"}),({"","\000"}));
+  s=replace(s||"",({"\0","\\$"}),({"","\0"}));
   int size=sizeof(s);
   if(size>2 && s[size-2..]=="--") s=s[..size-3];
-  if(s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
-  return s; //FIXME: No in-string-substitution yet.
+
+  string a,var,b;
+  while( sscanf(s, "%s${%s}%s", a, var, b)==3 )
+    s = a + ((get_var(var, id)||"")-"\0") + b;
+  replace(s, "\0", "$");
+
+  return s;
 }
 
 array(string) simpletag_config(string tag, mapping m, string c, RequestID id)

@@ -12,7 +12,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: serbian.pike,v 1.9 2000/11/27 14:09:15 per Exp $";
+constant cvs_version = "$Id$";
 constant _id = ({ "sr", "serbian", "" });
 constant _aliases = ({ "sr", "ser", "serbian" });
 
@@ -129,7 +129,7 @@ string number(int num)
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

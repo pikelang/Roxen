@@ -1,8 +1,8 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2000, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.9 2001/03/23 03:13:19 per Exp $";
+constant cvs_version = "$Id$";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -12,9 +12,13 @@ constant doc =
 
 inherit FontHandler;
 
-array available_fonts()
+Thread.Mutex lock = Thread.Mutex();
+
+protected mapping font_cache;
+
+protected void build_font_cache()
 {
-  array res = ({});
+  mapping res = ([ ]);
   foreach(roxen->query("font_dirs"), string dir)
   {
     dir+="32/";
@@ -31,14 +35,21 @@ array available_fonts()
 		   string style)
 	    if(has_value(d, style)) 
             {
-              res |= ({ replace(f,"_", " ") });
-              break;
+	      res["32/" + f + "/" + style] = replace(f, "_", " ");
             }
         }
       }
     }
   }
-  return res;
+  font_cache = res;
+}
+
+array available_fonts(int(0..1)|void force_reload)
+{
+  Thread.MutexKey key = lock->lock();
+  if (!font_cache || force_reload)
+    build_font_cache();
+  return Array.uniq(values(font_cache));
 }
 
 array(mapping) font_information( string fnt )
@@ -87,15 +98,30 @@ array has_font( string name, int size )
   array available;
   if( String.width( name ) > 8 )
     return 0;
-  foreach(roxen->query("font_dirs"), string dir)
-  {
-    base_dir = dir+size+"/"+fix_name(name);
-    if((available = r_get_dir(base_dir))) break;
-    base_dir=dir+"/32/"+fix_name(name);
-    available = r_get_dir(base_dir);
+
+  Thread.MutexKey key = lock->lock();
+  if (!font_cache)
+    build_font_cache();
+
+  string match_prefix = size + "/" + fix_name(name) + "/";
+  array matches = filter(indices(font_cache), has_prefix, match_prefix);
+  if (sizeof(matches))
+    return map(matches, `[], sizeof(match_prefix), 99999);
+  
+  if (size != 32) {
+    foreach(roxen->query("font_dirs"), string dir) {
+      string key = size + "/" + fix_name(name);
+      base_dir = dir + key;
+      if (available = r_get_dir(base_dir)) {
+	foreach(available - ({ "CVS" }), string style)
+	  font_cache[key + "/" + style] = name;
+	return available;
+      }
+    }
+    key = 0;
+    return has_font(name, 32);
   }
-  if(!available) return 0;
-  return available - ({ "CVS" });
+  return 0;
 }
 
 class MyFont {
@@ -114,6 +140,11 @@ class MyFont {
     else
       ::set_y_spacing( (float)delta );
   }
+
+  string _sprintf() {
+    return sprintf( "OldFont" );
+  }
+
 }
 
 Font open( string name, int size, int bold, int italic )

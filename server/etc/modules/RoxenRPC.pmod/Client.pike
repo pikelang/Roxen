@@ -1,8 +1,11 @@
 /*
- * $Id: Client.pike,v 1.15 1998/04/22 15:23:08 grubba Exp $
+ * $Id$
  */
 
-#define error(X) throw( ({ X, backtrace() }) )
+#define CHECK_IO_ERROR(FD, OP) do {					\
+    if (int err = (FD)->errno())					\
+      error ("Error " OP " to %O: %s\n", (FD), strerror (err));		\
+  } while (0)
 
 class RemoteFunctionCall
 {
@@ -16,14 +19,19 @@ class RemoteFunctionCall
     int len; object key = lock(); mixed data;
     data= encode_value(({ cl, me, args }));
     server->write(sprintf("%4c%s", strlen(data), data));
+    CHECK_IO_ERROR (server, "writing");
     data="";
     while(strlen(data) < 8) {
       data += server->read(4000,1);
+      CHECK_IO_ERROR (server, "reading");
       if(!strlen(data))
 	error("Remote RPC server closed connection.\n");
     }
     sscanf(data, "%4c%s", len,data);
-    if(strlen(data) < len) data += server->read(len-strlen(data));
+    if(strlen(data) < len) {
+      data += server->read(len-strlen(data));
+      CHECK_IO_ERROR (server, "reading");
+    }
     data = decode_value(data);
 
     /* The server returned a pointer to an object. */
@@ -46,8 +54,11 @@ class RemoteFunctionCall
     {
       string v = encode_value(([ "subtract_refs":cl ]));
       server->write(sprintf("%4c%s", strlen(v), v));
-      if(server->read(1) != "!")
+      CHECK_IO_ERROR (server, "writing");
+      if(server->read(1) != "!") {
+	CHECK_IO_ERROR (server, "reading");
 	error("server->subtract_refs("+cl+") failed\n");
+      }
     }
   }
 
@@ -57,8 +68,11 @@ class RemoteFunctionCall
     master = mast;
     string v = encode_value(([ "add_refs":cl ]));
     server->write(sprintf("%4c%s", strlen(v), v));
-    if(server->read(1) != "!")
+    CHECK_IO_ERROR (server, "writing");
+    if(server->read(1) != "!") {
+      CHECK_IO_ERROR (server, "reading");
       error("server->subtract_refs("+cl+") failed\n");
+    }
   }
 }
 
@@ -99,12 +113,16 @@ void create(string|object ip, int port, string cl,
     /* Server in ip... */
     server = ip;
   } else {
-    if(!server->connect(ip, port)) error("Failed to connect to RPC server\n");
+    if(!server->connect(ip, port))
+      error("Failed to connect to RPC server at %s:%d: %s\n",
+	    ip, port, strerror (server->errno()));
   }
 
   while(!not_again)
   {
-    switch(server->read(1))
+    string s = server->read(1);
+    CHECK_IO_ERROR (server, "reading");
+    switch (s)
     {
      case "=":
      case "!":
@@ -112,6 +130,7 @@ void create(string|object ip, int port, string cl,
       break;
      case "?":
       server->write("%4c%s", strlen(key||""), key||"");
+      CHECK_IO_ERROR (server, "writing");
       continue;
      default:
       error("Server there, but refused connection.\n");
@@ -125,9 +144,12 @@ void create(string|object ip, int port, string cl,
   string v = encode_value(([ "add_refs":myclass ]));
 
   server->write(sprintf("%4c%s", strlen(v), v));
+  CHECK_IO_ERROR (server, "writing");
 
-  if(server->read(1) != "!")
+  if(server->read(1) != "!") {
+    CHECK_IO_ERROR (server, "reading");
     error("server->add_refs("+myclass+") failed\n");
+  }
 }
 
 void destroy()

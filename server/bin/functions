@@ -1,24 +1,54 @@
+# -*- sh -*-
 # Support functions for the startscript and some other scripts.
+#
+# $Id$
+#
+
+# Default number of generations for log rotation.
+GENERATIONS=5
+export GENERATIONS
 
 rotate () {
-  b=5;
-  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
+  b="$GENERATIONS";
+  while test "$b" -gt 1; do
+    a=`expr "$b" - 1`;
+    mv -f "$1.$a" "$1.$b" 2> /dev/null;
+    b=$a;
+  done
 }
 
 setup_environment() {
+  # Check if TMPDIR is set to a user specific temp directory in
+  # /var/folders (c.f. "getconf DARWIN_USER_TEMP_DIR") - this breaks
+  # e.g. the patch system if the uid is changed or similar.
+  case "$TMPDIR" in
+    /var/folders/*)
+      TMPDIR=/tmp/
+      export TMPDIR
+      ;;
+  esac
+
   # If environment file doesn't exist, try to create it.
-  if test ! -f $LOCALDIR/environment && test -f bin/buildenv.pike;  then
+  if test ! -f "$LOCALDIR"/environment && test -f bin/buildenv.pike;  then
+    if [ $verbose -gt 0 ]; then
+      dp "Building environment: $pike bin/buildenv.pike"
+    fi
     $pike bin/buildenv.pike
-    touch $LOCALDIR/environment
+    touch "$LOCALDIR"/environment
   fi
 
   # Set up environment
-  if test -f $LOCALDIR/environment; then
-    . $LOCALDIR/environment
+  if test -f "$LOCALDIR"/environment; then
+    . "$LOCALDIR"/environment
+  fi
+
+  # Also source environment2, which will not be modified by updates
+  if test -f "$LOCALDIR"/environment2; then
+    . "$LOCALDIR"/environment2
   fi
 
   # Make sure $CLASSPATH contains the servlet stuff
-  CLASSPATH=java/classes${CLASSPATH:+:}$CLASSPATH
+  CLASSPATH="java/classes${CLASSPATH:+:}$CLASSPATH"
   for jar in java/classes/*.jar; do
     CLASSPATH="$jar:$CLASSPATH"
   done
@@ -28,15 +58,34 @@ setup_environment() {
 dp() {
   if [ "x$SILENT_START" = "xy" ] ; then 
      :
-  else 
+  elif [ "x$self_test" = "xy" ]; then
+    echo "$@" >&2
+  else
     echo "          :" "$@" >&2
   fi
 }
 
+dp_no_nl() {
+  if [ "x$SILENT_START" = "xy" ] ; then 
+     :
+  elif [ "x$self_test" = "xy" ]; then
+    echo "$@" | tr -d '
+' >&2
+  else
+    echo "          :" "$@" | tr -d '
+' >&2
+  fi
+}
+
 roxen_version() {
-   VERSION="`sed <etc/include/version.h -e '/__roxen_version__/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   BUILD="`sed <etc/include/version.h -e '/__roxen_build__/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
-   echo $VERSION.$BUILD
+   VERSION="`sed <etc/include/version.h -e '/roxen_ver/s/[^0-9]*\([0-9][0-9]*\.[0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
+   BUILD="`sed <etc/include/version.h -e '/roxen_build/s/[^0-9]*\([0-9][0-9]*\)[^0-9]*/\1/p' -n | head -1`"
+   if [ -f "RELEASE" ] ; then
+     RELEASE="`head -1 <RELEASE`"
+   else
+     RELEASE="-cvs"
+   fi
+   echo "$VERSION.$BUILD$RELEASE"
 }
 
 fullpath() {
@@ -48,7 +97,7 @@ fullpath() {
 	break
       fi
     done
-    ( test "x$full" != "x" && echo $full ) || echo $1
+    ( test "x$full" != "x" && echo "$full" ) || echo "$1"
   )
 }
 
@@ -57,11 +106,14 @@ change_owner( ) {
  gid="$1";  shift
 
  for a in "$@" ; do 
-    ok=`ls -lgd $a 2>/dev/null | grep $uid | grep $gid | wc -l`
+    ok=`ls -lgd $a 2>/dev/null | grep "$uid" | grep "$gid" | wc -l`
     ok=`echo $ok`
     if [ x$ok = x1 ] ; then 
       dp "$a already has the correct ownership"
     else
+      if [ x"$gid" = x ] ; then
+        gid=root
+      fi
       dp "Changing ownership of $a to $uid:$gid"
       if chown -R "$uid" "$a" 2>/dev/null ; then
         if  chgrp -R "$gid" "$a" 2>/dev/null ; then
@@ -78,16 +130,16 @@ change_owner( ) {
 
 
 find_pike() {
- pike=`fullpath pike`
- if [ -x bin/pike ] ; then pike=$roxendir/bin/pike; fi
- if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
- if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
- if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
+ pike="`fullpath pike`"
+ if [ -x bin/pike ] ; then pike="$roxendir/bin/pike"; fi
+ if [ -x bin/roxen ] ; then  pike="$roxendir/bin/roxen"; fi
+ if [ -x "$LOCALDIR/bin/pike" ] ; then pike="$LOCALDIR/bin/pike"; fi
+ if [ -x "$LOCALDIR/bin/roxen" ] ; then pike="$LOCALDIR/bin/roxen"; fi
  if [ "x$PIKE" = "x" ]; then :; else
    if [ -x "$PIKE" ]; then 
      pike="$PIKE"
    else
-     pikepath=`fullpath "$PIKE"`
+     pikepath="`fullpath \"$PIKE\"`"
      if [ -x "$pikepath" ]; then 
        pike="$pikepath"
      else 
@@ -105,6 +157,15 @@ find_pike() {
    dp "No pike binary found. Aborting."
    exit 1
  fi
+
+ # Check pike version if we're targeting something older than the latest.
+# if [ x`"$pike" -e 'if (__VERSION__ > 7.4) write("new");'` = "xnew" ]; then
+#   DEFINES="-V7.4 $DEFINES"
+#   export DEFINES
+# fi
+
+ PIKE="$pike"
+ export PIKE
 }
 
 raise_limit() {

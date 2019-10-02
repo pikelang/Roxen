@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright Â© 1996 - 2009, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.11 2001/03/08 14:35:48 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -46,6 +46,7 @@ inherit "module";
 mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
 int flno=1;
+float compat_level;
 
 #define GC_LOOP_TIME QUERY(gc_time)
 
@@ -207,7 +208,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	       {
 		  in[start]=sa[1];
 		  print+=sa[0];
-		  if (!flags["g"]) break;
+		  if (compat_level < 5.0 && !flags["g"]) break;
 	       }
 	       start++;
 	    }
@@ -300,15 +301,16 @@ string container_sed(string tag,mapping m,string cont,object id)
 {
    mapping c=(["e":({})]);
    string|array d;
+   compat_level = (float) my_configuration()->query("compat_level");
 
    parse_html(cont,
 	      (["source":lambda(string tag,mapping m,mapping c,object id)
 			 {
 			    if (m->variable)
-			       c->data=id->variables[m->variable]||"";
-			    else if (m->cookie)
+			      c->data = RXML_CONTEXT->user_get_var (m->variable) || "";
+			    else if (m->cookie) {
 			       c->data=id->cookie[m->cookie]||"";
-			    else
+			    } else
 			       c->data="";
 			    if (m->rxml) c->data=Roxen.parse_rxml(c->data,id);
 			 },
@@ -348,14 +350,22 @@ string container_sed(string tag,mapping m,string cont,object id)
 
    if (c->destvar)
    {
-      if (m->prepend) d+=id->variables[c->destvar]||"";
-      if (m->apppend) d=(id->variables[c->destvar]||"")+d;
-      id->variables[c->destvar]=d;
+      if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
+      if (m->apppend || m->append)
+	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+      RXML_CONTEXT->user_set_var (c->destvar, d);
    }
    else if (c->destcookie)
    {
-      if (m->prepend) d+=id->variables[c->destvar]||"";
-      if (m->apppend) d=(id->variables[c->destvar]||"")+d;
+      // Hmm, shouldn't the prepend and append attributes work on the
+      // cookie? Looks like a cut'n'paste bug here, but I leave it be
+      // for compatibility. /mast
+      if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
+      if (m->apppend || m->append)
+	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+      // NOTE: The following line messes up for the protocol cache,
+      //       since we have no idea if it overwrites a cookie that
+      //       has been used earlier.
       id->cookie[c->destcookie]=d;
    }
    else if (!c->nodest)
@@ -363,3 +373,85 @@ string container_sed(string tag,mapping m,string cont,object id)
 
    return "";
 }
+
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+  "sed":({ #"<desc type='cont'><p><short>Adds the <tag>sed</tag> tag, to emulate a 
+  subset of sed operations in rxml.</short></p></desc>
+
+  <attr name='suppress'></attr>
+  <attr name='lines'></attr>
+  <attr name='chars'></attr>
+  <attr name='split' value='separator'></attr>
+  <attr name='append'></attr>
+  <attr name='prepend'></attr>
+
+  ", 
+       	   (["e":#"<desc type='cont'>
+	     <p>The edit command to apply to the input. It is possible to control
+	        which lines that will be affected by using 
+                <tag>e</tag>[<i>first line</i>],[<i>last line</i>][<i>command</i>]<tag>/e</tag>.
+                It is possible to use relative line numbers using '+' and '-' or 
+                using regexp by start and end the regexp with '/'</p>
+             <p>
+<ex>
+  <set variable=\"var.foo\">Foo. Foo. Foo. Foo. Foo. Foo. Foo.</set>
+
+  <sed split=\".\">
+    <source variable=\"var.foo\" />
+    <e>3,+3y/o/u/</e>
+  </sed>
+</ex>
+             </p>
+	     <list type=\"dl\">
+	       <item name='D'><p>Delete first line in space</p></item>
+	       <item name='G'><p>Insert hold space</p></item>
+	       <item name='H'><p>Append current space to hold space</p></item>
+	       <item name='P'><p>Print current data</p></item>
+	       <item name='a'><p>Insert.</p> 
+                              <p>Usage: <b>a</b>[<i>string</i>]</p></item>
+	       <item name='c'><p>Change current space.</p> 
+	                      <p>Usage: <b>c</b>[<i>string</i>]</p></item>
+	       <item name='d'><p>Delete current space</p></item>
+	       <item name='h'><p>Copy current space to hold space</p></item>
+	       <item name='i'><p>Print string</p>
+	                      <p>Usage: <b>i</b>[<i>string</i>]</p></item>
+	       <item name='l'><p>Print current space</p></item>
+	       <item name='p'><p>Print first line in data</p></item>
+	       <item name='q'><p>Quit evaluating</p></item>
+	       <item name='s'><p>Replace. Replaces the first match on each
+                                line unless the flag <i>g</i> is active, in
+                                which case all matches will be replaced.
+                                In 4.5 and earlier compat mode the
+                                replacement will terminate after the first
+                                matching line (unless <i>g</i> is active).</p>
+	                      <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
+	       <item name='y'><p>Replace chars</p>
+	                      <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
+	     <attr name='rxml'><p>Run through RXML parser before edit</p></attr>"
+	   ,
+	   "source":#"<desc type='cont'><p>Tells which source to read from if
+                        <tag>raw</tag> or <tag>rxml</tag>is not used. Must be 
+			either variable or cookie.</p></desc>
+
+			<attr name='variable' value='variable'></attr>
+			<attr name='cookie' value='cookie'></attr>
+			<attr name='rxml'><p>Run through RXML parser 
+			                  before edit</p></attr>",
+	   
+	   "destination":#"<desc type='cont'><p>Tells which destination to 
+                             store the edited string if other than screen. Must
+                             be either variable or cookie.</p></desc>
+
+			     <attr name='variable' value='variable'></attr>
+			     <attr name='cookie' value='cookie'></attr>",
+
+	   "raw":#"<desc type='cont'><p>Raw, unparsed data.</p></desc>",
+	   
+	   "rxml":#"<desc type='cont'><p>Data run through RXML parser before 
+                      edited.</p></desc>"]),
+  }),
+]);
+#endif

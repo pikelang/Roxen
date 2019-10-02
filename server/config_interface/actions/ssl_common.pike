@@ -1,8 +1,8 @@
 /*
- * $Id: ssl_common.pike,v 1.4 2001/03/05 18:15:47 nilsson Exp $
+ * $Id$
  */
 
-#if constant(_Crypto) 
+#if constant (Nettle)
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -43,7 +43,6 @@ mixed page_0(object id, object mc)
 }
 
 
-#if constant(Crypto.rsa)
 mixed verify_0(object id, object mc)
 {
   int key_size = (int) id->variables->key_size;
@@ -61,13 +60,13 @@ mixed verify_0(object id, object mc)
     return 1;
   }
 
-  object file = Stdio.File();
+  Stdio.File file;
   object privs = Privs("Storing private key.");
-  if (!file->open(id->variables->key_file, "wxc", 0600))
+  if (!(file = lopen(id->variables->key_file, "wxc", 0600)))
   {
     id->variables->_error =
       "Could not open file: "
-      + (strerror(file->errno()) || (string) file->errno())
+      + (strerror(errno()) || (string) errno())
       + ".";
     privs = 0;
     return 1;
@@ -75,18 +74,11 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object rsa = Crypto.rsa();
-  rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
+  Crypto.RSA rsa = Crypto.RSA();
+  rsa->generate_key(key_size, Crypto.Random.random_string);
 
-#if constant(Tools)
-  string key = Tools.PEM.simple_build_pem
-    ("RSA PRIVATE KEY",
-     Standards.PKCS.RSA.private_key(rsa));
-#else /* !constant(Tools) */
-  /* Backward compatibility */
-  string key = SSL.pem.build_pem("RSA PRIVATE KEY",
-				 Standards.PKCS.RSA.rsa_private_key(rsa));
-#endif /* constant(Tools) */
+  string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
+					   Standards.PKCS.RSA.private_key(rsa));
   WERROR(key);
   
   if (strlen(key) != file->write(key))
@@ -100,7 +92,6 @@ mixed verify_0(object id, object mc)
 
   return 0;
 }
-#endif /* constant(Crypto.rsa) */
 
 
 string ssl_errors (RequestID id) {
@@ -123,13 +114,13 @@ string generic_key_size_string =
 string rsa_key_form = 
       ("<p><font size='+1'>" + key_size_question + "</font></p>"
        "<b>" + LOCALE(94, "Key size") + "</b><br />"
-       "<var name='key_size' type='int' default='1024'/><br />\n<blockquote>" 
+       "<var name='key_size' type='int' default='2048'/><br />\n<blockquote>"
        "<p>"+generic_key_size_string+"</p><help>" +
 // http://www.rsasecurity.com/rsalabs/challenges/factoring/status.html
        LOCALE(95,"The largest key that is publicly known to have been broken "
 	      "was 155 decimal digits, or 512 bits large. This "
 	      "effort required approximately 8000 MIPS-years.<p>"
-	      "A key 1024 bits large should be secure enough for most "
+	      "A key 2048 bits large should be secure enough for most "
 	      "applications, but of course you can you use an even larger key "
 	      "if you so wish.") +
        "</help></blockquote>");
@@ -142,7 +133,7 @@ string key_file_form (string filename)
     "<var name='key_file' type='string' default='"+filename+"'/><blockquote>\n"+
     sprintf(LOCALE(97, 
 		   "Where to store the file, may be relative to %s."),
-	    getcwd()) +
+	    combine_path(getcwd(), "../local/")) +
     "\n<help><p>" +
     LOCALE(98, 
 	   "A filename in the real filesystem, where the secret key should "
@@ -232,9 +223,9 @@ string save_certificate_form (string name, string filename)
     "<var type='string' name='"+name+"' default='"+filename+"'/>"
     "<br />"+ 
     sprintf(LOCALE(97, "Where to store the file, may be relative to %s."),
-	    getcwd()) +
+	    combine_path(getcwd(), "../local/")) +
     "</blockquote>";
 }
 
 
-#endif /* constant(_Crypto) */
+#endif /* constant (Nettle) */

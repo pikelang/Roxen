@@ -5,7 +5,7 @@
 <file>../modules/compat/compat.pike</file>
 
 <str id="3">
-<o>Old RXML Compatibility Module</o>
+<o>Tags: Old RXML Compatibility Module</o>
 <t></t>
 </str>
 
@@ -286,5 +286,20 @@
 
 <str id="46">
 <o>entities</o>
+<t></t>
+</str>
+
+<str id="1">
+<o>In order to function properly the ROXEN_COMPAT define must be set to 1.3 or lower. It is currently set to %1.1f.</o>
+<t></t>
+</str>
+
+<str id="2">
+<o>Warning!</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>This sites compatibility level is set to %s, but it must be set to a value below 2.2. Change the value in the site global settings and restart the server.</o>
 <t></t>
 </str>

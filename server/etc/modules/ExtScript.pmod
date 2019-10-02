@@ -2,22 +2,24 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.13 2001/02/17 17:13:24 nilsson Exp $
+// $Id$
+
+// 
 
 mapping scripthandlers = ([ ]);
 
-static void diag(string x)
-{
-  // werror(x);
-}
+#ifdef EXTSCRIPT_DEBUG
+#define DEBUGMSG(X...) werror (X)
+#else
+#define DEBUGMSG(X...) 0
+#endif
 
 class Handler
 {
   Process.Process
              proc;
   Stdio.File pipe;
-  Stdio.File pipe_other;
-  string     binpath;
+  array(string) command;
   mapping(string:mixed)
              settings;
   int        runcount = 0;
@@ -26,8 +28,10 @@ class Handler
   function   nb_when_done;
   int        nb_status = 0, nb_returncode = 0;
   string     nb_output = 0, nb_errmsg = 0, nb_headers = 0, nb_data;
-  Thread.Mutex mutex = Thread.Mutex();
-  Thread.MutexKey run_lock = 0;
+  Thread.Mutex
+             mutex = Thread.Mutex();
+  Thread.MutexKey
+             run_lock = 0;
 
   void terminate()
   {
@@ -37,7 +41,6 @@ class Handler
       pipe->write("X");
     proc = 0;
     pipe = 0;
-    pipe_other = 0;
   }
 
   int busy()
@@ -56,11 +59,21 @@ class Handler
 
   int probe()
   {
-    return timeout < time(0);
+    return timeout < time();
   }
 
-  static void putvar(string vtype, string vname, string vval)
+  protected void putvar(string vtype, string vname, string vval)
+  // Send a variable name and value to the subprocess. The
+  // one-character string in vtype indicates the type; "E" is
+  // an environment variable, "I" a Roxen-internal RequestID
+  // object variable, "F" a FORM variable, "H" a request header
+  // variable, and "L" a configuration variable for the script
+  // helper subprocess. The last category includes "cd", which
+  // is the current directory that should be used for running
+  // scripts.
   {
+    if (!vtype || strlen(vtype) != 1)
+      error("Bad variable type in external script .\n");
     pipe->write("%s%c%s%3c", vtype, strlen(vname), vname, strlen(vval));
     pipe->write(vval);
   }
@@ -88,7 +101,7 @@ class Handler
     if (run_lock)
     { Thread.MutexKey tmplock = run_lock;
       RequestID id = id1 ? id1 : nb_id; // nb_id can get reset before we're done.
-//      werror("ExtScript/finalize: %O %O\n", id, run_lock);
+      DEBUGMSG("ExtScript/finalize: %O %O\n", id, run_lock);
       if (nb_when_done)
         nb_when_done(id, get_results());
       run_lock = 0;
@@ -96,13 +109,13 @@ class Handler
     }
   }
 
-  static void read_callback(mixed fid, string data)
+  protected void read_callback(mixed fid, string data)
   { if (!run_lock || !stringp(data) || strlen(data) < 1)
       { return;}
     if (nb_data != 0)
       { data = nb_data + data; nb_data = 0;}
     string ptype = data[0..0];
-//    werror("ExtScript/rcb0: %O %O\n", nb_id, run_lock);
+//    DEBUGMSG(sprintf("ExtScript/rcb0: %O %O\n", nb_id, run_lock));
     if ( (< "+", "*", "?", "=" >) [ ptype ] )
     { if (strlen(data) < 4)
         { nb_data = data; return;}
@@ -114,7 +127,7 @@ class Handler
           data    = data[..3+len];
         }
     }
-    diag(sprintf("<%s:%d>", ptype, strlen(data)));
+    DEBUGMSG(sprintf("<%s:%d>", ptype, strlen(data)));
     switch (ptype)
     { case "X":
         finalize();
@@ -133,8 +146,8 @@ class Handler
         nb_output = (nb_output || "") + data[4..];
         break;
       case "*":
-//        werror("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
-        nb_output = (nb_output || "") + data[4..];
+	DEBUGMSG("ExtScript/rcb*: %O %O\n", nb_id, run_lock);
+	nb_output = (nb_output || "") + data[4..];
         nb_status = 1;
         finalize(nb_id);
         break;
@@ -158,36 +171,52 @@ class Handler
   {
     Thread.MutexKey lock = mutex ? mutex->lock(1) : 0;
 
-    timeout = time(0) + 190;
+    timeout = time() + 190;
 
     if (!proc || proc->status() != 0)
     {
       pipe = Stdio.File();
-      pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
+      Stdio.File pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
 
-      diag("(L1)");
+      DEBUGMSG("(L1)");
 
-      mapping opts = ([ "fds":({pipe_other}) ]);
-      if (settings->set_uid)
-	opts["set_uid"] = settings->set_uid;
+      mapping opts = ([ "stdin": pipe_other, "stdout": pipe_other ]);
+#if constant(system.getuid)
+      if (system.getuid() == 0)
+      { if (settings->set_uid > 0)
+          opts["uid"] = settings->set_uid;
+        if (settings->set_gid > 0)
+          opts["gid"] = settings->set_gid;
+	else if (settings->set_uid && settings->set_gid != -1)
+        {
+	  // If we have set the uid, Process.Process may change the
+	  // group ID to the user's primary group ID, which is not
+	  // what we want here.
+	  opts["gid"] = system.getgid();
+	}
+      }
+#endif
 
-      if (catch (
-        proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
-                                       opts
-                                     )
-               ))
-         return ({ -1, "unable to start helper process" });
+      mixed bt;
+      if (bt = catch {
+        proc = Process.Process(command, opts);
+	  })
+	{
+	  werror("ExtScript, Process.Process failed: " +
+                 describe_backtrace(bt) + "\n");
+          return ({ -1, "unable to start helper process" });
+        }
 
-      diag("(L2)");
+      DEBUGMSG("(L2)");
       runcount = 0;
       pipe_other = 0;
       pipe->write("QP"); // send 'ping'
-      diag("(L2p)");
+      DEBUGMSG("(L2p)");
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) < 4 || res[0] != '=')
-	return ({ -1, "external process didn't respond"
-		  + sprintf("(Got: %O)", res) });
-      diag("(NewSubprocess)");
+	return ({ -1, "external process didn't respond" +
+                        sprintf(" (Got: %O)", res) });
+      DEBUGMSG("(NewSubprocess)");
       if (mode == "run")
         putvar("L", "cd", dirname(arg));
       if (mappingp(settings))
@@ -200,7 +229,7 @@ class Handler
     {
       int len, returncode = 200; string headers;
 
-      diag("{");
+      DEBUGMSG("{");
       // Reset script variables.
       pipe->set_blocking();
       pipe->write("R");
@@ -261,6 +290,9 @@ class Handler
         }
       }
 
+      if (stringp(id->query))
+	putvar("E", "QUERY_STRING", id->query);
+      
       // Transfer explicit environment variables.
       mapping ee = id->misc->explicit_script_env;
       if (mappingp(ee))
@@ -285,14 +317,14 @@ class Handler
       string res = pipe->read(4);
       if (!stringp(res) || sizeof(res) != 4 || res[0] != '=' || res[3] != 0)
       {
-	pipe = 0; proc = 0; diag("@");
+	pipe = 0; proc = 0; DEBUGMSG("@");
         lock = 0;
-        diag("ExtScript/restart\n");
+        DEBUGMSG("ExtScript/restart\n");
         return launch(mode, arg, id, nonblock);
       }
 
       // start operation
-      diag("$");
+      DEBUGMSG("$");
       pipe->write("%c%3c%s", (mode == "eval" ? 'C' : 'S'), strlen(arg), arg);
       string output = "";
 
@@ -301,8 +333,8 @@ class Handler
       if (nonblock)
       { if (functionp(nonblock))
             nb_when_done = nonblock;
-//        werror("ExtScript/launch/nonblock: %O\n", nb_id);
-        if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
+	DEBUGMSG("ExtScript/launch/nonblock: %O\n", nb_id);
+	if (!catch ( pipe->set_nonblocking(read_callback, 0, finalize) ) )
         { run_lock = lock;
           return ({ });
         }
@@ -310,7 +342,7 @@ class Handler
 
       while (sizeof(res = pipe->read(1)) > 0)
       {
-	diag("."+res);
+	DEBUGMSG("."+res);
         if (res == "a")
 	  continue;
         else if (res == "X")
@@ -319,9 +351,11 @@ class Handler
         {
 	  string tmp = pipe->read(3);
           len = tmp[1]*256 + tmp[2];
-          diag("<");
-          tmp = pipe->read(len);
-          diag(">");
+	  DEBUGMSG(len + "<");
+	  // The len check is paranoia since read() might hang in
+	  // older pikes on NT when it's zero.
+          tmp = len ? pipe->read(len) : "";
+          DEBUGMSG(">");
           if (stringp(tmp))
           {
 	    if (res == "=")
@@ -329,7 +363,7 @@ class Handler
 	      array arr = tmp / "=";
               if (arr[0] == "RETURNCODE")
               {
-		diag(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
+		DEBUGMSG(":ExtScript:RETURNCODE=" + arr[1]*"=" + "\n");
                 if (sscanf(arr[1], "%d", returncode) != 1)
                   returncode = 200;
               }
@@ -340,7 +374,7 @@ class Handler
               else if (arr[0] == "ADDHEADER")
               {
 		headers = (headers || "") + arr[1..]*"=" + "\n";
-                diag(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
+                DEBUGMSG(":ExtScript:ADDHEADER=" + arr[1..]*"=" + "\n");
               }
             }
             else if (res == "?")
@@ -354,14 +388,14 @@ class Handler
         }
         /* else ... support queries from script ... */
       }
-      diag("<Done.>");
+      DEBUGMSG("<Done.>");
       if (res == "" || res == 0)
 	return ({ -1, "SCRIPT I/O ERROR (2)" });
 
       if (++runcount > 5000)
 	proc = 0, pipe = 0, runcount = 0;
 
-      diag("}");
+      DEBUGMSG("}");
 
       return headers ? ({ returncode, output, headers })
                      : ({ returncode, output });
@@ -379,23 +413,71 @@ class Handler
 
   void create(string helper_program_path, void|mapping settings0)
   {
-    binpath = helper_program_path;
     settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
-    timeout = time(0) + 300;
+    timeout = time() + 300;
+    command = ({ helper_program_path, "--cmdsocket=3" });
+#ifdef __NT__
+    string binpath = helper_program_path;
+    string ft, cmd;
+
+    mixed bt = catch {
+      string ext = "." + reverse(array_sscanf(reverse(binpath), "%[^.].")[0]);
+      DEBUGMSG("Looking up extension %O\n", ext);
+      ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
+      DEBUGMSG("ft:%O\n", ft);
+      cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
+      DEBUGMSG("cmd:%O\n", cmd);
+    };
+    if (bt) {
+      werror("Failed to lookup in registry:\n%s\n",
+	     describe_backtrace(bt));
+    }
+    if (cmd) {
+      // Perform %-substitution.
+      command = ({});
+      foreach(Process.split_quoted_string(cmd, 1), string arg) {
+	if (sizeof(arg) && arg[0] == '%') {
+	  int argno;
+	  if (arg == "%*") {
+	    command += ({ "--cmdsocket=3" });
+	  } else if (sscanf(arg, "%%%d", argno)) {
+	    if (argno == 1) {
+	      command += ({ binpath });
+	    } else if (argno == 2) {
+	      command += ({ "--cmdsocket=3" });
+	    }
+	  } else {
+	    command += ({ arg });
+	  }
+	} else {
+	  command += ({ arg });
+	}
+      }
+    } else {
+      string s = Stdio.read_file(binpath, 0, 1);
+      if (s && has_prefix(s, "#!")) {
+	command = Process.split_quoted_string(s[2..], 1) + command;
+      } else {
+	// Hope we can execute it anyway...
+	// Not likely, but we can hope.
+      }
+    }
+#endif /* __NT__ */
+    DEBUGMSG("Resulting command: %O\n", command);
   }
 }
 
 Thread.Mutex dispatchmutex = Thread.Mutex();
 
-static int lastobjdiag = 0;
+protected int lastobjdiag = 0;
 
-static void objdiag()
+protected void objdiag()
 {
-  if (lastobjdiag < time(0)-25)
+  if (lastobjdiag < time()-25)
   {
-    lastobjdiag = time(0);
-    diag("Subprocess status:\n");
+    lastobjdiag = time();
+    DEBUGMSG("Subprocess status:\n");
     foreach(indices(scripthandlers), string binpath)
     {
       mapping m = scripthandlers[binpath];
@@ -404,16 +486,22 @@ static void objdiag()
       foreach(m->handlers, Handler h)
   	if (h)
   	  line += "  H" + (++n) + "=" + h->procstat();
-      diag(line + "\n");
+      DEBUGMSG(line + "\n");
+      if (!n && cleaner) {
+	cleaner->stop();
+        cleaner = 0;
+      }
     }
   }
 }
 
-static int lastcleanup = 0;
+protected int lastcleanup = 0;
+
+protected roxen.BackgroundProcess cleaner;
 
 void periodic_cleanup()
 {
-  int now = time(0);
+  int now = time();
   if (lastcleanup+42 < now)
   {
     lastcleanup = now;
@@ -423,10 +511,10 @@ void periodic_cleanup()
       if (m->expire < now)
       {
         Thread.MutexKey lock = m->mutex->lock();
-  	diag("(Z)");
+  	DEBUGMSG("(Z)");
   	if (m->handlers[0])
   	{ if (m->handlers[0]->probe())
-  	  { diag("(*T*)");
+  	  { DEBUGMSG("(*T*)");
   	    m->handlers[0]->terminate();
   	  }
   	}
@@ -435,13 +523,12 @@ void periodic_cleanup()
   	   m->handlers = m->handlers[1..];
   	else
   	   m->handlers = ({ 0 });
-  	now = time(0);
+  	now = time();
   	m->expire   = now+600/(2+sizeof(m->handlers));
   	lock = 0;
       }
     }
   }
-  call_out(periodic_cleanup, 50);
   objdiag();
 }
 
@@ -454,7 +541,11 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!intp(multi) || multi < 1) multi = 1;
 
-  objdiag();
+  if (lastcleanup+900 < time()) {
+    if (!cleaner) {
+      cleaner = roxen.BackgroundProcess(50, periodic_cleanup);
+    }
+  }
 
   if (!(m = scripthandlers[binpath])) 
   {
@@ -462,7 +553,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
     scripthandlers[binpath] = m =
        ([
 	 "handlers": ({ Handler(binpath) }),
-          "expire": time(0) + 600,  
+          "expire": time() + 600,  
           "mutex": Thread.Mutex(),
           "binpath": binpath
         ]);
@@ -493,3 +584,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   return m->handlers[random(sizeof(m->handlers))];
 }
+
+
+
+

@@ -17,8 +17,19 @@
   <theme-set what=linkcolor to=darkgreen />
 </theme-path>
 
-<theme-path match='/ports/*'>
+<theme-path match='/actions/*'>
   <theme-set what=left-image to=utonium.gif themefile />
   <theme-set what=bgcolor to=pink       />
   <theme-set what=linkcolor to=darkred  />
+</theme-path>
+
+<theme-path match='/dbs/*'>
+  <theme-set what=left-image to=buttercup.gif themefile />
+  <theme-set what=bgcolor to=lightgreen  />
+  <theme-set what=linkcolor to=darkgreen />
+</theme-path>
+
+<theme-path match='/docs/*'>
+  <theme-set what=bgcolor to=lightgreen  />
+  <theme-set what=linkcolor to=darkgreen />
 </theme-path>

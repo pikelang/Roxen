@@ -1,3 +1,5 @@
 # Don't distribute empty folders
 atlas
 business_graphics
+# rimage doesn't work anymore
+rimage

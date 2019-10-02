@@ -1,10 +1,9 @@
-<topmenu selected="home"/>
-
+<!-- $(B$$$=(B2022 $(B$K$[$s$4(B -->
+<topmenu selected="hype"/>
 <content>
-<cv-startpage>
+<charset in='iso-2022'>
 <br />
-<blockquote>
-<rul>
+
 <define container="new-feature">
   <eval><rli>
    <dl><dt><b><font size='+1'>&_.name;</font></b></dt>
@@ -12,6 +11,283 @@
    </dl>
    </rli></eval>
 </define>
+
+
+
+<h1>Release notes for Roxen 2.2</h1>
+
+
+<h2>User level changes</h2>
+
+
+<rul>
+
+<new-feature name='Configuration interface changes'>
+<b>'content boxes'</b> added in the config interface (the first page)
+
+    If you want to write your own boxes, see the files in
+    <i>config_interface/boxes</i>.
+<p>
+
+<b>Added memory to the toplevel tabs</b> in the configuration interface
+   When you click on a toplevel tab, you return to the page you last visited below that tab, just like in Roxen 1.3, click again to go to toplevel
+
+<p>
+<b>The configuration interface now works with more browsers.</b>
+Some HTML changes were made so that the configuration interface works
+better with the Mozilla and Opera browsers.
+
+<p>
+
+<b>The ports tab has been merged into the site tabs.</b> 
+The old (overview) ports tab is available under the globals tab.
+
+<p>
+
+<b>Two new themes added</b>; Square orange, and the new default theme
+(old default now known as '2.0 and 2.1 theme').
+
+</new-feature>
+
+
+<new-feature name="Built-in MySQL Database">
+ Roxen WebServer now comes bundled with MySQL, and the
+ database is used for various things inside Roxen Webserver. Also, there is a
+ new <a href='dbs/'>database administration interface</a> available
+ inside the configuration interface.
+</new-feature>
+
+
+<new-feature name='New User-database and Authentication module system'>
+The user-database and authentication module API has been redesigned.
+
+<p> You can now have multiple user database and multiple authentication
+modules, and the modules only has to implement one of the two services.
+
+<p> Two example authentication modules are included, one that uses
+cookies and one that use the normal 'Basic' authentication system.
+
+<p> Two user database modules are currently available (unless you
+count the htaccess module), the system user database and the ldap user
+database. The system database uses getpwent on to access the normal system
+users.
+</new-feature>
+
+<new-feature name='Improved security patterns and htaccess support'>
+The module level security patterns and the htaccess files now include
+many new options, and are compiled for quicker execution.
+
+<p>The htaccess module now also acts as a user-database, so you can use
+<tt>&lt;if&nbsp;user=username&gt;</tt> in your RXML pages (and, if you feel
+like it, your module level security patterns) with users and groups
+authenticated from the htaccess module, even if the page does not
+otherwise use the htaccess permission system.
+</new-feature>
+
+<new-feature name='Major protocol module changes'>
+<dl>
+<dt><b>Gopher and fhttp removed</b>
+<dd>The gopher and fhttp protocols has been removed. The former
+because it has not worked for three years, and nobody noticed, and the
+latter because it did only offer benchmark performance, it was not all
+that useful for real life applications. However:
+<p>
+<dt><b>The HTTP protocol module has some C-optimizations</b>
+
+<dd>Parts of the normal HTTP protocol module has been rewritten in C,
+and some other optimizations has been done. Overall, the HTTP parsing
+is now about twice as fast as it was in Roxen 2.1.
+<p>
+<dt><b>The HTTP protocol auto-encodes unicode</b>
+
+<dd>Unicode characters in text data is now recoded to useable output charset. 
+This includes recoding of unsupported characters to entities (as an
+    example, when a $(B6b(B character is encountered and the output charset
+    is iso-8859-1, or å and the output charset is iso-8859-9)
+</dl>
+</new-feature>
+
+<new-feature name='Changes in the generic image cache'>
+<ul>
+  <li>The URLs for the images in the image cache are now encrypted
+  before they are sent to the client. 
+
+  <li>The user ID is now saved for the images, no authenticated user
+  can get an image rendered for another authenticated user.
+</ul>
+</new-feature>
+
+<new-feature name='New generic arguments for the image-related tags'>
+  <ul>
+ <li> <b>span-width</b> and <b>span-height</b>. Like max-width and max-height, but if the image is smaller, it's padded to the specified size.
+
+<p><li><b>crop=guides-cross</b> <b>guides-index=x,y</b>: Crop
+  <i>around</i> the point specified by the intersection of the two
+  guides. Useful with max-width=... and max-height=..., primary for
+  thumbnail generation.
+
+<p><li><b>crop=guides-region [guides-index=x1,y1[-x2,y2]]</b>
+  Crop to the
+    specified region before doing any scales. Also useful with
+    max-width=... and max-height=... for thumbnail generation. If
+    guides-index is x1,y1, the guides x1,y1 and x1+1,y1+1 will be
+    used, counting from the left and the top, respectively.  If both
+    the ending and starting indexes (x2,y2) are specified, thoose
+    guides will be used.
+</ul>
+</new-feature>
+
+<new-feature name='Every site configuration now has a compatibility level'>
+ There is a new configuration variable "Compatibility level" for each
+ site. This variable is queried by different modules to control minor
+ compatibility issues in their behavior.
+
+ <p>The variable is set to the latest version for every newly created
+ site, but is then never changed automatically during upgrade. It's
+ set to "2.1" for sites that are imported from earlier Roxen versions.
+
+ <p>The intention with this variable is to make it easier to do small
+ changes that aren't strictly compatible, but still avoid jeopardizing
+ the compatibility when upgrading older sites.
+</new-feature>
+
+<new-feature name='Font handling changes'>
+ FreeType 2 support added. Roxen can now render text using TrueType
+ and PostScript Type1 fronts using FreeType 2.
+
+<p>There are now more CIF (Compact Image Font) generation and
+unpacking programs available in the bin directory.
+</new-fetaure>
+
+<new-feature name='New start script NT compatibility option'>
+ The option <b>--strip-backslash</b> has been added. This causes all \
+ in the URL to be transformed to /. Useful for NT-compatibility reasons
+ on Unix, this behaviour has been the default on NT since Roxen 2.0.
+</new-feature>
+
+<new-feature name='New NT service'>
+  The NT service is now built-in to the ordinary roxen binary.
+</new-feature>
+
+<new-feature name='Auto detection of hung clients'>
+  Minimum bandwidth - new method to detect and dispose of hung
+  clients. This saves valuable resources in form of file descriptors
+  and memory.
+</new-feature>
+
+<new-feature name='New internal images'>
+  /internal-roxen-pixel-colorname generates a pixel with the color
+  colorname. colorname can be either a symbolic name like "darkgreen"
+  or a precise value in the RGB color space like "0000ff". For example
+  /internal-roxen-pixel-red or /internal-roxen-pixel-ff0000 will give
+  you a 1x1pixel red image.
+</new-feature>
+
+<new-feature name='Supports FTP extensions for IPv6 and NATs'>
+  Added support for <a
+  href="http://community.roxen.com/developers/idocs/rfc/rfc2428.html">RFC
+  2428 (EPRT & EPSV)</a>.
+</new-feature>
+
+<new-feature name='Cache overhaul'>
+  Some caches has been rewritten for better speed and to avoid
+  overcaching.
+</new-feature>
+
+<new-feature name='Performance improvements in throttling support'>
+  Throttling support has been changed and optimzed to make it useful
+  for sites with a lot of traffic.
+</new-feature>
+  
+
+</rul>
+
+
+
+<h2>RXML changes</h2>
+
+<rul>
+<new-feature name='Optimizations'>
+The RXML parser has been optimized, mainly with the introduction of
+p-code.
+</new-feature>
+
+<new-feature name='P-code'>
+ RXML is now compiled to p-code the first time it is run, then
+ evaluated directly from this form on subsequent accesses to the same
+ file. This means that the RXML does not have to be reparsed from the
+ source code for each access, and the internal memory structures are
+ reused.
+
+ <p>The introduction of p-code also allows more advanced features in
+ the &lt;cache&gt; tag, which now is powerful enough to allow you to
+ tune RXML pages for substantial performance gains.
+</new-feature>
+
+<new-feature name='Entity indexing'>
+Entity variables holding complex data types (lists of values etc) can
+now be indexed using the <tt>&amp;scope.variable.index;</tt> syntax.
+As an example, if the page requested has two form variables with the
+name <tt>'file'</tt>, you can access them one at a time as
+<tt>&amp;form.file.1;</tt> and <tt>&amp;form.file.2;</tt>,
+respectively.
+</new-feature>
+
+<new-feature name='&lt;cache&gt; improvements'>
+ The &lt;cache&gt; tag now handles nested &lt;cache&gt; and
+ &lt;nocache&gt; tags correctly by mixing evaluated and unevaluated
+ RXML code in the cached entries. This allows caching to be used
+ around complex RXML code while still keeping some part of it dynamic
+ (such as the name of the visitor or an access counter).
+
+ <p>The cache also handles variable assignments. You can e.g. do a
+ costly sql query and assign the result to a variable inside a
+ &lt;cache&gt;, and then use that cached value outside the
+ &lt;cache&gt; tag to format it dynamically depending on a user set
+ theme.
+</new-feature>
+
+<new-feature name='Emit extended'>
+Emit now supports more filtering and sorting options.
+</new-feature>
+
+<new-feature name='Set and append'>
+Set and append can now act as container tags, with the value inside them. As an example, to set the variable var.foo to bar, you can use <tt>&lt;set variable=foo&gt;bar&lt/set&gt;</tt>
+</new-feature>
+
+<new-feature name='Insert can now insert the "closest" file with a certain name'>
+A new argument has been added to &lt;insert&gt; and &lt;use&gt;:
+locate=filename. This will attempt to locate the specified file in the
+directory the current file recides and all directories above that
+directory, up to the root of the virtual filesystem.
+</new-feature>
+
+<new-feature name='The expr argument is now more powerful'>
+
+The expr argument (expression evaluation) can now handle much more
+complex expressions. As an example, it can do type conversions, and
+use complex datatypes.
+</new-feature>
+
+<new-feature name='Session handling'>
+  
+  New entities such as &amp;unique-id; and &amp;client.session; helps
+  you make session driven applications with little effort. See also the Session tag module under New modules.
+</new-feature>
+
+</rul>
+
+<h2>New modules</h2>
+
+<rul>
+<new-feature name='New image related module, GXML'> 
+There is a new image generating module available, the GXML module. It
+renders images from a XML language, and is quite easily extended with
+new tags and operations (Roxen modules can add tags to GXML).
+
+<p>
+See the <a href='http://community.roxen.com/projects/webserver2.2/gxml1.html'>following examples</a> for some more information
+</new-feature>
 
 <new-feature name='Email module'>
  A module for creating and sending mails.<br />
@@ -23,9 +299,274 @@
 </ul>
 </new-feature>
 
+<new-feature name='Writefile'>
+ A module that allows the creation of files from normal RXML using the
+ &lt;writefile&gt; tag. Contributed by <a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>.
+</new-feature>
+
+<new-feature name='robots.txt generator'>
+  Generates a robots.txt on demand from various information. 
+</new-feature>
+<new-feature name='Word highlighter'>
+  Highlights the words stored in the form variable <tt>highlight</tt> in
+  HTML pages, mostly useful for searchengines.
+</new-feature>
+
+<new-feature name='Whitespace sucker'>
+  This module removes redundant whitespace from HTML pages.
+</new-feature>
+
+<new-feature name='Sizer'>
+This module provides the <tt>&lt;page-size&gt;</tt> tag that 
+ calculates the size of a page, including inline images, HTTP headers
+ etc, and gives an estimates of the time it will take to download the
+ page over various connections.<p> You can also use the <i>size</i>
+ prestate to trigger the sizing process.
+</new-feature>
+
+<new-feature name='Table/Image Border Unveiler'>
+Another helping module for HTML-writers. This one allows you to toggle the viewing of table and image borders using a prestate.
+</new-feature>
+
+<new-feature name='Implicit &lt;use&gt;'>
+  Automatically &lt;use&gt; a package before parsing files.
+<p>
+  Useful for creating template files whose tags and variables are
+  automatically included before any RXML parsing is done of the
+  content files.
+
+  <p>The tags defined in such templates also benefits from the p-code
+  speedups.
+</new-feature>
+
+<new-feature name='Javascript support module'>
+This module provides some tags to support javascript development (as
+an example, Javascript popup menus)
+</new-feature>
+
+<new-feature name='Simple MPEG streaming server'>
+  A simple mpeg streaming server has been added, mostly for example purposes.
+</new-feature>
+
+<new-feature name='Session tag module'>
+
+  Provides support for session handling in form of the &lt;session&gt;
+  and &lt;force-session-id&gt; tags. Handles clients with cookie
+  support turned off transparently for the RXML programmer and uses
+  unguessable session ID's.
+
+</new-feature>
 
 </rul>
 
-</blockquote><br />
-</cv-startpage>
+
+<h2>User level compatibility issues</h2>
+
+<rul>
+
+<new-feature name='The global variable "PID file" has been removed'>
+ The start script now makes a PID file earlier to be better at
+ avoiding duplicate server processes, and to work better together
+ init.d scripts. The global variable "PID file" is no longer
+ consulted, due to the "chicken-and-egg" problem that would occur
+ then.
+
+ <p>If you depend on the PID file location specified by the "PID file"
+ variable, you need to move that setting to the start script, either
+ by adding a --pid-file argument or by setting the environment
+ variable ROXEN_PID_FILE.
+</new-feature>
+
+<new-feature name='MODULE_DEBUG is no longer defined by default by the start script'>
+ Previously the start script added the MODULE_DEBUG define when
+ neither --with-debug nor --without-debug was given to it. That define
+ turns on some extra debug checks which are useful when developing new
+ Roxen modules, but wasteful in production use. It's now turned off by
+ default to get maximum performance in production use. To turn it on,
+ you now need to either add the new --module-debug argument, or run
+ with --once.
+</new-feature>
+
+</rul>
+
+
+<h2>News for developers</h2>
+
+<rul>
+
+<new-feature name='Hilfe protocol'>
+
+  A Hilfe (interactive pike evaluator) protocol has been added.  You
+  can use this to evaluate Pike expressions inside your running Roxen
+  Server.
+</new-feature>
+
+<new-feature name='Protocol modules are found dynamically'>
+
+  When Roxen starts, it search for protocol modules in the 'protocols'
+  directory, there is no longer any hard-coded list of known
+  protocols.
+</new-feature>
+
+<new-feature name='New database APIs'>
+
+  Two new APIs are available to module programmers. For more
+  information, see the <a
+  href='https://community.roxen.com/articles/014_db/'>Roxen Community
+  article</a>
+</new-feature>
+
+<new-feature name='Built-in testsuite'>
+
+  Roxen now has a built-in testsuite to verify that no regression
+  occurs. It is started by supplying the argument --self-test to the
+  start script.
+</new-feature>
+
+<new-feature name='Patches to the Java-module system by Tom Palmer applied'>
+<ul>
+    <li> Added cookies, prestates and time to the request object.
+    <li> Added cache() method.
+    <li> Allow module loading from paths beginning with ../
+</ul>
+</new-feature>
+
+<new-feature name='The Roxen module path is searched for Pike modules'>
+ It's possible to use Pike modules (.pmod files and directories)
+ in Roxen modules in a convenient way. Roxen now adds all directories
+ called "pike-modules" that are found in the Roxen module search path
+ to the Pike module path. So you can simply put your Pike modules in a
+ directory called "pike-modules" near your Roxen module, and its
+ contents will be available when the Roxen module is loaded.
+</new-feature>
+
+<new-feature name='How to make tags work well with &lt;cache&gt;'>
+ The &lt;cache&gt; tag works by caching the result after evaluating
+ its contents. It also caches any variable changes made with
+ RXML.set_var, RXML.Context.set_var, RXML.Context.add_scope etc.
+
+ <p>Changes directly in id-&gt;misc and RXML_CONTEXT-&gt;misc (aka
+ id-&gt;misc-&gt;defines) is however not known by the cache system and
+ therefore not saved in the cache entries. This can be a problem when
+ tags uses either of those two mappings to pass state between each
+ other. A (rather silly) example to illustrate:
+
+<pre>
+&lt;my-set value="foo"/&gt;    &lt;!-- Does id-&gt;misc-&gt;my_value = "foo" --&gt;
+...
+&lt;my-get/&gt;                &lt;!-- Returns id-&gt;misc-&gt;my_value --&gt;
+</pre>
+
+ <p>Now, if &lt;my-set&gt; is surrounded by a &lt;cache&gt; tag, there's
+ a problem:
+
+<pre>
+&lt;cache&gt;
+  &lt;my-set value="foo"/&gt;  &lt;!-- Does id-&gt;misc-&gt;my_value = "foo" --&gt;
+&lt;/cache&gt;
+...
+&lt;my-get/&gt;                &lt;!-- Returns id-&gt;misc-&gt;my_value --&gt;
+</pre>
+
+ <p>When the &lt;cache&gt; tag is evaluated the second time, it won't
+ redo the assignment id-&gt;misc-&gt;my_value = "foo", since it
+ doesn't know it has happened. Therefore &lt;my-get/&gt; will not
+ return the same thing.
+
+ <p>There are two ways to solve this:
+
+ <ul>
+  <p><li>Use RXML.set_var and similar functions to set values instead,
+  e.g:
+
+<pre>
+&lt;cache&gt;
+  &lt;my-set value="foo"/&gt;  &lt;!-- Does set_var("my_value", "foo", "var") --&gt;
+&lt;/cache&gt;
+...
+&lt;my-get/&gt;                &lt;!-- Returns get_var("my_value", "var") --&gt;
+</pre>
+
+  <p>The set_var call is intercepted by the cache, so it will be
+  redone when the cached value is reused. The downside of this
+  approach is that the variable will be user accessible (with
+  &amp;var.my_value; in this example).
+
+  <p><li>Use RXML_CONTEXT-&gt;set_misc to set the values, e.g:
+
+<pre>
+&lt;cache&gt;
+  &lt;my-set value="foo"/&gt;  &lt;!-- Does RXML_CONTEXT-&gt;set_misc("my_value", "foo") --&gt;
+&lt;/cache&gt;
+...
+&lt;my-get/&gt;                &lt;!-- Returns RXML_CONTEXT-&gt;misc-&gt;my_value --&gt;
+</pre>
+
+  <p>This is very similar to the approach above, except that the
+  variable won't be user accessible. The function set_misc simply sets
+  a value in RXML_CONTEXT-&gt;misc but also records the setting for
+  the cache.
+
+ </ul>
+</new-feature>
+
+</rul>
+
+
+<h2>Developer level compatibility issues</h2>
+
+<rul>
+
+<new-feature name='Different format for RoxenModule.module_identifier()'>
+ The function module_identifier in Roxen modules has been changed to
+ return a string on the same format as Roxen.get_modname. The old
+ format was bulkier and not guaranteed to be unique for the module.
+</new-feature>
+
+<new-feature name='Different type handling for RXML.Value and RXML.Scope objects'>
+ The responsibility to do type conversion for values from RXML.Value
+ and RXML.Scope objects has been moved from the caller to the callee
+ (i.e. RXML.Value.rxml_var_eval and RXML.Scope.`[]). It is therefore
+ an error to ignore the fourth RXML.Type argument to these functions.
+ The inline doc for RXML.Value.rxml_var_eval contains motivation and
+ further discussion of this.
+</new-feature>
+
+<new-feature name='Changed API in RXML.TagSet.create'>
+ The way to create new RXML tag sets has changed slightly due to
+ encoding issues when p-code is dumped to disk. It's however fairly
+ simple to update the create call. Previously, tag sets were typically
+ created with something like this:
+
+ <pre>RXML.TagSet internal = RXML.TagSet("TagFoldlist.internal", ({ TagFT(), TagFD() }) );</pre>
+
+ <p>The first argument should earlier be a string that uniquely
+ identifies the tag set in the whole server (which the one in the
+ example above from the foldlist module clearly doesn't). Now, one
+ instead gives the own module as the first argument and a string that
+ only should identify the tag set uniquely within the module (the
+ empty string is reserved for the main module tag set). The example
+ above thus becomes:
+
+ <pre>RXML.TagSet internal = RXML.TagSet(this_module(), "foldlist", ({ TagFT(), TagFD() }) );</pre>
+
+ <p>For tag sets that are used for local or additional tags inside a
+ container tag, it's typically a good idea to use the name of the
+ container tag as the unique identifier, hence "foldlist" above. (Note
+ that these identifier strings are stored in the dumped p-code, so
+ it's a good idea to keep them fairly short.)
+</new-feature>
+
+<new-feature name='The Roxen module Debug.pmod renamed RoxenDebug.pmod'>
+ This is to avoid a name conflict with Debug.pmod that comes with Pike.
+</new-feature>
+
+</rul>
+
+
+<h2><a href="whatsnew-pike.html">Pike changes since Pike 7.0</a></h2>
+
+
+<br />
+</charset>
 </content>

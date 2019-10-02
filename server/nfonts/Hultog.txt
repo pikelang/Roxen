@@ -1,0 +1,18 @@
+
+This font, "Hultog," is a simple "antiqued" font based on some 
+classic Venetian-style typefaces (or rather, what happened to them
+once I munged them rather a lot in bitmap form and then scanned
+them back into a font). It's not a full family; only the "regular"
+version was ever completed. The goal was to create a simple antique
+font that wasn't quite as munged as most others, something that
+might be suitable for long stretches of text, if need be. I was,
+in the end, too lazy to do the italic version, and then I didn't
+need it anymore. But it's still kinda neat, so here it is.
+
+This font is copyright 2000 by S. John Ross. It is freeware;
+no license is required to use it. All I ask is that if you
+put it to any interesting use, you let me know so I can feel
+all warm and fuzzy. Email me at sjohn@io.com - and visit my
+website, the Blue Room, at http://www.io.com/~sjohn
+
+Version 3.0

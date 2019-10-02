@@ -2,27 +2,34 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>nld</language>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
+<file>../config_interface/actions/connections.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
+<file>../config_interface/actions/debug_summary.pike</file>
 <file>../config_interface/actions/feature_list.pike</file>
 <file>../config_interface/actions/flush.pike</file>
 <file>../config_interface/actions/ftpstatus.pike</file>
 <file>../config_interface/actions/generate_rsa.pike</file>
+<file>../config_interface/actions/licensestatus.pike</file>
 <file>../config_interface/actions/listfonts.pike</file>
 <file>../config_interface/actions/locks.pike</file>
 <file>../config_interface/actions/make_rsa_csr.pike</file>
 <file>../config_interface/actions/make_selfsigned_dsa.pike</file>
 <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
+<file>../config_interface/actions/make_site_template.pike</file>
 <file>../config_interface/actions/openfiles.pike</file>
+<file>../config_interface/actions/patcher.pike</file>
+<file>../config_interface/actions/pike_profiling.pike</file>
 <file>../config_interface/actions/proc.pike</file>
 <file>../config_interface/actions/reloadconfigurations.pike</file>
+<file>../config_interface/actions/request_profiling.pike</file>
 <file>../config_interface/actions/resolv.pike</file>
 <file>../config_interface/actions/restart.pike</file>
 <file>../config_interface/actions/ssl_common.pike</file>
 <file>../config_interface/actions/tablist.pike</file>
 <file>../config_interface/actions/threads.pike</file>
+<file>../config_interface/actions/upload_license.pike</file>
 
 <str id="1">
 <o>Pike memory usage information</o>
@@ -30,7 +37,8 @@
 </str>
 
 <str id="2">
-<o>Show some information about how pike is using the memory it has allocated. Mostly useful for developers.</o>
+<changed from="Show some information about how pike is using the memory it has allocated. Mostly useful for developers."/>
+<o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t>Toon informatie over hoe pike het gealloceerde geheugen gebruikt. Voonamelijk nuttig voor ontwikkelaars</t>
 </str>
 
@@ -62,42 +70,6 @@
 <str id="238">
 <o>Features</o>
 <t>Opties</t>
-</str>
-
-<str id="dM">
-<o>Disabled modules</o>
-<t>Uitgeschakelde modules</t>
-</str>
-
-<str id="239">
-<o>All modules</o>
-<t>Alle modules</t>
-</str>
-
-<str id="240">
-<new/>
-<o>Name</o>
-<t></t>
-</str>
-
-<str id="241">
-<o>State</o>
-<t>Status</t>
-</str>
-
-<str id="242">
-<o>Disabled</o>
-<t>Uitgeschakeld</t>
-</str>
-
-<str id="243">
-<o>N/A</o>
-<t>N/A</t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t>Ingeschakeld</t>
 </str>
 
 <str id="8">
@@ -141,21 +113,18 @@
 </str>
 
 <str id="237">
-<new/>
 <o>Jackdaws love my big sphinx of quartz.</o>
-<t></t>
+<t>Jackdaws love my big sphinx of quartz.</t>
 </str>
 
 <str id="280">
-<new/>
 <o>Module lock status</o>
-<t></t>
+<t>Module lock status</t>
 </str>
 
 <str id="281">
-<new/>
 <o>Shows various information about the module thread locks in Roxen.</o>
-<t></t>
+<t>Toont informatie over de module thread locks in Roxen.</t>
 </str>
 
 <str id="12">
@@ -164,21 +133,18 @@
 </str>
 
 <str id="13">
-<new/>
 <o>Module lock status : Accesses to all modules</o>
-<t></t>
+<t>Module vergrendelings status : toegangen tot alle modules</t>
 </str>
 
 <str id="14">
-<new/>
 <o>Locked means that the access was done using a serializing lock since the module was not thread-safe, unlocked means that there was no need for a lock.</o>
-<t></t>
+<t>Vergrendeld betekent dat de toegang serieel werd gedaan omdat de module niet met meerdere threads kan omgaan, Ontgrendeld betekent dat er geen reden is voor een vergrendeling.</t>
 </str>
 
 <str id="15">
-<new/>
 <o>Locked accesses to a single module can inflict quite a severe performance degradation of the whole server, since a locked module will act as a bottleneck, blocking access for all other threads that want to access that module.</o>
-<t></t>
+<t>Vergrendelde toegang tot een enkele module kan leiden tot sterk verminderde prestaties van de server omdat een vergrendeld module een bottleneck is. Deze houdt de toegang tegen voor alle andere threads die de module willen gebruiken.</t>
 </str>
 
 <str id="17">
@@ -192,21 +158,18 @@
 </str>
 
 <str id="19">
-<new/>
 <o>Locked</o>
-<t></t>
+<t>Gelockt</t>
 </str>
 
 <str id="20">
-<new/>
 <o>Unlocked</o>
-<t></t>
+<t>Ge-unlocked</t>
 </str>
 
 <str id="21">
-<new/>
 <o>Open files</o>
-<t></t>
+<t>Open bestanden</t>
 </str>
 
 <str id="22">
@@ -235,21 +198,18 @@
 </str>
 
 <str id="27">
-<new/>
 <o>Resolve path...</o>
-<t></t>
+<t>herleid pad..</t>
 </str>
 
 <str id="28">
-<new/>
 <o>Check which modules handles the path you enter in the form</o>
-<t></t>
+<t>Bekijke welke modules zijn betrokken bij afhandeling van het opgegeven pad</t>
 </str>
 
 <str id="29">
-<new/>
 <o>URL</o>
-<t></t>
+<t>URL</t>
 </str>
 
 <str id="206">
@@ -258,33 +218,28 @@
 </str>
 
 <str id="30">
-<new/>
 <o>Password</o>
-<t></t>
+<t>Wachtwoord</t>
 </str>
 
 <str id="31">
-<new/>
 <o>There is no configuration available that matches this URL.</o>
-<t></t>
+<t>Er is geen configuratie beschikbaar die gelijk is aan deze URL</t>
 </str>
 
 <str id="32">
-<new/>
 <o>Resolving</o>
-<t></t>
+<t>Herleiden</t>
 </str>
 
 <str id="33">
-<new/>
 <o>in</o>
-<t></t>
+<t>in</t>
 </str>
 
 <str id="34">
-<new/>
 <o>Restart or shutdown</o>
-<t></t>
+<t>Herstarten of stoppen</t>
 </str>
 
 <str id="197">
@@ -293,15 +248,15 @@
 </str>
 
 <str id="233">
-<new/>
 <o>Roxen will restart automatically.</o>
-<t></t>
+<t>Roxen zal automatisch herstarten.</t>
 </str>
 
 <str id="234">
-<new/>
 <o>You might see the old process for a while in the process table when doing 'ps' or running 'top'. This is normal. Roxen waits for a while for all connections to finish, the process will go away after at most 15 minutes.</o>
-<t></t>
+<t>Het oude proces blijft mogelijk nog een tijdje zichbaar in de procestabel
+bij het uitvoeren van een 'ps' of 'top'. Dit is normaal. Na het afhandelen van alle
+verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="226">
@@ -315,51 +270,38 @@
 </str>
 
 <str id="235">
-<new/>
 <o>Roxen will &lt;b&gt;not&lt;/b&gt; restart automatically.</o>
-<t></t>
+<t>Roxen wordt &lt;b&gt;niet&lt;/b&gt; automatisch opnieuw gestart.</t>
 </str>
 
 <str id="35">
-<new/>
 <o>Thread backtrace</o>
-<t></t>
+<t>Thread backtrace</t>
 </str>
 
 <str id="36">
-<new/>
 <o>Shows a backtrace (stack) for each and every thread in Roxen.</o>
-<t></t>
+<t>Toont een backtrace (stack) van iedere actieve thread in Roxen.</t>
 </str>
 
 <str id="37">
-<new/>
 <o>version</o>
-<t></t>
-</str>
-
-<str id="38">
-<new/>
-<o>Backend thread</o>
-<t></t>
+<t>versie</t>
 </str>
 
 <str id="39">
-<new/>
 <o>Thread</o>
-<t></t>
+<t>Thread</t>
 </str>
 
 <str id="16">
-<new/>
 <o>This is only a problem if a significant percentage of the accesses are passed through non-threadsafe modules.</o>
-<t></t>
+<t>Dit is alleen een probleem als een significant percentage van de verzoeken door niet thread-safe  modules lopen.</t>
 </str>
 
 <str id="228">
-<new/>
 <o>Status</o>
-<t></t>
+<t>Status</t>
 </str>
 
 <str id="229">
@@ -368,621 +310,1345 @@
 </str>
 
 <str id="230">
-<new/>
 <o>SSL</o>
-<t></t>
+<t>SSL</t>
 </str>
 
 <str id="231">
-<o>Debug information</o>
+<changed from="Debug information"/>
+<o>Debug Information</o>
 <t>Debug informatie</t>
 </str>
 
 <str id="49">
-<new/>
 <o>Current FTP sessions</o>
-<t></t>
+<t>Actieve FTP sessies</t>
 </str>
 
 <str id="50">
-<new/>
 <o>List all active FTP sessions and what files they are currently transferring.</o>
-<t></t>
+<t>Toon alle actieve FTP-sessie en de bestanden die nu worden verzonden./t&gt;
+</t>
 </str>
 
 <str id="51">
-<new/>
 <o>anonymous</o>
-<t></t>
+<t>anoniem</t>
 </str>
 
 <str id="52">
-<new/>
 <o>idle</o>
-<t></t>
+<t>idle</t>
 </str>
 
 <str id="53">
-<new/>
 <o>From</o>
-<t></t>
+<t>Van</t>
 </str>
 
 <str id="54">
-<new/>
 <o>CWD</o>
-<t></t>
+<t>CWD</t>
 </str>
 
 <str id="55">
-<new/>
 <o>Action</o>
-<t></t>
+<t>Actie</t>
 </str>
 
 <str id="56">
-<new/>
 <o>Transferred</o>
-<t></t>
+<t>Verzonden</t>
 </str>
 
 <str id="57">
-<new/>
 <o>There are currently no active FTP sessions.</o>
-<t></t>
+<t>Er zijn op dit moment geen actieve FTP-sessies</t>
 </str>
 
 <str id="58">
-<new/>
 <o>Available font loaders</o>
-<t></t>
+<t>Beschikbare lettertype-bibliotheken</t>
 </str>
 
 <str id="59">
-<new/>
 <o>Cache status</o>
-<t></t>
+<t>Status van de cache</t>
 </str>
 
 <str id="60">
-<new/>
 <o>Show information about the main memory cache in Roxen</o>
-<t></t>
+<t>Toon informatie over de primaire geheugencache in Roxen</t>
 </str>
 
 <str id="61">
-<new/>
 <o>WebServer Memory Cache</o>
-<t></t>
+<t>WebServer geheugencache</t>
 </str>
 
 <str id="62">
-<new/>
 <o>Class</o>
-<t></t>
+<t>Klasse</t>
 </str>
 
 <str id="64">
-<new/>
 <o>Size</o>
-<t></t>
+<t>Groote</t>
 </str>
 
 <str id="67">
-<new/>
 <o>Hit rate</o>
-<t></t>
+<t>Hit rate</t>
 </str>
 
 <str id="68">
-<new/>
-<o>supportdb</o>
-<t></t>
+<changed from="supportdb"/>
+<o>Supports database</o>
+<t>supportdb</t>
 </str>
 
 <str id="69">
-<new/>
 <o>Fonts</o>
-<t></t>
+<t>Lettertypes</t>
 </str>
 
 <str id="70">
-<new/>
 <o>DNS</o>
-<t></t>
+<t>DNS</t>
 </str>
 
 <str id="71">
-<new/>
 <o>Locale Cache</o>
-<t></t>
+<t>Lokale cache</t>
 </str>
 
 <str id="72">
-<new/>
 <o>Used languages:</o>
-<t></t>
+<t>Gebruikte talen:</t>
 </str>
 
 <str id="73">
-<new/>
 <o>Registered projects:</o>
-<t></t>
+<t>Geregistreerde projecten:</t>
 </str>
 
 <str id="74">
-<new/>
-<o>Loaded projects:</o>
-<t></t>
+<changed from="Loaded projects:"/>
+<o>Loaded project files:</o>
+<t>Geladen projecten:</t>
 </str>
 
 <str id="75">
-<new/>
 <o>Current cache size:</o>
-<t></t>
+<t>Huidige grootte van de cache</t>
 </str>
 
 <str id="295">
-<new/>
 <o>Entries</o>
-<t></t>
-</str>
-
-<str id="293">
-<new/>
-<o>Hits</o>
-<t></t>
-</str>
-
-<str id="294">
-<new/>
-<o>Misses</o>
-<t></t>
+<t>Regels</t>
 </str>
 
 <str id="63">
-<new/>
 <o>Extended process status</o>
-<t></t>
+<t>Uitgebreide proces-status</t>
 </str>
 
 <str id="65">
-<new/>
 <o>Shows detailed process status on Solaris 2.5 and later.</o>
-<t></t>
+<t>Toont een gedetailleerd overzicht van processen op Solaris 2.5 en hoger</t>
 </str>
 
 <str id="66">
-<new/>
 <o>shared</o>
-<t></t>
+<t>gedeeld</t>
 </str>
 
 <str id="76">
-<new/>
 <o>private</o>
-<t></t>
+<t>privaat/lokaal</t>
 </str>
 
 <str id="77">
-<new/>
 <o>resident</o>
-<t></t>
+<t>resident</t>
 </str>
 
 <str id="78">
-<new/>
 <o>groups:</o>
-<t></t>
+<t>groepen:</t>
 </str>
 
 <str id="79">
-<new/>
 <o>and</o>
-<t></t>
+<t>en</t>
 </str>
 
 <str id="80">
-<new/>
 <o>Process Tree for %d</o>
-<t></t>
+<t>Procesboom voor %d</t>
 </str>
 
 <str id="81">
-<new/>
 <o>Misc status for %d</o>
-<t></t>
+<t>div. status foor %d</t>
 </str>
 
 <str id="82">
-<new/>
 <o>Memory Usage:</o>
-<t></t>
+<t>geheugengebruik:</t>
 </str>
 
 <str id="83">
-<new/>
 <o>Credentials:</o>
-<t></t>
+<t>Personalia:</t>
 </str>
 
 <str id="84">
-<new/>
 <o>Current working directory:</o>
-<t></t>
+<t>Huidige 'werk' directory </t>
 </str>
 
-
-
 <str id="88">
-<new/>
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
-<t></t>
+<t>Het andere gedeelte moet worden verstuurd naar een 'certificate authority' zoals Thawte of Verisign. Deze zal het certificaat dan getekend terugsturen. Dit certificaat heeft u nodig voor een server die versleutelde verbindingen ondersteund. </t>
 </str>
 
 <str id="89">
-<new/>
 <o>The other part is used to create a certificate. You can create a certificate yourself; this is not the recommended way to use SSL, and browsers will complain about not recognizing the entity that has signed the key (i.e. you). But a self-signed certificate is a lot better than nothing.</o>
-<t></t>
+<t>Het andere gedeelte wordt gebruik om een certificaat te maken. U kunt zelf een certificaat maken maar dit heeft niet de voorkeur: browsers geven dan een melding dat de organisatie die het certificaat heeft getekend (uzelf dus) niet herkennen. Maar een eigen certificaat is nog altijd beter dan niets.</t>
 </str>
 
 <str id="90">
-<new/>
 <o>Keys smaller than %d bits are ridiculous.</o>
-<t></t>
+<t>Sleutels kleiner dan %d bits hebben geen nut.</t>
 </str>
 
 <str id="91">
-<new/>
 <o>Keys larger than %d bits would take too long to generate.</o>
-<t></t>
+<t>Sleutels groter dan %d kosten te veel tijd om te genereren.</t>
 </str>
 
 <str id="92">
-<new/>
 <o>How large key do you want to generate?</o>
-<t></t>
+<t>Hoe groot moet de sleutel zijn?</t>
 </str>
 
 <str id="93">
-<new/>
 <o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
-<t></t>
+<t>De gewenste sleutelgrootte. Dit is een beveiligingskeuze; grotere sleutels bieden een betere beveiliging maar maakt verbindingen naar de server wel langzamer.</t>
 </str>
 
 <str id="94">
-<new/>
 <o>Key size</o>
-<t></t>
+<t>Sleutelgrootte</t>
 </str>
 
 <str id="95">
-<new/>
-<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
-<t></t>
+<changed from="The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish."/>
+<o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 2048 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
+<t>De grootste sleutel waarvan bekend is dat hij gekraakt kon worden was 155 decimalen, of 512 bits. Deze onderneming kostte ongeveer 8000 MIPS-jaar. &lt;p&amp;gt Een 1024 bits sleutel zou veilig genoeg moet zijn voor de meeste toepassingen, maar u kunt een grotere sleutel kiezen als u dat wilt.</t>
 </str>
 
 <str id="96">
-<new/>
 <o>Key file</o>
-<t></t>
+<t>Sleutelbestand</t>
 </str>
 
 <str id="97">
-<new/>
 <o>Where to store the file, may be relative to %s.</o>
-<t></t>
+<t>De locatie van het sleutelbestand, mag relatief ten opzichte van %s</t>
 </str>
 
 <str id="98">
-<new/>
 <o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
-<t></t>
+<t>Een betanndsnaan in het bestandssysteem op de server, waar de geheime sleutel moet worden opgeslagen. Dit is de bestandsnaam die u invult in het 'Sleutelbestand'-veld als u een SSL poort configureert.</t>
 </str>
 
 <str id="99">
-<new/>
 <o>Your Distinguished Name?</o>
-<t></t>
+<t>Uw 'Distinguished Name'?</t>
 </str>
 
 <str id="100">
-<new/>
+<changed from="Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt; Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII."/>
 <o>Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt;
 Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII.</o>
-<t></t>
+<t>Uw X.501 'Distinguished Name' bestaat uit een rij van parameters en waarden waarbij elke verwijzing in de rij nauwkeuriger definieert wie u bent. Welke paramters nodig of nuttig zijn hangt van waarvoor u het certficaat wilt gebruiken en welke 'Certificate Authority' u gebruikt. Deze pagina laat u de meeste gebruikelijke parameters invoeren. Als u een veld niet invuld wordt deze parameter niet toegevoegd. &lt;p&gt; Alhoewel de meeste browsers 8 bits ISO 8859-1 karakters in deze parameters acceptern kunt u er niet van uitgaan. Gebruikt u om zeker te zijn alleen US-ASCII (dus geen accenten e.d.) </t>
 </str>
 
 <str id="101">
-<new/>
 <o>Your country code</o>
-<t></t>
+<t>Uw landscode</t>
 </str>
 
 <str id="102">
-<new/>
 <o>Your two-letter country code, for example GB (United Kingdom). This attribute is required.</o>
-<t></t>
+<t>Uw tweeletterige landscode. Bijvoorbeeld NL (Nederland). Dit veld is vereist.</t>
 </str>
 
 <str id="103">
-<new/>
 <o>State/Province</o>
-<t></t>
+<t>Staat/Provincie</t>
 </str>
 
 <str id="104">
-<new/>
 <o>The state where you are operating. VeriSign requires this attribute to be present for US and Canadian customers. Do not abbreviate.</o>
-<t></t>
+<t>De staat/provincie waar u bent gevestigd. Verisign vereist dit veld voor Amerikaanse en Canadese klanten. De naam niet afkorten.</t>
 </str>
 
 <str id="105">
-<new/>
 <o>City/Locality</o>
-<t></t>
+<t>Plaats</t>
 </str>
 
 <str id="106">
-<new/>
 <o>The city or locality where you are registered. VeriSign requires that at least one of the locality and the state attributes are present. Do not abbreviate.</o>
-<t></t>
+<t>De plaats waar u bent gevestigd. Verisign vereist dat tenminste &amp;eacute;&amp;eacute; van de plaats en staat/provincie velden aanwezig zijn. De naam niet afkorten.</t>
 </str>
 
 <str id="107">
-<new/>
 <o>Organization/Company</o>
-<t></t>
+<t>Organisatie/Bedrijf</t>
 </str>
 
 <str id="108">
-<new/>
 <o>The organization name under which you are registered with some national or regional authority.</o>
-<t></t>
+<t>De organisatie- of bedrijfsnaam waaronder u bent geregistreerd.</t>
 </str>
 
 <str id="109">
-<new/>
 <o>Organizational unit</o>
-<t></t>
+<t>Divisie/Bedrijfsonderdeel</t>
 </str>
 
 <str id="110">
-<new/>
 <o>This attribute is optional, and there are no specific requirements on the value of this attribute.</o>
-<t></t>
+<t>Dit veld is optioneel en er zijn geen speciale eisen voor de inhoud ervan.</t>
 </str>
 
 <str id="111">
-<new/>
 <o>Common Name</o>
-<t></t>
+<t>'Common Name'</t>
 </str>
 
 <str id="112">
-<new/>
 <o>This is the DNS name of your server (i.e. the host part of the URL).&lt;p&gt;Browsers will compare the URL they are connecting to with the Common Name in the server's certificate, and warn the user if they don't match.&lt;p&gt;Some Certificate Authorities allow wild cards in the Common Name. This means that you can have a certificate for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at Roxen.Thawte allows wild card certificates, while VeriSign does not.</o>
-<t></t>
+<t>Dit is de DNS naam van uw server. (d.wz. het 'host' gedeelte van de URL) &lt;p&gt; Browsers vergelijken de URL waar naartoe ze verbinden met de 'Common Name' in het certificaat van de server en waarschuwen de gebruiker als ze niet overeenkomen. &lt;p&gt; Sommige 'Certificate uthorities' staan wildcards to in de common name. Dit houdt in dat u een certificaat kan hebben voor bijv. &lt;tt&gt;*.roxen.com&lt;/tt&gt; welke geldig is alle servers bij Roxen. Thawte ondersteund deze wild cards, Verisign niet. </t>
 </str>
 
 <str id="113">
-<new/>
 <o>For how long should the certificate be valid?</o>
-<t></t>
+<t>Tot hoe lang moet het certificaat geldig blijven?</t>
 </str>
 
 <str id="114">
-<new/>
 <o>Certificate lifetime, in days</o>
-<t></t>
+<t>Tijdsduur certificaat in dagen </t>
 </str>
 
 <str id="115">
-<new/>
 <o>A certificate includes a validity period. How many days, from now, do you want the certificate to be valid?</o>
-<t></t>
+<t>Elk certificaat heeft een geldigheidsduur. Hoeveel dagen wilt u dat het certificaat geldig is, gerekend vanaf nu?</t>
 </str>
 
 <str id="116">
-<new/>
 <o>Save the request in a file:</o>
-<t></t>
+<t>Bewaar het verzoek in een bestand:</t>
 </str>
 
 <str id="117">
-<new/>
 <o>Filename</o>
-<t></t>
+<t>Bestandnaam</t>
 </str>
 
 <str id="118">
-<new/>
 <o>Generate a new RSA key pair...</o>
-<t></t>
+<t>Genereer een nieuw RSA sleutelpaar...</t>
 </str>
 
 <str id="119">
-<new/>
 <o>Note that it is possible to have more than one certificate for the same key.</o>
-<t></t>
+<t>Merk op dat het mogelijk is meerdere certificaten te hebben met dezelfde sleutel.</t>
 </str>
 
 <str id="120">
-<new/>
 <o>Wrote %d-bit key in %s</o>
-<t></t>
+<t>%d-bits sleutel weggeschreven in %s</t>
 </str>
 
 <str id="121">
-<new/>
 <o>Generate a Certificate Signing Request and an RSA key...</o>
-<t></t>
+<t>Genereeer een 'Certificate Signing Request' en een RSA-sleutel...</t>
 </str>
 
 <str id="122">
-<new/>
 <o>Certificate Attributes?</o>
-<t></t>
+<t>Certifcaat parameters?</t>
 </str>
 
 <str id="123">
-<new/>
 <o>An X.509 certificate associates a Common Name with a public key. Some certificate authorities support "extended certificates", defined in PKCS#10. An extended certificate may contain other useful information associated with the name and the key. This information is signed by the CA, together with the X.509 certificate.</o>
-<t></t>
+<t>Een X.509 certificaat verbind een 'Common Name' met een publieke sleutel. Sommige 'Certificate Authorities ondersteunen uitgebreide certificaten, gedefinieerd volgens PKCS#10. Een uitgebreid certificaat kan andere nuttige informatie bevatten die gerelateerd is aan de naam en de sleutel. Deze informatie wordt getekend door de CA, samen met het X.509 certificaat.</t>
 </str>
 
 <str id="124">
-<new/>
 <o>Email address</o>
-<t></t>
+<t>Email adres</t>
 </str>
 
 <str id="125">
-<new/>
 <o>An email address to be embedded in the certificate.</o>
-<t></t>
+<t>Een email adres dat in het certificaat komt te staan.</t>
 </str>
 
 <str id="126">
-<new/>
 <o>CSR Attributes?</o>
-<t></t>
+<t>CSR parameters?</t>
 </str>
 
 <str id="127">
-<new/>
 <o>At last, you can add attributes to the Certificate Signing Request, which are meant for the Certificate Authority and are not included in the issued Certificate.</o>
-<t></t>
+<t>Tot slot kunt u parameters aan het 'Certificate Signing Request' toevagen die alleen zijn bedoeld voor de 'Certificate Authority' maar niet in het certificaat komen.</t>
 </str>
 
 <str id="128">
-<new/>
 <o>Challenge Password</o>
-<t></t>
+<t>Challenge wachtwoord</t>
 </str>
 
 <str id="129">
-<new/>
 <o>This password could be used if you ever want to revoke your certificate. Of course, this depends on the policy of your Certificate Authority.</o>
-<t></t>
+<t>Dit wachtwoord kan gebruikt worden als u uw certificaat wilt intrekken. Dit hangt natuurlijk af van het beleid van uw 'Certificate Authority'.</t>
 </str>
 
 <str id="130">
-<new/>
 <o>This is your Certificate Signing Request.</o>
-<t></t>
+<t>Dit is uw 'Certificate Signing Request'.</t>
 </str>
 
 <str id="131">
-<new/>
 <o>Wrote %d bytes to %s.</o>
-<t></t>
+<t>%d bytes weggeschreven naar %s.</t>
 </str>
 
 <str id="132">
-<new/>
 <o>Generate an RSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Genereer een RSA sleutel en een zelf ondertekend certificaat...</t>
 </str>
 
 <str id="133">
-<new/>
 <o>This is your Certificate.</o>
-<t></t>
+<t>Dit is uw certificaat.</t>
 </str>
 
 <str id="134">
-<new/>
 <o>Generate an DSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Genereer een DSA sleutel en een zelf ondertekend certificaat...</t>
 </str>
 
 <str id="135">
-<new/>
 <o>Invalid key size.</o>
-<t></t>
+<t>Ongeldige sleutelgrootte</t>
 </str>
 
 <str id="40">
-<new/>
 <o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
+<t>Om SSL op uw server te gebruiken moet u eerst een willekeurig sleutelpaar genereren. Een gedeelte van de sleutel wordt geheim gehouden.</t>
+</str>
+
+<str id="42">
+<changed from="Indeed"/>
+<o>If you have more than one Roxen version installed
+in the same location, you can use this action to
+change the currently running version.</o>
+<t>Inderdaad</t>
+</str>
+
+<str id="43">
+<o>1 month</o>
+<t>1 maand</t>
+</str>
+
+<str id="44">
+<o>%d months</o>
+<t>%d maanden</t>
+</str>
+
+<str id="45">
+<o>%d days</o>
+<t>%d dagen</t>
+</str>
+
+<str id="46">
+<o>Change Roxen version</o>
+<t>Wijzig de versie van Roxen...</t>
+</str>
+
+<str id="47">
+<changed from="Changing roxen version"/>
+<o>Shutting down and changing Roxen version</o>
+<t>Versie van Roxen aan het wijzigen</t>
+</str>
+
+<str id="48">
+<o>Version</o>
+<t>Versie</t>
+</str>
+
+<str id="85">
+<o>Release date</o>
+<t>Release datum</t>
+</str>
+
+<str id="86">
+<o>Age</o>
+<t>Leeftijd</t>
+</str>
+
+<str id="136">
+<o>Directory</o>
+<t>Directory</t>
+</str>
+
+<str id="137">
+<changed from="If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again"/>
+<o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<t>Als u naar een van deze Roxen versies wijzigt kunt u niet meer in versie  teruggaan vanaf de administratie interface. U moet dan het bestand %O handmatig wijzigen, de server stoppen en %O weer uitvoeren.</t>
+</str>
+
+<str id="138">
+<o>Change version</o>
+<t>Wijzig versie</t>
+</str>
+
+<str id="87">
+<new/>
+<o>Non-garbing Memory Cache</o>
 <t></t>
+</str>
+
+<str id="139">
+<o>one day</o>
+<t>een dag</t>
+</str>
+
+<str id="140">
+<o>Unavailable features</o>
+<t>Niet geinstalleerde features</t>
+</str>
+
+<str id="141">
+<o>Source</o>
+<t>Bron</t>
+</str>
+
+<str id="142">
+<new/>
+<o>Program</o>
+<t></t>
+</str>
+
+<str id="143">
+<o>Clones</o>
+<t>Klonen</t>
+</str>
+
+<str id="144">
+<o>Create site template</o>
+<t>Maak een site template</t>
+</str>
+
+<str id="145">
+<changed from="Create a site template from a site configuration"/>
+<o>Create a site template from a site configuration (deprecated).</o>
+<t>Maak een site template van een site configuratie</t>
+</str>
+
+<str id="146">
+<o>Coundn't find configuration</o>
+<t>Kan configuratie niet vinden</t>
+</str>
+
+<str id="147">
+<o>Select configuration to base the template on.</o>
+<t>Kies een configuratie om de template op de baseren</t>
+</str>
+
+<str id="148">
+<o>Selected configuration</o>
+<t>Gekozen configuratie</t>
+</str>
+
+<str id="149">
+<o>Coundn't create directory</o>
+<t>Kan directory niet maken</t>
+</str>
+
+<str id="150">
+<o>Failed to create template file</o>
+<t>Maken van template mislukt</t>
+</str>
+
+<str id="151">
+<o>Failed to write template file</o>
+<t>Het schrijven naar het template bestand is mislukt</t>
+</str>
+
+<str id="152">
+<o>Site template created successfully.</o>
+<t>Site template maken is gelukt</t>
+</str>
+
+<str id="154">
+<o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
+<t>NB: U moet de server handmatig herstarten omdat u misschien een paar vragen moet beantwoorden over het nieuwe environment bestand</t>
+</str>
+
+<str id="155">
+<o>Failed to write CSR to %s.</o>
+<t>Schrijven naar %s voor de  CSR is mislukt</t>
+</str>
+
+<str id="156">
+<changed from="Active connection"/>
+<o>Active connections</o>
+<t>Actieve verbinding</t>
+</str>
+
+<str id="157">
+<changed from="All currently active connection"/>
+<o>All currently active connections</o>
+<t>Alle huidige verbindingen</t>
+</str>
+
+<str id="158">
+<o>Time</o>
+<t>Tijd</t>
+</str>
+
+<str id="159">
+<o>Sent (Mib)</o>
+<t>Verzonden (Mib)</t>
+</str>
+
+<str id="160">
+<new/>
+<o>Kibyte/s</o>
+<t></t>
+</str>
+
+<str id="161">
+<o>Total bandwidth</o>
+<t>Totale bandbreedte</t>
+</str>
+
+<str id="163">
+<o>Debug summary</o>
+<t>Debug samenvatting</t>
+</str>
+
+<str id="164">
+<o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
+<t>Laat een tekst bestand zien met daaring de configuratie samenvatting, handig voor support activiteiten</t>
+</str>
+
+<str id="165">
+<o>License status</o>
+<t>Licentie status</t>
+</str>
+
+<str id="166">
+<changed from="Show information about the installed licenses and there usage."/>
+<o>Show information about the installed licenses and their usage.</o>
+<t>Laat informatie zien over geinstalleerde licenties en het gebruik ervan.</t>
+</str>
+
+<str id="168">
+<o>Upload a new Roxen license file.</o>
+<t>Upload een nieuw Roxen licentie bestand.</t>
+</str>
+
+<str id="169">
+<o>The garbage collector freed %d of %d things (%d%%).</o>
+<t>De garbage collector heeft %d zaken opgeruimd van in totaal %d (%d%%).</t>
+</str>
+
+<str id="170">
+<o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
+<t>%d seconden sinds de laatste garbage collection, %d%% van de interval is verstreken.</t>
+</str>
+
+<str id="172">
+<o>Garbage collector status</o>
+<t>Garbage collector status</t>
+</str>
+
+<str id="173">
+<o>Internal inconsistency</o>
+<t>Interne inconsistentie</t>
+</str>
+
+<str id="174">
+<o>Object(s) missing in object link list.</o>
+<t>Object(en) gemist in de objecten link lijst</t>
+</str>
+
+<str id="175">
+<o>Warning</o>
+<t>Waarschuwing</t>
+</str>
+
+<str id="176">
+<o>Number of objects changed during object walkthrough (probably due to automatic gc call) - the list below is not complete.</o>
+<t>Aantal objecten veranderd gedurendende de object inventarisatie (waarschijnlijk door de automatische garbage collectie) - de lijst hieronder is niet volledig</t>
+</str>
+
+<str id="177">
+<o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
+<t>De object inventarisatie heeft %d van %d gevonden - de lijst hieronder is niet volledig.</t>
+</str>
+
+<str id="178">
+<o>Total</o>
+<t>Totaal</t>
+</str>
+
+<str id="179">
+<new/>
+<o>Canonic URL: </o>
+<t></t>
+</str>
+
+<str id="180">
+<o>Upload license...</o>
+<t>Licentie uploaden...</t>
 </str>
 
 <str id="41">
 <new/>
-<o>Change roxen version...</o>
+<o>Download</o>
 <t></t>
 </str>
 
-<str id="42">
+<str id="153">
 <new/>
-<o>Indeed</o>
+<o>Download Debug Log</o>
 <t></t>
 </str>
 
-<str id="43">
+<str id="162">
 <new/>
-<o>1 month</o>
+<o>Pike profiling information</o>
 <t></t>
 </str>
 
-<str id="44">
+<str id="167">
+<o>Show some information about how much time has been spent in various functions. Mostly useful for developers.</o>
+<t>Laat informatie zien over hoeveel tijd is gespendeerd aan verschillende functies. Veelal handig voor ontwikkelaars.</t>
+</str>
+
+<str id="181">
+<o>Request profiling information</o>
+<t>Request profiling informatie</t>
+</str>
+
+<str id="182">
+<o>Show some information about how how much time has been spent in requests. Mostly useful for developers.</o>
+<t>Laat informatie zien over hoeveel tijd is gespendeerd in een request. Veelal handig voor ontwikkelaars.</t>
+</str>
+
+<str id="183">
+<o>All times are in microseconds.</o>
+<t>Alle tijden zijn in microseconden.</t>
+</str>
+
+<str id="184">
+<o>NOTE: This information is only available if the server has been stared with &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</o>
+<t>NB: Deze informatie is alleen leesbaar indien de server is gestart met &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</t>
+</str>
+
+<str id="185">
+<o>This information is only available if the pike binary has been compiled with &lt;tt&gt;--with-profiling&lt;/tt&gt;.</o>
+<t>Deze informatie is alleen leesbaar indien de Pike distributie is gecompileerd met  &lt;tt&gt;--with-profiling&lt;/tt&gt;.</t>
+</str>
+
+<str id="186">
+<o>Refresh</o>
+<t>Vernieuwen</t>
+</str>
+
+<str id="187">
 <new/>
-<o>%d months</o>
+<o>Reset</o>
 <t></t>
 </str>
 
-<str id="45">
+<str id="188">
 <new/>
-<o>%d days</o>
+<o>Unable to parse URL.</o>
 <t></t>
 </str>
 
-<str id="46">
+<str id="296">
 <new/>
-<o>Change Roxen version</o>
+<o>HTTP auth</o>
 <t></t>
 </str>
 
-<str id="47">
+<str id="297">
 <new/>
-<o>Changing roxen version</o>
+<o>Form variables</o>
 <t></t>
 </str>
 
-<str id="48">
+<str id="325">
 <new/>
-<o>Version</o>
+<o>HTTP Cookies</o>
 <t></t>
 </str>
 
-<str id="85">
+<str id="326">
 <new/>
-<o>Release date</o>
+<o>Patch management</o>
 <t></t>
 </str>
 
-<str id="86">
+<str id="327">
 <new/>
-<o>Age</o>
+<o>Show information about the available patches and their status.</o>
 <t></t>
 </str>
 
-<str id="136">
+<str id="328">
 <new/>
-<o>Directory</o>
+<o>Installed by:</o>
 <t></t>
 </str>
 
-<str id="137">
+<str id="329">
 <new/>
-<o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
+<o>Installed:</o>
 <t></t>
 </str>
 
-<str id="138">
+<str id="330">
 <new/>
-<o>Change version</o>
+<o>Unknown</o>
+<t></t>
+</str>
+
+<str id="331">
+<new/>
+<o>Uninstalled:</o>
+<t></t>
+</str>
+
+<str id="332">
+<new/>
+<o>Uninstalled by:</o>
+<t></t>
+</str>
+
+<str id="333">
+<new/>
+<o>Description:</o>
+<t></t>
+</str>
+
+<str id="334">
+<new/>
+<o>Originator:</o>
+<t></t>
+</str>
+
+<str id="335">
+<new/>
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="336">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="337">
+<new/>
+<o>Flags:</o>
+<t></t>
+</str>
+
+<str id="338">
+<new/>
+<o>Platforms:</o>
+<t></t>
+</str>
+
+<str id="339">
+<new/>
+<o>All platforms</o>
+<t></t>
+</str>
+
+<str id="340">
+<new/>
+<o>Platform:</o>
+<t></t>
+</str>
+
+<str id="342">
+<new/>
+<o>Target version:</o>
+<t></t>
+</str>
+
+<str id="343">
+<new/>
+<o>All versions</o>
+<t></t>
+</str>
+
+<str id="344">
+<new/>
+<o>installed</o>
+<t></t>
+</str>
+
+<str id="345">
+<new/>
+<o>imported</o>
+<t></t>
+</str>
+
+<str id="346">
+<new/>
+<o>unavailable</o>
+<t></t>
+</str>
+
+<str id="347">
+<new/>
+<o>Dependencies:</o>
+<t></t>
+</str>
+
+<str id="348">
+<new/>
+<o>None</o>
+<t></t>
+</str>
+
+<str id="349">
+<new/>
+<o>New file:</o>
+<t></t>
+</str>
+
+<str id="350">
+<new/>
+<o>New files:</o>
+<t></t>
+</str>
+
+<str id="351">
+<new/>
+<o>Replaced file:</o>
+<t></t>
+</str>
+
+<str id="352">
+<new/>
+<o>Replaced files:</o>
+<t></t>
+</str>
+
+<str id="353">
+<new/>
+<o>Deleted file:</o>
+<t></t>
+</str>
+
+<str id="354">
+<new/>
+<o>Deleted files:</o>
+<t></t>
+</str>
+
+<str id="355">
+<new/>
+<o>Patched file:</o>
+<t></t>
+</str>
+
+<str id="356">
+<new/>
+<o>Patched files:</o>
+<t></t>
+</str>
+
+<str id="357">
+<new/>
+<o>No patches found</o>
+<t></t>
+</str>
+
+<str id="358">
+<new/>
+<o>Uninstall selected patches</o>
+<t></t>
+</str>
+
+<str id="359">
+<new/>
+<o>Install selected patches</o>
+<t></t>
+</str>
+
+<str id="360">
+<new/>
+<o>Importing</o>
+<t></t>
+</str>
+
+<str id="363">
+<new/>
+<o>Uninstalling</o>
+<t></t>
+</str>
+
+<str id="364">
+<new/>
+<o>Done!</o>
+<t></t>
+</str>
+
+<str id="365">
+<new/>
+<o>Failed to uninstall the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="366">
+<new/>
+<o>Patch uninstalled successfully. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="367">
+<new/>
+<o>%d out of %d patches sucessfully uninstalled. See the log below for details.</o>
+<t></t>
+</str>
+
+<str id="368">
+<new/>
+<o>The server needs to be restarted.</o>
+<t></t>
+</str>
+
+<str id="369">
+<new/>
+<o>Would you like to do  that now?</o>
+<t></t>
+</str>
+
+<str id="370">
+<new/>
+<o>Installing</o>
+<t></t>
+</str>
+
+<str id="371">
+<new/>
+<o>Failed to install the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="372">
+<new/>
+<o>Patch successfully installed. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="375">
+<new/>
+<o>Imported Patches</o>
+<t></t>
+</str>
+
+<str id="376">
+<new/>
+<o>These are patches that are not currently installed; they are imported but not applied. They can be found in local/patches/.</o>
+<t></t>
+</str>
+
+<str id="377">
+<new/>
+<o>Click on a patch for more information.</o>
+<t></t>
+</str>
+
+<str id="378">
+<new/>
+<o>Installed Patches</o>
+<t></t>
+</str>
+
+<str id="379">
+<new/>
+<o>Click on a Patch for more information.</o>
+<t></t>
+</str>
+
+<str id="380">
+<new/>
+<o>Configure cache settings</o>
+<t></t>
+</str>
+
+<str id="381">
+<new/>
+<o>The configured maximum size %s is divided dynamically between the
+cache managers based on the usage for the last half hour. If the
+caches are not full then all free space is assigned to each one of
+them. They will shrink to the configured maximum size as they fill up.</o>
+<t></t>
+</str>
+
+<str id="382">
+<new/>
+<o>Cache manager</o>
+<t></t>
+</str>
+
+<str id="383">
+<new/>
+<o>Size limit</o>
+<t></t>
+</str>
+
+<str id="384">
+<new/>
+<o>Input rate</o>
+<t></t>
+</str>
+
+<str id="385">
+<new/>
+<o>Cost HR</o>
+<t></t>
+</str>
+
+<str id="386">
+<new/>
+<o>Cache manager: </o>
+<t></t>
+</str>
+
+<str id="387">
+<new/>
+<o>Lookups</o>
+<t></t>
+</str>
+
+<str id="388">
+<new/>
+<o>Size/entry</o>
+<t></t>
+</str>
+
+<str id="389">
+<new/>
+<o>Byte HR</o>
+<t></t>
+</str>
+
+<str id="390">
+<new/>
+<o>Create cost</o>
+<t></t>
+</str>
+
+<str id="391">
+<new/>
+<o>Cost/entry</o>
+<t></t>
+</str>
+
+<str id="392">
+<new/>
+<o>&lt;i&gt;Cost HR&lt;/i&gt; is the cost hit rate, i.e. every hit and miss is
+weighted with the cost for each entry according to the cost metric of
+the cache manager. Note that it uses the approximation that every
+cache miss is followed by the addition of a new cache entry.</o>
+<t></t>
+</str>
+
+<str id="393">
+<new/>
+<o>Garbage Collector</o>
+<t></t>
+</str>
+
+<str id="394">
+<new/>
+<o>The garbage collector has not run yet.</o>
+<t></t>
+</str>
+
+<str id="395">
+<new/>
+<o>%d seconds since the last garbage collection. The following statistics are over approximately the last hour.</o>
+<t></t>
+</str>
+
+<str id="396">
+<new/>
+<o>Time spent in the garbage collector:</o>
+<t></t>
+</str>
+
+<str id="397">
+<new/>
+<o>Size of garbage collected entries:</o>
+<t></t>
+</str>
+
+<str id="398">
+<new/>
+<o>stale</o>
+<t></t>
+</str>
+
+<str id="399">
+<new/>
+<o>timed out</o>
+<t></t>
+</str>
+
+<str id="400">
+<new/>
+<o>Garbage collection ratio:</o>
+<t></t>
+</str>
+
+<str id="401">
+<new/>
+<o>Note that the garbage collector referred to here is not the same as
+the one for the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
+cache&lt;/a&gt;. This is the low-level garbage collector used internally by
+the Pike interpreter.</o>
+<t></t>
+</str>
+
+<str id="402">
+<new/>
+<o>Cache</o>
+<t></t>
+</str>
+
+<str id="403">
+<new/>
+<o>References</o>
+<t></t>
+</str>
+
+<str id="406">
+<new/>
+<o>Repeated action request ignored &amp;ndash; server process ID is different.</o>
+<t></t>
+</str>
+
+<str id="407">
+<new/>
+<o>Warning: The site templates generated by this action have multiple
+issues and might not produce a working or correctly configured site.
+YMMV. This action is deprecated.</o>
+<t></t>
+</str>
+
+<str id="408">
+<new/>
+<o>RXP Version:</o>
+<t></t>
+</str>
+
+<str id="409">
+<new/>
+<o>Warning: Missing tools</o>
+<t></t>
+</str>
+
+<str id="410">
+<new/>
+<o>RXP cluster import over HTTP failed..</o>
+<t></t>
+</str>
+
+<str id="411">
+<new/>
+<o>The patch import failed:</o>
+<t></t>
+</str>
+
+<str id="412">
+<new/>
+<o>All patches were not imported:</o>
+<t></t>
+</str>
+
+<str id="413">
+<new/>
+<o>Patch import done.</o>
+<t></t>
+</str>
+
+<str id="414">
+<new/>
+<o>Failed to remove the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="415">
+<new/>
+<o>Import New Patches</o>
+<t></t>
+</str>
+
+<str id="416">
+<new/>
+<o>Fetch and import the latest patches from www.roxen.com</o>
+<t></t>
+</str>
+
+<str id="417">
+<new/>
+<o>Import from Roxen</o>
+<t></t>
+</str>
+
+<str id="418">
+<new/>
+<o>Or manually select a local file to upload:</o>
+<t></t>
+</str>
+
+<str id="419">
+<new/>
+<o>Import file</o>
+<t></t>
+</str>
+
+<str id="420">
+<new/>
+<o>You can upload either a single rxp file or a tar/tar.gz/tgz file containing multiple rxp files.</o>
+<t></t>
+</str>
+
+<str id="421">
+<new/>
+<o>There is also a &lt;tt&gt;bin/rxnpatch&lt;/tt&gt; command-line tool to manage patches, if you prefer a terminal over a web interface.</o>
 <t></t>
 </str>

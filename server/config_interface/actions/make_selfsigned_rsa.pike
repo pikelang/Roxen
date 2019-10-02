@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.5 2000/09/09 03:11:56 lange Exp $
+ * $Id$
  */
 
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant (Nettle)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -49,15 +49,15 @@ mixed verify_2(object id, object mc)
 
 mixed page_3(object id, object mc)
 {
-  object file = Stdio.File();
+  object file;
 
   object privs = Privs("Reading private RSA key");
-  if (!file->open(id->variables->key_file, "r"))
+  if (!(file = lopen(id->variables->key_file, "r")))
   {
     privs = 0;
 
     return "<font color='red'>Could not open key file: "
-      + strerror(file->errno()) + "\n</font>";
+      + strerror(errno()) + "\n</font>";
   }
   privs = 0;
   string s = file->read(0x10000);
@@ -86,7 +86,7 @@ mixed page_3(object id, object mc)
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (id->variables[attr]) {
-      attrs[attr] = String.trim_whites (id->variables[attr]);
+      attrs[attr] = global.String.trim_whites (id->variables[attr]);
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
@@ -129,14 +129,14 @@ mixed verify_3(object id, object mc)
 {
   if (sizeof(id->variables->cert_file))
   {
-    object file = Stdio.File();
-    if (!file->open(id->variables->cert_file, "wct"))
+    object file;
+    if (!(file = lopen(id->variables->cert_file, "wct")))
     {
       /* FIXME: Should we use a verify function, to get
        * better error handling? */
       id->variables->_error =
 	"Could not open certificate file: "
-	+ (strerror(file->errno()) || (string) file->errno())
+	+ (strerror(errno()) || (string) errno())
 	+ ".";
       return 1;
     }
@@ -158,7 +158,7 @@ mixed wizard_done(object id, object mc)
   return http_string_answer( sprintf("<p>"+LOCALE(131,"Wrote %d bytes to %s.")+
 				     "</p>\n<p><cf-ok/></p>\n",
 				     strlen(id->variables->certificate),
-				     combine_path(getcwd(),
+				     combine_path(getcwd(), "../local/",
 						  id->variables->cert_file)) );
 }
 
@@ -166,4 +166,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.rsa) */
+#endif /* constant (Nettle) */

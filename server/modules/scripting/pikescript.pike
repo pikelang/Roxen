@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
 // the server, and thus much faster, but blocking, and somewhat less
@@ -6,10 +6,17 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.70 2001/03/03 07:15:12 per Exp $";
+constant cvs_version="$Id$";
 
 constant thread_safe=1;
 mapping scripts=([]);
+
+protected class DestructWrapper (object o)
+{
+  protected void destroy() {if (o) destruct (o);}
+}
+
+protected mapping destruct_wrappers = ([]);
 
 #include <config.h>
 #include <module.h>
@@ -17,12 +24,46 @@ inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: Pike script support";
-constant module_doc  = #"Support for user Pike-scripts, like CGI, but
-handled internally in the server, and thus much faster, but blocking,
-and less secure.<br /><img src=\"/internal-roxen-err_2\" align=\"left\"
-alt=\"Warning\" />NOTE: This module should not be enabled if you allow
-anonymous PUT!<br />NOTE: Enabling this module is the same thing as
-letting your users run programs with the same right as the server!";
+constant module_doc  = #"
+<p>Support for user Pike-scripts, like CGI, but handled internally in the
+   server, and thus much faster, but blocking, and less secure.</p>
+
+<p>A script must include the function <tt>mixed parse(RequestID id)</tt>.
+   The return argument should be one of these:</p>
+
+<table>
+  <tr>
+    <td><tt>string</tt>&nbsp;</td>
+    <td>RXML code to be parsed and returned to the client.</td>
+  </tr><tr>
+    <td><tt>mapping</tt>&nbsp;</td>
+    <td>WebServer result mapping, typically built via <tt>Roxen.http_*</tt>
+        methods.</td>
+  </tr><tr>
+    <td><tt>-1</tt>&nbsp;</td>
+    <td>Dequeues the request from the handler queue but keeps the stream
+        open to the client.</td>
+  </tr>
+</table>
+
+<p>Scripts are compiled and cached in RAM with the path as key. Global
+   variables keep their values across invocations as long as the cached
+   program remains valid and is the source file is reached via a regular
+   filesystem module (i.e. not a Roxen CMS workarea). All accesses to a
+   given script are serialized with an internal mutex unless the script
+   defines <tt>int thread_safe = 1;</tt>.</p>
+
+<table>
+  <tr>
+    <td valign='top'><imgs src='&usr.err-2;' alt='Warning' />&nbsp;</td>
+    <td>
+      <p style='margin-top: 0'>
+         NOTE: This module should not be enabled if you allow anonymous PUT!</p>
+      <p>NOTE: Enabling this module is the same thing as letting your users run
+         programs with the same right as the server!</p>
+    </td>
+  </tr>
+</table>";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -35,26 +76,26 @@ void create()
 {
   defvar("exts", ({ "pike" }), "Extensions",
          TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 "The extensions to parse");
+	 "The extensions to parse.");
 
   defvar("rawauth", 0, "Raw user info", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the raw, unparsed, user info will be sent to the script. "
 	 "Please note that this will give the scripts access to the password "
-	 "used. This is not recommended !");
+	 "used. This is not recommended!");
 
   defvar("clearpass", 0, "Send decoded password", 
          TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
 	 "If set, the decoded password value will be sent to the script. "
-	 "This is not recommended !");
+	 "This is not recommended!");
 
   defvar("exec-mask", "0777", "Exec mask: Needed",
 	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Only run scripts matching this permission mask");
+	 "Only run scripts matching this permission mask.");
 
   defvar("noexec-mask", "0000", "Exec mask: Forbidden",
 	 TYPE_STRING|VAR_MORE|VAR_NOT_CFIF,
-	 "Never run scripts matching this permission mask");
+	 "Never run scripts matching this permission mask.");
 
   defvar( "autoreload", 1, "Reload scripts automatically",
           TYPE_FLAG,
@@ -62,7 +103,7 @@ void create()
           "from disk if they have changed. This requires one stat for each "
           "access to the script, and also one stat for each file the script "
           "inherits, if any.  Please note that pike modules are currently not "
-          "automatically reloaded from disk" );
+          "automatically reloaded from disk." );
 
   defvar( "explicitreload", 1,
           "Reload scripts when the user sends a no-cache header",
@@ -71,7 +112,7 @@ void create()
           "a pragma: no-cache header (netscape does this when the user presses "
           "shift+reload, IE doesn't), even if they have not changed on disk. "
           " Please note that pike modules are currently not automatically "
-          "reloaded from disk" );
+          "reloaded from disk." );
 #if constant(__builtin.security)
   defvar( "trusted", 1,
 	  "Pike scripts are trusted",
@@ -93,13 +134,11 @@ mapping locks = ([]);
 array|mapping call_script(function fun, RequestID id, Stdio.File file)
 {
   mixed result, err;
-  string s;
   object privs;
   if(!functionp(fun)) {
     report_debug("call_script() failed: %O is not a function!\n", fun);
     return 0;
   }
-  string|array (int) uid, olduid, us;
 
   if(id->rawauth && (!query("rawauth") || !query("clearpass")))
     id->rawauth=0;
@@ -172,10 +211,10 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
   id->misc->cacheable=0;
 
   string file="";
-  string s;
   mixed err;
   program p;
   object o;
+  DestructWrapper avoid_destruct = destruct_wrappers[id->not_query];
 
   if(scripts[ id->not_query ])
   {
@@ -192,7 +231,10 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       if(!(o->no_reload && o->no_reload(id)))
       {
         master()->refresh( p, 1 );
-        destruct(o);
+	// Destruct the script instance as soon as no other thread is
+	// executing it.
+	m_delete (destruct_wrappers, id->not_query);
+	avoid_destruct = 0;
         p = 0;
         m_delete( scripts, id->not_query);
       }
@@ -244,6 +286,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       /* Should not happen */
       return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
+    avoid_destruct = destruct_wrappers[id->not_query] = DestructWrapper (o);
   }
 
   err = call_script(fun, id, f);
@@ -266,16 +309,16 @@ string status()
   string res="", foo;
 
 #if constant(__builtin.security)
-  res += "<hr><h1>Credential system enabled</h1>\n";
+  res += "<hr><h3>Credential system enabled</h3>\n";
 #endif /* constant(__builtin.security) */
 
   if(sizeof(scripts))
   {
-    res += "<hr><h1>Loaded scripts</h1><p>";
+    res += "<hr><h3>Loaded scripts</h3><p>";
     foreach(indices(scripts), foo )
       res += foo+"\n";
   } else {
-    return "<h1>No loaded scripts</h1>";
+    return "<h3>No loaded scripts</h3>";
   }
   res += "<hr>";
 

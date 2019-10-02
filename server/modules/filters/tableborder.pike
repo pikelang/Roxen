@@ -1,4 +1,4 @@
-// Copyright (C) 2001 Roxen IS
+// Copyright (C) 2001 - 2009, Roxen IS
 // Module author: Johan Sundström
 
 inherit "module";
@@ -26,7 +26,7 @@ inherit "module";
 "with(location)"                          \
   "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
 
-constant cvs_version = "$Id: tableborder.pike,v 1.11 2001/03/02 20:15:43 jhs Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table/Image Border Unveiler";
@@ -43,9 +43,9 @@ constant module_doc  =
 	      "respectively."
 	    "</p>";
 
-static array(string) add_border(Parser.HTML me, mapping arg,
-				string contents, RequestID id,
-				Parser.HTML parser)
+protected array(string) add_border(Parser.HTML me, mapping arg,
+				   string contents, RequestID id,
+				   Parser.HTML parser)
 {
   arg->border = "1";
   id->misc->borders_unveiled++;
@@ -54,13 +54,17 @@ static array(string) add_border(Parser.HTML me, mapping arg,
 				 parser->finish( contents )->read()) });
 }
 
-mapping filter(mapping result, RequestID id)
+mapping|void filter(mapping result, RequestID id)
 {
+  if (!result) return;
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result				// nobody had anything to say
   || !stringp(result->data)		// got a file object
   || !(id->prestate->tables ||
        id->prestate->images)		// only bother when we're being hailed
-  || !glob("text/html*", result->type)
+  || !glob("text/html*", type)
   || id->misc->borders_unveiled++	// borders already unveiled?
     )
     return 0; // signal that we didn't rewrite the result for good measure

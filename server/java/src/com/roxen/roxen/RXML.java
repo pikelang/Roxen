@@ -1,5 +1,5 @@
 /*
- * $Id: RXML.java,v 1.1 2000/11/15 23:03:52 marcus Exp $
+ * $Id$
  *
  */
 
@@ -39,6 +39,28 @@ public class RXML {
 
   /**
    * Returns the value a variable in the specified scope.  Returns
+   * null if there's no such variable (or it's nil).
+   *
+   * @param  var        the name of the variable
+   * @param  scopeName  the name of the scope
+   * @return            the value of the variable, or null
+   */
+  public static native Object getVar(String var, String scopeName);
+
+  /**
+   * Returns the value a variable in the current scope.  Returns null
+   * if there's no such variable (or it's nil).
+   *
+   * @param  var        the name of the variable
+   * @return            the value of the variable, or null
+   */
+  public static Object getVar(String var)
+  {
+    return getVar(var, null);
+  }
+
+  /**
+   * Returns the value a variable in the specified scope.  Returns
    * null if there's no such variable (or it's nil).  The var string
    * is also parsed for scope and/or subindexes, e.g. "scope.var.1.foo".
    *
@@ -59,6 +81,30 @@ public class RXML {
   public static Object userGetVar(String var)
   {
     return userGetVar(var, null);
+  }
+
+  /**
+   * Sets the value of a variable in the specified scope.  Returns
+   * val.
+   *
+   * @param  var        the name of the variable
+   * @param  val        the new value for the variable
+   * @param  scopeName  the name of the scope
+   * @return            the same value as was passed in
+   */
+  public static native Object setVar(String var, Object val,
+				     String scopeName);
+
+  /**
+   * Sets the value of a variable in the current scope.  Returns val.
+   *
+   * @param  var        the name of the variable
+   * @param  val        the new value for the variable
+   * @return            the same value as was passed in
+   */
+  public static Object setVar(String var, Object val)
+  {
+    return setVar(var, val, null);
   }
 
   /**
@@ -86,6 +132,24 @@ public class RXML {
   public static Object userSetVar(String var, Object val)
   {
     return userSetVar(var, val, null);
+  }
+
+  /**
+   * Removes a variable in the specified scope.
+   *
+   * @param  var        the name of the variable
+   * @param  scopeName  the name of the scope
+   */
+  public static native void deleteVar(String var, String scopeName);
+
+  /**
+   * Removes a variable in the current scope.
+   *
+   * @param  var        the name of the variable
+   */
+  public static void deleteVar(String var)
+  {
+    deleteVar(var, null); 
   }
 
   /**

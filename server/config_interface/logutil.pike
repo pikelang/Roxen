@@ -106,7 +106,7 @@ string describe_error(string err, array (int) times,
 			 @get_conf_url_to_module( module, lang ));
   }
 
-  return "<table><tr><td valign=\"top\"><img src=&usr.err-"+code+"; \n"
+  return "<table><tr><td valign=\"top\"><imgs src=&usr.err-"+code+"; \n"
 	 "alt=\"" + codetext[code-1] + "\" />"
 	  "</td><td>" + links + (nt?"":describe_times(times)+"<br />") +
 	  replace(fix_err(err), "\n", "<br />\n") + "</table>";
@@ -123,9 +123,10 @@ array(string) get_conf_url_to_module(string|RoxenModule m, string|void lang)
   string url_modname = replace(conf->otomod[module], "#", "!"),
 	url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/%s/",
-		    lang || "standard", url_confname, url_modname),
-	    Roxen.get_modfullname(module) });
+  return ({ sprintf("/sites/site.html/%s/-!-/%s/?section=Information",
+		   Roxen.http_encode_url(url_confname),
+		   Roxen.http_encode_url(url_modname)),
+	    Roxen.html_encode_string(Roxen.get_modfullname(module)) });
 }
 
 // Returns ({ URL to virtual server config page, virtual server name })
@@ -140,6 +141,9 @@ array(string) get_conf_url_to_virtual_server(string|Configuration conf,
   else
     url_confname = conf->name;
 
-  return ({ sprintf("/%s/sites/site.html/%s/", lang || "standard",
-		    url_confname), conf->query_name() });
+  return ({ sprintf("/sites/site.html/%s/", 
+		    Roxen.http_encode_url(url_confname)),
+	    Roxen.html_encode_string(conf->query_name()) });
 }
+
+

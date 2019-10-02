@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files.
@@ -7,39 +7,27 @@
 //This can be turned on when types in dumped files are working properly.
 //#pragma strict_types
 
-#define _misc ([mapping(string:mixed)]id->misc)
-#define _defines ([mapping(string:mixed)]_misc->defines)
-#define _stat _defines[" _stat"]
-#define _error _defines[" _error"]
-#define _extra_heads _defines[" _extra_heads"]
-#define _rettext _defines[" _rettext"]
-#define _ok _defines[" _ok"]
+#define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.54 2001/03/08 14:35:47 per Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id$";
+constant thread_safe = 1;
 constant language = roxen->language;
 
 #include <config.h>
 #include <module.h>
+#include <request_trace.h>
 
 inherit "module";
 
 
 // ------------- Module registration and configuration. ---------------
 
-constant module_type = MODULE_FILE_EXTENSION | MODULE_PROVIDER;
-constant module_name = "Tags: RXML 2 parser";
+constant module_type = MODULE_FILE_EXTENSION;
+constant module_name = "Tags: RXML parser";
 constant module_doc  = 
-#"This module handles RXML parsing of pages. Other modules can provide 
-additional tags that will be parsed. Most common RXML tags is provided by
-the <i>RXML 2.0 tags</i> module. This module provide some fundamental tags; 
-<tt>&lt;case&gt;</tt>, <tt>&lt;cond&gt;</tt>, <tt>&lt;comment&gt;</tt>, 
-<tt>&lt;define&gt;</tt>, <tt>&lt;elif&gt;</tt>, <tt>&lt;else&gt;</tt>, 
-<tt>&lt;elseif&gt;</tt>, <tt>&lt;emit&gt;</tt>, <tt>&lt;eval&gt;</tt>, 
-<tt>&lt;false&gt;</tt>, <tt>&lt;help&gt;</tt>, <tt>&lt;if&gt;</tt>, 
-<tt>&lt;nooutput&gt;</tt>, <tt>&lt;noparse&gt;</tt>, <tt>&lt;number&gt;</tt>, 
-<tt>&lt;strlen&gt;</tt>, <tt>&lt;then&gt;</tt>, <tt>&lt;trace&gt;</tt>, 
-<tt>&lt;true&gt;</tt>, <tt>&lt;undefine&gt;</tt> and <tt>&lt;use&gt;</tt>.";
+#"This module handles RXML parsing of pages. Other modules can provide
+additional tags that will be parsed. Most common RXML tags are
+provided by the <i>RXML tags</i> module.";
 
 string status()
 {
@@ -56,29 +44,50 @@ void create()
 
   defvar("require_exec", 0, "Require exec bit to parse",
 	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, files has to have a execute bit (any of them) set "
+	 "If enabled, files has to have a execute bit (any of them) set "
 	 "to be parsed. The exec bit is the one set by "
 	 "<tt>chmod +x filename</tt>");
 
   defvar("parse_exec", 1, "Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE|VAR_NOT_CFIF,
-	 "If set, files with the exec bit set will be parsed. If not set "
-	 "and the <i>Require exec bit to parse</i> option is set, no "
+	 "If enabled, files with the exec bit set will be parsed. If disabled "
+	 "and the <i>Require exec bit to parse</i> option is enabled, no "
 	 "parsing will occur.");
 
+  defvar ("ram_cache_pages", 1, "RAM cache RXML pages",
+	  TYPE_FLAG, #"\
+The RXML parser will cache the parse trees (known as \"p-code\") for
+the RXML pages in RAM when this is enabled, which speeds up the
+evaluation of them.");
+
+  defvar ("censor_request", 0, "Security:Censor sensitive data",
+	  TYPE_FLAG, #"\
+<p>If this is set, some sensitive data is removed from the incoming
+requests before RXML evaluation begins. Specifically, any
+authorization data derived from the Authorization or
+Proxy-Authorization http headers is removed. A notable effect is that
+the RXML variable &amp;client.password; will not reveal the real
+password, but it won't be possible to recover the authorization data
+any other way either.</p>
+
+<p>Note that this setting only affects the authorization headers as
+described above. A web application might have other places, e.g.
+cookies or form variables, where potentially sensitive data gets
+stored.</p>");
+
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
-	 "If set, all RXML parse errors will be logged in the debug log.");
+	 "If enabled, all RXML parse errors will be logged in the debug log.");
 
   defvar("logerrorsr", 1, "RXML Errors:Log RXML run errors", TYPE_FLAG,
-	 "If set, all RXML run errors will be logged in the debug log.");
+	 "If enabled, all RXML run errors will be logged in the debug log.");
 
   defvar("quietp", 0, "RXML Errors:Quiet RXML parse errors", TYPE_FLAG,
-	 "If set, RXML parse errors will not be shown in a page unless "
+	 "If enabled, RXML parse errors will not be shown in a page unless "
 	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
 	 "the <i>debug</i> prestate.");
 
   defvar("quietr", 1, "RXML Errors:Quiet RXML run errors", TYPE_FLAG,
-	 "If set, RXML run errors will not be shown in a page unless "
+	 "If enabled, RXML run errors will not be shown in a page unless "
 	 "debug has been turned on with <tt>&lt;debug on&gt;</tt> or with "
 	 "the <i>debug</i> prestate.");
 }
@@ -90,6 +99,10 @@ void start(int q, Configuration c)
   define_API_functions();
   require_exec=[int]query("require_exec");
   parse_exec=[int]query("parse_exec");
+  ram_cache_name = query ("ram_cache_pages") && "p-code:" + c->name;
+  c->rxml_tag_set->handle_run_error = rxml_run_error;
+  c->rxml_tag_set->handle_parse_error = rxml_parse_error;
+  c->rxml_tag_set->censor_request = query ("censor_request");
 }
 
 array(string) query_file_extensions()
@@ -97,25 +110,18 @@ array(string) query_file_extensions()
   return [array(string)]query("toparse");
 }
 
-multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
-
 
 // ------------------- RXML Parsing -------------------
 
 int require_exec, parse_exec;
 int bytes;  // Holds the number of bytes parsed
+int ram_cache_pages;
+string ram_cache_name;
 function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  if(!_misc->defines)
-    _misc->defines=([" _ok":1]);
-
-  array stat;
-  if(_stat)
-    stat=[array]_stat;
-  else
-    stat=_stat=[array]_misc->stat || file->stat();
+  Stdio.Stat stat = id->misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -123,7 +129,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   bytes += stat[1];
 
   string data = file->read();
-  switch( _misc->input_charset )
+  switch( id->misc->input_charset )
   {
    case 0:
    case "iso-8859-1":
@@ -135,45 +141,154 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = [string] (Locale.Charset.decoder( [string]_misc->input_charset )
-		      ->feed( data )
-		      ->drain());
+     data = (Locale.Charset.decoder( [string]id->misc->input_charset )
+	     ->feed( data )
+	     ->drain());
      break;
   }
 
-  return Roxen.http_rxml_answer(data, id, file,
-				file2type([string](id->realfile
-						   || id->no_query
-						   || "index.html"),
-					  0, e));
+  RXML.Context context;
+  string rxml;
+#ifdef MAY_OVERRIDE_RXML_PARSING
+  if(id->prestate->norxml)
+    rxml = data;
+  else
+#endif
+  {
+  eval_rxml:
+    if (ram_cache_name) {
+      array cache_ent;
+      if ((cache_ent = cache_lookup (ram_cache_name, id->not_query)) &&
+	  cache_ent[0] == stat[ST_MTIME]) {
+	TRACE_ENTER (sprintf ("Evaluating RXML page %O from RAM cache",
+			      id->not_query), this_object());
+	if (cache_ent[1]->is_stale()) {
+	  cache_remove (ram_cache_name, id->not_query);
+	  TRACE_LEAVE ("RAM cache entry was stale");
+	}
+	else {
+	  context = cache_ent[1]->new_context (id);
+	  rxml = cache_ent[1]->eval (context);
+	  id->cache_status["pcoderam"] = 1;
+	  break eval_rxml;
+	}
+      }
+      TRACE_ENTER (sprintf ("Evaluating and compiling RXML page %O",
+			    id->not_query), this_object());
+      RXML.Parser parser = Roxen.get_rxml_parser (id, 0, 1);
+      context = parser->context;
+      parser->write_end (data);
+      rxml = parser->eval();
+      RXML.PCode p_code = parser->p_code;
+      p_code->finish();
+      cache_set (ram_cache_name, id->not_query, ({stat[ST_MTIME], p_code}));
+    }
+    else {
+      TRACE_ENTER (sprintf ("Evaluating RXML page %O",
+			    id->not_query), this_object());
+      RXML.Parser parser = Roxen.get_rxml_parser (id);
+      context = parser->context;
+      parser->write_end (data);
+      rxml = parser->eval();
+    }
+  }
+  TRACE_LEAVE ("");
+
+  return (["data":rxml,
+	   "type": file2type((id->realfile
+			      || id->no_query
+			      || "index.html"),
+			     0, e) || "text/html",
+	   "stat":context->misc[" _stat"],
+	   "error":context->misc[" _error"],
+	   "rettext":context->misc[" _rettext"],
+	   "extra_heads":context->misc[" _extra_heads"],
+	   ]);
 }
 
 
 // ------------------ Error handling -------------------
 
-string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+function _run_error;
+string rxml_run_error(RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML run errors. See
+// RXML.run_error().
+{
+  RXML.Context ctx = RXML.get_context();
+  RequestID id = ctx->id;
+
+  if(id->conf->get_provider("RXMLRunError")) {
+    if(!_run_error)
+      _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
+    string res=_run_error(err, type, id);
+    if(res) return res;
+  }
+  else
+    _run_error=0;
+
+#ifdef VERBOSE_RXML_ERRORS
+  report_notice ("Error in %s.\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN",
+		 describe_backtrace (err));
+#else
+  if(query("logerrorsr"))
+    report_notice ("Error in %s.\n%s",
+		   id->raw_url || id->not_query || "UNKNOWN",
+		   describe_error (err));
+#endif
+
   NOCACHE();
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
-    if(query("logerrorsr"))
-      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-    _ok=0;
-    if(query("quietr") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
+  ctx->misc[" _ok"]=0;		// Unnecessary unless in < 5.0 compat mode.
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
+      type->subtype_of (RXML.t_text)) {
+    if(query("quietr") && !id->misc->debug)
       return "";
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
+    if (type->subtype_of (RXML.t_text))
+      return "\n" + describe_error (err) + "\n";
+    else
+      return "<br clear=\"all\" />\n<pre>" +
+	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
 
-string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+function _parse_error;
+string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
+// This is used to report thrown RXML parse errors. See
+// RXML.parse_error().
+{
+  RequestID id = RXML.get_context()->id;
+
+  if(id->conf->get_provider("RXMLParseError")) {
+    if(!_parse_error)
+      _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
+    string res=_parse_error(err, type, id);
+    if(res) return res;
+  }
+  else
+    _parse_error=0;
+
+#ifdef VERBOSE_RXML_ERRORS
+  report_notice ("Error in %s.\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN",
+		 describe_backtrace (err));
+#else
+  if(query("logerrorsp"))
+    report_notice ("Error in %s.\n%s",
+		   id->raw_url || id->not_query || "UNKNOWN",
+		   describe_error (err));
+#endif
+
   NOCACHE();
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
-    if(query("logerrorsp"))
-      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
-    if(query("quietp") && !_misc->debug && !([multiset(string)]id->prestate)->debug)
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
+      type->subtype_of (RXML.t_text)) {
+    if(query("quietp") && !id->misc->debug)
       return "";
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
+    if (type->subtype_of (RXML.t_text))
+      return "\n" + describe_error (err) + "\n";
+    else
+      return "<br clear=\"all\" />\n<pre>" +
+	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
@@ -206,13 +321,13 @@ string api_set(RequestID id, string what, string to, void|string scope)
 
 string api_define(RequestID id, string what, string to)
 {
-  _defines[what]=to;
+  CTX_MISC[what]=to;
   return ([])[0];
 }
 
 string api_query_define(RequestID id, string what)
 {
-  return (string)_defines[what];
+  return (string)CTX_MISC[what];
 }
 
 string api_query_variable(RequestID id, string what, void|string scope)
@@ -222,74 +337,64 @@ string api_query_variable(RequestID id, string what, void|string scope)
 
 string api_query_cookie(RequestID id, string f)
 {
-  return ([mapping(string:string)]id->cookies)[f];
+  return id->cookies[f];
 }
 
 void api_add_header(RequestID id, string h, string v)
 {
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, h, v);
+  id->add_response_header(h, v);
 }
 
 int api_set_cookie(RequestID id, string c, string v, void|string p)
 {
-  if(!c)
-    return 0;
-
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-    c+"="+Roxen.http_encode_cookie(v||"")+
-    "; expires="+Roxen.http_date(time(1)+(3600*24*365*2))+
-    "; path=" +(p||"/")
-  );
-
+  if(!c) return 0;
+  Roxen.set_cookie(id, c, v, 3600*24*365*2, 0, p);
   return 1;
 }
 
 int api_remove_cookie(RequestID id, string c, string v)
 {
-  if(!c)
-    return 0;
-
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, "Set-Cookie",
-			c+"="+Roxen.http_encode_cookie(v||"")+"; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/"
-  );
-
+  if(!c) return 0;
+  Roxen.remove_cookie(id, c, v);
   return 1;
 }
 
 int api_prestate(RequestID id, string p)
 {
-  return ([multiset(string)]id->prestate)[p];
+  return id->prestate[p];
 }
 
 int api_set_prestate(RequestID id, string p)
 {
-  return ([multiset(string)]id->prestate)[p]=1;
+  return id->prestate[p]=1;
 }
 
 int api_supports(RequestID id, string p)
 {
   NOCACHE();
-  return ([multiset(string)]id->supports)[p];
+  return id->supports[p];
 }
 
 int api_set_supports(RequestID id, string p)
 {
   NOCACHE();
-  return ([multiset(string)]id->supports)[p]=1;
+  return id->supports[p]=1;
 }
 
 int api_set_return_code(RequestID id, int c, void|string p)
 {
-  if(c) _error=c;
-  if(p) _rettext=p;
+  if (RXML.Context ctx = RXML_CONTEXT) {
+    if(c) ctx->set_misc (" _error", c);
+    if(p) ctx->set_misc (" _rettext", p);
+  }
   return 1;
 }
 
 string api_get_referer(RequestID id)
 {
   NOCACHE();
-  if([array(string)]id->referer && sizeof([array(string)]id->referer))
-    return [array(string)]id->referer*"";
+  if(id->referer && sizeof(id->referer))
+    return id->referer*"";
   return "";
 }
 

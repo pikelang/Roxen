@@ -1,7 +1,7 @@
 #!/usr/local/bin/pike
 #!NO_MODULE
 
-/* $Id: sqladduser.pike,v 1.5 2001/01/10 08:57:25 per Exp $
+/* $Id$
  *
  * name = "SQL Add user";
  * doc = "Add a user to an SQL user-database.";
@@ -9,8 +9,7 @@
 
 /*
  * This program is (C) 1997 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
- * You can use, duplicate and distribute it freely under the terms of
- * the GNU General Public License, version 2.
+ * See COPYING in the server directory for license information.
  * This program comes on an AS-IS basis, WITHOUT ANY WARRANTY of any kind,
  * either implicit or esplicit.
  * By using it you implicitly state that you are aware of the risks, and

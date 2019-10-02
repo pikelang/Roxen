@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 // This is a small sample module intended to show how a newstyle tag
 // is written. Note that this is only a very brief overview and that
@@ -8,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.11 2001/01/29 05:40:31 per Exp $";
+constant cvs_version = "$Id$";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
@@ -17,12 +17,12 @@ constant thread_safe=1;
 inherit "module";
 
 
-// moduke.h must be included to use the LOCALE macro below.
+// module.h must be included to use the LOCALE macro below.
 #include <module.h>
 // Some defines for the translation system
 // 
-//<locale-token project="mod_fnord">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_fnord",X,Y)
+//<locale-token project="mod_newstyle_fnord">LOCALE</locale-token>
+#define LOCALE(X,Y)	_DEF_LOCALE("mod_newstyle_fnord",X,Y)
 // end of the locale related stuff
 
 
@@ -88,7 +88,7 @@ LocaleString module_doc  =
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["fnord":#"<desc cont>The fnord container tag hides its "
+constant tagdoc=(["fnord":#"<desc type='cont'>The fnord container tag hides its "
   "contents for the user, unless the fnord prestate is used.</desc>"
   "<attr name=alt value=string>An alternate text that should be written "
   "in place of the hidden text.</attr>"]);

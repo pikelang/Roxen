@@ -14,7 +14,7 @@
 <input type="hidden" name="page" value="install" />
 
 <if variable="form.no">
-  <redirect to="/standard/update.html?foo" />
+  <redirect to="update.html?foo" />
 </if>
 <if variable="form.yes">
   <update-install-package package="&form.install;" /><br />
@@ -71,7 +71,7 @@
 <b><translate id="28">Do you really want to install this package?</translate></b>
 <br />
 <input type="hidden" name="install" value="&form.install;" />
-<translate id="29" variable="var.title;">Yes</translate>
+<translate id="29" variable="var.title">Yes</translate>
 <input type="submit" name="yes" value="   &var.title;   " />&nbsp;&nbsp;&nbsp;
 <translate id="30" variable="var.title">No</translate>
 <input type="submit" name="no" value="   &var.title;   " />

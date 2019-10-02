@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>mod_sqlfs</project>
+<language>eng</language>
+<file>../modules/filesystems/sqlfs.pike</file>
+
+<str id="57">
+<o>File systems: SQL File system</o>
+<t></t>
+</str>
+
+<str id="58">
+<o>Access files stored in a SQL database</o>
+<t></t>
+</str>
+
+<str id="15">
+<o>Mount point</o>
+<t></t>
+</str>
+
+<str id="16">
+<o>Where the module will be mounted in the site's virtual file system.</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>Filesystem database</o>
+<t></t>
+</str>
+
+<str id="60">
+<o>The database to use</o>
+<t></t>
+</str>
+
+<str id="61">
+<o>Filesystem table</o>
+<t></t>
+</str>
+
+<str id="62">
+<o>The table that cotains the files. The table should contain at least the columns 'name' and 'contents'. Optionally you can also have the fields 'mtime', 'uid' and 'gid'.</o>
+<t></t>
+</str>
+
+<str id="39">
+<o>File contents charset</o>
+<t></t>
+</str>
+
+<str id="40">
+<o>The charset of the contents of the files on this file system. This variable makes it possible for Roxen to use any text file, no matter what charset it is written in. If necessary, Roxen will convert the file to Unicode before processing the file.</o>
+<t></t>
+</str>
+
+<str id="41">
+<o>Filename charset</o>
+<t></t>
+</str>
+
+<str id="42">
+<o>The charset of the file names of the files on this file system. Unlike the &lt;i&gt;File contents charset&lt;/i&gt; variable, this might not work for all charsets simply because not all browsers support anything except ISO-8859-1 in URLs.</o>
+<t></t>
+</str>

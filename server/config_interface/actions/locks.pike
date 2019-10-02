@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.8 2000/09/19 09:49:37 lange Exp $
+ * $Id$
  */
 
 #include <config.h>
@@ -51,9 +51,9 @@ string parse( RequestID id )
     }
   }
   mapping res=([]);
-  string data=("<font size='+2'>"+
+  string data=("<font size='+1'><b>"+
 	       LOCALE(13, "Module lock status : Accesses to all modules")+
-	       "</font><p>"+
+	       "</b></font><p>"+
 	       LOCALE(14, "Locked means that the access was done using a "
 		      "serializing lock since the module was not thread-safe, "
 		      "unlocked means that there was no need for a lock.")+
@@ -77,10 +77,18 @@ string parse( RequestID id )
   array rows = ({});
   foreach(sort(indices(res)), string q)
     rows += ({ ({q,(string)(res[q]||""),(string)(locks[q]||"") }) });
+
   return data + 
-    html_table( ({ 
-      LOCALE(17, "Module"), LOCALE(18, "File"), LOCALE(19, "Locked"), 
-      LOCALE(20, "Unlocked") }), rows ) +
-    "<p><cf-ok/></p>";
+      html_table( ({ 
+        LOCALE(17, "Module"), LOCALE(18, "File"), LOCALE(19, "Locked"), 
+        LOCALE(20, "Unlocked") }), rows,
+		  ([ "titlebgcolor":"&usr.obox-titlebg;",
+		     "bordercolor":"&usr.obox-border;",
+		     "titlecolor":"&usr.obox-titlefg;",
+		     "oddbgcolor":"&usr.obox-bodybg;",
+		     "evenbgcolor":"&usr.fade1;",
+		  ])
+		  ) +
+      "<p><cf-ok/></p>";
 }
 #endif /* THREADS */

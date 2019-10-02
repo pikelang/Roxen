@@ -1,0 +1,78 @@
+#!/bin/sh
+
+status_fail()
+{
+  echo
+  echo "*** $1 FAILED ***"
+  echo
+#  rm -f "$ROOT"/status/$1.WORK
+#  touch "$ROOT"/status/$1.FAIL
+  exit 1
+}
+
+fail()
+{
+    exit 1
+}
+
+version_fixup()
+{
+    if [ -f ntstart/ntstart.cpp -a -f version.h ]; then :; else
+	echo "Invalid current directory for bumping ntstart."
+	fail
+    fi
+
+    echo "Bumping ntstart version..."
+
+    build=`sed <version.h -e'/NTSTART_BUILD_VERSION/s/[^0-9]*//gp' -ed | head -1`
+    newbuild=`echo $build 1+p | dc`
+    sed <version.h -e"/NTSTART_BUILD_VERSION/s/$build/$newbuild/" >version.h.new
+
+    checkbuild=`sed <version.h.new -e'/NTSTART_BUILD_VERSION/s/[^0-9]*//gp' -ed | \
+        head -1`
+
+    if [ "x$newbuild" = "x$checkbuild" ]
+    then
+        mv -f version.h.new version.h || status_fail ntstart
+        echo "Successful bump to build $newbuild."
+    else
+        echo "Version bump failed: $newbuild != $checkbuild."
+        fail
+    fi
+
+    major=`sed <version.h -e'/NTSTART_MAJOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
+    minor=`sed <version.h -e'/NTSTART_MINOR_VERSION/s/[^0-9]*//gp' -ed|head -1`
+    version=$major.$minor
+
+    if [ "x$nocvs" = "x" ]
+    then
+	echo git commit -m "Version bumped to $version.$newbuild by distmaker." version.h
+	git commit -m "Version bumped to $version.$newbuild by distmaker." version.h \
+	|| fail
+	git push || fail
+    fi
+
+    echo "$version.$newbuild" > VERSION
+
+    VERSION="$version.$newbuild"
+    export VERSION
+
+    if [ "x$nocvs" = "x" ]
+    then
+        echo Tagging...
+	echo git tag "ntstart_$VERSION"
+        git tag "ntstart_$VERSION" || fail
+	git push origin "refs/tags/ntstart_$VERSION" || fail
+    else
+        echo No tagging!
+    fi
+}
+
+# Main
+if [ "x$1" = "xdebug" ]
+then
+    nocvs="yes"
+else
+    nocvs=""
+fi
+version_fixup

@@ -16,17 +16,20 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.40 2001/03/08 14:35:43 per Exp $";
+constant cvs_version = "$Id$";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Counter";
 constant thread_safe = 1;
-constant module_doc  = "Generates graphical counters. This module is really only "
-  "a wrapper kept for compatibility. It creates a gtext tag with an accessed tag inside."
-  "<br /><br />"
-  "How to update from the old counter module:<br />"
-  "Take your old ppm-fonts and add a file called fontname, with the name of the font in it. "
-  "Then add the location of that directory to the font path in the global settings. It is a "
-  "known issue that you can not create user font directories, as with the old counter tag.";
+constant module_doc  = #"<p>Generates graphical counters.
+This module is really only a wrapper kept for compatibility. It
+creates a gtext tag with an accessed tag inside.
+</p>
+<p>
+How to update from the old counter module:<br />
+Take your old ppm-fonts and add a file called fontname, with the name
+of the font in it. Then add the location of that directory to the font
+path in the global settings. It is a known issue that you can not
+create user font directories, as with the old counter tag.</p>";
 
 void create()
 {
@@ -37,11 +40,16 @@ void create()
 }
 
 mapping tagdocumentation() {
-  string args=" This tag relays the following attributes to gtext; "+String.implode_nicely(g_args)+
-    ", and the following to accessed; "+String.implode_nicely(a_args)+". Refer to these tags documentation "
-    "for more information.";
-  return ([ "counter":"<desc tag>"+module_doc+args+"</desc>",
-	    "counter":"<desc tag>"+replace(module_doc, "gtext", "gtext-url")+args+"</desc>"
+  string args =
+    "<p>This tag relays the following attributes to gtext; " +
+    String.implode_nicely(g_args)+ ", and the following to accessed; " +
+    String.implode_nicely(a_args)+". Refer to these tags documentation "
+    "for more information.</p>";
+  return ([ "counter"     : ("<desc type='tag'>" + module_doc + args +
+			     "</desc>"),
+	    "counter-url" : ("<desc type='tag'>" +
+			     replace(module_doc, "gtext", "gtext-url") +
+			     args + "</desc>")
   ]);
 }
 

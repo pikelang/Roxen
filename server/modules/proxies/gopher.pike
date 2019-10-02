@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.25 2001/01/04 06:03:28 nilsson Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -206,7 +206,7 @@ void connected(object ok, string file, object send_to, string query,
   {
    case "1": /* Directory, must be parsed. */
      GOPHER_WERR("Is a menu");
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     ok->set_id(({ "", send_to, ok, key}));
     ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     send_to->my_fd->write("HTTP/1.0 200 Yo! Gopher dir comming soon to a "
@@ -218,38 +218,38 @@ void connected(object ok, string file, object send_to, string query,
     /* 3 is error (?) */
 
    case "4": /* Mac binhex (of all types...) */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo! Gopher data comming soon to a "
 			  "screen near you\n"
 			  "Content-Type: application/mac-binhex\n\n");
     break;
 
    case "5": /* Dos binary (of all types...) */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo!\n"
 			  "Content-Type: application/x-dosbinary\n\n");
     break;
 
    case "6": /* Unix UUENCODE */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo!\n"
 		   "Content-Type: application/x-uuencode\n\n");
     break;
 
    case "9": /* Binary */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo!\n"
 			  "Content-Type: application/binary\n\n");
     break;
 
    case "g": /* Gif image */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Gopher data\n"
 			  "Content-Type: image/gif\n\n");
     break;
 
    case "I": /* _some_ image, lets pretend it's a jpeg.. :) */
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200  to a screen near you\n"
 			  "Content-Type: image/jpeg\n\n");
     break;
@@ -269,7 +269,7 @@ void connected(object ok, string file, object send_to, string query,
 		   "screen near you\nContent-Type: text/html\n\n"
 		   "<h1>Gopher Search</h1>"
 		   "<isindex prompt=\"Gopher search:  \">");
-    ok->write(file + "	" + query + "\n");
+    ok->write(file + "	" + query + "\r\n");
     ok->set_id(({ "", send_to, ok}));
     ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     return;
@@ -278,7 +278,7 @@ void connected(object ok, string file, object send_to, string query,
    case "+": /* Extra server, shouldn't be here */
    case "8": /* Shouldn't be here... */
    default:
-    ok->write(file + "\n");
+    ok->write(file + "\r\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo! Gopher data comming soon to a "
 			  "screen near you\nContent-Type: text/plain\n\n");
 
@@ -301,7 +301,13 @@ mapping find_file(string fi, object id)
 
   sscanf(fi, "%[^/]/%s", h, f);
   if(!f)  f="";
-  sscanf(h, "%s:%d", h, p);
+  if (has_prefix(h, "[")) {
+    //  IPv6
+    if (sscanf(h, "[%s]:%d", h, p))
+      h = "[" + h + "]";
+  } else {
+    sscanf(h, "%s:%d", h, p);
+  }
   if(!p)  p=70;
   GOPHER_WERR("host = "+h+"\nfile = "+f+"\nport = "+p);
   sscanf(id->raw_url, "%*s?%s", q);

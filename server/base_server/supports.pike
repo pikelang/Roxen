@@ -1,6 +1,8 @@
+// This file is part of Roxen WebServer.
+// Copyright © 1999 - 2009, Roxen IS.
+//
 // Handles supports
-// Copyright © 1999 - 2000, Roxen IS.
-// $Id: supports.pike,v 1.23 2001/03/12 14:08:26 nilsson Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -121,7 +123,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
 {
   if(array(multiset(string)|mapping(string:string)) q = 
      [array(multiset(string)|mapping(string:string))] cache_lookup("supports", from))
-    return q;
+    return q + ({ });
 
   multiset (string) sup = (<>);
   mapping (string:string) m = ([]);
@@ -150,8 +152,10 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
 #endif
   }
   sup -= nsup;
-  cache_set("supports", from, ({sup,m}));
-  return ({ sup, m });
+  array res = ({sup, m});
+  sup = m = 0;	     // Discard refs for memory counting in cache_set.
+  cache_set("supports", from, res);
+  return res + ({});
 }
 
 

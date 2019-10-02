@@ -1,10 +1,10 @@
-// This is a roxen module.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 
 // A WAIS proxy module, not written by anyone at Roxen IS, and it would
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.24 2001/03/15 23:31:25 per Exp $";
+string cvs_version = "$Id$";
 
 #include <config.h>
 #include <module.h>
@@ -293,8 +293,7 @@ string debug_print_string(string str)
 
 string trim_junk(string headline)
 {
-  int length;
-  int i,j;
+  int i;
 
   WAIS_WERR_2("trim_junk1("+debug_print_string(headline));
 
@@ -414,7 +413,7 @@ string writeBinaryInteger(int num,int size)
 		(num>>(bitsPerByte*2))&255,(num>>(bitsPerByte))&255,num&255);
     break;
   default:
-    werror(sprintf("Invalid writeBinaryInteger call: num %d, size &d\n",
+    werror(sprintf("Invalid writeBinaryInteger call: num %d, size %d\n",
 		   num,size));
     buf="";
   }
@@ -480,7 +479,7 @@ string generate_search_apdu(string seed_words, string database,
 string generate_retrieval_apdu(string docid, string doctype, string database)
 {
   int start,end;
-  string buf,nbuf,attributes,query;
+  string buf,nbuf,query;
 
   start=0;end=10000;
 
@@ -585,7 +584,7 @@ string WWW_from_archie(string file)
 string WAIS_from_WWW (string docname)
 {
   string z,t2;
-  int len,type,tmp,i,j;
+  int len,type,tmp;
 
   WAIS_WERR_2("WWW id (to become WAIS id): "+debug_print_string(docname));
 
@@ -634,7 +633,7 @@ string WAIS_from_WWW (string docname)
 
 string WWW_from_WAIS(string docid)
 {
-  int in,l,i;
+  int in,l;
   string out;
 
   if(!docid)
@@ -1718,7 +1717,7 @@ string make_error_page(string error)
 
 void done_fetch_data(array in)
 {
-  int i,bin;
+  int bin;
   mapping query_resp,searchres;
   object to;
   string docname;
@@ -1842,7 +1841,6 @@ void got_fetch_data(array i, string s)
 
 void done_search_data(array in)
 {
-  int i,bin;
   mapping query_resp;
   object to;
   string database,key;
@@ -2124,7 +2122,13 @@ mapping find_file(string fi, object id)
   if(!f)
     f="";
 
-  sscanf(h, "%s:%d", h, p);
+  if (has_prefix(h, "[")) {
+    //  IPv6
+    if (sscanf(h, "[%s]:%d", h, p))
+      h = "[" + h + "]";
+  } else {
+    sscanf(h, "%s:%d", h, p);
+  }
   if(!p)
     p=210;
 

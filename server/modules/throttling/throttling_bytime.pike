@@ -1,9 +1,9 @@
 /*
  * By Francesco Chemolli
- * This is a Roxen module. Copyright © 2000, Roxen IS.
+ * This is a Roxen module. Copyright © 2000 - 2009, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.5 2000/05/23 22:12:32 kinkie Exp $";
+constant cvs_version="$Id$";
 
 
 #include <module.h>
@@ -59,7 +59,7 @@ constant module_unique=1;
 //the efficient way would be going for call_outs, but it would be quite harder
 //to implement, and generally not worth it.
 
-private static array current_rule;
+private array current_rule;
 private mixed update_call_out;
 
 #ifdef OLD

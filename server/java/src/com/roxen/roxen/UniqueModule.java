@@ -1,5 +1,5 @@
 /*
- * $Id: UniqueModule.java,v 1.3 2000/02/21 18:30:46 marcus Exp $
+ * $Id$
  *
  */
 

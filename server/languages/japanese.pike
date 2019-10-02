@@ -8,11 +8,12 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.18 2000/12/18 17:10:05 jhs Exp $";
-constant _id = ({ "kj", "japanese", "日本語" });
-constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
-			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
-			"日本語" });
+constant cvs_version = "$Id$";
+constant _id = ({ "ja", "japanese", "日本語" });
+constant _aliases =  ({ "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
+			"日本語",
+			"kj", "kanji", /* For backward compatibility */
+});
 
 constant required_charset = "iso-2022";
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
@@ -118,13 +119,23 @@ string month(int num)
   return mknumber(num)+"月";
 }
 
+string short_month(int num)
+{
+  return month(num);
+}
+
 string day(int num)
 {
   return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ]+
 	    "曜日";
 }
 
-static void create()
+string short_day(int num)
+{
+  return ({ "日", "月", "火", "水", "木", "金", "土" })[ num - 1 ];
+}
+
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

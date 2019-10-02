@@ -1,12 +1,13 @@
 #!/usr/local/bin/pike
-// $Id: tetris.pike,v 1.4 2001/02/23 04:15:20 per Exp $
+//#pike 7.2
+// $Id$
 import Process;import Protocols.TELNET;mixed a,h,Q,e=([]),q=Q=([]),c,s,I,_,j,K,
-x=252,m,f=map((array)"H45BBI65@CJ@BMED45@GM@LBFP@NBHS@BCDA5@LBB5BNCK5BMEL5@BEC"
-"5@MEN5MNFO6@BFE45MFQ65MHR4B@HF5MLHG5MYD",`-,65),n=25,io,tm;int u(){foreach(
+w,x=252,m,f=map((array)"H45BBI65@CJ@BMED45@GM@LBFP@NBHS@BCDA5@LBB5BNCK5BMEL5@B"
+"EC5@MEN5MNFO6@BFE45MFQ65MHR4B@HF5MLHG5MYD",`-,65),n=25,io,tm;int u(){foreach(
 sort(indices(Q)),_)_>11&&_<264&&Q[_]-e[_]&&io->write((_-++I||_%12<1?sprintf(
-"\33[%d;%dH",(I=_)/12,_%12*2+28):"")+(Q[_]-K?(K=Q[_])?"\33[7;3"+K+"m":"\33[0m":
-"")+"  ");Q=([263:7]);e=q+Q;e[263]=0;}int g(int b){for(_=4;_--;Q[m=_?x+f[n+_]:x
-]=q[m]=b&&f[n+4]);}int G(int b){for(_=4;_--;)if(q[_?b+f[n+_]:b])return 1;}int 
+"\e[%d;%dH",(I=_)/12,_%12*2+28):"")+(Q[_]-K?(K=Q[_])?"\e[7;3"+(K-w)+"m":"\e[0m"
+:"")+"  ");Q=([263:7]);e=q+Q;e[263]=0;}int g(int b){for(_=4;_--;Q[m=_?x+f[n+_]:
+x]=q[m]=b&&f[n+4]);}int G(int b){for(_=4;_--;)if(q[_?b+f[n+_]:b])return 1;}int 
 z(int p);void tick(){h-=h/3e3;call_out(tick,h);g(0);if(G(x+12)){g(++s);for(m=j=
 0;++j<252;)if(q[j]?++m>9&&j%12==10:(m=0)){for(;j%12;q[j]=Q[j--]=0);for(;--j;q[j
 +12]=Q[j+12]=q[j]);}n=random(7)*5;G(x=17)&&z(1);}else x+=12;g(7);u();}void key(
@@ -14,7 +15,7 @@ mixed id, string Z){g(0);foreach(values(Z),int c){if(c=search(a,c)+1){if(c==1)G
 (--x)&&++x;if(c==2){n=5*f[m=n];G(x)&&(n=m);}if(c==3)G(++x)&&--x;if(c==4)for(;!G
 (x+12);++s)x+=12;if(c>4)if(z(c>5))return;}}g(7);u();}void pause(mixed foo,
 string Z){int i=search(values(Z),a[4]);if(i==-1)return;io->write("\33[H\33[J"
-"\33[7m");h=m;call_out(tick,h);key(foo,Z[i+1..]);io->set_read_callback(key);}
+"\33[0m");h=m;call_out(tick,h);key(foo,Z[i+1..]);io->set_read_callback(key);}
 int z(int p){io->write("\33[H\33[J\33[0m"+s+"\n");#if constant(roxen)
 catch(Q=roxen.retrieve("tetris-highscores",0)->idi);if(!Q)#endif
 Q=({});if(p){io->normal();Q+=({ ({s,tm+"\n"}) });}sort(Q);j=([]);foreach(
@@ -36,6 +37,6 @@ DO,TELOPT_SGA,IAC,WONT,TELOPT_SGA}));}void normal(){write((string)({IAC,DO,
 TELOPT_ECHO,IAC,DO,TELOPT_LINEMODE}));}void quit(){destruct(this_object());}}
 void create(object f){if(f)tetris(telnet(f));}class console{inherit Stdio.File;
 string get_name(mixed cb){cb(getenv("LOGNAME")||popen("id -un"));}void
-create(){::create("stdin");}void raw(){system("stty raw cbreak -echo stop u");}
-void normal(){system("stty sane");}void quit(){exit(0);}}int main(){
-tetris(console());return -1;}
+create(){::create("stdin");}void raw(){system("stty raw -icanon -echo stop u");
+}void normal(){system("stty sane");}void quit(){exit(0);}}int main(int c){w=c-
+1;tetris(console());return -1;}

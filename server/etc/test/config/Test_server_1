@@ -1,4 +1,5 @@
-<?XML version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<roxen-config>
 
 <region name='EnabledModules'>
   <var name='contenttypes#0'>    <int>1</int> </var>
@@ -7,6 +8,8 @@
   <var name='roxen_test#0'>      <int>1</int> </var>
   <var name='rxmlparse#0'>       <int>1</int> </var>
   <var name='rxmltags#0'>        <int>1</int> </var>
+  <var name='additional_rxml#0'> <int>1</int> </var>
+  <var name='sqltag#0'>          <int>1</int> </var>
 </region>
 
 <region name='contenttypes#0'>
@@ -36,12 +39,17 @@
 <region name='filesystem#0'>
   <var name='.files'>            <int>0</int> </var>
   <var name='access_as_user'>    <int>0</int> </var>
+  <var name='access_as_user_db'> <str> all</str> </var>
+  <var name='access_as_user_throw'> <int>0</int> </var>
   <var name='charset'>           <str>iso-8859-1</str> </var>
   <var name='check_auth'>        <int>1</int> </var>
   <var name='delete'>            <int>0</int> </var>
   <var name='dir'>               <int>1</int> </var>
-  <var name='internal_files'>    <a></a> </var>
+  <var name='internal_files'><a>
+    <str>*.inv</str>
+  </a></var>
   <var name='mountpoint'>        <str>/</str> </var>
+  <var name='no-parse'>          <int>0</int> </var>
   <var name='no_symlinks'>       <int>0</int> </var>
   <var name='nobrowse'><a>
     <str>.www_not_browsable</str>
@@ -49,9 +57,13 @@
   </a></var>
   <var name='path_encoding'>     <str>iso-8859-1</str> </var>
   <var name='put'>               <int>0</int> </var>
-  <var name='searchpath'>        <str>etc/roxen_test/filesystem/</str> </var>
+  <var name='searchpath'>        <str>etc/test/filesystem/</str> </var>
   <var name='stat_cache'>        <int>0</int> </var>
   <var name='tilde'>             <int>0</int> </var>
+</region>
+
+<region name='roxen_test#0'>
+  <var name='selftestdir'>       <str>etc/test</str> </var>
 </region>
 
 <region name='rxmlparse#0'>
@@ -61,7 +73,6 @@
   <var name='quietp'>            <int>0</int> </var>
   <var name='quietr'>            <int>0</int> </var>
   <var name='require_exec'>      <int>0</int> </var>
-  <var name='skul'>              <int>3</int> </var>
   <var name='toparse'><a>
     <str>html</str>
     <str>htm</str>
@@ -80,10 +91,11 @@
   <var name='LogFormat'><str>404: $host $referer - [$cern_date] "$method $resource $protocol" 404 -
 500: $host $referer ERROR [$cern_date] "$method $resource $protocol" 500 -
 *: $host - - [$cern_date] "$method $resource $protocol" $response $length</str></var>
-  <var name='MyWorldLocation'>   <str></str> </var>
+  <var name='MyWorldLocation'>   <str>http://localhost:17369</str> </var>
   <var name='NoLog'>             <a></a> </var>
   <var name='URLs'><a>
     <str>http://*:17369/</str>
+    <str>ftp://*:17371/</str>
   </a></var>
   <var name='ZNoSuchFile'><str>%3chtml%3e%3chead%3e
 %3ctitle%3e404 - Page not found%3c/title%3e
@@ -125,13 +137,14 @@ page.
 %3c/body%3e
 </str></var>
   <var name='comment'>           <str></str> </var>
+  <var name='compat_level'>      <str>5.2</str> </var>
   <var name='data_cache_file_max_size'> <int>50</int> </var>
   <var name='data_cache_size'>   <int>2048</int> </var>
   <var name='default_server'>    <int>0</int> </var>
   <var name='name'>              <str></str> </var>
   <var name='no_delayed_load'>   <int>0</int> </var>
   <var name='req_throttle'>      <int>0</int> </var>
-  <var name='req_throttle_depth_mult'> <flt>60.000000</flt> </var>
+  <var name='req_throttle_depth_mult'> <flt>60</flt> </var>
   <var name='req_throttle_min'>  <int>1024</int> </var>
   <var name='throttle'>          <int>0</int> </var>
   <var name='throttle_bucket_depth'> <int>1024000</int> </var>
@@ -139,3 +152,14 @@ page.
   <var name='throttle_max_grant'> <int>14900</int> </var>
   <var name='throttle_min_grant'> <int>1300</int> </var>
 </region>
+
+<region name='sqltag#0'>
+  <var name='allow_module_dbs'>  <int>0</int> </var>
+  <var name='allow_sql_urls'>    <int>0</int> </var>
+  <var name='allowed_dbs'>       <str>local</str> </var>
+  <var name='charset'>           <str></str> </var>
+  <var name='db'>                <str> none</str> </var>
+  <var name='hostname'>          <str>mysql://localhost/</str> </var>
+</region>
+
+</roxen-config>

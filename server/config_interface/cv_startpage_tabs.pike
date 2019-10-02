@@ -5,7 +5,7 @@
 
 array pages =
 ({
-  //  ({ "update",       "update.html",   "Update",     0, LOCALE(219, "Update")}),
+//({ "update",       "update.html",   "Update",     0, LOCALE(400, "Update")}),
   ({ "usersettings", "settings.html", 0,            0, LOCALE(220, "Your Settings") }),
   ({ "users",        "users.html",    "Edit Users", 0, LOCALE(221, "Users")}),
 });

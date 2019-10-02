@@ -1,5 +1,7 @@
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.5 2001/03/08 14:35:45 per Exp $";
+  "$Id$";
 inherit AuthModule;
 inherit "module";
 
@@ -16,7 +18,7 @@ LocaleString module_name =
 LocaleString module_doc =
   _(2,"Authenticate users using basic username/password authentication.");
 
-static array(string) parse_auth_header( mixed header )
+protected array(string) parse_auth_header( mixed header )
 {
   array(string) res;
   array(string) handle_header( string header ) 
@@ -44,11 +46,11 @@ static array(string) parse_auth_header( mixed header )
 }
 
 
-static User low_authenticate( RequestID id,
-			      string user, string password,
-			      UserDB db)
+protected User low_authenticate( RequestID id,
+				 string user, string password,
+				 UserDB db)
 {
-  if( User u = db->find_user( user ) )
+  if( User u = db->find_user( user, id ) )
     if( u->password_authenticate( password ) )
       return u;
 }
@@ -68,7 +70,7 @@ User authenticate( RequestID id, UserDB db )
   
   if( !user )
     if( header = id->request_headers[ "authorization" ] )
-      [user,password] = parse_auth_header( header );
+      [user,password] = parse_auth_header( header ) || ({ 0,0 });
     else if( id->realauth )
       sscanf( id->realauth, "%[^:]:%s", user, password );
     else
@@ -77,15 +79,24 @@ User authenticate( RequestID id, UserDB db )
   if( !user || !password )
     return 0;
   
+  User res;
   if( !db )
   {
-    User res;
     foreach( id->conf->user_databases(), UserDB db )
       if( res = low_authenticate( id, user, password, db ) )
-	return res;
-    return 0;
+	break;
   }
-  return low_authenticate( id, user, password, db );
+  else
+    res = low_authenticate( id, user, password, db );
+  if (res)
+  {
+    id->misc->uid = res->uid();
+    id->misc->gid = res->gid();
+    id->misc->gecos = res->gecos();
+    id->misc->home = res->homedir();
+    id->misc->shell = res->shell();
+  }
+  return res;
 }
 
 
@@ -95,5 +106,5 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 //! configuration are searched in order, then the configuration user
 //! database.
 {
-  return Roxen.http_auth_required( realm );
+  return Roxen.http_auth_required( realm, 0, id );
 }

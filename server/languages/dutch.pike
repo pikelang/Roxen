@@ -3,13 +3,14 @@
  * doc = "Handles the conversion of numbers and dates to Dutch. You have to restart the server for updates to take effect.";
  *
  * Rewritten by Stephen R. van den Berg <srb@cuci.nl>, 1998/06/16
+ * Modified by Valentijn Siebrands, 2004/12/07
  */
 
 inherit "abstract.pike";
 
-constant cvs_version="$Id: dutch.pike,v 1.9 2000/11/27 14:09:13 per Exp $";
-constant _id = ({ "du", "dutch", "" });
-constant _aliases = ({ "du", "nl", "ned", "dutch" });
+constant cvs_version="$Id$";
+constant _id = ({ "nl", "dutch", "nederlands" });
+constant _aliases = ({ "du", "nl", "nld", "ned", "dutch" });
 
 constant months = ({
   "januari", "februari", "maart", "april", "mei",
@@ -22,7 +23,19 @@ constant days = ({
 
 string ordered(int i)
 {
-  return i+"e";
+  switch(i)
+  {
+    case 0:
+      return "buggy";
+    case 1:
+      return "1ste";
+    case 8:
+      return "8ste";
+    default:
+      if(i<=19)
+	return i+"de";
+      return i+"ste";
+  }
 }
 
 string date(int timestamp, mapping|void m)
@@ -69,7 +82,7 @@ string date(int timestamp, mapping|void m)
     return snumber(num/(unit))+(name)+snumber(num%(unit))
  
 
-static string snumber(int num)
+protected string snumber(int num)
 {
   if(num<0)
     return "min "+snumber(-num);
@@ -103,7 +116,7 @@ static string snumber(int num)
   case 11: return "elf";
   case 12: return "twaalf";
   case 13: return "dertien";
-  case 14: return "viertien";
+  case 14: return "veertien";
   case 15: return "vijftien";
   case 16: return "zestien";
   case 17: return "zeventien";
@@ -125,7 +138,7 @@ string number(int num)
   return num?snumber(num):"nul";
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

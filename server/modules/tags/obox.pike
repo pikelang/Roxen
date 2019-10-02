@@ -1,11 +1,11 @@
-// The outlined box module, Copyright © 1996 - 2000, Roxen IS.
+// The outlined box module, Copyright © 1996 - 2009, Roxen IS.
 //
 // Fredrik Noring et al
 //
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.35 2001/03/08 14:35:47 per Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,22 +29,25 @@ LocaleString module_doc  =
 
 constant unit_gif = "/internal-roxen-unit";
 
-static string img_placeholder (mapping args)
+protected string img_placeholder (mapping args)
 {
   int width=((int)args->outlinewidth)||1;
 
-  return sprintf("<img src=\"%s\" alt=\"\" width=\"%d\" height=\"%d\"%s>",
+  return sprintf("<img src=\"%s\" alt=\"\" "
+		 // border:1 is here to work around a buggy rendering in NS4.
+		 "style=\"display:block; border:1;\" "
+		 "width=\"%d\" height=\"%d\"%s>",
 		 unit_gif, width, width, (args->noxml?"":" /"));
 }
 
-static string handle_title(string name, mapping junk_args,
-			   string contents, mapping args)
+protected string handle_title(string name, mapping junk_args,
+			      string contents, mapping args)
 {
   args->title=contents;
   return "";
 }
 
-static string horiz_line(mapping args)
+protected string horiz_line(mapping args)
 {
   args->fixedleft="";
   return sprintf("<tr><td colspan=\"5\" bgcolor=\"%s\">\n"
@@ -53,7 +56,7 @@ static string horiz_line(mapping args)
 		 img_placeholder(args));
 }
 
-static string title(mapping args)
+protected string title(mapping args)
 {
   if (!args->title)
     return horiz_line(args);
@@ -99,10 +102,10 @@ static string title(mapping args)
 		   empty,
 		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
-		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
+		    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
 		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
-		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
+		    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
 		   args->outlinecolor,
 		   empty);
    case "caption":
@@ -135,10 +138,10 @@ static string title(mapping args)
 		   empty,
 		   args->left ? " width=\""+args->left+"\"" : "",
 		   (args->fixedleft ?
-		    String.strmult ("&nbsp;", (int) args->fixedleft) : "&nbsp;"),
+		    ("&nbsp;"*(int)args->fixedleft) : "&nbsp;"),
 		   args->right ? " width=\""+args->right+"\"" : "",
 		   (args->fixedright ?
-		    String.strmult ("&nbsp;", (int) args->fixedright) : "&nbsp;"),
+		    ("&nbsp;"*(int)args->fixedright) : "&nbsp;"),
 		   args->outlinecolor,
 		   empty);
   }
@@ -190,7 +193,7 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
 "obox": ([
-  "standard":#"<desc cont='cont'><p><short>
+  "standard":#"<desc type='cont'><p><short>
  This tag creates an outlined box.</short>
 </p></desc>
 
@@ -267,7 +270,7 @@ This is just a sample box.
 </attr>",
 
 
-  "svenska":#"<desc cont='cont'><p><short>
+  "svenska":#"<desc type='cont'><p><short>
  Denna tagg skapar en ramlåda runt dess innehåll.</short>
 </p></desc>
 

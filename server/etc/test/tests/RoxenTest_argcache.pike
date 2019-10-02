@@ -36,8 +36,6 @@ void run_tests( Configuration c  )
   test_equal( ([ "foo":"\4711","gazonk":1,"teleledningsanka":42.0 ]),
 	      roxen.argcache.lookup, key );
 
-  test_true( pass, (int)key );
-
   test( roxen.argcache.delete, key );
   test( roxen.argcache.delete, key2 );
   

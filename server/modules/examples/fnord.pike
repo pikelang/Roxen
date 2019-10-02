@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // This is a small sample module.  It is intended to show a simple example
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: fnord.pike,v 1.14 2001/01/29 05:40:30 per Exp $";
+constant cvs_version = "$Id$";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
@@ -98,7 +98,7 @@ LocaleString module_doc  =
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["fnord":#"<desc cont>The fnord container tag hides its "
+constant tagdoc=(["fnord":#"<desc type='cont'>The fnord container tag hides its "
   "contents for the user, unless the fnord prestate is used.</desc>"
   "<attr name=alt value=string>An alternate text that should be written "
   "in place of the hidden text.</attr>"]);
