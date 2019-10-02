@@ -7964,13 +7964,16 @@ class TagPathplugin
   inherit RXML.Tag;
   constant name = "emit";
   constant plugin_name = "path";
+  inherit "emit_object";
 
   class PathResult(array(string) segments)
   {
+    inherit EmitObject;
+
     protected int pos;
     protected string val = "";
 
-    protected string really_get_row()
+    protected mapping(string:mixed) really_get_row()
     {
       if (pos >= sizeof(segments)) return UNDEFINED;
       if (has_suffix(val, "/")) {
@@ -7980,7 +7983,7 @@ class TagPathplugin
 	val += "/" + segments[pos];
       }
       pos++;
-      return val;
+      return (["name":segments[pos-1], "path":val]);
     }
   }
 
