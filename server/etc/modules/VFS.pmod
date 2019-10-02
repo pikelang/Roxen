@@ -127,7 +127,9 @@ string find_above_dir(string above, RequestID id, string|void cache)
     }
   }
   res = "/" + segments[..l] * "/";
-  cache_set(ck, above, res, 60);
+  if (cache) {
+    cache_set(ck, above, res, 60);
+  }
   return res;
 }
 
