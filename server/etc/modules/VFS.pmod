@@ -142,6 +142,40 @@ array(string) find_above_read( string above,
   return 0;
 }
 
+string find_above_dir(string above, RequestID id, string|void cache)
+{
+  string res;
+  string ck;
+
+  if (cache) {
+    res = cache_lookup((ck = cache + "-dir:" +
+			id->conf->name + ":" + id->misc->host), above);
+    if (res) return res;
+  }
+
+  array(string) segments = (above/"/" - ({ "" }));
+  int l = -1;
+  int h = sizeof(segments);
+  while (l+1 < h) {
+    int m = (l + h)/2;
+    string dir = "/" + segments[..m] * "/";
+    if (Stat st = stat(dir, id)) {
+      if (st->isdir) {
+	l = m;
+      } else {
+	l = m-1;
+	break;
+      }
+    } else {
+      h = m;
+    }
+  }
+  res = "/" + segments[..l] * "/";
+  if (cache) {
+    cache_set(ck, above, res, 60);
+  }
+  return res;
+}
 
 string find_above( string above,
 		   string name,
@@ -167,6 +201,8 @@ string find_above( string above,
   
   if( above[-1] != '/' )  above = combine_path( above, "../" );
 
+  above = find_above_dir(above, id, cache);
+
   if( cache )  res = cache_lookup( (ck=cache+":"+
 				    id->conf->name+":"+id->misc->host), above );
 
@@ -184,6 +220,8 @@ string find_above( string above,
       break;
     }
   }
-  cache_set( ck, above, res || -1, res ? 60 : 5);
+  if (cache) {
+    cache_set( ck, above, res || -1, res ? 60 : 5);
+  }
   return res;
 }
