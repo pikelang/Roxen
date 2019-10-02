@@ -170,6 +170,8 @@ string find_above( string above,
       break;
     }
   }
-  cache_set( ck, above, res || -1, res ? 60 : 5);
+  if (cache) {
+    cache_set( ck, above, res || -1, res ? 60 : 5);
+  }
   return res;
 }
