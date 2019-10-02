@@ -355,7 +355,11 @@ class FSGarb
       this::quarantine = quarantine;
     }
 
-    ::create(max_age/file_interval_factor, 0, max_age);
+    //  If the max age is on the scale of months the file check interval
+    //  will likely exceed typical server uptime (e.g. every 36 days if
+    //  the stable time is 180 days). We cap this to a much lower number
+    //  to ensure it's run regularly even if the server reboots frequently.
+    ::create(min(max_age, 24 * 3600) / file_interval_factor, 0, max_age);
 
     // Workaround for too strict type-check in Pike 7.8.
     int flags = 3;
