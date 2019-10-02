@@ -5870,7 +5870,7 @@ low."))->add_changed_callback(lambda(object v)
    <if not='' variable='ef.value is '>
      <set variable='var.base' value=''/>
      <catch>
-       <emit source='path' existing-only='yes'>
+       <emit source='path'>
          <if not='' exists='/&_.name;'><throw/></if><!-- Break the loop. -->
          <append variable='var.base' value='/&_.name;'/>
          <set variable='var.401' value='&var.base;/&ef.value;'/>
