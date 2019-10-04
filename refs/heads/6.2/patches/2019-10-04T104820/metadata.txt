@@ -1,0 +1,31 @@
+subject: Roxen 6.2: Force the FSGarb to run with some regularity even if the purge threshold is many weeks or months. VFS: find_above(): Don't add to cache if no cache key. VFS: find_above_dir(): Don't add to cache if no cache key. RXML: Improved performance of <emit#path>. Fixes denial of service attack against the default 404 page.
+from: fb754e6a083ceaf396469413e7040b35a1fd00c3
+to: 1f2f4160dd20ebfa4d1786125dedce3b1683b611
+originator: Jonas Lonnberg
+depends: 2019-09-27T163124
+restart: true
+
+• Force the FSGarb to run with some regularity even if the purge threshold is
+many weeks or months.
+
+• VFS: find_above(): Don't add to cache if no cache key. [WS-562]
+
+• VFS: find_above_dir(): Don't add to cache if no cache key. [WS-558]
+
+• HTTP 401: Removed non supported arg to <emit#path>. [WS-553]
+
+• RXML: Fixed bug in <emit#path> in the code handling longer paths. [WS-559]
+
+• RXML: Improved performance of <emit#path>.
+
+For longer paths, create the segments on demand.
+
+Fixes denial of service attack against the default 404 page.
+
+Fixes [WS-559].
+
+• VFS: Improved performance of find_above().
+
+Fixes denial of service attack via htaccess or pathinfo.
+
+Fixes [WS-559].
