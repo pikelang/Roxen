@@ -1,0 +1,10 @@
+subject: Roxen 6.2: Outgoing Proxy: Only send Proxy-Authorization when auth is configured.
+from: 1f2f4160dd20ebfa4d1786125dedce3b1683b611
+to: 249826e05cdc2f3ca8ce5a3d7f922f4690a72c8f
+originator: Jonas Lonnberg
+depends: 2019-10-04T104820
+restart: true
+
+• Outgoing Proxy: Only send Proxy-Authorization when auth is configured.
+
+Fixes [WS-550].
