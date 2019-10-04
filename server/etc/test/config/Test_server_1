@@ -71,7 +71,7 @@
   <var name='access_as_user_db'> <str> all</str> </var>
   <var name='access_as_user_throw'> <int>0</int> </var>
   <var name='charset'>           <str>iso-8859-1</str> </var>
-  <var name='check_auth'>        <int>1</int> </var>
+  <var name='check_auth'>        <int>0</int> </var>
   <var name='delete'>            <int>1</int> </var>
   <var name='dir'>               <int>1</int> </var>
   <var name='internal_files'><a>
