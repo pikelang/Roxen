@@ -1,0 +1,5 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/fsgc.pike
+  etc/modules/VFS.pmod
+  modules/tags/rxmltags.pike
