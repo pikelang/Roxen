@@ -139,7 +139,6 @@ worldmap binary
 /server/etc/randomtext/README foreign_ident
 /server/etc/randomtext/company foreign_ident
 /server/etc/randomtext/poetry foreign_ident
-/server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/etc/test/filesystem/test_rxml_package foreign_ident
 /server/etc/test/tests/ftp/RoxenTest_ftp.pike foreign_ident

@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.121 2001/12/04 18:44:45 mast Exp $";
+constant cvs_version = "$Id$";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -775,12 +775,14 @@ class Describer
   }
 }
 
-constant bt_max_string_len = 99999999;
+constant bt_max_string_len = 999999;
 int long_file_names;
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
-  return predef::describe_backtrace(trace, 999999);
+  linewidth = (linewidth ? min(linewidth, bt_max_string_len)
+                         : bt_max_string_len);
+  return predef::describe_backtrace(trace, linewidth);
 }
 
 
