@@ -979,11 +979,13 @@ void name_program( program p, string name )
   programs[name] = p;
 }
 
-constant bt_max_string_len = 99999999;
+constant bt_max_string_len = 999999;
 
 string describe_backtrace(mixed trace, void|int linewidth)
 {
-  return predef::describe_backtrace(trace, 999999);
+  linewidth = (linewidth ? min(linewidth, bt_max_string_len)
+                         : bt_max_string_len);
+  return predef::describe_backtrace(trace, linewidth);
 }
 
 void create()
