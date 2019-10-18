@@ -190,11 +190,13 @@ mixed parse( RequestID id, mapping|void opt )
     {
       mod = replace (mod, "!", "#");
       RoxenModule module = conf->find_module( mod );
-      if(module)
-	conf->call_start_callbacks( module,
+      if(module) {
+        // Configuration->call_low_start_callbacks() already called from
+        // load_modules() (that we called above). This fix solves EP-1502.
+	conf->call_high_start_callbacks( module,
 				    roxen.find_module( mod ),
-				    conf->modules[ mod ],
 				    1);
+      }
     }
     
     License.Key key = conf->getvar("license")->get_key();
