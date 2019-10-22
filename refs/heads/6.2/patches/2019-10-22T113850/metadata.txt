@@ -1,0 +1,10 @@
+subject: Roxen 6.2: Testsuite [WebDAV]: Turn off authentication for the webdav test directory.
+from: 249826e05cdc2f3ca8ce5a3d7f922f4690a72c8f
+to: 0c0b56cc63b31c645c4e7a376c5dd5923412738b
+originator: Erik Allemann
+depends: 2019-10-04T132738
+restart: true
+
+• Testsuite [WebDAV]: Turn off authentication for the webdav test directory.
+
+Fixes [WS-563].
