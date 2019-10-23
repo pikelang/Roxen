@@ -120,6 +120,9 @@ void sender_loop()
       })
       master()->handle_error (err);
     int time_to_next_run = interval - (time() % interval);
+    if(time_to_next_run <= 1)
+      time_to_next_run += interval;
+    COLLECTD_WERR("::: Waiting %O (interval: %O, time: %O)\n", time_to_next_run, interval, time());
     Thread.MutexKey key = sender_mutex->lock();
     sender_cond->wait(key, time_to_next_run);
     destruct (key);
