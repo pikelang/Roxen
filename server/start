@@ -229,6 +229,7 @@ setup_for_tests() {
       kill `cat "$VARDIR/test_config/_mysql/mysql_pid"`
     fi
     self_test=y
+    DEFINES="-DDEBUG_REP_SES_TRACK $DEFINES"
     DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
     DEFINES="$DEFINES \"-M$SELF_TEST_DIR/modules\""
     DEFINES="$DEFINES \"-Metc/test/modules\""
