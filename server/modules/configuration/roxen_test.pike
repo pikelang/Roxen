@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.91 2012/02/14 16:48:55 mast Exp $";
+constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -65,18 +65,51 @@ void background_failure()
   }
 }
 
+int testloop_alive;
+mixed testloop_abs_co;
+
+void testloop_ping()
+{
+  testloop_alive = time();
+}
+
+void testloop_abort_if_stuck()
+{
+  if (!query("abs_timeout")) return;
+
+  if (!is_not_finished() || !is_running()) {
+    testloop_abs_co = UNDEFINED;
+    return;
+  }
+
+  if ((time(1) - testloop_alive) > 60 * query("abs_timeout")) {
+    report_debug("**** %s: ABS: Testloop has stalled!\n"
+		 "**** %s: ABS: %d seconds since last test.\n",
+		 ctime(time()) - "\n",
+		 ctime(time()) - "\n",
+		 time(1) - testloop_alive);
+    roxen.engage_abs(0);
+  }
+
+  testloop_abs_co = call_out(testloop_abort_if_stuck, 100);
+}
+
 void schedule_tests (int|float delay, function func, mixed... args)
 {
   // Run the tests in a normal handler thread so that real background
   // jobs can run as usual.
+
+  testloop_ping();
   call_out (roxen.handle, delay,
 	    lambda (function func, array args) {
 	      // Meddle with the busy_threads counter, so that this
 	      // handler thread running the tests doesn't delay the
 	      // background jobs.
+	      testloop_ping();
 	      roxen->busy_threads--;
 	      mixed err = catch (func (@args));
 	      roxen->busy_threads++;
+	      testloop_ping();
 	      if (err) throw (err);
 	    }, func, args);
 }
@@ -87,14 +120,20 @@ void schedule_tests_single_thread (int|float delay,
   // The opposite of schedule_tests, i.e. tries to ensure no other
   // jobs gets executed in parallel by either background_run or a
   // roxen.handle.
+  testloop_ping();
   call_out (lambda (function func, array args) {
+	      testloop_ping();
 	      roxen->hold_handler_threads();
+	      testloop_ping();
 	      mixed err = catch (func (@args));
 	      roxen->release_handler_threads (0);
+	      testloop_ping();
 	      if (err) throw (err);
 	    }, delay, func, args);
 }
 
+// This function is used to hand over testsuite control
+// from one configuration to the next.
 int do_continue(int _tests, int _fails)
 {
   if(finished)
@@ -103,6 +142,8 @@ int do_continue(int _tests, int _fails)
   running = 1;
   tests += _tests;
   fails += _fails;
+  testloop_ping();
+  testloop_abort_if_stuck();
   schedule_tests (0.5, do_tests);
   return 1;
 }
@@ -114,8 +155,8 @@ string query_provides()
 
 void create()
 {
-  defvar("selftestdir", "etc/test", "Self test directory", 
-         TYPE_STRING);
+  defvar("selftestdir", "etc/test", "Self test directory", TYPE_STRING);
+  defvar("abs_timeout", 5, "ABS Timeout", TYPE_INT);
 }
 
 void start(int n, Configuration c)
@@ -129,6 +170,10 @@ void start(int n, Configuration c)
   if(is_ready_to_start())
   {
     running = 1;
+
+    testloop_ping();
+    testloop_abort_if_stuck();
+
     schedule_tests (0.5, do_tests);
   }
 }
@@ -206,6 +251,8 @@ void xml_use_module(Parser.HTML file_parser, mapping m, string c,
 
 void xml_test(Parser.HTML file_parser, mapping args, string c,
 	      mapping(int:RXML.PCode) p_code_cache) {
+
+  testloop_ping();
 
   if (roxen.is_shutting_down()) return;
 
@@ -625,6 +672,8 @@ void run_xml_tests(string data) {
 
 void run_pike_tests(object test, string path)
 {
+  testloop_ping();
+
   void update_num_tests(int tsts, int fail)
   {
     tests+=tsts;
@@ -658,6 +707,7 @@ array(string) test_files;
 
 void continue_run_tests( )
 {
+  testloop_ping();
   if (sizeof (test_files)) {
     string file = test_files[0];
     test_files = test_files[1..];
@@ -692,6 +742,8 @@ void continue_run_tests( )
 
   running = 0;
   finished = 1;
+  remove_call_out(testloop_abs_co);
+  testloop_abs_co = UNDEFINED;
   if(is_last_test_configuration())
   {
     // Note that e.g. the distmaker parses this string.
