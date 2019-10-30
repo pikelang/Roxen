@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Archive fixes.
+from: 0c0b56cc63b31c645c4e7a376c5dd5923412738b
+to: a5b263c4d22f7d225d74b50d41b179be3bc28c18
+originator: Erik Allemann
+depends: 2019-10-22T113850
+restart: true
+
+• site_templates: Don't call Configuration->call_low_start_callbacks() twice for same module. [EP-1502]
