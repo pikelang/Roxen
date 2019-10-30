@@ -1,0 +1,2 @@
+Modified files:
+  site_templates/common.pike
