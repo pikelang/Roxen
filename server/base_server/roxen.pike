@@ -3699,7 +3699,7 @@ protected void low_engage_abs()
 		// any pending patches.
 }
 
-protected void engage_abs(int n)
+void engage_abs(int n)
 {
   if (!query("abs_engage")) {
     abs_started = 0;

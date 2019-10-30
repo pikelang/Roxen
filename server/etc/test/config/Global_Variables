@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<roxen-config>
+
+<region name='Variables'>
+  <var name='abs_engage'>        <int>1</int> </var>
+  <var name='abs_timeout'>       <int>300</int> </var>
+</region>
+
+</roxen-config>
