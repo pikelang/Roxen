@@ -77,6 +77,7 @@ void testloop_ping()
 
 void testloop_abort_if_stuck()
 {
+#ifndef __NT__
   if (!query("abs_timeout")) return;
 
   if (!is_not_finished() || !is_running()) {
@@ -94,6 +95,7 @@ void testloop_abort_if_stuck()
   }
 
   testloop_abs_co = call_out(testloop_abort_if_stuck, 100);
+#endif
 }
 
 void schedule_tests (int|float delay, function func, mixed... args)
