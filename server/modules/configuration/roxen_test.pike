@@ -160,7 +160,7 @@ string query_provides()
 void create()
 {
   defvar("selftestdir", "etc/test", "Self test directory", TYPE_STRING);
-  defvar("abs_timeout", 5, "ABS Timeout", TYPE_INT);
+  defvar("abs_timeout", 10, "ABS Timeout", TYPE_INT);
 }
 
 void start(int n, Configuration c)
