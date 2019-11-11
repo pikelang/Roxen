@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.151 2003/02/10 16:23:06 grubba Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -803,12 +803,14 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   if ((hdrs = id->request_headers)) {
     foreach(indices(hdrs) - ({ "authorization", "proxy-authorization",
-			       "security-scheme", }), string h) {
+			       "security-scheme", "proxy" }), string h) {
       string hh = "HTTP_" + replace(upper_case(h),
 				    ({ " ", "-", "\0", "=" }),
 				    ({ "_", "_", "", "_" }));
 
-      new[mk_env_var_name(hh)] = replace(hdrs[h], ({ "\0" }), ({ "" }));
+      hh = mk_env_var_name(hh);
+      if (hh == "HTTP_PROXY") continue;	// Protect against httpoxy.
+      new[hh] = replace(hdrs[h], ({ "\0" }), ({ "" }));
     }
     if (!new["HTTP_HOST"]) {
       if(objectp(id->my_fd) && id->my_fd->query_address(1))
