@@ -1,0 +1,34 @@
+subject: Roxen 6.2: CGI: Remove Proxy header, ABS testsuite
+from: a5b263c4d22f7d225d74b50d41b179be3bc28c18
+to: 7712bdbc4d55e96b9ed75caf8762d82cc9caa175
+originator: Administrator
+depends: 2019-10-30T084820
+restart: true
+
+• CGI: Filter proxy header from HTTP_-variables.
+
+Do not generate the HTTP_PROXY environment variable for CGI
+scripts, as it is often used by libraries for specifying an
+outgoing proxy, and is trivially exploitable.
+
+Cf httpoxy.org
+
+• ABS apparently only exists on non-Windows systems. [WS-572]
+
+• Testsuite: Raise the ABS timeout to 10 minutes.
+
+It seems that there are some tests that take close to 5 minutes
+to complete, so add some margin.
+
+• Testsuite: Enable ABS for the testsuite.
+
+Fixes [WS-572] some more.
+
+• Testsuite: Add a timeout for the testsuite driver.
+
+The Roxen testsuite driver now attempts to engage the ABS
+if a test takes longer than 5 minutes.
+
+Fixes [WS-572].
+
+• ABS: Make roxen.engage_abs() public.
