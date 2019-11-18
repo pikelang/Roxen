@@ -6524,7 +6524,20 @@ void scan_certs(int|void force)
       }
     }
   }
-  CertDB.refresh_all_pem_files(force);
+
+  if (CertDB.refresh_all_pem_files(force)) {
+
+    // Update all open SSL/TLS ports with the new certificates.
+    foreach(open_ports || ([]); ; mapping(string:mapping(int:Protocol)) ips) {
+      foreach(ips || ([]); ; mapping(int:Protocol) ports) {
+	foreach(ports || ([]); ; Protocol prot) {
+	  if (prot->certificates_changed) {
+	    prot->certificates_changed(UNDEFINED, !prot->bound);
+	  }
+	}
+      }
+    }
+  }
 }
 
 protected BackgroundProcess scan_certs_process;
