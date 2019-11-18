@@ -1,0 +1,26 @@
+subject: Roxen 6.1: CGI: Remove proxy header, Outgoing Proxy, Fastpipe
+from: 3fd2ab377b2de6e9e52691ef59cafa6b8e370e65
+to: 79ae5837e93872a0c275d647e605314ee052c04e
+originator: Administrator
+depends: 2019-09-23T204314
+restart: true
+
+• CGI: Filter proxy header from HTTP_-variables.
+
+Do not generate the HTTP_PROXY environment variable for CGI
+scripts, as it is often used by libraries for specifying an
+outgoing proxy, and is trivially exploitable.
+
+Cf httpoxy.org
+
+• Outgoing Proxy: Only send Proxy-Authorization when auth is configured.
+
+Fixes [WS-550].
+
+• Fastpipe: Avoid throwing errors from sendfile_done().
+
+sendfile_done() is called from a backend callback (not to be confused
+with a call_out), at a point where an error may cause the backend to
+enter an inconsistent state (exec_thread not being reset to NULL).
+
+Fixes [WS-545].
