@@ -1,0 +1,6 @@
+Added files:
+  etc/test/config/Global_Variables
+Modified files:
+  base_server/roxen.pike
+  etc/modules/Roxen.pmod
+  modules/configuration/roxen_test.pike
