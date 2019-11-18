@@ -2500,14 +2500,16 @@ class StartTLSProtocol
   } while (0)
 
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
-  protected void set_version()
+  protected void set_version(SSLContext|void ctx)
   {
+    if (!ctx) ctx = this_program::ctx;
     ctx->min_version = query("ssl_min_version");
   }
 #endif
 
-  protected void filter_preferred_suites()
+  protected void filter_preferred_suites(SSLContext|void ctx)
   {
+    if (!ctx) ctx = this_program::ctx;
 #if constant(SSL.ServerConnection)
     int mode = query("ssl_suite_filter");
     int bits = query("ssl_key_bits");
@@ -2537,14 +2539,14 @@ class StartTLSProtocol
       suites = ctx->preferred_suites;
 
       if (ctx->min_version < query("ssl_min_version")) {
-	set_version();
+	set_version(ctx);
       }
     } else {
       suites = ctx->get_suites(bits, 1);
 
       // Make sure the min version is restored in case we've
       // switched from Suite B.
-      set_version();
+      set_version(ctx);
     }
     if (mode & 4) {
       // Ephemeral suites only.
@@ -2633,11 +2635,10 @@ class StartTLSProtocol
 
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
-    // NB: Race condition here where the new SSLContext is
-    //     live before it has been configured completely.
-    ctx = SSLContext();
-    set_version();
-    filter_preferred_suites();
+    SSLContext ctx = SSLContext();
+    ctx->random = Crypto.Random.random_string;
+    set_version(ctx);
+    filter_preferred_suites(ctx);
 
     foreach(keypairs, int keypair_id) {
       array(Crypto.Sign.State|array(string)) keypair =
@@ -2660,6 +2661,8 @@ class StartTLSProtocol
       return;
     }
 #endif
+
+    this_program::ctx = ctx;
 
     if (!bound) {
       bind (ignore_eaddrinuse);
@@ -2944,10 +2947,10 @@ class StartTLSProtocol
     ::setup(pn, i);
 
 #if constant(SSL.Constants.PROTOCOL_TLS_MAX)
-    set_version();
+    set_version(ctx);
 #endif
 
-    filter_preferred_suites();
+    filter_preferred_suites(ctx);
 
     certificates_changed (0, ignore_eaddrinuse);
 
