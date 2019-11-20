@@ -2006,8 +2006,8 @@ protected void low_check_mysql(string myisamchk, string datadir,
     werror(describe_backtrace(err));
 }
 
-void low_start_mysql( string datadir,
-		      string uid )
+Process.Process low_start_mysql( string datadir,
+				 string uid )
 {
   array MYSQL_GOOD_VERSION = ({ "5.0.*" });
   array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
@@ -2201,6 +2201,8 @@ void low_start_mysql( string datadir,
   if (p)
     Stdio.write_file(pid_file, (string)p->pid());
 #endif
+
+  return p;
 }
 
 
@@ -2360,17 +2362,24 @@ void start_mysql()
   }
 
 
-  low_start_mysql( mysqldir,
+  Process.Process mysqld =
+    low_start_mysql( mysqldir,
 #if constant(getpwuid)
-		   (getpwuid(getuid()) || ({0}))[ 0 ]
+		     (getpwuid(getuid()) || ({0}))[ 0 ]
 #else /* Ignored by the start_mysql script */
-		0
+		     0
 #endif
-		 );
+		     );
 
   int repeat;
   while( 1 )
   {
+    if (!mysqld || (mysqld->status() == 2)) {
+      // mysqld has died.
+      int ret = mysqld->wait();
+      werror("\nMySQL failed to start with error code %O. Aborting.\n", ret);
+      exit(1);
+    }
     sleep( 0.1 );
     // Allow mysqld 1 minute to start answering before aborting.
     // Initial start delays of up to 26 seconds have been observed [WS-582].
