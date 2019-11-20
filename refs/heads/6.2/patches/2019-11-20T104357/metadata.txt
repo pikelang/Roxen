@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Selftest fix in roxenloader.pike
+from: 7712bdbc4d55e96b9ed75caf8762d82cc9caa175
+to: c8a819233d78302bce8fb960e5d083ec7e204042
+originator: Administrator
+depends: 2019-11-18T094120
+restart: true
+
+• roxenloader.pike: Added support for caller to prevent describe_backtrace() from triggering self test background error. [WS-570]
