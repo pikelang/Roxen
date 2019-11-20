@@ -80,7 +80,6 @@ worldmap binary
 /server/base_server/read_config.pike foreign_ident
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
-/server/base_server/roxenloader.pike foreign_ident
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/slowpipe.pike foreign_ident
 /server/base_server/smtprelay.pike foreign_ident
