@@ -1,0 +1,12 @@
+subject: Roxen 6.2: Loader: Improved diagnostics on MySQL startup failure. Loader: Allow mysqld 1 minute to start answering before aborting. Fixes [WS-582].
+from: c8a819233d78302bce8fb960e5d083ec7e204042
+to: 790716fdb0637457a834e6ad323217b7dfd657ed
+originator: Jonas Lonnberg
+depends: 2019-11-20T104357
+restart: true
+
+• Loader: Improved diagnostics on MySQL startup failure.
+
+• Loader: Allow mysqld 1 minute to start answering before aborting.
+
+Fixes [WS-582].
