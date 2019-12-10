@@ -1,0 +1,6 @@
+AuthType Basic
+AuthName Testsuite WebDAV
+AuthUserFile .htpasswd
+<limit GET POST PUT>
+require user test
+</limit>
