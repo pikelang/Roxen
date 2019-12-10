@@ -268,7 +268,7 @@ protected int(2..2147483647) roxen_started = [int(2..2147483647)]time();
 protected float roxen_started_flt = time(time());
 protected int uptime_row_counter;
 
-string short_time()
+string format_timestamp()
 {
   string up_str;
   if (uptime_row_counter) {
@@ -287,7 +287,9 @@ string short_time()
   uptime_row_counter = (uptime_row_counter + 1) % 5;
 
   mapping l = localtime(time());
-  return sprintf("%2d:%02d:%02d  %s : ", l->hour, l->min, l->sec, up_str);
+  return sprintf("%4d-%2d-%2d %2d:%02d:%02d  %s : ",
+                 (1900 + l->year), (1 + l->mon), l->mday,
+                 l->hour, l->min, l->sec, up_str);
 }
 
 
@@ -365,14 +367,14 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
       if(usr)
 	a[i] = usr + " : " + a[i];
 #endif
-      stderr->write(short_time() + a[i] + "\n");
+      stderr->write(format_timestamp() + a[i] + "\n");
     }
     if (!last_was_nl) {
 #ifdef DEBUG_LOG_SHOW_USER
       if(usr)
 	a[-1] = usr + " : " + a[-1];
 #endif
-      stderr->write(short_time() + a[-1]);
+      stderr->write(format_timestamp() + a[-1]);
     }
 #endif
   }
