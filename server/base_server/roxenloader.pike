@@ -268,6 +268,21 @@ protected int(2..2147483647) roxen_started = [int(2..2147483647)]time();
 protected float roxen_started_flt = time(time());
 protected int uptime_row_counter;
 
+// -----------------------------------------------------------------------------
+// NB: If the length of the timestamp is modified, the following files should
+//     also be updated:
+//         Roxen:  server/bin/functions
+//                 server/start
+//                 server/tools/ntroxen/startdll/cmdline.cpp
+//         Search: modules/search_sb_interface.pike
+//                 programs/compact.pike
+//                 programs/multiprocess_crawler.pike
+//
+// The Pike class Search.Utils.Logger, in lib/modules/Search.pmod/Utils.pmod,
+// was previously also effected when indentation width was changed but now it
+// is possible to specify indentation width as an argument to
+// the Search.Utils.Logger constructor.
+// -----------------------------------------------------------------------------
 string format_timestamp()
 {
   string up_str;
