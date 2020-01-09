@@ -302,7 +302,7 @@ string format_timestamp()
   uptime_row_counter = (uptime_row_counter + 1) % 5;
 
   mapping l = localtime(time());
-  return sprintf("%4d-%2d-%2d %2d:%02d:%02d  %s : ",
+  return sprintf("%4d-%02d-%02d %2d:%02d:%02d  %s : ",
                  (1900 + l->year), (1 + l->mon), l->mday,
                  l->hour, l->min, l->sec, up_str);
 }
