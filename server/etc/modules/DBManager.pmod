@@ -3055,7 +3055,7 @@ protected void create()
     query( #"
 CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
- path VARCHAR(100) NOT NULL, 
+ path VARCHAR(255) NOT NULL,
  local INT UNSIGNED NOT NULL,
  default_charset VARCHAR(64),
  schedule_id INT DEFAULT 1,
@@ -3097,7 +3097,7 @@ CREATE TABLE dbs (
               "Was %O\n", data_type);
       }
       if (char_max_length < 255) {
-        typed_query("ALTER table dbs MODIFY path VARCHAR(255) NOT NULL");
+        typed_query("ALTER TABLE dbs MODIFY path VARCHAR(255) NOT NULL");
       }
     };
     if (e) {
