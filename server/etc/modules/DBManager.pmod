@@ -34,6 +34,11 @@ private
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
 
+  mixed typed_query( mixed ... args )
+  {
+    return connect_to_my_mysql( 0, "roxen" )->typed_query( @args );
+  }
+
   Sql.sql_result big_query( mixed ... args )
   {
     return connect_to_my_mysql( 0, "roxen" )->big_query( @args );
@@ -3039,7 +3044,7 @@ protected void create()
     query( #"
 CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
- path VARCHAR(100) NOT NULL, 
+ path VARCHAR(255) NOT NULL,
  local INT UNSIGNED NOT NULL,
  default_charset VARCHAR(64),
  schedule_id INT DEFAULT 1,
@@ -3063,6 +3068,30 @@ CREATE TABLE dbs (
 	    "   SET schedule_id = NULL "
 	    " WHERE local = 0 "
 	    "   AND path NOT LIKE 'mysql://%'");
+    }
+    mixed e = catch {
+      array(mapping(string:mixed)) result = [array(mapping(string:mixed))]
+        typed_query("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH "
+                    "  FROM information_schema.columns "
+                    " WHERE table_name = 'dbs' AND COLUMN_NAME = 'path'");
+      if (!sizeof(result)) {
+        error("Failed to get DATA_TYPE and CHARACTER_MAXIMUM_LENGTH of "
+               "column 'path'.\n");
+      }
+      // We expect lower case already but better be safe than sorry...
+      string data_type = lower_case(result[0]->DATA_TYPE);
+      int char_max_length = [int] result[0]->CHARACTER_MAXIMUM_LENGTH;
+      if (data_type != "varchar") {
+        error("Unxepcted datatype of column 'path'. Expected \"varchar\". "
+              "Was %O\n", data_type);
+      }
+      if (char_max_length < 255) {
+        typed_query("ALTER TABLE dbs MODIFY path VARCHAR(255) NOT NULL");
+      }
+    };
+    if (e) {
+      werror("ERROR: DBManager: Failed to verify/alter table dbs. "
+             "Details: %s\n", describe_backtrace(e));
     }
   }
 
