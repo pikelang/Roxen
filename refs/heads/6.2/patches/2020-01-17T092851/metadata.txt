@@ -1,0 +1,33 @@
+subject: Roxen 6.2: Logging improvements.
+from: 790716fdb0637457a834e6ad323217b7dfd657ed
+to: 8c9cd55325c7a6f19412c9dcaebb1f5e350fab3a
+originator: Erik Allemann
+depends: 2019-12-03T084524
+restart: true
+
+• CREATE TABLE dbs: path VARCHAR(255) NOT NULL (Fixup of previous commit). [WS-583]
+
+Set CHARACTER_MAXIMUM_LENGTH of column path in table dbs from 100 to 255
+also when creating table (not only when updating already existing
+table).
+
+• Fixed day and month length to 2 digits in roxenloader.pike
+
+• Added a comment in roxenloader.pike listing files that are affected by indentation width change. [WS-581]
+
+• Adjust log indentation. [WS-581]
+
+Sync with
+
+commit 78c239e6272a6240840b6dad9450e4ca6c3c9a7e (origin/patches/ws581)
+Author: Karl Gustav Sterneberg <kg@roxen.com>
+Date:   Tue Dec 10 10:41:49 2019 +0100
+
+    Added date to timestamp in debug log. [WS-581]
+
+• Added date to timestamp in debug log. [WS-581]
+
+• Allow more than 100 chars in external database URLs. [WS-583]
+
+More specifically, changed CHARACTER_MAXIMUM_LENGTH of column path in
+table dbs from 100 to 255.
