@@ -26,7 +26,7 @@ class Relay
   int port;
   string file;
 
-  Stdio.File fd;
+  Stdio.File|SSL.File fd;
 
   mapping make_headers( RequestID from, int trim )
   {
@@ -343,7 +343,7 @@ class Relay
   }
 
 
-  void connected( int how )
+  void connected( int how, void|bool use_ssl )
   {
     if( !how )
     {
@@ -358,6 +358,15 @@ class Relay
 			      "Connection to remote HTTP host failed."));
       destruct();
       return;
+    }
+
+    if (use_ssl) {
+#ifdef RELAY_DEBUG
+      werror("RELAY: Using SSL...\n");
+#endif
+      fd = SSL.File(fd, SSL.Context());
+      fd->set_blocking();
+      fd->connect();
     }
 
 #ifdef RELAY_DEBUG
@@ -395,8 +404,9 @@ class Relay
 
     //  Support IPv6 addresses
     Standards.URI uri = Standards.URI(url);
+    bool use_ssl = lower_case(uri->scheme) == "https";
     host = uri->host;
-    port = uri->port || 80;
+    port = uri->port || (use_ssl ? 443 : 80);
     file = uri->get_path_query();
     if (has_prefix(file, "/"))
       file = file[1..];
@@ -431,7 +441,7 @@ class Relay
       return;
     }
 
-    fd->async_connect( host, port, connected );
+    fd->async_connect( host, port, connected, use_ssl );
   }
 }
 
