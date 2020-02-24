@@ -102,12 +102,15 @@ void start()
   schedule();
 }
 
+mapping rmem = ([]);
+mapping pmem = ([]);
+
 void log_memory()
 {
   mapping lt = localtime(time());
   string t = sprintf("%0:2d:%0:2d:%0:2d", lt->hour, lt->min, lt->sec);
-  mapping rmem = Roxen.get_memusage();
-  mapping pmem = Debug.memory_usage();
+  rmem = Roxen.get_memusage();
+  pmem = Debug.memory_usage();
   int pmem_tot = 
     pmem->array_bytes +
     pmem->call_out_bytes +
@@ -166,4 +169,61 @@ void log_memory()
   log_function(res);
 
   schedule();
+}
+
+ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
+{
+  return
+    SNMP.SimpleMIB(base_oid, oid_suffix,
+		   ({
+		     UNDEFINED,
+		     SNMP.Counter(lambda() { return rmem->virtual; },
+				  "virtmem"),
+		     SNMP.Counter(lambda() { return rmem->resident; },
+				  "resmem"),
+		     SNMP.Counter(lambda() { return pmem->malloc_block_bytes; },
+				  "malloc_alloced_bytes"),
+		     SNMP.Counter(lambda() { return pmem->malloc_bytes; },
+				  "malloc_used_bytes"),
+		     SNMP.Counter(lambda() {
+				    return pmem->pike_frame_bytes +
+				      pmem->catch_context_bytes;
+				  },
+				  "runtime_bytes"),
+		     SNMP.Counter(lambda() { return pmem->marker_bytes; },
+				  "marker_bytes"),
+		     SNMP.Counter(lambda() { return pmem->array_bytes; },
+				  "array_bytes"),
+		     SNMP.Counter(lambda() { return pmem->mapping_bytes; },
+				  "mapping_bytes"),
+		     SNMP.Counter(lambda() { return pmem->multiset_bytes; },
+				  "multiset_bytes"),
+		     SNMP.Counter(lambda() { return pmem->object_bytes; },
+				  "object_bytes"),
+		     SNMP.Counter(lambda() { return pmem->program_bytes; },
+				  "program_bytes"),
+		     SNMP.Counter(lambda() { return pmem->string_bytes; },
+				  "string_bytes"),
+		     SNMP.Counter(lambda() { return pmem->pike_type_bytes; },
+				  "type_bytes"),
+		     SNMP.Counter(lambda() { return pmem->call_out_bytes; },
+				  "call_out_bytes"),
+		     SNMP.Counter(lambda() { return pmem->callable_bytes; },
+				  "callable_bytes"),
+		     SNMP.Counter(lambda() { return pmem->callback_bytes; },
+				  "callback_bytes"),
+		     SNMP.Counter(lambda() {
+				    return pmem->node_s_bytes +
+				      pmem->supporter_marker_bytes;
+				  },
+				  "compiler_bytes"),
+		     SNMP.Counter(lambda() {
+				    return pmem->ba_mixed_frame_bytes +
+				      pmem->destroy_called_mark_bytes +
+				      pmem->gc_rec_frame_bytes +
+				      pmem->marker_bytes +
+				      pmem->mc_marker_bytes;
+				  },
+				  "gc_bytes"),
+		   }));
 }
