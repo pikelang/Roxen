@@ -1,0 +1,10 @@
+subject: Roxen 6.2: Logging: Added SNMP entries for the memory logger module. relay2.pike: Added support for https.
+from: 8c9cd55325c7a6f19412c9dcaebb1f5e350fab3a
+to: d288981e2e3b7d3a58e903c48bf8fe46703a9438
+originator: Jonas Lonnberg
+depends: 2020-01-17T092851
+restart: true
+
+• Logging: Added SNMP entries for the memory logger module.
+
+• relay2.pike: Added support for https. (Needed by REP's archive-ui-proxy.pike.)
