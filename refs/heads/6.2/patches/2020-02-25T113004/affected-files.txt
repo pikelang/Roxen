@@ -1,0 +1,5 @@
+Modified files:
+  etc/include/version.h
+  modules/logging/memory_logger.pike
+  modules/proxies/relay2.pike
+  tools/ntroxen/version.h
