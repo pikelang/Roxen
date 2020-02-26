@@ -435,9 +435,9 @@ class Relay
     // Kludge for bug 3127.
     if (linux) {
       if( fd->connect( host, port ) )
-	connected( 1 );
+	connected( 1, use_ssl );
       else
-	connected( 0 );
+	connected( 0, use_ssl );
       return;
     }
 
