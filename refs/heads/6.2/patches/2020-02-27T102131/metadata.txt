@@ -1,0 +1,12 @@
+subject: Roxen 6.2: relay2.pike: Fixed bug in https support. Logging [SNMP]: Switched from Counter to Gauge.
+from: d288981e2e3b7d3a58e903c48bf8fe46703a9438
+to: 20d89bb74c9918148e39c19710afce084bbf9be3
+originator: Jonas Lonnberg
+depends: 2020-02-25T113004
+restart: true
+
+• relay2.pike: Fixed bug in https support.
+
+• Logging [SNMP]: Switched from Counter to Gauge.
+
+This should make graphing tools happier.
