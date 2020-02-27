@@ -1,0 +1,3 @@
+Modified files:
+  modules/logging/memory_logger.pike
+  modules/proxies/relay2.pike
