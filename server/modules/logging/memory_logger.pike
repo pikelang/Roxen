@@ -150,9 +150,9 @@ ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
 				"virtmem"),
 		     SNMP.Gauge(lambda() { return rmem->resident; },
 				"resmem"),
-		     SNMP.Gauge(lambda() { return pmem->malloc_block_bytes; },
+		     SNMP.Gauge(lambda() { return pmem->malloc_block_bytes || 0; },
 				"malloc_alloced_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->malloc_bytes; },
+		     SNMP.Gauge(lambda() { return pmem->malloc_bytes || 0; },
 				"malloc_used_bytes"),
 		     SNMP.Gauge(lambda() {
 				  return pmem->pike_frame_bytes +
