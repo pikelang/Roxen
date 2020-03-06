@@ -146,53 +146,105 @@ ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
     SNMP.SimpleMIB(base_oid, oid_suffix,
 		   ({
 		     UNDEFINED,
-		     SNMP.Gauge(lambda() { return rmem->virtual; },
-				"virtmem"),
-		     SNMP.Gauge(lambda() { return rmem->resident; },
-				"resmem"),
-		     SNMP.Gauge(lambda() { return pmem->malloc_block_bytes || 0; },
-				"malloc_alloced_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->malloc_bytes || 0; },
-				"malloc_used_bytes"),
-		     SNMP.Gauge(lambda() {
-				  return pmem->pike_frame_bytes +
-				    pmem->catch_context_bytes;
-				},
-				"runtime_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->marker_bytes; },
-				"marker_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->array_bytes; },
-				"array_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->mapping_bytes; },
-				"mapping_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->multiset_bytes; },
-				"multiset_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->object_bytes; },
-				"object_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->program_bytes; },
-				"program_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->string_bytes; },
-				"string_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->pike_type_bytes; },
-				"type_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->call_out_bytes; },
-				"call_out_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->callable_bytes; },
-				"callable_bytes"),
-		     SNMP.Gauge(lambda() { return pmem->callback_bytes; },
-				"callback_bytes"),
-		     SNMP.Gauge(lambda() {
-				  return pmem->node_s_bytes +
-				    pmem->supporter_marker_bytes;
-				},
-				"compiler_bytes"),
-		     SNMP.Gauge(lambda() {
-				  return pmem->ba_mixed_frame_bytes +
-				    pmem->destroy_called_mark_bytes +
-				    pmem->gc_rec_frame_bytes +
-				    pmem->marker_bytes +
-				    pmem->mc_marker_bytes;
-				},
-				"gc_bytes"),
+		     ({		// OS-level
+		       UNDEFINED,
+		       SNMP.Gauge(lambda() { return rmem->virtual; },
+				  "virtmem"),
+		       SNMP.Gauge(lambda() { return rmem->resident; },
+				  "resmem"),
+		     }), ({	// Lib C-level
+		       UNDEFINED,
+		       SNMP.Gauge(lambda() { return pmem->malloc_block_bytes || 0; },
+				  "malloc_alloced_bytes"),
+		       SNMP.Gauge(lambda() { return pmem->malloc_bytes || 0; },
+				  "malloc_used_bytes"),
+		     }), ({	// Pike-level
+		       UNDEFINED,
+		       ({	// Number of items.
+			 UNDEFINED,
+			 SNMP.Gauge(lambda() {
+				      return pmem->num_pike_frames +
+					pmem->num_catch_contexts;
+				    },
+				    "num_runtime_items"),
+			 SNMP.Gauge(lambda() { return pmem->num_markers; },
+				    "num_markers"),
+			 SNMP.Gauge(lambda() { return pmem->num_arrays; },
+				    "num_arrays"),
+			 SNMP.Gauge(lambda() { return pmem->num_mappings; },
+				    "num_mappings"),
+			 SNMP.Gauge(lambda() { return pmem->num_multisets; },
+				    "num_multisets"),
+			 SNMP.Gauge(lambda() { return pmem->num_objects; },
+				    "num_objects"),
+			 SNMP.Gauge(lambda() { return pmem->num_programs; },
+				    "num_programs"),
+			 SNMP.Gauge(lambda() { return pmem->num_strings; },
+				    "num_strings"),
+			 SNMP.Gauge(lambda() { return pmem->num_pike_types; },
+				    "num_types"),
+			 SNMP.Gauge(lambda() { return pmem->num_call_outs; },
+				    "num_call_outs"),
+			 SNMP.Gauge(lambda() { return pmem->num_callables; },
+				    "num_callables"),
+			 SNMP.Gauge(lambda() { return pmem->num_callbacks; },
+				    "num_callbacks"),
+			 SNMP.Gauge(lambda() {
+				      return pmem->num_node_ss +
+					pmem->num_supporter_markers;
+				    },
+				    "num_compiler_items"),
+			 SNMP.Gauge(lambda() {
+				      return pmem->num_ba_mixed_frames +
+					pmem->num_destroy_called_marks +
+					pmem->num_gc_rec_frames +
+					pmem->num_markers +
+					pmem->num_mc_markers;
+				    },
+				    "num_gc_items"),
+		       }), ({	// Number of bytes,
+			 UNDEFINED,
+			 SNMP.Gauge(lambda() {
+				      return pmem->pike_frame_bytes +
+					pmem->catch_context_bytes;
+				    },
+				    "runtime_item_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->marker_bytes; },
+				    "marker_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->array_bytes; },
+				    "array_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->mapping_bytes; },
+				    "mapping_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->multiset_bytes; },
+				    "multiset_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->object_bytes; },
+				    "object_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->program_bytes; },
+				    "program_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->string_bytes; },
+				    "string_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->pike_type_bytes; },
+				    "type_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->call_out_bytes; },
+				    "call_out_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->callable_bytes; },
+				    "callable_bytes"),
+			 SNMP.Gauge(lambda() { return pmem->callback_bytes; },
+				    "callback_bytes"),
+			 SNMP.Gauge(lambda() {
+				      return pmem->node_s_bytes +
+					pmem->supporter_marker_bytes;
+				    },
+				    "compiler_item_bytes"),
+			 SNMP.Gauge(lambda() {
+				      return pmem->ba_mixed_frame_bytes +
+					pmem->destroy_called_mark_bytes +
+					pmem->gc_rec_frame_bytes +
+					pmem->marker_bytes +
+					pmem->mc_marker_bytes;
+				    },
+				    "gc_item_bytes"),
+		       }),
+		     }),
 		   }));
 }
