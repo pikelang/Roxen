@@ -1,0 +1,20 @@
+subject: Roxen 6.2: SNMP improvements
+from: 20d89bb74c9918148e39c19710afce084bbf9be3
+to: 7557b5d8f61200983294a0ff92472347ec494090
+originator: Erik Allemann
+depends: 2020-02-27T102131
+restart: true
+
+• Logging [SNMP]: Provide memory object counts.
+
+CAVEAT EMPTOR
+  This restructures the SNMP ids for the memory logger module.
+
+Fixes [WS-500].
+
+• Logging [SNMP]: Avoid returning UNDEFINED.
+
+The libc on eg MacOS X does apparently provide neither
+malloc_block_bytes nor malloc_bytes.
+
+Fixes [WS-599].
