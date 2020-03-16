@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.367 2008/08/15 12:33:54 mast Exp $
+// $Id$
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1327,7 +1327,21 @@ protected class CompositeTagSet
 protected mapping(int|string:CompositeTagSet) garb_composite_tag_set_cache()
 {
   call_out (garb_composite_tag_set_cache, 30*60);
-  return composite_tag_set_cache = ([]);
+
+  if (!composite_tag_set_cache) {
+    return composite_tag_set_cache = set_weak_flag(([]), Pike.WEAK_VALUES);
+  }
+
+  gc(composite_tag_set_cache);
+
+#ifdef RXML_OBJ_DEBUG
+  if (sizeof(composite_tag_set_cache)) {
+    werror("RXML: Some composite tagsets survived gc: %O\n",
+	   composite_tag_set_cache);
+  }
+#endif
+
+  return composite_tag_set_cache;
 }
 
 protected mapping(int|string:CompositeTagSet) composite_tag_set_cache =
