@@ -5326,7 +5326,8 @@ void set_cookie( RequestID id,
                  string|void domain,
                  int(0..1)|string|void path,
                  int(0..1)|__deprecated__(string)|void secure,
-                 int(0..1)|__deprecated__(string)|void httponly)
+                 int(0..1)|__deprecated__(string)|void httponly,
+                 string|void samesite)
 //! Set the cookie specified by @[name] to @[value]. Adds a Set-Cookie
 //! header in the response that will be made from @[id].
 //!
@@ -5370,6 +5371,13 @@ void set_cookie( RequestID id,
 //!   Instruct the client to not make the cookie available to client-side
 //!   scripting (ie Javascript).
 //!
+//! @param samesite
+//!   Add a SameSite=[...] parameter. The string value should be "None",
+//!   "Lax", or "Strict", but no check is made for the actual value. Note
+//!   though that None typically only has effect if set together with the
+//!   @[secure] flag. There is also a known browser bug where None may be
+//!   incorrectly handled as Strict in some Safari/iOS/macOS versions.
+//!
 //! @note
 //!   The @[value] of the cookie will be passed through
 //!   @[http_encode_cookie()] before being sent to the client
@@ -5389,6 +5397,7 @@ void set_cookie( RequestID id,
   if( path!=1 ) cookie += "; path="+http_encode_cookie( path||"" );
   if( secure ) cookie += "; secure";
   if( httponly ) cookie += "; HttpOnly";
+  if( samesite ) cookie += "; SameSite=" + http_encode_cookie(samesite);
   id->add_response_header ("Set-Cookie", cookie);
 }
 
