@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Allow "SameSite" parameter on cookies
+from: 7557b5d8f61200983294a0ff92472347ec494090
+to: c3e8cf8c856e1edf9718c482363e7da2a324d256
+originator: Jonas Wallden
+depends: 2020-03-14T094135
+restart: true
+
+• Support setting "SameSite=None|Lax|Strict" on cookies.
