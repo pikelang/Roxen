@@ -26,13 +26,15 @@ SSL.File start_ssl(Stdio.File fd, string host, int port)
   werror("RELAY: Using SSL...\n");
 #endif
 
-  fd = SSL.File(fd, ssl_context);
-  fd->set_blocking();
+  SSL.File ssl_fd = SSL.File(fd, ssl_context);
+  ssl_fd->set_blocking();
 
   string remote_host_and_port = host + ":" + port;
   SSL.Session session = m_delete(ssl_sessions, remote_host_and_port);
-  fd->connect(host, session);
-  ssl_sessions[remote_host_and_port] = fd->session;
+  ssl_fd->connect(host, session);
+  ssl_sessions[remote_host_and_port] = ssl_fd->session;
+
+  return ssl_fd;
 }
 
 class Relay
