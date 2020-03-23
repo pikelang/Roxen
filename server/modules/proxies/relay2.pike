@@ -365,7 +365,7 @@ class Relay
   }
 
 
-  void connected( int how, string host, string port, bool use_ssl )
+  void connected( int how, string host, int port, bool use_ssl )
   {
     if( !how )
     {
