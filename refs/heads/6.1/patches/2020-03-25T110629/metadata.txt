@@ -1,0 +1,16 @@
+subject: Roxen 6.1: Fixed memory leak.
+from: 79ae5837e93872a0c275d647e605314ee052c04e
+to: 808a66da3a99c530f429627b174a2d59c7bdd4bb
+originator: Erik Allemann
+depends: 2019-11-18T100333
+restart: true
+
+• RXML [GC]: Fixed memory leak.
+
+The RXML CompositeTagSet cache had a too primitive gc, in that
+it threw away the entire cache every 30 minutes. This caused
+composite tag sets to be recreated every 30 minutes even if
+they were still in use.
+
+The RXML compositeTagSet cache now instead uses weak references
+to only throw away the unused tag sets.
