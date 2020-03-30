@@ -15,6 +15,28 @@ constant module_doc =
 
 array(Relayer) relays = ({});
 
+SSL.Context ssl_context = SSL.Context();
+
+mapping(string:SSL.Session) ssl_sessions =
+  set_weak_flag(([]), Pike.WEAK_VALUES);
+
+SSL.File start_ssl(Stdio.File fd, string host, int port)
+{
+#ifdef RELAY_DEBUG
+  werror("RELAY: Using SSL...\n");
+#endif
+
+  SSL.File ssl_fd = SSL.File(fd, ssl_context);
+  ssl_fd->set_blocking();
+
+  string remote_host_and_port = host + ":" + port;
+  SSL.Session session = m_delete(ssl_sessions, remote_host_and_port);
+  ssl_fd->connect(host, session);
+  ssl_sessions[remote_host_and_port] = ssl_fd->session;
+
+  return ssl_fd;
+}
+
 class Relay
 {
   RequestID id;
@@ -343,7 +365,7 @@ class Relay
   }
 
 
-  void connected( int how, void|bool use_ssl )
+  void connected( int how, string host, int port, bool use_ssl )
   {
     if( !how )
     {
@@ -361,12 +383,7 @@ class Relay
     }
 
     if (use_ssl) {
-#ifdef RELAY_DEBUG
-      werror("RELAY: Using SSL...\n");
-#endif
-      fd = SSL.File(fd, SSL.Context());
-      fd->set_blocking();
-      fd->connect();
+      fd = start_ssl(fd, host, port);
     }
 
 #ifdef RELAY_DEBUG
@@ -435,13 +452,13 @@ class Relay
     // Kludge for bug 3127.
     if (linux) {
       if( fd->connect( host, port ) )
-	connected( 1, use_ssl );
+	connected( 1, host, port, use_ssl );
       else
-	connected( 0, use_ssl );
+	connected( 0, host, port, use_ssl );
       return;
     }
 
-    fd->async_connect( host, port, connected, use_ssl );
+    fd->async_connect( host, port, connected, host, port, use_ssl );
   }
 }
 
