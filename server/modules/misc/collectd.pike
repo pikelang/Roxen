@@ -189,7 +189,7 @@ string collectd_putval(string host,
 
 array(mapping) get_snmp_rows() 
 {
-  return
+  array(mapping) res =
     get_global_snmp()+
     get_cache_snmp()+
     get_site_snmp()+
@@ -199,6 +199,11 @@ array(mapping) get_snmp_rows()
     get_module_snmp(conf->find_module("image#0"))+
     get_module_snmp(conf->find_module("print-indesign-server#0"))+
     get_module_snmp(conf->find_module("print-db#0"));
+
+  RoxenModule memory_logger_module = conf->find_module("memory_logger#0");
+  if(memory_logger_module && sizeof(memory_logger_module->pmem))
+    res += get_module_snmp(memory_logger_module);
+  return res;
 }
 
 string status()
