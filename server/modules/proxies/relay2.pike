@@ -31,8 +31,7 @@ SSL.File start_ssl(Stdio.File fd, string host, int port)
 
   string remote_host_and_port = host + ":" + port;
   SSL.Session session = m_delete(ssl_sessions, remote_host_and_port);
-  ssl_fd->connect(host, session);
-  ssl_sessions[remote_host_and_port] = ssl_fd->session;
+  ssl_sessions[remote_host_and_port] = session = ssl_fd->connect(host, session);
 
   return ssl_fd;
 }
