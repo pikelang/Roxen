@@ -1,0 +1,18 @@
+subject: Roxen 6.2: Relay2: reuse SSL/TLS sessions
+from: 431a77f0a8a532783297138c01085417d0dfcaa1
+to: 33ab5d474b53513e6108cb95b8b5d8ef8b41538b
+originator: Administrator
+depends: 2020-03-30T101338
+restart: true
+
+• Relay2 [SSL/TLS]: Use the session API as intended.
+
+Fixes [WS-604] some more.
+
+• Relay2: Fixed typo.
+
+• Relay2: Fixed type error.
+
+• Relay2: Try reusing SSL/TLS sessions.
+
+Fixes [WS-604].
