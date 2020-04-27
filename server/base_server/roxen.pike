@@ -2061,8 +2061,7 @@ class Protocol
   void restore()
   //! Restore all port options from saved values
   {
-    foreach( (array)get_port_options( get_key() ),  array kv )
-      set( kv[0], kv[1] );
+    setvars(get_port_options( get_key() ));
   }
 
   protected int retries;
@@ -2443,8 +2442,8 @@ class StartTLSProtocol
 
     Variable.Variable Keys = getvar("ssl_keys");
 
-    array(int) keypairs = Keys->query();
-    if (!sizeof(keypairs)) {
+    array(string) keypair_names = Keys->query();
+    if (!sizeof(keypair_names)) {
       // No new-style certificates configured.
 
       // Check if there are old-style certificates; in case of which
@@ -2452,19 +2451,19 @@ class StartTLSProtocol
       Variable.Variable Certificates = getvar("ssl_cert_file");
       Variable.Variable KeyFile = getvar("ssl_key_file");
 
-      keypairs =
+      keypair_names =
 	CertDB.register_pem_files(Certificates->query() + ({ KeyFile->query() }),
 				  query("ssl_password"));
 
-      if (!sizeof(keypairs)) {
+      if (!sizeof(keypair_names)) {
 	// No Old-style certificate configuration found.
 	// Fall back to using all known certs.
-	keypairs = Keys->get_choice_list();
+	keypair_names = Keys->get_choice_list();
       }
 
-      if (sizeof(keypairs)) {
+      if (sizeof(keypair_names)) {
 	// Certificates found.
-	Keys->set(keypairs);
+	Keys->set(keypair_names);
 
 	save();
       } else {
@@ -2478,6 +2477,9 @@ class StartTLSProtocol
 	return;
       }
     }
+
+    array(int) keypairs =
+      map(keypair_names, CertDB.get_keypairs_by_name) * ({});
 
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
@@ -2521,17 +2523,11 @@ class StartTLSProtocol
 
   class CertificateKeyChoiceVariable
   {
-    inherit Variable.IntChoice;
+    inherit Variable.StringChoice;
 
-    mapping(int:string) get_translation_table()
+    array(string) get_choice_list()
     {
-      array(mapping(string:int|string)) keypairs = CertDB.list_keypairs();
-      return mkmapping(keypairs->id, keypairs->name);
-    }
-
-    array(int) get_choice_list()
-    {
-      return CertDB.list_keypairs()->id;
+      return Array.uniq(sort(CertDB.list_keypairs()->name));
     }
 
     array(string|mixed) verify_set(array(int) new_value)
@@ -2560,7 +2556,7 @@ class StartTLSProtocol
       return ids;
     }
 
-    protected array(string) render_element(int keypair_id)
+    protected array(string) render_keypair(int keypair_id)
     {
       array(Crypto.Sign.State|array(string)) keypair =
 	CertDB.get_keypair(keypair_id);
@@ -2704,8 +2700,14 @@ class StartTLSProtocol
       return res;
     }
 
+    protected array(string) render_element(string keypair_name)
+    {
+      return map(CertDB.get_keypairs_by_name(keypair_name), render_keypair) *
+	({});
+    }
+
     string render_form(RequestID id, void|mapping additional_args) {
-      array(string) current = map(query(), _name);
+      array(string) current = Array.uniq(sort(map(query(), _name)));
       string res = "<table width='100%'>\n";
       foreach( get_choice_list(); int i; mixed elem ) {
         if (i != 0) {
@@ -2747,6 +2749,24 @@ class StartTLSProtocol
                        Roxen.html_encode_string(title));
       }
       return res + "</table>";
+    }
+
+    string low_decode_keypair_id(mixed val) {
+      if (intp(val)) {
+	// Convert from cert keypair id to cert keypair name.
+	mapping md = CertDB.get_keypair_metadata(val);
+	if (md) return md->name;
+      }
+      return val;
+    }
+
+    int decode(mixed encoded)
+    {
+      // Convert from cert keypair ids to cert keypair names.
+      if (arrayp(encoded)) {
+	encoded = map(encoded, low_decode_keypair_id);
+      }
+      return ::decode(encoded);
     }
 
     protected void create( void|int _flags, void|LocaleString std_name,
