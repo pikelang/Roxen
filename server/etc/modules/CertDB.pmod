@@ -266,7 +266,7 @@ protected void refresh_private_key(Sql.Sql db, int pem_id, int msg_no,
   }
 }
 
-protected void low_refresh_pem(int pem_id, int|void force)
+protected int low_refresh_pem(int pem_id, int|void force)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
 
@@ -275,13 +275,13 @@ protected void low_refresh_pem(int pem_id, int|void force)
 		    "  FROM cert_pem_files "
 		    " WHERE id = %d",
 		    pem_id);
-  if (!sizeof(tmp)) return;
+  if (!sizeof(tmp)) return 0;
 
   sql_row pem_info = tmp[0];
 
   string pem_file = pem_info->path;
 
-  if (!sizeof(pem_file)) return;
+  if (!sizeof(pem_file)) return 0;
 
   string raw_pem;
   string pem_hash;
@@ -300,7 +300,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
       if ((pem_info->hash == pem_hash) && !force) {
 	// No change.
 	SSL3_WERR("PEM file not modified since last import.\n");
-	return;
+	return 0;
       }
     }
   }
@@ -317,7 +317,7 @@ protected void low_refresh_pem(int pem_id, int|void force)
 	      "       msg_no = NULL "
 	      " WHERE pem_id = %d",
 	      pem_id);
-    return;
+    return 0;
   }
 
   // Mark any old certs and keys as update in progress.
@@ -400,26 +400,31 @@ protected void low_refresh_pem(int pem_id, int|void force)
 	    " WHERE id = %d",
 	    pem_hash, st->mtime, time(1),
 	    pem_id);
+
+  return 1;
 }
 
 //! Refresh a single PEM file.
-void refresh_pem(int pem_id)
+int refresh_pem(int pem_id)
 {
   object privs = Privs("Reading cert file");
 
-  low_refresh_pem(pem_id);
+  return low_refresh_pem(pem_id);
 }
 
 //! Refresh all known PEM files.
-void refresh_all_pem_files(int|void force)
+int refresh_all_pem_files(int|void force)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
+  int count = 0;
 
   object privs = Privs("Reading cert file");
 
   foreach(db->typed_query("SELECT id FROM cert_pem_files")->id, int pem_id) {
-    low_refresh_pem(pem_id, force);
+    count += low_refresh_pem(pem_id, force);
   }
+
+  return count;
 }
 
 //! Register a single PEM file (no @[Privs]).
