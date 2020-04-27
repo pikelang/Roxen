@@ -650,3 +650,26 @@ mapping(string:string|sql_row|array(sql_row)) get_keypair_metadata(int keypair_i
 
   return res;
 }
+
+array(int) get_keypairs_by_name(string name)
+{
+  Sql.Sql db = DBManager.cached_get("roxen");
+
+  array(int) res =
+    db->typed_query("SELECT cert_keypairs.id AS id "
+		    "  FROM cert_keypairs, certs "
+		    " WHERE name = %s "
+		    "   AND cert_id = certs.id "
+		    "   AND pem_id IS NOT NULL "
+		    " ORDER BY expires ASC", name)->id;
+  if (!sizeof(res)) {
+    res =
+      db->typed_query("SELECT cert_keypairs.id AS id "
+		      "  FROM cert_keypairs, certs "
+		      " WHERE name = %s "
+		      "   AND cert_id = certs.id "
+		      " ORDER BY expires DESC "
+		      " LIMIT 1", name)->id;
+  }
+  return res;
+}
