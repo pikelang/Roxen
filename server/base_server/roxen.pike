@@ -2242,8 +2242,7 @@ class Protocol
   void restore()
   //! Restore all port options from saved values
   {
-    foreach( (array)get_port_options( get_key() ),  array kv )
-      set( kv[0], kv[1] );
+    setvars(get_port_options( get_key() ));
   }
 
   protected int retries;
