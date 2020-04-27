@@ -502,7 +502,7 @@ int register_pem_file(string pem_file, string|void password)
 //!
 //! @seealso
 //!   @[register_pem_file()]
-array(int) register_pem_files(array(string) pem_files, string|void password)
+array(string) register_pem_files(array(string) pem_files, string|void password)
 {
   Sql.Sql db = DBManager.cached_get("roxen");
 
@@ -519,17 +519,17 @@ array(int) register_pem_files(array(string) pem_files, string|void password)
 
   // FIXME: Move the following code to a separate function to improve API?
   //        (And instead just return pem_ids)?
-  array(int) keypairs = ({});
+  array(string) keypair_names = ({});
 
   foreach(Array.uniq(pem_ids), int pem_id) {
-    keypairs +=
-      db->typed_query("SELECT cert_keypairs.id AS id"
+    keypair_names +=
+      db->typed_query("SELECT cert_keypairs.name AS name"
 		      "  FROM cert_keys, cert_keypairs "
 		      " WHERE pem_id = %d "
 		      "   AND cert_keypairs.key_id = cert_keys.id",
-		      pem_id)->id;
+		      pem_id)->name;
   }
-  return sort(keypairs);
+  return Array.uniq(sort(keypair_names));
 }
 
 //! Get the private key and the list of certificates given a keypair id.

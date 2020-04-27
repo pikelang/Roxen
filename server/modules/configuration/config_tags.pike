@@ -682,39 +682,43 @@ mapping get_port_map( object p )
     ret->name = p->name+"://["+p->ip+"]:"+p->port+"/";
   }
 
-  array(int) keypair_ids = p->query("ssl_keys", 1);
-  if (arrayp(keypair_ids)) {
+  array(string) keypair_names = p->query("ssl_keys", 1);
+  if (arrayp(keypair_names)) {
     // SSL/TLS port.
     int suite_filter = p->query("ssl_suite_filter", 1);
     if (suite_filter && !(suite_filter & 4)) {
       ret->warning = LOCALE(1156, "RSA-encryption enabled.");
     }
-    foreach(keypair_ids, int keypair_id) {
-      array(Crypto.Sign.State|array(string)) keypair =
-	CertDB.get_keypair(keypair_id);
-      if (!keypair) continue;
-      [Crypto.Sign.State private_key, array(string) certs] = keypair;
+    foreach(keypair_names, string keypair_name) {
+      array(int) keypairs = CertDB.get_keypairs_by_name(keypair_name);
 
-      Standards.X509.TBSCertificate tbs =
-	Standards.X509.decode_certificate(certs[0]);
+      foreach(keypairs, int keypair_id) {
+	array(Crypto.Sign.State|array(string)) keypair =
+	  CertDB.get_keypair(keypair_id);
+	if (!keypair) continue;
+	[Crypto.Sign.State private_key, array(string) certs] = keypair;
 
-      array(string) res = ({});
+	Standards.X509.TBSCertificate tbs =
+	  Standards.X509.decode_certificate(certs[0]);
 
-      if (!tbs) {
-	ret->error = LOCALE(1130, "Invalid certificate");
-	continue;
-      }
+	array(string) res = ({});
 
-      if (tbs->issuer->get_der() == tbs->subject->get_der()) {
-	ret->info = LOCALE(1152, "Self-signed certificate");
-      }
+	if (!tbs) {
+	  ret->error = LOCALE(1130, "Invalid certificate");
+	  continue;
+	}
 
-      if (tbs->not_after < time(1)) {
-	// Already expired.
-	ret->error = LOCALE(1153, "Expired certificate");
-      } else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
-	// Expires within 30 days.
-	ret->warning = LOCALE(1154, "Certificate expires soon");
+	if (tbs->issuer->get_der() == tbs->subject->get_der()) {
+	  ret->info = LOCALE(1152, "Self-signed certificate");
+	}
+
+	if (tbs->not_after < time(1)) {
+	  // Already expired.
+	  ret->error = LOCALE(1153, "Expired certificate");
+	} else if (tbs->not_after < time(1) + (3600 * 24 * 30)) {
+	  // Expires within 30 days.
+	  ret->warning = LOCALE(1154, "Certificate expires soon");
+	}
       }
     }
   }
