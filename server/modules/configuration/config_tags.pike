@@ -682,7 +682,7 @@ mapping get_port_map( object p )
     ret->name = p->name+"://["+p->ip+"]:"+p->port+"/";
   }
 
-  array(string) keypair_names = p->query("ssl_keys", 1);
+  array(string) keypair_names = p->query("ssl_certs", 1);
   if (arrayp(keypair_names)) {
     // SSL/TLS port.
     int suite_filter = p->query("ssl_suite_filter", 1);
