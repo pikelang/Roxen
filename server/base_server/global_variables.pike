@@ -246,7 +246,7 @@ void set_up_ssl_variables( Protocol o )
 {
   function(DEFVAR) defvar = o->defvar;
 
-  defvar( "ssl_keys", o->CertificateKeyChoiceVariable
+  defvar( "ssl_certs", o->CertificateKeyChoiceVariable
 	  (VAR_NO_DEFAULT,
 	   LOCALE(1125, "SSL/TLS Certificate(s)"),
 	   LOCALE(1126, "<p>The TLS certificate(s) to use.</p>\n"
@@ -262,6 +262,11 @@ void set_up_ssl_variables( Protocol o )
 		  )));
 
 #if 1
+  // Not so old-style SSL Certificate variables.
+  // FIXME: Keep these around for at least a several major versions (15 years?).
+  defvar("ssl_keys", Variable.IntChoice(({}), ({}), VAR_INVISIBLE,
+					"SSL/TLS Keypair identifiers", ""));
+
   // Old-style SSL Certificate variables.
   // FIXME: Keep these around for at least a few major versions (10 years?).
   defvar( "ssl_cert_file",

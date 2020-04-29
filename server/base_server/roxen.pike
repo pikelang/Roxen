@@ -2434,20 +2434,49 @@ class StartTLSProtocol
 #endif
   }
 
+  protected string low_decode_keypair_id(mixed val) {
+    if (intp(val)) {
+      // Convert from cert keypair id to cert keypair name.
+      mapping md = CertDB.get_keypair_metadata(val);
+      if (md) return md->name;
+    }
+    return val;
+  }
+
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
     cert_failure = 0;
 
-    Variable.Variable Keys = getvar("ssl_keys");
+    Variable.Variable Keys = getvar("ssl_certs");
 
     array(string) keypair_names = Keys->query();
+
+    if (!sizeof(keypair_names)) {
+      // No new-style certificates configured.
+
+      // Check if there are old-style keypair ids; in case of which
+      // this is probably an upgrade from Roxen 6.2.
+      Variable.Variable Keypairs = getvar("ssl_keys");
+      array(int) keypair_ids = Keypairs->query();
+      if (sizeof(keypair_ids)) {
+	keypair_names =
+	  filter(map(keypair_ids, low_decode_keypair_id), stringp);
+	if (sizeof(keypair_names)) {
+	  // Certificates found.
+	  Keys->set(keypair_names);
+
+	  save();
+	}
+      }
+    }
+
     if (!sizeof(keypair_names)) {
       // No new-style certificates configured.
 
       // Check if there are old-style certificates; in case of which
-      // this is probably an upgrade.
+      // this is probably an upgrade from Roxen 6.1 or earlier.
       Variable.Variable Certificates = getvar("ssl_cert_file");
       Variable.Variable KeyFile = getvar("ssl_key_file");
 
@@ -2480,6 +2509,14 @@ class StartTLSProtocol
 
     array(int) keypairs =
       map(keypair_names, CertDB.get_keypairs_by_name) * ({});
+
+    if (!sizeof(keypairs)) {
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(63,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
 
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
@@ -2828,6 +2865,7 @@ class StartTLSProtocol
     //        changed callback is called. Currently you can get warnings
     //        that the files don't match if you update both variables
     //        at the same time.
+    getvar ("ssl_certs")->set_changed_callback(certificates_changed);
     getvar ("ssl_keys")->set_changed_callback(certificates_changed);
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
