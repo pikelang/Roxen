@@ -2691,6 +2691,14 @@ class StartTLSProtocol
     array(int) keypairs =
       map(keypair_names, CertDB.get_keypairs_by_name) * ({});
 
+    if (!sizeof(keypairs)) {
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M(63,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
+    }
+
     // FIXME: Only do this if there are certs loaded?
     // We must reset the set of certificates.
     SSLContext ctx = SSLContext();
