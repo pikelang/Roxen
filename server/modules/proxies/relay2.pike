@@ -20,6 +20,20 @@ SSL.Context ssl_context = SSL.Context();
 mapping(string:SSL.Session) ssl_sessions =
   set_weak_flag(([]), Pike.WEAK_VALUES);
 
+mapping(string:Thread.Queue) cached_connections = ([]);
+
+class FileWrapper(Stdio.File|SSL.File fd)
+{
+  void close(mixed ignored_id)
+  {
+#ifdef RELAY_DEBUG
+    werror("RELAY: Closing %O\n", fd);
+#endif
+    if (fd) fd->close();
+    fd = UNDEFINED;
+  }
+}
+
 SSL.File start_ssl(Stdio.File fd, string host, int port)
 {
 #ifdef RELAY_DEBUG
@@ -45,9 +59,70 @@ class Relay
   string request_data;
   string host;
   int port;
+  int use_ssl;
   string file;
 
   Stdio.File|SSL.File fd;
+
+  string connection_cache_key()
+  {
+    return sprintf("%s\0%d\0%d", host, port, use_ssl);
+  }
+
+  void release_fd()
+  {
+    // Make sure to close the fd if the remote does so.
+    FileWrapper wrapper = FileWrapper(fd);
+    fd->set_nonblocking(0, 0, wrapper->close);
+    call_out(wrapper->close, 60);	// Close after 60 seconds in cache.
+
+    string key = connection_cache_key();
+#ifdef RELAY_DEBUG
+    werror("RELAY: Releasing %O to %O\n", fd, key);
+#endif
+    Thread.Queue q = cached_connections[key];
+    if (!q) {
+      q = Thread.Queue();
+      cached_connections[key] = q;
+    }
+    q->write(wrapper);
+#ifdef RELAY_DEBUG
+    werror("RELAY: Cached connections: %O\n", cached_connections);
+#endif
+
+    fd = UNDEFINED;
+  }
+
+  Stdio.File|SSL.File get_cached_fd()
+  {
+    string key = connection_cache_key();
+    Thread.Queue q = cached_connections[key];
+    if (!q) return UNDEFINED;
+
+#ifdef RELAY_DEBUG
+    werror("RELAY: Queue: %O\n", q);
+#endif
+
+    while(1) {
+      FileWrapper wrapper = q->try_read();
+#ifdef RELAY_DEBUG
+      werror("RELAY: Wrapper: %O (%O)\n",
+	     wrapper, wrapper && wrapper->fd);
+#endif
+      if (!wrapper) break;
+      object(Stdio.File)|SSL.File fd = wrapper->fd;
+      if (!fd) continue;
+#ifdef RELAY_DEBUG
+      werror("Found cached conection for %O: %O\n", key, fd);
+#endif
+      remove_call_out(wrapper->close);
+      fd->set_close_callback(0);
+      if (fd->is_open()) return fd;
+    }
+#ifdef RELAY_DEBUG
+    werror("No suitable cached connection found for %O.\n", key);
+#endif
+  }
 
   mapping make_headers( RequestID from, int trim )
   {
@@ -102,8 +177,8 @@ class Relay
 	  // otherwise we might end up with things like double
 	  // gzipped data.
 	  break;
-	case "connection": /* We do not support keep-alive yet. */
-	  res->Connection = "close";
+	case "connection":
+	  // Strip.
 	  break;
 	default:
 	  res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
@@ -119,6 +194,8 @@ class Relay
       "Forwarded": map(forwarded, MIME.quote),
 
       "Host": host + ":" + port,
+
+      "Connection": "keep-alive",
     ]);
 
     // Also try to model X-Forwarded-Server after Apaches mod_proxy.
@@ -172,14 +249,33 @@ class Relay
   }
 
   string buffer;
+  int buflen = -1;
   void got_some_more_data( mixed q, string d)
   {
     buffer += d;
+
+    if (buflen == -1) {
+      Roxen.HeaderParser hp = Roxen.HeaderParser();
+      array res = hp->feed(buffer);
+      if (!res) return;	// Not enough data.
+      mapping(string:string) headers = res[2];
+      if (headers["content-length"]) {
+	int cl = (int)headers["content-length"];
+	buflen = cl + sizeof(buffer) - sizeof(res[0]);
+      } else {
+	buflen = -2;
+      }
+    }
+
+    if ((buflen >= 0) && (sizeof(buffer) >= buflen)) {
+      // Got all data.
+      release_fd();
+      call_out(done_with_data, 0);
+    }
   }
 
   void done_with_data( )
   {
-    destruct(fd);
     string headers, data;
     string type, charset, status;
     int code;
@@ -271,11 +367,10 @@ class Relay
           switch( lower_case( a ) )
           {
            case "connection":
-           case "content-length":
-           case "content-location":
-             break;
+	     // Strip.
+	     break;
            case "content-type":
-             h["Content-Type"] = b;
+             h[a] = b;
              type = b;
              break;
            default:
@@ -286,6 +381,8 @@ class Relay
 	     else
 	       h[a] = b;
           }
+
+	  h["Connection"] = "keep-alive";
         } else
           status = header;
       }
@@ -420,7 +517,7 @@ class Relay
 
     //  Support IPv6 addresses
     Standards.URI uri = Standards.URI(url);
-    bool use_ssl = lower_case(uri->scheme) == "https";
+    use_ssl = lower_case(uri->scheme) == "https";
     host = uri->host;
     port = uri->port || (use_ssl ? 443 : 80);
     file = uri->get_path_query();
@@ -434,7 +531,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+file+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+file+" HTTP/1.1\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
@@ -442,6 +539,18 @@ class Relay
 
     if( options->utf8 )
       request_data = string_to_utf8( request_data );
+
+    fd = get_cached_fd();
+    if (fd) {
+#ifdef RELAY_DEBUG
+      werror("RELAY: Reusing existing connection to "+host+":"+port+"\n");
+#endif
+
+      // NB: SSL (if any) is already started here.
+      connected(1, host, port, 0);
+      return;
+    }
+
     fd = Stdio.File( );
 
 #ifdef RELAY_DEBUG
