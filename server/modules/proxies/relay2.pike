@@ -103,8 +103,8 @@ class Relay
 	  // otherwise we might end up with things like double
 	  // gzipped data.
 	  break;
-	case "connection": /* We do not support keep-alive yet. */
-	  res->Connection = "close";
+	case "connection":
+	  // Strip.
 	  break;
 	default:
 	  res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
@@ -120,6 +120,8 @@ class Relay
       "Forwarded": map(forwarded, MIME.quote),
 
       "Host": host + ":" + port,
+
+      "Connection": "keep-alive",
     ]);
 
     // Also try to model X-Forwarded-Server after Apaches mod_proxy.
@@ -173,9 +175,29 @@ class Relay
   }
 
   string buffer;
+  int buflen = -1;
   void got_some_more_data( mixed q, string d)
   {
     buffer += d;
+
+    if (buflen == -1) {
+      Roxen.HeaderParser hp = Roxen.HeaderParser();
+      array res = hp->feed(buffer);
+      if (!res) return;	// Not enough data.
+      mapping(string:string) headers = res[2];
+      if (headers["content-length"]) {
+	int cl = (int)headers["content-length"];
+	buflen = cl + sizeof(buffer) - sizeof(res[0]);
+      } else {
+	buflen = -2;
+      }
+    }
+
+    if ((buflen >= 0) && (sizeof(buffer) >= buflen)) {
+      // Got all data.
+      release_fd();
+      call_out(done_with_data, 0);
+    }
   }
 
   void done_with_data( )
@@ -272,11 +294,10 @@ class Relay
           switch( lower_case( a ) )
           {
            case "connection":
-           case "content-length":
-           case "content-location":
-             break;
+	     // Strip.
+	     break;
            case "content-type":
-             h["Content-Type"] = b;
+             h[a] = b;
              type = b;
              break;
            default:
@@ -287,6 +308,8 @@ class Relay
 	     else
 	       h[a] = b;
           }
+
+	  h["Connection"] = "keep-alive";
         } else
           status = header;
       }
@@ -435,7 +458,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+file+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+file+" HTTP/1.1\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
