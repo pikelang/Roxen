@@ -1,0 +1,25 @@
+subject: Roxen 6.0: proxy and LDAP fixes.
+from: 972b4e6cd75d3529fe3121a01d973459ffd70599
+to: d7885ad2baa9475f4fe963dce8d1a9569490f2ab
+originator: Erik Allemann
+depends: 2017-12-01T135021
+restart: true
+
+• CGI: Filter proxy header from HTTP_-variables.
+
+Do not generate the HTTP_PROXY environment variable for CGI
+scripts, as it is often used by libraries for specifying an
+outgoing proxy, and is trivially exploitable.
+
+Cf httpoxy.org
+
+• UserDB [LDAP] [Pike 7.8]: Fixed broken handling of %u%.
+
+Since Pike 7.7.14 all URI-escapes in LDAP-URLs are decoded.
+This broke use of the magic marker '%u%' as it was interpreted
+as a Unicode-escape. We now force the marker to be escaped
+properly before parsing the LDAP-URL.
+
+Also some related code-cleanup.
+
+Fixes [WS-390].
