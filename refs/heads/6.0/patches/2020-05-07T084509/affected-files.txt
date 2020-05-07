@@ -1,0 +1,3 @@
+Modified files:
+  etc/modules/Roxen.pmod
+  modules/ldap/userdb_ldap.pike
