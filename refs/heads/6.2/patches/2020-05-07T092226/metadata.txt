@@ -1,0 +1,45 @@
+subject: Roxen 6.2: Fix for detection of updated SSL certificate.
+from: 33ab5d474b53513e6108cb95b8b5d8ef8b41538b
+to: ac42a039d20ef67331d999994f4ead087b67423f
+originator: Erik Allemann
+depends: 2020-04-01T134837
+restart: true
+
+• Merge commit 'patches/ws580^^^^2^^' into 6.2
+
+* commit 'patches/ws580^^^^2^^':
+  Core: Scan for certs in a handler thread
+
+• StartTLSProtocol: Changed ssl_keys to contain names of key pairs.
+
+This changes ssl_keys from being a set of keypair identifier numbers
+to a set of keypair names. This should make updating certificates
+on the fly (with eg Let's Encrypt) behave more like users expect.
+
+Previously if the certificate switched to a new key it was regarded
+as a new certificate and manual configuration was needed. Now the
+new certificate and key will most likely have the same name, and
+will thus be used automatically.
+
+Fixes [WS-580].
+
+• CertDB: Added get_keypairs_by_name().
+
+Needed for [WS-580].
+
+• Protocol: Cleaned up defvar initialization.
+
+Reduces code compexity somewhat.
+
+The main benefit is that Variable()->decode() now gets called
+for protocol variables.
+
+Needed for [WS-580].
+
+• CertDB: Update active ports when certificates change.
+
+Fixes some of [WS-580].
+
+• StartTLSProtocol: Get rid of race on certificate change.
+
+• Core: Scan for certs in a handler thread
