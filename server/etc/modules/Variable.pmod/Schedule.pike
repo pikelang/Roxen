@@ -89,11 +89,15 @@ private mapping next_or_same_day(mapping from, int day, int hour)
 
 private mapping next_day(mapping from, int day)
 {
-  from->hour = 0;
-  if(from->wday<day) {
-    return localtime(mktime(from) + (day - from->wday)*3600*24);
-  }
-  return localtime(mktime(from) + (7 - from->wday + day)*3600*24);
+  int num_days = ((6 + day - from->wday) % 7) + 1;
+
+  // NB: Use a time in the middle of the date to ensure that we
+  //     don't miss the next day due to DST or similar.
+  //     Adjust the hour back to 00 afterwards.
+  from->hour = 12;
+  mapping m = localtime(mktime(from) + num_days * 3600 * 24);
+  m->hour = from->hour = 0;
+  return m;
 }
 
 private mapping next_or_same_time(mapping from, int hour, void|int delta)
