@@ -1,0 +1,15 @@
+subject: Roxen 6.2: Fix handling of DST transition.
+from: ac42a039d20ef67331d999994f4ead087b67423f
+to: a811e037d65b65b9d9c46c1bd6ab3ccb7c36735e
+originator: Erik Allemann
+depends: 2020-05-07T092226
+restart: true
+
+• Variable.Schedule: Fix handling of DST transition.
+
+Fix issue where next_day() returned a time one hour into the
+next day rather than at hour 0 if the transition to dst was
+in the interval. This in turn caused next_or_same_time() to
+skip a week ahead if the targetted time was 00:00.
+
+Fixes [WS-606].
