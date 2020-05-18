@@ -2280,7 +2280,8 @@ class StartTLSProtocol
   }
 #endif
 
-  protected void filter_preferred_suites(SSLContext|void ctx)
+  protected void filter_preferred_suites(Variable.Variable|void ignored,
+					 SSLContext|void ctx)
   {
     if (!ctx) ctx = this_program::ctx;
 #if constant(SSL.ServerConnection)
@@ -2441,7 +2442,7 @@ class StartTLSProtocol
     SSLContext ctx = SSLContext();
     ctx->random = Crypto.Random.random_string;
     set_version(ctx);
-    filter_preferred_suites(ctx);
+    filter_preferred_suites(UNDEFINED, ctx);
 
     foreach(keypairs, int keypair_id) {
       array(Crypto.Sign.State|array(string)) keypair =
@@ -2773,7 +2774,7 @@ class StartTLSProtocol
     set_version(ctx);
 #endif
 
-    filter_preferred_suites(ctx);
+    filter_preferred_suites(UNDEFINED, ctx);
 
     certificates_changed (0, ignore_eaddrinuse);
 
