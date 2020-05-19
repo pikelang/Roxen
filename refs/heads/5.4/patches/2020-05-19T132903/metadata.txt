@@ -1,0 +1,17 @@
+subject: Roxen 5.4: Fixed broken handling of %u%.
+from: 479bdcd75a7be68838cdc5e5209fb01e5915ce8a
+to: 1b04e892e2b6f4f8601331cc53a95c7ca713aaf4
+originator: Erik Allemann
+depends: 2017-07-21T090901
+restart: true
+
+• UserDB [LDAP] [Pike 7.8]: Fixed broken handling of %u%.
+
+Since Pike 7.7.14 all URI-escapes in LDAP-URLs are decoded.
+This broke use of the magic marker '%u%' as it was interpreted
+as a Unicode-escape. We now force the marker to be escaped
+properly before parsing the LDAP-URL.
+
+Also some related code-cleanup.
+
+Fixes [WS-390].
