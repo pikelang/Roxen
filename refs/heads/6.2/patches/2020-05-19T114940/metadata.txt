@@ -1,0 +1,18 @@
+subject: Roxen 6.2: Fixes for "Additional suite filtering	" drop-down.
+from: a811e037d65b65b9d9c46c1bd6ab3ccb7c36735e
+to: 403f73cedabf34f5e002a906e7a7eab442bcee0c
+originator: Erik Allemann
+depends: 2020-05-13T111600
+restart: true
+
+• StartTLSProtocol: Fix dual use of filter_preferred_suites() arguments.
+
+filter_preferred_suites() is used as a Variable.Variable change callback,
+in which case it will be called with a Variable.Variable as the first
+argument. This conflicted with the filter_preferred_suites() as it
+expected a SSL.SSLContext as the first argument. This caused errors
+like "Calling the NULL value.".
+
+Move the SSL.SSLContext to the second argument.
+
+Fixes [WS-618].
