@@ -2294,8 +2294,8 @@ class Context
   }
 
   void handle_exception (mixed err, PCode|Parser evaluator, void|PCode p_code_error)
-  //! This function gets any exception that is catched during
-  //! evaluation. evaluator is the object that catched the error. If
+  //! This function gets any exception that is caught during
+  //! evaluation. evaluator is the object that caught the error. If
   //! p_code_error is set, a CompiledError object will be added to it
   //! if the error was reported.
   {
