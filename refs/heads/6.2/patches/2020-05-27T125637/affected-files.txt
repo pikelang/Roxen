@@ -1,0 +1,2 @@
+Modified files:
+  etc/modules/RXML.pmod/module.pmod
