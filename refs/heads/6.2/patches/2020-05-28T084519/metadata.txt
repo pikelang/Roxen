@@ -1,0 +1,15 @@
+subject: Roxen 6.2: RXML.PXml: Do not format empty error messages.
+from: d2cf8f580d7a5b2b82d311ba8439df1b62e3126d
+to: da1257183b21e57fe7100e893c5ba24f26a3ffce
+originator: Erik Allemann
+depends: 2020-05-27T125637
+restart: true
+
+• RXML.PXml: Do not format empty error messages.
+
+report_error() now avoids adding formatting to the empty error message.
+
+This removes extraneous <pre> and <br> tags when eg "RXML Errors:
+Quiet RXML Parse errors" is enabled.
+
+Fixes [WS-620] some more.
