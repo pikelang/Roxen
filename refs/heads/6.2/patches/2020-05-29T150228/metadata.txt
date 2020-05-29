@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Testsuite [RXML]: Fix fall-out from [WS-620].
+from: da1257183b21e57fe7100e893c5ba24f26a3ffce
+to: 20d1ef0073788d7eb836210d33db5abb38267060
+originator: Jonas Lonnberg
+depends: 2020-05-28T084519
+restart: true
+
+• Testsuite [RXML]: Fix fall-out from [WS-620].
