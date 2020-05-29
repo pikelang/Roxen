@@ -2294,8 +2294,8 @@ class Context
   }
 
   void handle_exception (mixed err, PCode|Parser evaluator, void|PCode p_code_error)
-  //! This function gets any exception that is catched during
-  //! evaluation. evaluator is the object that catched the error. If
+  //! This function gets any exception that is caught during
+  //! evaluation. evaluator is the object that caught the error. If
   //! p_code_error is set, a CompiledError object will be added to it
   //! if the error was reported.
   {
@@ -9370,14 +9370,16 @@ class PCode
 
   int report_error (string msg, Type|void type)
   {
-    if (type && type->subtype_of(t_text)) {
-      // text/plain
-      msg = "\n" + msg + "\n";
-    } else {
-      // Everything else.
-      // HTML/XML-quote everything for paranoia reasons.
-      msg = "<br clear=\"all\" />\n<pre>" +
-	Roxen.html_encode_string(msg) + "</pre>\n";
+    if (msg != "") {
+      if (type && type->subtype_of(t_text)) {
+	// text/plain
+	msg = "\n" + msg + "\n";
+      } else {
+	// Everything else.
+	// HTML/XML-quote everything for paranoia reasons.
+	msg = "<br clear=\"all\" />\n<pre>" +
+	  Roxen.html_encode_string(msg) + "</pre>\n";
+      }
     }
 
     // Store the error message in misc for later retrieval by _eval().
