@@ -2821,7 +2821,7 @@ hej</result>
     ><cache shared variable="test.pass">a<run-error/>b</cache
     ><cache shared variable="test.pass">a<run-error/>b</cache
   ></rxml>
-  <result>a<br clear='all'/><pre></pre>ba<br clear='all'/><pre></pre>b</result>
+  <result>abab</result>
 </test>
 
 <test>
