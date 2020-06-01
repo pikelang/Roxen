@@ -58,6 +58,7 @@ class Relay
   multiset options;
 
   string request_data;
+  string method;
   string host;
   int port;
   int use_ssl;
@@ -260,7 +261,9 @@ class Relay
       array res = hp->feed(buffer);
       if (!res) return;	// Not enough data.
       mapping(string:string) headers = res[2];
-      if (headers["content-length"]) {
+      if (method == "HEAD") {
+	buflen = sizeof(buffer);
+      } else if (headers["content-length"]) {
 	int cl = (int)headers["content-length"];
 	buflen = cl + sizeof(buffer) - sizeof(res[0]);
       } else {
@@ -525,18 +528,17 @@ class Relay
     if (has_prefix(file, "/"))
       file = file[1..];
 
-    if( options->raw )
+    if( options->raw ) {
       request_data = _id->raw;
-    else
-    {
+    } else {
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
       request_data = (id->method+" /"+file+" HTTP/1.1\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
-
     }
+    method = upper_case(id->method);
 
     if( options->utf8 )
       request_data = string_to_utf8( request_data );
