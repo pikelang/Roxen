@@ -1,0 +1,24 @@
+subject: Roxen 6.2: Relay2: Support the HEAD method.
+from: 20d1ef0073788d7eb836210d33db5abb38267060
+to: ec33cb6c31c7650dc46fdd38332d08cec4c8cc5f
+originator: Erik Allemann
+depends: 2020-05-29T150228
+restart: true
+
+• Relay2: Support the HEAD method.
+
+For the HEAD method data is never sent even when Content-Length != 0.
+
+Fixes [WS-603] some more.
+
+• Relay2: Reuse already opened connections.
+
+Adds a connection cache for the proxy connections.
+
+Fixes remainder of [WS-603].
+
+• Relay2: Use keep-alive requests and HTTP/1.1.
+
+Note that the connection isn't actually reused (but could be).
+
+Fixes some of [WS-603].
