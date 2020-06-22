@@ -24,18 +24,19 @@ class Documentation(string name,
 
 class Updateable(function(:mixed) fun)
 {
-  void update_value()
+  int(0..1) update_value()
   {
     if (fun) {
       mixed val = fun();
       if (undefinedp (val)) {
-	werror("SNMP: Got undefined value from callback %O.\n"
-	       "%s\n",
-	       fun, describe_backtrace(backtrace()));
+	// Value not available at this time.
+	// Keep the stale value.
+	return 0;
       }
       this_object()->init (val);
       this_object()->der = UNDEFINED;
     }
+    return 1;
   }
 }
 
