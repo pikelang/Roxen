@@ -5375,7 +5375,8 @@ void set_cookie( RequestID id,
 //!   Add a SameSite=[...] parameter. The string value should be "None",
 //!   "Lax", or "Strict", but no check is made for the actual value. Note
 //!   though that None typically only has effect if set together with the
-//!   @[secure] flag. There is also a known browser bug where None may be
+//!   @[secure] flag, and in practice it even breaks browsers for non-secure
+//!   cookies. There is also a known browser bug where None may be
 //!   incorrectly handled as Strict in some Safari/iOS/macOS versions.
 //!
 //! @note
