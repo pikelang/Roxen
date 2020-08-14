@@ -1,0 +1,13 @@
+subject: Roxen 6.2: Doc update for set_cookie() & new arch (rhel8_x86_64).
+from: ec33cb6c31c7650dc46fdd38332d08cec4c8cc5f
+to: dbef034ae531e54edfee613f00589f5d1a0ba8be
+originator: Erik Allemann
+depends: 2020-06-08T175341
+restart: true
+
+• Testsuite: RXPs need to be gzipped.
+
+• Doc update for set_cookie(): SameSite=None is only recommended together with
+the secure flag.
+
+• RoxenPatch: Added architecture rhel8_x86_64.
