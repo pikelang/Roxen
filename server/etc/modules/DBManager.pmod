@@ -34,6 +34,11 @@ private
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
 
+  mixed typed_query( mixed ... args )
+  {
+    return connect_to_my_mysql( 0, "roxen" )->typed_query( @args );
+  }
+
   Sql.sql_result big_query( mixed ... args )
   {
     return connect_to_my_mysql( 0, "roxen" )->big_query( @args );
@@ -514,12 +519,22 @@ private
       // "10.0.13-MariaDB".
     };
     db_version = db_version && (db_version - "\n");
+    // MariaDB 10.3 ends the entry with a \0 instead of a \n.
+    db_version = db_version && (db_version - "\0");
 
     if (db_version &&
 	has_suffix(mysql_version, "-log") &&
 	!has_suffix(db_version, "-log")) {
       db_version += "-log";
     }
+
+#if 0
+    werror("db_version:    %O\n"
+	   "mysql_version: %O\n"
+	   "Up to date:    %O\n",
+	   db_version, mysql_version,
+	   db_version && has_value(mysql_version, db_version));
+#endif
 
     // Comparing 5.5.5-10.0.13-MariaDB-log and 10.0.13-MariaDB-log
     if (db_version && has_value(mysql_version, db_version)) {
@@ -532,6 +547,8 @@ private
 	// Upgrade method in MySQL 5.0.19 and later (UNIX),
 	// MySQL 5.0.25 and later (NT).
 	int err = Process.Process(({ mysql_location->mysql_upgrade,
+				     "--defaults-file=" +
+				     roxenloader.query_mysql_config_file(),
 #ifdef __NT__
 				     "--pipe",
 #endif
@@ -568,6 +585,8 @@ private
 	  werror("Warning: Upgrade failed with code %d; trying once more...\n",
 		 err);
 	  err = Process.Process(({ mysql_location->mysql_upgrade,
+				   "--defaults-file=" +
+				   roxenloader.query_mysql_config_file(),
 #ifdef __NT__
 				   "--pipe",
 #endif
@@ -2065,10 +2084,14 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   // Time to build the command line...
-  array(string) cmd = ({ mysqldump, "--add-drop-table", "--create-options",
-			 "--complete-insert", "--compress",
-			 "--extended-insert", "--hex-blob",
-			 "--quick", "--quote-names" });
+  array(string) cmd = ({
+    mysqldump,
+    "--defaults-file=" + roxenloader.query_mysql_config_file(),
+    "--add-drop-table", "--create-options",
+    "--complete-insert", "--compress",
+    "--extended-insert", "--hex-blob",
+    "--quick", "--quote-names",
+  });
   if ((host == "") || (host == "localhost")) {
     // Socket.
     if (port) {
@@ -2997,7 +3020,7 @@ protected void create()
     query( #"
 CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
- path VARCHAR(100) NOT NULL, 
+ path VARCHAR(255) NOT NULL,
  local INT UNSIGNED NOT NULL,
  default_charset VARCHAR(64),
  schedule_id INT DEFAULT 1,
@@ -3021,6 +3044,30 @@ CREATE TABLE dbs (
 	    "   SET schedule_id = NULL "
 	    " WHERE local = 0 "
 	    "   AND path NOT LIKE 'mysql://%'");
+    }
+    mixed e = catch {
+      array(mapping(string:mixed)) result = [array(mapping(string:mixed))]
+        typed_query("SELECT DATA_TYPE, CHARACTER_MAXIMUM_LENGTH "
+                    "  FROM information_schema.columns "
+                    " WHERE table_name = 'dbs' AND COLUMN_NAME = 'path'");
+      if (!sizeof(result)) {
+        error("Failed to get DATA_TYPE and CHARACTER_MAXIMUM_LENGTH of "
+               "column 'path'.\n");
+      }
+      // We expect lower case already but better be safe than sorry...
+      string data_type = lower_case(result[0]->DATA_TYPE);
+      int char_max_length = [int] result[0]->CHARACTER_MAXIMUM_LENGTH;
+      if (data_type != "varchar") {
+        error("Unxepcted datatype of column 'path'. Expected \"varchar\". "
+              "Was %O\n", data_type);
+      }
+      if (char_max_length < 255) {
+        typed_query("ALTER TABLE dbs MODIFY path VARCHAR(255) NOT NULL");
+      }
+    };
+    if (e) {
+      werror("ERROR: DBManager: Failed to verify/alter table dbs. "
+             "Details: %s\n", describe_backtrace(e));
     }
   }
 
