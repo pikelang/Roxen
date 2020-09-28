@@ -1,0 +1,62 @@
+subject: Roxen 6.1: Various DB fixes
+from: 34b67eb91747357a59efabe288e66d2fb71256ff
+to: c4fcb9fe90bf0790ee0b74ab5292a5271344470d
+originator: Erik Allemann
+depends: 2020-06-02T102257
+restart: true
+
+• Merge tracking branch 'patches/ws583' into 6.1
+
+* origin/patches/ws583:
+  CREATE TABLE dbs: path VARCHAR(255) NOT NULL (Fixup of previous commit). [WS-583]
+  Allow more than 100 chars in external database URLs. [WS-583]
+  DBManager: Added --defaults-file directive in lots of places.
+  DBManager: Added some line-breaks.
+  DBs: Use query_mysql_config_file().
+  DBs: Added roxenloader.query_mysql_config_file().
+  MariaDB/MySQL: Support blacklisting of versions.
+  MariaDB: Bump supported version to 10.3.*.
+  DBManager: Added some (disabled) diagnostics.
+  DBManager: Support upgrading to MariaDB 10.3.x.
+
+• CREATE TABLE dbs: path VARCHAR(255) NOT NULL (Fixup of previous commit). [WS-583]
+
+Set CHARACTER_MAXIMUM_LENGTH of column path in table dbs from 100 to 255
+also when creating table (not only when updating already existing
+table).
+
+• Allow more than 100 chars in external database URLs. [WS-583]
+
+More specifically, changed CHARACTER_MAXIMUM_LENGTH of column path in
+table dbs from 100 to 255.
+
+• DBManager: Added --defaults-file directive in lots of places.
+
+This fixes issues caused by global mysql configuration files
+having options that conflict with what Roxen expects.
+
+Potential fix for [WS-328] and related issues.
+
+• DBManager: Added some line-breaks.
+
+• DBs: Use query_mysql_config_file().
+
+• DBs: Added roxenloader.query_mysql_config_file().
+
+Added convenience function to reduce code duplication.
+
+• MariaDB/MySQL: Support blacklisting of versions.
+
+Blacklist the (known bad) MariaDB 10.2.* series.
+
+• MariaDB: Bump supported version to 10.3.*.
+
+• DBManager: Added some (disabled) diagnostics.
+
+• DBManager: Support upgrading to MariaDB 10.3.x.
+
+MariaDB 10.3 seems to terminate the entry in the mysql_upgrade_info
+file with a NUL (and not a NL). This caused Roxen to attempt to
+upgrade the db at every restart.
+
+Fixes some of [IS-119].
