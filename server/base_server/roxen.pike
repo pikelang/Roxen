@@ -3827,7 +3827,7 @@ void handler_ping()
 
 protected int get_vmem_usage()
 {
-  Stdio.Stat st = file_stat(sprintf("/proc/$d/as", getpid()));
+  Stdio.Stat st = file_stat(sprintf("/proc/%d/as", getpid()));
   // NB: On Linux the size in stat for all stuff in /proc is 0.
   if (st && st->size) {
     // Return the size of the address space.
