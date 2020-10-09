@@ -2767,6 +2767,31 @@ void handler_ping()
   handlers_alive = time();
 }
 
+protected int get_vmem_usage()
+{
+  Stdio.Stat st = file_stat(sprintf("/proc/$d/as", getpid()));
+  // NB: On Linux the size in stat for all stuff in /proc is 0.
+  if (st && st->size) {
+    // Return the size of the address space.
+    return st->size;
+  }
+
+  /* Linux: Parse /proc/$$/maps */
+  string maps = Stdio.read_bytes(sprintf("/proc/%d/maps", getpid()));
+
+  if (!maps) {
+    return 0;
+  }
+
+  int sum = 0;
+  foreach(maps/"\n", string line) {
+    if (sscanf(line, "%x-%x %*s", int low, int high)) {
+      sum += high - low;
+    }
+  }
+  return sum;
+}
+
 void restart_if_stuck (int force)
 //! @note
 //! Must be called from the backend thread due to Linux peculiarities.
@@ -2793,6 +2818,33 @@ void restart_if_stuck (int force)
     engage_abs(0);
   }
   handle(handler_ping);
+
+  int limit;
+  if (limit = query("abs_rmemlimit")) {
+    int val = System.getrusage()->maxrss;
+#ifndef __APPLE__
+    /* NB: For some reason Apple considered it a good idea
+     *     to switch from KB to bytes for the ru_maxrss field.
+     *     Everybody else (including the BSDs that Apple
+     *     took the code from) seems to use KB.
+     */
+    val *= 1024;
+#endif
+    if (val > limit * 1024 * 1024) {
+      report_debug("**** %s: ABS: RSS (0x%08x bytes) is too large.\n",
+		   ctime(time()) - "\n", val);
+      engage_abs(0);
+    }
+  }
+
+  if (limit = query("abs_vmemlimit")) {
+    int val = get_vmem_usage();
+    if (val > limit * 1024 * 1024) {
+      report_debug("**** %s: ABS: VMEM (0x%08x bytes) is too large.\n",
+		   ctime(time()) - "\n", val);
+      engage_abs(0);
+    }
+  }
 }
 #endif
 
