@@ -578,6 +578,7 @@ process to get a thread dump.</p>
 	 LOCALE(0, "Automatically restart the Roxen process if its "
 		"virtual memory usage grows past this limit in megabytes. "
 		"Set to 0 to disable."),
+	 UNDEFINED,
 	 lambda() { return !query("abs_engage");});
   defvar("abs_rmemlimit", 0,
 	 LOCALE(0, "Auto Maintenance: ABS Memory limit (RSS)"),
@@ -585,6 +586,7 @@ process to get a thread dump.</p>
 	 LOCALE(0, "Automatically restart the Roxen process if its active "
 		"(aka resident) memory usage grows past this limit in "
 		"megabytes. Set to 0 to disable."),
+	 UNDEFINED,
 	 lambda() { return !query("abs_engage");});
 #endif // __NT__
 
