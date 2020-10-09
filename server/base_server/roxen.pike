@@ -901,11 +901,11 @@ protected void start_low_handler_threads()
 
 protected void transfer_handler_queue(Queue from, Queue to, int|void count)
 {
-  int transferred = handle_queue->size();
+  int transferred = from->size();
 
-  while (array entry = handle_queue->try_read()) {
+  while (array entry = from->try_read()) {
     if (arrayp(entry)) {
-      low_handle_queue->write(entry);
+      to->write(entry);
     }
   }
 
