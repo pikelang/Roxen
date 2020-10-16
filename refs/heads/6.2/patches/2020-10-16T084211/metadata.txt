@@ -1,0 +1,14 @@
+subject: Roxen 6.2: Add support to ABS to restart server on memory threshold
+from: dbef034ae531e54edfee613f00589f5d1a0ba8be
+to: 13fc7d313b0cf0f2ce47e612aa51f7321b04d57e
+originator: Administrator
+depends: 2020-08-14T102244
+restart: true
+
+• ABS: Fix hiding of unused ABS settings.
+
+• ABS: Fixed typo.
+
+• ABS: Add support for restarting the server if it grows too large.
+
+Fixes [WS-628].
