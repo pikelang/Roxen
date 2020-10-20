@@ -154,6 +154,18 @@ void set_up_ftp_variables( Protocol o )
 	  TYPE_INT,
 	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
 
+  defvar( "passive_public_address", "", LOCALE(0, "Passive public address"),
+	  TYPE_STRING,
+	  LOCALE(0, "<p>IP address to report in <b>PASV</b> reply.</p>\n"
+		 "<p>If the server is behind a network address translation "
+		 "(NAT) layer, it may not be possible for clients to connect "
+		 "to the local IP for the port. In that case, set the public "
+		 "IP or host name here.</p>\n"
+		 "<p>If left empty the local IP for the client connection "
+		 "will be used.</p>\n"
+		 "<p>Note: Only relevant for IPv4 as IPv6 "
+		 "uses <b>EPSV</b>.</p>\n"));
+
   defvar( "rfc2428_support", 1, LOCALE(518, "Support EPRT/EPSV"),
 	  TYPE_FLAG,
 	  LOCALE(528, "Enable support for the EPRT and EPSV commands (RFC2428)."
