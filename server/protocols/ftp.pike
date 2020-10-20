@@ -1695,6 +1695,7 @@ class FTPSession
   // the corresponding control connection to port L.
   // RFC 1123 4.1.2.12
   string local_addr;
+  string public_addr;
   int local_port;
   string e_mode = "1";	/* IPv4 */
 
@@ -3581,7 +3582,7 @@ class FTPSession
     }
     send(227, ({ LOCALE(151, "Entering Passive Mode.") +
 		 sprintf(" (%s,%d,%d)",
-			 replace(local_addr, ".", ","),
+			 replace(public_addr, ".", ","),
 			 (port>>8), (port&0xff)) }));
   }
 
@@ -4637,6 +4638,28 @@ class FTPSession
     local_addr = a[0];
     local_port = (int)a[1];
     e_mode = has_value(local_addr, ":")?"2":"1";
+    public_addr = local_addr;
+
+    // FIXME: In theory we could be behind a NAT that translates
+    //        from IPv4 to IPv6...
+    if (e_mode == "1") {
+      // IPv4
+      string addr = c->query_option("passive_public_address");
+      if (sizeof(addr)) {
+	// NB: blocking_host_to_ip() is caching, so this should be fine.
+	string ip = roxen.blocking_host_to_ip(addr);
+	array(string) a = (array(string))map((array(int))(ip/"."), `&, 255);
+	if ((sizeof(a) == 4) && (ip == (a * "."))) {
+	  // Looks like we got an IPv4 number.
+	  public_addr = ip;
+	} else {
+	  report_warning("FTP2: Failed to convert %O into an IPv4 address.\n"
+			 "FTP2: Got: %O.\n"
+			 "FTP2: Falling back to default: %O.\n",
+			 addr, ip, local_addr);
+	}
+      }
+    }
 
     call_out(timeout, FTP2_TIMEOUT);
 
