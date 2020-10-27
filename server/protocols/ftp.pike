@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 1.99 1999/05/01 18:18:55 grubba Exp $
+ * $Id$
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -989,7 +989,9 @@ class TelnetSession {
 	// FIXME: Is this the correct use?
 	fd->set_write_callback(0);
 
-	report_warning("FTP2: Write callback with nothing to send.\n");
+	if (write_cb) {
+	  report_warning("FTP2: Write callback with nothing to send.\n");
+	}
       }
     } else {
       report_error("FTP2: Write callback with no fd.\n");
