@@ -1126,9 +1126,9 @@ class TelnetSession {
 
   private mapping cb;
   private mixed id;
-  protected function(mixed|void:string) write_cb;
-  protected function(mixed, string:void) read_cb;
-  protected function(mixed|void:void) close_cb;
+  local protected function(mixed|void:string) write_cb;
+  local protected function(mixed, string:void) read_cb;
+  local protected function(mixed|void:void) close_cb;
 
   private constant TelnetCodes = ([
     236:"EOF",		// End Of File
