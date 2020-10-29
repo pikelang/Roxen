@@ -1,0 +1,15 @@
+subject: Roxen 6.2: FTP: Add override for PASV address.
+from: 13fc7d313b0cf0f2ce47e612aa51f7321b04d57e
+to: bc7ab9044ee80529f67eeba7a3e1820166ecb1e6
+originator: Erik Allemann
+depends: 2020-10-16T084211
+restart: true
+
+• FTP: Add override for PASV address.
+
+When the server is behind a NAT, clients that still use the ancient
+PORT command would get the internal address and then (depending on
+the client) fail when attempting to use it (some clients only use
+the port number part and thus work fine).
+
+Fixes [WS-639]/[EP-1805].
