@@ -990,7 +990,7 @@ class TelnetSession {
 	fd->set_write_callback(0);
 
 	if (write_cb) {
-	  report_warning("FTP2: Write callback with nothing to send.\n");
+	  DWRITE("TELNET: Write callback with nothing to send.\n");
 	}
       }
     } else {
