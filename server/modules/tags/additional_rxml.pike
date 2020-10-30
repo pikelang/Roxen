@@ -332,6 +332,7 @@ class TagInsertHref {
       method = "DELETE";
     }
 
+    int ns = -gethrtime(1);
 #ifdef THREADS
     q = AsyncHTTPClient(method, args, headers, data);
     q->run();
@@ -346,7 +347,9 @@ class TagInsertHref {
 	RXML.parse_error ("Invalid URL: %s\n", msg);
     }
 #endif
-    
+    ns += gethrtime(1);
+    float seconds = ns/1000000000.0;
+
     _ok = 1;
     
     if(args["status-variable"] && q && q->status)
@@ -394,8 +397,10 @@ class TagInsertHref {
 
     _ok = 0;
 
-    if(!args->silent)
-      RXML.run_error(errmsg || "No server response");
+    if(!args->silent) {
+      RXML.run_error(errmsg ||
+		     sprintf("No server response for %g seconds.", seconds));
+    }
     return "";
   }
 }
