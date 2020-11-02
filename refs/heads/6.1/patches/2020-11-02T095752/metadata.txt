@@ -1,0 +1,10 @@
+subject: Roxen 6.1: extended debug for <insert#href>.
+from: c4fcb9fe90bf0790ee0b74ab5292a5271344470d
+to: f7726e0c8936a699c2dc35f24c9223a107b25547
+originator: Erik Allemann
+depends: 2020-09-28T130732
+restart: true
+
+• RXML: Add some timing information to <insert#href> error message.
+
+Fixes [WS-642].
