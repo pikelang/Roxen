@@ -350,15 +350,21 @@ class CacheManager
 #ifdef CACHE_BYTE_HR_STATS
       cs->byte_misses += entry->size;
 #endif
-
-      if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
-        CacheEntry old_entry;
-	// vvv Relying on the interpreter lock from here.
-        while (old_entry = lm[entry->key]) {
-          recent_added_bytes -= old_entry->size;
-          remove_entry (cache_name, old_entry);
-        }
-        lm[entry->key] = entry;
+      mapping(mixed:CacheEntry) lm;
+      // vvv Relying on the interpreter lock from here.
+      while ((lm = lookup[cache_name]) && (old_entry = lm[entry->key])) {
+	if (remove_entry (cache_name, old_entry)) {
+	  // Paranoia: Only adjust the statistics if we actually
+	  //           succeeded to remove the old entry.
+	  recent_added_bytes -= old_entry->size;
+	}
+	// NB: Paranoia: We set lm every turn of the loop in
+	//               case something (like eg after_gc())
+	//               has messed with it during the call
+	//               of remove_entry().
+      }
+      if (lm) {
+	lm[entry->key] = entry;
         // ^^^ Relying on the interpreter lock to here.
 
 	cs->count++;
@@ -950,6 +956,8 @@ class CM_GreedyDual
       // mapping and start adding back the entries from the old one.
       // Need _disable_threads to make the resets of the CacheStats
       // fields atomic.
+      // Note that replacing the lookup mapping may cause confusion
+      // in code that caches it (like eg low_add_entry()).
       Thread.MutexKey key = priority_mux->lock();
       object threads_disabled = _disable_threads();
       mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
@@ -968,8 +976,11 @@ class CM_GreedyDual
 
       int|float max_pval;
 
-      foreach (old_lookup; string cache_name; mapping(mixed:CacheEntry) old_lm)
-	if (CacheStats cs = stats[cache_name])
+      // NB: We are still holding the priority_mux key here, this is
+      //     in order to avoid issues with reentrancy and races
+      //     (mainly to protect new_lm during the loop that updates it).
+      foreach (old_lookup; string cache_name; mapping(mixed:CacheEntry) old_lm) {
+	if (CacheStats cs = stats[cache_name]) {
 	  if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
 	    foreach (old_lm; mixed key; CacheEntry entry) {
 	      entry->element()->pos = -1;
@@ -986,6 +997,8 @@ class CM_GreedyDual
 		size += entry->size;
 	      }
 	    }
+	}
+      }
 
       key = 0;
 
