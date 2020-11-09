@@ -1,0 +1,8 @@
+subject: Roxen 6.2: CacheManager: Fix compilation error
+from: e043c8e68a9434c4c7f9296b87decb7a01da6d6e
+to: 71a4ff71abf7f3b26fa9cf5abfe30ba486309d40
+originator: Administrator
+depends: 2020-11-09T083547
+restart: true
+
+• CacheManager: Fix compilation error.
