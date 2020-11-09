@@ -1,0 +1,10 @@
+subject: Roxen 6.2: CacheManager: Fix race condition/infinite loop
+from: 6b881d595ea65805fbaf13e7f128b33ce88229d2
+to: e043c8e68a9434c4c7f9296b87decb7a01da6d6e
+originator: Administrator
+depends: 2020-11-02T115857
+restart: true
+
+• CacheManager: Fix race condition/infinite loop.
+
+Fixes [WS-643].
