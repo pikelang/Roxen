@@ -351,6 +351,7 @@ class CacheManager
       cs->byte_misses += entry->size;
 #endif
       mapping(mixed:CacheEntry) lm;
+      CacheEntry old_entry;
       // vvv Relying on the interpreter lock from here.
       while ((lm = lookup[cache_name]) && (old_entry = lm[entry->key])) {
 	if (remove_entry (cache_name, old_entry)) {
