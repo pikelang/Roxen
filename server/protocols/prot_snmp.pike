@@ -299,11 +299,11 @@ class RoxenGlobalMIB
 			  }, "activeFDCount"),
 	       ({
 		 UNDEFINED,
-		 SNMP.Counter(lambda()
-			      { return update_rusage()->utime/10; }, "userTime",
+		 SNMP.Tick(lambda()
+			   { return update_rusage()->utime/10; }, "userTime",
 		   "User time expressed in centiseconds."),
-		 SNMP.Counter(lambda()
-			      { return update_rusage()->stime/10; }, "sysTime",
+		 SNMP.Tick(lambda()
+			   { return update_rusage()->stime/10; }, "sysTime",
 		   "System time expressed in centiseconds."),
 		 SNMP.Gauge(lambda()
 			    { return update_memusage()->resident; }, "residentMemory",
@@ -327,13 +327,13 @@ class RoxenGlobalMIB
 			      "Handler threads queue size."),
 		   ({
 		     UNDEFINED,
-		     SNMP.Counter(lambda()
-				  { return roxen->handler_acc_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxen->handler_acc_time/10000; },
 		       "handlerTime",
 		       "Accumulated total time in handler threads "
 		       "in centiseconds."),
-		     SNMP.Counter(lambda()
-				  { return roxen->handler_acc_cpu_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxen->handler_acc_cpu_time/10000; },
 		       "handlerUserTime",
 		       "Accumulated total user time in handler threads "
 		       "in centiseconds."),
@@ -374,12 +374,12 @@ class RoxenGlobalMIB
 		     "Background run queue size."),
 		   ({
 		     UNDEFINED,
-		     SNMP.Counter(lambda()
-				  { return roxen->bg_acc_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxen->bg_acc_time/10000; },
 		       "bgTime",
 		       "Accumulated total background run real time in centiseconds."),
-		     SNMP.Counter(lambda()
-				  { return roxen->bg_acc_cpu_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxen->bg_acc_cpu_time/10000; },
 		       "bgUserTime",
 		       "Accumulated total background run user time in centiseconds."),
 		   }),
@@ -427,12 +427,12 @@ class RoxenGlobalMIB
 		     "Call out queue size."),
 		   ({
 		     UNDEFINED,
-		     SNMP.Counter(lambda()
-				  { return roxenloader->co_acc_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxenloader->co_acc_time/10000; },
 		       "coTime",
 		       "Accumulated total call out real time in centiseconds."),
-		     SNMP.Counter(lambda()
-				  { return roxenloader->co_acc_cpu_time/10000; },
+		     SNMP.Tick(lambda()
+			       { return roxenloader->co_acc_cpu_time/10000; },
 		       "coUserTime",
 		       "Accumulated total call out user time in centiseconds."),
 		   }),
@@ -480,8 +480,8 @@ class RoxenGlobalMIB
 				"single threaded."),
 		   ({
 		     UNDEFINED,
-		     SNMP.Counter(lambda()
-				  { return gethrdtime()/10000; },
+		     SNMP.Tick(lambda()
+			       { return gethrdtime()/10000; },
 		       "unithreadTime",
 		       "Single threaded real time in centiseconds."),
 		     UNDEFINED,	// User time.
@@ -622,12 +622,12 @@ class RoxenGlobalMIB
 		   "gcObjectsFreed",
 		   "Decaying average over the number of freed objects in each gc run."),
 		 UNDEFINED,  /* Reserved for projected_garbage */
-		 SNMP.Counter(lambda()
-			    { return Debug.gc_status()->total_gc_cpu_time/10000000; },
+		 SNMP.Tick(lambda()
+			   { return Debug.gc_status()->total_gc_cpu_time/10000000; },
 		   "gcTotalCpuTime",
 		   "Total CPU time spent inside the garbage collector in centiseconds."),
-		 SNMP.Counter(lambda()
-			    { return Debug.gc_status()->total_gc_real_time/10000000; },
+		 SNMP.Tick(lambda()
+			   { return Debug.gc_status()->total_gc_real_time/10000000; },
 		   "gcTotalRealTime",
 		   "Total real time spent inside the garbage collector in centiseconds."),
 	       }),
