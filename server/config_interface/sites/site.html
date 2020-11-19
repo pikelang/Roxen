@@ -17,15 +17,18 @@
   </cv-leftside>
   <eval>&var.js-code:none;</eval>
 
+  <div id="_site">
     <cv-split>
       <subtablist width="100%">
-       <st-tabs> 
-<insert file="site_header.pike"/></st-tabs>
-       <st-page>
-         <eval><insert file="site_content.pike" nocache="1" /></eval>
-       </st-page>
-     </subtablist>
+        <st-tabs> 
+          <insert file="site_header.pike"/></st-tabs>
+        <st-page>
+           <eval><insert file="site_content.pike" nocache="1" /></eval>
+        </st-page>
+      </subtablist>
     </cv-split>
+  </div>
+
   </content>
 </else>
 

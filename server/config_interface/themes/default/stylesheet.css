@@ -1,3 +1,12 @@
+    /* Icon font from FontAwesome */
+@font-face {
+  font-family: "FontAwesome";
+  src:         url('fontawesome-webfont-420.ttf') format('truetype');
+  font-weight: normal;
+  font-style:  normal;
+}
+
+
 *
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
@@ -306,4 +315,124 @@ li.timing.open:hover {
 
 i.timing {
   color:	#888;
+}
+
+
+/* Module notes */
+#_site {
+    position: relative;
+}
+
+#_notes {
+    position: absolute;
+    top: -12px;
+    right: 5px;
+    width: 400px;
+    background-color: #ffa;
+    border-radius: 4px;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+    color: #440;
+    font-family: "helvetica";
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 1.25;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#_notes .icon {
+    position: absolute;
+    top: 4px;
+    left: 8px;
+    display: inline-block;
+    color: #d47c30;
+    font-family: FontAwesome;
+    font-size: 15px;
+    font-weight: normal;
+    line-height 1.0;
+}
+
+#_notes .icon.got-msg {
+    left: initial;
+    right: 8px;
+}
+
+#_notes:not(.dirty) .icon.dirty,
+#_notes.empty-msg .icon.got-msg {
+    display: none;
+}
+
+#_notes.collapsed {
+    width: 180px;
+}
+
+#_notes.collapsed:not(:hover) {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    opacity: 0.7;
+}
+
+#_notes .title {
+    padding: 6px;
+    text-align: center;
+    font-weight: bold;
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+#_notes .title:hover {
+    opacity: 0.9;
+}
+
+#_notes:not(.collapsed) .title {
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+    border-bottom: 1px dashed #aa4;
+}
+
+#_notes .body {
+    margin: 0 8px;
+}
+
+#_notes.collapsed .body {
+    display: none;
+}
+
+#_notes .msg {
+    width: calc(100% - 4px);
+    min-height: 200px;
+    max-height: calc(100vh - 200px);
+    resize: vertical;
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: normal;
+    color: #220;
+    border: none;
+    background: #ffa;
+    overflow-y: auto;
+}
+#_notes .msg:focus {
+    outline: none;
+}
+
+#_notes .actions {
+    padding: 8px 0 12px;
+    text-align: center;
+}
+
+#_notes .actions .button {
+    padding: 2px 12px;
+    font-size: 9px;
+    font-weight: bold;
+    border: 1px solid #884;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#_notes.dirty .actions .button:hover {
+    background: #ee9;
+}
+
+#_notes:not(.dirty) .actions .button {
+    opacity: 0.4;
+    cursor: default;
 }

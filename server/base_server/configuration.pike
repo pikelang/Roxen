@@ -4068,6 +4068,19 @@ int save_one( RoxenModule o )
   return 1;
 }
 
+int save_one_without_cbs(RoxenModule o)
+//! Save all variables in a given module but don't call any callbacks.
+{
+  if (o) {
+    string q = otomod[ o ];
+    if (!q)
+      error("Invalid module");
+    store(q, o->query(), 0, this_object());
+    invalidate_cache();
+  }
+  return 1;
+}
+
 RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
@@ -4270,6 +4283,12 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 	    set_range(0, query("max_priority"));
 	}) {
 	throw(err);
+      }
+
+      if (err = catch {
+          me->defvar("_notes", Variable.String("", VAR_INVISIBLE, "Notes", ""));
+        }) {
+        throw(err);
       }
     }
 

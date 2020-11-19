@@ -896,8 +896,15 @@ class RESTVariables
     if (err) {
       error (err);
     } else {
-      if (obj->set (mangled_value))
-	parent->save();
+      if (obj->set (mangled_value)) {
+        //  We make an exception when modifying the "_notes" variable
+        //  where we avoid notifying the module callbacks since the note
+        //  text isn't visible elsewhere.
+        if (obj == parent->getvar("_notes"))
+          parent->my_configuration()->save_one_without_cbs(parent);
+        else
+          parent->save();
+      }
       return mangled_value;
     }
   }

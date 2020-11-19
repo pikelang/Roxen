@@ -578,13 +578,18 @@ string module_page( RequestID id, string conf, string module )
 
   string section = RXML.get_var( "section", "form" );
 
+  string notes_script =
+    "<script language='javascript' src='/sites/cfg_vars.js'></script>";
+
   if( section == "Status" || RXML.get_var( "info_section_is_it", "form" ) )
-    return find_module_doc( conf, module, id );
+    return notes_script + find_module_doc( conf, module, id );
 
   if( section == "Docs" )
-    return find_module_documentation( conf, module, id );
+    return notes_script + find_module_documentation( conf, module, id );
   
-  return "<cfg-variables source='module-variables' configuration='"+conf+"' "
+  return
+    notes_script +
+    "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
 }
 
