@@ -43,11 +43,14 @@ function mod_var_api(method, v, data)
           "/variables/" + v;
         XHRPromiseJSON(method, url, data)
           .then(function(ok_res) {
-              resolve(ok_res.target.response);
+              if (Math.floor(ok_res.target.status / 100) == 2)
+                resolve(ok_res.target.response);
+              else
+                reject(ok_res.target.statusText);
             },
             function(err_res) {
               console.log("XHR promise failed: ", err_res);
-              reject(0);
+              reject(err_res);
             });
       } else {
         reject(0);
@@ -78,11 +81,24 @@ function notes_dirty()
   return notesEl && notesEl.classList.contains("dirty");
 }
 
+
 function toggle_collapsed()
 {
-  if (notesEl)
+  if (notesEl) {
     notesEl.classList.toggle("collapsed");
+
+    //  Place text cursor at end of text area
+    if (!notesEl.classList.contains("collapsed")) {
+      var msgEl = notesEl.getElementsByClassName("msg")[0];
+      if (msgEl) {
+        var len = msgEl.value.length;
+        msgEl.focus();
+        msgEl.setSelectionRange(len, len);
+      }
+    }
+  }
 }
+
 
 function save_notes()
 {
@@ -129,51 +145,54 @@ function check_empty_msg()
 
 function create_notes_widget()
 {
-  var siteEl = document.getElementById("_site");
-  if (siteEl && !notesEl) {
-    notesEl = document.createElement("div");
-    notesEl.id = "_notes";
-    notesEl.className = "collapsed";
-    notesEl.innerHTML =
-      "<span class='icon dirty'>&#xf14b;</span>" +    //  fa-pencil-square
-      "<span class='icon got-msg'>&#xf0e5;</span>" +  //  fa-comment-o
-      "<div class='title'>Module Notes</div>" +
-      "<div class='body'>" +
-      "<textarea class='msg'></textarea>" +
-      "<div class='actions'>" +
-      "<span class='button save disabled'>Save</span>" +
-      "</div>";
-    siteEl.appendChild(notesEl);
-
-    var titleEl = notesEl.getElementsByClassName("title")[0];
-    titleEl.addEventListener("click", toggle_collapsed, false);
-
-    var saveEl = notesEl.getElementsByClassName("save")[0];
-    saveEl.addEventListener("click", save_notes, false);
-
-    var msgEl = notesEl.getElementsByClassName("msg")[0];
-    if (msgEl)
-      msgEl.addEventListener("input", msg_changed, false);
-    check_empty_msg();
-
-    get_mod_var("_notes")
-      .then(function(res) {
-          var msgEl = notesEl.getElementsByClassName("msg")[0];
-          if (msgEl) {
-            var msg_decoded = JSON.parse(res);
-            if (msg_decoded && (typeof msg_decoded === "string")) {
-              msgEl.value = msg_decoded;
-              check_empty_msg();
-            }
+  //  Check that we're on a module page
+  if (get_conf_and_mod()) {
+    var siteEl = document.getElementById("_site");
+    if (siteEl && !notesEl) {
+      //  Fetch current value
+      get_mod_var("_notes").then(function(res) {
+          //  Decode response and make sure we've got a string value. For
+          //  empty data we might see zero as well.
+          var msg_decoded = JSON.parse(res) || "";
+          if (typeof msg_decoded !== "string") {
+            console.log("Got unexpected notes data: ", res);
+            return;
           }
-        }).
-      catch(function(err) {
-        });;
+
+          //  Create the widget element
+          notesEl = document.createElement("div");
+          notesEl.id = "_notes";
+          notesEl.className = "collapsed";
+          notesEl.innerHTML =
+            "<span class='icon dirty'>&#xf14b;</span>" +   //  fa-pencil-square
+            "<span class='icon got-msg'>&#xf0e5;</span>" + //  fa-comment-o
+            "<div class='title'>Module Notes</div>" +
+            "<div class='body'>" +
+            "<textarea class='msg'></textarea>" +
+            "<div class='actions'>" +
+            "<span class='button save disabled'>Save</span>" +
+            "</div>";
+          siteEl.appendChild(notesEl);
+
+          //  Bind UI actions
+          var titleEl = notesEl.getElementsByClassName("title")[0];
+          titleEl.addEventListener("click", toggle_collapsed, false);
+
+          var saveEl = notesEl.getElementsByClassName("save")[0];
+          saveEl.addEventListener("click", save_notes, false);
+
+          var msgEl = notesEl.getElementsByClassName("msg")[0];
+          msgEl.value = msg_decoded;
+          msgEl.addEventListener("input", msg_changed, false);
+          check_empty_msg();
+        })
+        .catch(function(err) {
+            //  Data was not available
+            console.log("Could not load notes data: ", err);
+          });
+    }
   }
 }
 
 
-
-if (get_conf_and_mod()) {
-  create_notes_widget();
-}
+create_notes_widget();
