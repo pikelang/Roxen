@@ -65,7 +65,10 @@ protected string decode_mod_name (string s)
 }
 
 Configuration get_configuration(string name) {
-  Configuration conf = roxen.get_configuration (name);
+  //  Prefer find_configuration() over get_configuration() so we can resolve
+  //  mangled names as well (e.g. "administration-interface" in addition to
+  //  "Administration Interface").
+  Configuration conf = roxen.find_configuration (name);
   if (conf && !conf->inited)
     conf->enable_all_modules();
   return conf;
@@ -1046,7 +1049,7 @@ class RESTConfigurations
 
   protected RESTObj lookup_resource (string name, RequestID id)
   {
-    Configuration conf = roxen.get_configuration (name);
+    Configuration conf = roxen.find_configuration (name);
     if (!conf)
       error ("No such configuration \"%s\".\n", name);
     if (!conf->inited)
