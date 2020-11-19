@@ -231,7 +231,7 @@ class Router {
     //FIXME: content-type: return HTTP_BAD etc
     mixed client_data;
     if ((<"PUT","PATCH","POST">)[method] && sizeof (id->data)) {
-        client_data = Standards.JSON.decode (id->data);
+        client_data = Standards.JSON.decode_utf8 (id->data);
     }
 
     foreach (method_callbacks[method] || ({ }), Route route ) {
@@ -1123,7 +1123,7 @@ mapping(string:mixed) find_file (string f, RequestID id)
 	  mixed client_data;
 	  if ((id->method == "PUT" || id->method == "POST") &&
 	      sizeof (id->data)) {
-	    client_data = Standards.JSON.decode (id->data);
+	    client_data = Standards.JSON.decode_utf8 (id->data);
 	  }
 	  int envelope = id->variables["envelope"] == "1";
 	  json_res = r->handle_resource (segments[1..] - ({ "" }), id,
