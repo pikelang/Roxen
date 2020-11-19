@@ -4268,6 +4268,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   me->set_configuration( this_object() );
 
+  //  Add a hidden notes field to all modules (including those that don't
+  //  match MODULE_TYPE_MASK such as MODULE_SECURITY).
+  if (err = catch {
+      me->defvar("_notes", Variable.String("", VAR_INVISIBLE, "Notes", ""));
+    }) {
+    throw(err);
+  }
+
   module_type = moduleinfo->type;
   if (module_type & MODULE_TYPE_MASK)
   {
@@ -4283,12 +4291,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 	    set_range(0, query("max_priority"));
 	}) {
 	throw(err);
-      }
-
-      if (err = catch {
-          me->defvar("_notes", Variable.String("", VAR_INVISIBLE, "Notes", ""));
-        }) {
-        throw(err);
       }
     }
 
