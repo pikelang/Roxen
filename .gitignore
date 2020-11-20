@@ -8,6 +8,7 @@
 *.iw
 /backup
 configurations
+export
 /feeds
 license
 local
