@@ -1066,6 +1066,8 @@ constant jsonflags = Standards.JSON.HUMAN_READABLE;
 
 mapping(string:mixed) find_file (string f, RequestID id)
 {
+  NOCACHE();
+
   if (User user = id->conf->authenticate (id, roxen.config_userdb_module)) {
     if (!user->ruser->auth (perm_name)) {
       string errstr = "REST API access not allowed.";
