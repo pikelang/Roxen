@@ -165,7 +165,7 @@ function create_notes_widget()
           notesEl.className = "collapsed";
           notesEl.innerHTML =
             "<span class='icon dirty'>&#xf14b;</span>" +   //  fa-pencil-square
-            "<span class='icon got-msg'>&#xf0e5;</span>" + //  fa-comment-o
+            "<span class='icon got-msg'>&#xf086;</span>" + //  fa-comments
             "<div class='title'>Module Notes</div>" +
             "<div class='body'>" +
             "<textarea class='msg'></textarea>" +
