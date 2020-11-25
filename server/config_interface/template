@@ -173,7 +173,11 @@
 </title>
 <link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico?v=17" />
 <if exists="/themes/&usr.theme;/stylesheet.css">
-<link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />
+  <set variable="var.style-mtime">
+    <modified file="/themes/&usr.theme;/stylesheet.css" part="seconds"/>
+  </set>
+  <link rel="stylesheet" type="text/css"
+        href="/themes/&usr.theme;/stylesheet.css?mtime=&var.style-mtime;" />
 </if>
 </head>
 <gauge variable='var.time_spent' resultonly='yes'>
