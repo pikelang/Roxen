@@ -898,6 +898,23 @@ be of real use.</p>"));
 		"get a long downtime if the server for some reason locks up."),
 	 ({1,2,3,4,5,10,15,30,60}),
 	 lambda() {return !query("abs_engage");});
+
+  defvar("abs_vmemlimit", 0,
+	 LOCALE(0, "Auto Maintenance: ABS Memory limit (VMEM)"),
+	 TYPE_INT,
+	 LOCALE(0, "Automatically restart the Roxen process if its "
+		"virtual memory usage grows past this limit in megabytes. "
+		"Set to 0 to disable."),
+	 UNDEFINED,
+	 lambda() { return !query("abs_engage");});
+  defvar("abs_rmemlimit", 0,
+	 LOCALE(0, "Auto Maintenance: ABS Memory limit (RSS)"),
+	 TYPE_INT,
+	 LOCALE(0, "Automatically restart the Roxen process if its active "
+		"(aka resident) memory usage grows past this limit in "
+		"megabytes. Set to 0 to disable."),
+	 UNDEFINED,
+	 lambda() { return !query("abs_engage");});
 #endif // __NT__
 
   defvar("auto_fetch_rxps", 0,
