@@ -1,0 +1,3 @@
+Modified files:
+  base_server/global_variables.pike
+  base_server/roxen.pike
