@@ -1,0 +1,14 @@
+subject: Roxen 6.1: ABS: Add support for restarting the server if it grows too large.
+from: 5c63af200f203a608d952db2529944a812e40aad
+to: 652f7c842ed63cfb9df389a84544ba485932ba3a
+originator: Erik Allemann
+depends: 2020-11-09T134647
+restart: true
+
+• ABS: Fix hiding of unused ABS settings.
+
+• ABS: Fixed typo.
+
+• ABS: Add support for restarting the server if it grows too large.
+
+Fixes [WS-628].
