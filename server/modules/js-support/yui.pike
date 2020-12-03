@@ -176,7 +176,7 @@ mixed handle_combo(RequestID id)
 mixed find_file( string f, RequestID id )
 {
   mixed m;
-  if (f == "combo")
+  if (f == "combo" || has_prefix(f, "combo:"))
     m = handle_combo(id);
   else
     m = low_find_file(f, id);
