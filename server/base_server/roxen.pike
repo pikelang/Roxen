@@ -3810,6 +3810,13 @@ void engage_abs(int n)
       }
     })
     master()->handle_error(err);
+  foreach(configurations, Configuration conf) {
+    foreach(conf->get_providers("abs-hook"), RoxenModule mod) {
+      catch {
+	mod->abs_hook && mod->abs_hook();
+      };
+    }
+  }
   low_engage_abs();
 }
 
@@ -6300,6 +6307,15 @@ void describe_thread (Thread.Thread thread)
   report_debug(">> ### Thread 0x%x%s:\n",
 	       thread->id_number(),
 	       thread_descr);
+
+  foreach(configurations, Configuration conf) {
+    foreach(conf->get_providers("describe-thread"), RoxenModule mod) {
+      catch {
+	mod->describe_thread && mod->describe_thread(thread);
+      };
+    }
+  }
+
   // Use roxenloader's original reference to describe_backtrace to sidestep
   // the background failure wrapper that's active in RUN_SELF_TEST.
   string th_bt = roxenloader.orig_predef_describe_bt(thread->backtrace());
