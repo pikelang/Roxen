@@ -786,6 +786,16 @@ local protected void handler_thread(int id)
 	  }
 #endif
 
+#ifdef DEBUG
+	  foreach(configurations; Configuration conf) {
+	    foreach(conf->get_providers("handler-done-hook"), RoxenModule mod) {
+	      // NB: No need to catch here. Any errors will be get caught
+	      //     and reported below.
+	      mod->handler_done_hook && mod->handler_done_hook(h);
+	    }
+	  }
+#endif
+
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
