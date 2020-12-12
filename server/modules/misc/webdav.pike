@@ -157,6 +157,10 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
 {
   if (id->misc->internal_get) return 0;
 
+  //  Flag that any request that produces 404 shouldn't have a fancy error
+  //  page with RXML <emit> etc.
+  id->misc->generate_file_not_found = 1;
+
   mapping(string:mixed)|int(-1..0) res = check_if_header(id);
   if (res) {
     return res;
