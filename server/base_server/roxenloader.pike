@@ -342,6 +342,11 @@ string format_timestamp()
 //! @decl void roxen_perror(string format, mixed ... args)
 //! @appears roxen_perror
 
+protected void low_roxen_perror(string data)
+{
+  stderr->write(data);
+}
+
 protected int last_was_nl = 1;
 // Used to print error/debug messages
 void roxen_perror(sprintf_format format, sprintf_args ... args)
@@ -367,31 +372,36 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
     }
   }
 
+#if constant(syslog)
+  if (sizeof(format)) {
+    syslog_report(format, LOG_DEBUG);
+  }
+#endif
+
   if (!last_was_nl && (format != "")) {
     // Continuation line.
     int i = search(format, "\n");
 
     if (i == -1) {
-      stderr->write(format);
+      low_roxen_perror(format);
       format = "";
       if (delayed_nl) last_was_nl = -1;
     } else {
-      stderr->write(format[..i]);
+      low_roxen_perror(format[..i]);
       format = format[i+1..];
       last_was_nl = 1;
     }
   }
 
   if (sizeof(format)) {
-#if constant(syslog)
-    syslog_report (format, LOG_DEBUG);
-#endif
 
-    if (last_was_nl == -1) stderr->write("\n");
+    if (last_was_nl == -1) {
+      format = "\n" + format;
+    }
     last_was_nl = format[-1] == '\n';
 
 #ifdef RUN_SELF_TEST
-    stderr->write(format);
+    low_roxen_perror(format);
 #else
     array(string) a = format/"\n";
     int i;
@@ -410,14 +420,14 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
       if(usr)
 	a[i] = usr + " : " + a[i];
 #endif
-      stderr->write(format_timestamp() + a[i] + "\n");
+      low_roxen_perror(format_timestamp() + a[i] + "\n");
     }
     if (!last_was_nl) {
 #ifdef DEBUG_LOG_SHOW_USER
       if(usr)
 	a[-1] = usr + " : " + a[-1];
 #endif
-      stderr->write(format_timestamp() + a[-1]);
+      low_roxen_perror(format_timestamp() + a[-1]);
     }
 #endif
   }
