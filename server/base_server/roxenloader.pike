@@ -335,6 +335,34 @@ string format_timestamp()
                  l->hour, l->min, l->sec, up_str);
 }
 
+protected multiset(function(string(8bit):void)) roxen_perror_outputs =
+  (< stderr->write >);
+
+//! @appears register_roxen_perror_output
+//! Register an output handler for @[roxen_perror()].
+//!
+//! Anything logged via @[roxen_perror()] et al will be passed
+//! along to @[fun].
+//!
+//! @seealso
+//!   @[unregister_roxen_perror_output()], @[roxen_perror()]
+void register_roxen_perror_output(function(string(8bit):void) fun)
+{
+  roxen_perror_outputs[fun] = 1;
+}
+
+//! @appears unregister_roxen_perror_output
+//! Unregister an output handler for @[roxen_perror()].
+//!
+//! Anything logged via @[roxen_perror()] et al will stop being passed
+//! along to @[fun].
+//!
+//! @seealso
+//!   @[register_roxen_perror_output()], @[roxen_perror()]
+void unregister_roxen_perror_output(function(string(8bit):void) fun)
+{
+  roxen_perror_outputs[fun] = 0;
+}
 
 //! @decl void werror(string format, mixed ... args)
 //! @appears werror
@@ -342,9 +370,18 @@ string format_timestamp()
 //! @decl void roxen_perror(string format, mixed ... args)
 //! @appears roxen_perror
 
-protected void low_roxen_perror(string data)
+protected void low_roxen_perror(string(8bit) data)
 {
-  stderr->write(data);
+  foreach(roxen_perror_outputs; function(string(8bit):void) fun;) {
+    mixed err = catch {
+	fun(data);
+      };
+    if (err) {
+      stderr->write("Roxen perror output handler %O failed:\n"
+		    "%s\n",
+		    fun, describe_backtrace(err));
+    }
+  }
 }
 
 protected int last_was_nl = 1;
@@ -4072,6 +4109,10 @@ the correct system time.
   add_constant("werror",        roxen_perror);
   add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
+  add_constant("register_roxen_perror_output",
+	       register_roxen_perror_output);
+  add_constant("unregister_roxen_perror_output",
+	       unregister_roxen_perror_output);
   add_constant("roxenp",        lambda() { return roxen; });
   add_constant("ST_MTIME",      ST_MTIME );
   add_constant("ST_CTIME",      ST_CTIME );
