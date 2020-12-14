@@ -349,6 +349,8 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
   if(sizeof(args))
     format=sprintf(format,@args);
 
+  format = string_to_utf8(format);
+
   // "Delayed newlines": End a message with \b and start the next one
   // with \b to make them continue on the same line. If another
   // message gets in between, it still gets written on a new line.
@@ -370,11 +372,11 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
     int i = search(format, "\n");
 
     if (i == -1) {
-      stderr->write(string_to_utf8(format));
+      stderr->write(format);
       format = "";
       if (delayed_nl) last_was_nl = -1;
     } else {
-      stderr->write(string_to_utf8(format[..i]));
+      stderr->write(format[..i]);
       format = format[i+1..];
       last_was_nl = 1;
     }
@@ -389,12 +391,10 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
     last_was_nl = format[-1] == '\n';
 
 #ifdef RUN_SELF_TEST
-    stderr->write( string_to_utf8( format ) );
+    stderr->write(format);
 #else
     array(string) a = format/"\n";
     int i;
-
-    a = map( a, string_to_utf8 );
 
 #ifdef DEBUG_LOG_SHOW_USER
     string usr;
