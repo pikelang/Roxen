@@ -37,6 +37,8 @@ public void log(mapping file, RequestID request_id);
 
 void smtp_relay_start()
 {
+  mkdirhier("$VARDIR/spool/mqueue/");
+
   report_debug("Starting SMTP relayer...\n");
 
   Sql.Sql sql = DBManager.cached_get("local");
@@ -708,7 +710,8 @@ class MailSender
 
     mail = Stdio.File();
     if (!(mail->open(fname, "r"))) {
-      report_error(sprintf("Failed to open spoolfile %O\n", fname));
+      report_error(sprintf("Failed to open spoolfile %O: %s\n",
+			   fname, strerror(mail->errno())));
       call_out(cb, 0, SEND_OPEN_FAIL, m);
       return;
     }
@@ -730,7 +733,8 @@ class MailSender
 protected void mail_sent(int res, mapping(string:string) message)
 {
   // Fake request id for logging purposes.
-  RequestID id = RequestID(0, 0, 0 /*conf*/);
+  // NB: roxen.pike:log() need a conf to not be a noop.
+  RequestID id = RequestID(0, 0, get_admin_configuration());
   id->method = "SEND";
   id->prot = message->prot || "SMTP";
   id->remoteaddr = message->remote_mta || "0.0.0.0";
@@ -767,19 +771,23 @@ protected void mail_sent(int res, mapping(string:string) message)
     }
 
 #ifdef THREADS
-    mixed key = queue_mutex->lock();
+    object key = queue_mutex->lock();
 #endif /* THREADS */
 
     Sql.Sql sql = DBManager.cached_get("local");
 
     sql->query("DELETE FROM send_q WHERE id=%s", message->id);
 
-    array a = sql->query("SELECT id FROM send_q WHERE mailid='%s'",
+    array a = sql->query("SELECT id FROM send_q WHERE mailid=%s",
 			 message->mailid);
 
     if (!a || !sizeof(a)) {
       rm(combine_path([string]query("mail_spooldir"), message->mailid));
     }
+
+#ifdef THREADS
+    destruct(key);
+#endif
   } else {
     // res == SEND_FAIL
     log(([ "error":408 ]), id);
@@ -799,7 +807,7 @@ protected void send_mail()
   check_interval = 0x7fffffff;
 
 #ifdef THREADS
-  mixed key = queue_mutex->lock();
+  object key = queue_mutex->lock();
 #endif /* THREADS */
 
   Sql.Sql sql = DBManager.cached_get("local");
@@ -825,6 +833,10 @@ protected void send_mail()
   // Recheck again in 10 sec <= X <= 1 hour.
 
   m = sql->query("SELECT min(send_at) AS send_at FROM send_q");
+
+#ifdef THREADS
+  destruct(key);
+#endif
 
   int t = 60*60;
   if (m && sizeof(m) && (m[0]->send_at)) {
@@ -1078,7 +1090,7 @@ void bounce(mapping(string:string) msg, string code, array(string) text,
  */
 
 int relay(string from, string user, string domain,
-	  Stdio.BlockFile mail, string csum, object|void smtp)
+	  Stdio.BlockFile mail, string|void csum, object|void smtp)
 {
 #ifdef RELAY_DEBUG
   report_debug(sprintf("SMTP: relay(%O, %O, %O, X, %O, X)\n",
@@ -1096,9 +1108,9 @@ int relay(string from, string user, string domain,
 
   if (!csum) {
     Crypto.SHA1 sha = Crypto.SHA1();
-    string s;
+    string(8bit) s;
     mail->seek(0);
-    while ((s = mail->read(8192)) && (s != "")) {
+    while ((s = [string(8bit)]mail->read(8192)) && (s != "")) {
       sha->update(s);
     }
     csum = sha->digest();
@@ -1119,8 +1131,8 @@ int relay(string from, string user, string domain,
   if (!file_stat(fname)) {
     Stdio.File spoolfile = Stdio.File();
     if (!spoolfile->open(fname, "cwxa")) {
-      report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
-			   fname));
+      report_error(sprintf("SMTPRelay: Failed to open spoolfile %O! %s\n",
+			   fname, strerror(spoolfile->errno())));
 
       // FIXME: Should send a message to from here.
 
