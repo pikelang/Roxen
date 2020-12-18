@@ -278,6 +278,10 @@ class SMTP_Reader
 
   protected void got_data(mixed ignored, string s)
   {
+#ifdef RELAY_DEBUG
+    werror("%s >> %O\n", con->query_address(), s);
+#endif
+
     read_buffer += s;
 
     recv_bytes += sizeof(s);
@@ -345,6 +349,10 @@ class SMTP_Reader
     last_command = command;
 
     _got_code = cb;
+
+#ifdef RELAY_DEBUG
+    if (con) werror("%s << %O\n", con->query_address(), command);
+#endif
 
     if (con) {
       send_buffer += command + "\r\n";
