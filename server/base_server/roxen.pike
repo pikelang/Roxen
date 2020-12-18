@@ -3778,6 +3778,10 @@ void engage_abs(int n)
     report_debug("Anti-Block System Disabled.\n");
     return;
   }
+
+  Stdio.Buffer abs_buf = Stdio.Buffer();
+  register_roxen_perror_output(abs_buf->add);
+
   report_debug("**** %s: ABS engaged!\n"
 	       "Waited more than %d minute(s).\n",
 	       ctime(time()) - "\n",
@@ -3826,6 +3830,64 @@ void engage_abs(int n)
 	mod->abs_hook && mod->abs_hook();
       };
     }
+  }
+
+  unregister_roxen_perror_output(abs_buf->add);
+  if (has_value(query("abs_email"), "@")) {
+    report_debug("\nAttempting to send ABS report via email to %s.\n",
+		 query("abs_email"));
+
+    string abs_from = query("abs_sender");
+    if (!sizeof(abs_from)) abs_from = query("abs_email");
+    MIME.Message msg =
+      MIME.Message(abs_buf->read(), ([
+		     "Subject": "ABS",
+		     "Date": Roxen.http_date(time(1)),
+		     "Content-Type": "text/plain",
+		     "From": abs_from,
+		     "Sender": query("abs_sender"),
+		     "To": query("abs_email"),
+		     "Message-Id": sprintf("<\"%s\"@%s>",
+					   Standards.UUID.make_version4()->str,
+					   hostname()),
+		   ]));
+    msg->setcharset("utf8");
+#ifdef SMTP_RELAY
+    array(string) a = query("abs_email")/"@";
+    relay(query("abs_sender"), a[0], a[1], Stdio.FakeFile((string)msg));
+#else
+    string sendmail_bin;
+#ifndef __NT__
+    sendmail_bin = Process.search_path("sendmail");
+    if (!sendmail_bin) {
+      // Look in some common places.
+      foreach(({ "/sbin/sendmail", "/usr/sbin/sendmail",
+		 "/usr/lib/sendmail", "/usr/lib64/sendmail" }),
+	      string path) {
+	if (Stdio.exist(path)) {
+	  sendmail_bin = path;
+	  break;
+	}
+      }
+    }
+#endif
+    if (!sendmail_bin) {
+      report_debug("No sendmail binary found.\n"
+		   "You may want to enable SMTP_RELAY.\n");
+    } else {
+      Stdio.File fd = Stdio.File();
+      Process.Process p =
+	Process.Process(({ sendmail_bin,
+			   query("abs_email"),
+			}),
+			([ "stdin": fd->pipe() ]));
+      if (p) {
+	fd->write((string)msg);
+	p->wait();
+      }
+      fd->close();
+    }
+#endif
   }
   low_engage_abs();
 }

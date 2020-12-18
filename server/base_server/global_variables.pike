@@ -992,6 +992,24 @@ be of real use.</p>"));
 		"megabytes. Set to 0 to disable."),
 	 UNDEFINED,
 	 lambda() { return !query("abs_engage");});
+
+  defvar("abs_email", "", LOCALE(0, "Auto Maintenance: ABS Email Adress"),
+	 TYPE_STRING,
+	 LOCALE(0, "<p>Send ABS reports to this email adress.</p>\n"
+		"<p>Leaving it empty disables sending of emails.</p>\n"),
+	 UNDEFINED,
+	 lambda() { return !query("abs_engage");});
+  defvar("abs_sender", "", LOCALE(0, "Auto Maintenance: ABS Sender Adress"),
+	 TYPE_STRING,
+	 LOCALE(0, "<p>Send ABS reports from this email adress.</p>\n"
+		"<p>Leaving it empty causes the to adress to be used "
+		"in the <b>From</b> header, and the empty string to "
+		"be used in the <b>MAIL FROM</b> SMTP-command.</p>\n"),
+	 UNDEFINED,
+	 lambda() {
+	   return !query("abs_engage") ||
+	     !has_value(query("abs_email", "@"));
+	 });
 #endif // __NT__
 
   defvar("auto_fetch_rxps", 0,
