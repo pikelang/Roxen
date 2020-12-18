@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.325 2011/11/14 00:13:57 mast Exp $
+// $Id$
 
 #include <roxen.h>
 #include <config.h>
@@ -5458,6 +5458,16 @@ class Null
     if (type->subtype_of (RXML.t_num))
       return type->encode (0);
     return type->encode (this);
+  }
+
+  protected mixed cast(string to)
+  {
+    switch(to) {
+    case "string": return "";
+    case "int": return 0;
+    case "float": return 0.0;
+    default: error("Cannot cast %O to %s.\n", this, to);
+    }
   }
 
   protected string _sprintf (int flag) {return flag == 'O' && "Roxen.null";}
