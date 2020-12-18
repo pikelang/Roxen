@@ -830,10 +830,13 @@ protected void send_mail()
 
   foreach(m || ({}), mapping(string:string) mm) {
     // Needed to not send it twice at the same time.
-    // Resend in an hour.
+    // Resend in 5 minutes, then 10, then 15, etc.
     sql->query("UPDATE send_q "
-	       "SET send_at = %d, times = %d WHERE id = %s",
-	       time() + 60*60, ((int)mm->times) + 1, mm->id);
+	       "SET send_at = %d, times = %d "
+	       "WHERE id = %s",
+	       time() + (((int)mm->times) + 1)*5*60,
+	       ((int)mm->times) + 1,
+	       mm->id);
     // Send the message.
     MailSender(mm, mail_sent);
   }
