@@ -3849,7 +3849,7 @@ void engage_abs(int n)
 		     "To": query("abs_email"),
 		     "Message-Id": sprintf("<\"%s\"@%s>",
 					   Standards.UUID.make_version4()->str,
-					   hostname()),
+					   gethostname()),
 		   ]));
     msg->setcharset("utf8");
 #ifdef SMTP_RELAY

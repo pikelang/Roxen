@@ -1008,7 +1008,7 @@ be of real use.</p>"));
 	 UNDEFINED,
 	 lambda() {
 	   return !query("abs_engage") ||
-	     !has_value(query("abs_email", "@"));
+	     !has_value(query("abs_email"), "@");
 	 });
 #endif // __NT__
 
