@@ -5817,6 +5817,16 @@ class Null
     return type->encode (this);
   }
 
+  protected mixed cast(string to)
+  {
+    switch(to) {
+    case "string": return "";
+    case "int": return 0;
+    case "float": return 0.0;
+    default: error("Cannot cast %O to %s.\n", this, to);
+    }
+  }
+
   protected string _sprintf (int flag) {return flag == 'O' && "Roxen.null";}
 }
 
