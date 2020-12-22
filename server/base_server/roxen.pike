@@ -786,7 +786,7 @@ local protected void handler_thread(int id)
 	  }
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(HANDLER_DEBUG)
 	  foreach(configurations, Configuration conf) {
 	    foreach(conf->get_providers("handler-done-hook"), RoxenModule mod) {
 	      // NB: No need to catch here. Any errors will be get caught
