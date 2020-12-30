@@ -58,32 +58,59 @@ void fmt_snmp_value(Stdio.Buffer buf, mapping entry)
 			entry->type_instance);
   buf->sprintf("# HELP %s %s\n", name, entry->doc || "");
   buf->sprintf("# TYPE %s %s\n", name, entry->type);
+#if 0
+  if (entry->oid) {
+    buf->sprintf("%O\n", entry);
+  }
+#endif
+
   if (floatp(entry->value)) {
     buf->sprintf("%s %g\n", name, entry->value);
   } else if (arrayp(entry->value)) {
     foreach(entry->value; int i; mapping subval) {
       if (!subval) continue;
-      buf->sprintf("%s{", name);
       if (entry->aspects) {
-	foreach(entry->aspects; int j; string aspect) {
-	  int|float|string a_value = subval[aspect];
-	  if (j) {
-	    buf->sprintf(",%s=", aspect);
-	  } else {
-	    buf->sprintf("%s=", aspect);
-	  }
-	  if (intp(a_value)) {
-	    buf->sprintf("%d", a_value);
-	  } else if (floatp(a_value)) {
-	    buf->sprintf("%g", a_value);
-	  } else {
-	    buf->sprintf("%q", a_value);
-	  }
-	}
-      } else {
-	buf->sprintf("index=%d", i);
+	entry->aspects -= ({ "suffix" });
       }
-      buf->add("} ");
+      array(string) aspects = entry->aspects;
+      foreach (aspects || ({}), string aspect) {
+	if (undefinedp(subval[aspect])) {
+	  aspects -= ({ aspect });
+	}
+      }
+      if (!aspects || sizeof(aspects)) {
+	if (subval->suffix || entry->suffix) {
+	  buf->sprintf("%s_%s{", name, subval->suffix || entry->suffix);
+	} else {
+	  buf->sprintf("%s{", name);
+	}
+	if (sizeof(aspects || ({}))) {
+	  foreach(aspects; int j; string aspect) {
+	    int|float|string a_value = subval[aspect];
+	    if (j) {
+	      buf->sprintf(",%s=", aspect);
+	    } else {
+	      buf->sprintf("%s=", aspect);
+	    }
+	    if (intp(a_value)) {
+	      buf->sprintf("%d", a_value);
+	    } else if (floatp(a_value)) {
+	      buf->sprintf("%g", a_value);
+	    } else {
+	      buf->sprintf("%q", a_value);
+	    }
+	  }
+	} else {
+	  buf->sprintf("index=%d", i);
+	}
+	buf->add("} ");
+      } else {
+	if (subval->suffix || entry->suffix) {
+	  buf->sprintf("%s_%s ", name, subval->suffix || entry->suffix);
+	} else {
+	  buf->sprintf("%s ", name);
+	}
+      }
       if (floatp(subval->value)) {
 	buf->sprintf("%g\n", subval->value);
       } else if (intp(subval->value)) {
@@ -93,9 +120,23 @@ void fmt_snmp_value(Stdio.Buffer buf, mapping entry)
       }
     }
   } else {
-    buf->sprintf("%s %d\n", name, entry->value);
+    if (entry->suffix) {
+      buf->sprintf("%s_%s %d\n", name, entry->suffix, entry->value);
+    } else {
+      buf->sprintf("%s %d\n", name, entry->value);
+    }
   }
   // buf->sprintf("%O\n", entry);
+}
+
+protected string histogram_suffix(mapping entry)
+{
+  string oid = entry->oid;
+  while(has_suffix(oid, ".0")) {
+    oid = oid[..sizeof(oid)-3];
+  }
+  if (has_suffix(oid, ".1")) return "sum";
+  return "bucket";
 }
 
 array(mapping) get_snmp_rows()
@@ -116,63 +157,75 @@ array(mapping) get_snmp_rows()
     res += get_module_snmp(memory_logger_module, 6);
 
   foreach(({ ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("handlerNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.3",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("bgNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.3",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("coNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.2",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("requestNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.2",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("handleNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.2",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": histogram_suffix,
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("queueNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return UNDEFINED;
 		},
 	     ]),
 	     /* Start (fake) module oids. */
@@ -236,9 +289,16 @@ array(mapping) get_snmp_rows()
 		  return "since start";
 		},
 	     ]),
+	     ([ "oid_prefix": "-1.5.15",
+		"type": "histogram",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+	     ]),
 	     ([ "oid_prefix": "-1.5.19",
-		"aspects": ({ "interval" }),
-		"interval":
+		"aspects": ({ "ge", "suffix" }),
+		"type": "histogram",
+		"suffix": "bucket",
+		"ge":
 		lambda(mapping entry) {
 		  string suffix =
 		    entry->type_instance[sizeof("numActions")..];
@@ -265,13 +325,53 @@ array(mapping) get_snmp_rows()
 	res[i] = 0;
 	new_entry->value += ({ entry });
       }
-      foreach(consolidator->aspects, string aspect) {
-	entry[aspect] = consolidator[aspect](entry);
+      foreach(consolidator->aspects || ({}), string aspect) {
+	string aspect_val = callablep(consolidator[aspect])?
+	  consolidator[aspect](entry):consolidator[aspect];
+	if (undefinedp(aspect_val)) continue;
+	entry[aspect] = aspect_val;
       }
     }
 
     res -= ({ 0 });
   }
+
+  // Convert ge-histograms into le-histograms to make
+  // Prometheus happy.
+  mapping(string:int|float) sums = ([]);
+  for(int j = 0; j < 2; j++) {	// NB: Loop in case sum comes after buckets.
+    int misses;
+    foreach(res; int i; mapping entry) {
+      if (entry->type != "histogram") continue;
+      string key = sprintf("%s-%s-%s",
+			   entry->plugin, entry->plugin_instance,
+			   entry->type_instance);
+      foreach(arrayp(entry->value)?entry->value:({ entry }), mapping subval) {
+	if (subval->suffix == "sum") {
+	  sums[key] = subval->value;
+	} else if ((subval->suffix == "bucket") && subval->ge) {
+	  int|float val = sums[key];
+	  if (undefinedp(val)) {
+	    if (j) {
+	      werror("PROMETHEUS (%O): No sum for histogram %O!\n", conf, key);
+	    }
+	    misses++;
+	    continue;
+	  }
+	  subval->value = val - subval->value;
+	  subval->le = m_delete(subval, "ge");
+	  if (subval->aspects) {
+	    subval->aspects = replace(subval->aspects, "ge", "le");
+	  }
+	}
+      }
+      if (!misses && entry->aspects) {
+	entry->aspects = replace(entry->aspects, "ge", "le");
+      }
+    }
+    if (!misses) break;
+  }
+
   return res;
 }
 
