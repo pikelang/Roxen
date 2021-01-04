@@ -311,7 +311,9 @@ string get_module_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
 					 oid_suffix[..0],
 					 o, moduleinfo, UNDEFINED));
-    return "<h3>SNMP</h3>\n" + get_snmp_values(mib, mib->first());
+
+    // NB: Start at the empty OID to make sure we get the entire MIB.
+    return "<h3>SNMP</h3>\n" + get_snmp_values(mib, ({}));
   }
 
   return "";
