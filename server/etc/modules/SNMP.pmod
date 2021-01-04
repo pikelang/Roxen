@@ -265,6 +265,31 @@ class ContextSequence
   }
 }
 
+//! Cf @rfc{1212:5.1.1.1@} and @rfc{2579:2@}.
+class TruthValue
+{
+  inherit Integer;
+
+  protected void create(int|function(:int) val, string|void name,
+			string|void doc_string)
+  {
+    // NB: true == 1, false == 2.
+    if (intp(val)) {
+      ::create((val & 1) || 2, name, doc_string);
+    } else {
+      ::create(lambda() { return (val() & 1) || 2; }, name, doc_string);
+    }
+  }
+  protected string _sprintf(int t)
+  {
+    switch(t) {
+    case 'd': return (string)value;
+    case 's': return (value & 1)?"true":"false";
+    default: return sprintf("%s[%d][%d](%O)", type_name, cls, tag, value);
+    }
+  }
+}
+
 //! No such object marker.
 ContextOctetString NO_SUCH_OBJECT = ContextOctetString(0, "");
 
