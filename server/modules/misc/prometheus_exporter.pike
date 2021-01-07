@@ -42,6 +42,8 @@ int|object|mapping find_file(string f, RequestID id)
 {
   if (f != "") return 0;
 
+  NOCACHE(); // Disable protocol cache
+
   Stdio.Buffer buf = Stdio.Buffer();
 
   foreach(get_snmp_rows(), mapping row) {
@@ -53,9 +55,10 @@ int|object|mapping find_file(string f, RequestID id)
 
 void fmt_snmp_value(Stdio.Buffer buf, mapping entry)
 {
-  string name = sprintf("%s-%s-%s",
-			entry->plugin, entry->plugin_instance,
-			entry->type_instance);
+  string name = sprintf("%s_%s_%s",
+			entry->plugin,
+			replace(entry->plugin_instance, "-", "_"),
+			replace(entry->type_instance, "-", "_"));
   buf->sprintf("# HELP %s %s\n", name, entry->doc || "");
   buf->sprintf("# TYPE %s %s\n", name, entry->type);
 #if 0
@@ -156,7 +159,24 @@ array(mapping) get_snmp_rows()
   if(memory_logger_module && sizeof(memory_logger_module->pmem))
     res += get_module_snmp(memory_logger_module, 6);
 
-  foreach(({ ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
+  foreach(({ ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.5",
+		"aspects": ({ "mode" }),
+		"mode":
+		lambda(mapping entry) {
+		  return entry->type_instance == "userTime" ? "user" : "system";
+		},
+		"type_instance": "cpuTime",
+		"doc": "Total cpu time expressed in centiseconds."
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2",
+		"aspects": ({ "mode" }),
+		"mode":
+		lambda(mapping entry) {
+		  return entry->type_instance == "handlerTime" ? "real" : "user";
+		},
+		"type_instance": "handlerTime",
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
 		"aspects": ({ "ge", "suffix" }),
 		"type": "histogram",
 		"suffix": histogram_suffix,
@@ -166,6 +186,13 @@ array(mapping) get_snmp_rows()
 		    entry->type_instance[sizeof("handlerNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
 		  return UNDEFINED;
+		},
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2",
+		"aspects": ({ "mode" }),
+		"mode":
+		lambda(mapping entry) {
+		  return entry->type_instance == "bgTime" ? "real" : "user";
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.3",
@@ -178,6 +205,13 @@ array(mapping) get_snmp_rows()
 		    entry->type_instance[sizeof("bgNumRuns")..];
 		  if (sizeof(suffix)) return suffix;
 		  return UNDEFINED;
+		},
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2",
+		"aspects": ({ "mode" }),
+		"mode":
+		lambda(mapping entry) {
+		  return entry->type_instance == "coTime" ? "real" : "user";
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.3",
@@ -238,6 +272,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activeBrowserUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.0.3",
 		"aspects": ({ "interval" }),
@@ -248,6 +283,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activeAppLauncherUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.0.4",
 		"aspects": ({ "interval" }),
@@ -258,6 +294,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activePlannerUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.0.5",
 		"aspects": ({ "interval" }),
@@ -268,6 +305,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activeBadBrowserUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.0.6",
 		"aspects": ({ "interval" }),
@@ -278,6 +316,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activeBadAppLauncherUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.0.7",
 		"aspects": ({ "interval" }),
@@ -288,6 +327,7 @@ array(mapping) get_snmp_rows()
 		  if (sizeof(suffix)) return suffix;
 		  return "since start";
 		},
+		"type_instance": "activeBadPlannerUsers",
 	     ]),
 	     ([ "oid_prefix": "-1.5.15",
 		"type": "histogram",
