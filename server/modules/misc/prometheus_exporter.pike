@@ -132,13 +132,26 @@ void fmt_snmp_value(Stdio.Buffer buf, mapping entry)
   // buf->sprintf("%O\n", entry);
 }
 
+protected string histogram_label(mapping entry, string name)
+{
+  string label = entry->type_instance[sizeof(name)..];
+  if (!sizeof(label)) return UNDEFINED;
+  if (has_suffix(label, "s")) {
+    label = label[..sizeof(label)-2];
+  }
+  if (has_prefix(label, "0") && !has_value(label, ".")) {
+    label = "0." + label[1..];
+  }
+  return label;
+}
+
 protected string histogram_suffix(mapping entry)
 {
   string oid = entry->oid;
   while(has_suffix(oid, ".0")) {
     oid = oid[..sizeof(oid)-3];
   }
-  if (has_suffix(oid, ".1")) return "sum";
+  if (has_suffix(oid, ".1")) return "count";
   return "bucket";
 }
 
@@ -182,10 +195,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("handlerNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "handlerNumRuns");
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2",
@@ -201,10 +211,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("bgNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "bgNumRuns");
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2",
@@ -220,10 +227,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("coNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "coNumRuns");
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.2",
@@ -232,10 +236,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("requestNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "requestNumRuns");
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.2",
@@ -244,10 +245,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("handleNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "handleNumRuns");
 		},
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.2",
@@ -256,10 +254,7 @@ array(mapping) get_snmp_rows()
 		"suffix": histogram_suffix,
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("queueNumRuns")..];
-		  if (sizeof(suffix)) return suffix;
-		  return UNDEFINED;
+		  return histogram_label(entry, "queueNumRuns");
 		},
 	     ]),
 	     /* Start (fake) module oids. */
@@ -332,7 +327,7 @@ array(mapping) get_snmp_rows()
 	     ([ "oid_prefix": "-1.5.15",
 		"type": "histogram",
 		"aspects": ({ "suffix" }),
-		"suffix": "sum",
+		"suffix": "count",
 	     ]),
 	     ([ "oid_prefix": "-1.5.19",
 		"aspects": ({ "ge", "suffix" }),
@@ -340,10 +335,7 @@ array(mapping) get_snmp_rows()
 		"suffix": "bucket",
 		"ge":
 		lambda(mapping entry) {
-		  string suffix =
-		    entry->type_instance[sizeof("numActions")..];
-		  if (sizeof(suffix)) return suffix;
-		  return "since start";
+		  return histogram_label(entry, "numActions");
 		},
 		"type_instance": "numActions",
 	     ]),
