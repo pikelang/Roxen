@@ -1,0 +1,19 @@
+subject: Roxen 6.1: Roxen.Null: Added cast operator.
+from: 652f7c842ed63cfb9df389a84544ba485932ba3a
+to: de952f0f9ed2bbe477f9b664f656cbd5a64bc797
+originator: Erik Allemann
+depends: 2020-12-02T084113
+restart: true
+
+• Configuration Interface [SNMP]: Fix display of SNMP for modules.
+
+Only the first SNMP value was shown due to the traversal being
+terminated early.
+
+Fixes [WS-5] some more.
+
+• Roxen.Null: Added cast operator.
+
+Support casting of Roxen.null (aka Val.null) to some common basic types.
+
+Fixes [WS-650].
