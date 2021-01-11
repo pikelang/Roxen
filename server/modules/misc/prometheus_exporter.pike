@@ -68,7 +68,11 @@ void fmt_snmp_value(Stdio.Buffer buf, mapping entry)
 #endif
 
   if (floatp(entry->value)) {
-    buf->sprintf("%s %g\n", name, entry->value);
+    if (entry->suffix) {
+      buf->sprintf("%s_%s %g\n", name, entry->suffix, entry->value);
+    } else {
+      buf->sprintf("%s %g\n", name, entry->value);
+    }
   } else if (arrayp(entry->value)) {
     foreach(entry->value; int i; mapping subval) {
       if (!subval) continue;
@@ -181,12 +185,15 @@ array(mapping) get_snmp_rows()
 		"type_instance": "cpuTime",
 		"doc": "Total cpu time expressed in centiseconds."
 	     ]),
-	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2",
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2.1",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "handlerNumRuns",
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2.2",
 		"aspects": ({ "mode" }),
-		"mode":
-		lambda(mapping entry) {
-		  return entry->type_instance == "handlerTime" ? "real" : "user";
-		},
+		"mode": "user",
 		"type_instance": "handlerTime",
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.3",
@@ -198,12 +205,15 @@ array(mapping) get_snmp_rows()
 		  return histogram_label(entry, "handlerNumRuns");
 		},
 	     ]),
-	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2",
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2.1",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "bgNumRuns",
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.2.2",
 		"aspects": ({ "mode" }),
-		"mode":
-		lambda(mapping entry) {
-		  return entry->type_instance == "bgTime" ? "real" : "user";
-		},
+		"mode": "user",
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.2.3",
 		"aspects": ({ "ge", "suffix" }),
@@ -214,12 +224,15 @@ array(mapping) get_snmp_rows()
 		  return histogram_label(entry, "bgNumRuns");
 		},
 	     ]),
-	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2",
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2.1",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "coNumRuns",
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.2.2",
 		"aspects": ({ "mode" }),
-		"mode":
-		lambda(mapping entry) {
-		  return entry->type_instance == "coTime" ? "real" : "user";
-		},
+		"mode": "user",
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.3.3",
 		"aspects": ({ "ge", "suffix" }),
@@ -230,6 +243,12 @@ array(mapping) get_snmp_rows()
 		  return histogram_label(entry, "coNumRuns");
 		},
 	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.1.1.0",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "requestNumRuns",
+	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.2",
 		"aspects": ({ "ge", "suffix" }),
 		"type": "histogram",
@@ -239,6 +258,12 @@ array(mapping) get_snmp_rows()
 		  return histogram_label(entry, "requestNumRuns");
 		},
 	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.1.1.0",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "handleNumRuns",
+	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.2",
 		"aspects": ({ "ge", "suffix" }),
 		"type": "histogram",
@@ -247,6 +272,12 @@ array(mapping) get_snmp_rows()
 		lambda(mapping entry) {
 		  return histogram_label(entry, "handleNumRuns");
 		},
+	     ]),
+	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.1.1.0",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "queueNumRuns",
 	     ]),
 	     ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.2",
 		"aspects": ({ "ge", "suffix" }),
@@ -329,6 +360,12 @@ array(mapping) get_snmp_rows()
 		"aspects": ({ "suffix" }),
 		"suffix": "count",
 	     ]),
+	     ([ "oid_prefix": "-1.5.18.1",
+		"aspects": ({ "suffix" }),
+		"suffix": "sum",
+		"type": "histogram",
+		"type_instance": "numActions",
+	     ]),
 	     ([ "oid_prefix": "-1.5.19",
 		"aspects": ({ "ge", "suffix" }),
 		"type": "histogram",
@@ -379,13 +416,13 @@ array(mapping) get_snmp_rows()
 			   entry->plugin, entry->plugin_instance,
 			   entry->type_instance);
       foreach(arrayp(entry->value)?entry->value:({ entry }), mapping subval) {
-	if (subval->suffix == "sum") {
+	if (subval->suffix == "count") {
 	  sums[key] = subval->value;
 	} else if ((subval->suffix == "bucket") && subval->ge) {
 	  int|float val = sums[key];
 	  if (undefinedp(val)) {
 	    if (j) {
-	      werror("PROMETHEUS (%O): No sum for histogram %O!\n", conf, key);
+	      werror("PROMETHEUS (%O): No count for histogram %O!\n", conf, key);
 	    }
 	    misses++;
 	    continue;
