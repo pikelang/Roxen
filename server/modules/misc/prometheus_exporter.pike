@@ -92,9 +92,11 @@ class PrometheusValue(string name)
   void fmt_one_value(Stdio.Buffer buf, mixed val, string|void suffix,
 		     string|mapping|void aspects, string|void oid)
   {
+#if 0
     if (oid) {
       buf->add("## OID ", oid, "\n");
     }
+#endif
 
     buf->add(name);
 
