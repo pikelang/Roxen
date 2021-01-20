@@ -1,0 +1,29 @@
+subject: Roxen 6.2: SNMP & ABS improvements.
+from: 71a4ff71abf7f3b26fa9cf5abfe30ba486309d40
+to: 1e0b236d1a3b802e2eedba2aa5ffe5a5b6032eff
+originator: Erik Allemann
+depends: 2020-11-09T134256
+restart: true
+
+• Configuration Interface [SNMP]: Fix display of SNMP for modules.
+
+Only the first SNMP value was shown due to the traversal being
+terminated early.
+
+Fixes [WS-5] some more.
+
+• Debug: Added provider hook "handler-done-hook".
+
+This hook is called every time a handler has completed a task.
+As it is only intended to be used for debugging purposes, it is
+only enabled when the server has been started with --debug.
+
+• ABS: Added provider hooks for adding info to ABS output.
+
+Adds support for "abs-hook" and "describe-thread".
+
+• Roxen.Null: Added cast operator.
+
+Support casting of Roxen.null (aka Val.null) to some common basic types.
+
+Fixes [WS-650].
