@@ -66,7 +66,7 @@ class PrometheusValue(string name)
     Stdio.Buffer buf = Stdio.Buffer();
     foreach(sort(indices(aspects)); int i; string a) {
       if (i) buf->add(", ");
-      buf->add(a, "=");
+      buf->add(a, "=\"");
       mixed v = aspects[a];
       if (floatp(v)) {
 	buf->sprintf("%g", v);
@@ -75,6 +75,7 @@ class PrometheusValue(string name)
       } else {
 	buf->add(v);
       }
+      buf->add("\"");
     }
     return (string)buf;
   }
@@ -160,7 +161,7 @@ class Histogram
     }
     count = values->count[0][0];
 
-    if (!values->bucket || !values->bucket["le=+Inf"]) {
+    if (!values->bucket || !values->bucket["le=\"+Inf\""]) {
       add_value(count, "bucket", ([ "le": "+Inf" ]), values->count[0][2]);
     }
 
