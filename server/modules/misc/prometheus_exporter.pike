@@ -275,6 +275,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "handlerNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -302,6 +303,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "bgNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -329,6 +331,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "coNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -356,6 +359,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "requestNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -383,6 +387,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "handleNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -410,6 +415,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "queueNumRuns",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
@@ -509,6 +515,7 @@ array(PrometheusValue) get_snmp_rows()
 				  "suffix":"sum",
 				  "type":"histogram",
 				  "type_instance": "numActions",
+				  "doc":0,
 				]));
 		      return "user";
 		    }
