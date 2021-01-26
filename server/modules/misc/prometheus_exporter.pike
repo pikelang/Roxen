@@ -250,7 +250,8 @@ array(PrometheusValue) get_snmp_rows()
       aspects[a] = entry[a];
     }
 
-    val->add_value(entry->value, entry->suffix, aspects, entry->oid);
+    val->add_value(entry->value, entry->suffix, aspects,
+		   entry->oid + " [" + entry->snmp_type + "]");
   };
 
   foreach(snmp_res; int i; mapping entry) {
