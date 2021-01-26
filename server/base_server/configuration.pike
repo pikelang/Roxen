@@ -3719,7 +3719,7 @@ int start(int num)
 			     UNDEFINED,
 			     ({
 			       UNDEFINED,
-			       SNMP.Counter(lambda()
+			       SNMP.Tick(lambda()
 					    { return request_acc_time/10000; },
 				 "requestTime",
 				 "Accumulated total request time "
@@ -3757,7 +3757,7 @@ int start(int num)
 			     UNDEFINED,
 			     ({
 			       UNDEFINED,
-			       SNMP.Counter(lambda()
+			       SNMP.Tick(lambda()
 					    { return handle_acc_time/10000; },
 				 "handleTime",
 				 "Accumulated total handle time "
@@ -3795,7 +3795,7 @@ int start(int num)
 			     UNDEFINED,
 			     ({
 			       UNDEFINED,
-			       SNMP.Counter(lambda()
+			       SNMP.Tick(lambda()
 					    { return queue_acc_time/10000; },
 				 "queueTime",
 				 "Accumulated total queue time "
