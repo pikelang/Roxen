@@ -209,7 +209,7 @@ array(PrometheusValue) get_snmp_rows()
 
   // NB: Order below is relevant. Only add new modules to the end.
   //     Replace obsolete/removed modules with 0 or UNDEFINED.
-  foreach(({ "print-client", "print-backup", "feed-import",
+  foreach(({ "print-clients", "print-backup", "feed-import",
 	     "image", "print-indesign-server", "print-db",
 	     "memory_logger" }); int i; string modname) {
     if (!modname) continue;
@@ -231,7 +231,6 @@ array(PrometheusValue) get_snmp_rows()
 			  entry->plugin,
 			  replace(entry->plugin_instance, "-", "_"),
 			  replace(entry->type_instance, "-", "_"));
-    name = lower_case(name);
 
     PrometheusValue val = vals[name];
     if (!val) {
@@ -347,7 +346,6 @@ array(PrometheusValue) get_snmp_rows()
 	       ]),
 	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.1.1",
 		  "type_instance": "requestTime",
-		  "type": "gauge",	// FIXME: Broken module SNMP?
 		  "aspects": ({ "mode" }),
 		  "mode":
 		  lambda(mapping entry) {
@@ -375,7 +373,6 @@ array(PrometheusValue) get_snmp_rows()
 	       ]),
 	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.2.1",
 		  "type_instance": "handleTime",
-		  "type": "gauge",	// FIXME: Broken module SNMP?
 		  "aspects": ({ "mode" }),
 		  "mode":
 		  lambda(mapping entry) {
@@ -403,7 +400,6 @@ array(PrometheusValue) get_snmp_rows()
 	       ]),
 	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.2.9.3.1",
 		  "type_instance": "queueTime",
-		  "type": "gauge",	// FIXME: Broken module SNMP?
 		  "aspects": ({ "mode" }),
 		  "mode":
 		  lambda(mapping entry) {
@@ -503,7 +499,6 @@ array(PrometheusValue) get_snmp_rows()
 	       ]),
 	       ([ "oid_prefix": "-1.5.18",
 		  "type_instance": "actionTime",
-		  "type": "gauge",	// FIXME: Broken module SNMP?
 		  "aspects": ({ "mode" }),
 		  "mode":
 		  lambda(mapping entry) {
@@ -656,7 +651,7 @@ mapping type_mapping = ([ "STRING": 0,
 			  "GAUGE": "gauge",
 			  "COUNTER": "counter",
 			  "COUNTER64": "counter",
-			  "TICK": "gauge",
+			  "TICK": "counter",
 			  "INTEGER": "gauge" ]);
 
 string mangle_snmp_label(string label)
