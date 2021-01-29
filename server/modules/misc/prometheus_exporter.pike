@@ -263,7 +263,7 @@ array(PrometheusValue) get_snmp_rows()
 		    return entry->type_instance == "userTime" ? "user" :
 		      "system";
 		  },
-		  "doc": "Total cpu time expressed in centiseconds."
+		  "doc": "Total cpu time expressed in seconds."
 	       ]),
 	       ([ "oid_prefix": "1.3.6.1.4.1.8614.1.1.1.7.1.2",
 		  "type_instance": "handlerTime",
