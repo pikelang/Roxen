@@ -1,0 +1,8 @@
+subject: Roxen 6.2: Fix compile error
+from: 1e0b236d1a3b802e2eedba2aa5ffe5a5b6032eff
+to: 3cd490dac35df92f986c63245fae6a2f9ac47627
+originator: Jonas Wallden
+depends: 2021-01-20T094250
+restart: true
+
+• Fix compile error that prevents normal startup.
