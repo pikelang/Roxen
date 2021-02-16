@@ -7314,7 +7314,9 @@ int main(int argc, array tmp)
 #endif
 
 #if !defined(__NT__) && !defined(DISABLE_ABS)
-  restart_if_stuck( 0 );
+  if (!getenv("DISABLE_ABS")) {
+    restart_if_stuck( 0 );
+  }
 #endif
 #ifdef __RUN_TRACE
   trace(1);
