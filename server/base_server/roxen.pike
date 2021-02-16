@@ -7313,7 +7313,7 @@ int main(int argc, array tmp)
   restart_roxen_debug_memory_trace();
 #endif
 
-#ifndef __NT__
+#if !defined(__NT__) && !defined(DISABLE_ABS)
   restart_if_stuck( 0 );
 #endif
 #ifdef __RUN_TRACE
