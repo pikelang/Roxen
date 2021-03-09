@@ -615,9 +615,9 @@ mixed xml_testsuite(Parser.HTML file_parser, mapping args, string c,
 
 void xml_cache_control(Parser.HTML parser, mapping args)
 {
-  string cache_name = m->name;
-  int(-1..1) inhibit_eviction = m["inhibit-eviction"]?
-    (lower_case(m["inhibit-eviction"]) != "no"): -1;
+  string cache_name = args->name;
+  int(-1..1) inhibit_eviction = args["inhibit-eviction"]?
+    (lower_case(args["inhibit-eviction"]) != "no"): -1;
 
   if (!cache_name || (inhibit_eviction == -1)) return;
 
