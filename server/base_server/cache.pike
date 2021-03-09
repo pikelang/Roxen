@@ -221,7 +221,9 @@ class CacheManagerPrefs(int(0..1) extend_entries // Set if a
                                                  // existing entries
                                                  // extended even
                                                  // after cache hit.
-                        ) {}
+                        ) {
+  int(0..1) inhibit_eviction;
+}
 
 CacheManagerPrefs extend_entries_cache_prefs = CacheManagerPrefs(1);
 
@@ -572,11 +574,17 @@ overhead is minimal.";
 
   void evict (int max_size)
   {
+    int noop_loop;
     while (size > max_size) {
       if (!sizeof (lookup)) break;
       // Relying on the interpreter lock here.
       string cache_name = random (lookup)[0];
 
+      CacheManagerPrefs cm_prefs = prefs[cache_name];
+      if (cm_prefs && cm_prefs->inhibit_eviction) {
+	if (noop_loop++ < 1000) continue;
+	break;
+      }
       if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
 	if (sizeof (lm)) {
 	  // Relying on the interpreter lock here.
@@ -926,6 +934,9 @@ class CM_GreedyDual
       if (!element) break;
 
       CacheEntry entry = element->cache_entry();
+
+      CacheManagerPrefs cm_prefs = prefs[entry->cache_name];
+      if (cm_prefs && cm_prefs->inhibit_eviction) break;
 
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
 		       size, max_size, entry->cache_name, entry);
@@ -1793,7 +1804,11 @@ void cache_expire (void|string cache_name)
   // doesn't have to be quick.
   foreach (cache_name ? ({cache_name}) : indices (caches), string cn) {
     CACHE_WERR ("Emptying cache %O.\n", cn);
-    if (CacheManager mgr = caches[cn])
+    if (CacheManager mgr = caches[cn]) {
+      CacheManagerPrefs cm_prefs = mgr->prefs[cn];
+      if (cm_prefs && cm_prefs->inhibit_eviction) {
+	continue;
+      }
       if (mapping(mixed:CacheEntry) lm = mgr->lookup[cn]) {
 	if (sizeof (mgr->lookup) == 1 || !cache_name) {
 	  // Only one cache in this manager, or zapping all caches.
@@ -1806,6 +1821,7 @@ void cache_expire (void|string cache_name)
 	    mgr->remove_entry (cn, entry);
 	  }
       }
+    }
   }
 }
 
