@@ -681,7 +681,7 @@ void xml_cache_control(Parser.HTML parser, mapping args)
   if (inhibit_eviction) {
     if (cm_prefs && cm_prefs->inhibit_eviction) return;
     if (!cm_prefs || !cm_prefs->extend_entries) {
-      cm_prefs = cache.CacheManagerPrefs();
+      cm_prefs = cache.CacheManagerPrefs(0);
     } else {
       cm_prefs = cache.CacheManagerPrefs(1);
     }
