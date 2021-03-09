@@ -2599,6 +2599,9 @@ These only tests that the tags does not produce a backtrace, for now.
 <!-- ............................................................ -->
 <comment>Cache tests</comment>
 
+<cache-control name="RXML &lt;cache&gt; eval" inhibit-eviction="yes" />
+<cache-control name="RXML &lt;cache&gt; alternatives" inhibit-eviction="yes" />
+
 <test>
 <rxml><cache><append variable="var.foo" value="x"/></cache>
 <cache><append variable="var.foo" value="x"/></cache>&var.foo;</rxml>
@@ -3642,6 +3645,8 @@ hej</result>
   <result>1:a,2:b,3:c,4:d,</result>
 </test>
 
+<cache-control name="RXML &lt;cache&gt; eval" inhibit-eviction="no" />
+<cache-control name="RXML &lt;cache&gt; alternatives" inhibit-eviction="no" />
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
