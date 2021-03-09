@@ -612,6 +612,47 @@ mixed xml_testsuite(Parser.HTML file_parser, mapping args, string c,
   return c; // Continue to parse content withing this tag.
 }
 
+void xml_cache_control(Parser.HTML parser, mapping args)
+{
+  string cache_name = m->name;
+  int(-1..1) inhibit_eviction = m["inhibit-eviction"]?
+    (lower_case(m["inhibit-eviction"]) != "no"): -1;
+
+  if (!cache_name || (inhibit_eviction == -1)) return;
+
+  cache.CacheManager cm =
+    cache.cache_get_manager(cache_name);
+  cache.CacheManagerPrefs cm_prefs =
+    cm && cm->prefs[cache_name];
+  if (!cm) {
+    werror("Self tests: Warning: Cache manager for %O not found.\n",
+	   cache_name);
+  }
+  if (inhibit_eviction) {
+    if (cm_prefs && cm_prefs->inhibit_eviction) return;
+    if (!cm_prefs || !cm_prefs->extend_entries) {
+      cm_prefs = cache.CacheManagerPrefs();
+    } else {
+      cm_prefs = cache.CacheManagerPrefs(1);
+    }
+    cm_prefs->inhibit_eviction = 1;
+  } else {
+    if (!cm_prefs || !cm_prefs->inhibit_eviction) return;
+    if (cm_prefs->extend_entries) {
+      cm_prefs = cache.extend_entries_cache_prefs;
+    } else {
+      cm_prefs = UNDEFINED;
+    }
+  }
+  if (cm_prefs) {
+    cache.cache_register(cache_name, UNDEFINED, cm_prefs);
+  } else if (cm) {
+    // NB: Alter in-place since cache_register()
+    //     doesn't support this operation..
+    m_delete(cm->prefs, cache_name);
+  }
+}
+
 class TagTestData {
   inherit RXML.Tag;
   constant name = "test-data";
@@ -658,6 +699,8 @@ void run_xml_tests(string data) {
     "testsuite" : xml_testsuite,
     "test" : xml_test,
     "comment": xml_comment,
+  ]) )->add_tags( ([
+    "cache-control" : xml_cache_control,
   ]) )->
     set_extra (p_code_cache, used_modules)->
     finish(data);
@@ -685,6 +728,8 @@ void run_xml_tests(string data) {
       "testsuite" : xml_testsuite,
       "test" : xml_test,
       "comment": xml_comment,
+    ]) )->add_tags( ([
+      "cache-control" : xml_cache_control,
     ]) )->
       set_extra (p_code_cache, used_modules)->
       finish(data);
