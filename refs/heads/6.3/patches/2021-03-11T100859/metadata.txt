@@ -1,0 +1,35 @@
+subject: Roxen 6.3: RXML cache fixes, ABS email fixes
+from: 4b98c544d3c4c8a6515fef8b61fd47348fb1e86d
+to: be2e3de24643183600ed7ee1bf7906b8f8cae582
+originator: Administrator
+depends: roxen/6.3.818
+restart: true
+
+• ABS: Some fixes for sending of ABS email.
+
+• Testsuite: Fix parameters.
+
+• Testsuite: Fix cut-n-paste typo.
+
+Fixes [REP-99] some more.
+
+• Testsuite: Avoid anonymous background failures.
+
+• Testsuite [RXML]: Turn off cache eviction during <cache>-tag tests.
+
+Fixes [REP-99].
+
+• Testsuite [RXML]: Added tag <cache-control>.
+
+This tag is intended to be used to turn off automatic eviction
+from specific caches in order to get more reliable results when
+testing caching.
+
+Needed for [REP-99].
+
+• Cache: Added CacheManagerPrefs option to inhibit eviction.
+
+This may be needed in some circumstances (eg the test suite) to get
+consistent and predictable results from code using the main cache.
+
+Needed for [REP-99].
