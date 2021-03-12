@@ -3767,7 +3767,7 @@ protected int eaccess(string path, void|string mode)
   foreach(sort(mode/""), string flag) {
     switch(flag) {
     case "f":
-      if (!Stdio.exists(path)) return 0;
+      if (!Stdio.exist(path)) return 0;
       break;
     case "r":
       if (catch(Stdio.File(path, "r"))) return 0;
