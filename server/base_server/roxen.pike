@@ -3757,6 +3757,40 @@ string create_unique_id()
     + "|" + (unique_id_counter++) + "|" + time(1)));
 }
 
+#if constant(geteuid) && !constant(eaccess)
+/* Effective user access(2). */
+protected int eaccess(string path, void|string mode)
+{
+  if (!mode || !sizeof(mode)) {
+    mode = "f";
+  }
+  foreach(sort(mode/""), string flag) {
+    switch(flag) {
+    case "f":
+      if (!Stdio.exists(path)) return 0;
+      break;
+    case "r":
+      if (catch(Stdio.File(path, "r"))) return 0;
+      break;
+    case "w":
+    case "x":
+      if (catch {
+	  Process.Process p =
+	    Process.Process(({ "/usr/bin/test", "-" + flag, path }));
+	  if (p->wait()) return 0;
+	}) {
+	return 0;
+      }
+      break;
+    default:
+      // Silently ignore unsupported tests.
+      break;
+    }
+  }
+  return 1;
+}
+#endif
+
 #ifndef __NT__
 protected int abs_started;
 protected int handlers_alive;
@@ -3886,7 +3920,7 @@ void engage_abs(int n)
 	// store temporary files in $HOME.
 	//
 	// Set up a temporary home dir if we can't write to $HOME.
-	if (!home_dir || !access(home_dir, "w")) {
+	if (!home_dir || !eaccess(home_dir, "w")) {
 	  home_dir = sprintf("/tmp/roxen-home-%d", geteuid());
 	  mkdir(home_dir, 0744);
 	}
