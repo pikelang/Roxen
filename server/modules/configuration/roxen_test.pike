@@ -79,7 +79,7 @@ void testloop_ping()
 void testloop_abort_if_stuck()
 {
 #if !defined(__NT__) && !defined(DISABLE_ABS)
-  if (!query("abs_timeout") && !getenv("DISABLE_ABS")) return;
+  if (!query("abs_timeout") || getenv("DISABLE_ABS")) return;
 
   if (!is_not_finished() || !is_running()) {
     testloop_abs_co = UNDEFINED;
