@@ -931,6 +931,19 @@ void do_tests()
   conf->rxml_tag_set->handle_parse_error = rxml_error;
 
   test_files = ({});
+
+  tests += sizeof(conf->registered_urls) + sizeof(conf->failed_urls);
+  if (sizeof(conf->failed_urls)) {
+    foreach(conf->failed_urls, string url) {
+      report_error("Failed to register URL: %s\n", url);
+    }
+    fails += sizeof(conf->failed_urls);
+    report_error("\nAborting self tests in %s\n",
+		 query("selftestdir"));
+    schedule_tests (0, continue_run_tests);
+    return;
+  }
+
   mapping(string:int) matched_pos = ([]);
   ADT.Stack file_stack = ADT.Stack();
   file_stack->push( 0 );
