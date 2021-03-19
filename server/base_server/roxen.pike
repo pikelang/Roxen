@@ -3805,7 +3805,7 @@ protected void low_engage_abs()
 		// any pending patches.
 }
 
-void engage_abs(int n)
+void engage_abs(int n, Stdio.Buffer|void abs_buf)
 {
   if (!query("abs_engage")) {
     abs_started = 0;
@@ -3813,13 +3813,18 @@ void engage_abs(int n)
     return;
   }
 
-  Stdio.Buffer abs_buf = Stdio.Buffer();
-  register_roxen_perror_output(abs_buf->add);
+  if (!abs_buf) {
+    abs_buf = Stdio.Buffer();
+    register_roxen_perror_output(abs_buf->add);
+  }
 
-  report_debug("**** %s: ABS engaged!\n"
-	       "Waited more than %d minute(s).\n",
-	       ctime(time()) - "\n",
-	       query("abs_timeout"));
+  if (n) {
+    report_debug("**** Received signal %d%s\n",
+		 n, signame(n)?sprintf(" (%s)", signame(n)):"");
+  }
+
+  report_debug("**** %s: ABS engaged!\n", ctime(time()) - "\n");
+
   // Paranoia exit in case describe_all_threads below hangs.
   signal(signum("SIGALRM"), low_engage_abs);
   int t = alarm(20);
@@ -4003,11 +4008,18 @@ void restart_if_stuck (int force)
   signal(signum("SIGALRM"), engage_abs);
   int t = alarm (60*query("abs_timeout")+20);
   // werror("alarm: %d seconds left, set to %d\n", t, 60*query("abs_timeout")+20);
+
+  // Make sure that the cause for triggering the ABS is registered
+  // in the buffer, so that it is included in the ABS email (if enabled).
+  Stdio.Buffer abs_buf = Stdio.Buffer();
+  register_roxen_perror_output(abs_buf->add);
+
   if ((time(1) - handlers_alive) > 60*query("abs_timeout")) {
     // The handler installed below hasn't run.
     report_debug("**** %s: ABS: Handlers are dead!\n",
 		 ctime(time()) - "\n");
-    engage_abs(0);
+    report_debug("Waited more than %d minute(s).\n", query("abs_timeout"));
+    engage_abs(0, abs_buf);
   }
   handle(handler_ping);
 
@@ -4023,20 +4035,22 @@ void restart_if_stuck (int force)
     val *= 1024;
 #endif
     if (val > limit * 1024 * 1024) {
-      report_debug("**** %s: ABS: RSS (0x%08x bytes) is too large.\n",
-		   ctime(time()) - "\n", val);
-      engage_abs(0);
+      report_debug("**** %s: ABS: RSS (0x%08x bytes) is too large (limit: %d MB).\n",
+		   ctime(time()) - "\n", val, limit);
+      engage_abs(0, abs_buf);
     }
   }
 
   if (limit = query("abs_vmemlimit")) {
     int val = get_vmem_usage();
     if (val > limit * 1024 * 1024) {
-      report_debug("**** %s: ABS: VMEM (0x%08x bytes) is too large.\n",
-		   ctime(time()) - "\n", val);
-      engage_abs(0);
+      report_debug("**** %s: ABS: VMEM (0x%08x bytes) is too large (limit: %d MB).\n",
+		   ctime(time()) - "\n", val, limit);
+      engage_abs(0, abs_buf);
     }
   }
+
+  unregister_roxen_perror_output(abs_buf->add);
 }
 #endif
 
