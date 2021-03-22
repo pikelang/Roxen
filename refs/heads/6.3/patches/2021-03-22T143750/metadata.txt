@@ -1,0 +1,17 @@
+subject: Roxen 6.3: ABS info fixes
+from: 9ba4c6e1766c54773786e60f25d9b056b90f1eb7
+to: ecde90918ab6a3282b11e3e50de74fc008063b4e
+originator: Administrator
+depends: 2021-03-12T162053
+restart: true
+
+• ABS: Improved diagnostics in ABS-email.
+
+* Include the reason for triggering the ABS.
+
+* Do not write "Waiting more than 5 minute(s)" when it
+  was not the wait that triggered the ABS.
+
+* Report configured memory limits.
+
+Fixes [WS-659].
