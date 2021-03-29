@@ -670,6 +670,10 @@ void xml_cache_control(Parser.HTML parser, mapping args)
 
   if (!cache_name || (inhibit_eviction == -1)) return;
 
+  // NB: run_xml_tests() below uses Roxen.get_xml_parser(),
+  //     which is documented NOT to decode entities.
+  cache_name = Roxen.html_decode_string(cache_name);
+
   cache.CacheManager cm =
     cache.cache_get_manager(cache_name);
   cache.CacheManagerPrefs cm_prefs =
