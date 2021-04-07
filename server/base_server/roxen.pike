@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.998 2008/11/04 18:01:32 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -1691,6 +1691,12 @@ class Protocol
 
   mapping(Configuration:mapping(string:mixed)) conf_data = ([]);
   //! Maps the configuration objects to the data mappings in @[urls].
+
+  //! Used by basic_defvar.
+  string module_identifier()
+  {
+    return sprintf("_Ports/%s/%d", ip || "ANY", port);
+  }
 
   void ref(string name, mapping(string:mixed) data)
   //! Add a ref for the URL 'name' with the data 'data'

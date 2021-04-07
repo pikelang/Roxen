@@ -7,6 +7,11 @@ mapping(string:Variable.Variable)  variables=([]);
 //! defvar, killvar, getvar, query and set
 
 #include <module.h>
+
+//! Return a server-unique and persistent identifier for this
+//! set of variables.
+string module_identifier();
+
 mapping(string:Variable.Variable) getvars( )
 {
   return variables + ([]);
@@ -221,7 +226,10 @@ error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
     vv->set_invisibility_check_callback( lambda(RequestID id,
                                                 Variable.Variable i )
                                          { return 1; } );
-    
+
+  /* Set the global and persistent name for the variable. */
+  vv->set_path(sprintf("v/%s/%s", module_identifier(), var));
+
   return (variables[var] = vv);
 }
 

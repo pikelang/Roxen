@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.114 2008/09/29 15:57:33 mast Exp $
+// $Id$
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -286,6 +286,12 @@ void zap_all_module_caches( Variable.Variable v )
     };
     old_module_dirs = v->query();
   }
+}
+
+// Used by basic_defvar.
+string module_identifier()
+{
+  return "Global_Variables";
 }
 
 void define_global_variables(  )
