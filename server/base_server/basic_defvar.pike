@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2004, Roxen IS.
-// $Id: basic_defvar.pike,v 1.31 2008/09/28 17:41:49 mast Exp $
+// $Id$
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -81,138 +81,138 @@ Variable.Variable defvar(string var, mixed value,
                          int|function|void not_in_config,
                          mapping|void option_translations)
 {
-  if( objectp( value ) && value->is_variable )
-    return (variables[var] = value);
-
   Variable.Variable vv;
 
-  switch( type & VAR_TYPE_MASK )
-  {
-   case TYPE_STRING:
-     vv = Variable.String( value, 
-                           type&~VAR_TYPE_MASK,
-                           name,
-                           doc_str );
-     break;
-   case TYPE_FILE:
-     vv = Variable.File( value, 
-                         type&~VAR_TYPE_MASK,
-                         name,
-                         doc_str );
-     break;
-   case TYPE_INT:
-     vv = Variable.Int( value, 
-                        type&~VAR_TYPE_MASK,
-                        name,
-                        doc_str );
-     break;
-   case TYPE_DIR:
-     vv = Variable.Directory( value, 
-                              type&~VAR_TYPE_MASK,
-                              name,
-                              doc_str );
-     break;
-   case TYPE_STRING_LIST:
-     if( arrayp( misc ) || mappingp( misc) )
-       vv = Variable.StringChoice( value,
-                                   misc, 
-                                   type&~VAR_TYPE_MASK,
-                                   name,
-                                   doc_str);
+  if( objectp( value ) && value->is_variable ) {
+    vv = value;
+  } else {
+    switch( type & VAR_TYPE_MASK )
+    {
+    case TYPE_STRING:
+      vv = Variable.String( value,
+			    type&~VAR_TYPE_MASK,
+			    name,
+			    doc_str );
+      break;
+    case TYPE_FILE:
+      vv = Variable.File( value,
+			  type&~VAR_TYPE_MASK,
+			  name,
+			  doc_str );
+      break;
+    case TYPE_INT:
+      vv = Variable.Int( value,
+			 type&~VAR_TYPE_MASK,
+			 name,
+			 doc_str );
+      break;
+    case TYPE_DIR:
+      vv = Variable.Directory( value,
+			       type&~VAR_TYPE_MASK,
+			       name,
+			       doc_str );
+      break;
+    case TYPE_STRING_LIST:
+      if( arrayp( misc ) || mappingp( misc) )
+	vv = Variable.StringChoice( value,
+				    misc,
+				    type&~VAR_TYPE_MASK,
+				    name,
+				    doc_str);
       else
-       vv = Variable.StringList( value, 
-                                 type&~VAR_TYPE_MASK,
-                                 name,
-                                 doc_str );
-     break;
-   case TYPE_INT_LIST:
-     if( arrayp( misc ) )
-       vv = Variable.IntChoice( value, 
-                                misc,
-                                type&~VAR_TYPE_MASK,
-                                name,
-                                doc_str  );
+	vv = Variable.StringList( value,
+				  type&~VAR_TYPE_MASK,
+				  name,
+				  doc_str );
+      break;
+    case TYPE_INT_LIST:
+      if( arrayp( misc ) )
+	vv = Variable.IntChoice( value,
+				 misc,
+				 type&~VAR_TYPE_MASK,
+				 name,
+				 doc_str  );
       else
-       vv = Variable.IntList( value, 
-                              type&~VAR_TYPE_MASK,
-                              name,
-                              doc_str );
-     break;
+	vv = Variable.IntList( value,
+			       type&~VAR_TYPE_MASK,
+			       name,
+			       doc_str );
+      break;
 
-   case TYPE_FLAG:
-     vv = Variable.Flag( value, 
-                         type&~VAR_TYPE_MASK,
-                         name,
-                         doc_str );
-     break;
-   case TYPE_DIR_LIST:
-     if( arrayp( misc ) )
+    case TYPE_FLAG:
+      vv = Variable.Flag( value,
+			  type&~VAR_TYPE_MASK,
+			  name,
+			  doc_str );
+      break;
+    case TYPE_DIR_LIST:
+      if( arrayp( misc ) )
 error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
       "Define a custom variable type (see etc/modules/Variable.pmod)\n");
-     else
-       vv = Variable.DirectoryList( value, 
-                                    type&~VAR_TYPE_MASK,
-                                    name,
-                                    doc_str );
-     break;
-   case TYPE_FILE_LIST:
-     if( arrayp( misc ) )
-     {
-error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
-      "Define a custom variable type (see etc/modules/Variable.pmod)\n");
-     }
       else
-       vv = Variable.FileList( value, 
-                               type&~VAR_TYPE_MASK,
-                               name,
-                               doc_str );
-     break;
-   case TYPE_LOCATION:
-     vv = Variable.Location( value, 
-                             type&~VAR_TYPE_MASK,
-                             name,
-                             doc_str );
-     break;
-   case TYPE_TEXT:
-     vv = Variable.Text( value, 
+	vv = Variable.DirectoryList( value,
+				     type&~VAR_TYPE_MASK,
+				     name,
+				     doc_str );
+      break;
+    case TYPE_FILE_LIST:
+      if( arrayp( misc ) )
+      {
+error("Variable type "+(type&VAR_TYPE_MASK)+" with misc no longer supported.\n"
+      "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+      }
+      else
+	vv = Variable.FileList( value,
+				type&~VAR_TYPE_MASK,
+				name,
+				doc_str );
+      break;
+    case TYPE_LOCATION:
+      vv = Variable.Location( value,
+			      type&~VAR_TYPE_MASK,
+			      name,
+			      doc_str );
+      break;
+    case TYPE_TEXT:
+      vv = Variable.Text( value,
+			  type&~VAR_TYPE_MASK,
+			  name,
+			  doc_str );
+      break;
+    case TYPE_PASSWORD:
+      vv = Variable.Password( value,
+			      type&~VAR_TYPE_MASK,
+			      name,
+			      doc_str );
+      break;
+    case TYPE_FLOAT:
+      vv = Variable.Float( value,
+			   type&~VAR_TYPE_MASK,
+			   name,
+			   doc_str );
+      break;
+    case TYPE_FONT:
+      vv = Variable.FontChoice( value,
+				type&~VAR_TYPE_MASK,
+				name,
+				doc_str );
+      break;
+    case TYPE_URL:
+      vv = Variable.URL( value,
                          type&~VAR_TYPE_MASK,
                          name,
                          doc_str );
-     break;
-   case TYPE_PASSWORD:
-     vv = Variable.Password( value, 
-                             type&~VAR_TYPE_MASK,
-                             name,
-                             doc_str );
-     break;
-   case TYPE_FLOAT:
-     vv = Variable.Float( value, 
-                          type&~VAR_TYPE_MASK,
-                          name,
-                          doc_str );
-     break;
-   case TYPE_FONT:
-     vv = Variable.FontChoice( value,
-                               type&~VAR_TYPE_MASK,
-                               name,
-                               doc_str );
-     break;
-   case TYPE_URL:
-     vv = Variable.URL( value, 
-                         type&~VAR_TYPE_MASK,
-                         name,
-                         doc_str );
-     break;
-   case TYPE_URL_LIST:
-     vv = Variable.URLList( value, 
-                            type&~VAR_TYPE_MASK,
-                            name,
-                            doc_str );
-     break;
-   default:
-     error("Variable type "+(type&VAR_TYPE_MASK)+" no longer supported.\n"
-           "Define a custom variable type (see etc/modules/Variable.pmod)\n");
-     
+      break;
+    case TYPE_URL_LIST:
+      vv = Variable.URLList( value,
+			     type&~VAR_TYPE_MASK,
+			     name,
+			     doc_str );
+      break;
+    default:
+      error("Variable type "+(type&VAR_TYPE_MASK)+" no longer supported.\n"
+	    "Define a custom variable type (see etc/modules/Variable.pmod)\n");
+    }
   }
 
   if (functionp(not_in_config)) 
