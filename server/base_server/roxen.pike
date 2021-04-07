@@ -1792,6 +1792,12 @@ class Protocol
   mapping(Configuration:mapping(string:mixed)) conf_data = ([]);
   //! Maps the configuration objects to the data mappings in @[urls].
 
+  //! Used by basic_defvar.
+  string module_identifier()
+  {
+    return sprintf("_Ports/%s/%d", ip || "ANY", port);
+  }
+
   void ref(string name, mapping(string:mixed) data)
   //! Add a ref for the URL @[name] with the data @[data].
   //!

@@ -180,6 +180,11 @@ void avg_prof_leave( string name, string type, RequestID id )
 inherit Configuration;
 inherit "basic_defvar";
 
+string module_identifier()
+{
+  return name + "/_config";
+}
+
 protected mapping(RequestID:mapping) current_connections =
   set_weak_flag( ([ ]), 1 );
 
