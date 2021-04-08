@@ -130,6 +130,7 @@ ConfigIFCache config_settings2;
 class ConfigurationSettings
 {
   inherit "basic_defvar";
+
   class ThemeVariable
   {
     inherit Variable.StringChoice;
@@ -188,6 +189,12 @@ class ConfigurationSettings
     }
   }
   string name, host;
+
+  // Used by basic_defvar.
+  string module_identifier()
+  {
+    return "_configinterface/settings/" + name;
+  }
 
   mapping trim_variables( mapping m )
   {

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.706 2010/11/10 14:23:05 jonasw Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -179,6 +179,11 @@ void avg_prof_leave( string name, string type, RequestID id )
 /* A configuration.. */
 inherit Configuration;
 inherit "basic_defvar";
+
+string module_identifier()
+{
+  return name + "/_config";
+}
 
 protected mapping(RequestID:mapping) current_connections =
   set_weak_flag( ([ ]), 1 );
