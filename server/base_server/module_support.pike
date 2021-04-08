@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.146 2010/11/17 19:02:49 mast Exp $
+// $Id$
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -402,10 +402,6 @@ class ModuleInfo( string sname, string filename )
   {
     // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
     //        time()-last_checked,type,multiple_copies,name,description,locked);
-    if (!filename && !find_module(sname)) {
-      // Module not found.
-      return silent?0:LoadFailed(0);
-    }
 
     // conf is zero if we're making the dummy instance for the
     // ModuleInfo class. Find a fallback for bootstrap_info just to
@@ -419,42 +415,57 @@ class ModuleInfo( string sname, string filename )
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
     {
-      if( (has_suffix (filename, ".class") || has_suffix (filename, ".jar")) &&
-	  got_java()) {
-	program java_wrapper = (program)"javamodule.pike";
-	roxenp()->bootstrap_info->set (({bootstrap_conf,
-					 sname + "#" + copy_num}));
-	RoxenModule ret = java_wrapper(conf, filename);
-	roxenp()->bootstrap_info->set (0);
-	return ret;
-      }
-      // Check if the module is locked. Throw an empty string to not
-      // generate output, this is handled later.
-      object key = conf && conf->getvar("license")->get_key();
-      if(locked && !(key && unlocked(key, conf))) {
-	config_locked[conf] = 1;
+      function|program prog;
+      if (filename || find_module(sname)) {
+	if( (has_suffix (filename, ".class") ||
+	     has_suffix (filename, ".jar")) &&
+	    got_java()) {
+	  program java_wrapper = (program)"javamodule.pike";
+	  prog = lambda(Configuration conf) {
+		   return java_wrapper(conf, filename);
+		 };
+	} else {
+	  // Check if the module is locked.
+	  object key = conf && conf->getvar("license")->get_key();
+	  if(locked && !(key && unlocked(key, conf))) {
+	    config_locked[conf] = 1;
 #ifdef RUN_SELF_TEST
-	werror ("Locked module: %O lock: %O\n",
-		(string) (name || sname), locked * ":");
+	    werror ("Locked module: %O lock: %O\n",
+		    (string) (name || sname), locked * ":");
 #endif
-	throw( "" );
+	    throw( 0 );
+	  }
+	  else
+	    m_delete(config_locked, conf);
+	  prog = load( filename, silent );
+	}
       }
-      else
-	m_delete(config_locked, conf);
-      function|program prog = load( filename, silent );
+
       roxenp()->bootstrap_info->set (({bootstrap_conf,
 				       sname + "#" + copy_num}));
+
+      if (!prog) {
+	throw(0);
+      }
+
       RoxenModule ret = prog( conf );
-      roxenp()->bootstrap_info->set (0);
+
       if (ret->module_is_disabled) {
 	destruct (ret);
-	return DisabledModule();
+	ret = DisabledModule();
       }
+
+      roxenp()->bootstrap_info->set (0);
+
       return ret;
     };
     roxenloader.pop_compile_error_handler( );
+
+    RoxenModule ret = !silent && LoadFailed(filename && ec);
+
     roxenp()->bootstrap_info->set (0);
-    if( err )
+
+    if( err ) {
       if( stringp( err ) )
       {
 	if( sizeof( err ) )
@@ -462,9 +473,9 @@ class ModuleInfo( string sname, string filename )
       }
       else
 	report_error( describe_backtrace( err ) );
-    if( !silent )
-      return LoadFailed( ec );
-    return 0;
+    }
+
+    return ret;
   }
 
   protected mixed encode_string( mixed what )
