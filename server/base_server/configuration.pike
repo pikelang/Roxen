@@ -3068,6 +3068,8 @@ mapping error_file( RequestID id )
 
 mapping auth_failed_file( RequestID id, string message )
 {
+  NOCACHE();
+
   // Avoid recursion in 401 messages. This could occur if the 401
   // messages used files that also cause access denied.
   if(id->root_id->misc->generate_auth_failed)
@@ -3076,7 +3078,6 @@ mapping auth_failed_file( RequestID id, string message )
   id->root_id->misc->generate_auth_failed = 1;
   
   string data = "<return code='401' />" + query("ZAuthFailed");
-  NOCACHE();
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
   id->root_id->misc->generate_auth_failed = 0;
   return res;
