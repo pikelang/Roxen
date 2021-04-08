@@ -442,11 +442,11 @@ class ModuleInfo( string sname, string filename )
 	    werror ("Locked module: %O lock: %O\n",
 		    (string) (name || sname), locked * ":");
 #endif
-	    throw( 0 );
 	  }
-	  else
+	  else {
 	    m_delete(config_locked, conf);
-	  prog = load( filename, silent );
+	    prog = load( filename, silent );
+	  }
 	}
       }
 
