@@ -503,6 +503,12 @@ void zap_all_module_caches( Variable.Variable v )
   }
 }
 
+// Used by basic_defvar.
+string module_identifier()
+{
+  return "Global_Variables";
+}
+
 void define_global_variables(  )
 {
   Variable.Variable v;
