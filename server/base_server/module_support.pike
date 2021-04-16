@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.106 2002/02/08 17:11:21 grubba Exp $
+// $Id$
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -596,12 +596,27 @@ static constant module_aliases = ([
   "whitespace_sucker":"whitespace_remover",
 ]);
 
+#ifdef THREADS
+protected Thread.Mutex module_cache_init_mux = Thread.Mutex();
+#endif
+
 ModuleInfo find_module( string name, int|void noforce )
 {
   if( !modules )
   {
-    modules = ([]);
-    module_cache = roxenp()->ConfigIFCache( "modules" ); 
+#ifdef THREADS
+    // Protect against another configuration initializing
+    // the module_cache in parallel. [WS-663]
+    mixed key = module_cache_init_mux->lock();
+#endif
+    if (!modules) {
+      // NB: Initialization order is relevant (cf above).
+      module_cache = roxenp()->ConfigIFCache( "modules" );
+      modules = ([]);
+    }
+#ifdef THREADS
+    destruct(key);
+#endif
   }
 
   if( modules[ name ] )
