@@ -1,0 +1,44 @@
+subject: Roxen 6.3: Fix Admin IF save after restart, Core: Fix race-condition at initialization of find_module()
+from: ecde90918ab6a3282b11e3e50de74fc008063b4e
+to: dba2f1868b398356e0bb7aef893b560ab8db9123
+originator: Administrator
+depends: 2021-03-22T143750
+restart: true
+
+• Core: Fix race-condition at initialization of find_module().
+
+Fixes [WS-663].
+
+• Modules: Fixed ModuleInfo()->instance() some more.
+
+The bootstrap_info should now be set also when LoadFailed is
+caused by locked modules.
+
+Fixes remainder of [REP-111].
+
+• Move NOCACHE earlier in auth_failed_file().
+
+• Modules: Restructured ModuleInfo()->instance() somewhat.
+
+Make sure that the bootstrap_info is set also when LoadFailed
+or DisabledModule is cloned. This makes defvar() happier.
+
+Fixes some fallout from [REP-111].
+
+• basic_defvar: Set the path for variables automatically.
+
+Call set_path() in all variables defined via defvar().
+set_path() was documented as being called from the configuration
+interface, but no such code actually existed.
+
+The path used for set_path() is derived from module_identifier()
+and the variable name.
+
+Adds module_identifier() to all places that use basic_defvar that
+did not already have it.
+
+Fixes [REP-111].
+
+• basic_defvar: Some minor restructuring.
+
+• Testsuitei [RXML]: Fix entity decoding in <cache-control/>.
