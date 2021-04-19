@@ -1,0 +1,9 @@
+Modified files:
+  base_server/basic_defvar.pike
+  base_server/config_userdb.pike
+  base_server/configuration.pike
+  base_server/global_variables.pike
+  base_server/module_support.pike
+  base_server/roxen.pike
+  etc/include/version.h
+  modules/configuration/roxen_test.pike
