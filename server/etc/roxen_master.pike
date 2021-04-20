@@ -710,7 +710,7 @@ protected string extract_cvs_id(string id)
 string master_read_file(string file)
 {
   string data = ::master_read_file(file);
-  cvs_ids[file] = (data && extract_cvs_ids(data)) || "";
+  cvs_ids[file] = (data && extract_cvs_id(data)) || "";
   return data;
 }
 
