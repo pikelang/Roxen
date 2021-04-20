@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.155 2010/01/13 14:35:14 jonasw Exp $";
+constant cvs_version = "$Id$";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -693,6 +693,33 @@ mapping(string:function|int) has_set_on_load = ([]);
 void set_on_load( string f, function cb )
 {
   has_set_on_load[ f ] = cb;
+}
+
+mapping(string:string) cvs_ids = ([]);
+
+protected string extract_cvs_id(string id)
+{
+  if (sscanf (id, "%*s$""Id: %s $", id) == 2) {
+    if(sscanf(id, "%*s,v %[0-9.] %*s", string rev) == 3)
+      return " (rev "+rev+")"; // cvs
+    if (sscanf (id, "%[0-9a-z]%*c", id) == 1)
+      return " (" + id[..7] + ")"; // git
+  }
+}
+
+string master_read_file(string file)
+{
+  string data = ::master_read_file(file);
+  cvs_ids[file] = (data && extract_cvs_ids(data)) || "";
+  return data;
+}
+
+string get_cvs_id(string file)
+{
+  string id = cvs_ids[file];
+  if (id) return id;
+  string ignored = master_read_file(file);
+  return cvs_ids[file];
 }
 
 program low_findprog(string pname, string ext,
