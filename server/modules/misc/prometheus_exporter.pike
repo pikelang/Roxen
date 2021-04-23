@@ -116,7 +116,7 @@ class PrometheusValue(string name)
     buf->add(" ");
 
     if (floatp(val)) {
-      buf->sprintf("%g\n", val);
+      buf->sprintf("%.15g\n", val);
     } else {
       buf->sprintf("%d\n", val);
     }
