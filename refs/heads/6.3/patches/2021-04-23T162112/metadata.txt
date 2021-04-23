@@ -1,0 +1,8 @@
+subject: Roxen 6.3: Prometheus Exporter: Increase precision in output
+from: dba2f1868b398356e0bb7aef893b560ab8db9123
+to: e6d2bce970477f4b639c6a0320488e346c694207
+originator: Administrator
+depends: 2021-04-19T134811
+restart: true
+
+• Increase precision in output.
