@@ -1,0 +1,13 @@
+subject: Roxen 6.3: Handlers: Fix issue causing handlers to be put on hold
+from: e6d2bce970477f4b639c6a0320488e346c694207
+to: a730be8a61ef646cabfb3713d86dc92a45933205
+originator: Administrator
+depends: 2021-04-23T162112
+restart: true
+
+• Handlers: Fix issue causing handlers to be put on hold.
+
+Callback functions in destructed objects caused handler threads
+to enter the on hold state.
+
+Fixes several cases of spurious ABSes.
