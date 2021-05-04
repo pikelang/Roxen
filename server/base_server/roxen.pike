@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.634 2001/02/23 04:04:09 mast Exp $";
+constant cvs_version="$Id$";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -502,7 +502,12 @@ local static void handler_thread(int id)
     if(q=catch {
       do {
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if(arrayp(h=handle_queue->read()) && h[0]) {
+	if(arrayp(h = handle_queue->read())) {
+	  if (!h[0]) {
+	    THREAD_WERR(sprintf("Handle thread [%O] got NULL callback: %O(%{%O, %})",
+				id, h[0], h[1] / 1));
+	    continue;
+	  }
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
 				id, h[0], h[1] / 1));
 	  set_locale();
