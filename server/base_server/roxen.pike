@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1074 2010/11/10 19:23:49 mast Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -863,7 +863,12 @@ local protected void handler_thread(int id)
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
 	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if(arrayp(h=handle_queue->read()) && h[0]) {
+	if(arrayp(h = handle_queue->read())) {
+	  if (!h[0]) {
+	    THREAD_WERR(sprintf("Handle thread [%O] got NULL callback: %s",
+				id, debug_format_queue_task(h)));
+	    continue;
+	  }
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %s",
 			      id, debug_format_queue_task (h)));
 	  set_locale();
