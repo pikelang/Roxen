@@ -59,6 +59,20 @@ string get_locale();
 #define RAISE_CACHE(seconds) REQUESTID->raise_max_cache (seconds)
 #define NOCACHE() REQUESTID->set_max_cache (0)
 
+//  In some cases it's good to signal that caching is indefinite, e.g. to
+//  avoid installing a call-out to expire an image cache entry in RAM that
+//  is declared safe for years to come (since the server will restart long
+//  before then).
+//
+//  Code that wishes to check for use of indefinite caching should compare
+//  to the absolute or relative timestamp which is lower to accomodate the
+//  case where a delta is added to a timestamp from the past.
+#define CACHE_INDEF_SECS (5 * 365 * 86400)
+#define CACHE_INDEF_REL_LIMIT (4 * 365 * 86400)
+#define CACHE_INDEF_ABS_LIMIT (time() + 4 * 365 * 86400)
+#define CACHE_INDEFINITELY() REQUESTID->raise_max_cache(CACHE_INDEF_SECS)
+
+
 #ifdef DEBUG_CACHEABLE
 #  define NO_PROTO_CACHE() do {						\
     ([mapping(string:mixed)]REQUESTID->misc)->no_proto_cache = 1;	\

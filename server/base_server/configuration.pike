@@ -441,7 +441,9 @@ class DataCacheImpl
 
     // Only the actual cache entry is expired.
     // FIXME: This could lead to lots and lots of call outs.. :P
-    meta->co_handle = call_out(really_low_expire_entry, expire, key);
+    meta->co_handle =
+      (expire < CACHE_INDEF_REL_LIMIT) &&
+      call_out(really_low_expire_entry, expire, key);
     int n;
     while( (current_size > max_size) && (n++<10))
       clear_some_cache();
@@ -2314,7 +2316,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        case "roxen":
 	//  Mark all /internal-roxen-* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
-	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
+        CACHE_INDEFINITELY();
 	PROTO_CACHE();
 	id->set_response_header("Cache-Control", "public, max-age=31536000");
 	
