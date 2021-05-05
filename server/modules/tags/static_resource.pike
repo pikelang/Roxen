@@ -19,8 +19,6 @@ once in a while) by:
 
 constant module_type = MODULE_FILTER | MODULE_TAG;
 
-constant expire_time = 86400*365; // One year.
-
 constant default_process_tags = ([ "link"   : "href",
 				   "script" : "src" ]);
 
@@ -107,7 +105,7 @@ mapping|void filter(mapping res, RequestID id)
       m_delete(res->extra_heads, "Expires");
     }
 
-    RAISE_CACHE(expire_time);
+    CACHE_INDEFINITELY();
     PROTO_CACHE();
 
     id->misc->vary = (<>);
