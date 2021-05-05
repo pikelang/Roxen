@@ -4842,7 +4842,7 @@ class ImageCache
     //  sessions.
     //
     //  NB: Raise it above INITIAL_CACHEABLE to force an Expires header.
-    RAISE_CACHE(31557600);	// A year.
+    CACHE_INDEFINITELY();
 
     //  With the new (5.0 and newer) arg-cache enabled by default we can
     //  allow authenticated images in the protocol cache. At this point
