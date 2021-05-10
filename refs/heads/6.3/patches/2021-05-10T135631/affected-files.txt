@@ -1,0 +1,6 @@
+Modified files:
+  base_server/configuration.pike
+  base_server/roxen.pike
+  etc/include/roxen.h
+  etc/include/version.h
+  modules/tags/static_resource.pike
