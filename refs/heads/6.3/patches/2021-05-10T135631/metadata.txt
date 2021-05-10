@@ -1,0 +1,11 @@
+subject: Roxen 6.3: New cache macros to avoid long call-out lists
+from: a730be8a61ef646cabfb3713d86dc92a45933205
+to: 0c401e74cb6a15f4ce75c74ce64f7be8612d186f
+originator: Jonas Wallden
+depends: 2021-05-04T164808
+restart: true
+
+• Add CACHE_INDEFINITELY() macro and associated limits to flag resources that
+besides being cacheable also don't need any expires call-outs in Roxen. This
+avoids long lists of rather pointless call-outs one year or more into the
+future.
