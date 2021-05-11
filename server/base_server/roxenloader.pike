@@ -196,23 +196,9 @@ string server_dir =
  * Some efuns used by Roxen
  */
 
-protected string last_id, last_from;
 string get_cvs_id(string from)
 {
-  if(last_from == from) return last_id;
-  last_from=from;
-  catch {
-    object f = open(from,"r");
-    string id;
-    id = f->read(1024);
-    if (sscanf (id, "%*s$""Id: %s $", id) == 2) {
-      if(sscanf(id, "%*s,v %[0-9.] %*s", string rev) == 3)
-	return last_id=" (rev "+rev+")"; // cvs
-      if (sscanf (id, "%[0-9a-z]%*c", id) == 1)
-	return last_id = " (" + id[..7] + ")"; // git
-    }
-  };
-  last_id = "";
+  if (master()->get_cvs_id) return master()->get_cvs_id(from) || "";
   return "";
 }
 
