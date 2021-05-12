@@ -1,0 +1,17 @@
+subject: Roxen 6.3: Loader: Add caching of cvs ids
+from: 0c401e74cb6a15f4ce75c74ce64f7be8612d186f
+to: 553d55288ab9e133f573697893f22d12c97478c3
+originator: Administrator
+depends: 2021-05-10T135631
+restart: true
+
+• Master: Fix typo.
+
+• Loader: Add caching of cvs ids.
+
+Looking up cvs ids on demand seems to have quite a bit of overhead,
+so do it when we have read the file anyway and cache the result.
+
+Also moves cvs id lookup to the master.
+
+Fixes [REP-142].
