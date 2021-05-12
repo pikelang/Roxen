@@ -1,0 +1,10 @@
+subject: Roxen 6.1: Core: Fix race-condition at initialization of find_module
+from: de952f0f9ed2bbe477f9b664f656cbd5a64bc797
+to: a8484408c0a53ed7421e044ae08f42e27a832dc5
+originator: Administrator
+depends: 2021-01-08T093402
+restart: true
+
+• Core: Fix race-condition at initialization of find_module().
+
+Fixes [WS-663].
