@@ -1,0 +1,18 @@
+subject: Roxen 6.2: Fix issue causing handlers to be put on hold
+from: 29caca7ff7f464bce1bd6c6b180adb7cd288e232
+to: 9696ce4619ad3de62c31eddabbc39e1cbc20e372
+originator: Administrator
+depends: 2021-04-26T130848
+restart: true
+
+• Merge commit 'patches/stalled-handler-queue^2' into 6.2
+
+* commit 'patches/stalled-handler-queue^2':
+  Handlers: Fix issue causing handlers to be put on hold.
+
+• Handlers: Fix issue causing handlers to be put on hold.
+
+Callback functions in destructed objects caused handler threads
+to enter the on hold state.
+
+Fixes several cases of spurious ABSes.
