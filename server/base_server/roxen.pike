@@ -714,7 +714,12 @@ local protected void handler_thread(int id)
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
 	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
-	if(arrayp(h=handle_queue->read()) && h[0]) {
+	if(arrayp(h = handle_queue->read())) {
+	  if (!h[0]) {
+	    THREAD_WERR(sprintf("Handle thread [%O] got NULL callback: %s",
+				id, debug_format_queue_task(h)));
+	    continue;
+	  }
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %s",
 			      id, debug_format_queue_task (h)));
 	  set_locale();
