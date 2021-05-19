@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1068 2010/06/22 12:11:52 noring Exp $";
+constant cvs_version="$Id$";
 
 //! @appears roxen
 //!
@@ -6930,7 +6930,7 @@ protected string cached_hostname = gethostname();
 
 class LogFile(string fname, string|void compressor_program)
 {
-  private Thread.Mutex lock = Thread.Mutex();
+  private Thread.Mutex lock = Thread.Mutex();	// Protects fd and opened.
   private Stdio.File fd;
   private int opened;
 
@@ -7032,6 +7032,19 @@ class LogFile(string fname, string|void compressor_program)
 
     destruct( fd );
     opened = 0;
+  }
+
+  //! Return an @[Stdio.File] opened for writing to the logfile.
+  //!
+  //! This is typically used when spawning external processes.
+  Stdio.File dup()
+  {
+    object mutex_key = lock->lock();
+    if (!fd) {
+      do_open(mutex_key);
+      if (!fd) return UNDEFINED;
+    }
+    return fd->dup();
   }
 
   private array(string) write_buf = ({});
