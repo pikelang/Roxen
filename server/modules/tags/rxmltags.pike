@@ -2308,27 +2308,44 @@ class TagCache {
   mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 		   void|mapping|int(1..1) cache_context)
   {
-    CacheTagEntry entry
-      = cache.cache_set (cache_name, key, CacheTagEntry (data), timeout,
-			 cache_context);
+#ifdef RUN_SELF_TEST
+    CacheTagEntry entry = CacheTagEntry (data);
+    cache.nongarbing_cache_set (cache_name, key, entry);
+#else
+    CacheTagEntry entry =
+      cache.cache_set (cache_name, key, CacheTagEntry (data),
+                       timeout, cache_context);
+#endif
     return entry && entry->data;
   }
 
   mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
   {
+#ifdef RUN_SELF_TEST
+    CacheTagEntry entry = cache.nongarbing_cache_lookup (cache_name, key);
+#else
     CacheTagEntry entry = cache.cache_lookup (cache_name, key, cache_context);
+#endif
     return entry && entry->data;
   }
 
   mixed cache_peek (string cache_name, mixed key)
   {
+#ifdef RUN_SELF_TEST
+    CacheTagEntry entry = cache.nongarbing_cache_lookup (cache_name, key);
+#else
     CacheTagEntry entry = cache.cache_peek (cache_name, key);
+#endif
     return entry && entry->data;
   }
 
   void cache_remove (string cache_name, mixed key)
   {
+#ifdef RUN_SELF_TEST
+    cache.nongarbing_cache_remove (cache_name, key);
+#else
     cache.cache_remove (cache_name, key);
+#endif
   }
 
   class Frame {
