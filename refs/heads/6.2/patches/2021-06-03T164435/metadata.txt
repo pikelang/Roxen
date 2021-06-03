@@ -1,0 +1,11 @@
+subject: Roxen 6.2: Add CACHE_INDEFINITELY() macro and associated limits
+from: 9696ce4619ad3de62c31eddabbc39e1cbc20e372
+to: e20803de94a9405ae0c90d97fcb87c96459b7c19
+originator: Administrator
+depends: 2021-05-12T144426
+restart: true
+
+• Add CACHE_INDEFINITELY() macro and associated limits to flag resources that
+besides being cacheable also don't need any expires call-outs in Roxen. This
+avoids long lists of rather pointless call-outs one year or more into the
+future.
