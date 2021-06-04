@@ -3954,9 +3954,11 @@ void engage_abs(int n, Stdio.Buffer|void abs_buf)
 			]));
       if (p) {
 	fd->write((string)msg);
+	fd->close();
 	p->wait();
+      } else {
+	fd->close();
       }
-      fd->close();
     }
 #endif
   }
