@@ -1,0 +1,13 @@
+subject: Roxen 6.3: ABS sendmail stall fix, RAM cache fix for selftest
+from: 553d55288ab9e133f573697893f22d12c97478c3
+to: 15a09b81e0ff16baeaa8adb05df59e0b73ea54fe
+originator: Administrator
+depends: 2021-05-12T144302
+restart: true
+
+• ABS: Close stdio for the sendmail process before waiting on it.
+
+Fixes [REP-195].
+
+• Attempt to avoid self-test errors due to RAM cache pressure by switching to
+non-garbing implementation while self-test runs.
