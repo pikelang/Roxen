@@ -1533,25 +1533,37 @@ class BackgroundProcess
 //!
 //! The user must keep a reference to this object, otherwise it will remove
 //! itself and the callback won't be called anymore.
+//!
+//! @seealso
+//!   @[RoxenProcess]
 {
   int|float period;
   function func;
   array args;
   int stopping = 0;
 
-  protected void repeat (function func, array args)
+  // Got a minimum of four refs to this:
+  // o  One in the task array in bg_process_queue.
+  // o  One on the stack in the call in bg_process_queue.
+  // o  One as current_object in the stack frame.
+  // o  One on the stack as argument to Debug.refs.
+  protected constant expected_refs = 4;
+
+  protected void schedule_call()
   {
-    // Got a minimum of four refs to this:
-    // o  One in the task array in bg_process_queue.
-    // o  One on the stack in the call in bg_process_queue.
-    // o  One as current_object in the stack frame.
-    // o  One on the stack as argument to Debug.refs.
+    background_run (period, repeat);
+  }
+
+  protected void repeat()
+  {
     int self_refs = Debug.refs (this);
 #ifdef DEBUG
-    if (self_refs < 4)
-      error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
+    if (self_refs < expected_refs)
+      error("Minimum ref calculation wrong - "
+	    "have only %d refs (expected at least %d).\n",
+	    self_refs, expected_refs);
 #endif
-    if (stopping || (self_refs <= 4) || !func) {
+    if (stopping || (self_refs <= expected_refs) || !func) {
       stopping = 2;	// Stopped.
       return;
     }
@@ -1560,7 +1572,7 @@ class BackgroundProcess
       };
     if (err)
       master()->handle_error (err);
-    background_run (period, repeat, func, args);
+    schedule_call();
   }
 
   //! @decl void set_period (int|float period);
@@ -1588,7 +1600,7 @@ class BackgroundProcess
     period = period_;
     func = func_;
     args = args_;
-    background_run (period, repeat, func, args);
+    schedule_call();
   }
 
   void stop()
@@ -1603,7 +1615,7 @@ class BackgroundProcess
     int state = stopping;
     stopping = 0;
     if (state & 2) {
-      background_run (period, repeat, func, args);
+      schedule_call();
     }
   }
 
@@ -1613,6 +1625,32 @@ class BackgroundProcess
   }
 }
 
+//! A class to do a task repeatedly in a handler thread.
+//!
+//! This class is similar to @[BackgroundProcess], but does
+//! NOT use @[background_run].
+//!
+//! The user must keep a reference to this object, otherwise it will remove
+//! itself and the callback won't be called anymore.
+//!
+//! @seealso
+//!   @[BackgroundProcess]
+class RoxenProcess
+{
+  inherit BackgroundProcess;
+
+  // Got a minimum of four refs to this:
+  // o  One in h[0] in handler_thread.
+  // o  One on the stack in the call in handler_thread.
+  // o  One as current_object in the stack frame.
+  // o  One on the stack as argument to Debug.refs.
+  protected constant expected_refs = 4;
+
+  protected void schedule_call()
+  {
+    call_out(handle, period, repeat);
+  }
+}
 
 mapping get_port_options( string key )
 //! Get the options for the key 'key'.
