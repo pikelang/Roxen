@@ -1920,7 +1920,8 @@ class TagSetCookie {
       if(args->persistent) t=-1; else t=Roxen.time_dequantifier(args);
       Roxen.set_cookie( id,  args->name, (args->value||""), t,
                         args->domain, args->path,
-                        args->secure, args->httponly );
+                        args->secure, args->httponly,
+                        args->samesite);
       return 0;
     }
   }
@@ -12428,6 +12429,11 @@ After: &var.language;<br /></ex>
 
 <attr name='httponly'>
   <p>If this attribute is present the cookie will be set with the HttpOnly attribute. If the browser supports the HttpOnly flag, the cookie will be secured from being accessed by a client side script.</p>
+</attr>
+
+<attr name='samesite'>
+  <p>If this attribute is present the cookie will use the given SameSite
+     value.</p>
 </attr>
 ",
 
