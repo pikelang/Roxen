@@ -1,0 +1,8 @@
+subject: Roxen 6.3: Add support for SameSite in <set-cookie/>
+from: 15a09b81e0ff16baeaa8adb05df59e0b73ea54fe
+to: 64d95b99349c9143c8b3e772239df1f63e9091cd
+originator: Jonas Wallden
+depends: 2021-06-07T095745
+restart: true
+
+• Allow SameSite parameter to be specified in <set-cookie/>.
