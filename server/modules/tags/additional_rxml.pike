@@ -1428,7 +1428,7 @@ http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.11)</p>
 </desc>
 
 <attr name='variable'><p>
-Name of the variable holding the input data. If not provided the tag oeprates
+Name of the variable holding the input data. If not provided the tag operates
 on the contents of the <tag>sscanf</tag> element.
 </p>
 </attr>
