@@ -1,0 +1,8 @@
+subject: Roxen 6.3: Typo fix in RXML documentation of <sscanf>
+from: 64d95b99349c9143c8b3e772239df1f63e9091cd
+to: ad3e8a509d25b67c03a8c67792e596cf8067f03f
+originator: Administrator
+depends: 2021-06-29T110430
+restart: true
+
+• Typo fix in RXML documentation of <sscanf>.
