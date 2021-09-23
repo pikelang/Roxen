@@ -52,6 +52,12 @@ Thread.Thread backend_thread;
 #define LOC_C(X,Y)      _STR_LOCALE("roxen_config",X,Y)
 #define CALL_M(X,Y)     _LOCALE_FUN("roxen_message",X,Y)
 
+// --- Testsuite defaults ---
+
+#ifdef RUN_SELF_TEST
+#define LOG_GC_CYCLES
+#endif
+
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
