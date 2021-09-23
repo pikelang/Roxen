@@ -1490,7 +1490,7 @@ class RoxenConcurrent
     protected string initiator = describe_initiator();
 
 #ifdef THREADS
-    protected class HandlerBackend
+    protected class HandlerBackend(protected object /* (Roxen) */ roxen)
     {
       array call_out(function co, int t, mixed ... args)
       {
@@ -1509,7 +1509,7 @@ class RoxenConcurrent
       }
     }
 
-    protected Pike.Backend backend = HandlerBackend();
+    protected Pike.Backend backend = HandlerBackend(roxen);
 #endif /* THREADS */
 
     protected string _sprintf(int c)
