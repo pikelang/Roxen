@@ -1,0 +1,16 @@
+subject: Roxen 6.3: RoxenConcurrent.Promise.HandlerBackend: Avoid parent pointer.
+from: ad3e8a509d25b67c03a8c67792e596cf8067f03f
+to: 4a3657e190fa109506540bc9d252135e57ad6a46
+originator: Administrator
+depends: 2021-08-12T130705
+restart: true
+
+• RoxenConcurrent.Promise.HandlerBackend: Avoid parent pointer.
+
+HandlerBackend having a parent pointer causes a reference loop
+between it and RoxenConCurrent.Promise.
+
+• Testsuite: Enable gc cycle logging during the testsuite.
+
+Unintended circularities are often the underlying cause of
+testsuite failures, so make it easier to identify them.
