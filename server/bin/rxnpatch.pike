@@ -329,7 +329,7 @@ int main(int argc, array(string) argv)
 	    current_platform = UNDEFINED;
 	    any_platform = 1;
 	  } else {
-	    plib->write_err("Unkown platform: %s. Quitting.\n", argument[1]);
+	    plib->write_err("Unknown platform: %s. Quitting.\n", argument[1]);
 	    return 0;
 	  }
 	  break;
@@ -339,7 +339,7 @@ int main(int argc, array(string) argv)
 	    ptc_obj->version += version;
 	  else
 	  {
-	    plib->write_err("Unkown version format: %s. Quitting.\n", 
+	    plib->write_err("Unknown version format: %s. Quitting.\n",
 			    argument[1]);
 	    return 0;
 	  }
