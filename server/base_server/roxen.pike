@@ -8913,4 +8913,11 @@ class LogFile
       background_run (1, do_the_write);
     return strlen(what); 
   }
+
+  void flush()
+  {
+    if (sizeof(write_buf)) {
+      do_the_write();
+    }
+  }
 }
