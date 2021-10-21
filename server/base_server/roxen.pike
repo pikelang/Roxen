@@ -8682,9 +8682,11 @@ class LogFile
 {
   public string fname;              // Was public before...
   public string compressor_program; // Was public before...
-  private Thread.Mutex lock = Thread.Mutex();
+
+  private Thread.Mutex lock = Thread.Mutex();	// Protects fd and opened.
   private Stdio.File fd;
   private int opened;
+
   private bool compressor_exists;
   private bool auto_file_removal;
   private int days_to_keep_files;
@@ -8823,6 +8825,19 @@ class LogFile
     opened = 0;
   }
 
+  //! Return an @[Stdio.File] opened for writing to the logfile.
+  //!
+  //! This is typically used when spawning external processes.
+  Stdio.File dup()
+  {
+    object mutex_key = lock->lock();
+    if (!fd) {
+      do_open(mutex_key);
+      if (!fd) return UNDEFINED;
+    }
+    return fd->dup();
+  }
+
   private array(string) write_buf = ({});
   private void do_the_write()
   {
@@ -8857,5 +8872,12 @@ class LogFile
     if (sizeof (write_buf) == 1)
       background_run (1, do_the_write);
     return strlen(what); 
+  }
+
+  void flush()
+  {
+    if (sizeof(write_buf)) {
+      do_the_write();
+    }
   }
 }
