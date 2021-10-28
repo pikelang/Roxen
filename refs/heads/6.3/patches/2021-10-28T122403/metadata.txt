@@ -1,0 +1,18 @@
+subject: Roxen 6.3: Sync with Roxen 6.3.1060-r2
+from: 4a3657e190fa109506540bc9d252135e57ad6a46
+to: 531707b53bb9f23f0b1c022e0e00f59ec4effafb
+originator: Henrik Grubbstrom
+depends: 2021-09-29T133049
+restart: true
+
+Multiple fixes:
+
+• LogFile: Add flush().
+
+Support synchronous flushing of the log.
+
+• LogFile: Add dup().
+
+This returns an fd opened for appending to the current log file.
+
+Needed for [REP-145].
