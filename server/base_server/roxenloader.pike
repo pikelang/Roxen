@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.478 2012/11/14 15:07:30 stewa Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -3055,13 +3055,61 @@ and rebuild Pike from source.
 
 
 ******************************************
-Roxen requires Regexp.PCRE support in Pike
+Roxen requires Regexp.PCRE support in Pike.
 ******************************************
 
 
 ");
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Regexp.PCRE)
+
+#if !constant (Crypto.SHA256)
+  report_debug (#"
+
+
+********************************************
+Roxen requires Crypto.SHA256 support in Pike.
+
+Please check that you have Nettle installed.
+********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.SHA256)
+
+#if !constant (Crypto.AES.GCM)
+  report_debug (#"
+
+
+*********************************************
+Roxen requires Crypto.AES.GCM support in Pike.
+
+Please check that your Nettle is version 2.2
+or later.
+*********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.AES.GCM)
+
+#if !constant (Crypto.ECC.Curve)
+  report_debug (#"
+
+
+***********************************************
+Roxen requires Crypto.ECC.Curve support in Pike.
+
+Please check that your Nettle is version 2.7 or
+later, and has been compiled with a supported
+version of Gmp.
+***********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.ECC.Curve)
 
 
   Stdio.Stat stat = file_stat("etc/include/version.h");
