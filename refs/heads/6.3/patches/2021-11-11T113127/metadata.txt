@@ -1,0 +1,8 @@
+subject: Roxen 6.3: Loader: Check that the pike binary has sufficient crypto support.
+from: 531707b53bb9f23f0b1c022e0e00f59ec4effafb
+to: f3d2955f56f772e2a44e9bfa3ea65633ee97f7b4
+originator: Administrator
+depends: roxen/6.3.1060|2021-10-28T122403
+restart: true
+
+• Loader: Check that the pike binary has sufficient crypto support.
