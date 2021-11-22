@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.443 2011/01/20 12:53:17 grubba Exp $
+// $Id$
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.443 2011/01/20 12:53:17 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1318,6 +1318,20 @@ string lfile_path(string filename)
     }
   }
   return file_stat(filename) && filename;
+}
+
+array(string) lget_dir(string path)
+{
+  if (path[0] != '/') {
+    array(string) res = UNDEFINED;
+    foreach(package_directories, string dir) {
+      array(string) paths =
+	get_dir(combine_path(roxen_path(dir), path));
+      if (paths) res += paths;
+    }
+    if (res) return Array.uniq(res);
+  }
+  return get_dir(path);
 }
 
 // Make a $PATH-style string
@@ -2821,6 +2835,7 @@ the correct system time.
   add_constant("lopen",         lopen);
   add_constant("lfile_stat",    lfile_stat);
   add_constant("lfile_path",    lfile_path);
+  add_constant("lget_dir",      lget_dir);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
   add_constant("report_warning",report_warning);
