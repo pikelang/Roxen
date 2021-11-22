@@ -3983,13 +3983,61 @@ and rebuild Pike from source.
 
 
 ******************************************
-Roxen requires Regexp.PCRE support in Pike
+Roxen requires Regexp.PCRE support in Pike.
 ******************************************
 
 
 ");
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Regexp.PCRE)
+
+#if !constant (Crypto.SHA256)
+  report_debug (#"
+
+
+********************************************
+Roxen requires Crypto.SHA256 support in Pike.
+
+Please check that you have Nettle installed.
+********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.SHA256)
+
+#if !constant (Crypto.AES.GCM)
+  report_debug (#"
+
+
+*********************************************
+Roxen requires Crypto.AES.GCM support in Pike.
+
+Please check that your Nettle is version 2.2
+or later.
+*********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.AES.GCM)
+
+#if !constant (Crypto.ECC.Curve)
+  report_debug (#"
+
+
+***********************************************
+Roxen requires Crypto.ECC.Curve support in Pike.
+
+Please check that your Nettle is version 2.7 or
+later, and has been compiled with a supported
+version of Gmp.
+***********************************************
+
+
+");
+  _exit(0); // 0 means stop start script looping
+#endif // !constant (Crypto.ECC.Curve)
 
 
   string s;
