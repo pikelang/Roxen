@@ -2063,6 +2063,20 @@ string lfile_path(string filename)
   return file_stat(filename) && filename;
 }
 
+array(string) lget_dir(string path)
+{
+  if (path[0] != '/') {
+    array(string) res = UNDEFINED;
+    foreach(package_directories, string dir) {
+      array(string) paths =
+	get_dir(combine_path(roxen_path(dir), path));
+      if (paths) res += paths;
+    }
+    if (res) return Array.uniq(res);
+  }
+  return get_dir(path);
+}
+
 // Make a $PATH-style string
 string make_path(string ... from)
 {
@@ -4129,6 +4143,7 @@ the correct system time.
   add_constant("lopen",         lopen);
   add_constant("lfile_stat",    lfile_stat);
   add_constant("lfile_path",    lfile_path);
+  add_constant("lget_dir",      lget_dir);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
   add_constant("report_warning",report_warning);
