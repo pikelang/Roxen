@@ -3,7 +3,7 @@
 
 <region name='Variables'>
   <var name='abs_engage'>        <int>1</int> </var>
-  <var name='abs_timeout'>       <int>300</int> </var>
+  <var name='abs_timeout'>       <int>60</int> </var>
 </region>
 
 </roxen-config>
