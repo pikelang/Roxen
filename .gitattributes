@@ -148,7 +148,6 @@ worldmap binary
 /server/etc/modules/AFS.pmod/ClientMessages.pmod foreign_ident
 /server/etc/modules/AFS.pmod/ClientSession.pike foreign_ident
 /server/etc/modules/AFS.pmod/Types.pmod foreign_ident
-/server/etc/modules/DBManager.pmod foreign_ident
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/ExtScript.pmod foreign_ident
 /server/etc/modules/HTML.pmod foreign_ident
