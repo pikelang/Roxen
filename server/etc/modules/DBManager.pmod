@@ -1019,8 +1019,8 @@ private class SqlSqlStaleChecker (protected Sql.Sql sql)
   // connections via the DBManager to make sure timeouts are handled
   // correctly.
 
-  int _our_last_ping = time (1);
-  constant _our_timeout = 10;
+  int _our_last_ping = time();
+  constant _our_timeout = 30;
 
   protected void _check_ping()
   {
@@ -1037,7 +1037,7 @@ private class SqlSqlStaleChecker (protected Sql.Sql sql)
   {
     switch (i) {
     case "ping":
-      _our_last_ping = time (1);
+      _our_last_ping = time();
       break;
     case "query":
     case "typed_query":
