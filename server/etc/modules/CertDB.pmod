@@ -115,12 +115,13 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
 		    keyhash,
 		    subject,
 		    issuer);
+  int cert_id = -1;
   if (!sizeof(tmp)) {
     db->query("INSERT INTO certs "
 	      "    (pem_id, msg_no, subject, issuer, expires, keyhash, data) "
 	      "VALUES (%d, %d, %s, %s, %d, %s, %s)",
 	      pem_id, msg_no, subject, issuer, expires, keyhash, data);
-    int cert_id = db->master_sql->insert_id();
+    cert_id = db->master_sql->insert_id();
 
     // Check if we have a matching private key.
     tmp = db->typed_query("SELECT * "
@@ -145,10 +146,13 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
     if (subject != issuer) {
       // Not a self-signed certificate.
 
-      // Check if we have the cert that this cert was signed by.
+      // Check if we have a cert that this cert was signed by,
+      // and select the one that has the longest remaining
+      // time to expire.
       tmp = db->typed_query("SELECT * "
 			    "  FROM certs "
-			    " WHERE subject = %s",
+			    " WHERE subject = %s"
+			    " ORDER BY expires DESC",
 			    issuer);
       if (sizeof(tmp)) {
 	db->query("UPDATE certs "
@@ -158,16 +162,6 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
 		  cert_id);
       }
     }
-
-    // Update any cert that lacks a parent and
-    // is signed by us.
-    tmp = db->typed_query("UPDATE certs "
-			  "   SET parent = %d "
-			  " WHERE issuer = %s "
-			  "   AND parent IS NULL "
-			  "   AND subject != issuer",
-			  cert_id,
-			  subject);
   } else if (tmp[0]->expires <= expires) {
     // NB: Keep more recent certificates unmodified (even if stale).
     // NB: keyhash, subject and issuer are unmodified (cf above).
@@ -180,9 +174,27 @@ protected void refresh_cert(Sql.Sql db, int pem_id, int msg_no, string data)
 	      " WHERE id = %d",
 	      pem_id, msg_no, expires, data,
 	      tmp[0]->id);
+    cert_id = tmp[0]->id;
   } else {
     SSL3_WERR("Got certificate older than that in db: %d < %d\n",
 	      expires, tmp[0]->expires);
+    return;
+  }
+
+  // Check if we have the most recent certificate for subject.
+  tmp = db->typed_query("SELECT * "
+			"  FROM certs "
+			" WHERE subject = %s"
+			" ORDER BY expires DESC",
+			subject);
+  if (tmp[0]->id == cert_id) {
+    // Update all certs that are signed by us.
+    tmp = db->typed_query("UPDATE certs "
+			  "   SET parent = %d "
+			  " WHERE issuer = %s "
+			  "   AND subject != issuer",
+			  cert_id,
+			  subject);
   }
 }
 
