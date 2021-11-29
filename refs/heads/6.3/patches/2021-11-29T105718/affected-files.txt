@@ -1,0 +1,5 @@
+Modified files:
+  base_server/roxenloader.pike
+  etc/include/version.h
+  etc/modules/DBManager.pmod
+  etc/test/config/Global_Variables
