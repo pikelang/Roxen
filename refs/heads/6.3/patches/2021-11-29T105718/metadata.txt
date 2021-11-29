@@ -1,0 +1,18 @@
+subject: Roxen 6.3: Loader: Added lget_dir, Testsuite fixes
+from: f3d2955f56f772e2a44e9bfa3ea65633ee97f7b4
+to: d22b424c4ea491a687c6766c09fe3e55583a0cc2
+originator: Administrator
+depends: 2021-11-11T113127
+restart: true
+
+• DBManager.SqlSqlStaleChecker: Raise ping timeout to 30 seconds.
+
+Also reduces use of time(1) somewhat for paranoia reasons.
+
+• Testsuite: Set ABS timeout to 1 hour.
+
+• Loader: Added lget_dir().
+
+Analogous to lopen() et al, but for get_dir().
+
+Needed for [REP-347].
