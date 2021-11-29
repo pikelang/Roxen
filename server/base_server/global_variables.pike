@@ -760,7 +760,11 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"directory you started Roxen. "
 		"The directories are searched in order for modules."));
 
-  defvar("CertGlobs", ({ "*.pem", "certs/*.pem", "*.cer", "certs/*.cer" }),
+  defvar("CertGlobs", ({
+	   "*.pem", "certs/*.pem",
+	   "*.cer", "certs/*.cer",
+	   "*.key", "certs/*.key",
+	 }),
 	 LOCALE(1127, "Certificate and Private Key Globs"),
 	 TYPE_STRING_LIST,
 	 LOCALE(1128, "<p>This is a list of globs for which corresponding files "
