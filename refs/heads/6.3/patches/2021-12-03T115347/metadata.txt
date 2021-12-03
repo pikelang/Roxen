@@ -1,0 +1,28 @@
+subject: Roxen 6.3: SSL: Better support for replaced intermediate cert
+from: d22b424c4ea491a687c6766c09fe3e55583a0cc2
+to: d321532de279189e5ae386e617d8a9310483533a
+originator: Administrator
+depends: 2021-11-29T105718
+restart: true
+
+• StartTLSProtocol: Add *.key and certs/*.key to the default cert glob.
+
+The extension .key is commonly used for certificate keys.
+
+• StartTLSProtocol: Add *.cer and certs/*.cer to the default cert glob.
+
+The acme.sh script for fetching certificates from Let's Encrypt
+uses the extension .cer rather than .pem.
+
+• CertDB: Support replacement of intermediary certs.
+
+Let's Encrypt has changed its intermediary cert from one signed
+by Digital Signature Trust Co./DST Root CA X3 to one singed by
+Internet Security Research Group/ISRG Root X1. Unfortunately
+Roxen did not update the certificate chain when the new
+intermediate was added, but instead continued using the now
+expired cert. This caused complaints from clients that did not
+have the Let's Encrypt cert among their trusted certificates.
+
+The CertDB now updates the certificate chain to use the
+intermediate certificate with the longest expiry time.
