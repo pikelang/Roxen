@@ -3470,12 +3470,17 @@ int|string try_get_file(string s, RequestID id,
   }
 
   CACHE( fake_id->misc->cacheable );
-  destruct (fake_id);
 
   // Allow 2* and 3* error codes, not only a few specific ones.
-  if (!(< 0,2,3 >)[m->error/100]) return 0;
+  if (!(< 0,2,3 >)[m->error/100]) {
+    destruct (fake_id);
+    return 0;
+  }
 
-  if(stat_only) return 1;
+  if(stat_only) {
+    destruct (fake_id);
+    return 1;
+  }
 
   if(m->data)
     res = m->data;
@@ -3507,6 +3512,8 @@ int|string try_get_file(string s, RequestID id,
 	sscanf (res, "%*s\n%s", res);
     }
   }
+
+  destruct (fake_id);
 
   return res;
 }
