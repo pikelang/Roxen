@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.710 2010/12/02 16:11:02 mast Exp $";
+constant cvs_version = "$Id$";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3144,12 +3144,17 @@ int|string try_get_file(string s, RequestID id,
   }
 
   CACHE( fake_id->misc->cacheable );
-  destruct (fake_id);
 
   // Allow 2* and 3* error codes, not only a few specific ones.
-  if (!(< 0,2,3 >)[m->error/100]) return 0;
+  if (!(< 0,2,3 >)[m->error/100]) {
+    destruct (fake_id);
+    return 0;
+  }
 
-  if(stat_only) return 1;
+  if(stat_only) {
+    destruct (fake_id);
+    return 1;
+  }
 
   if(m->data)
     res = m->data;
@@ -3181,6 +3186,8 @@ int|string try_get_file(string s, RequestID id,
 	sscanf (res, "%*s\n%s", res);
     }
   }
+
+  destruct (fake_id);
 
   return res;
 }
