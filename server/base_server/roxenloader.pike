@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.298 2001/09/27 17:07:27 grubba Exp $";
+constant cvs_version="$Id$";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1273,6 +1273,7 @@ class MySQLKey
 {
   object real;
   string name;
+  string real_db_name;
 
   static int `!( )  { return !real; }
 
@@ -1309,6 +1310,7 @@ class MySQLKey
 
     bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
 #endif /* DB_DEBUG */
+    real_db_name = real->master_sql->query_db && real->master_sql->query_db();
   }
   
   static void destroy()
@@ -1318,11 +1320,24 @@ class MySQLKey
     all_sql_wrappers[this_object()]=0;
 #endif
 
+    if ((real->master_sql->query_db && real->master_sql->query_db()) !=
+	real_db_name) {
+      // The real db has changed.
+      // Ie select_db() or similar has been called.
+      // Do not reuse the connection.
+      return;
+    }
+
 #ifndef NO_DB_REUSE
     mixed key;
     catch {
       key = sq_cache_lock();
     };
+
+    if (real->master_sql->reset) {
+      // Reset state.
+      real->master_sql->reset();
+    }
     
 #ifdef DB_DEBUG
     werror("%O:%d added to free list\n", name, num );
