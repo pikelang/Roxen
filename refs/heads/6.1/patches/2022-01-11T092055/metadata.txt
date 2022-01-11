@@ -1,0 +1,14 @@
+subject: Roxen 6.1: CGI script error fix.
+from: 37731f36e9096ee92f00a0114ed98b85478895db
+to: 4f1d04f82b3ea95f680cddab552d4912990c9c2f
+originator: Erik Allemann
+depends: 2021-05-12T145032
+restart: true
+
+• Configuration: Change destruct order in try_get_file().
+
+try_get_file() now destructs the internal RequestID *after*
+having read the result. This improves its compatibility
+with eg the CGI module.
+
+Fixes RT#35827.
