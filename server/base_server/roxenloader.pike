@@ -2686,6 +2686,7 @@ protected class SQLKey
 {
   protected Sql.Sql real;
   protected string db_name;
+  protected string real_db_name;
   protected int reuse_in_thread;
 
   protected int `!( )  { return !real; }
@@ -2769,6 +2770,7 @@ protected class SQLKey
 #endif
 #endif
 #endif /* DB_DEBUG */
+    real_db_name = real->master_sql->query_db && real->master_sql->query_db();
   }
   
   protected void destroy()
@@ -2790,11 +2792,24 @@ protected class SQLKey
 
     if (!real) return;
 
+    if ((real->master_sql->query_db && real->master_sql->query_db()) !=
+	real_db_name) {
+      // The real db has changed.
+      // Ie select_db() or similar has been called.
+      // Do not reuse the connection.
+      return;
+    }
+
 #ifndef NO_DB_REUSE
     mixed key;
     catch {
       key = sq_cache_lock();
     };
+
+    if (real->master_sql->reset) {
+      // Reset state.
+      real->master_sql->reset();
+    }
     
 #ifdef DB_DEBUG
     werror("%O added to free list\n", this );
