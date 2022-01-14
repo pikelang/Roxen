@@ -1,0 +1,14 @@
+subject: Roxen 6.3: Configuration: Change destruct order in try_get_file(). Fixes RT#35827.
+from: d321532de279189e5ae386e617d8a9310483533a
+to: 2e5f9fe5f098561107fd344303cd332316854f16
+originator: Jonas Lonnberg
+depends: 2021-12-03T115347
+restart: true
+
+• Configuration: Change destruct order in try_get_file().
+
+try_get_file() now destructs the internal RequestID *after*
+having read the result. This improves its compatibility
+with eg the CGI module.
+
+Fixes RT#35827.
