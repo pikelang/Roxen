@@ -3036,7 +3036,7 @@ protected void create()
 	"schedule VARCHAR(255) NOT NULL, "
 	"dir VARCHAR(255) NULL, "
 	"period INT UNSIGNED NOT NULL DEFAULT 604800, "
-	"offset INT UNSIGNED NOT NULL DEFAULT 266400, "
+	"`offset` INT UNSIGNED NOT NULL DEFAULT 266400, "
 	"generations INT UNSIGNED NOT NULL DEFAULT 1, "
 	"method VARCHAR(20) NOT NULL DEFAULT 'mysqldump')");
 
