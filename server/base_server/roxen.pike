@@ -3835,11 +3835,16 @@ void engage_abs(int n)
     Sql.Sql db = connect_to_my_mysql(0, "mysql");
     array(mapping(string:string)) db_procs;
     if (catch {
-	// MySQL 8.0 and later.
-	db_procs = db->query("SELECT * FROM performance_schema.processlist");
+	// MariaDB 5.0 and later.
+	db_procs = db->query("SELECT * FROM information_schema.processlist");
       }) {
-      // Fall-back to old syntax.
-      db_procs = db->query("SHOW FULL PROCESSLIST");
+      if (catch {
+	  // MySQL 8.0 and later.
+	  db_procs = db->query("SELECT * FROM performance_schema.processlist");
+	}) {
+	// Fall-back to old syntax.
+	db_procs = db->query("SHOW FULL PROCESSLIST");
+      }
     }
     if (db_procs && sizeof(db_procs)) {
       report_debug("MySQL process list:\n");
@@ -3851,18 +3856,22 @@ void engage_abs(int n)
 	string db_host = row->HOST || row->Host;
 	string db_db = row->DB || row->db;
 	string db_cmd = row->COMMAND || row->Command;
-	string db_state = row->STATE || row->State;
-	int db_time = (int)(row->TIME || row->Time);
+	string db_state = row->STATE || row->State || "";
+	int db_time = (int)(row->TIME_MS || row->TIME || row->Time);
 	string db_info = row->INFO || row->Info;
 
 	string db_url = "";
 	if (db_user) db_url = db_user + "@";
 	if (db_host) db_url += db_host;
-	if (db_db) db_url += "://" + db_db;
+	if (db_url != "") db_url = "mysql://" + db_url;
+	if (db_db) db_url += "/" + db_db;
 	if (db_url == "") db_url = "internal";
-	report_debug("  %s(%s): %s(%s) %dms\n",
+
+	if (db_state != "") db_state = "(" + db_state + ")";
+
+	report_debug("  %s(%s): %s%s %dms\n",
 		     db_id || "NULL", db_url,
-		     db_cmd || "", db_state || "NULL",
+		     db_cmd || "", db_state,
 		     db_time);
 	if (db_info) {
 	  report_debug("  %s(%s):   %s\n",
