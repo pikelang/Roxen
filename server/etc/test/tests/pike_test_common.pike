@@ -10,6 +10,7 @@ constant single_thread = 0;
 
 void create( int vb ) { verbose = vb; }
 
+function(:void) testloop_ping = lambda(){};
 
 string describe_test (function|string cb, array args)
 {
@@ -108,6 +109,7 @@ void report_test_failure( mixed err,
     report_debug( do_describe_error( err ) );
   report_debug ("\n");
   tests_failed++;
+  testloop_ping();
 }
 
 
@@ -122,6 +124,7 @@ void report_test_ok( mixed err, function|string|array cb, array args, int st )
       report_debug( "   PASS\n" );
     //   if( err ) report_error( do_describe_error( err ) );
   }
+  testloop_ping();
 }
 
 private mixed test_generic_low( function check_return,
@@ -461,6 +464,8 @@ void run_tests( Configuration c );
 void low_run_tests( Configuration c,
                     function go_on )
 {
+  testloop_ping = c->get_provider("roxen_test")->testloop_ping || testloop_ping;
+
   mixed err = catch {
     run_tests( c );
   };
