@@ -476,6 +476,10 @@ class ConfigurationSettings
 			      roxenp()->set_locale();
 			    } );
 
+    defvar( "expert_mode", 0, LOCALE(0, "Show expert options and actions"),
+	    TYPE_FLAG,
+	    LOCALE(0, "Show settings and actions that are not normaly "
+		   "useful for non-expert users."));
 
     defvar( "devel_mode", 0, LOCALE(180, "Show developer options and actions"),
 	    TYPE_FLAG, 
