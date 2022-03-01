@@ -1,0 +1,21 @@
+subject: Roxen 6.3: ConfigIF, SQLKey
+from: 2e5f9fe5f098561107fd344303cd332316854f16
+to: 1acbeca813805c1e706d138963521ba0f1643a1d
+originator: Henrik Grubbström (Grubba) <grubba@grubba.org>
+depends: 2022-01-14T111552
+restart: true
+
+Multiple fixes:
+
+• ConfigIF: Make expert options reachable again.
+
+• SQLKey: Release any remaining locks when dropping the key.
+
+Remaining locks may confuse later queries if the connection is reused.
+
+Also drops the connection if the selected db has been changed (like
+eg when select_db() has been called.
+
+Requires recent Pike to have any effect.
+
+Potential fix for [REP-290].
