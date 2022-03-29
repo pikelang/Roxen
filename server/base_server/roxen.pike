@@ -7800,6 +7800,7 @@ protected mapping(string:function) compiled_log_event = ([ ]);
 #define LOG_NEED_TIMESTAMP	4
 #define LOG_NEED_LTIME		(8 | LOG_NEED_TIMESTAMP)
 #define LOG_NEED_GTIME		(16 | LOG_NEED_TIMESTAMP)
+#define LOG_NEED_INFO		32
 
 // Elements of a format array arr:
 // arr[0]: sprintf format for access logging (run_log_format).
@@ -8102,9 +8103,13 @@ protected LogFormat compile_log_format( string fmt )
 	break;
     }
 
-    a_format += "-" + DO_ES (part);
+    // Any unknown variable is indexed from the info mapping.
+    a_format += "%s" + DO_ES (part);
+    a_args += ({sprintf ("info && !zero_type (info[%O]) ? "
+			 "url_encode ((string) info[%O]) : \"-\"",
+			 kwd, kwd)});
+    log_flags |= LOG_NEED_INFO;
 
-    // Any unknown variable is indexed from the info mapping for events.
     e_format += "%s" + DO_ES (part);
     e_args += ({sprintf ("info && !zero_type (info[%O]) ? "
 			 "url_encode ((string) info[%O]) : \"-\"",
@@ -8122,6 +8127,10 @@ protected LogFormat compile_log_format( string fmt )
     {
       if(!callback) return;";
 
+  if (log_flags & LOG_NEED_INFO) {
+    a_func += #"
+      mapping(string:mixed) info = request_id->misc->log_info;";
+  }
   if (log_flags & LOG_NEED_TIMESTAMP) {
     string c = #"
       int timestamp = time (1);";
