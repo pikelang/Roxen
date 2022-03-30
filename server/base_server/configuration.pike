@@ -5219,6 +5219,8 @@ hyphens ('-') occur in the specifier names.</p>
     <td>Local date formatted like '<code>2001-01-17</code>'.</td></tr>
 <tr><td>$time</td>
     <td>Local time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$timestamp</td>
+    <td>Local date and time formatted like '<code>20010117T130000</code>'.</td></tr>
 <tr><td>$cern-date</td>
     <td>Local date and time in CERN Common Log file format, i.e.
     like '<code>17/Jan/2001:13:00:00 +0200</code>'.</td></tr>
@@ -5227,6 +5229,8 @@ hyphens ('-') occur in the specifier names.</p>
 
 <tr><td>$utc-time</td>
     <td>UTC time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$utc-timestamp</td>
+    <td>UTC date and time formatted like '<code>20010117T130000</code>'.</td></tr>
 <tr><td>$bin-date</td>
     <td>Unix time as a 32 bit integer in network byte order.</td></tr>
 <tr><td>$resource</td>

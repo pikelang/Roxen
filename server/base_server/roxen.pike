@@ -7721,6 +7721,12 @@ class LogFormat			// Note: Dumping won't work if protected.
 		   ct->hour, ct->min, ct->sec));
   }
 
+  protected string std_timestamp(mapping(string:int) ct) {
+    return sprintf("%04d%02d%02dT%02d%02d%02d",
+		   1900+ct->year, ct->mon+1, ct->mday,
+		   ct->hour, ct->min, ct->sec);
+  }
+
   // CERN date formatter. Note similar code in Roxen.pmod.
 
   protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -7820,10 +7826,12 @@ protected constant formats = ([
   // Used for both access and event logging
   "date":		({"%s", "std_date (ltime)", 0, 0, LOG_NEED_LTIME}),
   "time":		({"%s", "std_time (ltime)", 0, 0, LOG_NEED_LTIME}),
+  "timestamp":		({"%s", "std_timestamp (ltime)", 0, 0, LOG_NEED_LTIME}),
   "cern-date":		({"%s", "cern_http_date (timestamp, ltime)",
 			  0, 0, LOG_NEED_LTIME}),
   "utc-date":		({"%s", "std_date (gtime)", 0, 0, LOG_NEED_GTIME}),
   "utc-time":		({"%s", "std_time (gtime)", 0, 0, LOG_NEED_GTIME}),
+  "utc-timestamp":	({"%s", "std_timestamp (gtime)", 0, 0, LOG_NEED_GTIME}),
   "bin-date":		({"%4c", "timestamp", 0, 0, LOG_NEED_TIMESTAMP}),
   // FIXME: There is no difference between $resource and $full-resource.
   "resource":		({"%s", ("(string)"
