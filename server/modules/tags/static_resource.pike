@@ -86,15 +86,21 @@ class TagServeStaticResources
   class Frame
   {
     inherit RXML.Frame;
+#ifndef NO_CACHE_BUST
     array do_return(RequestID id)
     {
       result = mangle_resource_urls(content || "", id);
     }
+#endif
   }
 }
 
 mapping|void filter(mapping res, RequestID id)
 {
+#ifdef NO_CACHE_BUST
+  return;
+#endif
+
   if (!res) return;
 
   if(id->prestate["cache-forever"]) {
