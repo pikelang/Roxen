@@ -224,13 +224,52 @@ class Connection
   class Handler {
     inherit Tools.Hilfe.Evaluator;
 
+    //  By convention macro keys should start with ":" but we don't enforce
+    //  that policy.
+    mapping(string:string) macros = ([ ]);
+
+    void init_macros()
+    {
+      foreach (my_conf->get_providers("hilfe-macros"), RoxenModule mod) {
+        if (mapping m = mod->query_hilfe_macros && mod->query_hilfe_macros())
+          macros += m;
+      }
+    }
+
+    void list_macros()
+    {
+      if (!sizeof(macros)) {
+        write(" | No macros defined.\n");
+      } else {
+        array(string) keys = sort(indices(macros));
+        int maxlen = max(@sizeof(keys[*]));
+        foreach (keys, string key)
+          write(" | %-" + maxlen + "s -> %s\n", key, macros[key]);
+      }
+    }
+
     void got_data( void|string d )
     {
-      if( !d || (String.trim_all_whites(d) == "quit") )
+      string d_trim = d && String.trim_all_whites(d);
+      if( !d || (d_trim == "quit") )
       {
 	begone( );
 	return;
       }
+
+      if (d_trim == "macros") {
+        list_macros();
+        write("> ");
+        return;
+      }
+
+      if (string macro_cmd = macros[d_trim]) {
+        rl->readline->get_history()->finishline(macro_cmd);
+        rl->readline->get_history()->initline();
+        d = macro_cmd;
+        write(" | %s\n", d);
+      }
+
       add_input_line( d );
       write( state->finishedp() ? "> " : ">> " );
       user->settings->set("hilfe_history",
@@ -250,6 +289,9 @@ class Connection
       constants["port"] = my_port_obj;
       constants["user"] = user;
       constants["debug"] = hilfe_debug;
+
+      init_macros();
+
       user->settings->defvar( "hilfe_history", Variable.String("", 65535,0,0 ) );
       user->settings->restore( );
       string hi;
