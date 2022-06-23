@@ -256,6 +256,7 @@ class Connection
       if( (hi = user->settings->query("hilfe_history")) != "" )
 	rl->readline->get_history()->create( 512, hi/"\n" );
       rl->readline->get_history()->finishline("");
+      rl->readline->get_history()->initline();
       print_version();
       got_data("");
     }
@@ -275,7 +276,9 @@ class Connection
       case USER:
 	if(!(user = roxen.find_admin_user(line_nolf) ) )
 	{
-	  rl->readline->write("No such user: '"+ line_nolf + "'\n");
+          string user_msg =
+            sizeof(line_nolf) ? ("\"" + line_nolf + "\"") : "<blank>";
+	  rl->readline->write("No such user: " + user_msg + "\n");
 	} 
 	else 
 	{
@@ -285,7 +288,7 @@ class Connection
       case PASSWORD:
 	if( !verify_password(line_nolf, user->password) )
 	{
-	  rl->readline->write("Wrong password\n");
+	  rl->readline->write("Wrong password.\n");
 	  state=USER;
 	} 
 	else
@@ -294,13 +297,13 @@ class Connection
 	    state++;
 	  else
 	  {
-	    rl->readline->write("User lacks permission to access hilfe\n");
+	    rl->readline->write("User lacks permission to access hilfe.\n");
 	    state = USER;
 	  }
 	}
 	break;
       default:
-	handler->got_data( line );
+	handler->got_data( line && line_nolf );
 	return;
     }
 
@@ -308,7 +311,7 @@ class Connection
     {
       case USER:
 	rl->set_secret( 0 );
-	rl->readline->write("User: ");
+	rl->readline->write("Username: ");
 	break;
       case PASSWORD:
 	rl->set_secret( 1 );
@@ -368,6 +371,7 @@ class Connection
     {
       rl->readline->write("Welcome to Roxen Hilfe 1.1\n", 1);
       rl->readline->write("Username: ");
+      rl->readline->delete(0, 999);
       return;
     }
     n++;
