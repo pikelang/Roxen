@@ -221,7 +221,6 @@ class Connection
   }
 
 
-#if __VERSION__ > 7.2
   class Handler {
     inherit Tools.Hilfe.Evaluator;
 
@@ -261,108 +260,6 @@ class Connection
       got_data("");
     }
   }
-#else
-  class Handler
-  {
-    inherit Tools.Hilfe.Evaluator;
-    roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
-    int time_base;
-  
-    mixed do_evaluate(string a, int show_result)
-    {
-      mixed foo, c;
-      foo=eval(a);
-
-      if( foo )
-      {
-	mixed ff = foo->___Foo4711;
-	mixed res;
-	int st;
-	c = catch{ st = gethrtime(); res = ff(); st = gethrtime()-st-time_base; };
-	a = sprintf("%O", res);
-	if(c)
-	{
-	  trace(0);
-	  if(arrayp(c) && sizeof(c)==2 && arrayp(c[1]))
-	  {
-	    c[1]=c[1][sizeof(backtrace())..];
-	    write(describe_backtrace(c));
-	  }
-	  else if(objectp(c) && c->is_generic_error)
-	  {
-	    c->__backtrace=c->__backtrace[sizeof(backtrace())..];
-	    write(describe_backtrace(c));
-	  }else{
-	    write(sprintf("Error in evalutation: %O\n",c));
-	  }
-	}else{
-	  if(show_result)
-	  {
-	    write("Result: "+replace(a, "\n", "\n        ")+"\n");
-	    if( st > 1000 )
-	      write(sprintf("Timer:  %.1fms\n", st/1000.0 ));
-	    else
-	      write(sprintf("Timer:  %dns\n", st ));
-	  }
-	  else
-	  {
-	    write("Result: void\n");
-	    if( st > 1000 )
-	      write(sprintf("Timer:  %.1fms\n", st/1000.0 ));
-	    else
-	      write(sprintf("Timer:  %dns\n", st ));
-	  }
-	  variables=foo->query_variables();
-	  variables["_"] = res;
-	}
-      }
-    }
-
-    void got_data( string d )
-    {
-      if( String.trim_all_whites(d) == "quit" )
-      {
-	begone( );
-	return;
-      }
-      mixed oc = master()->get_inhibit_compile_errors( );
-      master()->set_inhibit_compile_errors( ec );
-      add_input_line( d );
-      master()->set_inhibit_compile_errors( oc );
-      if( strlen( ec->get() ) )
-      {
-	write( replace(ec->get(),"\t"," ") );
-	ec->errors = "";
-      }
-      ec->warnings = "";
-      write( strlen(input)?">> ": "> " );
-      user->settings->set("hilfe_history",
-			  rl->readline->get_history()->encode());
-      user->settings->save();
-    }
-
-    void create()
-    {
-      int cc;
-      cc = gethrtime(); lambda(){}(); time_base = gethrtime()-cc;
-
-      write = rl->readline->write;
-      constants["RequestID"] = myRequestID;
-      constants["conf"] = my_conf;
-      constants["port"] = my_port_obj;
-      constants["user"] = user;
-      constants["debug"] = hilfe_debug;
-      user->settings->defvar( "hilfe_history", Variable.String("", 65535,0,0 ) );
-      user->settings->restore( );
-      string hi;
-      if( (hi = user->settings->query("hilfe_history")) != "" )
-	rl->readline->get_history()->create( 512, hi/"\n" );
-      ::create();
-      rl->readline->get_history()->finishline("");
-      got_data("");
-    }
-  }
-#endif // > Pike 7.2
 
 #define USER 0
 #define PASSWORD 1
