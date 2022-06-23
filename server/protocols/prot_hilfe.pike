@@ -224,9 +224,9 @@ class Connection
   class Handler {
     inherit Tools.Hilfe.Evaluator;
 
-    void got_data( string d )
+    void got_data( void|string d )
     {
-      if( String.trim_all_whites(d) == "quit" )
+      if( !d || (String.trim_all_whites(d) == "quit") )
       {
 	begone( );
 	return;
@@ -267,14 +267,15 @@ class Connection
 #define DATA 3
   int state = USER;
 
-  void got_user_line( mixed q, string line )
+  void got_user_line( mixed q, void|string line )
   {
+    string line_nolf = (line || "") - "\n";
     switch( state )
     {
       case USER:
-	if(!(user = roxen.find_admin_user( line-"\n" ) ) )
+	if(!(user = roxen.find_admin_user(line_nolf) ) )
 	{
-	  rl->readline->write("No such user: '"+(line-"\n")+"'\n");
+	  rl->readline->write("No such user: '"+ line_nolf + "'\n");
 	} 
 	else 
 	{
@@ -282,7 +283,7 @@ class Connection
 	}
 	break;
       case PASSWORD:
-	if( !verify_password(line-"\n", user->password) )
+	if( !verify_password(line_nolf, user->password) )
 	{
 	  rl->readline->write("Wrong password\n");
 	  state=USER;
