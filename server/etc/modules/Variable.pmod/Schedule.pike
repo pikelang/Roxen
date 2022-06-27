@@ -1,6 +1,7 @@
 // $Id$
 
-inherit Variable.Variable;
+#if constant(roxen)
+inherit /*Variable*/.Variable;
 
 //! This class implements a scheduler widget with three main states,
 //! never index, index every n:th hour or index every n:th x-day at y
@@ -14,6 +15,14 @@ inherit Variable.Variable;
 
 #define LOCALE(X,Y)    \
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+
+#endif
+
+#define VALS_SORT		0
+#define VALS_REPEAT_HOURS	1
+#define VALS_REPEAT_COUNT	2
+#define VALS_DAY		3
+#define VALS_HOUR		4
 
 //! Transforms the form variables given in the @[vl] attribute
 //! to the internal time representation as follows.
@@ -52,21 +61,14 @@ array transform_from_form( string what, mapping vl )
   if(sizeof(res)!=5)
     res = ({ 0, 2, 1, 6, 3 });
 
-  res[0] = (int)what;
-  for(int i=1; i<5; i++) {
+  res[VALS_SORT] = (int)what;
+  for(int i=1; i <= VALS_HOUR; i++) {
     res[i] = (int)vl[(string)i];
     res[i] = max( ({ 0, 1, 1, 0, 0 })[i], res[i] );
     res[i] = min( ({ 2, 23, 9, 7, 23 })[i], res[i] );
   }
 
   return res;
-}
-
-private string checked( int pos, int alt )
-{
-  if(alt==query()[pos])
-    return " checked='checked'";
-  return "";
 }
 
 protected int mktime(mapping m)
@@ -121,7 +123,7 @@ int get_next( int last )
 //!
 //! @returns
 //!  When the next scheduled event is, represented by a posix time integer.
-//!  Note that the returnes time may already have occured, so all return
+//!  Note that the returned time may already have occured, so all return
 //!  values < time() essentially means go ahead and do it right away.
 //!  Minutes and seconds are cleared in the return value, so if the scheduler
 //!  is set to every day at 5 o'clock, and this method is called at 5:42 it
@@ -130,30 +132,30 @@ int get_next( int last )
 //!  Returns @tt{-1@} if the schedule is disabled (@tt{"Never"@}).
 {
   array vals = query();
-  if( !vals[0] )
+  if( !vals[VALS_SORT] )
     return -1;
 
   // Every n:th hour.
-  if( vals[0] == 1 )
+  if( vals[VALS_SORT] == 1 )
     if( !last )
       return time(1);
     else
-      return last + 3600 * vals[1];
+      return last + 3600 * vals[VALS_REPEAT_HOURS];
 
   mapping m = localtime( last || time(1) );
   m->min = m->sec = 0;
-  if( !vals[3] ) {
+  if( !vals[VALS_DAY] ) {
     // Every n:th day at x.
     if (!last)
     {
-      for(int i; i<vals[2]; i++)
-	m = next_or_same_time( m, vals[4] );
+      for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
+	m = next_or_same_time( m, vals[VALS_HOUR] );
       return mktime(m);
     }
     else
     {
-      for(int i; i<vals[2]; i++)
-	m = next_time( m, vals[4] );
+      for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
+	m = next_time( m, vals[VALS_HOUR] );
       return mktime(m);
     }
   }
@@ -161,38 +163,50 @@ int get_next( int last )
   // Every x-day at y.
   if (!last)
   {
-    for(int i; i<vals[2]; i++)
+    for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
     {
-      m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4]+1 ),
-			     vals[4], 6*24*3600 );
+      m = next_or_same_time( next_or_same_day( m, vals[VALS_DAY]-1,
+					       vals[VALS_HOUR]+1 ),
+			     vals[VALS_HOUR], 6*24*3600 );
     }
   }
   else
   {
-    for(int i; i<vals[2]; i++)
+    for(int i; i<vals[VALS_REPEAT_COUNT]; i++)
     {
-      m = next_or_same_time( next_or_same_day( m, vals[3]-1, vals[4] ),
-			     vals[4], 6*24*3600 );
+      m = next_or_same_time( next_or_same_day( m, vals[VALS_DAY]-1,
+					       vals[VALS_HOUR] ),
+			     vals[VALS_HOUR], 6*24*3600 );
     }
   }
   return mktime(m);
 }
 
+#if constant(roxen)
+
+private string checked( int pos, int alt )
+{
+  if(alt==query()[pos])
+    return " checked='checked'";
+  return "";
+}
+
 string render_form( RequestID id, void|mapping additional_args )
 {
   string res, inp1, inp2, inp3;
+  array vals = query();
 
   res = "<table>"
     "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
     checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
 
-  inp1 = HTML.select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)query()[1]);
+  inp1 = HTML.select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)vals[VALS_REPEAT_HOURS]);
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='1' type='radio' " +
     checked(0,1) + " /></td><td>" + sprintf( LOCALE(483, "Every %s hour(s)."), inp1) +
     "</td></tr>\n";
 
-  inp1 = HTML.select(path()+"2", "123456789"/1, (string)query()[2]);
+  inp1 = HTML.select(path()+"2", "123456789"/1, (string)vals[VALS_REPEAT_COUNT]);
   inp2 = HTML.select(path()+"3", ({
     ({ "0", LOCALE(484, "Day") }),
     ({ "1", LOCALE(485, "Sunday") }),
@@ -201,9 +215,10 @@ string render_form( RequestID id, void|mapping additional_args )
     ({ "4", LOCALE(488, "Wednesday") }),
     ({ "5", LOCALE(489, "Thursday") }),
     ({ "6", LOCALE(490, "Friday") }),
-    ({ "7", LOCALE(491, "Saturday") }) }), (string)query()[3]);
-  inp3 = HTML.select(path()+"4", "000102030405060708091011121314151617181920212223"/2,
-		sprintf("%02d", query()[4]));
+    ({ "7", LOCALE(491, "Saturday") }) }), (string)vals[VALS_DAY]);
+  inp3 = HTML.select(path()+"4",
+		     "000102030405060708091011121314151617181920212223"/2,
+		     sprintf("%02d", vals[VALS_HOUR]));
 
   res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
     checked(0,2) + " /></td>\n<td>" +
@@ -216,11 +231,11 @@ string render_form( RequestID id, void|mapping additional_args )
 string render_view( RequestID id, void|mapping additional_args )
 {
   array res = query();
-  switch(res[0]) {
+  switch(res[VALS_SORT]) {
     case 0:
       return LOCALE(482, "Never");
     case 1:
-      return sprintf(LOCALE(493, "Every %d hour."), res[1]);
+      return sprintf(LOCALE(493, "Every %d hour."), res[VALS_REPEAT_HOURS]);
     case 2:
       string period = ({
 	LOCALE(484, "Day"),
@@ -231,10 +246,13 @@ string render_view( RequestID id, void|mapping additional_args )
 	LOCALE(489, "Thursday"),
 	LOCALE(490, "Friday"),
 	LOCALE(491, "Saturday")
-      })[query()[3]];
+      })[res[VALS_DAY]];
 
-      return sprintf(LOCALE(494, "Every %d %s at %02d:00"), res[2], period, res[4]);
+      return sprintf(LOCALE(494, "Every %d %s at %02d:00"),
+		     res[VALS_REPEAT_COUNT], period, res[VALS_HOUR]);
     default:
       return LOCALE(495, "Error in stored value.");
   }
 }
+
+#endif
