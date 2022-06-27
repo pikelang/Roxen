@@ -16,6 +16,84 @@ inherit /*Variable*/.Variable;
 #define LOCALE(X,Y)    \
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
+#else
+
+// Test mode.
+
+#define LOCALE(X, Y)	(Y)
+
+array(int) val = ({ });
+
+array(int) query()
+{
+  return val;
+}
+
+// Deterministic timezone...
+#define localtime(X)	gmtime(X)
+
+int main(int argc, array(string) argv)
+{
+  int successes;
+  int failures;
+  foreach(({
+	    ({ ({ 0, 2, 1, 6, 3, }),
+	       // Disabled.
+	       ({ 0, -1 }),
+	    }),
+	    ({ ({ 1, 2, 1, 6, 3, }),
+	       // Every other hour.
+	       // 2022-06-22T14:11:43 (Wed)  ==>  2022-06-22T16:11:43 (Wed)
+	       ({ 1655907103, 1655914303 }),
+	    }),
+	    ({ ({ 2, 2, 1, 6, 3, }),
+	       // Every Friday at 03:00.
+	       // 2022-06-22T14:11:43 (Wed)  ==>  2022-06-24T03:00:00 (Fri)
+	       ({ 1655907103, 1656039600 }),
+	       // 2022-06-23T14:11:43 (Thu)  ==>  2022-06-24T03:00:00 (Fri)
+	       ({ 1655993503, 1656039600 }),
+	       // 2022-06-24T02:11:43 (Fri)  ==>  2022-06-24T03:00:00 (Fri)
+	       ({ 1656036703, 1656039600 }),
+	       // 2022-06-24T03:11:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
+	       ({ 1656040303, 1656644400 }),
+	       // 2022-06-24T03:21:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
+	       ({ 1656040903, 1656644400 }),
+	       // 2022-06-24T03:51:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
+	       ({ 1656042703, 1656644400 }),
+	       // 2022-06-24T04:11:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
+	       ({ 1656043903, 1656644400 }),
+	       // 2022-06-24T14:11:43 (Fri)  ==>  2022-07-01T03:00:00 (Fri)
+	       ({ 1656079903, 1656644400 }),
+	    }),
+	  }), array(array(int)) test) {
+    val = test[0];
+    while(1) {
+      foreach(test[1..], [int when, int expected]) {
+	int got = get_next(when);
+	if (got != expected) {
+	  failures++;
+	  werror("Test failed for %O\n"
+		 "When: %d\n"
+		 "%O\n"
+		 "Expected: %d\n"
+		 "%O\n"
+		 "Got: %d\n"
+		 "%O\n",
+		 test,
+		 when, localtime(when),
+		 expected, localtime(expected),
+		 got, localtime(got));
+	} else {
+	  successes++;
+	}
+      }
+      break;
+    }
+  }
+  werror("Succeeded on %d, Failed on %d.\n", successes, failures);
+  return !!failures;
+}
+
 #endif
 
 #define VALS_SORT		0
