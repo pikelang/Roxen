@@ -1,6 +1,6 @@
 // $Id$
 
-#if constant(roxen)
+#if constant(roxenp)
 inherit /*Variable*/.Variable;
 
 //! This class implements a scheduler widget with three main states,
@@ -322,7 +322,7 @@ int get_next( int last )
   return mktime(m);
 }
 
-#if constant(roxen)
+#if constant(roxenp)
 
 private string checked( int pos, int alt )
 {
