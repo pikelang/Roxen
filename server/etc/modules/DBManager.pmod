@@ -1171,12 +1171,12 @@ array(string) list( void|Configuration c )
                    " AND db_permissions.permission!='none'",
                    CN(c->name))->name
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
-      -({"roxen","mysql"})
+      - ({ "roxen", "mysql", "information_schema", "performance_schema" })
 #endif
       ;
   return query( "SELECT name FROM dbs" )->name
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
-      -({"roxen","mysql"})
+      - ({ "roxen", "mysql", "information_schema", "performance_schema" })
 #endif
     ;
 }
@@ -1775,7 +1775,8 @@ void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
 {
-  if( (< "local", "mysql", "roxen"  >)[ name ] )
+  if( (< "local", "mysql", "roxen",
+	 "information_schema", "performance_schema"  >)[ name ] )
     error( "Cannot drop the '%s' database\n", name );
 
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
@@ -2621,7 +2622,7 @@ array(string) group_dbs( string group )
   return query( "SELECT db FROM db_groups WHERE groupn=%s", group )
     ->db
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
-      -({"roxen","mysql"})
+    - ({ "roxen", "mysql", "information_schema", "performance_schema" })
 #endif
     ;
 }
@@ -3124,6 +3125,18 @@ CREATE TABLE dbs (
     is_module_db( 0, "mysql",
 		  "The mysql database contains data about access "
 		  "rights for the internal MySQL database." );
+  }
+  if (!get ("information_schema")) {
+    create_db( "information_schema",  0, 1 );
+    is_module_db( 0, "information_schema",
+		  "The information_schema database contains internal "
+		  "meta data about the internal MySQL database." );
+  }
+  if (!get ("performance_schema")) {
+    create_db( "performance_schema",  0, 1 );
+    is_module_db( 0, "performance_schema",
+		  "The performance_schema database contains statistics "
+		  "about the internal MySQL database." );
   }
 
   if( !q->db_permissions )
