@@ -2381,7 +2381,7 @@ protected void process_backup_queue()
 protected void low_timed_backup (int(1..) schedule_id)
 {
   array(mapping(string:string))
-    backup_info = query("SELECT schedule, period, offset, dir, "
+    backup_info = query("SELECT schedule, period, `offset`, dir, "
 			"       generations, method "
 			"  FROM db_schedules "
 			" WHERE id = %d "
@@ -2479,7 +2479,7 @@ void low_set_backup_timer(int schedule_id, int period, int offset)
 {
   query("UPDATE db_schedules "
 	"   SET period = %d, "
-	"       offset = %d "
+	"       `offset` = %d "
 	" WHERE id = %d",
 	period, offset, schedule_id);
 
@@ -2549,7 +2549,7 @@ void start_backup_timer(int schedule_id, int period, int offset)
 //!   @[start_backup_timer()]
 void start_backup_timers()
 {
-  foreach(query("SELECT id, schedule, period, offset "
+  foreach(query("SELECT id, schedule, period, `offset` "
 		"  FROM db_schedules "
 		" WHERE period > 0 "
 		" ORDER BY id ASC"),
