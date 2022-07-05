@@ -180,6 +180,7 @@ private
 		    privs[field]?"Y":"N",
 		    host, user, privs[field]?"Y":"N");
     }
+    db->big_query ("FLUSH PRIVILEGES");
   }
 
   void set_perms_in_db_table (Sql.Sql db, string host, array(string) dbs,
@@ -863,9 +864,7 @@ private
       set_perms_in_db_table (db, "localhost",
 			     indices (none_dbs), autouser, -1);
 
-    db->big_query ("REPLACE INTO user (Host, User, Password) "
-		   "VALUES ('localhost', %s, '')", autouser);
-    db->big_query ("FLUSH PRIVILEGES");
+    set_perms_in_user_table(db, "localhost", autouser, -1);
   }
 
   void invalidate_autousers (string db_name)
