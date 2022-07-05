@@ -76,6 +76,14 @@ private
 
   int check_db_user (string user, string host)
   {
+    if (normalized_server_version >= "010.004") {
+      return connect_to_my_mysql (0, "mysql")->
+	big_query ("SELECT 1 FROM global_priv "
+		   "WHERE Host=%s AND User=%s LIMIT 1",
+		   host, user)->
+	num_rows();
+    }
+    // Ancient style permission check.
     return connect_to_my_mysql (0, "mysql")->
       big_query ("SELECT 1 FROM user WHERE Host=%s AND User=%s LIMIT 1",
 		 host, user)->
@@ -124,6 +132,55 @@ private
   {
     multiset(string) privs = (<>);
 
+    if ((normalized_server_version >= "010.002") ||
+	sizeof(db->query("SELECT 1 FROM information_schema.views "
+			 " WHERE table_name = 'user' "
+			 "   AND table_schema = 'mysql' "
+			 " LIMIT 1"))) {
+      // Recent MariaDB -- mysql.user is a read-only view.
+      //
+      // Use the modern syntax for creating users and granting privileges.
+      if (level == NONE) {
+	db->query("DROP USER IF EXISTS %s@%s", user, host);
+      } else {
+	db->query("CREATE USER IF NOT EXISTS %s@%s", user, host);
+
+	switch(level) {
+	case READ:
+	  db->query("REVOKE ALL, GRANT OPTION FROM %s@%s", user, host);
+	  db->query("GRANT SELECT, SHOW DATABASES, CREATE TEMPORARY TABLES, "
+		    "      LOCK TABLES, EXECUTE, SHOW VIEW "
+		    "      ON *.* TO %s@%s", user, host);
+	  break;
+
+	case WRITE:
+	  mixed err = catch {
+	    db->query("GRANT ALL PRIVILEGES ON *.* TO %s@%s WITH GRANT OPTION",
+		      user, host);
+	    };
+	  if (err) {
+	    if ((user == "rw") && (host == "localhost")) {
+	      // MariaDB doesn't like altering the privileges
+	      // for the account performing the grant...
+	      //
+	      // We hope that the permissions are already correct.
+	      //
+	      // An alternative would be to access the mysql.global_priv
+	      // table directly, but...
+	    } else {
+	      throw(err);
+	    }
+	  }
+	  break;
+	case -1:
+	  break;
+
+	default:
+	  error ("Invalid level %d.\n", level);
+	}
+      }
+      return;
+    }
     switch (level) {
       case NONE:
 	db->big_query ("DELETE FROM user "
@@ -771,6 +828,80 @@ private
   void synch_mysql_perms()
   {
     Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    mixed err = catch {
+      // Check whether mysql.user is a view with a bad definer.
+      //
+      // This happens with MariaDB 10.4 prior to MariaDB 10.4.13,
+      // where the dedicated user "mariadb.sys" is used as definer.
+      // https://jira.mariadb.org/browse/MDEV-19650
+      if ((normalized_server_version >= "010.004") &&
+	  sizeof(db->query("SELECT definer FROM information_schema.views "
+			   " WHERE table_name = 'user' "
+			   "   AND table_schema = 'mysql' "
+			   "   AND definer = 'root@localhost'"))) {
+	// We want to switch the definer from "root@localhost"
+	// (ie a non-existing user) to "rw@localhost".
+	//
+	// ************* CAUTION ************* CAUTION *************
+	//
+	// MySql/MariaDB does not have a syntax for altering just
+	// the definer of a view.
+	//
+	// We thus instead access the files directly.
+	//
+	// cf https://blog.pythian.com/change-views-definer-without-alter-view-how-to-fix-thousands-of-views-2/
+	//
+	// ************* CAUTION ************* CAUTION *************
+	//
+	// Note also that it appears that the FRM-file has a binary
+	// format in some versions of MariaDB. This issue should be
+	// fixed in those versions and this code thus not triggered.
+	string(8bit) user_frm_path = roxenloader.query_mysql_data_dir() +
+	  "/mysql/user.frm";
+	Stdio.Stat st = file_stat(user_frm_path);
+	string(8bit) user_frm_orig = st && Stdio.read_bytes(user_frm_path);
+	if (user_frm_orig && has_prefix(user_frm_orig, "TYPE=VIEW\n")) {
+	  array(string(8bit)) lines = user_frm_orig/"\n";
+	  foreach(lines; int no; string line) {
+	    if (line == "definer_user=root") {
+	      lines[no] = "definer_user=rw";
+	    }
+	  }
+	  string(8bit) user_frm_new = lines * "\n";
+	  if (user_frm_orig != user_frm_new) {
+	    if (Stdio.write_file(user_frm_path + ".new", user_frm_new) ==
+		sizeof(user_frm_new)) {
+	      chmod(user_frm_path + ".new", st->mode);
+#if constant(chown)
+	      catch {
+		chown(user_frm_path + ".new", st->user, st->group);
+	      };
+#endif
+#if constant(hardlink)
+	      hardlink(user_frm_path, user_frm_path + ".orig");
+#endif
+	      mv(user_frm_path + ".new", user_frm_path);
+	      // Reload the table definitions.
+	      db->query("FLUSH TABLES");
+	      // NB: As the user table is only compat, there should
+	      //     be no need to flush privileges here.
+	    }
+	  } else {
+	    werror("Failed to alter the user view definition.\n");
+	  }
+	} else {
+	  werror("Failed to find the user view definition.\n");
+	  werror("path: %O\n"
+		 "st: %O\n"
+		 "orig: %O\n",
+		 user_frm_path, st, user_frm_orig);
+	}
+      }
+    };
+    if (err) {
+      werror("View check failed: %s\n", describe_error(err));
+    }
 
     // Force proper privs for the low-level users.
     set_perms_in_user_table(db, "localhost", "rw", WRITE);
