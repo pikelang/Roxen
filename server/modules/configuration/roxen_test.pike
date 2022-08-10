@@ -63,7 +63,11 @@ void background_failure()
   if (is_running()) {
     // Log something to make these easier to locate in the noisy test logs.
     report_error ("################ Background failure\n");
-    report_error (describe_backtrace(backtrace(), -1, 1));
+    report_error (describe_backtrace(backtrace(), -1
+#ifdef RUN_SELF_TEST
+                                     , 1
+#endif
+                                     ));
     bkgr_fails++;
   }
 }
