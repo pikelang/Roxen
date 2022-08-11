@@ -2681,6 +2681,9 @@ void create_db( string name, string path, int is_internal,
 //! If @[is_internal] is specified, the database will be automatically
 //! created if it does not exist, and the @[path] argument is ignored.
 //!
+//! If @[is_internal] is 2, the database will be internal, but NOT
+//! added to the default backup schedule.
+//!
 //! If the database @[name] already exists, an error will be thrown
 //!
 //! If group is specified, the @[path] will be generated
@@ -2716,7 +2719,7 @@ void create_db( string name, string path, int is_internal,
 	   "VALUES (%s, %s, %s)",
 	   name, (is_internal?name:path), (is_internal?"1":"0") );
   }
-  if (!is_internal) {
+  if (is_internal != 1) {
     // Don't attempt to backup external databases automatically.
     query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
   } else {
@@ -3127,13 +3130,13 @@ CREATE TABLE dbs (
 		  "rights for the internal MySQL database." );
   }
   if (!get ("information_schema")) {
-    create_db( "information_schema",  0, 1 );
+    create_db( "information_schema",  0, 2 );
     is_module_db( 0, "information_schema",
 		  "The information_schema database contains internal "
 		  "meta data about the internal MySQL database." );
   }
   if (!get ("performance_schema")) {
-    create_db( "performance_schema",  0, 1 );
+    create_db( "performance_schema",  0, 2 );
     is_module_db( 0, "performance_schema",
 		  "The performance_schema database contains statistics "
 		  "about the internal MySQL database." );
@@ -3171,6 +3174,15 @@ CREATE TABLE db_permissions (
 		       "docs", getcwd()+"/etc/docs" ) ) )
       query("INSERT INTO db_backups (db,tbl,directory,whn) "
 	    "VALUES ('docs','docs','"+getcwd()+"/etc/docs','"+time()+"')");
+  }
+
+  // Don't attempt to backup mysql-internal databases.
+  foreach(({ "information_schema", "performance_schema" }),
+	  string db) {
+    query("UPDATE dbs "
+	  "   SET schedule_id = NULL "
+	  " WHERE path = %s",
+	  db);
   }
 
   // Start the backup timers when we have finished booting.
