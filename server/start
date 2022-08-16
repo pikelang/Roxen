@@ -407,6 +407,20 @@ parse_args() {
     once=2
     debug=0
   ;;
+  --package)
+      pass="$pass --package=$2"
+      shift
+      ;;
+  --package=*)
+      pass="$pass $1"
+      ;;
+  --customer)
+      pass="$pass --package=customers/$2"
+      shift
+      ;;
+  --customer=*)
+      pass="$pass --package=customers/`echo $1 | sed -e's/^--customer=//'`"
+      ;;
   '--program')
     program="$2"
     once=2
@@ -573,6 +587,12 @@ the default arguments.
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
       .B--valgrind[=valgrind args]B.: Run the server in valgrind. Implies .B--onceB..
+
+      .B--package=DIRB.:              Add optional package to the Roxen
+                                  search path.
+
+      .B--customer=CUSTB.:            Add package customers/CUST to the
+                                  Roxen search path.
 
       .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
@@ -1074,6 +1094,9 @@ start_roxen() {
       exitcode="$?"
       ROXEN_PID=""
     else
+      if [ $verbose -gt 0 ]; then
+	dp "Executing $truss $pike $args"|sed -e "s!`pwd`!.!g"
+      fi
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
 	  eval "fork_roxen $truss \"$pike\" $args 2>&1"
