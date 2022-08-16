@@ -390,6 +390,13 @@ parse_args() {
     once=2
     debug=0
   ;;
+  --package)
+      pass="$pass --package=$2"
+      shift
+      ;;
+  --package=*)
+      pass="$pass $1"
+      ;;
   '--program')
     program="$2"
     once=2
@@ -556,6 +563,9 @@ the default arguments.
       .B--gdbB.:                      Run the server in gdb. Implies .B--onceB..
 
       .B--valgrind[=valgrind args]B.: Run the server in valgrind. Implies .B--onceB..
+
+      .B--package=DIRB.:              Add optional package to the Roxen
+                                  search path.
 
       .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
