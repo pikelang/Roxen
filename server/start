@@ -397,6 +397,13 @@ parse_args() {
   --package=*)
       pass="$pass $1"
       ;;
+  --customer)
+      pass="$pass --package=customers/$2"
+      shift
+      ;;
+  --customer=*)
+      pass="$pass --package=customers/`echo $1 | sed -e's/^--customer=//'`"
+      ;;
   '--program')
     program="$2"
     once=2
@@ -566,6 +573,9 @@ the default arguments.
 
       .B--package=DIRB.:              Add optional package to the Roxen
                                   search path.
+
+      .B--customer=CUSTB.:            Add package customers/CUST to the
+                                  Roxen search path.
 
       .B--programB.:                  Start a different program with the Roxen
 				  Pike. As an example,
