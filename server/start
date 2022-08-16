@@ -1044,6 +1044,9 @@ start_roxen() {
       exitcode="$?"
       ROXEN_PID=""
     else
+      if [ $verbose -gt 0 ]; then
+	dp "Executing $truss $pike $args"|sed -e "s!`pwd`!.!g"
+      fi
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
 	  eval "fork_roxen $truss \"$pike\" $args 2>&1"
