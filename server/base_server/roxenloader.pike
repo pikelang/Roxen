@@ -2037,7 +2037,7 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
   }
 
   string dir;
-  while (stringp(dir = Getopt.find_option(av, ({}), ({ "package" ]),
+  while (stringp(dir = Getopt.find_option(av, ({}), ({ "package" }),
 					  UNDEFINED, 1))) {
     add_package(dir);
   }
