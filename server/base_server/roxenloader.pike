@@ -2042,6 +2042,16 @@ Roxen 6.0 should be run with Pike 8.0 or newer.
     add_package(dir);
   }
 
+#ifdef RUN_SELF_TEST
+  // Add all customer packages.
+  foreach(lget_dir("customers"), string dir) {
+    dir = combine_path("customers", dir);
+    if (Stdio.is_dir(roxen_path(dir))) {
+      add_package(dir);
+    }
+  }
+#endif
+
   roxen_is_cms = !!lfile_stat("modules/sitebuilder") ||
     !!lfile_stat("packages/sitebuilder");
 
