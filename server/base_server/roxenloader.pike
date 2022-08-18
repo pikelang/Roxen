@@ -36,6 +36,12 @@ int once_mode;
 
 #define werror roxen_perror
 
+#ifdef DEBUG
+#define REPORT_DEBUG(X ...)	report_debug(X)
+#else
+#define REPORT_DEBUG(X ...)
+#endif
+
 constant cvs_version="$Id$";
 
 int pid = getpid();
@@ -1360,33 +1366,46 @@ void add_package(string package_dir)
     report_debug("Adding package %s.\n", package_dir);
   }
   package_directories += ({ package_dir });
-  string real_pkg_dir = roxen_path (package_dir);
+  string real_pkg_dir = lfile_path(package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
+    REPORT_DEBUG("  Pike modules:  %O\n", sub_dir);
     master()->add_module_path(sub_dir);
   }
   if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "include/"))) {
+    REPORT_DEBUG("  Pike includes: %O\n", sub_dir);
     master()->add_include_path(sub_dir);
   }
 #ifdef RUN_SELF_TEST
   sub_dir = combine_path(real_pkg_dir, "test/pike-modules");
   if (Stdio.is_dir(sub_dir)) {
+    REPORT_DEBUG("  Pike modules:  %O\n", sub_dir);
     master()->add_module_path(sub_dir);
   }
   if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/include/"))) {
+    REPORT_DEBUG("  Pike includes: %O\n", sub_dir);
     master()->add_include_path(sub_dir);
   }
 #endif
 
-  package_module_path += ({ combine_path(package_dir, "modules/") });
-  if (r_is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "roxen-modules/"))) {
+    REPORT_DEBUG("  Roxen modules: %O\n", sub_dir);
+    package_module_path += ({ sub_dir });
+  } else {
+    sub_dir = combine_path(real_pkg_dir, "modules/");
+    REPORT_DEBUG("  Roxen modules: %O\n", sub_dir);
     package_module_path += ({ sub_dir });
   }
-  if (r_is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "fonts/"))) {
+    REPORT_DEBUG("  Fonts:         %O\n", sub_dir);
     default_roxen_font_path += ({ sub_dir });
   }
 #ifdef RUN_SELF_TEST
-  if (r_is_dir(sub_dir = combine_path(package_dir, "test/modules/"))) {
+  if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/roxen-modules/"))) {
+    REPORT_DEBUG("  Roxen modules: %O\n", sub_dir);
+    package_module_path += ({ sub_dir });
+  } else if (Stdio.is_dir(sub_dir = combine_path(real_pkg_dir, "test/modules/"))) {
+    REPORT_DEBUG("  Roxen modules: %O\n", sub_dir);
     package_module_path += ({ sub_dir });
   }
 #endif
@@ -1403,7 +1422,7 @@ object|void lopen(string filename, string mode, int|void perm)
 	return o;
     }
   }
-  return open( filename, mode, perm );
+  return open( roxen_path(filename), mode, perm );
 }
 
 //! @appears lfile_stat
@@ -1416,7 +1435,7 @@ object(Stdio.Stat) lfile_stat(string filename)
 	return res;
     }
   }
-  return file_stat(filename);
+  return file_stat(roxen_path(filename));
 }
 
 //! @appears lfile_path
@@ -1428,7 +1447,7 @@ string lfile_path(string filename)
       if (file_stat(path)) return path;
     }
   }
-  return file_stat(filename) && filename;
+  return file_stat(roxen_path(filename)) && roxen_path(filename);
 }
 
 array(string) lget_dir(string path)
@@ -1442,7 +1461,7 @@ array(string) lget_dir(string path)
     }
     if (res) return Array.uniq(res);
   }
-  return get_dir(path);
+  return get_dir(roxen_path(path));
 }
 
 // Make a $PATH-style string
