@@ -6938,6 +6938,7 @@ void reinstall_gc_callbacks()
                                        "done_cb": 0 ]);
 
   int gc_start;
+  int gc_end;
 
   // mapping from program name (as reported by sprintf/%O) to number of
   // GC-destructed objects. Only valid in the GC's done_cb below.
@@ -6955,13 +6956,12 @@ void reinstall_gc_callbacks()
         gc_start = gethrtime();
         gc_histogram = ([]);
         reported_cycles = ([]);
-        werror("GC runs at %s", ctime(time()));
+        werror("GC runs at %s.\n", ctime(time()) - "\n");
       };
 
     gc_params->post_cb =
       lambda() {
-        werror("GC done after %dms\n",
-               (gethrtime() - gc_start) / 1000);
+        gc_end = gethrtime();
       };
 
     if (log_gc_histogram || log_gc_verbose || log_gc_cycles) {
@@ -6988,9 +6988,11 @@ void reinstall_gc_callbacks()
 
     gc_params->done_cb =
       lambda(int n) {
+        string msg = sprintf("GC done after %dms.", (gc_end - gc_start) / 1000);
+        if (n)
+          msg +=  sprintf(" Zapped %d things.", n);
+        werror(msg + "\n");
         if (!n) return;
-        werror("GC zapped %d things.\n", n);
-
         if (log_gc_histogram) {
           mapping h = gc_histogram;
           gc_histogram = ([]);
