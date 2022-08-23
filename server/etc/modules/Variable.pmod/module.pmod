@@ -1085,6 +1085,9 @@ class Text
   int rows = 10;
   //! The height of the textarea
   
+  bool wrap = false;
+  //! Allow text wrapping
+
   string diff( int render )
   {
     switch( render )
@@ -1111,7 +1114,8 @@ class Text
 
   string render_form( RequestID id, void|mapping additional_args )
   {
-    return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"' wrap='off'>"
+    return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"' " +
+           (wrap ? "style='word-break: break-all'" : "wrap='off'") + ">"
            + Roxen.html_encode_string( query() || "" ) +
            "</textarea>";
   }
