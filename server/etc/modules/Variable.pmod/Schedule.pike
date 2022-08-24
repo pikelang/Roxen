@@ -248,6 +248,7 @@ private mapping next_time(mapping from, int hour, int minute, void|int delta)
     from->min = minute;
     return from;
   }
+  from->min = minute;
   return localtime(mktime(from) + (24 - from->hour + hour)*3600 + delta);
 }
 
