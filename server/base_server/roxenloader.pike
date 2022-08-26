@@ -1938,9 +1938,11 @@ array(string) lget_dir(string path)
   if (path[0] != '/') {
     array(string) res = UNDEFINED;
     foreach(package_directories, string dir) {
-      array(string) paths =
-	get_dir(combine_path(roxen_path(dir), path));
-      if (paths) res += paths;
+      dir = combine_path(roxen_path(dir), path);
+      array(string) paths = get_dir(dir);
+      if (paths) {
+	res += paths;
+      }
     }
     if (res) return Array.uniq(res);
   }
