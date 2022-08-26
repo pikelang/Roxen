@@ -1,0 +1,8 @@
+subject: Roxen 6.3: Fix compilation error outside of testsuite.
+from: 1acbeca813805c1e706d138963521ba0f1643a1d
+to: d13daef9c6ce557e88c6b3208e788fa5ea8afcb2
+originator: Jonas Lonnberg
+depends: 2022-03-01T142604
+restart: true
+
+• Fix compilation error outside of testsuite.
