@@ -1,0 +1,3 @@
+Modified files:
+  etc/include/version.h
+  modules/configuration/roxen_test.pike
