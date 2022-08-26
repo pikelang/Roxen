@@ -1836,16 +1836,20 @@ array(string) package_directories = ({ });
 
 void add_package(string package_dir)
 {
-  string ver = r_read_bytes(combine_path(package_dir, "VERSION"));
+  string real_pkg_dir = lfile_path(package_dir);
+  string ver = Stdio.read_bytes(combine_path(real_pkg_dir, "VERSION"));
+  if (ver) ver -= "\n";
   if (ver && (ver != "")) {
-    report_debug("Adding package %s (Version %s).\n",
-		 roxen_path (package_dir), ver - "\n");
+    if ((ver[0] >= '0') && (ver[0] <= '9')) {
+      ver = "Version " + ver;
+    }
+    report_debug("Adding package %s (%s).\n",
+		 roxen_path (package_dir), ver);
   } else {
     report_debug("Adding package %s.\n",
 		 roxen_path (package_dir));
   }
   package_directories += ({ package_dir });
-  string real_pkg_dir = lfile_path(package_dir);
   string sub_dir = combine_path(real_pkg_dir, "pike-modules");
   if (Stdio.is_dir(sub_dir)) {
     REPORT_DEBUG("  Pike modules:  %O\n", sub_dir);
