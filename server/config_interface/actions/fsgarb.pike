@@ -212,8 +212,6 @@ string parse(RequestID id)
     "</b></font></p>\n\n";
 #endif
 
-  sort(garbs->root, garbs);
-  sort(garbs->modid, garbs);
   string modid;
   foreach(garbs, object/*(roxen.FSGarb)*/ g) {
 
