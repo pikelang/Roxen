@@ -7432,7 +7432,7 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
-#if constant(Filesystem.Monitor.basic)
+#if constant(Filesystem.Monitor.basic) && !defined(DISABLE_FSGARB)
   start_fsgarb();
 #endif
 #endif /* THREADS */
