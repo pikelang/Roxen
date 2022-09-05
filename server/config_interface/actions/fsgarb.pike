@@ -195,6 +195,13 @@ string parse(RequestID id)
 
   int size_unit = 1024;
   string res = "";
+
+#ifdef DISABLE_FSGARB
+  res = "<p><font color='&usr.warncolor;'><img src='&usr.err-2;' />&nbsp;<b>" +
+    LOCALE(0, "The filesystem garbage collector is disabled.") +
+    "</b></font></p>\n\n";
+#endif
+
   sort(garbs->root, garbs);
   sort(garbs->modid, garbs);
   string modid;
