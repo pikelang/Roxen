@@ -6641,9 +6641,14 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
       else {
 	report_debug("###### %d entries in the handler queue:\n>>\n",
 		     sizeof (queue));
-	foreach(queue; int i; array task)
+	foreach(queue; int i; array task) {
+	  if (i >= 100) {
+	    report_debug(">> [...]\n");
+	    break;
+	  }
 	  report_debug(">> %d: %s\n", i,
 		       replace (debug_format_queue_task (task), "\n", "\n>> "));
+	}
 	report_debug(">> \n");
       }
       queue = 0;
@@ -6659,9 +6664,14 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
       else {
 	report_debug ("###### %d entries in the background_run queue:\n>>\n",
 		      sizeof (queue));
-	foreach (queue; int i; array task)
+	foreach (queue; int i; array task) {
+	  if (i >= 100) {
+	    report_debug(">> [...]\n");
+	    break;
+	  }
 	  report_debug (">> %d: %s\n", i,
 			replace (debug_format_queue_task (task), "\n", "\n>> "));
+	}
 	report_debug (">> \n");
       }
       queue = 0;
