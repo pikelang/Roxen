@@ -54,6 +54,18 @@ int once_mode;
 #define REPORT_DEBUG(X ...)
 #endif
 
+#ifdef RUN_SELF_TEST
+// FIXME: Temporarily enable tracing of mysql-internal queries
+//        when running the testsuite.
+#ifndef SQL_DB_TRACE
+#define SQL_DB_TRACE	mysql
+#endif
+#endif
+
+#ifdef SQL_DB_TRACE
+#define SQL_DB_TRACE_STR	DEFINE_TOSTR(SQL_DB_TRACE)
+#endif
+
 constant cvs_version="$Id$";
 
 int pid = getpid();
@@ -2588,14 +2600,29 @@ protected class SQLResKey
   protected Sql.sql_result real;
   protected SQLKey key;
 
+#ifdef SQL_DB_TRACE
+  protected int trace_enabled;
+#endif
+
   //! @ignore
   DECLARE_OBJ_COUNT;
   //! @endignore
 
-  protected void create (Sql.sql_result real, SQLKey key)
+  protected void create (Sql.sql_result real, SQLKey key
+#ifdef SQL_DB_TRACE
+			 , int|void trace_enabled
+#endif
+			 )
   {
     this_program::real = real;
     this_program::key = key;
+#ifdef SQL_DB_TRACE
+    this_program::trace_enabled = trace_enabled;
+
+    if (trace_enabled) {
+      report_debug("SQL_TRACE: Result: %O\n", real);
+    }
+#endif
   }
 
   // Proxy functions:
@@ -2614,7 +2641,18 @@ protected class SQLResKey
   }
   protected array(mapping(string:mixed)) fetch_fields()
   {
-    return real->fetch_fields();
+    array(mapping(string:mixed)) ret = real->fetch_fields();
+#ifdef SQL_DB_TRACE
+    if (trace_enabled) {
+      if (arrayp(ret)) {
+	report_debug("SQL_TRACE: SqlResult: fields: ({ %{%O, %} })\n",
+		     ret->name);
+      } else {
+	report_debug("SQL_TRACE: SqlResult: fields: Fail\n");
+      }
+    }
+#endif
+    return ret;
   }
   protected void seek(int skip)
   {
@@ -2622,7 +2660,17 @@ protected class SQLResKey
   }
   protected int|array(string|int) fetch_row()
   {
-    return real->fetch_row();
+    int|array(string|int) ret = real->fetch_row();
+#ifdef SQL_DB_TRACE
+    if (trace_enabled) {
+      if (arrayp(ret)) {
+	report_debug("SQL_TRACE: SqlResult: row: ({ %{%O, %} })\n", ret);
+      } else {
+	report_debug("SQL_TRACE: SqlResult: row: End marker\n");
+      }
+    }
+#endif
+    return ret;
   }
   protected int|string fetch_json_result()
   {
@@ -2730,6 +2778,10 @@ protected class SQLKey
   protected string real_db_name;
   protected int reuse_in_thread;
 
+#ifdef SQL_DB_TRACE
+  protected int trace_enabled;
+#endif
+
   protected int `!( )  { return !real; }
 
   protected void handle_db_error (mixed err)
@@ -2753,22 +2805,55 @@ protected class SQLKey
   array(mapping) query( string f, mixed ... args )
   {
     mixed err = catch {
-	return real->query( f, @args );
+	array(mapping) ret = real->query( f, @args );
+#ifdef SQL_DB_TRACE
+	if (trace_enabled) {
+	  report_debug("SQL_TRACE: Sql(%O)->query(%O%{, %O%}) ==>\n"
+		       "SQL_TRACE:   %O\n",
+		       db_name, f, args, ret);
+	}
+#endif
+	return ret;
       };
+#ifdef SQL_DB_TRACE
+    if (trace_enabled) {
+      report_debug("SQL_TRACE: Sql(%O)->query(%O%{, %O%}) failed:\n",
+		   db_name, f, args);
+    }
+#endif
     handle_db_error (err);
   }
 
   Sql.sql_result big_query( string f, mixed ... args )
   {
     Sql.sql_result o;
-    if (mixed err = catch (o = real->big_query( f, @args )))
+    if (mixed err = catch {
+	o = real->big_query( f, @args );
+#ifdef SQL_DB_TRACE
+	if (trace_enabled) {
+	  report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) ==>\n",
+		       db_name, f, args);
+	}
+#endif
+      }) {
+#ifdef SQL_DB_TRACE
+      if (trace_enabled) {
+	report_debug("SQL_TRACE: Sql(%O)->big_query(%O%{, %O%}) failed:\n",
+		     db_name, f, args);
+      }
+#endif
       handle_db_error (err);
+    }
     if (reuse_in_thread) {
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (dbs_for_thread[db_name] == real)
 	m_delete (dbs_for_thread, db_name);
     }
+#ifdef SQL_DB_TRACE
+    return [object(Sql.sql_result)] (object) SQLResKey (o, this, trace_enabled);
+#else
     return [object(Sql.sql_result)] (object) SQLResKey (o, this);
+#endif
   }
 
   //! @ignore
@@ -2782,6 +2867,10 @@ protected class SQLKey
     this_program::real = real;
     this_program::db_name = db_name;
     this_program::reuse_in_thread = reuse_in_thread;
+
+#ifdef SQL_DB_TRACE
+    trace_enabled = has_prefix(db_name, SQL_DB_TRACE_STR ":");
+#endif
 
     if (reuse_in_thread) {
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
