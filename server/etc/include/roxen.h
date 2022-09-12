@@ -101,4 +101,12 @@ string get_locale();
 #define OBJ_COUNT ""
 #endif
 
+#ifndef TOSTR
+#define TOSTR(X)	#X
+#endif
+
+#ifndef DEFINE_TOSTR
+#define DEFINE_TOSTR(X)	TOSTR(X)
+#endif
+
 #endif  /* !_ROXEN_H_ */
