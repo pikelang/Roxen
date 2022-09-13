@@ -27,7 +27,8 @@ void create(Configuration conf)
   defvar("garb_schedule",
 	 Variable.Schedule( ({ 2, 1, 1, 0, 5 }), 0,
 			    "Schedule",
-			    "When to automaticaly perform the GC") );
+			    "When to automatically perform the GC") )
+    ->set_link_last_run(lambda() { return get_state(); });
 
   defvar("purge_limit", 100000, "Purge limit",
 	 TYPE_INT,

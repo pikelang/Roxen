@@ -2458,6 +2458,37 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 //! Call-out id's for backup schedules.
 protected mapping(int:mixed) backup_cos = ([]);
 
+
+//! Returns an array of info mappings covering pending backup schedules.
+//!
+//! Part of the "Server Schedule" info box in the admin interface.
+array(mapping) get_pending_backups()
+{
+  //  Get schedule names
+  mapping(int:string) schedule_lookup = ([ ]);
+  array(mapping(string:string)) backup_info =
+    query("SELECT id, schedule, period "
+          "  FROM db_schedules "
+          " WHERE period > 0");
+  foreach (backup_info, mapping bi) {
+    schedule_lookup[(int) bi->id] = bi->schedule;
+  }
+
+  array(mapping) res = ({ });
+  int now = time();
+  foreach (backup_cos; int schedule_id; mixed co) {
+    //  Compute time of next invocation
+    if (schedule_lookup[schedule_id] && co) {
+      int delta;
+      if (!zero_type(delta = find_call_out(co)))
+        res += ({ ([ "abs_start_ts": now + delta,
+                     "schedule": schedule_lookup[schedule_id] ]) });
+    }
+  }
+  return res;
+}
+
+
 //! Perform a scheduled database backup.
 //!
 //! @param schedule_id
