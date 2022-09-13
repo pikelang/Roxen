@@ -1256,6 +1256,26 @@ the Roxen instance of the MySQL server).</p>"));
   defvar("global_position",
 	 Variable.Variable(0, VAR_INVISIBLE));
 
+  defvar("fsgc_starttime",
+	 Variable.Schedule(({ 2, 2, 1, 0, 3, 0 }), 0,
+			   "FSGC: Start time",
+			   "<p>Time after which the Filesystem "
+			   "Garbage Collector subsystem may run.</p>\n"
+			   "<p>Disable this to disable the FSGC.</p>\n"
+			   "<p>Note that other values for this setting "
+			   "are only relevant if a <b>Stop time</b> is "
+			   "configured, and that that setting differs from "
+			   "this setting.</p>", (< 0, 2>)));
+
+  defvar("fsgc_stoptime",
+	 Variable.Schedule(({ 0, 2, 1, 0, 5, 0 }), 0,
+			   "FSGC: Stop time",
+			   "<p>Time after which the Filesystem "
+			   "Garbage Collector subsystem may not run.</p>\n"
+			   "<p>Disable this or set it to the same value as "
+			   "<b>Start time</b> to enable running the FSGC "
+			   "at any time of the day.</p>", (< 0, 2>)));
+
 #ifdef ENABLE_OUTGOING_PROXY
   defvar("use_proxy", 0,
 	 LOCALE(1052, "Proxy: Use proxy (experimental)"), TYPE_FLAG,
