@@ -146,6 +146,8 @@ int main(int argc, array(string) argv)
 #define VALS_HOUR		4
 #define VALS_MINUTE		5
 
+protected multiset(int(0..2)) valid_sorts = (< 0, 1, 2 >);
+
 //! Transforms the form variables given in the @[vl] attribute
 //! to the internal time representation as follows.
 //!
@@ -159,6 +161,7 @@ int main(int argc, array(string) argv)
 //!       @value 2
 //!         Every x y at z
 //!     @endint
+//!
 //!   @elem int(1..23) hour
 //!     Number of hours between restarts.
 //!
@@ -174,8 +177,10 @@ int main(int argc, array(string) argv)
 //!       @value 2..7
 //!         Rest of weekdays
 //!     @endint
+//!
 //!   @elem int(0..23) time_hour
 //!     Time at which to restart (hour).
+//!
 //!   @elem int(0..59)|void time_min
 //!     Time at which to restart (minute).
 //!     If not present at minute 0 (compat).
@@ -203,6 +208,15 @@ array transform_from_form( string what, mapping vl )
   }
 
   return res;
+}
+
+array verify_set_from_form(array val)
+{
+  if ((sizeof(val) >= VALS_SORT) &&
+      !valid_sorts[val[VALS_SORT]]) {
+    throw("Invalid operation mode.\n");
+  }
+  return ::verify_set_from_form(val);
 }
 
 protected int mktime(mapping m)
@@ -359,38 +373,48 @@ string render_form( RequestID id, void|mapping additional_args )
     vals += ({ 0 });
   }
 
-  res = "<table>"
-    "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
-    checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
+  res = "<table>";
 
-  inp1 = HTML.select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)vals[VALS_REPEAT_HOURS]);
+  if (valid_sorts[0]) {
+    res +=
+      "<tr valign='top'><td><input name='" + path() + "' value='0' type='radio' " +
+      checked(0,0) + " /></td><td>" + LOCALE(482, "Never") + "</td></tr>\n";
+  }
 
-  res += "<tr valign='top'><td><input name='" + path() + "' value='1' type='radio' " +
-    checked(0,1) + " /></td><td>" + sprintf( LOCALE(483, "Every %s hour(s)."), inp1) +
-    "</td></tr>\n";
+  if (valid_sorts[1]) {
+    inp1 = HTML.select(path()+"1", "123456789"/1 + "1011121314151617181920212223"/2, (string)vals[VALS_REPEAT_HOURS]);
 
-  inp1 = HTML.select(path()+"2", "123456789"/1, (string)vals[VALS_REPEAT_COUNT]);
-  inp2 = HTML.select(path()+"3", ({
-    ({ "0", LOCALE(484, "Day") }),
-    ({ "1", LOCALE(485, "Sunday") }),
-    ({ "2", LOCALE(486, "Monday") }),
-    ({ "3",  LOCALE(487, "Tuesday") }),
-    ({ "4", LOCALE(488, "Wednesday") }),
-    ({ "5", LOCALE(489, "Thursday") }),
-    ({ "6", LOCALE(490, "Friday") }),
-    ({ "7", LOCALE(491, "Saturday") }) }), (string)vals[VALS_DAY]);
-  inp3 = HTML.select(path()+"4",
-		     "000102030405060708091011121314151617181920212223"/2,
-		     sprintf("%02d", vals[VALS_HOUR]));
-  inp4 = HTML.select(path()+"5",
-		     "00153045"/2,
-		     sprintf("%02d", vals[VALS_MINUTE]));
+    res += "<tr valign='top'><td><input name='" + path() + "' value='1' type='radio' " +
+      checked(0,1) + " /></td><td>" + sprintf( LOCALE(483, "Every %s hour(s)."), inp1) +
+      "</td></tr>\n";
+  }
 
-  res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
-    checked(0,2) + " /></td>\n<td>" +
-    sprintf(LOCALE(492, "Every %s %s at %s:%s o'clock."),
-	    inp1, inp2, inp3, inp4) +
-    "</td></tr>\n</table>";
+  if (valid_sorts[2]) {
+    inp1 = HTML.select(path()+"2", "123456789"/1, (string)vals[VALS_REPEAT_COUNT]);
+    inp2 = HTML.select(path()+"3", ({
+      ({ "0", LOCALE(484, "Day") }),
+      ({ "1", LOCALE(485, "Sunday") }),
+      ({ "2", LOCALE(486, "Monday") }),
+      ({ "3", LOCALE(487, "Tuesday") }),
+      ({ "4", LOCALE(488, "Wednesday") }),
+      ({ "5", LOCALE(489, "Thursday") }),
+      ({ "6", LOCALE(490, "Friday") }),
+      ({ "7", LOCALE(491, "Saturday") }) }), (string)vals[VALS_DAY]);
+    inp3 = HTML.select(path()+"4",
+		       "000102030405060708091011121314151617181920212223"/2,
+		       sprintf("%02d", vals[VALS_HOUR]));
+    inp4 = HTML.select(path()+"5",
+		       "00153045"/2,
+		       sprintf("%02d", vals[VALS_MINUTE]));
+
+    res += "<tr valign='top'><td><input name='" + path() + "' value='2' type='radio' " +
+      checked(0,2) + " /></td>\n<td>" +
+      sprintf(LOCALE(492, "Every %s %s at %s:%s o'clock."),
+	      inp1, inp2, inp3, inp4) +
+      "</td></tr>\n";
+  }
+
+  res += "</table>";
 
   return res;
 }
@@ -424,6 +448,23 @@ string render_view( RequestID id, void|mapping additional_args )
     default:
       return LOCALE(495, "Error in stored value.");
   }
+}
+
+protected void create(array(int) default_value, void|int flags,
+		      void|LocaleString std_name, void|LocaleString std_doc,
+		      multiset(int(0..2))|void valid_sorts)
+{
+  if (valid_sorts) {
+    this_program::valid_sorts &= valid_sorts;
+    if (!sizeof(this_program::valid_sorts)) {
+      error("Invalid set of operation modes for Schedule: %O\n", valid_sorts);
+    }
+  }
+  if (sizeof(default_value||({})) &&
+      !this_program::valid_sorts[default_value[VALS_SORT]]) {
+    error("Invalid default mode for Schedule: %O\n", default_value[VALS_SORT]);
+  }
+  ::create(default_value, flags, std_name, std_doc);
 }
 
 #endif
