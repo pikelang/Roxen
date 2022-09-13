@@ -18,6 +18,8 @@ string parse( RequestID id )
 {
   int dt = (time() - roxen->start_time+1);
   string contents = "";
+  contents += add_row( _(0, "Server time"),
+		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", time()) );
   contents += add_row( _(369, "Server started"),
 		       Roxen.strftime( "%Y-%m-%d %H:%M:%S", roxen->start_time) );
   contents += add_row( _(370, "Server uptime"),
