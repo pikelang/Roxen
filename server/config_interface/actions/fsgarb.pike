@@ -191,18 +191,31 @@ string exp_histogram(string|object title, int num_buckets,
 string parse(RequestID id)
 {
 #if constant(roxen.register_fsgarb)
+  //  Sort according to config, module and path
+  array(string) garb_sort_keys = ({ });
   array(object/*(roxen.FSGarb)*/) garbs = values(roxen->fsgarbs);
+  foreach (garbs, object/*(roxen.FSGarb)*/ g) {
+    RoxenModule mod = Roxen.get_module(g->modid);
+    Configuration conf = mod && mod->my_configuration();
+    garb_sort_keys += ({ (conf ? conf->name : "") + "|" +
+                         (mod ? Roxen.get_modfullname(mod) : g->modid) + "|" +
+                         g->root });
+  }
+  sort(garb_sort_keys, garbs);
 
   int size_unit = 1024;
   string res = "";
-  sort(garbs->root, garbs);
-  sort(garbs->modid, garbs);
+
+#ifdef DISABLE_FSGARB
+  res = "<p><font color='&usr.warncolor;'><img src='&usr.err-2;' />&nbsp;<b>" +
+    LOCALE(0, "The filesystem garbage collector is disabled.") +
+    "</b></font></p>\n\n";
+#endif
+
   string modid;
   foreach(garbs, object/*(roxen.FSGarb)*/ g) {
 
     // werror("FSGARG DEBUG object g: %O\n", g);
-
-    if (sizeof(res)) res += "<tr><td>&nbsp;</td></tr>";
 
     if (g->modid != modid) {
       if (modid) {
@@ -243,7 +256,7 @@ string parse(RequestID id)
 	"</h3></td></tr>\n"
 	"<tr>\n"
 	"  <td>\n"
-	"    <table width='100&#37;'>\n";
+	"    <table class='entry'>\n";
     }
 
     array(Stdio.Stat) stats = g->get_stats();
@@ -263,24 +276,29 @@ string parse(RequestID id)
 				g->max_age || time(1) - local_min_mtime);
 
     res +=
-      sprintf("      <tr><th align='left' valign='top' colspan='4'>%s</th></tr>\n"
+      sprintf("      <tr>"
+	      "        <th>&nbsp;</th>\n"
+              "        <th class='path' colspan='3'><tt>%s</tt></th>"
+              "      </tr>\n"
 	      "      <tr>\n"
-	      "        <td>&nbsp;</td>\n"
-	      "        <th align='left' valign='top'>%s</th>\n"
-	      "        <th align='left' valign='top'>%s</th>\n"
-	      "        <th align='left' valign='top'>%s</th>\n"
+	      "        <th style='width: 0%%'>&nbsp;</th>\n"
+	      "        <th>%s</th>\n"
+	      "        <th>%s</th>\n"
+	      "        <th>%s</th>\n"
 	      "      </tr>\n"
-	      "      <tr id='tbl'>\n"
+	      "      <tr class='sub-table'>\n"
 	      "        <td>&nbsp;</td>\n"
-	      "        <td valign='top'>\n"
+	      "        <td class='status'>\n"
 	      "            " +
-	      LOCALE(1071, "%d files (max: %d)") + "<br/>\n"
+	      LOCALE(1071, "%d files <span class='dim'>(max: %d)</span>") +
+              "<br/>\n"
 	      "            " +
-	      LOCALE(1106, "%d KiB (max: %d)") + "<br/>\n"
+	      LOCALE(1106, "%d KiB <span class='dim'>(max: %d)</span>") +
+              "<br/>\n"
 	      "            Age limit: %s\n"
 	      "        </td>\n"
-	      "        <td valign='top'>\n%s</td>\n"
-	      "        <td valign='top'>\n%s</td>\n"
+	      "        <td>\n%s</td>\n"
+	      "        <td>\n%s</td>\n"
 	      "      </tr>\n",
 	      Roxen.html_encode_string(g->root), // Mount point
 	      LOCALE(228, "Status"),
@@ -306,7 +324,17 @@ string parse(RequestID id)
   }
 
   return
-    "<table width='100%'>\n" + res + "</table>\n"
+    "<style type='text/css'>\n"
+    "#fsgc-table h3 { font-size: 14px; margin: 0; }\n"
+    "#fsgc-table .entry { font-size: 12px; margin-bottom: 12px; }\n"
+    "#fsgc-table .entry tt { font-size: 14px; }\n"
+    "#fsgc-table .entry .dim { color: #888; }\n"
+    "#fsgc-table th { text-align: left; vertical-align: top; }\n"
+    "#fsgc-table th.path { color: #68a; padding: 8px 0; }\n"
+    "#fsgc-table .sub-table td { vertical-align: top; padding-right: 20px; }\n"
+    "#fsgc-table .sub-table td.status { width: 250px; }\n"
+    "</style>\n"
+    "<table id='fsgc-table' width='100%'>\n" + res + "</table>\n"
     "<input type='hidden' name='action' value='fsgarb.pike' />"
     "<br />\n"
     "<cf-ok-button href='./'/> <cf-refresh/>\n";
