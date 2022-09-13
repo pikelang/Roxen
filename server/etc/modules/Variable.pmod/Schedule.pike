@@ -139,6 +139,48 @@ int main(int argc, array(string) argv)
 
 #endif
 
+
+protected string|function(:bool) link_enabled;
+protected string|function(:int) link_last_run;
+
+//! Link this schedule to another variable instance (providing a flag value)
+//! or callback function (returning true/false) which answers whether this
+//! schedule is active. Only needed when this schedule can become inactive
+//! due to some external factor. Call @[get_link_enabled] to get the value
+//! back.
+//!
+//! Part of the "Server Schedule" info box in the admin interface.
+this_program set_link_enabled(string|function(:bool) _link_enabled)
+{
+  link_enabled = _link_enabled;
+  return this;
+}
+
+//! Getter for the value set in @[set_link_enabled].
+string|function(:bool) get_link_enabled()
+{
+  return link_enabled;
+}
+
+//! Link this schedule to another variable instance (providing a numeric
+//! value) or callback function (returning an integer) which answers when
+//! this schedule was last run. This helps the caller compute a more exact
+//! time of the next run. Call @[get_link_last_run] to get the value back.
+//!
+//! Part of the "Server Schedule" info box in the admin interface.
+this_program set_link_last_run(string|function(:int) _link_last_run)
+{
+  link_last_run = _link_last_run;
+  return this;
+}
+
+//! Getter for the value set in @[set_link_last_run].
+string|function(:int) get_link_last_run()
+{
+  return link_last_run;
+}
+
+
 #define VALS_SORT		0
 #define VALS_REPEAT_HOURS	1
 #define VALS_REPEAT_COUNT	2

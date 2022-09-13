@@ -1078,6 +1078,8 @@ be of real use.</p>"));
 			    LOCALE(387,"Auto Maintenance: Restart Schedule"),
 			    LOCALE(388, "Automatically restart the "
 				   "server according to this schedule.") ) )
+    ->set_link_enabled("suicide_engage")
+    ->set_link_last_run("last_suicide")
     ->set_invisibility_check_callback (
       lambda(RequestID id, Variable.Variable f)
 	{return !query("suicide_engage");}
