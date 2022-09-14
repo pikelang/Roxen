@@ -55,7 +55,7 @@ constant css = #"
   }
   tr.sched td.desc div {
     font-size: 11px;
-    opacity: 0.7;
+    color: #555;
   }
   tr.sched td.desc p {
     margin: 0;
@@ -167,7 +167,7 @@ string trim_desc(string desc)
   return desc;
 }
 
-string parse(RequestID id)
+string parse_low(RequestID id)
 {
   mapping(string:Variable.Variable) vars = ([ ]);
   mapping(Variable.Variable:int) next_run = ([ ]);
@@ -213,10 +213,14 @@ string parse(RequestID id)
     string conf_name =
       m ? Roxen.html_encode_string(m->my_configuration()->name) :
       "Global Settings";
+    string var_name = (string) sv->name();
+    string var_group_name =
+      has_value(var_name, ":") ?
+      replace((var_name / ":")[0], " ", "%20") : "Settings";
     string curl =
-      (m && conf_name) ?
+      ((mod_id != "_global") && conf_name) ?
       ("/sites/site.html/" + replace(conf_name, " ", "%20") + "/") :
-      "/global_settings/?section=Auto%20Maintenance&amp;&usr.set-wiz-id;";
+      "/global_settings/?section=" + var_group_name + "&amp;&usr.set-wiz-id;";
     string mname = m && Roxen.get_modfullname(m);
     string mgroup = "zz_misc";
     if (mname) {
@@ -228,11 +232,10 @@ string parse(RequestID id)
       m && (curl +
             Roxen.http_encode_invalids(mgroup) + "!0/" +
             replace(m->sname(), "#", "!") +
-            "/?section=Status&amp;&usr.set-wiz-id;");
-    string var_name = beautify_group_name(sv->name());
+            "/?section=" + var_group_name + "&amp;&usr.set-wiz-id;");
     int next_ts = next_run[sv];
     mapping row = ([
-      "var_name":  var_name,
+      "var_name":  beautify_group_name(var_name),
       "mod_name":  mod_name,
       "conf_name": conf_name,
       "mod_desc":  trim_desc(sv->doc() || ""),
@@ -339,7 +342,16 @@ string parse(RequestID id)
         "<td class='desc'><div>" + row->mod_desc + "</div></td>"
       "</tr>";
   }
+  return res;
+}
 
+string parse(RequestID id)
+{
+  string res;
+  if (mixed err = catch { res = parse_low(id); }) {
+    werror("Error generating schedule:\n%s\n", describe_backtrace(err));
+    res = "<tr><td>(An unknown error occurred.)</td></tr>";
+  }
   return
     "<box type='" + box + "' title='" + box_name + "'>"
     "<style type='text/css'>" + css + "</style>"
