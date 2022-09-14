@@ -7,6 +7,8 @@
 constant box      = "large";
 constant box_initial = 1;
 
+constant box_position = 3;
+
 LocaleString box_name = _(1066,"SNMP status");
 LocaleString box_doc  = _(1067,"Global SNMP server statistics");
 

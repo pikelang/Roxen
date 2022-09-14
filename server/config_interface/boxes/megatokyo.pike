@@ -7,6 +7,8 @@
 constant box      = "large";
 constant box_initial = 0;
 
+constant box_position = 4;
+
 LocaleString box_name = _(398,"Todays MegaTokyo comic");
 LocaleString box_doc  = _(399,"Todays comic from MegaTokyo");
 

@@ -3,6 +3,8 @@
 constant box = "large";
 constant box_initial = 1;
 
+constant box_position = 1;
+
 string box_name = "Server schedule";
 string box_doc = "Upcoming server events";
 

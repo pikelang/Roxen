@@ -7,6 +7,8 @@
 constant box      = "large";
 constant box_initial = 0;
 
+constant box_position = 3;
+
 LocaleString box_name = _(232,"Crunch activity");
 LocaleString box_doc  = _(262,"Recently changed Crunch reports");
 

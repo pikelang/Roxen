@@ -7,6 +7,8 @@
 constant box      = "large";
 constant box_initial = 1;
 
+constant box_position = 0;
+
 LocaleString box_name = _(367,"Server status");
 LocaleString box_doc  = _(368,"Various global server statistics");
 
