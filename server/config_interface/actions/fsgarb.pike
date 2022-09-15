@@ -204,13 +204,17 @@ string parse(RequestID id)
   sort(garb_sort_keys, garbs);
 
   int size_unit = 1024;
-  string res = "";
+  string res = "<h2>Filesystem Garbage Collector Status</h2>\n\n";
 
-#ifdef DISABLE_FSGARB
-  res = "<p><font color='&usr.warncolor;'><img src='&usr.err-2;' />&nbsp;<b>" +
-    LOCALE(0, "The filesystem garbage collector is disabled.") +
-    "</b></font></p>\n\n";
+#ifndef DISABLE_FSGARB
+  if (roxen.getvar("fsgc_starttime")->get_next(0) < 0)
 #endif
+  {
+    res += "<p><font color='&usr.warncolor;'><img src='&usr.err-2;' />"
+      "&nbsp;<b>" +
+      LOCALE(0, "The filesystem garbage collector is disabled.") +
+      "</b></font></p>\n\n";
+  }
 
   string modid;
   foreach(garbs, object/*(roxen.FSGarb)*/ g) {

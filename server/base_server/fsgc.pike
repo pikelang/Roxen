@@ -15,6 +15,9 @@
 #define GC_WERR(X...)
 #endif
 
+// The following are mixed in when inherited by roxen.pike.
+Variable.Variable getvar( string name );
+
 /* Some notes:
  *
  *   There are multiple data for a file that may affect the garbage policy:
@@ -499,12 +502,27 @@ void meta_fsgc()
   // Sleep a bit to avoid the startup race.
   sleep(60);
   while(meta_fsgc_thread) {
-    int max_sleep = 60;
-    foreach(fsgarbs; string id; FSGarb g) {
-      int seconds = g && g->check();
-      if (seconds < max_sleep) max_sleep = seconds;
+    int max_sleep = 300;
+    int next_start = getvar("fsgc_starttime")->get_next(0);
+    int next_stop = getvar("fsgc_stoptime")->get_next(0);
+
+    if (next_start < 0) {
+      // FSGC Disabled
+      GC_WERR("FSGC: Disabled.\n");
+    } else if (next_start < next_stop) {
+      // FSGC Not allowed to run now.
+      // Sleep until next start time, but max 5 minutes
+      // at a time in case the settings are changed.
+      max_sleep = limit(0, next_start - time(1), max_sleep);
+    } else {
+      // FSGC Allowed to run.
+      max_sleep = 60;
+      foreach(fsgarbs; string id; FSGarb g) {
+	int seconds = g && g->check();
+	if (seconds < max_sleep) max_sleep = seconds;
+      }
+      if (max_sleep < 1) max_sleep = 1;
     }
-    if (max_sleep < 1) max_sleep = 1;
     GC_WERR("FSGC: Sleeping %d seconds...\n", max_sleep);
     while(meta_fsgc_thread && max_sleep--) {
       sleep(1);
