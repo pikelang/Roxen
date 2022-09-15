@@ -513,10 +513,7 @@ void meta_fsgc()
       // FSGC Not allowed to run now.
       // Sleep until next start time, but max 5 minutes
       // at a time in case the settings are changed.
-      max_sleep = next_start - time(1);
-      if (max_sleep > 300) {
-	max_sleep = 300;
-      }
+      max_sleep = limit(0, next_start - time(1), max_sleep);
     } else {
       // FSGC Allowed to run.
       max_sleep = 60;
