@@ -503,8 +503,9 @@ void meta_fsgc()
   sleep(60);
   while(meta_fsgc_thread) {
     int max_sleep = 300;
-    int next_start = getvar("fsgc_starttime")->get_next(0);
-    int next_stop = getvar("fsgc_stoptime")->get_next(0);
+    int now = time(1);
+    int next_start = getvar("fsgc_starttime")->get_next(now);
+    int next_stop = getvar("fsgc_stoptime")->get_next(now);
 
     if (next_start < 0) {
       // FSGC Disabled
@@ -513,7 +514,7 @@ void meta_fsgc()
       // FSGC Not allowed to run now.
       // Sleep until next start time, but max 5 minutes
       // at a time in case the settings are changed.
-      max_sleep = limit(0, next_start - time(1), max_sleep);
+      max_sleep = limit(1, next_start - now, max_sleep);
     } else {
       // FSGC Allowed to run.
       max_sleep = 60;
