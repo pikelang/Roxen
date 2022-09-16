@@ -206,14 +206,37 @@ string parse(RequestID id)
   int size_unit = 1024;
   string res = "<h2>Filesystem Garbage Collector Status</h2>\n\n";
 
+  int now = time(1);
+  int starttime = roxen.getvar("fsgc_starttime")->get_next(now);
+  int stoptime = roxen.getvar("fsgc_stoptime")->get_next(now);
+
+  string warning;
+
 #ifndef DISABLE_FSGARB
-  if (roxen.getvar("fsgc_starttime")->get_next(0) < 0)
+  if (starttime < 0)
 #endif
   {
+    warning = "" + LOCALE(0, "The filesystem garbage collector is disabled.");
+  }
+#ifndef DISABLE_FSGARB
+  else if (starttime < stoptime) {
+    mapping(string:int) lt = localtime(starttime);
+    warning = LOCALE(0, "HALTED: The filesystem garbage collector will resume at:") +
+      sprintf(" %04d-%02d-%02d %02d:%02d",
+	      lt->year + 1900, lt->mon + 1, lt->mday,
+	      lt->hour, lt->min);
+  } else if (stoptime >= 0) {
+    mapping(string:int) lt = localtime(stoptime);
+    warning = LOCALE(0, "The filesystem garbage collector will halt at:") +
+      sprintf(" %04d-%02d-%02d %02d:%02d",
+	      lt->year + 1900, lt->mon + 1, lt->mday,
+	      lt->hour, lt->min);
+  }
+#endif
+
+  if (warning) {
     res += "<p><font color='&usr.warncolor;'><img src='&usr.err-2;' />"
-      "&nbsp;<b>" +
-      LOCALE(0, "The filesystem garbage collector is disabled.") +
-      "</b></font></p>\n\n";
+      "&nbsp;<b>" + warning + "</b></font></p>\n\n";
   }
 
   string modid;

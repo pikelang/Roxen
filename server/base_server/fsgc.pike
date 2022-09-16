@@ -385,6 +385,21 @@ class FSGarb
 
   constant DefaultMonitor = Monitor;
 
+  void restart()
+  {
+    if (!sizeof(monitors)) {
+      // Clear the statistics at restart.
+      num_files = 0;
+      total_size = 0;
+
+      GC_WERR("FSGC: (Re-)starting monitoring of %O...\n", root);
+      // Workaround for too strict type-check in Pike 7.8.
+      int flags = 3;
+
+      monitor(root, flags);
+    }
+  }
+
   protected void create(string modid, string path, int max_age,
 			int|void max_size, int|void max_files,
 			string|void quarantine,
@@ -416,10 +431,7 @@ class FSGarb
     //  to ensure it's run regularly even if the server reboots frequently.
     ::create(min(max_age, 24 * 3600) / file_interval_factor, 0, max_age);
 
-    // Workaround for too strict type-check in Pike 7.8.
-    int flags = 3;
-
-    monitor(root, flags);
+    restart();
   }
 
   void stable_data_change(string path, Stdio.Stat st)
@@ -491,15 +503,39 @@ class FSGarb
 		    return st && st->isreg;
 		  });
   }
+
+  void clear()
+  {
+    if (sizeof(monitors)) {
+      GC_WERR("FSGC: Clearing state for %O...\n", root);
+      ::clear();
+    }
+  }
 }
 
 mapping(string:FSGarb) fsgarbs = ([]);
+
+protected void stop_fsgcs()
+{
+  foreach(fsgarbs; string garb_id; FSGarb garb) {
+    garb->clear();
+  }
+}
+
+protected void start_fsgcs()
+{
+  foreach(fsgarbs; string garb_id; FSGarb garb) {
+    garb->restart();
+  }
+}
 
 Thread.Thread meta_fsgc_thread;
 
 void meta_fsgc()
 {
   // Sleep a bit to avoid the startup race.
+  int fsgcs_halted;
+
   sleep(60);
   while(meta_fsgc_thread) {
     int max_sleep = 300;
@@ -510,12 +546,31 @@ void meta_fsgc()
     if (next_start < 0) {
       // FSGC Disabled
       GC_WERR("FSGC: Disabled.\n");
+
+      stop_fsgcs();
+
+      fsgcs_halted = 1;
     } else if (next_start < next_stop) {
       // FSGC Not allowed to run now.
       // Sleep until next start time, but max 5 minutes
       // at a time in case the settings are changed.
       max_sleep = limit(1, next_start - now, max_sleep);
+
+      if ((next_start - now) > 600) {
+	// FSGC not expected to run for at least 10 minutes.
+	// Zap the state and let it reinitialize when
+	// it starts again.
+	stop_fsgcs();
+
+	fsgcs_halted = 1;
+      }
     } else {
+      if (fsgcs_halted) {
+	start_fsgcs();
+
+	fsgcs_halted = 0;
+      }
+
       // FSGC Allowed to run.
       max_sleep = 60;
       foreach(fsgarbs; string id; FSGarb g) {
