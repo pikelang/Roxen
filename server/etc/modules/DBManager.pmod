@@ -996,6 +996,15 @@ private
 			     indices (none_dbs), autouser, -1);
 
     set_perms_in_user_table(db, "localhost", autouser, -1);
+
+    if (normalized_server_version >= "010.002") {
+      // NB: set_perms_in_user_table() does not flush the privileges
+      //     in this case.
+      //
+      //     Flushing is needed to activate the changes done by
+      //     set_perms_in_db_table() above.
+      db->big_query ("FLUSH PRIVILEGES");
+    }
   }
 
   void invalidate_autousers (string db_name)
