@@ -69,7 +69,7 @@ class PrometheusValue(string name)
       buf->add(a, "=\"");
       mixed v = aspects[a];
       if (floatp(v)) {
-	buf->sprintf("%g", v);
+	buf->sprintf("%.15g", v);
       } else if (intp(v)) {
 	buf->sprintf("%d", v);
       } else {
