@@ -12,16 +12,17 @@ constant module_doc  =
   "<p>This module prints memory usage information in a log file. "
   "The log format contains the following columns:</p>"
   "<table>"
-  "<tr><td>ARR:</td> <td>Array megabytes </td></tr>"
-  "<tr><td>CLO:</td> <td>Call out megabytes </td></tr>"
-  "<tr><td>CLA:</td> <td>Callable megabytes </td></tr>"
-  "<tr><td>CLB:</td> <td>Callback megabytes </td></tr>"
-  "<tr><td>FRM:</td> <td>Frame megabytes </td></tr>"
-  "<tr><td>MAP:</td> <td>Mapping megabytes </td></tr>"
-  "<tr><td>MUL:</td> <td>Multiset megabytes </td></tr>"
-  "<tr><td>OBJ:</td> <td>Object megabytes </td></tr>"
-  "<tr><td>PRO:</td> <td>Program megabytes </td></tr>"
-  "<tr><td>STR:</td> <td>String megabytes </td></tr>"
+  "<tr><td>ARR:</td> <td>Array megabytes (count/1000)</td></tr>"
+  "<tr><td>CLO:</td> <td>Call out megabytes (count/1000)</td></tr>"
+  "<tr><td>CLA:</td> <td>Callable megabytes (count/1000)</td></tr>"
+  "<tr><td>CLB:</td> <td>Callback megabytes (count/1000)</td></tr>"
+  "<tr><td>FRM:</td> <td>Frame megabytes (count/1000)</td></tr>"
+  "<tr><td>MAP:</td> <td>Mapping megabytes (count/1000)</td></tr>"
+  "<tr><td>MUL:</td> <td>Multiset megabytes (count/1000)</td></tr>"
+  "<tr><td>OBJ:</td> <td>Object megabytes (count/1000)</td></tr>"
+  "<tr><td>PRO:</td> <td>Program megabytes (count/1000)</td></tr>"
+  "<tr><td>STR:</td> <td>String megabytes (count/1000)</td></tr>"
+  "<tr><td>TYP:</td> <td>Type megabytes (count/1000)</td></tr>"
   "<tr><td>TOT:</td> <td>Total pike megabytes </td></tr>"
   "<tr><td>RES:</td> <td>Resident megabytes </td></tr>"
   "<tr><td>VIR:</td> <td>Virtual megabytes </td></tr>"
@@ -109,32 +110,48 @@ void log_memory()
     pmem->program_bytes +
     pmem->string_bytes;
 
-  string res = 
+  string res =
     sprintf("%s "
-	    "ARR: %:3d, CLO: %:2d, CLA: %:2d, "
-	    "CLB: %:2d, FRM: %:2d, MAP: %:3d, "
-	    "MUL: %:3d, OBJ: %:3d, PRO: %:3d, "
-	    "STR: %:3d, TOT: %:4d, "
-	    "RES: %:4d, VIR: %:4d\n", 
-	    t, 
-	    pmem->array_bytes/1048576, 
-	    pmem->call_out_bytes/1048576, 
-	    pmem->callable_bytes/1048576, 
+	    "ARR: %:3d (%:3d), CLO: %:2d (%:2d), CLA: %:2d (%:2d), "
+	    "CLB: %:2d (%:2d), FRM: %:2d (%:2d), MAP: %:3d (%:3d), "
+	    "MUL: %:3d (%:3d), OBJ: %:3d (%:3d), PRO: %:3d (%:3d), "
+	    "STR: %:3d (%:3d), TYP: %:3d (%:3d), TOT: %:4d, "
+	    "COM: %:3d, RUN: %:3d, GC: %:3d, "
+	    "MAL: %:4d (%:4d), USE: %:4d (%:4d), "
+	    "RES: %:4d, VIR: %:4d\n",
+	    t,
+	    pmem->array_bytes/1048576, pmem->num_arrays/1000,
+	    pmem->call_out_bytes/1048576, pmem->num_call_outs/1000,
+	    pmem->callable_bytes/1048576, pmem->num_callables/1000,
 
-	    pmem->callback_bytes/1048576, 
-	    pmem->frame_bytes/1048576, 
-	    pmem->mapping_bytes/1048576, 
+	    pmem->callback_bytes/1048576, pmem->num_callbacks/1000,
+	    pmem->pike_frame_bytes/1048576, pmem->num_pike_frames/1000,
+	    pmem->mapping_bytes/1048576, pmem->num_mappings/1000,
 
-	    pmem->multiset_bytes/1048576, 
-	    pmem->object_bytes/1048576, 
-	    pmem->program_bytes/1048576, 
+	    pmem->multiset_bytes/1048576, pmem->num_multisets/1000,
+	    pmem->object_bytes/1048576, pmem->num_objects/1000,
+	    pmem->program_bytes/1048576, pmem->num_programs/1000,
 
-	    pmem->string_bytes/1048576,
-	    pmem_tot/1048576, 
+	    pmem->string_bytes/1048576, pmem->num_strings/1000,
+	    pmem->pike_type_bytes/1048576, pmem->num_pike_types/1000,
+	    pmem_tot/1048576,
 
-	    rmem->resident/1024, 
+	    (pmem->node_s_bytes +
+	     pmem->supporter_marker_bytes)/1048576,
+	    (pmem->catch_context_bytes +
+	     pmem->pike_frame_bytes)/1048576,
+	    (pmem->ba_mixed_frame_bytes +
+	     pmem->destroy_called_mark_bytes +
+	     pmem->gc_rec_frame_bytes +
+	     pmem->marker_bytes +
+	     pmem->mc_marker_bytes)/1048576,
+
+	    pmem->malloc_block_bytes/1048576, pmem->num_malloc_blocks/1000,
+	    pmem->malloc_bytes/1048576, pmem->num_malloc/1000,
+
+	    rmem->resident/1024,
 	    rmem->virtual/1024);
-  
+
   log_function(res);
 
   schedule();
