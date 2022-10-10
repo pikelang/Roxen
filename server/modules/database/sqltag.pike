@@ -311,6 +311,9 @@ protected string get_restricted_rw_user()
     werror ("Got restricted_rw_user %O\n", restricted_rw_user);
 #endif
   }
+#ifdef RUN_SELF_TEST
+  werror("SQLTAG: get_restricted_rw_user() ==> %O\n", restricted_rw_user);
+#endif
   return restricted_rw_user;
 }
 
@@ -324,6 +327,9 @@ protected string get_restricted_ro_user()
     werror ("Got restricted_ro_user %O\n", restricted_ro_user);
 #endif
   }
+#ifdef RUN_SELF_TEST
+  werror("SQLTAG: get_restricted_ro_user() ==> %O\n", restricted_ro_user);
+#endif
   return restricted_ro_user;
 }
 
@@ -421,6 +427,10 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
       RXML.parse_error ("Database %O is not accessible "
 			"from this configuration.\n", db);
     }
+
+#ifdef RUN_SELF_TEST
+    werror("SQLTAG: get_rxml_sql_con() ==> db_user: %O\n", db_user);
+#endif
 
     error = catch {
 	con = DBManager.low_get (db_user, db, reuse_in_thread, charset);
