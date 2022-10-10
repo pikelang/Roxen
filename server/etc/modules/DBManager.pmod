@@ -985,6 +985,11 @@ private
     // If the user exists at all we assume it got the right perms.
     if (check_db_user (autouser, "localhost")) return;
 
+#ifdef RUN_SELF_TEST
+    werror("fix_autouser(%O, %O, %O, %O)\n",
+	   autouser, write_dbs, read_dbs, none_dbs);
+#endif
+
     if (sizeof (write_dbs))
       set_perms_in_db_table (db, "localhost",
 			     indices (write_dbs), autouser, WRITE);
@@ -1674,6 +1679,13 @@ string get_restricted_db_user (multiset(string) dbs, Configuration conf,
     string val = restricted_user_cache[key];
     if (!zero_type (val)) return val;
   }
+
+#ifdef RUN_SELF_TEST
+  werror("get_restricted_db_user(%O, %O, %O)\n"
+	 "  conf_ro_dbs: %O\n"
+	 "  allowed_ro_dbs: %O\n",
+	 dbs, conf, read_only, conf_ro_dbs, allowed_ro_dbs);
+#endif
 
   if (equal (dbs, conf_ro_dbs)) {
     string nonautouser = short (conf->name) + (read_only ? "_ro" : "_rw");
