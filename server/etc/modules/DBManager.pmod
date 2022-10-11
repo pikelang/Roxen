@@ -282,7 +282,6 @@ private
 		      "FROM %s@%s",
 		      user, host);
 	  };
-	  break;
 	  if (level == READ) {
 	    // NB: SHOW DATABASES is a global privilege, and may not
 	    //     be granted on the dm_name.* privilege-level.
