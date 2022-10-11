@@ -143,7 +143,8 @@ private
       if (level == NONE) {
 	db->query("DROP USER IF EXISTS %s@%s", user, host);
       } else {
-	db->query("CREATE USER IF NOT EXISTS %s@%s", user, host);
+	db->query("CREATE USER IF NOT EXISTS %s@%s IDENTIFIED BY ''",
+		  user, host);
 
 	switch(level) {
 	case READ:
@@ -219,7 +220,8 @@ private
 			  " WHERE Host = %s AND User = %s",
 			  host, user))) {
       // Ensure that the user exists.
-      db->big_query("REPLACE INTO user (Host, User) VALUES (%s, %s)",
+      db->big_query("REPLACE INTO user (Host, User, Password) "
+		    "           VALUES (%s, %s, '')",
 		    host, user);
     }
     // Current as of MySQL 5.0.70.
@@ -1689,6 +1691,9 @@ string get_restricted_db_user (multiset(string) dbs, Configuration conf,
 
   if (equal (dbs, conf_ro_dbs)) {
     string nonautouser = short (conf->name) + (read_only ? "_ro" : "_rw");
+    // NB: This is only valid as long as no new databases are added
+    //     to the conf. This is however fine as clear_sql_caches()
+    //     will be called in that case.
     return restricted_user_cache[key] =
       restricted_user_cache[nonautouser] = nonautouser;
   }
