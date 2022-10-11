@@ -95,10 +95,24 @@ private
   {
     if( password )
     {
-      // According to the documentation MySQL 4.1 or newer is required
-      // for OLD_PASSWORD(). There does however seem to exist versions of
-      // at least 4.0 that know of OLD_PASSWORD().
-      if (normalized_server_version >= "004.001") {
+      if (normalized_server_version >= "010.002") {
+	// Unfortunately the syntax "CREATE OR REPLACE USER" zapps any
+	// existing grants, while we only want to update the password.
+	// "ALTER USER" on the other hand requires the user to exist.
+	db->query( "CREATE USER IF NOT EXISTS "
+		   "%s@%s IDENTIFIED BY %s,"
+		   "%s@%s IDENTIFIED BY %s",
+		   short_name + "_rw", host, password,
+		   short_name + "_ro", host, password);
+	db->query( "ALTER USER "
+		   "%s@%s IDENTIFIED BY %s,"
+		   "%s@%s IDENTIFIED BY %s",
+		   short_name + "_rw", host, password,
+		   short_name + "_ro", host, password);
+      } else if (normalized_server_version >= "004.001") {
+	// According to the documentation MySQL 4.1 or newer is required
+	// for OLD_PASSWORD(). There does however seem to exist versions of
+	// at least 4.0 that know of OLD_PASSWORD().
 	db->query( "REPLACE INTO user (Host,User,Password) "
 		   "VALUES (%s, %s, OLD_PASSWORD(%s)), "
 		   "       (%s, %s, OLD_PASSWORD(%s))",
@@ -245,6 +259,49 @@ private
   void set_perms_in_db_table (Sql.Sql db, string host, array(string) dbs,
 			      string user, int level)
   {
+    if (normalized_server_version >= "010.002") {
+      foreach(dbs, string db_name) {
+	switch(level) {
+	case NONE:
+	case -1:
+	case READ:
+	  // Catch "ERROR 1141 (42000): There is no such grant defined "
+	  //       "for user '%s' on host '%s'"
+	  // NB: The syntax "REVOKE ALL PRIVILEGES, GRANT OPTION "
+	  //     "ON table.* FROM user@host" is NOT supported. Thus
+	  //     the two separate queries.
+	  catch {
+	    db->query("REVOKE ALL PRIVILEGES "
+		      "ON `" + db_name + "`.* "
+		      "FROM %s@%s",
+		      user, host);
+	  };
+	  catch {
+	    db->query("REVOKE GRANT OPTION "
+		      "ON `" + db_name + "`.* "
+		      "FROM %s@%s",
+		      user, host);
+	  };
+	  break;
+	  if (level == READ) {
+	    // NB: SHOW DATABASES is a global privilege, and may not
+	    //     be granted on the dm_name.* privilege-level.
+	    db->query("GRANT SELECT, CREATE TEMPORARY TABLES, "
+		      "      LOCK TABLES, EXECUTE, SHOW VIEW "
+		      "      ON `" + db_name + "`.* TO %s@%s",
+		      user, host);
+	  }
+	  break;
+	case WRITE:
+	  db->query("GRANT ALL PRIVILEGES ON `" + db_name + "`.* "
+		    "TO %s@%s WITH GRANT OPTION",
+		    db_name, user, host);
+	  break;
+	}
+      }
+      return;
+    }
+
     function(string:string) q = db->quote;
 
     switch (level) {
