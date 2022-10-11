@@ -295,7 +295,7 @@ private
 	case WRITE:
 	  db->query("GRANT ALL PRIVILEGES ON `" + db_name + "`.* "
 		    "TO %s@%s WITH GRANT OPTION",
-		    db_name, user, host);
+		    user, host);
 	  break;
 	}
       }
