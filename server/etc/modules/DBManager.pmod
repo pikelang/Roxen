@@ -99,6 +99,8 @@ private
 	// Unfortunately the syntax "CREATE OR REPLACE USER" zapps any
 	// existing grants, while we only want to update the password.
 	// "ALTER USER" on the other hand requires the user to exist.
+	//
+	// NOTE: Also switches to the modern MySQL/MariaDB password hash.
 	db->query( "CREATE USER IF NOT EXISTS "
 		   "%s@%s IDENTIFIED BY %s,"
 		   "%s@%s IDENTIFIED BY %s",
@@ -967,11 +969,14 @@ private
 
     mapping(string:int(1..1)) old_perms = ([]);
 
-    Sql.sql_result sqlres =
-      db->big_query ("SELECT Db, User FROM db WHERE Host='localhost'");
-    while (array(string) ent = sqlres->fetch_row())
-      if (has_suffix (ent[1], "_rw") || has_suffix (ent[1], "_ro"))
-	old_perms[ent[0] + "\0" + ent[1]] = 1;
+    Sql.sql_result sqlres;
+    catch {
+      sqlres =
+	db->big_query ("SELECT Db, User FROM db WHERE Host='localhost'");
+      while (array(string) ent = sqlres->fetch_row())
+	if (has_suffix (ent[1], "_rw") || has_suffix (ent[1], "_ro"))
+	  old_perms[ent[0] + "\0" + ent[1]] = 1;
+    };
 
     mapping(string:int(1..1)) checked_users = ([]);
 
@@ -1070,11 +1075,38 @@ private
     }
   }
 
-  void invalidate_autousers (string db_name)
+  void invalidate_autousers (string|void db_name)
   // Invalidates the autousers that have any access on the given
   // database. Invalidates all autousers if db_name is zero.
   {
     Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    if (normalized_server_version >= "010.004") {
+      if (db_name) {
+	// NB: This differs from the old code in that the users
+	//     still exist albeit without any permissions on
+	//     the selected db.
+	foreach(db->query("SELECT user FROM global_priv "
+			  "WHERE host='localhost' "
+			  "AND (user LIKE '!_______________' "
+			  "     OR user LIKE '?_______________')")->user,
+		string user) {
+	  set_perms_in_db_table(db, "localhost", ({ db_name }), user, NONE);
+	}
+      } else {
+	foreach(db->query("SELECT user FROM global_priv "
+			  "WHERE host='localhost' "
+			  "AND (user LIKE '!_______________' "
+			  "     OR user LIKE '?_______________')")->user,
+		string user) {
+	  db->query("DROP USER IF EXISTS %s@'localhost'", user);
+	}
+      }
+
+      restricted_user_cache = ([]);
+
+      return;
+    }
 
     if (db_name) {
       array(string) users = ({});
@@ -1995,11 +2027,15 @@ void drop_db( string name )
   if(!sizeof( q ) )
     error( "The database "+name+" does not exist\n" );
   if( sizeof( q ) && (int)q[0]["local"] ) {
-    invalidate_autousers (name);
     query( "DROP DATABASE `"+name+"`" );
-    Sql.Sql db = connect_to_my_mysql (0, "mysql");
-    db->big_query ("DELETE FROM db WHERE Db=%s", name);
-    db->big_query ("FLUSH PRIVILEGES");
+    // NB: We assume that modern versions of MariaDB know that
+    //     they need to drop privilege info for the dropped db.
+    if (normalized_server_version < "010.004") {
+      invalidate_autousers(name);
+      Sql.Sql db = connect_to_my_mysql (0, "mysql");
+      db->big_query ("DELETE FROM db WHERE Db=%s", name);
+      db->big_query ("FLUSH PRIVILEGES");
+    }
   }
   query( "DELETE FROM dbs WHERE name=%s", name );
   query( "DELETE FROM db_groups WHERE db=%s", name );
@@ -2141,10 +2177,10 @@ array(mapping) restore( string dbname, string directory, string|void todb,
   array res = ({});
   foreach( q, string table )
   {
-    db->query( "DROP TABLE IF EXISTS "+table);
+    db->query( "DROP TABLE IF EXISTS `" + table + "`");
     if (use_restore) {
       directory = combine_path( getcwd(), directory );
-      res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+      res += db->query( "RESTORE TABLE `" + table + "` FROM %s", directory );
     } else {
       // Copy the files.
       foreach(({ ".frm", ".MYD", ".MYI" }), string ext) {
@@ -2160,7 +2196,7 @@ array(mapping) restore( string dbname, string directory, string|void todb,
 		directory + "/" + table + ext);
 	}
       }
-      res += db->query("REPAIR TABLE "+table+" USE_FRM");
+      res += db->query("REPAIR TABLE `" + table + "` USE_FRM");
     }
   }
   return res;
@@ -2512,7 +2548,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 	// Backup inhibited table.
 	continue;
       }
-      res += db->query( "BACKUP TABLE "+table+" TO %s",directory);
+      res += db->query( "BACKUP TABLE `" + table + "` TO %s", directory);
       query( "DELETE FROM db_backups WHERE "
 	     "db=%s AND directory=%s AND tbl=%s",
 	     dbname, directory, table );
@@ -2809,6 +2845,9 @@ void rename_db( string oname, string nname )
 //! internal database) is not copied. The old database is deleted,
 //! however. For external databases, only the metadata is modified, no
 //! attempt is made to alter the external database.
+//!
+//! CAVEAT EMPTOR: Dangerous! Do not use unless you know what
+//!                you are doing and have a backup.
 {
   query( "UPDATE dbs SET name=%s WHERE name=%s", oname, nname );
   query( "UPDATE db_permissions SET db=%s WHERE db=%s", oname, nname );
@@ -2817,6 +2856,9 @@ void rename_db( string oname, string nname )
     Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
     db->query("CREATE DATABASE IF NOT EXISTS %s",nname);
     db->query("UPDATE db SET Db=%s WHERE Db=%s",oname, nname );
+    // FIXME: Use list_tables() and
+    //        "RENAME TABLE `oname`.`tab` TO `nname`.`tab`
+    //        to move the content?
     db->query("DROP DATABASE IF EXISTS %s",oname);
     query( "FLUSH PRIVILEGES" );
   }
