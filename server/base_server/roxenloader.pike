@@ -2499,10 +2499,26 @@ mapping(string:string) parse_mysql_location()
 
 string query_mysql_data_dir()
 {
-  string old_dir = combine_path(getcwd(), query_configuration_dir(), "_mysql");
+  string wd = getcwd();
+#ifndef __NT__
+  // Attempt to shorten the path. MariaDB has a max length of
+  // 103 characters for the socket path on eg MacOS X 10.14.
+  if (has_prefix(wd, "/private/")) {
+    string shortwd = wd[sizeof("/private")..];
+    Stdio.Stat wdstat = file_stat(wd);
+    Stdio.Stat shortwdstat = file_stat(shortwd);
+    if (wdstat && shortwdstat &&
+	(wdstat->dev == shortwdstat->dev) &&
+	(wdstat->ino == shortwdstat->ino)) {
+      // Same device and inode.
+      wd = shortwd;
+    }
+  }
+#endif
+  string old_dir = combine_path(wd, query_configuration_dir(), "_mysql");
   string new_dir, datadir = getenv("ROXEN_DATADIR");
   if(datadir)
-    new_dir = combine_path(getcwd(), datadir, "mysql");
+    new_dir = combine_path(wd, datadir, "mysql");
   if(new_dir && Stdio.exist(new_dir))
     return new_dir;
   if(Stdio.exist(old_dir))
