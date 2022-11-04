@@ -442,6 +442,15 @@ function describe_module_normal( int image )
   {
     if(!block)
     {
+      string name = module->get_name();
+      if (module->type & MODULE_EXPERIMENTAL) {
+	// Prefix the name with a construction sign.
+	name = "\x1f6a7\xa0" + name;
+      }
+      if (module->type & MODULE_DEPRECATED) {
+	// Prefix the name with a warning sign.
+	name = "\x26a0\xa0" + name;
+      }
       return sprintf(
 	#"
   <tr>
@@ -472,7 +481,7 @@ function describe_module_normal( int image )
   </tr>
 ",
 	//Roxen.html_encode_string(strip_leading(module->get_name())),
-	Roxen.html_encode_string(module->get_name()),
+	Roxen.html_encode_string(name),
 	Roxen.html_encode_string (module->sname),
 	(image?module_image(module->type):""),
 	module->sname,
@@ -566,6 +575,15 @@ string describe_module_faster( object module, object block)
 {
   if(!block)
   {
+    string name = module->get_name();
+    if (module->type & MODULE_EXPERIMENTAL) {
+      // Prefix the name with a construction sign.
+      name = "\x1f6a7\xa0" + name;
+    }
+    if (module->type & MODULE_DEPRECATED) {
+      // Prefix the name with a warning sign.
+      name = "\x26a0\xa0" + name;
+    }
 return sprintf(
    #"
     <tr><td colspan='2'><table width='100%%'>
@@ -579,7 +597,7 @@ return sprintf(
     </tr>
 ",
    //Roxen.html_encode_string(strip_leading(module->get_name())),
-   Roxen.html_encode_string(module->get_name()),
+   Roxen.html_encode_string(name),
    Roxen.html_encode_string (module->sname),
    module_image(module->type),
    module->sname,
@@ -690,6 +708,14 @@ string describe_module_compact( object module, object block )
   if(!block) {
     //string modname = strip_leading (module->get_name());
     string modname = module->get_name();
+    if (module->type & MODULE_EXPERIMENTAL) {
+      // Prefix the name with a construction sign.
+      modname = "\x1f6a7\xa0" + modname;
+    }
+    if (module->type & MODULE_DEPRECATED) {
+      // Prefix the name with a warning sign.
+      modname = "\x26a0\xa0" + modname;
+    }
     return "<option value='"+module->sname+"'>"+
       Roxen.html_encode_string(modname)
       + "&nbsp;" * max (0, (int) ((49 - sizeof (modname)))) +
