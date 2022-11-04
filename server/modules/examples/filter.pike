@@ -4,7 +4,7 @@ inherit "module";
 // All roxen modules must inherit module.pike
 
 constant cvs_version = "$Id$";
-constant module_type = MODULE_FILTER;
+constant module_type = MODULE_FILTER|MODULE_EXPERIMENTAL;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "
 		      "documentation gets imported into the roxen "

@@ -30,6 +30,8 @@ constant name = "example";
 
 constant cvs_version="$Id$";
 
+constant module_type = UserDB::module_type|MODULE_EXPERIMENTAL;
+
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
 LocaleString module_doc =

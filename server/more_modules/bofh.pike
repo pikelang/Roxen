@@ -15,7 +15,7 @@ constant excuses = ({
   "hardware stress fractures "});
 constant size = sizeof(excuses);
 
-constant module_type = MODULE_PARSER;
+constant module_type = MODULE_PARSER|MODULE_EXPERIMENTAL;
 constant module_name = "BOFH Module";
 constant module_doc  = "Adds the tag &lt;bofh&gt;, which generates an excuse reason.";
 constant module_unique = 1;

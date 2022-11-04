@@ -22,7 +22,7 @@ void create()
 array(mixed) register_module()
 {
   return ({ 
-    MODULE_LOCATION,
+    MODULE_LOCATION|MODULE_EXPERIMENTAL,
     "Explicit clock", 
     "This is the Clock Module.",
     });

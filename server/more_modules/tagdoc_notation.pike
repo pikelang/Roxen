@@ -6,7 +6,7 @@ inherit "module";
 constant cvs_version = "$Id$";
 constant thread_safe = 1;
 constant module_name = "TagDoc Notation exemplifier";
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_EXPERIMENTAL;
 constant module_doc  = "This module only demonstrates how tagdoc is "
   "layouted in the final manual.";
 

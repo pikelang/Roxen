@@ -72,7 +72,7 @@ class TagFnord {
 
 // Some constants to register the module in the RXML parser.
 
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_EXPERIMENTAL;
 LocaleString module_name = LOCALE(3,"Newstyle Fnord!");
 LocaleString module_doc  =
   LOCALE(4,"Adds an extra container tag, &lt;fnord&gt; that's supposed "

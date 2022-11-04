@@ -25,7 +25,7 @@ LocaleString module_name = LOCALE(1,"Tamaroxchi");
 //! and unique, since this is the only means for identification of your
 //! module in the most brief add module view mode.
 
-constant module_type = MODULE_ZERO;
+constant module_type = MODULE_EXPERIMENTAL;
 //! Module type (see server/etc/include/module.h). May be bitwise ored
 //! (|) for hybrid modules. Hybrid modules must implement the required
 //! API functions for all of the module types they are hybrids of.

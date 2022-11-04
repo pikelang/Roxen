@@ -84,7 +84,7 @@ string simpletag_fnord(string tag_name, mapping arguments, string contents,
 
 
 // Some constants that are needed to register the module in the RXML parser.
-constant module_type = MODULE_TAG;
+constant module_type = MODULE_TAG|MODULE_EXPERIMENTAL;
 LocaleString module_name = LOCALE(1,"Fnord!");
 LocaleString module_doc  =
   LOCALE(2,"Adds an extra container tag, &lt;fnord&gt; that's supposed "

@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe = 1;
 
-constant module_type = MODULE_LOCATION;
+constant module_type = MODULE_LOCATION|MODULE_EXPERIMENTAL;
 constant module_name = "WebSockets: Example module";
 constant module_doc =
   "This module provides a dummy WebSocket (RFC 6455) service.";
