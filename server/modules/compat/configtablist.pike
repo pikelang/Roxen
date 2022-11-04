@@ -6,8 +6,8 @@ constant cvs_version="$Id$";
 inherit "module";
 inherit "roxenlib";
 
-constant module_type = MODULE_PARSER;
-constant module_name = "Old tab list module";
+constant module_type = MODULE_PARSER | MODULE_DEPRECATED;
+constant module_name = "Tags: Old tab list module";
 constant module_doc  = "<h2>Deprecated</h2>Use the <i>Tab list</i> module instead";
 
 void start(int num, Configuration conf) {

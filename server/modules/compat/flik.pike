@@ -55,8 +55,8 @@ void gc()
    if (k) call_out(gc,GC_LOOP_TIME);
 }
 
-constant module_type = MODULE_PARSER;
-constant module_name = "Old Folding List Tag";
+constant module_type = MODULE_PARSER | MODULE_DEPRECATED;
+constant module_name = "Tags: Old Folding List Tag";
 constant module_doc  = "<h2>Deprecated</h2>"
   "This is the older version of \"Folding list tag\". "
   "Adds the &lt;fl&gt;, &lt;ft&gt; and &lt;fd&gt; tags."

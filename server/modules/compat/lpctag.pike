@@ -3,7 +3,9 @@
 
 inherit "module";
 
-constant module_name = "DEPRECATED: lpctag";
+constant module_name = "Scripting: lpctag";
+
+constant module_type = MODULE_DEPRECATED;
 
 void start(int num, Configuration conf)
 {

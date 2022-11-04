@@ -12,8 +12,8 @@ constant thread_safe = 1;
 # define LANGUAGE_WERR(X)
 #endif
 
-constant module_type = MODULE_URL | MODULE_TAG;
-constant module_name = "DEPRECATED: Language module";
+constant module_type = MODULE_URL | MODULE_TAG | MODULE_DEPRECATED;
+constant module_name = "Tags: Language module";
 constant module_doc  = "Handles documents in different languages. "
 	      "What language a file is in is specified with an "
 	      "extra extension. index.html.sv would be a file in swedish "

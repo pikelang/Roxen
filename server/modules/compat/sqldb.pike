@@ -4,8 +4,8 @@
 inherit "module";
 
 constant cvs_version = "$Id$";
-constant module_type = MODULE_ZERO;
-constant module_name = "DEPRECATED: SQL databases";
+constant module_type = MODULE_DEPRECATED;
+constant module_name = "SQL databases";
 constant module_doc  =
 "Use the DBs tab in the configuration interface instead. This module is"
 " only kept for compatibility with old configurations.";

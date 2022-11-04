@@ -2,7 +2,9 @@
 
 inherit "module";
 
-constant module_name = "DEPRECATED: UserDB";
+constant module_name = "Authentication: UserDB";
+
+constant module_type = MODULE_DEPRECATED;
 
 void start(int num, Configuration conf)
 {

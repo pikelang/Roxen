@@ -22,7 +22,7 @@ inherit "roxenlib";
 constant thread_safe=1;
 constant language = roxen->language;
 
-constant module_type   = MODULE_PARSER | MODULE_PROVIDER;
+constant module_type = MODULE_PARSER | MODULE_PROVIDER | MODULE_DEPRECATED;
 LocaleString module_name   = LOCALE(3,"Tags: Old RXML Compatibility Module");
 
 #if ROXEN_COMPAT > 1.3

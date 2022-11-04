@@ -6,8 +6,8 @@ inherit "module";
 inherit "roxenlib";
 
 constant thread_safe = 1;
-constant module_type = MODULE_PARSER;
-constant module_name = "Old Ximg";
+constant module_type = MODULE_PARSER | MODULE_DEPRECATED;
+constant module_name = "Tags: Old Ximg";
 constant module_doc  = "<h2>Deprecated</h2> It does the same thing as the imgs tag.";
 
 RoxenModule rxml_warning_cache;

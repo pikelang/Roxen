@@ -15,7 +15,7 @@ inherit "modules/filesystems/filesystem";
 #define _(X,Y)	_DEF_LOCALE("mod_secure_fs",X,Y)
 // end of the locale related stuff
 
-constant module_type = MODULE_LOCATION;
+constant module_type = MODULE_LOCATION | MODULE_DEPRECATED;
 LocaleString module_name = _(1,"File systems: Secure file system");
 LocaleString module_doc  = 
 _(2,

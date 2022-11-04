@@ -3,7 +3,9 @@
 
 inherit "module";
 
-constant module_name = "DEPRECATED: Fastdir";
+constant module_name = "Fastdir";
+
+constant module_type = MODULE_DEPRECATED;
 
 void start(int num, Configuration conf)
 {

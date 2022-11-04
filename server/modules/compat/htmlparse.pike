@@ -3,7 +3,9 @@
 
 inherit "module";
 
-constant module_name = "DEPRECATED: HTML Parse";
+constant module_name = "Tags: Ancient HTML Parse";
+
+constant module_type = MODULE_DEPRECATED;
 
 void start(int num, Configuration conf) {
   module_dependencies (conf, ({ "rxmltags","rxmlparse","ssi","accessed","compat" }));
