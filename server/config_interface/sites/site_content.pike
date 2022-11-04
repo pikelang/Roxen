@@ -96,6 +96,7 @@ do                                                                      \
        res += #X + "<br />";                                 \
 } while(0)
 
+  T(MODULE_DEPRECATED,		(mixed)0,			 0);
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
   T(MODULE_LOCATION,   describe_location,                       id);
   T(MODULE_URL,                 (mixed)0,                        0);

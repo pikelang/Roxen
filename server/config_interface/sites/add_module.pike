@@ -40,12 +40,15 @@ array(string) class_description( string d, RequestID id )
   return ({ name, doc });
 }
 
-array(string) module_class( object m, RequestID id )
+array(string) module_class( ModuleInfo m, RequestID id )
 {
   return class_description( m->filename, id );
 }
 
-object module_nomore(string name, object modinfo, object conf)
+// NB: Unusual calling convention. Returns 0 when the module
+//     is to be kept and modinfo to filter it.
+ModuleInfo module_nomore(string name, ModuleInfo modinfo,
+			 Configuration conf, RequestID id)
 {
   mapping module;
   object o;
@@ -54,13 +57,30 @@ object module_nomore(string name, object modinfo, object conf)
     return 0;
 
   if(!modinfo->multiple_copies && (module = conf->modules[name]) &&
-     sizeof(module->copies) )
+     sizeof(module->copies) ) {
+    // Module already added.
     return modinfo;
+  }
+
+  if ((modinfo->type & MODULE_DEPRECATED) &&
+      !config_setting("expert_mode")) {
+    // Hide deprecated modules if not expert.
+    return modinfo;
+  }
+
+  if ((modinfo->type & MODULE_EXPERIMENTAL) &&
+      !config_setting("devel_mode")) {
+    // Hide experimental modules if not developer.
+    return modinfo;
+  }
 
   if(((modinfo->type & MODULE_DIRECTORIES) && (o=conf->dir_module))
      || ((modinfo->type & MODULE_AUTH)  && (o=conf->auth_module))
-     || ((modinfo->type & MODULE_TYPES) && (o=conf->types_module)))
+     || ((modinfo->type & MODULE_TYPES) && (o=conf->types_module))) {
+    // Only one of each of directory modules, auth modules
+    // and content-type modules is supported.
     return roxen.find_module( conf->otomod[o] );
+  }
 }
 
 // To redirect to when done with module addition
@@ -324,12 +344,12 @@ array(string) get_module_list( function describe_module,
   roxenloader.pop_compile_error_handler();
 
   foreach( mods, ModuleInfo m )
-    if( module_nomore( m->sname, m, conf ) )
+    if( module_nomore( m->sname, m, conf, id ) )
       mods -= ({ m });
 
   string res = "";
   string doubles="", already="";
-  array w = map(mods, module_class, id);
+  array(array(string)) w = map(mods, module_class, id);
 
   mapping classes = ([]);
   sort(w,mods);
@@ -376,17 +396,16 @@ array(string) get_module_list( function describe_module,
 	 sizeof(classes[c]->modules & indices(search_modules))))
     {
       res += r[1];
-      array m = classes[c]->modules;
-      array q = m->get_name();
-      sort( q, m );
-      foreach(m, object q)
+      array(ModuleInfo) m = classes[c]->modules;
+      sort( m->get_name(), m );
+      foreach(m, ModuleInfo q)
       {
         if( q->get_description() == "Undocumented" &&
             q->type == 0 )
           continue;
 	if (search_modules && !search_modules[q])
 	  continue;
-        object b = module_nomore(q->sname, q, conf);
+        object b = module_nomore(q->sname, q, conf, id);
 	if( !b && q->locked &&
 	    (!license_key || !q->unlocked(license_key, conf)) )
 	{
@@ -396,7 +415,7 @@ array(string) get_module_list( function describe_module,
         res += describe_module( q, b );
       }
     } else {
-      if (!search_modules)
+      if (!search_modules && r)
 	res += r[1];
     }
   }
@@ -741,7 +760,7 @@ string page_really_compact( RequestID id )
 	   (q->get_description() == "Undocumented")) &&
 	  q->type == 0 )
 	continue;
-      object b = module_nomore(q->sname, q, conf);
+      object b = module_nomore(q->sname, q, conf, id);
       if( !b && q->locked &&
 	  (!license_key || !q->unlocked(license_key, conf)) )
       {
