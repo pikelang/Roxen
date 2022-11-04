@@ -466,6 +466,12 @@ class ModuleInfo( string sname, string filename )
 
       roxenp()->bootstrap_info->set (0);
 
+      if (conf && (type & MODULE_DEPRECATED)) {
+	report_warning("Adding deprecated module %s to configuration %s.\n",
+		       name?string_to_utf8((string)name):sname,
+		       string_to_utf8((string)conf->name));
+      }
+
       return ret;
     };
     roxenloader.pop_compile_error_handler( );
