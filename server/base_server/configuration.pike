@@ -724,6 +724,8 @@ private mapping (string:array (function)) file_extension_module_cache=([]);
 private mapping (string:array (RoxenModule)) provider_module_cache=([]);
 private array (RoxenModule) auth_module_cache, userdb_module_cache;
 
+Thread.Mutex module_cache_mutex = Thread.Mutex();
+
 private int module_sort_key(RoxenModule me)
 {
   int pri = me->query("_priority");
@@ -932,9 +934,19 @@ array (RoxenModule) get_providers(string provides)
 //! Returns an array with all provider modules that provides "provides".
 {
   // This cache is cleared in the invalidate_cache() call.
-  if(!sizeof(provider_module_cache))
+  while(!sizeof(provider_module_cache))
   {
-    provider_module_cache[0] = 0;	// Initialization sentinel.
+    mixed key = module_cache_mutex->lock();
+
+    if (sizeof(provider_module_cache)) {
+      // Some other thread has initialized the cache.
+      destruct(key);
+      break;
+    }
+
+    mapping(string:array(RoxenModule)) new_provider_module_cache = ([]);
+    new_provider_module_cache[0] = 0;	// Initialization sentinel.
+
     int prev_pri = -1;
     array(RoxenModule) modules = ({});
     foreach(low_module_lookup(MODULE_PROVIDER), RoxenModule me) {
@@ -951,7 +963,7 @@ array (RoxenModule) get_providers(string provides)
 	  }
 	  if (provs) {
 	    foreach(provs; string provides;) {
-	      provider_module_cache[provides] += ({ p });
+	      new_provider_module_cache[provides] += ({ p });
 	    }
 	  }
 	}
@@ -970,10 +982,14 @@ array (RoxenModule) get_providers(string provides)
       }
       if (provs) {
 	foreach(provs; string provides;) {
-	  provider_module_cache[provides] += ({ p });
+	  new_provider_module_cache[provides] += ({ p });
 	}
       }
     }
+
+    provider_module_cache = new_provider_module_cache;
+    destruct(key);
+    break;
   }
   return provider_module_cache[provides] || ({});
 }
@@ -1028,15 +1044,25 @@ mixed call_provider(string provides, string fun, mixed ... args)
 
 array(function) file_extension_modules(string ext)
 {
-  if (!sizeof(file_extension_module_cache)) {
-    file_extension_module_cache[0] = 0;	// Initialization sentinel.
+  while (!sizeof(file_extension_module_cache)) {
+    mixed key = module_cache_mutex->lock();
+    if (sizeof(file_extension_module_cache)) {
+      destruct(key);
+      break;
+    }
+    mapping(string:array(function)) new_file_extension_module_cache = ([]);
+    new_file_extension_module_cache[0] = 0;	// Initialization sentinel.
     foreach(low_module_lookup(MODULE_FILE_EXTENSION), RoxenModule me) {
       if (!me->handle_file_extension) continue;
       array(string) arr = me->query_file_extensions();
       foreach(arr, string e) {
-	file_extension_module_cache[e] += ({ me->handle_file_extension });
+	new_file_extension_module_cache[e] += ({ me->handle_file_extension });
       }
     }
+
+    file_extension_module_cache = new_file_extension_module_cache;
+    destruct(key);
+    break;
   }
   return file_extension_module_cache[ext];
 }
@@ -1045,7 +1071,10 @@ array(function) url_modules()
 {
   if(!url_module_cache)
   {
+    // NB: Key needed in order to avoid race with invalidate_cache().
+    mixed key = module_cache_mutex->lock();
     url_module_cache = low_module_lookup(MODULE_URL, "remap_url");
+    destruct(key);
   }
   return url_module_cache;
 }
@@ -1060,7 +1089,10 @@ array (function) logger_modules()
 {
   if(!logger_module_cache)
   {
+    // NB: Key needed in order to avoid race with invalidate_cache().
+    mixed key = module_cache_mutex->lock();
     logger_module_cache = low_module_lookup(MODULE_LOGGER, "log");
+    destruct(key);
   }
   return logger_module_cache;
 }
@@ -1069,7 +1101,10 @@ array (function) last_modules()
 {
   if(!last_module_cache)
   {
+    // NB: Key needed in order to avoid race with invalidate_cache().
+    mixed key = module_cache_mutex->lock();
     last_module_cache = low_module_lookup(MODULE_LAST, "last_resort");
+    destruct(key);
   }
   return last_module_cache;
 }
@@ -1103,20 +1138,24 @@ array (function) first_modules()
 {
   if(!first_module_cache)
   {
-    first_module_cache = ({ });
-    
+    mixed key = module_cache_mutex->lock();
+    array(function) new_first_module_cache = ({ });
+
     //  Add special fork handlers on Windows and Mac OS X
     if (
 #ifdef __NT__
 	1 ||
 #endif
 	uname()->sysname == "Darwin") {
-      first_module_cache += ({
+      new_first_module_cache += ({
 	strip_fork_information,	// Always first!
       });
     }
 
-    first_module_cache += low_module_lookup(MODULE_FIRST, "first_try");
+    new_first_module_cache += low_module_lookup(MODULE_FIRST, "first_try");
+
+    first_module_cache = new_first_module_cache;
+    destruct(key);
   }
 
   return first_module_cache;
@@ -1133,6 +1172,9 @@ array(UserDB) user_databases()
 {
   if( userdb_module_cache )
     return userdb_module_cache;
+
+  // NB: Key needed in order to avoid race with invalidate_cache().
+  mixed key = module_cache_mutex->lock();
   return userdb_module_cache = low_module_lookup(MODULE_USERDB);
 }
 
@@ -1140,6 +1182,9 @@ array(AuthModule) auth_modules()
 {
   if( auth_module_cache )
     return auth_module_cache;
+
+  // NB: Key needed in order to avoid race with invalidate_cache().
+  mixed key = module_cache_mutex->lock();
   return auth_module_cache = low_module_lookup(MODULE_AUTH);
 }
 
@@ -1147,8 +1192,13 @@ array location_modules()
 //! Return an array of all location modules the request should be
 //! mapped through, by order of priority.
 {
-  if(!location_module_cache)
+  while(!location_module_cache)
   {
+    mixed key = module_cache_mutex->lock();
+    if (location_module_cache) {
+      destruct(key);
+      break;
+    }
     array new_location_module_cache=({ });
     int prev_pri = -1;
     array level_find_files = ({});
@@ -1173,14 +1223,17 @@ array location_modules()
       level_find_files += ({ me->find_file });
       level_locations += ({ location });
     }
-    
+
     sort(map(level_locations,
 	     lambda(string loc) { return -sizeof(loc); }),
 	 level_locations, level_find_files);
     foreach(level_locations; int i; string path) {
       new_location_module_cache += ({ ({ path, level_find_files[i] }) });
     }
+
     location_module_cache = new_location_module_cache;
+    destruct(key);
+    break;
   }
   return location_module_cache;
 }
@@ -1189,7 +1242,10 @@ array(function) filter_modules()
 {
   if(!filter_module_cache)
   {
+    // NB: Key needed in order to avoid race with invalidate_cache().
+    mixed key = module_cache_mutex->lock();
     filter_module_cache = low_module_lookup(MODULE_FILTER, "filter");
+    destruct(key);
   }
   return filter_module_cache;
 }
@@ -1614,6 +1670,9 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
 // Empty all the caches above.
 void invalidate_cache()
 {
+  // NB: Key needed in order to avoid race with the functions
+  //     that fill the caches.
+  mixed key = module_cache_mutex->lock();
   last_module_cache = 0;
   filter_module_cache = 0;
   userdb_module_cache = 0;
@@ -1627,6 +1686,7 @@ void invalidate_cache()
 #ifdef MODULE_LEVEL_SECURITY
   security_level_cache = set_weak_flag (([ ]), 1);
 #endif
+  destruct(key);
 }
 
 // Empty all the caches above AND the ones in the loaded modules.
