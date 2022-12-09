@@ -1,30 +1,17 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.DSW eol=crlf
-/server/bin/mysql_client_nt.bat eol=crlf
-/server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
 *.dsp eol=crlf
 *.gif binary
-/server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
-/server/tools/ntroxen/ntstart/resource.h eol=crlf
-/server/tools/ntroxen/startdll/StdAfx.h eol=crlf
-/server/tools/ntroxen/startdll/cmdline.h eol=crlf
-/server/tools/ntroxen/startdll/enumproc.h eol=crlf
-/server/tools/ntroxen/startdll/resource.h eol=crlf
-/server/tools/ntroxen/startdll/roxen.h eol=crlf
-/server/tools/ntroxen/version.h eol=crlf
 *.ico binary
 *.idl eol=crlf
 *.jar binary
 *.jpeg binary
 *.jpg binary
-/server/config_interface/dbs/ajax_optimizeall.js eol=crlf
-/server/config_interface/dbs/ajax_repairall.js eol=crlf
 *.mc eol=crlf
 *.pdf binary
-/server/demo_certificate.pem eol=crlf
 *.png binary
 *.raw binary
 *.rc eol=crlf
@@ -33,15 +20,32 @@
 *.sln eol=crlf
 *.tar binary
 *.ttf binary
+*.vcproj eol=crlf
+*.wxs eol=crlf
+*.xcf binary
+
+# List of files that use CRLF at EOL:
+/server/bin/mysql_client_nt.bat eol=crlf
+/server/config_interface/dbs/ajax_optimizeall.js eol=crlf
+/server/config_interface/dbs/ajax_repairall.js eol=crlf
+/server/demo_certificate.pem eol=crlf
 /server/nfonts/Andover.txt eol=crlf
 /server/nfonts/Font.txt eol=crlf
 /server/nfonts/Hultog.txt eol=crlf
 /server/nfonts/Quadrang.txt eol=crlf
 /server/nfonts/Resegrg.txt eol=crlf
-*.vcproj eol=crlf
-*.wxs eol=crlf
-*.xcf binary
+/server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
+/server/tools/ntroxen/ntstart/resource.h eol=crlf
+/server/tools/ntroxen/startdll/StdAfx.h eol=crlf
+/server/tools/ntroxen/startdll/cmdline.h eol=crlf
+/server/tools/ntroxen/startdll/enumproc.c eol=crlf
+/server/tools/ntroxen/startdll/enumproc.h eol=crlf
+/server/tools/ntroxen/startdll/resource.h eol=crlf
+/server/tools/ntroxen/startdll/roxen.h eol=crlf
+/server/tools/ntroxen/version.h eol=crlf
+
+# List of binary or other special files:
+/server/etc/maps/worldmap binary
 /server/etc/test/tests/rxml/RoxenTest_WashHtmlTag.xml -text -crlf
-nn binary
-rbf binary
-worldmap binary
+/server/font_handlers/rbf binary
+/server/nfonts/**/nn binary
