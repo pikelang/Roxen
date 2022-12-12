@@ -1,9 +1,9 @@
 [attr]binary -text -crlf -diff -ident -filter
 [attr]mixed_indent -filter
 # The space-indent filter is typically defined with:
-# $ git config --global filter.space-indent.clean 'unexpand --first-only'
+# $ git config --global filter.space-indent.clean 'expand --initial'
 # $ git config --global filter.space-indent.smudge 'cat'
-#[attr]space_indent filter=space-indent
+[attr]space_indent filter=space-indent
 * text ident space_indent
 *.DSW eol=crlf
 *.cif binary
