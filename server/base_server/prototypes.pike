@@ -3631,7 +3631,7 @@ class MultiStatusStatus
   constant is_status = 1;
 
   int http_code;
-  SimpleNode message;
+  SimpleNode|string message;
 
   //! @param http_code
   //!   HTTP return code.
@@ -3641,11 +3641,8 @@ class MultiStatusStatus
   protected void create(int http_code, void|string message)
   {
     this::http_code = http_code;
-    if (message) {
-      SimpleNode node = SimpleElementNode("DAV:responsedescription", ([]));
-      node->add_child(SimpleTextNode(message||""));
-      this::message = node;
-    }
+    if (message)
+      this::message = message;
   }
 
   //! @param ret
@@ -3671,7 +3668,14 @@ class MultiStatusStatus
     node->add_child(SimpleTextNode(sprintf("HTTP/1.1 %d ", http_code)));
 
     if (message) {
-      response_node->add_child(message);
+      if (stringp(message)) {
+        //  Delayed XML node creation so we get expected namespace
+        SimpleNode node = SimpleElementNode("DAV:responsedescription", ([]));
+        node->add_child(SimpleTextNode(message||""));
+        response_node->add_child(node);
+      } else {
+        response_node->add_child(message);
+      }
     }
   }
 
@@ -3685,7 +3689,12 @@ class MultiStatusStatus
 
   int __hash()
   {
-    return http_code + (message && hash (message->render_xml()));
+    int msg_hash = 0;
+    if (stringp(message))
+      msg_hash = hash(message);
+    else if (objectp(message))
+      msg_hash = hash(message->render_xml());
+    return http_code + msg_hash;
   }
 
   string _sprintf (int flag)
