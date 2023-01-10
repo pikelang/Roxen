@@ -1,0 +1,9 @@
+subject: Roxen 7.0: WebDAV: Delay generation of <DAV:responsedescription> multi-status element so we get the expected DAV namespace instead of NS0.
+from: fda0f7c99caadf8f6c57d4737e6d743da8a3fdf7
+to: 2bcb0afab146535f0c8a01f298cb322760d4619b
+originator: Administrator
+depends: 2023-01-10T112045
+restart: true
+
+• Delay generation of <DAV:responsedescription> multi-status element so we get
+the expected DAV namespace instead of NS0.
