@@ -58,7 +58,7 @@ int once_mode;
 // FIXME: Temporarily enable tracing of mysql-internal queries
 //        when running the testsuite.
 #ifndef SQL_DB_TRACE
-#define SQL_DB_TRACE	mysql
+// #define SQL_DB_TRACE	mysql
 #endif
 #endif
 
