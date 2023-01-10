@@ -1,0 +1,20 @@
+subject: Roxen 7.0: Git: Begin migration to using only spaces for indentation
+from: c99213c8bf9ce594b0b52035341a7d516b487c6c
+to: fda0f7c99caadf8f6c57d4737e6d743da8a3fdf7
+originator: Administrator
+depends: roxen/7.0.370
+restart: true
+
+• Git: Begin migration to using only spaces for indentation.
+
+This commit sets the git attribute "space_indent" on all files,
+defines it to use the git filter "space-indent" and adds a list
+of exceptions (that also get the attribute "mixed_indent").
+
+The space-indent filter is typically defined with:
+$ git config --global filter.space-indent.clean 'unexpand --first-only'
+$ git config --global filter.space-indent.smudge 'cat'
+
+Prepares for [REP-817].
+
+• Git: Clean up the .gitattributes file.
