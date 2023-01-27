@@ -2630,7 +2630,7 @@ string strftime(string fmt, int t,
 	res += my_sprintf(prefix, "%02d", 1 + (lt->hour + 11)%12);
 	break;
       case 'j':	// Day number of year [1,366]; 0-prefix
-	res += my_sprintf(prefix, "%03d", lt->yday);
+        res += my_sprintf(prefix, "%03d", lt->yday + 1);
 	break;
       case 'k':	// Hour (24-hour clock) [0,23]; space-prefix
 	res += my_sprintf(prefix, "%2d", lt->hour);
