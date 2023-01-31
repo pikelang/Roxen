@@ -1,0 +1,8 @@
+subject: Roxen 7.0: Fix strftime("%j"), it was off by 1 day.
+from: 2bcb0afab146535f0c8a01f298cb322760d4619b
+to: d48d0201d5118314ee628ac0016a2e030011b131
+originator: Jonas Lonnberg
+depends: 2023-01-10T112145
+restart: true
+
+• Roxen: Fix strftime("%j"), it was off by 1 day.
