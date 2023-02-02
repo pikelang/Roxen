@@ -2,21 +2,23 @@
 <!-- $Id$ -->
 
 <define tag='cfg-variables'>
-  <set variable='form.__redirect' value='1' />
-  <if not variable='_.nosave'><cf-save/></if>
-  <if variable='form.section'>
-    <input type='hidden' name='section' value='&form.section;'/>
-    <set variable='var.section' value='&form.section;'/>
-  </if>
-  <br clear="all" />
-  <set variable='var.oldchanged' value='0'/>
-  <table cellspacing="0" cellpadding="4">
-    <eval><emit ::='&_.args;'>
-      <cf-render-variable/>
-      <tr><td><img src="/internal-roxen-unit" width="1" height="10"/></td></tr>
-    </emit></eval>
-  </table>
-  <if not variable='_.nosave'><cf-save/></if>
+  <div data-cfg-section="&form.section;">
+    <set variable='form.__redirect' value='1' />
+    <if not variable='_.nosave'><cf-save/></if>
+    <if variable='form.section'>
+      <input type='hidden' name='section' value='&form.section;'/>
+      <set variable='var.section' value='&form.section;'/>
+    </if>
+    <br clear="all" />
+    <set variable='var.oldchanged' value='0'/>
+    <table cellspacing="0" cellpadding="4">
+      <eval><emit ::='&_.args;'>
+        <cf-render-variable/>
+        <tr><td><img src="/internal-roxen-unit" width="1" height="10"/></td></tr>
+      </emit></eval>
+    </table>
+    <if not variable='_.nosave'><cf-save/></if>
+  </div>
 </define>
 
 <define container="st-tabs" scope="st-tabs">
