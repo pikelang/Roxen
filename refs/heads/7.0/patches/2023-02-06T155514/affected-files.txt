@@ -1,0 +1,3 @@
+Modified files:
+  config_interface/template
+  etc/include/version.h
