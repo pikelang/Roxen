@@ -1,0 +1,9 @@
+subject: Roxen 7.0: Config Interface: CSS fix
+from: d48d0201d5118314ee628ac0016a2e030011b131
+to: 1a5634013ea254c3434c752e8ff3c33b87b717ba
+originator: Administrator
+depends: 2023-01-31T103848
+restart: true
+
+• Add <div> wrapper to config variable panel with a data attribute referencing
+the section name. This allows us to target CSS to a given section.
