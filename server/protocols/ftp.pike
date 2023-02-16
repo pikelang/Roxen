@@ -1200,7 +1200,9 @@ class TelnetSession {
 	// FIXME: Is this the correct use?
 	fd->set_write_callback(0);
 
-	report_warning("FTP2: Write callback with nothing to send.\n");
+	if (write_cb) {
+	  DWRITE("TELNET: Write callback with nothing to send.\n");
+	}
       }
     } else {
       report_error("FTP2: Write callback with no fd.\n");
