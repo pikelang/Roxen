@@ -826,6 +826,7 @@ class LSFile
     string res = "";
     int total;
     foreach(files, string short) {
+      short = Unicode.normalize(short, "NFC");
       string long = combine_path(dir, short);
       array|object st = stat_file(long);
       if (st) {
@@ -2897,7 +2898,7 @@ class FTPSession
   {
     string facts = format_MLSD_facts(make_MLSD_facts(f, dir, session));
     if (!facts) return 0;
-    return facts + " " + f;
+    return Unicode.normalize(facts + " " + f, "NFC");
   }
 
   void send_MLSD_response(mapping(string:array) dir, object session)
@@ -2905,7 +2906,8 @@ class FTPSession
     dir = dir || ([]);
 
     array(string) entries =
-      Array.map(indices(dir), make_MLSD_fact, dir, session) - ({ 0 });
+      map(map(indices(dir), make_MLSD_fact, dir, session) - ({ 0 }),
+          string_to_utf8);
 
     session->file->data = sizeof(entries) ? entries * "\r\n" + "\r\n" : "" ;
 
