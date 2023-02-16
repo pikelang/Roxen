@@ -3920,6 +3920,8 @@ class FTPSession
       send(502, ({ sprintf(LOCALE(166, "Bad OPTS command: '%s'"), a[0]) }));
     } else if (this_object()["ftp_OPTS_"+a[0]]) {
       this_object()["ftp_OPTS_"+a[0]](a[1..]);
+    } else if (a[0] == "UTF-8") {
+      ftp_OPTS_UTF8(a[1..]);
     } else {
       send(502, ({ sprintf(LOCALE(167, "OPTS command '%s' is not currently supported."),
 			   a[0]) }));
@@ -3944,6 +3946,21 @@ class FTPSession
 
     send(200, ({ sprintf("MLST OPTS %s",
 			 format_factlist(new_mlst_facts)) }));
+  }
+
+  void ftp_OPTS_UTF8(array(string) args)
+  {
+    // NB:
+    //     draft-ietf-ftpext-utf-8-option-00 (2002-05, expired 2002-11-28)
+    //     specifies OPTS UTF-8 [ <sp> NLST ].
+    //
+    //     There are several ftp clients that send "OPTS UTF8 ON",
+    //     but I have not found any specification indicating what
+    //     it is supposed to do.
+    //
+    // We just send UTF-8 always.
+
+    send(200, ({ "OPTS UTF8 ON" }));
   }
 
   void ftp_DELE(string args)
