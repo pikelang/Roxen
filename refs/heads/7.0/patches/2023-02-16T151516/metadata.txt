@@ -1,0 +1,36 @@
+subject: Roxen 7.0: FTP filename encoding fixes
+from: 1a5634013ea254c3434c752e8ff3c33b87b717ba
+to: fc51ddfacd19899642aa5a4b4280ffcacd8cc722
+originator: Marcus Wellhardh
+depends: 2023-02-06T155514
+restart: true
+
+• FTP: Added implementation of OPTS UTF-8 and OPTS UTF8.
+
+These are currently just a NOOP. OPTS UTF-8 is defined
+by draft-ietf-ftpext-utf-8-option-00 (expired 2002-11-28),
+and OPTS UTF8 does not seem to have any documentation,
+but is used by several clients.
+
+• FTP: Added help for some more commands.
+
+Also adds support for having multiple sets of arguments
+separated by '\n'. This is currently only used by the
+help for SITE UTIME.
+
+• FTP: More filename normalization.
+
+Also fixes issue with MLSD where raw wide strings were sent.
+
+• FTP: Updated translation string for EPRT.
+
+• FTP: Fix typo in EPRT message.
+
+Fixes [WS-341].
+
+• FTP: Added locale markers for the user visible text.
+
+It should now be possible to translate the ftp message strings
+to different languages, and use LANG to select those languages.
+
+• FTP: Implemented LANG from RFC 2640.
