@@ -1466,7 +1466,7 @@ class FTPSession
     // Informational commands
     "SYST":LOCALE(49, "(Get type of operating system)"),
     "STAT":LOCALE(50, "[ <sp> <pathname> ] (Status for server/file)"),
-    "HELP":LOCALE(51, "[ <sp> <string> ] (Give help)"),
+    "HELP":LOCALE(51, "[ <sp> <string> ]* (Give help)"),
     // Miscellaneous commands
     "SITE":LOCALE(52, "<sp> <string> (Site parameters)"),// Has separate help
     "NOOP":LOCALE(53, "(No operation)"),
@@ -1516,21 +1516,37 @@ class FTPSession
     "ACKN":LOCALE(76, "(Mail acknowledge)"),
     "TEXT":LOCALE(77, "(Mail text)"),
     "FILE":LOCALE(78, "<sp> <filename> (Mail file)"),
-    "CITA":LOCALE(79, "<sp> <file name> (Mail citation)"),
+    "CITA":LOCALE(79, "<sp> <filename> (Mail citation)"),
 #endif
 
     // This one is referenced in a lot of old RFCs
     "MLFL":LOCALE(80, "(Mail file)"),
+
+    // draft-somers-ftp-mfxx-04
+    "MFMT":LOCALE(0, "<sp> <time-val> <sp> <filename> (Modify fact modification time)"),
+    "MFCT":LOCALE(0, "<sp> <time-val> <sp> <filename> (Modify fact creation time)"),
+    "MFF":LOCALE(0, "<sp> [ <fact-list> ] <sp> <filename> (Modify fact: facts)"),
   ]);
 
   private mapping(string:string|Locale.DeferredLocale) site_help = ([
-    "CHMOD":LOCALE(81, "<sp> mode <sp> file"),
-    "UMASK":LOCALE(82, "<sp> mode"),
-    "PRESTATE":LOCALE(83, "<sp> prestate"),
+    // Common extensions
+    "CHMOD":LOCALE(81, "<sp> <mode> <sp> <filename> (Set protection mode)"),
+    "UMASK":LOCALE(82, "<sp> <mode> (Set protection mode mask)"),
+    "UTIME":LOCALE(0, "<sp> <mtime> <sp> <filename> (Set modification time)\n"
+                   "<sp> <filename> <sp> <atime> <sp> <mtime> <sp> <ctime> <sp> UTC"),
+
+    // Roxen-specific.
+    "PRESTATE":LOCALE(83, "<sp> <prestate> (Set prestate)"),
   ]);
 
   private mapping(string:string|Locale.DeferredLocale) opts_help = ([
     "MLST":LOCALE(84, "<sp> <fact-list>"),
+
+    // draft-ietf-ftpext-utf-8-option-00
+    "UTF-8":LOCALE(0, "[<sp> NLST]"),
+
+    // Used by serveral ftp-clients.
+    "UTF8":LOCALE(0, "[<sp> [ ON | OFF ] ]"),
   ]);
 
   private constant modes = ([
@@ -4218,8 +4234,13 @@ class FTPSession
 		       @(sprintf(" %#70s", sort(indices(site_help))*"\n")/"\n")
 	       }));
 	} else if (site_help[a[1]]) {
-	  send(214, ({ sprintf(LOCALE(182, "Syntax: SITE %s %s"),
-			       a[1], site_help[a[1]]) }));
+          send(214, map(site_help[a[1]]/"\n",
+                        lambda(string desc, string cmd) {
+                          return sprintf(LOCALE(182, "Syntax: SITE %s %s%s"),
+                                         cmd, desc,
+                                         (this_object()["ftp_SITE_" + cmd]?
+                                          "":"; unimplemented"));
+                        }, a[1]));
 	} else {
 	  send(504, ({ sprintf(LOCALE(183, "Unknown SITE command %s."), a[1]) }));
 	}
@@ -4230,17 +4251,25 @@ class FTPSession
 		       @(sprintf(" %#70s", sort(indices(opts_help))*"\n")/"\n")
 	       }));
 	} else if (opts_help[a[1]]) {
-	  send(214, ({ sprintf(LOCALE(185, "Syntax: OPTS %s %s"),
-			       a[1], opts_help[a[1]]) }));
+          send(214, map(opts_help[a[1]]/"\n",
+                        lambda(string desc, string opt) {
+                          return sprintf(LOCALE(185, "Syntax: OPTS %s %s%s"),
+                                         opt, desc,
+                                         (this_object()["ftp_OPTS_" + opt]?
+                                          "":"; unimplemented"));
+                        }, a[1]));
 	} else {
 	  send(504, ({ sprintf(LOCALE(186, "Unknown OPTS command %s."), a[1]) }));
 	}
       } else {
 	if (cmd_help[args]) {
-	  send(214, ({ sprintf(LOCALE(187, "Syntax: %s %s%s"), args,
-			       cmd_help[args],
-			       (this_object()["ftp_"+args]?
-				"":"; unimplemented")) }));
+          send(214, map(cmd_help[args]/"\n",
+                        lambda(string desc, string cmd) {
+                          return sprintf(LOCALE(187, "Syntax: %s %s%s"),
+                                         cmd, desc,
+                                         (this_object()["ftp_" + cmd]?
+                                          "":"; unimplemented"));
+                        }, args));
 	} else {
 	  send(504, ({ sprintf(LOCALE(188, "Unknown command %s."), args) }));
 	}
