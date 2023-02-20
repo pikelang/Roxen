@@ -7850,7 +7850,8 @@ protected constant formats = ([
 				 "(request_id->raw_url||"
 				 " (request_id->misc->common&&"
 				 "  request_id->misc->common->orig_url)||"
-				 " request_id->not_query)"),
+                                 " string_to_utf8(request_id->not_query||"
+                                 " \"-\"))"),
 			  "%s" , "url_encode (resource)", 0}),
   "server-uptime":	({"%d", "max(1, timestamp - roxen->start_time)",
 			  0, 0, 0}),
@@ -7877,30 +7878,24 @@ protected constant formats = ([
 				 "(request_id->raw_url||"
 				 " (request_id->misc->common&&"
 				 "  request_id->misc->common->orig_url)||"
-				 " request_id->not_query)"),
+                                 " string_to_utf8(request_id->not_query))"),
 			  "%s" , "url_encode (resource)", 0}),
   "cs-uri-stem":	({"%s", ("(string)"
 				 "((request_id->misc->common&&"
 				 "  request_id->misc->common->orig_url)||"
-				 " request_id->not_query||"
-				 " (request_id->raw_url && "
-				 "  (request_id->raw_url/\"?\")[0])||"
-				 " \"-\")"),
+                                 " string_to_utf8(request_id->not_query||\"-\")"),
 			  "%s" , "url_encode (resource)", 0}),
   "cs-uri-query":	({"%s", "(string)(request_id->query||\"-\")",
 			  1, "\"-\"", 0}),
   // FIXME: There is no difference between $real-resource and
   // $real-full-resource.
   "real-resource":	({"%s", ("(string)(request_id->raw_url||"
-				 "         request_id->not_query)"),
+                                 "         string_to_utf8(request_id->not_query))"),
 			  "%s" , "url_encode (resource)", 0}),
   "real-full-resource":	({"%s", ("(string)(request_id->raw_url||"
-				 "         request_id->not_query)"),
+                                 "         string_to_utf8(request_id->not_query))"),
 			  "%s" , "url_encode (resource)", 0}),
-  "real-cs-uri-stem":	({"%s", ("(string)(request_id->not_query||"
-				 "         (request_id->raw_url && "
-				 "          (request_id->raw_url/\"?\")[0])||"
-				 "         \"-\")"),
+  "real-cs-uri-stem":	({"%s", "string_to_utf8(request_id->not_query||\"-\")",
 			  "%s" , "url_encode (resource)", 0}),
   "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
   "scheme":             ({"%s", "(string)((request_id->port_obj && "
@@ -8019,7 +8014,8 @@ void run_log_event_format (string fmt, function cb,
 {
   (compiled_log_event[ fmt ] ||
    compile_log_format( fmt )->log_event) (cb, facility, action,
-					  resource, info);
+                                          resource && string_to_utf8(resource),
+                                          info);
 }
 
 protected LogFormat compile_log_format( string fmt )
