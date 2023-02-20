@@ -1,0 +1,12 @@
+subject: Roxen 7.0: LogFormat: compile_log_format() now knows about some wide resources.
+from: fc51ddfacd19899642aa5a4b4280ffcacd8cc722
+to: 25c96ee8bf5128cd8560bb215d5a8ff5604dff14
+originator: Marcus Wellhardh
+depends: 2023-02-16T151516
+restart: true
+
+• LogFormat: compile_log_format() now knows about some wide resources.
+
+id->not_query may be a wide string...
+
+Fixes [REP-926].
