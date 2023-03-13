@@ -77,11 +77,16 @@ private
   int check_db_user (string user, string host)
   {
     if (normalized_server_version >= "010.004") {
-      return connect_to_my_mysql (0, "mysql")->
-	big_query ("SELECT 1 FROM global_priv "
-		   "WHERE Host=%s AND User=%s LIMIT 1",
-		   host, user)->
-	num_rows();
+      catch {
+        // Return whether the user has any privileges or not.
+        return !!connect_to_my_mysql(0, "mysql")->
+          big_query("SHOW GRANTS FOR %s@%s", user, host)->num_rows();
+      };
+      // Typically an error like "Couldn't create result for query "
+      // "(There is no such grant defined for user 'rw' on host '%')".
+      //
+      // User does not exist.
+      return 0;
     }
     // Ancient style permission check.
     return connect_to_my_mysql (0, "mysql")->
