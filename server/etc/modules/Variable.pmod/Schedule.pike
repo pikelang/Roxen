@@ -42,6 +42,39 @@ mapping(string:int) localtime(int t)
   return predef::localtime(t);
 }
 
+string fmt_time(int|mapping(string:int) lt)
+{
+  if (intp(lt)) {
+    lt = localtime(lt);
+  }
+
+  return sprintf("%04d-%02d-%02dT%02d:%02d:%02d%+05d%s (%s)",
+                 lt->year + 1900, lt->mon + 1, lt->mday,
+                 lt->hour, lt->min, lt->sec,
+                 -(lt->timezone/36),
+                 lt->isdst?" DST":"",
+                 ({ "Sun", "Mon", "Tue", "Wed",
+                    "Thu", "Fri", "Sat" })[lt->wday]);
+}
+
+string describe_mode(array(int) mode)
+{
+  switch(mode[0]) {
+  case 0:
+    return "Disabled";
+  case 1:
+    return sprintf("Every %d hour(s)", mode[1]);
+  case 2:
+    return sprintf("Every %s at %02d%s",
+                   ({ "day", "Sunday", "Monday", "Tuesday", "Wednesday",
+                      "Thursday", "Friday", "Saturday" })[mode[3]],
+                   mode[4],
+                   (sizeof(mode) > 5) ?
+                   sprintf(":%02d", mode[5]):
+                   ":00 (compat)");
+  }
+}
+
 int main(int argc, array(string) argv)
 {
   // Force timezone to be CET (aka Europe/Berlin, Europe/Stockholm, etc).
@@ -160,17 +193,16 @@ int main(int argc, array(string) argv)
 	int got = get_next(when);
         if (got != expected_utc) {
 	  failures++;
-          werror("Test failed for %O (UTC)\n"
-		 "When: %d\n"
-		 "%O\n"
-		 "Expected: %d\n"
-		 "%O\n"
-		 "Got: %d\n"
-		 "%O\n",
-		 test,
-		 when, localtime(when),
-                 expected_utc, localtime(expected_utc),
-		 got, localtime(got));
+          werror("Test failed for ({ %s }) (UTC)\n"
+                 "%s\n"
+                 "When:     %s (%d)\n"
+                 "Expected: %s (%d)\n"
+                 "Got:      %s (%d)\n\n",
+                 ((array(string))val) * ", ",
+                 describe_mode(val),
+                 fmt_time(when), when,
+                 fmt_time(expected_utc), expected_utc,
+                 fmt_time(got), got);
         } else {
           successes++;
         }
@@ -178,17 +210,16 @@ int main(int argc, array(string) argv)
         got = get_next(when);
         if (got != expected_cet) {
           failures++;
-          werror("Test failed for %O (CET)\n"
-                 "When: %d\n"
-                 "%O\n"
-                 "Expected: %d\n"
-                 "%O\n"
-                 "Got: %d\n"
-                 "%O\n",
-                 test,
-                 when, localtime(when),
-                 expected_cet, localtime(expected_cet),
-                 got, localtime(got));
+          werror("Test failed for ({ %s }) (CET)\n"
+                 "%s\n"
+                 "When:     %s (%d)\n"
+                 "Expected: %s (%d)\n"
+                 "Got:      %s (%d)\n\n",
+                 ((array(string))val) * ", ",
+                 describe_mode(val),
+                 fmt_time(when), when,
+                 fmt_time(expected_cet), expected_cet,
+                 fmt_time(got), got);
 	} else {
 	  successes++;
 	}
