@@ -712,6 +712,8 @@ protected int mktime(mapping m)
   return t;
 }
 
+// Advance to the next weekday day after from where hour:minute
+// has not happended yet.
 private mapping next_or_same_day(mapping from, int day, int hour, int minute)
 {
   if(from->wday==day && from->hour<hour)
@@ -721,6 +723,7 @@ private mapping next_or_same_day(mapping from, int day, int hour, int minute)
   return next_day(from, day);
 }
 
+// Advance to 00:00 the weekday day after from.
 private mapping next_day(mapping from, int day)
 {
   int num_days = ((6 + day - from->wday) % 7) + 1;
@@ -732,6 +735,11 @@ private mapping next_day(mapping from, int day)
   mapping m = localtime(mktime(from) + num_days * 3600 * 24);
   m->hour = from->hour = 0;
   m->min = from->min = 0;
+
+  // Adjust m with respect to timezone differences!
+  mapping lt = localtime(mktime(m));
+  m->timezone = lt->timezone;
+
   return m;
 }
 
@@ -758,13 +766,42 @@ private mapping next_time(mapping from, int hour, int minute, void|int delta)
     } else {
       from->min = minute;
     }
+
+    // Check for DST transition.
+    from = localtime(mktime(from));
+    if (from->hour != hour) {
+      // Probably due to DST transition.
+      //
+      // Attempt to adjust.
+      mapping(string:int) alt = from + ([ "hour": hour ]);
+      alt = localtime(mktime(alt));
+      // NB: We keep 03:00 for 02:00 in the DST transition.
+      if (alt->hour == hour) {
+        from = alt;
+      }
+    }
     return from;
   } else if ((from->hour == hour) && (from->min < minute)) {
     from->min = minute;
     return from;
   }
   from->min = minute;
-  return localtime(mktime(from) + (24 - from->hour + hour)*3600 + delta);
+
+  mapping(string:mixed) m =
+    localtime(mktime(from) + (24 - from->hour + hour)*3600 + delta);
+  if (m->hour != hour) {
+    // Probably due to DST transition.
+    //
+    // Attempt to adjust.
+    mapping(string:int) alt = m + ([ "hour": hour ]);
+    alt = localtime(mktime(alt));
+    // NB: We keep 03:00 for 02:00 in the DST transition.
+    if (alt->hour == hour) {
+      m = alt;
+    }
+  }
+
+  return m;
 }
 
 int get_next( int last )
