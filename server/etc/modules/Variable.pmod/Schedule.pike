@@ -252,6 +252,7 @@ array transform_from_form( string what, mapping vl )
   return res;
 }
 
+#if constant(roxenp)
 array verify_set_from_form(array val)
 {
   if ((sizeof(val) >= VALS_SORT) &&
@@ -260,6 +261,7 @@ array verify_set_from_form(array val)
   }
   return ::verify_set_from_form(val);
 }
+#endif
 
 protected int mktime(mapping m)
 {
