@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.426 2004/04/13 16:02:37 grubba Exp $";
+constant cvs_version = "$Id$";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -697,7 +697,29 @@ private final int parse_got_2( )
      case "if-modified-since": since=contents; break;
      case "if-match": break; // Not supported yet.
      case "if-none-match":
-       none_match = (multiset)((contents-" ")/",");
+       // RFC 7232 3.2:
+       //   A recipient MUST use the weak comparison function when
+       //   comparing entity-tags for If-None-Match (Section 2.3.2),
+       //   since weak entity-tags can be used for cache validation
+       //   even if there have been changes to the representation
+       //   data.
+       //
+       // We typically only use strong entity tags, but they may
+       // be introduced by proxys. The weak comparison function
+       // just means disregarding the "W/"-prefix.
+       //
+       // In the event of us ever using weak etags, make sure both
+       // variants are present in none_match.
+       none_match = (multiset)(map((contents-" ")/",",
+                                   lambda(string etag) {
+                                     if (etag == "*") {
+                                       return ({ etag });
+                                     }
+                                     if (has_prefix(etag, "W/")) {
+                                       return ({ etag[2..], etag });
+                                     }
+                                     return ({ etag, "W/" + etag });
+                                   }) * ({}));
        break;
 
      case "proxy-authorization":
