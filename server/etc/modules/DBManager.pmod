@@ -3144,10 +3144,25 @@ protected void create()
 {
   Sql.Sql db = connect_to_my_mysql(0, "mysql");
   // Typically a string like "mysql/5.5.30-log" or "mysql/5.5.39-MariaDB-log".
-  normalized_server_version = map(((db->server_info()/"/")[1]/"-")[0]/".",
-				  lambda(string d) {
-				    return ("000" + d)[<2..];
-				  }) * ".";
+  // NB: On Ubuntu strings like "mysql/5.5.5-10.6.8-MariaDB-log" have been seen.
+  string found;
+  foreach((db->server_info() / "/")[1]/"-", string ver) {
+    if (('0' <= ver[0]) && ('9' >= ver[0])) {
+      // Probably a version number.
+      found = map(ver/".",
+                  lambda(string d) {
+                    return ("000" + d)[<2..];
+                  }) * ".";
+      continue;
+    }
+    if (found) break;
+  }
+  normalized_server_version = found;
+#ifdef DB_DEBUG
+  werror("DBManager: Raw server version: %O\n", db->server_info());
+  werror("DBManager: Normalized server version: %O\n",
+         normalized_server_version);
+#endif
 
   mixed err = 
   catch {
