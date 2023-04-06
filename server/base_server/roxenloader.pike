@@ -3549,17 +3549,13 @@ void start_mysql (void|int log_queries_to_stdout)
 
   if (!once_mode) start_tailf();
 
-  if( !file_stat( mysqldir+"/mysql/user.MYD" ) ||
-      !file_stat( mysqldir+"/mysql/host.MYD" ) ||
-      !file_stat( mysqldir+"/mysql/db.MYD" ) )
-  {
-#ifdef DEBUG
+  if( !file_stat(mysqldir+"/mysql/global_priv.frm") &&
+      (!file_stat( mysqldir+"/mysql/user.MYD" ) ||
+       !file_stat( mysqldir+"/mysql/host.MYD" ) ||
+       !file_stat( mysqldir+"/mysql/db.MYD" )) ) {
     report_debug("MySQL data directory does not exist -- copying template\n");
-#endif
     if (!file_stat(mysqldir)) {
-#ifdef DEBUG
       report_debug("Creating directory %O\n", mysqldir);
-#endif /* DEBUG */
       mkdirhier(combine_path(mysqldir, "../"));
       mkdir(mysqldir, 0750);
     }
