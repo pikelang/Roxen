@@ -3270,7 +3270,9 @@ void low_start_mysql( string datadir,
   }
 
   if ((normalized_mysql_version > "010.002.003") &&
-      !has_value(normalized_cfg_file, "sql_mode")) {
+      !has_value(cfg_file, "sql_mode")) {
+    // NB: The '_' is a '-' in normalized_cfg_file!
+
     // Since MariaDB 10.2.4, SQL_MODE is by default set to NO_AUTO_CREATE_USER,
     // NO_ENGINE_SUBSTITUTION, STRICT_TRANS_TABLES, ERROR_FOR_DIVISION_BY_ZERO.
     // In earlier versions of MariaDB 10.2, and since MariaDB 10.1.7, SQL_MODE
