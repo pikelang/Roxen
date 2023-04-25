@@ -618,6 +618,7 @@
 /server/translations/jpn/roxen_config.xml mixed_indent
 /server/translations/nld/roxen_config.xml mixed_indent
 /server/translations/scripts/babelfish.pike mixed_indent
+/server/translations/scripts/make_config mixed_indent
 /server/translations/swe/roxen_config.xml mixed_indent
 /server/translations/swe/roxen_message.xml mixed_indent
 /start mixed_indent
