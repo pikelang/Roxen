@@ -1,0 +1,50 @@
+subject: Roxen 7.0: MariaDB fixes, RFC 7232 3.2 compliance.
+from: 25c96ee8bf5128cd8560bb215d5a8ff5604dff14
+to: 70421de67ee35bc62848244e3e39ef5072377144
+originator: Erik Allemann
+depends: 2023-02-20T135215
+restart: true
+
+• Loader [MariaDB]: Detect modern privilege tables.
+
+Do NOT reload ancient privilege (user, host, db, etc) tables if
+they have been replaced by modern (ie global_privs).
+
+• Loader [MariaDB]: Fix detection of sql_mode.
+
+• DBManager [Ubuntu]: Survive Ubuntu-style MariaDB server version info.
+
+On Ubuntu MariaDB server versions like "mysql/5.5.5-10.0.13-MariaDB-log"
+have been seen when connecting to a local MariaDB 10.0.13. Make sure
+that normalized_server_version is set to the expected "010.000.013" on
+such hosts (rather than the broken "005.005.005").
+
+Fixes MariaDB version detection on Ubuntu.
+
+• HTTP: Update handling of If-None-Match to comply with RFC 7232.
+
+RFC 7232 3.2 requires matching with the weak comparison function,
+while RFC 2616 said that it was optional (and only for GET and HEAD).
+
+Fixes [REP-963].
+
+• Variable.Schedule: Fix handling of DST transitions.
+
+Fixes [REP-964].
+
+• Variable.Schedule: Add tests of low-level functions.
+
+Adds test of next_or_same_time(), next_or_same_day() and next_time().
+
+• Variable.Schedule: Add tests of DST transitions.
+
+NB: Many of these currently fail.
+
+• Variable.Schedule: Improve formatting of testsuite output.
+
+• Variable.Schedule: Add testsuite for timezone CET.
+
+• Variable.Schedule: Fix testsuite rot.
+
+• Add "Server Schedule" info box that summarizes scheduled tasks in various
+parts of the server (e.g. auto restart or DB backup).
