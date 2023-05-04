@@ -1,0 +1,13 @@
+subject: Roxen 6.3:  Loader [MariaDB]: Detect modern privilege tables. Loader [MariaDB]: Fix detection of sql_mode.
+from: 436fd67c7e7544a01d5c81acf6bbcf2f41db642e
+to: b055308c5c405abd7911cb07c655acd3d8b7396e
+originator: Jonas Lonnberg
+depends: 2023-02-28T170227
+restart: true
+
+• Loader [MariaDB]: Detect modern privilege tables.
+
+Do NOT reload ancient privilege (user, host, db, etc) tables if
+they have been replaced by modern (ie global_privs).
+
+• Loader [MariaDB]: Fix detection of sql_mode.
