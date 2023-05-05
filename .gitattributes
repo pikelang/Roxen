@@ -242,6 +242,7 @@
 /server/config_interface/themes/square_orange/gbutton.xcf mixed_indent
 /server/config_interface/themes/square_orange/tabframe.xcf mixed_indent
 /server/config_interface/topmenu.pike mixed_indent
+/server/config_interface/update.html mixed_indent
 /server/config_interface/update/index.txt mixed_indent
 /server/config_interface/update/install.txt mixed_indent
 /server/config_interface/user_delete.pike mixed_indent
@@ -327,6 +328,7 @@
 /server/etc/test/tests/http/internal.pike mixed_indent
 /server/etc/test/tests/http/websocket.pike mixed_indent
 /server/etc/test/tests/patcher/RoxenTest_patcher.pike mixed_indent
+/server/etc/test/tests/patcher/testfile.patch mixed_indent
 /server/etc/test/tests/patcher/testfile.txt mixed_indent
 /server/etc/test/tests/pike_async_process_test_common.pike mixed_indent
 /server/etc/test/tests/rxml/RoxenTest_BaseRXML.xml mixed_indent
