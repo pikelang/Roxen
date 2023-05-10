@@ -860,10 +860,40 @@ program cast_to_program(string pname, string current_file, object|void handler)
   return ::cast_to_program(pname, current_file, handler);
 }
 
-void handle_error(array(mixed)|object trace)
+void handle_error(array(mixed)|object trace, int|void inhibit_hooks)
 {
   werror ("Internal server error: ");
+  object roxen;
+  catch {
+    roxen = !inhibit_hooks && roxenp();
+
+    Thread.Thread t = this_thread();
+
+    if (roxen && t) {
+      werror("Thread 0x%x:\n", t->id_number());
+      foreach(roxen->configurations, object conf) {
+        foreach(conf->get_providers("describe-thread"), object mod) {
+          catch {
+            mod->describe_thread && mod->describe_thread(this_thread());
+          };
+        }
+      }
+    }
+  };
+
   ::handle_error (trace);
+
+  if (roxen) {
+    catch {
+      foreach(roxen->configurations, object conf) {
+        foreach(conf->get_providers("abs-hook"), object mod) {
+          catch {
+            mod->abs_hook && mod->abs_hook();
+          };
+        }
+      }
+    };
+  }
 }
 
 void compile_warning(string file,int line,string err)

@@ -3780,7 +3780,7 @@ void engage_abs(int n)
       // Catch for paranoia reasons.
       describe_all_threads();
     })
-    master()->handle_error (err);
+    master()->handle_error(err, 1);
 #ifdef THREADS
   report_debug("\nHandler queue:\n");
   if (mixed err = catch {
@@ -3799,7 +3799,7 @@ void engage_abs(int n)
       }
     }
     })
-    master()->handle_error (err);
+    master()->handle_error(err, 1);
 #endif
   report_debug("\nPending call_outs:\n");
   if (mixed err = catch {
@@ -3809,7 +3809,7 @@ void engage_abs(int n)
 		     info[0], info[2], info[3..]);
       }
     })
-    master()->handle_error(err);
+    master()->handle_error(err, 1);
   foreach(configurations, Configuration conf) {
     foreach(conf->get_providers("abs-hook"), RoxenModule mod) {
       catch {
