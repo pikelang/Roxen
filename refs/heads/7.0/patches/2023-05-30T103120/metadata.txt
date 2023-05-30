@@ -1,0 +1,13 @@
+subject: Roxen 7.0: Master: Call describe-thread and abs-hook hooks from handle_error()
+from: 70421de67ee35bc62848244e3e39ef5072377144
+to: 141652a39cc6c021671b87312cfe58e2195b8734
+originator: Marcus Wellhardh
+depends: 2023-04-28T092712
+restart: true
+
+• Master: Call describe-thread and abs-hook hooks from handle_error().
+
+The hooks can now be used to present more information about
+internal server errors.
+
+Requested in [REP-1016].
