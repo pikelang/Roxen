@@ -618,11 +618,12 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
       }
     }
 
+    if (depth <= 0) {
+      SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
+      return ([]);
+    }
+
     if (properties->get_stat()->isdir) {
-      if (depth <= 0) {
-	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-	return ([]);
-      }
       depth--;
       foreach(find_dir(path, id) || ({}), string filename) {
 	filename = combine_path_unix(path, filename);
