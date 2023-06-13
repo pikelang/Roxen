@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.245 2012/01/23 12:50:52 grubba Exp $
+// $Id$
 
 #include <module_constants.h>
 #include <module.h>
@@ -510,6 +510,8 @@ class DefaultPropertySet
   }
 }
 
+private string dav_property_set_cache;
+
 //! Return the set of properties for @[path].
 //!
 //! @returns
@@ -525,14 +527,28 @@ class DefaultPropertySet
 PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Querying properties on %O", path);
+  if (!dav_property_set_cache) {
+    dav_property_set_cache = "DAV:" + module_identifier() + ":property_sets";
+  }
+
+  mapping(string:mixed)|PropertySet res =
+    cache_lookup(dav_property_set_cache, path);
+  if (!undefinedp(res)) {
+    SIMPLE_TRACE_LEAVE("Found in cache.");
+    return res;
+  }
+
   Stat st = stat_file(path, id);
 
   if (!st) {
+    cache_set(dav_property_set_cache, path, 0);
     SIMPLE_TRACE_LEAVE ("No such file or dir");
     return 0;
   }
 
-  PropertySet res = DefaultPropertySet(path, query_location()+path, id, st);
+  res = DefaultPropertySet(path, query_location()+path, id, st);
+  cache_set(dav_property_set_cache, path, res);
+
   SIMPLE_TRACE_LEAVE ("");
   return res;
 }
