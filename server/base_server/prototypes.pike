@@ -3857,6 +3857,8 @@ class MultiStatus
 }
 
 // Only for protyping and breaking of circularities.
+//
+// cf etc/modules/PropertySet.pike
 protected class PropertySet
 {
   string path;
