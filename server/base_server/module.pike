@@ -625,8 +625,9 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
 
     if (properties->get_stat()->isdir) {
       depth--;
+      path = combine_path_unix(path, "");	// Simplify concatenation.
       foreach(find_dir(path, id) || ({}), string filename) {
-	filename = combine_path_unix(path, filename);
+        filename = path + filename;
 	if (mapping(string:mixed) sub_res = recurse(filename, depth))
 	  if (sizeof (sub_res))
 	    result->add_status (filename, sub_res->error, sub_res->rettext);
