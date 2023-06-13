@@ -589,16 +589,23 @@ mapping(string:mixed) remove_property(string prop_name)
 //!   @[MultiStatus.Prefixed] object to collect the results. It has
 //!   the path to the file system as implicit prefix.
 //! @param filt
-//!   Optional multiset of requested properties. If this parameter
+//!   Optional array or multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
 mapping(string:mixed) find_properties(string mode,
 				      MultiStatus.Prefixed result,
-				      multiset(string)|void filt)
+                                      array(string)|multiset(string)|void filt)
 {
+  if (multisetp(filt)) {
+    filt = indices(filt);
+  }
   switch(mode) {
   case "DAV:propname":
-    filt = query_all_properties();
-    foreach(filt; string prop_name;) {
+    filt = indices(query_all_properties());
+    foreach(filt, string prop_name) {
+      if (prop_name == "http://apache.org/dav/props/executable") {
+        // Not really necessary.
+        result->add_namespace ("http://apache.org/dav/props/");
+      }
       result->add_property(path, prop_name, "");
     }
     break;
@@ -606,15 +613,18 @@ mapping(string:mixed) find_properties(string mode,
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
       // (draft-reschke-webdav-allprop-include-04).
-      filt |= query_all_properties();
+      filt |= indices(query_all_properties());
     } else {
-      filt = query_all_properties();
+      filt = indices(query_all_properties());
     }
     // FALL_THROUGH
   case "DAV:prop":
-    foreach(filt; string prop_name;) {
-      result->add_property(path, prop_name,
-			   query_property(prop_name));
+    foreach(filt || ({}), string prop_name) {
+      if (prop_name == "http://apache.org/dav/props/executable") {
+        // Not really necessary.
+        result->add_namespace ("http://apache.org/dav/props/");
+      }
+      result->add_property(path, prop_name, query_property(prop_name));
     }
     break;
   default:
@@ -622,8 +632,5 @@ mapping(string:mixed) find_properties(string mode,
     return 0;
   }
 
-  if (filt["http://apache.org/dav/props/executable"])
-    // Not really necessary.
-    result->add_namespace ("http://apache.org/dav/props/");
   return 0;
 }

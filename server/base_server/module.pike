@@ -569,6 +569,8 @@ class DefaultPropertySet
   }
 }
 
+private string dav_property_set_cache;
+
 //! Return the set of properties for @[path].
 //!
 //! @returns
@@ -584,14 +586,28 @@ class DefaultPropertySet
 PropertySet|mapping(string:mixed) query_property_set(string path, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Querying properties on %O", path);
+  if (!dav_property_set_cache) {
+    dav_property_set_cache = "DAV:" + module_identifier() + ":property_sets";
+  }
+
+  mapping(string:mixed)|PropertySet res =
+    cache_lookup(dav_property_set_cache, path);
+  if (!undefinedp(res)) {
+    SIMPLE_TRACE_LEAVE("Found in cache.");
+    return res;
+  }
+
   Stat st = stat_file(path, id);
 
   if (!st) {
+    cache_set(dav_property_set_cache, path, 0);
     SIMPLE_TRACE_LEAVE ("No such file or dir");
     return 0;
   }
 
-  PropertySet res = DefaultPropertySet(path, query_location()+path, id, st);
+  res = DefaultPropertySet(path, query_location()+path, id, st);
+  cache_set(dav_property_set_cache, path, res);
+
   SIMPLE_TRACE_LEAVE ("");
   return res;
 }
@@ -626,11 +642,16 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 //!   @[query_property_set()]
 mapping(string:mixed) recurse_find_properties(string path, string mode,
 					      int depth, RequestID id,
-					      multiset(string)|void filt)
+                                              array(string)|multiset(string)|void filt)
 {
+  int startts = -gethrtime();
   string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
     id->get_multi_status()->prefix (id->url_base() + prefix);
+
+  if (multisetp(filt)) {
+    filt = indices(filt);
+  }
 
   mapping(string:mixed) recurse (string path, int depth) {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
@@ -656,14 +677,16 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
       }
     }
 
+    if (depth <= 0) {
+      SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
+      return ([]);
+    }
+
     if (properties->get_stat()->isdir) {
-      if (depth <= 0) {
-	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-	return ([]);
-      }
       depth--;
+      path = combine_path_unix(path, "");	// Simplify concatenation.
       foreach(find_dir(path, id) || ({}), string filename) {
-	filename = combine_path_unix(path, filename);
+        filename = path + filename;
 	if (mapping(string:mixed) sub_res = recurse(filename, depth))
 	  if (sizeof (sub_res))
 	    result->add_status (filename, sub_res->error, sub_res->rettext);
@@ -674,7 +697,15 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
     return ([]);
   };
 
-  return recurse (path, depth);
+  mapping(string:mixed) res = recurse (path, depth);
+  startts += gethrtime();
+
+#ifdef DAV_DEBUG
+  werror("recurse_find_properties(%O, %O, %O, %O, %O) took %dus.\n",
+         path, mode, depth, id, filt,
+         startts);
+#endif
+  return res;
 }
 
 mapping(string:mixed) patch_properties(string path,
