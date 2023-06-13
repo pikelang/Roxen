@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.283 2012/01/23 12:50:52 grubba Exp $";
+constant cvs_version="$Id$";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3587,6 +3587,7 @@ class MultiStatus
     array(SimpleNode) response_xml = allocate(sizeof(status_set));
     int i;
 
+    int startts = gethrtime();
     DAV_WERROR("Generating XML Nodes for status_set:%O\n",
 	       status_set);
 
@@ -3603,13 +3604,196 @@ class MultiStatus
       status_set[href]->build_response (response_node);
     }
     node->replace_children(response_xml);
+    DAV_WERROR("Generating XML Nodes took %dus.\n",
+               gethrtime()-startts);
 
     return root;
   }
 
+  protected string old_render_xml()
+  {
+    return get_xml_node()->render_xml();
+  }
+
+  string render()
+  {
+    mapping(string:string) namespaces = ([
+      "DAV":"DAV:",
+      "MS":"urn:schemas-microsoft-com:datatypes",
+    ]);
+    mapping(string:string) namespaces_rev = ([
+      "DAV:":"DAV",
+      "http://apache.org/dav/props/":"A",
+      "urn:schemas-microsoft-com:datatypes":"MS",
+    ]);
+    int nscount;
+    mapping(string:string) abbreviate = ([]);
+    foreach(status_set; string href; MultiStatusNode n) {
+      foreach(n->properties; string prop;
+              string|SimpleNode|array(SimpleNode)|MultiStatusStatus val) {
+        if (arrayp(val) && (sizeof(val) < 2)) {
+          if (sizeof(val)) {
+            val = val[0];
+          } else {
+            val = "";
+          }
+        }
+        if (!(!val || stringp(val) ||
+              (objectp(val) && val->is_status) ||
+              (objectp(val) && functionp(val->get_node_type) &&
+               (val->get_node_type() == Parser.XML.Tree.XML_ELEMENT) &&
+               (val->get_children() == ({}))))) {
+          // Unsupported property value.
+          // fall back to the old code.
+          DAV_WERROR("Unsupported prop value for %O:%O:%O\n", href, prop, val);
+          return old_render_xml();
+        }
+        do {
+          if (abbreviate[prop]) continue;
+          foreach(namespaces_rev; string ns; string short) {
+            if (has_prefix(prop, ns)) {
+              string suffix = prop[sizeof(ns)..];
+              if (!has_value(suffix, "/")) {
+                namespaces[short] = ns;
+                abbreviate[prop] = short + ":" + suffix;
+                break;
+              }
+            }
+          }
+          if (abbreviate[prop]) continue;
+          array(string) split = prop/"/";
+          string prefix;
+          string suffix;
+          if (sizeof(split) > 1) {
+            prefix = split[..sizeof(split)-2] * "/" + "/";
+            suffix = split[-1];
+          } else {
+            split = prop/":";
+            if (sizeof(split) > 1) {
+              prefix = split[..sizeof(split)-2] * ":" + ":";
+              suffix = split[-1];
+            }
+          }
+          if (prefix) {
+            string ns = "NS" + nscount++;
+            namespaces[ns] = prefix;
+            namespaces_rev[prefix] = ns;
+            abbreviate[prop] = ns + ":" + suffix;
+          } else {
+            abbreviate[prop] = prop;
+          }
+        } while(0);
+        // FIXME: Handle namespaces for node values here.
+      }
+    }
+
+    String.Buffer buf = String.Buffer();
+    buf->add("<?xml version='1.0' encoding='utf-8'?>\n"
+             "<DAV:multistatus");
+    foreach(sort(indices(namespaces)), string ns) {
+      buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
+    }
+    buf->add(">\n");
+    foreach(sort(indices(status_set)), string href) {
+      buf->add("  <DAV:response>\n",
+               "    <DAV:href>",
+               string_to_utf8(Roxen.html_encode_string(href)),
+               "</DAV:href>\n",
+               "    <DAV:propstat>\n"
+               "      <DAV:prop>\n");
+      MultiStatusNode n = status_set[href];
+      int good;
+      mapping(string:array(string)) bad = ([]);
+      foreach(n->properties; string prop;
+              string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
+        if (objectp(value) && value->is_status) {
+          bad[(string)value->http_code] += ({ prop });
+        } else {
+          good = 1;
+          string ms_type = ([
+            "DAV:creationdate":"dateTime.tz",
+            "DAV:getlastmodified":"dateTime.rfc1123",
+          ])[prop];
+          buf->add("        <", abbreviate[prop]);
+          if (ms_type) {
+            buf->add(" MS:dt='", ms_type, "'");
+          }
+          if (value) {
+            buf->add(">");
+            if (arrayp(value) && (sizeof(value) < 2)) {
+              if (sizeof(value) == 1) {
+                value = value[0];
+              } else {
+                value = "";
+              }
+            }
+            if (stringp(value)) {
+              buf->add(Roxen.html_encode_string(value));
+            } else if (objectp(value) && functionp(value->get_node_type) &&
+                       (value->get_node_type() ==
+                        Parser.XML.Tree.XML_ELEMENT) &&
+                       (value->get_children() == ({}))) {
+              // FIXME: We assume the node is in the DAV:-namespace,
+              //        and thus does not require abbreviation.
+              //        See FIXME above.
+              buf->add("<", value->get_full_name(), "/>");
+            } else {
+              buf->sprintf("<!-- Unsupported: %O -->", value);
+            }
+            buf->add("</", abbreviate[prop], ">\n");
+          } else {
+            buf->add("/>\n");
+          }
+        }
+      }
+      if (good) {
+        buf->add("      </DAV:prop>\n"
+                 "      <DAV:status>HTTP/1.1 200 OK</DAV:status>\n",
+                 "    </DAV:propstat>\n");
+      }
+      if (sizeof(bad)) {
+        foreach(sort(indices(bad)), string http_code) {
+          if (good) {
+            buf->add("    <DAV:propstat>\n"
+                     "      <DAV:prop>\n");
+          }
+          foreach(sort(bad[http_code]), string prop) {
+            buf->add("        <", abbreviate[prop], "/>\n");
+          }
+          buf->add("      </DAV:prop>\n"
+                   "      <DAV:status>HTTP/1.1 ", http_code,
+                   " </DAV:status>\n",
+                   "    </DAV:propstat>\n");
+          good = 1;
+        }
+      }
+      buf->add("  </DAV:response>\n");
+    }
+
+    buf->add("</DAV:multistatus>\n");
+
+    return buf->get();
+  }
+
   mapping(string:mixed) http_answer()
   {
+    int startts = gethrtime();
+#if 0
     string xml = get_xml_node()->render_xml();
+    DAV_WERROR("Rendering XML took %dus.\n", gethrtime() -  startts);
+#if 0
+    startts = gethrtime();
+    string xml2 = render();
+    DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
+
+    if (sizeof(xml) < 65536) {
+      DAV_WERROR("XML:\n%s\nXML2:\n%s\n", xml, xml2);
+    }
+#endif
+#else
+    string xml = render();
+    DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
+#endif
     return ([
       "error": 207,
       "data": xml,
