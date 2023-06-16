@@ -13,6 +13,12 @@ constant cvs_version="$Id$";
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
 
+#ifdef DAV_PRETTY_XML
+#define DAV_PRETTY(X)		X
+#else
+#define DAV_PRETTY(X)		""
+#endif
+
 #ifdef VARY_DEBUG
 #define VARY_WERROR(X...)	werror("VARY: " + X)
 #else
@@ -3693,14 +3699,14 @@ class MultiStatus
     foreach(sort(indices(namespaces)), string ns) {
       buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
     }
-    buf->add(">\n");
+    buf->add(">" DAV_PRETTY("\n"));
     foreach(sort(indices(status_set)), string href) {
-      buf->add("  <DAV:response>\n",
-               "    <DAV:href>",
+      buf->add(DAV_PRETTY("  ") "<DAV:response>" DAV_PRETTY("\n")
+               DAV_PRETTY("    ") "<DAV:href>",
                string_to_utf8(Roxen.html_encode_string(href)),
-               "</DAV:href>\n",
-               "    <DAV:propstat>\n"
-               "      <DAV:prop>\n");
+               "</DAV:href>" DAV_PRETTY("\n")
+               DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
+               DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
       MultiStatusNode n = status_set[href];
       int good;
       mapping(string:array(string)) bad = ([]);
@@ -3714,7 +3720,7 @@ class MultiStatus
             "DAV:creationdate":"dateTime.tz",
             "DAV:getlastmodified":"dateTime.rfc1123",
           ])[prop];
-          buf->add("        <", abbreviate[prop]);
+          buf->add(DAV_PRETTY("        ") "<", abbreviate[prop]);
           if (ms_type) {
             buf->add(" MS:dt='", ms_type, "'");
           }
@@ -3737,40 +3743,44 @@ class MultiStatus
               //        and thus does not require abbreviation.
               //        See FIXME above.
               buf->add("<", value->get_full_name(), "/>");
+#ifdef DAV_PRETTY_XML
             } else {
               buf->sprintf("<!-- Unsupported: %O -->", value);
+#endif
             }
-            buf->add("</", abbreviate[prop], ">\n");
+            buf->add("</", abbreviate[prop], ">" DAV_PRETTY("\n"));
           } else {
-            buf->add("/>\n");
+            buf->add("/>" DAV_PRETTY("\n"));
           }
         }
       }
       if (good) {
-        buf->add("      </DAV:prop>\n"
-                 "      <DAV:status>HTTP/1.1 200 OK</DAV:status>\n",
-                 "    </DAV:propstat>\n");
+        buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
+                 DAV_PRETTY("      ") "<DAV:status>"
+                 "HTTP/1.1 200 OK</DAV:status>" DAV_PRETTY("\n")
+                 DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
       }
       if (sizeof(bad)) {
         foreach(sort(indices(bad)), string http_code) {
           if (good) {
-            buf->add("    <DAV:propstat>\n"
-                     "      <DAV:prop>\n");
+            buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
+                     DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
           }
           foreach(sort(bad[http_code]), string prop) {
-            buf->add("        <", abbreviate[prop], "/>\n");
+            buf->add(DAV_PRETTY("        ") "<", abbreviate[prop],
+                     "/>" DAV_PRETTY("\n"));
           }
-          buf->add("      </DAV:prop>\n"
-                   "      <DAV:status>HTTP/1.1 ", http_code,
-                   " </DAV:status>\n",
-                   "    </DAV:propstat>\n");
+          buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
+                   DAV_PRETTY("      ") "<DAV:status>HTTP/1.1 ", http_code,
+                   " </DAV:status>" DAV_PRETTY("\n")
+                   DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
           good = 1;
         }
       }
-      buf->add("  </DAV:response>\n");
+      buf->add(DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
     }
 
-    buf->add("</DAV:multistatus>\n");
+    buf->add("</DAV:multistatus>" DAV_PRETTY("\n"));
 
     return buf->get();
   }
