@@ -3634,7 +3634,9 @@ class MultiStatus
     ]);
     int nscount;
     mapping(string:string) abbreviate = ([]);
-    foreach(status_set; string href; MultiStatusNode n) {
+    foreach(status_set; string href;
+            object(MultiStatusPropStat)|MultiStatusStatus n) {
+      if (!n->properties) continue;
       foreach(n->properties; string prop;
               string|SimpleNode|array(SimpleNode)|MultiStatusStatus val) {
         if (arrayp(val) && (sizeof(val) < 2)) {
@@ -3704,10 +3706,33 @@ class MultiStatus
       buf->add(DAV_PRETTY("  ") "<DAV:response>" DAV_PRETTY("\n")
                DAV_PRETTY("    ") "<DAV:href>",
                string_to_utf8(Roxen.html_encode_string(href)),
-               "</DAV:href>" DAV_PRETTY("\n")
-               DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
+               "</DAV:href>" DAV_PRETTY("\n"));
+      object(MultiStatusPropStat)|MultiStatusStatus n = status_set[href];
+
+      if (!n->properties) {
+        if (n->is_status && objectp(n->message) &&
+            (n->message->get_full_name() == "DAV:error")) {
+          // Typically lock-discovery.
+          array(SimpleNode) cs = n->message->get_children();
+          if ((sizeof(cs) == 1) && objectp(cs[0]) &&
+              !sizeof(cs[0]->get_children())) {
+            buf->add(DAV_PRETTY("    ") "<DAV:status>HTTP/1.1 ",
+                     (string)n->http_code,
+                     " </DAV:status>" DAV_PRETTY("\n")
+                     DAV_PRETTY("    ") "<DAV:error>" DAV_PRETTY("\n")
+                     DAV_PRETTY("      ") "<", cs[0]->get_full_name(), "/>"
+                     DAV_PRETTY("\n")
+                     DAV_PRETTY("    ") "</DAV:error>" DAV_PRETTY("\n")
+                     DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
+            continue;
+          }
+        }
+
+        DAV_WERROR("Unsupported node: %O\n", n);
+        return old_render_xml();
+      }
+      buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
                DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
-      MultiStatusNode n = status_set[href];
       int good;
       mapping(string:array(string)) bad = ([]);
       foreach(n->properties; string prop;
