@@ -3718,7 +3718,8 @@ class MultiStatusPropStat
 {
   constant is_prop_stat = 1;
 
-  mapping(string:string|SimpleNode|array(SimpleNode)|MultiStatusStatus)
+  mapping(string:
+          string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int(100..999))
     properties = ([]);
   //! The property settings. Indexed on property name (with complete
   //! XML namespace). Values are:
@@ -3742,13 +3743,16 @@ class MultiStatusPropStat
   void build_response (SimpleElementNode response_node)
   {
     SimpleElementNode ok_prop_node = SimpleElementNode("DAV:prop", ([]));
-    mapping(MultiStatusStatus:SimpleNode) prop_nodes = ([]);
+    mapping(int:SimpleNode) prop_nodes = ([]);
 
     foreach (properties;
 	     string prop_name;
-	     string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
-      if (objectp (value) && value->is_status) {
+             string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int value) {
+      if (intp(value) || (objectp (value) && value->is_status)) {
 	// Group together failed properties according to status codes.
+        if (objectp(value)) {
+          value = value->http_code;
+        }
 	SimpleNode prop_node = prop_nodes[value];
 	if (!prop_node)
 	  prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
@@ -3792,11 +3796,12 @@ class MultiStatusPropStat
       propstat_node->add_child (ok_status_node);
     }
 
-    foreach (prop_nodes; MultiStatusStatus status; SimpleNode prop_node) {
+    foreach (prop_nodes; int http_code; SimpleNode prop_node) {
       SimpleElementNode propstat_node =
 	SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (prop_node);
+      MultiStatusStatus status = MultiStatusStatus(http_code);
       status->build_response (propstat_node);
     }
   }
@@ -3888,9 +3893,12 @@ class MultiStatus
   //!     @type MultiStatusStatus
   //!     @type mapping(string:mixed)
   //!       Operation failed as described by the mapping.
+  //!     @type int(100..999)
+  //!       Operation failed as described by the http code.
   //!   @endmixed
   void add_property(string href, string prop_name,
-		    void|int(0..0)|string|array(SimpleNode)|SimpleNode|
+                    void|int(0..0)|int(100..999)|string|
+                    array(SimpleNode)|SimpleNode|
 		    MultiStatusStatus|mapping(string:mixed) prop_value)
   {
     MultiStatusPropStat prop_stat;
@@ -3905,6 +3913,9 @@ class MultiStatus
       prop_stat = status_set[href] = MultiStatusPropStat();
     if (mappingp (prop_value))
       prop_value = MultiStatusStatus (prop_value->error, prop_value->rettext);
+    else if (prop_value && intp(prop_value)) {
+      prop_value = MultiStatusStatus(prop_value);
+    }
     prop_stat->properties[prop_name] = prop_value;
   }
 
@@ -4001,11 +4012,12 @@ class MultiStatus
   string render()
   {
     mapping(string:string) namespaces = ([
+      "":"DAV:",
       "DAV":"DAV:",
       "MS":"urn:schemas-microsoft-com:datatypes",
     ]);
     mapping(string:string) namespaces_rev = ([
-      "DAV:":"DAV",
+      "DAV:":"",
       "http://apache.org/dav/props/":"A",
       "urn:schemas-microsoft-com:datatypes":"MS",
     ]);
@@ -4023,7 +4035,7 @@ class MultiStatus
             val = "";
           }
         }
-        if (!(!val || stringp(val) ||
+        if (!(intp(val) || stringp(val) ||
               (objectp(val) && val->is_status) ||
               (objectp(val) && functionp(val->get_node_type) &&
                (val->get_node_type() == Parser.XML.Tree.XML_ELEMENT) &&
@@ -4040,7 +4052,12 @@ class MultiStatus
               string suffix = prop[sizeof(ns)..];
               if (!has_value(suffix, "/")) {
                 namespaces[short] = ns;
-                abbreviate[prop] = short + ":" + suffix;
+                if (sizeof(short)) {
+                  abbreviate[prop] = short + ":" + suffix;
+                } else {
+                  // Default namespace.
+                  abbreviate[prop] = suffix;
+                }
                 break;
               }
             }
@@ -4074,16 +4091,21 @@ class MultiStatus
 
     String.Buffer buf = String.Buffer();
     buf->add("<?xml version='1.0' encoding='utf-8'?>\n"
-             "<DAV:multistatus");
+             "<multistatus");
     foreach(sort(indices(namespaces)), string ns) {
-      buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
+      if (sizeof(ns)) {
+        buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
+      } else {
+        // Default namespace.
+        buf->add(" xmlns='", namespaces[ns], "'");
+      }
     }
     buf->add(">" DAV_PRETTY("\n"));
     foreach(sort(indices(status_set)), string href) {
-      buf->add(DAV_PRETTY("  ") "<DAV:response>" DAV_PRETTY("\n")
-               DAV_PRETTY("    ") "<DAV:href>",
+      buf->add(DAV_PRETTY("  ") "<response>" DAV_PRETTY("\n")
+               DAV_PRETTY("    ") "<href>",
                string_to_utf8(Roxen.html_encode_string(href)),
-               "</DAV:href>" DAV_PRETTY("\n"));
+               "</href>" DAV_PRETTY("\n"));
       object(MultiStatusPropStat)|MultiStatusStatus n = status_set[href];
 
       if (!n->properties) {
@@ -4093,14 +4115,14 @@ class MultiStatus
           array(SimpleNode) cs = n->message->get_children();
           if ((sizeof(cs) == 1) && objectp(cs[0]) &&
               !sizeof(cs[0]->get_children())) {
-            buf->add(DAV_PRETTY("    ") "<DAV:status>HTTP/1.1 ",
+            buf->add(DAV_PRETTY("    ") "<status>HTTP/1.1 ",
                      (string)n->http_code,
-                     " </DAV:status>" DAV_PRETTY("\n")
-                     DAV_PRETTY("    ") "<DAV:error>" DAV_PRETTY("\n")
+                     " </status>" DAV_PRETTY("\n")
+                     DAV_PRETTY("    ") "<error>" DAV_PRETTY("\n")
                      DAV_PRETTY("      ") "<", cs[0]->get_full_name(), "/>"
                      DAV_PRETTY("\n")
-                     DAV_PRETTY("    ") "</DAV:error>" DAV_PRETTY("\n")
-                     DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
+                     DAV_PRETTY("    ") "</error>" DAV_PRETTY("\n")
+                     DAV_PRETTY("  ") "</response>" DAV_PRETTY("\n"));
             continue;
           }
         }
@@ -4108,13 +4130,16 @@ class MultiStatus
         DAV_WERROR("Unsupported node: %O\n", n);
         return old_render_xml();
       }
-      buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
-               DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
+      buf->add(DAV_PRETTY("    ") "<propstat>" DAV_PRETTY("\n")
+               DAV_PRETTY("      ") "<prop>" DAV_PRETTY("\n"));
       int good;
       mapping(string:array(string)) bad = ([]);
       foreach(n->properties; string prop;
-              string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
-        if (objectp(value) && value->is_status) {
+              string|SimpleNode|array(SimpleNode)|
+              MultiStatusStatus|int(100..999) value) {
+        if (intp(value) && value) {
+          bad[(string)value] += ({ prop });
+        } else if (objectp(value) && value->is_status) {
           bad[(string)value->http_code] += ({ prop });
         } else {
           good = 1;
@@ -4137,6 +4162,13 @@ class MultiStatus
             }
             if (stringp(value)) {
               buf->add(Roxen.html_encode_string(value));
+              if (([ "DAV:getcontentlength":1,
+                     "DAV:quota-available-bytes":1,
+                     "DAV:quota-used-bytes":1 ])[prop]) {
+                // NB: Work-around for bug in XML integer value parser
+                //     in webdavfs before MacOS X Darwin 13.0.
+                buf->add(" ");
+              }
             } else if (objectp(value) && functionp(value->get_node_type) &&
                        (value->get_node_type() ==
                         Parser.XML.Tree.XML_ELEMENT) &&
@@ -4157,32 +4189,32 @@ class MultiStatus
         }
       }
       if (good) {
-        buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
-                 DAV_PRETTY("      ") "<DAV:status>"
-                 "HTTP/1.1 200 OK</DAV:status>" DAV_PRETTY("\n")
-                 DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
+        buf->add(DAV_PRETTY("      ") "</prop>" DAV_PRETTY("\n")
+                 DAV_PRETTY("      ") "<status>"
+                 "HTTP/1.1 200 OK</status>" DAV_PRETTY("\n")
+                 DAV_PRETTY("    ") "</propstat>" DAV_PRETTY("\n"));
       }
       if (sizeof(bad)) {
         foreach(sort(indices(bad)), string http_code) {
           if (good) {
-            buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
-                     DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
+            buf->add(DAV_PRETTY("    ") "<propstat>" DAV_PRETTY("\n")
+                     DAV_PRETTY("      ") "<prop>" DAV_PRETTY("\n"));
           }
           foreach(sort(bad[http_code]), string prop) {
             buf->add(DAV_PRETTY("        ") "<", abbreviate[prop],
                      "/>" DAV_PRETTY("\n"));
           }
-          buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
-                   DAV_PRETTY("      ") "<DAV:status>HTTP/1.1 ", http_code,
-                   " </DAV:status>" DAV_PRETTY("\n")
-                   DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
+          buf->add(DAV_PRETTY("      ") "</prop>" DAV_PRETTY("\n")
+                   DAV_PRETTY("      ") "<status>HTTP/1.1 ", http_code,
+                   " </status>" DAV_PRETTY("\n")
+                   DAV_PRETTY("    ") "</propstat>" DAV_PRETTY("\n"));
           good = 1;
         }
       }
-      buf->add(DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
+      buf->add(DAV_PRETTY("  ") "</response>" DAV_PRETTY("\n"));
     }
 
-    buf->add("</DAV:multistatus>" DAV_PRETTY("\n"));
+    buf->add("</multistatus>" DAV_PRETTY("\n"));
 
     return buf->get();
   }
@@ -4205,6 +4237,11 @@ class MultiStatus
 #else
     string xml = render();
     DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
+#if 0
+    if (sizeof(xml) < 65536) {
+      DAV_WERROR("XML:\n%s\n", xml);
+    }
+#endif
 #endif
     return ([
       "error": 207,
@@ -4289,7 +4326,7 @@ protected class PropertySet
   Stat get_stat();
   mapping(string:string) get_response_headers();
   multiset(string) query_all_properties();
-  string|array(SimpleNode)|mapping(string:mixed)
+  string|array(SimpleNode)|mapping(string:mixed)|int(100..999)
     query_property(string prop_name);
   mapping(string:mixed) start();
   void unroll();
