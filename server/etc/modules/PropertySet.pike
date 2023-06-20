@@ -272,7 +272,7 @@ multiset(string) query_all_properties()
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
-string|array(SimpleNode)|mapping(string:mixed)
+string|array(SimpleNode)|mapping(string:mixed)|int(0..999)
   query_property(string prop_name)
 {
   switch(prop_name) {
@@ -412,8 +412,7 @@ string|array(SimpleNode)|mapping(string:mixed)
   //   exist is an error and MUST be noted, if the response uses a
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
-  return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND,
-			    "No such property.");
+  return Protocols.HTTP.HTTP_NOT_FOUND;
 }
 
 // RFC 2518 8.2
