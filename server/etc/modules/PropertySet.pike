@@ -249,7 +249,7 @@ multiset(string) query_all_properties()
   Stat st = get_stat();
   if (st) {
     multiset(string) props =
-      (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
+      (st->isreg ? all_properties_file : all_properties_dir) + (<>);
 
     // This isn't necessary for the Content-Length and Content-Type
     // headers since RequestID.make_response_headers always sets those.
