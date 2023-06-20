@@ -3771,6 +3771,13 @@ class MultiStatus
             }
             if (stringp(value)) {
               buf->add(Roxen.html_encode_string(value));
+              if (([ "DAV:getcontentlength":1,
+                     "DAV:quota-available-bytes":1,
+                     "DAV:quota-used-bytes":1 ])[prop]) {
+                // NB: Work-around for bug in XML integer value parser
+                //     in webdavfs before MacOS X Darwin 13.0.
+                buf->add(" ");
+              }
             } else if (objectp(value) && functionp(value->get_node_type) &&
                        (value->get_node_type() ==
                         Parser.XML.Tree.XML_ELEMENT) &&
