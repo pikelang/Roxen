@@ -3624,11 +3624,12 @@ class MultiStatus
   string render()
   {
     mapping(string:string) namespaces = ([
+      "":"DAV:",
       "DAV":"DAV:",
       "MS":"urn:schemas-microsoft-com:datatypes",
     ]);
     mapping(string:string) namespaces_rev = ([
-      "DAV:":"DAV",
+      "DAV:":"",
       "http://apache.org/dav/props/":"A",
       "urn:schemas-microsoft-com:datatypes":"MS",
     ]);
@@ -3663,7 +3664,12 @@ class MultiStatus
               string suffix = prop[sizeof(ns)..];
               if (!has_value(suffix, "/")) {
                 namespaces[short] = ns;
-                abbreviate[prop] = short + ":" + suffix;
+                if (sizeof(short)) {
+                  abbreviate[prop] = short + ":" + suffix;
+                } else {
+                  // Default namespace.
+                  abbreviate[prop] = suffix;
+                }
                 break;
               }
             }
@@ -3697,16 +3703,21 @@ class MultiStatus
 
     String.Buffer buf = String.Buffer();
     buf->add("<?xml version='1.0' encoding='utf-8'?>\n"
-             "<DAV:multistatus");
+             "<multistatus");
     foreach(sort(indices(namespaces)), string ns) {
-      buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
+      if (sizeof(ns)) {
+        buf->add(" xmlns:", ns, "='", namespaces[ns], "'");
+      } else {
+        // Default namespace.
+        buf->add(" xmlns='", namespaces[ns], "'");
+      }
     }
     buf->add(">" DAV_PRETTY("\n"));
     foreach(sort(indices(status_set)), string href) {
-      buf->add(DAV_PRETTY("  ") "<DAV:response>" DAV_PRETTY("\n")
-               DAV_PRETTY("    ") "<DAV:href>",
+      buf->add(DAV_PRETTY("  ") "<response>" DAV_PRETTY("\n")
+               DAV_PRETTY("    ") "<href>",
                string_to_utf8(Roxen.html_encode_string(href)),
-               "</DAV:href>" DAV_PRETTY("\n"));
+               "</href>" DAV_PRETTY("\n"));
       object(MultiStatusPropStat)|MultiStatusStatus n = status_set[href];
 
       if (!n->properties) {
@@ -3716,14 +3727,14 @@ class MultiStatus
           array(SimpleNode) cs = n->message->get_children();
           if ((sizeof(cs) == 1) && objectp(cs[0]) &&
               !sizeof(cs[0]->get_children())) {
-            buf->add(DAV_PRETTY("    ") "<DAV:status>HTTP/1.1 ",
+            buf->add(DAV_PRETTY("    ") "<status>HTTP/1.1 ",
                      (string)n->http_code,
-                     " </DAV:status>" DAV_PRETTY("\n")
-                     DAV_PRETTY("    ") "<DAV:error>" DAV_PRETTY("\n")
+                     " </status>" DAV_PRETTY("\n")
+                     DAV_PRETTY("    ") "<error>" DAV_PRETTY("\n")
                      DAV_PRETTY("      ") "<", cs[0]->get_full_name(), "/>"
                      DAV_PRETTY("\n")
-                     DAV_PRETTY("    ") "</DAV:error>" DAV_PRETTY("\n")
-                     DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
+                     DAV_PRETTY("    ") "</error>" DAV_PRETTY("\n")
+                     DAV_PRETTY("  ") "</response>" DAV_PRETTY("\n"));
             continue;
           }
         }
@@ -3731,8 +3742,8 @@ class MultiStatus
         DAV_WERROR("Unsupported node: %O\n", n);
         return old_render_xml();
       }
-      buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
-               DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
+      buf->add(DAV_PRETTY("    ") "<propstat>" DAV_PRETTY("\n")
+               DAV_PRETTY("      ") "<prop>" DAV_PRETTY("\n"));
       int good;
       mapping(string:array(string)) bad = ([]);
       foreach(n->properties; string prop;
@@ -3780,32 +3791,32 @@ class MultiStatus
         }
       }
       if (good) {
-        buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
-                 DAV_PRETTY("      ") "<DAV:status>"
-                 "HTTP/1.1 200 OK</DAV:status>" DAV_PRETTY("\n")
-                 DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
+        buf->add(DAV_PRETTY("      ") "</prop>" DAV_PRETTY("\n")
+                 DAV_PRETTY("      ") "<status>"
+                 "HTTP/1.1 200 OK</status>" DAV_PRETTY("\n")
+                 DAV_PRETTY("    ") "</propstat>" DAV_PRETTY("\n"));
       }
       if (sizeof(bad)) {
         foreach(sort(indices(bad)), string http_code) {
           if (good) {
-            buf->add(DAV_PRETTY("    ") "<DAV:propstat>" DAV_PRETTY("\n")
-                     DAV_PRETTY("      ") "<DAV:prop>" DAV_PRETTY("\n"));
+            buf->add(DAV_PRETTY("    ") "<propstat>" DAV_PRETTY("\n")
+                     DAV_PRETTY("      ") "<prop>" DAV_PRETTY("\n"));
           }
           foreach(sort(bad[http_code]), string prop) {
             buf->add(DAV_PRETTY("        ") "<", abbreviate[prop],
                      "/>" DAV_PRETTY("\n"));
           }
-          buf->add(DAV_PRETTY("      ") "</DAV:prop>" DAV_PRETTY("\n")
-                   DAV_PRETTY("      ") "<DAV:status>HTTP/1.1 ", http_code,
-                   " </DAV:status>" DAV_PRETTY("\n")
-                   DAV_PRETTY("    ") "</DAV:propstat>" DAV_PRETTY("\n"));
+          buf->add(DAV_PRETTY("      ") "</prop>" DAV_PRETTY("\n")
+                   DAV_PRETTY("      ") "<status>HTTP/1.1 ", http_code,
+                   " </status>" DAV_PRETTY("\n")
+                   DAV_PRETTY("    ") "</propstat>" DAV_PRETTY("\n"));
           good = 1;
         }
       }
-      buf->add(DAV_PRETTY("  ") "</DAV:response>" DAV_PRETTY("\n"));
+      buf->add(DAV_PRETTY("  ") "</response>" DAV_PRETTY("\n"));
     }
 
-    buf->add("</DAV:multistatus>" DAV_PRETTY("\n"));
+    buf->add("</multistatus>" DAV_PRETTY("\n"));
 
     return buf->get();
   }
