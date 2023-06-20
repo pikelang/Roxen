@@ -3860,6 +3860,11 @@ class MultiStatus
 #else
     string xml = render();
     DAV_WERROR("Render(2) took %dus.\n", gethrtime() - startts);
+#if 0
+    if (sizeof(xml) < 65536) {
+      DAV_WERROR("XML:\n%s\n", xml);
+    }
+#endif
 #endif
     return ([
       "error": 207,
