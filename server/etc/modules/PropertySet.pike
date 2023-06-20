@@ -403,10 +403,10 @@ string|array(SimpleNode)|mapping(string:mixed)|int(0..999)
 #endif /* 0 */
 
   default:
+    DAV_WERROR("query_property(): Unimplemented property:%O\n", prop_name);
     break;
   }
 
-  DAV_WERROR("query_property(): Unimplemented property:%O\n", prop_name);
   // RFC 2518 8.1:
   //   A request to retrieve the value of a property which does not
   //   exist is an error and MUST be noted, if the response uses a
