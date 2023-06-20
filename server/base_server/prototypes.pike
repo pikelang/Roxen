@@ -3369,7 +3369,8 @@ class MultiStatusPropStat
 {
   constant is_prop_stat = 1;
 
-  mapping(string:string|SimpleNode|array(SimpleNode)|MultiStatusStatus)
+  mapping(string:
+          string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int(100..999))
     properties = ([]);
   //! The property settings. Indexed on property name (with complete
   //! XML namespace). Values are:
@@ -3393,13 +3394,16 @@ class MultiStatusPropStat
   void build_response (SimpleElementNode response_node)
   {
     SimpleElementNode ok_prop_node = SimpleElementNode("DAV:prop", ([]));
-    mapping(MultiStatusStatus:SimpleNode) prop_nodes = ([]);
+    mapping(int:SimpleNode) prop_nodes = ([]);
 
     foreach (properties;
 	     string prop_name;
-	     string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
-      if (objectp (value) && value->is_status) {
+             string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int value) {
+      if (intp(value) || (objectp (value) && value->is_status)) {
 	// Group together failed properties according to status codes.
+        if (objectp(value)) {
+          value = value->http_code;
+        }
 	SimpleNode prop_node = prop_nodes[value];
 	if (!prop_node)
 	  prop_nodes[value] = prop_node = SimpleElementNode("DAV:prop", ([]));
@@ -3443,11 +3447,12 @@ class MultiStatusPropStat
       propstat_node->add_child (ok_status_node);
     }
 
-    foreach (prop_nodes; MultiStatusStatus status; SimpleNode prop_node) {
+    foreach (prop_nodes; int http_code; SimpleNode prop_node) {
       SimpleElementNode propstat_node =
 	SimpleElementNode("DAV:propstat", ([]));
       response_node->add_child (propstat_node);
       propstat_node->add_child (prop_node);
+      MultiStatusStatus status = MultiStatusStatus(http_code);
       status->build_response (propstat_node);
     }
   }
@@ -3539,9 +3544,12 @@ class MultiStatus
   //!     @type MultiStatusStatus
   //!     @type mapping(string:mixed)
   //!       Operation failed as described by the mapping.
+  //!     @type int(100..999)
+  //!       Operation failed as described by the http code.
   //!   @endmixed
   void add_property(string href, string prop_name,
-		    void|int(0..0)|string|array(SimpleNode)|SimpleNode|
+                    void|int(0..0)|int(100..999)|string|
+                    array(SimpleNode)|SimpleNode|
 		    MultiStatusStatus|mapping(string:mixed) prop_value)
   {
     MultiStatusPropStat prop_stat;
@@ -3556,6 +3564,9 @@ class MultiStatus
       prop_stat = status_set[href] = MultiStatusPropStat();
     if (mappingp (prop_value))
       prop_value = MultiStatusStatus (prop_value->error, prop_value->rettext);
+    else if (prop_value && intp(prop_value)) {
+      prop_value = MultiStatusStatus(prop_value);
+    }
     prop_stat->properties[prop_name] = prop_value;
   }
 
@@ -3647,7 +3658,7 @@ class MultiStatus
             val = "";
           }
         }
-        if (!(!val || stringp(val) ||
+        if (!(intp(val) || stringp(val) ||
               (objectp(val) && val->is_status) ||
               (objectp(val) && functionp(val->get_node_type) &&
                (val->get_node_type() == Parser.XML.Tree.XML_ELEMENT) &&
@@ -3747,8 +3758,11 @@ class MultiStatus
       int good;
       mapping(string:array(string)) bad = ([]);
       foreach(n->properties; string prop;
-              string|SimpleNode|array(SimpleNode)|MultiStatusStatus value) {
-        if (objectp(value) && value->is_status) {
+              string|SimpleNode|array(SimpleNode)|
+              MultiStatusStatus|int(100..999) value) {
+        if (intp(value) && value) {
+          bad[(string)value] += ({ prop });
+        } else if (objectp(value) && value->is_status) {
           bad[(string)value->http_code] += ({ prop });
         } else {
           good = 1;
@@ -3919,7 +3933,7 @@ protected class PropertySet
   Stat get_stat();
   mapping(string:string) get_response_headers();
   multiset(string) query_all_properties();
-  string|array(SimpleNode)|mapping(string:mixed)
+  string|array(SimpleNode)|mapping(string:mixed)|int(100..999)
     query_property(string prop_name);
   mapping(string:mixed) start();
   void unroll();
