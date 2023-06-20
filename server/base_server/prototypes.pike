@@ -3399,7 +3399,7 @@ class MultiStatusPropStat
     foreach (properties;
 	     string prop_name;
              string|SimpleNode|array(SimpleNode)|MultiStatusStatus|int value) {
-      if (intp(value) || (objectp (value) && value->is_status)) {
+      if (value && (intp(value) || (objectp (value) && value->is_status))) {
 	// Group together failed properties according to status codes.
         if (objectp(value)) {
           value = value->http_code;
