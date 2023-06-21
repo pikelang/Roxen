@@ -405,7 +405,8 @@ protected array(Parser.XML.Tree.AbstractNode) get_nodes_from_response(
 {
   ASSERT_TRUE("DAV:href" == element || "DAV:response" == element);
   Parser.XML.Tree.SimpleRootNode root_node =
-    Parser.XML.Tree.simple_parse_input(data);
+    Parser.XML.Tree.simple_parse_input(data, UNDEFINED,
+                                       Parser.XML.Tree.PARSE_ENABLE_NAMESPACES);
   array(Parser.XML.Tree.AbstractNode) multistatus_nodes =
     root_node->get_elements("DAV:multistatus", true);
   TEST_TRUE(sizeof(multistatus_nodes) > 0);
