@@ -249,7 +249,7 @@ multiset(string) query_all_properties()
   Stat st = get_stat();
   if (st) {
     multiset(string) props =
-      (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
+      (st->isreg ? all_properties_file : all_properties_dir) + (<>);
 
     // This isn't necessary for the Content-Length and Content-Type
     // headers since RequestID.make_response_headers always sets those.
@@ -272,7 +272,7 @@ multiset(string) query_all_properties()
 //! @note
 //!   Returning a string is shorthand for returning an array
 //!   with a single text node.
-string|array(SimpleNode)|mapping(string:mixed)
+string|array(SimpleNode)|mapping(string:mixed)|int(0..999)
   query_property(string prop_name)
 {
   switch(prop_name) {
@@ -403,17 +403,16 @@ string|array(SimpleNode)|mapping(string:mixed)
 #endif /* 0 */
 
   default:
+    DAV_WERROR("query_property(): Unimplemented property:%O\n", prop_name);
     break;
   }
 
-  DAV_WERROR("query_property(): Unimplemented property:%O\n", prop_name);
   // RFC 2518 8.1:
   //   A request to retrieve the value of a property which does not
   //   exist is an error and MUST be noted, if the response uses a
   //   multistatus XML element, with a response XML element which
   //   contains a 404 (Not Found) status value.
-  return Roxen.http_status (Protocols.HTTP.HTTP_NOT_FOUND,
-			    "No such property.");
+  return Protocols.HTTP.HTTP_NOT_FOUND;
 }
 
 // RFC 2518 8.2
@@ -577,16 +576,23 @@ mapping(string:mixed) remove_property(string prop_name)
 //!   @[MultiStatus.Prefixed] object to collect the results. It has
 //!   the path to the file system as implicit prefix.
 //! @param filt
-//!   Optional multiset of requested properties. If this parameter
+//!   Optional array or multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
 mapping(string:mixed) find_properties(string mode,
 				      MultiStatus.Prefixed result,
-				      multiset(string)|void filt)
+                                      array(string)|multiset(string)|void filt)
 {
+  if (multisetp(filt)) {
+    filt = indices(filt);
+  }
   switch(mode) {
   case "DAV:propname":
-    filt = query_all_properties();
-    foreach(filt; string prop_name;) {
+    filt = indices(query_all_properties());
+    foreach(filt, string prop_name) {
+      if (prop_name == "http://apache.org/dav/props/executable") {
+        // Not really necessary.
+        result->add_namespace ("http://apache.org/dav/props/");
+      }
       result->add_property(path, prop_name, "");
     }
     break;
@@ -594,15 +600,18 @@ mapping(string:mixed) find_properties(string mode,
     if (filt) {
       // Used in http://sapportals.com/xmlns/cm/webdavinclude case.
       // (draft-reschke-webdav-allprop-include-04).
-      filt |= query_all_properties();
+      filt |= indices(query_all_properties());
     } else {
-      filt = query_all_properties();
+      filt = indices(query_all_properties());
     }
     // FALL_THROUGH
   case "DAV:prop":
-    foreach(filt; string prop_name;) {
-      result->add_property(path, prop_name,
-			   query_property(prop_name));
+    foreach(filt || ({}), string prop_name) {
+      if (prop_name == "http://apache.org/dav/props/executable") {
+        // Not really necessary.
+        result->add_namespace ("http://apache.org/dav/props/");
+      }
+      result->add_property(path, prop_name, query_property(prop_name));
     }
     break;
   default:
@@ -610,8 +619,5 @@ mapping(string:mixed) find_properties(string mode,
     return 0;
   }
 
-  if (filt["http://apache.org/dav/props/executable"])
-    // Not really necessary.
-    result->add_namespace ("http://apache.org/dav/props/");
   return 0;
 }

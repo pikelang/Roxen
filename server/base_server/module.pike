@@ -626,13 +626,22 @@ string|array(Parser.XML.Tree.SimpleNode)|mapping(string:mixed)
 //!   @[query_property_set()]
 mapping(string:mixed) recurse_find_properties(string path, string mode,
 					      int depth, RequestID id,
-					      multiset(string)|void filt)
+                                              array(string)|multiset(string)|void filt)
 {
+  int startts = -gethrtime();
   string prefix = map(query_location()[1..]/"/", Roxen.http_encode_url)*"/";
   MultiStatus.Prefixed result =
     id->get_multi_status()->prefix (id->url_base() + prefix);
 
-  mapping(string:mixed) recurse (string path, int depth) {
+  if (multisetp(filt)) {
+    filt = indices(filt);
+  }
+
+  mapping(string:mixed) recurse(MultiStatus.Prefixed result,
+                                string path, string mode, int depth,
+                                RequestID id,
+                                array(string)|multiset(string)|void filt)
+  {
     SIMPLE_TRACE_ENTER (this, "%s for %O, depth %d",
 			mode == "DAV:propname" ? "Listing property names" :
 			mode == "DAV:allprop" ? "Retrieving all properties" :
@@ -641,32 +650,38 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
 			path, depth);
     mapping(string:mixed)|PropertySet properties = query_property_set(path, id);
 
-    if (!properties) {
-      SIMPLE_TRACE_LEAVE ("No such file or dir");
-      return 0;
+    if (!objectp(properties)) {
+      if (!properties) {
+        SIMPLE_TRACE_LEAVE ("No such file or dir");
+        return 0;
+      }
+      SIMPLE_TRACE_LEAVE ("Got status %d: %O",
+                          properties->error, properties->rettext);
+      result->add_status(path, properties->error, properties->rettext);
+      return properties;
     }
 
     {
-      mapping(string:mixed) ret = mappingp (properties) ?
-	properties : properties->find_properties(mode, result, filt);
+      mapping(string:mixed) ret =
+        properties->find_properties(mode, result, filt);
 
       if (ret) {
 	SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
+        result->add_status(path, ret->error, ret->rettext);
 	return ret;
       }
     }
 
+    if (depth <= 0) {
+      SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
+      return ([]);
+    }
+
     if (properties->get_stat()->isdir) {
-      if (depth <= 0) {
-	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-	return ([]);
-      }
       depth--;
+      path = combine_path_unix(path, "");	// Simplify concatenation.
       foreach(find_dir(path, id) || ({}), string filename) {
-	filename = combine_path_unix(path, filename);
-	if (mapping(string:mixed) sub_res = recurse(filename, depth))
-	  if (sizeof (sub_res))
-	    result->add_status (filename, sub_res->error, sub_res->rettext);
+        recurse(result, path + filename, mode, depth, id, filt);
       }
     }
 
@@ -674,7 +689,15 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
     return ([]);
   };
 
-  return recurse (path, depth);
+  mapping(string:mixed) res = recurse(result, path, mode, depth, id, filt);
+  startts += gethrtime();
+
+#ifdef DAV_DEBUG
+  werror("recurse_find_properties(%O, %O, %O, %O, %O) took %dus.\n",
+         path, mode, depth, id, filt,
+         startts);
+#endif
+  return res;
 }
 
 mapping(string:mixed) patch_properties(string path,
